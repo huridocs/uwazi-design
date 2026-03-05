@@ -49,7 +49,20 @@ Verify in Cursor: **Settings → Tools & MCP** → check Pencil is listed.
 
 See [`docs/screens.md`](docs/screens.md) for full screen index with node IDs and layout details.
 
-## Brand Palette
+## Branding
+
+### Logo & Icons
+
+| Asset | Preview | File |
+|---|---|---|
+| Wordmark | ![Wordmark](images/nu-logo.png) | `images/nu-logo.png` / `.svg` |
+| App icon (dark) | ![Icon](images/icon.png) | `images/icon.png` |
+| App icon (light) | ![Icon white](images/icon-white.png) | `images/icon-white.png` |
+| Symbol | ![Symbol](images/logo_sym.png) | `images/logo_sym.png` |
+
+Navbar wordmark: **73 x 18**. Wordmark is the default — symbol only where space is constrained. Seal square always above Carbon.
+
+### Palette
 
 | Name | Hex | Role |
 |---|---|---|
@@ -60,4 +73,4 @@ See [`docs/screens.md`](docs/screens.md) for full screen index with node IDs and
 | Parchment | `#F5F0E8` | Cool stock — page grounds |
 | Paper | `#FFFFFF` | The margin — cards, modals, open space |
 
-See [`docs/brand-colors.md`](docs/brand-colors.md) for full rebrand guide — logos, icons, variable mapping, and usage guidelines.
+See [`docs/brand-colors.md`](docs/brand-colors.md) for full rebrand guide — variable mapping, accent usage, and design decisions.
