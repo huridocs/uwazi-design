@@ -1,6 +1,29 @@
-# Uwazi Brand Colors — Future/Alternative Theme
+# Uwazi Rebrand Guide
 
-Status: **Explored** in `import_csv_rebrand.pen` — not applied to main design file.
+## Logos & Icons
+
+| Asset | File | Usage |
+|---|---|---|
+| ![Wordmark](../images/nu-logo.png) | `nu-logo.png` / `nu-logo.svg` | Primary logo — navbar, headers. Ink letterforms with Seal + Carbon marks. |
+| ![App icon](../images/icon.png) | `icon.png` | App icon — dark bg, Seal + Carbon squares. |
+| ![Icon white](../images/icon-white.png) | `icon-white.png` | Icon on light bg — Seal + Carbon squares, transparent bg. |
+| ![Symbol](../images/logo_sym.png) | `logo_sym.png` | Symbol mark — Seal over Carbon, vertical colon. |
+
+### Sizing
+
+| Context | Size |
+|---|---|
+| Navbar wordmark | 73 x 18 |
+| Favicon / small icon | 16 x 16 or 24 x 24 |
+| App icon | Original (512 x 512) |
+
+### Rules
+- Wordmark is the default — use symbol only where space is constrained
+- Seal square always above Carbon square in the symbol
+- No background fills behind the wordmark on Paper or Parchment surfaces
+- On dark backgrounds, use `icon-white.png`
+
+---
 
 ## Palette
 
@@ -87,7 +110,7 @@ Status: **Explored** in `import_csv_rebrand.pen` — not applied to main design 
 - Seal and Carbon are used sparingly as semantic accents, not primary UI chrome
 - Amber/yellow warning colors kept as semantic (not rebranded)
 - Green success colors kept as semantic (not rebranded)
-- New logo (nu-logo.png) replaces old icon+text — 100x24 wordmark with Seal/Carbon marks built in
+- Wordmark (`nu-logo.png`) at 73x18 in navbar — Seal/Carbon marks built into letterforms
 - Light backgrounds use solid `#FCFAF8` (Parchment at HSL ~98% lightness) instead of opacity — no transparency
 - Borders use 64% opacity (`A3` suffix) for softness while remaining functional
 - Warning detail layout matches Failed layout: alert first → stats → progress → table

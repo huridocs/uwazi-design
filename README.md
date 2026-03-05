@@ -2,7 +2,26 @@
 
 Design system, screens, and rebrand assets for Uwazi v2.
 
-Open `.pen` files with [Pencil](https://pencil.gg).
+## Setup — Pencil
+
+`.pen` files are edited with [Pencil](https://pencil.dev), a design canvas that runs inside your IDE.
+
+### Install the extension
+
+1. Open **VS Code** or **Cursor**
+2. Go to Extensions (`Cmd + Shift + X`)
+3. Search for **"Pencil"** → Install
+4. Create or open any `.pen` file — look for the Pencil icon in the top-right editor corner
+
+### Install Claude Code (required for AI features)
+
+```bash
+npm install -g @anthropic-ai/claude-code
+```
+
+Run `claude` and follow the auth flow. The Pencil MCP server connects automatically — no extra config needed.
+
+Verify in Cursor: **Settings → Tools & MCP** → check Pencil is listed.
 
 ## Structure
 
@@ -18,24 +37,17 @@ Open `.pen` files with [Pencil](https://pencil.gg).
 │   └── archive/                # Previous iterations
 ├── images/                     # Shared assets (referenced by .pen files)
 ├── docs/                       # Rebrand guides & design documentation
-│   ├── brand-colors.md         # Palette, variables, accent usage
-│   ├── design-system.md        # Tokens (colors, type, spacing, shadows)
-│   ├── components.md           # Recurring UI patterns
-│   ├── screens.md              # Screen index with IDs
-│   ├── uwazi-product.md        # Product context
-│   └── uwazi-navigation.md     # Routes and navigation
 └── README.md
 ```
 
-## Sections
+## Screens
 
-| Folder | Status |
-|---|---|
-| `ui/entity-view/` | In progress — document, files, relationships, audio, references |
-| `ui/tools/` | In progress — import CSV |
-| `ui/library/` | — |
-| `ui/settings/user/` | — |
-| `ui/settings/system/` | — |
+| Section | File | Screens |
+|---|---|---|
+| Entity View | `ui/entity-view/entity-view.pen` | Document, Files (Table, Split Selected, Split Supporting, Split Multi, Table Selected, Table Multi-select), drawer |
+| Import CSV | `ui/tools/import-csv.pen` | Empty State, New Import Modal (3 states), List, List Selected, Detail, Detail Uploading, Detail Processing, Detail Failed, Detail Warnings, Detail Mixed |
+
+See [`docs/screens.md`](docs/screens.md) for full screen index with node IDs and layout details.
 
 ## Brand Palette
 
@@ -48,4 +60,4 @@ Open `.pen` files with [Pencil](https://pencil.gg).
 | Parchment | `#F5F0E8` | Cool stock — page grounds |
 | Paper | `#FFFFFF` | The margin — cards, modals, open space |
 
-See [`docs/brand-colors.md`](docs/brand-colors.md) for full variable mapping and usage guidelines.
+See [`docs/brand-colors.md`](docs/brand-colors.md) for full rebrand guide — logos, icons, variable mapping, and usage guidelines.
