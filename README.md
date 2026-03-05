@@ -13,15 +13,9 @@ Design system, screens, and rebrand assets for Uwazi v2.
 3. Search for **"Pencil"** → Install
 4. Create or open any `.pen` file — look for the Pencil icon in the top-right editor corner
 
-### Install Claude Code (required for AI features)
+### AI features (optional)
 
-```bash
-npm install -g @anthropic-ai/claude-code
-```
-
-Run `claude` and follow the auth flow. The Pencil MCP server connects automatically — no extra config needed.
-
-Verify in Cursor: **Settings → Tools & MCP** → check Pencil is listed.
+Pencil exposes an MCP server that AI coding agents can use to read and write `.pen` files. It connects automatically — no extra config needed. Check your IDE's MCP/tools settings to verify Pencil is listed.
 
 ## Structure
 
