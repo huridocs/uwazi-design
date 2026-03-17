@@ -1,0 +1,55 @@
+:root {
+  /* Brand — Parchment palette */
+  --bg-primary: #F5F0E8;
+  --bg-surface: #FFFFFF;
+  --bg-warm: #FCFAF8;
+  --bg-muted: #F5EED7;
+  --bg-overlay: #00000066;
+
+  /* Text */
+  --text-primary: #1A1A1A;
+  --text-secondary: #333333;
+  --text-tertiary: #6B6B6B;
+  --text-muted: #9A9A9A;
+
+  /* Borders */
+  --border-primary: #E0D9C8;
+  --border-soft: #D4CDB8;
+  --border-primary-64: #E0D9C8A3;
+  --border-soft-64: #D4CDB8A3;
+
+  /* Accents */
+  --accent-blue: #00B4F0;
+  --accent-seal: #E8432A;
+  --accent-primary: #1A1A1A;
+  --accent-blue-tint: #DDF3FD;
+
+  /* Semantic */
+  --success: #059669;
+  --success-light: #D1FAE5;
+  --warning: #F59E0B;
+  --warning-light: #FEF3C7;
+  --danger: #E8432A;
+  --danger-light: #FEE2E2;
+
+  /* Highlight */
+  --highlight-yellow: #FDE68A;
+  --highlight-yellow-active: #FCD34D;
+  --highlight-blue: #BFDBFE;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  /* Typography */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
