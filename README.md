@@ -59,7 +59,7 @@ See [`docs/screens.md`](docs/screens.md) for full screen index with node IDs and
 | Wordmark | ![Wordmark](images/nu-logo.png) | `images/nu-logo.png` / `.svg` |
 | App icon (dark) | ![Icon](images/icon.png) | `images/icon.png` |
 | App icon (light) | ![Icon white](images/icon-white.png) | `images/icon-white.png` |
-| Symbol | ![Symbol](images/logo_sym.png) | `images/logo_sym.png` |
+| Symbol | <img src="images/logo_sym.png" height="24" /> | `images/logo_sym.png` |
 
 Navbar wordmark: **73 x 18**. Wordmark is the default — symbol only where space is constrained. Seal square always above Carbon.
 
