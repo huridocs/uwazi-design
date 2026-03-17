@@ -8,6 +8,7 @@ import { DocumentViewer } from "../components/viewer/DocumentViewer";
 import { ReferencePanel } from "../components/references/ReferencePanel";
 import { EntityPickerModal } from "./EntityPickerModal";
 import { ToastContainer } from "./ToastContainer";
+import { FilesView } from "./FilesView";
 
 const mainTabs = [
   { id: "metadata", label: "Metadata" },
@@ -21,26 +22,31 @@ export function ReferencesView() {
   const [activeTab, setActiveTab] = useState("document");
   const [references] = useAtom(referencesAtom);
 
-  // Update references count dynamically
   const tabs = mainTabs.map((t) =>
     t.id === "references" ? { ...t, count: references.length } : t
   );
+
+  if (activeTab === "files") {
+    return (
+      <>
+        <FilesView tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+        <ToastContainer />
+      </>
+    );
+  }
 
   return (
     <>
       <SplitView
         left={
           <div className="flex flex-col h-full min-h-0 bg-paper">
-            {/* Header: back + tabs + language badges */}
             <MainTabs
               tabs={tabs}
               activeId={activeTab}
               onChange={setActiveTab}
               languages={["EN", "ES"]}
             />
-            {/* Document meta row */}
             <DocMeta />
-            {/* Document viewer + action bar */}
             <DocumentViewer />
           </div>
         }

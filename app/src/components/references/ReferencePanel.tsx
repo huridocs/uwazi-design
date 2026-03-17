@@ -131,7 +131,7 @@ export function ReferencePanel() {
       />
 
       {/* Reference list */}
-      <div className="flex-1 overflow-auto pt-1 pb-3">
+      <div className="flex-1 overflow-auto pb-3">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Link2 size={32} className="text-ink-muted/40 mb-3" />

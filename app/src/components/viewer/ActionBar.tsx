@@ -18,18 +18,10 @@ export function ActionBar({ numPages, onScrollToPage }: ActionBarProps) {
       className="flex items-center justify-between h-12 px-4 bg-paper shrink-0"
       style={{ borderTop: "1px solid var(--border-primary)" }}
     >
-      {/* Left: OCR button + View legend */}
-      <div className="flex items-center gap-4">
-        <button className="px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
-          OCR PDF
-        </button>
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs font-medium text-ink-tertiary">View:</span>
-          <span className="w-3.5 h-3.5 rounded bg-[#FCE96A]" />
-          <span className="w-3.5 h-3.5 rounded bg-[#FDBA8C]" />
-          <span className="w-3.5 h-3.5 rounded bg-[#E74694]" />
-        </div>
-      </div>
+      {/* Left: OCR button */}
+      <button className="px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
+        OCR PDF
+      </button>
 
       {/* Right: Pager */}
       <div className="flex items-center gap-4">
