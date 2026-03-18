@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { Reference } from "../../data/references";
@@ -74,11 +74,10 @@ export function GroupedCard({
         onClick={toggle}
         className="w-full flex items-center gap-2 px-3 py-2 hover:bg-warm transition-colors"
       >
-        {expanded ? (
-          <ChevronDown size={14} className="text-ink-muted shrink-0" />
-        ) : (
-          <ChevronRight size={14} className="text-ink-muted shrink-0" />
-        )}
+        <ChevronDown
+          size={14}
+          className={`text-ink-muted shrink-0 transition-transform ${expanded ? "" : "-rotate-90"}`}
+        />
         {color && (
           <span
             className="w-2 h-2 rounded-full shrink-0"

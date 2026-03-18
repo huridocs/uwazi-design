@@ -29,8 +29,8 @@ export function MetadataView({ tabs, activeTab, onTabChange }: MetadataViewProps
             tabs={tabs}
             activeId={activeTab}
             onChange={onTabChange}
-            languages={["EN", "ES", "FR", "MY"]}
-            availableLanguages={["EN", "ES", "FR"]}
+            languages={["EN", "ES", "FR", "AR"]}
+            availableLanguages={["EN", "ES", "FR", "AR"]}
             activeLanguage={language}
             onLanguageChange={(lang) => setLanguage(lang as Language)}
           />

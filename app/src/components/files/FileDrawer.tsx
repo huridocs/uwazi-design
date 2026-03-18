@@ -30,7 +30,7 @@ const translationLanguages: TranslationLang[] = [
   { code: "EN", name: "English", file: primaryFiles.find((f) => f.language === "EN") },
   { code: "ES", name: "Español", file: primaryFiles.find((f) => f.language === "ES") },
   { code: "FR", name: "Français", file: primaryFiles.find((f) => f.language === "FR") },
-  { code: "MY", name: "Burmese" },
+  { code: "AR", name: "العربية" },
 ];
 
 export function FileDrawer({ selectedFiles }: FileDrawerProps) {

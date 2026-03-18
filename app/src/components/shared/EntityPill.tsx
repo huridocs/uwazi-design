@@ -17,9 +17,9 @@ export function EntityPill({ typeId, label, size = "sm" }: EntityPillProps) {
         size === "sm" ? "px-2 py-0.5 text-xs" : "px-2.5 py-1 text-sm"
       }`}
       style={{
-        backgroundColor: `${color}14`,
+        backgroundColor: `${color}20`,
         color: color,
-        border: `1px solid ${color}30`,
+        border: `1px solid ${color}40`,
       }}
     >
       <span

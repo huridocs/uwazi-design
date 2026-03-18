@@ -44,16 +44,17 @@ function CodeBlock({ label, content, name }: { label: string; content: string; n
 
   return (
     <div className="relative border-t border-border/40">
-      <div className="flex items-center justify-between px-4 py-1.5 bg-ink">
-        <span className="text-[10px] font-medium text-ink-muted uppercase tracking-wider">{label}</span>
+      <div className="flex items-center justify-between px-4 py-1.5" style={{ backgroundColor: "#1A1A1A" }}>
+        <span className="text-[10px] font-medium uppercase tracking-wider" style={{ color: "#9A9A9A" }}>{label}</span>
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium text-ink-muted hover:text-parchment hover:bg-white/10 transition-colors"
+          className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium hover:bg-white/10 transition-colors"
+          style={{ color: "#9A9A9A" }}
         >
           <Copy size={10} /> Copy
         </button>
       </div>
-      <pre className="bg-ink px-4 py-2.5 overflow-x-auto text-xs leading-relaxed font-mono">
+      <pre className="px-4 py-2.5 overflow-x-auto text-xs leading-relaxed font-mono" style={{ backgroundColor: "#1A1A1A" }}>
         <code>
           {label === "React" ? (
             <SyntaxHighlight code={content} />

@@ -1,5 +1,6 @@
 interface UwaziLoaderProps {
   size?: "sm" | "md" | "lg";
+  color?: "default" | "white";
 }
 
 const sizes = {
@@ -8,8 +9,9 @@ const sizes = {
   lg: { cell: 16, gap: 4 },
 };
 
-export function UwaziLoader({ size = "md" }: UwaziLoaderProps) {
+export function UwaziLoader({ size = "md", color = "default" }: UwaziLoaderProps) {
   const { cell, gap } = sizes[size];
+  const bg = color === "white" ? "#FFFFFF" : "var(--text-primary)";
 
   return (
     <div
@@ -29,7 +31,7 @@ export function UwaziLoader({ size = "md" }: UwaziLoaderProps) {
           style={{
             width: cell,
             height: cell,
-            backgroundColor: "var(--text-primary)",
+            backgroundColor: bg,
           }}
         />
       ))}

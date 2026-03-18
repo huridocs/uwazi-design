@@ -281,7 +281,7 @@ export function ComponentCatalog() {
                   name="Buttons"
                   description="Primary, secondary, ghost, danger, compact, and icon button styles"
                   code={`{/* Primary */}
-<button className="px-4 py-2 text-sm font-medium rounded-md bg-ink text-white hover:bg-ink/90">
+<button className="px-4 py-2 text-sm font-medium rounded-md bg-ink text-parchment hover:bg-ink/90">
   Primary
 </button>
 
@@ -322,7 +322,7 @@ export function ComponentCatalog() {
                 >
                   <div className="flex flex-col gap-3">
                     <div className="flex flex-wrap items-center gap-3">
-                      <button className="px-4 py-2 text-sm font-medium rounded-md bg-ink text-white hover:bg-ink/90 transition-colors">Primary</button>
+                      <button className="px-4 py-2 text-sm font-medium rounded-md bg-ink text-parchment hover:bg-ink/90 transition-colors">Primary</button>
                       <button className="px-4 py-2 text-sm font-medium rounded-md border border-border text-ink-secondary hover:bg-parchment transition-colors">Secondary</button>
                       <button className="px-4 py-2 text-sm font-medium rounded-md bg-seal text-white hover:bg-seal/90 transition-colors">Delete</button>
                       <button className="px-3 py-1.5 text-xs font-medium text-ink-tertiary hover:text-ink-secondary hover:bg-warm rounded-md transition-colors">Ghost</button>
@@ -424,7 +424,7 @@ export function ComponentCatalog() {
 {/* Dark bg-ink bar with Create Reference, Copy, Highlight buttons */}`}
                 >
                   <div className="relative h-16 w-full flex items-center justify-center">
-                    <div className="flex items-center gap-0.5 bg-ink rounded-md shadow-xl px-1 py-1">
+                    <div className="flex items-center gap-0.5 rounded-md shadow-xl px-1 py-1" style={{ backgroundColor: "#1A1A1A" }}>
                       <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white rounded-md hover:bg-white/15 transition-colors">Create Reference</button>
                       <div className="w-px h-4 bg-white/20" />
                       <button className="p-1.5 text-white/70 rounded-md hover:bg-white/15 hover:text-white transition-colors">Copy</button>
@@ -726,27 +726,93 @@ export function ComponentCatalog() {
               <div id="sh-uwazi-loader" ref={reg("sh-uwazi-loader")}>
                 <CatalogEntry
                   name="UwaziLoader"
-                  description="Branded loading animation — 3x2 grid with cycling highlight"
+                  description="Branded loading animation — 3x2 grid with left-to-right column sweep"
                   code={`<UwaziLoader />
 <UwaziLoader size="sm" />
-<UwaziLoader size="lg" />`}
+<UwaziLoader size="lg" />
+<UwaziLoader size="sm" color="white" />
+
+{/* In a button */}
+<button className="... bg-ink text-parchment">
+  <UwaziLoader size="sm" color="white" /> Saving
+</button>
+
+{/* In a toast */}
+<div className="... bg-paper border rounded-md shadow-lg">
+  <UwaziLoader size="sm" />
+  <span>Importing 3 files</span>
+</div>`}
                 >
-                  <div className="flex items-center gap-8">
-                    <div className="flex flex-col items-center gap-2">
-                      <UwaziLoader size="sm" />
-                      <span className="text-[10px] text-ink-muted">sm</span>
+                  <div className="flex flex-col gap-6 w-full">
+                    {/* Sizes */}
+                    <div className="flex flex-col gap-3">
+                      <span className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider">Sizes</span>
+                      <div className="flex items-center gap-8">
+                        <div className="flex flex-col items-center gap-2">
+                          <UwaziLoader size="sm" />
+                          <span className="text-[10px] text-ink-muted">sm</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-2">
+                          <UwaziLoader size="md" />
+                          <span className="text-[10px] text-ink-muted">md</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-2">
+                          <UwaziLoader size="lg" />
+                          <span className="text-[10px] text-ink-muted">lg</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex flex-col items-center gap-2">
-                      <UwaziLoader size="md" />
-                      <span className="text-[10px] text-ink-muted">md</span>
+
+                    {/* In buttons */}
+                    <div className="flex flex-col gap-3">
+                      <span className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider">Buttons</span>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <button className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md bg-ink text-parchment cursor-default">
+                          <UwaziLoader size="sm" color="white" /> Saving
+                        </button>
+                        <button className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md border border-border text-ink-secondary cursor-default">
+                          <UwaziLoader size="sm" /> Processing
+                        </button>
+                        <button className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md bg-seal text-white cursor-default">
+                          <UwaziLoader size="sm" color="white" /> Deleting
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex flex-col items-center gap-2">
-                      <UwaziLoader size="lg" />
-                      <span className="text-[10px] text-ink-muted">lg</span>
+
+                    {/* In toasts */}
+                    <div className="flex flex-col gap-3">
+                      <span className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider">Toasts</span>
+                      <div className="flex flex-col gap-2 max-w-sm">
+                        <div className="flex items-center gap-2.5 px-4 py-2.5 bg-paper border border-border rounded-md shadow-lg">
+                          <UwaziLoader size="sm" />
+                          <span className="text-sm text-ink">Importing 3 files</span>
+                        </div>
+                        <div className="flex items-center gap-2.5 px-4 py-2.5 bg-paper border border-border rounded-md shadow-lg">
+                          <UwaziLoader size="sm" />
+                          <span className="text-sm text-ink">Processing document</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* In card */}
+                    <div className="flex flex-col gap-3">
+                      <span className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider">Card</span>
+                      <div className="max-w-xs bg-paper border border-border/40 rounded-md px-3 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded bg-warm flex items-center justify-center shrink-0">
+                            <UwaziLoader size="sm" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-ink">Processing document</p>
+                            <p className="text-[10px] text-ink-muted">Extracting text from PDF</p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </CatalogEntry>
               </div>
+
             </div>
           </section>
         </div>

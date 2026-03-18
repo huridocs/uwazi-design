@@ -45,7 +45,7 @@ export function Property({ label, value, linked }: PropertyProps) {
 
 export function PropertyRow({ children }: { children: ReactNode }) {
   return (
-    <div className="flex gap-1 items-start w-full">
+    <div className="flex gap-6 items-start w-full">
       {children}
     </div>
   );

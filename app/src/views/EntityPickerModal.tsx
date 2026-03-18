@@ -210,7 +210,7 @@ export function EntityPickerModal() {
               </button>
               <button
                 onClick={handleCreate}
-                className="px-4 py-2 text-sm font-medium rounded-md bg-ink text-white
+                className="px-4 py-2 text-sm font-medium rounded-md bg-ink text-parchment
                   hover:bg-ink/90 transition-colors"
               >
                 Create Reference

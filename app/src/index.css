@@ -47,6 +47,19 @@ body {
   filter: invert(1);
 }
 
+/* RTL: flip scrollbar to left side */
+[dir="rtl"] ::-webkit-scrollbar {
+  direction: rtl;
+}
+
+/* RTL: keep code blocks and file names LTR */
+[dir="rtl"] pre,
+[dir="rtl"] code,
+[dir="rtl"] .font-mono {
+  direction: ltr;
+  text-align: left;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;
@@ -107,18 +120,30 @@ body {
   animation: slide-in-right 0.2s ease-out;
 }
 
-/* Uwazi loader — cycles highlight through 6 grid positions */
-@keyframes uwazi-loader {
-  0%, 100%   { opacity: 1; }
-  16.67%     { opacity: 1; }
-  16.68%     { opacity: 0; }
+/* Uwazi loader — left-to-right sweep across 3×2 grid
+   Cells light up column by column: [0,3] → [1,4] → [2,5]
+   Each cell fades in then out with overlap for a fluid sweep */
+@keyframes uwazi-cell-pulse {
+  0%   { opacity: 0.12; }
+  30%  { opacity: 1; }
+  60%  { opacity: 0.12; }
+  100% { opacity: 0.12; }
 }
 .uwazi-loader-cell {
-  opacity: 0.15;
+  opacity: 0.12;
 }
-.uwazi-loader-cell:nth-child(1) { animation: uwazi-loader 1.2s ease-in-out infinite 0s; }
-.uwazi-loader-cell:nth-child(2) { animation: uwazi-loader 1.2s ease-in-out infinite 0.2s; }
-.uwazi-loader-cell:nth-child(3) { animation: uwazi-loader 1.2s ease-in-out infinite 0.4s; }
-.uwazi-loader-cell:nth-child(4) { animation: uwazi-loader 1.2s ease-in-out infinite 0.6s; }
-.uwazi-loader-cell:nth-child(5) { animation: uwazi-loader 1.2s ease-in-out infinite 0.8s; }
-.uwazi-loader-cell:nth-child(6) { animation: uwazi-loader 1.2s ease-in-out infinite 1.0s; }
+/* Column 1 (left) */
+.uwazi-loader-cell:nth-child(1),
+.uwazi-loader-cell:nth-child(4) {
+  animation: uwazi-cell-pulse 1.2s ease-in-out infinite 0s;
+}
+/* Column 2 (center) */
+.uwazi-loader-cell:nth-child(2),
+.uwazi-loader-cell:nth-child(5) {
+  animation: uwazi-cell-pulse 1.2s ease-in-out infinite 0.2s;
+}
+/* Column 3 (right) */
+.uwazi-loader-cell:nth-child(3),
+.uwazi-loader-cell:nth-child(6) {
+  animation: uwazi-cell-pulse 1.2s ease-in-out infinite 0.4s;
+}

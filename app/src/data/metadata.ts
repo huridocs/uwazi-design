@@ -181,6 +181,62 @@ export const metadataFieldsByLanguage: Record<Language, MetadataField[]> = {
       ],
     },
   ],
+  AR: [
+    {
+      id: "description",
+      label: "الوصف",
+      type: "multiline",
+      value: `قدمت لجنة البلدان الأمريكية لحقوق الإنسان هذه القضية إلى المحكمة في 24 أبريل 1986. نشأت القضية من شكوى ضد هندوراس (رقم 7920) تلقتها أمانة اللجنة في 7 أكتوبر 1981. ادعت اللجنة أن أنخيل مانفريدو فيلاسكيز رودريغيز، طالب في الجامعة الوطنية المستقلة في هندوراس، احتُجز دون أمر قضائي في 12 سبتمبر 1981، من قبل أعضاء مكتب التحقيقات الوطني وفرد مجهول الهوية، كانوا يؤدون واجباتهم باسم القوات المسلحة الهندوراسية وتحت حمايتها.`,
+    },
+    {
+      id: "country",
+      label: "البلد",
+      type: "country",
+      value: "هندوراس",
+      flag: "🇭🇳",
+    },
+    {
+      id: "date",
+      label: "التاريخ",
+      type: "date",
+      value: "26 يونيو 1987",
+    },
+    {
+      id: "date-incident",
+      label: "تاريخ الحادثة",
+      type: "date",
+      value: "12 سبتمبر 1981",
+    },
+    {
+      id: "type",
+      label: "النوع",
+      type: "text",
+      value: "اعتراضات أولية — حكم",
+    },
+    {
+      id: "mechanism",
+      label: "الآلية",
+      type: "link",
+      value: "محكمة البلدان الأمريكية لحقوق الإنسان",
+    },
+    {
+      id: "signatories",
+      label: "الموقعون",
+      type: "link",
+      value: "توماس بورغنتال",
+    },
+    {
+      id: "other-files",
+      label: "ملفات أخرى",
+      type: "file-list",
+      value: "",
+      items: [
+        { label: "مستند", value: "Velasquez-Rodriguez — Sentencia de Fondo (29 julio 1988).docx" },
+        { label: "مستند", value: "Velasquez-Rodriguez — Reparaciones y Costas (21 julio 1989).docx" },
+        { label: "فيديو", value: "Audiencia pública — Velásquez Rodríguez c. Honduras (1987).mpeg" },
+      ],
+    },
+  ],
 };
 
 export const pdfMetadata = {
@@ -204,6 +260,13 @@ export const pdfMetadataByLanguage: Record<Language, typeof pdfMetadata> = {
     name: "Velasquez-Rodriguez_c_Honduras_1987_FR.pdf",
     type: "PDF",
     size: "118 KB",
+    lastEdited: "26-06-1987",
+    added: "15-03-2024",
+  },
+  AR: {
+    name: "Velasquez-Rodriguez_c_Honduras_1987_AR.pdf",
+    type: "PDF",
+    size: "120 KB",
     lastEdited: "26-06-1987",
     added: "15-03-2024",
   },

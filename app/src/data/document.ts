@@ -40,4 +40,13 @@ export const documentsByLanguage: Record<Language, DocumentMeta> = {
     pages: 14,
     filename: "sample.pdf",
   },
+  AR: {
+    id: "doc-1-ar",
+    title: "محكمة البلدان الأمريكية لحقوق الإنسان — قضية فيلاسكيز رودريغيز ضد هندوراس — حكم 26 يونيو 1987",
+    entityTypeId: "court_case",
+    language: "العربية",
+    createdAt: "2024-06-15",
+    pages: 14,
+    filename: "sample.pdf",
+  },
 };
