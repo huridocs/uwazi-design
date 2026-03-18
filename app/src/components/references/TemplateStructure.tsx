@@ -86,7 +86,7 @@ function PropertyGroup({
 export function TemplateStructure() {
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-auto px-4 py-3">
+      <div className="flex-1 overflow-auto px-4 py-3 pb-8">
         <div className="flex flex-col gap-2">
           {/* Header group */}
           <PropertyGroup label="Header" variant="header">

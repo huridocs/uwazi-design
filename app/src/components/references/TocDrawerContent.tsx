@@ -63,7 +63,7 @@ export function TocDrawerContent() {
       </div>
 
       {/* Tree */}
-      <div className="flex-1 overflow-auto px-1">
+      <div className="flex-1 overflow-auto px-1 pb-8">
         {tocEntries.map((entry) => (
           <TocNode
             key={entry.id}

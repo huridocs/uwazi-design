@@ -81,7 +81,7 @@ export function FileDrawer({ selectedFiles }: FileDrawerProps) {
       {/* Tab content */}
       {activeTab === "file" ? (
         <>
-          <div className="flex-1 overflow-auto p-3 space-y-3">
+          <div className="flex-1 overflow-auto p-3 pb-8 space-y-3">
             {selectedFiles.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center gap-3">
                 <MousePointerClick size={32} className="text-ink-muted/40" />
@@ -140,7 +140,7 @@ export function FileDrawer({ selectedFiles }: FileDrawerProps) {
         </>
       ) : (
         <>
-          <div className="flex-1 overflow-auto p-3 space-y-4">
+          <div className="flex-1 overflow-auto p-3 pb-8 space-y-4">
             {translationLanguages.map((lang) => (
               <div key={lang.code}>
                 {/* Language header */}

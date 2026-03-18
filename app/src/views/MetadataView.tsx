@@ -62,7 +62,7 @@ function MetadataReadBody({ onEdit }: { onEdit: () => void }) {
       <DocMeta />
 
       {/* Scrollable metadata body */}
-      <div className="flex-1 overflow-auto px-4 py-2 space-y-3">
+      <div className="flex-1 overflow-auto px-4 py-2 pb-8 space-y-3">
         <MetadataCard title="Document">
           <div className="flex items-center justify-center bg-warm rounded-md overflow-hidden h-[200px]">
             <div className="bg-paper rounded shadow-sm w-[45%] h-[180px] flex items-center justify-center">
@@ -159,7 +159,7 @@ function MetadataEditBody({ onCancel, onSave }: { onCancel: () => void; onSave: 
 
   return (
     <>
-      <div className="flex-1 overflow-auto px-4 py-3 space-y-3">
+      <div className="flex-1 overflow-auto px-4 py-3 pb-8 space-y-3">
         {/* Title */}
         <EditSection label="Title*">
           <textarea
@@ -435,7 +435,7 @@ function MetadataDrawer() {
         <TemplateStructure />
       ) : activeDrawerTab === "files" ? (
         <>
-          <div className="flex-1 overflow-auto px-3 py-3 space-y-3">
+          <div className="flex-1 overflow-auto px-3 py-3 pb-8 space-y-3">
             <DrawerFileRow
               title={doc.title}
               filename={pdf.name}

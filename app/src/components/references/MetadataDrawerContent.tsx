@@ -18,7 +18,7 @@ export function MetadataDrawerContent() {
   );
 
   return (
-    <div className="flex-1 overflow-auto px-3 py-3 space-y-3">
+    <div className="flex-1 overflow-auto px-3 py-3 pb-8 space-y-3">
       {/* Entity header */}
       <div className="bg-warm rounded-md px-3 py-2.5 space-y-1.5">
         <span className="px-1.5 py-0.5 text-xs font-medium rounded bg-[#C4B5FD] text-[#4C1D95]">

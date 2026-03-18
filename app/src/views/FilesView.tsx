@@ -61,7 +61,7 @@ export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
             onLanguageChange={(lang) => setLanguage(lang as Language)}
           />
           <DocMeta showPdfSelector={false} />
-          <div className="flex-1 overflow-auto p-4 space-y-5 bg-warm">
+          <div className="flex-1 overflow-auto p-4 pb-8 space-y-5 bg-warm">
             <div>
               <h3 className="text-xs font-semibold text-ink-tertiary uppercase tracking-wider mb-2 px-1">
                 Primary document & translations
