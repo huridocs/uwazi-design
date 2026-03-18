@@ -100,6 +100,7 @@ npm run dev        # → http://localhost:5173
 - **Reference panel** — search, sort (None/A→Z/Z→A), filter toggles (All/Entity type/Rel. type/Density), grouped cards with collapse/expand all, stacked density chart by relation type
 - **Files management** — dual tables (primary document + translations, supporting files), row selection with blue accent, file metadata drawer, compact stacked cards on multi-select, bulk actions
 - **Translations drawer** — per-language file cards (EN/ES/FR with file, AR empty state with dashed Add), Download all/Delete actions
+- **Table of Contents** — collapsible tree with nested sections (up to 4 levels), page tags, Collapse All / Expand All, ML-generated indicator, Edit + Mark as reviewed actions
 - **Drawer tabs** — contextual per view: Metadata/ToC/References/Relationships/Search (document), File/Translations (files), Files/Relationships (metadata), each with own action bar
 - **Shared** — toast notifications (center top), entity pills, page tags, confirm dialogs, branded loader animation (UwaziLoader)
 - **Component Catalog** — click logo to open storybook-like catalog with live previews, copyable React + Tailwind code blocks, style guide with separate light/dark color palettes, typography, shadows, radii, spacing, sidebar with scroll tracking

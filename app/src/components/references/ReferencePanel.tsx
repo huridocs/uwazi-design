@@ -14,6 +14,7 @@ import { RefRow } from "./RefRow";
 import { DrawerActionBar } from "./DrawerActionBar";
 import { ConfirmDialog } from "../shared/ConfirmDialog";
 import { MetadataDrawerContent } from "./MetadataDrawerContent";
+import { TocDrawerContent } from "./TocDrawerContent";
 import { Link2 } from "lucide-react";
 
 const drawerTabs = [
@@ -194,8 +195,11 @@ export function ReferencePanel() {
       </div>
       )}
 
+      {/* ToC tab content */}
+      {activeDrawerTab === "toc" && <TocDrawerContent />}
+
       {/* Other tabs placeholder */}
-      {activeDrawerTab !== "metadata" && activeDrawerTab !== "references" && (
+      {!["metadata", "references", "toc"].includes(activeDrawerTab) && (
         <div className="flex-1 flex items-center justify-center">
           <p className="text-sm text-ink-muted capitalize">{activeDrawerTab} content</p>
         </div>
