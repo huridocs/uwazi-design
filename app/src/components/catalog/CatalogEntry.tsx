@@ -1,5 +1,6 @@
-import { useState, ReactNode } from "react";
-import { Copy, Check } from "lucide-react";
+import { ReactNode } from "react";
+import { Copy } from "lucide-react";
+import { useCopyToast } from "./useCopyToast";
 
 interface CatalogEntryProps {
   name: string;
@@ -19,28 +20,26 @@ export function CatalogEntry({ name, description, code, children, tailwind }: Ca
       </div>
 
       {/* Preview */}
-      <div className="px-4 py-6 bg-warm flex items-start justify-center min-h-[80px]">
-        <div className="max-w-full">{children}</div>
+      <div className="px-4 py-6 bg-warm flex items-start justify-center min-h-[80px] w-full">
+        <div className="w-full">{children}</div>
       </div>
 
       {/* React code */}
-      <CodeBlock label="React" content={code} syntax="jsx" />
+      <CodeBlock label="React" content={code} name={name} />
 
       {/* Tailwind classes */}
       {tailwind && (
-        <CodeBlock label="Tailwind" content={tailwind} syntax="css" />
+        <CodeBlock label="Tailwind" content={tailwind} name={name} />
       )}
     </div>
   );
 }
 
-function CodeBlock({ label, content, syntax }: { label: string; content: string; syntax: "jsx" | "css" }) {
-  const [copied, setCopied] = useState(false);
+function CodeBlock({ label, content, name }: { label: string; content: string; name: string }) {
+  const copyToast = useCopyToast();
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(content);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    copyToast(content, `${label} — ${name}`);
   };
 
   return (
@@ -51,20 +50,12 @@ function CodeBlock({ label, content, syntax }: { label: string; content: string;
           onClick={handleCopy}
           className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium text-ink-muted hover:text-parchment hover:bg-white/10 transition-colors"
         >
-          {copied ? (
-            <>
-              <Check size={10} className="text-success" /> Copied
-            </>
-          ) : (
-            <>
-              <Copy size={10} /> Copy
-            </>
-          )}
+          <Copy size={10} /> Copy
         </button>
       </div>
       <pre className="bg-ink px-4 py-2.5 overflow-x-auto text-xs leading-relaxed font-mono">
         <code>
-          {syntax === "jsx" ? (
+          {label === "React" ? (
             <SyntaxHighlight code={content} />
           ) : (
             <span style={{ color: "#F5F0E8" }}>{content}</span>

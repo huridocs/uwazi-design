@@ -16,6 +16,7 @@ export function SearchBar() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search"
+          aria-label="Search references"
           className="w-full h-8 pl-3 pr-8 text-xs font-medium bg-warm border border-border rounded-md
             placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-carbon/20
             focus:border-carbon/40 transition-all"

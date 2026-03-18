@@ -12,10 +12,12 @@ interface SegmentedTabsProps {
 
 export function SegmentedTabs({ tabs, activeId, onChange }: SegmentedTabsProps) {
   return (
-    <div className="flex bg-parchment rounded-md p-0.5 gap-0.5">
+    <div className="flex bg-parchment rounded-md p-0.5 gap-0.5" role="tablist">
       {tabs.map((tab) => (
         <button
           key={tab.id}
+          role="tab"
+          aria-selected={activeId === tab.id}
           onClick={() => onChange(tab.id)}
           className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
             activeId === tab.id
@@ -25,11 +27,7 @@ export function SegmentedTabs({ tabs, activeId, onChange }: SegmentedTabsProps) 
         >
           {tab.label}
           {tab.count !== undefined && (
-            <span
-              className={`ml-1.5 ${
-                activeId === tab.id ? "text-ink-muted" : "text-ink-muted"
-              }`}
-            >
+            <span className="ml-1.5 text-ink-muted">
               {tab.count}
             </span>
           )}

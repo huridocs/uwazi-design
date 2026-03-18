@@ -37,7 +37,7 @@ export function FileTable({ files, selectedIds, onSelect, onSelectAll }: FileTab
         className="grid items-center gap-3 px-4 h-10 text-[11px] font-semibold text-ink-tertiary uppercase tracking-wider"
         style={{
           gridTemplateColumns: "28px 1fr 70px 70px 50px 90px 50px",
-          backgroundColor: "#FCFAF8",
+          backgroundColor: "var(--bg-warm)",
           borderBottom: "1px solid var(--border-primary)",
         }}
       >
@@ -65,6 +65,9 @@ export function FileTable({ files, selectedIds, onSelect, onSelectAll }: FileTab
         return (
           <div
             key={file.id}
+            role="row"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(file.id); } }}
             className={`grid items-center gap-3 px-4 h-11 text-sm transition-colors cursor-pointer
               hover:bg-warm ${isSelected ? "bg-warm" : ""}`}
             style={{
@@ -107,6 +110,7 @@ export function FileTable({ files, selectedIds, onSelect, onSelectAll }: FileTab
               onClick={(e) => {
                 e.stopPropagation();
               }}
+              aria-label={`View ${file.name}`}
               className="flex items-center justify-center p-1 rounded hover:bg-parchment transition-colors"
             >
               <Eye size={14} className="text-ink-tertiary" />
@@ -119,7 +123,7 @@ export function FileTable({ files, selectedIds, onSelect, onSelectAll }: FileTab
       <div
         className="flex items-center justify-between px-4 h-10 text-xs text-ink-muted"
         style={{
-          backgroundColor: "#FCFAF8",
+          backgroundColor: "var(--bg-warm)",
           borderTop: "1px solid var(--border-primary)",
         }}
       >

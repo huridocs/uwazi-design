@@ -65,22 +65,27 @@ export function FiltersRow({ onCollapseAll, onExpandAll }: FiltersRowProps) {
         <div className="relative">
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
+            aria-expanded={dropdownOpen}
+            aria-haspopup="listbox"
             className="flex items-center gap-1.5 h-6 px-2 text-[11px] font-medium text-ink-tertiary
               bg-warm border border-border rounded hover:bg-parchment hover:text-ink-secondary transition-colors"
           >
             {sortOrder === "none" ? "Sort" : activeSort?.label}
-            <ChevronDown size={10} className="text-ink-muted" />
+            <ChevronDown size={10} className="text-ink-muted" aria-hidden="true" />
           </button>
           {dropdownOpen && (
             <>
               <div
                 className="fixed inset-0 z-10"
+                aria-hidden="true"
                 onClick={() => setDropdownOpen(false)}
               />
-              <div className="absolute top-full left-0 mt-1 z-20 bg-paper border border-border rounded-md shadow-lg overflow-hidden w-[100px]">
+              <div role="listbox" aria-label="Sort order" className="absolute top-full left-0 mt-1 z-20 bg-paper border border-border rounded-md shadow-lg overflow-hidden w-[100px]">
                 {sortOptions.map((opt) => (
                   <button
                     key={opt.id}
+                    role="option"
+                    aria-selected={sortOrder === opt.id}
                     onClick={() => {
                       setSortOrder(opt.id);
                       setDropdownOpen(false);

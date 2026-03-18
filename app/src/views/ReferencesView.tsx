@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAtom } from "jotai";
 import { referencesAtom } from "../atoms/references";
+import { languageAtom, type Language } from "../atoms/language";
 import { SplitView } from "../components/layout/SplitView";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DocMeta } from "../components/layout/DocMeta";
@@ -14,14 +15,15 @@ import { MetadataView } from "./MetadataView";
 const mainTabs = [
   { id: "metadata", label: "Metadata" },
   { id: "document", label: "Document" },
-  { id: "references", label: "References", count: 9 },
-  { id: "relationships", label: "Relationships", count: 324 },
-  { id: "files", label: "Files", count: 4 },
+  { id: "references", label: "References", count: 12 },
+  { id: "relationships", label: "Relationships", count: 14 },
+  { id: "files", label: "Files", count: 6 },
 ];
 
 export function ReferencesView() {
   const [activeTab, setActiveTab] = useState("document");
   const [references] = useAtom(referencesAtom);
+  const [language, setLanguage] = useAtom(languageAtom);
 
   const tabs = mainTabs.map((t) =>
     t.id === "references" ? { ...t, count: references.length } : t
@@ -55,7 +57,9 @@ export function ReferencesView() {
               activeId={activeTab}
               onChange={setActiveTab}
               languages={["EN", "ES", "FR", "MY"]}
-            availableLanguages={["EN", "ES", "FR"]}
+              availableLanguages={["EN", "ES", "FR"]}
+              activeLanguage={language}
+              onLanguageChange={(lang) => setLanguage(lang as Language)}
             />
             <DocMeta />
             <DocumentViewer />

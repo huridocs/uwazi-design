@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, Music, Link2, Download, Trash2, Pencil, MousePointerClick, Plus, ChevronRight, Star } from "lucide-react";
+import { FileText, Music, Link2, Download, Trash2, Pencil, MousePointerClick, Plus, ChevronRight } from "lucide-react";
 import { DrawerTabs } from "../layout/DrawerTabs";
 import { FileEntry, primaryFiles } from "../../data/files";
 import { currentDocument } from "../../data/document";
@@ -72,10 +72,9 @@ export function FileDrawer({ selectedFiles }: FileDrawerProps) {
           ))}
         </div>
         {defaultFile && (
-          <div className="flex items-center gap-1 text-xs text-ink-tertiary">
-            <Star size={12} className="text-carbon fill-carbon" />
-            <span className="font-medium">Default file</span>
-          </div>
+          <span className="px-2 py-0.5 text-[10px] font-medium rounded bg-warning-light text-warning">
+            Default
+          </span>
         )}
       </div>
 

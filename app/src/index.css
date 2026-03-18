@@ -2,28 +2,28 @@
 @import "./tokens.css";
 
 @theme {
-  --color-parchment: #F5F0E8;
-  --color-paper: #FFFFFF;
-  --color-warm: #FCFAF8;
-  --color-vellum: #F5EED7;
-  --color-ink: #1A1A1A;
-  --color-ink-secondary: #333333;
-  --color-ink-tertiary: #6B6B6B;
-  --color-ink-muted: #9A9A9A;
-  --color-border: #E0D9C8;
-  --color-border-soft: #D4CDB8;
-  --color-carbon: #00B4F0;
-  --color-seal: #E8432A;
-  --color-carbon-tint: #DDF3FD;
-  --color-seal-tint: #FEE2E2;
-  --color-success: #059669;
-  --color-success-light: #D1FAE5;
-  --color-warning: #F59E0B;
-  --color-warning-light: #FEF3C7;
-  --color-highlight: #FDE68A;
-  --color-highlight-active: #FCD34D;
-  --color-highlight-blue: #BFDBFE;
-  --color-overlay: #00000066;
+  --color-parchment: var(--bg-primary);
+  --color-paper: var(--bg-surface);
+  --color-warm: var(--bg-warm);
+  --color-vellum: var(--bg-muted);
+  --color-ink: var(--text-primary);
+  --color-ink-secondary: var(--text-secondary);
+  --color-ink-tertiary: var(--text-tertiary);
+  --color-ink-muted: var(--text-muted);
+  --color-border: var(--border-primary);
+  --color-border-soft: var(--border-soft);
+  --color-carbon: var(--accent-blue);
+  --color-seal: var(--accent-seal);
+  --color-carbon-tint: var(--accent-blue-tint);
+  --color-seal-tint: var(--accent-seal-tint);
+  --color-success: var(--success);
+  --color-success-light: var(--success-light);
+  --color-warning: var(--warning);
+  --color-warning-light: var(--warning-light);
+  --color-highlight: var(--highlight-yellow);
+  --color-highlight-active: var(--highlight-yellow-active);
+  --color-highlight-blue: var(--highlight-blue);
+  --color-overlay: var(--bg-overlay);
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
@@ -39,6 +39,12 @@ body {
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Dark mode: invert black logo */
+:root.dark .logo-img {
+  filter: invert(1);
 }
 
 /* Scrollbar styling */
@@ -100,3 +106,19 @@ body {
 .animate-slide-in-right {
   animation: slide-in-right 0.2s ease-out;
 }
+
+/* Uwazi loader — cycles highlight through 6 grid positions */
+@keyframes uwazi-loader {
+  0%, 100%   { opacity: 1; }
+  16.67%     { opacity: 1; }
+  16.68%     { opacity: 0; }
+}
+.uwazi-loader-cell {
+  opacity: 0.15;
+}
+.uwazi-loader-cell:nth-child(1) { animation: uwazi-loader 1.2s ease-in-out infinite 0s; }
+.uwazi-loader-cell:nth-child(2) { animation: uwazi-loader 1.2s ease-in-out infinite 0.2s; }
+.uwazi-loader-cell:nth-child(3) { animation: uwazi-loader 1.2s ease-in-out infinite 0.4s; }
+.uwazi-loader-cell:nth-child(4) { animation: uwazi-loader 1.2s ease-in-out infinite 0.6s; }
+.uwazi-loader-cell:nth-child(5) { animation: uwazi-loader 1.2s ease-in-out infinite 0.8s; }
+.uwazi-loader-cell:nth-child(6) { animation: uwazi-loader 1.2s ease-in-out infinite 1.0s; }

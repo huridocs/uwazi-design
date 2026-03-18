@@ -37,17 +37,17 @@ export function FloatingMenu({ x, y, text }: FloatingMenuProps) {
           <Link2 size={14} />
           Create Reference
         </button>
-        <div className="w-px h-4 bg-white/20" />
+        <div className="w-px h-4 bg-white/20" aria-hidden="true" />
         <button
           onClick={handleCopy}
           className="p-1.5 text-white/70 rounded-md hover:bg-white/15 hover:text-white transition-colors"
-          title="Copy text"
+          aria-label="Copy text"
         >
           <Copy size={14} />
         </button>
         <button
           className="p-1.5 text-white/70 rounded-md hover:bg-white/15 hover:text-white transition-colors"
-          title="Highlight"
+          aria-label="Highlight text"
         >
           <Highlighter size={14} />
         </button>

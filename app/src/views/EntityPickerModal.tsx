@@ -85,7 +85,7 @@ export function EntityPickerModal() {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay" role="dialog" aria-modal="true" aria-label="Select entity">
       <div className="bg-paper rounded-lg shadow-xl w-full max-w-lg max-h-[80vh] flex flex-col animate-fade-in-up">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">

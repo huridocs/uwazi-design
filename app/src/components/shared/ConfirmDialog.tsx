@@ -22,7 +22,7 @@ export function ConfirmDialog({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
       <div className="bg-paper rounded-lg shadow-xl w-full max-w-md p-6 animate-fade-in-up">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -31,7 +31,7 @@ export function ConfirmDialog({
                 <AlertTriangle size={20} className="text-seal" />
               </div>
             )}
-            <h3 className="text-lg font-semibold text-ink">{title}</h3>
+            <h3 id="confirm-dialog-title" className="text-lg font-semibold text-ink">{title}</h3>
           </div>
           <button
             onClick={onCancel}

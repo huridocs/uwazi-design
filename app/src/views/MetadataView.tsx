@@ -1,12 +1,15 @@
 import { useState } from "react";
+import { useAtom } from "jotai";
 import { Download, Eye, Search, ChevronRight } from "lucide-react";
 import { SplitView } from "../components/layout/SplitView";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { DocMeta } from "../components/layout/DocMeta";
 import { MetadataCard, Property, PropertyRow } from "../components/metadata/MetadataCard";
-import { metadataFields, pdfMetadata, MetadataField } from "../data/metadata";
-import { currentDocument } from "../data/document";
+import { TemplateStructure } from "../components/references/TemplateStructure";
+import { metadataFieldsByLanguage, pdfMetadataByLanguage, MetadataField } from "../data/metadata";
+import { documentsByLanguage } from "../data/document";
+import { languageAtom, type Language } from "../atoms/language";
 
 interface MetadataViewProps {
   tabs: { id: string; label: string; count?: number }[];
@@ -16,6 +19,7 @@ interface MetadataViewProps {
 
 export function MetadataView({ tabs, activeTab, onTabChange }: MetadataViewProps) {
   const [editing, setEditing] = useState(false);
+  const [language, setLanguage] = useAtom(languageAtom);
 
   return (
     <SplitView
@@ -27,6 +31,8 @@ export function MetadataView({ tabs, activeTab, onTabChange }: MetadataViewProps
             onChange={onTabChange}
             languages={["EN", "ES", "FR", "MY"]}
             availableLanguages={["EN", "ES", "FR"]}
+            activeLanguage={language}
+            onLanguageChange={(lang) => setLanguage(lang as Language)}
           />
 
           {editing ? (
@@ -47,6 +53,10 @@ export function MetadataView({ tabs, activeTab, onTabChange }: MetadataViewProps
 /* ── Read Mode ── */
 
 function MetadataReadBody({ onEdit }: { onEdit: () => void }) {
+  const language = useAtom(languageAtom)[0];
+  const fields = metadataFieldsByLanguage[language];
+  const pdf = pdfMetadataByLanguage[language];
+
   return (
     <>
       <DocMeta />
@@ -64,14 +74,14 @@ function MetadataReadBody({ onEdit }: { onEdit: () => void }) {
         <MetadataCard
           title="PDF Metadata"
         >
-          <Property label="Name" value={pdfMetadata.name} />
+          <Property label="Name" value={pdf.name} />
           <PropertyRow>
-            <div className="flex-1"><Property label="Type" value={pdfMetadata.type} /></div>
-            <div className="flex-1"><Property label="Size" value={pdfMetadata.size} /></div>
+            <div className="flex-1"><Property label="Type" value={pdf.type} /></div>
+            <div className="flex-1"><Property label="Size" value={pdf.size} /></div>
           </PropertyRow>
           <PropertyRow>
-            <div className="flex-1"><Property label="Last Edited" value={pdfMetadata.lastEdited} /></div>
-            <div className="flex-1"><Property label="Added" value={pdfMetadata.added} /></div>
+            <div className="flex-1"><Property label="Last Edited" value={pdf.lastEdited} /></div>
+            <div className="flex-1"><Property label="Added" value={pdf.added} /></div>
           </PropertyRow>
           <div className="flex items-center justify-between pt-2">
             <button className="px-3 py-1 text-xs font-medium text-ink rounded border border-border hover:bg-warm transition-colors flex items-center gap-1.5">
@@ -83,7 +93,7 @@ function MetadataReadBody({ onEdit }: { onEdit: () => void }) {
           </div>
         </MetadataCard>
 
-        {metadataFields.map((field) => (
+        {fields.map((field) => (
           <MetadataCard key={field.id} title={field.label}>
             {field.type === "multiline" ? (
               <p className="text-sm font-medium text-ink leading-relaxed">{field.value}</p>
@@ -133,8 +143,12 @@ function MetadataReadBody({ onEdit }: { onEdit: () => void }) {
 /* ── Edit Mode ── */
 
 function MetadataEditBody({ onCancel, onSave }: { onCancel: () => void; onSave: () => void }) {
-  const [title, setTitle] = useState(currentDocument.title);
-  const [fields, setFields] = useState<MetadataField[]>(metadataFields);
+  const language = useAtom(languageAtom)[0];
+  const doc = documentsByLanguage[language];
+  const initialFields = metadataFieldsByLanguage[language];
+  const pdf = pdfMetadataByLanguage[language];
+  const [title, setTitle] = useState(doc.title);
+  const [fields, setFields] = useState<MetadataField[]>(initialFields);
   const [showPreview, setShowPreview] = useState(true);
   const [showFileSize, setShowFileSize] = useState(true);
   const [showLastEdit, setShowLastEdit] = useState(true);
@@ -172,7 +186,7 @@ function MetadataEditBody({ onCancel, onSave }: { onCancel: () => void; onSave: 
         <EditSection label="Document*">
           <div className="flex items-center gap-2">
             <div className="flex-1 px-3 py-2 text-sm text-ink bg-paper border border-border rounded-md truncate">
-              Choose file &nbsp; {pdfMetadata.name}
+              Choose file &nbsp; {pdf.name}
             </div>
             <button className="px-3 py-1.5 text-xs font-medium text-seal rounded-md hover:bg-seal-tint transition-colors">
               Remove file
@@ -185,8 +199,8 @@ function MetadataEditBody({ onCancel, onSave }: { onCancel: () => void; onSave: 
 
           {/* Inline PDF metadata */}
           <div className="mt-3 space-y-2">
-            <EditInput label="Name" value={pdfMetadata.name} />
-            <EditInput label="Type" value={pdfMetadata.type} />
+            <EditInput label="Name" value={pdf.name} />
+            <EditInput label="Type" value={pdf.type} />
             <div className="flex items-center gap-4 mt-2">
               <Checkbox checked={showFileSize} onChange={setShowFileSize} label="Show file size" />
               <Checkbox checked={showLastEdit} onChange={setShowLastEdit} label="Show last edit" />
@@ -404,65 +418,81 @@ function CountryPicker() {
 const drawerTabs = [
   { id: "files", label: "Files", count: 4 },
   { id: "relationships", label: "Relationships", count: 14 },
+  { id: "template", label: "Template" },
 ];
 
 function MetadataDrawer() {
+  const [activeDrawerTab, setActiveDrawerTab] = useState("files");
+  const language = useAtom(languageAtom)[0];
+  const doc = documentsByLanguage[language];
+  const pdf = pdfMetadataByLanguage[language];
+
   return (
     <div className="flex flex-col h-full">
-      <DrawerTabs tabs={drawerTabs} activeId="files" onChange={() => {}} />
+      <DrawerTabs tabs={drawerTabs} activeId={activeDrawerTab} onChange={setActiveDrawerTab} />
 
-      <div className="flex-1 overflow-auto px-3 py-3 space-y-3">
-        <DrawerFileRow
-          title={currentDocument.title}
-          filename="Velasquez-Rodriguez_v_Honduras_Judgment_1987.pdf"
-          type="PDF"
-          size="114 KB"
-          starred
-          thumbnail={
-            <div className="w-20 h-full bg-warm flex items-center justify-center rounded-l-md shrink-0">
-              <div className="bg-paper rounded shadow-sm w-14 h-16 flex items-center justify-center">
-                <span className="text-[8px] text-ink-muted">PDF</span>
-              </div>
-            </div>
-          }
-        />
-        <DrawerFileRow
-          title="Audiencia — Velásquez Rodríguez"
-          filename="audiencia_velasquez_rodriguez_1987.wav"
-          type="WAV"
-          size="18.7 MB"
-          thumbnail={
-            <div className="w-20 h-full bg-warm flex items-center justify-center rounded-l-md shrink-0">
-              <div className="w-10 h-10 rounded-full bg-parchment flex items-center justify-center shadow-sm">
-                <div className="w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[9px] border-l-ink ml-0.5" />
-              </div>
-            </div>
-          }
-        />
-        <DrawerFileRow
-          title="Video — Audiencia pública CorteIDH"
-          filename="https://youtube.com/watch?v=iachr-velasquez"
-          type="Link"
-          size="—"
-          thumbnail={
-            <div className="w-20 h-full bg-seal flex items-center justify-center rounded-l-md shrink-0">
-              <span className="text-[9px] font-bold text-white">YouTube</span>
-            </div>
-          }
-        />
-      </div>
+      {activeDrawerTab === "template" ? (
+        <TemplateStructure />
+      ) : activeDrawerTab === "files" ? (
+        <>
+          <div className="flex-1 overflow-auto px-3 py-3 space-y-3">
+            <DrawerFileRow
+              title={doc.title}
+              filename={pdf.name}
+              type={pdf.type}
+              size={pdf.size}
+              starred
+              thumbnail={
+                <div className="w-20 h-full bg-warm flex items-center justify-center rounded-l-md shrink-0">
+                  <div className="bg-paper rounded shadow-sm w-14 h-16 flex items-center justify-center">
+                    <span className="text-[8px] text-ink-muted">PDF</span>
+                  </div>
+                </div>
+              }
+            />
+            <DrawerFileRow
+              title="Audiencia — Velásquez Rodríguez"
+              filename="audiencia_velasquez_rodriguez_1987.wav"
+              type="WAV"
+              size="18.7 MB"
+              thumbnail={
+                <div className="w-20 h-full bg-warm flex items-center justify-center rounded-l-md shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-parchment flex items-center justify-center shadow-sm">
+                    <div className="w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[9px] border-l-ink ml-0.5" />
+                  </div>
+                </div>
+              }
+            />
+            <DrawerFileRow
+              title="Video — Audiencia pública CorteIDH"
+              filename="https://youtube.com/watch?v=iachr-velasquez"
+              type="Link"
+              size="—"
+              thumbnail={
+                <div className="w-20 h-full bg-seal flex items-center justify-center rounded-l-md shrink-0">
+                  <span className="text-[9px] font-bold text-white">YouTube</span>
+                </div>
+              }
+            />
+          </div>
 
-      <div
-        className="flex items-center gap-3 h-12 px-3 bg-paper shrink-0"
-        style={{ borderTop: "1px solid var(--border-primary)" }}
-      >
-        <button className="px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
-          Add file
-        </button>
-        <span className="text-xs text-ink-muted">
-          Learn more about <span className="font-bold underline">files</span>
-        </span>
-      </div>
+          <div
+            className="flex items-center gap-3 h-12 px-3 bg-paper shrink-0"
+            style={{ borderTop: "1px solid var(--border-primary)" }}
+          >
+            <button className="px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
+              Add file
+            </button>
+            <span className="text-xs text-ink-muted">
+              Learn more about <span className="font-bold underline">files</span>
+            </span>
+          </div>
+        </>
+      ) : (
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-sm text-ink-muted capitalize">{activeDrawerTab} content</p>
+        </div>
+      )}
     </div>
   );
 }

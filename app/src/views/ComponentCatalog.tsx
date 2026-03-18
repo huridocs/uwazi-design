@@ -15,151 +15,272 @@ import { HighlightCard } from "../components/references/HighlightCard";
 import { DensityCard } from "../components/references/DensityCard";
 import { RelatedDocCard } from "../components/references/RelatedDocCard";
 import { FileTable } from "../components/files/FileTable";
-import { ConfirmDialog } from "../components/shared/ConfirmDialog";
 import { DrawerActionBar } from "../components/references/DrawerActionBar";
 import { FiltersRow } from "../components/references/FiltersRow";
 import { GroupedCard } from "../components/references/GroupedCard";
 import { RefRow } from "../components/references/RefRow";
 import { ActionBar } from "../components/viewer/ActionBar";
+import { UwaziLoader } from "../components/shared/UwaziLoader";
 
-// Icons for MetadataCard
-import { FileText } from "lucide-react";
+// Icons
+import { FileText, Pencil, Download, Trash2, Share2, Plus } from "lucide-react";
 
 // Data
 import { references } from "../data/references";
 import { files } from "../data/files";
 
-const sections = [
-  { id: "style-guide", label: "Style Guide" },
-  { id: "elements", label: "Elements" },
-  { id: "components", label: "Components" },
+// --- Sidebar structure ---
+
+interface SidebarGroup {
+  label: string;
+  items: { id: string; label: string }[];
+}
+
+const sidebarGroups: SidebarGroup[] = [
+  {
+    label: "Style Guide",
+    items: [
+      { id: "sg-colors", label: "Colors" },
+      { id: "sg-typography", label: "Typography" },
+      { id: "sg-shadows", label: "Shadows" },
+      { id: "sg-radii", label: "Border Radius" },
+      { id: "sg-spacing", label: "Spacing" },
+    ],
+  },
+  {
+    label: "Elements",
+    items: [
+      { id: "el-entity-pill", label: "EntityPill" },
+      { id: "el-page-tag", label: "PageTag" },
+      { id: "el-count-badge", label: "CountBadge" },
+      { id: "el-buttons", label: "Buttons" },
+    ],
+  },
+  {
+    label: "Entity View — Layout",
+    items: [
+      { id: "ev-main-tabs", label: "MainTabs" },
+      { id: "ev-segmented-tabs", label: "SegmentedTabs" },
+      { id: "ev-drawer-tabs", label: "DrawerTabs" },
+    ],
+  },
+  {
+    label: "Entity View — Document",
+    items: [
+      { id: "ev-floating-menu", label: "FloatingMenu" },
+      { id: "ev-action-bar", label: "ActionBar" },
+      { id: "ev-hover-expand", label: "HoverExpand" },
+    ],
+  },
+  {
+    label: "Entity View — References",
+    items: [
+      { id: "ev-search-bar", label: "SearchBar" },
+      { id: "ev-filters-row", label: "FiltersRow" },
+      { id: "ev-ref-row", label: "RefRow" },
+      { id: "ev-grouped-card", label: "GroupedCard" },
+      { id: "ev-highlight-card", label: "HighlightCard" },
+      { id: "ev-density-card", label: "DensityCard" },
+      { id: "ev-related-doc", label: "RelatedDocCard" },
+    ],
+  },
+  {
+    label: "Entity View — Metadata",
+    items: [
+      { id: "ev-metadata-card", label: "MetadataCard" },
+    ],
+  },
+  {
+    label: "Entity View — Files",
+    items: [
+      { id: "ev-file-table", label: "FileTable" },
+    ],
+  },
+  {
+    label: "Entity View — Drawer",
+    items: [
+      { id: "ev-drawer-action-bar", label: "DrawerActionBar" },
+    ],
+  },
+  {
+    label: "Shared",
+    items: [
+      { id: "sh-confirm-dialog", label: "ConfirmDialog" },
+      { id: "sh-toast", label: "Toast" },
+      { id: "sh-uwazi-loader", label: "UwaziLoader" },
+    ],
+  },
 ];
 
-export function ComponentCatalog() {
-  const [activeSection, setActiveSection] = useState("style-guide");
-  const contentRef = useRef<HTMLDivElement>(null);
-  const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
+const allItemIds = sidebarGroups.flatMap((g) => g.items.map((i) => i.id));
 
-  // IntersectionObserver for scroll tracking
+export function ComponentCatalog() {
+  const [activeId, setActiveId] = useState(allItemIds[0]);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<Map<string, HTMLElement>>(new Map());
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   useEffect(() => {
+    if (!mounted) return;
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
+            const id = entry.target.id;
+            setActiveId(id);
+            sidebarBtnRefs.current.get(id)?.scrollIntoView({ behavior: "smooth", block: "center" });
             break;
           }
         }
       },
       {
         root: contentRef.current,
-        rootMargin: "-10% 0px -80% 0px",
+        rootMargin: "-5% 0px -85% 0px",
         threshold: 0,
       }
     );
 
-    sectionRefs.current.forEach((el) => observer.observe(el));
+    itemRefs.current.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, []);
+  }, [mounted]);
 
-  const scrollToSection = (id: string) => {
-    sectionRefs.current.get(id)?.scrollIntoView({ behavior: "smooth" });
+  const sidebarBtnRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const [blinkId, setBlinkId] = useState<string | null>(null);
+
+  const scrollTo = (id: string) => {
+    itemRefs.current.get(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    sidebarBtnRefs.current.get(id)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (activeId === id) {
+      // Force re-blink by toggling off then on
+      setBlinkId(null);
+      requestAnimationFrame(() => {
+        setBlinkId(id);
+        setTimeout(() => setBlinkId(null), 500);
+      });
+    }
   };
 
-  const registerRef = (id: string) => (el: HTMLElement | null) => {
-    if (el) sectionRefs.current.set(id, el);
+  const reg = (id: string) => (el: HTMLElement | null) => {
+    if (el) itemRefs.current.set(id, el);
   };
 
   return (
     <div className="flex-1 flex overflow-hidden">
       {/* Sidebar */}
-      <nav className="w-[200px] shrink-0 bg-paper border-r border-border/60 py-4 px-3 flex flex-col gap-1">
-        <h2 className="text-xs font-bold text-ink-tertiary uppercase tracking-wider px-2 mb-2">
-          Catalog
+      <nav className="w-[220px] shrink-0 bg-paper border-r border-border/60 py-4 px-3 overflow-y-auto">
+        <h2 className="text-[10px] font-bold text-ink-muted uppercase tracking-widest px-2 mb-3">
+          Component Catalog
         </h2>
-        {sections.map((s) => (
-          <button
-            key={s.id}
-            onClick={() => scrollToSection(s.id)}
-            className={`text-left px-2 py-1.5 text-sm rounded-md transition-colors ${
-              activeSection === s.id
-                ? "bg-vellum text-ink font-medium"
-                : "text-ink-tertiary hover:text-ink-secondary hover:bg-warm"
-            }`}
-          >
-            {s.label}
-          </button>
+        {sidebarGroups.map((group) => (
+          <div key={group.label} className="mb-3">
+            <span className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider px-2">
+              {group.label}
+            </span>
+            <div className="flex flex-col mt-1">
+              {group.items.map((item) => (
+                <button
+                  key={item.id}
+                  ref={(el) => { if (el) sidebarBtnRefs.current.set(item.id, el); }}
+                  onClick={() => scrollTo(item.id)}
+                  className={`text-left px-2 py-1 text-xs rounded transition-colors ${
+                    activeId === item.id
+                      ? "bg-vellum text-ink font-medium"
+                      : "text-ink-tertiary hover:text-ink-secondary hover:bg-warm"
+                  } ${blinkId === item.id ? "flash-highlight" : ""}`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
         ))}
       </nav>
 
       {/* Content */}
       <div ref={contentRef} className="flex-1 overflow-y-auto px-8 py-6">
-        <div className="max-w-3xl mx-auto flex flex-col gap-12">
-          {/* Style Guide */}
-          <section id="style-guide" ref={registerRef("style-guide")}>
-            <h2 className="text-lg font-bold text-ink mb-6">Style Guide</h2>
-            <StyleGuide />
-          </section>
+        <div className="max-w-3xl mx-auto flex flex-col gap-10">
 
-          {/* Elements */}
-          <section id="elements" ref={registerRef("elements")}>
+          {/* ==================== STYLE GUIDE ==================== */}
+          <div ref={(el) => {
+            if (!el) return;
+            // Register StyleGuide section IDs into itemRefs
+            const sgIds = ["sg-colors", "sg-typography", "sg-shadows", "sg-radii", "sg-spacing"];
+            sgIds.forEach((id) => {
+              const node = el.querySelector(`#${id}`);
+              if (node) itemRefs.current.set(id, node as HTMLElement);
+            });
+          }}>
+            <StyleGuide />
+          </div>
+
+          {/* ==================== ELEMENTS ==================== */}
+          <section>
             <h2 className="text-lg font-bold text-ink mb-6">Elements</h2>
             <div className="flex flex-col gap-6">
-              <CatalogEntry
-                name="EntityPill"
-                description="Colored badge showing entity type with dot indicator"
-                code={`<EntityPill typeId="person" />
+              <div id="el-entity-pill" ref={reg("el-entity-pill")}>
+                <CatalogEntry
+                  name="EntityPill"
+                  description="Colored badge showing entity type with dot indicator"
+                  code={`<EntityPill typeId="person" />
 <EntityPill typeId="court_case" />
 <EntityPill typeId="country" label="Honduras" />
 <EntityPill typeId="violation" size="md" />`}
-                tailwind="rounded-full px-2 py-0.5 text-xs font-medium"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <EntityPill typeId="person" />
-                  <EntityPill typeId="court_case" />
-                  <EntityPill typeId="country" label="Honduras" />
-                  <EntityPill typeId="violation" size="md" />
-                  <EntityPill typeId="right" />
-                  <EntityPill typeId="judgment" />
-                  <EntityPill typeId="organization" />
-                  <EntityPill typeId="document" />
-                </div>
-              </CatalogEntry>
+                  tailwind="rounded-full px-2 py-0.5 text-xs font-medium"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <EntityPill typeId="person" />
+                    <EntityPill typeId="court_case" />
+                    <EntityPill typeId="country" label="Honduras" />
+                    <EntityPill typeId="violation" size="md" />
+                    <EntityPill typeId="right" />
+                    <EntityPill typeId="judgment" />
+                    <EntityPill typeId="organization" />
+                    <EntityPill typeId="document" />
+                  </div>
+                </CatalogEntry>
+              </div>
 
-              <CatalogEntry
-                name="PageTag"
-                description="Monospaced page number badge for document references"
-                code={`<PageTag page={3} />
+              <div id="el-page-tag" ref={reg("el-page-tag")}>
+                <CatalogEntry
+                  name="PageTag"
+                  description="Monospaced page number badge for document references"
+                  code={`<PageTag page={3} />
 <PageTag page={12} onClick={() => {}} />`}
-                tailwind="font-mono text-xs bg-vellum rounded px-1.5 py-0.5"
-              >
-                <div className="flex items-center gap-2">
-                  <PageTag page={1} />
-                  <PageTag page={3} />
-                  <PageTag page={12} />
-                  <PageTag page={42} />
-                </div>
-              </CatalogEntry>
+                  tailwind="font-mono text-xs bg-vellum rounded px-1.5 py-0.5"
+                >
+                  <div className="flex items-center gap-2">
+                    <PageTag page={1} />
+                    <PageTag page={3} />
+                    <PageTag page={12} />
+                    <PageTag page={42} />
+                  </div>
+                </CatalogEntry>
+              </div>
 
-              <CatalogEntry
-                name="CountBadge"
-                description="Small rounded badge displaying a numeric count"
-                code={`<CountBadge count={5} />
+              <div id="el-count-badge" ref={reg("el-count-badge")}>
+                <CatalogEntry
+                  name="CountBadge"
+                  description="Small rounded badge displaying a numeric count"
+                  code={`<CountBadge count={5} />
 <CountBadge count={12} />
 <CountBadge count={128} />`}
-                tailwind="min-w-[20px] h-5 rounded-full bg-parchment text-ink-tertiary"
-              >
-                <div className="flex items-center gap-3">
-                  <CountBadge count={3} />
-                  <CountBadge count={12} />
-                  <CountBadge count={128} />
-                </div>
-              </CatalogEntry>
+                  tailwind="min-w-[20px] h-5 rounded-full bg-parchment text-ink-tertiary"
+                >
+                  <div className="flex items-center gap-3">
+                    <CountBadge count={3} />
+                    <CountBadge count={12} />
+                    <CountBadge count={128} />
+                  </div>
+                </CatalogEntry>
+              </div>
 
-              <CatalogEntry
-                name="Button patterns"
-                description="Primary, secondary, ghost, and danger button styles"
-                code={`{/* Primary */}
+              <div id="el-buttons" ref={reg("el-buttons")}>
+                <CatalogEntry
+                  name="Buttons"
+                  description="Primary, secondary, ghost, danger, compact, and icon button styles"
+                  code={`{/* Primary */}
 <button className="px-4 py-2 text-sm font-medium rounded-md bg-ink text-white hover:bg-ink/90">
   Primary
 </button>
@@ -181,94 +302,63 @@ export function ComponentCatalog() {
 
 {/* Compact (navbar) */}
 <button className="flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium text-ink-secondary rounded-md bg-warm border border-border-soft/60 hover:bg-parchment">
-  Compact
+  <BookOpen size={14} /> Compact
+</button>
+
+{/* Icon + label (secondary) */}
+<button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm">
+  <Pencil size={12} /> Edit
+</button>
+
+{/* Icon + label (danger) */}
+<button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-seal rounded-md hover:bg-seal/90">
+  <Trash2 size={12} /> Delete
+</button>
+
+{/* Icon + label (add) */}
+<button className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm">
+  <Plus size={12} /> Add file
 </button>`}
-              >
-                <div className="flex flex-wrap items-center gap-3">
-                  <button className="px-4 py-2 text-sm font-medium rounded-md bg-ink text-white hover:bg-ink/90 transition-colors">
-                    Primary
-                  </button>
-                  <button className="px-4 py-2 text-sm font-medium rounded-md border border-border text-ink-secondary hover:bg-parchment transition-colors">
-                    Secondary
-                  </button>
-                  <button className="px-4 py-2 text-sm font-medium rounded-md bg-seal text-white hover:bg-seal/90 transition-colors">
-                    Delete
-                  </button>
-                  <button className="px-3 py-1.5 text-xs font-medium text-ink-tertiary hover:text-ink-secondary hover:bg-warm rounded-md transition-colors">
-                    Ghost
-                  </button>
-                  <button className="flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium text-ink-secondary rounded-md bg-warm border border-border-soft/60 hover:bg-parchment transition-colors">
-                    Compact
-                  </button>
-                </div>
-              </CatalogEntry>
+                >
+                  <div className="flex flex-col gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button className="px-4 py-2 text-sm font-medium rounded-md bg-ink text-white hover:bg-ink/90 transition-colors">Primary</button>
+                      <button className="px-4 py-2 text-sm font-medium rounded-md border border-border text-ink-secondary hover:bg-parchment transition-colors">Secondary</button>
+                      <button className="px-4 py-2 text-sm font-medium rounded-md bg-seal text-white hover:bg-seal/90 transition-colors">Delete</button>
+                      <button className="px-3 py-1.5 text-xs font-medium text-ink-tertiary hover:text-ink-secondary hover:bg-warm rounded-md transition-colors">Ghost</button>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
+                        <Pencil size={12} /> Edit
+                      </button>
+                      <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
+                        <Share2 size={12} /> Share
+                      </button>
+                      <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
+                        <Download size={12} /> Download
+                      </button>
+                      <button className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
+                        <Plus size={12} /> Add file
+                      </button>
+                      <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-seal rounded-md hover:bg-seal/90 transition-colors">
+                        <Trash2 size={12} /> Delete
+                      </button>
+                    </div>
+                  </div>
+                </CatalogEntry>
+              </div>
             </div>
           </section>
 
-          {/* Components */}
-          <section id="components" ref={registerRef("components")}>
-            <h2 className="text-lg font-bold text-ink mb-6">Components</h2>
+          {/* ==================== ENTITY VIEW — LAYOUT ==================== */}
+          <section>
+            <h2 className="text-lg font-bold text-ink mb-6">Entity View — Layout</h2>
             <div className="flex flex-col gap-6">
-              <CatalogEntry
-                name="MetadataCard + Property"
-                description="Card container with label/value property pairs"
-                code={`<MetadataCard title="Case details" icon={<FileText size={14} className="text-ink-tertiary" />}>
-  <Property label="Country" value="Honduras" />
-  <PropertyRow>
-    <Property label="Date" value="June 26, 1987" />
-    <Property label="Type" value="Judgment" />
-  </PropertyRow>
-  <Property label="Mechanism" value="Corte IDH" linked />
-</MetadataCard>`}
-              >
-                <div className="w-full max-w-sm">
-                  <MetadataCard title="Case details" icon={<FileText size={14} className="text-ink-tertiary" />}>
-                    <Property label="Country" value="Honduras" />
-                    <PropertyRow>
-                      <Property label="Date" value="June 26, 1987" />
-                      <Property label="Type" value="Judgment" />
-                    </PropertyRow>
-                    <Property label="Mechanism" value="Corte IDH" linked />
-                  </MetadataCard>
-                </div>
-              </CatalogEntry>
-
-              <CatalogEntry
-                name="SegmentedTabs"
-                description="Pill-style segmented control with optional counts"
-                code={`<SegmentedTabs
-  tabs={[
-    { id: "all", label: "All", count: 12 },
-    { id: "docs", label: "Documents", count: 4 },
-    { id: "refs", label: "References", count: 8 },
-  ]}
-  activeId="all"
-  onChange={(id) => {}}
-/>`}
-              >
-                <SegmentedTabsDemo />
-              </CatalogEntry>
-
-              <CatalogEntry
-                name="DrawerTabs"
-                description="Bordered tab group used in side drawers"
-                code={`<DrawerTabs
-  tabs={[
-    { id: "metadata", label: "Metadata" },
-    { id: "references", label: "References", count: 12 },
-    { id: "toc", label: "TOC" },
-  ]}
-  activeId="metadata"
-  onChange={(id) => {}}
-/>`}
-              >
-                <DrawerTabsDemo />
-              </CatalogEntry>
-
-              <CatalogEntry
-                name="MainTabs"
-                description="Primary navigation tabs with back arrow and language badges"
-                code={`<MainTabs
+              <div id="ev-main-tabs" ref={reg("ev-main-tabs")}>
+                <CatalogEntry
+                  name="MainTabs"
+                  description="Primary navigation tabs with back arrow"
+                  code={`<MainTabs
   tabs={[
     { id: "metadata", label: "Metadata" },
     { id: "document", label: "Document" },
@@ -278,182 +368,302 @@ export function ComponentCatalog() {
   activeId="document"
   onChange={(id) => {}}
 />`}
-              >
-                <MainTabsDemo />
-              </CatalogEntry>
+                >
+                  <MainTabsDemo />
+                </CatalogEntry>
+              </div>
 
-              <CatalogEntry
-                name="SearchBar"
-                description="Search input with icon, connected to filter atoms"
-                code={`<SearchBar />
+              <div id="ev-segmented-tabs" ref={reg("ev-segmented-tabs")}>
+                <CatalogEntry
+                  name="SegmentedTabs"
+                  description="Pill-style segmented control with optional counts"
+                  code={`<SegmentedTabs
+  tabs={[
+    { id: "all", label: "All", count: 12 },
+    { id: "docs", label: "Documents", count: 4 },
+    { id: "refs", label: "References", count: 8 },
+  ]}
+  activeId="all"
+  onChange={(id) => {}}
+/>`}
+                >
+                  <SegmentedTabsDemo />
+                </CatalogEntry>
+              </div>
 
-{/* Uses searchQueryAtom from atoms/filters.ts */}
-{/* Wrap in isolated <Provider> to avoid shared state */}`}
-              >
-                <IsolatedSearchBar />
-              </CatalogEntry>
+              <div id="ev-drawer-tabs" ref={reg("ev-drawer-tabs")}>
+                <CatalogEntry
+                  name="DrawerTabs"
+                  description="Bordered tab group used in side drawers"
+                  code={`<DrawerTabs
+  tabs={[
+    { id: "metadata", label: "Metadata" },
+    { id: "references", label: "References", count: 12 },
+    { id: "toc", label: "TOC" },
+  ]}
+  activeId="metadata"
+  onChange={(id) => {}}
+/>`}
+                >
+                  <DrawerTabsDemo />
+                </CatalogEntry>
+              </div>
+            </div>
+          </section>
 
-              <CatalogEntry
-                name="FiltersRow"
-                description="View mode toggle + sort dropdown + collapse/expand controls"
-                code={`<FiltersRow
+          {/* ==================== ENTITY VIEW — DOCUMENT ==================== */}
+          <section>
+            <h2 className="text-lg font-bold text-ink mb-6">Entity View — Document</h2>
+            <div className="flex flex-col gap-6">
+              <div id="ev-floating-menu" ref={reg("ev-floating-menu")}>
+                <CatalogEntry
+                  name="FloatingMenu"
+                  description="Context menu on text selection in document viewer"
+                  code={`<FloatingMenu x={200} y={100} text="selected text" />
+
+{/* Dark bg-ink bar with Create Reference, Copy, Highlight buttons */}`}
+                >
+                  <div className="relative h-16 w-full flex items-center justify-center">
+                    <div className="flex items-center gap-0.5 bg-ink rounded-md shadow-xl px-1 py-1">
+                      <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white rounded-md hover:bg-white/15 transition-colors">Create Reference</button>
+                      <div className="w-px h-4 bg-white/20" />
+                      <button className="p-1.5 text-white/70 rounded-md hover:bg-white/15 hover:text-white transition-colors">Copy</button>
+                      <button className="p-1.5 text-white/70 rounded-md hover:bg-white/15 hover:text-white transition-colors">Highlight</button>
+                    </div>
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="ev-action-bar" ref={reg("ev-action-bar")}>
+                <CatalogEntry
+                  name="ActionBar"
+                  description="Document viewer footer with OCR button and page navigation"
+                  code={`<ActionBar numPages={15} onScrollToPage={(page) => {}} />`}
+                >
+                  <IsolatedActionBar />
+                </CatalogEntry>
+              </div>
+
+              <div id="ev-hover-expand" ref={reg("ev-hover-expand")}>
+                <CatalogEntry
+                  name="HoverExpand"
+                  description="Tooltip card on reference highlight hover"
+                  code={`<HoverExpand reference={reference} x={200} y={100} />
+
+{/* Fixed-positioned, pointer-events-none */}`}
+                >
+                  <div className="relative w-full flex justify-center">
+                    <div className="bg-paper border border-border rounded-md shadow-lg px-3 py-2.5 max-w-xs">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <EntityPill typeId="person" label="Juan Carlos Abella" size="sm" />
+                        <span className="text-[10px] text-ink-muted capitalize">mentions</span>
+                      </div>
+                      <p className="text-xs text-ink-secondary leading-relaxed line-clamp-3">
+                        "Juan Carlos Abella and other persons were detained on January 23, 1989..."
+                      </p>
+                    </div>
+                  </div>
+                </CatalogEntry>
+              </div>
+            </div>
+          </section>
+
+          {/* ==================== ENTITY VIEW — REFERENCES ==================== */}
+          <section>
+            <h2 className="text-lg font-bold text-ink mb-6">Entity View — References</h2>
+            <div className="flex flex-col gap-6">
+              <div id="ev-search-bar" ref={reg("ev-search-bar")}>
+                <CatalogEntry
+                  name="SearchBar"
+                  description="Search input with icon, connected to filter atoms"
+                  code={`<SearchBar />
+
+{/* Uses searchQueryAtom from atoms/filters.ts */}`}
+                >
+                  <IsolatedSearchBar />
+                </CatalogEntry>
+              </div>
+
+              <div id="ev-filters-row" ref={reg("ev-filters-row")}>
+                <CatalogEntry
+                  name="FiltersRow"
+                  description="View mode toggle + sort dropdown + collapse/expand controls"
+                  code={`<FiltersRow
   onCollapseAll={() => {}}
   onExpandAll={() => {}}
-/>
-
-{/* Uses viewModeAtom, sortOrderAtom, expandedGroupCountAtom */}
-{/* Wrap in isolated <Provider> to avoid shared state */}`}
-              >
-                <IsolatedFiltersRow />
-              </CatalogEntry>
-
-              <CatalogEntry
-                name="HighlightCard"
-                description="Reference card with highlighted text snippet and entity pill"
-                code={`<HighlightCard reference={reference} />
-
-{/* Props: { reference: Reference } */}
-{/* Shows EntityPill, PageTag, and quoted text */}`}
-              >
-                <div className="w-full max-w-md">
-                  <HighlightCard reference={references[0]} />
-                </div>
-              </CatalogEntry>
-
-              <CatalogEntry
-                name="DensityCard"
-                description="Bar chart showing reference density across document pages"
-                code={`<DensityCard
-  references={references}
-  totalPages={15}
 />`}
-              >
-                <div className="w-full max-w-md bg-paper border border-border/40 rounded-md">
-                  <DensityCard references={references} totalPages={15} />
-                </div>
-              </CatalogEntry>
+                >
+                  <IsolatedFiltersRow />
+                </CatalogEntry>
+              </div>
 
-              <CatalogEntry
-                name="RelatedDocCard"
-                description="Card showing a related document with entity type and reference count"
-                code={`<RelatedDocCard
-  title="Case 12.045 — Pueblo Bello Massacre"
-  entityTypeId="court_case"
-  referenceCount={7}
+              <div id="ev-ref-row" ref={reg("ev-ref-row")}>
+                <CatalogEntry
+                  name="RefRow"
+                  description="Single reference entry with entity pill, page tag, text preview"
+                  code={`<RefRow
+  reference={reference}
+  onDelete={(id) => {}}
 />`}
-              >
-                <div className="w-full max-w-md">
-                  <RelatedDocCard title="Case 12.045 — Pueblo Bello Massacre" entityTypeId="court_case" referenceCount={7} />
-                  <div className="h-2" />
-                  <RelatedDocCard title="Right to Life — Article 4" entityTypeId="right" referenceCount={3} />
-                </div>
-              </CatalogEntry>
+                >
+                  <div className="w-full max-w-md border border-border/40 rounded-md overflow-hidden">
+                    <IsolatedRefRow />
+                  </div>
+                </CatalogEntry>
+              </div>
 
-              <CatalogEntry
-                name="GroupedCard"
-                description="Collapsible group of references with expand/collapse + count badge"
-                code={`<GroupedCard
+              <div id="ev-grouped-card" ref={reg("ev-grouped-card")}>
+                <CatalogEntry
+                  name="GroupedCard"
+                  description="Collapsible group of references with expand/collapse + count badge"
+                  code={`<GroupedCard
   title="Person"
   color="#7C3AED"
   references={references.slice(0, 3)}
   onDeleteRef={(id) => {}}
   defaultExpanded
-/>
+/>`}
+                >
+                  <div className="w-full max-w-md">
+                    <IsolatedGroupedCard />
+                  </div>
+                </CatalogEntry>
+              </div>
 
-{/* Uses expand/collapse signal atoms */}
-{/* Wrap in isolated <Provider> to avoid shared state */}`}
-              >
-                <div className="w-full max-w-md">
-                  <IsolatedGroupedCard />
-                </div>
-              </CatalogEntry>
+              <div id="ev-highlight-card" ref={reg("ev-highlight-card")}>
+                <CatalogEntry
+                  name="HighlightCard"
+                  description="Reference card with highlighted text snippet and entity pill"
+                  code={`<HighlightCard reference={reference} />`}
+                >
+                  <div className="w-full max-w-md">
+                    <HighlightCard reference={references[0]} />
+                  </div>
+                </CatalogEntry>
+              </div>
 
-              <CatalogEntry
-                name="RefRow"
-                description="Single reference entry with entity pill, page tag, text preview"
-                code={`<RefRow
-  reference={reference}
-  onDelete={(id) => {}}
-/>
+              <div id="ev-density-card" ref={reg("ev-density-card")}>
+                <CatalogEntry
+                  name="DensityCard"
+                  description="Stacked bar chart showing reference density by relation type"
+                  code={`<DensityCard
+  references={references}
+  totalPages={15}
+/>`}
+                >
+                  <div className="w-full max-w-md bg-paper border border-border/40 rounded-md">
+                    <DensityCard references={references} totalPages={15} />
+                  </div>
+                </CatalogEntry>
+              </div>
 
-{/* Uses activeRefIdAtom, scrollToHighlightAtom */}
-{/* Wrap in isolated <Provider> to avoid shared state */}`}
-              >
-                <div className="w-full max-w-md border border-border/40 rounded-md overflow-hidden">
-                  <IsolatedRefRow />
-                </div>
-              </CatalogEntry>
+              <div id="ev-related-doc" ref={reg("ev-related-doc")}>
+                <CatalogEntry
+                  name="RelatedDocCard"
+                  description="Card showing a related document with entity type and reference count"
+                  code={`<RelatedDocCard
+  title="Case 12.045 — Pueblo Bello Massacre"
+  entityTypeId="court_case"
+  referenceCount={7}
+/>`}
+                >
+                  <div className="w-full max-w-md flex flex-col gap-2">
+                    <RelatedDocCard title="Case 12.045 — Pueblo Bello Massacre" entityTypeId="court_case" referenceCount={7} />
+                    <RelatedDocCard title="Right to Life — Article 4" entityTypeId="right" referenceCount={3} />
+                  </div>
+                </CatalogEntry>
+              </div>
+            </div>
+          </section>
 
-              <CatalogEntry
-                name="FileTable"
-                description="Tabular file listing with checkboxes, type icons, and metadata columns"
-                code={`<FileTable
+          {/* ==================== ENTITY VIEW — METADATA ==================== */}
+          <section>
+            <h2 className="text-lg font-bold text-ink mb-6">Entity View — Metadata</h2>
+            <div className="flex flex-col gap-6">
+              <div id="ev-metadata-card" ref={reg("ev-metadata-card")}>
+                <CatalogEntry
+                  name="MetadataCard + Property"
+                  description="Card container with label/value property pairs"
+                  code={`<MetadataCard title="Case details" icon={<FileText size={14} className="text-ink-tertiary" />}>
+  <Property label="Country" value="Honduras" />
+  <PropertyRow>
+    <Property label="Date" value="June 26, 1987" />
+    <Property label="Type" value="Judgment" />
+  </PropertyRow>
+  <Property label="Mechanism" value="Corte IDH" linked />
+</MetadataCard>`}
+                >
+                  <div className="w-full max-w-sm">
+                    <MetadataCard title="Case details" icon={<FileText size={14} className="text-ink-tertiary" />}>
+                      <Property label="Country" value="Honduras" />
+                      <PropertyRow>
+                        <Property label="Date" value="June 26, 1987" />
+                        <Property label="Type" value="Judgment" />
+                      </PropertyRow>
+                      <Property label="Mechanism" value="Corte IDH" linked />
+                    </MetadataCard>
+                  </div>
+                </CatalogEntry>
+              </div>
+            </div>
+          </section>
+
+          {/* ==================== ENTITY VIEW — FILES ==================== */}
+          <section>
+            <h2 className="text-lg font-bold text-ink mb-6">Entity View — Files</h2>
+            <div className="flex flex-col gap-6">
+              <div id="ev-file-table" ref={reg("ev-file-table")}>
+                <CatalogEntry
+                  name="FileTable"
+                  description="Tabular file listing with checkboxes, type icons, and metadata columns"
+                  code={`<FileTable
   files={files}
   selectedIds={new Set()}
   onSelect={(id) => {}}
   onSelectAll={() => {}}
 />`}
-              >
-                <div className="w-full">
-                  <FileTableDemo />
-                </div>
-              </CatalogEntry>
-
-              <CatalogEntry
-                name="FloatingMenu"
-                description="Context menu appearing on text selection in document viewer"
-                code={`<FloatingMenu x={200} y={100} text="selected text" />
-
-{/* Normally fixed-positioned, shown here in relative container */}
-{/* Dark bg-ink bar with Create Reference, Copy, Highlight buttons */}`}
-              >
-                <div className="relative h-16 w-full flex items-center justify-center">
-                  <div className="flex items-center gap-0.5 bg-ink rounded-md shadow-xl px-1 py-1">
-                    <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white rounded-md hover:bg-white/15 transition-colors">
-                      Create Reference
-                    </button>
-                    <div className="w-px h-4 bg-white/20" />
-                    <button className="p-1.5 text-white/70 rounded-md hover:bg-white/15 hover:text-white transition-colors">
-                      Copy
-                    </button>
-                    <button className="p-1.5 text-white/70 rounded-md hover:bg-white/15 hover:text-white transition-colors">
-                      Highlight
-                    </button>
+                >
+                  <div className="w-full">
+                    <FileTableDemo />
                   </div>
-                </div>
-              </CatalogEntry>
+                </CatalogEntry>
+              </div>
+            </div>
+          </section>
 
-              <CatalogEntry
-                name="ActionBar"
-                description="Document viewer footer with OCR button and page navigation"
-                code={`<ActionBar numPages={15} onScrollToPage={(page) => {}} />
-
-{/* Uses currentPageAtom for page display */}
-{/* Wrap in isolated <Provider> to avoid shared state */}`}
-              >
-                <IsolatedActionBar />
-              </CatalogEntry>
-
-              <CatalogEntry
-                name="DrawerActionBar"
-                description="Context-sensitive action bar for drawer panels"
-                code={`<DrawerActionBar activeTab="metadata" />
+          {/* ==================== ENTITY VIEW — DRAWER ==================== */}
+          <section>
+            <h2 className="text-lg font-bold text-ink mb-6">Entity View — Drawer</h2>
+            <div className="flex flex-col gap-6">
+              <div id="ev-drawer-action-bar" ref={reg("ev-drawer-action-bar")}>
+                <CatalogEntry
+                  name="DrawerActionBar"
+                  description="Context-sensitive action bar for drawer panels"
+                  code={`<DrawerActionBar activeTab="metadata" />
 <DrawerActionBar activeTab="references" />`}
-              >
-                <div className="w-full flex flex-col gap-2">
-                  <div className="border border-border/40 rounded-md overflow-hidden">
-                    <DrawerActionBar activeTab="metadata" />
+                >
+                  <div className="w-full flex flex-col gap-2">
+                    <div className="border border-border/40 rounded-md overflow-hidden">
+                      <DrawerActionBar activeTab="metadata" />
+                    </div>
+                    <div className="border border-border/40 rounded-md overflow-hidden">
+                      <DrawerActionBar activeTab="references" />
+                    </div>
                   </div>
-                  <div className="border border-border/40 rounded-md overflow-hidden">
-                    <DrawerActionBar activeTab="references" />
-                  </div>
-                </div>
-              </CatalogEntry>
+                </CatalogEntry>
+              </div>
+            </div>
+          </section>
 
-              <CatalogEntry
-                name="ConfirmDialog"
-                description="Modal confirmation dialog with danger and default variants"
-                code={`<ConfirmDialog
+          {/* ==================== SHARED ==================== */}
+          <section>
+            <h2 className="text-lg font-bold text-ink mb-6">Shared</h2>
+            <div className="flex flex-col gap-6">
+              <div id="sh-confirm-dialog" ref={reg("sh-confirm-dialog")}>
+                <CatalogEntry
+                  name="ConfirmDialog"
+                  description="Modal confirmation dialog with danger and default variants"
+                  code={`<ConfirmDialog
   open={true}
   title="Delete reference?"
   message="This action cannot be undone."
@@ -462,78 +672,81 @@ export function ComponentCatalog() {
   onConfirm={() => {}}
   onCancel={() => {}}
 />`}
-              >
-                <div className="relative h-48 w-full overflow-hidden rounded-md border border-border/40">
-                  <div className="absolute inset-0 flex items-center justify-center bg-overlay/30">
-                    <div className="bg-paper rounded-lg shadow-xl w-full max-w-xs p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-seal-tint flex items-center justify-center">
-                            <span className="text-seal text-sm">!</span>
+                >
+                  <div className="relative h-48 w-full overflow-hidden rounded-md border border-border/40">
+                    <div className="absolute inset-0 flex items-center justify-center bg-overlay/30">
+                      <div className="bg-paper rounded-lg shadow-xl w-full max-w-xs p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-seal-tint flex items-center justify-center">
+                              <span className="text-seal text-sm">!</span>
+                            </div>
+                            <h3 className="text-sm font-semibold text-ink">Delete reference?</h3>
                           </div>
-                          <h3 className="text-sm font-semibold text-ink">Delete reference?</h3>
+                        </div>
+                        <p className="text-xs text-ink-secondary mb-4">This action cannot be undone. The reference will be permanently removed.</p>
+                        <div className="flex justify-end gap-2">
+                          <button className="px-3 py-1.5 text-xs font-medium rounded-md border border-border text-ink-secondary hover:bg-parchment transition-colors">Cancel</button>
+                          <button className="px-3 py-1.5 text-xs font-medium rounded-md bg-seal text-white hover:bg-seal/90 transition-colors">Delete</button>
                         </div>
                       </div>
-                      <p className="text-xs text-ink-secondary mb-4">This action cannot be undone. The reference will be permanently removed.</p>
-                      <div className="flex justify-end gap-2">
-                        <button className="px-3 py-1.5 text-xs font-medium rounded-md border border-border text-ink-secondary hover:bg-parchment transition-colors">
-                          Cancel
-                        </button>
-                        <button className="px-3 py-1.5 text-xs font-medium rounded-md bg-seal text-white hover:bg-seal/90 transition-colors">
-                          Delete
-                        </button>
-                      </div>
                     </div>
                   </div>
-                </div>
-              </CatalogEntry>
+                </CatalogEntry>
+              </div>
 
-              <CatalogEntry
-                name="HoverExpand"
-                description="Tooltip-like card that appears on reference highlight hover"
-                code={`<HoverExpand reference={reference} x={200} y={100} />
-
-{/* Normally fixed-positioned, pointer-events-none */}
-{/* Shows EntityPill, relation type, quoted text */}`}
-              >
-                <div className="relative w-full flex justify-center">
-                  <div className="bg-paper border border-border rounded-md shadow-lg px-3 py-2.5 max-w-xs">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <EntityPill typeId="person" label="Juan Carlos Abella" size="sm" />
-                      <span className="text-[10px] text-ink-muted capitalize">mentions</span>
-                    </div>
-                    <p className="text-xs text-ink-secondary leading-relaxed line-clamp-3">
-                      "Juan Carlos Abella and other persons were detained on January 23, 1989..."
-                    </p>
-                  </div>
-                </div>
-              </CatalogEntry>
-
-              <CatalogEntry
-                name="Toast notifications"
-                description="Success, error, and info toast messages"
-                code={`{/* Toast system uses toastsAtom from atoms/references.ts */}
-{/* Add toast: setToasts(prev => [...prev, { id, type, message }]) */}
+              <div id="sh-toast" ref={reg("sh-toast")}>
+                <CatalogEntry
+                  name="Toast"
+                  description="Success, error, and info toast notifications"
+                  code={`{/* Uses toastsAtom from atoms/references.ts */}
+{/* setToasts(prev => [...prev, { id, type, message }]) */}
 
 <ToastContainer />
 
 {/* Types: "success" | "error" | "info" */}`}
-              >
-                <div className="flex flex-col gap-2 w-full max-w-sm">
-                  <div className="flex items-center gap-2 px-4 py-2.5 bg-paper border border-border rounded-md shadow-lg">
-                    <span className="text-success">&#10003;</span>
-                    <span className="text-sm text-ink">Reference created successfully</span>
+                >
+                  <div className="flex flex-col gap-2 w-full max-w-sm">
+                    <div className="flex items-center gap-2 px-4 py-2.5 bg-paper border border-border rounded-md shadow-lg">
+                      <span className="text-success">&#10003;</span>
+                      <span className="text-sm text-ink">Reference created successfully</span>
+                    </div>
+                    <div className="flex items-center gap-2 px-4 py-2.5 bg-paper border border-border rounded-md shadow-lg">
+                      <span className="text-seal">&#10007;</span>
+                      <span className="text-sm text-ink">Failed to save changes</span>
+                    </div>
+                    <div className="flex items-center gap-2 px-4 py-2.5 bg-paper border border-border rounded-md shadow-lg">
+                      <span className="text-carbon">&#9432;</span>
+                      <span className="text-sm text-ink">2 references updated</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 px-4 py-2.5 bg-paper border border-border rounded-md shadow-lg">
-                    <span className="text-seal">&#10007;</span>
-                    <span className="text-sm text-ink">Failed to save changes</span>
+                </CatalogEntry>
+              </div>
+
+              <div id="sh-uwazi-loader" ref={reg("sh-uwazi-loader")}>
+                <CatalogEntry
+                  name="UwaziLoader"
+                  description="Branded loading animation — 3x2 grid with cycling highlight"
+                  code={`<UwaziLoader />
+<UwaziLoader size="sm" />
+<UwaziLoader size="lg" />`}
+                >
+                  <div className="flex items-center gap-8">
+                    <div className="flex flex-col items-center gap-2">
+                      <UwaziLoader size="sm" />
+                      <span className="text-[10px] text-ink-muted">sm</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2">
+                      <UwaziLoader size="md" />
+                      <span className="text-[10px] text-ink-muted">md</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2">
+                      <UwaziLoader size="lg" />
+                      <span className="text-[10px] text-ink-muted">lg</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 px-4 py-2.5 bg-paper border border-border rounded-md shadow-lg">
-                    <span className="text-carbon">&#9432;</span>
-                    <span className="text-sm text-ink">2 references updated</span>
-                  </div>
-                </div>
-              </CatalogEntry>
+                </CatalogEntry>
+              </div>
             </div>
           </section>
         </div>
@@ -542,7 +755,7 @@ export function ComponentCatalog() {
   );
 }
 
-// ---------- Isolated demos (own Jotai store, no shared state) ----------
+// ---------- Isolated demos ----------
 
 function SegmentedTabsDemo() {
   const [active, setActive] = useState("all");
@@ -592,9 +805,10 @@ function MainTabsDemo() {
 
 function FileTableDemo() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const subset = files.slice(0, 4);
   return (
     <FileTable
-      files={files.slice(0, 4)}
+      files={subset}
       selectedIds={selected}
       onSelect={(id) =>
         setSelected((prev) => {
@@ -605,7 +819,7 @@ function FileTableDemo() {
       }
       onSelectAll={() =>
         setSelected((prev) =>
-          prev.size === 4 ? new Set() : new Set(files.slice(0, 4).map((f) => f.id))
+          prev.size === subset.length ? new Set() : new Set(subset.map((f) => f.id))
         )
       }
     />
@@ -613,7 +827,6 @@ function FileTableDemo() {
 }
 
 function IsolatedSearchBar() {
-  // Inline version to avoid atom dependency
   const [query, setQuery] = useState("");
   return (
     <div className="w-full max-w-sm">
@@ -623,24 +836,13 @@ function IsolatedSearchBar() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search"
+          aria-label="Search"
           className="w-full h-8 pl-3 pr-8 text-xs font-medium bg-warm border border-border rounded-md
             placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-carbon/20
             focus:border-carbon/40 transition-all"
         />
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none"
-        >
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.3-4.3" />
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none">
+          <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
         </svg>
       </div>
     </div>
@@ -651,7 +853,7 @@ function IsolatedFiltersRow() {
   const store = createStore();
   return (
     <Provider store={store}>
-      <div className="w-full max-w-md">
+      <div className="w-full">
         <FiltersRow onCollapseAll={() => {}} onExpandAll={() => {}} />
       </div>
     </Provider>

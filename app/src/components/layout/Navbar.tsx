@@ -1,11 +1,14 @@
-import { ArrowLeft, BookOpen, Settings } from "lucide-react";
+import { ArrowLeft, BookOpen, Settings, Sun, Moon } from "lucide-react";
+import type { Theme } from "../../atoms/theme";
 
 interface NavbarProps {
   onLogoClick?: () => void;
   showingCatalog?: boolean;
+  theme?: Theme;
+  onToggleTheme?: () => void;
 }
 
-export function Navbar({ onLogoClick, showingCatalog }: NavbarProps) {
+export function Navbar({ onLogoClick, showingCatalog, theme, onToggleTheme }: NavbarProps) {
   return (
     <header
       className="h-[52px] bg-paper flex items-center justify-between px-5 shrink-0"
@@ -17,7 +20,7 @@ export function Navbar({ onLogoClick, showingCatalog }: NavbarProps) {
           onClick={onLogoClick}
           className="flex items-center"
         >
-          <img src="/nu-logo.svg" alt="Uwazi" style={{ height: 14.7 }} />
+          <img src="/nu-logo.svg" alt="Uwazi" style={{ height: 14.7 }} className="logo-img" />
         </button>
       </div>
 
@@ -40,6 +43,13 @@ export function Navbar({ onLogoClick, showingCatalog }: NavbarProps) {
             </button>
           </>
         )}
+        <button
+          onClick={onToggleTheme}
+          className="p-1.5 text-ink-tertiary hover:text-ink-secondary hover:bg-warm rounded-md transition-colors"
+          aria-label="Toggle theme"
+        >
+          {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+        </button>
       </div>
     </header>
   );

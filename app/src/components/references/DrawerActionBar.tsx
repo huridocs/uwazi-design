@@ -34,7 +34,7 @@ export function DrawerActionBar({ activeTab }: DrawerActionBarProps) {
               guide here.
             </span>
           </div>
-          <HelpCircle size={18} className="text-carbon" />
+          <HelpCircle size={18} className="text-carbon" aria-label="Help" />
         </>
       )}
 
@@ -61,7 +61,7 @@ export function DrawerActionBar({ activeTab }: DrawerActionBarProps) {
       {activeTab === "search" && (
         <>
           <span className="text-[11px] text-ink-muted">Search tips</span>
-          <HelpCircle size={18} className="text-carbon" />
+          <HelpCircle size={18} className="text-carbon" aria-label="Search tips" />
         </>
       )}
     </div>

@@ -23,11 +23,12 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
     >
       {/* Left: Back + Tabs */}
       <div className="flex items-center gap-4">
-        <button className="text-ink-tertiary hover:text-ink transition-colors">
+        <button className="text-ink-tertiary hover:text-ink transition-colors" aria-label="Go back">
           <ArrowLeft size={20} />
         </button>
         <div
           className="flex items-center rounded-md overflow-hidden"
+          role="tablist"
           style={{
             border: "1px solid var(--border-primary)",
             boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
@@ -35,8 +36,10 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
         >
           {tabs.map((tab, i) => (
             <div key={tab.id} className="flex items-center">
-              {i > 0 && <div className="w-px self-stretch bg-border" />}
+              {i > 0 && <div className="w-px self-stretch bg-border" aria-hidden="true" />}
               <button
+                role="tab"
+                aria-selected={activeId === tab.id}
                 onClick={() => onChange(tab.id)}
                 className={`flex items-center justify-center gap-1 px-3 py-1.5 text-[13px] font-medium transition-colors ${
                   activeId === tab.id
@@ -58,7 +61,7 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
 
       {/* Right: Language badges */}
       {languages.length > 0 && (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1" role="group" aria-label="Language selection">
           {languages.map((lang) => {
             const isActive = lang === (activeLanguage ?? languages[0]);
             const isAvailable = !availableLanguages || availableLanguages.includes(lang);
@@ -67,6 +70,8 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
                 key={lang}
                 onClick={() => isAvailable && onLanguageChange?.(lang)}
                 disabled={!isAvailable}
+                aria-label={`Language: ${lang}`}
+                aria-pressed={isActive}
                 className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
                   isActive
                     ? "bg-vellum text-ink"

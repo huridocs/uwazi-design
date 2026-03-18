@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useAtom } from "jotai";
 import { SplitView } from "../components/layout/SplitView";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DocMeta } from "../components/layout/DocMeta";
 import { FileTable } from "../components/files/FileTable";
 import { FileDrawer } from "../components/files/FileDrawer";
 import { files, primaryFiles, supportingFiles } from "../data/files";
+import { languageAtom, type Language } from "../atoms/language";
 
 interface FilesViewProps {
   tabs: { id: string; label: string; count?: number }[];
@@ -13,6 +15,7 @@ interface FilesViewProps {
 }
 
 export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
+  const [language, setLanguage] = useAtom(languageAtom);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const selectedFiles = files.filter((f) => selectedIds.has(f.id));
@@ -54,9 +57,11 @@ export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
             onChange={onTabChange}
             languages={["EN", "ES", "FR", "MY"]}
             availableLanguages={["EN", "ES", "FR"]}
+            activeLanguage={language}
+            onLanguageChange={(lang) => setLanguage(lang as Language)}
           />
-          <DocMeta />
-          <div className="flex-1 overflow-auto p-4 space-y-5" style={{ backgroundColor: "#FCFAF8" }}>
+          <DocMeta showPdfSelector={false} />
+          <div className="flex-1 overflow-auto p-4 space-y-5 bg-warm">
             <div>
               <h3 className="text-xs font-semibold text-ink-tertiary uppercase tracking-wider mb-2 px-1">
                 Primary document & translations

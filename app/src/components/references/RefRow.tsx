@@ -47,7 +47,10 @@ export function RefRow({ reference, onDelete }: RefRowProps) {
   return (
     <div
       ref={rowRef}
+      role="button"
+      tabIndex={0}
       onClick={handleClick}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleClick(); } }}
       className={`group px-3 py-2.5 border-b border-border/50 cursor-pointer
         transition-all ${
           isActive

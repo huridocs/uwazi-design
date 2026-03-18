@@ -112,7 +112,7 @@ export function DocumentViewer() {
       <div
         ref={containerRef}
         className="flex-1 overflow-auto flex flex-col items-center py-4 gap-4"
-        style={{ backgroundColor: "#FCFAF8" }}
+        style={{ backgroundColor: "var(--bg-warm)" }}
         onMouseUp={handleTextSelect}
         onMouseDown={handleMouseDown}
       >

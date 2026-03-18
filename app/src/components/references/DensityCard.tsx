@@ -46,7 +46,7 @@ export function DensityCard({ references, totalPages }: DensityCardProps) {
       <h4 className="text-xs font-medium text-ink-tertiary mb-3 uppercase tracking-wide">
         Reference Density by Page
       </h4>
-      <div className="flex items-end gap-1" style={{ height: 96 }}>
+      <div className="flex items-end gap-1" style={{ height: 96 }} role="img" aria-label={`Reference density chart: ${references.length} references across ${pageCategoryCounts.size} pages`}>
         {pages.map((page) => {
           const cats = pageCategoryCounts.get(page);
           const total = cats ? Array.from(cats.values()).reduce((a, b) => a + b, 0) : 0;

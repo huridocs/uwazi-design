@@ -19,7 +19,7 @@ import { Link2 } from "lucide-react";
 const drawerTabs = [
   { id: "metadata", label: "Metadata" },
   { id: "toc", label: "ToC" },
-  { id: "references", label: "References", count: 9 },
+  { id: "references", label: "References", count: 12 },
   { id: "relationships", label: "Relationships", count: 14 },
   { id: "search", label: "Search" },
 ];

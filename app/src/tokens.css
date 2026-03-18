@@ -23,6 +23,7 @@
   --accent-seal: #E8432A;
   --accent-primary: #1A1A1A;
   --accent-blue-tint: #DDF3FD;
+  --accent-seal-tint: #FEE2E2;
 
   /* Semantic */
   --success: #059669;
@@ -52,4 +53,39 @@
   /* Typography */
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+:root.dark {
+  --bg-primary: #1A1A1A;
+  --bg-surface: #242424;
+  --bg-warm: #2A2A2A;
+  --bg-muted: #333333;
+  --bg-overlay: #000000AA;
+
+  --text-primary: #F5F0E8;
+  --text-secondary: #D4CDB8;
+  --text-tertiary: #9A9A9A;
+  --text-muted: #6B6B6B;
+
+  --border-primary: #3D3D3D;
+  --border-soft: #4A4A4A;
+  --border-primary-64: #3D3D3DA3;
+  --border-soft-64: #4A4A4AA3;
+
+  --accent-primary: #F5F0E8;
+  --accent-blue-tint: #0C3A4D;
+  --accent-seal-tint: #4A1A1A;
+
+  --success-light: #064E3B;
+  --warning-light: #78350F;
+  --danger-light: #4A1A1A;
+
+  --highlight-yellow: #78350F;
+  --highlight-yellow-active: #92400E;
+  --highlight-blue: #1E3A5F;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.35), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.25);
 }

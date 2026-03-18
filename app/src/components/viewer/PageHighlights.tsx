@@ -33,6 +33,10 @@ export function PageHighlights({ page }: PageHighlightsProps) {
         return (
           <div
             key={ref.id}
+            role="button"
+            tabIndex={0}
+            aria-label={`Reference: ${ref.sourceSelection.text.slice(0, 60)}`}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setScrollToRef(ref.id); } }}
             className={`absolute cursor-pointer rounded-[2px] transition-shadow
               hover:ring-2 hover:ring-orange-400/50
               ${isFlashing ? "flash-highlight" : ""}`}

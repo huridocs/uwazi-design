@@ -1,7 +1,16 @@
+import { useAtomValue } from "jotai";
 import { ChevronDown } from "lucide-react";
-import { currentDocument } from "../../data/document";
+import { languageAtom } from "../../atoms/language";
+import { documentsByLanguage } from "../../data/document";
 
-export function DocMeta() {
+interface DocMetaProps {
+  showPdfSelector?: boolean;
+}
+
+export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
+  const language = useAtomValue(languageAtom);
+  const doc = documentsByLanguage[language];
+
   return (
     <div
       className="flex items-center gap-2 h-10 px-4 shrink-0"
@@ -14,14 +23,16 @@ export function DocMeta() {
 
       {/* Document title */}
       <span className="text-xs font-semibold text-ink truncate flex-1">
-        {currentDocument.title}
+        {doc.title}
       </span>
 
       {/* PDF dropdown */}
-      <button className="flex items-center gap-2 px-3 py-1 text-xs font-medium text-ink rounded-md bg-warm border border-border shrink-0 hover:bg-parchment transition-colors">
-        PDF
-        <ChevronDown size={12} className="text-ink-tertiary" />
-      </button>
+      {showPdfSelector && (
+        <button className="flex items-center gap-2 px-3 py-1 text-xs font-medium text-ink rounded-md bg-warm border border-border shrink-0 hover:bg-parchment transition-colors">
+          PDF
+          <ChevronDown size={12} className="text-ink-tertiary" />
+        </button>
+      )}
     </div>
   );
 }

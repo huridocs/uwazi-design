@@ -90,13 +90,15 @@ npm run dev        # → http://localhost:5173
 
 ### Features
 
-- **Layout** — navbar with logo + Library/Settings buttons, main tabs (Metadata, Document, References, Relationships, Files), doc meta bar, language badges (active/disabled), resizable split view with contextual drawer
-- **Metadata** — read mode with property cards (description, country with flag, dates, type, mechanism, signatories, other files), edit mode with inputs/textareas/checkboxes/country picker, PDF metadata card with View/Download
+- **Layout** — navbar with logo + Library/Settings buttons + dark mode toggle, main tabs (Metadata, Document, References, Relationships, Files), doc meta bar, language badges (EN/ES/FR/MY), resizable split view with contextual drawer
+- **Dark mode** — CSS-variable-driven theme toggled via sun/moon button in navbar. `.dark` class on `<html>` swaps all tokens (backgrounds, text, borders, shadows, highlights). Persists to localStorage.
+- **i18n** — language toggle (EN/ES/FR) updates document title, metadata labels and values, PDF metadata, and drawer content in real time via Jotai atom
+- **Metadata** — read mode with property cards (description, country with flag, dates, type, mechanism, signatories, other files), edit mode with inputs/textareas/checkboxes/country picker, PDF metadata card with View/Download. Drawer shows complete metadata with collapsible sections (description, PDF, geolocation, fields, other files)
 - **Document viewer** — PDF rendering with continuous scroll, page navigation (Previous/Next), OCR button
 - **Text References** — highlight overlays (`mix-blend-mode: darken`), floating menu on text selection, entity picker modal (search → relation type → create), bidirectional navigation (highlight ↔ panel), delete with confirmation
 - **Reference panel** — search, sort (None/A→Z/Z→A), filter toggles (All/Entity type/Rel. type/Density), grouped cards with collapse/expand all, stacked density chart by relation type
 - **Files management** — dual tables (primary document + translations, supporting files), row selection with blue accent, file metadata drawer, compact stacked cards on multi-select, bulk actions
 - **Translations drawer** — per-language file cards (EN/ES/FR with file, MY empty state with dashed Add), Download all/Delete actions
 - **Drawer tabs** — contextual per view: Metadata/ToC/References/Relationships/Search (document), File/Translations (files), Files/Relationships (metadata), each with own action bar
-- **Shared** — toast notifications (center top), entity pills, page tags, confirm dialogs
-- **Component Catalog** — click logo to open storybook-like catalog with live previews, copyable React + Tailwind code blocks, style guide (colors, typography, shadows, radii, spacing), sidebar with scroll tracking
+- **Shared** — toast notifications (center top), entity pills, page tags, confirm dialogs, branded loader animation (UwaziLoader)
+- **Component Catalog** — click logo to open storybook-like catalog with live previews, copyable React + Tailwind code blocks, style guide with separate light/dark color palettes, typography, shadows, radii, spacing, sidebar with scroll tracking

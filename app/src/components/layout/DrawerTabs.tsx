@@ -17,6 +17,7 @@ export function DrawerTabs({ tabs, activeId, onChange }: DrawerTabsProps) {
     >
       <div
         className="flex items-center rounded-md overflow-hidden w-fit"
+        role="tablist"
         style={{
           border: "1px solid var(--border-primary)",
           boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
@@ -24,8 +25,10 @@ export function DrawerTabs({ tabs, activeId, onChange }: DrawerTabsProps) {
       >
         {tabs.map((tab, i) => (
           <div key={tab.id} className="flex items-center">
-            {i > 0 && <div className="w-px self-stretch bg-border" />}
+            {i > 0 && <div className="w-px self-stretch bg-border" aria-hidden="true" />}
             <button
+              role="tab"
+              aria-selected={activeId === tab.id}
               onClick={() => onChange(tab.id)}
               className={`flex items-center justify-center gap-1 w-full px-3 py-1.5 text-[13px] font-medium transition-colors ${
                 activeId === tab.id
