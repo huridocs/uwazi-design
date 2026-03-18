@@ -10,6 +10,7 @@ const toggleOptions: { id: ViewMode; label: string }[] = [
 ];
 
 const sortOptions: { id: SortOrder; label: string }[] = [
+  { id: "none", label: "None" },
   { id: "asc", label: "A → Z" },
   { id: "desc", label: "Z → A" },
 ];
@@ -31,7 +32,7 @@ export function FiltersRow({ onCollapseAll, onExpandAll }: FiltersRowProps) {
   const activeSort = sortOptions.find((s) => s.id === sortOrder);
 
   return (
-    <div className="flex items-center justify-between px-4 pb-2">
+    <div className="flex items-center justify-between px-3 pb-2">
       {/* Left: segmented toggle + sort dropdown */}
       <div className="flex items-center gap-2">
         <div
@@ -66,7 +67,7 @@ export function FiltersRow({ onCollapseAll, onExpandAll }: FiltersRowProps) {
             className="flex items-center gap-1.5 h-6 px-2 text-[11px] font-medium text-ink-tertiary
               bg-warm border border-border rounded hover:bg-parchment hover:text-ink-secondary transition-colors"
           >
-            {activeSort?.label ?? "A → Z"}
+            {sortOrder === "none" ? "Sort" : activeSort?.label}
             <ChevronDown size={10} className="text-ink-muted" />
           </button>
           {dropdownOpen && (
@@ -75,7 +76,7 @@ export function FiltersRow({ onCollapseAll, onExpandAll }: FiltersRowProps) {
                 className="fixed inset-0 z-10"
                 onClick={() => setDropdownOpen(false)}
               />
-              <div className="absolute top-full left-0 mt-1 z-20 bg-paper border border-border rounded-lg shadow-lg overflow-hidden w-[100px]">
+              <div className="absolute top-full left-0 mt-1 z-20 bg-paper border border-border rounded-md shadow-lg overflow-hidden w-[100px]">
                 {sortOptions.map((opt) => (
                   <button
                     key={opt.id}

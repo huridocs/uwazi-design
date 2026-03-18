@@ -28,7 +28,7 @@ export function FloatingMenu({ x, y, text }: FloatingMenuProps) {
         transform: "translateX(-50%)",
       }}
     >
-      <div className="flex items-center gap-0.5 bg-ink rounded-lg shadow-xl px-1 py-1">
+      <div className="flex items-center gap-0.5 bg-ink rounded-md shadow-xl px-1 py-1">
         <button
           onClick={handleCreateRef}
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white

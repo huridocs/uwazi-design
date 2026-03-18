@@ -12,7 +12,7 @@ interface SegmentedTabsProps {
 
 export function SegmentedTabs({ tabs, activeId, onChange }: SegmentedTabsProps) {
   return (
-    <div className="flex bg-parchment rounded-lg p-0.5 gap-0.5">
+    <div className="flex bg-parchment rounded-md p-0.5 gap-0.5">
       {tabs.map((tab) => (
         <button
           key={tab.id}

@@ -120,12 +120,12 @@ export function DocumentViewer() {
           file="/sample.pdf"
           onLoadSuccess={onDocumentLoadSuccess}
           loading={
-            <div className="flex items-center justify-center h-[900px] bg-paper rounded-lg" style={{ width: "100%", maxWidth: 900 }}>
+            <div className="flex items-center justify-center h-[900px] bg-paper rounded-md" style={{ width: "100%", maxWidth: 900 }}>
               <p className="text-ink-muted text-sm">Loading document...</p>
             </div>
           }
           error={
-            <div className="flex flex-col items-center justify-center h-[900px] bg-paper rounded-lg gap-3" style={{ width: "100%", maxWidth: 900 }}>
+            <div className="flex flex-col items-center justify-center h-[900px] bg-paper rounded-md gap-3" style={{ width: "100%", maxWidth: 900 }}>
               <p className="text-ink-muted text-sm">
                 PDF not found. Place a sample.pdf in app/public/
               </p>

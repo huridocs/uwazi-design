@@ -16,14 +16,14 @@ export function DrawerTabs({ tabs, activeId, onChange }: DrawerTabsProps) {
       className="px-3 py-2 shrink-0"
     >
       <div
-        className="flex items-center rounded-md overflow-hidden"
+        className="flex items-center rounded-md overflow-hidden w-fit"
         style={{
           border: "1px solid var(--border-primary)",
           boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
         }}
       >
         {tabs.map((tab, i) => (
-          <div key={tab.id} className="flex items-center flex-1">
+          <div key={tab.id} className="flex items-center">
             {i > 0 && <div className="w-px self-stretch bg-border" />}
             <button
               onClick={() => onChange(tab.id)}

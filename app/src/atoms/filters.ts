@@ -22,8 +22,8 @@ export const expandAllSignalAtom = atom(0);
 export const collapseAllSignalAtom = atom(0);
 
 /** Sort order for references */
-export type SortOrder = "asc" | "desc";
-export const sortOrderAtom = atom<SortOrder>("asc");
+export type SortOrder = "none" | "asc" | "desc";
+export const sortOrderAtom = atom<SortOrder>("none");
 
 /** Track expanded group count for greying out collapse/expand buttons */
 export const expandedGroupCountAtom = atom(0);

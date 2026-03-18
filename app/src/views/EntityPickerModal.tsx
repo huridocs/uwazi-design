@@ -86,7 +86,7 @@ export function EntityPickerModal() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay">
-      <div className="bg-paper rounded-xl shadow-xl w-full max-w-lg max-h-[80vh] flex flex-col animate-fade-in-up">
+      <div className="bg-paper rounded-lg shadow-xl w-full max-w-lg max-h-[80vh] flex flex-col animate-fade-in-up">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <div>
@@ -102,7 +102,7 @@ export function EntityPickerModal() {
           </div>
           <button
             onClick={handleClose}
-            className="p-1.5 rounded-lg hover:bg-parchment transition-colors"
+            className="p-1.5 rounded-md hover:bg-parchment transition-colors"
           >
             <X size={18} className="text-ink-muted" />
           </button>
@@ -122,7 +122,7 @@ export function EntityPickerModal() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search entities..."
-                  className="w-full pl-8 pr-4 py-2 text-sm bg-warm border border-border rounded-lg
+                  className="w-full pl-8 pr-4 py-2 text-sm bg-warm border border-border rounded-md
                     placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-carbon/20"
                   autoFocus
                 />
@@ -146,7 +146,7 @@ export function EntityPickerModal() {
                             setSelectedEntity(entity);
                             setStep("relation");
                           }}
-                          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg
+                          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md
                             text-left hover:bg-warm transition-colors ${
                               selectedEntity?.id === entity.id
                                 ? "bg-warm ring-1 ring-carbon/20"
@@ -189,7 +189,7 @@ export function EntityPickerModal() {
                 <button
                   key={rel.id}
                   onClick={() => setSelectedRelation(rel.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-left
                     transition-colors ${
                       selectedRelation === rel.id
                         ? "bg-carbon-tint ring-1 ring-carbon/30"
@@ -203,14 +203,14 @@ export function EntityPickerModal() {
             <div className="px-5 py-4 border-t border-border flex justify-between">
               <button
                 onClick={() => setStep("entity")}
-                className="px-4 py-2 text-sm font-medium rounded-lg border border-border
+                className="px-4 py-2 text-sm font-medium rounded-md border border-border
                   text-ink-secondary hover:bg-parchment transition-colors"
               >
                 Back
               </button>
               <button
                 onClick={handleCreate}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-ink text-white
+                className="px-4 py-2 text-sm font-medium rounded-md bg-ink text-white
                   hover:bg-ink/90 transition-colors"
               >
                 Create Reference

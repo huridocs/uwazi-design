@@ -13,6 +13,7 @@ import { DensityCard } from "./DensityCard";
 import { RefRow } from "./RefRow";
 import { DrawerActionBar } from "./DrawerActionBar";
 import { ConfirmDialog } from "../shared/ConfirmDialog";
+import { MetadataDrawerContent } from "./MetadataDrawerContent";
 import { Link2 } from "lucide-react";
 
 const drawerTabs = [
@@ -30,7 +31,7 @@ export function ReferencePanel() {
   const [sortOrder] = useAtom(sortOrderAtom);
   const [, setToasts] = useAtom(toastsAtom);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-  const [activeDrawerTab, setActiveDrawerTab] = useState("references");
+  const [activeDrawerTab, setActiveDrawerTab] = useState("metadata");
   const [, setExpandSignal] = useAtom(expandAllSignalAtom);
   const [, setCollapseSignal] = useAtom(collapseAllSignalAtom);
 
@@ -48,6 +49,7 @@ export function ReferencePanel() {
         );
       });
     }
+    if (sortOrder === "none") return result;
     const dir = sortOrder === "asc" ? 1 : -1;
     return [...result].sort((a, b) => {
       const nameA = getEntity(a.targetEntityId)?.title ?? "";
@@ -84,6 +86,7 @@ export function ReferencePanel() {
       group.push(ref);
       groups.set(typeId, group);
     });
+    if (sortOrder === "none") return groups;
     const dir = sortOrder === "asc" ? 1 : -1;
     return new Map(
       [...groups.entries()].sort(([a], [b]) => {
@@ -102,6 +105,7 @@ export function ReferencePanel() {
       group.push(ref);
       groups.set(ref.relationType, group);
     });
+    if (sortOrder === "none") return groups;
     const dir = sortOrder === "asc" ? 1 : -1;
     return new Map(
       [...groups.entries()].sort(([a], [b]) => {
@@ -121,16 +125,21 @@ export function ReferencePanel() {
         onChange={setActiveDrawerTab}
       />
 
-      {/* Search + filter row */}
-      <SearchBar />
+      {/* Metadata tab content */}
+      {activeDrawerTab === "metadata" && <MetadataDrawerContent />}
 
-      {/* Sort/filter toggles + collapse/expand */}
-      <FiltersRow
-        onExpandAll={() => setExpandSignal((s) => s + 1)}
-        onCollapseAll={() => setCollapseSignal((s) => s + 1)}
-      />
+      {/* References tab content */}
+      {activeDrawerTab === "references" && (
+        <>
+          <SearchBar />
+          <FiltersRow
+            onExpandAll={() => setExpandSignal((s) => s + 1)}
+            onCollapseAll={() => setCollapseSignal((s) => s + 1)}
+          />
+        </>
+      )}
 
-      {/* Reference list */}
+      {activeDrawerTab === "references" && (
       <div className="flex-1 overflow-auto pb-3">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -141,9 +150,11 @@ export function ReferencePanel() {
             </p>
           </div>
         ) : viewMode === "all" ? (
-          filtered.map((ref) => (
+          <div className="px-3 space-y-1.5">
+          {filtered.map((ref) => (
             <RefRow key={ref.id} reference={ref} onDelete={handleDelete} />
-          ))
+          ))}
+          </div>
         ) : viewMode === "by-entity-type" ? (
           <div className="px-3 space-y-1.5">
           {Array.from(groupedByEntityType.entries()).map(([typeId, refs]) => {
@@ -181,9 +192,17 @@ export function ReferencePanel() {
           />
         ) : null}
       </div>
+      )}
 
-      {/* Drawer action bar */}
-      <DrawerActionBar />
+      {/* Other tabs placeholder */}
+      {activeDrawerTab !== "metadata" && activeDrawerTab !== "references" && (
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-sm text-ink-muted capitalize">{activeDrawerTab} content</p>
+        </div>
+      )}
+
+      {/* Drawer action bar — contextual per tab */}
+      <DrawerActionBar activeTab={activeDrawerTab} />
 
       <ConfirmDialog
         open={deleteTarget !== null}

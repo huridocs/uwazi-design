@@ -16,7 +16,7 @@ export function HoverExpand({ reference, x, y }: HoverExpandProps) {
       className="fixed z-40 animate-fade-in-up pointer-events-none"
       style={{ left: x + 8, top: y + 8 }}
     >
-      <div className="bg-paper border border-border rounded-lg shadow-lg px-3 py-2.5 max-w-xs">
+      <div className="bg-paper border border-border rounded-md shadow-lg px-3 py-2.5 max-w-xs">
         <div className="flex items-center gap-2 mb-1.5">
           <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} size="sm" />
           <span className="text-[10px] text-ink-muted capitalize">

@@ -10,10 +10,10 @@ export interface DocumentMeta {
 
 export const currentDocument: DocumentMeta = {
   id: "doc-1",
-  title: "Report No. 55/97 — Case 11.137 (Juan Carlos Abella v. Argentina)",
+  title: "Inter-American Court of Human Rights — Case of Velásquez-Rodríguez v. Honduras — Judgment of June 26, 1987",
   entityTypeId: "court_case",
   language: "English",
   createdAt: "2024-06-15",
-  pages: 40,
+  pages: 14,
   filename: "sample.pdf",
 };

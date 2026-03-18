@@ -69,7 +69,7 @@ export function GroupedCard({
   };
 
   return (
-    <div className="border border-border/60 rounded-lg overflow-hidden bg-paper">
+    <div className="border border-border/60 rounded-md overflow-hidden bg-paper">
       <button
         onClick={toggle}
         className="w-full flex items-center gap-2 px-3 py-2 hover:bg-warm transition-colors"

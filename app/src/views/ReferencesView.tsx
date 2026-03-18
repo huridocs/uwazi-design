@@ -9,6 +9,7 @@ import { ReferencePanel } from "../components/references/ReferencePanel";
 import { EntityPickerModal } from "./EntityPickerModal";
 import { ToastContainer } from "./ToastContainer";
 import { FilesView } from "./FilesView";
+import { MetadataView } from "./MetadataView";
 
 const mainTabs = [
   { id: "metadata", label: "Metadata" },
@@ -25,6 +26,15 @@ export function ReferencesView() {
   const tabs = mainTabs.map((t) =>
     t.id === "references" ? { ...t, count: references.length } : t
   );
+
+  if (activeTab === "metadata") {
+    return (
+      <>
+        <MetadataView tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+        <ToastContainer />
+      </>
+    );
+  }
 
   if (activeTab === "files") {
     return (
@@ -44,7 +54,8 @@ export function ReferencesView() {
               tabs={tabs}
               activeId={activeTab}
               onChange={setActiveTab}
-              languages={["EN", "ES"]}
+              languages={["EN", "ES", "FR", "MY"]}
+            availableLanguages={["EN", "ES", "FR"]}
             />
             <DocMeta />
             <DocumentViewer />

@@ -52,7 +52,8 @@ export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
             tabs={tabs}
             activeId={activeTab}
             onChange={onTabChange}
-            languages={["EN", "ES"]}
+            languages={["EN", "ES", "FR", "MY"]}
+            availableLanguages={["EN", "ES", "FR"]}
           />
           <DocMeta />
           <div className="flex-1 overflow-auto p-4 space-y-5" style={{ backgroundColor: "#FCFAF8" }}>

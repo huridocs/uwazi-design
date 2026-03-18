@@ -10,7 +10,7 @@ interface RelatedDocCardProps {
 
 export function RelatedDocCard({ title, entityTypeId, referenceCount }: RelatedDocCardProps) {
   return (
-    <div className="flex items-center gap-3 px-3 py-2.5 border border-border/60 rounded-lg
+    <div className="flex items-center gap-3 px-3 py-2.5 border border-border/60 rounded-md
       hover:bg-warm transition-colors cursor-pointer group">
       <FileText size={16} className="text-ink-muted shrink-0" />
       <div className="flex-1 min-w-0">

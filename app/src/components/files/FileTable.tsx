@@ -27,7 +27,7 @@ export function FileTable({ files, selectedIds, onSelect, onSelectAll }: FileTab
 
   return (
     <div
-      className="rounded-lg overflow-hidden bg-paper"
+      className="rounded-md overflow-hidden bg-paper"
       style={{
         boxShadow: "0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)",
       }}

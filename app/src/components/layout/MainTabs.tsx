@@ -11,9 +11,12 @@ interface MainTabsProps {
   activeId: string;
   onChange: (id: string) => void;
   languages?: string[];
+  availableLanguages?: string[];
+  activeLanguage?: string;
+  onLanguageChange?: (lang: string) => void;
 }
 
-export function MainTabs({ tabs, activeId, onChange, languages = [] }: MainTabsProps) {
+export function MainTabs({ tabs, activeId, onChange, languages = [], availableLanguages, activeLanguage, onLanguageChange }: MainTabsProps) {
   return (
     <div
       className="flex items-center justify-between px-4 py-2.5 shrink-0"
@@ -56,14 +59,26 @@ export function MainTabs({ tabs, activeId, onChange, languages = [] }: MainTabsP
       {/* Right: Language badges */}
       {languages.length > 0 && (
         <div className="flex items-center gap-1">
-          {languages.map((lang) => (
-            <span
-              key={lang}
-              className="px-2.5 py-1 text-xs font-medium text-ink rounded-md bg-vellum"
-            >
-              {lang}
-            </span>
-          ))}
+          {languages.map((lang) => {
+            const isActive = lang === (activeLanguage ?? languages[0]);
+            const isAvailable = !availableLanguages || availableLanguages.includes(lang);
+            return (
+              <button
+                key={lang}
+                onClick={() => isAvailable && onLanguageChange?.(lang)}
+                disabled={!isAvailable}
+                className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+                  isActive
+                    ? "bg-vellum text-ink"
+                    : isAvailable
+                    ? "bg-warm text-ink-tertiary hover:text-ink-secondary"
+                    : "bg-warm/50 text-ink-muted/40 cursor-not-allowed"
+                }`}
+              >
+                {lang}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

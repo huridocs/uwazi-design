@@ -90,9 +90,12 @@ npm run dev        # → http://localhost:5173
 
 ### Features
 
-- **Layout** — navbar, main tabs (Metadata, Document, References, Relationships, Files), doc meta bar, resizable split view with drawer
+- **Layout** — navbar with logo + Library/Settings buttons, main tabs (Metadata, Document, References, Relationships, Files), doc meta bar, language badges (active/disabled), resizable split view with contextual drawer
+- **Metadata** — read mode with property cards (description, country with flag, dates, type, mechanism, signatories, other files), edit mode with inputs/textareas/checkboxes/country picker, PDF metadata card with View/Download
 - **Document viewer** — PDF rendering with continuous scroll, page navigation (Previous/Next), OCR button
 - **Text References** — highlight overlays (`mix-blend-mode: darken`), floating menu on text selection, entity picker modal (search → relation type → create), bidirectional navigation (highlight ↔ panel), delete with confirmation
-- **Reference panel** — search, sort (A→Z / Z→A), filter toggles (All / Entity type / Rel. type), grouped cards with collapse/expand all
+- **Reference panel** — search, sort (None/A→Z/Z→A), filter toggles (All/Entity type/Rel. type), grouped cards with collapse/expand all
 - **Files management** — dual tables (primary document + translations, supporting files), row selection with blue accent, file metadata drawer, bulk actions
-- **Shared** — toast notifications, entity pills, page tags, confirm dialogs
+- **Translations drawer** — per-language file cards (EN/ES/FR with file, MY empty state with dashed Add), Download all/Delete actions
+- **Drawer tabs** — contextual per view: Metadata/ToC/References/Relationships/Search (document), File/Translations (files), Files/Relationships (metadata), each with own action bar
+- **Shared** — toast notifications (center top), entity pills, page tags, confirm dialogs
