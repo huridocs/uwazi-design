@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, Music, Link2, Download, Trash2, Pencil, Files, MousePointerClick, Plus, ChevronRight, Star } from "lucide-react";
+import { FileText, Music, Link2, Download, Trash2, Pencil, MousePointerClick, Plus, ChevronRight, Star } from "lucide-react";
 import { DrawerTabs } from "../layout/DrawerTabs";
 import { FileEntry, primaryFiles } from "../../data/files";
 import { currentDocument } from "../../data/document";
@@ -94,16 +94,13 @@ export function FileDrawer({ selectedFiles }: FileDrawerProps) {
                 </div>
               </div>
             ) : selectedFiles.length > 1 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center gap-3">
-                <Files size={32} className="text-ink-muted/40" />
-                <div>
-                  <p className="text-sm font-medium text-ink-muted">
-                    {selectedFiles.length} files selected
-                  </p>
-                  <p className="text-xs text-ink-muted mt-1">
-                    Select a single file to view its details
-                  </p>
-                </div>
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-ink-tertiary mb-2">
+                  {selectedFiles.length} files selected
+                </p>
+                {selectedFiles.map((file) => (
+                  <FileCompactCard key={file.id} file={file} />
+                ))}
               </div>
             ) : (
               <FileDetails file={selectedFiles[0]} />
@@ -126,6 +123,19 @@ export function FileDrawer({ selectedFiles }: FileDrawerProps) {
                   <Trash2 size={12} /> Delete
                 </button>
               </div>
+            </div>
+          )}
+          {selectedFiles.length > 1 && (
+            <div
+              className="flex items-center justify-between h-12 px-3 shrink-0"
+              style={{ borderTop: "1px solid var(--border-primary)" }}
+            >
+              <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
+                <Download size={12} /> Download all
+              </button>
+              <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-seal rounded-md hover:bg-seal/90 transition-colors">
+                <Trash2 size={12} /> Delete {selectedFiles.length}
+              </button>
             </div>
           )}
         </>
@@ -250,6 +260,29 @@ function FileDetails({ file }: { file: FileEntry }) {
         </p>
       </div>
     </>
+  );
+}
+
+function FileCompactCard({ file }: { file: FileEntry }) {
+  const Icon = typeIcons[file.type];
+
+  return (
+    <div className="flex items-center gap-3 px-3 py-2.5 rounded-md bg-warm border border-border/40">
+      <Icon size={14} className="text-ink-muted shrink-0" />
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-medium text-ink truncate">{file.name}</p>
+        <div className="flex items-center gap-2 mt-0.5">
+          <span className="text-[10px] text-ink-muted">{file.type.toUpperCase()}</span>
+          <span className="text-[10px] text-ink-muted">{file.size}</span>
+          <span className="text-[10px] text-ink-muted">{file.language}</span>
+        </div>
+      </div>
+      {file.isDefault && (
+        <span className="px-1.5 py-0.5 text-[9px] font-medium rounded bg-warning-light text-warning shrink-0">
+          Default
+        </span>
+      )}
+    </div>
   );
 }
 

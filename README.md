@@ -31,10 +31,10 @@ Pencil exposes an MCP server that AI coding agents can use to read and write `.p
 │   └── archive/                # Previous iterations
 ├── app/                        # Lightweight frontend prototype (Vite + React)
 │   ├── src/
-│   │   ├── components/         # Layout, viewer, references, shared
+│   │   ├── components/         # Layout, viewer, references, shared, catalog
 │   │   ├── atoms/              # Jotai state (references, selection, filters)
 │   │   ├── data/               # Mock entities, documents, references
-│   │   └── views/              # Page-level views and modals
+│   │   └── views/              # Page-level views, modals, component catalog
 │   └── public/                 # Static assets (sample.pdf, logos)
 ├── images/                     # Shared assets (referenced by .pen files)
 ├── docs/                       # Rebrand guides & design documentation
@@ -94,8 +94,9 @@ npm run dev        # → http://localhost:5173
 - **Metadata** — read mode with property cards (description, country with flag, dates, type, mechanism, signatories, other files), edit mode with inputs/textareas/checkboxes/country picker, PDF metadata card with View/Download
 - **Document viewer** — PDF rendering with continuous scroll, page navigation (Previous/Next), OCR button
 - **Text References** — highlight overlays (`mix-blend-mode: darken`), floating menu on text selection, entity picker modal (search → relation type → create), bidirectional navigation (highlight ↔ panel), delete with confirmation
-- **Reference panel** — search, sort (None/A→Z/Z→A), filter toggles (All/Entity type/Rel. type), grouped cards with collapse/expand all
-- **Files management** — dual tables (primary document + translations, supporting files), row selection with blue accent, file metadata drawer, bulk actions
+- **Reference panel** — search, sort (None/A→Z/Z→A), filter toggles (All/Entity type/Rel. type/Density), grouped cards with collapse/expand all, stacked density chart by relation type
+- **Files management** — dual tables (primary document + translations, supporting files), row selection with blue accent, file metadata drawer, compact stacked cards on multi-select, bulk actions
 - **Translations drawer** — per-language file cards (EN/ES/FR with file, MY empty state with dashed Add), Download all/Delete actions
 - **Drawer tabs** — contextual per view: Metadata/ToC/References/Relationships/Search (document), File/Translations (files), Files/Relationships (metadata), each with own action bar
 - **Shared** — toast notifications (center top), entity pills, page tags, confirm dialogs
+- **Component Catalog** — click logo to open storybook-like catalog with live previews, copyable React + Tailwind code blocks, style guide (colors, typography, shadows, radii, spacing), sidebar with scroll tracking

@@ -7,6 +7,7 @@ const toggleOptions: { id: ViewMode; label: string }[] = [
   { id: "all", label: "All" },
   { id: "by-entity-type", label: "Entity type" },
   { id: "by-relation-type", label: "Rel. type" },
+  { id: "density", label: "Density" },
 ];
 
 const sortOptions: { id: SortOrder; label: string }[] = [
@@ -45,10 +46,10 @@ export function FiltersRow({ onCollapseAll, onExpandAll }: FiltersRowProps) {
               <button
                 key={opt.id}
                 onClick={() => setViewMode(opt.id)}
-                className={`px-2 h-6 text-xs transition-colors ${
+                className={`px-2 h-6 text-xs font-medium transition-colors ${
                   isActive
-                    ? "bg-vellum text-ink font-semibold"
-                    : "text-ink-tertiary hover:text-ink-secondary font-medium"
+                    ? "bg-vellum text-ink"
+                    : "text-ink-tertiary hover:text-ink-secondary"
                 }`}
                 style={{
                   borderLeft: i > 0 ? "1px solid var(--border-primary)" : "none",

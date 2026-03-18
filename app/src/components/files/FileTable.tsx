@@ -23,7 +23,7 @@ const typeLabels: Record<FileEntry["type"], string> = {
 };
 
 export function FileTable({ files, selectedIds, onSelect, onSelectAll }: FileTableProps) {
-  const allSelected = selectedIds.size === files.length;
+  const allSelected = files.length > 0 && files.every((f) => selectedIds.has(f.id));
 
   return (
     <div
