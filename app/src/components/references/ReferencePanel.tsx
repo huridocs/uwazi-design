@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback } from "react";
 import { useAtom } from "jotai";
-import { referencesAtom, toastsAtom } from "../../atoms/references";
+import { referencesAtom, toastsAtom, activeDrawerTabAtom } from "../../atoms/references";
 import { viewModeAtom, searchQueryAtom, sortOrderAtom, expandAllSignalAtom, collapseAllSignalAtom } from "../../atoms/filters";
 import { getEntity, getEntityType } from "../../data/entities";
 import { currentDocument } from "../../data/document";
@@ -32,7 +32,7 @@ export function ReferencePanel() {
   const [sortOrder] = useAtom(sortOrderAtom);
   const [, setToasts] = useAtom(toastsAtom);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-  const [activeDrawerTab, setActiveDrawerTab] = useState("metadata");
+  const [activeDrawerTab, setActiveDrawerTab] = useAtom(activeDrawerTabAtom);
   const [, setExpandSignal] = useAtom(expandAllSignalAtom);
   const [, setCollapseSignal] = useAtom(collapseAllSignalAtom);
 

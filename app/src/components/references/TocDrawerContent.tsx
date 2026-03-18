@@ -25,10 +25,10 @@ export function TocDrawerContent() {
   if (tocEntries.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-center gap-3 px-4">
-        <List size={32} className="text-ink-muted/40" />
+        <List size={32} className="text-ink-tertiary/40" />
         <div>
-          <p className="text-sm font-semibold text-ink-muted">No ToC</p>
-          <p className="text-xs text-ink-muted mt-1">
+          <p className="text-sm font-semibold text-ink-tertiary">No ToC</p>
+          <p className="text-xs text-ink-tertiary mt-1">
             Well, just a table of contents (ToC)
           </p>
         </div>
@@ -42,13 +42,13 @@ export function TocDrawerContent() {
       <div className="flex items-center justify-between px-3 py-2.5 shrink-0">
         <div className="flex items-center gap-1.5">
           <span className="text-sm font-semibold text-ink">Table of contents</span>
-          <Sparkles size={14} className="text-ink-muted" />
+          <Sparkles size={14} className="text-ink-tertiary" />
         </div>
         {hasAnyChildren && (
           <div className="flex items-center gap-3">
             <button
               onClick={collapseAll}
-              className="text-xs text-ink-muted hover:text-ink-secondary transition-colors"
+              className="text-xs text-ink-tertiary hover:text-ink-secondary transition-colors"
             >
               Collapse All
             </button>
@@ -104,7 +104,7 @@ function TocNode({
           {hasChildren && (
             <ChevronDown
               size={12}
-              className={`text-ink-muted transition-transform ${isExpanded ? "" : "-rotate-90"}`}
+              className={`text-ink-tertiary transition-transform ${isExpanded ? "" : "-rotate-90"}`}
             />
           )}
         </span>

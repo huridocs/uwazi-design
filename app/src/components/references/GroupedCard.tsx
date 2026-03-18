@@ -10,6 +10,7 @@ import {
   expandedGroupCountAtom,
   totalGroupCountAtom,
 } from "../../atoms/filters";
+import { expandGroupForRefAtom } from "../../atoms/references";
 
 interface GroupedCardProps {
   title: string;
@@ -60,6 +61,19 @@ export function GroupedCard({
       }
     }
   }, [collapseSignal]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-expand when a highlight click targets a ref in this group
+  // Uses functional setExpanded to read latest queued state (collapse may have just fired)
+  const [expandForRef, setExpandForRef] = useAtom(expandGroupForRefAtom);
+  useEffect(() => {
+    if (expandForRef && references.some((r) => r.id === expandForRef)) {
+      setExpanded((prev) => {
+        if (!prev) setExpandedCount((c) => c + 1);
+        return true;
+      });
+      setExpandForRef(null);
+    }
+  }, [expandForRef]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggle = () => {
     setExpanded((prev) => {

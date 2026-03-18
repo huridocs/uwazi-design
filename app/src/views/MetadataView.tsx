@@ -59,7 +59,7 @@ function MetadataReadBody({ onEdit }: { onEdit: () => void }) {
 
   return (
     <>
-      <DocMeta />
+      <DocMeta showPdfSelector={false} />
 
       {/* Scrollable metadata body */}
       <div className="flex-1 overflow-auto px-4 py-2 pb-8 space-y-3">

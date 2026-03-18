@@ -58,30 +58,28 @@ export function RefRow({ reference, onDelete }: RefRowProps) {
             : "hover:bg-warm"
         }`}
     >
-      <div className="flex items-start justify-between gap-2 mb-1.5">
-        <div className="flex items-center gap-2 min-w-0">
-          <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
-        </div>
-        <div className="flex items-center gap-1 shrink-0">
-          <PageTag page={reference.sourceSelection.page} onClick={handlePageClick} />
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(reference.id);
-            }}
-            className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-seal-tint
-              text-ink-muted hover:text-seal transition-all"
-          >
-            <Trash2 size={13} />
-          </button>
-        </div>
+      <div className="flex items-center justify-between gap-2 mb-1.5">
+        <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
+        <PageTag page={reference.sourceSelection.page} onClick={handlePageClick} />
       </div>
       <p className="text-xs text-ink-secondary leading-relaxed line-clamp-2">
         "{reference.sourceSelection.text}"
       </p>
-      <span className="text-[10px] text-ink-muted mt-1 inline-block capitalize">
-        {reference.relationType.replace("_", " ")}
-      </span>
+      <div className="flex items-center justify-between mt-1">
+        <span className="text-[10px] text-ink-tertiary capitalize">
+          {reference.relationType.replace("_", " ")}
+        </span>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(reference.id);
+          }}
+          className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-seal-tint
+            text-ink-muted hover:text-seal transition-all"
+        >
+          <Trash2 size={12} />
+        </button>
+      </div>
     </div>
   );
 }

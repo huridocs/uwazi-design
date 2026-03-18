@@ -108,7 +108,7 @@ function FilesActionBar({
   return (
     <div
       className={`flex items-center justify-between h-12 px-4 shrink-0 transition-colors ${
-        hasSelection ? "bg-[#F0EDED]" : "bg-paper"
+        hasSelection ? "bg-selected" : "bg-paper"
       }`}
       style={{ borderTop: "1px solid var(--border-primary)" }}
     >

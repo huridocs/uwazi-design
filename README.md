@@ -91,13 +91,13 @@ npm run dev        # → http://localhost:5173
 ### Features
 
 - **Layout** — navbar with logo + Library/Tools (left), Settings dropdown + dark mode toggle (right), main tabs (Metadata, Document, References, Relationships, Files), doc meta bar, language badges (EN/ES/FR/AR), resizable split view with contextual drawer
-- **Dark mode** — CSS-variable-driven theme toggled via sun/moon button in navbar. `.dark` class on `<html>` swaps all tokens (backgrounds, text, borders, shadows, highlights). Persists to localStorage.
+- **Dark mode** — CSS-variable-driven theme toggled via sun/moon button in navbar. `.dark` class on `<html>` swaps all tokens (backgrounds, text, borders, shadows, highlights, selection states, checkbox accents). Persists to localStorage.
 - **RTL support** — test RTL layout via Settings dropdown toggle. Switches to Arabic content and sets `dir="rtl"` on `<html>`. Code blocks and monospace content stay LTR. Settings dropdown anchors right-aligned in LTR, left-aligned in RTL.
 - **i18n** — language toggle (EN/ES/FR/AR) updates document title, metadata labels and values, PDF metadata, and drawer content in real time via Jotai atom
 - **Metadata** — read mode with property cards (description, country with flag, dates, type, mechanism, signatories, other files), edit mode with inputs/textareas/checkboxes/country picker, PDF metadata card with View/Download. Drawer shows complete metadata with collapsible sections (description, PDF, geolocation, fields, other files)
-- **Document viewer** — PDF rendering with continuous scroll, page navigation (Previous/Next), OCR button
-- **Text References** — highlight overlays (`mix-blend-mode: darken`), floating menu on text selection, entity picker modal (search → relation type → create), bidirectional navigation (highlight ↔ panel), delete with confirmation
-- **Reference panel** — search, sort (None/A→Z/Z→A), filter toggles (All/Entity type/Rel. type/Density), grouped cards with collapse/expand all, stacked density chart by relation type
+- **Document viewer** — PDF rendering with continuous scroll, responsive container-aware scaling (ResizeObserver), page navigation (Previous/Next), OCR button
+- **Text References** — per-line highlight overlays with entity-type color coding (subtle tint, hover/active/flash states), entity name tags on hover, floating menu on text selection, entity picker modal (search → relation type → create), bidirectional navigation (highlight click → opens References tab, collapses other groups, expands target group, scrolls to RefRow; RefRow click → navigates to page, flashes highlight), delete with confirmation
+- **Reference panel** — search, sort (None/A→Z/Z→A), filter toggles (All/Entity type/Rel. type/Density), grouped cards with collapse/expand all, stacked density chart by relation type. References tab in main content shows full-width list with document viewer in drawer
 - **Files management** — dual tables (primary document + translations, supporting files), row selection with blue accent, file metadata drawer, compact stacked cards on multi-select, bulk actions
 - **Translations drawer** — per-language file cards (EN/ES/FR with file, AR empty state with dashed Add), Download all/Delete actions
 - **Table of Contents** — collapsible tree with nested sections (up to 4 levels), page tags, Collapse All / Expand All, ML-generated indicator, Edit + Mark as reviewed actions

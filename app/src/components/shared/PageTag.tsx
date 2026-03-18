@@ -8,7 +8,7 @@ export function PageTag({ page, onClick }: PageTagProps) {
     <button
       onClick={onClick}
       className="inline-flex items-center px-1.5 py-0.5 text-xs font-mono rounded
-        bg-vellum text-ink-tertiary hover:bg-border hover:text-ink-secondary
+        bg-vellum text-ink-secondary hover:bg-border hover:text-ink
         transition-colors cursor-pointer"
     >
       p.{page}

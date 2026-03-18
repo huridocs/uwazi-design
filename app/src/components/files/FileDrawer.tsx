@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, Music, Link2, Download, Trash2, Pencil, MousePointerClick, Plus, ChevronRight } from "lucide-react";
+import { FileText, Music, Link2, Download, Trash2, Pencil, MousePointerClick, Plus, Eye } from "lucide-react";
 import { DrawerTabs } from "../layout/DrawerTabs";
 import { FileEntry, primaryFiles } from "../../data/files";
 import { currentDocument } from "../../data/document";
@@ -106,34 +106,16 @@ export function FileDrawer({ selectedFiles }: FileDrawerProps) {
             )}
           </div>
 
-          {selectedFiles.length === 1 && (
+          {selectedFiles.length >= 1 && (
             <div
-              className="flex items-center justify-between h-12 px-3 shrink-0"
+              className="flex items-center justify-between h-12 px-3 shrink-0 bg-selected transition-colors"
               style={{ borderTop: "1px solid var(--border-primary)" }}
             >
               <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
                 <Pencil size={12} /> Edit
               </button>
-              <div className="flex items-center gap-2">
-                <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
-                  <Download size={12} /> Download
-                </button>
-                <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-seal rounded-md hover:bg-seal/90 transition-colors">
-                  <Trash2 size={12} /> Delete
-                </button>
-              </div>
-            </div>
-          )}
-          {selectedFiles.length > 1 && (
-            <div
-              className="flex items-center justify-between h-12 px-3 shrink-0"
-              style={{ borderTop: "1px solid var(--border-primary)" }}
-            >
               <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
-                <Download size={12} /> Download all
-              </button>
-              <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-seal rounded-md hover:bg-seal/90 transition-colors">
-                <Trash2 size={12} /> Delete {selectedFiles.length}
+                <Download size={12} /> {selectedFiles.length > 1 ? "Download all" : "Download"}
               </button>
             </div>
           )}
@@ -144,11 +126,11 @@ export function FileDrawer({ selectedFiles }: FileDrawerProps) {
             {translationLanguages.map((lang) => (
               <div key={lang.code}>
                 {/* Language header */}
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold text-ink">{lang.name}</span>
+                <div className="flex items-center gap-2 mb-2">
                   <span className="px-2 py-0.5 text-xs font-medium rounded-md bg-vellum text-ink">
                     {lang.code}
                   </span>
+                  <span className="text-sm font-semibold text-ink">{lang.name}</span>
                 </div>
 
                 {lang.file ? (
@@ -173,8 +155,8 @@ export function FileDrawer({ selectedFiles }: FileDrawerProps) {
                       </div>
                     </div>
                     <div className="flex items-center pr-3 shrink-0">
-                      <button className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-ink rounded border border-border hover:bg-parchment transition-colors">
-                        <ChevronRight size={12} /> View
+                      <button className="flex items-center justify-center p-1.5 rounded hover:bg-parchment transition-colors">
+                        <Eye size={16} className="text-ink-tertiary" />
                       </button>
                     </div>
                   </div>

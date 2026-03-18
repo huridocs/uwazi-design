@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -19,6 +19,20 @@ export function DocumentViewer() {
   const [selection, setSelection] = useAtom(textSelectionAtom);
   const setScrollToHighlight = useSetAtom(scrollToHighlightAtom);
   const [references] = useAtom(referencesAtom);
+  const [containerWidth, setContainerWidth] = useState(800);
+
+  // Measure container width for responsive PDF scaling
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      setContainerWidth(entry.contentRect.width);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const pageWidth = useMemo(() => Math.min(860, containerWidth - 48), [containerWidth]);
 
   const onDocumentLoadSuccess = useCallback(
     ({ numPages }: { numPages: number }) => {
@@ -145,7 +159,7 @@ export function DocumentViewer() {
             >
               <Page
                 pageNumber={pageNum}
-                width={Math.min(860, window.innerWidth - 520)}
+                width={pageWidth}
                 renderTextLayer={true}
                 renderAnnotationLayer={true}
               />

@@ -29,7 +29,7 @@ export function DrawerActionBar({ activeTab }: DrawerActionBarProps) {
       {activeTab === "references" && (
         <>
           <div className="flex items-center gap-1">
-            <span className="text-[11px] text-ink-muted">To add references check this</span>
+            <span className="text-[11px] text-ink-tertiary">To add references check this</span>
             <span className="text-[11px] font-medium text-carbon cursor-pointer hover:underline">
               guide here.
             </span>
@@ -60,7 +60,7 @@ export function DrawerActionBar({ activeTab }: DrawerActionBarProps) {
 
       {activeTab === "search" && (
         <>
-          <span className="text-[11px] text-ink-muted">Search tips</span>
+          <span className="text-[11px] text-ink-tertiary">Search tips</span>
           <HelpCircle size={18} className="text-carbon" aria-label="Search tips" />
         </>
       )}
