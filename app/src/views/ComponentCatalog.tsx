@@ -728,6 +728,7 @@ export function ComponentCatalog() {
                   name="UwaziLoader"
                   description="Branded loading animation — 3x2 grid with left-to-right column sweep"
                   code={`<UwaziLoader />
+<UwaziLoader size="xs" />
 <UwaziLoader size="sm" />
 <UwaziLoader size="lg" />
 <UwaziLoader size="sm" color="white" />
@@ -748,6 +749,10 @@ export function ComponentCatalog() {
                     <div className="flex flex-col gap-3">
                       <span className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider">Sizes</span>
                       <div className="flex items-center gap-8">
+                        <div className="flex flex-col items-center gap-2">
+                          <UwaziLoader size="xs" />
+                          <span className="text-[10px] text-ink-muted">xs</span>
+                        </div>
                         <div className="flex flex-col items-center gap-2">
                           <UwaziLoader size="sm" />
                           <span className="text-[10px] text-ink-muted">sm</span>
@@ -792,6 +797,14 @@ export function ComponentCatalog() {
                           <span className="text-sm text-ink">Processing document</span>
                         </div>
                       </div>
+                    </div>
+
+                    {/* Inline */}
+                    <div className="flex flex-col gap-3">
+                      <span className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider">Inline</span>
+                      <p className="text-sm text-ink-secondary flex items-center gap-1.5">
+                        <UwaziLoader size="xs" /> Extracting information
+                      </p>
                     </div>
 
                     {/* In card */}

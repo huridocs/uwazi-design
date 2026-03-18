@@ -1,9 +1,10 @@
 interface UwaziLoaderProps {
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   color?: "default" | "white";
 }
 
 const sizes = {
+  xs: { cell: 4, gap: 1 },
   sm: { cell: 6, gap: 2 },
   md: { cell: 10, gap: 3 },
   lg: { cell: 16, gap: 4 },
@@ -15,7 +16,7 @@ export function UwaziLoader({ size = "md", color = "default" }: UwaziLoaderProps
 
   return (
     <div
-      className="inline-grid"
+      className="inline-grid align-middle"
       style={{
         gridTemplateColumns: `repeat(3, ${cell}px)`,
         gridTemplateRows: `repeat(2, ${cell}px)`,
