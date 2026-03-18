@@ -92,7 +92,7 @@ npm run dev        # → http://localhost:5173
 
 - **Layout** — navbar with logo + Library/Tools (left), Settings dropdown + dark mode toggle (right), main tabs (Metadata, Document, References, Relationships, Files), doc meta bar, language badges (EN/ES/FR/AR), resizable split view with contextual drawer
 - **Dark mode** — CSS-variable-driven theme toggled via sun/moon button in navbar. `.dark` class on `<html>` swaps all tokens (backgrounds, text, borders, shadows, highlights). Persists to localStorage.
-- **RTL support** — test RTL layout via Settings dropdown toggle. Switches to Arabic content and sets `dir="rtl"` on `<html>`. Code blocks and monospace content stay LTR.
+- **RTL support** — test RTL layout via Settings dropdown toggle. Switches to Arabic content and sets `dir="rtl"` on `<html>`. Code blocks and monospace content stay LTR. Settings dropdown anchors right-aligned in LTR, left-aligned in RTL.
 - **i18n** — language toggle (EN/ES/FR/AR) updates document title, metadata labels and values, PDF metadata, and drawer content in real time via Jotai atom
 - **Metadata** — read mode with property cards (description, country with flag, dates, type, mechanism, signatories, other files), edit mode with inputs/textareas/checkboxes/country picker, PDF metadata card with View/Download. Drawer shows complete metadata with collapsible sections (description, PDF, geolocation, fields, other files)
 - **Document viewer** — PDF rendering with continuous scroll, page navigation (Previous/Next), OCR button

@@ -76,7 +76,7 @@ export function Navbar({ onLogoClick, showingCatalog, theme, onToggleTheme, rtl,
               <div
                 dir="ltr"
                 className="absolute top-full mt-1.5 w-52 bg-paper border border-border rounded-lg shadow-lg overflow-hidden z-50"
-                style={{ left: 0 }}
+                style={{ right: rtl ? undefined : 0, left: rtl ? 0 : undefined }}
               >
                 <div className="py-1">
                   <button
