@@ -88,6 +88,20 @@ npm install
 npm run dev        # → http://localhost:5173
 ```
 
+### Screenshots
+
+| Document viewer | References (main) |
+|---|---|
+| ![Document](images/screens/prototype/01-document-view.png) | ![References](images/screens/prototype/02-references-main.png) |
+
+| Metadata | Files |
+|---|---|
+| ![Metadata](images/screens/prototype/03-metadata-view.png) | ![Files](images/screens/prototype/05-files-selected.png) |
+
+| Document + References drawer | Dark mode |
+|---|---|
+| ![Drawer](images/screens/prototype/06-document-references-drawer.png) | ![Dark](images/screens/prototype/07-dark-mode.png) |
+
 ### Features
 
 - **Layout** — navbar with logo + Library/Tools (left), Settings dropdown + dark mode toggle (right), main tabs (Metadata, Document, References, Relationships, Files), doc meta bar, language badges (EN/ES/FR/AR), resizable split view with contextual drawer
