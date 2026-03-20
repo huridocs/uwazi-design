@@ -88,41 +88,45 @@ npm install
 npm run dev        # → http://localhost:5173
 ```
 
-### Screenshots
+### Views
 
 | Document viewer | Metadata |
 |---|---|
 | ![Document](images/screens/prototype/01-document-view.png) | ![Metadata](images/screens/prototype/03-metadata-view.png) |
 
-| Files | Dark mode |
+| Files (selected) | Dark mode |
 |---|---|
 | ![Files](images/screens/prototype/05-files-selected.png) | ![Dark](images/screens/prototype/07-dark-mode.png) |
 
-#### Close-ups
-
-| Navbar | Tab bar + language badges |
+| Document + drawer | Component catalog |
 |---|---|
-| ![Navbar](images/screens/prototype/closeup-navbar.png) | ![Tabs](images/screens/prototype/closeup-tab-bar.png) |
+| ![Drawer](images/screens/prototype/06-document-references-drawer.png) | ![Catalog](images/screens/prototype/08-component-catalog.png) |
 
-| Entity bar | Page navigation |
-|---|---|
-| ![Entity](images/screens/prototype/closeup-entity-bar.png) | ![PageNav](images/screens/prototype/closeup-page-nav.png) |
+### Close-ups
 
-| Document with highlights + drawer | Dark mode split view |
+| Highlights + drawer | Dark mode split |
 |---|---|
 | ![Highlights](images/screens/prototype/closeup-highlights-and-drawer.png) | ![DarkSplit](images/screens/prototype/closeup-dark-split.png) |
 
-| Metadata cards | Metadata drawer |
+| Metadata cards | File cards |
 |---|---|
-| ![MetaCards](images/screens/prototype/closeup-metadata-content.png) | ![MetaDrawer](images/screens/prototype/closeup-metadata-drawer.png) |
+| ![MetaCards](images/screens/prototype/closeup-metadata-content.png) | ![FileCards](images/screens/prototype/closeup-file-drawer.png) |
 
-| File cards | Dark mode drawer |
+| Metadata drawer | Dark mode drawer |
 |---|---|
-| ![FileCards](images/screens/prototype/closeup-file-drawer.png) | ![DarkDrawer](images/screens/prototype/closeup-dark-drawer.png) |
+| ![MetaDrawer](images/screens/prototype/closeup-metadata-drawer.png) | ![DarkDrawer](images/screens/prototype/closeup-dark-drawer.png) |
 
-| Navbar (dark) |
+| Navbar | Navbar (dark) |
+|---|---|
+| ![Navbar](images/screens/prototype/closeup-navbar.png) | ![DarkNav](images/screens/prototype/closeup-dark-navbar.png) |
+
+| Tab bar + language badges | Entity bar |
+|---|---|
+| ![Tabs](images/screens/prototype/closeup-tab-bar.png) | ![Entity](images/screens/prototype/closeup-entity-bar.png) |
+
+| Page navigation |
 |---|
-| ![DarkNav](images/screens/prototype/closeup-dark-navbar.png) |
+| ![PageNav](images/screens/prototype/closeup-page-nav.png) |
 
 ### Features
 
