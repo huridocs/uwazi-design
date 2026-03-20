@@ -92,6 +92,12 @@ npm install
 npm run dev        # → http://localhost:5173
 ```
 
+### Conventions
+
+- **Units** — Use `rem` for layout dimensions (widths, heights, max-widths). Tailwind spacing utilities (`px-5`, `py-2`, `gap-3`, etc.) are fine — they already output `rem`. Reserve `px` for borders, shadows, and sub-pixel details.
+- **Colors** — All via CSS custom properties in `tokens.css`, mapped to Tailwind in `index.css`. Dark mode comes free — never hardcode hex values.
+- **State** — Jotai atoms for cross-component state, local `useState` for view-scoped UI.
+
 ### Navigation
 
 The prototype has three top-level views controlled by the navbar:
@@ -153,9 +159,9 @@ The prototype has three top-level views controlled by the navbar:
 - **Drawer tabs** — contextual per view: Metadata/ToC/References/Relationships/Search (document), File/Translations (files), Files/Relationships (metadata)
 
 #### Import CSV
-- **Tools sidebar** — 250px panel with Metadata (Templates, Extraction, Thesauri, Relationship Types) and Tools (Processes, Import CSV, Activity Log, Global CSS, Uploads) sections. Active item highlighted with blue left-border accent.
-- **List view** — Stats bar (totals), sortable table with status badges, mini progress bars, checkbox selection with bulk delete
-- **Detail view** — 6 states: completed (green progress + stats cards), uploading (stepper step 1 + animated blue bar), processing (stepper step 2 + animated blue bar), failed (red alert + error table), warnings (amber alert + warnings table), mixed errors+warnings (both alerts + combined issues table)
+- **Tools sidebar** — fixed-width panel with Metadata (Templates, Extraction, Thesauri, Relationship Types) and Tools (Processes, Import CSV, Activity Log, Global CSS, Uploads) sections. Active item highlighted with blue left-border accent.
+- **List view** — Stats bar (totals), table with status badges, mini progress bars, checkbox selection with bulk delete. Table fills available space — pinned header/footer, scrollable rows, action bar at bottom with gap.
+- **Detail view** — 6 states: completed (green progress + stats cards + created entities table), uploading (stepper step 1 + animated blue bar), processing (stepper step 2 + animated blue bar), failed (red alert + error table), warnings (amber alert + warnings table), mixed errors+warnings (both alerts + combined issues table). Tables fill remaining viewport space with pinned header/footer.
 - **New Import modal** — Dropzone with click-to-upload, searchable template dropdown, three form states (empty → dropdown open → filled)
 - **Upload simulation** — Animated progress: uploading → processing → completed, with random tick intervals and random outcome (clean or with warnings)
 - **Empty state** — Upload icon + "No imports yet" CTA

@@ -16,7 +16,7 @@ interface StatusBadgeProps {
 export function StatusBadge({ status }: StatusBadgeProps) {
   const { label, bg, text } = config[status];
   return (
-    <span className={`inline-flex px-2 py-0.5 text-[11px] font-semibold rounded-full ${bg} ${text}`}>
+    <span className={`inline-flex w-fit px-2 py-0.5 text-[11px] font-semibold rounded-full ${bg} ${text}`}>
       {label}
     </span>
   );

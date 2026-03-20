@@ -139,14 +139,12 @@ export function ImportCSVView() {
   return (
     <ImportCSVLayout
       actionBar={
-        screen === "list" ? (
-          <ToolsActionBar
-            selectedCount={selectedIds.size}
-            totalCount={imports.length}
-            onNewImport={() => setModalOpen(true)}
-            onDeleteSelected={() => setDeleteConfirmOpen(true)}
-          />
-        ) : undefined
+        <ToolsActionBar
+          selectedCount={screen === "list" ? selectedIds.size : 0}
+          totalCount={imports.length}
+          onNewImport={() => setModalOpen(true)}
+          onDeleteSelected={() => setDeleteConfirmOpen(true)}
+        />
       }
     >
       {screen === "list" ? (

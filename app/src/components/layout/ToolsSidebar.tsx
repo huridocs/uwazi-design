@@ -32,7 +32,7 @@ const toolsItems = [
 export function ToolsSidebar({ activeItem = "import-csv" }: ToolsSidebarProps) {
   return (
     <aside
-      className="w-[250px] h-full shrink-0 bg-paper overflow-y-auto"
+      className="w-[15.625rem] h-full shrink-0 bg-paper overflow-y-auto"
       style={{ borderRight: "1px solid var(--border-primary)" }}
     >
       <div className="py-4">

@@ -15,15 +15,15 @@ export function ToolsActionBar({
 
   return (
     <div
-      className={`flex items-center justify-between h-[58px] px-5 shrink-0 transition-colors ${
+      className={`flex items-center justify-between h-12 px-4 shrink-0 transition-colors ${
         hasSelection ? "bg-selected" : "bg-paper"
       }`}
       style={{ borderTop: "1px solid var(--border-primary)" }}
     >
       <button
         onClick={onNewImport}
-        className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-parchment bg-ink rounded-md
-          hover:bg-ink/90 transition-colors"
+        className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-ink rounded-md
+          border border-border hover:bg-warm transition-colors"
       >
         <span>+</span> New Import
       </button>

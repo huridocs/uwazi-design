@@ -39,6 +39,56 @@ export const templates = [
   { id: "t8", name: "Document" },
 ];
 
+export interface CreatedEntity {
+  id: string;
+  title: string;
+  template: string;
+  date: string;
+}
+
+const courtCaseNames = [
+  "Velásquez Rodríguez v. Honduras", "Godínez Cruz v. Honduras", "Aloeboetoe et al. v. Suriname",
+  "Neira Alegría et al. v. Peru", "Caballero Delgado and Santana v. Colombia", "El Amparo v. Venezuela",
+  "Garrido and Baigorria v. Argentina", "Loayza Tamayo v. Peru", "Castillo Páez v. Peru",
+  "Suárez Rosero v. Ecuador", "Blake v. Guatemala", "Paniagua Morales et al. v. Guatemala",
+  "Cantoral Benavides v. Peru", "Durand and Ugarte v. Peru", "Bámaca Velásquez v. Guatemala",
+  "Barrios Altos v. Peru", "Hilaire v. Trinidad and Tobago", "Myrna Mack Chang v. Guatemala",
+  "Maritza Urrutia v. Guatemala", "Molina Theissen v. Guatemala",
+];
+
+const personNames = [
+  "Juan Carlos Abella", "María Elena Almeida", "Pedro Sánchez García", "Ana Lucía Flores",
+  "Roberto Mendoza", "Carmen Díaz Ortega", "Fernando Torres", "Isabel Ramírez",
+  "Diego Morales", "Luisa Fernanda Pérez", "Andrés Martínez", "Claudia Vásquez",
+  "Miguel Ángel Reyes", "Patricia Herrera", "Javier Gutiérrez", "Sofía Castillo",
+  "Ricardo Vargas", "Daniela Rojas", "Alejandro Ruiz", "Valentina Espinoza",
+];
+
+const countryNames = [
+  "Argentina", "Bolivia", "Brazil", "Chile", "Colombia", "Costa Rica", "Cuba",
+  "Dominican Republic", "Ecuador", "El Salvador", "Guatemala", "Haiti", "Honduras",
+  "Jamaica", "Mexico", "Nicaragua", "Panama", "Paraguay", "Peru", "Suriname",
+];
+
+function namePool(template: string): string[] {
+  if (template === "Court Case") return courtCaseNames;
+  if (template === "Person") return personNames;
+  if (template === "Country") return countryNames;
+  return courtCaseNames;
+}
+
+export function generateCreatedEntities(entry: ImportEntry): CreatedEntity[] {
+  if (entry.entities === 0) return [];
+  const pool = namePool(entry.template);
+  const count = Math.min(entry.entities, 20); // show up to 20
+  return Array.from({ length: count }, (_, i) => ({
+    id: `${entry.id}-ent-${i}`,
+    title: pool[i % pool.length] + (i >= pool.length ? ` (${Math.floor(i / pool.length) + 1})` : ""),
+    template: entry.template,
+    date: entry.date,
+  }));
+}
+
 export const defaultImports: ImportEntry[] = [
   {
     id: "imp1",

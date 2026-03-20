@@ -55,7 +55,7 @@ export function NewImportModal({ open, onClose, onImport }: NewImportModalProps)
       aria-modal="true"
       aria-labelledby="import-modal-title"
     >
-      <div className="bg-paper rounded-xl shadow-xl w-full max-w-[560px] animate-fade-in-up">
+      <div className="bg-paper rounded-xl shadow-xl w-full max-w-[35rem] animate-fade-in-up">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid var(--border-primary)" }}>
           <h2 id="import-modal-title" className="text-base font-semibold text-ink">New Import</h2>

@@ -11,13 +11,13 @@ export function ImportEmptyState({ onNewImport }: ImportEmptyStateProps) {
         <Upload size={28} className="text-ink-tertiary/50" />
       </div>
       <h3 className="text-sm font-semibold text-ink mb-1">No imports yet</h3>
-      <p className="text-xs text-ink-tertiary mb-5 max-w-[260px]">
+      <p className="text-xs text-ink-tertiary mb-5 max-w-[16.25rem]">
         Import CSV files to bulk-create entities from spreadsheets
       </p>
       <button
         onClick={onNewImport}
-        className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-parchment bg-ink rounded-md
-          hover:bg-ink/90 transition-colors"
+        className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-ink rounded-md
+          border border-border hover:bg-warm transition-colors"
       >
         <span>+</span> New Import
       </button>

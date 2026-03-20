@@ -1,13 +1,14 @@
-import type { ImportIssue } from "../../data/imports";
+import { Eye } from "lucide-react";
+import type { CreatedEntity } from "../../data/imports";
 
-interface IssuesTableProps {
-  issues: ImportIssue[];
+interface EntitiesTableProps {
+  entities: CreatedEntity[];
 }
 
-const cols = "1fr 2fr 5rem 5.625rem";
+const cols = "1fr 10rem 5.625rem 2.75rem";
 
-export function IssuesTable({ issues }: IssuesTableProps) {
-  if (issues.length === 0) return null;
+export function EntitiesTable({ entities }: EntitiesTableProps) {
+  if (entities.length === 0) return null;
 
   return (
     <div
@@ -25,40 +26,37 @@ export function IssuesTable({ issues }: IssuesTableProps) {
           borderBottom: "1px solid var(--border-primary)",
         }}
       >
-        <span>Field</span>
-        <span>Issue</span>
-        <span>Type</span>
-        <span>Date</span>
+        <span>Title</span>
+        <span>Template</span>
+        <span>Created</span>
+        <span className="text-center">View</span>
       </div>
 
       {/* Rows — fills available space, scrolls */}
       <div className="flex-1 overflow-y-auto min-h-0">
-        {issues.map((issue) => (
+        {entities.map((entity) => (
           <div
-            key={issue.id}
-            className="grid items-center gap-3 px-4 h-11 text-sm"
+            key={entity.id}
+            className="grid items-center gap-3 px-4 h-11 text-sm hover:bg-warm transition-colors"
             style={{
               gridTemplateColumns: cols,
               borderBottom: "1px solid var(--border-primary)",
             }}
           >
-            <span className="text-xs font-medium text-ink font-mono truncate">{issue.field}</span>
-            <span className="text-xs text-ink-secondary truncate">{issue.issue}</span>
-            <span
-              className={`inline-flex w-fit px-2 py-0.5 text-[11px] font-semibold rounded-full ${
-                issue.type === "warning"
-                  ? "bg-warning-light text-warning"
-                  : "bg-seal-tint text-seal"
-              }`}
-            >
-              {issue.type === "warning" ? "Warning" : "Error"}
-            </span>
+            <span className="text-xs font-medium text-ink truncate">{entity.title}</span>
+            <span className="text-xs text-ink-tertiary">{entity.template}</span>
             <span className="text-xs text-ink-tertiary">
-              {new Date(issue.date).toLocaleDateString("en-US", {
+              {new Date(entity.date).toLocaleDateString("en-US", {
                 month: "short",
                 day: "numeric",
               })}
             </span>
+            <button
+              aria-label={`View ${entity.title}`}
+              className="flex items-center justify-center p-1 rounded hover:bg-parchment transition-colors"
+            >
+              <Eye size={14} className="text-ink-tertiary" />
+            </button>
           </div>
         ))}
       </div>
@@ -71,7 +69,7 @@ export function IssuesTable({ issues }: IssuesTableProps) {
           borderTop: "1px solid var(--border-primary)",
         }}
       >
-        <span>{issues.length} issues</span>
+        <span>{entities.length} entities shown</span>
       </div>
     </div>
   );
