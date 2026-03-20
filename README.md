@@ -1,6 +1,6 @@
 # Uwazi 2026
 
-Design system, screens, and rebrand assets for Uwazi v2.
+Design system, screens, and interactive prototype for the Uwazi settings/admin UI redesign.
 
 ## Setup — Pencil
 
@@ -21,7 +21,7 @@ Pencil exposes an MCP server that AI coding agents can use to read and write `.p
 
 ```
 .
-├── ui/                         # All design files
+├── ui/                         # All design files (.pen)
 │   ├── entity-view/            # Entity viewer screens
 │   ├── library/                # Library & search
 │   ├── tools/                  # Admin tools (import CSV, activity log, etc.)
@@ -29,12 +29,20 @@ Pencil exposes an MCP server that AI coding agents can use to read and write `.p
 │   │   ├── user/               # User preferences
 │   │   └── system/             # System configuration
 │   └── archive/                # Previous iterations
-├── app/                        # Lightweight frontend prototype (Vite + React)
+├── app/                        # Interactive prototype (Vite + React + TS + Tailwind v4)
 │   ├── src/
-│   │   ├── components/         # Layout, viewer, references, shared, catalog
-│   │   ├── atoms/              # Jotai state (references, selection, filters)
-│   │   ├── data/               # Mock entities, documents, references
-│   │   └── views/              # Page-level views, modals, component catalog
+│   │   ├── atoms/              # Jotai state (navigation, references, selection, filters, theme, language)
+│   │   ├── components/
+│   │   │   ├── layout/         # Navbar, SplitView, MainTabs, DrawerTabs, Breadcrumb, ToolsSidebar, ToolsActionBar
+│   │   │   ├── viewer/         # DocumentViewer, PageHighlights, FloatingMenu, ActionBar
+│   │   │   ├── references/     # ReferencePanel, RefRow, FilterBar, SearchBar, GroupedCard, DensityCard
+│   │   │   ├── files/          # FileTable, FileDrawer
+│   │   │   ├── metadata/       # MetadataCard
+│   │   │   ├── import-csv/     # ImportCSVLayout, ImportListView, ImportDetailView, ImportTable, IssuesTable, ImportEmptyState, NewImportModal
+│   │   │   ├── shared/         # ConfirmDialog, UwaziLoader, StatusBadge, ProgressBar, StatsCard, Stepper, AlertBanner, EntityPill, PageTag, CountBadge
+│   │   │   └── catalog/        # CatalogEntry, StyleGuide
+│   │   ├── data/               # Mock data (entities, documents, references, files, metadata, toc, imports)
+│   │   └── views/              # Page-level orchestrators (ReferencesView, FilesView, MetadataView, ImportCSVView, ComponentCatalog)
 │   └── public/                 # Static assets (sample.pdf, logos)
 ├── images/                     # Shared assets (referenced by .pen files)
 ├── docs/                       # Rebrand guides & design documentation
@@ -47,8 +55,6 @@ Pencil exposes an MCP server that AI coding agents can use to read and write `.p
 |---|---|---|
 | Entity View | `ui/entity-view/entity-view.pen` | Document, Files (Table, Split Selected, Split Supporting, Split Multi, Table Selected, Table Multi-select), drawer |
 | Import CSV | `ui/tools/import-csv.pen` | Empty State, New Import Modal (3 states), List, List Selected, Detail, Detail Uploading, Detail Processing, Detail Failed, Detail Warnings, Detail Mixed |
-
-See [`docs/screens.md`](docs/screens.md) for full screen index with node IDs and layout details.
 
 ## Branding
 
@@ -68,17 +74,15 @@ Navbar wordmark: **73 x 18**. Wordmark is the default — symbol only where spac
 | Name | Hex | Role |
 |---|---|---|
 | Ink | `#1A1A1A` | The letterpress — text, headers, primary buttons |
-| Seal | `#E8432A` | The stamp — danger, alerts, actions |
-| Carbon | `#00B4F0` | The copy — links, data, processing |
+| Seal | `#E8432A` | The stamp — danger, alerts, destructive actions |
+| Carbon | `#00B4F0` | The copy — links, data, processing states |
 | Vellum | `#F5EED7` | Warm stock — muted backgrounds, hover states |
 | Parchment | `#F5F0E8` | Cool stock — page grounds |
 | Paper | `#FFFFFF` | The margin — cards, modals, open space |
 
-See [`docs/brand-colors.md`](docs/brand-colors.md) for full rebrand guide — variable mapping, accent usage, and design decisions.
-
 ## Prototype
 
-Lightweight frontend for testing interactions. Vite + React 18 + TypeScript + Tailwind v4 + Jotai. All mock data, no backend.
+Interactive frontend for testing layout, navigation, and interaction patterns. Vite + React 18 + TypeScript + Tailwind v4 + Jotai. All mock data, no backend.
 
 ### Quick start
 
@@ -87,6 +91,14 @@ cd app
 npm install
 npm run dev        # → http://localhost:5173
 ```
+
+### Navigation
+
+The prototype has three top-level views controlled by the navbar:
+
+- **Library** (default) — Entity viewer with document, metadata, references, relationships, and files tabs
+- **Tools > Import CSV** — Full import lifecycle with sidebar, list/detail screens, and upload simulation
+- **Logo click** — Toggles to/from the component catalog
 
 ### Views
 
@@ -130,20 +142,30 @@ npm run dev        # → http://localhost:5173
 
 ### Features
 
-- **Layout** — navbar with logo + Library/Tools (left), Settings dropdown + dark mode toggle (right), main tabs (Metadata, Document, References, Relationships, Files), doc meta bar, language badges (EN/ES/FR/AR), resizable split view with contextual drawer
-- **Dark mode** — CSS-variable-driven theme toggled via sun/moon button in navbar. `.dark` class on `<html>` swaps all tokens (backgrounds, text, borders, shadows, highlights, selection states, checkbox accents). Persists to localStorage.
-- **RTL support** — test RTL layout via Settings dropdown toggle. Switches to Arabic content and sets `dir="rtl"` on `<html>`. Code blocks and monospace content stay LTR. Settings dropdown anchors right-aligned in LTR, left-aligned in RTL.
-- **i18n** — language toggle (EN/ES/FR/AR) updates document title, metadata labels and values, PDF metadata, and drawer content in real time via Jotai atom
-- **Metadata** — read mode with property cards (description, country with flag, dates, type, mechanism, signatories, other files), edit mode with inputs/textareas/checkboxes/country picker, PDF metadata card with View/Download. Drawer shows complete metadata with collapsible sections (description, PDF, geolocation, fields, other files)
-- **Document viewer** — PDF rendering with continuous scroll, responsive container-aware scaling (ResizeObserver), page navigation (Previous/Next), OCR button
-- **Text References** — per-line highlight overlays with entity-type color coding (subtle tint, hover/active/flash states), entity name tags on hover, floating menu on text selection, entity picker modal (search → relation type → create), bidirectional navigation (highlight click → opens References tab, collapses other groups, expands target group, scrolls to RefRow; RefRow click → navigates to page, flashes highlight), delete with confirmation
-- **Reference panel** — search, sort (None/A→Z/Z→A), filter toggles (All/Entity type/Rel. type/Density), grouped cards with collapse/expand all, stacked density chart by relation type. References tab in main content shows full-width list with document viewer in drawer
-- **Files management** — dual tables (primary document + translations, supporting files), row selection with blue accent, file metadata drawer, compact stacked cards on multi-select, bulk actions
-- **Translations drawer** — per-language file cards (EN/ES/FR with file, AR empty state with dashed Add), Download all/Delete actions
-- **Table of Contents** — collapsible tree with nested sections (up to 4 levels), page tags, Collapse All / Expand All, ML-generated indicator, Edit + Mark as reviewed actions
-- **Drawer tabs** — contextual per view: Metadata/ToC/References/Relationships/Search (document), File/Translations (files), Files/Relationships (metadata), each with own action bar
-- **Shared** — toast notifications (center top), entity pills, page tags, confirm dialogs, branded loader animation (UwaziLoader)
-- **Component Catalog** — click logo to open storybook-like catalog with live previews, copyable React + Tailwind code blocks, style guide with separate light/dark color palettes, typography, shadows, radii, spacing, sidebar with scroll tracking
+#### Entity View
+- **Document viewer** — PDF rendering with continuous scroll, responsive scaling (ResizeObserver), page navigation, OCR button
+- **Text References** — per-line highlight overlays with entity-type color coding, entity name tags on hover, floating menu on text selection, entity picker modal, bidirectional navigation (highlight ↔ RefRow), delete with confirmation
+- **Reference panel** — search, sort (None/A→Z/Z→A), filter toggles (All/Entity type/Rel. type/Density), grouped cards with collapse/expand all, stacked density chart
+- **Metadata** — read mode with property cards (description, country with flag, dates, type, mechanism, signatories), edit mode with inputs/textareas/checkboxes/country picker
+- **Files** — dual tables (primary + translations, supporting), row selection with blue accent, file metadata drawer, compact stacked cards on multi-select, bulk actions
+- **Translations drawer** — per-language file cards with Download all/Delete
+- **Table of Contents** — collapsible tree (4 levels), ML-generated indicator, Edit + Mark as reviewed
+- **Drawer tabs** — contextual per view: Metadata/ToC/References/Relationships/Search (document), File/Translations (files), Files/Relationships (metadata)
+
+#### Import CSV
+- **Tools sidebar** — 250px panel with Metadata (Templates, Extraction, Thesauri, Relationship Types) and Tools (Processes, Import CSV, Activity Log, Global CSS, Uploads) sections. Active item highlighted with blue left-border accent.
+- **List view** — Stats bar (totals), sortable table with status badges, mini progress bars, checkbox selection with bulk delete
+- **Detail view** — 6 states: completed (green progress + stats cards), uploading (stepper step 1 + animated blue bar), processing (stepper step 2 + animated blue bar), failed (red alert + error table), warnings (amber alert + warnings table), mixed errors+warnings (both alerts + combined issues table)
+- **New Import modal** — Dropzone with click-to-upload, searchable template dropdown, three form states (empty → dropdown open → filled)
+- **Upload simulation** — Animated progress: uploading → processing → completed, with random tick intervals and random outcome (clean or with warnings)
+- **Empty state** — Upload icon + "No imports yet" CTA
+
+#### Global
+- **Dark mode** — CSS-variable-driven theme, toggled via navbar, persists to localStorage
+- **RTL support** — Settings dropdown toggle, switches to Arabic, sets `dir="rtl"` on `<html>`
+- **i18n** — Language toggle (EN/ES/FR/AR) updates all content in real time via Jotai
+- **Shared components** — Toast notifications, entity pills, page tags, confirm dialogs, branded loader (UwaziLoader), status badges, progress bars, stats cards, stepper, alert banners
+- **Component Catalog** — Click logo to browse all components with live previews and copyable code
 
 ---
 

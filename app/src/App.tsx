@@ -3,12 +3,14 @@ import { useAtom } from "jotai";
 import { Navbar } from "./components/layout/Navbar";
 import { ReferencesView } from "./views/ReferencesView";
 import { ComponentCatalog } from "./views/ComponentCatalog";
+import { ImportCSVView } from "./views/ImportCSVView";
 import { ToastContainer } from "./views/ToastContainer";
 import { themeAtom } from "./atoms/theme";
 import { languageAtom } from "./atoms/language";
+import { appViewAtom, type AppView } from "./atoms/navigation";
 
 export function App() {
-  const [showCatalog, setShowCatalog] = useState(false);
+  const [appView, setAppView] = useAtom(appViewAtom);
   const [theme, setTheme] = useAtom(themeAtom);
   const [language, setLanguage] = useAtom(languageAtom);
   const [rtl, setRtl] = useState(false);
@@ -30,17 +32,36 @@ export function App() {
     });
   };
 
+  const handleLogoClick = () => {
+    if (appView === "entity") {
+      setAppView("catalog");
+    } else {
+      setAppView("entity");
+    }
+  };
+
+  const handleNavigate = (view: AppView) => {
+    setAppView(view);
+  };
+
   return (
     <div className="h-full flex flex-col">
       <Navbar
-        onLogoClick={() => setShowCatalog((prev) => !prev)}
-        showingCatalog={showCatalog}
+        onLogoClick={handleLogoClick}
+        appView={appView}
+        onNavigate={handleNavigate}
         theme={theme}
         onToggleTheme={() => setTheme((t) => (t === "light" ? "dark" : "light"))}
         rtl={rtl}
         onToggleRtl={handleToggleRtl}
       />
-      {showCatalog ? <ComponentCatalog /> : <ReferencesView />}
+      {appView === "catalog" ? (
+        <ComponentCatalog />
+      ) : appView === "import-csv" ? (
+        <ImportCSVView />
+      ) : (
+        <ReferencesView />
+      )}
       <ToastContainer />
     </div>
   );

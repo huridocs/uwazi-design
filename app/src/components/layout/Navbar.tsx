@@ -1,30 +1,62 @@
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, BookOpen, Wrench, Settings, Sun, Moon, User, Server, Languages } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  Wrench,
+  Settings,
+  Sun,
+  Moon,
+  User,
+  Server,
+  Languages,
+  Cog,
+  FileSpreadsheet,
+  Activity,
+  Code2,
+  Upload,
+} from "lucide-react";
 import type { Theme } from "../../atoms/theme";
+import type { AppView } from "../../atoms/navigation";
 
 interface NavbarProps {
   onLogoClick?: () => void;
-  showingCatalog?: boolean;
+  appView?: AppView;
+  onNavigate?: (view: AppView) => void;
   theme?: Theme;
   onToggleTheme?: () => void;
   rtl?: boolean;
   onToggleRtl?: () => void;
 }
 
-export function Navbar({ onLogoClick, showingCatalog, theme, onToggleTheme, rtl, onToggleRtl }: NavbarProps) {
+export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onToggleTheme, rtl, onToggleRtl }: NavbarProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const settingsRef = useRef<HTMLDivElement>(null);
+  const toolsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!settingsOpen) return;
+    if (!settingsOpen && !toolsOpen) return;
     const handleClick = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (settingsOpen && settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
         setSettingsOpen(false);
+      }
+      if (toolsOpen && toolsRef.current && !toolsRef.current.contains(e.target as Node)) {
+        setToolsOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
-  }, [settingsOpen]);
+  }, [settingsOpen, toolsOpen]);
+
+  const showingCatalog = appView === "catalog";
+
+  const toolsItems = [
+    { id: "processes", label: "Processes", icon: Cog, enabled: false },
+    { id: "import-csv", label: "Import CSV", icon: FileSpreadsheet, enabled: true },
+    { id: "activity-log", label: "Activity Log", icon: Activity, enabled: false },
+    { id: "global-css", label: "Global CSS", icon: Code2, enabled: false },
+    { id: "uploads", label: "Uploads", icon: Upload, enabled: false },
+  ];
 
   return (
     <header
@@ -41,12 +73,65 @@ export function Navbar({ onLogoClick, showingCatalog, theme, onToggleTheme, rtl,
         </button>
         {!showingCatalog && (
           <div className="flex items-center gap-2">
-            <button className="flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium text-ink-secondary rounded-md bg-warm border border-border-soft/60 hover:bg-parchment transition-colors">
+            <button
+              onClick={() => onNavigate?.("entity")}
+              className={`flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium rounded-md border transition-colors ${
+                appView === "entity"
+                  ? "text-ink bg-vellum border-border-soft"
+                  : "text-ink-secondary bg-warm border-border-soft/60 hover:bg-parchment"
+              }`}
+            >
               <BookOpen size={14} /> Library
             </button>
-            <button className="flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium text-ink-secondary rounded-md bg-warm border border-border-soft/60 hover:bg-parchment transition-colors">
-              <Wrench size={14} /> Tools
-            </button>
+            <div className="relative" ref={toolsRef}>
+              <button
+                onClick={() => { setToolsOpen((o) => !o); setSettingsOpen(false); }}
+                className={`flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium rounded-md border transition-colors ${
+                  toolsOpen || appView === "import-csv"
+                    ? "text-ink bg-vellum border-border-soft"
+                    : "text-ink-secondary bg-warm border-border-soft/60 hover:bg-parchment"
+                }`}
+              >
+                <Wrench size={14} /> Tools
+              </button>
+              {toolsOpen && (
+                <div
+                  dir="ltr"
+                  className="absolute top-full mt-1.5 w-48 bg-paper border border-border rounded-lg shadow-lg overflow-hidden z-50"
+                  style={{ left: rtl ? undefined : 0, right: rtl ? 0 : undefined }}
+                >
+                  <div className="py-1">
+                    {toolsItems.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            if (item.enabled && item.id === "import-csv") {
+                              onNavigate?.("import-csv");
+                            }
+                            setToolsOpen(false);
+                          }}
+                          className={`flex items-center justify-between w-full px-3 py-2 text-xs font-medium transition-colors ${
+                            item.enabled
+                              ? "text-ink-secondary hover:bg-warm"
+                              : "text-ink-muted cursor-default"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Icon size={14} className={item.enabled ? "text-ink-tertiary" : "text-ink-muted/50"} />
+                            {item.label}
+                          </div>
+                          {appView === "import-csv" && item.id === "import-csv" && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-carbon" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -61,9 +146,9 @@ export function Navbar({ onLogoClick, showingCatalog, theme, onToggleTheme, rtl,
             <ArrowLeft size={14} /> Return to app
           </button>
         ) : (
-          <div className="relative" ref={dropdownRef}>
+          <div className="relative" ref={settingsRef}>
             <button
-              onClick={() => setSettingsOpen((o) => !o)}
+              onClick={() => { setSettingsOpen((o) => !o); setToolsOpen(false); }}
               className={`flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium rounded-md border transition-colors ${
                 settingsOpen
                   ? "text-ink bg-vellum border-border-soft"
