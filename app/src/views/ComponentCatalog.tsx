@@ -21,6 +21,13 @@ import { GroupedCard } from "../components/references/GroupedCard";
 import { RefRow } from "../components/references/RefRow";
 import { ActionBar } from "../components/viewer/ActionBar";
 import { UwaziLoader } from "../components/shared/UwaziLoader";
+import { StatusBadge } from "../components/shared/StatusBadge";
+import { ProgressBar } from "../components/shared/ProgressBar";
+import { StatsCard } from "../components/shared/StatsCard";
+import { Stepper } from "../components/shared/Stepper";
+import { AlertBanner } from "../components/shared/AlertBanner";
+import { Breadcrumb } from "../components/layout/Breadcrumb";
+import { ToolsSidebar } from "../components/layout/ToolsSidebar";
 
 // Icons
 import { FileText, Pencil, Download, Trash2, Share2, Plus } from "lucide-react";
@@ -100,6 +107,23 @@ const sidebarGroups: SidebarGroup[] = [
     label: "Entity View — Drawer",
     items: [
       { id: "ev-drawer-action-bar", label: "DrawerActionBar" },
+    ],
+  },
+  {
+    label: "Import CSV — Layout",
+    items: [
+      { id: "csv-sidebar", label: "ToolsSidebar" },
+      { id: "csv-breadcrumb", label: "Breadcrumb" },
+    ],
+  },
+  {
+    label: "Import CSV — Components",
+    items: [
+      { id: "csv-status-badge", label: "StatusBadge" },
+      { id: "csv-progress-bar", label: "ProgressBar" },
+      { id: "csv-stats-card", label: "StatsCard" },
+      { id: "csv-stepper", label: "Stepper" },
+      { id: "csv-alert-banner", label: "AlertBanner" },
     ],
   },
   {
@@ -649,6 +673,183 @@ export function ComponentCatalog() {
                     <div className="border border-border/40 rounded-md overflow-hidden">
                       <DrawerActionBar activeTab="references" />
                     </div>
+                  </div>
+                </CatalogEntry>
+              </div>
+            </div>
+          </section>
+
+          {/* ==================== IMPORT CSV — LAYOUT ==================== */}
+          <section>
+            <h2 className="text-lg font-bold text-ink mb-6">Import CSV — Layout</h2>
+            <div className="flex flex-col gap-6">
+              <div id="csv-sidebar" ref={reg("csv-sidebar")}>
+                <CatalogEntry
+                  name="ToolsSidebar"
+                  description="Fixed-width sidebar with Metadata and Tools sections, active item highlight"
+                  code={`<ToolsSidebar activeItem="import-csv" />`}
+                >
+                  <div className="w-full h-64 border border-border/40 rounded-md overflow-hidden">
+                    <ToolsSidebar activeItem="import-csv" />
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="csv-breadcrumb" ref={reg("csv-breadcrumb")}>
+                <CatalogEntry
+                  name="Breadcrumb"
+                  description="Clickable navigation breadcrumb with chevron separators"
+                  code={`<Breadcrumb segments={[
+  { label: "Import CSV", onClick: () => {} },
+  { label: "cases.csv" },
+]} />`}
+                >
+                  <div className="flex flex-col gap-3">
+                    <Breadcrumb segments={[{ label: "Import CSV" }]} />
+                    <Breadcrumb segments={[
+                      { label: "Import CSV", onClick: () => {} },
+                      { label: "cases.csv" },
+                    ]} />
+                    <Breadcrumb segments={[
+                      { label: "Import CSV", onClick: () => {} },
+                      { label: "Settings", onClick: () => {} },
+                      { label: "Advanced" },
+                    ]} />
+                  </div>
+                </CatalogEntry>
+              </div>
+            </div>
+          </section>
+
+          {/* ==================== IMPORT CSV — COMPONENTS ==================== */}
+          <section>
+            <h2 className="text-lg font-bold text-ink mb-6">Import CSV — Components</h2>
+            <div className="flex flex-col gap-6">
+              <div id="csv-status-badge" ref={reg("csv-status-badge")}>
+                <CatalogEntry
+                  name="StatusBadge"
+                  description="Colored pill showing import status — completed, processing, failed, etc."
+                  code={`<StatusBadge status="completed" />
+<StatusBadge status="processing" />
+<StatusBadge status="failed" />
+<StatusBadge status="completed_warnings" />
+<StatusBadge status="completed_errors" />
+<StatusBadge status="uploading" />`}
+                  tailwind="inline-flex w-fit px-2 py-0.5 text-[11px] font-semibold rounded-full"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusBadge status="completed" />
+                    <StatusBadge status="processing" />
+                    <StatusBadge status="uploading" />
+                    <StatusBadge status="failed" />
+                    <StatusBadge status="completed_warnings" />
+                    <StatusBadge status="completed_errors" />
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="csv-progress-bar" ref={reg("csv-progress-bar")}>
+                <CatalogEntry
+                  name="ProgressBar"
+                  description="Horizontal bar with color variants and optional percentage label"
+                  code={`<ProgressBar value={75} color="green" showLabel />
+<ProgressBar value={45} color="blue" showLabel size="md" />
+<ProgressBar value={30} color="red" />`}
+                >
+                  <div className="flex flex-col gap-4 w-full max-w-sm">
+                    <div>
+                      <span className="text-[10px] text-ink-muted mb-1 block">Green (completed)</span>
+                      <ProgressBar value={100} color="green" showLabel />
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-ink-muted mb-1 block">Blue (processing) — md</span>
+                      <ProgressBar value={64} color="blue" showLabel size="md" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-ink-muted mb-1 block">Red (failed)</span>
+                      <ProgressBar value={37} color="red" showLabel />
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-ink-muted mb-1 block">No label</span>
+                      <ProgressBar value={50} color="blue" />
+                    </div>
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="csv-stats-card" ref={reg("csv-stats-card")}>
+                <CatalogEntry
+                  name="StatsCard"
+                  description="Bordered card with label and large value, optional color accent on left border"
+                  code={`<StatsCard label="Entities" value="847" accent="blue" />
+<StatsCard label="Failed" value={0} />
+<StatsCard label="Warnings" value={12} accent="amber" />
+<StatsCard label="Errors" value={3} accent="red" />`}
+                >
+                  <div className="grid grid-cols-4 gap-3 w-full">
+                    <StatsCard label="Entities" value="847" accent="blue" />
+                    <StatsCard label="Failed" value={0} />
+                    <StatsCard label="Warnings" value={12} accent="amber" />
+                    <StatsCard label="Errors" value={3} accent="red" />
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="csv-stepper" ref={reg("csv-stepper")}>
+                <CatalogEntry
+                  name="Stepper"
+                  description="3-step progress indicator with completed, active, and upcoming states"
+                  code={`<Stepper steps={[
+  { label: "Upload", state: "completed" },
+  { label: "Process", state: "active" },
+  { label: "Complete", state: "upcoming" },
+]} />`}
+                >
+                  <div className="flex flex-col gap-4 w-full">
+                    <div className="px-4 py-3 rounded-lg bg-paper" style={{ border: "1px solid var(--border-primary)" }}>
+                      <Stepper steps={[
+                        { label: "Upload", state: "active" },
+                        { label: "Process", state: "upcoming" },
+                        { label: "Complete", state: "upcoming" },
+                      ]} />
+                    </div>
+                    <div className="px-4 py-3 rounded-lg bg-paper" style={{ border: "1px solid var(--border-primary)" }}>
+                      <Stepper steps={[
+                        { label: "Upload", state: "completed" },
+                        { label: "Process", state: "active" },
+                        { label: "Complete", state: "upcoming" },
+                      ]} />
+                    </div>
+                    <div className="px-4 py-3 rounded-lg bg-paper" style={{ border: "1px solid var(--border-primary)" }}>
+                      <Stepper steps={[
+                        { label: "Upload", state: "completed" },
+                        { label: "Process", state: "completed" },
+                        { label: "Complete", state: "completed" },
+                      ]} />
+                    </div>
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="csv-alert-banner" ref={reg("csv-alert-banner")}>
+                <CatalogEntry
+                  name="AlertBanner"
+                  description="Warning (amber) and error (red) banners with icon and message"
+                  code={`<AlertBanner variant="warning">
+  3 warnings detected — review issues below.
+</AlertBanner>
+
+<AlertBanner variant="error">
+  Import failed — 3 errors encountered.
+</AlertBanner>`}
+                >
+                  <div className="flex flex-col gap-3 w-full">
+                    <AlertBanner variant="warning">
+                      3 warnings detected — review the issues below. Entities were imported but some fields may need attention.
+                    </AlertBanner>
+                    <AlertBanner variant="error">
+                      Import failed — 3 errors encountered. Review the issues below and re-import the file.
+                    </AlertBanner>
                   </div>
                 </CatalogEntry>
               </div>
