@@ -5,21 +5,27 @@ interface ProgressBarProps {
   size?: "sm" | "md";
 }
 
-const colorMap = {
+const fillColor = {
   green: "bg-success",
   blue: "bg-carbon",
   red: "bg-seal",
 };
 
+const trackColor = {
+  green: "bg-success/15",
+  blue: "bg-carbon/15",
+  red: "bg-seal/15",
+};
+
 export function ProgressBar({ value, color = "green", showLabel = false, size = "sm" }: ProgressBarProps) {
   const clamped = Math.min(100, Math.max(0, value));
-  const h = size === "sm" ? "h-1.5" : "h-2.5";
+  const h = size === "sm" ? "h-1" : "h-2";
 
   return (
     <div className="flex items-center gap-2 w-full">
-      <div className={`flex-1 ${h} rounded-full bg-warm overflow-hidden`} style={{ border: "1px solid var(--border-primary)" }}>
+      <div className={`flex-1 ${h} rounded-full ${trackColor[color]} overflow-hidden`}>
         <div
-          className={`${h} rounded-full ${colorMap[color]} transition-all duration-300`}
+          className={`h-full rounded-full ${fillColor[color]} transition-all duration-300`}
           style={{ width: `${clamped}%` }}
         />
       </div>

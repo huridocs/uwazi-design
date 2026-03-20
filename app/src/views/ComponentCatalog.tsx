@@ -780,7 +780,7 @@ export function ComponentCatalog() {
               <div id="csv-stats-card" ref={reg("csv-stats-card")}>
                 <CatalogEntry
                   name="StatsCard"
-                  description="Bordered card with label and large value, optional color accent on left border"
+                  description="Bordered card with label and large value, optional colored dot accent"
                   code={`<StatsCard label="Entities" value="847" accent="blue" />
 <StatsCard label="Failed" value={0} />
 <StatsCard label="Warnings" value={12} accent="amber" />

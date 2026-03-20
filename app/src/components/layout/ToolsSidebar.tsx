@@ -65,14 +65,11 @@ function SidebarSection({
             key={item.id}
             className={`flex items-center gap-2.5 w-full px-5 py-2 text-[13px] font-medium transition-colors ${
               isActive
-                ? "bg-vellum text-ink"
+                ? "bg-warm text-ink"
                 : "text-ink-secondary hover:bg-warm"
             }`}
-            style={{
-              boxShadow: isActive ? "inset 3px 0 0 var(--accent-blue)" : "none",
-            }}
           >
-            <Icon size={15} className={isActive ? "text-carbon" : "text-ink-tertiary"} />
+            <Icon size={15} className="text-ink-tertiary" />
             {item.label}
           </button>
         );
