@@ -90,7 +90,7 @@ export function DensityCard({ references, totalPages }: DensityCardProps) {
         {activeCategories.map((rt) => (
           <div key={rt.id} className="flex items-center gap-1">
             <div
-              className="w-2 h-2 rounded-full"
+              className="w-2 h-2 rounded-[2px]"
               style={{ backgroundColor: categoryColors[rt.id] }}
             />
             <span className="text-[10px] text-ink-muted">{rt.label}</span>

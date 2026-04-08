@@ -17,6 +17,9 @@ export const activeDrawerTabAtom = atom("metadata");
 /** One-shot signal: expand the group containing this ref ID, then clear */
 export const expandGroupForRefAtom = atom<string | null>(null);
 
+/** Entity overlay — shows target entity preview when "View" is clicked on a ref */
+export const overlayEntityIdAtom = atom<string | null>(null);
+
 /** Toast messages */
 export interface Toast {
   id: string;

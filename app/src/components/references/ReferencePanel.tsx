@@ -1,7 +1,7 @@
 import { useMemo, useState, useCallback } from "react";
 import { useAtom } from "jotai";
 import { referencesAtom, toastsAtom, activeDrawerTabAtom } from "../../atoms/references";
-import { viewModeAtom, searchQueryAtom, sortOrderAtom, expandAllSignalAtom, collapseAllSignalAtom } from "../../atoms/filters";
+import { viewModeAtom, searchQueryAtom, sortOrderAtom, expandAllSignalAtom, collapseAllSignalAtom, activeClusterRefIdsAtom } from "../../atoms/filters";
 import { getEntity, getEntityType } from "../../data/entities";
 import { currentDocument } from "../../data/document";
 import { Reference, relationTypes } from "../../data/references";
@@ -16,6 +16,7 @@ import { ConfirmDialog } from "../shared/ConfirmDialog";
 import { MetadataDrawerContent } from "./MetadataDrawerContent";
 import { TocDrawerContent } from "./TocDrawerContent";
 import { Link2 } from "lucide-react";
+import { EntityOverlay } from "./EntityOverlay";
 
 const drawerTabs = [
   { id: "metadata", label: "Metadata" },
@@ -36,9 +37,15 @@ export function ReferencePanel() {
   const [, setExpandSignal] = useAtom(expandAllSignalAtom);
   const [, setCollapseSignal] = useAtom(collapseAllSignalAtom);
 
+  const [activeClusterRefIds] = useAtom(activeClusterRefIdsAtom);
+
   // Filter and sort references
   const filtered = useMemo(() => {
     let result = references;
+    // Filter by active cluster from track
+    if (activeClusterRefIds) {
+      result = result.filter((ref) => activeClusterRefIds.includes(ref.id));
+    }
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       result = result.filter((ref) => {
@@ -57,7 +64,7 @@ export function ReferencePanel() {
       const nameB = getEntity(b.targetEntityId)?.title ?? "";
       return nameA.localeCompare(nameB) * dir;
     });
-  }, [references, searchQuery, sortOrder]);
+  }, [references, searchQuery, sortOrder, activeClusterRefIds]);
 
   const handleDelete = useCallback((id: string) => {
     setDeleteTarget(id);
@@ -118,7 +125,10 @@ export function ReferencePanel() {
   }, [filtered, sortOrder]);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full relative overflow-hidden">
+      {/* Entity overlay */}
+      <EntityOverlay />
+
       {/* Drawer tabs */}
       <DrawerTabs
         tabs={drawerTabs}

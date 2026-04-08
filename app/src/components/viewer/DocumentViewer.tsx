@@ -4,10 +4,11 @@ import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import { useAtom, useSetAtom } from "jotai";
 import { currentPageAtom, textSelectionAtom } from "../../atoms/selection";
-import { scrollToHighlightAtom, referencesAtom } from "../../atoms/references";
+import { scrollToHighlightAtom, referencesAtom, activeRefIdAtom } from "../../atoms/references";
 import { PageHighlights } from "./PageHighlights";
 import { FloatingMenu } from "./FloatingMenu";
 import { ActionBar } from "./ActionBar";
+import { RefMinimap } from "./RefMinimap";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
@@ -18,6 +19,7 @@ export function DocumentViewer() {
   const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const [selection, setSelection] = useAtom(textSelectionAtom);
   const setScrollToHighlight = useSetAtom(scrollToHighlightAtom);
+  const setActiveRefId = useSetAtom(activeRefIdAtom);
   const [references] = useAtom(referencesAtom);
   const [containerWidth, setContainerWidth] = useState(800);
 
@@ -73,7 +75,8 @@ export function DocumentViewer() {
 
   const handleMouseDown = useCallback(() => {
     setSelection(null);
-  }, [setSelection]);
+    setActiveRefId(null);
+  }, [setSelection, setActiveRefId]);
 
   // Track current page on scroll
   useEffect(() => {
@@ -108,28 +111,34 @@ export function DocumentViewer() {
     }
   }, []);
 
-  // Scroll to page when clicking ref in panel
+  // Scroll to highlight centered in viewport
   const [scrollTarget] = useAtom(scrollToHighlightAtom);
   useEffect(() => {
-    if (scrollTarget) {
-      const ref = references.find((r) => r.id === scrollTarget);
-      if (ref) {
-        scrollToPage(ref.sourceSelection.page);
+    if (!scrollTarget) return;
+    const ref = references.find((r) => r.id === scrollTarget);
+    if (ref) {
+      const pageEl = pageRefs.current.get(ref.sourceSelection.page);
+      const container = containerRef.current;
+      if (pageEl && container) {
+        const highlightY = pageEl.offsetTop + pageEl.offsetHeight * ref.sourceSelection.top;
+        const centered = highlightY - container.clientHeight / 2;
+        container.scrollTo({ top: Math.max(0, centered), behavior: "smooth" });
       }
-      setScrollToHighlight(null);
     }
-  }, [scrollTarget, references, setScrollToHighlight, scrollToPage]);
+    setScrollToHighlight(null);
+  }, [scrollTarget, references, setScrollToHighlight]);
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-paper">
-      {/* Scrollable document area */}
-      <div
-        ref={containerRef}
-        className="flex-1 overflow-auto flex flex-col items-center py-4 gap-4"
-        style={{ backgroundColor: "var(--bg-warm)" }}
-        onMouseUp={handleTextSelect}
-        onMouseDown={handleMouseDown}
-      >
+      {/* Scrollable document area + minimap */}
+      <div className="flex-1 relative min-h-0">
+        <div
+          ref={containerRef}
+          className="absolute inset-0 overflow-auto flex flex-col items-center py-4 gap-4"
+          style={{ backgroundColor: "var(--bg-warm)", paddingRight: 40 }}
+          onMouseUp={handleTextSelect}
+          onMouseDown={handleMouseDown}
+        >
         <Document
           file="/sample.pdf"
           onLoadSuccess={onDocumentLoadSuccess}
@@ -167,6 +176,8 @@ export function DocumentViewer() {
             </div>
           ))}
         </Document>
+        </div>
+        <RefMinimap numPages={numPages} />
       </div>
 
       {/* Bottom action bar */}

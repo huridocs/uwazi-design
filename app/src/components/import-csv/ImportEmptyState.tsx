@@ -7,7 +7,7 @@ interface ImportEmptyStateProps {
 export function ImportEmptyState({ onNewImport }: ImportEmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center">
-      <div className="w-16 h-16 rounded-full bg-warm flex items-center justify-center mb-4" style={{ border: "1px solid var(--border-primary)" }}>
+      <div className="w-16 h-16 rounded-lg bg-warm flex items-center justify-center mb-4" style={{ border: "1px solid var(--border-primary)" }}>
         <Upload size={28} className="text-ink-tertiary/50" />
       </div>
       <h3 className="text-sm font-semibold text-ink mb-1">No imports yet</h3>

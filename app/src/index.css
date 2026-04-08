@@ -29,6 +29,21 @@
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
+/* Brand radii — override Tailwind defaults */
+@layer theme {
+  :root {
+    --radius-xs: 1px;
+    --radius-sm: 2px;
+    --radius: 2px;
+    --radius-md: 2px;
+    --radius-lg: 2px;
+    --radius-xl: 3px;
+    --radius-2xl: 3px;
+    --radius-3xl: 3px;
+    --radius-4xl: 3px;
+  }
+}
+
 html, body, #root {
   height: 100%;
   margin: 0;
@@ -41,6 +56,11 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Buttons should always show pointer cursor */
+button:not(:disabled) {
+  cursor: pointer;
 }
 
 /* Dark mode: invert black logo */

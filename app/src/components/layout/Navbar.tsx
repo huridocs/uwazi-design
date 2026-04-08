@@ -123,7 +123,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                             {item.label}
                           </div>
                           {appView === "import-csv" && item.id === "import-csv" && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-carbon" />
+                            <span className="w-1.5 h-1.5 rounded-[1px] bg-carbon" />
                           )}
                         </button>
                       );

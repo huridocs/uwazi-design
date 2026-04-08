@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback } from "react";
 import { useAtom } from "jotai";
 import { referencesAtom, toastsAtom } from "../atoms/references";
 import { languageAtom, type Language } from "../atoms/language";
-import { viewModeAtom, searchQueryAtom, sortOrderAtom, expandAllSignalAtom, collapseAllSignalAtom } from "../atoms/filters";
+import { viewModeAtom, searchQueryAtom, sortOrderAtom, expandAllSignalAtom, collapseAllSignalAtom, activeClusterRefIdsAtom } from "../atoms/filters";
 import { getEntity, getEntityType } from "../data/entities";
 import { Reference, relationTypes } from "../data/references";
 import { currentDocument } from "../data/document";
@@ -23,6 +23,7 @@ import { ToastContainer } from "./ToastContainer";
 import { FilesView } from "./FilesView";
 import { MetadataView } from "./MetadataView";
 import { Link2 } from "lucide-react";
+import { EntityOverlay } from "../components/references/EntityOverlay";
 
 const mainTabs = [
   { id: "metadata", label: "Metadata" },
@@ -116,9 +117,13 @@ function ReferencesMainView({ tabs, activeTab, onTabChange }: ReferencesMainView
   const [, setExpandSignal] = useAtom(expandAllSignalAtom);
   const [, setCollapseSignal] = useAtom(collapseAllSignalAtom);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [activeClusterRefIds] = useAtom(activeClusterRefIdsAtom);
 
   const filtered = useMemo(() => {
     let result = references;
+    if (activeClusterRefIds) {
+      result = result.filter((ref) => activeClusterRefIds.includes(ref.id));
+    }
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       result = result.filter((ref) => {
@@ -137,7 +142,7 @@ function ReferencesMainView({ tabs, activeTab, onTabChange }: ReferencesMainView
       const nameB = getEntity(b.targetEntityId)?.title ?? "";
       return nameA.localeCompare(nameB) * dir;
     });
-  }, [references, searchQuery, sortOrder]);
+  }, [references, searchQuery, sortOrder, activeClusterRefIds]);
 
   const handleDelete = useCallback((id: string) => {
     setDeleteTarget(id);
@@ -280,7 +285,8 @@ function ReferencesMainView({ tabs, activeTab, onTabChange }: ReferencesMainView
         </div>
       }
       right={
-        <div className="flex flex-col h-full min-h-0">
+        <div className="flex flex-col h-full min-h-0 relative overflow-hidden">
+          <EntityOverlay />
           <DrawerTabs
             tabs={[{ id: "document", label: "Document" }]}
             activeId="document"

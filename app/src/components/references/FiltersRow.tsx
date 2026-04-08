@@ -46,7 +46,7 @@ export function FiltersRow({ onCollapseAll, onExpandAll }: FiltersRowProps) {
               <button
                 key={opt.id}
                 onClick={() => setViewMode(opt.id)}
-                className={`px-2 h-6 text-xs font-medium transition-colors ${
+                className={`px-2 h-6 text-xs font-medium transition-colors cursor-pointer ${
                   isActive
                     ? "bg-vellum text-ink"
                     : "text-ink-tertiary hover:text-ink-secondary"
@@ -68,7 +68,7 @@ export function FiltersRow({ onCollapseAll, onExpandAll }: FiltersRowProps) {
             aria-expanded={dropdownOpen}
             aria-haspopup="listbox"
             className="flex items-center gap-1.5 h-6 px-2 text-[11px] font-medium text-ink-tertiary
-              bg-warm border border-border rounded hover:bg-parchment hover:text-ink-secondary transition-colors"
+              bg-warm border border-border rounded hover:bg-parchment hover:text-ink-secondary transition-colors cursor-pointer"
           >
             {sortOrder === "none" ? "Sort" : activeSort?.label}
             <ChevronDown size={10} className="text-ink-muted" aria-hidden="true" />
@@ -113,7 +113,7 @@ export function FiltersRow({ onCollapseAll, onExpandAll }: FiltersRowProps) {
           className={`text-[11px] font-medium transition-colors px-1 ${
             allCollapsed
               ? "text-ink-muted cursor-default"
-              : "text-ink hover:text-ink-secondary"
+              : "text-ink hover:text-ink-secondary cursor-pointer"
           }`}
         >
           Collapse all
@@ -124,7 +124,7 @@ export function FiltersRow({ onCollapseAll, onExpandAll }: FiltersRowProps) {
           className={`text-[11px] font-medium transition-colors px-1 ${
             allExpanded
               ? "text-ink-muted cursor-default"
-              : "text-ink hover:text-ink-secondary"
+              : "text-ink hover:text-ink-secondary cursor-pointer"
           }`}
         >
           Expand all

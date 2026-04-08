@@ -23,9 +23,9 @@ export function ProgressBar({ value, color = "green", showLabel = false, size = 
 
   return (
     <div className="flex items-center gap-2 w-full">
-      <div className={`flex-1 ${h} rounded-full ${trackColor[color]} overflow-hidden`}>
+      <div className={`flex-1 ${h} rounded-sm ${trackColor[color]} overflow-hidden`}>
         <div
-          className={`h-full rounded-full ${fillColor[color]} transition-all duration-300`}
+          className={`h-full rounded-sm ${fillColor[color]} transition-all duration-300`}
           style={{ width: `${clamped}%` }}
         />
       </div>

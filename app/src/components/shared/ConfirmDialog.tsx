@@ -27,7 +27,7 @@ export function ConfirmDialog({
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
             {variant === "danger" && (
-              <div className="w-10 h-10 rounded-full bg-seal-tint flex items-center justify-center">
+              <div className="w-10 h-10 rounded-md bg-seal-tint flex items-center justify-center">
                 <AlertTriangle size={20} className="text-seal" />
               </div>
             )}

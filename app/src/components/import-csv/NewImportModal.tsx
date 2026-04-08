@@ -130,6 +130,14 @@ export function NewImportModal({ open, onClose, onImport }: NewImportModalProps)
                       className="flex-1 text-xs bg-transparent outline-none text-ink placeholder:text-ink-muted"
                       autoFocus
                     />
+                    {search && (
+                      <button
+                        onClick={() => setSearch("")}
+                        className="p-0.5 rounded-full hover:bg-parchment text-ink-muted hover:text-ink cursor-pointer transition-colors shrink-0"
+                      >
+                        <X size={12} />
+                      </button>
+                    )}
                   </div>
                 </div>
                 <div className="max-h-48 overflow-y-auto py-1">

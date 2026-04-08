@@ -45,7 +45,7 @@ export function IssuesTable({ issues }: IssuesTableProps) {
             <span className="text-xs font-medium text-ink font-mono truncate">{issue.field}</span>
             <span className="text-xs text-ink-secondary truncate">{issue.issue}</span>
             <span
-              className={`inline-flex w-fit px-2 py-0.5 text-[11px] font-semibold rounded-full ${
+              className={`inline-flex w-fit px-2 py-0.5 text-[11px] font-semibold rounded-md ${
                 issue.type === "warning"
                   ? "bg-warning-light text-warning"
                   : "bg-seal-tint text-seal"

@@ -94,7 +94,7 @@ export function GroupedCard({
         />
         {color && (
           <span
-            className="w-2 h-2 rounded-full shrink-0"
+            className="w-2 h-2 rounded-[2px] shrink-0"
             style={{ backgroundColor: color }}
           />
         )}

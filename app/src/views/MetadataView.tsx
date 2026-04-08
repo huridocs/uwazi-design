@@ -457,7 +457,7 @@ function MetadataDrawer() {
               size="18.7 MB"
               thumbnail={
                 <div className="w-20 h-full bg-warm flex items-center justify-center rounded-l-md shrink-0">
-                  <div className="w-10 h-10 rounded-full bg-parchment flex items-center justify-center shadow-sm">
+                  <div className="w-10 h-10 rounded-md bg-parchment flex items-center justify-center shadow-sm">
                     <div className="w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[9px] border-l-ink ml-0.5" />
                   </div>
                 </div>

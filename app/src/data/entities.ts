@@ -5,13 +5,13 @@ export interface EntityType {
 }
 
 export const entityTypes: EntityType[] = [
-  { id: "person", name: "Person", color: "#7C3AED" },
+  { id: "person", name: "Person", color: "#A78BFA" },
   { id: "court_case", name: "Court Case", color: "#0891B2" },
   { id: "country", name: "Country", color: "#059669" },
   { id: "judgment", name: "Judgment", color: "#D97706" },
   { id: "violation", name: "Violation", color: "#E8432A" },
   { id: "right", name: "Right", color: "#2563EB" },
-  { id: "organization", name: "Organization", color: "#7C3AED" },
+  { id: "organization", name: "Organization", color: "#A78BFA" },
   { id: "document", name: "Document", color: "#6B7280" },
 ];
 

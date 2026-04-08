@@ -20,7 +20,7 @@ export function StatsCard({ label, value, accent }: StatsCardProps) {
       <span className="flex items-center gap-1.5 text-[11px] font-medium text-ink-tertiary uppercase tracking-wider">
         {accent && (
           <span
-            className="w-1.5 h-1.5 rounded-full shrink-0"
+            className="w-1.5 h-1.5 rounded-[1px] shrink-0"
             style={{ backgroundColor: accentColor[accent] }}
           />
         )}

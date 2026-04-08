@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { useAtom } from "jotai";
 import { searchQueryAtom } from "../../atoms/filters";
 import { useRef } from "react";
@@ -21,10 +21,19 @@ export function SearchBar() {
             placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-carbon/20
             focus:border-carbon/40 transition-all"
         />
-        <Search
-          size={14}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none"
-        />
+        {query ? (
+          <button
+            onClick={() => { setQuery(""); inputRef.current?.focus(); }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-parchment text-ink-muted hover:text-ink cursor-pointer transition-colors"
+          >
+            <X size={12} />
+          </button>
+        ) : (
+          <Search
+            size={14}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none"
+          />
+        )}
       </div>
     </div>
   );

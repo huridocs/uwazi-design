@@ -1,10 +1,10 @@
-import { Trash2 } from "lucide-react";
+import { Trash2, Eye } from "lucide-react";
 import { Reference } from "../../data/references";
 import { getEntity } from "../../data/entities";
 import { EntityPill } from "../shared/EntityPill";
 import { PageTag } from "../shared/PageTag";
 import { useSetAtom, useAtom } from "jotai";
-import { scrollToHighlightAtom, scrollToRefAtom, activeRefIdAtom } from "../../atoms/references";
+import { scrollToHighlightAtom, scrollToRefAtom, activeRefIdAtom, overlayEntityIdAtom } from "../../atoms/references";
 import { currentPageAtom } from "../../atoms/selection";
 import { useEffect, useRef } from "react";
 
@@ -19,6 +19,7 @@ export function RefRow({ reference, onDelete }: RefRowProps) {
   const [scrollToRef, setScrollToRef] = useAtom(scrollToRefAtom);
   const [activeRefId, setActiveRefId] = useAtom(activeRefIdAtom);
   const setCurrentPage = useSetAtom(currentPageAtom);
+  const setOverlayEntityId = useSetAtom(overlayEntityIdAtom);
   const rowRef = useRef<HTMLDivElement>(null);
 
   const isActive = activeRefId === reference.id;
@@ -69,16 +70,28 @@ export function RefRow({ reference, onDelete }: RefRowProps) {
         <span className="text-[10px] text-ink-tertiary capitalize">
           {reference.relationType.replace("_", " ")}
         </span>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(reference.id);
-          }}
-          className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-seal-tint
-            text-ink-muted hover:text-seal transition-all"
-        >
-          <Trash2 size={12} />
-        </button>
+        <div className="flex items-center gap-0.5">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setOverlayEntityId(reference.targetEntityId);
+            }}
+            className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-warm
+              text-ink-muted hover:text-ink transition-all"
+          >
+            <Eye size={12} />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(reference.id);
+            }}
+            className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-seal-tint
+              text-ink-muted hover:text-seal transition-all"
+          >
+            <Trash2 size={12} />
+          </button>
+        </div>
       </div>
     </div>
   );

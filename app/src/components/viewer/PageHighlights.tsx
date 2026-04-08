@@ -65,16 +65,24 @@ export function PageHighlights({ page }: PageHighlightsProps) {
 
   const pageRefs = references.filter((r) => r.sourceSelection.page === page);
 
+  // Clear flash when active ref changes
+  useEffect(() => {
+    setFlashId(null);
+  }, [activeRefId]);
+
   useEffect(() => {
     if (scrollToHighlight && pageRefs.some((r) => r.id === scrollToHighlight)) {
       setFlashId(scrollToHighlight);
       setScrollToHighlight(null);
-      const timer = setTimeout(() => setFlashId(null), 1500);
+      const timer = setTimeout(() => setFlashId(null), 1200);
       return () => clearTimeout(timer);
     }
   }, [scrollToHighlight, pageRefs, setScrollToHighlight]);
 
-  if (pageRefs.length === 0) return null;
+  // Only show highlights that are active or flashing
+  const visibleRefs = pageRefs.filter((r) => r.id === activeRefId || r.id === flashId);
+
+  if (visibleRefs.length === 0) return null;
 
   const handleHighlightClick = (refId: string) => {
     setActiveDrawerTab("references");
@@ -85,7 +93,7 @@ export function PageHighlights({ page }: PageHighlightsProps) {
 
   return (
     <>
-      {pageRefs.map((ref) => {
+      {visibleRefs.map((ref) => {
         const sel = ref.sourceSelection;
         const entity = getEntity(ref.targetEntityId);
         const entityType = entity ? getEntityType(entity.typeId) : undefined;

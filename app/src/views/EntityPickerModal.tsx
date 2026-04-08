@@ -122,10 +122,18 @@ export function EntityPickerModal() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search entities..."
-                  className="w-full pl-8 pr-4 py-2 text-sm bg-warm border border-border rounded-md
+                  className="w-full pl-8 pr-8 py-2 text-sm bg-warm border border-border rounded-md
                     placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-carbon/20"
                   autoFocus
                 />
+                {search && (
+                  <button
+                    onClick={() => setSearch("")}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-parchment text-ink-muted hover:text-ink cursor-pointer transition-colors"
+                  >
+                    <X size={12} />
+                  </button>
+                )}
               </div>
             </div>
 
@@ -154,7 +162,7 @@ export function EntityPickerModal() {
                             }`}
                         >
                           <span
-                            className="w-2 h-2 rounded-full shrink-0"
+                            className="w-2 h-2 rounded-[2px] shrink-0"
                             style={{ backgroundColor: type?.color }}
                           />
                           <span className="text-sm text-ink">{entity.title}</span>

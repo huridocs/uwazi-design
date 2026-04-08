@@ -28,3 +28,6 @@ export const sortOrderAtom = atom<SortOrder>("none");
 /** Track expanded group count for greying out collapse/expand buttons */
 export const expandedGroupCountAtom = atom(0);
 export const totalGroupCountAtom = atom(0);
+
+/** IDs of refs in the currently expanded cluster on the minimap track */
+export const activeClusterRefIdsAtom = atom<string[] | null>(null);

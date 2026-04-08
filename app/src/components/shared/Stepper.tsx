@@ -16,7 +16,7 @@ export function Stepper({ steps }: StepperProps) {
         <div key={step.label} className="flex items-center">
           <div className="flex items-center gap-2">
             <div
-              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 ${
+              className={`w-7 h-7 rounded-md flex items-center justify-center text-xs font-semibold shrink-0 ${
                 step.state === "completed"
                   ? "bg-success text-white"
                   : step.state === "active"
