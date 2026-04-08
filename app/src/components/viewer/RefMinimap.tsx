@@ -22,8 +22,8 @@ interface ClusterInfo {
   dots: DotInfo[];
 }
 
-const DOT_SIZE = 10;
-const CLUSTER_SIZE = DOT_SIZE + 8;
+const BASE_DOT = 6;
+const MAX_DOT = 14;
 
 export function RefMinimap({ numPages }: RefMinimapProps) {
   const [references] = useAtom(referencesAtom);
@@ -39,6 +39,10 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
   const [currentPage] = useAtom(currentPageAtom);
   const [searchQuery] = useAtom(searchQueryAtom);
   const setActiveClusterRefIds = useSetAtom(activeClusterRefIdsAtom);
+
+  // Dot size scales with total ref count: 6px at 1 ref → 14px at 200+
+  const dotSize = Math.min(MAX_DOT, BASE_DOT + Math.floor(references.length / 25));
+  const clusterSize = dotSize + 8;
 
   const clusters = useMemo<ClusterInfo[]>(() => {
     if (numPages === 0) return [];
@@ -137,7 +141,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
   return (
     <div
       className="absolute pointer-events-none"
-      style={{ top: 8, bottom: 8, right: 40, width: CLUSTER_SIZE, zIndex: 5 }}
+      style={{ top: 8, bottom: 8, right: 40, width: clusterSize, zIndex: 5 }}
     >
       {/* Mode toggle */}
       <div
@@ -160,7 +164,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
 
       {/* Track line */}
       <div
-        className="absolute rounded-[2px]"
+        className="absolute rounded-full"
         style={{
           top: 28,
           bottom: 0,
@@ -182,7 +186,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
           const { ref, color, entityName } = cluster.dots[0];
           const isActive = activeRefId === ref.id;
           const isHov = hoveredDot === ref.id;
-          const size = isActive ? 14 : isHov ? 12 : DOT_SIZE;
+          const size = isActive ? 14 : isHov ? 12 : dotSize;
 
           return (
             <div
@@ -195,7 +199,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
               title={entityName}
             >
               <div
-                className="rounded-[2px] transition-all duration-150"
+                className="rounded-full transition-all duration-150"
                 style={{
                   width: size, height: size,
                   backgroundColor: color,
@@ -210,7 +214,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
         // Cluster — subtle size scaling, capped
         const count = cluster.dots.length;
         const scale = Math.min(count / 10, 1);
-        const outerSize = CLUSTER_SIZE + scale * 4;
+        const outerSize = clusterSize + scale * 4;
 
         return (
           <div
@@ -233,7 +237,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
               onClick={() => handleClusterClick(ci)}
             >
               <div
-                className="rounded-[2px] flex items-center justify-center transition-all duration-150"
+                className="rounded-full flex items-center justify-center transition-all duration-150"
                 style={{
                   width: outerSize,
                   height: outerSize,
@@ -254,7 +258,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
             {isExpanded && (() => {
               const rowH = 22;
               const n = cluster.dots.length;
-              const dotS = DOT_SIZE;
+              const dotS = dotSize;
               const pad = 2; // padding around each dot for hit area
               const stemLen = 12;
               const branchLen = 16;
@@ -307,7 +311,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
                           x={pad / 2 + (dotS - s) / 2}
                           y={cy - s / 2}
                           width={s} height={s}
-                          rx={2}
+                          rx={99}
                           fill={color}
                           opacity={isActive || isHov ? 1 : 0.8}
                           className="cursor-pointer"
@@ -323,7 +327,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
                             x={pad / 2 + (dotS - s) / 2 - 2}
                             y={cy - s / 2 - 2}
                             width={s + 4} height={s + 4}
-                            rx={3}
+                            rx={99}
                             fill="none"
                             stroke={color}
                             strokeWidth={1.5}
