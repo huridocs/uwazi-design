@@ -43,7 +43,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
   const clusters = useMemo<ClusterInfo[]>(() => {
     if (numPages === 0) return [];
 
-    const thresholdPercent = 1.8;
+    const thresholdPercent = 1.2;
 
     // Apply same search filter as the drawer
     let baseRefs = references;
@@ -71,7 +71,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
         ? sel.top
         : (sel.page - 1 + sel.top) / numPages;
       return {
-        yPercent: 0.5 + yFraction * 99,
+        yPercent: 8 + yFraction * 88,
         dot: {
           ref,
           color: entityType?.color ?? "#D97706",
@@ -88,7 +88,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
       let j = i + 1;
       let sumY = items[i].yPercent;
       const dots: DotInfo[] = [items[i].dot];
-      while (j < items.length && items[j].yPercent - items[j - 1].yPercent < thresholdPercent) {
+      while (j < items.length && items[j].yPercent - items[i].yPercent < thresholdPercent) {
         dots.push(items[j].dot);
         sumY += items[j].yPercent;
         j++;
@@ -110,7 +110,12 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
 
   if (numPages === 0 || references.length === 0) return null;
 
-  const handleDotClick = (refId: string) => {
+  const handleDotClick = (refId: string, fromCluster?: number) => {
+    // Close cluster only if clicking a dot outside the open cluster
+    if (expandedCluster !== null && fromCluster !== expandedCluster) {
+      setExpandedCluster(null);
+      setActiveClusterRefIds(null);
+    }
     setActiveRefId(refId);
     setActiveDrawerTab("references");
     setCollapseSignal((s) => s + 1);
@@ -202,9 +207,9 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
           );
         }
 
-        // Cluster — size scales with count
+        // Cluster — subtle size scaling, capped
         const count = cluster.dots.length;
-        const scale = Math.min(count / 3, 2.5);
+        const scale = Math.min(count / 10, 1);
         const outerSize = CLUSTER_SIZE + scale * 4;
 
         return (
@@ -306,7 +311,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
                           fill={color}
                           opacity={isActive || isHov ? 1 : 0.8}
                           className="cursor-pointer"
-                          onClick={() => handleDotClick(ref.id)}
+                          onClick={(e) => { e.stopPropagation(); handleDotClick(ref.id, ci); }}
                           onMouseEnter={() => setHoveredDot(ref.id)}
                           onMouseLeave={() => setHoveredDot(null)}
                         >

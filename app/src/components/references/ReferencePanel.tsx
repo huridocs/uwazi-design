@@ -18,10 +18,10 @@ import { TocDrawerContent } from "./TocDrawerContent";
 import { Link2 } from "lucide-react";
 import { EntityOverlay } from "./EntityOverlay";
 
-const drawerTabs = [
+const baseDrawerTabs = [
   { id: "metadata", label: "Metadata" },
   { id: "toc", label: "ToC" },
-  { id: "references", label: "References", count: 12 },
+  { id: "references", label: "References" },
   { id: "relationships", label: "Relationships", count: 14 },
   { id: "search", label: "Search" },
 ];
@@ -131,7 +131,9 @@ export function ReferencePanel() {
 
       {/* Drawer tabs */}
       <DrawerTabs
-        tabs={drawerTabs}
+        tabs={baseDrawerTabs.map((t) =>
+          t.id === "references" ? { ...t, count: references.length } : t
+        )}
         activeId={activeDrawerTab}
         onChange={setActiveDrawerTab}
       />

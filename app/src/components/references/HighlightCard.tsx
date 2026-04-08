@@ -2,6 +2,7 @@ import { Reference } from "../../data/references";
 import { getEntity } from "../../data/entities";
 import { EntityPill } from "../shared/EntityPill";
 import { PageTag } from "../shared/PageTag";
+import { FadeTruncate } from "../shared/FadeTruncate";
 
 interface HighlightCardProps {
   reference: Reference;
@@ -16,9 +17,13 @@ export function HighlightCard({ reference }: HighlightCardProps) {
         <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
         <PageTag page={reference.sourceSelection.page} />
       </div>
-      <p className="text-xs text-ink-secondary leading-relaxed italic">
-        "{reference.sourceSelection.text}"
-      </p>
+      <FadeTruncate
+        text={reference.sourceSelection.text}
+        maxLines={4}
+        expandable
+        className="text-xs text-ink-secondary leading-relaxed italic"
+        fadeTo="color-mix(in srgb, var(--highlight-yellow) 20%, var(--bg-surface))"
+      />
     </div>
   );
 }

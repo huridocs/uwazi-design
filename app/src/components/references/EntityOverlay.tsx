@@ -3,6 +3,7 @@ import { overlayEntityIdAtom, referencesAtom } from "../../atoms/references";
 import { getEntity, getEntityType } from "../../data/entities";
 import { EntityPill } from "../shared/EntityPill";
 import { PageTag } from "../shared/PageTag";
+import { FadeTruncate } from "../shared/FadeTruncate";
 import { X, FileText, Link2, Calendar, Tag } from "lucide-react";
 
 export function EntityOverlay() {
@@ -102,9 +103,11 @@ export function EntityOverlay() {
                       <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
                       <PageTag page={ref.sourceSelection.page} />
                     </div>
-                    <p className="text-xs text-ink-secondary leading-relaxed line-clamp-2">
-                      "{ref.sourceSelection.text}"
-                    </p>
+                    <FadeTruncate
+                      text={ref.sourceSelection.text}
+                      maxLines={2}
+                      className="text-xs text-ink-secondary leading-relaxed"
+                    />
                     <div className="flex items-center mt-1">
                       <span className="text-[10px] text-ink-tertiary capitalize">
                         {ref.relationType.replace("_", " ")}

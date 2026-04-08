@@ -373,7 +373,302 @@ export const references: Reference[] = [
     },
     createdAt: "2024-06-24",
   },
+  // Cluster on page 1
+  {
+    id: "ref-24",
+    sourceEntityId: "e3",
+    targetEntityId: "e8",
+    relationType: "cites",
+    sourceSelection: {
+      text: "The Commission declared the petition admissible on October 9, 1997.",
+      page: 1,
+      top: 0.35,
+      left: 0.08,
+      width: 0.84,
+      height: 0.04,
+    },
+    createdAt: "2024-06-25",
+  },
+  {
+    id: "ref-25",
+    sourceEntityId: "e3",
+    targetEntityId: "e2",
+    relationType: "relates_to",
+    sourceSelection: {
+      text: "The Argentine government contested the jurisdiction of the Commission in its initial response.",
+      page: 1,
+      top: 0.37,
+      left: 0.08,
+      width: 0.84,
+      height: 0.04,
+    },
+    createdAt: "2024-06-25",
+  },
+  {
+    id: "ref-26",
+    sourceEntityId: "e3",
+    targetEntityId: "e1",
+    relationType: "mentions",
+    sourceSelection: {
+      text: "Abella filed a supplementary brief on March 12, 1994, providing additional evidence.",
+      page: 1,
+      top: 0.39,
+      left: 0.08,
+      width: 0.84,
+      height: 0.04,
+    },
+    createdAt: "2024-06-25",
+  },
+  // Scattered refs on pages 9, 11, 12, 13
+  {
+    id: "ref-27",
+    sourceEntityId: "e3",
+    targetEntityId: "e4",
+    relationType: "cites",
+    sourceSelection: {
+      text: "The Commission concluded that the State had violated Article 4 in conjunction with Article 1.1 of the Convention.",
+      page: 9,
+      top: 0.40,
+      left: 0.08,
+      width: 0.84,
+      height: 0.04,
+    },
+    createdAt: "2024-06-25",
+  },
+  {
+    id: "ref-28",
+    sourceEntityId: "e3",
+    targetEntityId: "e6",
+    relationType: "relates_to",
+    sourceSelection: {
+      text: "The military tribunals lacked the independence and impartiality required by the American Convention.",
+      page: 11,
+      top: 0.25,
+      left: 0.08,
+      width: 0.84,
+      height: 0.04,
+    },
+    createdAt: "2024-06-25",
+  },
+  {
+    id: "ref-29",
+    sourceEntityId: "e3",
+    targetEntityId: "e5",
+    relationType: "relates_to",
+    sourceSelection: {
+      text: "Medical reports documented injuries consistent with the use of excessive force during the operation.",
+      page: 11,
+      top: 0.27,
+      left: 0.08,
+      width: 0.84,
+      height: 0.04,
+    },
+    createdAt: "2024-06-25",
+  },
+  {
+    id: "ref-30",
+    sourceEntityId: "e3",
+    targetEntityId: "e12",
+    relationType: "mentions",
+    sourceSelection: {
+      text: "Sánchez was held incommunicado for seventy-two hours before being allowed to contact his family.",
+      page: 12,
+      top: 0.60,
+      left: 0.08,
+      width: 0.84,
+      height: 0.04,
+    },
+    createdAt: "2024-06-25",
+  },
+  {
+    id: "ref-31",
+    sourceEntityId: "e3",
+    targetEntityId: "e11",
+    relationType: "mentions",
+    sourceSelection: {
+      text: "Almeida identified three officers responsible for the mistreatment she suffered.",
+      page: 12,
+      top: 0.62,
+      left: 0.08,
+      width: 0.84,
+      height: 0.04,
+    },
+    createdAt: "2024-06-25",
+  },
+  {
+    id: "ref-32",
+    sourceEntityId: "e3",
+    targetEntityId: "e7",
+    relationType: "refers_to",
+    sourceSelection: {
+      text: "The assault resulted in the deaths of twenty-nine attackers and several members of the armed forces.",
+      page: 13,
+      top: 0.20,
+      left: 0.08,
+      width: 0.84,
+      height: 0.04,
+    },
+    createdAt: "2024-06-25",
+  },
+  {
+    id: "ref-33",
+    sourceEntityId: "e3",
+    targetEntityId: "e9",
+    relationType: "relates_to",
+    sourceSelection: {
+      text: "The whereabouts of at least two individuals remain unknown to this day.",
+      page: 13,
+      top: 0.22,
+      left: 0.08,
+      width: 0.84,
+      height: 0.04,
+    },
+    createdAt: "2024-06-25",
+  },
+  {
+    id: "ref-34",
+    sourceEntityId: "e3",
+    targetEntityId: "e10",
+    relationType: "cites",
+    sourceSelection: {
+      text: "Autopsy reports revealed gunshot wounds inflicted at close range, inconsistent with combat injuries.",
+      page: 13,
+      top: 0.24,
+      left: 0.08,
+      width: 0.84,
+      height: 0.04,
+    },
+    createdAt: "2024-06-25",
+  },
+  {
+    id: "ref-35",
+    sourceEntityId: "e3",
+    targetEntityId: "e14",
+    relationType: "relates_to",
+    sourceSelection: {
+      text: "The Commission found a pattern of systematic torture in the detention facilities used after the incident.",
+      page: 13,
+      top: 0.26,
+      left: 0.08,
+      width: 0.84,
+      height: 0.04,
+    },
+    createdAt: "2024-06-25",
+  },
+  // Cluster on page 4
+  {
+    id: "ref-36",
+    sourceEntityId: "e3",
+    targetEntityId: "e8",
+    relationType: "refers_to",
+    sourceSelection: {
+      text: "The Commission held hearings in Washington D.C. on July 15, 1996.",
+      page: 4,
+      top: 0.52,
+      left: 0.08,
+      width: 0.84,
+      height: 0.04,
+    },
+    createdAt: "2024-06-25",
+  },
+  {
+    id: "ref-37",
+    sourceEntityId: "e3",
+    targetEntityId: "e2",
+    relationType: "relates_to",
+    sourceSelection: {
+      text: "Argentina requested an extension to submit its observations, which was granted.",
+      page: 4,
+      top: 0.54,
+      left: 0.08,
+      width: 0.84,
+      height: 0.04,
+    },
+    createdAt: "2024-06-25",
+  },
+  // Generated bulk references for stress testing
+  ...generateBulkReferences(),
 ];
+
+function generateBulkReferences(): Reference[] {
+  const entityIds = ["e1", "e2", "e4", "e5", "e6", "e7", "e8", "e9", "e10", "e11", "e12", "e14"];
+  const relationTypes: RelationType[] = ["mentions", "relates_to", "cites", "refers_to"];
+  const snippets = [
+    "The witness testified that the events occurred without prior warning to the civilian population.",
+    "International humanitarian law requires the protection of non-combatants during armed conflict.",
+    "The forensic evidence was submitted to the Commission as an annex to the petition.",
+    "Survivors reported being blindfolded and transported to an unknown location.",
+    "The government failed to conduct a prompt and impartial investigation into the allegations.",
+    "Article 25 of the Convention guarantees the right to judicial protection.",
+    "The victims were denied access to legal representation for the duration of their detention.",
+    "Photographic evidence documented the conditions of the detention facility.",
+    "The Commission received testimony from twelve witnesses during the oral hearings.",
+    "The State argued that the actions were justified under the doctrine of national security.",
+    "Medical examinations revealed injuries consistent with the application of electric current.",
+    "The petitioners requested precautionary measures on behalf of the detained individuals.",
+    "Several bodies were found in a mass grave discovered in the outskirts of the military compound.",
+    "The right to personal liberty under Article 7 was violated in each of the documented cases.",
+    "Witnesses described hearing screams and gunfire throughout the night of the incident.",
+    "The Commission noted the State's failure to comply with repeated requests for information.",
+    "Family members were not informed of the whereabouts of their detained relatives.",
+    "The use of military courts to try civilians constitutes a violation of due process.",
+    "Amnesty laws enacted after the events effectively denied justice to the victims.",
+    "The Inter-American Court has consistently held that enforced disappearance is a continuing violation.",
+    "Documentary evidence included official military communications intercepted by journalists.",
+    "The psychological impact on surviving family members was documented by expert witnesses.",
+    "Reparations were recommended including compensation, rehabilitation, and guarantees of non-repetition.",
+    "The Commission emphasized the obligation of States to investigate human rights violations ex officio.",
+    "The principle of proportionality was not observed during the military response to the incident.",
+    "Habeas corpus petitions filed on behalf of the detainees were systematically denied.",
+    "The testimony of military personnel contradicted the official version of events.",
+    "International observers were denied access to the detention facilities for over six months.",
+    "The remains of several victims were identified through DNA analysis conducted years later.",
+    "The Commission determined that the State bore international responsibility for the violations.",
+  ];
+
+  const refs: Reference[] = [];
+  const totalPages = 14;
+  let id = 38;
+
+  // Generate ~200 refs spread across all pages with natural clustering
+  for (let page = 1; page <= totalPages; page++) {
+    // Each page gets 10-20 refs, with some clustering
+    const refsPerPage = 10 + Math.floor(seededRandom(page * 7) * 10);
+
+    for (let j = 0; j < refsPerPage; j++) {
+      const seed = id * 31 + page * 13 + j * 7;
+      // Create clusters by snapping some refs to nearby positions
+      const clusterBase = Math.floor(seededRandom(seed) * 5) / 5; // 0, 0.2, 0.4, 0.6, 0.8
+      const jitter = seededRandom(seed + 1) * 0.08;
+      const top = Math.min(0.92, Math.max(0.05, clusterBase + jitter));
+
+      refs.push({
+        id: `ref-${id}`,
+        sourceEntityId: "e3",
+        targetEntityId: entityIds[Math.floor(seededRandom(seed + 2) * entityIds.length)],
+        relationType: relationTypes[Math.floor(seededRandom(seed + 3) * relationTypes.length)],
+        sourceSelection: {
+          text: snippets[Math.floor(seededRandom(seed + 4) * snippets.length)],
+          page,
+          top,
+          left: 0.08,
+          width: 0.84,
+          height: 0.04,
+        },
+        createdAt: "2024-07-01",
+      });
+      id++;
+    }
+  }
+
+  return refs;
+}
+
+// Simple seeded pseudo-random for deterministic test data
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed * 9301 + 49297) * 49297;
+  return x - Math.floor(x);
+}
 
 export const relationTypes: { id: RelationType; label: string }[] = [
   { id: "mentions", label: "Mentions" },

@@ -3,6 +3,7 @@ import { Reference } from "../../data/references";
 import { getEntity } from "../../data/entities";
 import { EntityPill } from "../shared/EntityPill";
 import { PageTag } from "../shared/PageTag";
+import { FadeTruncate } from "../shared/FadeTruncate";
 import { useSetAtom, useAtom } from "jotai";
 import { scrollToHighlightAtom, scrollToRefAtom, activeRefIdAtom, overlayEntityIdAtom } from "../../atoms/references";
 import { currentPageAtom } from "../../atoms/selection";
@@ -63,9 +64,13 @@ export function RefRow({ reference, onDelete }: RefRowProps) {
         <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
         <PageTag page={reference.sourceSelection.page} onClick={handlePageClick} />
       </div>
-      <p className="text-xs text-ink-secondary leading-relaxed line-clamp-2">
-        "{reference.sourceSelection.text}"
-      </p>
+      <FadeTruncate
+        text={reference.sourceSelection.text}
+        maxLines={2}
+        expandable
+        className="text-xs text-ink-secondary leading-relaxed"
+        fadeTo={isActive ? "color-mix(in srgb, var(--highlight-yellow) 25%, var(--bg-surface))" : undefined}
+      />
       <div className="flex items-center justify-between mt-1">
         <span className="text-[10px] text-ink-tertiary capitalize">
           {reference.relationType.replace("_", " ")}
