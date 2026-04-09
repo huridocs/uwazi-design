@@ -4,12 +4,13 @@ interface MetadataCardProps {
   title: string;
   icon?: ReactNode;
   children: ReactNode;
+  className?: string;
 }
 
-export function MetadataCard({ title, icon, children }: MetadataCardProps) {
+export function MetadataCard({ title, icon, children, className = "" }: MetadataCardProps) {
   return (
-    <div className="bg-paper border border-border/40 rounded-md overflow-hidden">
-      <div className="flex flex-col gap-2 px-4 py-3">
+    <div className={`bg-paper border border-border/40 rounded-md overflow-hidden h-full ${className}`}>
+      <div className="flex flex-col gap-2 px-4 py-3 h-full">
         <div className="flex items-center gap-1.5">
           {icon}
           <h4 className="text-sm font-bold text-ink leading-tight">{title}</h4>

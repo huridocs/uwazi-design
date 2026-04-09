@@ -61,60 +61,68 @@ function MetadataReadBody({ onEdit }: { onEdit: () => void }) {
     <>
       <DocMeta showPdfSelector={false} />
 
-      {/* Scrollable metadata body */}
-      <div className="flex-1 overflow-auto px-4 py-2 pb-8 space-y-3">
-        <MetadataCard title="Document">
-          <div className="flex items-center justify-center bg-warm rounded-md overflow-hidden h-[200px]">
-            <div className="bg-paper rounded shadow-sm w-[45%] h-[180px] flex items-center justify-center">
-              <span className="text-xs text-ink-muted">PDF Preview</span>
+      {/* Scrollable metadata body — responsive grid */}
+      <div className="flex-1 overflow-auto px-4 py-2 pb-8">
+        <div className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+          <MetadataCard title="Document" className="md:col-span-2 xl:col-span-1 md:row-span-2">
+            <div className="flex items-center justify-center bg-warm rounded-md overflow-hidden h-[200px]">
+              <div className="bg-paper rounded shadow-sm w-[45%] h-[180px] flex items-center justify-center">
+                <span className="text-xs text-ink-muted">PDF Preview</span>
+              </div>
             </div>
-          </div>
-        </MetadataCard>
-
-        <MetadataCard
-          title="PDF Metadata"
-        >
-          <Property label="Name" value={pdf.name} />
-          <PropertyRow>
-            <div className="flex-1"><Property label="Type" value={pdf.type} /></div>
-            <div className="flex-1"><Property label="Size" value={pdf.size} /></div>
-          </PropertyRow>
-          <PropertyRow>
-            <div className="flex-1"><Property label="Last Edited" value={pdf.lastEdited} /></div>
-            <div className="flex-1"><Property label="Added" value={pdf.added} /></div>
-          </PropertyRow>
-          <div className="flex items-center justify-between pt-2">
-            <button className="px-3 py-1 text-xs font-medium text-ink rounded border border-border hover:bg-warm transition-colors flex items-center gap-1.5">
-              <Eye size={12} /> View
-            </button>
-            <button className="px-3 py-1 text-xs font-medium text-ink rounded border border-border hover:bg-warm transition-colors flex items-center gap-1.5">
-              <Download size={12} /> Download
-            </button>
-          </div>
-        </MetadataCard>
-
-        {fields.map((field) => (
-          <MetadataCard key={field.id} title={field.label}>
-            {field.type === "multiline" ? (
-              <p className="text-sm font-medium text-ink leading-relaxed">{field.value}</p>
-            ) : field.type === "country" ? (
-              <div className="flex items-center gap-2">
-                <span className="text-[22px] leading-none">{field.flag}</span>
-                <span className="text-sm font-medium text-ink">{field.value}</span>
-              </div>
-            ) : field.type === "link" ? (
-              <Property value={field.value} linked />
-            ) : field.type === "file-list" ? (
-              <div className="space-y-2">
-                {field.items?.map((item, i) => (
-                  <Property key={i} label={item.label} value={item.value} linked />
-                ))}
-              </div>
-            ) : (
-              <Property value={field.value} />
-            )}
           </MetadataCard>
-        ))}
+
+          <MetadataCard title="PDF Metadata" className="md:col-span-2 xl:col-span-2 xl:row-span-2">
+            <Property label="Name" value={pdf.name} />
+            <PropertyRow>
+              <div className="flex-1"><Property label="Type" value={pdf.type} /></div>
+              <div className="flex-1"><Property label="Size" value={pdf.size} /></div>
+              <div className="flex-1"><Property label="Last Edited" value={pdf.lastEdited} /></div>
+              <div className="flex-1"><Property label="Added" value={pdf.added} /></div>
+            </PropertyRow>
+            <div className="flex items-center justify-between pt-2 mt-auto">
+              <button className="px-3 py-1 text-xs font-medium text-ink rounded border border-border hover:bg-warm transition-colors flex items-center gap-1.5">
+                <Eye size={12} /> View
+              </button>
+              <button className="px-3 py-1 text-xs font-medium text-ink rounded border border-border hover:bg-warm transition-colors flex items-center gap-1.5">
+                <Download size={12} /> Download
+              </button>
+            </div>
+          </MetadataCard>
+
+          {fields.map((field) => {
+            // Large fields span more columns
+            const span =
+              field.type === "multiline"
+                ? "col-span-1 md:col-span-2 xl:col-span-3"
+                : field.type === "file-list"
+                  ? "col-span-1 md:col-span-2 xl:col-span-2"
+                  : "col-span-1";
+
+            return (
+              <MetadataCard key={field.id} title={field.label} className={span}>
+                {field.type === "multiline" ? (
+                  <p className="text-sm font-medium text-ink leading-relaxed">{field.value}</p>
+                ) : field.type === "country" ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[22px] leading-none">{field.flag}</span>
+                    <span className="text-sm font-medium text-ink">{field.value}</span>
+                  </div>
+                ) : field.type === "link" ? (
+                  <Property value={field.value} linked />
+                ) : field.type === "file-list" ? (
+                  <div className="space-y-2">
+                    {field.items?.map((item, i) => (
+                      <Property key={i} label={item.label} value={item.value} linked />
+                    ))}
+                  </div>
+                ) : (
+                  <Property value={field.value} />
+                )}
+              </MetadataCard>
+            );
+          })}
+        </div>
       </div>
 
       {/* Action bar */}
