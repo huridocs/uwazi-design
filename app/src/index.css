@@ -110,6 +110,18 @@ button:not(:disabled) {
   cursor: text;
 }
 
+/* Minimap tooltip slide-in */
+@keyframes minimapTooltipIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+}
+
 /* Highlight flash animation */
 @keyframes flash-highlight {
   0%, 100% { opacity: 1; }

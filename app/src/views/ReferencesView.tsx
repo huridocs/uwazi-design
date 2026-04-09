@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, type ReactNode } from "react";
 import { useAtom } from "jotai";
 import { referencesAtom, toastsAtom } from "../atoms/references";
 import { languageAtom, type Language } from "../atoms/language";
@@ -13,6 +13,8 @@ import { MainTabs } from "../components/layout/MainTabs";
 import { DocMeta } from "../components/layout/DocMeta";
 import { DocumentViewer } from "../components/viewer/DocumentViewer";
 import { ReferencePanel } from "../components/references/ReferencePanel";
+import { MetadataDrawerContent } from "../components/references/MetadataDrawerContent";
+import { TocDrawerContent } from "../components/references/TocDrawerContent";
 import { SearchBar } from "../components/references/SearchBar";
 import { FiltersRow } from "../components/references/FiltersRow";
 import { GroupedCard } from "../components/references/GroupedCard";
@@ -71,7 +73,7 @@ export function ReferencesView() {
     );
   }
 
-  const renderLeft = (openSheet?: () => void) => (
+  const renderLeft = (menuTrigger?: ReactNode) => (
     <div className="flex flex-col h-full min-h-0 bg-paper">
       <MainTabs
         tabs={tabs}
@@ -83,21 +85,7 @@ export function ReferencesView() {
         onLanguageChange={(lang) => setLanguage(lang as Language)}
       />
       <DocMeta />
-      <DocumentViewer
-        actionBarLeft={
-          openSheet ? (
-            <button
-              onClick={openSheet}
-              className="px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors flex items-center gap-1.5"
-            >
-              References
-              <span className="text-[10px] font-semibold text-ink-tertiary">
-                {references.length}
-              </span>
-            </button>
-          ) : undefined
-        }
-      />
+      <DocumentViewer actionBarLeft={menuTrigger} />
     </div>
   );
 
@@ -105,12 +93,29 @@ export function ReferencesView() {
     <>
       <AdaptiveSplitView
         left={renderLeft()}
-        mobileLeft={(open) => renderLeft(open)}
+        mobileLeft={(menuTrigger) => renderLeft(menuTrigger)}
         right={<ReferencePanel />}
         defaultRightWidth={480}
         minRightWidth={380}
         maxRightWidth={600}
-        mobileSheetTitle="References"
+        mobileSections={[
+          {
+            id: "references",
+            label: "References",
+            count: references.length,
+            content: <ReferencePanel />,
+          },
+          {
+            id: "metadata",
+            label: "Metadata",
+            content: <MetadataDrawerContent />,
+          },
+          {
+            id: "toc",
+            label: "Table of contents",
+            content: <TocDrawerContent />,
+          },
+        ]}
       />
       <EntityPickerModal />
       <ToastContainer />

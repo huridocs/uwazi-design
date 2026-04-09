@@ -3,6 +3,15 @@ import { useAtom } from "jotai";
 import { breakpointAtom } from "../../atoms/viewport";
 import { SplitView } from "./SplitView";
 import { MobileBottomSheet } from "./MobileBottomSheet";
+import { MobileActionMenu, type MobileMenuItem } from "./MobileActionMenu";
+
+export interface MobileSection {
+  id: string;
+  label: string;
+  count?: number;
+  icon?: ReactNode;
+  content: ReactNode;
+}
 
 interface AdaptiveSplitViewProps {
   left: ReactNode;
@@ -10,10 +19,10 @@ interface AdaptiveSplitViewProps {
   defaultRightWidth?: number;
   minRightWidth?: number;
   maxRightWidth?: number;
-  /** Title shown in the mobile bottom sheet */
-  mobileSheetTitle?: string;
-  /** Render-prop that receives the open function so callers can place a trigger inside `left` */
-  mobileLeft?: (open: () => void) => ReactNode;
+  /** Mobile-only: each section opens in its own bottom sheet via the action menu */
+  mobileSections?: MobileSection[];
+  /** Render-prop: receives a node containing the action menu trigger to embed inside `left` */
+  mobileLeft?: (menuTrigger: ReactNode) => ReactNode;
 }
 
 export function AdaptiveSplitView({
@@ -22,26 +31,40 @@ export function AdaptiveSplitView({
   defaultRightWidth,
   minRightWidth,
   maxRightWidth,
-  mobileSheetTitle,
+  mobileSections,
   mobileLeft,
 }: AdaptiveSplitViewProps) {
   const [breakpoint] = useAtom(breakpointAtom);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [openSectionId, setOpenSectionId] = useState<string | null>(null);
 
   if (breakpoint === "mobile") {
+    const sections = mobileSections ?? [
+      { id: "right", label: "Details", content: right },
+    ];
+
+    const menuItems: MobileMenuItem[] = sections.map((s) => ({
+      id: s.id,
+      label: s.label,
+      icon: s.icon,
+      count: s.count,
+      onSelect: () => setOpenSectionId(s.id),
+    }));
+
+    const activeSection = sections.find((s) => s.id === openSectionId);
+
     return (
       <>
         <div className="flex flex-1 overflow-hidden">
           <div className="flex-1 overflow-hidden">
-            {mobileLeft ? mobileLeft(() => setSheetOpen(true)) : left}
+            {mobileLeft ? mobileLeft(<MobileActionMenu items={menuItems} />) : left}
           </div>
         </div>
         <MobileBottomSheet
-          open={sheetOpen}
-          onClose={() => setSheetOpen(false)}
-          title={mobileSheetTitle}
+          open={activeSection !== undefined}
+          onClose={() => setOpenSectionId(null)}
+          title={activeSection?.label}
         >
-          {right}
+          {activeSection?.content}
         </MobileBottomSheet>
       </>
     );

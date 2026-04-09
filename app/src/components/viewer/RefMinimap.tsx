@@ -349,7 +349,6 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
               onClick={() => handleDotClick(ref.id)}
               onMouseEnter={() => setHoveredDot(ref.id)}
               onMouseLeave={() => setHoveredDot(null)}
-              title={entityName}
             >
               <div
                 className="rounded-full transition-all duration-150"
@@ -360,6 +359,25 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
                   boxShadow: isActive ? `0 0 0 2px ${color}44` : "none",
                 }}
               />
+              {/* Tooltip — slides in from the right of the dot */}
+              {isHov && (
+                <div
+                  className="absolute pointer-events-none text-[10px] font-medium whitespace-nowrap rounded-md"
+                  style={{
+                    right: "calc(100% + 6px)",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    padding: "3px 7px",
+                    backgroundColor: "var(--text-primary)",
+                    color: "var(--bg-surface)",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                    zIndex: 100,
+                    animation: "minimapTooltipIn 150ms ease-out",
+                  }}
+                >
+                  {entityName}
+                </div>
+              )}
             </div>
           );
         }
@@ -437,76 +455,101 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
                   : totalH / 2;
 
               return (
-                <svg
-                  className="absolute pointer-events-auto"
-                  style={{
-                    top: topOffset,
-                    right: "50%",
-                    marginRight: outerSize / 2 + 4,
-                    width: svgW,
-                    height: totalH,
-                    overflow: "visible",
-                  }}
-                >
-                  {/* Stem: from right edge to trunk */}
-                  <line
-                    x1={trunkX} y1={midY}
-                    x2={svgW} y2={midY}
-                    stroke="var(--text-tertiary)" strokeWidth={1} opacity={0.4}
-                  />
-                  {/* Trunk: vertical */}
-                  <line
-                    x1={trunkX} y1={dotS / 2}
-                    x2={trunkX} y2={totalH - dotS / 2}
-                    stroke="var(--text-tertiary)" strokeWidth={1} opacity={0.4}
-                  />
-                  {/* Branches + dots */}
-                  {cluster.dots.map(({ ref, color, entityName }, i) => {
-                    const cy = i * rowH + dotS / 2;
-                    const isActive = activeRefId === ref.id;
-                    const isHov = hoveredDot === ref.id;
-                    const s = isActive ? 14 : isHov ? 12 : dotS;
+                <>
+                  <svg
+                    className="absolute pointer-events-auto"
+                    style={{
+                      top: topOffset,
+                      right: "50%",
+                      marginRight: outerSize / 2 + 4,
+                      width: svgW,
+                      height: totalH,
+                      overflow: "visible",
+                    }}
+                  >
+                    {/* Stem: from right edge to trunk */}
+                    <line
+                      x1={trunkX} y1={midY}
+                      x2={svgW} y2={midY}
+                      stroke="var(--text-tertiary)" strokeWidth={1} opacity={0.4}
+                    />
+                    {/* Trunk: vertical */}
+                    <line
+                      x1={trunkX} y1={dotS / 2}
+                      x2={trunkX} y2={totalH - dotS / 2}
+                      stroke="var(--text-tertiary)" strokeWidth={1} opacity={0.4}
+                    />
+                    {/* Branches + dots */}
+                    {cluster.dots.map(({ ref, color }, i) => {
+                      const cy = i * rowH + dotS / 2;
+                      const isActive = activeRefId === ref.id;
+                      const isHov = hoveredDot === ref.id;
+                      const s = isActive ? 14 : isHov ? 12 : dotS;
 
-                    return (
-                      <g key={ref.id}>
-                        {/* Branch line */}
-                        <line
-                          x1={dotS + pad} y1={cy}
-                          x2={trunkX} y2={cy}
-                          stroke="var(--text-tertiary)" strokeWidth={1} opacity={0.4}
-                        />
-                        {/* Dot square */}
-                        <rect
-                          x={pad / 2 + (dotS - s) / 2}
-                          y={cy - s / 2}
-                          width={s} height={s}
-                          rx={99}
-                          fill={color}
-                          opacity={isActive || isHov ? 1 : 0.8}
-                          className="cursor-pointer"
-                          onClick={(e) => { e.stopPropagation(); handleDotClick(ref.id, ci); }}
-                          onMouseEnter={() => setHoveredDot(ref.id)}
-                          onMouseLeave={() => setHoveredDot(null)}
-                        >
-                          <title>{entityName}</title>
-                        </rect>
-                        {/* Active ring */}
-                        {isActive && (
-                          <rect
-                            x={pad / 2 + (dotS - s) / 2 - 2}
-                            y={cy - s / 2 - 2}
-                            width={s + 4} height={s + 4}
-                            rx={99}
-                            fill="none"
-                            stroke={color}
-                            strokeWidth={1.5}
-                            opacity={0.3}
+                      return (
+                        <g key={ref.id}>
+                          {/* Branch line */}
+                          <line
+                            x1={dotS + pad} y1={cy}
+                            x2={trunkX} y2={cy}
+                            stroke="var(--text-tertiary)" strokeWidth={1} opacity={0.4}
                           />
-                        )}
-                      </g>
+                          {/* Dot square */}
+                          <rect
+                            x={pad / 2 + (dotS - s) / 2}
+                            y={cy - s / 2}
+                            width={s} height={s}
+                            rx={99}
+                            fill={color}
+                            opacity={isActive || isHov ? 1 : 0.8}
+                            className="cursor-pointer"
+                            onClick={(e) => { e.stopPropagation(); handleDotClick(ref.id, ci); }}
+                            onMouseEnter={() => setHoveredDot(ref.id)}
+                            onMouseLeave={() => setHoveredDot(null)}
+                          />
+                          {/* Active ring */}
+                          {isActive && (
+                            <rect
+                              x={pad / 2 + (dotS - s) / 2 - 2}
+                              y={cy - s / 2 - 2}
+                              width={s + 4} height={s + 4}
+                              rx={99}
+                              fill="none"
+                              stroke={color}
+                              strokeWidth={1.5}
+                              opacity={0.3}
+                            />
+                          )}
+                        </g>
+                      );
+                    })}
+                  </svg>
+
+                  {/* HTML tooltip overlay for hovered cluster sub-dot */}
+                  {cluster.dots.map(({ ref, entityName }, i) => {
+                    if (hoveredDot !== ref.id) return null;
+                    const cy = i * rowH + dotS / 2;
+                    return (
+                      <div
+                        key={`tip-${ref.id}`}
+                        className="absolute pointer-events-none text-[10px] font-medium whitespace-nowrap rounded-md"
+                        style={{
+                          top: topOffset + cy,
+                          right: `calc(50% + ${outerSize / 2 + svgW + 12}px)`,
+                          transform: "translateY(-50%)",
+                          padding: "3px 7px",
+                          backgroundColor: "var(--text-primary)",
+                          color: "var(--bg-surface)",
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                          zIndex: 100,
+                          animation: "minimapTooltipIn 150ms ease-out",
+                        }}
+                      >
+                        {entityName}
+                      </div>
                     );
                   })}
-                </svg>
+                </>
               );
             })()}
           </div>
