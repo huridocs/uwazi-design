@@ -1,6 +1,8 @@
 import { Eye } from "lucide-react";
+import { useAtom } from "jotai";
 import { StatusBadge } from "../shared/StatusBadge";
 import { ProgressBar } from "../shared/ProgressBar";
+import { breakpointAtom } from "../../atoms/viewport";
 import type { ImportEntry } from "../../data/imports";
 
 interface ImportTableProps {
@@ -21,6 +23,80 @@ function progressColor(status: ImportEntry["status"]): "green" | "blue" | "red" 
 
 export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onView }: ImportTableProps) {
   const allSelected = imports.length > 0 && imports.every((i) => selectedIds.has(i.id));
+  const [breakpoint] = useAtom(breakpointAtom);
+  const isMobile = breakpoint === "mobile";
+
+  if (isMobile) {
+    return (
+      <div
+        className="flex flex-col flex-1 min-h-0 rounded-md overflow-hidden bg-paper"
+        style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)" }}
+      >
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {imports.map((entry) => {
+            const isSelected = selectedIds.has(entry.id);
+            return (
+              <div
+                key={entry.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => onSelect(entry.id)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(entry.id); } }}
+                className={`flex items-start gap-3 p-3 cursor-pointer transition-colors hover:bg-warm ${isSelected ? "bg-warm" : ""}`}
+                style={{
+                  borderBottom: "1px solid var(--border-primary)",
+                  boxShadow: isSelected ? "inset 3px 0 0 var(--accent-blue)" : "none",
+                }}
+              >
+                <label className="flex items-center pt-0.5" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => onSelect(entry.id)}
+                    className="w-3.5 h-3.5 rounded accent-ink cursor-pointer"
+                  />
+                </label>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2 mb-1.5">
+                    <span className="text-sm font-medium text-ink truncate">{entry.filename}</span>
+                    <StatusBadge status={entry.status} />
+                  </div>
+                  <div className="text-[11px] text-ink-tertiary truncate mb-1.5">{entry.template}</div>
+                  <div className="mb-1.5">
+                    <ProgressBar value={entry.progress} color={progressColor(entry.status)} showLabel />
+                  </div>
+                  <div className="flex items-center gap-3 text-[11px] text-ink-tertiary">
+                    <span><span className="tabular-nums">{entry.entities.toLocaleString()}</span> entities</span>
+                    {entry.failed > 0 && (
+                      <span className="text-seal font-medium">
+                        <span className="tabular-nums">{entry.failed}</span> failed
+                      </span>
+                    )}
+                    <span className="ml-auto">
+                      {new Date(entry.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onView(entry.id); }}
+                  aria-label={`View ${entry.filename}`}
+                  className="flex items-center justify-center p-1.5 rounded hover:bg-parchment transition-colors shrink-0"
+                >
+                  <Eye size={14} className="text-ink-tertiary" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+        <div
+          className="flex items-center justify-between px-3 h-10 shrink-0 text-xs text-ink-muted"
+          style={{ backgroundColor: "var(--bg-warm)", borderTop: "1px solid var(--border-primary)" }}
+        >
+          <span>{imports.length} imports</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

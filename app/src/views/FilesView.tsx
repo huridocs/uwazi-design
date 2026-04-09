@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useAtom } from "jotai";
-import { SplitView } from "../components/layout/SplitView";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DocMeta } from "../components/layout/DocMeta";

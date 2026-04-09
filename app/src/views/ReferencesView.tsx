@@ -6,7 +6,6 @@ import { viewModeAtom, searchQueryAtom, sortOrderAtom, expandAllSignalAtom, coll
 import { getEntity, getEntityType } from "../data/entities";
 import { Reference, relationTypes } from "../data/references";
 import { currentDocument } from "../data/document";
-import { SplitView } from "../components/layout/SplitView";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { MainTabs } from "../components/layout/MainTabs";

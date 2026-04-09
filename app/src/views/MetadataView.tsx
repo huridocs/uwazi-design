@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useAtom } from "jotai";
 import { Download, Eye, Search, ChevronRight } from "lucide-react";
-import { SplitView } from "../components/layout/SplitView";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DrawerTabs } from "../components/layout/DrawerTabs";

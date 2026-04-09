@@ -19,12 +19,17 @@ export function FloatingMenu({ x, y, text }: FloatingMenuProps) {
     navigator.clipboard.writeText(text);
   };
 
+  // Clamp horizontally so the menu doesn't escape the viewport
+  const clampedX = typeof window !== "undefined"
+    ? Math.min(Math.max(x, 110), window.innerWidth - 110)
+    : x;
+
   return (
     <div
       className="fixed z-50 animate-fade-in-up"
       style={{
-        left: x,
-        top: y - 48,
+        left: clampedX,
+        top: Math.max(8, y - 48),
         transform: "translateX(-50%)",
       }}
     >
