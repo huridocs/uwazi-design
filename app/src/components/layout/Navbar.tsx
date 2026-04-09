@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useAtom } from "jotai";
 import {
   ArrowLeft,
   BookOpen,
@@ -14,9 +15,12 @@ import {
   Activity,
   Code2,
   Upload,
+  Menu,
 } from "lucide-react";
 import type { Theme } from "../../atoms/theme";
 import type { AppView } from "../../atoms/navigation";
+import { breakpointAtom } from "../../atoms/viewport";
+import { MobileBottomSheet } from "./MobileBottomSheet";
 
 interface NavbarProps {
   onLogoClick?: () => void;
@@ -31,8 +35,11 @@ interface NavbarProps {
 export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onToggleTheme, rtl, onToggleRtl }: NavbarProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
   const toolsRef = useRef<HTMLDivElement>(null);
+  const [breakpoint] = useAtom(breakpointAtom);
+  const isMobile = breakpoint === "mobile";
 
   useEffect(() => {
     if (!settingsOpen && !toolsOpen) return;
@@ -60,18 +67,28 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
 
   return (
     <header
-      className="h-[52px] bg-paper flex items-center justify-between px-5 shrink-0"
+      className="h-[52px] bg-paper flex items-center justify-between px-4 md:px-5 shrink-0"
       style={{ borderBottom: "1px solid var(--border-primary)" }}
     >
-      {/* Left: Logo + Library + Tools */}
-      <div className="flex items-center gap-4">
+      {/* Left: Logo + (mobile hamburger | desktop nav) */}
+      <div className="flex items-center gap-3 md:gap-4">
+        {isMobile && !showingCatalog && (
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            className="flex items-center justify-center rounded-md hover:bg-warm transition-colors"
+            style={{ width: 32, height: 32, color: "var(--text-secondary)" }}
+            aria-label="Open menu"
+          >
+            <Menu size={18} />
+          </button>
+        )}
         <button
           onClick={onLogoClick}
           className="flex items-center"
         >
           <img src="/nu-logo.svg" alt="Uwazi" style={{ height: 14.7 }} className="logo-img" />
         </button>
-        {!showingCatalog && (
+        {!showingCatalog && !isMobile && (
           <div className="flex items-center gap-2">
             <button
               onClick={() => onNavigate?.("entity")}
@@ -145,7 +162,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
           >
             <ArrowLeft size={14} /> Return to app
           </button>
-        ) : (
+        ) : !isMobile ? (
           <div className="relative" ref={settingsRef}>
             <button
               onClick={() => { setSettingsOpen((o) => !o); setToolsOpen(false); }}
@@ -194,15 +211,106 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
               </div>
             )}
           </div>
+        ) : null}
+        {!isMobile && (
+          <button
+            onClick={onToggleTheme}
+            className="p-1.5 text-ink-tertiary hover:text-ink-secondary hover:bg-warm rounded-md transition-colors"
+            aria-label="Toggle theme"
+          >
+            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
         )}
-        <button
-          onClick={onToggleTheme}
-          className="p-1.5 text-ink-tertiary hover:text-ink-secondary hover:bg-warm rounded-md transition-colors"
-          aria-label="Toggle theme"
-        >
-          {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-        </button>
       </div>
+
+      {/* Mobile menu sheet */}
+      {isMobile && (
+        <MobileBottomSheet
+          open={mobileMenuOpen}
+          onClose={() => setMobileMenuOpen(false)}
+          title="Menu"
+        >
+          <div className="flex flex-col py-2">
+            {/* Library */}
+            <button
+              onClick={() => { onNavigate?.("entity"); setMobileMenuOpen(false); }}
+              className={`flex items-center gap-3 w-full px-4 py-3 text-sm font-medium transition-colors ${
+                appView === "entity" ? "bg-vellum text-ink" : "text-ink-secondary hover:bg-warm"
+              }`}
+            >
+              <BookOpen size={16} className="text-ink-tertiary" />
+              Library
+            </button>
+
+            {/* Tools section */}
+            <div className="px-4 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-ink-tertiary">
+              Tools
+            </div>
+            {toolsItems.map((item) => {
+              const Icon = item.icon;
+              const active = appView === "import-csv" && item.id === "import-csv";
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    if (item.enabled && item.id === "import-csv") {
+                      onNavigate?.("import-csv");
+                      setMobileMenuOpen(false);
+                    }
+                  }}
+                  disabled={!item.enabled}
+                  className={`flex items-center gap-3 w-full px-4 py-3 text-sm font-medium transition-colors ${
+                    active
+                      ? "bg-vellum text-ink"
+                      : item.enabled
+                        ? "text-ink-secondary hover:bg-warm"
+                        : "text-ink-muted/60"
+                  }`}
+                >
+                  <Icon size={16} className={item.enabled ? "text-ink-tertiary" : "text-ink-muted/40"} />
+                  {item.label}
+                </button>
+              );
+            })}
+
+            {/* Settings section */}
+            <div className="px-4 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-ink-tertiary">
+              Settings
+            </div>
+            <button
+              onClick={() => { onToggleTheme?.(); }}
+              className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
+            >
+              {theme === "dark" ? <Sun size={16} className="text-ink-tertiary" /> : <Moon size={16} className="text-ink-tertiary" />}
+              {theme === "dark" ? "Light mode" : "Dark mode"}
+            </button>
+            <button
+              onClick={() => { onToggleRtl?.(); }}
+              className="flex items-center justify-between gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Languages size={16} className="text-ink-tertiary" />
+                Test RTL layout
+              </div>
+              <span
+                className={`px-1.5 py-0.5 text-[10px] font-semibold rounded ${
+                  rtl ? "bg-success-light text-success" : "bg-warm text-ink-muted"
+                }`}
+              >
+                {rtl ? "ON" : "OFF"}
+              </span>
+            </button>
+            <button className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors">
+              <User size={16} className="text-ink-tertiary" />
+              User settings
+            </button>
+            <button className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors">
+              <Server size={16} className="text-ink-tertiary" />
+              System settings
+            </button>
+          </div>
+        </MobileBottomSheet>
+      )}
     </header>
   );
 }

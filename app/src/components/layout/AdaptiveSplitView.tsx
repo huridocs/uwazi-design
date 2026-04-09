@@ -59,6 +59,19 @@ export function AdaptiveSplitView({
             {mobileLeft ? mobileLeft(<MobileActionMenu items={menuItems} />) : left}
           </div>
         </div>
+        {/* Floating menu trigger when no embedded slot */}
+        {!mobileLeft && (
+          <div
+            className="fixed"
+            style={{
+              right: 16,
+              bottom: `calc(16px + env(safe-area-inset-bottom, 0))`,
+              zIndex: 60,
+            }}
+          >
+            <MobileActionMenu items={menuItems} />
+          </div>
+        )}
         <MobileBottomSheet
           open={activeSection !== undefined}
           onClose={() => setOpenSectionId(null)}

@@ -19,15 +19,15 @@ interface MainTabsProps {
 export function MainTabs({ tabs, activeId, onChange, languages = [], availableLanguages, activeLanguage, onLanguageChange }: MainTabsProps) {
   return (
     <div
-      className="flex items-center justify-between px-4 py-2.5 shrink-0"
+      className="flex items-center justify-between gap-3 px-4 py-2.5 shrink-0 overflow-x-auto"
     >
       {/* Left: Back + Tabs */}
-      <div className="flex items-center gap-4">
-        <button className="text-ink-tertiary hover:text-ink transition-colors" aria-label="Go back">
+      <div className="flex items-center gap-4 min-w-0">
+        <button className="text-ink-tertiary hover:text-ink transition-colors shrink-0" aria-label="Go back">
           <ArrowLeft size={20} />
         </button>
         <div
-          className="flex items-center rounded-md overflow-hidden"
+          className="flex items-center rounded-md overflow-hidden shrink-0"
           role="tablist"
           style={{
             border: "1px solid var(--border-primary)",
@@ -61,7 +61,7 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
 
       {/* Right: Language badges */}
       {languages.length > 0 && (
-        <div className="flex items-center gap-1" role="group" aria-label="Language selection">
+        <div className="flex items-center gap-1 shrink-0" role="group" aria-label="Language selection">
           {languages.map((lang) => {
             const isActive = lang === (activeLanguage ?? languages[0]);
             const isAvailable = !availableLanguages || availableLanguages.includes(lang);

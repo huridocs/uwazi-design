@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAtom } from "jotai";
 import { Download, Eye, Search, ChevronRight } from "lucide-react";
 import { SplitView } from "../components/layout/SplitView";
+import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { DocMeta } from "../components/layout/DocMeta";
@@ -22,7 +23,7 @@ export function MetadataView({ tabs, activeTab, onTabChange }: MetadataViewProps
   const [language, setLanguage] = useAtom(languageAtom);
 
   return (
-    <SplitView
+    <AdaptiveSplitView
       left={
         <div className="flex flex-col h-full min-h-0 bg-paper">
           <MainTabs
@@ -46,6 +47,9 @@ export function MetadataView({ tabs, activeTab, onTabChange }: MetadataViewProps
       defaultRightWidth={480}
       minRightWidth={380}
       maxRightWidth={600}
+      mobileSections={[
+        { id: "details", label: "Details", content: <MetadataDrawer /> },
+      ]}
     />
   );
 }

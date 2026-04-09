@@ -50,12 +50,12 @@ export function NewImportModal({ open, onClose, onImport }: NewImportModalProps)
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-overlay"
+      className="fixed inset-0 z-50 flex md:items-center md:justify-center md:p-4 bg-overlay"
       role="dialog"
       aria-modal="true"
       aria-labelledby="import-modal-title"
     >
-      <div className="bg-paper rounded-xl shadow-xl w-full max-w-[35rem] animate-fade-in-up">
+      <div className="bg-paper shadow-xl w-full md:max-w-[35rem] md:rounded-xl md:animate-fade-in-up h-full md:h-auto md:max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid var(--border-primary)" }}>
           <h2 id="import-modal-title" className="text-base font-semibold text-ink">New Import</h2>

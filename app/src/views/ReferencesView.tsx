@@ -228,7 +228,19 @@ function ReferencesMainView({ tabs, activeTab, onTabChange }: ReferencesMainView
   }, [filtered, sortOrder]);
 
   return (
-    <SplitView
+    <AdaptiveSplitView
+      mobileSections={[
+        {
+          id: "document",
+          label: "Document",
+          content: (
+            <div className="flex flex-col h-full min-h-0 relative overflow-hidden">
+              <EntityOverlay />
+              <DocumentViewer />
+            </div>
+          ),
+        },
+      ]}
       left={
         <div className="flex flex-col h-full min-h-0 bg-paper">
           <MainTabs

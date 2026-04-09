@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAtom } from "jotai";
 import { SplitView } from "../components/layout/SplitView";
+import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DocMeta } from "../components/layout/DocMeta";
 import { FileTable } from "../components/files/FileTable";
@@ -48,7 +49,19 @@ export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
   };
 
   return (
-    <SplitView
+    <AdaptiveSplitView
+      mobileSections={[
+        {
+          id: "details",
+          label: selectedFiles.length === 0
+            ? "File details"
+            : selectedFiles.length === 1
+              ? selectedFiles[0].name
+              : `${selectedFiles.length} files`,
+          count: selectedFiles.length || undefined,
+          content: <FileDrawer selectedFiles={selectedFiles} />,
+        },
+      ]}
       left={
         <div className="flex flex-col h-full min-h-0 bg-paper">
           <MainTabs
