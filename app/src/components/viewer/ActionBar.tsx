@@ -1,12 +1,15 @@
+import { ReactNode } from "react";
 import { useAtom } from "jotai";
 import { currentPageAtom } from "../../atoms/selection";
 
 interface ActionBarProps {
   numPages: number;
   onScrollToPage: (page: number) => void;
+  /** Optional content to render on the left side instead of the OCR button */
+  leftSlot?: ReactNode;
 }
 
-export function ActionBar({ numPages, onScrollToPage }: ActionBarProps) {
+export function ActionBar({ numPages, onScrollToPage, leftSlot }: ActionBarProps) {
   const [currentPage] = useAtom(currentPageAtom);
 
   const goTo = (page: number) => {
@@ -18,10 +21,12 @@ export function ActionBar({ numPages, onScrollToPage }: ActionBarProps) {
       className="flex items-center justify-between h-12 px-4 bg-paper shrink-0"
       style={{ borderTop: "1px solid var(--border-primary)" }}
     >
-      {/* Left: OCR button */}
-      <button className="px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
-        OCR PDF
-      </button>
+      {/* Left: optional slot or default OCR button */}
+      {leftSlot ?? (
+        <button className="px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
+          OCR PDF
+        </button>
+      )}
 
       {/* Right: Pager */}
       <div className="flex items-center gap-4">

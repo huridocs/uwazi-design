@@ -8,8 +8,10 @@ import { ToastContainer } from "./views/ToastContainer";
 import { themeAtom } from "./atoms/theme";
 import { languageAtom } from "./atoms/language";
 import { appViewAtom, type AppView } from "./atoms/navigation";
+import { useBreakpointSync } from "./hooks/useBreakpointSync";
 
 export function App() {
+  useBreakpointSync();
   const [appView, setAppView] = useAtom(appViewAtom);
   const [theme, setTheme] = useAtom(themeAtom);
   const [language, setLanguage] = useAtom(languageAtom);

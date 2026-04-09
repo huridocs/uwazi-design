@@ -1,10 +1,11 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo, ReactNode } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import { useAtom, useSetAtom } from "jotai";
 import { currentPageAtom, textSelectionAtom } from "../../atoms/selection";
 import { scrollToHighlightAtom, referencesAtom, activeRefIdAtom } from "../../atoms/references";
+import { breakpointAtom } from "../../atoms/viewport";
 import { PageHighlights } from "./PageHighlights";
 import { FloatingMenu } from "./FloatingMenu";
 import { ActionBar } from "./ActionBar";
@@ -12,7 +13,14 @@ import { RefMinimap } from "./RefMinimap";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
-export function DocumentViewer() {
+interface DocumentViewerProps {
+  /** Optional left slot for the action bar — used to inject the mobile sheet trigger */
+  actionBarLeft?: ReactNode;
+}
+
+export function DocumentViewer({ actionBarLeft }: DocumentViewerProps = {}) {
+  const [breakpoint] = useAtom(breakpointAtom);
+  const isMobile = breakpoint === "mobile";
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useAtom(currentPageAtom);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -135,7 +143,7 @@ export function DocumentViewer() {
         <div
           ref={containerRef}
           className="absolute inset-0 overflow-auto flex flex-col items-center py-4 gap-4"
-          style={{ backgroundColor: "var(--bg-warm)", paddingRight: 80 }}
+          style={{ backgroundColor: "var(--bg-warm)", paddingRight: isMobile ? 16 : 80 }}
           onMouseUp={handleTextSelect}
           onMouseDown={handleMouseDown}
         >
@@ -177,11 +185,11 @@ export function DocumentViewer() {
           ))}
         </Document>
         </div>
-        <RefMinimap numPages={numPages} />
+        {!isMobile && <RefMinimap numPages={numPages} />}
       </div>
 
       {/* Bottom action bar */}
-      <ActionBar numPages={numPages} onScrollToPage={scrollToPage} />
+      <ActionBar numPages={numPages} onScrollToPage={scrollToPage} leftSlot={actionBarLeft} />
 
       {selection && (
         <FloatingMenu

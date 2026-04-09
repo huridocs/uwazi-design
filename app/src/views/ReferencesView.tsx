@@ -7,6 +7,7 @@ import { getEntity, getEntityType } from "../data/entities";
 import { Reference, relationTypes } from "../data/references";
 import { currentDocument } from "../data/document";
 import { SplitView } from "../components/layout/SplitView";
+import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DocMeta } from "../components/layout/DocMeta";
@@ -70,28 +71,46 @@ export function ReferencesView() {
     );
   }
 
+  const renderLeft = (openSheet?: () => void) => (
+    <div className="flex flex-col h-full min-h-0 bg-paper">
+      <MainTabs
+        tabs={tabs}
+        activeId={activeTab}
+        onChange={setActiveTab}
+        languages={["EN", "ES", "FR", "AR"]}
+        availableLanguages={["EN", "ES", "FR", "AR"]}
+        activeLanguage={language}
+        onLanguageChange={(lang) => setLanguage(lang as Language)}
+      />
+      <DocMeta />
+      <DocumentViewer
+        actionBarLeft={
+          openSheet ? (
+            <button
+              onClick={openSheet}
+              className="px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors flex items-center gap-1.5"
+            >
+              References
+              <span className="text-[10px] font-semibold text-ink-tertiary">
+                {references.length}
+              </span>
+            </button>
+          ) : undefined
+        }
+      />
+    </div>
+  );
+
   return (
     <>
-      <SplitView
-        left={
-          <div className="flex flex-col h-full min-h-0 bg-paper">
-            <MainTabs
-              tabs={tabs}
-              activeId={activeTab}
-              onChange={setActiveTab}
-              languages={["EN", "ES", "FR", "AR"]}
-              availableLanguages={["EN", "ES", "FR", "AR"]}
-              activeLanguage={language}
-              onLanguageChange={(lang) => setLanguage(lang as Language)}
-            />
-            <DocMeta />
-            <DocumentViewer />
-          </div>
-        }
+      <AdaptiveSplitView
+        left={renderLeft()}
+        mobileLeft={(open) => renderLeft(open)}
         right={<ReferencePanel />}
         defaultRightWidth={480}
         minRightWidth={380}
         maxRightWidth={600}
+        mobileSheetTitle="References"
       />
       <EntityPickerModal />
       <ToastContainer />
