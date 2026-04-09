@@ -135,7 +135,7 @@ export function DocumentViewer() {
         <div
           ref={containerRef}
           className="absolute inset-0 overflow-auto flex flex-col items-center py-4 gap-4"
-          style={{ backgroundColor: "var(--bg-warm)", paddingRight: 40 }}
+          style={{ backgroundColor: "var(--bg-warm)", paddingRight: 80 }}
           onMouseUp={handleTextSelect}
           onMouseDown={handleMouseDown}
         >

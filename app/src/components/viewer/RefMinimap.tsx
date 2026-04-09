@@ -3,7 +3,7 @@ import { referencesAtom, scrollToHighlightAtom, scrollToRefAtom, activeRefIdAtom
 import { collapseAllSignalAtom, searchQueryAtom, activeClusterRefIdsAtom } from "../../atoms/filters";
 import { currentPageAtom } from "../../atoms/selection";
 import { getEntity, getEntityType } from "../../data/entities";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Reference } from "../../data/references";
 import { FileText, Layers } from "lucide-react";
 
@@ -22,8 +22,7 @@ interface ClusterInfo {
   dots: DotInfo[];
 }
 
-const BASE_DOT = 6;
-const MAX_DOT = 14;
+const DOT_SIZE = 10;
 
 export function RefMinimap({ numPages }: RefMinimapProps) {
   const [references] = useAtom(referencesAtom);
@@ -39,15 +38,14 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
   const [currentPage] = useAtom(currentPageAtom);
   const [searchQuery] = useAtom(searchQueryAtom);
   const setActiveClusterRefIds = useSetAtom(activeClusterRefIdsAtom);
+  const minimapRef = useRef<HTMLDivElement>(null);
 
-  // Dot size scales with total ref count: 6px at 1 ref → 14px at 200+
-  const dotSize = Math.min(MAX_DOT, BASE_DOT + Math.floor(references.length / 25));
-  const clusterSize = dotSize + 8;
+  const dotSize = DOT_SIZE;
 
   const clusters = useMemo<ClusterInfo[]>(() => {
     if (numPages === 0) return [];
 
-    const thresholdPercent = 1.2;
+    const thresholdPercent = 3.5;
 
     // Apply same search filter as the drawer
     let baseRefs = references;
@@ -112,6 +110,19 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
     }
   }, [activeRefId, setActiveClusterRefIds]);
 
+  // Collapse cluster on outside click anywhere on the page
+  useEffect(() => {
+    if (expandedCluster === null) return;
+    const handleClick = (e: MouseEvent) => {
+      if (!minimapRef.current?.contains(e.target as Node)) {
+        setExpandedCluster(null);
+        setActiveClusterRefIds(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [expandedCluster, setActiveClusterRefIds]);
+
   if (numPages === 0 || references.length === 0) return null;
 
   const handleDotClick = (refId: string, fromCluster?: number) => {
@@ -140,8 +151,9 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
 
   return (
     <div
+      ref={minimapRef}
       className="absolute pointer-events-none"
-      style={{ top: 8, bottom: 8, right: 40, width: clusterSize, zIndex: 5 }}
+      style={{ top: 8, bottom: 8, right: 40, width: DOT_SIZE + 22, zIndex: 5 }}
     >
       {/* Mode toggle */}
       <div
@@ -175,6 +187,45 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
           opacity: 0.5,
         }}
       />
+
+      {/* Page mode: page number label */}
+      {mode === "page" && (
+        <div
+          className="absolute pointer-events-none flex items-center"
+          style={{
+            top: 32,
+            left: "50%",
+            transform: "translateX(-50%)",
+            gap: 6,
+          }}
+        >
+          <div
+            style={{
+              width: 14,
+              height: 1,
+              backgroundColor: "var(--border-soft)",
+            }}
+          />
+          <span
+            className="text-[9px] font-medium tabular-nums whitespace-nowrap"
+            style={{
+              color: "var(--text-tertiary)",
+              backgroundColor: "var(--bg-warm)",
+              padding: "1px 4px",
+              borderRadius: 2,
+            }}
+          >
+            p. {currentPage}
+          </span>
+          <div
+            style={{
+              width: 14,
+              height: 1,
+              backgroundColor: "var(--border-soft)",
+            }}
+          />
+        </div>
+      )}
 
       {clusters.map((cluster, ci) => {
         const isExpanded = expandedCluster === ci;
@@ -211,10 +262,9 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
           );
         }
 
-        // Cluster — subtle size scaling, capped
+        // Cluster size driven by its own dot count
         const count = cluster.dots.length;
-        const scale = Math.min(count / 10, 1);
-        const outerSize = clusterSize + scale * 4;
+        const outerSize = DOT_SIZE + 6 + Math.min(Math.sqrt(count) * 3, 16);
 
         return (
           <div
@@ -259,19 +309,36 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
               const rowH = 22;
               const n = cluster.dots.length;
               const dotS = dotSize;
-              const pad = 2; // padding around each dot for hit area
+              const pad = 2;
               const stemLen = 12;
               const branchLen = 16;
               const trunkX = dotS + pad + branchLen;
               const svgW = trunkX + stemLen;
               const totalH = (n - 1) * rowH + dotS;
-              const midY = totalH / 2;
+
+              // Anchor based on cluster position: top → grow down, bottom → grow up, middle → center
+              let topOffset: number;
+              if (cluster.yPercent < 25) {
+                // Near top: anchor tree top to cluster top
+                topOffset = outerSize / 2 - dotS / 2;
+              } else if (cluster.yPercent > 75) {
+                // Near bottom: anchor tree bottom to cluster bottom
+                topOffset = -(totalH - dotS) - (outerSize / 2 - dotS / 2);
+              } else {
+                // Middle: center
+                topOffset = -(totalH / 2) + outerSize / 2;
+              }
+              const midY = cluster.yPercent < 25
+                ? dotS / 2
+                : cluster.yPercent > 75
+                  ? totalH - dotS / 2
+                  : totalH / 2;
 
               return (
                 <svg
                   className="absolute pointer-events-auto"
                   style={{
-                    top: -(totalH / 2) + outerSize / 2,
+                    top: topOffset,
                     right: "50%",
                     marginRight: outerSize / 2 + 4,
                     width: svgW,
