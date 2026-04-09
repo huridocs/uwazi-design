@@ -42,6 +42,25 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
 
   const dotSize = DOT_SIZE;
 
+  // Counts of refs before/after current page (for page mode edges)
+  const { beforeCount, afterCount, beforeColors, afterColors } = useMemo(() => {
+    if (mode !== "page") return { beforeCount: 0, afterCount: 0, beforeColors: [], afterColors: [] };
+    let bc = 0, ac = 0;
+    const bColors: string[] = [], aColors: string[] = [];
+    for (const ref of references) {
+      const entity = getEntity(ref.targetEntityId);
+      const color = entity ? getEntityType(entity.typeId)?.color ?? "#D97706" : "#D97706";
+      if (ref.sourceSelection.page < currentPage) {
+        bc++;
+        if (bColors.length < 4 && !bColors.includes(color)) bColors.push(color);
+      } else if (ref.sourceSelection.page > currentPage) {
+        ac++;
+        if (aColors.length < 4 && !aColors.includes(color)) aColors.push(color);
+      }
+    }
+    return { beforeCount: bc, afterCount: ac, beforeColors: bColors, afterColors: aColors };
+  }, [references, mode, currentPage]);
+
   const clusters = useMemo<ClusterInfo[]>(() => {
     if (numPages === 0) return [];
 
@@ -65,6 +84,10 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
       ? baseRefs.filter((r) => r.sourceSelection.page === currentPage)
       : baseRefs;
 
+    // In page mode, leave space at top/bottom for edge summaries
+    const startPct = mode === "page" ? 18 : 8;
+    const rangePct = mode === "page" ? 64 : 88;
+
     const items = filteredRefs.map((ref) => {
       const sel = ref.sourceSelection;
       const entity = getEntity(ref.targetEntityId);
@@ -73,7 +96,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
         ? sel.top
         : (sel.page - 1 + sel.top) / numPages;
       return {
-        yPercent: 8 + yFraction * 88,
+        yPercent: startPct + yFraction * rangePct,
         dot: {
           ref,
           color: entityType?.color ?? "#D97706",
@@ -188,43 +211,122 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
         }}
       />
 
-      {/* Page mode: page number label */}
+      {/* Page mode: edges + page label */}
       {mode === "page" && (
-        <div
-          className="absolute pointer-events-none flex items-center"
-          style={{
-            top: 32,
-            left: "50%",
-            transform: "translateX(-50%)",
-            gap: 6,
-          }}
-        >
+        <>
+          {/* Top edge: refs from previous pages */}
+          {beforeCount > 0 && (
+            <div
+              className="absolute pointer-events-none flex flex-col items-center"
+              style={{
+                top: 32,
+                left: "50%",
+                transform: "translateX(-50%)",
+                gap: 3,
+                backgroundColor: "var(--bg-warm)",
+                padding: "3px 4px",
+                borderRadius: 3,
+              }}
+            >
+              <div className="flex items-center gap-[2px]">
+                {beforeColors.map((c, i) => (
+                  <div
+                    key={i}
+                    className="rounded-full"
+                    style={{
+                      width: 4,
+                      height: 4,
+                      backgroundColor: c,
+                      opacity: 0.6,
+                    }}
+                  />
+                ))}
+              </div>
+              <span
+                className="text-[9px] font-medium tabular-nums"
+                style={{ color: "var(--text-tertiary)" }}
+              >
+                ↑ {beforeCount}
+              </span>
+            </div>
+          )}
+
+          {/* Bottom edge: refs from next pages */}
+          {afterCount > 0 && (
+            <div
+              className="absolute pointer-events-none flex flex-col items-center"
+              style={{
+                bottom: 4,
+                left: "50%",
+                transform: "translateX(-50%)",
+                gap: 3,
+                backgroundColor: "var(--bg-warm)",
+                padding: "3px 4px",
+                borderRadius: 3,
+              }}
+            >
+              <span
+                className="text-[9px] font-medium tabular-nums"
+                style={{ color: "var(--text-tertiary)" }}
+              >
+                ↓ {afterCount}
+              </span>
+              <div className="flex items-center gap-[2px]">
+                {afterColors.map((c, i) => (
+                  <div
+                    key={i}
+                    className="rounded-full"
+                    style={{
+                      width: 4,
+                      height: 4,
+                      backgroundColor: c,
+                      opacity: 0.6,
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Current page divider with label */}
           <div
+            className="absolute pointer-events-none flex items-center"
             style={{
-              width: 14,
-              height: 1,
-              backgroundColor: "var(--border-soft)",
-            }}
-          />
-          <span
-            className="text-[9px] font-medium tabular-nums whitespace-nowrap"
-            style={{
-              color: "var(--text-tertiary)",
-              backgroundColor: "var(--bg-warm)",
-              padding: "1px 4px",
-              borderRadius: 2,
+              top: `${18 - 4}%`,
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              gap: 6,
             }}
           >
-            p. {currentPage}
-          </span>
+            <div style={{ width: 14, height: 1, backgroundColor: "var(--border-soft)" }} />
+            <span
+              className="text-[9px] font-medium tabular-nums whitespace-nowrap"
+              style={{
+                color: "var(--text-tertiary)",
+                backgroundColor: "var(--bg-warm)",
+                padding: "1px 4px",
+                borderRadius: 2,
+              }}
+            >
+              p. {currentPage}
+            </span>
+            <div style={{ width: 14, height: 1, backgroundColor: "var(--border-soft)" }} />
+          </div>
+
+          {/* End-of-page divider */}
           <div
+            className="absolute pointer-events-none flex items-center"
             style={{
-              width: 14,
-              height: 1,
-              backgroundColor: "var(--border-soft)",
+              top: `${18 + 64 + 2}%`,
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              gap: 6,
             }}
-          />
-        </div>
+          >
+            <div style={{ width: 14, height: 1, backgroundColor: "var(--border-soft)" }} />
+            <div style={{ width: 14, height: 1, backgroundColor: "var(--border-soft)" }} />
+          </div>
+        </>
       )}
 
       {clusters.map((cluster, ci) => {

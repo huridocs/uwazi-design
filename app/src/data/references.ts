@@ -591,7 +591,18 @@ export const references: Reference[] = [
 ];
 
 function generateBulkReferences(): Reference[] {
-  const entityIds = ["e1", "e2", "e4", "e5", "e6", "e7", "e8", "e9", "e10", "e11", "e12", "e14"];
+  // All entity IDs except the source document itself (e3)
+  const entityIds = [
+    "e1", "e2", "e4", "e5", "e6", "e7", "e8", "e9", "e10", "e11", "e12", "e13", "e14", "e15",
+    "e16", "e17", "e18", "e19", "e20", "e21", "e22", "e23", "e24", "e25",
+    "e26", "e27", "e28", "e29", "e30",
+    "e31", "e32", "e33",
+    "e34", "e35", "e36", "e37",
+    "e38", "e39", "e40",
+    "e41", "e42", "e43", "e44",
+    "e45", "e46", "e47",
+    "e48", "e49", "e50", "e51", "e52", "e53",
+  ];
   const relationTypes: RelationType[] = ["mentions", "relates_to", "cites", "refers_to"];
   const snippets = [
     "The witness testified that the events occurred without prior warning to the civilian population.",
@@ -624,6 +635,41 @@ function generateBulkReferences(): Reference[] {
     "International observers were denied access to the detention facilities for over six months.",
     "The remains of several victims were identified through DNA analysis conducted years later.",
     "The Commission determined that the State bore international responsibility for the violations.",
+    "Carlos Mendoza was last seen entering the military compound on the morning of the incident.",
+    "Rosa Quintero filed a complaint with the local prosecutor's office on behalf of her brother.",
+    "The Bámaca Velásquez judgment established a key precedent for cases of forced disappearance.",
+    "The Truth Commission Report 1991 documented over three hundred cases of arbitrary detention.",
+    "Expert witness Luis Hernández presented findings from his analysis of ballistic evidence.",
+    "The Geneva Conventions Protocol II applies to non-international armed conflicts.",
+    "Ana Velázquez identified her son's body at the morgue forty-eight hours after the operation.",
+    "The Gelman v. Uruguay Ruling reinforced the obligation to investigate past atrocities.",
+    "Amnesty International published a comprehensive report on the patterns observed in the region.",
+    "Jorge Fuentes was held in incommunicado detention for over two weeks without charge.",
+    "Human Rights Watch corroborated the findings through interviews with surviving witnesses.",
+    "The American Convention on Human Rights establishes binding obligations on State Parties.",
+    "Beatriz Morales testified about the conditions she witnessed during her four months in detention.",
+    "The Inter-American Court found Honduras responsible for the disappearance documented in the case.",
+    "Roberto Cárdenas described being subjected to mock executions by his captors.",
+    "The case of Ellacuría and others illustrates the systematic nature of the violations.",
+    "Elena Ríos provided crucial testimony about the chain of command involved in the operation.",
+    "Manuel Ortega's family received no official notification of his death until weeks later.",
+    "The UN Universal Declaration of Human Rights serves as a foundational reference document.",
+    "Sofía Reyes survived the assault but suffered permanent injuries documented in medical reports.",
+    "The Final Report La Tablada Investigation contained classified annexes obtained through litigation.",
+    "Guatemala has been the subject of numerous cases involving violations during the internal conflict.",
+    "Peru's truth and reconciliation process informed the Commission's recommendations in this case.",
+    "Chile's transition to democracy did not initially include accountability for past abuses.",
+    "Mexico's response to the Commission's request for information was deemed insufficient.",
+    "The Universal Periodic Review highlighted ongoing concerns about judicial independence.",
+    "Freedom of expression was effectively curtailed during the period under examination.",
+    "The right to privacy was violated through unauthorized surveillance of victims and their families.",
+    "Military intelligence files declassified in 2009 confirmed key elements of the petitioners' claims.",
+    "The Inter-American Convention on Disappearance defines the elements of this continuing violation.",
+    "Sexual violence was used as a tool of repression against detainees of both genders.",
+    "Forced displacement affected entire communities in the region surrounding the military operations.",
+    "Arbitrary detention of suspected sympathizers continued for years after the initial incident.",
+    "The State acknowledged its responsibility through a public ceremony held in 2015.",
+    "Reparations included a memorial constructed at the site of the former detention facility.",
   ];
 
   const refs: Reference[] = [];

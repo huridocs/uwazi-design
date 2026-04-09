@@ -57,7 +57,14 @@ export function ReferencePanel() {
         );
       });
     }
-    if (sortOrder === "none") return result;
+    if (sortOrder === "none") {
+      // Default: order by appearance in document (page, then top position)
+      return [...result].sort((a, b) => {
+        const pageDiff = a.sourceSelection.page - b.sourceSelection.page;
+        if (pageDiff !== 0) return pageDiff;
+        return a.sourceSelection.top - b.sourceSelection.top;
+      });
+    }
     const dir = sortOrder === "asc" ? 1 : -1;
     return [...result].sort((a, b) => {
       const nameA = getEntity(a.targetEntityId)?.title ?? "";
