@@ -59,13 +59,13 @@ export function AdaptiveSplitView({
             {mobileLeft ? mobileLeft(<MobileActionMenu items={menuItems} />) : left}
           </div>
         </div>
-        {/* Floating menu trigger when no embedded slot */}
+        {/* Floating menu trigger when no embedded slot — sits above any action bar */}
         {!mobileLeft && (
           <div
             className="fixed"
             style={{
-              right: 16,
-              bottom: `calc(16px + env(safe-area-inset-bottom, 0))`,
+              right: 12,
+              bottom: `calc(60px + env(safe-area-inset-bottom, 0))`,
               zIndex: 60,
             }}
           >
