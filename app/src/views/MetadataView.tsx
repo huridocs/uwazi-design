@@ -10,6 +10,9 @@ import { TemplateStructure } from "../components/references/TemplateStructure";
 import { metadataFieldsByLanguage, pdfMetadataByLanguage, MetadataField } from "../data/metadata";
 import { documentsByLanguage } from "../data/document";
 import { languageAtom, type Language } from "../atoms/language";
+import { referencesAtom } from "../atoms/references";
+import { deriveRelationships } from "../utils/relationships";
+import { RelationshipPanel } from "../components/references/RelationshipPanel";
 
 interface MetadataViewProps {
   tabs: { id: string; label: string; count?: number }[];
@@ -43,9 +46,9 @@ export function MetadataView({ tabs, activeTab, onTabChange }: MetadataViewProps
         </div>
       }
       right={<MetadataDrawer />}
-      defaultRightWidth={480}
-      minRightWidth={380}
-      maxRightWidth={600}
+      defaultRightWidth={560}
+      minRightWidth={460}
+      maxRightWidth={720}
       mobileSections={[
         { id: "details", label: "Details", content: <MetadataDrawer /> },
       ]}
@@ -426,17 +429,19 @@ function CountryPicker() {
 
 /* ── Drawer ── */
 
-const drawerTabs = [
-  { id: "files", label: "Files", count: 4 },
-  { id: "relationships", label: "Relationships", count: 14 },
-  { id: "template", label: "Template" },
-];
-
 function MetadataDrawer() {
   const [activeDrawerTab, setActiveDrawerTab] = useState("files");
   const language = useAtom(languageAtom)[0];
   const doc = documentsByLanguage[language];
   const pdf = pdfMetadataByLanguage[language];
+  const [references] = useAtom(referencesAtom);
+  const relationshipCount = deriveRelationships(references).length;
+
+  const drawerTabs = [
+    { id: "files", label: "Files", count: 4 },
+    { id: "relationships", label: "Relationships", count: relationshipCount },
+    { id: "template", label: "Template" },
+  ];
 
   return (
     <div className="flex flex-col h-full">
@@ -499,6 +504,8 @@ function MetadataDrawer() {
             </span>
           </div>
         </>
+      ) : activeDrawerTab === "relationships" ? (
+        <RelationshipPanel />
       ) : (
         <div className="flex-1 flex items-center justify-center">
           <p className="text-sm text-ink-muted capitalize">{activeDrawerTab} content</p>

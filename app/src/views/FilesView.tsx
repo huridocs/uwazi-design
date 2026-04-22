@@ -101,9 +101,9 @@ export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
         </div>
       }
       right={<FileDrawer selectedFiles={selectedFiles} />}
-      defaultRightWidth={480}
-      minRightWidth={380}
-      maxRightWidth={600}
+      defaultRightWidth={560}
+      minRightWidth={460}
+      maxRightWidth={720}
     />
   );
 }

@@ -2,6 +2,7 @@ import { useAtomValue } from "jotai";
 import { ChevronDown } from "lucide-react";
 import { languageAtom } from "../../atoms/language";
 import { documentsByLanguage } from "../../data/document";
+import { EntityPill } from "../shared/EntityPill";
 
 interface DocMetaProps {
   showPdfSelector?: boolean;
@@ -16,10 +17,7 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
       className="flex items-center gap-2 h-10 px-4 shrink-0"
       style={{ borderBottom: "1px solid var(--border-primary)" }}
     >
-      {/* Entity type pill */}
-      <span className="px-1.5 py-0.5 text-xs font-semibold rounded bg-[#C4B5FD] text-[#4C1D95] shrink-0">
-        Case
-      </span>
+      <EntityPill typeId={doc.entityTypeId} />
 
       {/* Document title */}
       <span className="text-xs font-semibold text-ink truncate flex-1">
