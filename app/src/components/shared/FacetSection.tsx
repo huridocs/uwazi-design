@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
+import { Checkbox } from "./Checkbox";
 
 interface FacetSectionProps {
   title: string;
@@ -54,12 +55,10 @@ export function FacetSection({
                 key={id}
                 className="flex items-center gap-2 px-4 py-1.5 cursor-pointer hover:bg-warm transition-colors"
               >
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={checked}
                   onChange={() => onToggle(id)}
-                  className="shrink-0 cursor-pointer"
-                  style={{ width: 12, height: 12 }}
+                  ariaLabel={label(id)}
                 />
                 {renderMarker?.(id)}
                 <span className="text-xs text-ink-secondary truncate flex-1">

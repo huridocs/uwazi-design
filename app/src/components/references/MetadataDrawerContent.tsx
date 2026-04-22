@@ -1,10 +1,18 @@
 import { useState } from "react";
 import { useAtomValue } from "jotai";
-import { ChevronDown, ChevronRight, ExternalLink } from "lucide-react";
+import { ChevronDown, ChevronRight, ExternalLink, FileText, Music, Link2 } from "lucide-react";
 import { languageAtom } from "../../atoms/language";
 import { documentsByLanguage } from "../../data/document";
 import { metadataFieldsByLanguage, pdfMetadataByLanguage } from "../../data/metadata";
+import { supportingFiles, FileEntry } from "../../data/files";
 import { EntityPill } from "../shared/EntityPill";
+
+const fileTypeIcons: Record<FileEntry["type"], typeof FileText> = {
+  pdf: FileText,
+  audio: Music,
+  link: Link2,
+  document: FileText,
+};
 
 export function MetadataDrawerContent() {
   const language = useAtomValue(languageAtom);
@@ -13,10 +21,11 @@ export function MetadataDrawerContent() {
   const pdf = pdfMetadataByLanguage[language];
 
   const description = fields.find((f) => f.id === "description");
-  const otherFiles = fields.find((f) => f.id === "other-files");
   const regularFields = fields.filter(
     (f) => !["description", "other-files"].includes(f.id)
   );
+  const supportingLabel =
+    language === "ES" ? "Archivos de soporte" : language === "FR" ? "Fichiers de support" : "Supporting files";
 
   return (
     <div className="flex-1 overflow-auto px-3 py-3 pb-8 space-y-3">
@@ -81,22 +90,28 @@ export function MetadataDrawerContent() {
         </div>
       ))}
 
-      {/* Other Files */}
-      {otherFiles?.items && otherFiles.items.length > 0 && (
-        <CollapsibleSection title={otherFiles.label} defaultExpanded>
+      {/* Supporting Files — synced with the Files view */}
+      {supportingFiles.length > 0 && (
+        <CollapsibleSection title={supportingLabel} defaultExpanded>
           <div className="space-y-1.5">
-            {otherFiles.items.map((item, i) => (
-              <div
-                key={i}
-                className="flex items-center justify-between px-2.5 py-2 bg-warm rounded hover:bg-parchment transition-colors cursor-pointer"
-              >
-                <div className="min-w-0">
-                  <p className="text-xs font-medium text-ink truncate">{item.value}</p>
-                  <span className="text-[10px] text-ink-muted">{item.label}</span>
+            {supportingFiles.map((file) => {
+              const Icon = fileTypeIcons[file.type];
+              return (
+                <div
+                  key={file.id}
+                  className="flex items-center gap-2 px-2.5 py-2 bg-warm rounded hover:bg-parchment transition-colors cursor-pointer"
+                >
+                  <Icon size={12} className="text-ink-muted shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium text-ink truncate">{file.name}</p>
+                    <span className="text-[10px] text-ink-muted">
+                      {file.type.toUpperCase()} · {file.size}
+                    </span>
+                  </div>
+                  <ChevronRight size={12} className="text-ink-muted shrink-0" />
                 </div>
-                <ChevronRight size={12} className="text-ink-muted shrink-0 ml-2" />
-              </div>
-            ))}
+              );
+            })}
           </div>
         </CollapsibleSection>
       )}

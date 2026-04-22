@@ -2,12 +2,15 @@ import { FileText, Music, Link2, Eye } from "lucide-react";
 import { useAtom } from "jotai";
 import { FileEntry } from "../../data/files";
 import { breakpointAtom } from "../../atoms/viewport";
+import { Checkbox } from "../shared/Checkbox";
 
 interface FileTableProps {
   files: FileEntry[];
   selectedIds: Set<string>;
   onSelect: (id: string) => void;
   onSelectAll: () => void;
+  focusedId?: string | null;
+  onFocus?: (id: string) => void;
 }
 
 const typeIcons: Record<FileEntry["type"], typeof FileText> = {
@@ -24,7 +27,7 @@ const typeLabels: Record<FileEntry["type"], string> = {
   document: "Document",
 };
 
-export function FileTable({ files, selectedIds, onSelect, onSelectAll }: FileTableProps) {
+export function FileTable({ files, selectedIds, onSelect, onSelectAll, focusedId, onFocus }: FileTableProps) {
   const allSelected = files.length > 0 && files.every((f) => selectedIds.has(f.id));
   const [breakpoint] = useAtom(breakpointAtom);
   const isMobile = breakpoint === "mobile";
@@ -37,26 +40,25 @@ export function FileTable({ files, selectedIds, onSelect, onSelectAll }: FileTab
       >
         {files.map((file) => {
           const isSelected = selectedIds.has(file.id);
+          const isFocused = focusedId === file.id;
           const Icon = typeIcons[file.type];
           return (
             <div
               key={file.id}
               role="button"
               tabIndex={0}
-              onClick={() => onSelect(file.id)}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(file.id); } }}
-              className={`flex items-start gap-3 p-3 cursor-pointer transition-colors hover:bg-warm ${isSelected ? "bg-warm" : ""}`}
+              onClick={() => onFocus?.(file.id)}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onFocus?.(file.id); } }}
+              className={`flex items-start gap-3 p-3 cursor-pointer transition-colors hover:bg-warm ${isFocused ? "bg-parchment" : ""}`}
               style={{
                 borderBottom: "1px solid var(--border-primary)",
-                boxShadow: isSelected ? "inset 3px 0 0 var(--accent-blue)" : "none",
               }}
             >
               <label className="flex items-center pt-0.5" onClick={(e) => e.stopPropagation()}>
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={isSelected}
                   onChange={() => onSelect(file.id)}
-                  className="w-3.5 h-3.5 rounded accent-ink cursor-pointer"
+                  ariaLabel={`Select ${file.name}`}
                 />
               </label>
               <Icon size={16} className="text-ink-muted shrink-0 mt-0.5" />
@@ -121,11 +123,10 @@ export function FileTable({ files, selectedIds, onSelect, onSelectAll }: FileTab
         }}
       >
         <label className="flex items-center justify-center">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={allSelected}
             onChange={onSelectAll}
-            className="w-3.5 h-3.5 rounded accent-ink cursor-pointer"
+            ariaLabel="Select all files"
           />
         </label>
         <span>File name</span>
@@ -139,6 +140,7 @@ export function FileTable({ files, selectedIds, onSelect, onSelectAll }: FileTab
       {/* Rows */}
       {files.map((file) => {
         const isSelected = selectedIds.has(file.id);
+        const isFocused = focusedId === file.id;
         const Icon = typeIcons[file.type];
 
         return (
@@ -146,22 +148,20 @@ export function FileTable({ files, selectedIds, onSelect, onSelectAll }: FileTab
             key={file.id}
             role="row"
             tabIndex={0}
-            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(file.id); } }}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onFocus?.(file.id); } }}
             className={`grid items-center gap-3 px-4 h-11 text-sm transition-colors cursor-pointer
-              hover:bg-warm ${isSelected ? "bg-warm" : ""}`}
+              hover:bg-warm ${isFocused ? "bg-parchment" : ""}`}
             style={{
               gridTemplateColumns: "28px 1fr 70px 70px 50px 90px 50px",
               borderBottom: "1px solid var(--border-primary)",
-              boxShadow: isSelected ? "inset 3px 0 0 var(--accent-blue)" : "none",
             }}
-            onClick={() => onSelect(file.id)}
+            onClick={() => onFocus?.(file.id)}
           >
             <label className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={isSelected}
                 onChange={() => onSelect(file.id)}
-                className="w-3.5 h-3.5 rounded accent-ink cursor-pointer"
+                ariaLabel={`Select ${file.name}`}
               />
             </label>
 

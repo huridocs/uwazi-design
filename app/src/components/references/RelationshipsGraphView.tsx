@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { Link2 } from "lucide-react";
 import { referencesAtom, overlayEntityIdAtom } from "../../atoms/references";
@@ -34,11 +34,15 @@ interface Spoke {
   labelY: number;
 }
 
-const VIEW_W = 1000;
-const VIEW_H = 800;
+const VIEW_W = 1200;
+const VIEW_H = 900;
 const CX = VIEW_W / 2;
 const CY = VIEW_H / 2;
 const SOURCE_R = 26;
+const LABEL_DIST = 88;
+const FIRST_RING_R = 170;
+const RING_GAP = 40;
+const ARC_GAP = 30;
 
 export function RelationshipsGraphView() {
   const [references] = useAtom(referencesAtom);
@@ -49,9 +53,10 @@ export function RelationshipsGraphView() {
   const setOverlayEntityId = useSetAtom(overlayEntityIdAtom);
 
   const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [transform, setTransform] = useState({ tx: 0, ty: 0, scale: 1 });
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-  const [hover, setHover] = useState<{ node: GraphNode; cx: number; cy: number } | null>(null);
+  const [hover, setHover] = useState<{ node: GraphNode; x: number; y: number } | null>(null);
   const dragRef = useRef<{
     active: boolean;
     startX: number;
@@ -106,9 +111,14 @@ export function RelationshipsGraphView() {
     });
 
     const spokeCount = sorted.length;
-    const outerRadius = Math.min(VIEW_W, VIEW_H) * 0.42;
     const nodes: GraphNode[] = [];
     const spokesArr: Spoke[] = [];
+
+    // Angular width each branch may use (leave a gap between sectors).
+    const sectorSpan =
+      spokeCount === 1
+        ? Math.PI * 1.4
+        : (Math.PI * 2) / spokeCount - 0.12;
 
     sorted.forEach(([relationType, targets], i) => {
       const angle = spokeCount === 1 ? -Math.PI / 2 : (i / spokeCount) * Math.PI * 2 - Math.PI / 2;
@@ -118,32 +128,47 @@ export function RelationshipsGraphView() {
       const dirX = Math.cos(angle);
       const dirY = Math.sin(angle);
 
-      shown.forEach((rel, idx) => {
-        const t = (shown.length === 1 ? 0.75 : 0.35 + (idx / Math.max(1, shown.length - 1)) * 0.65);
-        const dist = SOURCE_R + 40 + t * (outerRadius - SOURCE_R - 40);
-        const entity = getEntity(rel.targetEntityId);
-        const type = entity ? getEntityType(entity.typeId) : undefined;
-        nodes.push({
-          id: rel.id,
-          title: entity?.title ?? "Unknown",
-          color: type?.color ?? "#9ca3af",
-          typeName: type?.name ?? "Unknown",
-          evidenceCount: rel.evidenceCount,
-          x: CX + dirX * dist,
-          y: CY + dirY * dist,
-          r: Math.min(14, 5 + Math.sqrt(rel.evidenceCount) * 2),
-        });
-      });
+      // Distribute nodes across this sector in concentric rings, snaked so
+      // adjacent rings interleave and the fan looks balanced. Each ring's
+      // capacity is driven by its arc length.
+      let placed = 0;
+      let ring = 0;
+      while (placed < shown.length) {
+        const R = FIRST_RING_R + ring * RING_GAP;
+        const arcLen = sectorSpan * R;
+        const capacity = Math.max(1, Math.floor(arcLen / ARC_GAP));
+        const toPlace = Math.min(capacity, shown.length - placed);
+        // Distribute evenly across the sector for this ring.
+        for (let j = 0; j < toPlace; j++) {
+          const t =
+            toPlace === 1 ? 0.5 : j / (toPlace - 1);
+          const offset = (t - 0.5) * sectorSpan;
+          const nodeAngle = angle + offset;
+          const rel = shown[placed + j];
+          const entity = getEntity(rel.targetEntityId);
+          const type = entity ? getEntityType(entity.typeId) : undefined;
+          nodes.push({
+            id: rel.id,
+            title: entity?.title ?? "Unknown",
+            color: type?.color ?? "#9ca3af",
+            typeName: type?.name ?? "Unknown",
+            evidenceCount: rel.evidenceCount,
+            x: CX + Math.cos(nodeAngle) * R,
+            y: CY + Math.sin(nodeAngle) * R,
+            r: Math.min(7, 4 + Math.sqrt(rel.evidenceCount) * 1.1),
+          });
+        }
+        placed += toPlace;
+        ring++;
+      }
 
-      const labelT = 0.18;
-      const labelDist = SOURCE_R + 40 + labelT * (outerRadius - SOURCE_R - 40);
       spokesArr.push({
         relationType,
         label: relationTypes.find((t) => t.id === relationType)?.label ?? relationType,
         angle,
         targets: sortedTargets,
-        labelX: CX + dirX * labelDist,
-        labelY: CY + dirY * labelDist,
+        labelX: CX + dirX * LABEL_DIST,
+        labelY: CY + dirY * LABEL_DIST,
       });
     });
 
@@ -152,14 +177,20 @@ export function RelationshipsGraphView() {
 
   const sourceType = getEntityType(currentDocument.entityTypeId);
 
-  const onWheel = (e: React.WheelEvent<SVGSVGElement>) => {
-    e.preventDefault();
-    const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
-    setTransform((t) => ({
-      ...t,
-      scale: Math.max(0.4, Math.min(2.5, t.scale * factor)),
-    }));
-  };
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const factor = e.deltaY < 0 ? 1.08 : 1 / 1.08;
+      setTransform((t) => ({
+        ...t,
+        scale: Math.max(0.4, Math.min(2.5, t.scale * factor)),
+      }));
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
 
   const onPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
     if ((e.target as SVGElement).dataset.node) return;
@@ -199,12 +230,11 @@ export function RelationshipsGraphView() {
   }
 
   return (
-    <div className="relative flex-1 overflow-hidden bg-warm">
+    <div ref={containerRef} className="relative flex-1 overflow-hidden bg-warm">
       <svg
         ref={svgRef}
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
         preserveAspectRatio="xMidYMid meet"
-        onWheel={onWheel}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -212,21 +242,30 @@ export function RelationshipsGraphView() {
         style={{ width: "100%", height: "100%", cursor: dragRef.current.active ? "grabbing" : "grab", touchAction: "none" }}
       >
         <g transform={`translate(${transform.tx} ${transform.ty}) scale(${transform.scale})`} style={{ transformOrigin: `${CX}px ${CY}px` }}>
-          {/* Edges */}
+          {/* Edges: source → label, then fan from label → each node */}
           {spokes.map((s) => {
-            const targets = nodes.filter((n) => s.targets.some((t) => t.id === n.id));
+            const branchNodes = nodes.filter((n) => s.targets.some((t) => t.id === n.id));
             return (
               <g key={s.relationType}>
-                {targets.map((n) => (
+                <line
+                  x1={CX}
+                  y1={CY}
+                  x2={s.labelX}
+                  y2={s.labelY}
+                  stroke="var(--border-primary)"
+                  strokeWidth={1}
+                  opacity={0.75}
+                />
+                {branchNodes.map((n) => (
                   <line
                     key={`${s.relationType}-${n.id}`}
-                    x1={CX}
-                    y1={CY}
+                    x1={s.labelX}
+                    y1={s.labelY}
                     x2={n.x}
                     y2={n.y}
                     stroke="var(--border-primary)"
                     strokeWidth={1}
-                    opacity={0.7}
+                    opacity={0.45}
                   />
                 ))}
               </g>
@@ -252,7 +291,7 @@ export function RelationshipsGraphView() {
                   width={110}
                   height={22}
                   rx={4}
-                  fill="var(--bg-paper, #fff)"
+                  fill="var(--bg-surface)"
                   stroke="var(--border-primary)"
                   strokeWidth={1}
                 />
@@ -262,7 +301,7 @@ export function RelationshipsGraphView() {
                   textAnchor="middle"
                   fontSize={10}
                   fontWeight={500}
-                  fill="var(--ink-secondary, #4b4237)"
+                  fill="var(--text-secondary)"
                 >
                   {isCollapsed ? `${s.label} (${s.targets.length})` : s.label}
                 </text>
@@ -277,7 +316,7 @@ export function RelationshipsGraphView() {
               cy={CY}
               r={SOURCE_R}
               fill={sourceType?.color ?? "#8b5cf6"}
-              stroke="var(--ink, #1c1712)"
+              stroke="var(--text-primary)"
               strokeWidth={1.5}
             />
             <text
@@ -286,7 +325,7 @@ export function RelationshipsGraphView() {
               textAnchor="middle"
               fontSize={11}
               fontWeight={600}
-              fill="var(--ink, #1c1712)"
+              fill="var(--text-primary)"
             >
               {sourceType?.name ?? "Source"}
             </text>
@@ -301,9 +340,22 @@ export function RelationshipsGraphView() {
                 cy={n.y}
                 r={n.r}
                 fill={n.color}
-                stroke="var(--paper, #fff)"
+                stroke="var(--bg-surface)"
                 strokeWidth={1.5}
-                onPointerEnter={() => setHover({ node: n, cx: n.x, cy: n.y })}
+                onPointerEnter={(e) => {
+                  const rect = containerRef.current?.getBoundingClientRect();
+                  if (!rect) return;
+                  setHover({ node: n, x: e.clientX - rect.left, y: e.clientY - rect.top });
+                }}
+                onPointerMove={(e) => {
+                  const rect = containerRef.current?.getBoundingClientRect();
+                  if (!rect) return;
+                  setHover((h) =>
+                    h && h.node.id === n.id
+                      ? { ...h, x: e.clientX - rect.left, y: e.clientY - rect.top }
+                      : h,
+                  );
+                }}
                 onPointerLeave={() => setHover(null)}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -315,30 +367,28 @@ export function RelationshipsGraphView() {
             </g>
           ))}
 
-          {/* Hover tooltip */}
-          {hover && (
-            <g transform={`translate(${hover.cx + 12} ${hover.cy - 20})`} pointerEvents="none">
-              <rect
-                x={0}
-                y={0}
-                width={Math.max(120, hover.node.title.length * 6.2)}
-                height={40}
-                rx={4}
-                fill="var(--ink, #1c1712)"
-                opacity={0.92}
-              />
-              <text x={8} y={16} fontSize={11} fontWeight={600} fill="var(--paper, #fff)">
-                {hover.node.title.length > 26
-                  ? hover.node.title.slice(0, 24) + "…"
-                  : hover.node.title}
-              </text>
-              <text x={8} y={30} fontSize={10} fill="var(--paper, #fff)" opacity={0.8}>
-                {hover.node.typeName} · {hover.node.evidenceCount} evidence
-              </text>
-            </g>
-          )}
         </g>
       </svg>
+
+      {hover && containerRef.current && (() => {
+        const rect = containerRef.current.getBoundingClientRect();
+        const estWidth = Math.min(240, Math.max(140, hover.node.title.length * 7 + 24));
+        const estHeight = 44;
+        const pad = 8;
+        const left = Math.min(rect.width - estWidth - pad, Math.max(pad, hover.x + 12));
+        const top = Math.min(rect.height - estHeight - pad, Math.max(pad, hover.y - estHeight - 10));
+        return (
+          <div
+            className="absolute z-10 pointer-events-none px-2.5 py-1.5 rounded-md bg-ink text-paper shadow-md max-w-[240px]"
+            style={{ left, top, opacity: 0.94 }}
+          >
+            <div className="text-[11px] font-semibold truncate">{hover.node.title}</div>
+            <div className="text-[10px] opacity-80 truncate">
+              {hover.node.typeName} · {hover.node.evidenceCount} evidence
+            </div>
+          </div>
+        );
+      })()}
 
       <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-paper border border-border rounded-md shadow-sm px-1 py-0.5">
         <button

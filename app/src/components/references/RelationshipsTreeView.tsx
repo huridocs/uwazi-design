@@ -1,6 +1,6 @@
-import { useMemo, useState, useLayoutEffect, useRef } from "react";
-import { useAtom, useSetAtom } from "jotai";
-import { Link2, Link as LinkIcon } from "lucide-react";
+import { useMemo, useState, useLayoutEffect, useRef, useEffect } from "react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { Link2, Link as LinkIcon, ChevronRight } from "lucide-react";
 import {
   referencesAtom,
   overlayEntityIdAtom,
@@ -16,6 +16,10 @@ import {
   relationshipEntityTypeFiltersAtom,
   relationshipsZoomAtom,
   relationshipsActiveFilterCountAtom,
+  expandAllSignalAtom,
+  collapseAllSignalAtom,
+  expandedGroupCountAtom,
+  totalGroupCountAtom,
   type RelationshipsZoom,
 } from "../../atoms/filters";
 import { currentPageAtom } from "../../atoms/selection";
@@ -24,7 +28,9 @@ import { Reference, relationTypes, RelationType } from "../../data/references";
 import { buildMatcher } from "../../utils/searchQuery";
 import { EntityPill } from "../shared/EntityPill";
 import { FadeTruncate } from "../shared/FadeTruncate";
-import { ActiveFilterChips } from "./ActiveFilterChips";
+import { ListInfoRow } from "../shared/ListInfoRow";
+import { ListCardRow } from "../shared/ListCardRow";
+import { CollapseControls } from "./FiltersRow";
 
 interface GroupedTarget {
   targetEntityId: string;
@@ -52,6 +58,11 @@ export function RelationshipsTreeView() {
   const setCurrentPage = useSetAtom(currentPageAtom);
   const [activeRefId, setActiveRefId] = useAtom(activeRefIdAtom);
   const setScrollToHighlight = useSetAtom(scrollToHighlightAtom);
+  const expandSignal = useAtomValue(expandAllSignalAtom);
+  const collapseSignal = useAtomValue(collapseAllSignalAtom);
+  const setExpandedGroupCount = useSetAtom(expandedGroupCountAtom);
+  const setTotalGroupCount = useSetAtom(totalGroupCountAtom);
+  const [collapsed, setCollapsed] = useState<Set<RelationType>>(new Set());
 
   const filtered = useMemo(() => {
     let result = references;
@@ -137,6 +148,33 @@ export function RelationshipsTreeView() {
 
   const entityCount = new Set(filtered.map((r) => r.targetEntityId)).size;
 
+  useEffect(() => {
+    setTotalGroupCount(groups.length);
+    setExpandedGroupCount(groups.length - collapsed.size);
+  }, [groups.length, collapsed, setTotalGroupCount, setExpandedGroupCount]);
+
+  useEffect(() => {
+    if (expandSignal > 0) setCollapsed(new Set());
+  }, [expandSignal]);
+
+  useEffect(() => {
+    setActiveRefId(null);
+    setOverlayEntityId(null);
+  }, [relTypeFilters, entityTypeFilters, setActiveRefId, setOverlayEntityId]);
+
+  useEffect(() => {
+    if (collapseSignal > 0) setCollapsed(new Set(groups.map((g) => g.relationType)));
+  }, [collapseSignal, groups]);
+
+  const toggleGroup = (relationType: RelationType) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(relationType)) next.delete(relationType);
+      else next.add(relationType);
+      return next;
+    });
+  };
+
   const jumpToReference = (ref: Reference) => {
     if (activeRefId === ref.id) {
       setActiveRefId(null);
@@ -150,26 +188,30 @@ export function RelationshipsTreeView() {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div
-        className="px-3 pt-3 pb-2 flex items-center gap-2 flex-wrap text-[11px] text-ink-tertiary shrink-0"
-      >
-        <span className="shrink-0">
-          <span className="font-semibold text-ink-secondary tabular-nums">
-            {filtered.length}
-          </span>{" "}
-          relationships,{" "}
-          <span className="font-semibold text-ink-secondary tabular-nums">
-            {entityCount}
-          </span>{" "}
-          entities
-        </span>
-        {activeFilterCount > 0 && (
+      <ListInfoRow
+        count={
           <>
-            <span className="shrink-0 font-medium text-ink-secondary">Filters:</span>
-            <ActiveFilterChips />
+            <span className="font-semibold text-ink-secondary tabular-nums">
+              {filtered.length}
+            </span>{" "}
+            relationships,{" "}
+            <span className="font-semibold text-ink-secondary tabular-nums">
+              {entityCount}
+            </span>{" "}
+            entities
           </>
-        )}
-      </div>
+        }
+        activeFilterCount={activeFilterCount}
+        showFilterChips={false}
+        rightSlot={
+          <CollapseControls
+            onCollapseAll={() =>
+              setCollapsed(new Set(groups.map((g) => g.relationType)))
+            }
+            onExpandAll={() => setCollapsed(new Set())}
+          />
+        }
+      />
 
       <div className="flex-1 overflow-auto bg-warm">
         {filtered.length === 0 ? (
@@ -181,16 +223,14 @@ export function RelationshipsTreeView() {
             </p>
           </div>
         ) : (
-          <div
-            className={`py-4 ${
-              zoom === "detail" ? "space-y-5" : zoom === "compact" ? "space-y-3" : "space-y-2.5"
-            }`}
-          >
+          <div className="py-3 space-y-2">
             {groups.map((g) => (
               <GroupBlock
                 key={g.relationType}
                 group={g}
                 zoom={zoom}
+                isCollapsed={collapsed.has(g.relationType)}
+                onToggle={() => toggleGroup(g.relationType)}
                 selectedEntityId={overlayEntityId}
                 selectedRefId={activeRefId}
                 onTargetClick={setOverlayEntityId}
@@ -207,6 +247,8 @@ export function RelationshipsTreeView() {
 interface GroupBlockProps {
   group: TypeGroup;
   zoom: RelationshipsZoom;
+  isCollapsed: boolean;
+  onToggle: () => void;
   selectedEntityId: string | null;
   selectedRefId: string | null;
   onTargetClick: (entityId: string) => void;
@@ -216,6 +258,8 @@ interface GroupBlockProps {
 function GroupBlock({
   group,
   zoom,
+  isCollapsed,
+  onToggle,
   selectedEntityId,
   selectedRefId,
   onTargetClick,
@@ -226,22 +270,26 @@ function GroupBlock({
   const headerText = zoom === "overview" ? "text-[11px]" : "text-xs";
   return (
     <div>
-      <div
-        className={`sticky top-0 z-10 mx-3 px-3 ${headerPadY} rounded-md ${headerText} font-medium text-ink-secondary flex items-center gap-2`}
-        style={{
-          backgroundColor: "var(--bg-vellum, #eeeae0)",
-        }}
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={!isCollapsed}
+        className={`sticky top-0 z-10 mx-3 px-3 ${headerPadY} rounded-md ${headerText} font-medium text-ink-secondary flex items-center gap-2 w-[calc(100%-1.5rem)] text-left cursor-pointer bg-vellum hover:brightness-95 transition-all`}
       >
+        <ChevronRight
+          size={12}
+          className={`text-ink-tertiary transition-transform ${isCollapsed ? "" : "rotate-90"}`}
+        />
         <LinkIcon size={11} className="text-ink-tertiary" />
         <span className="truncate">{group.label}</span>
         <span className="ml-auto text-ink-tertiary tabular-nums shrink-0">
           {group.targets.length}
           {group.targets.length !== group.totalRefs && <> · {group.totalRefs}</>}
         </span>
-      </div>
+      </button>
 
-      {zoom === "overview" ? (
-        <div className="relative mt-1.5 mx-3">
+      {isCollapsed ? null : zoom === "overview" ? (
+        <div className="relative mt-1.5 mx-3 px-3">
           <div className="flex flex-wrap gap-1.5">
             {group.targets.map((t) => (
               <TargetCardOverview
@@ -320,21 +368,7 @@ function TargetCardDetail({
   const firstRef = refs[0];
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      aria-pressed={selected}
-      onClick={() => onTargetClick(targetEntityId)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onTargetClick(targetEntityId);
-        }
-      }}
-      className={`px-3 py-2.5 border-b border-border/50 last:border-b-0 cursor-pointer transition-colors ${
-        selected ? "bg-parchment" : ""
-      }`}
-    >
+    <ListCardRow selected={selected} onClick={() => onTargetClick(targetEntityId)}>
       <div className="flex items-start justify-between gap-2 mb-1.5">
         <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
         {refs.length > 0 && (
@@ -377,7 +411,7 @@ function TargetCardDetail({
           {refs.length === 1 ? "1 mention" : `${refs.length} mentions`}
         </span>
       </div>
-    </div>
+    </ListCardRow>
   );
 }
 
@@ -390,19 +424,18 @@ function TargetCardCompact({
   const entity = getEntity(targetEntityId);
 
   return (
-    <button
+    <ListCardRow
+      as="button"
+      selected={selected}
       onClick={() => onTargetClick(targetEntityId)}
-      aria-pressed={selected}
-      className={`w-full flex items-center justify-between gap-2 px-3 py-2 border-b border-border/50 last:border-b-0 transition-colors cursor-pointer text-left ${
-        selected ? "bg-parchment" : ""
-      }`}
-      aria-label={`Open ${entity?.title ?? "entity"}`}
+      ariaLabel={`Open ${entity?.title ?? "entity"}`}
+      className="!py-2"
     >
       <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
       <span className="shrink-0 text-[11px] text-ink-tertiary tabular-nums">
         {refs.length}
       </span>
-    </button>
+    </ListCardRow>
   );
 }
 

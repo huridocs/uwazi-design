@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, type ReactNode } from "react";
+import { useState, useMemo, useCallback, useEffect, type ReactNode } from "react";
 import { useAtom } from "jotai";
 import { referencesAtom, toastsAtom } from "../atoms/references";
 import { languageAtom, type Language } from "../atoms/language";
@@ -16,6 +16,7 @@ import {
   relationshipEntityTypeFiltersAtom,
   relationshipsViewModeAtom,
 } from "../atoms/filters";
+import { ListInfoRow } from "../components/shared/ListInfoRow";
 import { ActiveFilterChips } from "../components/references/ActiveFilterChips";
 import { getEntity, getEntityType } from "../data/entities";
 import { Reference, relationTypes } from "../data/references";
@@ -29,7 +30,7 @@ import { ReferencePanel } from "../components/references/ReferencePanel";
 import { MetadataDrawerContent } from "../components/references/MetadataDrawerContent";
 import { TocDrawerContent } from "../components/references/TocDrawerContent";
 import { SearchBar } from "../components/references/SearchBar";
-import { FiltersRow } from "../components/references/FiltersRow";
+import { ViewModeControls, CollapseControls } from "../components/references/FiltersRow";
 import { GroupedCard } from "../components/references/GroupedCard";
 import { DensityCard } from "../components/references/DensityCard";
 import { RefRow } from "../components/references/RefRow";
@@ -167,12 +168,18 @@ function RelationshipsMainView({ tabs, activeTab, onTabChange }: RelationshipsMa
   const [language, setLanguage] = useAtom(languageAtom);
   const [filtersOpen, setFiltersOpen] = useAtom(filtersDrawerOpenAtom);
   const [activeFilterCount] = useAtom(relationshipsActiveFilterCountAtom);
-  const [viewMode] = useAtom(relationshipsViewModeAtom);
+  const [viewMode, setViewMode] = useAtom(relationshipsViewModeAtom);
   const [, setRelTypeFilters] = useAtom(relationshipTypeFiltersAtom);
   const [, setEntityTypeFilters] = useAtom(relationshipEntityTypeFiltersAtom);
   const [, setSearchQuery] = useAtom(searchQueryAtom);
   const [, setSortOrder] = useAtom(sortOrderAtom);
   const [, setActiveClusterRefIds] = useAtom(activeClusterRefIdsAtom);
+
+  // Entering the Relationships tab always starts in tree view; the Graph is
+  // an opt-in escape hatch, not the default.
+  useEffect(() => {
+    setViewMode("tree");
+  }, [setViewMode]);
 
   const clearAllFilters = () => {
     setRelTypeFilters({});
@@ -211,6 +218,7 @@ function RelationshipsMainView({ tabs, activeTab, onTabChange }: RelationshipsMa
 
           <div className="pt-2" />
           <SearchBar
+            inlineSlot={<ActiveFilterChips />}
             rightSlot={
               <>
                 <FiltersButton
@@ -427,31 +435,36 @@ function ReferencesMainView({ tabs, activeTab, onTabChange }: ReferencesMainView
 
           <div className="pt-2" />
           <SearchBar
+            inlineSlot={<ActiveFilterChips />}
             rightSlot={
-              <FiltersButton
-                activeCount={activeFilterCount}
-                onClick={() => setFiltersOpen(true)}
-                size="sm"
-              />
+              <>
+                <ViewModeControls />
+                <FiltersButton
+                  activeCount={activeFilterCount}
+                  onClick={() => setFiltersOpen(true)}
+                  size="sm"
+                />
+              </>
             }
           />
-          <div className="px-3 pt-1 pb-2 flex items-center gap-2 flex-wrap text-[11px] text-ink-tertiary">
-            <span className="shrink-0">
-              <span className="font-semibold text-ink-secondary tabular-nums">
-                {filtered.length}
-              </span>{" "}
-              references
-            </span>
-            {activeFilterCount > 0 && (
+          <ListInfoRow
+            count={
               <>
-                <span className="shrink-0 font-medium text-ink-secondary">Filters:</span>
-                <ActiveFilterChips />
+                <span className="font-semibold text-ink-secondary tabular-nums">
+                  {filtered.length}
+                </span>{" "}
+                references
               </>
-            )}
-          </div>
-          <FiltersRow
-            onExpandAll={() => setExpandSignal((s) => s + 1)}
-            onCollapseAll={() => setCollapseSignal((s) => s + 1)}
+            }
+            activeFilterCount={activeFilterCount}
+            showFilterChips={false}
+            rightSlot={
+              <CollapseControls
+                disabled={viewMode === "all" || viewMode === "density"}
+                onExpandAll={() => setExpandSignal((s) => s + 1)}
+                onCollapseAll={() => setCollapseSignal((s) => s + 1)}
+              />
+            }
           />
 
           <div className="flex-1 overflow-auto pb-8 bg-warm relative">

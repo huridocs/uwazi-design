@@ -4,6 +4,7 @@ import { Relationship } from "../../utils/relationships";
 import { getEntity } from "../../data/entities";
 import { relationTypes } from "../../data/references";
 import { EntityPill } from "../shared/EntityPill";
+import { ListCardRow } from "../shared/ListCardRow";
 import { overlayEntityIdAtom, activeDrawerTabAtom } from "../../atoms/references";
 import { activeClusterRefIdsAtom } from "../../atoms/filters";
 
@@ -31,21 +32,7 @@ export function RelationshipRow({ relationship }: RelationshipRowProps) {
   const openOverlay = () => setOverlayEntityId(relationship.targetEntityId);
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      aria-pressed={selected}
-      onClick={openOverlay}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          openOverlay();
-        }
-      }}
-      className={`px-3 py-2 border-b border-border/50 cursor-pointer transition-colors ${
-        selected ? "bg-parchment" : "hover:bg-warm"
-      }`}
-    >
+    <ListCardRow selected={selected} onClick={openOverlay} className="!py-2">
       <div className="flex items-center justify-between gap-2">
         <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
         <button
@@ -64,6 +51,6 @@ export function RelationshipRow({ relationship }: RelationshipRowProps) {
       <div className="mt-1.5">
         <span className="text-[10px] text-ink-tertiary capitalize">{relLabel}</span>
       </div>
-    </div>
+    </ListCardRow>
   );
 }

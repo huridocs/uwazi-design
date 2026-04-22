@@ -9,10 +9,12 @@ import { MetadataCard, Property, PropertyRow } from "../components/metadata/Meta
 import { TemplateStructure } from "../components/references/TemplateStructure";
 import { metadataFieldsByLanguage, pdfMetadataByLanguage, MetadataField } from "../data/metadata";
 import { documentsByLanguage } from "../data/document";
+import { files, FileEntry } from "../data/files";
 import { languageAtom, type Language } from "../atoms/language";
 import { referencesAtom } from "../atoms/references";
 import { deriveRelationships } from "../utils/relationships";
 import { RelationshipPanel } from "../components/references/RelationshipPanel";
+import { DocumentViewer } from "../components/viewer/DocumentViewer";
 
 interface MetadataViewProps {
   tabs: { id: string; label: string; count?: number }[];
@@ -430,16 +432,16 @@ function CountryPicker() {
 /* ── Drawer ── */
 
 function MetadataDrawer() {
-  const [activeDrawerTab, setActiveDrawerTab] = useState("files");
+  const [activeDrawerTab, setActiveDrawerTab] = useState("document");
   const language = useAtom(languageAtom)[0];
   const doc = documentsByLanguage[language];
-  const pdf = pdfMetadataByLanguage[language];
   const [references] = useAtom(referencesAtom);
   const relationshipCount = deriveRelationships(references).length;
 
   const drawerTabs = [
-    { id: "files", label: "Files", count: 4 },
+    { id: "document", label: "Document" },
     { id: "relationships", label: "Relationships", count: relationshipCount },
+    { id: "files", label: "Files", count: files.length },
     { id: "template", label: "Template" },
   ];
 
@@ -447,49 +449,24 @@ function MetadataDrawer() {
     <div className="flex flex-col h-full">
       <DrawerTabs tabs={drawerTabs} activeId={activeDrawerTab} onChange={setActiveDrawerTab} />
 
-      {activeDrawerTab === "template" ? (
+      {activeDrawerTab === "document" ? (
+        <DocumentViewer showMinimap={false} />
+      ) : activeDrawerTab === "template" ? (
         <TemplateStructure />
       ) : activeDrawerTab === "files" ? (
         <>
           <div className="flex-1 overflow-auto px-3 py-3 pb-8 space-y-3">
-            <DrawerFileRow
-              title={doc.title}
-              filename={pdf.name}
-              type={pdf.type}
-              size={pdf.size}
-              starred
-              thumbnail={
-                <div className="w-20 h-full bg-warm flex items-center justify-center rounded-l-md shrink-0">
-                  <div className="bg-paper rounded shadow-sm w-14 h-16 flex items-center justify-center">
-                    <span className="text-[8px] text-ink-muted">PDF</span>
-                  </div>
-                </div>
-              }
-            />
-            <DrawerFileRow
-              title="Audiencia — Velásquez Rodríguez"
-              filename="audiencia_velasquez_rodriguez_1987.wav"
-              type="WAV"
-              size="18.7 MB"
-              thumbnail={
-                <div className="w-20 h-full bg-warm flex items-center justify-center rounded-l-md shrink-0">
-                  <div className="w-10 h-10 rounded-md bg-parchment flex items-center justify-center shadow-sm">
-                    <div className="w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[9px] border-l-ink ml-0.5" />
-                  </div>
-                </div>
-              }
-            />
-            <DrawerFileRow
-              title="Video — Audiencia pública CorteIDH"
-              filename="https://youtube.com/watch?v=iachr-velasquez"
-              type="Link"
-              size="—"
-              thumbnail={
-                <div className="w-20 h-full bg-seal flex items-center justify-center rounded-l-md shrink-0">
-                  <span className="text-[9px] font-bold text-white">YouTube</span>
-                </div>
-              }
-            />
+            {files.map((file) => (
+              <DrawerFileRow
+                key={file.id}
+                title={file.isDefault ? doc.title : titleForFile(file)}
+                filename={file.name}
+                type={file.type.toUpperCase()}
+                size={file.size}
+                starred={file.isDefault}
+                thumbnail={<FileThumbnail type={file.type} />}
+              />
+            ))}
           </div>
 
           <div
@@ -524,6 +501,40 @@ interface DrawerFileRowProps {
   size: string;
   starred?: boolean;
   thumbnail: React.ReactNode;
+}
+
+function titleForFile(file: FileEntry): string {
+  if (file.type === "audio") return "Audiencia — Velásquez Rodríguez";
+  if (file.type === "link") return "Video — Audiencia pública CorteIDH";
+  if (file.group === "supporting" && file.type === "pdf")
+    return "Testimonio de testigos — Velásquez Rodríguez";
+  return file.name;
+}
+
+function FileThumbnail({ type }: { type: FileEntry["type"] }) {
+  if (type === "link") {
+    return (
+      <div className="w-20 h-full bg-seal flex items-center justify-center rounded-l-md shrink-0">
+        <span className="text-[9px] font-bold text-white">YouTube</span>
+      </div>
+    );
+  }
+  if (type === "audio") {
+    return (
+      <div className="w-20 h-full bg-warm flex items-center justify-center rounded-l-md shrink-0">
+        <div className="w-10 h-10 rounded-md bg-parchment flex items-center justify-center shadow-sm">
+          <div className="w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[9px] border-l-ink ml-0.5" />
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="w-20 h-full bg-warm flex items-center justify-center rounded-l-md shrink-0">
+      <div className="bg-paper rounded shadow-sm w-14 h-16 flex items-center justify-center">
+        <span className="text-[8px] text-ink-muted">{type === "pdf" ? "PDF" : "DOC"}</span>
+      </div>
+    </div>
+  );
 }
 
 function DrawerFileRow({ title, filename, type, size, starred, thumbnail }: DrawerFileRowProps) {

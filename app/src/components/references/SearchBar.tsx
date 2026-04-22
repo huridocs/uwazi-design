@@ -5,9 +5,11 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 interface SearchBarProps {
   rightSlot?: ReactNode;
+  /** Chips rendered GitHub-style inside the input box, before the typing cursor. */
+  inlineSlot?: ReactNode;
 }
 
-export function SearchBar({ rightSlot }: SearchBarProps = {}) {
+export function SearchBar({ rightSlot, inlineSlot }: SearchBarProps = {}) {
   const [query, setQuery] = useAtom(searchQueryAtom);
   const inputRef = useRef<HTMLInputElement>(null);
   const hintRef = useRef<HTMLDivElement>(null);
@@ -22,11 +24,14 @@ export function SearchBar({ rightSlot }: SearchBarProps = {}) {
     return () => document.removeEventListener("mousedown", onClick);
   }, [hintOpen]);
 
-  const rightPad = query ? 32 : 52;
-
   return (
-    <div className="px-3 pt-0.5 pb-2 flex items-center gap-2">
-      <div className="relative flex-1 min-w-0">
+    <div className="px-3 pt-0.5 pb-2 flex items-center gap-1.5">
+      <div
+        className="relative flex-1 min-w-0 flex items-center gap-1 min-h-8 py-1 pl-2 pr-2 bg-warm border border-border rounded-md
+          focus-within:ring-2 focus-within:ring-carbon/20 focus-within:border-carbon/40 transition-all flex-wrap"
+        onClick={() => inputRef.current?.focus()}
+      >
+        {inlineSlot}
         <input
           ref={inputRef}
           type="text"
@@ -34,25 +39,22 @@ export function SearchBar({ rightSlot }: SearchBarProps = {}) {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search  •  AND, OR, NOT, &quot;exact&quot;, wild*"
           aria-label="Search references"
-          style={{ paddingRight: rightPad }}
-          className="w-full h-8 pl-3 text-xs font-medium bg-warm border border-border rounded-md
-            placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-carbon/20
-            focus:border-carbon/40 transition-all"
+          className="flex-1 min-w-[100px] h-6 bg-transparent text-xs font-medium placeholder:text-ink-muted focus:outline-none"
         />
 
         {query && (
           <button
             onClick={() => { setQuery(""); inputRef.current?.focus(); }}
             aria-label="Clear search"
-            className="absolute right-8 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-parchment text-ink-muted hover:text-ink cursor-pointer transition-colors"
+            className="shrink-0 p-0.5 rounded-full hover:bg-parchment text-ink-muted hover:text-ink cursor-pointer transition-colors"
           >
             <X size={12} />
           </button>
         )}
 
-        <div ref={hintRef} className="absolute right-2 top-1/2 -translate-y-1/2">
+        <div ref={hintRef} className="shrink-0 relative">
           <button
-            onClick={() => setHintOpen((o) => !o)}
+            onClick={(e) => { e.stopPropagation(); setHintOpen((o) => !o); }}
             aria-label="Search tips"
             aria-expanded={hintOpen}
             className="p-0.5 rounded-full text-ink-muted hover:text-ink transition-colors cursor-pointer"

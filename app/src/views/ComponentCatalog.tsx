@@ -16,9 +16,17 @@ import { DensityCard } from "../components/references/DensityCard";
 import { RelatedDocCard } from "../components/references/RelatedDocCard";
 import { FileTable } from "../components/files/FileTable";
 import { DrawerActionBar } from "../components/references/DrawerActionBar";
-import { FiltersRow } from "../components/references/FiltersRow";
+import { FiltersRow, ViewModeControls, CollapseControls } from "../components/references/FiltersRow";
 import { GroupedCard } from "../components/references/GroupedCard";
 import { RefRow } from "../components/references/RefRow";
+import { FiltersButton } from "../components/shared/FiltersButton";
+import { FiltersDrawer } from "../components/shared/FiltersDrawer";
+import { FacetSection } from "../components/shared/FacetSection";
+import { ActiveFilterChip } from "../components/shared/ActiveFilterChip";
+import { FadeTruncate } from "../components/shared/FadeTruncate";
+import { ListInfoRow } from "../components/shared/ListInfoRow";
+import { ListCardRow } from "../components/shared/ListCardRow";
+import { ZoomControl } from "../components/references/ZoomControl";
 import { ActionBar } from "../components/viewer/ActionBar";
 import { UwaziLoader } from "../components/shared/UwaziLoader";
 import { StatusBadge } from "../components/shared/StatusBadge";
@@ -124,6 +132,21 @@ const sidebarGroups: SidebarGroup[] = [
       { id: "csv-stats-card", label: "StatsCard" },
       { id: "csv-stepper", label: "Stepper" },
       { id: "csv-alert-banner", label: "AlertBanner" },
+    ],
+  },
+  {
+    label: "Filters & Lists",
+    items: [
+      { id: "fl-filters-button", label: "FiltersButton" },
+      { id: "fl-filters-drawer", label: "FiltersDrawer" },
+      { id: "fl-facet-section", label: "FacetSection" },
+      { id: "fl-active-filter-chip", label: "ActiveFilterChip" },
+      { id: "fl-view-mode-controls", label: "ViewModeControls" },
+      { id: "fl-collapse-controls", label: "CollapseControls" },
+      { id: "fl-list-info-row", label: "ListInfoRow" },
+      { id: "fl-list-card-row", label: "ListCardRow" },
+      { id: "fl-zoom-control", label: "ZoomControl" },
+      { id: "fl-fade-truncate", label: "FadeTruncate" },
     ],
   },
   {
@@ -856,6 +879,164 @@ export function ComponentCatalog() {
             </div>
           </section>
 
+          {/* ==================== FILTERS & LISTS ==================== */}
+          <section>
+            <h2 className="text-lg font-bold text-ink mb-6">Filters & Lists</h2>
+            <div className="flex flex-col gap-6">
+
+              <div id="fl-filters-button" ref={reg("fl-filters-button")}>
+                <CatalogEntry
+                  name="FiltersButton"
+                  description="Trigger button for the filters slide-over with active-count badge"
+                  code={`<FiltersButton activeCount={0} onClick={...} />
+<FiltersButton activeCount={3} onClick={...} size="sm" />`}
+                >
+                  <div className="flex flex-wrap items-center gap-4">
+                    <FiltersButton activeCount={0} onClick={() => {}} />
+                    <FiltersButton activeCount={1} onClick={() => {}} />
+                    <FiltersButton activeCount={5} onClick={() => {}} />
+                    <FiltersButton activeCount={0} onClick={() => {}} size="sm" />
+                    <FiltersButton activeCount={3} onClick={() => {}} size="sm" />
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="fl-filters-drawer" ref={reg("fl-filters-drawer")}>
+                <CatalogEntry
+                  name="FiltersDrawer"
+                  description="Slide-over panel scoped to the nearest relative overflow-hidden parent"
+                  code={`<FiltersDrawer open={open} onClose={() => setOpen(false)}>
+  {/* facet content */}
+</FiltersDrawer>`}
+                >
+                  <FiltersDrawerDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="fl-facet-section" ref={reg("fl-facet-section")}>
+                <CatalogEntry
+                  name="FacetSection"
+                  description="Collapsible facet block with checkbox options (used inside FiltersDrawer)"
+                  code={`<FacetSection
+  title="Relation type"
+  options={[{ id: "cites", label: "Cites" }, ...]}
+  selected={selected}
+  onToggle={(id) => ...}
+/>`}
+                >
+                  <FacetSectionDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="fl-active-filter-chip" ref={reg("fl-active-filter-chip")}>
+                <CatalogEntry
+                  name="ActiveFilterChip"
+                  description="Small pill representing a single active filter; X removes it"
+                  code={`<ActiveFilterChip label="Cites" onRemove={...} />
+<ActiveFilterChip label="Person" color="#7C3AED" onRemove={...} />`}
+                >
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <ActiveFilterChip label="Cites" onRemove={() => {}} />
+                    <ActiveFilterChip label="Person" color="#7C3AED" onRemove={() => {}} />
+                    <ActiveFilterChip label="Country" color="#16A34A" onRemove={() => {}} />
+                    <ActiveFilterChip label={'"rights"'} onRemove={() => {}} />
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="fl-view-mode-controls" ref={reg("fl-view-mode-controls")}>
+                <CatalogEntry
+                  name="ViewModeControls"
+                  description="Segmented view-mode toggle + sort dropdown (used in SearchBar rightSlot)"
+                  code={`<ViewModeControls />
+<ViewModeControls modes={["all", "by-entity-type", "by-relation-type"]} />`}
+                >
+                  <IsolatedViewModeControls />
+                </CatalogEntry>
+              </div>
+
+              <div id="fl-collapse-controls" ref={reg("fl-collapse-controls")}>
+                <CatalogEntry
+                  name="CollapseControls"
+                  description="Collapse all / Expand all pair; disabled prop overrides atom-driven logic"
+                  code={`<CollapseControls
+  onCollapseAll={...}
+  onExpandAll={...}
+  disabled={viewMode === "all"}
+/>`}
+                >
+                  <IsolatedCollapseControls />
+                </CatalogEntry>
+              </div>
+
+              <div id="fl-list-info-row" ref={reg("fl-list-info-row")}>
+                <CatalogEntry
+                  name="ListInfoRow"
+                  description="Count + 'Filters:' + ActiveFilterChips + rightSlot. One row under the toolbar."
+                  code={`<ListInfoRow
+  count={<><b>221</b> references</>}
+  activeFilterCount={activeFilterCount}
+  rightSlot={<CollapseControls ... />}
+/>`}
+                >
+                  <IsolatedListInfoRow />
+                </CatalogEntry>
+              </div>
+
+              <div id="fl-list-card-row" ref={reg("fl-list-card-row")}>
+                <CatalogEntry
+                  name="ListCardRow"
+                  description="Shell for list rows — owns selected (bg-parchment), cursor, border-b, px-3 py-2.5"
+                  code={`<ListCardRow selected={selected} onClick={...}>
+  {/* row content */}
+</ListCardRow>`}
+                >
+                  <div className="w-full max-w-md border border-border/60 rounded-md overflow-hidden bg-paper">
+                    <ListCardRow selected={false} onClick={() => {}}>
+                      <span className="text-xs text-ink">Default row — click me</span>
+                    </ListCardRow>
+                    <ListCardRow selected={true} onClick={() => {}}>
+                      <span className="text-xs text-ink">Selected row (bg-parchment)</span>
+                    </ListCardRow>
+                    <ListCardRow selected={false} onClick={() => {}}>
+                      <span className="text-xs text-ink">Another default row</span>
+                    </ListCardRow>
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="fl-zoom-control" ref={reg("fl-zoom-control")}>
+                <CatalogEntry
+                  name="ZoomControl"
+                  description="Segmented detail/compact/overview + graph toggle for the Relationships view"
+                  code={`<ZoomControl />
+
+{/* Bound to relationshipsZoomAtom + relationshipsViewModeAtom */}`}
+                >
+                  <IsolatedZoomControl />
+                </CatalogEntry>
+              </div>
+
+              <div id="fl-fade-truncate" ref={reg("fl-fade-truncate")}>
+                <CatalogEntry
+                  name="FadeTruncate"
+                  description="Clamp text to N lines with a gradient fade; optional expand button"
+                  code={`<FadeTruncate text={longString} maxLines={2} expandable />`}
+                >
+                  <div className="w-full max-w-md">
+                    <FadeTruncate
+                      text="The Inter-American Commission on Human Rights received the petition on February 15, 1993, alleging systemic abuses under the military regime and invoking the American Convention to request provisional measures on behalf of the named detainees."
+                      maxLines={2}
+                      expandable
+                      className="text-xs text-ink-secondary leading-relaxed"
+                    />
+                  </div>
+                </CatalogEntry>
+              </div>
+
+            </div>
+          </section>
+
           {/* ==================== SHARED ==================== */}
           <section>
             <h2 className="text-lg font-bold text-ink mb-6">Shared</h2>
@@ -1172,6 +1353,148 @@ function IsolatedActionBar() {
       <div className="w-full border border-border/40 rounded-md overflow-hidden">
         <ActionBar numPages={15} onScrollToPage={() => {}} />
       </div>
+    </Provider>
+  );
+}
+
+function FiltersDrawerDemo() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="w-full">
+      <FiltersButton activeCount={open ? 2 : 0} onClick={() => setOpen(true)} />
+      <div className="relative overflow-hidden mt-3 h-60 border border-border/60 rounded-md bg-paper">
+        <div className="px-3 py-2 text-xs text-ink-muted">
+          Demo container — FiltersDrawer is scoped to this pane.
+        </div>
+        <FiltersDrawer
+          open={open}
+          onClose={() => setOpen(false)}
+          footer={
+            <button className="text-[11px] font-medium text-ink-secondary hover:text-ink cursor-pointer">
+              Clear all filters
+            </button>
+          }
+        >
+          <FacetSection
+            title="Relation type"
+            total={3}
+            entries={[
+              ["cites", 31],
+              ["mentions", 12],
+              ["refers", 7],
+            ]}
+            selected={{ cites: true }}
+            onToggle={() => {}}
+            label={(id) =>
+              id === "cites" ? "Cites" : id === "mentions" ? "Mentions" : "Refers to"
+            }
+          />
+        </FiltersDrawer>
+      </div>
+    </div>
+  );
+}
+
+function FacetSectionDemo() {
+  const [selected, setSelected] = useState<Record<string, boolean>>({ person: true });
+  const entries: [string, number][] = [
+    ["person", 8],
+    ["country", 5],
+    ["org", 3],
+    ["case", 12],
+  ];
+  const colors: Record<string, string> = {
+    person: "#7C3AED",
+    country: "#16A34A",
+    org: "#C026D3",
+    case: "#0EA5E9",
+  };
+  const labels: Record<string, string> = {
+    person: "Person",
+    country: "Country",
+    org: "Organization",
+    case: "Court Case",
+  };
+  return (
+    <div className="w-full max-w-xs border border-border/60 rounded-md bg-paper overflow-hidden">
+      <FacetSection
+        title="Target entity type"
+        total={entries.length}
+        entries={entries}
+        selected={selected}
+        onToggle={(id) =>
+          setSelected((prev) => ({ ...prev, [id]: !prev[id] }))
+        }
+        label={(id) => labels[id] ?? id}
+        renderMarker={(id) => (
+          <span
+            className="shrink-0 rounded-[2px]"
+            style={{ width: 8, height: 8, backgroundColor: colors[id] }}
+          />
+        )}
+      />
+    </div>
+  );
+}
+
+function IsolatedViewModeControls() {
+  const store = createStore();
+  return (
+    <Provider store={store}>
+      <div className="flex flex-col gap-3">
+        <ViewModeControls />
+        <ViewModeControls modes={["all", "by-entity-type", "by-relation-type"]} />
+      </div>
+    </Provider>
+  );
+}
+
+function IsolatedCollapseControls() {
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-6">
+        <CollapseControls onCollapseAll={() => {}} onExpandAll={() => {}} />
+        <span className="text-[10px] text-ink-muted">default (atom-driven)</span>
+      </div>
+      <div className="flex items-center gap-6">
+        <CollapseControls
+          onCollapseAll={() => {}}
+          onExpandAll={() => {}}
+          disabled
+        />
+        <span className="text-[10px] text-ink-muted">disabled (e.g. viewMode === "all")</span>
+      </div>
+    </div>
+  );
+}
+
+function IsolatedListInfoRow() {
+  const store = createStore();
+  return (
+    <Provider store={store}>
+      <div className="w-full border border-border/40 rounded-md bg-paper">
+        <ListInfoRow
+          count={
+            <>
+              <span className="font-semibold text-ink-secondary tabular-nums">221</span>{" "}
+              references
+            </>
+          }
+          activeFilterCount={0}
+          rightSlot={
+            <CollapseControls onCollapseAll={() => {}} onExpandAll={() => {}} disabled />
+          }
+        />
+      </div>
+    </Provider>
+  );
+}
+
+function IsolatedZoomControl() {
+  const store = createStore();
+  return (
+    <Provider store={store}>
+      <ZoomControl />
     </Provider>
   );
 }

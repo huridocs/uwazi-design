@@ -20,7 +20,6 @@ export function DrawerTabs({ tabs, activeId, onChange }: DrawerTabsProps) {
         role="tablist"
         style={{
           border: "1px solid var(--border-primary)",
-          boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
         }}
       >
         {tabs.map((tab, i) => (

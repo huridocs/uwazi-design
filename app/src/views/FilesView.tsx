@@ -17,8 +17,16 @@ interface FilesViewProps {
 export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
   const [language, setLanguage] = useAtom(languageAtom);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const defaultFileId = files.find((f) => f.isDefault)?.id ?? files[0]?.id;
+  const [focusedId, setFocusedId] = useState<string | null>(defaultFileId ?? null);
 
   const selectedFiles = files.filter((f) => selectedIds.has(f.id));
+  const focusedFile = files.find((f) => f.id === focusedId) ?? null;
+  const drawerFiles = selectedFiles.length > 0
+    ? selectedFiles
+    : focusedFile
+      ? [focusedFile]
+      : [];
 
   const handleSelect = (id: string) => {
     setSelectedIds((prev) => {
@@ -52,13 +60,11 @@ export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
       mobileSections={[
         {
           id: "details",
-          label: selectedFiles.length === 0
-            ? "File details"
-            : selectedFiles.length === 1
-              ? selectedFiles[0].name
-              : `${selectedFiles.length} files`,
+          label: selectedFiles.length > 1
+            ? `${selectedFiles.length} files`
+            : drawerFiles[0]?.name ?? "File details",
           count: selectedFiles.length || undefined,
-          content: <FileDrawer selectedFiles={selectedFiles} />,
+          content: <FileDrawer selectedFiles={drawerFiles} />,
         },
       ]}
       left={
@@ -83,6 +89,8 @@ export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
                 selectedIds={selectedIds}
                 onSelect={handleSelect}
                 onSelectAll={handleSelectAllPrimary}
+                focusedId={focusedId}
+                onFocus={setFocusedId}
               />
             </div>
             <div>
@@ -94,13 +102,15 @@ export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
                 selectedIds={selectedIds}
                 onSelect={handleSelect}
                 onSelectAll={handleSelectAllSupporting}
+                focusedId={focusedId}
+                onFocus={setFocusedId}
               />
             </div>
           </div>
           <FilesActionBar selectedCount={selectedIds.size} totalCount={files.length} />
         </div>
       }
-      right={<FileDrawer selectedFiles={selectedFiles} />}
+      right={<FileDrawer selectedFiles={drawerFiles} />}
       defaultRightWidth={560}
       minRightWidth={460}
       maxRightWidth={720}

@@ -68,6 +68,11 @@ button:not(:disabled) {
   filter: invert(1);
 }
 
+/* Dark mode: make native form controls render dark (unchecked boxes, etc.) */
+:root.dark {
+  color-scheme: dark;
+}
+
 /* Dark mode: tone down checkboxes */
 :root.dark input[type="checkbox"] {
   accent-color: var(--text-tertiary);

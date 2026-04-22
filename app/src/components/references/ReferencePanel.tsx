@@ -8,70 +8,34 @@ import {
   expandAllSignalAtom,
   collapseAllSignalAtom,
   activeClusterRefIdsAtom,
+  filtersDrawerOpenAtom,
+  referencesActiveFilterCountAtom,
+  relationshipTypeFiltersAtom,
+  relationshipEntityTypeFiltersAtom,
 } from "../../atoms/filters";
 import { getEntity, getEntityType } from "../../data/entities";
 import { currentDocument } from "../../data/document";
 import { Reference, relationTypes } from "../../data/references";
 import { DrawerTabs } from "../layout/DrawerTabs";
 import { SearchBar } from "./SearchBar";
-import { FiltersRow } from "./FiltersRow";
+import { ViewModeControls, CollapseControls } from "./FiltersRow";
 import { GroupedCard } from "./GroupedCard";
 import { DensityCard } from "./DensityCard";
 import { RefRow } from "./RefRow";
 import { DrawerActionBar } from "./DrawerActionBar";
 import { ConfirmDialog } from "../shared/ConfirmDialog";
+import { FiltersButton } from "../shared/FiltersButton";
+import { FiltersDrawer } from "../shared/FiltersDrawer";
+import { ListInfoRow } from "../shared/ListInfoRow";
+import { ActiveFilterChips } from "./ActiveFilterChips";
+import { RelationshipsFilterDrawer } from "./RelationshipsFilterDrawer";
 import { MetadataDrawerContent } from "./MetadataDrawerContent";
 import { TocDrawerContent } from "./TocDrawerContent";
-import { Link2, X } from "lucide-react";
+import { Link2 } from "lucide-react";
 import { EntityOverlay } from "./EntityOverlay";
 import { buildMatcher } from "../../utils/searchQuery";
 import { deriveRelationships } from "../../utils/relationships";
 import { RelationshipPanel } from "./RelationshipPanel";
-
-function FilterChip({
-  count,
-  total,
-  pages,
-  onClear,
-}: {
-  count: number;
-  total: number;
-  pages: number[];
-  onClear: () => void;
-}) {
-  const pageLabel =
-    pages.length === 0
-      ? ""
-      : pages.length === 1
-        ? `Page ${pages[0]}`
-        : pages.length <= 3
-          ? `Pages ${pages.join(", ")}`
-          : `Pages ${pages[0]}–${pages[pages.length - 1]}`;
-  return (
-    <div className="px-3 pt-2 pb-1 shrink-0">
-      <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-md bg-warm">
-        <div className="flex items-center gap-1.5 min-w-0 text-[11px]">
-          {pageLabel && (
-            <span className="font-semibold text-ink-secondary tabular-nums shrink-0">
-              {pageLabel}
-            </span>
-          )}
-          <span className="text-ink-tertiary tabular-nums">
-            {pageLabel && "·"} Showing {count} of {total}
-          </span>
-        </div>
-        <button
-          onClick={onClear}
-          className="shrink-0 flex items-center justify-center rounded-sm text-ink-tertiary hover:text-ink transition-colors"
-          aria-label="Clear selection"
-          style={{ width: 16, height: 16 }}
-        >
-          <X size={12} />
-        </button>
-      </div>
-    </div>
-  );
-}
 
 const baseDrawerTabs = [
   { id: "metadata", label: "Metadata" },
@@ -84,15 +48,27 @@ const baseDrawerTabs = [
 export function ReferencePanel() {
   const [references, setReferences] = useAtom(referencesAtom);
   const [viewMode] = useAtom(viewModeAtom);
-  const [searchQuery] = useAtom(searchQueryAtom);
-  const [sortOrder] = useAtom(sortOrderAtom);
+  const [searchQuery, setSearchQuery] = useAtom(searchQueryAtom);
+  const [sortOrder, setSortOrder] = useAtom(sortOrderAtom);
   const [, setToasts] = useAtom(toastsAtom);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [activeDrawerTab, setActiveDrawerTab] = useAtom(activeDrawerTabAtom);
   const [, setExpandSignal] = useAtom(expandAllSignalAtom);
   const [, setCollapseSignal] = useAtom(collapseAllSignalAtom);
+  const [filtersOpen, setFiltersOpen] = useAtom(filtersDrawerOpenAtom);
+  const [activeFilterCount] = useAtom(referencesActiveFilterCountAtom);
+  const [, setRelTypeFilters] = useAtom(relationshipTypeFiltersAtom);
+  const [, setEntityTypeFilters] = useAtom(relationshipEntityTypeFiltersAtom);
 
   const [activeClusterRefIds, setActiveClusterRefIds] = useAtom(activeClusterRefIdsAtom);
+
+  const clearAllFilters = () => {
+    setRelTypeFilters({});
+    setEntityTypeFilters({});
+    setSearchQuery("");
+    setSortOrder("none");
+    setActiveClusterRefIds(null);
+  };
 
   // Filter and sort references
   const filtered = useMemo(() => {
@@ -205,21 +181,35 @@ export function ReferencePanel() {
       {/* References tab content */}
       {activeDrawerTab === "references" && (
         <>
-          <SearchBar />
-          <FiltersRow
-            onExpandAll={() => setExpandSignal((s) => s + 1)}
-            onCollapseAll={() => setCollapseSignal((s) => s + 1)}
+          <SearchBar inlineSlot={<ActiveFilterChips />} />
+          <div className="px-3 pb-2 flex items-center justify-between gap-2 flex-wrap">
+            <ViewModeControls size="sm" />
+            <FiltersButton
+              activeCount={activeFilterCount}
+              onClick={() => setFiltersOpen(true)}
+              size="sm"
+            />
+          </div>
+          <ListInfoRow
+            count={
+              <>
+                <span className="font-semibold text-ink-secondary tabular-nums">
+                  {filtered.length}
+                </span>{" "}
+                references
+              </>
+            }
+            activeFilterCount={activeFilterCount}
+            showFilterChips={false}
+            rightSlot={
+              <CollapseControls
+                disabled={viewMode === "all" || viewMode === "density"}
+                onExpandAll={() => setExpandSignal((s) => s + 1)}
+                onCollapseAll={() => setCollapseSignal((s) => s + 1)}
+              />
+            }
           />
         </>
-      )}
-
-      {activeDrawerTab === "references" && activeClusterRefIds && (
-        <FilterChip
-          count={filtered.length}
-          total={references.length}
-          pages={Array.from(new Set(filtered.map((r) => r.sourceSelection.page))).sort((a, b) => a - b)}
-          onClear={() => setActiveClusterRefIds(null)}
-        />
       )}
 
       {activeDrawerTab === "references" && (
@@ -292,6 +282,26 @@ export function ReferencePanel() {
 
       {/* Drawer action bar — contextual per tab */}
       <DrawerActionBar activeTab={activeDrawerTab} />
+
+      {/* Filters slide-over (scoped to this pane) */}
+      {activeDrawerTab === "references" && (
+        <FiltersDrawer
+          open={filtersOpen}
+          onClose={() => setFiltersOpen(false)}
+          footer={
+            activeFilterCount > 0 ? (
+              <button
+                onClick={clearAllFilters}
+                className="text-[11px] font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
+              >
+                Clear all filters
+              </button>
+            ) : null
+          }
+        >
+          <RelationshipsFilterDrawer />
+        </FiltersDrawer>
+      )}
 
       <ConfirmDialog
         open={deleteTarget !== null}

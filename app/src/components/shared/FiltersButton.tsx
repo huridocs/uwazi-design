@@ -14,10 +14,10 @@ export function FiltersButton({
   label = "Filters",
 }: FiltersButtonProps) {
   const active = activeCount > 0;
-  const h = size === "sm" ? "h-8" : "h-8";
-  const px = size === "sm" ? "px-2.5" : "px-3";
-  const iconSize = size === "sm" ? 12 : 12;
-  const textSize = size === "sm" ? "text-xs" : "text-xs";
+  const h = size === "sm" ? "h-6" : "h-8";
+  const px = size === "sm" ? "px-2" : "px-2.5";
+  const iconSize = size === "sm" ? 11 : 12;
+  const textSize = size === "sm" ? "text-[11px]" : "text-xs";
 
   return (
     <button

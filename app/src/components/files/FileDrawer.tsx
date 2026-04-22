@@ -108,7 +108,7 @@ export function FileDrawer({ selectedFiles }: FileDrawerProps) {
 
           {selectedFiles.length >= 1 && (
             <div
-              className="flex items-center justify-between h-12 px-3 shrink-0 bg-selected transition-colors"
+              className="flex items-center justify-between h-12 px-3 shrink-0"
               style={{ borderTop: "1px solid var(--border-primary)" }}
             >
               <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
