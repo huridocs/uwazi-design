@@ -6,6 +6,7 @@ import { getEntity, getEntityType } from "../../data/entities";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Reference } from "../../data/references";
 import { FileText, Layers } from "lucide-react";
+import { buildMatcher } from "../../utils/searchQuery";
 
 interface RefMinimapProps {
   numPages: number;
@@ -68,15 +69,12 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
 
     // Apply same search filter as the drawer
     let baseRefs = references;
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
+    const matcher = buildMatcher(searchQuery);
+    if (matcher) {
       baseRefs = baseRefs.filter((ref) => {
         const entity = getEntity(ref.targetEntityId);
-        return (
-          ref.sourceSelection.text.toLowerCase().includes(q) ||
-          entity?.title.toLowerCase().includes(q) ||
-          ref.relationType.toLowerCase().includes(q)
-        );
+        const haystack = `${ref.sourceSelection.text} ${entity?.title ?? ""} ${ref.relationType}`;
+        return matcher(haystack);
       });
     }
 
@@ -243,7 +241,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
                 ))}
               </div>
               <span
-                className="text-[9px] font-medium tabular-nums"
+                className="text-[10px] font-medium tabular-nums leading-none"
                 style={{ color: "var(--text-tertiary)" }}
               >
                 ↑ {beforeCount}
@@ -266,7 +264,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
               }}
             >
               <span
-                className="text-[9px] font-medium tabular-nums"
+                className="text-[10px] font-medium tabular-nums leading-none"
                 style={{ color: "var(--text-tertiary)" }}
               >
                 ↓ {afterCount}
