@@ -4,6 +4,7 @@ import { ChevronDown, ChevronRight, ExternalLink } from "lucide-react";
 import { languageAtom } from "../../atoms/language";
 import { documentsByLanguage } from "../../data/document";
 import { metadataFieldsByLanguage, pdfMetadataByLanguage } from "../../data/metadata";
+import { EntityPill } from "../shared/EntityPill";
 
 export function MetadataDrawerContent() {
   const language = useAtomValue(languageAtom);
@@ -21,9 +22,7 @@ export function MetadataDrawerContent() {
     <div className="flex-1 overflow-auto px-3 py-3 pb-8 space-y-3">
       {/* Entity header */}
       <div className="bg-warm rounded-md px-3 py-2.5 space-y-1.5">
-        <span className="px-1.5 py-0.5 text-xs font-medium rounded bg-[#C4B5FD] text-[#4C1D95]">
-          Case
-        </span>
+        <EntityPill typeId={doc.entityTypeId} />
         <p className="text-sm font-bold text-ink leading-relaxed">
           {doc.title}
         </p>

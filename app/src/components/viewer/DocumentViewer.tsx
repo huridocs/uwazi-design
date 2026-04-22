@@ -16,9 +16,11 @@ pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.vers
 interface DocumentViewerProps {
   /** Optional left slot for the action bar — used to inject the mobile sheet trigger */
   actionBarLeft?: ReactNode;
+  /** Hide the right-edge ref minimap. Default: shown on non-mobile. */
+  showMinimap?: boolean;
 }
 
-export function DocumentViewer({ actionBarLeft }: DocumentViewerProps = {}) {
+export function DocumentViewer({ actionBarLeft, showMinimap = true }: DocumentViewerProps = {}) {
   const [breakpoint] = useAtom(breakpointAtom);
   const isMobile = breakpoint === "mobile";
   const [numPages, setNumPages] = useState<number>(0);
@@ -143,7 +145,10 @@ export function DocumentViewer({ actionBarLeft }: DocumentViewerProps = {}) {
         <div
           ref={containerRef}
           className="absolute inset-0 overflow-auto flex flex-col items-center py-4 gap-4"
-          style={{ backgroundColor: "var(--bg-warm)", paddingRight: isMobile ? 16 : 80 }}
+          style={{
+            paddingLeft: 16,
+            paddingRight: isMobile ? 16 : showMinimap ? 80 : 16,
+          }}
           onMouseUp={handleTextSelect}
           onMouseDown={handleMouseDown}
         >
@@ -185,7 +190,7 @@ export function DocumentViewer({ actionBarLeft }: DocumentViewerProps = {}) {
           ))}
         </Document>
         </div>
-        {!isMobile && <RefMinimap numPages={numPages} />}
+        {!isMobile && showMinimap && <RefMinimap numPages={numPages} />}
       </div>
 
       {/* Bottom action bar */}

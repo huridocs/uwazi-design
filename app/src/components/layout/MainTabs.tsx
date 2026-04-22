@@ -38,7 +38,7 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
 
   return (
     <div
-      className="flex items-center justify-between gap-3 px-3 md:px-4 py-2 md:py-2.5 shrink-0"
+      className="flex items-center justify-between gap-3 px-3 py-2 md:py-2.5 shrink-0"
     >
       {/* Left: Back + Tabs */}
       <div className="flex items-center gap-3 md:gap-4 min-w-0 overflow-x-auto">

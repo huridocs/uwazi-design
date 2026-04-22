@@ -1,7 +1,14 @@
 import { useMemo, useState, useCallback } from "react";
 import { useAtom } from "jotai";
 import { referencesAtom, toastsAtom, activeDrawerTabAtom } from "../../atoms/references";
-import { viewModeAtom, searchQueryAtom, sortOrderAtom, expandAllSignalAtom, collapseAllSignalAtom, activeClusterRefIdsAtom } from "../../atoms/filters";
+import {
+  viewModeAtom,
+  searchQueryAtom,
+  sortOrderAtom,
+  expandAllSignalAtom,
+  collapseAllSignalAtom,
+  activeClusterRefIdsAtom,
+} from "../../atoms/filters";
 import { getEntity, getEntityType } from "../../data/entities";
 import { currentDocument } from "../../data/document";
 import { Reference, relationTypes } from "../../data/references";

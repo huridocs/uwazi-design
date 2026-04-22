@@ -2,7 +2,14 @@ import { useMemo } from "react";
 import { useAtom } from "jotai";
 import { Link2, X } from "lucide-react";
 import { referencesAtom } from "../../atoms/references";
-import { viewModeAtom, searchQueryAtom, sortOrderAtom, expandAllSignalAtom, collapseAllSignalAtom, activeClusterRefIdsAtom } from "../../atoms/filters";
+import {
+  viewModeAtom,
+  searchQueryAtom,
+  sortOrderAtom,
+  expandAllSignalAtom,
+  collapseAllSignalAtom,
+  activeClusterRefIdsAtom,
+} from "../../atoms/filters";
 import { getEntity, getEntityType } from "../../data/entities";
 import { relationTypes } from "../../data/references";
 import { deriveRelationships, Relationship } from "../../utils/relationships";
@@ -72,7 +79,7 @@ export function RelationshipPanel() {
         const nameA = getEntityType(a)?.name ?? a;
         const nameB = getEntityType(b)?.name ?? b;
         return nameA.localeCompare(nameB) * dir;
-      })
+      }),
     );
   }, [filtered, sortOrder]);
 
@@ -90,7 +97,7 @@ export function RelationshipPanel() {
         const labelA = relationTypes.find((r) => r.id === a)?.label ?? a;
         const labelB = relationTypes.find((r) => r.id === b)?.label ?? b;
         return labelA.localeCompare(labelB) * dir;
-      })
+      }),
     );
   }, [filtered, sortOrder]);
 
@@ -119,7 +126,7 @@ export function RelationshipPanel() {
             <button
               onClick={() => setActiveClusterRefIds(null)}
               aria-label="Clear selection"
-              className="shrink-0 flex items-center justify-center rounded-sm text-ink-tertiary hover:text-ink transition-colors"
+              className="shrink-0 flex items-center justify-center rounded-sm text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
               style={{ width: 16, height: 16 }}
             >
               <X size={12} />

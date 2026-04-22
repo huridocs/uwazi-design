@@ -14,7 +14,7 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
 
   return (
     <div
-      className="flex items-center gap-2 h-10 px-4 shrink-0"
+      className="flex items-center gap-2 h-10 px-3 shrink-0"
       style={{ borderBottom: "1px solid var(--border-primary)" }}
     >
       <EntityPill typeId={doc.entityTypeId} />

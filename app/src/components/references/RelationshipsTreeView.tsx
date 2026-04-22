@@ -1,15 +1,30 @@
-import { useMemo } from "react";
+import { useMemo, useState, useLayoutEffect, useRef } from "react";
 import { useAtom, useSetAtom } from "jotai";
-import { Link2, X, Link as LinkIcon, Quote, ChevronRight } from "lucide-react";
-import { referencesAtom, overlayEntityIdAtom, activeDrawerTabAtom, scrollToHighlightAtom, activeRefIdAtom } from "../../atoms/references";
-import { searchQueryAtom, activeClusterRefIdsAtom, sortOrderAtom, relationshipTypeFiltersAtom, relationshipEntityTypeFiltersAtom } from "../../atoms/filters";
+import { Link2, Link as LinkIcon } from "lucide-react";
+import {
+  referencesAtom,
+  overlayEntityIdAtom,
+  activeDrawerTabAtom,
+  scrollToHighlightAtom,
+  activeRefIdAtom,
+} from "../../atoms/references";
+import {
+  searchQueryAtom,
+  activeClusterRefIdsAtom,
+  sortOrderAtom,
+  relationshipTypeFiltersAtom,
+  relationshipEntityTypeFiltersAtom,
+  relationshipsZoomAtom,
+  relationshipsActiveFilterCountAtom,
+  type RelationshipsZoom,
+} from "../../atoms/filters";
 import { currentPageAtom } from "../../atoms/selection";
 import { getEntity, getEntityType } from "../../data/entities";
 import { Reference, relationTypes, RelationType } from "../../data/references";
-import { currentDocument } from "../../data/document";
 import { buildMatcher } from "../../utils/searchQuery";
 import { EntityPill } from "../shared/EntityPill";
-import { SearchBar } from "./SearchBar";
+import { FadeTruncate } from "../shared/FadeTruncate";
+import { ActiveFilterChips } from "./ActiveFilterChips";
 
 interface GroupedTarget {
   targetEntityId: string;
@@ -27,13 +42,15 @@ export function RelationshipsTreeView() {
   const [references] = useAtom(referencesAtom);
   const [searchQuery] = useAtom(searchQueryAtom);
   const [sortOrder] = useAtom(sortOrderAtom);
-  const [activeClusterRefIds, setActiveClusterRefIds] = useAtom(activeClusterRefIdsAtom);
+  const [activeClusterRefIds] = useAtom(activeClusterRefIdsAtom);
   const [relTypeFilters] = useAtom(relationshipTypeFiltersAtom);
   const [entityTypeFilters] = useAtom(relationshipEntityTypeFiltersAtom);
-  const setOverlayEntityId = useSetAtom(overlayEntityIdAtom);
+  const [zoom] = useAtom(relationshipsZoomAtom);
+  const [activeFilterCount] = useAtom(relationshipsActiveFilterCountAtom);
+  const [overlayEntityId, setOverlayEntityId] = useAtom(overlayEntityIdAtom);
   const setActiveDrawerTab = useSetAtom(activeDrawerTabAtom);
   const setCurrentPage = useSetAtom(currentPageAtom);
-  const setActiveRefId = useSetAtom(activeRefIdAtom);
+  const [activeRefId, setActiveRefId] = useAtom(activeRefIdAtom);
   const setScrollToHighlight = useSetAtom(scrollToHighlightAtom);
 
   const filtered = useMemo(() => {
@@ -44,13 +61,17 @@ export function RelationshipsTreeView() {
       result = result.filter((r) => cluster.has(r.id));
     }
 
-    const activeRelTypes = Object.entries(relTypeFilters).filter(([, v]) => v).map(([k]) => k);
+    const activeRelTypes = Object.entries(relTypeFilters)
+      .filter(([, v]) => v)
+      .map(([k]) => k);
     if (activeRelTypes.length > 0) {
       const set = new Set(activeRelTypes);
       result = result.filter((r) => set.has(r.relationType));
     }
 
-    const activeEntityTypes = Object.entries(entityTypeFilters).filter(([, v]) => v).map(([k]) => k);
+    const activeEntityTypes = Object.entries(entityTypeFilters)
+      .filter(([, v]) => v)
+      .map(([k]) => k);
     if (activeEntityTypes.length > 0) {
       const set = new Set(activeEntityTypes);
       result = result.filter((r) => {
@@ -90,8 +111,9 @@ export function RelationshipsTreeView() {
       const targets: GroupedTarget[] = [];
       for (const [targetEntityId, refs] of byTarget.entries()) {
         const sorted = [...refs].sort(
-          (a, b) => a.sourceSelection.page - b.sourceSelection.page ||
-                    a.sourceSelection.top - b.sourceSelection.top
+          (a, b) =>
+            a.sourceSelection.page - b.sourceSelection.page ||
+            a.sourceSelection.top - b.sourceSelection.top,
         );
         targets.push({ targetEntityId, refs: sorted });
       }
@@ -116,6 +138,10 @@ export function RelationshipsTreeView() {
   const entityCount = new Set(filtered.map((r) => r.targetEntityId)).size;
 
   const jumpToReference = (ref: Reference) => {
+    if (activeRefId === ref.id) {
+      setActiveRefId(null);
+      return;
+    }
     setActiveRefId(ref.id);
     setCurrentPage(ref.sourceSelection.page);
     setScrollToHighlight(ref.id);
@@ -124,25 +150,24 @@ export function RelationshipsTreeView() {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="pt-2" />
-      <SearchBar />
-
-      <div className="px-4 pb-3 flex items-center gap-3 text-[11px] text-ink-tertiary">
-        <span>
-          <span className="font-semibold text-ink-secondary tabular-nums">{filtered.length}</span>{" "}
+      <div
+        className="px-3 pt-3 pb-2 flex items-center gap-2 flex-wrap text-[11px] text-ink-tertiary shrink-0"
+      >
+        <span className="shrink-0">
+          <span className="font-semibold text-ink-secondary tabular-nums">
+            {filtered.length}
+          </span>{" "}
           relationships,{" "}
-          <span className="font-semibold text-ink-secondary tabular-nums">{entityCount}</span>{" "}
+          <span className="font-semibold text-ink-secondary tabular-nums">
+            {entityCount}
+          </span>{" "}
           entities
         </span>
-        {activeClusterRefIds && (
-          <button
-            onClick={() => setActiveClusterRefIds(null)}
-            className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-warm text-ink-tertiary hover:text-ink transition-colors"
-            aria-label="Clear selection"
-          >
-            <span>Filtered</span>
-            <X size={10} />
-          </button>
+        {activeFilterCount > 0 && (
+          <>
+            <span className="shrink-0 font-medium text-ink-secondary">Filters:</span>
+            <ActiveFilterChips />
+          </>
         )}
       </div>
 
@@ -156,42 +181,22 @@ export function RelationshipsTreeView() {
             </p>
           </div>
         ) : (
-          <div className="px-4 md:px-6 py-6">
-            {/* Narrow: stacked — source card then groups, no rail */}
-            <div className="md:hidden space-y-5">
-              <SourceCard />
-              <div className="space-y-5">
-                {groups.map((g) => (
-                  <GroupBlock
-                    key={g.relationType}
-                    group={g}
-                    onTargetClick={setOverlayEntityId}
-                    onMarkerClick={jumpToReference}
-                    hideRailConnector
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Wide: 3-column tree with sticky source + connector rail */}
-            <div className="hidden md:grid gap-0" style={{ gridTemplateColumns: "minmax(240px, 320px) 56px minmax(0, 1fr)" }}>
-              <div className="col-start-1 row-start-1 sticky top-2 self-start">
-                <SourceCard />
-              </div>
-              <div className="col-start-3 row-start-1 space-y-6 min-w-0">
-                {groups.map((g) => (
-                  <GroupBlock
-                    key={g.relationType}
-                    group={g}
-                    onTargetClick={setOverlayEntityId}
-                    onMarkerClick={jumpToReference}
-                  />
-                ))}
-              </div>
-              <div className="col-start-2 row-start-1 relative">
-                <ConnectorRail count={groups.length} />
-              </div>
-            </div>
+          <div
+            className={`py-4 ${
+              zoom === "detail" ? "space-y-5" : zoom === "compact" ? "space-y-3" : "space-y-2.5"
+            }`}
+          >
+            {groups.map((g) => (
+              <GroupBlock
+                key={g.relationType}
+                group={g}
+                zoom={zoom}
+                selectedEntityId={overlayEntityId}
+                selectedRefId={activeRefId}
+                onTargetClick={setOverlayEntityId}
+                onMarkerClick={jumpToReference}
+              />
+            ))}
           </div>
         )}
       </div>
@@ -199,146 +204,278 @@ export function RelationshipsTreeView() {
   );
 }
 
-function SourceCard() {
-  const type = getEntityType(currentDocument.entityTypeId);
-  return (
-    <div className="bg-paper border border-border rounded-md p-3 shadow-sm">
-      <div className="text-[13px] font-medium text-ink leading-snug mb-2 line-clamp-3">
-        {currentDocument.title}
-      </div>
-      <EntityPill typeId={currentDocument.entityTypeId} label={type?.name} />
-    </div>
-  );
-}
-
-function ConnectorRail({ count }: { count: number }) {
-  if (count === 0) return null;
-  return (
-    <div className="absolute inset-0 flex items-center justify-center">
-      <div
-        className="absolute left-1/2 -translate-x-1/2"
-        style={{
-          top: 16,
-          bottom: 16,
-          width: 1,
-          backgroundColor: "var(--border-primary)",
-        }}
-      />
-    </div>
-  );
-}
-
 interface GroupBlockProps {
   group: TypeGroup;
+  zoom: RelationshipsZoom;
+  selectedEntityId: string | null;
+  selectedRefId: string | null;
   onTargetClick: (entityId: string) => void;
   onMarkerClick: (ref: Reference) => void;
-  hideRailConnector?: boolean;
 }
 
-function GroupBlock({ group, onTargetClick, onMarkerClick, hideRailConnector }: GroupBlockProps) {
+function GroupBlock({
+  group,
+  zoom,
+  selectedEntityId,
+  selectedRefId,
+  onTargetClick,
+  onMarkerClick,
+}: GroupBlockProps) {
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const headerPadY = zoom === "detail" ? "py-1.5" : "py-1";
+  const headerText = zoom === "overview" ? "text-[11px]" : "text-xs";
   return (
-    <div className="relative">
-      {/* Group header bar — sticky to the scroll container top */}
+    <div>
       <div
-        className="sticky top-0 z-10 px-3 py-1.5 rounded-md text-xs font-medium text-ink-secondary flex items-center gap-2"
-        style={{ backgroundColor: "var(--bg-vellum, #eeeae0)" }}
+        className={`sticky top-0 z-10 mx-3 px-3 ${headerPadY} rounded-md ${headerText} font-medium text-ink-secondary flex items-center gap-2`}
+        style={{
+          backgroundColor: "var(--bg-vellum, #eeeae0)",
+        }}
       >
-        {!hideRailConnector && (
-          <>
-            <span
-              className="absolute top-1/2 -translate-y-1/2"
-              style={{
-                right: "100%",
-                width: 28,
-                height: 1,
-                backgroundColor: "var(--border-primary)",
-              }}
-            />
-            <span
-              className="absolute top-1/2 -translate-y-1/2 rounded-full"
-              style={{
-                right: "calc(100% + 28px - 4px)",
-                width: 8, height: 8,
-                backgroundColor: "var(--border-primary)",
-              }}
-            />
-          </>
-        )}
         <LinkIcon size={11} className="text-ink-tertiary" />
-        <span>{group.label}</span>
-        <span className="ml-auto text-ink-tertiary tabular-nums">
+        <span className="truncate">{group.label}</span>
+        <span className="ml-auto text-ink-tertiary tabular-nums shrink-0">
           {group.targets.length}
-          {group.targets.length !== group.totalRefs && <> · {group.totalRefs} refs</>}
+          {group.targets.length !== group.totalRefs && <> · {group.totalRefs}</>}
         </span>
       </div>
 
-      {/* Targets */}
-      <div className="mt-2 space-y-1.5">
-        {group.targets.map((t) => (
-          <TargetCard
-            key={t.targetEntityId}
-            targetEntityId={t.targetEntityId}
-            refs={t.refs}
-            onTargetClick={onTargetClick}
-            onMarkerClick={onMarkerClick}
-          />
-        ))}
-      </div>
+      {zoom === "overview" ? (
+        <div className="relative mt-1.5 mx-3">
+          <div className="flex flex-wrap gap-1.5">
+            {group.targets.map((t) => (
+              <TargetCardOverview
+                key={t.targetEntityId}
+                targetEntityId={t.targetEntityId}
+                refs={t.refs}
+                selected={selectedEntityId === t.targetEntityId}
+                hovered={hoveredId === t.targetEntityId}
+                onHover={(entering) =>
+                  setHoveredId(entering ? t.targetEntityId : null)
+                }
+                onTargetClick={onTargetClick}
+              />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="mt-2 mx-3 border border-border/60 rounded-md overflow-hidden bg-paper">
+          {group.targets.map((t) =>
+            zoom === "compact" ? (
+              <TargetCardCompact
+                key={t.targetEntityId}
+                targetEntityId={t.targetEntityId}
+                refs={t.refs}
+                selected={
+                  selectedEntityId === t.targetEntityId ||
+                  (selectedRefId !== null &&
+                    t.refs.some((r) => r.id === selectedRefId))
+                }
+                onTargetClick={onTargetClick}
+              />
+            ) : (
+              <TargetCardDetail
+                key={t.targetEntityId}
+                targetEntityId={t.targetEntityId}
+                refs={t.refs}
+                selected={
+                  selectedEntityId === t.targetEntityId ||
+                  (selectedRefId !== null &&
+                    t.refs.some((r) => r.id === selectedRefId))
+                }
+                selectedRefId={selectedRefId}
+                onTargetClick={onTargetClick}
+                onMarkerClick={onMarkerClick}
+              />
+            ),
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-interface TargetCardProps {
+interface TargetProps {
   targetEntityId: string;
   refs: Reference[];
+  selected: boolean;
   onTargetClick: (entityId: string) => void;
+}
+
+interface TargetDetailProps extends TargetProps {
+  selectedRefId: string | null;
   onMarkerClick: (ref: Reference) => void;
 }
 
-function TargetCard({ targetEntityId, refs, onTargetClick, onMarkerClick }: TargetCardProps) {
+function TargetCardDetail({
+  targetEntityId,
+  refs,
+  selected,
+  selectedRefId,
+  onTargetClick,
+  onMarkerClick,
+}: TargetDetailProps) {
   const entity = getEntity(targetEntityId);
   const type = entity ? getEntityType(entity.typeId) : undefined;
+  const firstRef = refs[0];
 
   return (
     <div
       role="button"
       tabIndex={0}
+      aria-pressed={selected}
       onClick={() => onTargetClick(targetEntityId)}
-      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onTargetClick(targetEntityId); } }}
-      className="bg-paper border border-border rounded-md p-3 shadow-sm hover:border-border-dark transition-colors cursor-pointer"
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onTargetClick(targetEntityId);
+        }
+      }}
+      className={`px-3 py-2.5 border-b border-border/50 last:border-b-0 cursor-pointer transition-colors ${
+        selected ? "bg-parchment" : ""
+      }`}
     >
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <div className="text-[13px] font-medium text-ink leading-snug flex-1 min-w-0 line-clamp-2">
-          {entity?.title ?? "Unknown entity"}
-        </div>
-        <button
-          onClick={(e) => { e.stopPropagation(); onTargetClick(targetEntityId); }}
-          className="shrink-0 flex items-center gap-1 px-2 py-1 border border-border rounded text-[11px] font-medium text-ink-secondary hover:bg-warm transition-colors"
-          aria-label="Preview target entity"
-        >
-          <ChevronRight size={10} />
-          View
-        </button>
+      <div className="flex items-start justify-between gap-2 mb-1.5">
+        <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
+        {refs.length > 0 && (
+          <div className="flex flex-wrap justify-end gap-1 shrink-0">
+            {refs.map((ref) => {
+              const active = selectedRefId === ref.id;
+              return (
+                <span
+                  key={ref.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onMarkerClick(ref);
+                  }}
+                  aria-pressed={active}
+                  title={ref.sourceSelection.text.slice(0, 120)}
+                  className={`inline-flex items-center px-1.5 py-0.5 text-xs font-mono rounded tabular-nums transition-colors cursor-pointer ${
+                    active
+                      ? "bg-ink text-paper"
+                      : "bg-vellum text-ink-secondary hover:bg-border hover:text-ink"
+                  }`}
+                >
+                  p.{ref.sourceSelection.page}
+                </span>
+              );
+            })}
+          </div>
+        )}
       </div>
-      <EntityPill typeId={entity?.typeId ?? ""} label={type?.name} />
-
-      {/* Evidence markers — one dashed chip per underlying ref */}
-      {refs.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-1">
-          {refs.map((ref) => (
-            <button
-              key={ref.id}
-              onClick={(e) => { e.stopPropagation(); onMarkerClick(ref); }}
-              title={ref.sourceSelection.text.slice(0, 120)}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-dashed text-[11px] text-ink-tertiary tabular-nums hover:text-ink hover:border-border-dark transition-colors"
-              style={{ borderColor: "var(--border-primary)" }}
-            >
-              <Quote size={9} />
-              p. {ref.sourceSelection.page}
-            </button>
-          ))}
-        </div>
+      {firstRef && (
+        <FadeTruncate
+          text={firstRef.sourceSelection.text}
+          maxLines={2}
+          className="text-xs text-ink-secondary leading-relaxed"
+          fadeTo={selected ? "var(--bg-primary)" : undefined}
+        />
       )}
+      <div className="flex items-center justify-between mt-1 text-[10px] text-ink-tertiary">
+        <span>{type?.name ?? ""}</span>
+        <span className="tabular-nums">
+          {refs.length === 1 ? "1 mention" : `${refs.length} mentions`}
+        </span>
+      </div>
     </div>
+  );
+}
+
+function TargetCardCompact({
+  targetEntityId,
+  refs,
+  selected,
+  onTargetClick,
+}: TargetProps) {
+  const entity = getEntity(targetEntityId);
+
+  return (
+    <button
+      onClick={() => onTargetClick(targetEntityId)}
+      aria-pressed={selected}
+      className={`w-full flex items-center justify-between gap-2 px-3 py-2 border-b border-border/50 last:border-b-0 transition-colors cursor-pointer text-left ${
+        selected ? "bg-parchment" : ""
+      }`}
+      aria-label={`Open ${entity?.title ?? "entity"}`}
+    >
+      <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
+      <span className="shrink-0 text-[11px] text-ink-tertiary tabular-nums">
+        {refs.length}
+      </span>
+    </button>
+  );
+}
+
+interface TargetOverviewProps extends TargetProps {
+  hovered: boolean;
+  onHover: (entering: boolean) => void;
+}
+
+function TargetCardOverview({
+  targetEntityId,
+  refs,
+  selected,
+  hovered,
+  onHover,
+  onTargetClick,
+}: TargetOverviewProps) {
+  const entity = getEntity(targetEntityId);
+  const type = entity ? getEntityType(entity.typeId) : undefined;
+  const tooltipRef = useRef<HTMLSpanElement>(null);
+  const [shiftX, setShiftX] = useState(0);
+
+  useLayoutEffect(() => {
+    if (!hovered) {
+      setShiftX(0);
+      return;
+    }
+    const el = tooltipRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const margin = 8;
+    let shift = 0;
+    if (rect.left < margin) shift = margin - rect.left;
+    else if (rect.right > window.innerWidth - margin)
+      shift = window.innerWidth - margin - rect.right;
+    setShiftX(shift);
+  }, [hovered]);
+
+  return (
+    <span className="relative inline-flex">
+      <button
+        onClick={() => onTargetClick(targetEntityId)}
+        onMouseEnter={() => onHover(true)}
+        onMouseLeave={() => onHover(false)}
+        onFocus={() => onHover(true)}
+        onBlur={() => onHover(false)}
+        aria-pressed={selected}
+        aria-label={`${entity?.title ?? "Unknown"} with ${refs.length} evidence items`}
+        className={`shrink-0 rounded-full transition-shadow cursor-pointer ${
+          selected ? "ring-2 ring-ink/30" : "hover:ring-2 hover:ring-ink/20"
+        }`}
+        style={{
+          backgroundColor: type?.color ?? "var(--border-primary)",
+          width: 10,
+          height: 10,
+        }}
+      />
+      {hovered && (
+        <span
+          ref={tooltipRef}
+          role="tooltip"
+          className="absolute z-20 bottom-full left-1/2 mb-1.5 px-2 py-1 rounded whitespace-nowrap text-[11px] shadow-md pointer-events-none"
+          style={{
+            backgroundColor: "var(--ink, #1c1712)",
+            color: "var(--paper, #fff)",
+            transform: `translateX(calc(-50% + ${shiftX}px))`,
+          }}
+        >
+          <span className="font-medium">{entity?.title ?? "Unknown"}</span>
+          <span className="opacity-70 ml-1.5">
+            {type?.name ?? "Unknown"} · {refs.length}
+          </span>
+        </span>
+      )}
+    </span>
   );
 }

@@ -2,7 +2,21 @@ import { useState, useMemo, useCallback, type ReactNode } from "react";
 import { useAtom } from "jotai";
 import { referencesAtom, toastsAtom } from "../atoms/references";
 import { languageAtom, type Language } from "../atoms/language";
-import { viewModeAtom, searchQueryAtom, sortOrderAtom, expandAllSignalAtom, collapseAllSignalAtom, activeClusterRefIdsAtom } from "../atoms/filters";
+import {
+  viewModeAtom,
+  searchQueryAtom,
+  sortOrderAtom,
+  expandAllSignalAtom,
+  collapseAllSignalAtom,
+  activeClusterRefIdsAtom,
+  filtersDrawerOpenAtom,
+  relationshipsActiveFilterCountAtom,
+  referencesActiveFilterCountAtom,
+  relationshipTypeFiltersAtom,
+  relationshipEntityTypeFiltersAtom,
+  relationshipsViewModeAtom,
+} from "../atoms/filters";
+import { ActiveFilterChips } from "../components/references/ActiveFilterChips";
 import { getEntity, getEntityType } from "../data/entities";
 import { Reference, relationTypes } from "../data/references";
 import { currentDocument } from "../data/document";
@@ -28,6 +42,10 @@ import { Link2 } from "lucide-react";
 import { EntityOverlay } from "../components/references/EntityOverlay";
 import { RelationshipsTreeView } from "../components/references/RelationshipsTreeView";
 import { RelationshipsFilterDrawer } from "../components/references/RelationshipsFilterDrawer";
+import { RelationshipsGraphView } from "../components/references/RelationshipsGraphView";
+import { ZoomControl } from "../components/references/ZoomControl";
+import { FiltersButton } from "../components/shared/FiltersButton";
+import { FiltersDrawer } from "../components/shared/FiltersDrawer";
 import { deriveRelationships } from "../utils/relationships";
 
 const mainTabs = [
@@ -147,6 +165,22 @@ interface RelationshipsMainViewProps {
 
 function RelationshipsMainView({ tabs, activeTab, onTabChange }: RelationshipsMainViewProps) {
   const [language, setLanguage] = useAtom(languageAtom);
+  const [filtersOpen, setFiltersOpen] = useAtom(filtersDrawerOpenAtom);
+  const [activeFilterCount] = useAtom(relationshipsActiveFilterCountAtom);
+  const [viewMode] = useAtom(relationshipsViewModeAtom);
+  const [, setRelTypeFilters] = useAtom(relationshipTypeFiltersAtom);
+  const [, setEntityTypeFilters] = useAtom(relationshipEntityTypeFiltersAtom);
+  const [, setSearchQuery] = useAtom(searchQueryAtom);
+  const [, setSortOrder] = useAtom(sortOrderAtom);
+  const [, setActiveClusterRefIds] = useAtom(activeClusterRefIdsAtom);
+
+  const clearAllFilters = () => {
+    setRelTypeFilters({});
+    setEntityTypeFilters({});
+    setSearchQuery("");
+    setSortOrder("none");
+    setActiveClusterRefIds(null);
+  };
 
   return (
     <AdaptiveSplitView
@@ -163,7 +197,7 @@ function RelationshipsMainView({ tabs, activeTab, onTabChange }: RelationshipsMa
         },
       ]}
       left={
-        <div className="flex flex-col h-full min-h-0 bg-paper">
+        <div className="flex flex-col h-full min-h-0 bg-paper relative overflow-hidden">
           <MainTabs
             tabs={tabs}
             activeId={activeTab}
@@ -174,18 +208,56 @@ function RelationshipsMainView({ tabs, activeTab, onTabChange }: RelationshipsMa
             onLanguageChange={(lang) => setLanguage(lang as Language)}
           />
           <DocMeta showPdfSelector={false} />
-          <RelationshipsTreeView />
+
+          <div className="pt-2" />
+          <SearchBar
+            rightSlot={
+              <>
+                <FiltersButton
+                  activeCount={activeFilterCount}
+                  onClick={() => setFiltersOpen(true)}
+                  size="sm"
+                />
+                <ZoomControl />
+              </>
+            }
+          />
+
+          {viewMode === "graph" ? (
+            <div className="flex-1 flex flex-col min-h-0">
+              <RelationshipsGraphView />
+            </div>
+          ) : (
+            <RelationshipsTreeView />
+          )}
         </div>
       }
       right={
         <div className="flex flex-col h-full min-h-0 relative overflow-hidden">
           <EntityOverlay />
           <DrawerTabs
-            tabs={[{ id: "filters", label: "Filters" }]}
-            activeId="filters"
+            tabs={[{ id: "document", label: "Document" }]}
+            activeId="document"
             onChange={() => {}}
           />
-          <RelationshipsFilterDrawer />
+          <FiltersDrawer
+            open={filtersOpen}
+            onClose={() => setFiltersOpen(false)}
+            width={720}
+            footer={
+              activeFilterCount > 0 ? (
+                <button
+                  onClick={clearAllFilters}
+                  className="text-[11px] font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
+                >
+                  Clear all filters
+                </button>
+              ) : null
+            }
+          >
+            <RelationshipsFilterDrawer />
+          </FiltersDrawer>
+          <DocumentViewer showMinimap={false} />
         </div>
       }
       defaultRightWidth={560}
@@ -213,12 +285,39 @@ function ReferencesMainView({ tabs, activeTab, onTabChange }: ReferencesMainView
   const [, setExpandSignal] = useAtom(expandAllSignalAtom);
   const [, setCollapseSignal] = useAtom(collapseAllSignalAtom);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-  const [activeClusterRefIds] = useAtom(activeClusterRefIdsAtom);
+  const [activeClusterRefIds, setActiveClusterRefIds] = useAtom(activeClusterRefIdsAtom);
+  const [filtersOpen, setFiltersOpen] = useAtom(filtersDrawerOpenAtom);
+  const [activeFilterCount] = useAtom(referencesActiveFilterCountAtom);
+  const [relTypeFilters, setRelTypeFilters] = useAtom(relationshipTypeFiltersAtom);
+  const [entityTypeFilters, setEntityTypeFilters] = useAtom(relationshipEntityTypeFiltersAtom);
+  const [, setSearchQuery] = useAtom(searchQueryAtom);
+  const [, setSortOrder] = useAtom(sortOrderAtom);
+
+  const clearAllFilters = () => {
+    setRelTypeFilters({});
+    setEntityTypeFilters({});
+    setSearchQuery("");
+    setSortOrder("none");
+    setActiveClusterRefIds(null);
+  };
 
   const filtered = useMemo(() => {
     let result = references;
     if (activeClusterRefIds) {
       result = result.filter((ref) => activeClusterRefIds.includes(ref.id));
+    }
+    const activeRelTypes = Object.entries(relTypeFilters).filter(([, v]) => v).map(([k]) => k);
+    if (activeRelTypes.length > 0) {
+      const set = new Set(activeRelTypes);
+      result = result.filter((r) => set.has(r.relationType));
+    }
+    const activeEntityTypes = Object.entries(entityTypeFilters).filter(([, v]) => v).map(([k]) => k);
+    if (activeEntityTypes.length > 0) {
+      const set = new Set(activeEntityTypes);
+      result = result.filter((r) => {
+        const entity = getEntity(r.targetEntityId);
+        return entity ? set.has(entity.typeId) : false;
+      });
     }
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -245,7 +344,7 @@ function ReferencesMainView({ tabs, activeTab, onTabChange }: ReferencesMainView
       const nameB = getEntity(b.targetEntityId)?.title ?? "";
       return nameA.localeCompare(nameB) * dir;
     });
-  }, [references, searchQuery, sortOrder, activeClusterRefIds]);
+  }, [references, searchQuery, sortOrder, activeClusterRefIds, relTypeFilters, entityTypeFilters]);
 
   const handleDelete = useCallback((id: string) => {
     setDeleteTarget(id);
@@ -327,13 +426,35 @@ function ReferencesMainView({ tabs, activeTab, onTabChange }: ReferencesMainView
           <DocMeta showPdfSelector={false} />
 
           <div className="pt-2" />
-          <SearchBar />
+          <SearchBar
+            rightSlot={
+              <FiltersButton
+                activeCount={activeFilterCount}
+                onClick={() => setFiltersOpen(true)}
+                size="sm"
+              />
+            }
+          />
+          <div className="px-3 pt-1 pb-2 flex items-center gap-2 flex-wrap text-[11px] text-ink-tertiary">
+            <span className="shrink-0">
+              <span className="font-semibold text-ink-secondary tabular-nums">
+                {filtered.length}
+              </span>{" "}
+              references
+            </span>
+            {activeFilterCount > 0 && (
+              <>
+                <span className="shrink-0 font-medium text-ink-secondary">Filters:</span>
+                <ActiveFilterChips />
+              </>
+            )}
+          </div>
           <FiltersRow
             onExpandAll={() => setExpandSignal((s) => s + 1)}
             onCollapseAll={() => setCollapseSignal((s) => s + 1)}
           />
 
-          <div className="flex-1 overflow-auto pb-8 bg-warm">
+          <div className="flex-1 overflow-auto pb-8 bg-warm relative">
             {filtered.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <Link2 size={36} className="text-ink-tertiary/40 mb-3" />
@@ -343,13 +464,15 @@ function ReferencesMainView({ tabs, activeTab, onTabChange }: ReferencesMainView
                 </p>
               </div>
             ) : viewMode === "all" ? (
-              <div className="px-4 py-3 space-y-1.5">
-                {filtered.map((ref) => (
-                  <RefRow key={ref.id} reference={ref} onDelete={handleDelete} />
-                ))}
+              <div className="px-3 py-3">
+                <div className="border border-border/60 rounded-md overflow-hidden bg-paper">
+                  {filtered.map((ref) => (
+                    <RefRow key={ref.id} reference={ref} onDelete={handleDelete} />
+                  ))}
+                </div>
               </div>
             ) : viewMode === "by-entity-type" ? (
-              <div className="px-4 py-3 space-y-1.5">
+              <div className="px-3 py-3 space-y-1.5">
                 {Array.from(groupedByEntityType.entries()).map(([typeId, refs]) => {
                   const type = getEntityType(typeId);
                   return (
@@ -364,7 +487,7 @@ function ReferencesMainView({ tabs, activeTab, onTabChange }: ReferencesMainView
                 })}
               </div>
             ) : viewMode === "by-relation-type" ? (
-              <div className="px-4 py-3 space-y-1.5">
+              <div className="px-3 py-3 space-y-1.5">
                 {Array.from(groupedByRelType.entries()).map(([relType, refs]) => {
                   const label =
                     relationTypes.find((r) => r.id === relType)?.label ?? relType;
@@ -379,7 +502,7 @@ function ReferencesMainView({ tabs, activeTab, onTabChange }: ReferencesMainView
                 })}
               </div>
             ) : viewMode === "density" ? (
-              <div className="px-4 py-3">
+              <div className="px-3 py-3">
                 <DensityCard
                   references={filtered}
                   totalPages={currentDocument.pages}
@@ -407,7 +530,24 @@ function ReferencesMainView({ tabs, activeTab, onTabChange }: ReferencesMainView
             activeId="document"
             onChange={() => {}}
           />
-          <DocumentViewer />
+          <DocumentViewer showMinimap={false} />
+          <FiltersDrawer
+            open={filtersOpen}
+            onClose={() => setFiltersOpen(false)}
+            width={720}
+            footer={
+              activeFilterCount > 0 ? (
+                <button
+                  onClick={clearAllFilters}
+                  className="text-[11px] font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
+                >
+                  Clear all filters
+                </button>
+              ) : null
+            }
+          >
+            <RelationshipsFilterDrawer />
+          </FiltersDrawer>
         </div>
       }
       defaultRightWidth={560}

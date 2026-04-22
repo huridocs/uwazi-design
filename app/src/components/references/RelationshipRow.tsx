@@ -1,5 +1,5 @@
-import { Eye, FileText } from "lucide-react";
-import { useSetAtom } from "jotai";
+import { FileText } from "lucide-react";
+import { useAtom, useSetAtom } from "jotai";
 import { Relationship } from "../../utils/relationships";
 import { getEntity } from "../../data/entities";
 import { relationTypes } from "../../data/references";
@@ -13,13 +13,15 @@ interface RelationshipRowProps {
 
 export function RelationshipRow({ relationship }: RelationshipRowProps) {
   const entity = getEntity(relationship.targetEntityId);
-  const setOverlayEntityId = useSetAtom(overlayEntityIdAtom);
+  const [overlayEntityId, setOverlayEntityId] = useAtom(overlayEntityIdAtom);
   const setActiveDrawerTab = useSetAtom(activeDrawerTabAtom);
   const setActiveClusterRefIds = useSetAtom(activeClusterRefIdsAtom);
 
   const relLabel =
     relationTypes.find((r) => r.id === relationship.relationType)?.label ??
     relationship.relationType.replace("_", " ");
+
+  const selected = overlayEntityId === relationship.targetEntityId;
 
   const jumpToEvidence = () => {
     setActiveClusterRefIds(relationship.refIds);
@@ -32,31 +34,35 @@ export function RelationshipRow({ relationship }: RelationshipRowProps) {
     <div
       role="button"
       tabIndex={0}
+      aria-pressed={selected}
       onClick={openOverlay}
-      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openOverlay(); } }}
-      className="group px-3 py-2 border-b border-border/50 cursor-pointer hover:bg-warm transition-colors"
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          openOverlay();
+        }
+      }}
+      className={`px-3 py-2 border-b border-border/50 cursor-pointer transition-colors ${
+        selected ? "bg-parchment" : "hover:bg-warm"
+      }`}
     >
       <div className="flex items-center justify-between gap-2">
         <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
         <button
-          onClick={(e) => { e.stopPropagation(); jumpToEvidence(); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            jumpToEvidence();
+          }}
           aria-label={`${relationship.evidenceCount} evidence references`}
           title="Jump to evidence in References"
-          className="shrink-0 flex items-center gap-1 px-1.5 h-5 rounded bg-warm hover:bg-parchment text-ink-tertiary hover:text-ink-secondary text-[10px] font-medium tabular-nums transition-colors"
+          className="shrink-0 flex items-center gap-1 px-1.5 h-5 rounded bg-warm hover:bg-parchment text-ink-tertiary hover:text-ink-secondary text-[10px] font-medium tabular-nums transition-colors cursor-pointer"
         >
           <FileText size={10} />
           {relationship.evidenceCount}
         </button>
       </div>
-      <div className="flex items-center justify-between mt-1.5">
+      <div className="mt-1.5">
         <span className="text-[10px] text-ink-tertiary capitalize">{relLabel}</span>
-        <button
-          onClick={(e) => { e.stopPropagation(); openOverlay(); }}
-          aria-label="Preview entity"
-          className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-warm text-ink-muted hover:text-ink transition-all"
-        >
-          <Eye size={12} />
-        </button>
       </div>
     </div>
   );

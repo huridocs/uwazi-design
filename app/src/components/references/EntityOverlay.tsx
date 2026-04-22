@@ -1,4 +1,5 @@
 import { useAtom } from "jotai";
+import { useEffect, useRef } from "react";
 import { overlayEntityIdAtom, referencesAtom } from "../../atoms/references";
 import { getEntity, getEntityType } from "../../data/entities";
 import { EntityPill } from "../shared/EntityPill";
@@ -9,6 +10,7 @@ import { X, FileText, Link2, Calendar, Tag } from "lucide-react";
 export function EntityOverlay() {
   const [entityId, setEntityId] = useAtom(overlayEntityIdAtom);
   const [references] = useAtom(referencesAtom);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   const entity = entityId ? getEntity(entityId) : undefined;
   const entityType = entity ? getEntityType(entity.typeId) : undefined;
@@ -19,6 +21,29 @@ export function EntityOverlay() {
     : [];
 
   const isOpen = entityId !== null && entity !== undefined;
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      const panel = panelRef.current;
+      if (!panel) return;
+      if (panel.contains(e.target as Node)) return;
+      setEntityId(null);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setEntityId(null);
+    };
+    // Defer one tick so the click that opened the overlay doesn't immediately close it.
+    const t = window.setTimeout(() => {
+      document.addEventListener("pointerdown", onPointerDown);
+      document.addEventListener("keydown", onKey);
+    }, 0);
+    return () => {
+      window.clearTimeout(t);
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [isOpen, setEntityId]);
 
   return (
     <>
@@ -36,6 +61,7 @@ export function EntityOverlay() {
 
       {/* Panel */}
       <div
+        ref={panelRef}
         className="absolute top-0 right-0 bottom-0 flex flex-col bg-paper transition-transform duration-250 ease-out"
         style={{
           width: "calc(100% - 12px)",

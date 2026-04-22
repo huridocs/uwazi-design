@@ -1,9 +1,13 @@
 import { Search, X, HelpCircle } from "lucide-react";
 import { useAtom } from "jotai";
 import { searchQueryAtom } from "../../atoms/filters";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
-export function SearchBar() {
+interface SearchBarProps {
+  rightSlot?: ReactNode;
+}
+
+export function SearchBar({ rightSlot }: SearchBarProps = {}) {
   const [query, setQuery] = useAtom(searchQueryAtom);
   const inputRef = useRef<HTMLInputElement>(null);
   const hintRef = useRef<HTMLDivElement>(null);
@@ -21,8 +25,8 @@ export function SearchBar() {
   const rightPad = query ? 32 : 52;
 
   return (
-    <div className="px-3 pt-0.5 pb-2">
-      <div className="relative">
+    <div className="px-3 pt-0.5 pb-2 flex items-center gap-2">
+      <div className="relative flex-1 min-w-0">
         <input
           ref={inputRef}
           type="text"
@@ -92,6 +96,7 @@ export function SearchBar() {
           )}
         </div>
       </div>
+      {rightSlot}
     </div>
   );
 }
