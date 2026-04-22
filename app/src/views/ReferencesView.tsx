@@ -26,6 +26,9 @@ import { FilesView } from "./FilesView";
 import { MetadataView } from "./MetadataView";
 import { Link2 } from "lucide-react";
 import { EntityOverlay } from "../components/references/EntityOverlay";
+import { RelationshipsTreeView } from "../components/references/RelationshipsTreeView";
+import { RelationshipsFilterDrawer } from "../components/references/RelationshipsFilterDrawer";
+import { deriveRelationships } from "../utils/relationships";
 
 const mainTabs = [
   { id: "metadata", label: "Metadata" },
@@ -40,9 +43,11 @@ export function ReferencesView() {
   const [references] = useAtom(referencesAtom);
   const [language, setLanguage] = useAtom(languageAtom);
 
-  const tabs = mainTabs.map((t) =>
-    t.id === "references" ? { ...t, count: references.length } : t
-  );
+  const tabs = mainTabs.map((t) => {
+    if (t.id === "references") return { ...t, count: references.length };
+    if (t.id === "relationships") return { ...t, count: deriveRelationships(references).length };
+    return t;
+  });
 
   if (activeTab === "metadata") {
     return (
@@ -72,6 +77,16 @@ export function ReferencesView() {
     );
   }
 
+  if (activeTab === "relationships") {
+    return (
+      <>
+        <RelationshipsMainView tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+        <EntityPickerModal />
+        <ToastContainer />
+      </>
+    );
+  }
+
   const renderLeft = (menuTrigger?: ReactNode) => (
     <div className="flex flex-col h-full min-h-0 bg-paper">
       <MainTabs
@@ -94,9 +109,9 @@ export function ReferencesView() {
         left={renderLeft()}
         mobileLeft={(menuTrigger) => renderLeft(menuTrigger)}
         right={<ReferencePanel />}
-        defaultRightWidth={480}
-        minRightWidth={380}
-        maxRightWidth={600}
+        defaultRightWidth={560}
+        minRightWidth={460}
+        maxRightWidth={720}
         mobileSections={[
           {
             id: "references",
@@ -119,6 +134,64 @@ export function ReferencesView() {
       <EntityPickerModal />
       <ToastContainer />
     </>
+  );
+}
+
+/* ── Relationships Main View ── */
+
+interface RelationshipsMainViewProps {
+  tabs: { id: string; label: string; count?: number }[];
+  activeTab: string;
+  onTabChange: (id: string) => void;
+}
+
+function RelationshipsMainView({ tabs, activeTab, onTabChange }: RelationshipsMainViewProps) {
+  const [language, setLanguage] = useAtom(languageAtom);
+
+  return (
+    <AdaptiveSplitView
+      mobileSections={[
+        {
+          id: "document",
+          label: "Document",
+          content: (
+            <div className="flex flex-col h-full min-h-0 relative overflow-hidden">
+              <EntityOverlay />
+              <DocumentViewer />
+            </div>
+          ),
+        },
+      ]}
+      left={
+        <div className="flex flex-col h-full min-h-0 bg-paper">
+          <MainTabs
+            tabs={tabs}
+            activeId={activeTab}
+            onChange={onTabChange}
+            languages={["EN", "ES", "FR", "AR"]}
+            availableLanguages={["EN", "ES", "FR", "AR"]}
+            activeLanguage={language}
+            onLanguageChange={(lang) => setLanguage(lang as Language)}
+          />
+          <DocMeta showPdfSelector={false} />
+          <RelationshipsTreeView />
+        </div>
+      }
+      right={
+        <div className="flex flex-col h-full min-h-0 relative overflow-hidden">
+          <EntityOverlay />
+          <DrawerTabs
+            tabs={[{ id: "filters", label: "Filters" }]}
+            activeId="filters"
+            onChange={() => {}}
+          />
+          <RelationshipsFilterDrawer />
+        </div>
+      }
+      defaultRightWidth={560}
+      minRightWidth={460}
+      maxRightWidth={720}
+    />
   );
 }
 
@@ -337,9 +410,9 @@ function ReferencesMainView({ tabs, activeTab, onTabChange }: ReferencesMainView
           <DocumentViewer />
         </div>
       }
-      defaultRightWidth={480}
-      minRightWidth={380}
-      maxRightWidth={600}
+      defaultRightWidth={560}
+      minRightWidth={460}
+      maxRightWidth={720}
     />
   );
 }

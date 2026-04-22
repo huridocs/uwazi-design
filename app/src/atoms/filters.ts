@@ -31,3 +31,9 @@ export const totalGroupCountAtom = atom(0);
 
 /** IDs of refs in the currently expanded cluster on the minimap track */
 export const activeClusterRefIdsAtom = atom<string[] | null>(null);
+
+/** Relationship tab: selected relation types (empty = no filter). */
+export const relationshipTypeFiltersAtom = atom<Record<string, boolean>>({});
+
+/** Relationship tab: selected target entity types (empty = no filter). */
+export const relationshipEntityTypeFiltersAtom = atom<Record<string, boolean>>({});

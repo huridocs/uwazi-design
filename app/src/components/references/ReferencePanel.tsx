@@ -15,14 +15,62 @@ import { DrawerActionBar } from "./DrawerActionBar";
 import { ConfirmDialog } from "../shared/ConfirmDialog";
 import { MetadataDrawerContent } from "./MetadataDrawerContent";
 import { TocDrawerContent } from "./TocDrawerContent";
-import { Link2 } from "lucide-react";
+import { Link2, X } from "lucide-react";
 import { EntityOverlay } from "./EntityOverlay";
+import { buildMatcher } from "../../utils/searchQuery";
+import { deriveRelationships } from "../../utils/relationships";
+import { RelationshipPanel } from "./RelationshipPanel";
+
+function FilterChip({
+  count,
+  total,
+  pages,
+  onClear,
+}: {
+  count: number;
+  total: number;
+  pages: number[];
+  onClear: () => void;
+}) {
+  const pageLabel =
+    pages.length === 0
+      ? ""
+      : pages.length === 1
+        ? `Page ${pages[0]}`
+        : pages.length <= 3
+          ? `Pages ${pages.join(", ")}`
+          : `Pages ${pages[0]}–${pages[pages.length - 1]}`;
+  return (
+    <div className="px-3 pt-2 pb-1 shrink-0">
+      <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-md bg-warm">
+        <div className="flex items-center gap-1.5 min-w-0 text-[11px]">
+          {pageLabel && (
+            <span className="font-semibold text-ink-secondary tabular-nums shrink-0">
+              {pageLabel}
+            </span>
+          )}
+          <span className="text-ink-tertiary tabular-nums">
+            {pageLabel && "·"} Showing {count} of {total}
+          </span>
+        </div>
+        <button
+          onClick={onClear}
+          className="shrink-0 flex items-center justify-center rounded-sm text-ink-tertiary hover:text-ink transition-colors"
+          aria-label="Clear selection"
+          style={{ width: 16, height: 16 }}
+        >
+          <X size={12} />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 const baseDrawerTabs = [
   { id: "metadata", label: "Metadata" },
   { id: "toc", label: "ToC" },
   { id: "references", label: "References" },
-  { id: "relationships", label: "Relationships", count: 14 },
+  { id: "relationships", label: "Relationships" },
   { id: "search", label: "Search" },
 ];
 
@@ -37,7 +85,7 @@ export function ReferencePanel() {
   const [, setExpandSignal] = useAtom(expandAllSignalAtom);
   const [, setCollapseSignal] = useAtom(collapseAllSignalAtom);
 
-  const [activeClusterRefIds] = useAtom(activeClusterRefIdsAtom);
+  const [activeClusterRefIds, setActiveClusterRefIds] = useAtom(activeClusterRefIdsAtom);
 
   // Filter and sort references
   const filtered = useMemo(() => {
@@ -46,15 +94,12 @@ export function ReferencePanel() {
     if (activeClusterRefIds) {
       result = result.filter((ref) => activeClusterRefIds.includes(ref.id));
     }
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
+    const matcher = buildMatcher(searchQuery);
+    if (matcher) {
       result = result.filter((ref) => {
         const entity = getEntity(ref.targetEntityId);
-        return (
-          ref.sourceSelection.text.toLowerCase().includes(q) ||
-          entity?.title.toLowerCase().includes(q) ||
-          ref.relationType.toLowerCase().includes(q)
-        );
+        const haystack = `${ref.sourceSelection.text} ${entity?.title ?? ""} ${ref.relationType}`;
+        return matcher(haystack);
       });
     }
     if (sortOrder === "none") {
@@ -138,9 +183,11 @@ export function ReferencePanel() {
 
       {/* Drawer tabs */}
       <DrawerTabs
-        tabs={baseDrawerTabs.map((t) =>
-          t.id === "references" ? { ...t, count: references.length } : t
-        )}
+        tabs={baseDrawerTabs.map((t) => {
+          if (t.id === "references") return { ...t, count: references.length };
+          if (t.id === "relationships") return { ...t, count: deriveRelationships(references).length };
+          return t;
+        })}
         activeId={activeDrawerTab}
         onChange={setActiveDrawerTab}
       />
@@ -157,6 +204,15 @@ export function ReferencePanel() {
             onCollapseAll={() => setCollapseSignal((s) => s + 1)}
           />
         </>
+      )}
+
+      {activeDrawerTab === "references" && activeClusterRefIds && (
+        <FilterChip
+          count={filtered.length}
+          total={references.length}
+          pages={Array.from(new Set(filtered.map((r) => r.sourceSelection.page))).sort((a, b) => a - b)}
+          onClear={() => setActiveClusterRefIds(null)}
+        />
       )}
 
       {activeDrawerTab === "references" && (
@@ -217,8 +273,11 @@ export function ReferencePanel() {
       {/* ToC tab content */}
       {activeDrawerTab === "toc" && <TocDrawerContent />}
 
+      {/* Relationships tab content */}
+      {activeDrawerTab === "relationships" && <RelationshipPanel />}
+
       {/* Other tabs placeholder */}
-      {!["metadata", "references", "toc"].includes(activeDrawerTab) && (
+      {!["metadata", "references", "toc", "relationships"].includes(activeDrawerTab) && (
         <div className="flex-1 flex items-center justify-center">
           <p className="text-sm text-ink-muted capitalize">{activeDrawerTab} content</p>
         </div>

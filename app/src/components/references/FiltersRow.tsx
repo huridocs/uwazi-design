@@ -19,9 +19,13 @@ const sortOptions: { id: SortOrder; label: string }[] = [
 interface FiltersRowProps {
   onCollapseAll?: () => void;
   onExpandAll?: () => void;
+  modes?: ViewMode[];
 }
 
-export function FiltersRow({ onCollapseAll, onExpandAll }: FiltersRowProps) {
+export function FiltersRow({ onCollapseAll, onExpandAll, modes }: FiltersRowProps) {
+  const visibleOptions = modes
+    ? toggleOptions.filter((o) => modes.includes(o.id))
+    : toggleOptions;
   const [viewMode, setViewMode] = useAtom(viewModeAtom);
   const [sortOrder, setSortOrder] = useAtom(sortOrderAtom);
   const [expandedCount] = useAtom(expandedGroupCountAtom);
@@ -40,7 +44,7 @@ export function FiltersRow({ onCollapseAll, onExpandAll }: FiltersRowProps) {
           className="flex items-center rounded overflow-hidden"
           style={{ border: "1px solid var(--border-primary)" }}
         >
-          {toggleOptions.map((opt, i) => {
+          {visibleOptions.map((opt, i) => {
             const isActive = viewMode === opt.id;
             return (
               <button
