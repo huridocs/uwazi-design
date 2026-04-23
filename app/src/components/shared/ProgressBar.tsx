@@ -1,6 +1,6 @@
 interface ProgressBarProps {
   value: number;
-  color?: "green" | "blue" | "red";
+  color?: "green" | "blue" | "red" | "gray";
   showLabel?: boolean;
   size?: "sm" | "md";
 }
@@ -9,12 +9,14 @@ const fillColor = {
   green: "bg-success",
   blue: "bg-carbon",
   red: "bg-seal",
+  gray: "bg-ink-muted/40",
 };
 
 const trackColor = {
   green: "bg-success/15",
   blue: "bg-carbon/15",
   red: "bg-seal/15",
+  gray: "bg-warm",
 };
 
 export function ProgressBar({ value, color = "green", showLabel = false, size = "sm" }: ProgressBarProps) {

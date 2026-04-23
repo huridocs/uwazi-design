@@ -8,6 +8,7 @@ import {
   BrainCircuit,
   BookOpen,
   GitFork,
+  Archive,
 } from "lucide-react";
 
 interface ToolsSidebarProps {
@@ -22,7 +23,7 @@ const metadataItems = [
 ];
 
 const toolsItems = [
-  { id: "processes", label: "Processes", icon: Cog },
+  { id: "preserve", label: "Preserve", icon: Archive },
   { id: "import-csv", label: "Import CSV", icon: FileSpreadsheet },
   { id: "activity-log", label: "Activity Log", icon: Activity },
   { id: "global-css", label: "Global CSS", icon: Code2 },

@@ -16,6 +16,7 @@ export function ImportCSVView() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteCurrentConfirmOpen, setDeleteCurrentConfirmOpen] = useState(false);
 
   const activeEntry = imports.find((i) => i.id === activeImportId) ?? null;
 
@@ -136,15 +137,32 @@ export function ImportCSVView() {
     return () => clearInterval(interval);
   }, [activeImportId, imports]);
 
+  const handleDeleteCurrent = useCallback(() => {
+    if (!activeImportId) return;
+    setImports((prev) => prev.filter((i) => i.id !== activeImportId));
+    setDeleteCurrentConfirmOpen(false);
+    setScreen("list");
+    setActiveImportId(null);
+  }, [activeImportId]);
+
   return (
     <ImportCSVLayout
       actionBar={
-        <ToolsActionBar
-          selectedCount={screen === "list" ? selectedIds.size : 0}
-          totalCount={imports.length}
-          onNewImport={() => setModalOpen(true)}
-          onDeleteSelected={() => setDeleteConfirmOpen(true)}
-        />
+        screen === "detail" && activeEntry ? (
+          <ToolsActionBar
+            mode="detail"
+            onBack={handleBack}
+            onDeleteCurrent={() => setDeleteCurrentConfirmOpen(true)}
+          />
+        ) : (
+          <ToolsActionBar
+            mode="list"
+            selectedCount={selectedIds.size}
+            totalCount={imports.length}
+            onNewImport={() => setModalOpen(true)}
+            onDeleteSelected={() => setDeleteConfirmOpen(true)}
+          />
+        )
       }
     >
       {screen === "list" ? (
@@ -174,6 +192,16 @@ export function ImportCSVView() {
         variant="danger"
         onConfirm={handleDeleteSelected}
         onCancel={() => setDeleteConfirmOpen(false)}
+      />
+
+      <ConfirmDialog
+        open={deleteCurrentConfirmOpen}
+        title="Delete Import"
+        message={`Are you sure you want to delete ${activeEntry?.filename ?? "this import"}? This action cannot be undone.`}
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={handleDeleteCurrent}
+        onCancel={() => setDeleteCurrentConfirmOpen(false)}
       />
     </ImportCSVLayout>
   );

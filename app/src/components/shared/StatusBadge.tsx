@@ -6,6 +6,7 @@ const config: Record<ImportStatus, { label: string; bg: string; text: string }> 
   completed_errors: { label: "Errors", bg: "bg-seal-tint", text: "text-seal" },
   processing: { label: "Processing", bg: "bg-carbon-tint", text: "text-carbon" },
   uploading: { label: "Uploading", bg: "bg-carbon-tint", text: "text-carbon" },
+  pending: { label: "Pending", bg: "bg-warm", text: "text-ink-tertiary" },
   failed: { label: "Failed", bg: "bg-seal-tint", text: "text-seal" },
 };
 

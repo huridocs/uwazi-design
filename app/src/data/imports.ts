@@ -4,6 +4,7 @@ export type ImportStatus =
   | "completed_errors"
   | "processing"
   | "uploading"
+  | "pending"
   | "failed";
 
 export interface ImportIssue {
@@ -26,6 +27,18 @@ export interface ImportEntry {
   errors: number;
   date: string;
   issues: ImportIssue[];
+  // Total row count in the CSV (drives the "X / Y" progress label).
+  totalRows?: number;
+  // Detail-view extras (optional; detail view falls back to sensible defaults)
+  createdBy?: string;
+  time?: string;               // e.g. "3:24 PM"
+  sourceKind?: "CSV" | "ZIP";
+  sourceSizeKb?: number;
+  thesauriTouched?: number;
+  relationshipsCreated?: number;
+  filesExtracted?: number;
+  thesauriObserved?: number;
+  thesauriCreated?: number;
 }
 
 export const templates = [
@@ -96,11 +109,21 @@ export const defaultImports: ImportEntry[] = [
     template: "Court Case",
     status: "completed",
     progress: 100,
-    entities: 847,
+    entities: 932,
     failed: 0,
     warnings: 0,
     errors: 0,
-    date: "2026-03-15",
+    date: "2026-02-18",
+    totalRows: 932,
+    createdBy: "santi",
+    time: "3:24 PM",
+    sourceKind: "CSV",
+    sourceSizeKb: 245,
+    thesauriTouched: 3,
+    relationshipsCreated: 47,
+    filesExtracted: 1,
+    thesauriObserved: 128,
+    thesauriCreated: 14,
     issues: [],
   },
   {
@@ -108,25 +131,45 @@ export const defaultImports: ImportEntry[] = [
     filename: "locations.csv",
     template: "Country",
     status: "processing",
-    progress: 64,
-    entities: 312,
-    failed: 0,
+    progress: Math.round((412 / 634) * 100),
+    entities: 412,
+    failed: 3,
     warnings: 0,
     errors: 0,
-    date: "2026-03-18",
+    date: "2026-02-19",
+    totalRows: 634,
+    createdBy: "maria",
+    time: "10:08 AM",
+    sourceKind: "CSV",
+    sourceSizeKb: 98,
+    thesauriTouched: 1,
+    relationshipsCreated: 12,
+    filesExtracted: 1,
+    thesauriObserved: 52,
+    thesauriCreated: 4,
     issues: [],
   },
   {
     id: "imp3",
-    filename: "judges.zip",
-    template: "Person",
+    filename: "judges-import.zip",
+    template: "Judge",
     status: "failed",
-    progress: 37,
-    entities: 0,
-    failed: 156,
+    progress: Math.round((89 / 234) * 100),
+    entities: 89,
+    failed: 12,
     warnings: 0,
     errors: 3,
-    date: "2026-03-17",
+    date: "2026-02-17",
+    totalRows: 234,
+    createdBy: "santi",
+    time: "4:51 PM",
+    sourceKind: "ZIP",
+    sourceSizeKb: 1240,
+    thesauriTouched: 0,
+    relationshipsCreated: 0,
+    filesExtracted: 234,
+    thesauriObserved: 0,
+    thesauriCreated: 0,
     issues: [
       { id: "iss1", field: "date_of_birth", issue: "Invalid date format in 89 rows", type: "error", date: "2026-03-17" },
       { id: "iss2", field: "nationality", issue: "Unrecognized thesaurus value in 42 rows", type: "error", date: "2026-03-17" },
@@ -139,11 +182,21 @@ export const defaultImports: ImportEntry[] = [
     template: "Person",
     status: "completed_warnings",
     progress: 100,
-    entities: 523,
-    failed: 0,
+    entities: 156,
+    failed: 2,
     warnings: 12,
     errors: 0,
-    date: "2026-03-16",
+    date: "2026-02-15",
+    totalRows: 156,
+    createdBy: "santi",
+    time: "9:42 AM",
+    sourceKind: "CSV",
+    sourceSizeKb: 68,
+    thesauriTouched: 2,
+    relationshipsCreated: 28,
+    filesExtracted: 1,
+    thesauriObserved: 43,
+    thesauriCreated: 5,
     issues: [
       { id: "iss4", field: "phone_number", issue: "Missing value — left blank in 5 rows", type: "warning", date: "2026-03-16" },
       { id: "iss5", field: "address", issue: "Truncated to 255 characters in 4 rows", type: "warning", date: "2026-03-16" },
@@ -152,15 +205,25 @@ export const defaultImports: ImportEntry[] = [
   },
   {
     id: "imp5",
-    filename: "hearings.csv",
-    template: "Court Case",
-    status: "completed_errors",
-    progress: 100,
-    entities: 1204,
-    failed: 18,
-    warnings: 7,
-    errors: 4,
-    date: "2026-03-14",
+    filename: "hearings-2026.csv",
+    template: "Hearing",
+    status: "pending",
+    progress: 0,
+    entities: 0,
+    failed: 0,
+    warnings: 0,
+    errors: 0,
+    date: "2026-02-20",
+    totalRows: 1204,
+    createdBy: "maria",
+    time: "11:17 AM",
+    sourceKind: "CSV",
+    sourceSizeKb: 412,
+    thesauriTouched: 4,
+    relationshipsCreated: 82,
+    filesExtracted: 1,
+    thesauriObserved: 174,
+    thesauriCreated: 22,
     issues: [
       { id: "iss7", field: "case_number", issue: "Duplicate case number in 8 rows", type: "error", date: "2026-03-14" },
       { id: "iss8", field: "hearing_date", issue: "Date out of range in 10 rows", type: "error", date: "2026-03-14" },
