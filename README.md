@@ -12,7 +12,7 @@ All screens and the design system live in a single Figma file:
 |------|----------|------|
 | Design System | 43 components, color/dimension variables, text styles, effect styles | [Open](https://www.figma.com/design/5VSISGr1dSEKi1dGG5Noft?node-id=40-2) |
 | Import CSV | 8 screens: Empty State, List, List Selected, Modal, Detail (Completed, Processing, Failed, Warnings) | [Open](https://www.figma.com/design/5VSISGr1dSEKi1dGG5Noft?node-id=0-1) |
-| Entity View | 10 screens: Document, References, Relationships, Files (Card/Table/Selected/Multi-select/Translations/No Selection), Audio | [Open](https://www.figma.com/design/5VSISGr1dSEKi1dGG5Noft?node-id=29-2) |
+| Entity View | 10 screens: Document, Metadata, References, Relationships (Tree/Graph), Files (Card/Table/Selected/Multi-select/Translations) | [Open](https://www.figma.com/design/5VSISGr1dSEKi1dGG5Noft?node-id=29-2) |
 | Reference Screenshots | Prototype screenshots for pixel-perfect reference | [Open](https://www.figma.com/design/5VSISGr1dSEKi1dGG5Noft?node-id=84-2) |
 
 ### Token System
@@ -30,18 +30,29 @@ All components are bound to variables — switching a frame to Dark mode updates
 .
 ├── app/                           # Interactive prototype (Vite + React 18 + TS + Tailwind v4 + Jotai)
 │   ├── src/
-│   │   ├── atoms/                 # Jotai state (navigation, references, selection, filters, theme, language)
+│   │   ├── atoms/                 # Jotai state (navigation, references, selection, filters, theme, language, viewport)
 │   │   ├── components/
-│   │   │   ├── layout/            # Navbar, SplitView, MainTabs, DrawerTabs, Breadcrumb, ToolsSidebar, ToolsActionBar
-│   │   │   ├── viewer/            # DocumentViewer, PageHighlights, FloatingMenu, ActionBar
-│   │   │   ├── references/        # ReferencePanel, RefRow, FilterBar, SearchBar, GroupedCard, DensityCard
+│   │   │   ├── layout/            # Navbar, SplitView, AdaptiveSplitView, MainTabs, DrawerTabs, SegmentedTabs,
+│   │   │   │                      # Breadcrumb, ToolsSidebar, ToolsActionBar, MobileBottomSheet, MobileActionMenu
+│   │   │   ├── viewer/            # DocumentViewer, PageHighlights, FloatingMenu, ActionBar, RefMinimap
+│   │   │   ├── references/        # ReferencePanel, RefRow, GroupedCard, DensityCard, HighlightCard, SearchBar,
+│   │   │   │                      # FiltersRow (ViewModeControls + CollapseControls), ActiveFilterChips,
+│   │   │   │                      # EntityOverlay, DrawerActionBar, ZoomControl,
+│   │   │   │                      # RelationshipPanel, RelationshipRow, RelationshipGroupedCard,
+│   │   │   │                      # RelationshipsTreeView, RelationshipsGraphView, RelationshipsFilterDrawer
 │   │   │   ├── files/             # FileTable, FileDrawer
 │   │   │   ├── metadata/          # MetadataCard
-│   │   │   ├── import-csv/        # ImportCSVLayout, ImportListView, ImportDetailView, ImportTable, IssuesTable, ImportEmptyState, NewImportModal
-│   │   │   ├── shared/            # ConfirmDialog, UwaziLoader, StatusBadge, ProgressBar, StatsCard, Stepper, AlertBanner, EntityPill, PageTag, CountBadge
+│   │   │   ├── import-csv/        # ImportCSVLayout, ImportListView, ImportDetailView, ImportTable,
+│   │   │   │                      # IssuesTable, ImportEmptyState, NewImportModal
+│   │   │   ├── shared/            # List/filter primitives (ListInfoRow, ListCardRow, FiltersButton, FiltersDrawer,
+│   │   │   │                      # FacetSection, ActiveFilterChip, Checkbox, FadeTruncate);
+│   │   │   │                      # elements (EntityPill, PageTag, CountBadge); feedback (ConfirmDialog,
+│   │   │   │                      # UwaziLoader, StatusBadge, ProgressBar, StatsCard, Stepper, AlertBanner)
 │   │   │   └── catalog/           # CatalogEntry, StyleGuide
 │   │   ├── data/                  # Mock data (entities, documents, references, files, metadata, toc, imports)
-│   │   └── views/                 # Page-level orchestrators (ReferencesView, FilesView, MetadataView, ImportCSVView, ComponentCatalog)
+│   │   ├── utils/                 # Pure helpers (searchQuery boolean matcher, deriveRelationships)
+│   │   └── views/                 # Page-level orchestrators (ReferencesView, FilesView, MetadataView,
+│   │                              # ImportCSVView, CreateRefView, EntityPickerModal, ComponentCatalog)
 │   └── public/                    # Static assets (sample.pdf, logos)
 ├── images/                        # Logos, screenshots, assets
 │   └── screens/                   # Prototype screenshots (prototype/ + import_csv/)
@@ -71,9 +82,27 @@ npm run dev        # → http://localhost:5173
 
 ### Navigation
 
-- **Library** (default) — Entity viewer with document, metadata, references, relationships, and files tabs
+- **Library** (default) — Entity viewer with five main tabs:
+  - **Document** — PDF viewer with highlights, floating menu, and `RefMinimap` scroll track
+  - **Metadata** — Metadata cards + drawer (Document preview, Relationships, Files, Template)
+  - **References** — Reference list (All / by-entity-type / by-relation-type / density); boolean search (AND/OR/NOT/"exact"/wild\*); filters slide-over
+  - **Relationships** — Derived entity-to-entity links; Tree view (collapsible groups, detail → compact → overview zoom) + radial Graph view (pan/zoom, branch collapse); shares filters with References
+  - **Files** — Primary + supporting files with multi-select; drawer shows focused file (default: the entity's primary file)
 - **Tools > Import CSV** — Full import lifecycle with sidebar, list/detail screens, and upload simulation
 - **Logo click** — Toggles to/from the component catalog
+
+### Component catalog
+
+The in-app design system (`ComponentCatalog`, opened via the logo) is organised into these groups:
+
+- **Style Guide** — Colors, Typography, Shadows, Border Radius, Spacing
+- **Elements** — EntityPill, PageTag, CountBadge, Buttons
+- **Entity View — Layout / Document / References / Metadata / Files / Drawer / Relationships**
+- **Import CSV — Layout / Components**
+- **Filters & Lists** — the reusable surface primitives: FiltersButton, FiltersDrawer, FacetSection, ActiveFilterChip, ViewModeControls, CollapseControls, ListInfoRow, ListCardRow, Checkbox, ZoomControl, FadeTruncate
+- **Shared** — ConfirmDialog, Toast, UwaziLoader
+
+Each entry renders a live preview, the calling code, and the Tailwind token it's built from.
 
 ## Branding
 

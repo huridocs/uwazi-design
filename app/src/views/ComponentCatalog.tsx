@@ -26,7 +26,11 @@ import { ActiveFilterChip } from "../components/shared/ActiveFilterChip";
 import { FadeTruncate } from "../components/shared/FadeTruncate";
 import { ListInfoRow } from "../components/shared/ListInfoRow";
 import { ListCardRow } from "../components/shared/ListCardRow";
+import { Checkbox } from "../components/shared/Checkbox";
 import { ZoomControl } from "../components/references/ZoomControl";
+import { RelationshipRow } from "../components/references/RelationshipRow";
+import { RelationshipGroupedCard } from "../components/references/RelationshipGroupedCard";
+import { deriveRelationships } from "../utils/relationships";
 import { ActionBar } from "../components/viewer/ActionBar";
 import { UwaziLoader } from "../components/shared/UwaziLoader";
 import { StatusBadge } from "../components/shared/StatusBadge";
@@ -145,8 +149,16 @@ const sidebarGroups: SidebarGroup[] = [
       { id: "fl-collapse-controls", label: "CollapseControls" },
       { id: "fl-list-info-row", label: "ListInfoRow" },
       { id: "fl-list-card-row", label: "ListCardRow" },
+      { id: "fl-checkbox", label: "Checkbox" },
       { id: "fl-zoom-control", label: "ZoomControl" },
       { id: "fl-fade-truncate", label: "FadeTruncate" },
+    ],
+  },
+  {
+    label: "Entity View — Relationships",
+    items: [
+      { id: "rel-row", label: "RelationshipRow" },
+      { id: "rel-grouped-card", label: "RelationshipGroupedCard" },
     ],
   },
   {
@@ -1005,6 +1017,20 @@ export function ComponentCatalog() {
                 </CatalogEntry>
               </div>
 
+              <div id="fl-checkbox" ref={reg("fl-checkbox")}>
+                <CatalogEntry
+                  name="Checkbox"
+                  description="Shared native checkbox primitive — used by FacetSection and FileTable. Accent-color adapts to dark mode."
+                  code={`<Checkbox
+  checked={checked}
+  onChange={(e) => setChecked(e.target.checked)}
+  ariaLabel="Select"
+/>`}
+                >
+                  <IsolatedCheckboxes />
+                </CatalogEntry>
+              </div>
+
               <div id="fl-zoom-control" ref={reg("fl-zoom-control")}>
                 <CatalogEntry
                   name="ZoomControl"
@@ -1034,6 +1060,39 @@ export function ComponentCatalog() {
                 </CatalogEntry>
               </div>
 
+            </div>
+          </section>
+
+          {/* ==================== RELATIONSHIPS ==================== */}
+          <section>
+            <h2 className="text-lg font-bold text-ink mb-6">Entity View — Relationships</h2>
+            <div className="flex flex-col gap-6">
+              <div id="rel-row" ref={reg("rel-row")}>
+                <CatalogEntry
+                  name="RelationshipRow"
+                  description="Row for a derived relationship: target entity pill, relation type, evidence count → jumps into the refs drawer with the cluster pre-filtered."
+                  code={`<RelationshipRow relationship={rel} />
+
+{/* rel comes from deriveRelationships(references) */}`}
+                >
+                  <IsolatedRelationshipRow />
+                </CatalogEntry>
+              </div>
+
+              <div id="rel-grouped-card" ref={reg("rel-grouped-card")}>
+                <CatalogEntry
+                  name="RelationshipGroupedCard"
+                  description="Collapsible card grouping relationships (by entity type or relation type). Responds to expand/collapse signal atoms."
+                  code={`<RelationshipGroupedCard
+  title="Person"
+  color="#8b5cf6"
+  relationships={rels}
+  defaultExpanded
+/>`}
+                >
+                  <IsolatedRelationshipGroupedCard />
+                </CatalogEntry>
+              </div>
             </div>
           </section>
 
@@ -1495,6 +1554,58 @@ function IsolatedZoomControl() {
   return (
     <Provider store={store}>
       <ZoomControl />
+    </Provider>
+  );
+}
+
+function IsolatedCheckboxes() {
+  const [a, setA] = useState(false);
+  const [b, setB] = useState(true);
+  return (
+    <div className="flex items-center gap-5">
+      <label className="flex items-center gap-2 cursor-pointer">
+        <Checkbox checked={a} onChange={(e) => setA(e.target.checked)} ariaLabel="Unchecked demo" />
+        <span className="text-xs text-ink">Unchecked</span>
+      </label>
+      <label className="flex items-center gap-2 cursor-pointer">
+        <Checkbox checked={b} onChange={(e) => setB(e.target.checked)} ariaLabel="Checked demo" />
+        <span className="text-xs text-ink">Checked</span>
+      </label>
+      <label className="flex items-center gap-2 opacity-60 cursor-not-allowed">
+        <Checkbox checked={false} onChange={() => {}} disabled ariaLabel="Disabled demo" />
+        <span className="text-xs text-ink">Disabled</span>
+      </label>
+    </div>
+  );
+}
+
+function IsolatedRelationshipRow() {
+  const store = createStore();
+  const rels = deriveRelationships(references);
+  if (rels.length === 0) return null;
+  return (
+    <Provider store={store}>
+      <div className="border border-border/60 rounded-md overflow-hidden bg-paper">
+        {rels.slice(0, 2).map((rel) => (
+          <RelationshipRow key={rel.id} relationship={rel} />
+        ))}
+      </div>
+    </Provider>
+  );
+}
+
+function IsolatedRelationshipGroupedCard() {
+  const store = createStore();
+  const rels = deriveRelationships(references);
+  if (rels.length === 0) return null;
+  return (
+    <Provider store={store}>
+      <RelationshipGroupedCard
+        title="Person"
+        color="#7C3AED"
+        relationships={rels.slice(0, 4)}
+        defaultExpanded
+      />
     </Provider>
   );
 }
