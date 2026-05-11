@@ -4,8 +4,6 @@ import {
   Link2,
   Link as LinkIcon,
   ChevronRight,
-  ArrowRight,
-  ArrowLeft,
   FileText,
 } from "lucide-react";
 import {
@@ -42,6 +40,7 @@ import { EntityPill } from "../shared/EntityPill";
 import { FadeTruncate } from "../shared/FadeTruncate";
 import { ListInfoRow } from "../shared/ListInfoRow";
 import { ListCardRow } from "../shared/ListCardRow";
+import { DirectionGlyph } from "../connections/DirectionGlyph";
 import { CollapseControls } from "./FiltersRow";
 
 interface GroupedTarget {
@@ -375,20 +374,6 @@ interface TargetProps {
   onTargetClick: (entityId: string) => void;
 }
 
-function DirectionBadge({ direction }: { direction: Direction }) {
-  const Icon = direction === "incoming" ? ArrowLeft : ArrowRight;
-  const title = direction === "incoming" ? "Incoming" : "Outgoing";
-  return (
-    <span
-      aria-label={title}
-      title={title}
-      className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-[2px] bg-vellum text-ink-tertiary shrink-0"
-    >
-      <Icon size={10} strokeWidth={2.5} />
-    </span>
-  );
-}
-
 interface TargetDetailProps extends TargetProps {
   selectedRefId: string | null;
   onMarkerClick: (ref: Reference) => void;
@@ -438,7 +423,7 @@ function TargetCardDetail({
         </div>
       </div>
       <div className="flex items-center gap-1 mt-1 text-[10px] text-ink-tertiary">
-        <DirectionBadge direction={direction} />
+        <DirectionGlyph direction={direction} size="md" />
         <span className="capitalize">
           {direction === "incoming" ? "incoming" : "outgoing"}
         </span>
@@ -465,7 +450,7 @@ function TargetCardCompact({
       className="!py-2"
     >
       <div className="flex items-center gap-1.5 min-w-0">
-        <DirectionBadge direction={direction} />
+        <DirectionGlyph direction={direction} size="md" />
         <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
       </div>
       <span className="shrink-0 text-[11px] text-ink-tertiary tabular-nums">

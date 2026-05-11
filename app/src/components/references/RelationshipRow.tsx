@@ -1,10 +1,11 @@
-import { FileText, ArrowRight, ArrowLeft } from "lucide-react";
+import { FileText } from "lucide-react";
 import { useAtom, useSetAtom } from "jotai";
 import { Relationship } from "../../utils/relationships";
 import { getEntity, getEntityType } from "../../data/entities";
 import { relationTypes } from "../../data/references";
 import { EntityPill } from "../shared/EntityPill";
 import { ListCardRow } from "../shared/ListCardRow";
+import { DirectionGlyph } from "../connections/DirectionGlyph";
 import {
   overlayEntityIdAtom,
   activeDrawerTabAtom,
@@ -60,19 +61,5 @@ export function RelationshipRow({ relationship }: RelationshipRowProps) {
         <span className="capitalize">{relLabel}</span>
       </div>
     </ListCardRow>
-  );
-}
-
-function DirectionGlyph({ direction }: { direction: "outgoing" | "incoming" }) {
-  const Icon = direction === "incoming" ? ArrowLeft : ArrowRight;
-  const title = direction === "incoming" ? "Incoming" : "Outgoing";
-  return (
-    <span
-      aria-label={title}
-      title={title}
-      className="inline-flex items-center justify-center w-3 h-3 rounded-[2px] bg-vellum text-ink-tertiary shrink-0"
-    >
-      <Icon size={9} strokeWidth={2.5} />
-    </span>
   );
 }
