@@ -12,8 +12,7 @@ import { documentsByLanguage } from "../data/document";
 import { files, FileEntry } from "../data/files";
 import { languageAtom, type Language } from "../atoms/language";
 import { referencesAtom } from "../atoms/references";
-import { deriveRelationships } from "../utils/relationships";
-import { RelationshipPanel } from "../components/references/RelationshipPanel";
+import { ConnectionsDrawerSection } from "../components/connections/ConnectionsDrawerSection";
 import { DocumentViewer } from "../components/viewer/DocumentViewer";
 
 interface MetadataViewProps {
@@ -436,11 +435,10 @@ function MetadataDrawer() {
   const language = useAtom(languageAtom)[0];
   const doc = documentsByLanguage[language];
   const [references] = useAtom(referencesAtom);
-  const relationshipCount = deriveRelationships(references).length;
 
   const drawerTabs = [
     { id: "document", label: "Document" },
-    { id: "relationships", label: "Relationships", count: relationshipCount },
+    { id: "connections", label: "Connections", count: references.length },
     { id: "files", label: "Files", count: files.length },
     { id: "template", label: "Template" },
   ];
@@ -481,8 +479,8 @@ function MetadataDrawer() {
             </span>
           </div>
         </>
-      ) : activeDrawerTab === "relationships" ? (
-        <RelationshipPanel />
+      ) : activeDrawerTab === "connections" ? (
+        <ConnectionsDrawerSection />
       ) : (
         <div className="flex-1 flex items-center justify-center">
           <p className="text-sm text-ink-muted capitalize">{activeDrawerTab} content</p>

@@ -16,8 +16,6 @@ import { RelatedDocCard } from "../components/references/RelatedDocCard";
 import { FileTable } from "../components/files/FileTable";
 import { DrawerActionBar } from "../components/references/DrawerActionBar";
 import { FiltersRow, ViewModeControls, CollapseControls } from "../components/references/FiltersRow";
-import { GroupedCard } from "../components/references/GroupedCard";
-import { RefRow } from "../components/references/RefRow";
 import { FiltersButton } from "../components/shared/FiltersButton";
 import { FiltersDrawer } from "../components/shared/FiltersDrawer";
 import { FacetSection } from "../components/shared/FacetSection";
@@ -27,8 +25,10 @@ import { ListInfoRow } from "../components/shared/ListInfoRow";
 import { ListCardRow } from "../components/shared/ListCardRow";
 import { Checkbox } from "../components/shared/Checkbox";
 import { ZoomControl } from "../components/references/ZoomControl";
-import { RelationshipRow } from "../components/references/RelationshipRow";
-import { RelationshipGroupedCard } from "../components/references/RelationshipGroupedCard";
+import { ConnectionRow } from "../components/connections/ConnectionRow";
+import { ConnectionGroupedCard } from "../components/connections/ConnectionGroupedCard";
+import { PanelModeControls } from "../components/connections/PanelModeControls";
+import { DirectionGlyph } from "../components/connections/DirectionGlyph";
 import { deriveRelationships } from "../utils/relationships";
 import { ActionBar } from "../components/viewer/ActionBar";
 import { UwaziLoader } from "../components/shared/UwaziLoader";
@@ -95,8 +95,8 @@ const sidebarGroups: SidebarGroup[] = [
     items: [
       { id: "ev-search-bar", label: "SearchBar" },
       { id: "ev-filters-row", label: "FiltersRow" },
-      { id: "ev-ref-row", label: "RefRow" },
-      { id: "ev-grouped-card", label: "GroupedCard" },
+      { id: "ev-connection-row-ref", label: "ConnectionRow · reference" },
+      { id: "ev-connection-grouped-card", label: "ConnectionGroupedCard" },
       { id: "ev-highlight-card", label: "HighlightCard" },
       { id: "ev-related-doc", label: "RelatedDocCard" },
     ],
@@ -155,8 +155,10 @@ const sidebarGroups: SidebarGroup[] = [
   {
     label: "Entity View — Relationships",
     items: [
-      { id: "rel-row", label: "RelationshipRow" },
-      { id: "rel-grouped-card", label: "RelationshipGroupedCard" },
+      { id: "connection-row-aggregate", label: "ConnectionRow · aggregate" },
+      { id: "connection-grouped-card-aggregate", label: "ConnectionGroupedCard · aggregate" },
+      { id: "panel-mode-controls", label: "PanelModeControls" },
+      { id: "direction-glyph", label: "DirectionGlyph" },
     ],
   },
   {
@@ -554,35 +556,39 @@ export function ComponentCatalog() {
                 </CatalogEntry>
               </div>
 
-              <div id="ev-ref-row" ref={reg("ev-ref-row")}>
+              <div id="ev-connection-row-ref" ref={reg("ev-connection-row-ref")}>
                 <CatalogEntry
-                  name="RefRow"
-                  description="Single reference entry with entity pill, page tag, text preview"
-                  code={`<RefRow
-  reference={reference}
+                  name="ConnectionRow · reference"
+                  description="Text-anchored row variant — entity pill, page tag, snippet, direction + rel label"
+                  code={`<ConnectionRow
+  kind="reference"
+  ref={reference}
   onDelete={(id) => {}}
 />`}
                 >
                   <div className="w-full max-w-md border border-border/40 rounded-md overflow-hidden">
-                    <IsolatedRefRow />
+                    <IsolatedConnectionRowReference />
                   </div>
                 </CatalogEntry>
               </div>
 
-              <div id="ev-grouped-card" ref={reg("ev-grouped-card")}>
+              <div id="ev-connection-grouped-card" ref={reg("ev-connection-grouped-card")}>
                 <CatalogEntry
-                  name="GroupedCard"
-                  description="Collapsible group of references with expand/collapse + count badge"
-                  code={`<GroupedCard
+                  name="ConnectionGroupedCard"
+                  description="Collapsible group with expand/collapse signal handling + count badge"
+                  code={`<ConnectionGroupedCard
   title="Person"
   color="#7C3AED"
-  references={references.slice(0, 3)}
-  onDeleteRef={(id) => {}}
+  count={3}
   defaultExpanded
-/>`}
+>
+  {refs.map((ref) => (
+    <ConnectionRow kind="reference" ref={ref} />
+  ))}
+</ConnectionGroupedCard>`}
                 >
                   <div className="w-full max-w-md">
-                    <IsolatedGroupedCard />
+                    <IsolatedConnectionGroupedCard />
                   </div>
                 </CatalogEntry>
               </div>
@@ -1050,30 +1056,58 @@ export function ComponentCatalog() {
           <section>
             <h2 className="text-lg font-bold text-ink mb-6">Entity View — Relationships</h2>
             <div className="flex flex-col gap-6">
-              <div id="rel-row" ref={reg("rel-row")}>
+              <div id="connection-row-aggregate" ref={reg("connection-row-aggregate")}>
                 <CatalogEntry
-                  name="RelationshipRow"
-                  description="Row for a derived relationship: target entity pill, relation type, evidence count → jumps into the refs drawer with the cluster pre-filtered."
-                  code={`<RelationshipRow relationship={rel} />
+                  name="ConnectionRow · aggregate"
+                  description="Aggregate row variant — entity pill, evidence count badge, direction + rel label. Click on the count jumps into the refs cluster."
+                  code={`<ConnectionRow
+  kind="aggregate"
+  rel={rel}
+/>
 
 {/* rel comes from deriveRelationships(references) */}`}
                 >
-                  <IsolatedRelationshipRow />
+                  <IsolatedConnectionRowAggregate />
                 </CatalogEntry>
               </div>
 
-              <div id="rel-grouped-card" ref={reg("rel-grouped-card")}>
+              <div id="connection-grouped-card-aggregate" ref={reg("connection-grouped-card-aggregate")}>
                 <CatalogEntry
-                  name="RelationshipGroupedCard"
-                  description="Collapsible card grouping relationships (by entity type or relation type). Responds to expand/collapse signal atoms."
-                  code={`<RelationshipGroupedCard
+                  name="ConnectionGroupedCard · aggregate"
+                  description="Same group primitive holding aggregate rows. Responds to expand/collapse signal atoms."
+                  code={`<ConnectionGroupedCard
   title="Person"
   color="#8b5cf6"
-  relationships={rels}
+  count={rels.length}
   defaultExpanded
-/>`}
+>
+  {rels.map((rel) => (
+    <ConnectionRow kind="aggregate" rel={rel} />
+  ))}
+</ConnectionGroupedCard>`}
                 >
-                  <IsolatedRelationshipGroupedCard />
+                  <IsolatedConnectionGroupedCardAggregate />
+                </CatalogEntry>
+              </div>
+
+              <div id="panel-mode-controls" ref={reg("panel-mode-controls")}>
+                <CatalogEntry
+                  name="PanelModeControls"
+                  description="Segmented 5-way pill driving the merged Relationships panel (list / by entity / by relation / tree / graph)."
+                  code={`<PanelModeControls />`}
+                >
+                  <IsolatedPanelModeControls />
+                </CatalogEntry>
+              </div>
+
+              <div id="direction-glyph" ref={reg("direction-glyph")}>
+                <CatalogEntry
+                  name="DirectionGlyph"
+                  description="Shared arrow badge — outgoing vs incoming. Small / medium footprints."
+                  code={`<DirectionGlyph direction="outgoing" />
+<DirectionGlyph direction="incoming" size="md" />`}
+                >
+                  <IsolatedDirectionGlyph />
                 </CatalogEntry>
               </div>
             </div>
@@ -1363,27 +1397,35 @@ function IsolatedFiltersRow() {
   );
 }
 
-function IsolatedGroupedCard() {
+function IsolatedConnectionGroupedCard() {
   const store = createStore();
   return (
     <Provider store={store}>
-      <GroupedCard
+      <ConnectionGroupedCard
         title="Person"
         color="#7C3AED"
-        references={references.slice(0, 3)}
-        onDeleteRef={() => {}}
+        count={3}
         defaultExpanded
-      />
+      >
+        {references.slice(0, 3).map((ref) => (
+          <ConnectionRow
+            key={ref.id}
+            kind="reference"
+            ref={ref}
+            onDelete={() => {}}
+          />
+        ))}
+      </ConnectionGroupedCard>
     </Provider>
   );
 }
 
-function IsolatedRefRow() {
+function IsolatedConnectionRowReference() {
   const store = createStore();
   return (
     <Provider store={store}>
-      <RefRow reference={references[0]} onDelete={() => {}} />
-      <RefRow reference={references[1]} onDelete={() => {}} />
+      <ConnectionRow kind="reference" ref={references[0]} onDelete={() => {}} />
+      <ConnectionRow kind="reference" ref={references[1]} onDelete={() => {}} />
     </Provider>
   );
 }
@@ -1562,7 +1604,7 @@ function IsolatedCheckboxes() {
   );
 }
 
-function IsolatedRelationshipRow() {
+function IsolatedConnectionRowAggregate() {
   const store = createStore();
   const rels = deriveRelationships(references);
   if (rels.length === 0) return null;
@@ -1570,25 +1612,49 @@ function IsolatedRelationshipRow() {
     <Provider store={store}>
       <div className="border border-border/60 rounded-md overflow-hidden bg-paper">
         {rels.slice(0, 2).map((rel) => (
-          <RelationshipRow key={rel.id} relationship={rel} />
+          <ConnectionRow key={rel.id} kind="aggregate" rel={rel} />
         ))}
       </div>
     </Provider>
   );
 }
 
-function IsolatedRelationshipGroupedCard() {
+function IsolatedConnectionGroupedCardAggregate() {
   const store = createStore();
   const rels = deriveRelationships(references);
   if (rels.length === 0) return null;
   return (
     <Provider store={store}>
-      <RelationshipGroupedCard
+      <ConnectionGroupedCard
         title="Person"
         color="#7C3AED"
-        relationships={rels.slice(0, 4)}
+        count={rels.slice(0, 4).length}
         defaultExpanded
-      />
+      >
+        {rels.slice(0, 4).map((rel) => (
+          <ConnectionRow key={rel.id} kind="aggregate" rel={rel} />
+        ))}
+      </ConnectionGroupedCard>
     </Provider>
+  );
+}
+
+function IsolatedPanelModeControls() {
+  const store = createStore();
+  return (
+    <Provider store={store}>
+      <PanelModeControls />
+    </Provider>
+  );
+}
+
+function IsolatedDirectionGlyph() {
+  return (
+    <div className="flex items-center gap-3">
+      <DirectionGlyph direction="outgoing" />
+      <DirectionGlyph direction="incoming" />
+      <DirectionGlyph direction="outgoing" size="md" />
+      <DirectionGlyph direction="incoming" size="md" />
+    </div>
   );
 }

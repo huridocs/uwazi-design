@@ -153,7 +153,7 @@ function AggregateRow({ rel, expanded, onToggleExpand }: AggregateKind) {
     // Legacy behaviour: jump to the References drawer tab with the cluster
     // filter applied. Used by the drawer-side panel until the main views merge.
     setActiveClusterRefIds(rel.refIds);
-    setActiveDrawerTab("references");
+    setActiveDrawerTab("connections");
   };
 
   return (

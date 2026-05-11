@@ -153,7 +153,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
       setActiveClusterRefIds(null);
     }
     setActiveRefId(refId);
-    setActiveDrawerTab("references");
+    setActiveDrawerTab("connections");
     setCollapseSignal((s) => s + 1);
     setExpandGroupForRef(refId);
     setScrollToRef(refId);

@@ -201,7 +201,7 @@ export function RelationshipsTreeView() {
     setActiveRefId(ref.id);
     setCurrentPage(ref.sourceSelection.page);
     setScrollToHighlight(ref.id);
-    setActiveDrawerTab("references");
+    setActiveDrawerTab("connections");
   };
 
   return (
