@@ -4,13 +4,10 @@ import {
   Link2,
   Link as LinkIcon,
   ChevronRight,
-  FileText,
 } from "lucide-react";
 import {
   referencesAtom,
   overlayEntityIdAtom,
-  activeDrawerTabAtom,
-  scrollToHighlightAtom,
   activeRefIdAtom,
 } from "../../atoms/references";
 import {
@@ -27,7 +24,6 @@ import {
   totalGroupCountAtom,
   type Zoom,
 } from "../../atoms/filters";
-import { currentPageAtom } from "../../atoms/selection";
 import { getEntity, getEntityType } from "../../data/entities";
 import {
   Direction,
@@ -36,11 +32,9 @@ import {
   RelationType,
 } from "../../data/references";
 import { buildMatcher } from "../../utils/searchQuery";
-import { EntityPill } from "../shared/EntityPill";
-import { FadeTruncate } from "../shared/FadeTruncate";
+import { Relationship } from "../../utils/relationships";
 import { ListInfoRow } from "../shared/ListInfoRow";
-import { ListCardRow } from "../shared/ListCardRow";
-import { DirectionGlyph } from "../connections/DirectionGlyph";
+import { ConnectionRow } from "../connections/ConnectionRow";
 import { CollapseControls } from "./FiltersRow";
 
 interface GroupedTarget {
@@ -65,11 +59,8 @@ export function RelationshipsTreeView() {
   const [entityTypeFilters] = useAtom(entityTypeFiltersAtom);
   const [zoom] = useAtom(zoomAtom);
   const [activeFilterCount] = useAtom(activeFilterCountAtom);
-  const [overlayEntityId, setOverlayEntityId] = useAtom(overlayEntityIdAtom);
-  const setActiveDrawerTab = useSetAtom(activeDrawerTabAtom);
-  const setCurrentPage = useSetAtom(currentPageAtom);
-  const [activeRefId, setActiveRefId] = useAtom(activeRefIdAtom);
-  const setScrollToHighlight = useSetAtom(scrollToHighlightAtom);
+  const [, setOverlayEntityId] = useAtom(overlayEntityIdAtom);
+  const [, setActiveRefId] = useAtom(activeRefIdAtom);
   const expandSignal = useAtomValue(expandAllSignalAtom);
   const collapseSignal = useAtomValue(collapseAllSignalAtom);
   const setExpandedGroupCount = useSetAtom(expandedGroupCountAtom);
@@ -193,17 +184,6 @@ export function RelationshipsTreeView() {
     });
   };
 
-  const jumpToReference = (ref: Reference) => {
-    if (activeRefId === ref.id) {
-      setActiveRefId(null);
-      return;
-    }
-    setActiveRefId(ref.id);
-    setCurrentPage(ref.sourceSelection.page);
-    setScrollToHighlight(ref.id);
-    setActiveDrawerTab("connections");
-  };
-
   return (
     <div className="flex flex-col h-full min-h-0">
       <ListInfoRow
@@ -249,10 +229,6 @@ export function RelationshipsTreeView() {
                 zoom={zoom}
                 isCollapsed={collapsed.has(g.relationType)}
                 onToggle={() => toggleGroup(g.relationType)}
-                selectedEntityId={overlayEntityId}
-                selectedRefId={activeRefId}
-                onTargetClick={setOverlayEntityId}
-                onMarkerClick={jumpToReference}
               />
             ))}
           </div>
@@ -267,10 +243,6 @@ interface GroupBlockProps {
   zoom: Zoom;
   isCollapsed: boolean;
   onToggle: () => void;
-  selectedEntityId: string | null;
-  selectedRefId: string | null;
-  onTargetClick: (entityId: string) => void;
-  onMarkerClick: (ref: Reference) => void;
 }
 
 function GroupBlock({
@@ -278,14 +250,20 @@ function GroupBlock({
   zoom,
   isCollapsed,
   onToggle,
-  selectedEntityId,
-  selectedRefId,
-  onTargetClick,
-  onMarkerClick,
 }: GroupBlockProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
   const headerPadY = zoom === "detail" ? "py-1.5" : "py-1";
   const headerText = zoom === "overview" ? "text-[11px]" : "text-xs";
+
+  const toggleKey = (key: string) =>
+    setExpandedKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+
   return (
     <div>
       <button
@@ -315,152 +293,58 @@ function GroupBlock({
                 targetEntityId={t.targetEntityId}
                 direction={t.direction}
                 refs={t.refs}
-                selected={selectedEntityId === t.targetEntityId}
                 hovered={hoveredId === `${t.targetEntityId}-${t.direction}`}
                 onHover={(entering) =>
                   setHoveredId(
                     entering ? `${t.targetEntityId}-${t.direction}` : null,
                   )
                 }
-                onTargetClick={onTargetClick}
               />
             ))}
           </div>
         </div>
       ) : (
         <div className="mt-2 mx-3 border border-border/60 rounded-md overflow-hidden bg-paper">
-          {group.targets.map((t) =>
-            zoom === "compact" ? (
-              <TargetCardCompact
-                key={`${t.targetEntityId}-${t.direction}`}
-                targetEntityId={t.targetEntityId}
-                direction={t.direction}
-                refs={t.refs}
-                selected={
-                  selectedEntityId === t.targetEntityId ||
-                  (selectedRefId !== null &&
-                    t.refs.some((r) => r.id === selectedRefId))
-                }
-                onTargetClick={onTargetClick}
-              />
-            ) : (
-              <TargetCardDetail
-                key={`${t.targetEntityId}-${t.direction}`}
-                targetEntityId={t.targetEntityId}
-                direction={t.direction}
-                refs={t.refs}
-                selected={
-                  selectedEntityId === t.targetEntityId ||
-                  (selectedRefId !== null &&
-                    t.refs.some((r) => r.id === selectedRefId))
-                }
-                selectedRefId={selectedRefId}
-                onTargetClick={onTargetClick}
-                onMarkerClick={onMarkerClick}
-              />
-            ),
-          )}
+          {group.targets.map((t) => {
+            const key = `${t.targetEntityId}-${t.direction}`;
+            const rel: Relationship = {
+              id: `${t.targetEntityId}::${group.relationType}::${t.direction}`,
+              targetEntityId: t.targetEntityId,
+              relationType: group.relationType,
+              direction: t.direction,
+              evidenceCount: t.refs.length,
+              firstPage: t.refs[0]?.sourceSelection.page ?? 0,
+              refIds: t.refs.map((r) => r.id),
+            };
+            const expanded = expandedKeys.has(key);
+            return (
+              <div key={key}>
+                <ConnectionRow
+                  kind="aggregate"
+                  rel={rel}
+                  expanded={expanded}
+                  onToggleExpand={() => toggleKey(key)}
+                />
+                {expanded && (
+                  <div className="bg-warm/40 border-t border-border/40">
+                    {t.refs.map((ref) => (
+                      <ConnectionRow key={ref.id} kind="reference" ref={ref} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
   );
 }
 
-interface TargetProps {
+interface TargetOverviewProps {
   targetEntityId: string;
   direction: Direction;
   refs: Reference[];
-  selected: boolean;
-  onTargetClick: (entityId: string) => void;
-}
-
-interface TargetDetailProps extends TargetProps {
-  selectedRefId: string | null;
-  onMarkerClick: (ref: Reference) => void;
-}
-
-function TargetCardDetail({
-  targetEntityId,
-  direction,
-  refs,
-  selected,
-  selectedRefId,
-  onTargetClick,
-  onMarkerClick,
-}: TargetDetailProps) {
-  const entity = getEntity(targetEntityId);
-  const type = entity ? getEntityType(entity.typeId) : undefined;
-  const firstRef = refs[0];
-
-  // Relationships exist between entities, not pages. Show entity-level info
-  // only; the evidence-count action jumps to the underlying references where
-  // page/text-selection details live.
-  const activeInRefs =
-    selectedRefId !== null && refs.some((r) => r.id === selectedRefId);
-  return (
-    <ListCardRow selected={selected} onClick={() => onTargetClick(targetEntityId)}>
-      <div className="flex items-start justify-between gap-2 mb-1.5">
-        <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
-        <div className="flex items-center gap-1.5 shrink-0">
-          <span className="text-[10px] text-ink-tertiary">{type?.name ?? ""}</span>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onMarkerClick(refs[0]);
-            }}
-            aria-label={`Open ${refs.length} evidence references`}
-            title="View evidence in References"
-            className={`flex items-center gap-1 px-1.5 h-5 rounded text-[10px] font-medium tabular-nums transition-colors cursor-pointer ${
-              activeInRefs
-                ? "bg-ink text-paper"
-                : "bg-warm text-ink-tertiary hover:bg-parchment hover:text-ink-secondary"
-            }`}
-          >
-            <FileText size={10} />
-            {refs.length}
-          </button>
-        </div>
-      </div>
-      <div className="flex items-center gap-1 mt-1 text-[10px] text-ink-tertiary">
-        <DirectionGlyph direction={direction} size="md" />
-        <span className="capitalize">
-          {direction === "incoming" ? "incoming" : "outgoing"}
-        </span>
-      </div>
-    </ListCardRow>
-  );
-}
-
-function TargetCardCompact({
-  targetEntityId,
-  direction,
-  refs,
-  selected,
-  onTargetClick,
-}: TargetProps) {
-  const entity = getEntity(targetEntityId);
-
-  return (
-    <ListCardRow
-      as="button"
-      selected={selected}
-      onClick={() => onTargetClick(targetEntityId)}
-      ariaLabel={`Open ${entity?.title ?? "entity"}`}
-      className="!py-2"
-    >
-      <div className="flex items-center gap-1.5 min-w-0">
-        <DirectionGlyph direction={direction} size="md" />
-        <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
-      </div>
-      <span className="shrink-0 text-[11px] text-ink-tertiary tabular-nums">
-        {refs.length}
-      </span>
-    </ListCardRow>
-  );
-}
-
-interface TargetOverviewProps extends TargetProps {
   hovered: boolean;
   onHover: (entering: boolean) => void;
 }
@@ -469,15 +353,15 @@ function TargetCardOverview({
   targetEntityId,
   direction,
   refs,
-  selected,
   hovered,
   onHover,
-  onTargetClick,
 }: TargetOverviewProps) {
+  const [overlayEntityId, setOverlayEntityId] = useAtom(overlayEntityIdAtom);
   const entity = getEntity(targetEntityId);
   const type = entity ? getEntityType(entity.typeId) : undefined;
   const tooltipRef = useRef<HTMLSpanElement>(null);
   const [shiftX, setShiftX] = useState(0);
+  const selected = overlayEntityId === targetEntityId;
 
   useLayoutEffect(() => {
     if (!hovered) {
@@ -498,7 +382,7 @@ function TargetCardOverview({
   return (
     <span className="relative inline-flex">
       <button
-        onClick={() => onTargetClick(targetEntityId)}
+        onClick={() => setOverlayEntityId(targetEntityId)}
         onMouseEnter={() => onHover(true)}
         onMouseLeave={() => onHover(false)}
         onFocus={() => onHover(true)}

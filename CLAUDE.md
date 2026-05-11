@@ -46,60 +46,64 @@ The Tailwind aliases (`--color-ink`, `--color-paper`, `--color-vellum`, `--color
 - **Tooltips**: render as HTML overlays positioned by `getBoundingClientRect`, not as SVG elements inside the zoom transform. SVG tooltips scale with the graph and clip at viewport edges.
 - **Layout**: branches occupy angular sectors, nodes fan out across concentric arcs (capacity scales with arc length). Edges are tree-style: source → label → fan to children.
 
-## Four list surfaces share one set of primitives
+## Connections panel — refs and rels are one surface
 
-References main, References drawer, Relationships main, Relationships drawer all wire through the same components. **Don't hand-roll** info rows, toolbars, or card shells.
+There is **no longer a separate "References" tab**. The Relationships top tab is the single surface, hosting both the text-anchored (snippet + page) and aggregated (entity-level) projections of the same `references[]` array. Both the main view and the document-tab drawer route through the same body. This mirrors Uwazi v2's data model, where a `Relationship` has `from`/`to` pointers that may optionally carry text-anchor `{file, selections[], text}`.
 
 ```
+src/components/connections/
+  ConnectionRow.tsx              // discriminated union: kind="reference" | kind="aggregate"
+  ConnectionGroupedCard.tsx      // shared group shell (expand/collapse signal, refIdsToWatch)
+  ConnectionsPanelBody.tsx       // filter pipeline + body switch on panelModeAtom
+  ConnectionsDrawerSection.tsx   // drawer-flavour wrapper: toolbar + body + scoped drawer
+  PanelModeControls.tsx          // 5-way pill driving panelModeAtom
+  DirectionGlyph.tsx             // shared arrow badge
+src/views/
+  ConnectionsView.tsx            // the merged main-tab surface (Relationships tab)
 src/components/shared/
-  ListInfoRow.tsx          // count + "Filters:" + chips + rightSlot
-  ListCardRow.tsx          // forwardRef shell, owns selected/hover/focus
-  Checkbox.tsx             // single shared native checkbox
-  FiltersDrawer.tsx        // slide-over scoped to relative parent
-  FiltersButton.tsx        // size="sm" → h-6, size="md" → h-8
-  FacetSection.tsx         // checkbox group with counts
+  ListInfoRow.tsx                // count + chips + rightSlot
+  ListCardRow.tsx                // forwardRef shell, owns selected/hover/focus
+  Checkbox.tsx                   // single shared native checkbox
+  FiltersDrawer.tsx              // slide-over scoped to relative parent
+  FiltersButton.tsx              // size="sm" → h-6, size="md" → h-8
+  FacetSection.tsx               // checkbox group with counts
   ActiveFilterChip.tsx
   FadeTruncate.tsx
 src/components/references/
-  SearchBar.tsx            // has rightSlot AND inlineSlot (chips inside the pill, GitHub-style)
-  FiltersRow.tsx           // exports ViewModeControls + CollapseControls (gains `disabled` prop)
-  ZoomControl.tsx          // detail / compact / overview / graph
+  SearchBar.tsx                  // has rightSlot AND inlineSlot
+  FiltersRow.tsx                 // exports ViewModeControls (legacy) + CollapseControls
+  ZoomControl.tsx                // detail / compact / overview (graph is now a PanelMode)
+  RelationshipsTreeView.tsx      // tree body — its target cards use ConnectionRow kind="aggregate"
+  RelationshipsGraphView.tsx     // radial SVG body
 ```
 
-Toolbar pattern:
+`PanelMode = "list" | "by-entity-type" | "by-relation-type" | "tree" | "graph"`. The zoom toggle (`detail` / `compact` / `overview`) is orthogonal — applies to grouped + tree, hidden in list + graph.
+
+Atom rename history: `relationshipTypeFiltersAtom` → `relTypeFiltersAtom`, `relationshipEntityTypeFiltersAtom` → `entityTypeFiltersAtom`, `relationshipsZoomAtom` → `zoomAtom`, `relationshipsActiveFilterCountAtom`/`referencesActiveFilterCountAtom` → `activeFilterCountAtom`. Removed: `viewModeAtom`'s `density` and `by-document` variants, `DensityCard`.
+
+Toolbar pattern (main view):
 ```tsx
-<SearchBar inlineSlot={<ActiveFilterChips />} />
-<div className="px-3 pb-2 flex items-center justify-between">
-  <ViewModeControls size="sm" />
-  <FiltersButton size="sm" activeCount={n} onClick={…} />
-</div>
-<ListInfoRow
-  count={…}
-  activeFilterCount={n}
-  showFilterChips={false}        // chips already live in SearchBar
+<SearchBar
+  inlineSlot={<ActiveFilterChips />}
   rightSlot={
-    <CollapseControls
-      disabled={mode === "all" || mode === "density"}
-      onExpandAll={…} onCollapseAll={…}
-    />
+    <>
+      <PanelModeControls />
+      {showZoom && <ZoomControl />}
+      <FiltersButton size="sm" activeCount={n} onClick={…} />
+    </>
   }
 />
 ```
 
+Drawer flavour stacks the controls vertically and uses `size="sm"`.
+
 Card-row pattern:
 ```tsx
-<ListCardRow selected={isSelected} onClick={…} as="div">
-  {/* row content */}
-</ListCardRow>
+<ConnectionRow kind="reference" ref={ref} onDelete={…} />
+<ConnectionRow kind="aggregate" rel={rel} expanded={…} onToggleExpand={…} />
 ```
 
-Selected logic in tree views ties to both atoms:
-```ts
-const selected = overlayEntityId === entityId
-  || (selectedRefId !== null && refs.some(r => r.id === selectedRefId));
-```
-
-Drawer panels stack toolbar rows vertically with smaller heights (`size="sm"`).
+In tree mode, target cards are aggregate rows with inline-expand revealing their underlying ref rows. Selected state is read internally from `overlayEntityIdAtom` (aggregate) or `activeRefIdAtom`+`overlayEntityIdAtom` (reference).
 
 ## Files view
 - `focusedId` (single click on row) is separate from `selectedIds` (checkboxes).
@@ -108,9 +112,9 @@ Drawer panels stack toolbar rows vertically with smaller heights (`size="sm"`).
 - Selected rows use `bg-parchment`. No inset blue accent.
 
 ## Metadata view
-- Drawer tabs: **Document → Relationships → Files → Template** (Document is first by request).
+- Drawer tabs: **Document → Connections → Files → Template** (Document is first by request).
 - Files tab maps over real `files[]` from `data/files.ts` — *not* hardcoded.
-- Relationships tab inside the drawer always remounts as Tree view.
+- Connections tab inside the drawer renders `<ConnectionsDrawerSection />`; default panel mode is `tree`.
 
 ## Import CSV
 The 5 sample rows in `data/imports.ts` are seeded to match `images/screens/import_csv/*.png`. Status set: `completed`, `processing`, `failed`, `completed_warnings`, `completed_errors`, `uploading`, `pending`. `pending` rows render with a grey StatusBadge, grey ProgressBar, em-dashes for entities/failed, and a disabled View button.
@@ -120,7 +124,7 @@ The 5 sample rows in `data/imports.ts` are seeded to match `images/screens/impor
 `ToolsActionBar` has `mode: "list" | "detail"`. Detail mode = "Back to list" + "Delete Import" with its own confirm dialog. List-mode "New Import" is a solid `bg-ink` button.
 
 ## Component catalog
-Logo click toggles in/out of `ComponentCatalog`. Sidebar groups: Style Guide, Elements, Entity View — Layout / Document / References / Metadata / Files / Drawer / Relationships, Import CSV — Layout / Components, **Filters & Lists**, Shared. Add new shared/refs/relationships components here as a `CatalogEntry` with a live `Isolated…` demo.
+Logo click toggles in/out of `ComponentCatalog`. Sidebar groups: Style Guide, Elements, Entity View — Layout / Document / References / Metadata / Files / Drawer / Relationships, Import CSV — Layout / Components, **Filters & Lists**, Shared. Add new shared/connections components here as a `CatalogEntry` with a live `Isolated…` demo. Note: the Entity View → References + Relationships groups now both showcase `ConnectionRow` (reference and aggregate variants) and `ConnectionGroupedCard`.
 
 ## Mobile
 Breakpoints: mobile `<768`, tablet `768-1023`, desktop `≥1024` (`atoms/viewport.ts`). `AdaptiveSplitView` swaps to `MobileBottomSheet` on mobile. Outstanding mobile follow-ups in `~/.claude/projects/-Users-juanmnl-Documents-Claude-uwazi-2026/memory/pending.md` — read before touching mobile.
