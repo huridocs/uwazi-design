@@ -11,6 +11,7 @@ const zoomOptions: { id: Zoom; icon: typeof LayoutList; label: string }[] = [
 ];
 
 interface Props {
+  size?: "sm" | "md";
   /** When true, render the control inert (greyed out). Used in list view
    *  without grouping and in graph view to keep the toolbar layout stable. */
   disabled?: boolean;
@@ -18,8 +19,11 @@ interface Props {
 
 /** Three-button density toggle. Used for the tree view and grouped list view;
  *  the view itself is now selected via ViewControls. */
-export function ZoomControl({ disabled = false }: Props = {}) {
+export function ZoomControl({ size = "md", disabled = false }: Props = {}) {
   const [zoom, setZoom] = useAtom(zoomAtom);
+  const h = size === "sm" ? "h-6" : "h-8";
+  const iconSize = size === "sm" ? 11 : 12;
+  const px = size === "sm" ? "px-2" : "px-2.5";
 
   const cycle = (delta: number) => {
     if (disabled) return;
@@ -44,7 +48,7 @@ export function ZoomControl({ disabled = false }: Props = {}) {
       aria-label="Row density"
       onKeyDown={onKeyDown}
       aria-disabled={disabled}
-      className={`flex items-center rounded-md overflow-hidden h-8 ${
+      className={`flex items-center rounded-md overflow-hidden ${h} ${
         disabled ? "opacity-60" : ""
       }`}
       style={{ border: "1px solid var(--border-primary)" }}
@@ -61,7 +65,7 @@ export function ZoomControl({ disabled = false }: Props = {}) {
             aria-label={opt.label}
             title={opt.label}
             disabled={disabled}
-            className={`flex items-center justify-center h-8 px-2.5 transition-colors ${
+            className={`flex items-center justify-center ${h} ${px} transition-colors ${
               disabled
                 ? "text-ink-muted cursor-not-allowed"
                 : active
@@ -70,7 +74,7 @@ export function ZoomControl({ disabled = false }: Props = {}) {
             }`}
             style={{ borderLeft: i > 0 ? "1px solid var(--border-primary)" : "none" }}
           >
-            <Icon size={12} />
+            <Icon size={iconSize} />
           </button>
         );
       })}

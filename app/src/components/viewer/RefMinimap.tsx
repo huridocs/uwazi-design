@@ -123,26 +123,10 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
     return result;
   }, [references, numPages, mode, currentPage, searchQuery]);
 
-  // Collapse cluster when clicking outside (activeRefId becomes null)
-  useEffect(() => {
-    if (activeRefId === null) {
-      setExpandedCluster(null);
-      setActiveClusterRefIds(null);
-    }
-  }, [activeRefId, setActiveClusterRefIds]);
-
-  // Collapse cluster on outside click anywhere on the page
-  useEffect(() => {
-    if (expandedCluster === null) return;
-    const handleClick = (e: MouseEvent) => {
-      if (!minimapRef.current?.contains(e.target as Node)) {
-        setExpandedCluster(null);
-        setActiveClusterRefIds(null);
-      }
-    };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [expandedCluster, setActiveClusterRefIds]);
+  // Cluster filter is cleared explicitly via the "From selection" filter chip
+  // or by re-clicking the same minimap cluster. We intentionally do NOT clear
+  // it on outside clicks (that would drop the filter when users interact with
+  // the connections panel — expand all, toggle a group, click a row).
 
   if (numPages === 0 || references.length === 0) return null;
 

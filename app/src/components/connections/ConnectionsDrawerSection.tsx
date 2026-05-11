@@ -77,7 +77,7 @@ export function ConnectionsDrawerSection() {
           <SortControl size="sm" />
         </div>
         <div className="flex items-center gap-1.5">
-          <ZoomControl disabled={!showZoom} />
+          <ZoomControl size="sm" disabled={!showZoom} />
           <FiltersButton
             activeCount={activeFilterCount}
             onClick={() => setFiltersOpen(true)}
