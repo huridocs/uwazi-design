@@ -20,8 +20,8 @@ import { deriveRelationships, Relationship } from "../../utils/relationships";
 import { buildMatcher } from "../../utils/searchQuery";
 import { SearchBar } from "./SearchBar";
 import { ViewModeControls, CollapseControls } from "./FiltersRow";
-import { RelationshipRow } from "./RelationshipRow";
-import { RelationshipGroupedCard } from "./RelationshipGroupedCard";
+import { ConnectionRow } from "../connections/ConnectionRow";
+import { ConnectionGroupedCard } from "../connections/ConnectionGroupedCard";
 import { FiltersButton } from "../shared/FiltersButton";
 import { FiltersDrawer } from "../shared/FiltersDrawer";
 import { ListInfoRow } from "../shared/ListInfoRow";
@@ -189,7 +189,7 @@ export function RelationshipPanel() {
           <div className="px-3 space-y-1.5">
             <div className="border border-border/60 rounded-md overflow-hidden bg-paper">
               {filtered.map((rel) => (
-                <RelationshipRow key={rel.id} relationship={rel} />
+                <ConnectionRow key={rel.id} kind="aggregate" rel={rel} />
               ))}
             </div>
           </div>
@@ -198,12 +198,16 @@ export function RelationshipPanel() {
             {Array.from(groupedByEntityType.entries()).map(([typeId, rels]) => {
               const type = getEntityType(typeId);
               return (
-                <RelationshipGroupedCard
+                <ConnectionGroupedCard
                   key={typeId}
                   title={type?.name ?? typeId}
                   color={type?.color}
-                  relationships={rels}
-                />
+                  count={rels.length}
+                >
+                  {rels.map((rel) => (
+                    <ConnectionRow key={rel.id} kind="aggregate" rel={rel} />
+                  ))}
+                </ConnectionGroupedCard>
               );
             })}
           </div>
@@ -213,11 +217,15 @@ export function RelationshipPanel() {
               const label =
                 relationTypes.find((r) => r.id === relType)?.label ?? relType;
               return (
-                <RelationshipGroupedCard
+                <ConnectionGroupedCard
                   key={relType}
                   title={label}
-                  relationships={rels}
-                />
+                  count={rels.length}
+                >
+                  {rels.map((rel) => (
+                    <ConnectionRow key={rel.id} kind="aggregate" rel={rel} />
+                  ))}
+                </ConnectionGroupedCard>
               );
             })}
           </div>

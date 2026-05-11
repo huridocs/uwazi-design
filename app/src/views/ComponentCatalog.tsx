@@ -12,7 +12,6 @@ import { SegmentedTabs } from "../components/layout/SegmentedTabs";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { MainTabs } from "../components/layout/MainTabs";
 import { HighlightCard } from "../components/references/HighlightCard";
-import { DensityCard } from "../components/references/DensityCard";
 import { RelatedDocCard } from "../components/references/RelatedDocCard";
 import { FileTable } from "../components/files/FileTable";
 import { DrawerActionBar } from "../components/references/DrawerActionBar";
@@ -99,7 +98,6 @@ const sidebarGroups: SidebarGroup[] = [
       { id: "ev-ref-row", label: "RefRow" },
       { id: "ev-grouped-card", label: "GroupedCard" },
       { id: "ev-highlight-card", label: "HighlightCard" },
-      { id: "ev-density-card", label: "DensityCard" },
       { id: "ev-related-doc", label: "RelatedDocCard" },
     ],
   },
@@ -597,21 +595,6 @@ export function ComponentCatalog() {
                 >
                   <div className="w-full max-w-md">
                     <HighlightCard reference={references[0]} />
-                  </div>
-                </CatalogEntry>
-              </div>
-
-              <div id="ev-density-card" ref={reg("ev-density-card")}>
-                <CatalogEntry
-                  name="DensityCard"
-                  description="Stacked bar chart showing reference density by relation type"
-                  code={`<DensityCard
-  references={references}
-  totalPages={15}
-/>`}
-                >
-                  <div className="w-full max-w-md bg-paper border border-border/40 rounded-md">
-                    <DensityCard references={references} totalPages={15} />
                   </div>
                 </CatalogEntry>
               </div>

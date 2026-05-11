@@ -3,11 +3,19 @@ import { atom } from "jotai";
 export type ViewMode =
   | "all"
   | "by-entity-type"
-  | "by-relation-type"
-  | "density"
-  | "by-document";
+  | "by-relation-type";
 
 export const viewModeAtom = atom<ViewMode>("all");
+
+/** Merged Relationships panel view mode. Drives the body of the unified
+ *  Relationships surface introduced by the connections refactor. */
+export type PanelMode =
+  | "list"
+  | "by-entity-type"
+  | "by-relation-type"
+  | "tree"
+  | "graph";
+export const panelModeAtom = atom<PanelMode>("tree");
 
 export const searchQueryAtom = atom("");
 

@@ -30,9 +30,8 @@ import { MetadataDrawerContent } from "../components/references/MetadataDrawerCo
 import { TocDrawerContent } from "../components/references/TocDrawerContent";
 import { SearchBar } from "../components/references/SearchBar";
 import { ViewModeControls, CollapseControls } from "../components/references/FiltersRow";
-import { GroupedCard } from "../components/references/GroupedCard";
-import { DensityCard } from "../components/references/DensityCard";
-import { RefRow } from "../components/references/RefRow";
+import { ConnectionRow } from "../components/connections/ConnectionRow";
+import { ConnectionGroupedCard } from "../components/connections/ConnectionGroupedCard";
 import { ConfirmDialog } from "../components/shared/ConfirmDialog";
 import { EntityPickerModal } from "./EntityPickerModal";
 import { ToastContainer } from "./ToastContainer";
@@ -459,7 +458,7 @@ function ReferencesMainView({ tabs, activeTab, onTabChange }: ReferencesMainView
             showFilterChips={false}
             rightSlot={
               <CollapseControls
-                disabled={viewMode === "all" || viewMode === "density"}
+                disabled={viewMode === "all"}
                 onExpandAll={() => setExpandSignal((s) => s + 1)}
                 onCollapseAll={() => setCollapseSignal((s) => s + 1)}
               />
@@ -479,7 +478,12 @@ function ReferencesMainView({ tabs, activeTab, onTabChange }: ReferencesMainView
               <div className="px-3 py-3">
                 <div className="border border-border/60 rounded-md overflow-hidden bg-paper">
                   {filtered.map((ref) => (
-                    <RefRow key={ref.id} reference={ref} onDelete={handleDelete} />
+                    <ConnectionRow
+                      key={ref.id}
+                      kind="reference"
+                      ref={ref}
+                      onDelete={handleDelete}
+                    />
                   ))}
                 </div>
               </div>
@@ -488,13 +492,22 @@ function ReferencesMainView({ tabs, activeTab, onTabChange }: ReferencesMainView
                 {Array.from(groupedByEntityType.entries()).map(([typeId, refs]) => {
                   const type = getEntityType(typeId);
                   return (
-                    <GroupedCard
+                    <ConnectionGroupedCard
                       key={typeId}
                       title={type?.name ?? typeId}
                       color={type?.color}
-                      references={refs}
-                      onDeleteRef={handleDelete}
-                    />
+                      count={refs.length}
+                      refIdsToWatch={refs.map((r) => r.id)}
+                    >
+                      {refs.map((ref) => (
+                        <ConnectionRow
+                          key={ref.id}
+                          kind="reference"
+                          ref={ref}
+                          onDelete={handleDelete}
+                        />
+                      ))}
+                    </ConnectionGroupedCard>
                   );
                 })}
               </div>
@@ -504,21 +517,23 @@ function ReferencesMainView({ tabs, activeTab, onTabChange }: ReferencesMainView
                   const label =
                     relationTypes.find((r) => r.id === relType)?.label ?? relType;
                   return (
-                    <GroupedCard
+                    <ConnectionGroupedCard
                       key={relType}
                       title={label}
-                      references={refs}
-                      onDeleteRef={handleDelete}
-                    />
+                      count={refs.length}
+                      refIdsToWatch={refs.map((r) => r.id)}
+                    >
+                      {refs.map((ref) => (
+                        <ConnectionRow
+                          key={ref.id}
+                          kind="reference"
+                          ref={ref}
+                          onDelete={handleDelete}
+                        />
+                      ))}
+                    </ConnectionGroupedCard>
                   );
                 })}
-              </div>
-            ) : viewMode === "density" ? (
-              <div className="px-3 py-3">
-                <DensityCard
-                  references={filtered}
-                  totalPages={currentDocument.pages}
-                />
               </div>
             ) : null}
           </div>

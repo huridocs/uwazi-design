@@ -14,14 +14,12 @@ import {
   entityTypeFiltersAtom,
 } from "../../atoms/filters";
 import { getEntity, getEntityType } from "../../data/entities";
-import { currentDocument } from "../../data/document";
 import { Reference, relationTypes } from "../../data/references";
 import { DrawerTabs } from "../layout/DrawerTabs";
 import { SearchBar } from "./SearchBar";
 import { ViewModeControls, CollapseControls } from "./FiltersRow";
-import { GroupedCard } from "./GroupedCard";
-import { DensityCard } from "./DensityCard";
-import { RefRow } from "./RefRow";
+import { ConnectionRow } from "../connections/ConnectionRow";
+import { ConnectionGroupedCard } from "../connections/ConnectionGroupedCard";
 import { DrawerActionBar } from "./DrawerActionBar";
 import { ConfirmDialog } from "../shared/ConfirmDialog";
 import { FiltersButton } from "../shared/FiltersButton";
@@ -203,7 +201,7 @@ export function ReferencePanel() {
             showFilterChips={false}
             rightSlot={
               <CollapseControls
-                disabled={viewMode === "all" || viewMode === "density"}
+                disabled={viewMode === "all"}
                 onExpandAll={() => setExpandSignal((s) => s + 1)}
                 onCollapseAll={() => setCollapseSignal((s) => s + 1)}
               />
@@ -224,45 +222,65 @@ export function ReferencePanel() {
           </div>
         ) : viewMode === "all" ? (
           <div className="px-3 space-y-1.5">
-          {filtered.map((ref) => (
-            <RefRow key={ref.id} reference={ref} onDelete={handleDelete} />
-          ))}
+            <div className="border border-border/60 rounded-md overflow-hidden bg-paper">
+              {filtered.map((ref) => (
+                <ConnectionRow
+                  key={ref.id}
+                  kind="reference"
+                  ref={ref}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
           </div>
         ) : viewMode === "by-entity-type" ? (
           <div className="px-3 space-y-1.5">
-          {Array.from(groupedByEntityType.entries()).map(([typeId, refs]) => {
-            const type = getEntityType(typeId);
-            return (
-              <GroupedCard
-                key={typeId}
-                title={type?.name ?? typeId}
-                color={type?.color}
-                references={refs}
-                onDeleteRef={handleDelete}
-              />
-            );
-          })}
+            {Array.from(groupedByEntityType.entries()).map(([typeId, refs]) => {
+              const type = getEntityType(typeId);
+              return (
+                <ConnectionGroupedCard
+                  key={typeId}
+                  title={type?.name ?? typeId}
+                  color={type?.color}
+                  count={refs.length}
+                  refIdsToWatch={refs.map((r) => r.id)}
+                >
+                  {refs.map((ref) => (
+                    <ConnectionRow
+                      key={ref.id}
+                      kind="reference"
+                      ref={ref}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+                </ConnectionGroupedCard>
+              );
+            })}
           </div>
         ) : viewMode === "by-relation-type" ? (
           <div className="px-3 space-y-1.5">
-          {Array.from(groupedByRelType.entries()).map(([relType, refs]) => {
-            const label =
-              relationTypes.find((r) => r.id === relType)?.label ?? relType;
-            return (
-              <GroupedCard
-                key={relType}
-                title={label}
-                references={refs}
-                onDeleteRef={handleDelete}
-              />
-            );
-          })}
+            {Array.from(groupedByRelType.entries()).map(([relType, refs]) => {
+              const label =
+                relationTypes.find((r) => r.id === relType)?.label ?? relType;
+              return (
+                <ConnectionGroupedCard
+                  key={relType}
+                  title={label}
+                  count={refs.length}
+                  refIdsToWatch={refs.map((r) => r.id)}
+                >
+                  {refs.map((ref) => (
+                    <ConnectionRow
+                      key={ref.id}
+                      kind="reference"
+                      ref={ref}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+                </ConnectionGroupedCard>
+              );
+            })}
           </div>
-        ) : viewMode === "density" ? (
-          <DensityCard
-            references={filtered}
-            totalPages={currentDocument.pages}
-          />
         ) : null}
       </div>
       )}

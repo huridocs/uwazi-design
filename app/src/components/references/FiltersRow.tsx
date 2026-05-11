@@ -7,7 +7,6 @@ const toggleOptions: { id: ViewMode; label: string }[] = [
   { id: "all", label: "All" },
   { id: "by-entity-type", label: "Entity type" },
   { id: "by-relation-type", label: "Rel. type" },
-  { id: "density", label: "Density" },
 ];
 
 const sortOptions: { id: SortOrder; label: string }[] = [
