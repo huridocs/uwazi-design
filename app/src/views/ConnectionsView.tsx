@@ -3,7 +3,8 @@ import { useAtom } from "jotai";
 import { referencesAtom, toastsAtom } from "../atoms/references";
 import { languageAtom, type Language } from "../atoms/language";
 import {
-  panelModeAtom,
+  viewAtom,
+  groupByAtom,
   searchQueryAtom,
   sortOrderAtom,
   activeClusterRefIdsAtom,
@@ -26,7 +27,9 @@ import { FiltersButton } from "../components/shared/FiltersButton";
 import { FiltersDrawer } from "../components/shared/FiltersDrawer";
 import { ConfirmDialog } from "../components/shared/ConfirmDialog";
 import { ConnectionsPanelBody } from "../components/connections/ConnectionsPanelBody";
-import { PanelModeControls } from "../components/connections/PanelModeControls";
+import { ViewControls } from "../components/connections/ViewControls";
+import { GroupByControl } from "../components/connections/GroupByControl";
+import { SortControl } from "../components/connections/SortControl";
 
 interface Props {
   tabs: { id: string; label: string; count?: number }[];
@@ -41,7 +44,8 @@ export function ConnectionsView({ tabs, activeTab, onTabChange }: Props) {
   const [references, setReferences] = useAtom(referencesAtom);
   const [, setToasts] = useAtom(toastsAtom);
   const [language, setLanguage] = useAtom(languageAtom);
-  const [mode] = useAtom(panelModeAtom);
+  const [view] = useAtom(viewAtom);
+  const [groupBy] = useAtom(groupByAtom);
   const [filtersOpen, setFiltersOpen] = useAtom(filtersDrawerOpenAtom);
   const [activeFilterCount] = useAtom(activeFilterCountAtom);
   const [, setSearchQuery] = useAtom(searchQueryAtom);
@@ -74,11 +78,8 @@ export function ConnectionsView({ tabs, activeTab, onTabChange }: Props) {
     setActiveClusterRefIds(null);
   };
 
-  const showZoom =
-    mode === "by-entity-type" ||
-    mode === "by-relation-type" ||
-    mode === "tree";
-  const hideMinimap = mode === "graph";
+  const showZoom = view === "tree" || (view === "list" && groupBy !== "none");
+  const hideMinimap = view === "graph";
 
   return (
     <AdaptiveSplitView
@@ -95,7 +96,7 @@ export function ConnectionsView({ tabs, activeTab, onTabChange }: Props) {
         },
         {
           id: "connections",
-          label: "Connections",
+          label: "Relationships",
           count: references.length,
           content: <ConnectionsPanelBody onDelete={handleDelete} />,
         },
@@ -114,20 +115,22 @@ export function ConnectionsView({ tabs, activeTab, onTabChange }: Props) {
           <DocMeta showPdfSelector={false} />
 
           <div className="pt-2" />
-          <SearchBar
-            inlineSlot={<ActiveFilterChips />}
-            rightSlot={
-              <>
-                <PanelModeControls />
-                {showZoom && <ZoomControl />}
-                <FiltersButton
-                  activeCount={activeFilterCount}
-                  onClick={() => setFiltersOpen(true)}
-                  size="sm"
-                />
-              </>
-            }
-          />
+          <SearchBar inlineSlot={<ActiveFilterChips />} />
+          <div className="px-3 pb-2 flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <ViewControls size="sm" />
+              {view === "list" && <GroupByControl size="sm" />}
+              <SortControl size="sm" />
+            </div>
+            <div className="flex items-center gap-1.5">
+              {showZoom && <ZoomControl />}
+              <FiltersButton
+                activeCount={activeFilterCount}
+                onClick={() => setFiltersOpen(true)}
+                size="sm"
+              />
+            </div>
+          </div>
 
           <ConnectionsPanelBody
             onDelete={handleDelete}

@@ -21,7 +21,7 @@ import { DirectionGlyph } from "./DirectionGlyph";
 
 interface ReferenceKind {
   kind: "reference";
-  ref: Reference;
+  reference: Reference;
   onDelete?: (id: string) => void;
 }
 
@@ -47,7 +47,7 @@ export function ConnectionRow(props: Props) {
   return <AggregateRow {...props} />;
 }
 
-function ReferenceRow({ ref: reference, onDelete }: ReferenceKind) {
+function ReferenceRow({ reference, onDelete }: ReferenceKind) {
   const entity = getEntity(reference.targetEntityId);
   const type = entity ? getEntityType(entity.typeId) : undefined;
   const setScrollToHighlight = useSetAtom(scrollToHighlightAtom);

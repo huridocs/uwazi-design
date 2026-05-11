@@ -438,7 +438,7 @@ function MetadataDrawer() {
 
   const drawerTabs = [
     { id: "document", label: "Document" },
-    { id: "connections", label: "Connections", count: references.length },
+    { id: "connections", label: "Relationships", count: references.length },
     { id: "files", label: "Files", count: files.length },
     { id: "template", label: "Template" },
   ];

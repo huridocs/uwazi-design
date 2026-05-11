@@ -27,7 +27,9 @@ import { Checkbox } from "../components/shared/Checkbox";
 import { ZoomControl } from "../components/references/ZoomControl";
 import { ConnectionRow } from "../components/connections/ConnectionRow";
 import { ConnectionGroupedCard } from "../components/connections/ConnectionGroupedCard";
-import { PanelModeControls } from "../components/connections/PanelModeControls";
+import { ViewControls } from "../components/connections/ViewControls";
+import { GroupByControl } from "../components/connections/GroupByControl";
+import { SortControl } from "../components/connections/SortControl";
 import { DirectionGlyph } from "../components/connections/DirectionGlyph";
 import { deriveRelationships } from "../utils/relationships";
 import { ActionBar } from "../components/viewer/ActionBar";
@@ -157,7 +159,9 @@ const sidebarGroups: SidebarGroup[] = [
     items: [
       { id: "connection-row-aggregate", label: "ConnectionRow · aggregate" },
       { id: "connection-grouped-card-aggregate", label: "ConnectionGroupedCard · aggregate" },
-      { id: "panel-mode-controls", label: "PanelModeControls" },
+      { id: "view-controls", label: "ViewControls" },
+      { id: "group-by-control", label: "GroupByControl" },
+      { id: "sort-control", label: "SortControl" },
       { id: "direction-glyph", label: "DirectionGlyph" },
     ],
   },
@@ -583,7 +587,7 @@ export function ComponentCatalog() {
   defaultExpanded
 >
   {refs.map((ref) => (
-    <ConnectionRow kind="reference" ref={ref} />
+    <ConnectionRow kind="reference" reference={ref} />
   ))}
 </ConnectionGroupedCard>`}
                 >
@@ -1090,13 +1094,33 @@ export function ComponentCatalog() {
                 </CatalogEntry>
               </div>
 
-              <div id="panel-mode-controls" ref={reg("panel-mode-controls")}>
+              <div id="view-controls" ref={reg("view-controls")}>
                 <CatalogEntry
-                  name="PanelModeControls"
-                  description="Segmented 5-way pill driving the merged Relationships panel (list / by entity / by relation / tree / graph)."
-                  code={`<PanelModeControls />`}
+                  name="ViewControls"
+                  description="Presentation toggle for the merged Relationships panel: list / tree / graph."
+                  code={`<ViewControls />`}
                 >
-                  <IsolatedPanelModeControls />
+                  <IsolatedViewControls />
+                </CatalogEntry>
+              </div>
+
+              <div id="group-by-control" ref={reg("group-by-control")}>
+                <CatalogEntry
+                  name="GroupByControl"
+                  description="Dropdown selecting the grouping axis applied to list view (none / entity type / relation type)."
+                  code={`<GroupByControl />`}
+                >
+                  <IsolatedGroupByControl />
+                </CatalogEntry>
+              </div>
+
+              <div id="sort-control" ref={reg("sort-control")}>
+                <CatalogEntry
+                  name="SortControl"
+                  description="Dropdown selecting the sort order (appearance / A → Z / Z → A)."
+                  code={`<SortControl />`}
+                >
+                  <IsolatedSortControl />
                 </CatalogEntry>
               </div>
 
@@ -1411,7 +1435,7 @@ function IsolatedConnectionGroupedCard() {
           <ConnectionRow
             key={ref.id}
             kind="reference"
-            ref={ref}
+            reference={ref}
             onDelete={() => {}}
           />
         ))}
@@ -1424,8 +1448,8 @@ function IsolatedConnectionRowReference() {
   const store = createStore();
   return (
     <Provider store={store}>
-      <ConnectionRow kind="reference" ref={references[0]} onDelete={() => {}} />
-      <ConnectionRow kind="reference" ref={references[1]} onDelete={() => {}} />
+      <ConnectionRow kind="reference" reference={references[0]} onDelete={() => {}} />
+      <ConnectionRow kind="reference" reference={references[1]} onDelete={() => {}} />
     </Provider>
   );
 }
@@ -1639,11 +1663,29 @@ function IsolatedConnectionGroupedCardAggregate() {
   );
 }
 
-function IsolatedPanelModeControls() {
+function IsolatedViewControls() {
   const store = createStore();
   return (
     <Provider store={store}>
-      <PanelModeControls />
+      <ViewControls />
+    </Provider>
+  );
+}
+
+function IsolatedGroupByControl() {
+  const store = createStore();
+  return (
+    <Provider store={store}>
+      <GroupByControl />
+    </Provider>
+  );
+}
+
+function IsolatedSortControl() {
+  const store = createStore();
+  return (
+    <Provider store={store}>
+      <SortControl />
     </Provider>
   );
 }

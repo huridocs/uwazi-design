@@ -10,7 +10,7 @@ import { ConnectionsDrawerSection } from "../connections/ConnectionsDrawerSectio
 const baseDrawerTabs = [
   { id: "metadata", label: "Metadata" },
   { id: "toc", label: "ToC" },
-  { id: "connections", label: "Connections" },
+  { id: "connections", label: "Relationships" },
   { id: "search", label: "Search" },
 ];
 

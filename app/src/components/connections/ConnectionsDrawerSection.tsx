@@ -2,7 +2,8 @@ import { useCallback, useState } from "react";
 import { useAtom } from "jotai";
 import { referencesAtom, toastsAtom } from "../../atoms/references";
 import {
-  panelModeAtom,
+  viewAtom,
+  groupByAtom,
   searchQueryAtom,
   sortOrderAtom,
   activeClusterRefIdsAtom,
@@ -19,7 +20,9 @@ import { FiltersButton } from "../shared/FiltersButton";
 import { FiltersDrawer } from "../shared/FiltersDrawer";
 import { ConfirmDialog } from "../shared/ConfirmDialog";
 import { ConnectionsPanelBody } from "./ConnectionsPanelBody";
-import { PanelModeControls } from "./PanelModeControls";
+import { ViewControls } from "./ViewControls";
+import { GroupByControl } from "./GroupByControl";
+import { SortControl } from "./SortControl";
 
 /** Drawer-style connections section: toolbar + body + scoped filters drawer.
  *  Used wherever the unified Relationships panel needs to render inside a
@@ -34,7 +37,8 @@ export function ConnectionsDrawerSection() {
   const [, setEntityTypeFilters] = useAtom(entityTypeFiltersAtom);
   const [filtersOpen, setFiltersOpen] = useAtom(filtersDrawerOpenAtom);
   const [activeFilterCount] = useAtom(activeFilterCountAtom);
-  const [mode] = useAtom(panelModeAtom);
+  const [view] = useAtom(viewAtom);
+  const [groupBy] = useAtom(groupByAtom);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const handleDelete = useCallback((id: string) => setDeleteTarget(id), []);
@@ -61,16 +65,17 @@ export function ConnectionsDrawerSection() {
     setActiveClusterRefIds(null);
   };
 
-  const showZoom =
-    mode === "by-entity-type" ||
-    mode === "by-relation-type" ||
-    mode === "tree";
+  const showZoom = view === "tree" || (view === "list" && groupBy !== "none");
 
   return (
     <>
       <SearchBar inlineSlot={<ActiveFilterChips />} />
       <div className="px-3 pb-2 flex items-center justify-between gap-2 flex-wrap">
-        <PanelModeControls size="sm" />
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <ViewControls size="sm" />
+          {view === "list" && <GroupByControl size="sm" />}
+          <SortControl size="sm" />
+        </div>
         <div className="flex items-center gap-1.5">
           {showZoom && <ZoomControl />}
           <FiltersButton

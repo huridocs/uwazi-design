@@ -87,7 +87,7 @@ export function ReferencesView() {
         mobileSections={[
           {
             id: "connections",
-            label: "Connections",
+            label: "Relationships",
             count: references.length,
             content: <ReferencePanel />,
           },

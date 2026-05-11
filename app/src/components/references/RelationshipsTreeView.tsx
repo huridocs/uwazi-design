@@ -328,7 +328,7 @@ function GroupBlock({
                 {expanded && (
                   <div className="bg-warm/40 border-t border-border/40">
                     {t.refs.map((ref) => (
-                      <ConnectionRow key={ref.id} kind="reference" ref={ref} />
+                      <ConnectionRow key={ref.id} kind="reference" reference={ref} />
                     ))}
                   </div>
                 )}

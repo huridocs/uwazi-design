@@ -10,8 +10,8 @@ const zoomOptions: { id: Zoom; icon: typeof LayoutList; label: string }[] = [
   { id: "overview", icon: CircleDot, label: "Overview" },
 ];
 
-/** Three-button density toggle. Used for the grouped + tree panel modes; the
- *  graph mode is now selected via PanelModeControls instead. */
+/** Three-button density toggle. Used for the tree view and grouped list view;
+ *  the view itself is now selected via ViewControls. */
 export function ZoomControl() {
   const [zoom, setZoom] = useAtom(zoomAtom);
 

@@ -3,7 +3,8 @@ import { useAtom, useSetAtom } from "jotai";
 import { Link2 } from "lucide-react";
 import { referencesAtom } from "../../atoms/references";
 import {
-  panelModeAtom,
+  viewAtom,
+  groupByAtom,
   searchQueryAtom,
   sortOrderAtom,
   activeClusterRefIdsAtom,
@@ -36,7 +37,8 @@ interface Props {
  *  by both the main `Relationships` tab and the document-tab drawer. */
 export function ConnectionsPanelBody({ onDelete, scrollBgClass }: Props) {
   const [references] = useAtom(referencesAtom);
-  const [mode] = useAtom(panelModeAtom);
+  const [view] = useAtom(viewAtom);
+  const [groupBy] = useAtom(groupByAtom);
   const [searchQuery] = useAtom(searchQueryAtom);
   const [sortOrder] = useAtom(sortOrderAtom);
   const [activeClusterRefIds] = useAtom(activeClusterRefIdsAtom);
@@ -138,17 +140,14 @@ export function ConnectionsPanelBody({ onDelete, scrollBgClass }: Props) {
   }, [filtered, sortOrder]);
 
   const entityCount = new Set(filtered.map((r) => r.targetEntityId)).size;
-  const showCollapse =
-    mode === "by-entity-type" ||
-    mode === "by-relation-type" ||
-    mode === "tree";
+  const showCollapse = view === "list" && groupBy !== "none";
 
   // Tree + graph manage their own info row + filter pipeline (they group by
   // relation type → target → refs internally and add the direction split).
-  if (mode === "tree") {
+  if (view === "tree") {
     return <RelationshipsTreeView />;
   }
-  if (mode === "graph") {
+  if (view === "graph") {
     return (
       <div className="flex-1 flex flex-col min-h-0">
         <RelationshipsGraphView />
@@ -160,25 +159,25 @@ export function ConnectionsPanelBody({ onDelete, scrollBgClass }: Props) {
     filtered.length === 0 ? (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <Link2 size={36} className="text-ink-tertiary/40 mb-3" />
-        <p className="text-sm text-ink-tertiary">No connections found</p>
+        <p className="text-sm text-ink-tertiary">No relationships found</p>
         <p className="text-xs text-ink-tertiary mt-1">
           Select text in the document to create one
         </p>
       </div>
-    ) : mode === "list" ? (
+    ) : groupBy === "none" ? (
       <div className="px-3 py-3">
         <div className="border border-border/60 rounded-md overflow-hidden bg-paper">
           {filtered.map((ref) => (
             <ConnectionRow
               key={ref.id}
               kind="reference"
-              ref={ref}
+              reference={ref}
               onDelete={onDelete}
             />
           ))}
         </div>
       </div>
-    ) : mode === "by-entity-type" ? (
+    ) : groupBy === "entity-type" ? (
       <div className="px-3 py-3 space-y-1.5">
         {Array.from(groupedByEntityType.entries()).map(([typeId, refs]) => {
           const type = getEntityType(typeId);
@@ -194,7 +193,7 @@ export function ConnectionsPanelBody({ onDelete, scrollBgClass }: Props) {
                 <ConnectionRow
                   key={ref.id}
                   kind="reference"
-                  ref={ref}
+                  reference={ref}
                   onDelete={onDelete}
                 />
               ))}
@@ -218,7 +217,7 @@ export function ConnectionsPanelBody({ onDelete, scrollBgClass }: Props) {
                 <ConnectionRow
                   key={ref.id}
                   kind="reference"
-                  ref={ref}
+                  reference={ref}
                   onDelete={onDelete}
                 />
               ))}
@@ -236,7 +235,7 @@ export function ConnectionsPanelBody({ onDelete, scrollBgClass }: Props) {
             <span className="font-semibold text-ink-secondary tabular-nums">
               {filtered.length}
             </span>{" "}
-            connections,{" "}
+            relationships,{" "}
             <span className="font-semibold text-ink-secondary tabular-nums">
               {entityCount}
             </span>{" "}
