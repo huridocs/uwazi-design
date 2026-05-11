@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Eye, FileText, Trash2 } from "lucide-react";
 import {
   activeRefIdAtom,
@@ -8,7 +8,7 @@ import {
   scrollToRefAtom,
   activeDrawerTabAtom,
 } from "../../atoms/references";
-import { activeClusterRefIdsAtom } from "../../atoms/filters";
+import { activeClusterRefIdsAtom, zoomAtom } from "../../atoms/filters";
 import { currentPageAtom } from "../../atoms/selection";
 import { getEntity, getEntityType } from "../../data/entities";
 import { Reference, relationTypes } from "../../data/references";
@@ -39,7 +39,8 @@ type Props = ReferenceKind | AggregateKind;
 /** Unified row primitive for the merged Relationships panel. Renders a single
  *  text-anchored reference (kind="reference", with snippet + page tag) or a
  *  deduped aggregate relationship (kind="aggregate", entity-level with an
- *  evidence-count action). */
+ *  evidence-count action). Reads zoomAtom to vary row density across
+ *  detail / compact / overview. */
 export function ConnectionRow(props: Props) {
   if (props.kind === "reference") {
     return <ReferenceRow {...props} />;
@@ -50,6 +51,7 @@ export function ConnectionRow(props: Props) {
 function ReferenceRow({ reference, onDelete }: ReferenceKind) {
   const entity = getEntity(reference.targetEntityId);
   const type = entity ? getEntityType(entity.typeId) : undefined;
+  const zoom = useAtomValue(zoomAtom);
   const setScrollToHighlight = useSetAtom(scrollToHighlightAtom);
   const [scrollToRef, setScrollToRef] = useAtom(scrollToRefAtom);
   const [activeRefId, setActiveRefId] = useAtom(activeRefIdAtom);
@@ -78,6 +80,47 @@ function ReferenceRow({ reference, onDelete }: ReferenceKind) {
     setScrollToHighlight(reference.id);
   };
 
+  // Overview: single-line, entity pill + page tag only.
+  if (zoom === "overview") {
+    return (
+      <ListCardRow
+        ref={rowRef as unknown as React.Ref<HTMLElement>}
+        selected={isActive}
+        onClick={handleClick}
+        className="!py-1.5"
+      >
+        <div className="flex items-center justify-between gap-2">
+          <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
+          <PageTag page={reference.sourceSelection.page} onClick={handleClick} />
+        </div>
+      </ListCardRow>
+    );
+  }
+
+  // Compact: single-line, pill + direction + rel label + page tag, no snippet.
+  if (zoom === "compact") {
+    return (
+      <ListCardRow
+        ref={rowRef as unknown as React.Ref<HTMLElement>}
+        selected={isActive}
+        onClick={handleClick}
+        className="!py-2"
+      >
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
+            <DirectionGlyph direction={direction} />
+            <span className="text-[10px] text-ink-tertiary truncate capitalize">
+              {relLabel}
+            </span>
+          </div>
+          <PageTag page={reference.sourceSelection.page} onClick={handleClick} />
+        </div>
+      </ListCardRow>
+    );
+  }
+
+  // Detail (default): full layout — header, snippet, footer with actions.
   return (
     <ListCardRow
       ref={rowRef as unknown as React.Ref<HTMLElement>}
@@ -135,6 +178,7 @@ function ReferenceRow({ reference, onDelete }: ReferenceKind) {
 function AggregateRow({ rel, expanded, onToggleExpand }: AggregateKind) {
   const entity = getEntity(rel.targetEntityId);
   const type = entity ? getEntityType(entity.typeId) : undefined;
+  const zoom = useAtomValue(zoomAtom);
   const [overlayEntityId, setOverlayEntityId] = useAtom(overlayEntityIdAtom);
   const setActiveDrawerTab = useSetAtom(activeDrawerTabAtom);
   const setActiveClusterRefIds = useSetAtom(activeClusterRefIdsAtom);
@@ -150,12 +194,69 @@ function AggregateRow({ rel, expanded, onToggleExpand }: AggregateKind) {
       onToggleExpand();
       return;
     }
-    // Legacy behaviour: jump to the References drawer tab with the cluster
-    // filter applied. Used by the drawer-side panel until the main views merge.
     setActiveClusterRefIds(rel.refIds);
     setActiveDrawerTab("connections");
   };
 
+  const countBadge = (
+    <button
+      type="button"
+      onClick={handleEvidenceClick}
+      aria-label={`${rel.evidenceCount} evidence references`}
+      aria-expanded={onToggleExpand ? !!expanded : undefined}
+      title={
+        onToggleExpand ? "Toggle evidence" : "View evidence in References"
+      }
+      className={`flex items-center gap-1 px-1.5 h-5 rounded text-[10px] font-medium tabular-nums transition-colors cursor-pointer ${
+        expanded
+          ? "bg-ink text-paper"
+          : "bg-warm text-ink-tertiary hover:bg-parchment hover:text-ink-secondary"
+      }`}
+    >
+      <FileText size={10} />
+      {rel.evidenceCount}
+    </button>
+  );
+
+  // Overview: pill + count only.
+  if (zoom === "overview") {
+    return (
+      <ListCardRow
+        selected={selected}
+        onClick={() => setOverlayEntityId(rel.targetEntityId)}
+        className="!py-1.5"
+      >
+        <div className="flex items-center justify-between gap-2">
+          <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
+          {countBadge}
+        </div>
+      </ListCardRow>
+    );
+  }
+
+  // Compact: single-line, pill + direction + rel label + count.
+  if (zoom === "compact") {
+    return (
+      <ListCardRow
+        selected={selected}
+        onClick={() => setOverlayEntityId(rel.targetEntityId)}
+        className="!py-2"
+      >
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
+            <DirectionGlyph direction={rel.direction} />
+            <span className="text-[10px] text-ink-tertiary truncate capitalize">
+              {relLabel}
+            </span>
+          </div>
+          {countBadge}
+        </div>
+      </ListCardRow>
+    );
+  }
+
+  // Detail: full layout — header, footer.
   return (
     <ListCardRow
       selected={selected}
@@ -165,23 +266,7 @@ function AggregateRow({ rel, expanded, onToggleExpand }: AggregateKind) {
         <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
         <div className="flex items-center gap-1.5 shrink-0">
           <span className="text-[10px] text-ink-tertiary">{type?.name ?? ""}</span>
-          <button
-            type="button"
-            onClick={handleEvidenceClick}
-            aria-label={`${rel.evidenceCount} evidence references`}
-            aria-expanded={onToggleExpand ? !!expanded : undefined}
-            title={
-              onToggleExpand ? "Toggle evidence" : "View evidence in References"
-            }
-            className={`flex items-center gap-1 px-1.5 h-5 rounded text-[10px] font-medium tabular-nums transition-colors cursor-pointer ${
-              expanded
-                ? "bg-ink text-paper"
-                : "bg-warm text-ink-tertiary hover:bg-parchment hover:text-ink-secondary"
-            }`}
-          >
-            <FileText size={10} />
-            {rel.evidenceCount}
-          </button>
+          {countBadge}
         </div>
       </div>
       <div className="flex items-center gap-1 mt-1 text-[10px] text-ink-tertiary">

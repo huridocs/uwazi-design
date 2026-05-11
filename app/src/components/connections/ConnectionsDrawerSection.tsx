@@ -65,7 +65,7 @@ export function ConnectionsDrawerSection() {
     setActiveClusterRefIds(null);
   };
 
-  const showZoom = view === "tree" || (view === "list" && groupBy !== "none");
+  const showZoom = view !== "graph";
 
   return (
     <>

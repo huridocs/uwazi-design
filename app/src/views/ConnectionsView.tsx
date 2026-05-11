@@ -78,7 +78,7 @@ export function ConnectionsView({ tabs, activeTab, onTabChange }: Props) {
     setActiveClusterRefIds(null);
   };
 
-  const showZoom = view === "tree" || (view === "list" && groupBy !== "none");
+  const showZoom = view !== "graph";
   const hideMinimap = view === "graph";
 
   return (
