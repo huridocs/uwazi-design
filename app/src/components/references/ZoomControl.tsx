@@ -10,12 +10,19 @@ const zoomOptions: { id: Zoom; icon: typeof LayoutList; label: string }[] = [
   { id: "overview", icon: CircleDot, label: "Overview" },
 ];
 
+interface Props {
+  /** When true, render the control inert (greyed out). Used in list view
+   *  without grouping and in graph view to keep the toolbar layout stable. */
+  disabled?: boolean;
+}
+
 /** Three-button density toggle. Used for the tree view and grouped list view;
  *  the view itself is now selected via ViewControls. */
-export function ZoomControl() {
+export function ZoomControl({ disabled = false }: Props = {}) {
   const [zoom, setZoom] = useAtom(zoomAtom);
 
   const cycle = (delta: number) => {
+    if (disabled) return;
     const i = zoomOrder.indexOf(zoom);
     const next = zoomOrder[(i + delta + zoomOrder.length) % zoomOrder.length];
     setZoom(next);
@@ -36,7 +43,10 @@ export function ZoomControl() {
       role="group"
       aria-label="Row density"
       onKeyDown={onKeyDown}
-      className="flex items-center rounded-md overflow-hidden h-8"
+      aria-disabled={disabled}
+      className={`flex items-center rounded-md overflow-hidden h-8 ${
+        disabled ? "opacity-60" : ""
+      }`}
       style={{ border: "1px solid var(--border-primary)" }}
     >
       {zoomOptions.map((opt, i) => {
@@ -45,14 +55,18 @@ export function ZoomControl() {
         return (
           <button
             key={opt.id}
-            onClick={() => setZoom(opt.id)}
+            type="button"
+            onClick={() => !disabled && setZoom(opt.id)}
             aria-pressed={active}
             aria-label={opt.label}
             title={opt.label}
-            className={`flex items-center justify-center h-8 px-2.5 transition-colors cursor-pointer ${
-              active
-                ? "bg-vellum text-ink"
-                : "text-ink-tertiary hover:text-ink-secondary"
+            disabled={disabled}
+            className={`flex items-center justify-center h-8 px-2.5 transition-colors ${
+              disabled
+                ? "text-ink-muted cursor-not-allowed"
+                : active
+                  ? "bg-vellum text-ink cursor-pointer"
+                  : "text-ink-tertiary hover:text-ink-secondary cursor-pointer"
             }`}
             style={{ borderLeft: i > 0 ? "1px solid var(--border-primary)" : "none" }}
           >

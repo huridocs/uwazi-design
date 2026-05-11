@@ -119,11 +119,11 @@ export function ConnectionsView({ tabs, activeTab, onTabChange }: Props) {
           <div className="px-3 pb-2 flex items-center justify-between gap-2 flex-wrap">
             <div className="flex items-center gap-1.5 flex-wrap">
               <ViewControls size="sm" />
-              {view === "list" && <GroupByControl size="sm" />}
+              <GroupByControl size="sm" disabled={view !== "list"} />
               <SortControl size="sm" />
             </div>
             <div className="flex items-center gap-1.5">
-              {showZoom && <ZoomControl />}
+              <ZoomControl disabled={!showZoom} />
               <FiltersButton
                 activeCount={activeFilterCount}
                 onClick={() => setFiltersOpen(true)}

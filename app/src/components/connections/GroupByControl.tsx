@@ -9,9 +9,16 @@ const options: { id: GroupBy; label: string }[] = [
   { id: "relation-type", label: "Relation type" },
 ];
 
-/** Dropdown selecting the grouping axis applied to list view. Hidden by the
- *  parent in tree and graph views (where grouping is intrinsic / n/a). */
-export function GroupByControl({ size = "md" }: { size?: "sm" | "md" }) {
+interface Props {
+  size?: "sm" | "md";
+  /** When true, the control is rendered but inert (greyed out). Used in tree
+   *  and graph views where grouping is intrinsic / n/a; keeping the control
+   *  in flow prevents a layout shift when toggling between views. */
+  disabled?: boolean;
+}
+
+/** Dropdown selecting the grouping axis applied to list view. */
+export function GroupByControl({ size = "md", disabled = false }: Props) {
   const [groupBy, setGroupBy] = useAtom(groupByAtom);
   const [open, setOpen] = useState(false);
   const h = size === "sm" ? "h-6" : "h-8";
@@ -21,16 +28,21 @@ export function GroupByControl({ size = "md" }: { size?: "sm" | "md" }) {
     <div className="relative">
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => !disabled && setOpen((o) => !o)}
         aria-expanded={open}
         aria-haspopup="listbox"
-        className={`flex items-center gap-1 ${h} px-2 text-[11px] font-medium text-ink-secondary bg-warm border border-border rounded-md hover:bg-parchment hover:text-ink transition-colors cursor-pointer`}
+        disabled={disabled}
+        className={`flex items-center gap-1 ${h} px-2 text-[11px] font-medium bg-warm border border-border rounded-md transition-colors ${
+          disabled
+            ? "text-ink-muted opacity-60 cursor-not-allowed"
+            : "text-ink-secondary hover:bg-parchment hover:text-ink cursor-pointer"
+        }`}
       >
         <span className="text-ink-tertiary">Group by:</span>
         <span>{groupBy === "none" ? "None" : active?.label}</span>
         <ChevronDown size={10} className="text-ink-muted" aria-hidden="true" />
       </button>
-      {open && (
+      {open && !disabled && (
         <>
           <div
             className="fixed inset-0 z-10"
