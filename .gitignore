@@ -1,5 +1,6 @@
 .DS_Store
 .claude/
+memory/
 *.swp
 *~
 app/tsconfig.tsbuildinfo
