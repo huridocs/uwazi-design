@@ -9,13 +9,15 @@ interface EntityPillProps {
 export function EntityPill({ typeId, label, size = "sm" }: EntityPillProps) {
   const type = getEntityType(typeId);
   const color = type?.color ?? "#6B7280";
-  const name = label ?? type?.name ?? typeId;
+  const resolved = label ?? type?.name ?? typeId;
+  const isMissing = !resolved;
+  const name = isMissing ? "Unknown entity" : resolved;
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-md font-medium whitespace-nowrap ${
-        size === "sm" ? "px-2 py-0.5 text-xs" : "px-2.5 py-1 text-sm"
-      }`}
+      className={`inline-flex items-center gap-1.5 rounded-md whitespace-nowrap ${
+        isMissing ? "italic font-normal" : "font-medium"
+      } ${size === "sm" ? "px-2 py-0.5 text-xs" : "px-2.5 py-1 text-sm"}`}
       style={{
         backgroundColor: `${color}20`,
         color: color,

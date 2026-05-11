@@ -9,7 +9,7 @@ import {
   relationshipEntityTypeFiltersAtom,
 } from "../../atoms/filters";
 import { getEntity, getEntityType } from "../../data/entities";
-import { relationTypes, RelationType } from "../../data/references";
+import { Direction, relationTypes, RelationType } from "../../data/references";
 import { currentDocument } from "../../data/document";
 import { buildMatcher } from "../../utils/searchQuery";
 import { deriveRelationships, Relationship } from "../../utils/relationships";
@@ -20,6 +20,7 @@ interface GraphNode {
   color: string;
   typeName: string;
   evidenceCount: number;
+  direction: Direction;
   x: number;
   y: number;
   r: number;
@@ -153,6 +154,7 @@ export function RelationshipsGraphView() {
             color: type?.color ?? "#9ca3af",
             typeName: type?.name ?? "Unknown",
             evidenceCount: rel.evidenceCount,
+            direction: rel.direction,
             x: CX + Math.cos(nodeAngle) * R,
             y: CY + Math.sin(nodeAngle) * R,
             r: Math.min(7, 4 + Math.sqrt(rel.evidenceCount) * 1.1),
@@ -241,6 +243,22 @@ export function RelationshipsGraphView() {
         onPointerLeave={onPointerUp}
         style={{ width: "100%", height: "100%", cursor: dragRef.current.active ? "grabbing" : "grab", touchAction: "none" }}
       >
+        <defs>
+          {/* Arrowhead: tip at refX, points along the line direction. We draw
+              outgoing edges label→node (tip at target) and incoming edges
+              node→label (tip near source) so a single marker-end suffices. */}
+          <marker
+            id="rel-arrow"
+            viewBox="0 0 10 10"
+            refX="9"
+            refY="5"
+            markerWidth="7"
+            markerHeight="7"
+            orient="auto"
+          >
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--border-primary)" />
+          </marker>
+        </defs>
         <g transform={`translate(${transform.tx} ${transform.ty}) scale(${transform.scale})`} style={{ transformOrigin: `${CX}px ${CY}px` }}>
           {/* Edges: source → label, then fan from label → each node */}
           {spokes.map((s) => {
@@ -256,18 +274,36 @@ export function RelationshipsGraphView() {
                   strokeWidth={1}
                   opacity={0.75}
                 />
-                {branchNodes.map((n) => (
-                  <line
-                    key={`${s.relationType}-${n.id}`}
-                    x1={s.labelX}
-                    y1={s.labelY}
-                    x2={n.x}
-                    y2={n.y}
-                    stroke="var(--border-primary)"
-                    strokeWidth={1}
-                    opacity={0.45}
-                  />
-                ))}
+                {branchNodes.map((n) => {
+                  const out = n.direction === "outgoing";
+                  // Pull the line short of the node circle so the arrowhead
+                  // lands cleanly. For outgoing the tip is near the node; for
+                  // incoming the tip is near the label.
+                  const dx = n.x - s.labelX;
+                  const dy = n.y - s.labelY;
+                  const len = Math.hypot(dx, dy) || 1;
+                  const ux = dx / len;
+                  const uy = dy / len;
+                  const nodePad = n.r + 3;
+                  const labelPad = 14; // skirts the label pill
+                  const startX = s.labelX + ux * labelPad;
+                  const startY = s.labelY + uy * labelPad;
+                  const endX = n.x - ux * nodePad;
+                  const endY = n.y - uy * nodePad;
+                  return (
+                    <line
+                      key={`${s.relationType}-${n.id}`}
+                      x1={out ? startX : endX}
+                      y1={out ? startY : endY}
+                      x2={out ? endX : startX}
+                      y2={out ? endY : startY}
+                      stroke="var(--border-primary)"
+                      strokeWidth={1}
+                      opacity={0.55}
+                      markerEnd="url(#rel-arrow)"
+                    />
+                  );
+                })}
               </g>
             );
           })}

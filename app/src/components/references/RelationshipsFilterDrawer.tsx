@@ -41,6 +41,7 @@ export function RelationshipsFilterDrawer() {
         selected={relTypeFilters}
         onToggle={(id) => setRelTypeFilters((s) => ({ ...s, [id]: !s[id] }))}
         label={(id) => relationTypes.find((r) => r.id === id)?.label ?? id}
+        noLabelId="no_label"
         defaultExpanded
       />
       <FacetSection
@@ -52,6 +53,7 @@ export function RelationshipsFilterDrawer() {
           setEntityTypeFilters((s) => ({ ...s, [id]: !s[id] }))
         }
         label={(id) => getEntityType(id)?.name ?? id}
+        noLabelId="unknown"
         renderMarker={(id) => {
           const t = getEntityType(id);
           return t ? (

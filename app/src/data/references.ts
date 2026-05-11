@@ -1,4 +1,11 @@
-export type RelationType = "mentions" | "relates_to" | "cites" | "refers_to";
+export type RelationType =
+  | "mentions"
+  | "relates_to"
+  | "cites"
+  | "refers_to"
+  | "no_label";
+
+export type Direction = "outgoing" | "incoming";
 
 export interface TextSelection {
   text: string;
@@ -18,6 +25,9 @@ export interface Reference {
   targetEntityId: string;
   /** Relation type label */
   relationType: RelationType;
+  /** Whether the relationship points out from the source ("outgoing") or
+   *  into the source from the target ("incoming"). Defaults to "outgoing". */
+  direction?: Direction;
   /** Selected text in source document */
   sourceSelection: TextSelection;
   /** Optional: selected text in target document */
@@ -61,6 +71,7 @@ export const references: Reference[] = [
     sourceEntityId: "e3",
     targetEntityId: "e4",
     relationType: "relates_to",
+    direction: "incoming",
     sourceSelection: {
       text: "The Commission finds that the right to life, enshrined in Article 4 of the American Convention, was violated in this case.",
       page: 8,
@@ -151,6 +162,7 @@ export const references: Reference[] = [
     sourceEntityId: "e3",
     targetEntityId: "e8",
     relationType: "refers_to",
+    direction: "incoming",
     sourceSelection: {
       text: "The Inter-American Commission on Human Rights received the petition on February 15, 1993.",
       page: 1,
@@ -348,6 +360,7 @@ export const references: Reference[] = [
     sourceEntityId: "e3",
     targetEntityId: "e7",
     relationType: "cites",
+    direction: "incoming",
     sourceSelection: {
       text: "The La Tablada incident remains one of the most significant cases before the Commission.",
       page: 5,
@@ -603,7 +616,18 @@ function generateBulkReferences(): Reference[] {
     "e45", "e46", "e47",
     "e48", "e49", "e50", "e51", "e52", "e53",
   ];
-  const relationTypes: RelationType[] = ["mentions", "relates_to", "cites", "refers_to"];
+  // "no_label" is included so the bulk seed exercises the no-label rel facet.
+  const relationTypes: RelationType[] = [
+    "mentions",
+    "relates_to",
+    "cites",
+    "refers_to",
+    "mentions",
+    "relates_to",
+    "cites",
+    "refers_to",
+    "no_label",
+  ];
   const snippets = [
     "The witness testified that the events occurred without prior warning to the civilian population.",
     "International humanitarian law requires the protection of non-combatants during armed conflict.",
@@ -688,11 +712,22 @@ function generateBulkReferences(): Reference[] {
       const jitter = seededRandom(seed + 1) * 0.08;
       const top = Math.min(0.92, Math.max(0.05, clusterBase + jitter));
 
+      // ~6% of refs target a non-existent entity so getEntity() falls back to
+      // "unknown" — surfaces the "(No label)" facet in the entity-type filter.
+      const targetRoll = seededRandom(seed + 5);
+      const targetId =
+        targetRoll < 0.06
+          ? `e-missing-${(seed % 9) + 1}`
+          : entityIds[Math.floor(seededRandom(seed + 2) * entityIds.length)];
+      // ~25% of refs flow into the source rather than out of it.
+      const direction: Direction =
+        seededRandom(seed + 6) < 0.25 ? "incoming" : "outgoing";
       refs.push({
         id: `ref-${id}`,
         sourceEntityId: "e3",
-        targetEntityId: entityIds[Math.floor(seededRandom(seed + 2) * entityIds.length)],
+        targetEntityId: targetId,
         relationType: relationTypes[Math.floor(seededRandom(seed + 3) * relationTypes.length)],
+        direction,
         sourceSelection: {
           text: snippets[Math.floor(seededRandom(seed + 4) * snippets.length)],
           page,
@@ -721,4 +756,5 @@ export const relationTypes: { id: RelationType; label: string }[] = [
   { id: "relates_to", label: "Relates to" },
   { id: "cites", label: "Cites" },
   { id: "refers_to", label: "Refers to" },
+  { id: "no_label", label: "No label" },
 ];

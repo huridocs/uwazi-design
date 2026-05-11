@@ -11,6 +11,12 @@ interface FacetSectionProps {
   label: (id: string) => string;
   renderMarker?: (id: string) => ReactNode;
   defaultExpanded?: boolean;
+  /** ID treated as "no value for this facet" — pinned at the top with a
+   *  divider beneath. Hidden if no entry matches. Mirrors Uwazi's "No label"
+   *  bucket. */
+  noLabelId?: string;
+  /** Label shown for the pinned no-label row (default: "No label"). */
+  noLabelText?: string;
 }
 
 export function FacetSection({
@@ -22,12 +28,21 @@ export function FacetSection({
   label,
   renderMarker,
   defaultExpanded = true,
+  noLabelId,
+  noLabelText = "No label",
 }: FacetSectionProps) {
   const [open, setOpen] = useState(defaultExpanded);
   const activeCount = entries.reduce(
     (sum, [id, c]) => sum + (selected[id] ? c : 0),
     0,
   );
+
+  const noLabelEntry = noLabelId
+    ? entries.find(([id]) => id === noLabelId)
+    : undefined;
+  const regularEntries = noLabelId
+    ? entries.filter(([id]) => id !== noLabelId)
+    : entries;
 
   return (
     <div style={{ borderBottom: "1px solid var(--border-soft)" }}>
@@ -48,7 +63,24 @@ export function FacetSection({
       </button>
       {open && (
         <div className="pb-2">
-          {entries.map(([id, count]) => {
+          {noLabelEntry && (
+            <label
+              className="flex items-center gap-2 px-4 py-1.5 cursor-pointer hover:bg-warm transition-colors border-b border-border-soft"
+            >
+              <Checkbox
+                checked={!!selected[noLabelEntry[0]]}
+                onChange={() => onToggle(noLabelEntry[0])}
+                ariaLabel={noLabelText}
+              />
+              <span className="text-xs italic text-ink-tertiary truncate flex-1">
+                {noLabelText}
+              </span>
+              <span className="text-[11px] text-ink-tertiary tabular-nums shrink-0">
+                {noLabelEntry[1]}
+              </span>
+            </label>
+          )}
+          {regularEntries.map(([id, count]) => {
             const checked = !!selected[id];
             return (
               <label

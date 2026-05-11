@@ -185,7 +185,7 @@ export function RelationshipPanel() {
               References between entities will appear here
             </p>
           </div>
-        ) : viewMode === "all" || viewMode === "density" ? (
+        ) : viewMode === "all" ? (
           <div className="px-3 space-y-1.5">
             <div className="border border-border/60 rounded-md overflow-hidden bg-paper">
               {filtered.map((rel) => (

@@ -49,6 +49,28 @@ html, body, #root {
   margin: 0;
 }
 
+/* Thin neutral scrollbars everywhere. Firefox / modern Chromium honor the
+ * standard properties; older WebKit gets a matching custom skin below. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: gray transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: gray;
+  border-radius: 2px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #6b6b6b;
+}
+
 body {
   font-family: var(--font-sans);
   background: var(--bg-primary);

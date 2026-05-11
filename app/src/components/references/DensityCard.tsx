@@ -10,6 +10,7 @@ const categoryColors: Record<RelationType, string> = {
   relates_to: "#00B4F0",
   cites: "#D97706",
   refers_to: "#059669",
+  no_label: "#9CA3AF",
 };
 
 export function DensityCard({ references, totalPages }: DensityCardProps) {

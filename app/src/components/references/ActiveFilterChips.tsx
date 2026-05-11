@@ -58,10 +58,11 @@ export function ActiveFilterChips() {
       ))}
       {activeEntityTypes.map((id) => {
         const t = getEntityType(id);
+        const isNoLabel = id === "unknown";
         return (
           <ActiveFilterChip
             key={`ent-${id}`}
-            label={t?.name ?? id}
+            label={isNoLabel ? "No label" : (t?.name ?? id)}
             color={t?.color}
             onRemove={() =>
               setEntityTypeFilters((s) => {

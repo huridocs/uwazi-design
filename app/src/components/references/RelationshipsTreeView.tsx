@@ -1,6 +1,13 @@
 import { useMemo, useState, useLayoutEffect, useRef, useEffect } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Link2, Link as LinkIcon, ChevronRight } from "lucide-react";
+import {
+  Link2,
+  Link as LinkIcon,
+  ChevronRight,
+  ArrowRight,
+  ArrowLeft,
+  FileText,
+} from "lucide-react";
 import {
   referencesAtom,
   overlayEntityIdAtom,
@@ -24,7 +31,12 @@ import {
 } from "../../atoms/filters";
 import { currentPageAtom } from "../../atoms/selection";
 import { getEntity, getEntityType } from "../../data/entities";
-import { Reference, relationTypes, RelationType } from "../../data/references";
+import {
+  Direction,
+  Reference,
+  relationTypes,
+  RelationType,
+} from "../../data/references";
 import { buildMatcher } from "../../utils/searchQuery";
 import { EntityPill } from "../shared/EntityPill";
 import { FadeTruncate } from "../shared/FadeTruncate";
@@ -34,6 +46,7 @@ import { CollapseControls } from "./FiltersRow";
 
 interface GroupedTarget {
   targetEntityId: string;
+  direction: Direction;
   refs: Reference[];
 }
 
@@ -104,29 +117,35 @@ export function RelationshipsTreeView() {
   }, [references, searchQuery, activeClusterRefIds, relTypeFilters, entityTypeFilters]);
 
   const groups = useMemo<TypeGroup[]>(() => {
+    // Group key includes direction so an outgoing + incoming pair to the same
+    // target appears as two distinct target cards (matches deriveRelationships).
     const byType = new Map<RelationType, Map<string, Reference[]>>();
     for (const ref of filtered) {
-      let byTarget = byType.get(ref.relationType);
-      if (!byTarget) {
-        byTarget = new Map();
-        byType.set(ref.relationType, byTarget);
+      let byTargetDir = byType.get(ref.relationType);
+      if (!byTargetDir) {
+        byTargetDir = new Map();
+        byType.set(ref.relationType, byTargetDir);
       }
-      const list = byTarget.get(ref.targetEntityId) ?? [];
+      const direction: Direction = ref.direction ?? "outgoing";
+      const key = `${ref.targetEntityId}::${direction}`;
+      const list = byTargetDir.get(key) ?? [];
       list.push(ref);
-      byTarget.set(ref.targetEntityId, list);
+      byTargetDir.set(key, list);
     }
 
     const dir = sortOrder === "desc" ? -1 : 1;
     const result: TypeGroup[] = [];
-    for (const [relationType, byTarget] of byType.entries()) {
+    for (const [relationType, byTargetDir] of byType.entries()) {
       const targets: GroupedTarget[] = [];
-      for (const [targetEntityId, refs] of byTarget.entries()) {
+      for (const [key, refs] of byTargetDir.entries()) {
+        const [targetEntityId, directionRaw] = key.split("::");
+        const direction = (directionRaw as Direction) ?? "outgoing";
         const sorted = [...refs].sort(
           (a, b) =>
             a.sourceSelection.page - b.sourceSelection.page ||
             a.sourceSelection.top - b.sourceSelection.top,
         );
-        targets.push({ targetEntityId, refs: sorted });
+        targets.push({ targetEntityId, direction, refs: sorted });
       }
       if (sortOrder !== "none") {
         targets.sort((a, b) => {
@@ -293,13 +312,16 @@ function GroupBlock({
           <div className="flex flex-wrap gap-1.5">
             {group.targets.map((t) => (
               <TargetCardOverview
-                key={t.targetEntityId}
+                key={`${t.targetEntityId}-${t.direction}`}
                 targetEntityId={t.targetEntityId}
+                direction={t.direction}
                 refs={t.refs}
                 selected={selectedEntityId === t.targetEntityId}
-                hovered={hoveredId === t.targetEntityId}
+                hovered={hoveredId === `${t.targetEntityId}-${t.direction}`}
                 onHover={(entering) =>
-                  setHoveredId(entering ? t.targetEntityId : null)
+                  setHoveredId(
+                    entering ? `${t.targetEntityId}-${t.direction}` : null,
+                  )
                 }
                 onTargetClick={onTargetClick}
               />
@@ -311,8 +333,9 @@ function GroupBlock({
           {group.targets.map((t) =>
             zoom === "compact" ? (
               <TargetCardCompact
-                key={t.targetEntityId}
+                key={`${t.targetEntityId}-${t.direction}`}
                 targetEntityId={t.targetEntityId}
+                direction={t.direction}
                 refs={t.refs}
                 selected={
                   selectedEntityId === t.targetEntityId ||
@@ -323,8 +346,9 @@ function GroupBlock({
               />
             ) : (
               <TargetCardDetail
-                key={t.targetEntityId}
+                key={`${t.targetEntityId}-${t.direction}`}
                 targetEntityId={t.targetEntityId}
+                direction={t.direction}
                 refs={t.refs}
                 selected={
                   selectedEntityId === t.targetEntityId ||
@@ -345,9 +369,24 @@ function GroupBlock({
 
 interface TargetProps {
   targetEntityId: string;
+  direction: Direction;
   refs: Reference[];
   selected: boolean;
   onTargetClick: (entityId: string) => void;
+}
+
+function DirectionBadge({ direction }: { direction: Direction }) {
+  const Icon = direction === "incoming" ? ArrowLeft : ArrowRight;
+  const title = direction === "incoming" ? "Incoming" : "Outgoing";
+  return (
+    <span
+      aria-label={title}
+      title={title}
+      className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-[2px] bg-vellum text-ink-tertiary shrink-0"
+    >
+      <Icon size={10} strokeWidth={2.5} />
+    </span>
+  );
 }
 
 interface TargetDetailProps extends TargetProps {
@@ -357,6 +396,7 @@ interface TargetDetailProps extends TargetProps {
 
 function TargetCardDetail({
   targetEntityId,
+  direction,
   refs,
   selected,
   selectedRefId,
@@ -367,48 +407,40 @@ function TargetCardDetail({
   const type = entity ? getEntityType(entity.typeId) : undefined;
   const firstRef = refs[0];
 
+  // Relationships exist between entities, not pages. Show entity-level info
+  // only; the evidence-count action jumps to the underlying references where
+  // page/text-selection details live.
+  const activeInRefs =
+    selectedRefId !== null && refs.some((r) => r.id === selectedRefId);
   return (
     <ListCardRow selected={selected} onClick={() => onTargetClick(targetEntityId)}>
       <div className="flex items-start justify-between gap-2 mb-1.5">
         <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
-        {refs.length > 0 && (
-          <div className="flex flex-wrap justify-end gap-1 shrink-0">
-            {refs.map((ref) => {
-              const active = selectedRefId === ref.id;
-              return (
-                <span
-                  key={ref.id}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onMarkerClick(ref);
-                  }}
-                  aria-pressed={active}
-                  title={ref.sourceSelection.text.slice(0, 120)}
-                  className={`inline-flex items-center px-1.5 py-0.5 text-xs font-mono rounded tabular-nums transition-colors cursor-pointer ${
-                    active
-                      ? "bg-ink text-paper"
-                      : "bg-vellum text-ink-secondary hover:bg-border hover:text-ink"
-                  }`}
-                >
-                  p.{ref.sourceSelection.page}
-                </span>
-              );
-            })}
-          </div>
-        )}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="text-[10px] text-ink-tertiary">{type?.name ?? ""}</span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onMarkerClick(refs[0]);
+            }}
+            aria-label={`Open ${refs.length} evidence references`}
+            title="View evidence in References"
+            className={`flex items-center gap-1 px-1.5 h-5 rounded text-[10px] font-medium tabular-nums transition-colors cursor-pointer ${
+              activeInRefs
+                ? "bg-ink text-paper"
+                : "bg-warm text-ink-tertiary hover:bg-parchment hover:text-ink-secondary"
+            }`}
+          >
+            <FileText size={10} />
+            {refs.length}
+          </button>
+        </div>
       </div>
-      {firstRef && (
-        <FadeTruncate
-          text={firstRef.sourceSelection.text}
-          maxLines={2}
-          className="text-xs text-ink-secondary leading-relaxed"
-          fadeTo={selected ? "var(--bg-primary)" : undefined}
-        />
-      )}
-      <div className="flex items-center justify-between mt-1 text-[10px] text-ink-tertiary">
-        <span>{type?.name ?? ""}</span>
-        <span className="tabular-nums">
-          {refs.length === 1 ? "1 mention" : `${refs.length} mentions`}
+      <div className="flex items-center gap-1 mt-1 text-[10px] text-ink-tertiary">
+        <DirectionBadge direction={direction} />
+        <span className="capitalize">
+          {direction === "incoming" ? "incoming" : "outgoing"}
         </span>
       </div>
     </ListCardRow>
@@ -417,6 +449,7 @@ function TargetCardDetail({
 
 function TargetCardCompact({
   targetEntityId,
+  direction,
   refs,
   selected,
   onTargetClick,
@@ -431,7 +464,10 @@ function TargetCardCompact({
       ariaLabel={`Open ${entity?.title ?? "entity"}`}
       className="!py-2"
     >
-      <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
+      <div className="flex items-center gap-1.5 min-w-0">
+        <DirectionBadge direction={direction} />
+        <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
+      </div>
       <span className="shrink-0 text-[11px] text-ink-tertiary tabular-nums">
         {refs.length}
       </span>
@@ -446,6 +482,7 @@ interface TargetOverviewProps extends TargetProps {
 
 function TargetCardOverview({
   targetEntityId,
+  direction,
   refs,
   selected,
   hovered,
@@ -496,16 +533,15 @@ function TargetCardOverview({
         <span
           ref={tooltipRef}
           role="tooltip"
-          className="absolute z-20 bottom-full left-1/2 mb-1.5 px-2 py-1 rounded whitespace-nowrap text-[11px] shadow-md pointer-events-none"
+          className="absolute z-20 bottom-full left-1/2 mb-1.5 px-2 py-1 rounded whitespace-nowrap text-[11px] shadow-md pointer-events-none bg-ink text-paper"
           style={{
-            backgroundColor: "var(--ink, #1c1712)",
-            color: "var(--paper, #fff)",
             transform: `translateX(calc(-50% + ${shiftX}px))`,
           }}
         >
           <span className="font-medium">{entity?.title ?? "Unknown"}</span>
           <span className="opacity-70 ml-1.5">
-            {type?.name ?? "Unknown"} · {refs.length}
+            {type?.name ?? "Unknown"} · {refs.length} ·{" "}
+            {direction === "incoming" ? "in" : "out"}
           </span>
         </span>
       )}
