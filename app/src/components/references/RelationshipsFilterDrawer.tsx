@@ -2,8 +2,8 @@ import { useMemo } from "react";
 import { useAtom } from "jotai";
 import { referencesAtom } from "../../atoms/references";
 import {
-  relationshipTypeFiltersAtom,
-  relationshipEntityTypeFiltersAtom,
+  relTypeFiltersAtom,
+  entityTypeFiltersAtom,
 } from "../../atoms/filters";
 import { getEntity, getEntityType } from "../../data/entities";
 import { relationTypes } from "../../data/references";
@@ -15,9 +15,9 @@ import { FacetSection } from "../shared/FacetSection";
  */
 export function RelationshipsFilterDrawer() {
   const [references] = useAtom(referencesAtom);
-  const [relTypeFilters, setRelTypeFilters] = useAtom(relationshipTypeFiltersAtom);
+  const [relTypeFilters, setRelTypeFilters] = useAtom(relTypeFiltersAtom);
   const [entityTypeFilters, setEntityTypeFilters] = useAtom(
-    relationshipEntityTypeFiltersAtom,
+    entityTypeFiltersAtom,
   );
 
   const { byRelType, byEntityType, totalRels } = useMemo(() => {

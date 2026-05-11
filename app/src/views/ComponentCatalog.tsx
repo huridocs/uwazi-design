@@ -1037,7 +1037,7 @@ export function ComponentCatalog() {
                   description="Segmented detail/compact/overview + graph toggle for the Relationships view"
                   code={`<ZoomControl />
 
-{/* Bound to relationshipsZoomAtom + relationshipsViewModeAtom */}`}
+{/* Bound to zoomAtom + relationshipsViewModeAtom */}`}
                 >
                   <IsolatedZoomControl />
                 </CatalogEntry>

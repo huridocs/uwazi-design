@@ -10,9 +10,9 @@ import {
   collapseAllSignalAtom,
   activeClusterRefIdsAtom,
   filtersDrawerOpenAtom,
-  relationshipsActiveFilterCountAtom,
-  relationshipTypeFiltersAtom,
-  relationshipEntityTypeFiltersAtom,
+  activeFilterCountAtom,
+  relTypeFiltersAtom,
+  entityTypeFiltersAtom,
 } from "../../atoms/filters";
 import { getEntity, getEntityType } from "../../data/entities";
 import { relationTypes } from "../../data/references";
@@ -37,9 +37,9 @@ export function RelationshipPanel() {
   const [, setExpandSignal] = useAtom(expandAllSignalAtom);
   const [, setCollapseSignal] = useAtom(collapseAllSignalAtom);
   const [filtersOpen, setFiltersOpen] = useAtom(filtersDrawerOpenAtom);
-  const [activeFilterCount] = useAtom(relationshipsActiveFilterCountAtom);
-  const [, setRelTypeFilters] = useAtom(relationshipTypeFiltersAtom);
-  const [, setEntityTypeFilters] = useAtom(relationshipEntityTypeFiltersAtom);
+  const [activeFilterCount] = useAtom(activeFilterCountAtom);
+  const [, setRelTypeFilters] = useAtom(relTypeFiltersAtom);
+  const [, setEntityTypeFilters] = useAtom(entityTypeFiltersAtom);
 
   const clearAllFilters = () => {
     setRelTypeFilters({});

@@ -10,10 +10,9 @@ import {
   collapseAllSignalAtom,
   activeClusterRefIdsAtom,
   filtersDrawerOpenAtom,
-  relationshipsActiveFilterCountAtom,
-  referencesActiveFilterCountAtom,
-  relationshipTypeFiltersAtom,
-  relationshipEntityTypeFiltersAtom,
+  activeFilterCountAtom,
+  relTypeFiltersAtom,
+  entityTypeFiltersAtom,
   relationshipsViewModeAtom,
 } from "../atoms/filters";
 import { ListInfoRow } from "../components/shared/ListInfoRow";
@@ -167,10 +166,10 @@ interface RelationshipsMainViewProps {
 function RelationshipsMainView({ tabs, activeTab, onTabChange }: RelationshipsMainViewProps) {
   const [language, setLanguage] = useAtom(languageAtom);
   const [filtersOpen, setFiltersOpen] = useAtom(filtersDrawerOpenAtom);
-  const [activeFilterCount] = useAtom(relationshipsActiveFilterCountAtom);
+  const [activeFilterCount] = useAtom(activeFilterCountAtom);
   const [viewMode, setViewMode] = useAtom(relationshipsViewModeAtom);
-  const [, setRelTypeFilters] = useAtom(relationshipTypeFiltersAtom);
-  const [, setEntityTypeFilters] = useAtom(relationshipEntityTypeFiltersAtom);
+  const [, setRelTypeFilters] = useAtom(relTypeFiltersAtom);
+  const [, setEntityTypeFilters] = useAtom(entityTypeFiltersAtom);
   const [, setSearchQuery] = useAtom(searchQueryAtom);
   const [, setSortOrder] = useAtom(sortOrderAtom);
   const [, setActiveClusterRefIds] = useAtom(activeClusterRefIdsAtom);
@@ -295,9 +294,9 @@ function ReferencesMainView({ tabs, activeTab, onTabChange }: ReferencesMainView
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [activeClusterRefIds, setActiveClusterRefIds] = useAtom(activeClusterRefIdsAtom);
   const [filtersOpen, setFiltersOpen] = useAtom(filtersDrawerOpenAtom);
-  const [activeFilterCount] = useAtom(referencesActiveFilterCountAtom);
-  const [relTypeFilters, setRelTypeFilters] = useAtom(relationshipTypeFiltersAtom);
-  const [entityTypeFilters, setEntityTypeFilters] = useAtom(relationshipEntityTypeFiltersAtom);
+  const [activeFilterCount] = useAtom(activeFilterCountAtom);
+  const [relTypeFilters, setRelTypeFilters] = useAtom(relTypeFiltersAtom);
+  const [entityTypeFilters, setEntityTypeFilters] = useAtom(entityTypeFiltersAtom);
   const [, setSearchQuery] = useAtom(searchQueryAtom);
   const [, setSortOrder] = useAtom(sortOrderAtom);
 

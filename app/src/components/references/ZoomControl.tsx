@@ -1,22 +1,22 @@
 import { useAtom } from "jotai";
 import { Rows3, LayoutList, CircleDot, Network } from "lucide-react";
 import {
-  relationshipsZoomAtom,
+  zoomAtom,
   relationshipsViewModeAtom,
-  type RelationshipsZoom,
+  type Zoom,
   type RelationshipsViewMode,
 } from "../../atoms/filters";
 
-const zoomOrder: RelationshipsZoom[] = ["detail", "compact", "overview"];
+const zoomOrder: Zoom[] = ["detail", "compact", "overview"];
 
-const zoomOptions: { id: RelationshipsZoom; icon: typeof LayoutList; label: string }[] = [
+const zoomOptions: { id: Zoom; icon: typeof LayoutList; label: string }[] = [
   { id: "detail", icon: LayoutList, label: "Detail" },
   { id: "compact", icon: Rows3, label: "Compact" },
   { id: "overview", icon: CircleDot, label: "Overview" },
 ];
 
 export function ZoomControl() {
-  const [zoom, setZoom] = useAtom(relationshipsZoomAtom);
+  const [zoom, setZoom] = useAtom(zoomAtom);
   const [viewMode, setViewMode] = useAtom(relationshipsViewModeAtom);
 
   const cycle = (delta: number) => {

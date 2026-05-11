@@ -2,8 +2,8 @@ import { useAtom } from "jotai";
 import {
   searchQueryAtom,
   sortOrderAtom,
-  relationshipTypeFiltersAtom,
-  relationshipEntityTypeFiltersAtom,
+  relTypeFiltersAtom,
+  entityTypeFiltersAtom,
   activeClusterRefIdsAtom,
 } from "../../atoms/filters";
 import { getEntityType } from "../../data/entities";
@@ -13,8 +13,8 @@ import { ActiveFilterChip } from "../shared/ActiveFilterChip";
 export function ActiveFilterChips() {
   const [search, setSearch] = useAtom(searchQueryAtom);
   const [sort, setSort] = useAtom(sortOrderAtom);
-  const [relTypeFilters, setRelTypeFilters] = useAtom(relationshipTypeFiltersAtom);
-  const [entityTypeFilters, setEntityTypeFilters] = useAtom(relationshipEntityTypeFiltersAtom);
+  const [relTypeFilters, setRelTypeFilters] = useAtom(relTypeFiltersAtom);
+  const [entityTypeFilters, setEntityTypeFilters] = useAtom(entityTypeFiltersAtom);
   const [cluster, setCluster] = useAtom(activeClusterRefIdsAtom);
 
   const activeRelTypes = Object.entries(relTypeFilters).filter(([, v]) => v).map(([k]) => k);

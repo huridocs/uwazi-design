@@ -5,8 +5,8 @@ import { referencesAtom, overlayEntityIdAtom } from "../../atoms/references";
 import {
   searchQueryAtom,
   activeClusterRefIdsAtom,
-  relationshipTypeFiltersAtom,
-  relationshipEntityTypeFiltersAtom,
+  relTypeFiltersAtom,
+  entityTypeFiltersAtom,
 } from "../../atoms/filters";
 import { getEntity, getEntityType } from "../../data/entities";
 import { Direction, relationTypes, RelationType } from "../../data/references";
@@ -49,8 +49,8 @@ export function RelationshipsGraphView() {
   const [references] = useAtom(referencesAtom);
   const [searchQuery] = useAtom(searchQueryAtom);
   const [activeClusterRefIds] = useAtom(activeClusterRefIdsAtom);
-  const [relTypeFilters] = useAtom(relationshipTypeFiltersAtom);
-  const [entityTypeFilters] = useAtom(relationshipEntityTypeFiltersAtom);
+  const [relTypeFilters] = useAtom(relTypeFiltersAtom);
+  const [entityTypeFilters] = useAtom(entityTypeFiltersAtom);
   const setOverlayEntityId = useSetAtom(overlayEntityIdAtom);
 
   const svgRef = useRef<SVGSVGElement>(null);

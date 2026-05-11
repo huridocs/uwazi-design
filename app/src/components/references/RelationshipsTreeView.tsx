@@ -19,15 +19,15 @@ import {
   searchQueryAtom,
   activeClusterRefIdsAtom,
   sortOrderAtom,
-  relationshipTypeFiltersAtom,
-  relationshipEntityTypeFiltersAtom,
-  relationshipsZoomAtom,
-  relationshipsActiveFilterCountAtom,
+  relTypeFiltersAtom,
+  entityTypeFiltersAtom,
+  zoomAtom,
+  activeFilterCountAtom,
   expandAllSignalAtom,
   collapseAllSignalAtom,
   expandedGroupCountAtom,
   totalGroupCountAtom,
-  type RelationshipsZoom,
+  type Zoom,
 } from "../../atoms/filters";
 import { currentPageAtom } from "../../atoms/selection";
 import { getEntity, getEntityType } from "../../data/entities";
@@ -62,10 +62,10 @@ export function RelationshipsTreeView() {
   const [searchQuery] = useAtom(searchQueryAtom);
   const [sortOrder] = useAtom(sortOrderAtom);
   const [activeClusterRefIds] = useAtom(activeClusterRefIdsAtom);
-  const [relTypeFilters] = useAtom(relationshipTypeFiltersAtom);
-  const [entityTypeFilters] = useAtom(relationshipEntityTypeFiltersAtom);
-  const [zoom] = useAtom(relationshipsZoomAtom);
-  const [activeFilterCount] = useAtom(relationshipsActiveFilterCountAtom);
+  const [relTypeFilters] = useAtom(relTypeFiltersAtom);
+  const [entityTypeFilters] = useAtom(entityTypeFiltersAtom);
+  const [zoom] = useAtom(zoomAtom);
+  const [activeFilterCount] = useAtom(activeFilterCountAtom);
   const [overlayEntityId, setOverlayEntityId] = useAtom(overlayEntityIdAtom);
   const setActiveDrawerTab = useSetAtom(activeDrawerTabAtom);
   const setCurrentPage = useSetAtom(currentPageAtom);
@@ -265,7 +265,7 @@ export function RelationshipsTreeView() {
 
 interface GroupBlockProps {
   group: TypeGroup;
-  zoom: RelationshipsZoom;
+  zoom: Zoom;
   isCollapsed: boolean;
   onToggle: () => void;
   selectedEntityId: string | null;
