@@ -5,6 +5,7 @@ import { referencesAtom } from "../../atoms/references";
 import {
   viewAtom,
   groupByAtom,
+  subGroupByAtom,
   searchQueryAtom,
   sortOrderAtom,
   activeClusterRefIdsAtom,
@@ -14,9 +15,14 @@ import {
   collapseAllSignalAtom,
   activeFilterCountAtom,
 } from "../../atoms/filters";
-import { getEntity, getEntityType } from "../../data/entities";
-import { Reference, relationTypes } from "../../data/references";
+import { getEntity } from "../../data/entities";
+import { Reference } from "../../data/references";
 import { buildMatcher } from "../../utils/searchQuery";
+import {
+  getGroupColor,
+  getGroupLabel,
+  groupRefs,
+} from "../../utils/connectionGrouping";
 import { ListInfoRow } from "../shared/ListInfoRow";
 import { CollapseControls } from "../references/FiltersRow";
 import { RelationshipsTreeView } from "../references/RelationshipsTreeView";
@@ -25,20 +31,16 @@ import { ConnectionRow } from "./ConnectionRow";
 import { ConnectionGroupedCard } from "./ConnectionGroupedCard";
 
 interface Props {
-  /** Optional delete handler for ref-kind rows. When omitted, the trash
-   *  affordance hides (drawer-side panel is read-only, main view supplies it). */
   onDelete?: (id: string) => void;
-  /** Background shade behind the scroll area. Main view uses bg-warm to match
-   *  the document column; the drawer leaves it transparent. */
   scrollBgClass?: string;
 }
 
-/** Body of the merged Relationships panel — the part below the toolbar. Used
- *  by both the main `Relationships` tab and the document-tab drawer. */
+/** Body of the merged Relationships panel — toolbar lives above. */
 export function ConnectionsPanelBody({ onDelete, scrollBgClass }: Props) {
   const [references] = useAtom(referencesAtom);
   const [view] = useAtom(viewAtom);
   const [groupBy] = useAtom(groupByAtom);
+  const [subGroupBy] = useAtom(subGroupByAtom);
   const [searchQuery] = useAtom(searchQueryAtom);
   const [sortOrder] = useAtom(sortOrderAtom);
   const [activeClusterRefIds] = useAtom(activeClusterRefIdsAtom);
@@ -101,49 +103,9 @@ export function ConnectionsPanelBody({ onDelete, scrollBgClass }: Props) {
     entityTypeFilters,
   ]);
 
-  const groupedByEntityType = useMemo(() => {
-    const groups = new Map<string, Reference[]>();
-    filtered.forEach((ref) => {
-      const entity = getEntity(ref.targetEntityId);
-      const typeId = entity?.typeId ?? "unknown";
-      const list = groups.get(typeId) ?? [];
-      list.push(ref);
-      groups.set(typeId, list);
-    });
-    if (sortOrder === "none") return groups;
-    const dir = sortOrder === "asc" ? 1 : -1;
-    return new Map(
-      [...groups.entries()].sort(([a], [b]) => {
-        const nameA = getEntityType(a)?.name ?? a;
-        const nameB = getEntityType(b)?.name ?? b;
-        return nameA.localeCompare(nameB) * dir;
-      }),
-    );
-  }, [filtered, sortOrder]);
-
-  const groupedByRelType = useMemo(() => {
-    const groups = new Map<string, Reference[]>();
-    filtered.forEach((ref) => {
-      const list = groups.get(ref.relationType) ?? [];
-      list.push(ref);
-      groups.set(ref.relationType, list);
-    });
-    if (sortOrder === "none") return groups;
-    const dir = sortOrder === "asc" ? 1 : -1;
-    return new Map(
-      [...groups.entries()].sort(([a], [b]) => {
-        const labelA = relationTypes.find((r) => r.id === a)?.label ?? a;
-        const labelB = relationTypes.find((r) => r.id === b)?.label ?? b;
-        return labelA.localeCompare(labelB) * dir;
-      }),
-    );
-  }, [filtered, sortOrder]);
-
   const entityCount = new Set(filtered.map((r) => r.targetEntityId)).size;
   const showCollapse = view === "list" && groupBy !== "none";
 
-  // Tree + graph manage their own info row + filter pipeline (they group by
-  // relation type → target → refs internally and add the direction split).
   if (view === "tree") {
     return <RelationshipsTreeView />;
   }
@@ -155,8 +117,9 @@ export function ConnectionsPanelBody({ onDelete, scrollBgClass }: Props) {
     );
   }
 
-  const body: ReactNode =
-    filtered.length === 0 ? (
+  let body: ReactNode;
+  if (filtered.length === 0) {
+    body = (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <Link2 size={36} className="text-ink-tertiary/40 mb-3" />
         <p className="text-sm text-ink-tertiary">No relationships found</p>
@@ -164,7 +127,9 @@ export function ConnectionsPanelBody({ onDelete, scrollBgClass }: Props) {
           Select text in the document to create one
         </p>
       </div>
-    ) : groupBy === "none" ? (
+    );
+  } else if (groupBy === "none") {
+    body = (
       <div className="px-3 py-3">
         <div className="border border-border/60 rounded-md overflow-hidden bg-paper">
           {filtered.map((ref) => (
@@ -177,55 +142,55 @@ export function ConnectionsPanelBody({ onDelete, scrollBgClass }: Props) {
           ))}
         </div>
       </div>
-    ) : groupBy === "entity-type" ? (
+    );
+  } else {
+    const primaryGroups = groupRefs(filtered, groupBy);
+    body = (
       <div className="px-3 py-3 space-y-1.5">
-        {Array.from(groupedByEntityType.entries()).map(([typeId, refs]) => {
-          const type = getEntityType(typeId);
-          return (
-            <ConnectionGroupedCard
-              key={typeId}
-              title={type?.name ?? typeId}
-              color={type?.color}
-              count={refs.length}
-              refIdsToWatch={refs.map((r) => r.id)}
-            >
-              {refs.map((ref) => (
-                <ConnectionRow
-                  key={ref.id}
-                  kind="reference"
-                  reference={ref}
-                  onDelete={onDelete}
-                />
-              ))}
-            </ConnectionGroupedCard>
-          );
-        })}
-      </div>
-    ) : (
-      <div className="px-3 py-3 space-y-1.5">
-        {Array.from(groupedByRelType.entries()).map(([relType, refs]) => {
-          const label =
-            relationTypes.find((r) => r.id === relType)?.label ?? relType;
-          return (
-            <ConnectionGroupedCard
-              key={relType}
-              title={label}
-              count={refs.length}
-              refIdsToWatch={refs.map((r) => r.id)}
-            >
-              {refs.map((ref) => (
-                <ConnectionRow
-                  key={ref.id}
-                  kind="reference"
-                  reference={ref}
-                  onDelete={onDelete}
-                />
-              ))}
-            </ConnectionGroupedCard>
-          );
-        })}
+        {primaryGroups.map(([key, refs]) => (
+          <ConnectionGroupedCard
+            key={`p:${key}`}
+            title={getGroupLabel(key, groupBy)}
+            color={getGroupColor(key, groupBy)}
+            count={refs.length}
+            refIdsToWatch={refs.map((r) => r.id)}
+          >
+            {subGroupBy === "none"
+              ? refs.map((ref) => (
+                  <ConnectionRow
+                    key={ref.id}
+                    kind="reference"
+                    reference={ref}
+                    onDelete={onDelete}
+                  />
+                ))
+              : (
+                <div className="px-2 py-2 space-y-1.5 bg-warm/30">
+                  {groupRefs(refs, subGroupBy).map(([subKey, subRefs]) => (
+                    <ConnectionGroupedCard
+                      key={`s:${key}::${subKey}`}
+                      title={getGroupLabel(subKey, subGroupBy)}
+                      color={getGroupColor(subKey, subGroupBy)}
+                      count={subRefs.length}
+                      refIdsToWatch={subRefs.map((r) => r.id)}
+                    >
+                      {subRefs.map((ref) => (
+                        <ConnectionRow
+                          key={ref.id}
+                          kind="reference"
+                          reference={ref}
+                          onDelete={onDelete}
+                        />
+                      ))}
+                    </ConnectionGroupedCard>
+                  ))}
+                </div>
+              )}
+          </ConnectionGroupedCard>
+        ))}
       </div>
     );
+  }
 
   return (
     <>

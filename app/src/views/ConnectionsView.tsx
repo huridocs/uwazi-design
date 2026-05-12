@@ -119,7 +119,16 @@ export function ConnectionsView({ tabs, activeTab, onTabChange }: Props) {
           <div className="px-3 pb-2 flex items-center justify-between gap-2 flex-wrap">
             <div className="flex items-center gap-1.5 flex-wrap">
               <ViewControls size="sm" />
-              <GroupByControl size="sm" disabled={view !== "list"} />
+              <GroupByControl
+                axis="primary"
+                size="sm"
+                disabled={view !== "list"}
+              />
+              <GroupByControl
+                axis="secondary"
+                size="sm"
+                disabled={view !== "list" || groupBy === "none"}
+              />
               <SortControl size="sm" />
             </div>
             <div className="flex items-center gap-1.5">

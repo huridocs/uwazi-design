@@ -14,8 +14,18 @@ export const viewAtom = atom<View>("tree");
 
 /** Grouping axis applied within the list view. Tree has implicit structure
  *  (rel type → target → refs); graph has no grouping. */
-export type GroupBy = "none" | "entity-type" | "relation-type";
+export type GroupBy =
+  | "none"
+  | "target-template"
+  | "target-entity"
+  | "relation-type"
+  | "direction"
+  | "source-page";
 export const groupByAtom = atom<GroupBy>("none");
+
+/** Secondary grouping axis ("Then by"). Mirrors Uwazi's relation-type → template
+ *  two-level facet pattern; the prototype lets you pick any pair. */
+export const subGroupByAtom = atom<GroupBy>("none");
 
 export const searchQueryAtom = atom("");
 
