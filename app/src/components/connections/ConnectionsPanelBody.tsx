@@ -18,6 +18,7 @@ import {
 import { getEntity } from "../../data/entities";
 import { Reference } from "../../data/references";
 import { buildMatcher } from "../../utils/searchQuery";
+import { deriveRelationships } from "../../utils/relationships";
 import {
   getGroupColor,
   getGroupLabel,
@@ -104,6 +105,10 @@ export function ConnectionsPanelBody({ onDelete, scrollBgClass }: Props) {
   ]);
 
   const entityCount = new Set(filtered.map((r) => r.targetEntityId)).size;
+  const aggregateCount = useMemo(
+    () => deriveRelationships(filtered).length,
+    [filtered],
+  );
   const showCollapse = view === "list" && groupBy !== "none";
 
   if (view === "tree") {
@@ -198,7 +203,7 @@ export function ConnectionsPanelBody({ onDelete, scrollBgClass }: Props) {
         count={
           <>
             <span className="font-semibold text-ink-secondary tabular-nums">
-              {filtered.length}
+              {aggregateCount}
             </span>{" "}
             relationships,{" "}
             <span className="font-semibold text-ink-secondary tabular-nums">

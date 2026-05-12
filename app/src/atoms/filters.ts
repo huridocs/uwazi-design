@@ -17,10 +17,8 @@ export const viewAtom = atom<View>("tree");
 export type GroupBy =
   | "none"
   | "target-template"
-  | "target-entity"
   | "relation-type"
-  | "direction"
-  | "source-page";
+  | "direction";
 export const groupByAtom = atom<GroupBy>("none");
 
 /** Secondary grouping axis ("Then by"). Mirrors Uwazi's relation-type → template
