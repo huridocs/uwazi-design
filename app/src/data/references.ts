@@ -194,7 +194,7 @@ export const references: Reference[] = [
     targetEntityId: "e12",
     relationType: "mentions",
     sourceSelection: {
-      text: "Pedro Sánchez testified before the Commission regarding the conditions of detention.",
+      text: "Pedro Cabrera testified before the Commission regarding the conditions of detention.",
       page: 5,
       top: 0.15,
       left: 0.08,
@@ -377,7 +377,7 @@ export const references: Reference[] = [
     targetEntityId: "e12",
     relationType: "mentions",
     sourceSelection: {
-      text: "Sánchez described conditions in the detention facility as inhumane and degrading.",
+      text: "Cabrera described conditions in the detention facility as inhumane and degrading.",
       page: 5,
       top: 0.50,
       left: 0.08,
@@ -484,7 +484,7 @@ export const references: Reference[] = [
     targetEntityId: "e12",
     relationType: "mentions",
     sourceSelection: {
-      text: "Sánchez was held incommunicado for seventy-two hours before being allowed to contact his family.",
+      text: "Cabrera was held incommunicado for seventy-two hours before being allowed to contact his family.",
       page: 12,
       top: 0.60,
       left: 0.08,

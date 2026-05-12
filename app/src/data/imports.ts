@@ -70,7 +70,7 @@ const courtCaseNames = [
 ];
 
 const personNames = [
-  "Juan Carlos Abella", "María Elena Almeida", "Pedro Sánchez García", "Ana Lucía Flores",
+  "Juan Carlos Abella", "María Elena Almeida", "Pedro Cabrera García", "Ana Lucía Flores",
   "Roberto Mendoza", "Carmen Díaz Ortega", "Fernando Torres", "Isabel Ramírez",
   "Diego Morales", "Luisa Fernanda Pérez", "Andrés Martínez", "Claudia Vásquez",
   "Miguel Ángel Reyes", "Patricia Herrera", "Javier Gutiérrez", "Sofía Castillo",

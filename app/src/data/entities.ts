@@ -25,7 +25,7 @@ export const entities: Entity[] = [
   // Persons
   { id: "e1", title: "Juan Carlos Abella", typeId: "person" },
   { id: "e11", title: "María Elena Almeida", typeId: "person" },
-  { id: "e12", title: "Pedro Sánchez", typeId: "person" },
+  { id: "e12", title: "Pedro Cabrera", typeId: "person" },
   { id: "e16", title: "Carlos Mendoza", typeId: "person" },
   { id: "e17", title: "Rosa Quintero", typeId: "person" },
   { id: "e18", title: "Luis Hernández", typeId: "person" },
