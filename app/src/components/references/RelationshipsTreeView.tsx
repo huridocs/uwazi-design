@@ -1,10 +1,6 @@
-import { useMemo, useState, useLayoutEffect, useRef, useEffect } from "react";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import {
-  Link2,
-  Link as LinkIcon,
-  ChevronRight,
-} from "lucide-react";
+import { useMemo, useState } from "react";
+import { useAtom } from "jotai";
+import { Link2 } from "lucide-react";
 import {
   referencesAtom,
   overlayEntityIdAtom,
@@ -16,40 +12,33 @@ import {
   sortOrderAtom,
   relTypeFiltersAtom,
   entityTypeFiltersAtom,
-  zoomAtom,
   activeFilterCountAtom,
-  expandAllSignalAtom,
-  collapseAllSignalAtom,
-  expandedGroupCountAtom,
-  totalGroupCountAtom,
-  type Zoom,
+  groupByAtom,
+  subGroupByAtom,
 } from "../../atoms/filters";
-import { getEntity, getEntityType } from "../../data/entities";
-import {
-  Direction,
-  Reference,
-  relationTypes,
-  RelationType,
-} from "../../data/references";
+import { getEntity } from "../../data/entities";
+import { Reference } from "../../data/references";
 import { buildMatcher } from "../../utils/searchQuery";
-import { Relationship } from "../../utils/relationships";
+import { Relationship, deriveRelationships } from "../../utils/relationships";
+import {
+  getGroupColor,
+  getGroupLabel,
+  groupRefs,
+} from "../../utils/connectionGrouping";
 import { ListInfoRow } from "../shared/ListInfoRow";
 import { ConnectionRow } from "../connections/ConnectionRow";
+import { ConnectionGroupedCard } from "../connections/ConnectionGroupedCard";
 import { CollapseControls } from "./FiltersRow";
+import { useEffect } from "react";
+import { useSetAtom } from "jotai";
+import {
+  expandAllSignalAtom,
+  collapseAllSignalAtom,
+} from "../../atoms/filters";
 
-interface GroupedTarget {
-  targetEntityId: string;
-  direction: Direction;
-  refs: Reference[];
-}
-
-interface TypeGroup {
-  relationType: RelationType;
-  label: string;
-  targets: GroupedTarget[];
-  totalRefs: number;
-}
-
+/** Tree view of the merged Relationships panel. Same grouping pipeline as the
+ *  list view, but the leaves are aggregate `ConnectionRow kind="aggregate"`
+ *  cards with inline-expand into their underlying refs. */
 export function RelationshipsTreeView() {
   const [references] = useAtom(referencesAtom);
   const [searchQuery] = useAtom(searchQueryAtom);
@@ -57,24 +46,21 @@ export function RelationshipsTreeView() {
   const [activeClusterRefIds] = useAtom(activeClusterRefIdsAtom);
   const [relTypeFilters] = useAtom(relTypeFiltersAtom);
   const [entityTypeFilters] = useAtom(entityTypeFiltersAtom);
-  const [zoom] = useAtom(zoomAtom);
   const [activeFilterCount] = useAtom(activeFilterCountAtom);
+  const [groupBy] = useAtom(groupByAtom);
+  const [subGroupBy] = useAtom(subGroupByAtom);
   const [, setOverlayEntityId] = useAtom(overlayEntityIdAtom);
   const [, setActiveRefId] = useAtom(activeRefIdAtom);
-  const expandSignal = useAtomValue(expandAllSignalAtom);
-  const collapseSignal = useAtomValue(collapseAllSignalAtom);
-  const setExpandedGroupCount = useSetAtom(expandedGroupCountAtom);
-  const setTotalGroupCount = useSetAtom(totalGroupCountAtom);
-  const [collapsed, setCollapsed] = useState<Set<RelationType>>(new Set());
+  const setExpandSignal = useSetAtom(expandAllSignalAtom);
+  const setCollapseSignal = useSetAtom(collapseAllSignalAtom);
 
-  const filtered = useMemo(() => {
+  const filtered = useMemo<Reference[]>(() => {
     let result = references;
 
     if (activeClusterRefIds) {
       const cluster = new Set(activeClusterRefIds);
       result = result.filter((r) => cluster.has(r.id));
     }
-
     const activeRelTypes = Object.entries(relTypeFilters)
       .filter(([, v]) => v)
       .map(([k]) => k);
@@ -82,7 +68,6 @@ export function RelationshipsTreeView() {
       const set = new Set(activeRelTypes);
       result = result.filter((r) => set.has(r.relationType));
     }
-
     const activeEntityTypes = Object.entries(entityTypeFilters)
       .filter(([, v]) => v)
       .map(([k]) => k);
@@ -93,7 +78,6 @@ export function RelationshipsTreeView() {
         return entity ? set.has(entity.typeId) : false;
       });
     }
-
     const matcher = buildMatcher(searchQuery);
     if (matcher) {
       result = result.filter((ref) => {
@@ -102,87 +86,40 @@ export function RelationshipsTreeView() {
         return matcher(haystack);
       });
     }
-
-    return result;
-  }, [references, searchQuery, activeClusterRefIds, relTypeFilters, entityTypeFilters]);
-
-  const groups = useMemo<TypeGroup[]>(() => {
-    // Group key includes direction so an outgoing + incoming pair to the same
-    // target appears as two distinct target cards (matches deriveRelationships).
-    const byType = new Map<RelationType, Map<string, Reference[]>>();
-    for (const ref of filtered) {
-      let byTargetDir = byType.get(ref.relationType);
-      if (!byTargetDir) {
-        byTargetDir = new Map();
-        byType.set(ref.relationType, byTargetDir);
-      }
-      const direction: Direction = ref.direction ?? "outgoing";
-      const key = `${ref.targetEntityId}::${direction}`;
-      const list = byTargetDir.get(key) ?? [];
-      list.push(ref);
-      byTargetDir.set(key, list);
-    }
-
-    const dir = sortOrder === "desc" ? -1 : 1;
-    const result: TypeGroup[] = [];
-    for (const [relationType, byTargetDir] of byType.entries()) {
-      const targets: GroupedTarget[] = [];
-      for (const [key, refs] of byTargetDir.entries()) {
-        const [targetEntityId, directionRaw] = key.split("::");
-        const direction = (directionRaw as Direction) ?? "outgoing";
-        const sorted = [...refs].sort(
-          (a, b) =>
-            a.sourceSelection.page - b.sourceSelection.page ||
-            a.sourceSelection.top - b.sourceSelection.top,
-        );
-        targets.push({ targetEntityId, direction, refs: sorted });
-      }
-      if (sortOrder !== "none") {
-        targets.sort((a, b) => {
-          const aName = getEntity(a.targetEntityId)?.title ?? "";
-          const bName = getEntity(b.targetEntityId)?.title ?? "";
-          return aName.localeCompare(bName) * dir;
-        });
-      }
-      result.push({
-        relationType,
-        label: relationTypes.find((r) => r.id === relationType)?.label ?? relationType,
-        targets,
-        totalRefs: targets.reduce((sum, t) => sum + t.refs.length, 0),
+    if (sortOrder === "none") {
+      return [...result].sort((a, b) => {
+        const pageDiff = a.sourceSelection.page - b.sourceSelection.page;
+        if (pageDiff !== 0) return pageDiff;
+        return a.sourceSelection.top - b.sourceSelection.top;
       });
     }
-    result.sort((a, b) => a.label.localeCompare(b.label));
-    return result;
-  }, [filtered, sortOrder]);
+    const dir = sortOrder === "asc" ? 1 : -1;
+    return [...result].sort((a, b) => {
+      const nameA = getEntity(a.targetEntityId)?.title ?? "";
+      const nameB = getEntity(b.targetEntityId)?.title ?? "";
+      return nameA.localeCompare(nameB) * dir;
+    });
+  }, [
+    references,
+    searchQuery,
+    sortOrder,
+    activeClusterRefIds,
+    relTypeFilters,
+    entityTypeFilters,
+  ]);
 
   const entityCount = new Set(filtered.map((r) => r.targetEntityId)).size;
-
-  useEffect(() => {
-    setTotalGroupCount(groups.length);
-    setExpandedGroupCount(groups.length - collapsed.size);
-  }, [groups.length, collapsed, setTotalGroupCount, setExpandedGroupCount]);
-
-  useEffect(() => {
-    if (expandSignal > 0) setCollapsed(new Set());
-  }, [expandSignal]);
+  const aggregateCount = useMemo(
+    () => deriveRelationships(filtered).length,
+    [filtered],
+  );
 
   useEffect(() => {
     setActiveRefId(null);
     setOverlayEntityId(null);
   }, [relTypeFilters, entityTypeFilters, setActiveRefId, setOverlayEntityId]);
 
-  useEffect(() => {
-    if (collapseSignal > 0) setCollapsed(new Set(groups.map((g) => g.relationType)));
-  }, [collapseSignal, groups]);
-
-  const toggleGroup = (relationType: RelationType) => {
-    setCollapsed((prev) => {
-      const next = new Set(prev);
-      if (next.has(relationType)) next.delete(relationType);
-      else next.add(relationType);
-      return next;
-    });
-  };
+  const showCollapse = groupBy !== "none";
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -190,7 +127,7 @@ export function RelationshipsTreeView() {
         count={
           <>
             <span className="font-semibold text-ink-secondary tabular-nums">
-              {filtered.length}
+              {aggregateCount}
             </span>{" "}
             relationships,{" "}
             <span className="font-semibold text-ink-secondary tabular-nums">
@@ -203,10 +140,9 @@ export function RelationshipsTreeView() {
         showFilterChips={false}
         rightSlot={
           <CollapseControls
-            onCollapseAll={() =>
-              setCollapsed(new Set(groups.map((g) => g.relationType)))
-            }
-            onExpandAll={() => setCollapsed(new Set())}
+            disabled={!showCollapse}
+            onExpandAll={() => setExpandSignal((s) => s + 1)}
+            onCollapseAll={() => setCollapseSignal((s) => s + 1)}
           />
         }
       />
@@ -220,16 +156,38 @@ export function RelationshipsTreeView() {
               References between entities appear here
             </p>
           </div>
+        ) : groupBy === "none" ? (
+          <FlatAggregates refs={filtered} />
         ) : (
-          <div className="py-3 space-y-2">
-            {groups.map((g) => (
-              <GroupBlock
-                key={g.relationType}
-                group={g}
-                zoom={zoom}
-                isCollapsed={collapsed.has(g.relationType)}
-                onToggle={() => toggleGroup(g.relationType)}
-              />
+          <div className="px-3 py-3 space-y-1.5">
+            {groupRefs(filtered, groupBy).map(([key, refs]) => (
+              <ConnectionGroupedCard
+                key={`p:${key}`}
+                title={getGroupLabel(key, groupBy)}
+                color={getGroupColor(key, groupBy)}
+                count={deriveRelationships(refs).length}
+                refIdsToWatch={refs.map((r) => r.id)}
+                defaultExpanded
+              >
+                {subGroupBy === "none" ? (
+                  <AggregateRows refs={refs} />
+                ) : (
+                  <div className="px-2 py-2 space-y-1.5 bg-warm/30">
+                    {groupRefs(refs, subGroupBy).map(([subKey, subRefs]) => (
+                      <ConnectionGroupedCard
+                        key={`s:${key}::${subKey}`}
+                        title={getGroupLabel(subKey, subGroupBy)}
+                        color={getGroupColor(subKey, subGroupBy)}
+                        count={deriveRelationships(subRefs).length}
+                        refIdsToWatch={subRefs.map((r) => r.id)}
+                        defaultExpanded
+                      >
+                        <AggregateRows refs={subRefs} />
+                      </ConnectionGroupedCard>
+                    ))}
+                  </div>
+                )}
+              </ConnectionGroupedCard>
             ))}
           </div>
         )}
@@ -238,182 +196,54 @@ export function RelationshipsTreeView() {
   );
 }
 
-interface GroupBlockProps {
-  group: TypeGroup;
-  zoom: Zoom;
-  isCollapsed: boolean;
-  onToggle: () => void;
-}
-
-function GroupBlock({
-  group,
-  zoom,
-  isCollapsed,
-  onToggle,
-}: GroupBlockProps) {
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
-  const headerPadY = zoom === "detail" ? "py-1.5" : "py-1";
-  const headerText = zoom === "overview" ? "text-[11px]" : "text-xs";
-
-  const toggleKey = (key: string) =>
-    setExpandedKeys((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-
+function FlatAggregates({ refs }: { refs: Reference[] }) {
   return (
-    <div>
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={!isCollapsed}
-        className={`sticky top-0 z-10 mx-3 px-3 ${headerPadY} rounded-md ${headerText} font-medium text-ink-secondary flex items-center gap-2 w-[calc(100%-1.5rem)] text-left cursor-pointer bg-vellum hover:brightness-95 transition-all`}
-      >
-        <ChevronRight
-          size={12}
-          className={`text-ink-tertiary transition-transform ${isCollapsed ? "" : "rotate-90"}`}
-        />
-        <LinkIcon size={11} className="text-ink-tertiary" />
-        <span className="truncate">{group.label}</span>
-        <span className="ml-auto text-ink-tertiary tabular-nums shrink-0">
-          {group.targets.length}
-          {group.targets.length !== group.totalRefs && <> · {group.totalRefs}</>}
-        </span>
-      </button>
-
-      {isCollapsed ? null : zoom === "overview" ? (
-        <div className="relative mt-1.5 mx-3 px-3">
-          <div className="flex flex-wrap gap-1.5">
-            {group.targets.map((t) => (
-              <TargetCardOverview
-                key={`${t.targetEntityId}-${t.direction}`}
-                targetEntityId={t.targetEntityId}
-                direction={t.direction}
-                refs={t.refs}
-                hovered={hoveredId === `${t.targetEntityId}-${t.direction}`}
-                onHover={(entering) =>
-                  setHoveredId(
-                    entering ? `${t.targetEntityId}-${t.direction}` : null,
-                  )
-                }
-              />
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div className="mt-2 mx-3 border border-border/60 rounded-md overflow-hidden bg-paper">
-          {group.targets.map((t) => {
-            const key = `${t.targetEntityId}-${t.direction}`;
-            const rel: Relationship = {
-              id: `${t.targetEntityId}::${group.relationType}::${t.direction}`,
-              targetEntityId: t.targetEntityId,
-              relationType: group.relationType,
-              direction: t.direction,
-              evidenceCount: t.refs.length,
-              firstPage: t.refs[0]?.sourceSelection.page ?? 0,
-              refIds: t.refs.map((r) => r.id),
-            };
-            const expanded = expandedKeys.has(key);
-            return (
-              <div key={key}>
-                <ConnectionRow
-                  kind="aggregate"
-                  rel={rel}
-                  expanded={expanded}
-                  onToggleExpand={() => toggleKey(key)}
-                />
-                {expanded && (
-                  <div className="bg-warm/40 border-t border-border/40">
-                    {t.refs.map((ref) => (
-                      <ConnectionRow key={ref.id} kind="reference" reference={ref} />
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
+    <div className="px-3 py-3">
+      <div className="border border-border/60 rounded-md overflow-hidden bg-paper">
+        <AggregateRows refs={refs} />
+      </div>
     </div>
   );
 }
 
-interface TargetOverviewProps {
-  targetEntityId: string;
-  direction: Direction;
-  refs: Reference[];
-  hovered: boolean;
-  onHover: (entering: boolean) => void;
-}
+function AggregateRows({ refs }: { refs: Reference[] }) {
+  const rels = useMemo<Relationship[]>(
+    () => deriveRelationships(refs),
+    [refs],
+  );
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
-function TargetCardOverview({
-  targetEntityId,
-  direction,
-  refs,
-  hovered,
-  onHover,
-}: TargetOverviewProps) {
-  const [overlayEntityId, setOverlayEntityId] = useAtom(overlayEntityIdAtom);
-  const entity = getEntity(targetEntityId);
-  const type = entity ? getEntityType(entity.typeId) : undefined;
-  const tooltipRef = useRef<HTMLSpanElement>(null);
-  const [shiftX, setShiftX] = useState(0);
-  const selected = overlayEntityId === targetEntityId;
-
-  useLayoutEffect(() => {
-    if (!hovered) {
-      setShiftX(0);
-      return;
-    }
-    const el = tooltipRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const margin = 8;
-    let shift = 0;
-    if (rect.left < margin) shift = margin - rect.left;
-    else if (rect.right > window.innerWidth - margin)
-      shift = window.innerWidth - margin - rect.right;
-    setShiftX(shift);
-  }, [hovered]);
+  const toggle = (id: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   return (
-    <span className="relative inline-flex">
-      <button
-        onClick={() => setOverlayEntityId(targetEntityId)}
-        onMouseEnter={() => onHover(true)}
-        onMouseLeave={() => onHover(false)}
-        onFocus={() => onHover(true)}
-        onBlur={() => onHover(false)}
-        aria-pressed={selected}
-        aria-label={`${entity?.title ?? "Unknown"} with ${refs.length} evidence items`}
-        className={`shrink-0 rounded-full transition-shadow cursor-pointer ${
-          selected ? "ring-2 ring-ink/30" : "hover:ring-2 hover:ring-ink/20"
-        }`}
-        style={{
-          backgroundColor: type?.color ?? "var(--border-primary)",
-          width: 10,
-          height: 10,
-        }}
-      />
-      {hovered && (
-        <span
-          ref={tooltipRef}
-          role="tooltip"
-          className="absolute z-20 bottom-full left-1/2 mb-1.5 px-2 py-1 rounded whitespace-nowrap text-[11px] shadow-md pointer-events-none bg-ink text-paper"
-          style={{
-            transform: `translateX(calc(-50% + ${shiftX}px))`,
-          }}
-        >
-          <span className="font-medium">{entity?.title ?? "Unknown"}</span>
-          <span className="opacity-70 ml-1.5">
-            {type?.name ?? "Unknown"} · {refs.length} ·{" "}
-            {direction === "incoming" ? "in" : "out"}
-          </span>
-        </span>
-      )}
-    </span>
+    <>
+      {rels.map((rel) => {
+        const isExpanded = expanded.has(rel.id);
+        const refsForRel = refs.filter((r) => rel.refIds.includes(r.id));
+        return (
+          <div key={rel.id}>
+            <ConnectionRow
+              kind="aggregate"
+              rel={rel}
+              expanded={isExpanded}
+              onToggleExpand={() => toggle(rel.id)}
+            />
+            {isExpanded && (
+              <div className="bg-warm/40 border-t border-border/40">
+                {refsForRel.map((ref) => (
+                  <ConnectionRow key={ref.id} kind="reference" reference={ref} />
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </>
   );
 }

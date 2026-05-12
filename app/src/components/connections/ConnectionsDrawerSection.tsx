@@ -76,12 +76,12 @@ export function ConnectionsDrawerSection() {
           <GroupByControl
             axis="primary"
             size="sm"
-            disabled={view !== "list"}
+            disabled={view === "graph"}
           />
           <GroupByControl
             axis="secondary"
             size="sm"
-            disabled={view !== "list" || groupBy === "none"}
+            disabled={view === "graph" || groupBy === "none"}
           />
           <SortControl size="sm" />
         </div>
