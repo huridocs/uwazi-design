@@ -73,11 +73,7 @@ export function ConnectionsDrawerSection() {
       <div className="px-3 pb-2 flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-1.5 flex-wrap">
           <ViewControls size="sm" />
-          <GroupByControl
-            axis="primary"
-            size="sm"
-            disabled={view === "graph"}
-          />
+          <GroupByControl axis="primary" size="sm" />
           <GroupByControl
             axis="secondary"
             size="sm"

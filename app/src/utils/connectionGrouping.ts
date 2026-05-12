@@ -1,5 +1,6 @@
 import { getEntity, getEntityType } from "../data/entities";
 import { Reference, relationTypes } from "../data/references";
+import { Relationship } from "./relationships";
 import { GroupBy } from "../atoms/filters";
 
 export interface GroupingDescriptor {
@@ -86,4 +87,26 @@ export function groupRefs(
     map.set(key, list);
   }
   return Array.from(map.entries());
+}
+
+/** Same as {@link getGroupKey} but for an aggregated Relationship. Used by
+ *  the graph (whose nodes are relationships) so it can spoke by any axis. */
+export function getRelGroupKey(rel: Relationship, by: GroupBy): string {
+  switch (by) {
+    case "target-template": {
+      const entity = getEntity(rel.targetEntityId);
+      return entity?.typeId ?? "unknown";
+    }
+    case "target-entity":
+      return rel.targetEntityId;
+    case "relation-type":
+      return rel.relationType;
+    case "direction":
+      return rel.direction;
+    case "source-page":
+      return String(rel.firstPage);
+    case "none":
+    default:
+      return "";
+  }
 }

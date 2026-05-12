@@ -7,12 +7,18 @@ import {
   activeClusterRefIdsAtom,
   relTypeFiltersAtom,
   entityTypeFiltersAtom,
+  groupByAtom,
 } from "../../atoms/filters";
 import { getEntity, getEntityType } from "../../data/entities";
-import { Direction, relationTypes, RelationType } from "../../data/references";
+import { Direction } from "../../data/references";
 import { currentDocument } from "../../data/document";
 import { buildMatcher } from "../../utils/searchQuery";
 import { deriveRelationships, Relationship } from "../../utils/relationships";
+import {
+  getGroupColor,
+  getGroupLabel,
+  getRelGroupKey,
+} from "../../utils/connectionGrouping";
 
 interface GraphNode {
   id: string;
@@ -27,8 +33,10 @@ interface GraphNode {
 }
 
 interface Spoke {
-  relationType: RelationType;
+  key: string;
   label: string;
+  /** Optional accent for the spoke label pill (e.g. entity-type colour). */
+  color?: string;
   angle: number;
   targets: Relationship[];
   labelX: number;
@@ -51,6 +59,7 @@ export function RelationshipsGraphView() {
   const [activeClusterRefIds] = useAtom(activeClusterRefIdsAtom);
   const [relTypeFilters] = useAtom(relTypeFiltersAtom);
   const [entityTypeFilters] = useAtom(entityTypeFiltersAtom);
+  const [groupBy] = useAtom(groupByAtom);
   const setOverlayEntityId = useSetAtom(overlayEntityIdAtom);
 
   const svgRef = useRef<SVGSVGElement>(null);
@@ -99,15 +108,19 @@ export function RelationshipsGraphView() {
 
   const { spokes, nodes } = useMemo(() => {
     const rels = deriveRelationships(filteredRefs);
-    const byRelType = new Map<RelationType, Relationship[]>();
+
+    // Bucket each relationship by the active primary grouping axis. When
+    // groupBy === "none" everything lands in one big sector around the source.
+    const byKey = new Map<string, Relationship[]>();
     for (const r of rels) {
-      const list = byRelType.get(r.relationType) ?? [];
+      const key = getRelGroupKey(r, groupBy);
+      const list = byKey.get(key) ?? [];
       list.push(r);
-      byRelType.set(r.relationType, list);
+      byKey.set(key, list);
     }
-    const sorted = Array.from(byRelType.entries()).sort(([a], [b]) => {
-      const la = relationTypes.find((t) => t.id === a)?.label ?? a;
-      const lb = relationTypes.find((t) => t.id === b)?.label ?? b;
+    const sorted = Array.from(byKey.entries()).sort(([a], [b]) => {
+      const la = getGroupLabel(a, groupBy);
+      const lb = getGroupLabel(b, groupBy);
       return la.localeCompare(lb);
     });
 
@@ -121,10 +134,15 @@ export function RelationshipsGraphView() {
         ? Math.PI * 1.4
         : (Math.PI * 2) / spokeCount - 0.12;
 
-    sorted.forEach(([relationType, targets], i) => {
-      const angle = spokeCount === 1 ? -Math.PI / 2 : (i / spokeCount) * Math.PI * 2 - Math.PI / 2;
-      const isCollapsed = !!collapsed[relationType];
-      const sortedTargets = [...targets].sort((a, b) => b.evidenceCount - a.evidenceCount);
+    sorted.forEach(([key, targets], i) => {
+      const angle =
+        spokeCount === 1
+          ? -Math.PI / 2
+          : (i / spokeCount) * Math.PI * 2 - Math.PI / 2;
+      const isCollapsed = !!collapsed[key];
+      const sortedTargets = [...targets].sort(
+        (a, b) => b.evidenceCount - a.evidenceCount,
+      );
       const shown = isCollapsed ? sortedTargets.slice(0, 1) : sortedTargets;
       const dirX = Math.cos(angle);
       const dirY = Math.sin(angle);
@@ -141,8 +159,7 @@ export function RelationshipsGraphView() {
         const toPlace = Math.min(capacity, shown.length - placed);
         // Distribute evenly across the sector for this ring.
         for (let j = 0; j < toPlace; j++) {
-          const t =
-            toPlace === 1 ? 0.5 : j / (toPlace - 1);
+          const t = toPlace === 1 ? 0.5 : j / (toPlace - 1);
           const offset = (t - 0.5) * sectorSpan;
           const nodeAngle = angle + offset;
           const rel = shown[placed + j];
@@ -165,8 +182,9 @@ export function RelationshipsGraphView() {
       }
 
       spokesArr.push({
-        relationType,
-        label: relationTypes.find((t) => t.id === relationType)?.label ?? relationType,
+        key,
+        label: groupBy === "none" ? "Connections" : getGroupLabel(key, groupBy),
+        color: getGroupColor(key, groupBy),
         angle,
         targets: sortedTargets,
         labelX: CX + dirX * LABEL_DIST,
@@ -175,7 +193,7 @@ export function RelationshipsGraphView() {
     });
 
     return { spokes: spokesArr, nodes };
-  }, [filteredRefs, collapsed]);
+  }, [filteredRefs, collapsed, groupBy]);
 
   const sourceType = getEntityType(currentDocument.entityTypeId);
 
@@ -264,7 +282,7 @@ export function RelationshipsGraphView() {
           {spokes.map((s) => {
             const branchNodes = nodes.filter((n) => s.targets.some((t) => t.id === n.id));
             return (
-              <g key={s.relationType}>
+              <g key={s.key}>
                 <line
                   x1={CX}
                   y1={CY}
@@ -292,7 +310,7 @@ export function RelationshipsGraphView() {
                   const endY = n.y - uy * nodePad;
                   return (
                     <line
-                      key={`${s.relationType}-${n.id}`}
+                      key={`${s.key}-${n.id}`}
                       x1={out ? startX : endX}
                       y1={out ? startY : endY}
                       x2={out ? endX : startX}
@@ -310,14 +328,14 @@ export function RelationshipsGraphView() {
 
           {/* Relation-type labels (midway) */}
           {spokes.map((s) => {
-            const isCollapsed = !!collapsed[s.relationType];
+            const isCollapsed = !!collapsed[s.key];
             return (
               <g
-                key={`label-${s.relationType}`}
+                key={`label-${s.key}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   if (dragRef.current.moved) return;
-                  setCollapsed((c) => ({ ...c, [s.relationType]: !c[s.relationType] }));
+                  setCollapsed((c) => ({ ...c, [s.key]: !c[s.key] }));
                 }}
                 style={{ cursor: "pointer" }}
               >
@@ -328,7 +346,7 @@ export function RelationshipsGraphView() {
                   height={22}
                   rx={4}
                   fill="var(--bg-surface)"
-                  stroke="var(--border-primary)"
+                  stroke={s.color ?? "var(--border-primary)"}
                   strokeWidth={1}
                 />
                 <text
