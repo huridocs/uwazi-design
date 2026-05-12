@@ -180,13 +180,16 @@ function AggregateRow({ rel, expanded, onToggleExpand }: AggregateKind) {
   const type = entity ? getEntityType(entity.typeId) : undefined;
   const zoom = useAtomValue(zoomAtom);
   const [overlayEntityId, setOverlayEntityId] = useAtom(overlayEntityIdAtom);
+  const activeRefId = useAtomValue(activeRefIdAtom);
   const setActiveDrawerTab = useSetAtom(activeDrawerTabAtom);
   const setActiveClusterRefIds = useSetAtom(activeClusterRefIdsAtom);
 
   const relLabel =
     relationTypes.find((r) => r.id === rel.relationType)?.label ??
     rel.relationType.replace("_", " ");
-  const selected = overlayEntityId === rel.targetEntityId;
+  const selected =
+    overlayEntityId === rel.targetEntityId ||
+    (activeRefId !== null && rel.refIds.includes(activeRefId));
 
   const handleEvidenceClick = (e: React.MouseEvent) => {
     e.stopPropagation();
