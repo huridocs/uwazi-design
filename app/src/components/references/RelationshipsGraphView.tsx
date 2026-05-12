@@ -44,18 +44,8 @@ interface Spoke {
   color?: string;
   angle: number;
   targets: Relationship[];
-  /** Inner anchor used as the fan's origin point — keeps the source→fan
-   *  topology clean regardless of where the visible label sits. */
-  anchorX: number;
-  anchorY: number;
-  /** Visible label position; pushed past the outer node ring. */
   labelX: number;
   labelY: number;
-  /** Visible label text after truncation. Empty when the spoke is too thin to
-   *  fit any text without colliding with neighbours. */
-  display: string;
-  /** Approximate width of the label rect. */
-  rectW: number;
 }
 
 const VIEW_W = 1200;
@@ -63,37 +53,10 @@ const VIEW_H = 900;
 const CX = VIEW_W / 2;
 const CY = VIEW_H / 2;
 const SOURCE_R = 26;
-const ANCHOR_DIST = 88;
-const LABEL_MIN_DIST = 96;
-const LABEL_PAD = 22;
+const LABEL_DIST = 88;
 const FIRST_RING_R = 170;
 const RING_GAP = 40;
 const ARC_GAP = 30;
-const CHAR_PX = 6.5;
-/** Beyond this many spokes, labels are dropped — the colored fan + hover
- *  tooltips convey identity, since labels at this density just stack. */
-const LABEL_HIDE_THRESHOLD = 12;
-
-/** Outer ring radius reached by `nodeCount` nodes given a sector. Mirrors the
- *  layout loop below — used to push the label past the last placed node. */
-function computeOuterR(nodeCount: number, sectorSpan: number): number {
-  if (nodeCount <= 0) return FIRST_RING_R;
-  let placed = 0;
-  let ring = 0;
-  while (placed < nodeCount) {
-    const R = FIRST_RING_R + ring * RING_GAP;
-    const cap = Math.max(1, Math.floor((sectorSpan * R) / ARC_GAP));
-    placed += cap;
-    ring++;
-  }
-  return FIRST_RING_R + Math.max(0, ring - 1) * RING_GAP;
-}
-
-function fitLabel(text: string, maxChars: number): string {
-  if (maxChars <= 1) return "";
-  if (text.length <= maxChars) return text;
-  return text.slice(0, Math.max(1, maxChars - 1)) + "…";
-}
 
 export function RelationshipsGraphView() {
   const [references] = useAtom(referencesAtom);
@@ -200,6 +163,7 @@ export function RelationshipsGraphView() {
         const arcLen = sectorSpan * R;
         const capacity = Math.max(1, Math.floor(arcLen / ARC_GAP));
         const toPlace = Math.min(capacity, shown.length - placed);
+        // Distribute evenly across the sector for this ring.
         for (let j = 0; j < toPlace; j++) {
           const t = toPlace === 1 ? 0.5 : j / (toPlace - 1);
           const offset = (t - 0.5) * sectorSpan;
@@ -228,35 +192,14 @@ export function RelationshipsGraphView() {
         ring++;
       }
 
-      // Place the label past the outermost node ring so dense spoke counts
-      // don't crowd the source. For very high spoke counts (e.g. target-entity
-      // grouping with 50+ spokes) labels are dropped — there's just no room
-      // around the circumference and stacking them is worse than colour-only.
-      const outerR = computeOuterR(shown.length, sectorSpan);
-      const labelR = Math.max(LABEL_MIN_DIST, outerR + LABEL_PAD);
-      const arcAtLabel = sectorSpan * labelR;
-      const charCap = Math.max(0, Math.floor((arcAtLabel - 14) / CHAR_PX));
-      const labelText = getGroupLabel(key, groupBy);
-      const fullLabel =
-        groupBy === "none" ? "Connections" : labelText;
-      const tooMany = spokeCount > LABEL_HIDE_THRESHOLD;
-      const display = tooMany ? "" : fitLabel(fullLabel, Math.min(charCap, 24));
-      const rectW = display
-        ? Math.max(40, display.length * CHAR_PX + 14)
-        : 0;
-
       spokesArr.push({
         key,
-        label: fullLabel,
+        label: groupBy === "none" ? "Connections" : getGroupLabel(key, groupBy),
         color: getGroupColor(key, groupBy),
         angle,
         targets: sortedTargets,
-        anchorX: CX + dirX * ANCHOR_DIST,
-        anchorY: CY + dirY * ANCHOR_DIST,
-        labelX: CX + dirX * labelR,
-        labelY: CY + dirY * labelR,
-        display,
-        rectW,
+        labelX: CX + dirX * LABEL_DIST,
+        labelY: CY + dirY * LABEL_DIST,
       });
     });
 
@@ -346,9 +289,7 @@ export function RelationshipsGraphView() {
           </marker>
         </defs>
         <g transform={`translate(${transform.tx} ${transform.ty}) scale(${transform.scale})`} style={{ transformOrigin: `${CX}px ${CY}px` }}>
-          {/* Edges: source → anchor → fan to each node. The visible label is
-              placed past the outer ring (s.labelX/Y); the anchor sits closer
-              to the source (s.anchorX/Y) and is the fan's origin. */}
+          {/* Edges: source → label, then fan from label → each node */}
           {spokes.map((s) => {
             const branchNodes = nodes.filter((n) => s.targets.some((t) => t.id === n.id));
             return (
@@ -356,23 +297,26 @@ export function RelationshipsGraphView() {
                 <line
                   x1={CX}
                   y1={CY}
-                  x2={s.anchorX}
-                  y2={s.anchorY}
+                  x2={s.labelX}
+                  y2={s.labelY}
                   stroke="var(--border-primary)"
                   strokeWidth={1}
                   opacity={0.75}
                 />
                 {branchNodes.map((n) => {
                   const out = n.direction === "outgoing";
-                  const dx = n.x - s.anchorX;
-                  const dy = n.y - s.anchorY;
+                  // Pull the line short of the node circle so the arrowhead
+                  // lands cleanly. For outgoing the tip is near the node; for
+                  // incoming the tip is near the label.
+                  const dx = n.x - s.labelX;
+                  const dy = n.y - s.labelY;
                   const len = Math.hypot(dx, dy) || 1;
                   const ux = dx / len;
                   const uy = dy / len;
                   const nodePad = n.r + 3;
-                  const anchorPad = 6;
-                  const startX = s.anchorX + ux * anchorPad;
-                  const startY = s.anchorY + uy * anchorPad;
+                  const labelPad = 14; // skirts the label pill
+                  const startX = s.labelX + ux * labelPad;
+                  const startY = s.labelY + uy * labelPad;
                   const endX = n.x - ux * nodePad;
                   const endY = n.y - uy * nodePad;
                   return (
@@ -393,18 +337,9 @@ export function RelationshipsGraphView() {
             );
           })}
 
-          {/* Spoke labels — placed past the outer node ring; hidden when the
-              spoke count would force them to stack illegibly. */}
+          {/* Relation-type labels (midway) */}
           {spokes.map((s) => {
-            if (!s.display) return null;
             const isCollapsed = !!collapsed[s.key];
-            const text = isCollapsed
-              ? `${s.display} (${s.targets.length})`
-              : s.display;
-            const w = Math.max(
-              s.rectW,
-              text.length * CHAR_PX + 14,
-            );
             return (
               <g
                 key={`label-${s.key}`}
@@ -416,9 +351,9 @@ export function RelationshipsGraphView() {
                 style={{ cursor: "pointer" }}
               >
                 <rect
-                  x={s.labelX - w / 2}
+                  x={s.labelX - 55}
                   y={s.labelY - 11}
-                  width={w}
+                  width={110}
                   height={22}
                   rx={4}
                   fill="var(--bg-surface)"
@@ -433,7 +368,7 @@ export function RelationshipsGraphView() {
                   fontWeight={500}
                   fill="var(--text-secondary)"
                 >
-                  {text}
+                  {isCollapsed ? `${s.label} (${s.targets.length})` : s.label}
                 </text>
               </g>
             );
