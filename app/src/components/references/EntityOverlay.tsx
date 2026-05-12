@@ -183,11 +183,11 @@ export function EntityOverlay() {
 
 function MetaRow({ icon: Icon, label, value }: { icon: typeof Tag; label: string; value: string }) {
   return (
-    <div className="flex items-start gap-2">
-      <Icon size={12} className="text-ink-tertiary mt-0.5 shrink-0" />
+    <div className="flex items-center gap-2.5">
+      <Icon size={14} className="text-ink-tertiary shrink-0" />
       <div className="min-w-0">
-        <span className="text-[10px] text-ink-tertiary">{label}</span>
-        <p className="text-xs text-ink-secondary">{value}</p>
+        <span className="text-[10px] text-ink-tertiary leading-tight block">{label}</span>
+        <p className="text-xs text-ink-secondary leading-tight">{value}</p>
       </div>
     </div>
   );
