@@ -105,7 +105,7 @@ export function RelationshipsGraphView() {
     if (matcher) {
       result = result.filter((ref) => {
         const entity = getEntity(ref.targetEntityId);
-        const haystack = `${ref.sourceSelection.text} ${entity?.title ?? ""} ${ref.relationType}`;
+        const haystack = `${ref.sourceSelection?.text ?? ""} ${entity?.title ?? ""} ${ref.relationType}`;
         return matcher(haystack);
       });
     }

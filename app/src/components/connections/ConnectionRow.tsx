@@ -78,10 +78,13 @@ function ReferenceRow({ reference, onDelete }: ReferenceKind) {
     }
   }, [scrollToRef, reference.id, setScrollToRef, setActiveRefId]);
 
+  const selection = reference.sourceSelection;
   const handleClick = () => {
     setActiveRefId(reference.id);
-    setCurrentPage(reference.sourceSelection.page);
-    setScrollToHighlight(reference.id);
+    if (selection) {
+      setCurrentPage(selection.page);
+      setScrollToHighlight(reference.id);
+    }
   };
 
   // Overview: single-line, entity pill + page tag only.
@@ -95,7 +98,9 @@ function ReferenceRow({ reference, onDelete }: ReferenceKind) {
       >
         <div className="flex items-center justify-between gap-2">
           <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
-          <PageTag page={reference.sourceSelection.page} onClick={handleClick} />
+          {selection && (
+            <PageTag page={selection.page} onClick={handleClick} />
+          )}
         </div>
       </ListCardRow>
     );
@@ -118,7 +123,9 @@ function ReferenceRow({ reference, onDelete }: ReferenceKind) {
               {relLabel}
             </span>
           </div>
-          <PageTag page={reference.sourceSelection.page} onClick={handleClick} />
+          {selection && (
+            <PageTag page={selection.page} onClick={handleClick} />
+          )}
         </div>
       </ListCardRow>
     );
@@ -135,16 +142,24 @@ function ReferenceRow({ reference, onDelete }: ReferenceKind) {
         <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
         <div className="flex items-center gap-1.5 shrink-0">
           <span className="text-[10px] text-ink-tertiary">{type?.name ?? ""}</span>
-          <PageTag page={reference.sourceSelection.page} onClick={handleClick} />
+          {selection && (
+            <PageTag page={selection.page} onClick={handleClick} />
+          )}
         </div>
       </div>
-      <FadeTruncate
-        text={reference.sourceSelection.text}
-        maxLines={2}
-        expandable
-        className="text-xs text-ink-secondary leading-relaxed"
-        fadeTo={isActive ? "var(--bg-primary)" : undefined}
-      />
+      {selection ? (
+        <FadeTruncate
+          text={selection.text}
+          maxLines={2}
+          expandable
+          className="text-xs text-ink-secondary leading-relaxed"
+          fadeTo={isActive ? "var(--bg-primary)" : undefined}
+        />
+      ) : (
+        <p className="text-xs italic text-ink-tertiary">
+          Entity-level connection — no text anchor
+        </p>
+      )}
       <div className="flex items-center justify-between mt-1 text-[10px] text-ink-tertiary">
         <span className="flex items-center gap-1">
           <DirectionGlyph direction={direction} />

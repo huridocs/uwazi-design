@@ -126,11 +126,12 @@ export function DocumentViewer({ actionBarLeft, showMinimap = true }: DocumentVi
   useEffect(() => {
     if (!scrollTarget) return;
     const ref = references.find((r) => r.id === scrollTarget);
-    if (ref) {
+    if (ref?.sourceSelection) {
       const pageEl = pageRefs.current.get(ref.sourceSelection.page);
       const container = containerRef.current;
       if (pageEl && container) {
-        const highlightY = pageEl.offsetTop + pageEl.offsetHeight * ref.sourceSelection.top;
+        const highlightY =
+          pageEl.offsetTop + pageEl.offsetHeight * ref.sourceSelection.top;
         const centered = highlightY - container.clientHeight / 2;
         container.scrollTo({ top: Math.max(0, centered), behavior: "smooth" });
       }

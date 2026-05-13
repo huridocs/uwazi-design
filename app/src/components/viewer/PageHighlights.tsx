@@ -63,7 +63,9 @@ export function PageHighlights({ page }: PageHighlightsProps) {
   const [flashId, setFlashId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
-  const pageRefs = references.filter((r) => r.sourceSelection.page === page);
+  const pageRefs = references.filter(
+    (r) => r.sourceSelection?.page === page,
+  );
 
   // Clear flash when active ref changes
   useEffect(() => {
@@ -95,6 +97,7 @@ export function PageHighlights({ page }: PageHighlightsProps) {
     <>
       {visibleRefs.map((ref) => {
         const sel = ref.sourceSelection;
+        if (!sel) return null;
         const entity = getEntity(ref.targetEntityId);
         const entityType = entity ? getEntityType(entity.typeId) : undefined;
         const color = entityType?.color ?? "#D97706";

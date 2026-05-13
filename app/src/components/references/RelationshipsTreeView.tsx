@@ -83,15 +83,18 @@ export function RelationshipsTreeView() {
     if (matcher) {
       result = result.filter((ref) => {
         const entity = getEntity(ref.targetEntityId);
-        const haystack = `${ref.sourceSelection.text} ${entity?.title ?? ""} ${ref.relationType}`;
+        const haystack = `${ref.sourceSelection?.text ?? ""} ${entity?.title ?? ""} ${ref.relationType}`;
         return matcher(haystack);
       });
     }
     if (sortOrder === "none") {
       return [...result].sort((a, b) => {
-        const pageDiff = a.sourceSelection.page - b.sourceSelection.page;
-        if (pageDiff !== 0) return pageDiff;
-        return a.sourceSelection.top - b.sourceSelection.top;
+        const pageA = a.sourceSelection?.page ?? Number.MAX_SAFE_INTEGER;
+        const pageB = b.sourceSelection?.page ?? Number.MAX_SAFE_INTEGER;
+        if (pageA !== pageB) return pageA - pageB;
+        const topA = a.sourceSelection?.top ?? 0;
+        const topB = b.sourceSelection?.top ?? 0;
+        return topA - topB;
       });
     }
     const dir = sortOrder === "asc" ? 1 : -1;

@@ -31,8 +31,10 @@ export function getGroupKey(ref: Reference, by: GroupBy): string {
       return ref.relationType;
     case "direction":
       return ref.direction ?? "outgoing";
-    case "source-page":
-      return String(ref.sourceSelection.page);
+    case "source-page": {
+      const page = ref.sourceSelection?.page;
+      return page === undefined ? "no-page" : String(page);
+    }
     case "none":
     default:
       return "";
@@ -51,7 +53,7 @@ export function getGroupLabel(key: string, by: GroupBy): string {
     case "direction":
       return key === "incoming" ? "Incoming" : "Outgoing";
     case "source-page":
-      return `Page ${key}`;
+      return key === "no-page" ? "No page" : `Page ${key}`;
     case "none":
     default:
       return key;
@@ -104,7 +106,7 @@ export function getRelGroupKey(rel: Relationship, by: GroupBy): string {
     case "direction":
       return rel.direction;
     case "source-page":
-      return String(rel.firstPage);
+      return rel.firstPage === undefined ? "no-page" : String(rel.firstPage);
     case "none":
     default:
       return "";

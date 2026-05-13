@@ -49,12 +49,15 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
     let bc = 0, ac = 0;
     const bColors: string[] = [], aColors: string[] = [];
     for (const ref of references) {
+      // Entity-level refs have no page anchor — exclude from page-mode counts.
+      const page = ref.sourceSelection?.page;
+      if (page === undefined) continue;
       const entity = getEntity(ref.targetEntityId);
       const color = entity ? getEntityType(entity.typeId)?.color ?? "#D97706" : "#D97706";
-      if (ref.sourceSelection.page < currentPage) {
+      if (page < currentPage) {
         bc++;
         if (bColors.length < 4 && !bColors.includes(color)) bColors.push(color);
-      } else if (ref.sourceSelection.page > currentPage) {
+      } else if (page > currentPage) {
         ac++;
         if (aColors.length < 4 && !aColors.includes(color)) aColors.push(color);
       }
@@ -67,19 +70,20 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
 
     const thresholdPercent = 3.5;
 
-    // Apply same search filter as the drawer
-    let baseRefs = references;
+    // Apply same search filter as the drawer. Entity-level refs (no
+    // sourceSelection) can't be plotted on the document, so drop them first.
+    let baseRefs = references.filter((r) => r.sourceSelection !== undefined);
     const matcher = buildMatcher(searchQuery);
     if (matcher) {
       baseRefs = baseRefs.filter((ref) => {
         const entity = getEntity(ref.targetEntityId);
-        const haystack = `${ref.sourceSelection.text} ${entity?.title ?? ""} ${ref.relationType}`;
+        const haystack = `${ref.sourceSelection?.text ?? ""} ${entity?.title ?? ""} ${ref.relationType}`;
         return matcher(haystack);
       });
     }
 
     const filteredRefs = mode === "page"
-      ? baseRefs.filter((r) => r.sourceSelection.page === currentPage)
+      ? baseRefs.filter((r) => r.sourceSelection?.page === currentPage)
       : baseRefs;
 
     // In page mode, leave space at top/bottom for edge summaries
@@ -87,7 +91,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
     const rangePct = mode === "page" ? 64 : 88;
 
     const items = filteredRefs.map((ref) => {
-      const sel = ref.sourceSelection;
+      const sel = ref.sourceSelection!;
       const entity = getEntity(ref.targetEntityId);
       const entityType = entity ? getEntityType(entity.typeId) : undefined;
       const yFraction = mode === "page"

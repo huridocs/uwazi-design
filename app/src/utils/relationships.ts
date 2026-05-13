@@ -6,7 +6,10 @@ export interface Relationship {
   relationType: RelationType;
   direction: Direction;
   evidenceCount: number;
-  firstPage: number;
+  /** Smallest page number across underlying refs that have a source text
+   *  anchor. Undefined when every backing ref is entity-level (no
+   *  sourceSelection). */
+  firstPage?: number;
   refIds: string[];
 }
 
@@ -18,12 +21,16 @@ export function deriveRelationships(refs: Reference[]): Relationship[] {
   for (const ref of refs) {
     const direction: Direction = ref.direction ?? "outgoing";
     const key = `${ref.targetEntityId}::${ref.relationType}::${direction}`;
+    const page = ref.sourceSelection?.page;
     const existing = map.get(key);
     if (existing) {
       existing.evidenceCount += 1;
       existing.refIds.push(ref.id);
-      if (ref.sourceSelection.page < existing.firstPage) {
-        existing.firstPage = ref.sourceSelection.page;
+      if (
+        page !== undefined &&
+        (existing.firstPage === undefined || page < existing.firstPage)
+      ) {
+        existing.firstPage = page;
       }
     } else {
       map.set(key, {
@@ -32,7 +39,7 @@ export function deriveRelationships(refs: Reference[]): Relationship[] {
         relationType: ref.relationType,
         direction,
         evidenceCount: 1,
-        firstPage: ref.sourceSelection.page,
+        firstPage: page,
         refIds: [ref.id],
       });
     }

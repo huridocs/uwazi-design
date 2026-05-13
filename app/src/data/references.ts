@@ -28,8 +28,10 @@ export interface Reference {
   /** Whether the relationship points out from the source ("outgoing") or
    *  into the source from the target ("incoming"). Defaults to "outgoing". */
   direction?: Direction;
-  /** Selected text in source document */
-  sourceSelection: TextSelection;
+  /** Selected text in source document. Absent when the relationship is a
+   *  pure entity-level link with no text anchor — e.g. a manual connection
+   *  between two entities that doesn't point to a specific passage. */
+  sourceSelection?: TextSelection;
   /** Optional: selected text in target document */
   targetSelection?: TextSelection;
   createdAt: string;
@@ -598,6 +600,46 @@ export const references: Reference[] = [
       height: 0.04,
     },
     createdAt: "2024-06-25",
+  },
+  // Entity-level connections — no source text anchor. These represent manual
+  // entity-to-entity links the user adds without quoting a passage (e.g. a
+  // catalog cross-reference, an editorial note). The UI hides page tags and
+  // snippets for these; the document viewer skips them entirely.
+  {
+    id: "ref-el-1",
+    sourceEntityId: "e3",
+    targetEntityId: "e13",
+    relationType: "relates_to",
+    createdAt: "2024-07-05",
+  },
+  {
+    id: "ref-el-2",
+    sourceEntityId: "e3",
+    targetEntityId: "e31",
+    relationType: "cites",
+    createdAt: "2024-07-05",
+  },
+  {
+    id: "ref-el-3",
+    sourceEntityId: "e3",
+    targetEntityId: "e32",
+    relationType: "cites",
+    direction: "incoming",
+    createdAt: "2024-07-05",
+  },
+  {
+    id: "ref-el-4",
+    sourceEntityId: "e3",
+    targetEntityId: "e15",
+    relationType: "mentions",
+    createdAt: "2024-07-05",
+  },
+  {
+    id: "ref-el-5",
+    sourceEntityId: "e3",
+    targetEntityId: "e8",
+    relationType: "refers_to",
+    createdAt: "2024-07-05",
   },
   // Generated bulk references for stress testing
   ...generateBulkReferences(),
