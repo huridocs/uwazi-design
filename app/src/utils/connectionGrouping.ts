@@ -12,7 +12,7 @@ export interface GroupingDescriptor {
 export const groupingOptions: GroupingDescriptor[] = [
   { id: "none", label: "None" },
   { id: "target-template", label: "Target template" },
-  { id: "target-entity", label: "Target document" },
+  { id: "target-entity", label: "Target entity" },
   { id: "relation-type", label: "Relation type" },
   { id: "direction", label: "Direction" },
   { id: "source-page", label: "Source page" },
