@@ -209,7 +209,11 @@ export function ConnectionsPanelBody({ onDelete, scrollBgClass }: Props) {
             <span className="font-semibold text-ink-secondary tabular-nums">
               {entityCount}
             </span>{" "}
-            entities
+            entities,{" "}
+            <span className="font-semibold text-ink-secondary tabular-nums">
+              {filtered.length}
+            </span>{" "}
+            references
           </>
         }
         activeFilterCount={activeFilterCount}
