@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from "react";
+import { Children, ReactNode, useEffect, useState } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { ChevronRight } from "lucide-react";
 import {
@@ -17,9 +17,10 @@ interface Props {
 }
 
 /** Tree-node primitive — chevron header on top, indented children below with
- *  a vertical guide line for visual hierarchy. Used as the group/sub-group
- *  shell in RelationshipsTreeView. Card-style alternative is
- *  ConnectionGroupedCard. */
+ *  vertical + horizontal connector lines drawn into each child. Used as the
+ *  group/sub-group shell in RelationshipsTreeView. Each direct child is
+ *  wrapped in a connector slot, so the tree reads as an actual tree even
+ *  when those children are aggregate rows or fragments. */
 export function TreeBranch({
   title,
   color,
@@ -64,6 +65,8 @@ export function TreeBranch({
     });
   };
 
+  const items = Children.toArray(children);
+
   return (
     <div>
       <button
@@ -89,11 +92,42 @@ export function TreeBranch({
           {count}
         </span>
       </button>
-      {expanded && (
-        <div className="ml-[10px] pl-3 border-l border-border-soft">
-          {children}
+      {expanded && items.length > 0 && (
+        // Aligns the vertical guide line below the chevron centre of the
+        // header above (chevron is at px-2 + ~6px = ~14px from the wrapper
+        // edge; ml-[14px] keeps the line continuous across nested branches).
+        <div className="ml-[14px]">
+          {items.map((child, i) => (
+            <TreeNode key={i}>{child}</TreeNode>
+          ))}
         </div>
       )}
+    </div>
+  );
+}
+
+/** Connector slot for a direct child of a TreeBranch — draws a vertical line
+ *  along the left edge and a horizontal stub into the child's first row.
+ *  The vertical line is clipped on the last child to produce the "L" corner
+ *  that closes the branch. */
+function TreeNode({ children }: { children: ReactNode }) {
+  return (
+    <div
+      className={[
+        "relative pl-5",
+        // Vertical guide: top of this row down to bottom (full height).
+        "before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0",
+        "before:border-l before:border-border-soft",
+        // On the last child, cut the vertical short so it ends at the
+        // horizontal stub, giving a proper L corner.
+        "last:before:bottom-auto last:before:h-[18px]",
+        // Horizontal stub aligned with the visual centre of a single-line
+        // header (~18px from top of the row).
+        "after:content-[''] after:absolute after:left-0 after:top-[18px] after:w-[14px]",
+        "after:border-t after:border-border-soft",
+      ].join(" ")}
+    >
+      {children}
     </div>
   );
 }

@@ -158,7 +158,7 @@ export function RelationshipsTreeView() {
           </div>
         ) : groupBy === "none" ? (
           <div className="px-3 py-3">
-            <AggregateRows refs={filtered} />
+            {renderAggregates(filtered)}
           </div>
         ) : (
           <div className="px-3 py-3">
@@ -170,21 +170,19 @@ export function RelationshipsTreeView() {
                 count={deriveRelationships(refs).length}
                 defaultExpanded
               >
-                {subGroupBy === "none" ? (
-                  <AggregateRows refs={refs} />
-                ) : (
-                  groupRefs(refs, subGroupBy).map(([subKey, subRefs]) => (
-                    <TreeBranch
-                      key={`s:${key}::${subKey}`}
-                      title={getGroupLabel(subKey, subGroupBy)}
-                      color={getGroupColor(subKey, subGroupBy)}
-                      count={deriveRelationships(subRefs).length}
-                      defaultExpanded
-                    >
-                      <AggregateRows refs={subRefs} />
-                    </TreeBranch>
-                  ))
-                )}
+                {subGroupBy === "none"
+                  ? renderAggregates(refs)
+                  : groupRefs(refs, subGroupBy).map(([subKey, subRefs]) => (
+                      <TreeBranch
+                        key={`s:${key}::${subKey}`}
+                        title={getGroupLabel(subKey, subGroupBy)}
+                        color={getGroupColor(subKey, subGroupBy)}
+                        count={deriveRelationships(subRefs).length}
+                        defaultExpanded
+                      >
+                        {renderAggregates(subRefs)}
+                      </TreeBranch>
+                    ))}
               </TreeBranch>
             ))}
           </div>
@@ -194,44 +192,37 @@ export function RelationshipsTreeView() {
   );
 }
 
-function AggregateRows({ refs }: { refs: Reference[] }) {
-  const rels = useMemo<Relationship[]>(
-    () => deriveRelationships(refs),
-    [refs],
-  );
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+/** Render a bucket of refs as a flat list of aggregate tree-nodes. Returned
+ *  as an array so the caller (TreeBranch) sees each aggregate as a direct
+ *  child and can wrap it in its own connector slot. */
+function renderAggregates(refs: Reference[]) {
+  const rels = deriveRelationships(refs);
+  return rels.map((rel) => (
+    <AggregateNode
+      key={rel.id}
+      rel={rel}
+      refs={refs.filter((r) => rel.refIds.includes(r.id))}
+    />
+  ));
+}
 
-  const toggle = (id: string) =>
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-
+function AggregateNode({ rel, refs }: { rel: Relationship; refs: Reference[] }) {
+  const [expanded, setExpanded] = useState(false);
   return (
-    <>
-      {rels.map((rel) => {
-        const isExpanded = expanded.has(rel.id);
-        const refsForRel = refs.filter((r) => rel.refIds.includes(r.id));
-        return (
-          <div key={rel.id}>
-            <ConnectionRow
-              kind="aggregate"
-              rel={rel}
-              expanded={isExpanded}
-              onToggleExpand={() => toggle(rel.id)}
-            />
-            {isExpanded && (
-              <div className="bg-warm/40 border-t border-border/40">
-                {refsForRel.map((ref) => (
-                  <ConnectionRow key={ref.id} kind="reference" reference={ref} />
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </>
+    <div>
+      <ConnectionRow
+        kind="aggregate"
+        rel={rel}
+        expanded={expanded}
+        onToggleExpand={() => setExpanded((e) => !e)}
+      />
+      {expanded && (
+        <div className="bg-warm/40 border-t border-border/40">
+          {refs.map((ref) => (
+            <ConnectionRow key={ref.id} kind="reference" reference={ref} />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
