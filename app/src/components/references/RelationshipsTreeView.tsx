@@ -27,7 +27,7 @@ import {
 } from "../../utils/connectionGrouping";
 import { ListInfoRow } from "../shared/ListInfoRow";
 import { ConnectionRow } from "../connections/ConnectionRow";
-import { ConnectionGroupedCard } from "../connections/ConnectionGroupedCard";
+import { TreeBranch } from "../connections/TreeBranch";
 import { CollapseControls } from "./FiltersRow";
 import { useEffect } from "react";
 import { useSetAtom } from "jotai";
@@ -157,50 +157,38 @@ export function RelationshipsTreeView() {
             </p>
           </div>
         ) : groupBy === "none" ? (
-          <FlatAggregates refs={filtered} />
+          <div className="px-3 py-3">
+            <AggregateRows refs={filtered} />
+          </div>
         ) : (
-          <div className="px-3 py-3 space-y-1.5">
+          <div className="px-3 py-3">
             {groupRefs(filtered, groupBy).map(([key, refs]) => (
-              <ConnectionGroupedCard
+              <TreeBranch
                 key={`p:${key}`}
                 title={getGroupLabel(key, groupBy)}
                 color={getGroupColor(key, groupBy)}
                 count={deriveRelationships(refs).length}
-                refIdsToWatch={refs.map((r) => r.id)}
                 defaultExpanded
               >
                 {subGroupBy === "none" ? (
                   <AggregateRows refs={refs} />
                 ) : (
-                  <div className="px-2 py-2 space-y-1.5 bg-warm/30">
-                    {groupRefs(refs, subGroupBy).map(([subKey, subRefs]) => (
-                      <ConnectionGroupedCard
-                        key={`s:${key}::${subKey}`}
-                        title={getGroupLabel(subKey, subGroupBy)}
-                        color={getGroupColor(subKey, subGroupBy)}
-                        count={deriveRelationships(subRefs).length}
-                        refIdsToWatch={subRefs.map((r) => r.id)}
-                        defaultExpanded
-                      >
-                        <AggregateRows refs={subRefs} />
-                      </ConnectionGroupedCard>
-                    ))}
-                  </div>
+                  groupRefs(refs, subGroupBy).map(([subKey, subRefs]) => (
+                    <TreeBranch
+                      key={`s:${key}::${subKey}`}
+                      title={getGroupLabel(subKey, subGroupBy)}
+                      color={getGroupColor(subKey, subGroupBy)}
+                      count={deriveRelationships(subRefs).length}
+                      defaultExpanded
+                    >
+                      <AggregateRows refs={subRefs} />
+                    </TreeBranch>
+                  ))
                 )}
-              </ConnectionGroupedCard>
+              </TreeBranch>
             ))}
           </div>
         )}
-      </div>
-    </div>
-  );
-}
-
-function FlatAggregates({ refs }: { refs: Reference[] }) {
-  return (
-    <div className="px-3 py-3">
-      <div className="border border-border/60 rounded-md overflow-hidden bg-paper">
-        <AggregateRows refs={refs} />
       </div>
     </div>
   );
