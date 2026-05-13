@@ -10,7 +10,7 @@ export const viewModeAtom = atom<ViewMode>("all");
 /** Presentation mode in the merged Relationships panel: how the connections
  *  are shown. Orthogonal to {@link groupByAtom}, which only matters in list. */
 export type View = "list" | "tree" | "graph";
-export const viewAtom = atom<View>("tree");
+export const viewAtom = atom<View>("list");
 
 /** Grouping axis applied within the list view. Tree has implicit structure
  *  (rel type → target → refs); graph has no grouping. */
