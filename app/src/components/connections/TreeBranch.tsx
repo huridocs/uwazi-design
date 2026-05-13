@@ -73,12 +73,14 @@ export function TreeBranch({
         type="button"
         onClick={toggle}
         aria-expanded={expanded}
-        className="w-full flex items-center gap-1.5 px-2 py-1.5 hover:bg-warm rounded text-left cursor-pointer transition-colors"
+        className={`w-full flex items-center gap-1.5 px-2 py-1.5 rounded text-left cursor-pointer transition-colors ${
+          expanded ? "bg-warm/60 hover:bg-warm" : "hover:bg-warm"
+        }`}
       >
         <ChevronRight
           size={12}
-          className={`text-ink-tertiary shrink-0 transition-transform ${
-            expanded ? "rotate-90" : ""
+          className={`shrink-0 transition-transform ${
+            expanded ? "rotate-90 text-ink-secondary" : "text-ink-tertiary"
           }`}
         />
         {color && (
