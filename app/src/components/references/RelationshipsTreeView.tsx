@@ -27,7 +27,7 @@ import {
 } from "../../utils/connectionGrouping";
 import { ListInfoRow } from "../shared/ListInfoRow";
 import { ConnectionRow } from "../connections/ConnectionRow";
-import { TreeBranch } from "../connections/TreeBranch";
+import { TreeBranch, TreeNode } from "../connections/TreeBranch";
 import { CollapseControls } from "./FiltersRow";
 import { useEffect } from "react";
 import { useSetAtom } from "jotai";
@@ -217,9 +217,11 @@ function AggregateNode({ rel, refs }: { rel: Relationship; refs: Reference[] }) 
         onToggleExpand={() => setExpanded((e) => !e)}
       />
       {expanded && (
-        <div className="bg-warm/40 border-t border-border/40">
+        <div className="ml-[14px]">
           {refs.map((ref) => (
-            <ConnectionRow key={ref.id} kind="reference" reference={ref} />
+            <TreeNode key={ref.id}>
+              <ConnectionRow kind="reference" reference={ref} />
+            </TreeNode>
           ))}
         </div>
       )}

@@ -109,8 +109,10 @@ export function TreeBranch({
 /** Connector slot for a direct child of a TreeBranch — draws a vertical line
  *  along the left edge and a horizontal stub into the child's first row.
  *  The vertical line is clipped on the last child to produce the "L" corner
- *  that closes the branch. */
-function TreeNode({ children }: { children: ReactNode }) {
+ *  that closes the branch. Exported so other tree leaves (aggregate rows
+ *  with inline-expanded refs) can render their children with the same
+ *  connector geometry. */
+export function TreeNode({ children }: { children: ReactNode }) {
   return (
     <div
       className={[
