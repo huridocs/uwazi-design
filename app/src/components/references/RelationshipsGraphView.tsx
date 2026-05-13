@@ -289,34 +289,40 @@ export function RelationshipsGraphView() {
           </marker>
         </defs>
         <g transform={`translate(${transform.tx} ${transform.ty}) scale(${transform.scale})`} style={{ transformOrigin: `${CX}px ${CY}px` }}>
-          {/* Edges: source → label, then fan from label → each node */}
+          {/* Edges: when grouped, source → label → fan to nodes. When
+              groupBy === "none" there's nothing useful to label, so lines
+              fan directly from the source circle's edge. */}
           {spokes.map((s) => {
             const branchNodes = nodes.filter((n) => s.targets.some((t) => t.id === n.id));
+            const direct = groupBy === "none";
             return (
               <g key={s.key}>
-                <line
-                  x1={CX}
-                  y1={CY}
-                  x2={s.labelX}
-                  y2={s.labelY}
-                  stroke="var(--border-primary)"
-                  strokeWidth={1}
-                  opacity={0.75}
-                />
+                {!direct && (
+                  <line
+                    x1={CX}
+                    y1={CY}
+                    x2={s.labelX}
+                    y2={s.labelY}
+                    stroke="var(--border-primary)"
+                    strokeWidth={1}
+                    opacity={0.75}
+                  />
+                )}
                 {branchNodes.map((n) => {
                   const out = n.direction === "outgoing";
-                  // Pull the line short of the node circle so the arrowhead
-                  // lands cleanly. For outgoing the tip is near the node; for
-                  // incoming the tip is near the label.
-                  const dx = n.x - s.labelX;
-                  const dy = n.y - s.labelY;
+                  // Anchor at the spoke's label position when grouped, or at
+                  // the source circle's centre when ungrouped.
+                  const ax = direct ? CX : s.labelX;
+                  const ay = direct ? CY : s.labelY;
+                  const dx = n.x - ax;
+                  const dy = n.y - ay;
                   const len = Math.hypot(dx, dy) || 1;
                   const ux = dx / len;
                   const uy = dy / len;
                   const nodePad = n.r + 3;
-                  const labelPad = 14; // skirts the label pill
-                  const startX = s.labelX + ux * labelPad;
-                  const startY = s.labelY + uy * labelPad;
+                  const anchorPad = direct ? SOURCE_R + 2 : 14;
+                  const startX = ax + ux * anchorPad;
+                  const startY = ay + uy * anchorPad;
                   const endX = n.x - ux * nodePad;
                   const endY = n.y - uy * nodePad;
                   return (
@@ -337,8 +343,9 @@ export function RelationshipsGraphView() {
             );
           })}
 
-          {/* Relation-type labels (midway) */}
-          {spokes.map((s) => {
+          {/* Relation-type labels (midway). Skipped when ungrouped — no
+              meaningful label to apply. */}
+          {groupBy !== "none" && spokes.map((s) => {
             const isCollapsed = !!collapsed[s.key];
             return (
               <g
