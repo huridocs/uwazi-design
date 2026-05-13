@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Eye, FileText, Trash2 } from "lucide-react";
+import { ChevronRight, Eye, Link2, Trash2 } from "lucide-react";
 import {
   activeRefIdAtom,
   overlayEntityIdAtom,
@@ -201,6 +201,8 @@ function AggregateRow({ rel, expanded, onToggleExpand }: AggregateKind) {
     setActiveDrawerTab("connections");
   };
 
+  // Chain-link icon signals "relationship between entities" — distinct from
+  // the page-tag pill that references use.
   const countBadge = (
     <button
       type="button"
@@ -216,10 +218,29 @@ function AggregateRow({ rel, expanded, onToggleExpand }: AggregateKind) {
           : "bg-warm text-ink-tertiary hover:bg-parchment hover:text-ink-secondary"
       }`}
     >
-      <FileText size={10} />
+      <Link2 size={10} />
       {rel.evidenceCount}
     </button>
   );
+
+  // Chevron prefix: when the row is expandable (tree-view context), prepend a
+  // small rotating chevron so the row reads as a drill-down node, not a leaf.
+  const chevron = onToggleExpand ? (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggleExpand();
+      }}
+      aria-label={expanded ? "Collapse evidence" : "Expand evidence"}
+      className="shrink-0 p-0.5 -ml-0.5 text-ink-tertiary hover:text-ink cursor-pointer"
+    >
+      <ChevronRight
+        size={12}
+        className={`transition-transform ${expanded ? "rotate-90" : ""}`}
+      />
+    </button>
+  ) : null;
 
   // Overview: pill + count only.
   if (zoom === "overview") {
@@ -230,7 +251,10 @@ function AggregateRow({ rel, expanded, onToggleExpand }: AggregateKind) {
         className="!py-1.5"
       >
         <div className="flex items-center justify-between gap-2">
-          <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
+          <div className="flex items-center gap-1 min-w-0">
+            {chevron}
+            <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
+          </div>
           {countBadge}
         </div>
       </ListCardRow>
@@ -246,7 +270,8 @@ function AggregateRow({ rel, expanded, onToggleExpand }: AggregateKind) {
         className="!py-2"
       >
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 min-w-0">
+          <div className="flex items-center gap-1 min-w-0">
+            {chevron}
             <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
             <DirectionGlyph direction={rel.direction} />
             <span className="text-[10px] text-ink-tertiary truncate capitalize">
@@ -266,7 +291,10 @@ function AggregateRow({ rel, expanded, onToggleExpand }: AggregateKind) {
       onClick={() => setOverlayEntityId(rel.targetEntityId)}
     >
       <div className="flex items-start justify-between gap-2 mb-1.5">
-        <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
+        <div className="flex items-center gap-1 min-w-0">
+          {chevron}
+          <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
+        </div>
         <div className="flex items-center gap-1.5 shrink-0">
           <span className="text-[10px] text-ink-tertiary">{type?.name ?? ""}</span>
           {countBadge}
