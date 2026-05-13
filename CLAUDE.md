@@ -46,9 +46,42 @@ The Tailwind aliases (`--color-ink`, `--color-paper`, `--color-vellum`, `--color
 - **Tooltips**: render as HTML overlays positioned by `getBoundingClientRect`, not as SVG elements inside the zoom transform. SVG tooltips scale with the graph and clip at viewport edges.
 - **Layout**: branches occupy angular sectors, nodes fan out across concentric arcs (capacity scales with arc length). Edges are tree-style: source → label → fan to children.
 
+## Reference vs Relationship — one record, two projections
+
+Uwazi v2's data model is a single `Relationship { from, to, type }` where each pointer may optionally carry a text anchor `{file, selections[], text}`. A row is "text-anchored" iff either endpoint has selections. There is no separate "References" collection — text references and entity-to-entity edges are the same record, viewed differently.
+
+The prototype keeps a simpler shape: every row in `data/references.ts` is a `Reference` with a required `sourceSelection` (text anchor) plus `sourceEntityId` (always the current doc), `targetEntityId`, `relationType`, and `direction`. What we call a `Relationship` (`utils/relationships.ts`) is **runtime aggregation** — `deriveRelationships(refs)` collapses by `(targetEntityId, relationType, direction)` and exposes `evidenceCount` + `refIds[]`. It is not stored.
+
+**Property cheat sheet:**
+
+| Property | `Reference` (per evidence) | `Relationship` (aggregate) |
+|---|---|---|
+| `id` | per ref | composite `target::type::direction` |
+| `targetEntityId` | required | required |
+| `relationType` | required | required |
+| `direction` | optional, default `outgoing` | propagated |
+| `sourceSelection` (text+page+box) | required — the text anchor | — |
+| `targetSelection` | optional (never populated today) | — |
+| `evidenceCount` | — | `refIds.length` |
+| `firstPage` | — | `min(ref.page)` |
+| `refIds` | — | backing references |
+
+**Where the seam shows up in the UI:**
+- List view rows = `Reference[]` (one per evidence, snippet + page tag).
+- Tree view leaves = `Relationship[]` (deduped aggregates) with inline-expand into their underlying refs.
+- Graph nodes = `Relationship[]`.
+- Header counter always shows the **aggregate** count (`deriveRelationships(filtered).length`) so list and tree numbers agree.
+- The aggregate row's "evidence count" badge is `relationship.evidenceCount`.
+
+**Known gaps vs Uwazi v2 (intentional, don't paper over):**
+- We always anchor source to the current document; Uwazi's `from`/`to` are symmetric. So "target-side text anchor" (a quote on the *target's* document) doesn't exist in our seed data, and grouping/filtering by target-side text would be empty.
+- No inverse relation labels — Uwazi v2 stores a single `type` per relationship; the "source rel type vs target rel type" pair from the mockup has no backing data.
+- No `createdBy`, `sourceKind` (manual / IX-suggested), or confidence on refs. If we add filters by source/author/confidence, the data layer has to grow first.
+- No no-anchor relationships in seed data — every relationship has at least one underlying reference. A manual entity link with no quote is representable (`Reference` requires `sourceSelection` so… not actually representable without loosening the type). Future expansion if we model it.
+
 ## Connections panel — refs and rels are one surface
 
-There is **no longer a separate "References" tab**. The Relationships top tab is the single surface, hosting both the text-anchored (snippet + page) and aggregated (entity-level) projections of the same `references[]` array. Both the main view and the document-tab drawer route through the same body. This mirrors Uwazi v2's data model, where a `Relationship` has `from`/`to` pointers that may optionally carry text-anchor `{file, selections[], text}`.
+The Relationships top tab is the single surface, hosting both the text-anchored (snippet + page) and aggregated (entity-level) projections of the same `references[]` array. Both the main view and the document-tab drawer route through the same body.
 
 ```
 src/components/connections/
