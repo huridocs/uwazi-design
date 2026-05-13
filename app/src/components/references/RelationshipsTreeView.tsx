@@ -171,7 +171,9 @@ export function RelationshipsTreeView() {
                 defaultExpanded
               >
                 {subGroupBy === "none"
-                  ? renderAggregates(refs)
+                  ? renderAggregates(refs, {
+                      hidePill: groupBy === "target-entity",
+                    })
                   : groupRefs(refs, subGroupBy).map(([subKey, subRefs]) => (
                       <TreeBranch
                         key={`s:${key}::${subKey}`}
@@ -180,7 +182,11 @@ export function RelationshipsTreeView() {
                         count={deriveRelationships(subRefs).length}
                         defaultExpanded
                       >
-                        {renderAggregates(subRefs)}
+                        {renderAggregates(subRefs, {
+                          hidePill:
+                            subGroupBy === "target-entity" ||
+                            groupBy === "target-entity",
+                        })}
                       </TreeBranch>
                     ))}
               </TreeBranch>
@@ -194,19 +200,34 @@ export function RelationshipsTreeView() {
 
 /** Render a bucket of refs as a flat list of aggregate tree-nodes. Returned
  *  as an array so the caller (TreeBranch) sees each aggregate as a direct
- *  child and can wrap it in its own connector slot. */
-function renderAggregates(refs: Reference[]) {
+ *  child and can wrap it in its own connector slot.
+ *
+ *  `hidePill` is forwarded to the aggregate row when the enclosing group is
+ *  keyed on the target entity — the pill would just repeat the group title. */
+function renderAggregates(
+  refs: Reference[],
+  opts: { hidePill?: boolean } = {},
+) {
   const rels = deriveRelationships(refs);
   return rels.map((rel) => (
     <AggregateNode
       key={rel.id}
       rel={rel}
       refs={refs.filter((r) => rel.refIds.includes(r.id))}
+      hidePill={opts.hidePill}
     />
   ));
 }
 
-function AggregateNode({ rel, refs }: { rel: Relationship; refs: Reference[] }) {
+function AggregateNode({
+  rel,
+  refs,
+  hidePill,
+}: {
+  rel: Relationship;
+  refs: Reference[];
+  hidePill?: boolean;
+}) {
   const [expanded, setExpanded] = useState(false);
   return (
     <div>
@@ -215,6 +236,7 @@ function AggregateNode({ rel, refs }: { rel: Relationship; refs: Reference[] }) 
         rel={rel}
         expanded={expanded}
         onToggleExpand={() => setExpanded((e) => !e)}
+        hidePill={hidePill}
       />
       {expanded && (
         <div className="ml-[14px]">

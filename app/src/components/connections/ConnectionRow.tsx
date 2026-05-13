@@ -32,6 +32,10 @@ interface AggregateKind {
    *  to evidence elsewhere. */
   expanded?: boolean;
   onToggleExpand?: () => void;
+  /** Hide the entity pill + typeName. Used when the row is nested inside a
+   *  group that already keys on this entity (e.g. groupBy = target-entity),
+   *  so the pill would just repeat the group header. */
+  hidePill?: boolean;
 }
 
 type Props = ReferenceKind | AggregateKind;
@@ -175,7 +179,12 @@ function ReferenceRow({ reference, onDelete }: ReferenceKind) {
   );
 }
 
-function AggregateRow({ rel, expanded, onToggleExpand }: AggregateKind) {
+function AggregateRow({
+  rel,
+  expanded,
+  onToggleExpand,
+  hidePill,
+}: AggregateKind) {
   const entity = getEntity(rel.targetEntityId);
   const type = entity ? getEntityType(entity.typeId) : undefined;
   const zoom = useAtomValue(zoomAtom);
@@ -242,7 +251,8 @@ function AggregateRow({ rel, expanded, onToggleExpand }: AggregateKind) {
     </button>
   ) : null;
 
-  // Overview: pill + count only.
+  // Overview: pill + count only. When pill is suppressed, surface the
+  // relation label so the row still says something useful.
   if (zoom === "overview") {
     return (
       <ListCardRow
@@ -253,7 +263,14 @@ function AggregateRow({ rel, expanded, onToggleExpand }: AggregateKind) {
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1 min-w-0">
             {chevron}
-            <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
+            {hidePill ? (
+              <span className="flex items-center gap-1.5 text-xs text-ink-secondary capitalize">
+                <DirectionGlyph direction={rel.direction} />
+                {relLabel}
+              </span>
+            ) : (
+              <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
+            )}
           </div>
           {countBadge}
         </div>
@@ -270,13 +287,21 @@ function AggregateRow({ rel, expanded, onToggleExpand }: AggregateKind) {
         className="!py-2"
       >
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1 min-w-0">
+          <div className="flex items-center gap-1.5 min-w-0">
             {chevron}
-            <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
             <DirectionGlyph direction={rel.direction} />
-            <span className="text-[10px] text-ink-tertiary truncate capitalize">
-              {relLabel}
-            </span>
+            {hidePill ? (
+              <span className="text-xs text-ink-secondary capitalize truncate">
+                {relLabel}
+              </span>
+            ) : (
+              <>
+                <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
+                <span className="text-[10px] text-ink-tertiary truncate capitalize">
+                  {relLabel}
+                </span>
+              </>
+            )}
           </div>
           {countBadge}
         </div>
@@ -284,26 +309,42 @@ function AggregateRow({ rel, expanded, onToggleExpand }: AggregateKind) {
     );
   }
 
-  // Detail: full layout — header, footer.
+  // Detail: full layout — header, footer. With hidePill, the relation label
+  // becomes the row's title (capitalized text in the header slot).
   return (
     <ListCardRow
       selected={selected}
       onClick={() => setOverlayEntityId(rel.targetEntityId)}
     >
       <div className="flex items-start justify-between gap-2 mb-1.5">
-        <div className="flex items-center gap-1 min-w-0">
+        <div className="flex items-center gap-1.5 min-w-0">
           {chevron}
-          <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
+          {hidePill ? (
+            <>
+              <DirectionGlyph direction={rel.direction} />
+              <span className="text-sm font-medium text-ink capitalize truncate">
+                {relLabel}
+              </span>
+            </>
+          ) : (
+            <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
+          )}
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
-          <span className="text-[10px] text-ink-tertiary">{type?.name ?? ""}</span>
+          {!hidePill && (
+            <span className="text-[10px] text-ink-tertiary">
+              {type?.name ?? ""}
+            </span>
+          )}
           {countBadge}
         </div>
       </div>
-      <div className="flex items-center gap-1 mt-1 text-[10px] text-ink-tertiary">
-        <DirectionGlyph direction={rel.direction} />
-        <span className="capitalize">{relLabel}</span>
-      </div>
+      {!hidePill && (
+        <div className="flex items-center gap-1 mt-1 text-[10px] text-ink-tertiary">
+          <DirectionGlyph direction={rel.direction} />
+          <span className="capitalize">{relLabel}</span>
+        </div>
+      )}
     </ListCardRow>
   );
 }
