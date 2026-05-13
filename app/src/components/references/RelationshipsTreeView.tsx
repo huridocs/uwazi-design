@@ -5,6 +5,7 @@ import {
   referencesAtom,
   overlayEntityIdAtom,
   activeRefIdAtom,
+  expandGroupForRefAtom,
 } from "../../atoms/references";
 import {
   searchQueryAtom,
@@ -168,6 +169,7 @@ export function RelationshipsTreeView() {
                 title={getGroupLabel(key, groupBy)}
                 color={getGroupColor(key, groupBy)}
                 count={deriveRelationships(refs).length}
+                refIdsToWatch={refs.map((r) => r.id)}
                 defaultExpanded
               >
                 {subGroupBy === "none"
@@ -180,6 +182,7 @@ export function RelationshipsTreeView() {
                         title={getGroupLabel(subKey, subGroupBy)}
                         color={getGroupColor(subKey, subGroupBy)}
                         count={deriveRelationships(subRefs).length}
+                        refIdsToWatch={subRefs.map((r) => r.id)}
                         defaultExpanded
                       >
                         {renderAggregates(subRefs, {
@@ -229,6 +232,19 @@ function AggregateNode({
   hidePill?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [expandForRef, setExpandForRef] = useAtom(expandGroupForRefAtom);
+
+  // Minimap dot click sets expandGroupForRef to the ref id. The chain of
+  // TreeBranches above us auto-expand; we (the leaf containing the actual
+  // ref) auto-expand too, then clear the signal.
+  useEffect(() => {
+    if (!expandForRef) return;
+    if (rel.refIds.includes(expandForRef)) {
+      if (!expanded) setExpanded(true);
+      setExpandForRef(null);
+    }
+  }, [expandForRef]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <div>
       <ConnectionRow

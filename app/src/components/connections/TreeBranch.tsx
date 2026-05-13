@@ -7,12 +7,17 @@ import {
   expandedGroupCountAtom,
   totalGroupCountAtom,
 } from "../../atoms/filters";
+import { expandGroupForRefAtom } from "../../atoms/references";
 
 interface Props {
   title: string;
   color?: string;
   count: number;
   defaultExpanded?: boolean;
+  /** Reference IDs this branch hosts (directly or transitively). When the
+   *  document viewer's minimap highlights a ref, the branch containing it
+   *  auto-expands so the matching aggregate becomes visible. */
+  refIdsToWatch?: string[];
   children: ReactNode;
 }
 
@@ -26,6 +31,7 @@ export function TreeBranch({
   color,
   count,
   defaultExpanded = true,
+  refIdsToWatch,
   children,
 }: Props) {
   const [expanded, setExpanded] = useState(defaultExpanded);
@@ -33,6 +39,7 @@ export function TreeBranch({
   const [collapseSignal] = useAtom(collapseAllSignalAtom);
   const setExpandedCount = useSetAtom(expandedGroupCountAtom);
   const setTotalCount = useSetAtom(totalGroupCountAtom);
+  const [expandForRef] = useAtom(expandGroupForRefAtom);
 
   useEffect(() => {
     setTotalCount((c) => c + 1);
@@ -57,6 +64,19 @@ export function TreeBranch({
       setExpandedCount((c) => c - 1);
     }
   }, [collapseSignal]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Minimap dot click → activeRefId + collapseAllSignal + expandGroupForRef.
+  // If the highlighted ref lives inside this branch, re-open. We don't clear
+  // the signal here — leaf AggregateNodes also listen for it.
+  useEffect(() => {
+    if (!expandForRef || !refIdsToWatch || refIdsToWatch.length === 0) return;
+    if (refIdsToWatch.includes(expandForRef)) {
+      setExpanded((prev) => {
+        if (!prev) setExpandedCount((c) => c + 1);
+        return true;
+      });
+    }
+  }, [expandForRef]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggle = () => {
     setExpanded((prev) => {
