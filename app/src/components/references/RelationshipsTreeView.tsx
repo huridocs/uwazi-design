@@ -28,7 +28,7 @@ import {
 } from "../../utils/connectionGrouping";
 import { ListInfoRow } from "../shared/ListInfoRow";
 import { ConnectionRow } from "../connections/ConnectionRow";
-import { TreeBranch } from "../connections/TreeBranch";
+import { TreeBranch, TreeNode } from "../connections/TreeBranch";
 import { CollapseControls } from "./FiltersRow";
 import {
   expandAllSignalAtom,
@@ -163,7 +163,7 @@ export function RelationshipsTreeView() {
             </p>
           </div>
         ) : groupBy === "none" ? (
-          <div className="px-3 py-3 space-y-1.5">
+          <div className="px-3 py-3">
             {renderAggregates(filtered)}
           </div>
         ) : (
@@ -176,7 +176,6 @@ export function RelationshipsTreeView() {
                 count={deriveRelationships(refs).length}
                 refIdsToWatch={refs.map((r) => r.id)}
                 defaultExpanded
-                leafCards={subGroupBy === "none"}
               >
                 {subGroupBy === "none"
                   ? renderAggregates(refs, {
@@ -190,7 +189,6 @@ export function RelationshipsTreeView() {
                         count={deriveRelationships(subRefs).length}
                         refIdsToWatch={subRefs.map((r) => r.id)}
                         defaultExpanded
-                        leafCards
                       >
                         {renderAggregates(subRefs, {
                           hidePill:
@@ -253,7 +251,7 @@ function AggregateNode({
   }, [expandForRef]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="border border-border/60 rounded-md overflow-hidden bg-paper transition-colors">
+    <div>
       <ConnectionRow
         kind="aggregate"
         rel={rel}
@@ -262,9 +260,11 @@ function AggregateNode({
         hidePill={hidePill}
       />
       {expanded && (
-        <div className="bg-warm/40 border-t border-border/40">
+        <div className="ml-[14px]">
           {refs.map((ref) => (
-            <ConnectionRow key={ref.id} kind="reference" reference={ref} />
+            <TreeNode key={ref.id}>
+              <ConnectionRow kind="reference" reference={ref} />
+            </TreeNode>
           ))}
         </div>
       )}

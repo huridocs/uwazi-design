@@ -18,11 +18,6 @@ interface Props {
    *  document viewer's minimap highlights a ref, the branch containing it
    *  auto-expands so the matching aggregate becomes visible. */
   refIdsToWatch?: string[];
-  /** When true, children render as a plain stacked list (with vertical
-   *  spacing) instead of being wrapped in TreeNode connector slots. Use this
-   *  when children are leaf cards — they have their own border, so the
-   *  horizontal/vertical connector stubs would just clutter the view. */
-  leafCards?: boolean;
   children: ReactNode;
 }
 
@@ -37,7 +32,6 @@ export function TreeBranch({
   count,
   defaultExpanded = true,
   refIdsToWatch,
-  leafCards = false,
   children,
 }: Props) {
   const [expanded, setExpanded] = useState(defaultExpanded);
@@ -99,9 +93,7 @@ export function TreeBranch({
         type="button"
         onClick={toggle}
         aria-expanded={expanded}
-        className={`w-full flex items-center gap-1.5 px-2 py-1.5 rounded text-left cursor-pointer transition-colors ${
-          expanded ? "bg-warm/60 hover:bg-warm" : "hover:bg-warm"
-        }`}
+        className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded text-left cursor-pointer hover:bg-warm/60 transition-colors"
       >
         <ChevronRight
           size={12}
@@ -121,16 +113,13 @@ export function TreeBranch({
         </span>
       </button>
       {expanded && items.length > 0 && (
-        // When children are leaf cards we drop the connector stubs and stack
-        // the cards with breathing room; the indent + chevron above is enough
-        // hierarchy. Otherwise (children are nested TreeBranches), wrap each
-        // in a TreeNode so the vertical guide + horizontal stub render.
-        <div
-          className={leafCards ? "ml-[14px] pt-1 space-y-1.5" : "ml-[14px]"}
-        >
-          {leafCards
-            ? items
-            : items.map((child, i) => <TreeNode key={i}>{child}</TreeNode>)}
+        // Aligns the vertical guide line below the chevron centre of the
+        // header above (chevron is at px-2 + ~6px = ~14px from the wrapper
+        // edge; ml-[14px] keeps the line continuous across nested branches).
+        <div className="ml-[14px]">
+          {items.map((child, i) => (
+            <TreeNode key={i}>{child}</TreeNode>
+          ))}
         </div>
       )}
     </div>
