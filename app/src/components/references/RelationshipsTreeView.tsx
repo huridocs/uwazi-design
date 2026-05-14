@@ -263,7 +263,7 @@ function AggregateNode({
         <div className="ml-[14px]">
           {refs.map((ref) => (
             <TreeNode key={ref.id}>
-              <ConnectionRow kind="reference" reference={ref} />
+              <ConnectionRow kind="reference" reference={ref} nested />
             </TreeNode>
           ))}
         </div>

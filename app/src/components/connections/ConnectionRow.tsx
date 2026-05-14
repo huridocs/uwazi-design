@@ -23,6 +23,10 @@ interface ReferenceKind {
   kind: "reference";
   reference: Reference;
   onDelete?: (id: string) => void;
+  /** Hide the entity pill, type name, direction glyph, and relation label.
+   *  Used inside an aggregate's inline-expand, where the aggregate header
+   *  above already establishes all of those — only page + snippet vary. */
+  nested?: boolean;
 }
 
 interface AggregateKind {
@@ -52,7 +56,7 @@ export function ConnectionRow(props: Props) {
   return <AggregateRow {...props} />;
 }
 
-function ReferenceRow({ reference, onDelete }: ReferenceKind) {
+function ReferenceRow({ reference, onDelete, nested }: ReferenceKind) {
   const entity = getEntity(reference.targetEntityId);
   const type = entity ? getEntityType(entity.typeId) : undefined;
   const zoom = useAtomValue(zoomAtom);
@@ -132,21 +136,31 @@ function ReferenceRow({ reference, onDelete }: ReferenceKind) {
   }
 
   // Detail (default): full layout — header, snippet, footer with actions.
+  // In nested mode (inside an aggregate's inline-expand), the header pill +
+  // typeName and the footer direction + relation label are dropped because
+  // the aggregate above already established them. Page tag, snippet, and
+  // hover actions stay — those are what actually varies between refs.
   return (
     <ListCardRow
       ref={rowRef as unknown as React.Ref<HTMLElement>}
       selected={isActive}
       onClick={handleClick}
     >
-      <div className="flex items-start justify-between gap-2 mb-1.5">
-        <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
-        <div className="flex items-center gap-1.5 shrink-0">
-          <span className="text-[10px] text-ink-tertiary">{type?.name ?? ""}</span>
-          {selection && (
-            <PageTag page={selection.page} onClick={handleClick} />
-          )}
+      {!nested ? (
+        <div className="flex items-start justify-between gap-2 mb-1.5">
+          <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-[10px] text-ink-tertiary">{type?.name ?? ""}</span>
+            {selection && (
+              <PageTag page={selection.page} onClick={handleClick} />
+            )}
+          </div>
         </div>
-      </div>
+      ) : selection ? (
+        <div className="flex justify-end mb-1">
+          <PageTag page={selection.page} onClick={handleClick} />
+        </div>
+      ) : null}
       {selection ? (
         <FadeTruncate
           text={selection.text}
@@ -161,10 +175,14 @@ function ReferenceRow({ reference, onDelete }: ReferenceKind) {
         </p>
       )}
       <div className="flex items-center justify-between mt-1 text-[10px] text-ink-tertiary">
-        <span className="flex items-center gap-1">
-          <DirectionGlyph direction={direction} />
-          <span className="capitalize">{relLabel}</span>
-        </span>
+        {nested ? (
+          <span />
+        ) : (
+          <span className="flex items-center gap-1">
+            <DirectionGlyph direction={direction} />
+            <span className="capitalize">{relLabel}</span>
+          </span>
+        )}
         <div className="flex items-center gap-0.5">
           <button
             onClick={(e) => {
