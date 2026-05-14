@@ -146,7 +146,7 @@ function ReferenceRow({ reference, onDelete, nested }: ReferenceKind) {
       selected={isActive}
       onClick={handleClick}
     >
-      {!nested ? (
+      {!nested && (
         <div className="flex items-start justify-between gap-2 mb-1.5">
           <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
           <div className="flex items-center gap-1.5 shrink-0">
@@ -156,12 +156,29 @@ function ReferenceRow({ reference, onDelete, nested }: ReferenceKind) {
             )}
           </div>
         </div>
-      ) : selection ? (
-        <div className="flex justify-end mb-1">
-          <PageTag page={selection.page} onClick={handleClick} />
+      )}
+      {nested ? (
+        <div className="flex items-start justify-between gap-2">
+          {selection ? (
+            <FadeTruncate
+              text={selection.text}
+              maxLines={2}
+              expandable
+              className="text-xs text-ink-secondary leading-relaxed flex-1 min-w-0"
+              fadeTo={isActive ? "var(--bg-primary)" : undefined}
+            />
+          ) : (
+            <p className="text-xs italic text-ink-tertiary flex-1">
+              Entity-level connection — no text anchor
+            </p>
+          )}
+          {selection && (
+            <span className="shrink-0">
+              <PageTag page={selection.page} onClick={handleClick} />
+            </span>
+          )}
         </div>
-      ) : null}
-      {selection ? (
+      ) : selection ? (
         <FadeTruncate
           text={selection.text}
           maxLines={2}
