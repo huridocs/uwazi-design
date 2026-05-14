@@ -74,8 +74,26 @@ export function getGroupColor(key: string, by: GroupBy): string | undefined {
   }
 }
 
-/** Bucket refs by the selected dimension. Order is stable: keys appear in the
- *  order their first member shows up in the input array. */
+/** Returns true if a key represents an "unknown / no label" bucket for the
+ *  given grouping. Such buckets are pinned to the bottom of any group list. */
+export function isUnknownGroupKey(key: string, by: GroupBy): boolean {
+  switch (by) {
+    case "target-template":
+      return key === "unknown";
+    case "target-entity":
+      return !getEntity(key);
+    case "relation-type":
+      return key === "no_label";
+    case "source-page":
+      return key === "no-page";
+    default:
+      return false;
+  }
+}
+
+/** Bucket refs by the selected dimension. Keys appear in the order their first
+ *  member shows up in the input array, except "unknown / no label" buckets
+ *  which are pinned to the bottom. */
 export function groupRefs(
   refs: Reference[],
   by: GroupBy,
@@ -88,7 +106,12 @@ export function groupRefs(
     list.push(ref);
     map.set(key, list);
   }
-  return Array.from(map.entries());
+  const entries = Array.from(map.entries());
+  return entries.sort(([a], [b]) => {
+    const aUnknown = isUnknownGroupKey(a, by) ? 1 : 0;
+    const bUnknown = isUnknownGroupKey(b, by) ? 1 : 0;
+    return aUnknown - bUnknown;
+  });
 }
 
 /** Same as {@link getGroupKey} but for an aggregated Relationship. Used by

@@ -11,8 +11,8 @@ interface FacetSectionProps {
   label: (id: string) => string;
   renderMarker?: (id: string) => ReactNode;
   defaultExpanded?: boolean;
-  /** ID treated as "no value for this facet" — pinned at the top with a
-   *  divider beneath. Hidden if no entry matches. Mirrors Uwazi's "No label"
+  /** ID treated as "no value for this facet" — pinned at the bottom with a
+   *  divider above. Hidden if no entry matches. Mirrors Uwazi's "No label"
    *  bucket. */
   noLabelId?: string;
   /** Label shown for the pinned no-label row (default: "No label"). */
@@ -63,23 +63,6 @@ export function FacetSection({
       </button>
       {open && (
         <div className="pb-2">
-          {noLabelEntry && (
-            <label
-              className="flex items-center gap-2 px-4 py-1.5 cursor-pointer hover:bg-warm transition-colors border-b border-border-soft"
-            >
-              <Checkbox
-                checked={!!selected[noLabelEntry[0]]}
-                onChange={() => onToggle(noLabelEntry[0])}
-                ariaLabel={noLabelText}
-              />
-              <span className="text-xs italic text-ink-tertiary truncate flex-1">
-                {noLabelText}
-              </span>
-              <span className="text-[11px] text-ink-tertiary tabular-nums shrink-0">
-                {noLabelEntry[1]}
-              </span>
-            </label>
-          )}
           {regularEntries.map(([id, count]) => {
             const checked = !!selected[id];
             return (
@@ -102,6 +85,23 @@ export function FacetSection({
               </label>
             );
           })}
+          {noLabelEntry && (
+            <label
+              className="flex items-center gap-2 px-4 py-1.5 cursor-pointer hover:bg-warm transition-colors border-t border-border-soft"
+            >
+              <Checkbox
+                checked={!!selected[noLabelEntry[0]]}
+                onChange={() => onToggle(noLabelEntry[0])}
+                ariaLabel={noLabelText}
+              />
+              <span className="text-xs italic text-ink-tertiary truncate flex-1">
+                {noLabelText}
+              </span>
+              <span className="text-[11px] text-ink-tertiary tabular-nums shrink-0">
+                {noLabelEntry[1]}
+              </span>
+            </label>
+          )}
         </div>
       )}
     </div>

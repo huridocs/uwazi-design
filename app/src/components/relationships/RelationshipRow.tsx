@@ -67,8 +67,10 @@ function ReferenceRow({ reference, onDelete, nested }: ReferenceKind) {
   const [overlayEntityId, setOverlayEntityId] = useAtom(overlayEntityIdAtom);
   const rowRef = useRef<HTMLDivElement>(null);
 
-  const isActive =
-    activeRefId === reference.id || overlayEntityId === reference.targetEntityId;
+  // Only this exact row when the user picked it. Don't glow every ref that
+  // happens to point at the entity currently shown in the overlay — that
+  // floods the panel and steals focus from the row the user actually selected.
+  const isActive = activeRefId === reference.id;
   const relLabel =
     relationTypes.find((r) => r.id === reference.relationType)?.label ??
     reference.relationType.replace("_", " ");
@@ -246,9 +248,10 @@ function AggregateRow({
   const relLabel =
     relationTypes.find((r) => r.id === rel.relationType)?.label ??
     rel.relationType.replace("_", " ");
-  const selected =
-    overlayEntityId === rel.targetEntityId ||
-    (activeRefId !== null && rel.refIds.includes(activeRefId));
+  // The aggregate is "selected" when the user is peeking at its entity in
+  // the overlay. When a nested ref is active, that ref row glows; we don't
+  // double-glow the parent — it competes with the child and reads as noise.
+  const selected = overlayEntityId === rel.targetEntityId;
 
   const handleEvidenceClick = (e: React.MouseEvent) => {
     e.stopPropagation();
