@@ -3,7 +3,8 @@ import { useEffect, useRef } from "react";
 import { overlayEntityIdAtom, referencesAtom } from "../../atoms/references";
 import { getEntity, getEntityType } from "../../data/entities";
 import { EntityPill } from "../shared/EntityPill";
-import { NestedRefRow } from "../connections/NestedRefRow";
+import { PageTag } from "../shared/PageTag";
+import { FadeTruncate } from "../shared/FadeTruncate";
 import { X, FileText, Link2, Calendar, Tag } from "lucide-react";
 
 export function EntityOverlay() {
@@ -112,17 +113,41 @@ export function EntityOverlay() {
             </div>
           </section>
 
-          {/* References to this entity. The overlay's header above already
-              names the entity, so each row is the simplified nested-ref
-              style (template-colour dot + snippet + relation label + page). */}
+          {/* References to this entity */}
           {entityRefs.length > 0 && (
             <section className="space-y-2">
               <h4 className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider">
                 References in document
               </h4>
-              <div className="border border-border/60 rounded-md overflow-hidden bg-paper">
+              <div>
                 {entityRefs.map((ref) => (
-                  <NestedRefRow key={ref.id} reference={ref} showRelLabel />
+                  <div
+                    key={ref.id}
+                    className="px-3 py-2.5 border-b border-border/50"
+                  >
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
+                      {ref.sourceSelection && (
+                        <PageTag page={ref.sourceSelection.page} />
+                      )}
+                    </div>
+                    {ref.sourceSelection ? (
+                      <FadeTruncate
+                        text={ref.sourceSelection.text}
+                        maxLines={2}
+                        className="text-xs text-ink-secondary leading-relaxed"
+                      />
+                    ) : (
+                      <p className="text-xs italic text-ink-tertiary">
+                        Entity-level connection — no text anchor
+                      </p>
+                    )}
+                    <div className="flex items-center mt-1">
+                      <span className="text-[10px] text-ink-tertiary capitalize">
+                        {ref.relationType.replace("_", " ")}
+                      </span>
+                    </div>
+                  </div>
                 ))}
               </div>
             </section>
