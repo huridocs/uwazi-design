@@ -1,12 +1,14 @@
-import { useMemo, useState } from "react";
-import { useAtom } from "jotai";
+import { useEffect, useMemo, useState } from "react";
+import { useAtom, useSetAtom } from "jotai";
 import { Link2 } from "lucide-react";
 import {
   referencesAtom,
   overlayEntityIdAtom,
   activeRefIdAtom,
   expandGroupForRefAtom,
+  scrollToHighlightAtom,
 } from "../../atoms/references";
+import { currentPageAtom } from "../../atoms/selection";
 import {
   searchQueryAtom,
   activeClusterRefIdsAtom,
@@ -17,7 +19,7 @@ import {
   groupByAtom,
   subGroupByAtom,
 } from "../../atoms/filters";
-import { getEntity } from "../../data/entities";
+import { getEntity, getEntityType } from "../../data/entities";
 import { Reference } from "../../data/references";
 import { buildMatcher } from "../../utils/searchQuery";
 import { Relationship, deriveRelationships } from "../../utils/relationships";
@@ -28,10 +30,8 @@ import {
 } from "../../utils/connectionGrouping";
 import { ListInfoRow } from "../shared/ListInfoRow";
 import { ConnectionRow } from "../connections/ConnectionRow";
-import { TreeBranch, TreeNode } from "../connections/TreeBranch";
+import { TreeBranch } from "../connections/TreeBranch";
 import { CollapseControls } from "./FiltersRow";
-import { useEffect } from "react";
-import { useSetAtom } from "jotai";
 import {
   expandAllSignalAtom,
   collapseAllSignalAtom,
@@ -165,7 +165,7 @@ export function RelationshipsTreeView() {
             </p>
           </div>
         ) : groupBy === "none" ? (
-          <div className="px-3 py-3">
+          <div className="px-3 py-3 space-y-1.5">
             {renderAggregates(filtered)}
           </div>
         ) : (
@@ -178,6 +178,7 @@ export function RelationshipsTreeView() {
                 count={deriveRelationships(refs).length}
                 refIdsToWatch={refs.map((r) => r.id)}
                 defaultExpanded
+                leafCards={subGroupBy === "none"}
               >
                 {subGroupBy === "none"
                   ? renderAggregates(refs, {
@@ -191,6 +192,7 @@ export function RelationshipsTreeView() {
                         count={deriveRelationships(subRefs).length}
                         refIdsToWatch={subRefs.map((r) => r.id)}
                         defaultExpanded
+                        leafCards
                       >
                         {renderAggregates(subRefs, {
                           hidePill:
@@ -253,13 +255,7 @@ function AggregateNode({
   }, [expandForRef]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div
-      className={
-        expanded
-          ? "bg-warm/40 rounded-sm transition-colors"
-          : "transition-colors"
-      }
-    >
+    <div className="border border-border/60 rounded-md overflow-hidden bg-paper transition-colors">
       <ConnectionRow
         kind="aggregate"
         rel={rel}
@@ -268,14 +264,65 @@ function AggregateNode({
         hidePill={hidePill}
       />
       {expanded && (
-        <div className="ml-[14px]">
+        <div className="bg-warm/40 border-t border-border/40">
           {refs.map((ref) => (
-            <TreeNode key={ref.id}>
-              <ConnectionRow kind="reference" reference={ref} />
-            </TreeNode>
+            <NestedRefRow key={ref.id} reference={ref} />
           ))}
         </div>
       )}
     </div>
+  );
+}
+
+/** Compact ref row used inside an expanded aggregate. The aggregate header
+ *  above already establishes the target entity + relation type + direction,
+ *  so a full ConnectionRow would just repeat that. We render the small
+ *  template colour dot + page tag (when anchored) + a one-line snippet, plus
+ *  click-to-scroll into the document. */
+function NestedRefRow({ reference }: { reference: Reference }) {
+  const entity = getEntity(reference.targetEntityId);
+  const type = entity ? getEntityType(entity.typeId) : undefined;
+  const setScrollToHighlight = useSetAtom(scrollToHighlightAtom);
+  const [activeRefId, setActiveRefId] = useAtom(activeRefIdAtom);
+  const setCurrentPage = useSetAtom(currentPageAtom);
+  const selection = reference.sourceSelection;
+  const isActive = activeRefId === reference.id;
+
+  const handleClick = () => {
+    setActiveRefId(reference.id);
+    if (selection) {
+      setCurrentPage(selection.page);
+      setScrollToHighlight(reference.id);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={`group w-full text-left px-3 py-2 flex items-start gap-2 border-b border-border/40 last:border-b-0 transition-colors ${
+        isActive ? "bg-parchment" : "hover:bg-warm/60"
+      }`}
+    >
+      <span
+        className="w-2 h-2 rounded-[2px] shrink-0 mt-1.5"
+        style={{ backgroundColor: type?.color ?? "var(--border-primary)" }}
+        aria-hidden="true"
+      />
+      <span className="flex-1 min-w-0 text-xs text-ink-secondary leading-relaxed">
+        {selection ? (
+          <span className="italic">"{selection.text}"</span>
+        ) : (
+          <span className="italic text-ink-tertiary">
+            Entity-level connection — no text anchor
+          </span>
+        )}
+      </span>
+      {selection && (
+        <span className="shrink-0 text-[10px] font-mono tabular-nums text-ink-tertiary mt-0.5">
+          p.{selection.page}
+        </span>
+      )}
+    </button>
   );
 }
