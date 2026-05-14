@@ -4,6 +4,7 @@ import { ChevronDown, Sparkles, List } from "lucide-react";
 import { tocEntries, TocEntry } from "../../data/toc";
 import { PageTag } from "../shared/PageTag";
 import { currentPageAtom, scrollToPageAtom } from "../../atoms/selection";
+import { t } from "../../utils/i18n";
 
 /** Flatten a tree of TocEntries in document order, preserving ancestor ids. */
 function flatten(entries: TocEntry[], ancestors: string[] = []): {
@@ -62,9 +63,9 @@ export function ToCPanel() {
       <div className="flex-1 flex flex-col items-center justify-center text-center gap-3 px-4">
         <List size={32} className="text-ink-tertiary/40" />
         <div>
-          <p className="text-sm font-semibold text-ink-tertiary">No ToC</p>
+          <p className="text-sm font-semibold text-ink-tertiary">{t("System", "No ToC")}</p>
           <p className="text-xs text-ink-tertiary mt-1">
-            Well, just a table of contents (ToC)
+            {t("System", "Well, just a table of contents (ToC)")}
           </p>
         </div>
       </div>
@@ -76,7 +77,7 @@ export function ToCPanel() {
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2.5 shrink-0">
         <div className="flex items-center gap-1.5">
-          <span className="text-sm font-semibold text-ink">Table of contents</span>
+          <span className="text-sm font-semibold text-ink">{t("System", "Table of contents")}</span>
           <Sparkles size={14} className="text-ink-tertiary" />
         </div>
         {hasAnyChildren && (
@@ -85,13 +86,13 @@ export function ToCPanel() {
               onClick={collapseAll}
               className="text-xs text-ink-tertiary hover:text-ink-secondary transition-colors cursor-pointer"
             >
-              Collapse All
+              {t("System", "Collapse All")}
             </button>
             <button
               onClick={expandAll}
               className="text-xs font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
             >
-              Expand All
+              {t("System", "Expand All")}
             </button>
           </div>
         )}

@@ -14,12 +14,13 @@ import { ToastContainer } from "./ToastContainer";
 import { FilesView } from "./FilesView";
 import { MetadataView } from "./MetadataView";
 import { RelationshipsView } from "./RelationshipsView";
+import { t } from "../utils/i18n";
 
 const mainTabs = [
-  { id: "document", label: "Document" },
-  { id: "metadata", label: "Metadata" },
-  { id: "relationships", label: "Relationships", count: 0 },
-  { id: "files", label: "Files", count: 6 },
+  { id: "document", label: t("System", "Document") },
+  { id: "metadata", label: t("System", "Metadata") },
+  { id: "relationships", label: t("System", "Relationships"), count: 0 },
+  { id: "files", label: t("System", "Files"), count: 6 },
 ];
 
 export function EntityView() {
@@ -87,18 +88,18 @@ export function EntityView() {
         mobileSections={[
           {
             id: "connections",
-            label: "Relationships",
+            label: t("System", "Relationships"),
             count: references.length,
             content: <ReferencePanel />,
           },
           {
             id: "metadata",
-            label: "Metadata",
+            label: t("System", "Metadata"),
             content: <MetadataDrawerContent />,
           },
           {
             id: "toc",
-            label: "Table of contents",
+            label: t("System", "Table of contents"),
             content: <ToCPanel />,
           },
         ]}

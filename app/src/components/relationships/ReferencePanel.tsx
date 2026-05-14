@@ -6,12 +6,13 @@ import { MetadataDrawerContent } from "./MetadataDrawerContent";
 import { ToCPanel } from "./ToCPanel";
 import { EntityOverlay } from "./EntityOverlay";
 import { RelationshipsDrawerSection } from "./RelationshipsDrawerSection";
+import { t } from "../../utils/i18n";
 
 const baseDrawerTabs = [
-  { id: "metadata", label: "Metadata" },
-  { id: "toc", label: "ToC" },
-  { id: "connections", label: "Relationships" },
-  { id: "search", label: "Search" },
+  { id: "metadata", label: t("System", "Metadata") },
+  { id: "toc", label: t("System", "ToC") },
+  { id: "connections", label: t("System", "Relationships") },
+  { id: "search", label: t("System", "Search") },
 ];
 
 export function ReferencePanel() {
@@ -23,8 +24,8 @@ export function ReferencePanel() {
       <EntityOverlay />
 
       <DrawerTabs
-        tabs={baseDrawerTabs.map((t) =>
-          t.id === "connections" ? { ...t, count: references.length } : t,
+        tabs={baseDrawerTabs.map((tab) =>
+          tab.id === "connections" ? { ...tab, count: references.length } : tab,
         )}
         activeId={activeDrawerTab}
         onChange={setActiveDrawerTab}

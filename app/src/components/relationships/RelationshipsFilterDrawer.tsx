@@ -8,6 +8,7 @@ import {
 import { getEntity, getEntityType } from "../../data/entities";
 import { relationTypes } from "../../data/references";
 import { FacetSection } from "../shared/FacetSection";
+import { t } from "../../utils/i18n";
 
 /**
  * Body-only facet sections for Relationships. Designed to be wrapped by
@@ -35,7 +36,7 @@ export function RelationshipsFilterDrawer() {
   return (
     <>
       <FacetSection
-        title="Relation type"
+        title={t("System", "Relation type")}
         total={totalRels}
         entries={Array.from(byRelType.entries()).sort((a, b) => b[1] - a[1])}
         selected={relTypeFilters}
@@ -45,7 +46,7 @@ export function RelationshipsFilterDrawer() {
         defaultExpanded
       />
       <FacetSection
-        title="Target entity type"
+        title={t("System", "Target entity type")}
         total={totalRels}
         entries={Array.from(byEntityType.entries()).sort((a, b) => b[1] - a[1])}
         selected={entityTypeFilters}
@@ -55,12 +56,12 @@ export function RelationshipsFilterDrawer() {
         label={(id) => getEntityType(id)?.name ?? id}
         noLabelId="unknown"
         renderMarker={(id) => {
-          const t = getEntityType(id);
-          return t ? (
+          const type = getEntityType(id);
+          return type ? (
             <span
               className="rounded-[2px] shrink-0"
               style={{
-                backgroundColor: t.color,
+                backgroundColor: type.color,
                 width: 6,
                 height: 6,
               }}

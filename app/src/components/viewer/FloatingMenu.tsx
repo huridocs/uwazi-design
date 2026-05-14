@@ -1,6 +1,7 @@
 import { Link2, Copy, Highlighter } from "lucide-react";
 import { useSetAtom } from "jotai";
 import { entityPickerOpenAtom } from "../../atoms/selection";
+import { t } from "../../utils/i18n";
 
 interface FloatingMenuProps {
   x: number;
@@ -40,19 +41,19 @@ export function FloatingMenu({ x, y, text }: FloatingMenuProps) {
             rounded-md hover:bg-white/15 transition-colors"
         >
           <Link2 size={14} />
-          Create relationship
+          {t("System", "Create relationship")}
         </button>
         <div className="w-px h-4 bg-white/20" aria-hidden="true" />
         <button
           onClick={handleCopy}
           className="p-1.5 text-white/70 rounded-md hover:bg-white/15 hover:text-white transition-colors"
-          aria-label="Copy text"
+          aria-label={t("System", "Copy text")}
         >
           <Copy size={14} />
         </button>
         <button
           className="p-1.5 text-white/70 rounded-md hover:bg-white/15 hover:text-white transition-colors"
-          aria-label="Highlight text"
+          aria-label={t("System", "Highlight text")}
         >
           <Highlighter size={14} />
         </button>
