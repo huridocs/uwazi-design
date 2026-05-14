@@ -30,6 +30,7 @@ import { RelationshipsTreeView } from "./RelationshipsTreeView";
 import { RelationshipsGraphView } from "./RelationshipsGraphView";
 import { RelationshipRow } from "./RelationshipRow";
 import { RelationshipGroupedCard } from "./RelationshipGroupedCard";
+import { IxSuggestionsCard } from "./IxSuggestionsCard";
 
 interface Props {
   onDelete?: (id: string) => void;
@@ -230,6 +231,7 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
         }
       />
       <div className={`flex-1 overflow-auto pb-8 relative ${scrollBgClass ?? ""}`}>
+        <IxSuggestionsCard />
         {body}
       </div>
     </>

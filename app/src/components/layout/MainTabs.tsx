@@ -1,12 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 import { useAtom } from "jotai";
-import { ArrowLeft, ChevronDown } from "lucide-react";
+import { ArrowLeft, ChevronDown, Sparkles } from "lucide-react";
 import { breakpointAtom } from "../../atoms/viewport";
 
 interface MainTab {
   id: string;
   label: string;
   count?: number;
+  /** Show a tiny Sparkles icon next to the count — signals pending AI
+   *  suggestions on the Relationships tab. */
+  sparkle?: boolean;
 }
 
 interface MainTabsProps {
@@ -73,6 +76,9 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
                   <span className="text-xs font-semibold text-ink-tertiary bg-warm px-1 rounded">
                     {tab.count}
                   </span>
+                )}
+                {tab.sparkle && (
+                  <Sparkles size={11} className="text-carbon" aria-label="AI suggestions pending" />
                 )}
               </button>
             </div>
