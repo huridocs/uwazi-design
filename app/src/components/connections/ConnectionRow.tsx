@@ -324,53 +324,42 @@ function AggregateRow({
     );
   }
 
-  // Detail: card-style row with the entity title promoted to a heading.
-  // Template colour dot + title at top-left; type name + direction + rel
-  // label as a subtitle. Count badge top-right. With hidePill, the relation
-  // label becomes the row's heading instead (used when the enclosing group
-  // already keys on this entity).
+  // Detail: full layout — header, footer. With hidePill, the relation label
+  // becomes the row's title (capitalized text in the header slot).
   return (
     <ListCardRow
       selected={selected}
       onClick={() => setOverlayEntityId(rel.targetEntityId)}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-start gap-2 min-w-0">
+      <div className="flex items-start justify-between gap-2 mb-1.5">
+        <div className="flex items-center gap-1.5 min-w-0">
           {chevron}
           {hidePill ? (
-            <div className="flex items-center gap-1.5 min-w-0">
+            <>
               <DirectionGlyph direction={rel.direction} />
               <span className="text-sm font-medium text-ink capitalize truncate">
                 {relLabel}
               </span>
-            </div>
-          ) : (
-            <>
-              <span
-                className="w-2 h-2 rounded-[2px] shrink-0 mt-1.5"
-                style={{
-                  backgroundColor: type?.color ?? "var(--border-primary)",
-                }}
-                aria-hidden="true"
-              />
-              <div className="min-w-0">
-                <div className="text-sm font-medium text-ink truncate">
-                  {entity?.title ?? "Unknown entity"}
-                </div>
-                <div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-ink-tertiary">
-                  {type?.name && <span>{type.name}</span>}
-                  {type?.name && <span aria-hidden="true">·</span>}
-                  <span className="inline-flex items-center gap-1">
-                    <DirectionGlyph direction={rel.direction} />
-                    <span className="capitalize">{relLabel}</span>
-                  </span>
-                </div>
-              </div>
             </>
+          ) : (
+            <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
           )}
         </div>
-        {countBadge}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {!hidePill && (
+            <span className="text-[10px] text-ink-tertiary">
+              {type?.name ?? ""}
+            </span>
+          )}
+          {countBadge}
+        </div>
       </div>
+      {!hidePill && (
+        <div className="flex items-center gap-1 mt-1 text-[10px] text-ink-tertiary">
+          <DirectionGlyph direction={rel.direction} />
+          <span className="capitalize">{relLabel}</span>
+        </div>
+      )}
     </ListCardRow>
   );
 }
