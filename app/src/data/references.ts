@@ -34,6 +34,10 @@ export interface Reference {
   sourceSelection?: TextSelection;
   /** Optional: selected text in target document */
   targetSelection?: TextSelection;
+  /** If set, this reference is a member of a multi-party hub. All refs
+   *  sharing a hubId belong to the same hub (Uwazi's n-ary relationship
+   *  container — see deriveHubs). */
+  hubId?: string;
   createdAt: string;
 }
 
@@ -640,6 +644,81 @@ export const references: Reference[] = [
     targetEntityId: "e8",
     relationType: "refers_to",
     createdAt: "2024-07-05",
+  },
+  // Hubs (n-ary relationships) — refs sharing a hubId form one hub.
+  // Hub "hub-hearing-1": Inter-American Court hearing parties.
+  {
+    id: "ref-hub-1-a",
+    sourceEntityId: "e3",
+    targetEntityId: "e1",
+    relationType: "relates_to",
+    hubId: "hub-hearing-1",
+    sourceSelection: {
+      text: "the petitioner Juan Carlos Abella appeared before the Commission alongside representatives of the State and the Inter-American Court.",
+      page: 4,
+      top: 0.42,
+      left: 0.08,
+      width: 0.84,
+      height: 0.04,
+    },
+    createdAt: "2024-07-10",
+  },
+  {
+    id: "ref-hub-1-b",
+    sourceEntityId: "e3",
+    targetEntityId: "e2",
+    relationType: "relates_to",
+    hubId: "hub-hearing-1",
+    sourceSelection: {
+      text: "the State of Argentina, represented by its Agent, submitted preliminary objections at the same hearing.",
+      page: 4,
+      top: 0.48,
+      left: 0.08,
+      width: 0.84,
+      height: 0.04,
+    },
+    createdAt: "2024-07-10",
+  },
+  {
+    id: "ref-hub-1-c",
+    sourceEntityId: "e3",
+    targetEntityId: "e8",
+    relationType: "relates_to",
+    hubId: "hub-hearing-1",
+    createdAt: "2024-07-10",
+  },
+  // Hub "hub-violations-1": violations cited together in the state-responsibility section.
+  {
+    id: "ref-hub-2-a",
+    sourceEntityId: "e3",
+    targetEntityId: "e9",
+    relationType: "cites",
+    hubId: "hub-violations-1",
+    sourceSelection: {
+      text: "The Court found that the State was responsible for enforced disappearance, extrajudicial execution, and torture inflicted on the victims.",
+      page: 9,
+      top: 0.32,
+      left: 0.08,
+      width: 0.84,
+      height: 0.04,
+    },
+    createdAt: "2024-07-11",
+  },
+  {
+    id: "ref-hub-2-b",
+    sourceEntityId: "e3",
+    targetEntityId: "e10",
+    relationType: "cites",
+    hubId: "hub-violations-1",
+    createdAt: "2024-07-11",
+  },
+  {
+    id: "ref-hub-2-c",
+    sourceEntityId: "e3",
+    targetEntityId: "e14",
+    relationType: "cites",
+    hubId: "hub-violations-1",
+    createdAt: "2024-07-11",
   },
   // Generated bulk references for stress testing
   ...generateBulkReferences(),

@@ -113,7 +113,9 @@ export function RelationshipsGraphView() {
   }, [references, searchQuery, activeClusterRefIds, relTypeFilters, entityTypeFilters]);
 
   const { spokes, nodes } = useMemo(() => {
-    const rels = deriveRelationships(filteredRefs);
+    // Graph has no "hub container" node — every entity that participates
+    // shows up as its own node, so let hub members through deriveRelationships.
+    const rels = deriveRelationships(filteredRefs, { includeHubMembers: true });
 
     // Bucket each relationship by the active primary grouping axis. When
     // groupBy === "none" everything lands in one big sector around the source.

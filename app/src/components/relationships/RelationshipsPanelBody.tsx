@@ -18,7 +18,7 @@ import {
 import { getEntity } from "../../data/entities";
 import { Reference } from "../../data/references";
 import { buildMatcher } from "../../utils/searchQuery";
-import { deriveRelationships } from "../../utils/relationships";
+import { deriveHubs, deriveRelationships } from "../../utils/relationships";
 import {
   getGroupColor,
   getGroupLabel,
@@ -109,7 +109,7 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
 
   const entityCount = new Set(filtered.map((r) => r.targetEntityId)).size;
   const aggregateCount = useMemo(
-    () => deriveRelationships(filtered).length,
+    () => deriveRelationships(filtered).length + deriveHubs(filtered).length,
     [filtered],
   );
   const showCollapse = view === "list" && groupBy !== "none";

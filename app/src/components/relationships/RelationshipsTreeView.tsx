@@ -20,7 +20,7 @@ import {
 import { getEntity } from "../../data/entities";
 import { Reference } from "../../data/references";
 import { buildMatcher } from "../../utils/searchQuery";
-import { Relationship, deriveRelationships } from "../../utils/relationships";
+import { Hub, Relationship, deriveHubs, deriveRelationships } from "../../utils/relationships";
 import {
   getGroupColor,
   getGroupLabel,
@@ -112,7 +112,7 @@ export function RelationshipsTreeView() {
 
   const entityCount = new Set(filtered.map((r) => r.targetEntityId)).size;
   const aggregateCount = useMemo(
-    () => deriveRelationships(filtered).length,
+    () => deriveRelationships(filtered).length + deriveHubs(filtered).length,
     [filtered],
   );
 
@@ -173,7 +173,7 @@ export function RelationshipsTreeView() {
                 key={`p:${key}`}
                 title={getGroupLabel(key, groupBy)}
                 color={getGroupColor(key, groupBy)}
-                count={deriveRelationships(refs).length}
+                count={deriveRelationships(refs).length + deriveHubs(refs).length}
                 refIdsToWatch={refs.map((r) => r.id)}
                 defaultExpanded
               >
@@ -186,7 +186,7 @@ export function RelationshipsTreeView() {
                         key={`s:${key}::${subKey}`}
                         title={getGroupLabel(subKey, subGroupBy)}
                         color={getGroupColor(subKey, subGroupBy)}
-                        count={deriveRelationships(subRefs).length}
+                        count={deriveRelationships(subRefs).length + deriveHubs(subRefs).length}
                         refIdsToWatch={subRefs.map((r) => r.id)}
                         defaultExpanded
                       >
@@ -206,25 +206,65 @@ export function RelationshipsTreeView() {
   );
 }
 
-/** Render a bucket of refs as a flat list of aggregate tree-nodes. Returned
- *  as an array so the caller (TreeBranch) sees each aggregate as a direct
- *  child and can wrap it in its own connector slot.
+/** Render a bucket of refs as a flat list of tree-nodes: hubs first (multi-
+ *  party relationships read as a peer of aggregates), then aggregates. Each
+ *  child wraps in its own connector slot via TreeNode upstream.
  *
  *  `hidePill` is forwarded to the aggregate row when the enclosing group is
- *  keyed on the target entity — the pill would just repeat the group title. */
+ *  keyed on the target entity — the pill would just repeat the group title.
+ *  Hubs never carry a single target entity, so hidePill doesn't apply. */
 function renderAggregates(
   refs: Reference[],
   opts: { hidePill?: boolean } = {},
 ) {
+  const hubs = deriveHubs(refs);
   const rels = deriveRelationships(refs);
-  return rels.map((rel) => (
-    <AggregateNode
-      key={rel.id}
-      rel={rel}
-      refs={refs.filter((r) => rel.refIds.includes(r.id))}
-      hidePill={opts.hidePill}
-    />
-  ));
+  return [
+    ...hubs.map((hub) => (
+      <HubNode key={`hub:${hub.id}`} hub={hub} refs={refs.filter((r) => hub.refIds.includes(r.id))} />
+    )),
+    ...rels.map((rel) => (
+      <AggregateNode
+        key={rel.id}
+        rel={rel}
+        refs={refs.filter((r) => rel.refIds.includes(r.id))}
+        hidePill={opts.hidePill}
+      />
+    )),
+  ];
+}
+
+function HubNode({ hub, refs }: { hub: Hub; refs: Reference[] }) {
+  const [expanded, setExpanded] = useState(false);
+  const [expandForRef, setExpandForRef] = useAtom(expandGroupForRefAtom);
+
+  useEffect(() => {
+    if (!expandForRef) return;
+    if (hub.refIds.includes(expandForRef)) {
+      if (!expanded) setExpanded(true);
+      setExpandForRef(null);
+    }
+  }, [expandForRef]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div>
+      <RelationshipRow
+        kind="hub"
+        hub={hub}
+        expanded={expanded}
+        onToggleExpand={() => setExpanded((e) => !e)}
+      />
+      {expanded && (
+        <div className="ml-[14px]">
+          {refs.map((ref) => (
+            <TreeNode key={ref.id}>
+              <RelationshipRow kind="reference" reference={ref} nested />
+            </TreeNode>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function AggregateNode({

@@ -12,7 +12,7 @@ import { activeClusterRefIdsAtom, zoomAtom } from "../../atoms/filters";
 import { currentPageAtom } from "../../atoms/selection";
 import { getEntity, getEntityType } from "../../data/entities";
 import { Reference, relationTypes } from "../../data/references";
-import { Relationship } from "../../utils/relationships";
+import { Hub, Relationship } from "../../utils/relationships";
 import { EntityPill } from "../shared/EntityPill";
 import { FadeTruncate } from "../shared/FadeTruncate";
 import { ListCardRow } from "../shared/ListCardRow";
@@ -42,17 +42,23 @@ interface AggregateKind {
   hidePill?: boolean;
 }
 
-type Props = ReferenceKind | AggregateKind;
+interface HubKind {
+  kind: "hub";
+  hub: Hub;
+  expanded?: boolean;
+  onToggleExpand?: () => void;
+}
+
+type Props = ReferenceKind | AggregateKind | HubKind;
 
 /** Unified row primitive for the merged Relationships panel. Renders a single
- *  text-anchored reference (kind="reference", with snippet + page tag) or a
+ *  text-anchored reference (kind="reference", with snippet + page tag), a
  *  deduped aggregate relationship (kind="aggregate", entity-level with an
- *  evidence-count action). Reads zoomAtom to vary row density across
- *  detail / compact / overview. */
+ *  evidence-count action), or a hub (kind="hub", n-ary multi-entity row).
+ *  Reads zoomAtom to vary row density across detail / compact / overview. */
 export function RelationshipRow(props: Props) {
-  if (props.kind === "reference") {
-    return <ReferenceRow {...props} />;
-  }
+  if (props.kind === "reference") return <ReferenceRow {...props} />;
+  if (props.kind === "hub") return <HubRow {...props} />;
   return <AggregateRow {...props} />;
 }
 
@@ -396,6 +402,107 @@ function AggregateRow({
         <div className="flex items-center gap-1 mt-1 text-[10px] text-ink-tertiary">
           <DirectionGlyph direction={rel.direction} />
           <span className="capitalize">{relLabel}</span>
+        </div>
+      )}
+    </ListCardRow>
+  );
+}
+
+/** N-ary hub row. Renders the member entities as inline pills, no direction
+ *  glyph (hubs are symmetric — every member relates to every other). The
+ *  evidence-count badge mirrors aggregates. */
+function HubRow({ hub, expanded, onToggleExpand }: HubKind) {
+  const zoom = useAtomValue(zoomAtom);
+  const relLabel =
+    relationTypes.find((r) => r.id === hub.relationType)?.label ??
+    hub.relationType.replace("_", " ");
+
+  const memberPills = hub.members.map((m) => {
+    const entity = getEntity(m.entityId);
+    return (
+      <EntityPill
+        key={m.entityId}
+        typeId={entity?.typeId ?? ""}
+        label={entity?.title}
+      />
+    );
+  });
+
+  const countBadge = (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggleExpand?.();
+      }}
+      aria-label={`${hub.refIds.length} evidence references`}
+      aria-expanded={onToggleExpand ? !!expanded : undefined}
+      className={`flex items-center gap-1 px-1.5 h-5 rounded text-[10px] font-medium tabular-nums transition-colors cursor-pointer ${
+        expanded
+          ? "bg-vellum text-ink-secondary"
+          : "bg-warm text-ink-tertiary hover:bg-parchment hover:text-ink-secondary"
+      }`}
+    >
+      <Link2 size={10} />
+      {hub.refIds.length}
+    </button>
+  );
+
+  const chevron = onToggleExpand ? (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggleExpand();
+      }}
+      aria-label={expanded ? "Collapse hub members" : "Expand hub members"}
+      className="shrink-0 p-0.5 -ml-0.5 text-ink-tertiary hover:text-ink cursor-pointer"
+    >
+      <ChevronRight
+        size={12}
+        className={`transition-transform ${expanded ? "rotate-90" : ""}`}
+      />
+    </button>
+  ) : null;
+
+  if (zoom === "overview") {
+    return (
+      <ListCardRow selected={false} onClick={() => onToggleExpand?.()} className="!py-1.5">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1 min-w-0 flex-wrap">
+            {chevron}
+            {memberPills.slice(0, 3)}
+            {hub.members.length > 3 && (
+              <span className="text-[10px] text-ink-tertiary">
+                +{hub.members.length - 3}
+              </span>
+            )}
+          </div>
+          {countBadge}
+        </div>
+      </ListCardRow>
+    );
+  }
+
+  return (
+    <ListCardRow selected={false} onClick={() => onToggleExpand?.()} className={zoom === "compact" ? "!py-2" : ""}>
+      <div className="flex items-start justify-between gap-2 mb-1.5">
+        <div className="flex items-center gap-1 min-w-0 flex-wrap">
+          {chevron}
+          {memberPills}
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="text-[10px] text-ink-tertiary uppercase tracking-wide">
+            hub
+          </span>
+          {countBadge}
+        </div>
+      </div>
+      {zoom !== "compact" && (
+        <div className="flex items-center gap-1 mt-1 text-[10px] text-ink-tertiary">
+          <span className="capitalize">{relLabel}</span>
+          <span>·</span>
+          <span>{hub.members.length} parties</span>
         </div>
       )}
     </ListCardRow>
