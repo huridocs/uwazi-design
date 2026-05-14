@@ -6,9 +6,7 @@ import {
   overlayEntityIdAtom,
   activeRefIdAtom,
   expandGroupForRefAtom,
-  scrollToHighlightAtom,
 } from "../../atoms/references";
-import { currentPageAtom } from "../../atoms/selection";
 import {
   searchQueryAtom,
   activeClusterRefIdsAtom,
@@ -19,7 +17,7 @@ import {
   groupByAtom,
   subGroupByAtom,
 } from "../../atoms/filters";
-import { getEntity, getEntityType } from "../../data/entities";
+import { getEntity } from "../../data/entities";
 import { Reference } from "../../data/references";
 import { buildMatcher } from "../../utils/searchQuery";
 import { Relationship, deriveRelationships } from "../../utils/relationships";
@@ -30,6 +28,7 @@ import {
 } from "../../utils/connectionGrouping";
 import { ListInfoRow } from "../shared/ListInfoRow";
 import { ConnectionRow } from "../connections/ConnectionRow";
+import { NestedRefRow } from "../connections/NestedRefRow";
 import { TreeBranch } from "../connections/TreeBranch";
 import { CollapseControls } from "./FiltersRow";
 import {
@@ -274,55 +273,3 @@ function AggregateNode({
   );
 }
 
-/** Compact ref row used inside an expanded aggregate. The aggregate header
- *  above already establishes the target entity + relation type + direction,
- *  so a full ConnectionRow would just repeat that. We render the small
- *  template colour dot + page tag (when anchored) + a one-line snippet, plus
- *  click-to-scroll into the document. */
-function NestedRefRow({ reference }: { reference: Reference }) {
-  const entity = getEntity(reference.targetEntityId);
-  const type = entity ? getEntityType(entity.typeId) : undefined;
-  const setScrollToHighlight = useSetAtom(scrollToHighlightAtom);
-  const [activeRefId, setActiveRefId] = useAtom(activeRefIdAtom);
-  const setCurrentPage = useSetAtom(currentPageAtom);
-  const selection = reference.sourceSelection;
-  const isActive = activeRefId === reference.id;
-
-  const handleClick = () => {
-    setActiveRefId(reference.id);
-    if (selection) {
-      setCurrentPage(selection.page);
-      setScrollToHighlight(reference.id);
-    }
-  };
-
-  return (
-    <button
-      type="button"
-      onClick={handleClick}
-      className={`group w-full text-left px-3 py-2 flex items-start gap-2 border-b border-border/40 last:border-b-0 transition-colors ${
-        isActive ? "bg-parchment" : "hover:bg-warm/60"
-      }`}
-    >
-      <span
-        className="w-2 h-2 rounded-[2px] shrink-0 mt-1.5"
-        style={{ backgroundColor: type?.color ?? "var(--border-primary)" }}
-        aria-hidden="true"
-      />
-      <span className="flex-1 min-w-0 text-xs text-ink-secondary leading-relaxed">
-        {selection ? (
-          <span className="italic">"{selection.text}"</span>
-        ) : (
-          <span className="italic text-ink-tertiary">
-            Entity-level connection — no text anchor
-          </span>
-        )}
-      </span>
-      {selection && (
-        <span className="shrink-0 text-[10px] font-mono tabular-nums text-ink-tertiary mt-0.5">
-          p.{selection.page}
-        </span>
-      )}
-    </button>
-  );
-}
