@@ -238,7 +238,7 @@ function AggregateRow({
       }
       className={`flex items-center gap-1 px-1.5 h-5 rounded text-[10px] font-medium tabular-nums transition-colors cursor-pointer ${
         expanded
-          ? "bg-ink text-paper"
+          ? "bg-vellum text-ink-secondary"
           : "bg-warm text-ink-tertiary hover:bg-parchment hover:text-ink-secondary"
       }`}
     >

@@ -253,7 +253,13 @@ function AggregateNode({
   }, [expandForRef]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div>
+    <div
+      className={
+        expanded
+          ? "bg-warm/40 rounded-sm transition-colors"
+          : "transition-colors"
+      }
+    >
       <ConnectionRow
         kind="aggregate"
         rel={rel}
