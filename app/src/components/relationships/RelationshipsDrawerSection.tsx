@@ -12,14 +12,14 @@ import {
   relTypeFiltersAtom,
   entityTypeFiltersAtom,
 } from "../../atoms/filters";
-import { SearchBar } from "../references/SearchBar";
-import { ZoomControl } from "../references/ZoomControl";
-import { ActiveFilterChips } from "../references/ActiveFilterChips";
-import { RelationshipsFilterDrawer } from "../references/RelationshipsFilterDrawer";
+import { SearchBar } from "./SearchBar";
+import { ZoomControl } from "./ZoomControl";
+import { ActiveFilterChips } from "./ActiveFilterChips";
+import { RelationshipsFilterDrawer } from "./RelationshipsFilterDrawer";
 import { FiltersButton } from "../shared/FiltersButton";
 import { FiltersDrawer } from "../shared/FiltersDrawer";
 import { ConfirmDialog } from "../shared/ConfirmDialog";
-import { ConnectionsPanelBody } from "./ConnectionsPanelBody";
+import { RelationshipsPanelBody } from "./RelationshipsPanelBody";
 import { ViewControls } from "./ViewControls";
 import { GroupByControl } from "./GroupByControl";
 import { SortControl } from "./SortControl";
@@ -27,7 +27,7 @@ import { SortControl } from "./SortControl";
 /** Drawer-style connections section: toolbar + body + scoped filters drawer.
  *  Used wherever the unified Relationships panel needs to render inside a
  *  drawer (ReferencePanel sub-tab, MetadataView's relationships tab, etc.). */
-export function ConnectionsDrawerSection() {
+export function RelationshipsDrawerSection() {
   const [, setReferences] = useAtom(referencesAtom);
   const [, setToasts] = useAtom(toastsAtom);
   const [, setSearchQuery] = useAtom(searchQueryAtom);
@@ -90,7 +90,7 @@ export function ConnectionsDrawerSection() {
           />
         </div>
       </div>
-      <ConnectionsPanelBody onDelete={handleDelete} />
+      <RelationshipsPanelBody onDelete={handleDelete} />
 
       <FiltersDrawer
         open={filtersOpen}

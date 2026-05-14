@@ -25,7 +25,7 @@ interface Props {
 /** Single grouped-card primitive used across all grouped views in the merged
  *  Relationships panel (was previously split into GroupedCard +
  *  RelationshipGroupedCard). Children render whatever the parent needs. */
-export function ConnectionGroupedCard({
+export function RelationshipGroupedCard({
   title,
   color,
   count,

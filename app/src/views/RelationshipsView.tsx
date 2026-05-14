@@ -18,18 +18,18 @@ import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DocMeta } from "../components/layout/DocMeta";
 import { DocumentViewer } from "../components/viewer/DocumentViewer";
-import { SearchBar } from "../components/references/SearchBar";
-import { ZoomControl } from "../components/references/ZoomControl";
-import { ActiveFilterChips } from "../components/references/ActiveFilterChips";
-import { RelationshipsFilterDrawer } from "../components/references/RelationshipsFilterDrawer";
-import { EntityOverlay } from "../components/references/EntityOverlay";
+import { SearchBar } from "../components/relationships/SearchBar";
+import { ZoomControl } from "../components/relationships/ZoomControl";
+import { ActiveFilterChips } from "../components/relationships/ActiveFilterChips";
+import { RelationshipsFilterDrawer } from "../components/relationships/RelationshipsFilterDrawer";
+import { EntityOverlay } from "../components/relationships/EntityOverlay";
 import { FiltersButton } from "../components/shared/FiltersButton";
 import { FiltersDrawer } from "../components/shared/FiltersDrawer";
 import { ConfirmDialog } from "../components/shared/ConfirmDialog";
-import { ConnectionsPanelBody } from "../components/connections/ConnectionsPanelBody";
-import { ViewControls } from "../components/connections/ViewControls";
-import { GroupByControl } from "../components/connections/GroupByControl";
-import { SortControl } from "../components/connections/SortControl";
+import { RelationshipsPanelBody } from "../components/relationships/RelationshipsPanelBody";
+import { ViewControls } from "../components/relationships/ViewControls";
+import { GroupByControl } from "../components/relationships/GroupByControl";
+import { SortControl } from "../components/relationships/SortControl";
 
 interface Props {
   tabs: { id: string; label: string; count?: number }[];
@@ -40,7 +40,7 @@ interface Props {
 /** Single main-tab surface that absorbs the old References and Relationships
  *  tabs. The panel-mode toggle inside picks the projection (list / grouped /
  *  tree / graph) over the same underlying references[]. */
-export function ConnectionsView({ tabs, activeTab, onTabChange }: Props) {
+export function RelationshipsView({ tabs, activeTab, onTabChange }: Props) {
   const [references, setReferences] = useAtom(referencesAtom);
   const [, setToasts] = useAtom(toastsAtom);
   const [language, setLanguage] = useAtom(languageAtom);
@@ -98,7 +98,7 @@ export function ConnectionsView({ tabs, activeTab, onTabChange }: Props) {
           id: "connections",
           label: "Relationships",
           count: references.length,
-          content: <ConnectionsPanelBody onDelete={handleDelete} />,
+          content: <RelationshipsPanelBody onDelete={handleDelete} />,
         },
       ]}
       left={
@@ -137,7 +137,7 @@ export function ConnectionsView({ tabs, activeTab, onTabChange }: Props) {
             </div>
           </div>
 
-          <ConnectionsPanelBody
+          <RelationshipsPanelBody
             onDelete={handleDelete}
             scrollBgClass="bg-warm"
           />

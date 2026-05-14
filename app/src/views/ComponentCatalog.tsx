@@ -11,11 +11,11 @@ import { MetadataCard, Property, PropertyRow } from "../components/metadata/Meta
 import { SegmentedTabs } from "../components/layout/SegmentedTabs";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { MainTabs } from "../components/layout/MainTabs";
-import { HighlightCard } from "../components/references/HighlightCard";
-import { RelatedDocCard } from "../components/references/RelatedDocCard";
+import { HighlightCard } from "../components/relationships/HighlightCard";
+import { RelatedDocCard } from "../components/relationships/RelatedDocCard";
 import { FileTable } from "../components/files/FileTable";
-import { DrawerActionBar } from "../components/references/DrawerActionBar";
-import { FiltersRow, ViewModeControls, CollapseControls } from "../components/references/FiltersRow";
+import { DrawerActionBar } from "../components/relationships/DrawerActionBar";
+import { FiltersRow, ViewModeControls, CollapseControls } from "../components/relationships/FiltersRow";
 import { FiltersButton } from "../components/shared/FiltersButton";
 import { FiltersDrawer } from "../components/shared/FiltersDrawer";
 import { FacetSection } from "../components/shared/FacetSection";
@@ -24,13 +24,13 @@ import { FadeTruncate } from "../components/shared/FadeTruncate";
 import { ListInfoRow } from "../components/shared/ListInfoRow";
 import { ListCardRow } from "../components/shared/ListCardRow";
 import { Checkbox } from "../components/shared/Checkbox";
-import { ZoomControl } from "../components/references/ZoomControl";
-import { ConnectionRow } from "../components/connections/ConnectionRow";
-import { ConnectionGroupedCard } from "../components/connections/ConnectionGroupedCard";
-import { ViewControls } from "../components/connections/ViewControls";
-import { GroupByControl } from "../components/connections/GroupByControl";
-import { SortControl } from "../components/connections/SortControl";
-import { DirectionGlyph } from "../components/connections/DirectionGlyph";
+import { ZoomControl } from "../components/relationships/ZoomControl";
+import { RelationshipRow } from "../components/relationships/RelationshipRow";
+import { RelationshipGroupedCard } from "../components/relationships/RelationshipGroupedCard";
+import { ViewControls } from "../components/relationships/ViewControls";
+import { GroupByControl } from "../components/relationships/GroupByControl";
+import { SortControl } from "../components/relationships/SortControl";
+import { DirectionGlyph } from "../components/relationships/DirectionGlyph";
 import { deriveRelationships } from "../utils/relationships";
 import { ActionBar } from "../components/viewer/ActionBar";
 import { UwaziLoader } from "../components/shared/UwaziLoader";
@@ -97,8 +97,8 @@ const sidebarGroups: SidebarGroup[] = [
     items: [
       { id: "ev-search-bar", label: "SearchBar" },
       { id: "ev-filters-row", label: "FiltersRow" },
-      { id: "ev-connection-row-ref", label: "ConnectionRow · reference" },
-      { id: "ev-connection-grouped-card", label: "ConnectionGroupedCard" },
+      { id: "ev-connection-row-ref", label: "RelationshipRow · reference" },
+      { id: "ev-connection-grouped-card", label: "RelationshipGroupedCard" },
       { id: "ev-highlight-card", label: "HighlightCard" },
       { id: "ev-related-doc", label: "RelatedDocCard" },
     ],
@@ -157,8 +157,8 @@ const sidebarGroups: SidebarGroup[] = [
   {
     label: "Entity View — Relationships",
     items: [
-      { id: "connection-row-aggregate", label: "ConnectionRow · aggregate" },
-      { id: "connection-grouped-card-aggregate", label: "ConnectionGroupedCard · aggregate" },
+      { id: "connection-row-aggregate", label: "RelationshipRow · aggregate" },
+      { id: "connection-grouped-card-aggregate", label: "RelationshipGroupedCard · aggregate" },
       { id: "view-controls", label: "ViewControls" },
       { id: "group-by-control", label: "GroupByControl" },
       { id: "sort-control", label: "SortControl" },
@@ -562,37 +562,37 @@ export function ComponentCatalog() {
 
               <div id="ev-connection-row-ref" ref={reg("ev-connection-row-ref")}>
                 <CatalogEntry
-                  name="ConnectionRow · reference"
+                  name="RelationshipRow · reference"
                   description="Text-anchored row variant — entity pill, page tag, snippet, direction + rel label"
-                  code={`<ConnectionRow
+                  code={`<RelationshipRow
   kind="reference"
   ref={reference}
   onDelete={(id) => {}}
 />`}
                 >
                   <div className="w-full max-w-md border border-border/40 rounded-md overflow-hidden">
-                    <IsolatedConnectionRowReference />
+                    <IsolatedRelationshipRowReference />
                   </div>
                 </CatalogEntry>
               </div>
 
               <div id="ev-connection-grouped-card" ref={reg("ev-connection-grouped-card")}>
                 <CatalogEntry
-                  name="ConnectionGroupedCard"
+                  name="RelationshipGroupedCard"
                   description="Collapsible group with expand/collapse signal handling + count badge"
-                  code={`<ConnectionGroupedCard
+                  code={`<RelationshipGroupedCard
   title="Person"
   color="#7C3AED"
   count={3}
   defaultExpanded
 >
   {refs.map((ref) => (
-    <ConnectionRow kind="reference" reference={ref} />
+    <RelationshipRow kind="reference" reference={ref} />
   ))}
-</ConnectionGroupedCard>`}
+</RelationshipGroupedCard>`}
                 >
                   <div className="w-full max-w-md">
-                    <IsolatedConnectionGroupedCard />
+                    <IsolatedRelationshipGroupedCard />
                   </div>
                 </CatalogEntry>
               </div>
@@ -1062,35 +1062,35 @@ export function ComponentCatalog() {
             <div className="flex flex-col gap-6">
               <div id="connection-row-aggregate" ref={reg("connection-row-aggregate")}>
                 <CatalogEntry
-                  name="ConnectionRow · aggregate"
+                  name="RelationshipRow · aggregate"
                   description="Aggregate row variant — entity pill, evidence count badge, direction + rel label. Click on the count jumps into the refs cluster."
-                  code={`<ConnectionRow
+                  code={`<RelationshipRow
   kind="aggregate"
   rel={rel}
 />
 
 {/* rel comes from deriveRelationships(references) */}`}
                 >
-                  <IsolatedConnectionRowAggregate />
+                  <IsolatedRelationshipRowAggregate />
                 </CatalogEntry>
               </div>
 
               <div id="connection-grouped-card-aggregate" ref={reg("connection-grouped-card-aggregate")}>
                 <CatalogEntry
-                  name="ConnectionGroupedCard · aggregate"
+                  name="RelationshipGroupedCard · aggregate"
                   description="Same group primitive holding aggregate rows. Responds to expand/collapse signal atoms."
-                  code={`<ConnectionGroupedCard
+                  code={`<RelationshipGroupedCard
   title="Person"
   color="#8b5cf6"
   count={rels.length}
   defaultExpanded
 >
   {rels.map((rel) => (
-    <ConnectionRow kind="aggregate" rel={rel} />
+    <RelationshipRow kind="aggregate" rel={rel} />
   ))}
-</ConnectionGroupedCard>`}
+</RelationshipGroupedCard>`}
                 >
-                  <IsolatedConnectionGroupedCardAggregate />
+                  <IsolatedRelationshipGroupedCardAggregate />
                 </CatalogEntry>
               </div>
 
@@ -1421,35 +1421,35 @@ function IsolatedFiltersRow() {
   );
 }
 
-function IsolatedConnectionGroupedCard() {
+function IsolatedRelationshipGroupedCard() {
   const store = createStore();
   return (
     <Provider store={store}>
-      <ConnectionGroupedCard
+      <RelationshipGroupedCard
         title="Person"
         color="#7C3AED"
         count={3}
         defaultExpanded
       >
         {references.slice(0, 3).map((ref) => (
-          <ConnectionRow
+          <RelationshipRow
             key={ref.id}
             kind="reference"
             reference={ref}
             onDelete={() => {}}
           />
         ))}
-      </ConnectionGroupedCard>
+      </RelationshipGroupedCard>
     </Provider>
   );
 }
 
-function IsolatedConnectionRowReference() {
+function IsolatedRelationshipRowReference() {
   const store = createStore();
   return (
     <Provider store={store}>
-      <ConnectionRow kind="reference" reference={references[0]} onDelete={() => {}} />
-      <ConnectionRow kind="reference" reference={references[1]} onDelete={() => {}} />
+      <RelationshipRow kind="reference" reference={references[0]} onDelete={() => {}} />
+      <RelationshipRow kind="reference" reference={references[1]} onDelete={() => {}} />
     </Provider>
   );
 }
@@ -1628,7 +1628,7 @@ function IsolatedCheckboxes() {
   );
 }
 
-function IsolatedConnectionRowAggregate() {
+function IsolatedRelationshipRowAggregate() {
   const store = createStore();
   const rels = deriveRelationships(references);
   if (rels.length === 0) return null;
@@ -1636,29 +1636,29 @@ function IsolatedConnectionRowAggregate() {
     <Provider store={store}>
       <div className="border border-border/60 rounded-md overflow-hidden bg-paper">
         {rels.slice(0, 2).map((rel) => (
-          <ConnectionRow key={rel.id} kind="aggregate" rel={rel} />
+          <RelationshipRow key={rel.id} kind="aggregate" rel={rel} />
         ))}
       </div>
     </Provider>
   );
 }
 
-function IsolatedConnectionGroupedCardAggregate() {
+function IsolatedRelationshipGroupedCardAggregate() {
   const store = createStore();
   const rels = deriveRelationships(references);
   if (rels.length === 0) return null;
   return (
     <Provider store={store}>
-      <ConnectionGroupedCard
+      <RelationshipGroupedCard
         title="Person"
         color="#7C3AED"
         count={rels.slice(0, 4).length}
         defaultExpanded
       >
         {rels.slice(0, 4).map((rel) => (
-          <ConnectionRow key={rel.id} kind="aggregate" rel={rel} />
+          <RelationshipRow key={rel.id} kind="aggregate" rel={rel} />
         ))}
-      </ConnectionGroupedCard>
+      </RelationshipGroupedCard>
     </Provider>
   );
 }

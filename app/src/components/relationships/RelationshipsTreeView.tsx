@@ -27,8 +27,8 @@ import {
   groupRefs,
 } from "../../utils/connectionGrouping";
 import { ListInfoRow } from "../shared/ListInfoRow";
-import { ConnectionRow } from "../connections/ConnectionRow";
-import { TreeBranch, TreeNode } from "../connections/TreeBranch";
+import { RelationshipRow } from "./RelationshipRow";
+import { TreeBranch, TreeNode } from "./TreeBranch";
 import { CollapseControls } from "./FiltersRow";
 import {
   expandAllSignalAtom,
@@ -36,7 +36,7 @@ import {
 } from "../../atoms/filters";
 
 /** Tree view of the merged Relationships panel. Same grouping pipeline as the
- *  list view, but the leaves are aggregate `ConnectionRow kind="aggregate"`
+ *  list view, but the leaves are aggregate `RelationshipRow kind="aggregate"`
  *  cards with inline-expand into their underlying refs. */
 export function RelationshipsTreeView() {
   const [references] = useAtom(referencesAtom);
@@ -252,7 +252,7 @@ function AggregateNode({
 
   return (
     <div>
-      <ConnectionRow
+      <RelationshipRow
         kind="aggregate"
         rel={rel}
         expanded={expanded}
@@ -263,7 +263,7 @@ function AggregateNode({
         <div className="ml-[14px]">
           {refs.map((ref) => (
             <TreeNode key={ref.id}>
-              <ConnectionRow kind="reference" reference={ref} nested />
+              <RelationshipRow kind="reference" reference={ref} nested />
             </TreeNode>
           ))}
         </div>

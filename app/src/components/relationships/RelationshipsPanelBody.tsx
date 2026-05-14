@@ -25,11 +25,11 @@ import {
   groupRefs,
 } from "../../utils/connectionGrouping";
 import { ListInfoRow } from "../shared/ListInfoRow";
-import { CollapseControls } from "../references/FiltersRow";
-import { RelationshipsTreeView } from "../references/RelationshipsTreeView";
-import { RelationshipsGraphView } from "../references/RelationshipsGraphView";
-import { ConnectionRow } from "./ConnectionRow";
-import { ConnectionGroupedCard } from "./ConnectionGroupedCard";
+import { CollapseControls } from "./FiltersRow";
+import { RelationshipsTreeView } from "./RelationshipsTreeView";
+import { RelationshipsGraphView } from "./RelationshipsGraphView";
+import { RelationshipRow } from "./RelationshipRow";
+import { RelationshipGroupedCard } from "./RelationshipGroupedCard";
 
 interface Props {
   onDelete?: (id: string) => void;
@@ -37,7 +37,7 @@ interface Props {
 }
 
 /** Body of the merged Relationships panel — toolbar lives above. */
-export function ConnectionsPanelBody({ onDelete, scrollBgClass }: Props) {
+export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
   const [references] = useAtom(referencesAtom);
   const [view] = useAtom(viewAtom);
   const [groupBy] = useAtom(groupByAtom);
@@ -141,7 +141,7 @@ export function ConnectionsPanelBody({ onDelete, scrollBgClass }: Props) {
       <div className="px-3 py-3">
         <div className="border border-border/60 rounded-md overflow-hidden bg-paper">
           {filtered.map((ref) => (
-            <ConnectionRow
+            <RelationshipRow
               key={ref.id}
               kind="reference"
               reference={ref}
@@ -156,7 +156,7 @@ export function ConnectionsPanelBody({ onDelete, scrollBgClass }: Props) {
     body = (
       <div className="px-3 py-3 space-y-1.5">
         {primaryGroups.map(([key, refs]) => (
-          <ConnectionGroupedCard
+          <RelationshipGroupedCard
             key={`p:${key}`}
             title={getGroupLabel(key, groupBy)}
             color={getGroupColor(key, groupBy)}
@@ -165,7 +165,7 @@ export function ConnectionsPanelBody({ onDelete, scrollBgClass }: Props) {
           >
             {subGroupBy === "none"
               ? refs.map((ref) => (
-                  <ConnectionRow
+                  <RelationshipRow
                     key={ref.id}
                     kind="reference"
                     reference={ref}
@@ -175,7 +175,7 @@ export function ConnectionsPanelBody({ onDelete, scrollBgClass }: Props) {
               : (
                 <div className="px-2 py-2 space-y-1.5 bg-warm/30">
                   {groupRefs(refs, subGroupBy).map(([subKey, subRefs]) => (
-                    <ConnectionGroupedCard
+                    <RelationshipGroupedCard
                       key={`s:${key}::${subKey}`}
                       title={getGroupLabel(subKey, subGroupBy)}
                       color={getGroupColor(subKey, subGroupBy)}
@@ -183,18 +183,18 @@ export function ConnectionsPanelBody({ onDelete, scrollBgClass }: Props) {
                       refIdsToWatch={subRefs.map((r) => r.id)}
                     >
                       {subRefs.map((ref) => (
-                        <ConnectionRow
+                        <RelationshipRow
                           key={ref.id}
                           kind="reference"
                           reference={ref}
                           onDelete={onDelete}
                         />
                       ))}
-                    </ConnectionGroupedCard>
+                    </RelationshipGroupedCard>
                   ))}
                 </div>
               )}
-          </ConnectionGroupedCard>
+          </RelationshipGroupedCard>
         ))}
       </div>
     );

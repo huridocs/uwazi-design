@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAtom } from "jotai";
 import { Navbar } from "./components/layout/Navbar";
-import { ReferencesView } from "./views/ReferencesView";
+import { EntityView } from "./views/EntityView";
 import { ComponentCatalog } from "./views/ComponentCatalog";
 import { ImportCSVView } from "./views/ImportCSVView";
 import { ToastContainer } from "./views/ToastContainer";
@@ -62,7 +62,7 @@ export function App() {
       ) : appView === "import-csv" ? (
         <ImportCSVView />
       ) : (
-        <ReferencesView />
+        <EntityView />
       )}
       <ToastContainer />
     </div>

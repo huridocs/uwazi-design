@@ -49,7 +49,7 @@ type Props = ReferenceKind | AggregateKind;
  *  deduped aggregate relationship (kind="aggregate", entity-level with an
  *  evidence-count action). Reads zoomAtom to vary row density across
  *  detail / compact / overview. */
-export function ConnectionRow(props: Props) {
+export function RelationshipRow(props: Props) {
   if (props.kind === "reference") {
     return <ReferenceRow {...props} />;
   }

@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { ActiveFilterChips } from "../references/ActiveFilterChips";
+import { ActiveFilterChips } from "../relationships/ActiveFilterChips";
 
 interface ListInfoRowProps {
   count: ReactNode;

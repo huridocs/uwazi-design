@@ -16,7 +16,7 @@ function flatten(entries: TocEntry[], ancestors: string[] = []): {
   ]);
 }
 
-export function TocDrawerContent() {
+export function ToCPanel() {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [currentPage] = useAtom(currentPageAtom);
   const setScrollToPage = useSetAtom(scrollToPageAtom);

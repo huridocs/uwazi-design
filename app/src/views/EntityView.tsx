@@ -6,14 +6,14 @@ import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DocMeta } from "../components/layout/DocMeta";
 import { DocumentViewer } from "../components/viewer/DocumentViewer";
-import { ReferencePanel } from "../components/references/ReferencePanel";
-import { MetadataDrawerContent } from "../components/references/MetadataDrawerContent";
-import { TocDrawerContent } from "../components/references/TocDrawerContent";
+import { ReferencePanel } from "../components/relationships/ReferencePanel";
+import { MetadataDrawerContent } from "../components/relationships/MetadataDrawerContent";
+import { ToCPanel } from "../components/relationships/ToCPanel";
 import { EntityPickerModal } from "./EntityPickerModal";
 import { ToastContainer } from "./ToastContainer";
 import { FilesView } from "./FilesView";
 import { MetadataView } from "./MetadataView";
-import { ConnectionsView } from "./ConnectionsView";
+import { RelationshipsView } from "./RelationshipsView";
 
 const mainTabs = [
   { id: "metadata", label: "Metadata" },
@@ -22,7 +22,7 @@ const mainTabs = [
   { id: "files", label: "Files", count: 6 },
 ];
 
-export function ReferencesView() {
+export function EntityView() {
   const [activeTab, setActiveTab] = useState("document");
   const [references] = useAtom(referencesAtom);
   const [language, setLanguage] = useAtom(languageAtom);
@@ -52,7 +52,7 @@ export function ReferencesView() {
   if (activeTab === "relationships") {
     return (
       <>
-        <ConnectionsView tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+        <RelationshipsView tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
         <EntityPickerModal />
         <ToastContainer />
       </>
@@ -99,7 +99,7 @@ export function ReferencesView() {
           {
             id: "toc",
             label: "Table of contents",
-            content: <TocDrawerContent />,
+            content: <ToCPanel />,
           },
         ]}
       />

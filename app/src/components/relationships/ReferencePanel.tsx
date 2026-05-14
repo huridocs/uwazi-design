@@ -3,9 +3,9 @@ import { referencesAtom, activeDrawerTabAtom } from "../../atoms/references";
 import { DrawerTabs } from "../layout/DrawerTabs";
 import { DrawerActionBar } from "./DrawerActionBar";
 import { MetadataDrawerContent } from "./MetadataDrawerContent";
-import { TocDrawerContent } from "./TocDrawerContent";
+import { ToCPanel } from "./ToCPanel";
 import { EntityOverlay } from "./EntityOverlay";
-import { ConnectionsDrawerSection } from "../connections/ConnectionsDrawerSection";
+import { RelationshipsDrawerSection } from "./RelationshipsDrawerSection";
 
 const baseDrawerTabs = [
   { id: "metadata", label: "Metadata" },
@@ -31,8 +31,8 @@ export function ReferencePanel() {
       />
 
       {activeDrawerTab === "metadata" && <MetadataDrawerContent />}
-      {activeDrawerTab === "toc" && <TocDrawerContent />}
-      {activeDrawerTab === "connections" && <ConnectionsDrawerSection />}
+      {activeDrawerTab === "toc" && <ToCPanel />}
+      {activeDrawerTab === "connections" && <RelationshipsDrawerSection />}
 
       {!["metadata", "toc", "connections"].includes(activeDrawerTab) && (
         <div className="flex-1 flex items-center justify-center">

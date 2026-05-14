@@ -6,13 +6,13 @@ import { MainTabs } from "../components/layout/MainTabs";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { DocMeta } from "../components/layout/DocMeta";
 import { MetadataCard, Property, PropertyRow } from "../components/metadata/MetadataCard";
-import { TemplateStructure } from "../components/references/TemplateStructure";
+import { TemplateStructure } from "../components/relationships/TemplateStructure";
 import { metadataFieldsByLanguage, pdfMetadataByLanguage, MetadataField } from "../data/metadata";
 import { documentsByLanguage } from "../data/document";
 import { files, FileEntry } from "../data/files";
 import { languageAtom, type Language } from "../atoms/language";
 import { referencesAtom } from "../atoms/references";
-import { ConnectionsDrawerSection } from "../components/connections/ConnectionsDrawerSection";
+import { RelationshipsDrawerSection } from "../components/relationships/RelationshipsDrawerSection";
 import { DocumentViewer } from "../components/viewer/DocumentViewer";
 
 interface MetadataViewProps {
@@ -480,7 +480,7 @@ function MetadataDrawer() {
           </div>
         </>
       ) : activeDrawerTab === "connections" ? (
-        <ConnectionsDrawerSection />
+        <RelationshipsDrawerSection />
       ) : (
         <div className="flex-1 flex items-center justify-center">
           <p className="text-sm text-ink-muted capitalize">{activeDrawerTab} content</p>
