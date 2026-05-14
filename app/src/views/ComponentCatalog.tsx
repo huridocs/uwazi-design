@@ -97,8 +97,8 @@ const sidebarGroups: SidebarGroup[] = [
     items: [
       { id: "ev-search-bar", label: "SearchBar" },
       { id: "ev-filters-row", label: "FiltersRow" },
-      { id: "ev-connection-row-ref", label: "RelationshipRow · reference" },
-      { id: "ev-connection-grouped-card", label: "RelationshipGroupedCard" },
+      { id: "ev-relationship-row-ref", label: "RelationshipRow · reference" },
+      { id: "ev-relationship-grouped-card", label: "RelationshipGroupedCard" },
       { id: "ev-highlight-card", label: "HighlightCard" },
       { id: "ev-related-doc", label: "RelatedDocCard" },
     ],
@@ -157,8 +157,8 @@ const sidebarGroups: SidebarGroup[] = [
   {
     label: "Entity View — Relationships",
     items: [
-      { id: "connection-row-aggregate", label: "RelationshipRow · aggregate" },
-      { id: "connection-grouped-card-aggregate", label: "RelationshipGroupedCard · aggregate" },
+      { id: "relationship-row-aggregate", label: "RelationshipRow · aggregate" },
+      { id: "relationship-grouped-card-aggregate", label: "RelationshipGroupedCard · aggregate" },
       { id: "view-controls", label: "ViewControls" },
       { id: "group-by-control", label: "GroupByControl" },
       { id: "sort-control", label: "SortControl" },
@@ -560,7 +560,7 @@ export function ComponentCatalog() {
                 </CatalogEntry>
               </div>
 
-              <div id="ev-connection-row-ref" ref={reg("ev-connection-row-ref")}>
+              <div id="ev-relationship-row-ref" ref={reg("ev-relationship-row-ref")}>
                 <CatalogEntry
                   name="RelationshipRow · reference"
                   description="Text-anchored row variant — entity pill, page tag, snippet, direction + rel label"
@@ -576,7 +576,7 @@ export function ComponentCatalog() {
                 </CatalogEntry>
               </div>
 
-              <div id="ev-connection-grouped-card" ref={reg("ev-connection-grouped-card")}>
+              <div id="ev-relationship-grouped-card" ref={reg("ev-relationship-grouped-card")}>
                 <CatalogEntry
                   name="RelationshipGroupedCard"
                   description="Collapsible group with expand/collapse signal handling + count badge"
@@ -1060,7 +1060,7 @@ export function ComponentCatalog() {
           <section>
             <h2 className="text-lg font-bold text-ink mb-6">Entity View — Relationships</h2>
             <div className="flex flex-col gap-6">
-              <div id="connection-row-aggregate" ref={reg("connection-row-aggregate")}>
+              <div id="relationship-row-aggregate" ref={reg("relationship-row-aggregate")}>
                 <CatalogEntry
                   name="RelationshipRow · aggregate"
                   description="Aggregate row variant — entity pill, evidence count badge, direction + rel label. Click on the count jumps into the refs cluster."
@@ -1075,7 +1075,7 @@ export function ComponentCatalog() {
                 </CatalogEntry>
               </div>
 
-              <div id="connection-grouped-card-aggregate" ref={reg("connection-grouped-card-aggregate")}>
+              <div id="relationship-grouped-card-aggregate" ref={reg("relationship-grouped-card-aggregate")}>
                 <CatalogEntry
                   name="RelationshipGroupedCard · aggregate"
                   description="Same group primitive holding aggregate rows. Responds to expand/collapse signal atoms."

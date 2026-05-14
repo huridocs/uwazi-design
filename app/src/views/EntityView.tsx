@@ -16,8 +16,8 @@ import { MetadataView } from "./MetadataView";
 import { RelationshipsView } from "./RelationshipsView";
 
 const mainTabs = [
-  { id: "metadata", label: "Metadata" },
   { id: "document", label: "Document" },
+  { id: "metadata", label: "Metadata" },
   { id: "relationships", label: "Relationships", count: 0 },
   { id: "files", label: "Files", count: 6 },
 ];

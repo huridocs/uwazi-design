@@ -40,7 +40,7 @@ export function FloatingMenu({ x, y, text }: FloatingMenuProps) {
             rounded-md hover:bg-white/15 transition-colors"
         >
           <Link2 size={14} />
-          Create Reference
+          Create relationship
         </button>
         <div className="w-px h-4 bg-white/20" aria-hidden="true" />
         <button

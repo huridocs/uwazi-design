@@ -194,7 +194,7 @@ export function RelationshipsGraphView() {
 
       spokesArr.push({
         key,
-        label: groupBy === "none" ? "Connections" : getGroupLabel(key, groupBy),
+        label: groupBy === "none" ? "Relationships" : getGroupLabel(key, groupBy),
         color: getGroupColor(key, groupBy),
         angle,
         targets: sortedTargets,
