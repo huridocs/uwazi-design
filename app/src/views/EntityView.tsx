@@ -9,7 +9,7 @@ import { DocumentViewer } from "../components/viewer/DocumentViewer";
 import { ReferencePanel } from "../components/relationships/ReferencePanel";
 import { MetadataDrawerContent } from "../components/relationships/MetadataDrawerContent";
 import { ToCPanel } from "../components/relationships/ToCPanel";
-import { EntityPickerModal } from "./EntityPickerModal";
+import { CreateRelationshipModal } from "../components/relationships/CreateRelationshipModal";
 import { ToastContainer } from "./ToastContainer";
 import { FilesView } from "./FilesView";
 import { MetadataView } from "./MetadataView";
@@ -54,7 +54,7 @@ export function EntityView() {
     return (
       <>
         <RelationshipsView tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
-        <EntityPickerModal />
+        <CreateRelationshipModal />
         <ToastContainer />
       </>
     );
@@ -104,7 +104,7 @@ export function EntityView() {
           },
         ]}
       />
-      <EntityPickerModal />
+      <CreateRelationshipModal />
       <ToastContainer />
     </>
   );
