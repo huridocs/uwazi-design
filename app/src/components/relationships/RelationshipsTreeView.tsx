@@ -30,7 +30,6 @@ import { ListInfoRow } from "../shared/ListInfoRow";
 import { RelationshipRow } from "./RelationshipRow";
 import { TreeBranch, TreeNode } from "./TreeBranch";
 import { CollapseControls } from "./FiltersRow";
-import { IxSuggestionsCard } from "./IxSuggestionsCard";
 import {
   expandAllSignalAtom,
   collapseAllSignalAtom,
@@ -155,7 +154,6 @@ export function RelationshipsTreeView() {
       />
 
       <div className="flex-1 overflow-auto bg-warm">
-        <IxSuggestionsCard />
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Link2 size={36} className="text-ink-tertiary/40 mb-3" />

@@ -1,7 +1,6 @@
 import { useState, type ReactNode } from "react";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom } from "jotai";
 import { referencesAtom } from "../atoms/references";
-import { pendingSuggestionsAtom } from "../atoms/suggestions";
 import { languageAtom, type Language } from "../atoms/language";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { MainTabs } from "../components/layout/MainTabs";
@@ -27,13 +26,10 @@ const mainTabs = [
 export function EntityView() {
   const [activeTab, setActiveTab] = useState("document");
   const [references] = useAtom(referencesAtom);
-  const pendingSuggestions = useAtomValue(pendingSuggestionsAtom);
   const [language, setLanguage] = useAtom(languageAtom);
 
   const tabs = mainTabs.map((tab) =>
-    tab.id === "relationships"
-      ? { ...tab, count: references.length, sparkle: pendingSuggestions.length > 0 }
-      : tab,
+    tab.id === "relationships" ? { ...tab, count: references.length } : tab,
   );
 
   if (activeTab === "metadata") {
