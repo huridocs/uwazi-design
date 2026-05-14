@@ -16,3 +16,8 @@ export const entityPickerOpenAtom = atom(false);
 
 /** Current page number in PDF viewer */
 export const currentPageAtom = atom(1);
+
+/** Signal: scroll the document viewer to this page number, then clear.
+ *  Set by ToC entries, the page picker, anything that wants to jump pages
+ *  without highlighting a specific reference. */
+export const scrollToPageAtom = atom<number | null>(null);

@@ -1,15 +1,48 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useAtom, useSetAtom } from "jotai";
 import { ChevronDown, Sparkles, List } from "lucide-react";
 import { tocEntries, TocEntry } from "../../data/toc";
 import { PageTag } from "../shared/PageTag";
+import { currentPageAtom, scrollToPageAtom } from "../../atoms/selection";
+
+/** Flatten a tree of TocEntries in document order, preserving ancestor ids. */
+function flatten(entries: TocEntry[], ancestors: string[] = []): {
+  entry: TocEntry;
+  ancestors: string[];
+}[] {
+  return entries.flatMap((e) => [
+    { entry: e, ancestors },
+    ...(e.children ? flatten(e.children, [...ancestors, e.id]) : []),
+  ]);
+}
 
 export function TocDrawerContent() {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [currentPage] = useAtom(currentPageAtom);
+  const setScrollToPage = useSetAtom(scrollToPageAtom);
+
+  const flat = useMemo(() => flatten(tocEntries), []);
+
+  /** Active entry = the latest TocEntry whose page <= currentPage. The path
+   *  from root to that entry should look "open" (active state on the leaf,
+   *  ancestor highlight on collapsed parents). */
+  const { activeId, activeAncestors } = useMemo(() => {
+    let active: (typeof flat)[number] | undefined;
+    for (const item of flat) {
+      if (item.entry.page <= currentPage) active = item;
+      else break;
+    }
+    return {
+      activeId: active?.entry.id ?? null,
+      activeAncestors: new Set(active?.ancestors ?? []),
+    };
+  }, [flat, currentPage]);
 
   const toggle = (id: string) => {
     setExpandedIds((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
@@ -19,6 +52,8 @@ export function TocDrawerContent() {
 
   const expandAll = () => setExpandedIds(new Set(getAllIds(tocEntries)));
   const collapseAll = () => setExpandedIds(new Set());
+
+  const jumpTo = (page: number) => setScrollToPage(page);
 
   const hasAnyChildren = tocEntries.some((e) => e.children?.length);
 
@@ -48,13 +83,13 @@ export function TocDrawerContent() {
           <div className="flex items-center gap-3">
             <button
               onClick={collapseAll}
-              className="text-xs text-ink-tertiary hover:text-ink-secondary transition-colors"
+              className="text-xs text-ink-tertiary hover:text-ink-secondary transition-colors cursor-pointer"
             >
               Collapse All
             </button>
             <button
               onClick={expandAll}
-              className="text-xs font-medium text-ink-secondary hover:text-ink transition-colors"
+              className="text-xs font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
             >
               Expand All
             </button>
@@ -69,7 +104,10 @@ export function TocDrawerContent() {
             key={entry.id}
             entry={entry}
             expandedIds={expandedIds}
+            activeId={activeId}
+            activeAncestors={activeAncestors}
             onToggle={toggle}
+            onJump={jumpTo}
           />
         ))}
       </div>
@@ -77,25 +115,51 @@ export function TocDrawerContent() {
   );
 }
 
+interface NodeProps {
+  entry: TocEntry;
+  expandedIds: Set<string>;
+  activeId: string | null;
+  activeAncestors: Set<string>;
+  onToggle: (id: string) => void;
+  onJump: (page: number) => void;
+}
+
 function TocNode({
   entry,
   expandedIds,
+  activeId,
+  activeAncestors,
   onToggle,
-}: {
-  entry: TocEntry;
-  expandedIds: Set<string>;
-  onToggle: (id: string) => void;
-}) {
-  const hasChildren = entry.children && entry.children.length > 0;
+  onJump,
+}: NodeProps) {
+  const hasChildren = !!entry.children?.length;
   const isExpanded = expandedIds.has(entry.id);
   const indent = entry.level * 16;
+  const isActive = activeId === entry.id;
+  const isOnActivePath = activeAncestors.has(entry.id);
+
+  const handleRowClick = () => {
+    if (hasChildren) onToggle(entry.id);
+    onJump(entry.page);
+  };
+
+  const handlePageClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onJump(entry.page);
+  };
 
   return (
     <div>
       <button
-        onClick={() => hasChildren ? onToggle(entry.id) : undefined}
-        className={`flex items-center gap-2 w-full px-2 py-2 text-left hover:bg-warm rounded transition-colors group ${
-          hasChildren ? "cursor-pointer" : "cursor-default"
+        type="button"
+        onClick={handleRowClick}
+        aria-current={isActive ? "true" : undefined}
+        className={`flex items-center gap-2 w-full px-2 py-2 text-left rounded transition-colors group cursor-pointer ${
+          isActive
+            ? "bg-parchment"
+            : isOnActivePath
+              ? "bg-warm/50"
+              : "hover:bg-warm"
         }`}
         style={{ paddingLeft: 8 + indent }}
       >
@@ -114,14 +178,18 @@ function TocNode({
           className={`flex-1 text-xs leading-relaxed truncate ${
             entry.level === 0
               ? "font-bold text-ink uppercase"
-              : "font-medium text-ink-secondary"
+              : isActive
+                ? "font-semibold text-ink"
+                : "font-medium text-ink-secondary"
           }`}
         >
           {entry.label}
         </span>
 
-        {/* Page */}
-        <PageTag page={entry.page} />
+        {/* Page (clickable independently of the row toggle) */}
+        <span onClick={handlePageClick}>
+          <PageTag page={entry.page} />
+        </span>
       </button>
 
       {/* Children */}
@@ -132,7 +200,10 @@ function TocNode({
               key={child.id}
               entry={child}
               expandedIds={expandedIds}
+              activeId={activeId}
+              activeAncestors={activeAncestors}
               onToggle={onToggle}
+              onJump={onJump}
             />
           ))}
         </div>

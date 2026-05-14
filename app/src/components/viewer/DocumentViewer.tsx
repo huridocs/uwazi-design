@@ -3,7 +3,7 @@ import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import { useAtom, useSetAtom } from "jotai";
-import { currentPageAtom, textSelectionAtom } from "../../atoms/selection";
+import { currentPageAtom, scrollToPageAtom, textSelectionAtom } from "../../atoms/selection";
 import { scrollToHighlightAtom, referencesAtom, activeRefIdAtom } from "../../atoms/references";
 import { breakpointAtom } from "../../atoms/viewport";
 import { PageHighlights } from "./PageHighlights";
@@ -120,6 +120,15 @@ export function DocumentViewer({ actionBarLeft, showMinimap = true }: DocumentVi
       pageEl.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, []);
+
+  // Scroll-to-page signal (from ToC clicks etc.)
+  const [pageJump, setPageJump] = useAtom(scrollToPageAtom);
+  useEffect(() => {
+    if (pageJump === null) return;
+    const pageEl = pageRefs.current.get(pageJump);
+    if (pageEl) pageEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    setPageJump(null);
+  }, [pageJump, setPageJump]);
 
   // Scroll to highlight centered in viewport
   const [scrollTarget] = useAtom(scrollToHighlightAtom);
