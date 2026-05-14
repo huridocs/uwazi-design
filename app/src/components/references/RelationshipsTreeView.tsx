@@ -28,7 +28,6 @@ import {
 } from "../../utils/connectionGrouping";
 import { ListInfoRow } from "../shared/ListInfoRow";
 import { ConnectionRow } from "../connections/ConnectionRow";
-import { NestedRefRow } from "../connections/NestedRefRow";
 import { TreeBranch } from "../connections/TreeBranch";
 import { CollapseControls } from "./FiltersRow";
 import {
@@ -265,7 +264,7 @@ function AggregateNode({
       {expanded && (
         <div className="bg-warm/40 border-t border-border/40">
           {refs.map((ref) => (
-            <NestedRefRow key={ref.id} reference={ref} />
+            <ConnectionRow key={ref.id} kind="reference" reference={ref} />
           ))}
         </div>
       )}
