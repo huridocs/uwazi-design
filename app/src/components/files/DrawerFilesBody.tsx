@@ -154,24 +154,17 @@ function FileThumbnail({ type }: { type: FileEntry["type"] }) {
       </div>
     );
   }
-  if (type === "image") {
-    return (
-      <div className={`${wrap} bg-vellum`}>
-        <span className="text-[9px] font-semibold uppercase tracking-wide text-ink-tertiary">
-          IMG
-        </span>
-      </div>
-    );
-  }
+  // PDF, document, and image all share the same chrome — a warm tray with
+  // a small white "paper" card inside. Only the label changes.
+  const label =
+    type === "pdf" ? "PDF" : type === "image" ? "IMG" : "DOC";
   return (
     <div className={`${wrap} bg-warm`}>
       <div
         className="bg-paper rounded shadow-sm flex items-center justify-center"
         style={{ width: "2.25rem", height: "2.75rem" }}
       >
-        <span className="text-[8px] text-ink-muted">
-          {type === "pdf" ? "PDF" : "DOC"}
-        </span>
+        <span className="text-[8px] text-ink-muted">{label}</span>
       </div>
     </div>
   );
