@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   FileText,
   Music,
@@ -372,12 +373,52 @@ type KebabItem = KebabItemAction | KebabSeparator;
 
 function RowKebab({ items }: { items: KebabItem[] }) {
   const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+
+  // Portal-positioned: measure the trigger and place the menu in viewport
+  // coords. Avoids being clipped by FileTable's rounded `overflow-hidden`.
+  useLayoutEffect(() => {
+    if (!open || !buttonRef.current) return;
+    const measure = () => {
+      const btn = buttonRef.current;
+      if (!btn) return;
+      const rect = btn.getBoundingClientRect();
+      const menuWidth = 220;
+      const menuHeight = menuRef.current?.offsetHeight ?? 240;
+      const margin = 8;
+      let top = rect.bottom + 4;
+      // Flip up if it would overflow the viewport bottom.
+      if (top + menuHeight > window.innerHeight - margin) {
+        top = Math.max(margin, rect.top - menuHeight - 4);
+      }
+      let left = rect.right - menuWidth;
+      if (left < margin) left = margin;
+      if (left + menuWidth > window.innerWidth - margin) {
+        left = window.innerWidth - menuWidth - margin;
+      }
+      setPos({ top, left });
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    window.addEventListener("scroll", measure, true);
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", measure, true);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
     const onClick = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (
+        buttonRef.current?.contains(target) ||
+        menuRef.current?.contains(target)
+      )
+        return;
+      setOpen(false);
     };
     const onEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
@@ -391,8 +432,9 @@ function RowKebab({ items }: { items: KebabItem[] }) {
   }, [open]);
 
   return (
-    <div ref={rootRef} className="relative">
+    <>
       <button
+        ref={buttonRef}
         type="button"
         onClick={(e) => {
           e.stopPropagation();
@@ -405,11 +447,16 @@ function RowKebab({ items }: { items: KebabItem[] }) {
       >
         <MoreVertical size={14} className="text-ink-tertiary" />
       </button>
-      {open && (
+      {open && pos && createPortal(
         <div
+          ref={menuRef}
           role="menu"
-          className="absolute right-0 top-full mt-1 z-30 min-w-[200px] rounded-md bg-paper shadow-xl py-1 animate-fade-in-up"
-          style={{ border: "1px solid var(--border-primary)" }}
+          className="fixed z-50 min-w-[220px] rounded-md bg-paper shadow-xl py-1 animate-fade-in-up"
+          style={{
+            top: pos.top,
+            left: pos.left,
+            border: "1px solid var(--border-primary)",
+          }}
         >
           {items.map((item) =>
             item.separator ? (
@@ -440,8 +487,9 @@ function RowKebab({ items }: { items: KebabItem[] }) {
               </button>
             ),
           )}
-        </div>
+        </div>,
+        document.body,
       )}
-    </div>
+    </>
   );
 }

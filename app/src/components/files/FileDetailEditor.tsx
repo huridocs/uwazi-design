@@ -7,6 +7,7 @@ import {
   Link2,
   ArrowUpCircle,
   ArrowDownCircle,
+  ChevronDown,
   Eye,
   Trash2,
 } from "lucide-react";
@@ -139,19 +140,25 @@ export function FileDetailEditor({
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="Language">
-            <select
-              ref={langRef}
-              value={file.language}
-              onChange={(e) => updateField("language", e.target.value)}
-              className="w-full px-2 py-1.5 text-sm text-ink bg-paper border border-border rounded focus:outline-none focus:ring-1 focus:ring-carbon/30"
-              aria-label="File language"
-            >
-              {languageOptions.map((lang) => (
-                <option key={lang} value={lang}>
-                  {lang}
-                </option>
-              ))}
-            </select>
+            <div className="relative inline-flex items-center bg-paper border border-border rounded focus-within:ring-1 focus-within:ring-carbon/30">
+              <select
+                ref={langRef}
+                value={file.language}
+                onChange={(e) => updateField("language", e.target.value)}
+                className="appearance-none bg-transparent pl-2 pr-6 py-1.5 text-sm text-ink focus:outline-none cursor-pointer"
+                aria-label="File language"
+              >
+                {languageOptions.map((lang) => (
+                  <option key={lang} value={lang}>
+                    {lang}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                size={12}
+                className="absolute right-1.5 text-ink-tertiary pointer-events-none"
+              />
+            </div>
           </Field>
 
           <Field label="Type">
