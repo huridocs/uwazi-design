@@ -29,18 +29,20 @@
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
-/* Brand radii — override Tailwind defaults */
+/* Brand radii — softer than Tailwind defaults but not pillowy. The earlier
+ * 2-3px "square-ish" overrides were too sharp; everything below scales the
+ * Tailwind ramp down ~½ so radii are visible without going rounded-pill. */
 @layer theme {
   :root {
-    --radius-xs: 1px;
-    --radius-sm: 2px;
-    --radius: 2px;
-    --radius-md: 2px;
-    --radius-lg: 2px;
-    --radius-xl: 3px;
-    --radius-2xl: 3px;
-    --radius-3xl: 3px;
-    --radius-4xl: 3px;
+    --radius-xs: 2px;
+    --radius-sm: 3px;
+    --radius: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 10px;
+    --radius-2xl: 12px;
+    --radius-3xl: 14px;
+    --radius-4xl: 16px;
   }
 }
 
