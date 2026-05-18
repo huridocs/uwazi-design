@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { X, CloudUpload, FileText, Music, Video, Image, Link2, Check } from "lucide-react";
+import { X, CloudUpload, FileText, Music, Video, Image, Link2, Check, Plus } from "lucide-react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   addFileTargetAtom,
@@ -224,21 +224,38 @@ export function AddFileModal() {
         </div>
 
         <div className="flex-1 overflow-auto px-6 py-5 space-y-4">
-          {/* Dropzone */}
-          <button
-            type="button"
-            onClick={simulatePick}
-            className="flex flex-col items-center justify-center w-full py-6 rounded-lg bg-warm hover:bg-parchment transition-colors cursor-pointer"
-            style={{ border: "2px dashed var(--border-soft)" }}
-          >
-            <CloudUpload size={28} className="text-ink-tertiary/50 mb-1.5" />
-            <span className="text-sm font-medium text-ink-secondary">
-              Click to select files
-            </span>
-            <span className="text-xs text-ink-muted mt-0.5">
-              or drag and drop here
-            </span>
-          </button>
+          {/* Dropzone — large when empty, compact "add more" when not. */}
+          {entries.length === 0 ? (
+            <button
+              type="button"
+              onClick={simulatePick}
+              className="flex flex-col items-center justify-center w-full py-6 rounded-lg bg-warm hover:bg-parchment transition-colors cursor-pointer"
+              style={{ border: "2px dashed var(--border-soft)" }}
+            >
+              <CloudUpload size={28} className="text-ink-tertiary/50 mb-1.5" />
+              <span className="text-sm font-medium text-ink-secondary">
+                Click to select files
+              </span>
+              <span className="text-xs text-ink-muted mt-0.5">
+                or drag and drop here
+              </span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={simulatePick}
+              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-md bg-warm hover:bg-parchment transition-colors cursor-pointer"
+              style={{ border: "1.5px dashed var(--border-soft)" }}
+            >
+              <Plus size={14} className="text-ink-tertiary" />
+              <span className="text-xs font-medium text-ink-secondary">
+                Add another file
+              </span>
+              <span className="text-[11px] text-ink-muted">
+                or drag &amp; drop
+              </span>
+            </button>
+          )}
 
           {/* Queued entries */}
           {entries.length > 0 && (
