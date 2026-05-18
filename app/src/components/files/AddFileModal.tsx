@@ -99,6 +99,14 @@ export function AddFileModal() {
     const kind = detectKind(originalName);
     const baseName = originalName.replace(/\.[^.]+$/, "");
     const id = `pending-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    // Default Add-as based on kind: text documents read as a "primary doc"
+    // candidate, everything else (audio/video/image/link) defaults to
+    // supporting. User can still flip it via the dropdown.
+    const defaultAddAs: PendingFile["addAs"] = lockedGroupId
+      ? { type: "translation", groupId: lockedGroupId }
+      : kind === "pdf" || kind === "document"
+        ? { type: "primary" }
+        : { type: "supporting" };
     setEntries((prev) => [
       ...prev,
       {
@@ -107,9 +115,7 @@ export function AddFileModal() {
         name: baseName,
         language: currentLanguage,
         kind,
-        addAs: lockedGroupId
-          ? { type: "translation", groupId: lockedGroupId }
-          : { type: "primary" },
+        addAs: defaultAddAs,
         size: size ?? "—",
         progress: 0,
       },
@@ -285,59 +291,71 @@ export function AddFileModal() {
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2">
-                      <select
-                        value={entry.language}
-                        onChange={(e) =>
-                          updateEntry(entry.id, { language: e.target.value })
-                        }
-                        className="w-full px-2 py-1 text-xs text-ink bg-paper border border-border rounded focus:outline-none focus:ring-1 focus:ring-carbon/30"
-                        aria-label="Language"
-                      >
-                        {Array.from(new Set([...knownLanguages, entry.language])).map((l) => (
-                          <option key={l} value={l}>
-                            Language: {l}
-                          </option>
-                        ))}
-                      </select>
-
-                      <select
-                        value={
-                          entry.addAs.type === "translation"
-                            ? `t:${entry.addAs.groupId}`
-                            : entry.addAs.type
-                        }
-                        disabled={!!lockedGroupId}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          if (v === "primary") {
-                            updateEntry(entry.id, { addAs: { type: "primary" } });
-                          } else if (v === "supporting") {
-                            updateEntry(entry.id, { addAs: { type: "supporting" } });
-                          } else if (v.startsWith("t:")) {
-                            updateEntry(entry.id, {
-                              addAs: { type: "translation", groupId: v.slice(2) },
-                            });
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="space-y-1">
+                        <span className="text-[10px] font-medium text-ink-muted uppercase tracking-wide">
+                          Language
+                        </span>
+                        <select
+                          value={entry.language}
+                          onChange={(e) =>
+                            updateEntry(entry.id, { language: e.target.value })
                           }
-                        }}
-                        className="w-full px-2 py-1 text-xs text-ink bg-paper border border-border rounded focus:outline-none focus:ring-1 focus:ring-carbon/30 disabled:opacity-70"
-                        aria-label="Add as"
-                      >
-                        <option value="primary">Add as: new primary doc</option>
-                        <option value="supporting">Add as: supporting file</option>
-                        {primaryGroups.map((g) => (
-                          <option key={g.id} value={`t:${g.id}`}>
-                            Translation of: {g.title}
-                          </option>
-                        ))}
-                      </select>
+                          className="w-full px-2 py-1 text-xs text-ink bg-paper border border-border rounded focus:outline-none focus:ring-1 focus:ring-ink/20"
+                          aria-label="Language"
+                        >
+                          {Array.from(new Set([...knownLanguages, entry.language])).map((l) => (
+                            <option key={l} value={l}>
+                              {l}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label className="space-y-1">
+                        <span className="text-[10px] font-medium text-ink-muted uppercase tracking-wide">
+                          Add as
+                        </span>
+                        <select
+                          value={
+                            entry.addAs.type === "translation"
+                              ? `t:${entry.addAs.groupId}`
+                              : entry.addAs.type
+                          }
+                          disabled={!!lockedGroupId}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            if (v === "primary") {
+                              updateEntry(entry.id, { addAs: { type: "primary" } });
+                            } else if (v === "supporting") {
+                              updateEntry(entry.id, { addAs: { type: "supporting" } });
+                            } else if (v.startsWith("t:")) {
+                              updateEntry(entry.id, {
+                                addAs: { type: "translation", groupId: v.slice(2) },
+                              });
+                            }
+                          }}
+                          className="w-full px-2 py-1 text-xs text-ink bg-paper border border-border rounded focus:outline-none focus:ring-1 focus:ring-ink/20 disabled:opacity-70"
+                          aria-label="Add as"
+                        >
+                          <option value="primary">New primary doc</option>
+                          <option value="supporting">Supporting file</option>
+                          {primaryGroups.map((g) => (
+                            <option key={g.id} value={`t:${g.id}`}>
+                              Translation of {g.title}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
                     </div>
 
                     {/* Progress */}
                     <div className="flex items-center gap-2">
                       <div className="flex-1 h-1 rounded bg-vellum overflow-hidden">
                         <div
-                          className="h-full bg-carbon transition-[width] duration-200"
+                          className={`h-full transition-[width] duration-200 ${
+                            entry.progress >= 1 ? "bg-success" : "bg-ink/40"
+                          }`}
                           style={{ width: `${Math.round(entry.progress * 100)}%` }}
                         />
                       </div>
