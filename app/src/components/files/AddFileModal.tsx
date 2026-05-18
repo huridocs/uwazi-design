@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { X, CloudUpload, FileText, Music, Video, Image, Link2, Check, Plus } from "lucide-react";
+import { X, CloudUpload, FileText, Music, Video, Image, Link2, Check, Plus, ChevronDown } from "lucide-react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   addFileTargetAtom,
@@ -311,56 +311,68 @@ export function AddFileModal() {
                         <span className="text-[10px] font-medium text-ink-muted uppercase tracking-wide">
                           Language
                         </span>
-                        <select
-                          value={entry.language}
-                          onChange={(e) =>
-                            updateEntry(entry.id, { language: e.target.value })
-                          }
-                          className="w-full px-2 py-1 text-xs text-ink bg-paper border border-border rounded focus:outline-none focus:ring-1 focus:ring-ink/20"
-                          aria-label="Language"
-                        >
-                          {Array.from(new Set([...knownLanguages, entry.language])).map((l) => (
-                            <option key={l} value={l}>
-                              {l}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="relative">
+                          <select
+                            value={entry.language}
+                            onChange={(e) =>
+                              updateEntry(entry.id, { language: e.target.value })
+                            }
+                            className="appearance-none w-full pl-2 pr-7 py-1 text-xs text-ink bg-paper border border-border rounded focus:outline-none focus:ring-1 focus:ring-ink/20 cursor-pointer"
+                            aria-label="Language"
+                          >
+                            {Array.from(new Set([...knownLanguages, entry.language])).map((l) => (
+                              <option key={l} value={l}>
+                                {l}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown
+                            size={12}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-ink-tertiary pointer-events-none"
+                          />
+                        </div>
                       </label>
 
                       <label className="space-y-1">
                         <span className="text-[10px] font-medium text-ink-muted uppercase tracking-wide">
                           Add as
                         </span>
-                        <select
-                          value={
-                            entry.addAs.type === "translation"
-                              ? `t:${entry.addAs.groupId}`
-                              : entry.addAs.type
-                          }
-                          disabled={!!lockedGroupId}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            if (v === "primary") {
-                              updateEntry(entry.id, { addAs: { type: "primary" } });
-                            } else if (v === "supporting") {
-                              updateEntry(entry.id, { addAs: { type: "supporting" } });
-                            } else if (v.startsWith("t:")) {
-                              updateEntry(entry.id, {
-                                addAs: { type: "translation", groupId: v.slice(2) },
-                              });
+                        <div className="relative">
+                          <select
+                            value={
+                              entry.addAs.type === "translation"
+                                ? `t:${entry.addAs.groupId}`
+                                : entry.addAs.type
                             }
-                          }}
-                          className="w-full px-2 py-1 text-xs text-ink bg-paper border border-border rounded focus:outline-none focus:ring-1 focus:ring-ink/20 disabled:opacity-70"
-                          aria-label="Add as"
-                        >
-                          <option value="primary">New primary doc</option>
-                          <option value="supporting">Supporting file</option>
-                          {primaryGroups.map((g) => (
-                            <option key={g.id} value={`t:${g.id}`}>
-                              Translation of {g.title}
-                            </option>
-                          ))}
-                        </select>
+                            disabled={!!lockedGroupId}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === "primary") {
+                                updateEntry(entry.id, { addAs: { type: "primary" } });
+                              } else if (v === "supporting") {
+                                updateEntry(entry.id, { addAs: { type: "supporting" } });
+                              } else if (v.startsWith("t:")) {
+                                updateEntry(entry.id, {
+                                  addAs: { type: "translation", groupId: v.slice(2) },
+                                });
+                              }
+                            }}
+                            className="appearance-none w-full pl-2 pr-7 py-1 text-xs text-ink bg-paper border border-border rounded focus:outline-none focus:ring-1 focus:ring-ink/20 disabled:opacity-70 cursor-pointer truncate"
+                            aria-label="Add as"
+                          >
+                            <option value="primary">New primary doc</option>
+                            <option value="supporting">Supporting file</option>
+                            {primaryGroups.map((g) => (
+                              <option key={g.id} value={`t:${g.id}`}>
+                                Translation of {g.title}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown
+                            size={12}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-ink-tertiary pointer-events-none"
+                          />
+                        </div>
                       </label>
                     </div>
 

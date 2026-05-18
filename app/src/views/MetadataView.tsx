@@ -508,39 +508,41 @@ function DrawerFilesBody({ files, groups, isInActivePrimary }: DrawerFilesBodyPr
 
   return (
     <>
-      <div className="flex-1 overflow-auto px-3 py-3 pb-8 space-y-5">
+      <div className="flex-1 overflow-auto px-3 py-4 pb-8">
         {primaryGroups.length > 0 && (
           <SectionHeader label="Primary documents" />
         )}
         {primaryGroups.map((group) => {
           const groupFiles = files.filter((f) => f.groupId === group.id);
           return (
-            <section key={group.id} className="space-y-1.5">
-              <div className="flex items-baseline justify-between px-1">
-                <h4 className="text-xs font-semibold text-ink truncate">
+            <section key={group.id} className="mb-6">
+              <div className="flex items-baseline justify-between px-1 mb-2">
+                <h4 className="text-sm font-semibold text-ink truncate">
                   {group.title}
                 </h4>
                 <span className="text-[10px] text-ink-tertiary tabular-nums shrink-0">
                   {groupFiles.length} {groupFiles.length === 1 ? "file" : "files"}
                 </span>
               </div>
-              {groupFiles.map((file) => (
-                <DrawerFileRow
-                  key={file.id}
-                  filename={file.name}
-                  type={file.type.toUpperCase()}
-                  size={file.size}
-                  language={file.language}
-                  active={isInActivePrimary(file)}
-                  thumbnail={<FileThumbnail type={file.type} />}
-                />
-              ))}
+              <div className="space-y-2">
+                {groupFiles.map((file) => (
+                  <DrawerFileRow
+                    key={file.id}
+                    filename={file.name}
+                    type={file.type.toUpperCase()}
+                    size={file.size}
+                    language={file.language}
+                    active={isInActivePrimary(file)}
+                    thumbnail={<FileThumbnail type={file.type} />}
+                  />
+                ))}
+              </div>
               <button
                 type="button"
                 onClick={() =>
                   setAddFileTarget({ mode: "translation", groupId: group.id })
                 }
-                className="text-[11px] font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer pl-1"
+                className="text-[11px] font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer mt-2 pl-1"
               >
                 + Add translation
               </button>
@@ -551,7 +553,7 @@ function DrawerFilesBody({ files, groups, isInActivePrimary }: DrawerFilesBodyPr
         {supportingFiles.length > 0 && (
           <>
             <SectionHeader label="Supporting files" />
-            <div className="space-y-1.5">
+            <div className="space-y-2 mt-2">
               {supportingFiles.map((file) => (
                 <DrawerFileRow
                   key={file.id}
@@ -588,7 +590,7 @@ function DrawerFilesBody({ files, groups, isInActivePrimary }: DrawerFilesBodyPr
 
 function SectionHeader({ label }: { label: string }) {
   return (
-    <h3 className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider px-1 -mb-1">
+    <h3 className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider px-1 mb-3">
       {label}
     </h3>
   );
@@ -603,35 +605,39 @@ interface DrawerFileRowProps {
   thumbnail: React.ReactNode;
 }
 
+/** Thumbnail block — always w-16, always fills row height via self-stretch.
+ *  Each kind has the same outer chrome (rounded-l-md, shrink-0, centered
+ *  content) so rows line up perfectly regardless of kind. */
 function FileThumbnail({ type }: { type: FileEntry["type"] }) {
+  const wrap = "w-16 self-stretch flex items-center justify-center rounded-l-md shrink-0";
   if (type === "link") {
     return (
-      <div className="w-16 self-stretch bg-seal flex items-center justify-center rounded-l-md shrink-0">
+      <div className={`${wrap} bg-seal`}>
         <span className="text-[9px] font-bold text-white">YouTube</span>
       </div>
     );
   }
   if (type === "audio") {
     return (
-      <div className="w-16 self-stretch bg-warm flex items-center justify-center rounded-l-md shrink-0">
-        <div className="w-9 h-9 rounded-md bg-parchment flex items-center justify-center shadow-sm">
-          <div className="w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[8px] border-l-ink ml-0.5" />
+      <div className={`${wrap} bg-warm`}>
+        <div className="w-8 h-8 rounded-md bg-parchment flex items-center justify-center shadow-sm">
+          <div className="w-0 h-0 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent border-l-[7px] border-l-ink ml-0.5" />
         </div>
       </div>
     );
   }
   if (type === "video") {
     return (
-      <div className="w-16 self-stretch bg-ink flex items-center justify-center rounded-l-md shrink-0">
-        <div className="w-9 h-9 rounded-full bg-paper/95 flex items-center justify-center shadow-sm">
-          <div className="w-0 h-0 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent border-l-[10px] border-l-ink ml-0.5" />
+      <div className={`${wrap} bg-ink`}>
+        <div className="w-8 h-8 rounded-full bg-paper/95 flex items-center justify-center shadow-sm">
+          <div className="w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[8px] border-l-ink ml-0.5" />
         </div>
       </div>
     );
   }
   if (type === "image") {
     return (
-      <div className="w-16 self-stretch bg-vellum flex items-center justify-center rounded-l-md shrink-0">
+      <div className={`${wrap} bg-vellum`}>
         <span className="text-[9px] font-semibold uppercase tracking-wide text-ink-tertiary">
           IMG
         </span>
@@ -639,8 +645,8 @@ function FileThumbnail({ type }: { type: FileEntry["type"] }) {
     );
   }
   return (
-    <div className="w-16 self-stretch bg-warm flex items-center justify-center rounded-l-md shrink-0">
-      <div className="bg-paper rounded shadow-sm w-11 h-13 flex items-center justify-center" style={{ height: "3.25rem" }}>
+    <div className={`${wrap} bg-warm`}>
+      <div className="bg-paper rounded shadow-sm flex items-center justify-center" style={{ width: "2.25rem", height: "2.75rem" }}>
         <span className="text-[8px] text-ink-muted">{type === "pdf" ? "PDF" : "DOC"}</span>
       </div>
     </div>
@@ -650,7 +656,7 @@ function FileThumbnail({ type }: { type: FileEntry["type"] }) {
 function DrawerFileRow({ filename, type, size, language, active, thumbnail }: DrawerFileRowProps) {
   return (
     <div
-      className={`flex border rounded-md overflow-hidden transition-colors ${
+      className={`flex items-stretch border rounded-md overflow-hidden transition-colors min-h-[58px] ${
         active
           ? "border-ink/30 bg-parchment hover:bg-parchment"
           : "border-border/50 bg-paper hover:bg-warm/50"
