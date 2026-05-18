@@ -106,7 +106,17 @@ export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
                 ? `${selectedFiles.length} files`
                 : drawerFiles[0]?.name ?? "File details",
             count: selectedFiles.length || undefined,
-            content: <FileDrawer selectedFiles={drawerFiles} />,
+            content: (
+              <FileDrawer
+                selectedFiles={drawerFiles}
+                onRequestDelete={(ids) => setPendingDelete(ids)}
+                onFocusFile={setFocusedId}
+                onAddTranslation={(groupId) => {
+                  // eslint-disable-next-line no-console
+                  console.info("Add translation requested for", groupId);
+                }}
+              />
+            ),
           },
         ]}
         left={
@@ -181,7 +191,17 @@ export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
             />
           </div>
         }
-        right={<FileDrawer selectedFiles={drawerFiles} />}
+        right={
+          <FileDrawer
+            selectedFiles={drawerFiles}
+            onRequestDelete={(ids) => setPendingDelete(ids)}
+            onFocusFile={setFocusedId}
+            onAddTranslation={(groupId) => {
+              // eslint-disable-next-line no-console
+              console.info("Add translation requested for", groupId);
+            }}
+          />
+        }
         defaultRightWidth={560}
         minRightWidth={460}
         maxRightWidth={720}

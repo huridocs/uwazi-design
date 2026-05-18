@@ -1,8 +1,21 @@
 import { useState } from "react";
-import { FileText, Music, Video, Image, Link2, Download, Trash2, Pencil, MousePointerClick, Plus, Eye } from "lucide-react";
+import {
+  FileText,
+  Music,
+  Video,
+  Image,
+  Link2,
+  Download,
+  Trash2,
+  MousePointerClick,
+  Plus,
+  Eye,
+} from "lucide-react";
+import { useAtomValue, useSetAtom } from "jotai";
 import { DrawerTabs } from "../layout/DrawerTabs";
-import { FileEntry, primaryFiles } from "../../data/files";
-import { currentDocument } from "../../data/document";
+import { FileEntry } from "../../data/files";
+import { filesAtom, documentGroupsAtom } from "../../atoms/files";
+import { FileDetailEditor } from "./FileDetailEditor";
 
 const typeIcons: Record<FileEntry["type"], typeof FileText> = {
   pdf: FileText,
@@ -15,35 +28,77 @@ const typeIcons: Record<FileEntry["type"], typeof FileText> = {
 
 interface FileDrawerProps {
   selectedFiles: FileEntry[];
+  /** Upstream confirm dialog launcher. */
+  onRequestDelete?: (ids: string[]) => void;
+  /** Open AddFileModal (commit 4) pre-filled with this groupId. */
+  onAddTranslation?: (groupId: string) => void;
+  /** Re-focus the row of a sibling translation when the user clicks a chip. */
+  onFocusFile?: (id: string) => void;
 }
 
-const drawerTabs = [
-  { id: "file", label: "File" },
-  { id: "translations", label: "Translations", count: 2 },
-];
-
-interface TranslationLang {
-  code: string;
-  name: string;
-  file?: FileEntry;
-}
-
-const translationLanguages: TranslationLang[] = [
-  { code: "EN", name: "English", file: primaryFiles.find((f) => f.language === "EN") },
-  { code: "ES", name: "Español", file: primaryFiles.find((f) => f.language === "ES") },
-  { code: "FR", name: "Français", file: primaryFiles.find((f) => f.language === "FR") },
-  { code: "AR", name: "العربية" },
-];
-
-export function FileDrawer({ selectedFiles }: FileDrawerProps) {
+/** Right-hand drawer for the Files tab. Hosts editable detail for a single
+ *  focused file, a compact list for multi-selection, or an empty state. */
+export function FileDrawer({
+  selectedFiles,
+  onRequestDelete,
+  onAddTranslation,
+  onFocusFile,
+}: FileDrawerProps) {
   const [activeTab, setActiveTab] = useState("file");
+  const allFiles = useAtomValue(filesAtom);
+  const allGroups = useAtomValue(documentGroupsAtom);
+  const setFiles = useSetAtom(filesAtom);
+  const setGroups = useSetAtom(documentGroupsAtom);
 
-  // Add "Default file" indicator next to tabs
-  const defaultFile = selectedFiles.find((f) => f.isDefault);
+  const focusedFile =
+    selectedFiles.length === 1 ? selectedFiles[0] : undefined;
+
+  // Translations tab is keyed on the focused file's group. Siblings include
+  // the focused file itself so users see the full set.
+  const translations = focusedFile
+    ? allFiles.filter((f) => f.groupId === focusedFile.groupId)
+    : [];
+  const focusedGroup = focusedFile
+    ? allGroups.find((g) => g.id === focusedFile.groupId)
+    : undefined;
+
+  const drawerTabs = [
+    { id: "file", label: "File" },
+    {
+      id: "translations",
+      label: "Translations",
+      count: translations.length || undefined,
+    },
+  ];
+
+  const handleDeleteFromTranslations = (id: string) => {
+    onRequestDelete?.([id]);
+  };
+
+  // Used by the "+ Add translation" / "Add file" empty-state — AddFileModal
+  // lands in commit 4, so for now we stub a placeholder file directly.
+  const stubAddTranslation = (language: string) => {
+    if (!focusedGroup) return;
+    const id = `f-${Date.now()}`;
+    setFiles((all) => [
+      ...all,
+      {
+        id,
+        groupId: focusedGroup.id,
+        name: `${focusedGroup.title} (${language}).pdf`,
+        type: "pdf",
+        size: "0 KB",
+        language,
+        modified: new Date().toISOString().slice(0, 10),
+        url: "/sample.pdf",
+      },
+    ]);
+    // Make sure the group still exists (it will).
+    setGroups((g) => g);
+  };
 
   return (
     <div className="flex flex-col h-full">
-      {/* Tabs + Default file badge */}
       <div className="flex items-center justify-between px-3 py-2 shrink-0">
         <div
           className="flex items-center rounded-md overflow-hidden w-fit"
@@ -73,14 +128,8 @@ export function FileDrawer({ selectedFiles }: FileDrawerProps) {
             </div>
           ))}
         </div>
-        {defaultFile && (
-          <span className="px-2 py-0.5 text-[10px] font-medium rounded bg-warning-light text-warning">
-            Default
-          </span>
-        )}
       </div>
 
-      {/* Tab content */}
       {activeTab === "file" ? (
         <>
           <div className="flex-1 overflow-auto p-3 pb-8 space-y-3">
@@ -104,20 +153,28 @@ export function FileDrawer({ selectedFiles }: FileDrawerProps) {
                 ))}
               </div>
             ) : (
-              <FileDetails file={selectedFiles[0]} />
+              <FileDetailEditor
+                file={selectedFiles[0]}
+                onRequestDelete={(id) => onRequestDelete?.([id])}
+                onAddTranslation={onAddTranslation}
+                onFocusSibling={onFocusFile}
+              />
             )}
           </div>
 
-          {selectedFiles.length >= 1 && (
+          {selectedFiles.length > 1 && (
             <div
               className="flex items-center justify-between h-12 px-3 shrink-0"
               style={{ borderTop: "1px solid var(--border-primary)" }}
             >
-              <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
-                <Pencil size={12} /> Edit
+              <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors cursor-pointer">
+                <Download size={12} /> Download all
               </button>
-              <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
-                <Download size={12} /> {selectedFiles.length > 1 ? "Download all" : "Download"}
+              <button
+                onClick={() => onRequestDelete?.(selectedFiles.map((f) => f.id))}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-seal rounded-md hover:bg-seal/90 transition-colors cursor-pointer"
+              >
+                <Trash2 size={12} /> Delete {selectedFiles.length}
               </button>
             </div>
           )}
@@ -125,73 +182,55 @@ export function FileDrawer({ selectedFiles }: FileDrawerProps) {
       ) : (
         <>
           <div className="flex-1 overflow-auto p-3 pb-8 space-y-4">
-            {translationLanguages.map((lang) => (
-              <div key={lang.code}>
-                {/* Language header */}
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="px-2 py-0.5 text-xs font-medium rounded-md bg-vellum text-ink">
-                    {lang.code}
-                  </span>
-                  <span className="text-sm font-semibold text-ink">{lang.name}</span>
-                </div>
-
-                {lang.file ? (
-                  <div className="flex border border-border/50 rounded-md overflow-hidden bg-paper hover:bg-warm/50 transition-colors">
-                    <div className="w-20 bg-warm flex items-center justify-center shrink-0 self-stretch">
-                      <div className="bg-paper rounded shadow-sm w-14 h-16 flex items-center justify-center">
-                        <span className="text-[8px] text-ink-muted">PDF</span>
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0 px-3 py-2.5 flex flex-col justify-center gap-1">
-                      <p className="text-sm font-bold text-ink truncate">{currentDocument.title}</p>
-                      <p className="text-xs text-ink-muted truncate">{lang.file.name}</p>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1">
-                          <span className="text-[11px] text-ink-tertiary">Type</span>
-                          <span className="text-[11px] font-medium text-ink">{lang.file.type.toUpperCase()}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-[11px] text-ink-tertiary">Size</span>
-                          <span className="text-[11px] font-medium text-ink">{lang.file.size}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center pr-3 shrink-0">
-                      <button className="flex items-center justify-center p-1.5 rounded hover:bg-parchment transition-colors">
-                        <Eye size={16} className="text-ink-tertiary" />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  /* Empty state */
-                  <div
-                    className="flex items-center justify-center gap-3 py-5 rounded-md"
-                    style={{
-                      border: "1.5px dashed var(--border-soft)",
-                    }}
-                  >
-                    <Plus size={16} className="text-ink-muted" />
-                    <span className="text-xs text-ink-muted">Add translation document</span>
-                    <button className="px-2.5 py-1 text-[11px] font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
-                      Add file
-                    </button>
-                  </div>
-                )}
+            {!focusedFile || !focusedGroup ? (
+              <div className="flex flex-col items-center justify-center h-full text-center gap-3">
+                <MousePointerClick size={32} className="text-ink-muted/40" />
+                <p className="text-xs text-ink-muted">
+                  Focus a single file to see its translations
+                </p>
               </div>
-            ))}
-          </div>
-
-          {/* Translations action bar */}
-          <div
-            className="flex items-center justify-between h-12 px-3 shrink-0"
-            style={{ borderTop: "1px solid var(--border-primary)" }}
-          >
-            <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
-              <Download size={12} /> Download all
-            </button>
-            <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-seal rounded-md hover:bg-seal/90 transition-colors">
-              <Trash2 size={12} /> Delete
-            </button>
+            ) : (
+              <>
+                <p className="text-xs font-medium text-ink-secondary">
+                  {focusedGroup.title}
+                </p>
+                {translations.length === 0 ? (
+                  <p className="text-xs italic text-ink-tertiary">
+                    No translations yet.
+                  </p>
+                ) : (
+                  translations.map((sib) => (
+                    <TranslationCard
+                      key={sib.id}
+                      file={sib}
+                      onFocus={() => onFocusFile?.(sib.id)}
+                      onDelete={() => handleDeleteFromTranslations(sib.id)}
+                    />
+                  ))
+                )}
+                <div
+                  className="flex items-center justify-center gap-3 py-5 rounded-md"
+                  style={{
+                    border: "1.5px dashed var(--border-soft)",
+                  }}
+                >
+                  <Plus size={16} className="text-ink-muted" />
+                  <span className="text-xs text-ink-muted">
+                    Add translation document
+                  </span>
+                  <button
+                    onClick={() =>
+                      onAddTranslation
+                        ? onAddTranslation(focusedGroup.id)
+                        : stubAddTranslation("EN")
+                    }
+                    className="px-2.5 py-1 text-[11px] font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors cursor-pointer"
+                  >
+                    Add file
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </>
       )}
@@ -199,83 +238,83 @@ export function FileDrawer({ selectedFiles }: FileDrawerProps) {
   );
 }
 
-function FileDetails({ file }: { file: FileEntry }) {
+function TranslationCard({
+  file,
+  onFocus,
+  onDelete,
+}: {
+  file: FileEntry;
+  onFocus: () => void;
+  onDelete: () => void;
+}) {
   const Icon = typeIcons[file.type];
-
   return (
-    <>
-      <div className="rounded-md bg-warm p-4 space-y-3">
-        <h4 className="text-xs font-semibold text-ink-tertiary uppercase tracking-wider">
-          File metadata
-        </h4>
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Icon size={14} className="text-ink-muted" />
-            <span className="text-sm font-medium text-ink">{file.name}</span>
-          </div>
-          <div className="grid grid-cols-2 gap-y-2 gap-x-4">
-            <Detail label="Type" value={file.type.toUpperCase()} />
-            <Detail label="Size" value={file.size} />
-            <Detail label="Language" value={file.language} />
-            <Detail
-              label="Modified"
-              value={new Date(file.modified).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
-            />
-          </div>
-          {file.isDefault && (
-            <span className="inline-block px-2 py-0.5 text-[10px] font-medium rounded bg-warning-light text-warning">
-              Default document
-            </span>
-          )}
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onFocus}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onFocus();
+        }
+      }}
+      className="flex items-center gap-2 px-3 py-2 rounded-md bg-paper border border-border/50 hover:bg-warm transition-colors cursor-pointer"
+    >
+      <span className="text-[10px] font-semibold text-ink-secondary bg-vellum px-1.5 py-0.5 rounded shrink-0">
+        {file.language}
+      </span>
+      <Icon size={14} className="text-ink-muted shrink-0" />
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-medium text-ink truncate">{file.name}</p>
+        <div className="flex items-center gap-2 mt-0.5">
+          <span className="text-[10px] text-ink-muted">
+            {file.type.toUpperCase()}
+          </span>
+          <span className="text-[10px] text-ink-muted">{file.size}</span>
         </div>
       </div>
-
-      <div className="rounded-md bg-warm p-4 space-y-2">
-        <h4 className="text-xs font-semibold text-ink-tertiary uppercase tracking-wider">
-          Description
-        </h4>
-        <p className="text-xs text-ink-secondary leading-relaxed">
-          No description available for this file.
-        </p>
-      </div>
-    </>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onFocus();
+        }}
+        aria-label={`View ${file.name}`}
+        className="p-1 rounded hover:bg-parchment transition-colors"
+      >
+        <Eye size={14} className="text-ink-tertiary" />
+      </button>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete();
+        }}
+        aria-label={`Delete ${file.name}`}
+        className="p-1 rounded hover:bg-seal-tint text-ink-muted hover:text-seal transition-colors"
+      >
+        <Trash2 size={14} />
+      </button>
+    </div>
   );
 }
 
 function FileCompactCard({ file }: { file: FileEntry }) {
   const Icon = typeIcons[file.type];
-
   return (
     <div className="flex items-center gap-3 px-3 py-2.5 rounded-md bg-warm border border-border/40">
       <Icon size={14} className="text-ink-muted shrink-0" />
       <div className="flex-1 min-w-0">
         <p className="text-xs font-medium text-ink truncate">{file.name}</p>
         <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-[10px] text-ink-muted">{file.type.toUpperCase()}</span>
+          <span className="text-[10px] text-ink-muted">
+            {file.type.toUpperCase()}
+          </span>
           <span className="text-[10px] text-ink-muted">{file.size}</span>
           <span className="text-[10px] text-ink-muted">{file.language}</span>
         </div>
       </div>
-      {file.isDefault && (
-        <span className="px-1.5 py-0.5 text-[9px] font-medium rounded bg-warning-light text-warning shrink-0">
-          Default
-        </span>
-      )}
-    </div>
-  );
-}
-
-function Detail({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <span className="text-[10px] font-medium text-ink-muted uppercase tracking-wide">
-        {label}
-      </span>
-      <p className="text-xs text-ink-secondary">{value}</p>
     </div>
   );
 }
