@@ -1,12 +1,18 @@
-import { useState } from "react";
-import { useAtom } from "jotai";
+import { useMemo, useState } from "react";
+import { useAtom, useSetAtom } from "jotai";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DocMeta } from "../components/layout/DocMeta";
 import { FileTable } from "../components/files/FileTable";
 import { FileDrawer } from "../components/files/FileDrawer";
-import { files, primaryFiles, supportingFiles } from "../data/files";
+import { DocumentGroupCard } from "../components/files/DocumentGroupCard";
+import {
+  filesAtom,
+  documentGroupsAtom,
+  activePrimaryGroupIdAtom,
+} from "../atoms/files";
 import { languageAtom, type Language } from "../atoms/language";
+import { ConfirmDialog } from "../components/shared/ConfirmDialog";
 
 interface FilesViewProps {
   tabs: { id: string; label: string; count?: number }[];
@@ -16,17 +22,40 @@ interface FilesViewProps {
 
 export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
   const [language, setLanguage] = useAtom(languageAtom);
+  const [files, setFiles] = useAtom(filesAtom);
+  const [groups, setGroups] = useAtom(documentGroupsAtom);
+  const [activeGroupId] = useAtom(activePrimaryGroupIdAtom);
+  const setActiveGroupId = useSetAtom(activePrimaryGroupIdAtom);
+
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const defaultFileId = files.find((f) => f.isDefault)?.id ?? files[0]?.id;
-  const [focusedId, setFocusedId] = useState<string | null>(defaultFileId ?? null);
+  const [focusedId, setFocusedId] = useState<string | null>(() => {
+    const firstPrimary = [...groups]
+      .filter((g) => g.isPrimary)
+      .sort((a, b) => a.order - b.order)[0];
+    return files.find((f) => f.groupId === firstPrimary?.id)?.id ?? files[0]?.id ?? null;
+  });
+
+  /** Pending deletion state: either a single id or a batch via the action bar. */
+  const [pendingDelete, setPendingDelete] = useState<string[] | null>(null);
+
+  const primaryGroups = useMemo(
+    () =>
+      [...groups]
+        .filter((g) => g.isPrimary)
+        .sort((a, b) => a.order - b.order),
+    [groups],
+  );
+  const supportingFiles = useMemo(() => {
+    const supportingGroupIds = new Set(
+      groups.filter((g) => !g.isPrimary).map((g) => g.id),
+    );
+    return files.filter((f) => supportingGroupIds.has(f.groupId));
+  }, [files, groups]);
 
   const selectedFiles = files.filter((f) => selectedIds.has(f.id));
   const focusedFile = files.find((f) => f.id === focusedId) ?? null;
-  const drawerFiles = selectedFiles.length > 0
-    ? selectedFiles
-    : focusedFile
-      ? [focusedFile]
-      : [];
+  const drawerFiles =
+    selectedFiles.length > 0 ? selectedFiles : focusedFile ? [focusedFile] : [];
 
   const handleSelect = (id: string) => {
     setSelectedIds((prev) => {
@@ -37,93 +66,159 @@ export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
     });
   };
 
-  const handleSelectAllPrimary = () => {
-    const allSelected = primaryFiles.every((f) => selectedIds.has(f.id));
+  const makeSelectAll = (subsetIds: string[]) => () => {
+    const allSelected = subsetIds.every((id) => selectedIds.has(id));
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      primaryFiles.forEach((f) => (allSelected ? next.delete(f.id) : next.add(f.id)));
+      subsetIds.forEach((id) => (allSelected ? next.delete(id) : next.add(id)));
       return next;
     });
   };
 
-  const handleSelectAllSupporting = () => {
-    const allSelected = supportingFiles.every((f) => selectedIds.has(f.id));
+  /** Delete by id list. Removes files; deletes any group that ends up empty. */
+  const performDelete = (ids: string[]) => {
+    const idSet = new Set(ids);
+    const remaining = files.filter((f) => !idSet.has(f.id));
+    const stillUsedGroupIds = new Set(remaining.map((f) => f.groupId));
+    setFiles(remaining);
+    setGroups((all) => all.filter((g) => stillUsedGroupIds.has(g.id)));
+    if (activeGroupId && !stillUsedGroupIds.has(activeGroupId)) {
+      setActiveGroupId(null);
+    }
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      supportingFiles.forEach((f) => (allSelected ? next.delete(f.id) : next.add(f.id)));
+      ids.forEach((id) => next.delete(id));
       return next;
     });
+    if (focusedId && idSet.has(focusedId)) {
+      setFocusedId(remaining[0]?.id ?? null);
+    }
   };
 
   return (
-    <AdaptiveSplitView
-      mobileSections={[
-        {
-          id: "details",
-          label: selectedFiles.length > 1
-            ? `${selectedFiles.length} files`
-            : drawerFiles[0]?.name ?? "File details",
-          count: selectedFiles.length || undefined,
-          content: <FileDrawer selectedFiles={drawerFiles} />,
-        },
-      ]}
-      left={
-        <div className="flex flex-col h-full min-h-0 bg-paper">
-          <MainTabs
-            tabs={tabs}
-            activeId={activeTab}
-            onChange={onTabChange}
-            languages={["EN", "ES", "FR", "AR"]}
-            availableLanguages={["EN", "ES", "FR", "AR"]}
-            activeLanguage={language}
-            onLanguageChange={(lang) => setLanguage(lang as Language)}
-          />
-          <DocMeta showPdfSelector={false} />
-          <div className="flex-1 overflow-auto p-4 pb-8 space-y-5 bg-warm">
-            <div>
+    <>
+      <AdaptiveSplitView
+        mobileSections={[
+          {
+            id: "details",
+            label:
+              selectedFiles.length > 1
+                ? `${selectedFiles.length} files`
+                : drawerFiles[0]?.name ?? "File details",
+            count: selectedFiles.length || undefined,
+            content: <FileDrawer selectedFiles={drawerFiles} />,
+          },
+        ]}
+        left={
+          <div className="flex flex-col h-full min-h-0 bg-paper">
+            <MainTabs
+              tabs={tabs}
+              activeId={activeTab}
+              onChange={onTabChange}
+              languages={["EN", "ES", "FR", "AR"]}
+              availableLanguages={["EN", "ES", "FR", "AR"]}
+              activeLanguage={language}
+              onLanguageChange={(lang) => setLanguage(lang as Language)}
+            />
+            <DocMeta showPdfSelector={false} />
+            <div className="flex-1 overflow-auto p-4 pb-8 bg-warm">
               <h3 className="text-xs font-semibold text-ink-tertiary uppercase tracking-wider mb-2 px-1">
-                Primary document & translations
+                Primary documents
               </h3>
-              <FileTable
-                files={primaryFiles}
-                selectedIds={selectedIds}
-                onSelect={handleSelect}
-                onSelectAll={handleSelectAllPrimary}
-                focusedId={focusedId}
-                onFocus={setFocusedId}
-              />
-            </div>
-            <div>
-              <h3 className="text-xs font-semibold text-ink-tertiary uppercase tracking-wider mb-2 px-1">
+              {primaryGroups.length === 0 ? (
+                <p className="text-xs italic text-ink-tertiary px-1 mb-5">
+                  No primary documents yet. Promote a supporting file or add a new one.
+                </p>
+              ) : (
+                primaryGroups.map((group) => {
+                  const groupFiles = files.filter((f) => f.groupId === group.id);
+                  const resolvedActiveId =
+                    activeGroupId ?? primaryGroups[0]?.id ?? null;
+                  return (
+                    <DocumentGroupCard
+                      key={group.id}
+                      group={group}
+                      translationCount={groupFiles.length}
+                      active={group.id === resolvedActiveId}
+                    >
+                      <FileTable
+                        files={groupFiles}
+                        selectedIds={selectedIds}
+                        onSelect={handleSelect}
+                        onSelectAll={makeSelectAll(groupFiles.map((f) => f.id))}
+                        focusedId={focusedId}
+                        onFocus={setFocusedId}
+                        onRequestDelete={(id) => setPendingDelete([id])}
+                        onAddTranslation={() => {
+                          // Stub: AddFileModal lands in commit 4.
+                          // eslint-disable-next-line no-console
+                          console.info("Add translation requested for", group.id);
+                        }}
+                        embedded
+                      />
+                    </DocumentGroupCard>
+                  );
+                })
+              )}
+
+              <h3 className="text-xs font-semibold text-ink-tertiary uppercase tracking-wider mb-2 mt-5 px-1">
                 Supporting files
               </h3>
               <FileTable
                 files={supportingFiles}
                 selectedIds={selectedIds}
                 onSelect={handleSelect}
-                onSelectAll={handleSelectAllSupporting}
+                onSelectAll={makeSelectAll(supportingFiles.map((f) => f.id))}
                 focusedId={focusedId}
                 onFocus={setFocusedId}
+                onRequestDelete={(id) => setPendingDelete([id])}
               />
             </div>
+            <FilesActionBar
+              selectedCount={selectedIds.size}
+              totalCount={files.length}
+              onDelete={() => setPendingDelete(Array.from(selectedIds))}
+            />
           </div>
-          <FilesActionBar selectedCount={selectedIds.size} totalCount={files.length} />
-        </div>
-      }
-      right={<FileDrawer selectedFiles={drawerFiles} />}
-      defaultRightWidth={560}
-      minRightWidth={460}
-      maxRightWidth={720}
-    />
+        }
+        right={<FileDrawer selectedFiles={drawerFiles} />}
+        defaultRightWidth={560}
+        minRightWidth={460}
+        maxRightWidth={720}
+      />
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        variant="danger"
+        title={
+          pendingDelete && pendingDelete.length > 1
+            ? `Delete ${pendingDelete.length} files?`
+            : "Delete file?"
+        }
+        message={
+          pendingDelete && pendingDelete.length > 1
+            ? "Removes the selected files. Any document with no remaining translations is removed."
+            : "Removes this file. If it's the last translation in its document, the document is removed too."
+        }
+        confirmLabel="Delete"
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (pendingDelete) performDelete(pendingDelete);
+          setPendingDelete(null);
+        }}
+      />
+    </>
   );
 }
 
 function FilesActionBar({
   selectedCount,
   totalCount,
+  onDelete,
 }: {
   selectedCount: number;
   totalCount: number;
+  onDelete: () => void;
 }) {
   const hasSelection = selectedCount > 0;
 
@@ -146,7 +241,10 @@ function FilesActionBar({
           <span className="text-xs text-ink-secondary">
             Selected {selectedCount} of {totalCount}
           </span>
-          <button className="px-3 py-1.5 text-xs font-medium text-white bg-seal rounded-md hover:bg-seal/90 transition-colors">
+          <button
+            onClick={onDelete}
+            className="px-3 py-1.5 text-xs font-medium text-white bg-seal rounded-md hover:bg-seal/90 transition-colors cursor-pointer"
+          >
             Delete
           </button>
         </div>

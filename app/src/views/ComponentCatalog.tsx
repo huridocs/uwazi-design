@@ -1383,6 +1383,7 @@ function FileTableDemo() {
           prev.size === subset.length ? new Set() : new Set(subset.map((f) => f.id))
         )
       }
+      onRequestDelete={() => {}}
     />
   );
 }

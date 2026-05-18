@@ -1,7 +1,28 @@
-import { FileText, Music, Video, Image, Link2, Eye } from "lucide-react";
-import { useAtom } from "jotai";
+import { useEffect, useRef, useState } from "react";
+import {
+  FileText,
+  Music,
+  Video,
+  Image,
+  Link2,
+  Eye,
+  MoreVertical,
+  Pencil,
+  Languages,
+  ArrowUpCircle,
+  ArrowDownCircle,
+  Star,
+  Plus,
+  Trash2,
+} from "lucide-react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { FileEntry } from "../../data/files";
 import { breakpointAtom } from "../../atoms/viewport";
+import {
+  documentGroupsAtom,
+  activePrimaryGroupIdAtom,
+  drawerEditFocusAtom,
+} from "../../atoms/files";
 import { Checkbox } from "../shared/Checkbox";
 
 interface FileTableProps {
@@ -11,6 +32,14 @@ interface FileTableProps {
   onSelectAll: () => void;
   focusedId?: string | null;
   onFocus?: (id: string) => void;
+  /** Invoked by the kebab "Delete" action; opens a confirmation upstream. */
+  onRequestDelete: (id: string) => void;
+  /** Invoked by the kebab "Add translation" action; opens AddFileModal
+   *  (commit 4) pre-filled with the file's group. */
+  onAddTranslation?: (groupId: string) => void;
+  /** When true, hide the inner table's section header so a wrapper like
+   *  DocumentGroupCard can provide its own. */
+  embedded?: boolean;
 }
 
 const typeIcons: Record<FileEntry["type"], typeof FileText> = {
@@ -31,10 +60,123 @@ const typeLabels: Record<FileEntry["type"], string> = {
   document: "Document",
 };
 
-export function FileTable({ files, selectedIds, onSelect, onSelectAll, focusedId, onFocus }: FileTableProps) {
+export function FileTable({
+  files,
+  selectedIds,
+  onSelect,
+  onSelectAll,
+  focusedId,
+  onFocus,
+  onRequestDelete,
+  onAddTranslation,
+  embedded = false,
+}: FileTableProps) {
   const allSelected = files.length > 0 && files.every((f) => selectedIds.has(f.id));
   const [breakpoint] = useAtom(breakpointAtom);
   const isMobile = breakpoint === "mobile";
+  const groups = useAtomValue(documentGroupsAtom);
+  const [activeGroupId, setActiveGroupId] = useAtom(activePrimaryGroupIdAtom);
+  const setGroups = useSetAtom(documentGroupsAtom);
+  const setDrawerFocus = useSetAtom(drawerEditFocusAtom);
+
+  /** Map of groupId → isPrimary, looked up per row to label badges. */
+  const isPrimaryByGroup = new Map(groups.map((g) => [g.id, g.isPrimary]));
+
+  const resolvedActiveGroupId =
+    activeGroupId ??
+    groups
+      .filter((g) => g.isPrimary)
+      .sort((a, b) => a.order - b.order)[0]?.id ??
+    null;
+
+  const promoteOrDemote = (groupId: string, makePrimary: boolean) => {
+    setGroups((all) =>
+      all.map((g) => (g.id === groupId ? { ...g, isPrimary: makePrimary } : g)),
+    );
+  };
+
+  const renderMenu = (file: FileEntry) => {
+    const isPrimary = isPrimaryByGroup.get(file.groupId) ?? false;
+    const isActiveGroup = file.groupId === resolvedActiveGroupId;
+    return (
+      <RowKebab
+        items={[
+          {
+            id: "rename",
+            label: "Rename",
+            icon: Pencil,
+            onClick: () => {
+              onFocus?.(file.id);
+              setDrawerFocus("name");
+            },
+          },
+          {
+            id: "language",
+            label: "Change language",
+            icon: Languages,
+            onClick: () => {
+              onFocus?.(file.id);
+              setDrawerFocus("language");
+            },
+          },
+          isPrimary
+            ? {
+                id: "demote",
+                label: "Demote to supporting",
+                icon: ArrowDownCircle,
+                onClick: () => promoteOrDemote(file.groupId, false),
+              }
+            : {
+                id: "promote",
+                label: "Promote to primary",
+                icon: ArrowUpCircle,
+                onClick: () => promoteOrDemote(file.groupId, true),
+              },
+          isPrimary && !isActiveGroup
+            ? {
+                id: "activate",
+                label: "Set as active primary",
+                icon: Star,
+                onClick: () => setActiveGroupId(file.groupId),
+              }
+            : null,
+          isPrimary
+            ? {
+                id: "add-translation",
+                label: "Add translation",
+                icon: Plus,
+                onClick: () => onAddTranslation?.(file.groupId),
+              }
+            : null,
+          { id: "sep", separator: true },
+          {
+            id: "delete",
+            label: "Delete",
+            icon: Trash2,
+            danger: true,
+            onClick: () => onRequestDelete(file.id),
+          },
+        ].filter(Boolean) as KebabItem[]}
+      />
+    );
+  };
+
+  const renderBadge = (file: FileEntry) => {
+    const isPrimary = isPrimaryByGroup.get(file.groupId) ?? false;
+    if (!isPrimary) return null;
+    const isActive = file.groupId === resolvedActiveGroupId;
+    return (
+      <span
+        className={`px-1.5 py-0.5 text-[10px] font-medium rounded shrink-0 ${
+          isActive
+            ? "bg-ink text-parchment"
+            : "bg-warning-light text-warning"
+        }`}
+      >
+        {isActive ? "Active" : "Primary"}
+      </span>
+    );
+  };
 
   if (isMobile) {
     return (
@@ -69,11 +211,7 @@ export function FileTable({ files, selectedIds, onSelect, onSelectAll, focusedId
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-sm font-medium text-ink truncate">{file.name}</span>
-                  {file.isDefault && (
-                    <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-warning-light text-warning shrink-0">
-                      Default
-                    </span>
-                  )}
+                  {renderBadge(file)}
                 </div>
                 <div className="flex items-center gap-3 text-[11px] text-ink-tertiary">
                   <span>{typeLabels[file.type]}</span>
@@ -90,22 +228,20 @@ export function FileTable({ files, selectedIds, onSelect, onSelectAll, focusedId
                   })}
                 </div>
               </div>
-              <button
-                onClick={(e) => e.stopPropagation()}
-                aria-label={`View ${file.name}`}
-                className="flex items-center justify-center p-1.5 rounded hover:bg-parchment transition-colors shrink-0"
-              >
-                <Eye size={14} className="text-ink-tertiary" />
-              </button>
+              <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
+                {renderMenu(file)}
+              </div>
             </div>
           );
         })}
-        <div
-          className="flex items-center justify-between px-3 h-10 text-xs text-ink-muted"
-          style={{ backgroundColor: "var(--bg-warm)", borderTop: "1px solid var(--border-primary)" }}
-        >
-          <span>{files.length} files</span>
-        </div>
+        {!embedded && (
+          <div
+            className="flex items-center justify-between px-3 h-10 text-xs text-ink-muted"
+            style={{ backgroundColor: "var(--bg-warm)", borderTop: "1px solid var(--border-primary)" }}
+          >
+            <span>{files.length} files</span>
+          </div>
+        )}
       </div>
     );
   }
@@ -121,7 +257,7 @@ export function FileTable({ files, selectedIds, onSelect, onSelectAll, focusedId
       <div
         className="grid items-center gap-3 px-4 h-10 text-[11px] font-semibold text-ink-tertiary uppercase tracking-wider"
         style={{
-          gridTemplateColumns: "28px 1fr 70px 70px 50px 90px 50px",
+          gridTemplateColumns: "28px 1fr 70px 70px 50px 90px 60px",
           backgroundColor: "var(--bg-warm)",
           borderBottom: "1px solid var(--border-primary)",
         }}
@@ -156,7 +292,7 @@ export function FileTable({ files, selectedIds, onSelect, onSelectAll, focusedId
             className={`grid items-center gap-3 px-4 h-11 text-sm transition-colors cursor-pointer
               hover:bg-warm ${isFocused ? "bg-parchment" : ""}`}
             style={{
-              gridTemplateColumns: "28px 1fr 70px 70px 50px 90px 50px",
+              gridTemplateColumns: "28px 1fr 70px 70px 50px 90px 60px",
               borderBottom: "1px solid var(--border-primary)",
             }}
             onClick={() => onFocus?.(file.id)}
@@ -172,11 +308,7 @@ export function FileTable({ files, selectedIds, onSelect, onSelectAll, focusedId
             <div className="flex items-center gap-2 min-w-0">
               <Icon size={14} className="text-ink-muted shrink-0" />
               <span className="text-xs font-medium text-ink truncate">{file.name}</span>
-              {file.isDefault && (
-                <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-warning-light text-warning shrink-0">
-                  Default
-                </span>
-              )}
+              {renderBadge(file)}
             </div>
 
             <span className="text-xs text-ink-tertiary">{typeLabels[file.type]}</span>
@@ -189,33 +321,127 @@ export function FileTable({ files, selectedIds, onSelect, onSelectAll, focusedId
                 year: "numeric",
               })}
             </span>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
-              aria-label={`View ${file.name}`}
-              className="flex items-center justify-center p-1 rounded hover:bg-parchment transition-colors"
-            >
-              <Eye size={14} className="text-ink-tertiary" />
-            </button>
+            <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
+              <button
+                aria-label={`View ${file.name}`}
+                className="flex items-center justify-center p-1 rounded hover:bg-parchment transition-colors"
+              >
+                <Eye size={14} className="text-ink-tertiary" />
+              </button>
+              {renderMenu(file)}
+            </div>
           </div>
         );
       })}
 
       {/* Footer */}
-      <div
-        className="flex items-center justify-between px-4 h-10 text-xs text-ink-muted"
-        style={{
-          backgroundColor: "var(--bg-warm)",
-          borderTop: "1px solid var(--border-primary)",
+      {!embedded && (
+        <div
+          className="flex items-center justify-between px-4 h-10 text-xs text-ink-muted"
+          style={{
+            backgroundColor: "var(--bg-warm)",
+            borderTop: "1px solid var(--border-primary)",
+          }}
+        >
+          <span>{files.length} files</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------- Kebab menu ----------
+
+interface KebabItemAction {
+  id: string;
+  label: string;
+  icon: typeof Pencil;
+  onClick: () => void;
+  danger?: boolean;
+  separator?: never;
+}
+interface KebabSeparator {
+  id: string;
+  separator: true;
+  label?: never;
+  icon?: never;
+  onClick?: never;
+  danger?: never;
+}
+type KebabItem = KebabItemAction | KebabSeparator;
+
+function RowKebab({ items }: { items: KebabItem[] }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e: MouseEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onEsc);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onEsc);
+    };
+  }, [open]);
+
+  return (
+    <div ref={rootRef} className="relative">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((o) => !o);
         }}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label="Row actions"
+        className="flex items-center justify-center p-1 rounded hover:bg-parchment transition-colors"
       >
-        <span>{files.length} files</span>
-        <span>
-          {files.filter((f) => f.type !== "link").length} documents,{" "}
-          {files.filter((f) => f.type === "link").length} link
-        </span>
-      </div>
+        <MoreVertical size={14} className="text-ink-tertiary" />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 top-full mt-1 z-30 min-w-[200px] rounded-md bg-paper shadow-xl py-1 animate-fade-in-up"
+          style={{ border: "1px solid var(--border-primary)" }}
+        >
+          {items.map((item) =>
+            item.separator ? (
+              <div
+                key={item.id}
+                className="my-1 mx-2 h-px"
+                style={{ backgroundColor: "var(--border-soft)" }}
+                role="separator"
+              />
+            ) : (
+              <button
+                key={item.id}
+                type="button"
+                role="menuitem"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpen(false);
+                  item.onClick();
+                }}
+                className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs text-left transition-colors cursor-pointer ${
+                  item.danger
+                    ? "text-seal hover:bg-seal-tint"
+                    : "text-ink-secondary hover:bg-warm"
+                }`}
+              >
+                <item.icon size={12} className="shrink-0" />
+                {item.label}
+              </button>
+            ),
+          )}
+        </div>
+      )}
     </div>
   );
 }
