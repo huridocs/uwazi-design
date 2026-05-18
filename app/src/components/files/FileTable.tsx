@@ -162,22 +162,10 @@ export function FileTable({
     );
   };
 
-  const renderBadge = (file: FileEntry) => {
-    const isPrimary = isPrimaryByGroup.get(file.groupId) ?? false;
-    if (!isPrimary) return null;
-    const isActive = file.groupId === resolvedActiveGroupId;
-    return (
-      <span
-        className={`px-1.5 py-0.5 text-[10px] font-medium rounded shrink-0 ${
-          isActive
-            ? "bg-ink text-parchment"
-            : "bg-warning-light text-warning"
-        }`}
-      >
-        {isActive ? "Active" : "Primary"}
-      </span>
-    );
-  };
+  // No per-row pill: the section header (Primary documents / Supporting files)
+  // and the DocumentGroupCard's own Active indicator already say everything
+  // a Primary/Active row could.
+  const renderBadge = (_file: FileEntry) => null;
 
   if (isMobile) {
     return (
