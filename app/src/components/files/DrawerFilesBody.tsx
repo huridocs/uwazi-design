@@ -143,20 +143,13 @@ function FileThumbnail({ type }: { type: FileEntry["type"] }) {
       </div>
     );
   }
-  if (type === "audio") {
+  // Audio and video share one play-affordance look — both are "playable
+  // media", so they should read as the same kind in the list.
+  if (type === "audio" || type === "video") {
     return (
       <div className={`${wrap} bg-warm`}>
         <div className="w-8 h-8 rounded-md bg-parchment flex items-center justify-center shadow-sm">
           <div className="w-0 h-0 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent border-l-[7px] border-l-ink ml-0.5" />
-        </div>
-      </div>
-    );
-  }
-  if (type === "video") {
-    return (
-      <div className={`${wrap} bg-ink`}>
-        <div className="w-8 h-8 rounded-full bg-paper/95 flex items-center justify-center shadow-sm">
-          <div className="w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[8px] border-l-ink ml-0.5" />
         </div>
       </div>
     );
