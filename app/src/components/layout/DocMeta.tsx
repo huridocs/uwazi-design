@@ -62,7 +62,7 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
             onClick={() => setPickerOpen((o) => !o)}
             aria-haspopup="menu"
             aria-expanded={pickerOpen}
-            className="flex items-center gap-2 px-3 py-1 text-xs font-medium text-ink rounded-md bg-warm border border-border hover:bg-parchment transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 pl-2 pr-2 py-1 text-xs font-medium text-ink-secondary rounded-full bg-warm hover:bg-parchment transition-colors cursor-pointer"
           >
             <FileText size={12} className="text-ink-tertiary" />
             {primaryGroups.length} primary
