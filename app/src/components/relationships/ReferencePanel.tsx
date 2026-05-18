@@ -1,22 +1,26 @@
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { referencesAtom, activeDrawerTabAtom } from "../../atoms/references";
+import { filesAtom } from "../../atoms/files";
 import { DrawerTabs } from "../layout/DrawerTabs";
 import { DrawerActionBar } from "./DrawerActionBar";
 import { MetadataDrawerContent } from "./MetadataDrawerContent";
 import { ToCPanel } from "./ToCPanel";
 import { EntityOverlay } from "./EntityOverlay";
 import { RelationshipsDrawerSection } from "./RelationshipsDrawerSection";
+import { DrawerFilesBody } from "../files/DrawerFilesBody";
 import { t } from "../../utils/i18n";
 
 const baseDrawerTabs = [
   { id: "metadata", label: t("System", "Metadata") },
   { id: "toc", label: t("System", "ToC") },
   { id: "connections", label: t("System", "Relationships") },
+  { id: "files", label: t("System", "Files") },
   { id: "search", label: t("System", "Search") },
 ];
 
 export function ReferencePanel() {
   const [references] = useAtom(referencesAtom);
+  const files = useAtomValue(filesAtom);
   const [activeDrawerTab, setActiveDrawerTab] = useAtom(activeDrawerTabAtom);
 
   return (
@@ -24,9 +28,11 @@ export function ReferencePanel() {
       <EntityOverlay />
 
       <DrawerTabs
-        tabs={baseDrawerTabs.map((tab) =>
-          tab.id === "connections" ? { ...tab, count: references.length } : tab,
-        )}
+        tabs={baseDrawerTabs.map((tab) => {
+          if (tab.id === "connections") return { ...tab, count: references.length };
+          if (tab.id === "files") return { ...tab, count: files.length };
+          return tab;
+        })}
         activeId={activeDrawerTab}
         onChange={setActiveDrawerTab}
       />
@@ -34,8 +40,9 @@ export function ReferencePanel() {
       {activeDrawerTab === "metadata" && <MetadataDrawerContent />}
       {activeDrawerTab === "toc" && <ToCPanel />}
       {activeDrawerTab === "connections" && <RelationshipsDrawerSection />}
+      {activeDrawerTab === "files" && <DrawerFilesBody />}
 
-      {!["metadata", "toc", "connections"].includes(activeDrawerTab) && (
+      {!["metadata", "toc", "connections", "files"].includes(activeDrawerTab) && (
         <div className="flex-1 flex items-center justify-center">
           <p className="text-sm text-ink-muted capitalize">
             {activeDrawerTab} content
