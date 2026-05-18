@@ -14,13 +14,6 @@ export interface FileEntry {
   /** Stub URL for the viewer — every seeded file points at /sample.pdf so the
    *  prototype can demo file-switching without juggling real assets. */
   url?: string;
-  /** @deprecated transitional flag while commit 2 rewires consumers to the
-   *  active-primary atom. The new model has no single "default file"; the
-   *  Document tab picks (activePrimaryGroupId, language) at render time. */
-  isDefault?: boolean;
-  /** @deprecated transitional accessor; consumers should derive
-   *  documentGroups.find(g => g.id === file.groupId).isPrimary instead. */
-  group?: "primary" | "supporting";
 }
 
 export interface DocumentGroup {
@@ -67,7 +60,6 @@ export const files: FileEntry[] = [
     language: "EN",
     modified: "1987-06-26",
     url: "/sample.pdf",
-    isDefault: true,
   },
   {
     id: "f-judg-es",
@@ -169,16 +161,3 @@ export const files: FileEntry[] = [
   },
 ];
 
-// Back-fill the deprecated `group` accessor on every seed file so commit-1
-// consumers (FileTable badge, MetadataView gating) keep compiling. Commit 2
-// removes both the field and these shims.
-for (const f of files) {
-  const g = documentGroups.find((g) => g.id === f.groupId);
-  f.group = g?.isPrimary ? "primary" : "supporting";
-}
-
-/** @deprecated commit-1 transitional shim. Read filesAtom + documentGroupsAtom
- *  instead — commit 2 rewires every consumer and removes these exports. */
-export const primaryFiles = files.filter((f) => f.group === "primary");
-/** @deprecated see {@link primaryFiles}. */
-export const supportingFiles = files.filter((f) => f.group === "supporting");

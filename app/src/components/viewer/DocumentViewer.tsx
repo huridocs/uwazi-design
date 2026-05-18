@@ -2,10 +2,16 @@ import { useState, useRef, useCallback, useEffect, useMemo, ReactNode } from "re
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { currentPageAtom, scrollToPageAtom, textSelectionAtom } from "../../atoms/selection";
 import { scrollToHighlightAtom, referencesAtom, activeRefIdAtom } from "../../atoms/references";
 import { breakpointAtom } from "../../atoms/viewport";
+import { languageAtom } from "../../atoms/language";
+import {
+  filesAtom,
+  documentGroupsAtom,
+  activePrimaryGroupIdAtom,
+} from "../../atoms/files";
 import { PageHighlights } from "./PageHighlights";
 import { FloatingMenu } from "./FloatingMenu";
 import { ActionBar } from "./ActionBar";
@@ -32,6 +38,32 @@ export function DocumentViewer({ actionBarLeft, showMinimap = true }: DocumentVi
   const setActiveRefId = useSetAtom(activeRefIdAtom);
   const [references] = useAtom(referencesAtom);
   const [containerWidth, setContainerWidth] = useState(800);
+
+  // Pick the file to render from (active primary group, current language).
+  // Falls back to first primary, then first file in the active group, then
+  // the bundled /sample.pdf so the viewer always has something to show.
+  const language = useAtomValue(languageAtom);
+  const files = useAtomValue(filesAtom);
+  const groups = useAtomValue(documentGroupsAtom);
+  const activeGroupId = useAtomValue(activePrimaryGroupIdAtom);
+  const primaryGroups = useMemo(
+    () => groups.filter((g) => g.isPrimary).sort((a, b) => a.order - b.order),
+    [groups],
+  );
+  const resolvedActiveId = activeGroupId ?? primaryGroups[0]?.id ?? null;
+  const activeFile = useMemo(() => {
+    if (!resolvedActiveId) return null;
+    const exact = files.find(
+      (f) => f.groupId === resolvedActiveId && f.language === language,
+    );
+    if (exact) return exact;
+    // No translation in this language — fall back to the first file in the
+    // group so the viewer still renders something.
+    return files.find((f) => f.groupId === resolvedActiveId) ?? null;
+  }, [files, resolvedActiveId, language]);
+  const filePath = activeFile?.url ?? "/sample.pdf";
+  const showLangFallback =
+    activeFile !== null && activeFile.language !== language;
 
   // Measure container width for responsive PDF scaling
   useEffect(() => {
@@ -152,6 +184,14 @@ export function DocumentViewer({ actionBarLeft, showMinimap = true }: DocumentVi
     <div className="flex flex-col h-full min-h-0 bg-paper">
       {/* Scrollable document area + minimap */}
       <div className="flex-1 relative min-h-0">
+        {showLangFallback && (
+          <div
+            className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 px-3 py-1.5 rounded-md bg-warning-light text-warning text-xs font-medium shadow-sm animate-fade-in-up"
+            role="status"
+          >
+            No translation in {language}. Showing {activeFile?.language}.
+          </div>
+        )}
         <div
           ref={containerRef}
           className="absolute inset-0 overflow-auto flex flex-col items-center py-4 gap-4"
@@ -163,7 +203,7 @@ export function DocumentViewer({ actionBarLeft, showMinimap = true }: DocumentVi
           onMouseDown={handleMouseDown}
         >
         <Document
-          file="/sample.pdf"
+          file={filePath}
           onLoadSuccess={onDocumentLoadSuccess}
           loading={
             <div className="flex items-center justify-center h-[900px] bg-paper rounded-md" style={{ width: "100%", maxWidth: 900 }}>

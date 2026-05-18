@@ -9,7 +9,12 @@ import { MetadataCard, Property, PropertyRow } from "../components/metadata/Meta
 import { TemplateStructure } from "../components/relationships/TemplateStructure";
 import { metadataFieldsByLanguage, pdfMetadataByLanguage, MetadataField } from "../data/metadata";
 import { documentsByLanguage } from "../data/document";
-import { files, FileEntry } from "../data/files";
+import { FileEntry } from "../data/files";
+import {
+  filesAtom,
+  documentGroupsAtom,
+  activePrimaryGroupIdAtom,
+} from "../atoms/files";
 import { languageAtom, type Language } from "../atoms/language";
 import { referencesAtom } from "../atoms/references";
 import { RelationshipsDrawerSection } from "../components/relationships/RelationshipsDrawerSection";
@@ -435,6 +440,15 @@ function MetadataDrawer() {
   const language = useAtom(languageAtom)[0];
   const doc = documentsByLanguage[language];
   const [references] = useAtom(referencesAtom);
+  const [files] = useAtom(filesAtom);
+  const [groups] = useAtom(documentGroupsAtom);
+  const [activeGroupId] = useAtom(activePrimaryGroupIdAtom);
+  const resolvedActiveId =
+    activeGroupId ?? groups.filter((g) => g.isPrimary).sort((a, b) => a.order - b.order)[0]?.id ?? null;
+  const isInActivePrimary = (file: FileEntry) =>
+    file.groupId === resolvedActiveId && file.language === language;
+  const isInPrimaryGroup = (file: FileEntry) =>
+    groups.find((g) => g.id === file.groupId)?.isPrimary ?? false;
 
   const drawerTabs = [
     { id: "document", label: "Document" },
@@ -457,11 +471,15 @@ function MetadataDrawer() {
             {files.map((file) => (
               <DrawerFileRow
                 key={file.id}
-                title={file.isDefault ? doc.title : titleForFile(file)}
+                title={
+                  isInActivePrimary(file)
+                    ? doc.title
+                    : titleForFile(file, isInPrimaryGroup(file))
+                }
                 filename={file.name}
                 type={file.type.toUpperCase()}
                 size={file.size}
-                starred={file.isDefault}
+                starred={isInActivePrimary(file)}
                 thumbnail={<FileThumbnail type={file.type} />}
               />
             ))}
@@ -501,10 +519,12 @@ interface DrawerFileRowProps {
   thumbnail: React.ReactNode;
 }
 
-function titleForFile(file: FileEntry): string {
+function titleForFile(file: FileEntry, isPrimary: boolean): string {
   if (file.type === "audio") return "Audiencia — Velásquez Rodríguez";
   if (file.type === "link") return "Video — Audiencia pública CorteIDH";
-  if (file.group === "supporting" && file.type === "pdf")
+  if (file.type === "video") return "Press conference — Comisión IDH";
+  if (file.type === "image") return "Evidence photo";
+  if (!isPrimary && file.type === "pdf")
     return "Testimonio de testigos — Velásquez Rodríguez";
   return file.name;
 }

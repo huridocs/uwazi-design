@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAtomValue } from "jotai";
 import { ChevronDown, ChevronRight, ExternalLink, FileText, Music, Video, Image, Link2 } from "lucide-react";
 import { languageAtom } from "../../atoms/language";
 import { documentsByLanguage } from "../../data/document";
 import { metadataFieldsByLanguage, pdfMetadataByLanguage } from "../../data/metadata";
-import { supportingFiles, FileEntry } from "../../data/files";
+import { FileEntry } from "../../data/files";
+import { filesAtom, documentGroupsAtom } from "../../atoms/files";
 import { EntityPill } from "../shared/EntityPill";
 
 const fileTypeIcons: Record<FileEntry["type"], typeof FileText> = {
@@ -21,6 +22,14 @@ export function MetadataDrawerContent() {
   const doc = documentsByLanguage[language];
   const fields = metadataFieldsByLanguage[language];
   const pdf = pdfMetadataByLanguage[language];
+  const allFiles = useAtomValue(filesAtom);
+  const allGroups = useAtomValue(documentGroupsAtom);
+  const supportingFiles = useMemo(() => {
+    const supportingGroupIds = new Set(
+      allGroups.filter((g) => !g.isPrimary).map((g) => g.id),
+    );
+    return allFiles.filter((f) => supportingGroupIds.has(f.groupId));
+  }, [allFiles, allGroups]);
 
   const description = fields.find((f) => f.id === "description");
   const regularFields = fields.filter(
