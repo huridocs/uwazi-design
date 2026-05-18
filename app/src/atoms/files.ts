@@ -20,3 +20,15 @@ export const activePrimaryGroupIdAtom = atom<string | null>(null);
  *  the field they meant to edit. */
 export type DrawerEditFocus = "name" | "language";
 export const drawerEditFocusAtom = atom<DrawerEditFocus | null>(null);
+
+/** Drives `AddFileModal`. `null` = closed. A target descriptor opens the
+ *  modal:
+ *  - `{ mode: "new" }`           — generic flow; user picks Primary /
+ *    Supporting / Translation-of-X per entry.
+ *  - `{ mode: "translation", groupId }` — entries are locked to translations
+ *    of the supplied primary group. Used from kebab "Add translation" and
+ *    drawer "+ Add translation document". */
+export type AddFileTarget =
+  | { mode: "new" }
+  | { mode: "translation"; groupId: string };
+export const addFileTargetAtom = atom<AddFileTarget | null>(null);

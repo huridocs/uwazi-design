@@ -6,10 +6,13 @@ import { DocMeta } from "../components/layout/DocMeta";
 import { FileTable } from "../components/files/FileTable";
 import { FileDrawer } from "../components/files/FileDrawer";
 import { DocumentGroupCard } from "../components/files/DocumentGroupCard";
+import { AddFileModal } from "../components/files/AddFileModal";
+import { AddFileDropArea } from "../components/files/AddFileDropArea";
 import {
   filesAtom,
   documentGroupsAtom,
   activePrimaryGroupIdAtom,
+  addFileTargetAtom,
 } from "../atoms/files";
 import { languageAtom, type Language } from "../atoms/language";
 import { ConfirmDialog } from "../components/shared/ConfirmDialog";
@@ -26,6 +29,7 @@ export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
   const [groups, setGroups] = useAtom(documentGroupsAtom);
   const [activeGroupId] = useAtom(activePrimaryGroupIdAtom);
   const setActiveGroupId = useSetAtom(activePrimaryGroupIdAtom);
+  const setAddFileTarget = useSetAtom(addFileTargetAtom);
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [focusedId, setFocusedId] = useState<string | null>(() => {
@@ -111,10 +115,9 @@ export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
                 selectedFiles={drawerFiles}
                 onRequestDelete={(ids) => setPendingDelete(ids)}
                 onFocusFile={setFocusedId}
-                onAddTranslation={(groupId) => {
-                  // eslint-disable-next-line no-console
-                  console.info("Add translation requested for", groupId);
-                }}
+                onAddTranslation={(groupId) =>
+                  setAddFileTarget({ mode: "translation", groupId })
+                }
               />
             ),
           },
@@ -159,11 +162,9 @@ export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
                         focusedId={focusedId}
                         onFocus={setFocusedId}
                         onRequestDelete={(id) => setPendingDelete([id])}
-                        onAddTranslation={() => {
-                          // Stub: AddFileModal lands in commit 4.
-                          // eslint-disable-next-line no-console
-                          console.info("Add translation requested for", group.id);
-                        }}
+                        onAddTranslation={(groupId) =>
+                          setAddFileTarget({ mode: "translation", groupId })
+                        }
                         embedded
                       />
                     </DocumentGroupCard>
@@ -183,10 +184,24 @@ export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
                 onFocus={setFocusedId}
                 onRequestDelete={(id) => setPendingDelete([id])}
               />
+              {files.length === 0 ? (
+                <div className="mt-3">
+                  <AddFileDropArea
+                    variant="large"
+                    onAdded={(id) => setFocusedId(id)}
+                  />
+                </div>
+              ) : (
+                <AddFileDropArea
+                  variant="compact"
+                  onAdded={(id) => setFocusedId(id)}
+                />
+              )}
             </div>
             <FilesActionBar
               selectedCount={selectedIds.size}
               totalCount={files.length}
+              onAddFile={() => setAddFileTarget({ mode: "new" })}
               onDelete={() => setPendingDelete(Array.from(selectedIds))}
             />
           </div>
@@ -206,6 +221,8 @@ export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
         minRightWidth={460}
         maxRightWidth={720}
       />
+
+      <AddFileModal />
 
       <ConfirmDialog
         open={pendingDelete !== null}
@@ -234,10 +251,12 @@ export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
 function FilesActionBar({
   selectedCount,
   totalCount,
+  onAddFile,
   onDelete,
 }: {
   selectedCount: number;
   totalCount: number;
+  onAddFile: () => void;
   onDelete: () => void;
 }) {
   const hasSelection = selectedCount > 0;
@@ -250,8 +269,9 @@ function FilesActionBar({
       style={{ borderTop: "1px solid var(--border-primary)" }}
     >
       <button
+        onClick={onAddFile}
         className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-ink rounded-md
-          border border-border hover:bg-warm transition-colors"
+          border border-border hover:bg-warm transition-colors cursor-pointer"
       >
         <span>+</span> Add file
       </button>
