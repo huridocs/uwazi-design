@@ -112,7 +112,6 @@ export function FileDetailEditor({
   const languageOptions = Array.from(
     new Set([...knownLanguages, file.language, language]),
   );
-  const fileKinds: FileKind[] = ["pdf", "document", "audio", "video", "image", "link"];
 
   return (
     <>
@@ -156,18 +155,10 @@ export function FileDetailEditor({
           </Field>
 
           <Field label="Type">
-            <select
-              value={file.type}
-              onChange={(e) => updateField("type", e.target.value as FileKind)}
-              className="w-full px-2 py-1.5 text-sm text-ink bg-paper border border-border rounded focus:outline-none focus:ring-1 focus:ring-carbon/30"
-              aria-label="File kind"
-            >
-              {fileKinds.map((kind) => (
-                <option key={kind} value={kind}>
-                  {typeLabels[kind]}
-                </option>
-              ))}
-            </select>
+            <div className="flex items-center gap-1.5 px-2 py-1.5 text-sm text-ink-secondary">
+              <Icon size={14} className="text-ink-muted shrink-0" />
+              <span>{typeLabels[file.type]}</span>
+            </div>
           </Field>
 
           <Field label="Size">
