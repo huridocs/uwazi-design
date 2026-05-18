@@ -1,4 +1,3 @@
-import { ChevronRight } from "lucide-react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { FileEntry } from "../../data/files";
 import {
@@ -9,6 +8,7 @@ import {
 } from "../../atoms/files";
 import { languageAtom } from "../../atoms/language";
 import { AddFileModal } from "./AddFileModal";
+import { ViewButton } from "../shared/ViewButton";
 
 /** Drawer body listing every file grouped by its DocumentGroup. Mirrors the
  *  main Files view layout: one section per primary group with its
@@ -202,9 +202,7 @@ function DrawerFileRow({
       </div>
 
       <div className="flex items-center pr-2 shrink-0">
-        <button className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-ink rounded border border-border hover:bg-warm transition-colors cursor-pointer">
-          <ChevronRight size={11} /> View
-        </button>
+        <ViewButton />
       </div>
     </div>
   );

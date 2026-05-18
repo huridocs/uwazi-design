@@ -69,9 +69,10 @@ export function FileDetailEditor({
   const langRef = useRef<HTMLSelectElement>(null);
 
   const group = groups.find((g) => g.id === file.groupId);
-  const siblings = files.filter(
-    (f) => f.groupId === file.groupId && f.id !== file.id,
-  );
+  // Every translation in the group, including the focused one. Hiding the
+  // focused one shifted positions on every selection — chips appeared to
+  // jump around. Keep them all visible; highlight the current.
+  const translations = files.filter((f) => f.groupId === file.groupId);
 
   // Honour the one-shot focus signal from kebab "Rename" / "Change language".
   useEffect(() => {
@@ -206,27 +207,35 @@ export function FileDetailEditor({
 
           <p className="text-sm font-medium text-ink">{group.title}</p>
 
-          {siblings.length > 0 && (
+          {translations.length > 1 && (
             <div className="space-y-1.5">
               <p className="text-[10px] font-medium text-ink-muted uppercase tracking-wide">
                 Translations
               </p>
               <div className="flex flex-wrap gap-1.5">
-                {siblings.map((sib) => (
-                  <button
-                    key={sib.id}
-                    type="button"
-                    onClick={() => onFocusSibling?.(sib.id)}
-                    className="flex items-center gap-1.5 px-2 py-1 rounded bg-paper border border-border hover:bg-parchment transition-colors cursor-pointer"
-                  >
-                    <span className="text-[10px] font-semibold text-ink-secondary bg-vellum px-1 rounded">
-                      {sib.language}
-                    </span>
-                    <span className="text-xs text-ink truncate max-w-[180px]">
-                      {sib.name}
-                    </span>
-                  </button>
-                ))}
+                {translations.map((t) => {
+                  const current = t.id === file.id;
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => !current && onFocusSibling?.(t.id)}
+                      aria-current={current ? "true" : undefined}
+                      className={`flex items-center gap-1.5 px-2 py-1 rounded border transition-colors ${
+                        current
+                          ? "bg-parchment border-ink/30 cursor-default"
+                          : "bg-paper border-border hover:bg-parchment cursor-pointer"
+                      }`}
+                    >
+                      <span className="text-[10px] font-semibold text-ink-secondary bg-vellum px-1 rounded">
+                        {t.language}
+                      </span>
+                      <span className="text-xs text-ink truncate max-w-[180px]">
+                        {t.name}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

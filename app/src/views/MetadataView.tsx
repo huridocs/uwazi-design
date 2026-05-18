@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAtom } from "jotai";
-import { Download, Eye, Search } from "lucide-react";
+import { Download, Search } from "lucide-react";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
@@ -12,6 +12,7 @@ import { documentsByLanguage } from "../data/document";
 import { filesAtom } from "../atoms/files";
 import { languageAtom, type Language } from "../atoms/language";
 import { DrawerFilesBody } from "../components/files/DrawerFilesBody";
+import { ViewButton } from "../components/shared/ViewButton";
 import { referencesAtom } from "../atoms/references";
 import { RelationshipsDrawerSection } from "../components/relationships/RelationshipsDrawerSection";
 import { DocumentViewer } from "../components/viewer/DocumentViewer";
@@ -89,11 +90,9 @@ function MetadataReadBody({ onEdit }: { onEdit: () => void }) {
               <div className="flex-1"><Property label="Added" value={pdf.added} /></div>
             </PropertyRow>
             <div className="flex items-center justify-between pt-2 mt-auto">
-              <button className="px-3 py-1 text-xs font-medium text-ink rounded border border-border hover:bg-warm transition-colors flex items-center gap-1.5">
-                <Eye size={12} /> View
-              </button>
-              <button className="px-3 py-1 text-xs font-medium text-ink rounded border border-border hover:bg-warm transition-colors flex items-center gap-1.5">
-                <Download size={12} /> Download
+              <ViewButton size="md" />
+              <button className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-full transition-colors cursor-pointer flex items-center gap-1.5">
+                <Download size={12} className="text-ink-tertiary" /> Download
               </button>
             </div>
           </MetadataCard>
