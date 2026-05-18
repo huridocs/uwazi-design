@@ -61,6 +61,7 @@ const SAMPLE_FILE_NAMES = [
 
 export function AddFileModal() {
   const [target, setTarget] = useAtom(addFileTargetAtom);
+  const allFiles = useAtomValue(filesAtom);
   const setFiles = useSetAtom(filesAtom);
   const [groups, setGroups] = useAtom(documentGroupsAtom);
   const currentLanguage = useAtomValue(languageAtom);
@@ -70,6 +71,20 @@ export function AddFileModal() {
   const lockedGroup = lockedGroupId
     ? groups.find((g) => g.id === lockedGroupId)
     : undefined;
+
+  /** In translation mode, prefer a language not already in the target group
+   *  (so a new entry doesn't default to a duplicate). Falls back to the
+   *  current UI language. */
+  const defaultLanguage = (): string => {
+    if (lockedGroupId) {
+      const existing = new Set(
+        allFiles.filter((f) => f.groupId === lockedGroupId).map((f) => f.language),
+      );
+      const missing = knownLanguages.find((l) => !existing.has(l));
+      if (missing) return missing;
+    }
+    return currentLanguage;
+  };
 
   const [entries, setEntries] = useState<PendingFile[]>([]);
 
@@ -113,7 +128,7 @@ export function AddFileModal() {
         id,
         originalName,
         name: baseName,
-        language: currentLanguage,
+        language: defaultLanguage(),
         kind,
         addAs: defaultAddAs,
         size: size ?? "—",

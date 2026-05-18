@@ -13,17 +13,14 @@ interface AddFileDropAreaProps {
   /** "large" for empty-state hero zone; "compact" for the bottom-of-list
    *  always-visible affordance. */
   variant?: "large" | "compact";
+  /** When set, dropped files attach to this DocumentGroup as translations
+   *  rather than creating new supporting groups. The "pick a file" button
+   *  opens the modal in translation mode for the same group. */
+  targetGroupId?: string;
   /** Called with the newly-created focused file id so the parent can update
    *  selection. */
   onAdded?: (fileId: string) => void;
 }
-
-const SAMPLE_FILES = [
-  { name: "evidence_photo.jpg", kind: "image" as FileKind, size: "1.6 MB" },
-  { name: "hearing_excerpt.mp3", kind: "audio" as FileKind, size: "5.2 MB" },
-  { name: "notes.docx", kind: "document" as FileKind, size: "42 KB" },
-  { name: "supplementary.pdf", kind: "pdf" as FileKind, size: "320 KB" },
-];
 
 function detectKind(filename: string): FileKind {
   const ext = filename.toLowerCase().split(".").pop() ?? "";
@@ -38,7 +35,11 @@ function detectKind(filename: string): FileKind {
  *  each dropped file lands as a new supporting group at the bottom. The
  *  affordance also offers a "+ More options" button that opens the full
  *  modal for users who need to pick primary / translation / etc. */
-export function AddFileDropArea({ variant = "compact", onAdded }: AddFileDropAreaProps) {
+export function AddFileDropArea({
+  variant = "compact",
+  targetGroupId,
+  onAdded,
+}: AddFileDropAreaProps) {
   const setFiles = useSetAtom(filesAtom);
   const setGroups = useSetAtom(documentGroupsAtom);
   const groups = useAtomValue(documentGroupsAtom);
@@ -51,8 +52,27 @@ export function AddFileDropArea({ variant = "compact", onAdded }: AddFileDropAre
     : 0;
 
   const addOne = (filename: string, size: string, kind: FileKind) => {
-    const groupId = `g-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     const fileId = `f-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    // Translation drop: attach to the target group, no new group created.
+    if (targetGroupId) {
+      setFiles((all) => [
+        ...all,
+        {
+          id: fileId,
+          groupId: targetGroupId,
+          name: filename,
+          language,
+          type: kind,
+          size,
+          modified: new Date().toISOString().slice(0, 10),
+          url: kind === "pdf" ? "/sample.pdf" : undefined,
+        },
+      ]);
+      onAdded?.(fileId);
+      return;
+    }
+    // Regular drop: spawn a new supporting group containing this file.
+    const groupId = `g-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     const base = filename.replace(/\.[^.]+$/, "");
     setGroups((all) => [
       ...all,
@@ -74,17 +94,22 @@ export function AddFileDropArea({ variant = "compact", onAdded }: AddFileDropAre
     onAdded?.(fileId);
   };
 
-  const simulatePick = () => {
-    const sample = SAMPLE_FILES[Math.floor(Math.random() * SAMPLE_FILES.length)];
-    addOne(sample.name, sample.size, sample.kind);
-  };
+  /** Click → open AddFileModal so the user can actually see what they're
+   *  adding (and edit name / language / add-as) before committing. Dropping
+   *  files bypasses the modal because the user already picked them. */
+  const openPicker = () =>
+    setTarget(
+      targetGroupId
+        ? { mode: "translation", groupId: targetGroupId }
+        : { mode: "new" },
+    );
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragging(false);
     const dropped = Array.from(e.dataTransfer.files ?? []);
     if (dropped.length === 0) {
-      simulatePick();
+      openPicker();
       return;
     }
     for (const f of dropped) {
@@ -119,22 +144,13 @@ export function AddFileDropArea({ variant = "compact", onAdded }: AddFileDropAre
         <p className="text-sm font-medium text-ink-secondary">
           Drag files here or click to add
         </p>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={simulatePick}
-            className="px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors cursor-pointer"
-          >
-            Pick a file
-          </button>
-          <button
-            type="button"
-            onClick={() => setTarget({ mode: "new" })}
-            className="text-xs font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
-          >
-            More options…
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={openPicker}
+          className="px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors cursor-pointer"
+        >
+          Pick a file
+        </button>
       </div>
     );
   }
@@ -157,18 +173,10 @@ export function AddFileDropArea({ variant = "compact", onAdded }: AddFileDropAre
       </span>
       <button
         type="button"
-        onClick={simulatePick}
+        onClick={openPicker}
         className="text-xs font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
       >
         pick a file
-      </button>
-      <span className="text-ink-muted">·</span>
-      <button
-        type="button"
-        onClick={() => setTarget({ mode: "new" })}
-        className="text-xs font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
-      >
-        more options
       </button>
     </div>
   );

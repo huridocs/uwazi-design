@@ -8,14 +8,14 @@ import {
   Download,
   Trash2,
   MousePointerClick,
-  Plus,
   Eye,
 } from "lucide-react";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue } from "jotai";
 import { DrawerTabs } from "../layout/DrawerTabs";
 import { FileEntry } from "../../data/files";
 import { filesAtom, documentGroupsAtom } from "../../atoms/files";
 import { FileDetailEditor } from "./FileDetailEditor";
+import { AddFileDropArea } from "./AddFileDropArea";
 
 const typeIcons: Record<FileEntry["type"], typeof FileText> = {
   pdf: FileText,
@@ -47,8 +47,6 @@ export function FileDrawer({
   const [activeTab, setActiveTab] = useState("file");
   const allFiles = useAtomValue(filesAtom);
   const allGroups = useAtomValue(documentGroupsAtom);
-  const setFiles = useSetAtom(filesAtom);
-  const setGroups = useSetAtom(documentGroupsAtom);
 
   const focusedFile =
     selectedFiles.length === 1 ? selectedFiles[0] : undefined;
@@ -73,28 +71,6 @@ export function FileDrawer({
 
   const handleDeleteFromTranslations = (id: string) => {
     onRequestDelete?.([id]);
-  };
-
-  // Used by the "+ Add translation" / "Add file" empty-state — AddFileModal
-  // lands in commit 4, so for now we stub a placeholder file directly.
-  const stubAddTranslation = (language: string) => {
-    if (!focusedGroup) return;
-    const id = `f-${Date.now()}`;
-    setFiles((all) => [
-      ...all,
-      {
-        id,
-        groupId: focusedGroup.id,
-        name: `${focusedGroup.title} (${language}).pdf`,
-        type: "pdf",
-        size: "0 KB",
-        language,
-        modified: new Date().toISOString().slice(0, 10),
-        url: "/sample.pdf",
-      },
-    ]);
-    // Make sure the group still exists (it will).
-    setGroups((g) => g);
   };
 
   return (
@@ -208,27 +184,11 @@ export function FileDrawer({
                     />
                   ))
                 )}
-                <div
-                  className="flex items-center justify-center gap-3 py-5 rounded-md"
-                  style={{
-                    border: "1.5px dashed var(--border-soft)",
-                  }}
-                >
-                  <Plus size={16} className="text-ink-muted" />
-                  <span className="text-xs text-ink-muted">
-                    Add translation document
-                  </span>
-                  <button
-                    onClick={() =>
-                      onAddTranslation
-                        ? onAddTranslation(focusedGroup.id)
-                        : stubAddTranslation("EN")
-                    }
-                    className="px-2.5 py-1 text-[11px] font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors cursor-pointer"
-                  >
-                    Add file
-                  </button>
-                </div>
+                <AddFileDropArea
+                  variant="compact"
+                  targetGroupId={focusedGroup.id}
+                  onAdded={(id) => onFocusFile?.(id)}
+                />
               </>
             )}
           </div>

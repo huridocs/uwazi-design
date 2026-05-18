@@ -9,13 +9,16 @@ import { MetadataCard, Property, PropertyRow } from "../components/metadata/Meta
 import { TemplateStructure } from "../components/relationships/TemplateStructure";
 import { metadataFieldsByLanguage, pdfMetadataByLanguage, MetadataField } from "../data/metadata";
 import { documentsByLanguage } from "../data/document";
-import { FileEntry } from "../data/files";
+import { FileEntry, DocumentGroup } from "../data/files";
 import {
   filesAtom,
   documentGroupsAtom,
   activePrimaryGroupIdAtom,
+  addFileTargetAtom,
 } from "../atoms/files";
 import { languageAtom, type Language } from "../atoms/language";
+import { useSetAtom } from "jotai";
+import { AddFileModal } from "../components/files/AddFileModal";
 import { referencesAtom } from "../atoms/references";
 import { RelationshipsDrawerSection } from "../components/relationships/RelationshipsDrawerSection";
 import { DocumentViewer } from "../components/viewer/DocumentViewer";
@@ -447,8 +450,6 @@ function MetadataDrawer() {
     activeGroupId ?? groups.filter((g) => g.isPrimary).sort((a, b) => a.order - b.order)[0]?.id ?? null;
   const isInActivePrimary = (file: FileEntry) =>
     file.groupId === resolvedActiveId && file.language === language;
-  const isInPrimaryGroup = (file: FileEntry) =>
-    groups.find((g) => g.id === file.groupId)?.isPrimary ?? false;
 
   const drawerTabs = [
     { id: "document", label: "Document" },
@@ -466,37 +467,11 @@ function MetadataDrawer() {
       ) : activeDrawerTab === "template" ? (
         <TemplateStructure />
       ) : activeDrawerTab === "files" ? (
-        <>
-          <div className="flex-1 overflow-auto px-3 py-3 pb-8 space-y-3">
-            {files.map((file) => (
-              <DrawerFileRow
-                key={file.id}
-                title={
-                  isInActivePrimary(file)
-                    ? doc.title
-                    : titleForFile(file, isInPrimaryGroup(file))
-                }
-                filename={file.name}
-                type={file.type.toUpperCase()}
-                size={file.size}
-                starred={isInActivePrimary(file)}
-                thumbnail={<FileThumbnail type={file.type} />}
-              />
-            ))}
-          </div>
-
-          <div
-            className="flex items-center gap-3 h-12 px-3 bg-paper shrink-0"
-            style={{ borderTop: "1px solid var(--border-primary)" }}
-          >
-            <button className="px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
-              Add file
-            </button>
-            <span className="text-xs text-ink-muted">
-              Learn more about <span className="font-bold underline">files</span>
-            </span>
-          </div>
-        </>
+        <DrawerFilesBody
+          files={files}
+          groups={groups}
+          isInActivePrimary={isInActivePrimary}
+        />
       ) : activeDrawerTab === "connections" ? (
         <RelationshipsDrawerSection />
       ) : (
@@ -508,86 +483,197 @@ function MetadataDrawer() {
   );
 }
 
-/* ── Drawer File Row ── */
+/* ── Drawer Files body ── */
+
+interface DrawerFilesBodyProps {
+  files: FileEntry[];
+  groups: DocumentGroup[];
+  isInActivePrimary: (file: FileEntry) => boolean;
+}
+
+/** Files drawer-tab body, grouped to mirror the main Files view: one
+ *  section per primary `DocumentGroup` with its translations as rows,
+ *  then a flat "Supporting files" section. Add file button opens the
+ *  shared AddFileModal (same atom-driven flow used in FilesView). */
+function DrawerFilesBody({ files, groups, isInActivePrimary }: DrawerFilesBodyProps) {
+  const setAddFileTarget = useSetAtom(addFileTargetAtom);
+
+  const primaryGroups = [...groups]
+    .filter((g) => g.isPrimary)
+    .sort((a, b) => a.order - b.order);
+  const supportingGroupIds = new Set(
+    groups.filter((g) => !g.isPrimary).map((g) => g.id),
+  );
+  const supportingFiles = files.filter((f) => supportingGroupIds.has(f.groupId));
+
+  return (
+    <>
+      <div className="flex-1 overflow-auto px-3 py-3 pb-8 space-y-5">
+        {primaryGroups.length > 0 && (
+          <SectionHeader label="Primary documents" />
+        )}
+        {primaryGroups.map((group) => {
+          const groupFiles = files.filter((f) => f.groupId === group.id);
+          return (
+            <section key={group.id} className="space-y-1.5">
+              <div className="flex items-baseline justify-between px-1">
+                <h4 className="text-xs font-semibold text-ink truncate">
+                  {group.title}
+                </h4>
+                <span className="text-[10px] text-ink-tertiary tabular-nums shrink-0">
+                  {groupFiles.length} {groupFiles.length === 1 ? "file" : "files"}
+                </span>
+              </div>
+              {groupFiles.map((file) => (
+                <DrawerFileRow
+                  key={file.id}
+                  filename={file.name}
+                  type={file.type.toUpperCase()}
+                  size={file.size}
+                  language={file.language}
+                  active={isInActivePrimary(file)}
+                  thumbnail={<FileThumbnail type={file.type} />}
+                />
+              ))}
+              <button
+                type="button"
+                onClick={() =>
+                  setAddFileTarget({ mode: "translation", groupId: group.id })
+                }
+                className="text-[11px] font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer pl-1"
+              >
+                + Add translation
+              </button>
+            </section>
+          );
+        })}
+
+        {supportingFiles.length > 0 && (
+          <>
+            <SectionHeader label="Supporting files" />
+            <div className="space-y-1.5">
+              {supportingFiles.map((file) => (
+                <DrawerFileRow
+                  key={file.id}
+                  filename={file.name}
+                  type={file.type.toUpperCase()}
+                  size={file.size}
+                  language={file.language}
+                  thumbnail={<FileThumbnail type={file.type} />}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
+      <div
+        className="flex items-center gap-3 h-12 px-3 bg-paper shrink-0"
+        style={{ borderTop: "1px solid var(--border-primary)" }}
+      >
+        <button
+          onClick={() => setAddFileTarget({ mode: "new" })}
+          className="px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors cursor-pointer"
+        >
+          Add file
+        </button>
+        <span className="text-xs text-ink-muted">
+          Learn more about <span className="font-bold underline">files</span>
+        </span>
+      </div>
+      <AddFileModal />
+    </>
+  );
+}
+
+function SectionHeader({ label }: { label: string }) {
+  return (
+    <h3 className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider px-1 -mb-1">
+      {label}
+    </h3>
+  );
+}
 
 interface DrawerFileRowProps {
-  title: string;
   filename: string;
   type: string;
   size: string;
-  starred?: boolean;
+  language: string;
+  active?: boolean;
   thumbnail: React.ReactNode;
-}
-
-function titleForFile(file: FileEntry, isPrimary: boolean): string {
-  if (file.type === "audio") return "Audiencia — Velásquez Rodríguez";
-  if (file.type === "link") return "Video — Audiencia pública CorteIDH";
-  if (file.type === "video") return "Press conference — Comisión IDH";
-  if (file.type === "image") return "Evidence photo";
-  if (!isPrimary && file.type === "pdf")
-    return "Testimonio de testigos — Velásquez Rodríguez";
-  return file.name;
 }
 
 function FileThumbnail({ type }: { type: FileEntry["type"] }) {
   if (type === "link") {
     return (
-      <div className="w-20 h-full bg-seal flex items-center justify-center rounded-l-md shrink-0">
+      <div className="w-16 self-stretch bg-seal flex items-center justify-center rounded-l-md shrink-0">
         <span className="text-[9px] font-bold text-white">YouTube</span>
       </div>
     );
   }
   if (type === "audio") {
     return (
-      <div className="w-20 h-full bg-warm flex items-center justify-center rounded-l-md shrink-0">
-        <div className="w-10 h-10 rounded-md bg-parchment flex items-center justify-center shadow-sm">
-          <div className="w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[9px] border-l-ink ml-0.5" />
+      <div className="w-16 self-stretch bg-warm flex items-center justify-center rounded-l-md shrink-0">
+        <div className="w-9 h-9 rounded-md bg-parchment flex items-center justify-center shadow-sm">
+          <div className="w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[8px] border-l-ink ml-0.5" />
         </div>
       </div>
     );
   }
+  if (type === "video") {
+    return (
+      <div className="w-16 self-stretch bg-ink flex items-center justify-center rounded-l-md shrink-0">
+        <div className="w-9 h-9 rounded-full bg-paper/95 flex items-center justify-center shadow-sm">
+          <div className="w-0 h-0 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent border-l-[10px] border-l-ink ml-0.5" />
+        </div>
+      </div>
+    );
+  }
+  if (type === "image") {
+    return (
+      <div className="w-16 self-stretch bg-vellum flex items-center justify-center rounded-l-md shrink-0">
+        <span className="text-[9px] font-semibold uppercase tracking-wide text-ink-tertiary">
+          IMG
+        </span>
+      </div>
+    );
+  }
   return (
-    <div className="w-20 h-full bg-warm flex items-center justify-center rounded-l-md shrink-0">
-      <div className="bg-paper rounded shadow-sm w-14 h-16 flex items-center justify-center">
+    <div className="w-16 self-stretch bg-warm flex items-center justify-center rounded-l-md shrink-0">
+      <div className="bg-paper rounded shadow-sm w-11 h-13 flex items-center justify-center" style={{ height: "3.25rem" }}>
         <span className="text-[8px] text-ink-muted">{type === "pdf" ? "PDF" : "DOC"}</span>
       </div>
     </div>
   );
 }
 
-function DrawerFileRow({ title, filename, type, size, starred, thumbnail }: DrawerFileRowProps) {
+function DrawerFileRow({ filename, type, size, language, active, thumbnail }: DrawerFileRowProps) {
   return (
-    <div className="flex border border-border/50 rounded-md overflow-hidden bg-paper hover:bg-warm/50 transition-colors">
-      {/* Thumbnail */}
-      <div className="relative">
-        {thumbnail}
-        {starred && (
-          <span className="absolute top-1.5 left-1.5 px-1 py-0.5 text-[8px] font-semibold uppercase tracking-wide rounded bg-warning-light text-warning leading-none">
-            Default
-          </span>
-        )}
-      </div>
+    <div
+      className={`flex border rounded-md overflow-hidden transition-colors ${
+        active
+          ? "border-ink/30 bg-parchment hover:bg-parchment"
+          : "border-border/50 bg-paper hover:bg-warm/50"
+      }`}
+    >
+      <div className="relative">{thumbnail}</div>
 
-      {/* Content */}
-      <div className="flex-1 min-w-0 px-3 py-2.5 flex flex-col justify-center gap-1">
-        <p className="text-sm font-bold text-ink truncate">{title}</p>
-        <p className="text-xs text-ink-muted truncate">{filename}</p>
+      <div className="flex-1 min-w-0 px-3 py-2 flex flex-col justify-center gap-0.5">
+        <div className="flex items-center gap-1.5">
+          <p className="text-xs font-medium text-ink truncate">{filename}</p>
+          <span className="text-[9px] font-semibold text-ink-secondary bg-vellum px-1 py-px rounded shrink-0">
+            {language}
+          </span>
+        </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            <span className="text-[11px] text-ink-tertiary">Type</span>
-            <span className="text-[11px] font-medium text-ink">{type}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="text-[11px] text-ink-tertiary">Size</span>
-            <span className="text-[11px] font-medium text-ink">{size}</span>
-          </div>
+          <span className="text-[10px] text-ink-tertiary">{type}</span>
+          <span className="text-[10px] text-ink-tertiary">{size}</span>
         </div>
       </div>
 
-      {/* View button */}
-      <div className="flex items-center pr-3 shrink-0">
-        <button className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-ink rounded border border-border hover:bg-parchment transition-colors">
-          <ChevronRight size={12} /> View
+      <div className="flex items-center pr-2 shrink-0">
+        <button className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-ink rounded border border-border hover:bg-warm transition-colors cursor-pointer">
+          <ChevronRight size={11} /> View
         </button>
       </div>
     </div>

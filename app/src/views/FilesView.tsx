@@ -184,18 +184,13 @@ export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
                 onFocus={setFocusedId}
                 onRequestDelete={(id) => setPendingDelete([id])}
               />
-              {files.length === 0 ? (
+              {files.length === 0 && (
                 <div className="mt-3">
                   <AddFileDropArea
                     variant="large"
                     onAdded={(id) => setFocusedId(id)}
                   />
                 </div>
-              ) : (
-                <AddFileDropArea
-                  variant="compact"
-                  onAdded={(id) => setFocusedId(id)}
-                />
               )}
             </div>
             <FilesActionBar

@@ -17,6 +17,7 @@ import {
   filesAtom,
   documentGroupsAtom,
   activePrimaryGroupIdAtom,
+  setActivePrimaryAtom,
   drawerEditFocusAtom,
 } from "../../atoms/files";
 import { languageAtom } from "../../atoms/language";
@@ -60,7 +61,7 @@ export function FileDetailEditor({
   const [files, setFiles] = useAtom(filesAtom);
   const [groups, setGroups] = useAtom(documentGroupsAtom);
   const activeGroupId = useAtomValue(activePrimaryGroupIdAtom);
-  const setActiveGroupId = useSetAtom(activePrimaryGroupIdAtom);
+  const setActivePrimary = useSetAtom(setActivePrimaryAtom);
   const [editFocus, setEditFocus] = useAtom(drawerEditFocusAtom);
   const language = useAtomValue(languageAtom);
 
@@ -103,7 +104,7 @@ export function FileDetailEditor({
   };
 
   const setAsActive = () => {
-    setActiveGroupId(file.groupId);
+    setActivePrimary(file.groupId);
   };
 
   const isActiveGroup = file.groupId === activeGroupId;

@@ -22,6 +22,7 @@ import { breakpointAtom } from "../../atoms/viewport";
 import {
   documentGroupsAtom,
   activePrimaryGroupIdAtom,
+  setActivePrimaryAtom,
   drawerEditFocusAtom,
 } from "../../atoms/files";
 import { Checkbox } from "../shared/Checkbox";
@@ -76,7 +77,8 @@ export function FileTable({
   const [breakpoint] = useAtom(breakpointAtom);
   const isMobile = breakpoint === "mobile";
   const groups = useAtomValue(documentGroupsAtom);
-  const [activeGroupId, setActiveGroupId] = useAtom(activePrimaryGroupIdAtom);
+  const [activeGroupId] = useAtom(activePrimaryGroupIdAtom);
+  const setActivePrimary = useSetAtom(setActivePrimaryAtom);
   const setGroups = useSetAtom(documentGroupsAtom);
   const setDrawerFocus = useSetAtom(drawerEditFocusAtom);
 
@@ -138,7 +140,7 @@ export function FileTable({
                 id: "activate",
                 label: "Set as active primary",
                 icon: Star,
-                onClick: () => setActiveGroupId(file.groupId),
+                onClick: () => setActivePrimary(file.groupId),
               }
             : null,
           isPrimary
