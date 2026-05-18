@@ -141,12 +141,12 @@ export function FileDetailEditor({
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="Language">
-            <div className="relative flex items-center bg-paper rounded border border-border focus-within:ring-1 focus-within:ring-carbon/30">
+            <div className="relative inline-flex items-center bg-paper rounded border border-border focus-within:ring-1 focus-within:ring-carbon/30">
               <select
                 ref={langRef}
                 value={file.language}
                 onChange={(e) => updateField("language", e.target.value)}
-                className="appearance-none flex-1 bg-transparent pl-2 pr-7 py-1.5 text-sm text-ink focus:outline-none cursor-pointer"
+                className="appearance-none bg-transparent pl-2 pr-7 py-1.5 text-sm text-ink focus:outline-none cursor-pointer"
                 aria-label="File language"
               >
                 {languageOptions.map((lang) => (
