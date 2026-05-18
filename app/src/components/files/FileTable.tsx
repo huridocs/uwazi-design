@@ -1,4 +1,4 @@
-import { FileText, Music, Link2, Eye } from "lucide-react";
+import { FileText, Music, Video, Image, Link2, Eye } from "lucide-react";
 import { useAtom } from "jotai";
 import { FileEntry } from "../../data/files";
 import { breakpointAtom } from "../../atoms/viewport";
@@ -16,6 +16,8 @@ interface FileTableProps {
 const typeIcons: Record<FileEntry["type"], typeof FileText> = {
   pdf: FileText,
   audio: Music,
+  video: Video,
+  image: Image,
   link: Link2,
   document: FileText,
 };
@@ -23,6 +25,8 @@ const typeIcons: Record<FileEntry["type"], typeof FileText> = {
 const typeLabels: Record<FileEntry["type"], string> = {
   pdf: "PDF",
   audio: "Audio",
+  video: "Video",
+  image: "Image",
   link: "Link",
   document: "Document",
 };

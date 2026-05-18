@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, Music, Link2, Download, Trash2, Pencil, MousePointerClick, Plus, Eye } from "lucide-react";
+import { FileText, Music, Video, Image, Link2, Download, Trash2, Pencil, MousePointerClick, Plus, Eye } from "lucide-react";
 import { DrawerTabs } from "../layout/DrawerTabs";
 import { FileEntry, primaryFiles } from "../../data/files";
 import { currentDocument } from "../../data/document";
@@ -7,6 +7,8 @@ import { currentDocument } from "../../data/document";
 const typeIcons: Record<FileEntry["type"], typeof FileText> = {
   pdf: FileText,
   audio: Music,
+  video: Video,
+  image: Image,
   link: Link2,
   document: FileText,
 };

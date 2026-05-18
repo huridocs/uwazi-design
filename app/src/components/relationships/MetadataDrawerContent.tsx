@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAtomValue } from "jotai";
-import { ChevronDown, ChevronRight, ExternalLink, FileText, Music, Link2 } from "lucide-react";
+import { ChevronDown, ChevronRight, ExternalLink, FileText, Music, Video, Image, Link2 } from "lucide-react";
 import { languageAtom } from "../../atoms/language";
 import { documentsByLanguage } from "../../data/document";
 import { metadataFieldsByLanguage, pdfMetadataByLanguage } from "../../data/metadata";
@@ -10,6 +10,8 @@ import { EntityPill } from "../shared/EntityPill";
 const fileTypeIcons: Record<FileEntry["type"], typeof FileText> = {
   pdf: FileText,
   audio: Music,
+  video: Video,
+  image: Image,
   link: Link2,
   document: FileText,
 };
