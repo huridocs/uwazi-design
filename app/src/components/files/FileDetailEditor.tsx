@@ -147,7 +147,7 @@ export function FileDetailEditor({
                 ref={langRef}
                 value={file.language}
                 onChange={(e) => updateField("language", e.target.value)}
-                className="appearance-none bg-transparent pl-2 pr-7 py-1.5 text-sm text-ink focus:outline-none cursor-pointer"
+                className="appearance-none bg-transparent pl-2 pr-6 py-0.5 text-xs font-medium text-ink focus:outline-none cursor-pointer"
                 aria-label="File language"
               >
                 {languageOptions.map((lang) => (
@@ -157,8 +157,8 @@ export function FileDetailEditor({
                 ))}
               </select>
               <ChevronDown
-                size={12}
-                className="absolute right-2 text-ink-tertiary pointer-events-none"
+                size={11}
+                className="absolute right-1.5 text-ink-tertiary pointer-events-none"
               />
             </div>
           </Field>
