@@ -7,7 +7,7 @@ interface ViewButtonProps {
   size?: "sm" | "md";
 }
 
-/** Shared "View" affordance. Soft pill (rounded-full, bg-warm, no border)
+/** Shared "View" affordance. Soft pill (rounded-md, bg-warm, no border)
  *  with an Eye glyph — used in file rows, metadata cards, and anywhere the
  *  app needs a tertiary "open this" action. */
 export function ViewButton({
@@ -23,7 +23,7 @@ export function ViewButton({
       type="button"
       onClick={onClick}
       aria-label={ariaLabel ?? label}
-      className={`inline-flex items-center font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-full transition-colors cursor-pointer ${dims}`}
+      className={`inline-flex items-center font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer ${dims}`}
     >
       <Eye size={icon} className="text-ink-tertiary" />
       {label}

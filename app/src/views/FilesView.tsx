@@ -265,7 +265,7 @@ function FilesActionBar({
     >
       <button
         onClick={onAddFile}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-full transition-colors cursor-pointer"
+        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
       >
         <span className="text-ink-tertiary">+</span> Add file
       </button>
@@ -277,7 +277,7 @@ function FilesActionBar({
           </span>
           <button
             onClick={onDelete}
-            className="px-3 py-1.5 text-xs font-medium text-white bg-seal rounded-full hover:bg-seal/90 transition-colors cursor-pointer"
+            className="px-3 py-1.5 text-xs font-medium text-white bg-seal rounded-md hover:bg-seal/90 transition-colors cursor-pointer"
           >
             Delete
           </button>
