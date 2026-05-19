@@ -49,13 +49,13 @@ export const documentGroups: DocumentGroup[] = [
   { id: "g-external-link", title: "External news coverage", isPrimary: false, order: 6 },
 ];
 
-// Stable public sample PDFs so the viewer renders distinct content for
-// each file. /sample.pdf (bundled) stays the canonical "main" demo for the
-// active primary; secondary primaries + supporting PDFs use public mirrors
-// of the Mozilla PDF.js tracemonkey demo and the Africau sample PDF.
-const TRACEMONKEY =
-  "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf";
-const AFRICAU_SAMPLE = "https://www.africau.edu/images/default/sample.pdf";
+// Bundled sample PDFs in app/public/ — kept local so react-pdf doesn't run
+// into CORS issues fetching from third-party hosts. Each file in the seed
+// points at one of these so the viewer renders distinct content per row.
+const SAMPLE_MAIN = "/sample.pdf";            // canonical IACHR judgment demo
+const SAMPLE_ACADEMIC = "/tracemonkey.pdf";   // Mozilla PDF.js academic paper
+const SAMPLE_REPORT = "/report-sample.pdf";   // Adobe sample report
+const SAMPLE_DOC = "/sample-doc.pdf";         // W3 dummy single-page
 
 export const files: FileEntry[] = [
   // Judgment — 4 translations
@@ -67,7 +67,7 @@ export const files: FileEntry[] = [
     size: "114 KB",
     language: "EN",
     modified: "1987-06-26",
-    url: "/sample.pdf",
+    url: SAMPLE_MAIN,
   },
   {
     id: "f-judg-es",
@@ -77,7 +77,7 @@ export const files: FileEntry[] = [
     size: "118 KB",
     language: "ES",
     modified: "1987-06-26",
-    url: TRACEMONKEY,
+    url: SAMPLE_ACADEMIC,
   },
   {
     id: "f-judg-fr",
@@ -87,7 +87,7 @@ export const files: FileEntry[] = [
     size: "121 KB",
     language: "FR",
     modified: "1988-01-15",
-    url: AFRICAU_SAMPLE,
+    url: SAMPLE_REPORT,
   },
   {
     id: "f-judg-ar",
@@ -97,7 +97,7 @@ export const files: FileEntry[] = [
     size: "127 KB",
     language: "AR",
     modified: "1988-04-02",
-    url: TRACEMONKEY,
+    url: SAMPLE_DOC,
   },
   // Final Report — 2 translations
   {
@@ -108,7 +108,7 @@ export const files: FileEntry[] = [
     size: "2.3 MB",
     language: "EN",
     modified: "1991-11-10",
-    url: AFRICAU_SAMPLE,
+    url: SAMPLE_REPORT,
   },
   {
     id: "f-report-es",
@@ -118,7 +118,7 @@ export const files: FileEntry[] = [
     size: "2.4 MB",
     language: "ES",
     modified: "1991-11-10",
-    url: TRACEMONKEY,
+    url: SAMPLE_ACADEMIC,
   },
   // Supporting — one file per group, mixed kinds
   {
@@ -156,7 +156,7 @@ export const files: FileEntry[] = [
     size: "4.1 MB",
     language: "ES",
     modified: "1987-04-22",
-    url: AFRICAU_SAMPLE,
+    url: SAMPLE_DOC,
   },
   {
     id: "f-external-link",
