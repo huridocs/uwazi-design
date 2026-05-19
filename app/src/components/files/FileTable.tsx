@@ -105,6 +105,12 @@ export function FileTable({
       <RowKebab
         items={[
           {
+            id: "view",
+            label: "View",
+            icon: Eye,
+            onClick: () => onFocus?.(file.id),
+          },
+          {
             id: "rename",
             label: "Rename",
             icon: Pencil,
@@ -248,7 +254,7 @@ export function FileTable({
       <div
         className="grid items-center gap-3 px-4 h-10 text-[11px] font-semibold text-ink-tertiary uppercase tracking-wider"
         style={{
-          gridTemplateColumns: "28px 1fr 70px 70px 50px 90px 60px",
+          gridTemplateColumns: "28px 1fr 70px 70px 50px 90px 32px",
           backgroundColor: "var(--bg-warm)",
           borderBottom: "1px solid var(--border-primary)",
         }}
@@ -283,7 +289,7 @@ export function FileTable({
             className={`grid items-center gap-3 px-4 h-11 text-sm transition-colors cursor-pointer
               hover:bg-warm ${isFocused ? "bg-parchment" : ""}`}
             style={{
-              gridTemplateColumns: "28px 1fr 70px 70px 50px 90px 60px",
+              gridTemplateColumns: "28px 1fr 70px 70px 50px 90px 32px",
               borderBottom: "1px solid var(--border-primary)",
             }}
             onClick={() => onFocus?.(file.id)}
@@ -312,13 +318,10 @@ export function FileTable({
                 year: "numeric",
               })}
             </span>
-            <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
-              <button
-                aria-label={`View ${file.name}`}
-                className="flex items-center justify-center p-1 rounded hover:bg-parchment transition-colors"
-              >
-                <Eye size={14} className="text-ink-tertiary" />
-              </button>
+            <div
+              className="flex items-center justify-end"
+              onClick={(e) => e.stopPropagation()}
+            >
               {renderMenu(file)}
             </div>
           </div>
