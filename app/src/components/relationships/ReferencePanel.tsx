@@ -50,7 +50,12 @@ export function ReferencePanel() {
         </div>
       )}
 
-      <DrawerActionBar activeTab={activeDrawerTab} />
+      {/* Files tab carries its own footer ("Add file" + learn-more link), so
+          skip the shared action bar slot — otherwise the empty 48px bar
+          stacks below it. */}
+      {activeDrawerTab !== "files" && (
+        <DrawerActionBar activeTab={activeDrawerTab} />
+      )}
     </div>
   );
 }
