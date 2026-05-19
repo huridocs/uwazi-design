@@ -91,7 +91,7 @@ function MetadataReadBody({ onEdit }: { onEdit: () => void }) {
             </PropertyRow>
             <div className="flex items-center justify-between pt-2 mt-auto">
               <ViewButton size="md" />
-              <button className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-full transition-colors cursor-pointer flex items-center gap-1.5">
+              <button className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer flex items-center gap-1.5">
                 <Download size={12} className="text-ink-tertiary" /> Download
               </button>
             </div>
