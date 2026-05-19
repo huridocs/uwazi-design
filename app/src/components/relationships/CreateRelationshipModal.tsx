@@ -294,14 +294,14 @@ export function CreateRelationshipModal() {
             <div className="px-5 py-4 border-t border-border flex justify-between">
               <button
                 onClick={() => setStep("entity")}
-                className="px-4 py-2 text-sm font-medium rounded-md text-ink-secondary bg-warm hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-xs font-medium rounded-md text-ink-secondary bg-warm hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
               >
                 {t("System", "Back")}
               </button>
               <button
                 onClick={handleConfirmNewEntity}
                 disabled={!newEntityTitle.trim()}
-                className="px-4 py-2 text-sm font-medium rounded-md bg-ink text-parchment
+                className="px-3 py-1.5 text-xs font-medium rounded-md bg-ink text-parchment
                   hover:bg-ink/90 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {t("System", "Create entity")}
@@ -341,13 +341,13 @@ export function CreateRelationshipModal() {
             <div className="px-5 py-4 border-t border-border flex justify-between">
               <button
                 onClick={() => setStep("entity")}
-                className="px-4 py-2 text-sm font-medium rounded-md text-ink-secondary bg-warm hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-xs font-medium rounded-md text-ink-secondary bg-warm hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
               >
                 {t("System", "Back")}
               </button>
               <button
                 onClick={handleCreate}
-                className="px-4 py-2 text-sm font-medium rounded-md bg-ink text-parchment
+                className="px-3 py-1.5 text-xs font-medium rounded-md bg-ink text-parchment
                   hover:bg-ink/90 transition-colors cursor-pointer"
               >
                 {t("System", "Create relationship")}

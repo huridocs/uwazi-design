@@ -415,17 +415,17 @@ export function AddFileModal() {
         >
           <button
             onClick={() => setTarget(null)}
-            className="px-4 py-2 text-sm font-medium rounded-md text-ink-secondary bg-warm hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
+            className="px-3 py-1.5 text-xs font-medium rounded-md text-ink-secondary bg-warm hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
           >
             Cancel
           </button>
           <button
             onClick={confirmAll}
             disabled={!allReady}
-            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
               allReady
                 ? "bg-ink text-parchment hover:bg-ink/90 cursor-pointer"
-                : "bg-warm text-ink-muted border border-border cursor-not-allowed"
+                : "bg-warm text-ink-muted cursor-not-allowed"
             }`}
           >
             {entries.length > 1 ? `Add ${entries.length} files` : "Add file"}
