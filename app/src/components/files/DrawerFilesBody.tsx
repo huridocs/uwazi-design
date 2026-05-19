@@ -35,8 +35,8 @@ export function DrawerFilesBody() {
   const supportingFiles = files.filter((f) => supportingGroupIds.has(f.groupId));
 
   return (
-    <>
-      <div className="flex-1 overflow-auto px-3 py-4 pb-8">
+    <div className="flex-1 min-h-0 flex flex-col">
+      <div className="flex-1 min-h-0 overflow-auto px-3 py-4 pb-8">
         {primaryGroups.length > 0 && (
           <SectionHeader label="Primary documents" />
         )}
@@ -112,7 +112,7 @@ export function DrawerFilesBody() {
         </span>
       </div>
       <AddFileModal />
-    </>
+    </div>
   );
 }
 
