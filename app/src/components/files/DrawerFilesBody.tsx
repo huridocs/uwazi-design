@@ -1,4 +1,5 @@
-import { useAtomValue, useSetAtom } from "jotai";
+import { ArrowLeft, Download } from "lucide-react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { FileEntry } from "../../data/files";
 import {
   filesAtom,
@@ -9,7 +10,7 @@ import {
 } from "../../atoms/files";
 import { languageAtom } from "../../atoms/language";
 import { AddFileModal } from "./AddFileModal";
-import { FileViewerModal } from "./FileViewerModal";
+import { FileViewerBody, resolveFileUrl } from "./FileViewerModal";
 import { ViewButton } from "../shared/ViewButton";
 
 /** Drawer body listing every file grouped by its DocumentGroup. Mirrors the
@@ -23,7 +24,10 @@ export function DrawerFilesBody() {
   const activeGroupId = useAtomValue(activePrimaryGroupIdAtom);
   const language = useAtomValue(languageAtom);
   const setAddFileTarget = useSetAtom(addFileTargetAtom);
-  const setViewerFileId = useSetAtom(viewerFileIdAtom);
+  const [viewerFileId, setViewerFileId] = useAtom(viewerFileIdAtom);
+  const viewingFile = viewerFileId
+    ? files.find((f) => f.id === viewerFileId)
+    : null;
 
   const primaryGroups = [...groups]
     .filter((g) => g.isPrimary)
@@ -42,6 +46,42 @@ export function DrawerFilesBody() {
     groups.filter((g) => !g.isPrimary).map((g) => g.id),
   );
   const supportingFiles = files.filter((f) => supportingGroupIds.has(f.groupId));
+
+  // Inline viewer mode — body swaps to the media, action bar shows
+  // Back + Download in place of the file list.
+  if (viewingFile) {
+    const url = resolveFileUrl(viewingFile);
+    return (
+      <div className="flex-1 min-h-0 flex flex-col">
+        <div className="flex-1 min-h-0 overflow-auto bg-warm/40 flex items-center justify-center p-4">
+          <FileViewerBody file={viewingFile} url={url} />
+        </div>
+        <div
+          className="flex items-center justify-between h-12 px-3 bg-paper shrink-0"
+          style={{ borderTop: "1px solid var(--border-primary)" }}
+        >
+          <button
+            onClick={() => setViewerFileId(null)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+          >
+            <ArrowLeft size={12} className="text-ink-tertiary" /> Back to files
+          </button>
+          {url && viewingFile.type !== "link" && (
+            <a
+              href={url}
+              download
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+            >
+              <Download size={12} className="text-ink-tertiary" /> Download
+            </a>
+          )}
+        </div>
+        <AddFileModal />
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 min-h-0 flex flex-col">
@@ -123,7 +163,6 @@ export function DrawerFilesBody() {
         </span>
       </div>
       <AddFileModal />
-      <FileViewerModal />
     </div>
   );
 }

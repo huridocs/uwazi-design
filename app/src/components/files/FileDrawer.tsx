@@ -9,13 +9,19 @@ import {
   Trash2,
   MousePointerClick,
   Eye,
+  ArrowLeft,
 } from "lucide-react";
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { DrawerTabs } from "../layout/DrawerTabs";
 import { FileEntry } from "../../data/files";
-import { filesAtom, documentGroupsAtom } from "../../atoms/files";
+import {
+  filesAtom,
+  documentGroupsAtom,
+  viewerFileIdAtom,
+} from "../../atoms/files";
 import { FileDetailEditor } from "./FileDetailEditor";
 import { AddFileDropArea } from "./AddFileDropArea";
+import { FileViewerBody, resolveFileUrl } from "./FileViewerModal";
 
 const typeIcons: Record<FileEntry["type"], typeof FileText> = {
   pdf: FileText,
@@ -47,9 +53,13 @@ export function FileDrawer({
   const [activeTab, setActiveTab] = useState("file");
   const allFiles = useAtomValue(filesAtom);
   const allGroups = useAtomValue(documentGroupsAtom);
+  const [viewerFileId, setViewerFileId] = useAtom(viewerFileIdAtom);
 
   const focusedFile =
     selectedFiles.length === 1 ? selectedFiles[0] : undefined;
+  // Viewer mode: focused file matches the global viewer atom. Swaps the
+  // drawer body from editor to inline media + action bar to back/download.
+  const viewing = focusedFile && focusedFile.id === viewerFileId;
 
   // Translations tab is keyed on the focused file's group. Siblings include
   // the focused file itself so users see the full set.
@@ -128,6 +138,13 @@ export function FileDrawer({
                   <FileCompactCard key={file.id} file={file} />
                 ))}
               </div>
+            ) : viewing ? (
+              <div className="flex items-center justify-center min-h-full">
+                <FileViewerBody
+                  file={selectedFiles[0]}
+                  url={resolveFileUrl(selectedFiles[0])}
+                />
+              </div>
             ) : (
               <FileDetailEditor
                 file={selectedFiles[0]}
@@ -143,15 +160,52 @@ export function FileDrawer({
               className="flex items-center justify-between h-12 px-3 shrink-0"
               style={{ borderTop: "1px solid var(--border-primary)" }}
             >
-              <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer">
-                <Download size={12} className="text-ink-tertiary" /> Download
-              </button>
-              <button
-                onClick={() => onRequestDelete?.([selectedFiles[0].id])}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-seal bg-seal-tint/40 hover:bg-seal-tint rounded-md transition-colors cursor-pointer"
-              >
-                <Trash2 size={12} /> Delete
-              </button>
+              {viewing ? (
+                <>
+                  <button
+                    onClick={() => setViewerFileId(null)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+                  >
+                    <ArrowLeft size={12} className="text-ink-tertiary" /> Back to details
+                  </button>
+                  {(() => {
+                    const url = resolveFileUrl(selectedFiles[0]);
+                    return url && selectedFiles[0].type !== "link" ? (
+                      <a
+                        href={url}
+                        download
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+                      >
+                        <Download size={12} className="text-ink-tertiary" /> Download
+                      </a>
+                    ) : (
+                      <div />
+                    );
+                  })()}
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setViewerFileId(selectedFiles[0].id)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+                    >
+                      <Eye size={12} className="text-ink-tertiary" /> View
+                    </button>
+                    <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer">
+                      <Download size={12} className="text-ink-tertiary" /> Download
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => onRequestDelete?.([selectedFiles[0].id])}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-seal bg-seal-tint/40 hover:bg-seal-tint rounded-md transition-colors cursor-pointer"
+                  >
+                    <Trash2 size={12} /> Delete
+                  </button>
+                </>
+              )}
             </div>
           )}
           {selectedFiles.length > 1 && (

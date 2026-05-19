@@ -87,7 +87,13 @@ export function FileViewerModal() {
   );
 }
 
-function FileViewerBody({ file, url }: { file: FileEntry; url?: string }) {
+/** Resolve the URL to render: explicit on the file, or a per-kind fallback
+ *  sample. Exported so consumers can mirror download links / hrefs. */
+export function resolveFileUrl(file: FileEntry): string | undefined {
+  return file.url ?? SAMPLE_URLS[file.type];
+}
+
+export function FileViewerBody({ file, url }: { file: FileEntry; url?: string }) {
   if (file.type === "pdf") {
     return (
       <iframe
