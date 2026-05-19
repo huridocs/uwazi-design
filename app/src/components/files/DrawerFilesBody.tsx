@@ -11,6 +11,7 @@ import {
 import { languageAtom } from "../../atoms/language";
 import { AddFileModal } from "./AddFileModal";
 import { FileViewerBody, resolveFileUrl } from "./FileViewerModal";
+import { DocumentViewer } from "../viewer/DocumentViewer";
 import { ViewButton } from "../shared/ViewButton";
 
 /** Drawer body listing every file grouped by its DocumentGroup. Mirrors the
@@ -48,14 +49,25 @@ export function DrawerFilesBody() {
   const supportingFiles = files.filter((f) => supportingGroupIds.has(f.groupId));
 
   // Inline viewer mode — body swaps to the media, action bar shows
-  // Back + Download in place of the file list.
+  // Back + Download in place of the file list. PDFs use the same full
+  // DocumentViewer the Metadata drawer's Document sub-tab uses (page
+  // rendering + highlights), so the experience matches across surfaces.
   if (viewingFile) {
     const url = resolveFileUrl(viewingFile);
     return (
       <div className="flex-1 min-h-0 flex flex-col">
-        <div className="flex-1 min-h-0 overflow-auto bg-warm/40 flex items-center justify-center p-4">
-          <FileViewerBody file={viewingFile} url={url} />
-        </div>
+        {viewingFile.type === "pdf" ? (
+          <div className="flex-1 min-h-0">
+            <DocumentViewer
+              showMinimap={false}
+              fileOverride={{ url, language: viewingFile.language }}
+            />
+          </div>
+        ) : (
+          <div className="flex-1 min-h-0 overflow-auto bg-warm/40 flex items-center justify-center p-4">
+            <FileViewerBody file={viewingFile} url={url} />
+          </div>
+        )}
         <div
           className="flex items-center justify-between h-12 px-3 bg-paper shrink-0"
           style={{ borderTop: "1px solid var(--border-primary)" }}

@@ -24,9 +24,13 @@ interface DocumentViewerProps {
   actionBarLeft?: ReactNode;
   /** Hide the right-edge ref minimap. Default: shown on non-mobile. */
   showMinimap?: boolean;
+  /** When set, render this specific file instead of resolving from the
+   *  active primary + language atoms. Used by the drawer's inline viewer
+   *  to display any file the user "View"s without disturbing global state. */
+  fileOverride?: { url?: string; language: string } | null;
 }
 
-export function DocumentViewer({ actionBarLeft, showMinimap = true }: DocumentViewerProps = {}) {
+export function DocumentViewer({ actionBarLeft, showMinimap = true, fileOverride }: DocumentViewerProps = {}) {
   const [breakpoint] = useAtom(breakpointAtom);
   const isMobile = breakpoint === "mobile";
   const [numPages, setNumPages] = useState<number>(0);
@@ -52,6 +56,7 @@ export function DocumentViewer({ actionBarLeft, showMinimap = true }: DocumentVi
   );
   const resolvedActiveId = activeGroupId ?? primaryGroups[0]?.id ?? null;
   const activeFile = useMemo(() => {
+    if (fileOverride) return fileOverride;
     if (!resolvedActiveId) return null;
     const exact = files.find(
       (f) => f.groupId === resolvedActiveId && f.language === language,
@@ -60,10 +65,10 @@ export function DocumentViewer({ actionBarLeft, showMinimap = true }: DocumentVi
     // No translation in this language — fall back to the first file in the
     // group so the viewer still renders something.
     return files.find((f) => f.groupId === resolvedActiveId) ?? null;
-  }, [files, resolvedActiveId, language]);
+  }, [files, resolvedActiveId, language, fileOverride]);
   const filePath = activeFile?.url ?? "/sample.pdf";
   const showLangFallback =
-    activeFile !== null && activeFile.language !== language;
+    !fileOverride && activeFile !== null && activeFile.language !== language;
 
   // Measure container width for responsive PDF scaling
   useEffect(() => {

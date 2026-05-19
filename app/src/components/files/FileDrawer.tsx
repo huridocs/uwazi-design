@@ -22,6 +22,7 @@ import {
 import { FileDetailEditor } from "./FileDetailEditor";
 import { AddFileDropArea } from "./AddFileDropArea";
 import { FileViewerBody, resolveFileUrl } from "./FileViewerModal";
+import { DocumentViewer } from "../viewer/DocumentViewer";
 
 const typeIcons: Record<FileEntry["type"], typeof FileText> = {
   pdf: FileText,
@@ -139,12 +140,26 @@ export function FileDrawer({
                 ))}
               </div>
             ) : viewing ? (
-              <div className="flex items-center justify-center min-h-full">
-                <FileViewerBody
-                  file={selectedFiles[0]}
-                  url={resolveFileUrl(selectedFiles[0])}
-                />
-              </div>
+              selectedFiles[0].type === "pdf" ? (
+                // Match the Metadata drawer's Document tab — full page-by-page
+                // viewer with highlights overlay, not a flat iframe.
+                <div className="-m-3 h-full min-h-[60vh]">
+                  <DocumentViewer
+                    showMinimap={false}
+                    fileOverride={{
+                      url: resolveFileUrl(selectedFiles[0]),
+                      language: selectedFiles[0].language,
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center justify-center min-h-full">
+                  <FileViewerBody
+                    file={selectedFiles[0]}
+                    url={resolveFileUrl(selectedFiles[0])}
+                  />
+                </div>
+              )
             ) : (
               <FileDetailEditor
                 file={selectedFiles[0]}
