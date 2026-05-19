@@ -24,6 +24,7 @@ import {
   activePrimaryGroupIdAtom,
   setActivePrimaryAtom,
   drawerEditFocusAtom,
+  viewerFileIdAtom,
 } from "../../atoms/files";
 import { Checkbox } from "../shared/Checkbox";
 
@@ -81,6 +82,7 @@ export function FileTable({
   const setActivePrimary = useSetAtom(setActivePrimaryAtom);
   const setGroups = useSetAtom(documentGroupsAtom);
   const setDrawerFocus = useSetAtom(drawerEditFocusAtom);
+  const setViewerFileId = useSetAtom(viewerFileIdAtom);
 
   /** Map of groupId → isPrimary, looked up per row to label badges. */
   const isPrimaryByGroup = new Map(groups.map((g) => [g.id, g.isPrimary]));
@@ -108,7 +110,10 @@ export function FileTable({
             id: "view",
             label: "View",
             icon: Eye,
-            onClick: () => onFocus?.(file.id),
+            onClick: () => {
+              onFocus?.(file.id);
+              setViewerFileId(file.id);
+            },
           },
           {
             id: "rename",

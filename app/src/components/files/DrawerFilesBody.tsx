@@ -5,9 +5,11 @@ import {
   documentGroupsAtom,
   activePrimaryGroupIdAtom,
   addFileTargetAtom,
+  viewerFileIdAtom,
 } from "../../atoms/files";
 import { languageAtom } from "../../atoms/language";
 import { AddFileModal } from "./AddFileModal";
+import { FileViewerModal } from "./FileViewerModal";
 import { ViewButton } from "../shared/ViewButton";
 
 /** Drawer body listing every file grouped by its DocumentGroup. Mirrors the
@@ -21,6 +23,7 @@ export function DrawerFilesBody() {
   const activeGroupId = useAtomValue(activePrimaryGroupIdAtom);
   const language = useAtomValue(languageAtom);
   const setAddFileTarget = useSetAtom(addFileTargetAtom);
+  const setViewerFileId = useSetAtom(viewerFileIdAtom);
 
   const primaryGroups = [...groups]
     .filter((g) => g.isPrimary)
@@ -68,6 +71,7 @@ export function DrawerFilesBody() {
                     language={file.language}
                     active={isInActivePrimary(file)}
                     thumbnail={<FileThumbnail type={file.type} />}
+                    onView={() => setViewerFileId(file.id)}
                   />
                 ))}
               </div>
@@ -96,6 +100,7 @@ export function DrawerFilesBody() {
                   size={file.size}
                   language={file.language}
                   thumbnail={<FileThumbnail type={file.type} />}
+                  onView={() => setViewerFileId(file.id)}
                 />
               ))}
             </div>
@@ -118,6 +123,7 @@ export function DrawerFilesBody() {
         </span>
       </div>
       <AddFileModal />
+      <FileViewerModal />
     </div>
   );
 }
@@ -137,6 +143,7 @@ interface DrawerFileRowProps {
   language: string;
   active?: boolean;
   thumbnail: React.ReactNode;
+  onView?: () => void;
 }
 
 function FileThumbnail({ type }: { type: FileEntry["type"] }) {
@@ -183,6 +190,7 @@ function DrawerFileRow({
   language,
   active,
   thumbnail,
+  onView,
 }: DrawerFileRowProps) {
   return (
     <div
@@ -208,7 +216,7 @@ function DrawerFileRow({
       </div>
 
       <div className="flex items-center pr-2 shrink-0">
-        <ViewButton />
+        <ViewButton onClick={onView} />
       </div>
     </div>
   );

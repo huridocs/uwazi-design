@@ -8,6 +8,7 @@ import { FileDrawer } from "../components/files/FileDrawer";
 import { DocumentGroupCard } from "../components/files/DocumentGroupCard";
 import { AddFileModal } from "../components/files/AddFileModal";
 import { AddFileDropArea } from "../components/files/AddFileDropArea";
+import { FileViewerModal } from "../components/files/FileViewerModal";
 import {
   filesAtom,
   documentGroupsAtom,
@@ -224,6 +225,7 @@ export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
       />
 
       <AddFileModal />
+      <FileViewerModal />
 
       <ConfirmDialog
         open={pendingDelete !== null}

@@ -42,6 +42,11 @@ export const setActivePrimaryAtom = atom(
 export type DrawerEditFocus = "name" | "language";
 export const drawerEditFocusAtom = atom<DrawerEditFocus | null>(null);
 
+/** When set, FileViewerModal opens and renders the matching file's content.
+ *  Set by "View" from any kebab or eye affordance; cleared by closing the
+ *  modal. */
+export const viewerFileIdAtom = atom<string | null>(null);
+
 /** Drives `AddFileModal`. `null` = closed. A target descriptor opens the
  *  modal:
  *  - `{ mode: "new" }`           — generic flow; user picks Primary /
