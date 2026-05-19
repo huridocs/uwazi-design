@@ -4,6 +4,38 @@ interface DrawerActionBarProps {
   activeTab: string;
 }
 
+/** Soft pill button used across the drawer action bar. No visible border;
+ *  bg-warm sits on the bar, parchment on hover. Matches ViewButton so the
+ *  whole drawer reads with one button vocabulary. */
+function ActionPill({
+  icon: Icon,
+  label,
+  variant = "default",
+}: {
+  icon?: typeof Pencil;
+  label: string;
+  variant?: "default" | "danger";
+}) {
+  const tone =
+    variant === "danger"
+      ? "text-seal bg-seal-tint/40 hover:bg-seal-tint"
+      : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink";
+  return (
+    <button
+      type="button"
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full transition-colors cursor-pointer ${tone}`}
+    >
+      {Icon && (
+        <Icon
+          size={12}
+          className={variant === "danger" ? "" : "text-ink-tertiary"}
+        />
+      )}
+      {label}
+    </button>
+  );
+}
+
 export function DrawerActionBar({ activeTab }: DrawerActionBarProps) {
   return (
     <div
@@ -13,16 +45,10 @@ export function DrawerActionBar({ activeTab }: DrawerActionBarProps) {
       {activeTab === "metadata" && (
         <>
           <div className="flex items-center gap-2">
-            <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
-              <Pencil size={12} /> Edit
-            </button>
-            <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
-              <Share2 size={12} /> Share
-            </button>
+            <ActionPill icon={Pencil} label="Edit" />
+            <ActionPill icon={Share2} label="Share" />
           </div>
-          <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-seal rounded-md border border-seal/30 hover:bg-seal-tint transition-colors">
-            <Trash2 size={12} /> Delete
-          </button>
+          <ActionPill icon={Trash2} label="Delete" variant="danger" />
         </>
       )}
 
@@ -40,20 +66,14 @@ export function DrawerActionBar({ activeTab }: DrawerActionBarProps) {
 
       {activeTab === "toc" && (
         <>
-          <button className="px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
-            Edit
-          </button>
-          <button className="px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
-            Mark as reviewed
-          </button>
+          <ActionPill label="Edit" />
+          <ActionPill label="Mark as reviewed" />
         </>
       )}
 
       {activeTab === "relationships" && (
         <>
-          <button className="px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
-            Add relationship
-          </button>
+          <ActionPill label="Add relationship" />
           <div />
         </>
       )}
