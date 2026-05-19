@@ -23,7 +23,7 @@ export function ActionBar({ numPages, onScrollToPage, leftSlot }: ActionBarProps
     >
       {/* Left: optional slot or default OCR button */}
       {leftSlot ?? (
-        <button className="px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
+        <button className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-full transition-colors cursor-pointer">
           OCR PDF
         </button>
       )}

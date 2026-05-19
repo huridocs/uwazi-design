@@ -29,13 +29,13 @@ export function ToolsActionBar({
       >
         <button
           onClick={onBack}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-full transition-colors cursor-pointer"
         >
-          <ArrowLeft size={14} /> Back to list
+          <ArrowLeft size={14} className="text-ink-tertiary" /> Back to list
         </button>
         <button
           onClick={onDeleteCurrent}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-paper bg-seal rounded-md hover:bg-seal/90 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-paper bg-seal rounded-full hover:bg-seal/90 transition-colors cursor-pointer"
         >
           <Trash2 size={14} /> Delete Import
         </button>
@@ -54,7 +54,7 @@ export function ToolsActionBar({
     >
       <button
         onClick={onNewImport}
-        className="px-4 py-1.5 text-xs font-medium text-paper bg-ink rounded-md hover:bg-ink/90 transition-colors"
+        className="px-4 py-1.5 text-xs font-medium text-paper bg-ink rounded-full hover:bg-ink/90 transition-colors cursor-pointer"
       >
         New Import
       </button>
@@ -66,7 +66,7 @@ export function ToolsActionBar({
           </span>
           <button
             onClick={onDeleteSelected}
-            className="px-3 py-1.5 text-xs font-medium text-white bg-seal rounded-md hover:bg-seal/90 transition-colors"
+            className="px-3 py-1.5 text-xs font-medium text-white bg-seal rounded-full hover:bg-seal/90 transition-colors cursor-pointer"
           >
             Delete
           </button>

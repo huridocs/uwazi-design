@@ -103,7 +103,7 @@ export function DrawerFilesBody() {
       >
         <button
           onClick={() => setAddFileTarget({ mode: "new" })}
-          className="px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors cursor-pointer"
+          className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-full transition-colors cursor-pointer"
         >
           Add file
         </button>
