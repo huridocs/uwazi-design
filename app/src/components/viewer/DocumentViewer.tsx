@@ -248,8 +248,12 @@ export function DocumentViewer({ actionBarLeft, showMinimap = true, fileOverride
         {!isMobile && showMinimap && <RefMinimap numPages={numPages} />}
       </div>
 
-      {/* Bottom action bar */}
-      <ActionBar numPages={numPages} onScrollToPage={scrollToPage} leftSlot={actionBarLeft} />
+      {/* Bottom action bar — only on the main-pane viewer (no fileOverride).
+          When the viewer is mounted inside a drawer to preview a specific
+          file, the host drawer carries its own footer (Back / Download). */}
+      {!fileOverride && (
+        <ActionBar numPages={numPages} onScrollToPage={scrollToPage} leftSlot={actionBarLeft} />
+      )}
 
       {selection && (
         <FloatingMenu
