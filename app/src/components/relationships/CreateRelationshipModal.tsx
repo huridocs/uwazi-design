@@ -294,8 +294,7 @@ export function CreateRelationshipModal() {
             <div className="px-5 py-4 border-t border-border flex justify-between">
               <button
                 onClick={() => setStep("entity")}
-                className="px-4 py-2 text-sm font-medium rounded-md border border-border
-                  text-ink-secondary hover:bg-parchment transition-colors cursor-pointer"
+                className="px-4 py-2 text-sm font-medium rounded-md text-ink-secondary bg-warm hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
               >
                 {t("System", "Back")}
               </button>
@@ -342,8 +341,7 @@ export function CreateRelationshipModal() {
             <div className="px-5 py-4 border-t border-border flex justify-between">
               <button
                 onClick={() => setStep("entity")}
-                className="px-4 py-2 text-sm font-medium rounded-md border border-border
-                  text-ink-secondary hover:bg-parchment transition-colors cursor-pointer"
+                className="px-4 py-2 text-sm font-medium rounded-md text-ink-secondary bg-warm hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
               >
                 {t("System", "Back")}
               </button>

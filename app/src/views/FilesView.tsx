@@ -42,13 +42,19 @@ export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
   /** Pending deletion state: either a single id or a batch via the action bar. */
   const [pendingDelete, setPendingDelete] = useState<string[] | null>(null);
 
-  const primaryGroups = useMemo(
-    () =>
-      [...groups]
-        .filter((g) => g.isPrimary)
-        .sort((a, b) => a.order - b.order),
-    [groups],
-  );
+  const primaryGroups = useMemo(() => {
+    // Active group floats to the top regardless of order; the rest sort
+    // by their stored order. Keeps the doc the user is currently reading
+    // at the head of the list every render.
+    const resolvedActive = activeGroupId;
+    return [...groups]
+      .filter((g) => g.isPrimary)
+      .sort((a, b) => {
+        if (a.id === resolvedActive) return -1;
+        if (b.id === resolvedActive) return 1;
+        return a.order - b.order;
+      });
+  }, [groups, activeGroupId]);
   const supportingFiles = useMemo(() => {
     const supportingGroupIds = new Set(
       groups.filter((g) => !g.isPrimary).map((g) => g.id),

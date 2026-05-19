@@ -174,7 +174,7 @@ export function EntityOverlay() {
         >
           <button
             onClick={() => setEntityId(null)}
-            className="px-3 py-1.5 text-xs font-medium text-ink-secondary rounded-md border border-border hover:bg-warm transition-colors"
+            className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
           >
             Close
           </button>

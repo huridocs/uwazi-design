@@ -138,17 +138,33 @@ export function FileDrawer({
             )}
           </div>
 
+          {selectedFiles.length === 1 && (
+            <div
+              className="flex items-center justify-between h-12 px-3 shrink-0"
+              style={{ borderTop: "1px solid var(--border-primary)" }}
+            >
+              <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer">
+                <Download size={12} className="text-ink-tertiary" /> Download
+              </button>
+              <button
+                onClick={() => onRequestDelete?.([selectedFiles[0].id])}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-seal bg-seal-tint/40 hover:bg-seal-tint rounded-md transition-colors cursor-pointer"
+              >
+                <Trash2 size={12} /> Delete
+              </button>
+            </div>
+          )}
           {selectedFiles.length > 1 && (
             <div
               className="flex items-center justify-between h-12 px-3 shrink-0"
               style={{ borderTop: "1px solid var(--border-primary)" }}
             >
-              <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors cursor-pointer">
-                <Download size={12} /> Download all
+              <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer">
+                <Download size={12} className="text-ink-tertiary" /> Download all
               </button>
               <button
                 onClick={() => onRequestDelete?.(selectedFiles.map((f) => f.id))}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-seal rounded-md hover:bg-seal/90 transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-seal bg-seal-tint/40 hover:bg-seal-tint rounded-md transition-colors cursor-pointer"
               >
                 <Trash2 size={12} /> Delete {selectedFiles.length}
               </button>

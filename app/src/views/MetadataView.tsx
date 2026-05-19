@@ -139,15 +139,15 @@ function MetadataReadBody({ onEdit }: { onEdit: () => void }) {
       >
         <button
           onClick={onEdit}
-          className="px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors"
+          className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
         >
           Edit
         </button>
-        <button className="px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
+        <button className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer">
           Share
         </button>
         <div className="flex-1" />
-        <button className="px-3 py-1.5 text-xs font-medium text-seal rounded-md border border-seal/30 hover:bg-seal-tint transition-colors">
+        <button className="px-3 py-1.5 text-xs font-medium text-seal bg-seal-tint/40 hover:bg-seal-tint rounded-md transition-colors cursor-pointer">
           Delete
         </button>
       </div>
@@ -308,13 +308,13 @@ function MetadataEditBody({ onCancel, onSave }: { onCancel: () => void; onSave: 
       >
         <button
           onClick={onCancel}
-          className="px-4 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors"
+          className="px-4 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
         >
           Cancel
         </button>
         <button
           onClick={onSave}
-          className="px-4 py-1.5 text-xs font-medium text-white bg-success rounded-md hover:bg-success/90 transition-colors"
+          className="px-4 py-1.5 text-xs font-medium text-white bg-success rounded-md hover:bg-success/90 transition-colors cursor-pointer"
         >
           Save
         </button>

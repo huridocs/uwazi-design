@@ -24,7 +24,13 @@ export function DrawerFilesBody() {
 
   const primaryGroups = [...groups]
     .filter((g) => g.isPrimary)
-    .sort((a, b) => a.order - b.order);
+    .sort((a, b) => {
+      // Pin the active primary to the top so the doc the viewer's showing
+      // is also first in the list.
+      if (a.id === activeGroupId) return -1;
+      if (b.id === activeGroupId) return 1;
+      return a.order - b.order;
+    });
   const resolvedActiveId = activeGroupId ?? primaryGroups[0]?.id ?? null;
   const isInActivePrimary = (file: FileEntry) =>
     file.groupId === resolvedActiveId && file.language === language;

@@ -171,8 +171,7 @@ export function NewImportModal({ open, onClose, onImport }: NewImportModalProps)
         <div className="flex justify-end gap-3 px-6 py-4" style={{ borderTop: "1px solid var(--border-primary)" }}>
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium rounded-md border border-border
-              text-ink-secondary hover:bg-parchment transition-colors"
+            className="px-4 py-2 text-sm font-medium rounded-md text-ink-secondary bg-warm hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
           >
             Cancel
           </button>
@@ -183,8 +182,8 @@ export function NewImportModal({ open, onClose, onImport }: NewImportModalProps)
             disabled={!canImport}
             className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
               canImport
-                ? "bg-ink text-parchment hover:bg-ink/90"
-                : "bg-warm text-ink-muted cursor-not-allowed border border-border"
+                ? "bg-ink text-parchment hover:bg-ink/90 cursor-pointer"
+                : "bg-warm text-ink-muted cursor-not-allowed"
             }`}
           >
             Import

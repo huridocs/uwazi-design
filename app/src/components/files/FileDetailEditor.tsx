@@ -244,7 +244,7 @@ export function FileDetailEditor({
             <button
               type="button"
               onClick={promoteOrDemote}
-              className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-ink rounded border border-border hover:bg-paper transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-ink-secondary bg-paper hover:bg-parchment hover:text-ink rounded transition-colors cursor-pointer"
             >
               {group.isPrimary ? (
                 <>
@@ -260,7 +260,7 @@ export function FileDetailEditor({
               <button
                 type="button"
                 onClick={setAsActive}
-                className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-ink rounded border border-border hover:bg-paper transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-ink-secondary bg-paper hover:bg-parchment hover:text-ink rounded transition-colors cursor-pointer"
               >
                 <Eye size={12} /> Set as active
               </button>
