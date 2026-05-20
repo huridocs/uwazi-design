@@ -1,10 +1,11 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAtom } from "jotai";
 import { referencesAtom, toastsAtom } from "../atoms/references";
 import { languageAtom, type Language } from "../atoms/language";
 import {
   viewAtom,
   groupByAtom,
+  subGroupByAtom,
   searchQueryAtom,
   sortOrderAtom,
   activeClusterRefIdsAtom,
@@ -30,6 +31,7 @@ import { RelationshipsPanelBody } from "../components/relationships/Relationship
 import { ViewControls } from "../components/relationships/ViewControls";
 import { GroupByControl } from "../components/relationships/GroupByControl";
 import { SortControl } from "../components/relationships/SortControl";
+import { RelationshipsActionBar } from "../components/relationships/RelationshipsActionBar";
 
 interface Props {
   tabs: { id: string; label: string; count?: number }[];
@@ -46,6 +48,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange }: Props) {
   const [language, setLanguage] = useAtom(languageAtom);
   const [view] = useAtom(viewAtom);
   const [groupBy] = useAtom(groupByAtom);
+  const [subGroupBy, setSubGroupBy] = useAtom(subGroupByAtom);
   const [filtersOpen, setFiltersOpen] = useAtom(filtersDrawerOpenAtom);
   const [activeFilterCount] = useAtom(activeFilterCountAtom);
   const [, setSearchQuery] = useAtom(searchQueryAtom);
@@ -70,6 +73,12 @@ export function RelationshipsView({ tabs, activeTab, onTabChange }: Props) {
     ]);
   }, [deleteTarget, setReferences, setToasts]);
 
+  // Snap secondary back to "none" when primary collides with it — otherwise
+  // the dropdown could render a stale value that's no longer in the option list.
+  useEffect(() => {
+    if (groupBy !== "none" && subGroupBy === groupBy) setSubGroupBy("none");
+  }, [groupBy, subGroupBy, setSubGroupBy]);
+
   const clearAllFilters = () => {
     setRelTypeFilters({});
     setEntityTypeFilters({});
@@ -82,6 +91,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange }: Props) {
   const hideMinimap = view === "graph";
 
   return (
+    <>
     <AdaptiveSplitView
       mobileSections={[
         {
@@ -98,7 +108,12 @@ export function RelationshipsView({ tabs, activeTab, onTabChange }: Props) {
           id: "connections",
           label: "Relationships",
           count: references.length,
-          content: <RelationshipsPanelBody onDelete={handleDelete} />,
+          content: (
+            <div className="flex flex-col h-full min-h-0">
+              <RelationshipsPanelBody onDelete={handleDelete} />
+              <RelationshipsActionBar />
+            </div>
+          ),
         },
       ]}
       left={
@@ -119,11 +134,16 @@ export function RelationshipsView({ tabs, activeTab, onTabChange }: Props) {
           <div className="px-3 pb-2 flex items-center justify-between gap-2 flex-wrap">
             <div className="flex items-center gap-1.5 flex-wrap">
               <ViewControls size="sm" />
-              <GroupByControl axis="primary" size="sm" />
+              <GroupByControl
+                axis="primary"
+                size="sm"
+                excludeOption={subGroupBy === "none" ? undefined : subGroupBy}
+              />
               <GroupByControl
                 axis="secondary"
                 size="sm"
                 disabled={view === "graph" || groupBy === "none"}
+                excludeOption={groupBy === "none" ? undefined : groupBy}
               />
               <SortControl size="sm" />
             </div>
@@ -141,6 +161,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange }: Props) {
             onDelete={handleDelete}
             scrollBgClass="bg-warm"
           />
+          <RelationshipsActionBar />
         </div>
       }
       right={
@@ -184,5 +205,6 @@ export function RelationshipsView({ tabs, activeTab, onTabChange }: Props) {
       minRightWidth={460}
       maxRightWidth={720}
     />
+    </>
   );
 }

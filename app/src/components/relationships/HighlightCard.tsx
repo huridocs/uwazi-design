@@ -18,7 +18,7 @@ export function HighlightCard({ reference }: HighlightCardProps) {
         <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
         {selection && <PageTag page={selection.page} />}
       </div>
-      {selection ? (
+      {selection && (
         <FadeTruncate
           text={selection.text}
           maxLines={4}
@@ -26,10 +26,6 @@ export function HighlightCard({ reference }: HighlightCardProps) {
           className="text-xs text-ink-secondary leading-relaxed italic"
           fadeTo="color-mix(in srgb, var(--highlight-yellow) 20%, var(--bg-surface))"
         />
-      ) : (
-        <p className="text-xs italic text-ink-tertiary">
-          Entity-level connection
-        </p>
       )}
     </div>
   );

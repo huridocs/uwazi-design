@@ -23,7 +23,7 @@ export function FiltersButton({
     <button
       onClick={onClick}
       aria-pressed={active}
-      className={`relative inline-flex items-center gap-1.5 ${h} ${px} ${textSize} font-medium rounded transition-colors cursor-pointer ${
+      className={`relative inline-flex items-center gap-1.5 ${h} ${px} ${textSize} font-medium rounded-md transition-colors cursor-pointer ${
         active
           ? "bg-vellum text-ink border border-border"
           : "bg-warm border border-border text-ink-secondary hover:bg-parchment hover:text-ink"

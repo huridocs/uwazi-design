@@ -1,9 +1,11 @@
-export type RelationType =
-  | "mentions"
-  | "relates_to"
-  | "cites"
-  | "refers_to"
-  | "no_label";
+/** Free-form relation-type id. The seed set ships with mentions / relates_to /
+ *  cites / refers_to / no_label, but `relationTypesAtom` is writable at runtime
+ *  so the Manage Types modal can append more. `no_label` is the canonical
+ *  fallback for orphaned references (assigned when their type gets deleted). */
+export type RelationType = string;
+
+/** Canonical fallback type id. Orphans from a deleted type are reassigned here. */
+export const NO_LABEL_RELATION_TYPE = "no_label";
 
 export type Direction = "outgoing" | "incoming";
 
@@ -645,6 +647,57 @@ export const references: Reference[] = [
     relationType: "refers_to",
     createdAt: "2024-07-05",
   },
+  {
+    id: "ref-el-6",
+    sourceEntityId: "e3",
+    targetEntityId: "e22",
+    relationType: "relates_to",
+    createdAt: "2024-07-12",
+  },
+  {
+    id: "ref-el-7",
+    sourceEntityId: "e3",
+    targetEntityId: "e9",
+    relationType: "mentions",
+    direction: "incoming",
+    createdAt: "2024-07-12",
+  },
+  {
+    id: "ref-el-8",
+    sourceEntityId: "e3",
+    targetEntityId: "e27",
+    relationType: "cites",
+    createdAt: "2024-07-13",
+  },
+  {
+    id: "ref-el-9",
+    sourceEntityId: "e3",
+    targetEntityId: "e35",
+    relationType: "refers_to",
+    direction: "incoming",
+    createdAt: "2024-07-13",
+  },
+  {
+    id: "ref-el-10",
+    sourceEntityId: "e3",
+    targetEntityId: "e41",
+    relationType: "relates_to",
+    createdAt: "2024-07-14",
+  },
+  {
+    id: "ref-el-11",
+    sourceEntityId: "e3",
+    targetEntityId: "e6",
+    relationType: "mentions",
+    createdAt: "2024-07-14",
+  },
+  {
+    id: "ref-el-12",
+    sourceEntityId: "e3",
+    targetEntityId: "e48",
+    relationType: "cites",
+    createdAt: "2024-07-15",
+  },
   // Hubs (n-ary relationships) — refs sharing a hubId form one hub.
   // Hub "hub-hearing-1": Inter-American Court hearing parties.
   {
@@ -815,16 +868,33 @@ function generateBulkReferences(): Reference[] {
     "Arbitrary detention of suspected sympathizers continued for years after the initial incident.",
     "The State acknowledged its responsibility through a public ceremony held in 2015.",
     "Reparations included a memorial constructed at the site of the former detention facility.",
+    // Multi-sentence paragraphs — these create rows with longer body text so
+    // the panel exercises FadeTruncate's "expand" affordance and line clamping.
+    "The Commission proceeded to hear witnesses over the course of three consecutive sessions. Each witness was examined first by the petitioners' counsel, then cross-examined by the State's agents. The transcripts were sealed by order of the rapporteur and only later released, in redacted form, following a public-interest petition filed in 2007.",
+    "Forensic experts working under the Commission's mandate exhumed the site over a period of fourteen weeks. The remains recovered showed patterns consistent with summary execution: hands bound, gunshot wounds at close range, and clothing intact. DNA analysis later confirmed the identities of nine of the eleven sets of remains, returning each to a surviving family member.",
+    "Reports from international observers describe a marked deterioration in detention conditions during the second year of the operation. Cells originally designed for four held as many as twelve detainees, with no provision for outdoor exercise, no formal medical attention, and inadequate sanitation. Detainees who survived later described an atmosphere of constant fear punctuated by night-time transfers whose destinations were never disclosed.",
+    "The doctrine invoked by the State — that situations of internal disturbance lift ordinary procedural guarantees — was rejected by the Court in unambiguous terms. The judgment quotes prior jurisprudence at length, particularly the Velásquez Rodríguez ruling, and reiterates that the obligation to investigate is independent of the willingness of family members to file a formal complaint. The State's argument was characterised as 'an attempt to construct legal justification after the fact.'",
+    "Following the Commission's recommendations, a special prosecutor was appointed in 2003 with a mandate to reopen the file. The prosecutor's office, working with archival records that had been catalogued by a parallel civil-society initiative, identified twenty-three individuals against whom credible evidence existed. Of these, six were ultimately prosecuted; the remaining files were closed on grounds of statutory limitation, a closure later challenged in the Inter-American Court.",
+    "The report places the events within a broader regional pattern. Across at least four neighbouring states during the same period, similar operations were carried out against suspected sympathisers, drawing on shared doctrine, shared training programmes, and in some documented instances shared personnel. The Truth Commission's chapter on transnational coordination relies extensively on declassified diplomatic cables released between 2005 and 2012.",
+    "Surviving family members organised a sustained campaign for accountability that lasted more than two decades. Their work included the meticulous documentation of every known detention, every reported sighting, and every official denial; the assembly of an archive that became the principal evidentiary basis for the Commission's eventual finding; and the maintenance, through legal and political channels, of a public memory of the events.",
+    "The applicable framework draws on three overlapping sources: the American Convention on Human Rights, the Inter-American Convention on Forced Disappearance of Persons, and customary international humanitarian law as codified in the Geneva Conventions and their Additional Protocols. Each of these instruments imposes obligations whose breach the Commission was asked to assess. The State acknowledged its ratification of the first two; its position on the third was that the events did not rise to the threshold of armed conflict.",
+    "Detainees released after extended periods of incommunicado holding described a consistent pattern in the conditions of their initial interrogation. They were transported, hooded, to a facility they were unable to identify; held in cells of approximately two metres by one; deprived of sleep for the first seventy-two hours; and subjected to questioning by individuals who never identified themselves and whose voices were the only means by which one detainee could be distinguished from another in subsequent identification efforts.",
+    "Expert testimony addressed the ballistic evidence in considerable detail. Three of the recovered cartridges bore markings consistent with the standard-issue rifles assigned to the military unit operating in the area at the relevant time. The expert was careful to note that this established a probability, not a certainty; nonetheless, in conjunction with the testimonial record and the documentary evidence, the Commission found the inference of state-actor involvement to be compelling.",
+    "The Commission's recommendations encompass measures of restitution, compensation, rehabilitation, satisfaction, and guarantees of non-repetition. Restitution was found to be impossible in the case of the deceased; compensation was calculated according to the formula established in prior Court rulings; rehabilitation included a programme of psychological support extending to second-degree relatives; and the guarantees of non-repetition required structural reform of the military justice system, a reform the State has only partially implemented.",
+    "Habeas corpus petitions filed during the period in question were systematically dismissed on grounds that varied from one judicial district to another but produced, in every instance, the same outcome. In some districts, petitions were rejected for failure to specify the precise place of detention — a piece of information the petitioners could not have possessed. In others, petitions were referred to military jurisdiction, where they remained pending for periods of months or years without action.",
+    "The international press coverage of the events shifted markedly over time. Initial reporting, reliant on official sources, emphasised the State's account of an armed insurrection swiftly suppressed. As independent journalists gained access, and as the testimonies of survivors began to circulate, the framing shifted toward the human-rights dimensions of the response. By the time the case was filed with the Commission, the events had become a reference point in the regional discourse on transitional justice.",
+    "The petitioners' submission identifies three distinct categories of victims: those killed during the initial operation, those subsequently detained and released, and those whose fate remains unknown. For each category, the submission documents the specific violations alleged and the evidentiary basis on which those allegations rest. The Commission's report adopts this tripartite structure and finds, for each category, that the State bears international responsibility.",
+    "Witnesses examined under oath corroborated one another on points of detail that had not been previously published. The convergence was striking: the timing of the initial assault, the colour and markings of the vehicles involved, the names of officers heard in the corridors of the facility. The Commission's report notes that such convergence among witnesses who had not been in contact with one another for years constitutes 'strong indicia of credibility,' citing the criteria established in prior jurisprudence.",
   ];
 
   const refs: Reference[] = [];
   const totalPages = 14;
   let id = 38;
 
-  // Generate ~200 refs spread across all pages with natural clustering
+  // Generate ~280 refs spread across all pages with natural clustering
   for (let page = 1; page <= totalPages; page++) {
-    // Each page gets 10-20 refs, with some clustering
-    const refsPerPage = 10 + Math.floor(seededRandom(page * 7) * 10);
+    // Each page gets 14-26 refs, with some clustering
+    const refsPerPage = 14 + Math.floor(seededRandom(page * 7) * 12);
 
     for (let j = 0; j < refsPerPage; j++) {
       const seed = id * 31 + page * 13 + j * 7;

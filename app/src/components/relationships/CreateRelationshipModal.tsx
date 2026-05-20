@@ -2,10 +2,14 @@ import { useState, useMemo } from "react";
 import { X, Search, Plus } from "lucide-react";
 import { useAtom, useSetAtom, useAtomValue } from "jotai";
 import { entityPickerOpenAtom, textSelectionAtom } from "../../atoms/selection";
-import { referencesAtom, toastsAtom } from "../../atoms/references";
+import {
+  referencesAtom,
+  relationTypesAtom,
+  toastsAtom,
+} from "../../atoms/references";
 import { entitiesAtom, entityTypesAtom } from "../../atoms/entities";
 import { getEntityType, Entity, entities as seedEntities } from "../../data/entities";
-import { RelationType, relationTypes } from "../../data/references";
+import { RelationType } from "../../data/references";
 import { EntityPill } from "../shared/EntityPill";
 import { t } from "../../utils/i18n";
 
@@ -21,6 +25,7 @@ export function CreateRelationshipModal() {
   const [selection, setSelection] = useAtom(textSelectionAtom);
   const [entities, setEntities] = useAtom(entitiesAtom);
   const entityTypes = useAtomValue(entityTypesAtom);
+  const relationTypes = useAtomValue(relationTypesAtom);
   const setReferences = useSetAtom(referencesAtom);
   const setToasts = useSetAtom(toastsAtom);
   const [search, setSearch] = useState("");
@@ -86,21 +91,28 @@ export function CreateRelationshipModal() {
   };
 
   const handleCreate = () => {
-    if (!selectedEntity || !selection) return;
+    if (!selectedEntity) return;
 
+    // When opened from the action bar there's no text selection — create an
+    // entity-level reference (no sourceSelection). When opened from a text
+    // selection, anchor to it.
     const newRef = {
       id: `ref-${Date.now()}`,
       sourceEntityId: "e3",
       targetEntityId: selectedEntity.id,
       relationType: selectedRelation,
-      sourceSelection: {
-        text: selection.text,
-        page: selection.page,
-        top: selection.rect.top,
-        left: selection.rect.left,
-        width: selection.rect.width,
-        height: selection.rect.height,
-      },
+      ...(selection
+        ? {
+            sourceSelection: {
+              text: selection.text,
+              page: selection.page,
+              top: selection.rect.top,
+              left: selection.rect.left,
+              width: selection.rect.width,
+              height: selection.rect.height,
+            },
+          }
+        : {}),
       createdAt: new Date().toISOString().split("T")[0],
     };
 

@@ -49,6 +49,11 @@
 html, body, #root {
   height: 100%;
   margin: 0;
+  overflow: hidden;
+  /* Prevent the macOS rubber-band overscroll on body — even with overflow
+   * hidden, trackpad bounce can briefly reveal blank space beyond the
+   * content. `overscroll-behavior: none` blocks that. */
+  overscroll-behavior: none;
 }
 
 /* Thin neutral scrollbars everywhere. Firefox / modern Chromium honor the

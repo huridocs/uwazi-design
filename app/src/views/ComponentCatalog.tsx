@@ -1,38 +1,20 @@
 import { useEffect, useRef, useState } from "react";
-import { createStore, Provider } from "jotai";
 import { CatalogEntry } from "../components/catalog/CatalogEntry";
 import { StyleGuide } from "../components/catalog/StyleGuide";
 
-// Components
+// Components rendered directly inside the catalog body (not wrapped in an
+// Isolated* demo helper). Everything that needs scoped atom state or stateful
+// interaction lives in `./catalog/demos.tsx` and is imported lower down.
 import { EntityPill } from "../components/shared/EntityPill";
 import { PageTag } from "../components/shared/PageTag";
 import { CountBadge } from "../components/shared/CountBadge";
 import { MetadataCard, Property, PropertyRow } from "../components/metadata/MetadataCard";
-import { SegmentedTabs } from "../components/layout/SegmentedTabs";
-import { DrawerTabs } from "../components/layout/DrawerTabs";
-import { MainTabs } from "../components/layout/MainTabs";
 import { HighlightCard } from "../components/relationships/HighlightCard";
 import { RelatedDocCard } from "../components/relationships/RelatedDocCard";
-import { FileTable } from "../components/files/FileTable";
 import { DrawerActionBar } from "../components/relationships/DrawerActionBar";
-import { FiltersRow, ViewModeControls, CollapseControls } from "../components/relationships/FiltersRow";
-import { FiltersButton } from "../components/shared/FiltersButton";
-import { FiltersDrawer } from "../components/shared/FiltersDrawer";
-import { FacetSection } from "../components/shared/FacetSection";
 import { ActiveFilterChip } from "../components/shared/ActiveFilterChip";
-import { FadeTruncate } from "../components/shared/FadeTruncate";
-import { ListInfoRow } from "../components/shared/ListInfoRow";
+import { FiltersButton } from "../components/shared/FiltersButton";
 import { ListCardRow } from "../components/shared/ListCardRow";
-import { Checkbox } from "../components/shared/Checkbox";
-import { ZoomControl } from "../components/relationships/ZoomControl";
-import { RelationshipRow } from "../components/relationships/RelationshipRow";
-import { RelationshipGroupedCard } from "../components/relationships/RelationshipGroupedCard";
-import { ViewControls } from "../components/relationships/ViewControls";
-import { GroupByControl } from "../components/relationships/GroupByControl";
-import { SortControl } from "../components/relationships/SortControl";
-import { DirectionGlyph } from "../components/relationships/DirectionGlyph";
-import { deriveRelationships } from "../utils/relationships";
-import { ActionBar } from "../components/viewer/ActionBar";
 import { UwaziLoader } from "../components/shared/UwaziLoader";
 import { StatusBadge } from "../components/shared/StatusBadge";
 import { ProgressBar } from "../components/shared/ProgressBar";
@@ -43,141 +25,54 @@ import { Breadcrumb } from "../components/layout/Breadcrumb";
 import { ToolsSidebar } from "../components/layout/ToolsSidebar";
 
 // Icons
-import { FileText, Pencil, Download, Trash2, Share2, Plus } from "lucide-react";
+import { ArrowLeft, FileText, Pencil, Download, Trash2, Share2, Plus } from "lucide-react";
 
 // Data
 import { references } from "../data/references";
 import { files } from "../data/files";
 
-// --- Sidebar structure ---
+// Stateful demo helpers — atom-scoped Providers, local React state, interaction.
+import {
+  FadeTruncate,
+  SegmentedTabsDemo,
+  DrawerTabsDemo,
+  MainTabsDemo,
+  FileTableDemo,
+  IsolatedSearchBar,
+  IsolatedFiltersRow,
+  IsolatedRelationshipGroupedCard,
+  IsolatedRelationshipRowReference,
+  IsolatedActionBar,
+  IsolatedRefMinimap,
+  FiltersDrawerDemo,
+  FacetSectionDemo,
+  IsolatedViewModeControls,
+  IsolatedCollapseControls,
+  IsolatedListInfoRow,
+  IsolatedZoomControl,
+  IsolatedCheckboxes,
+  IsolatedRelationshipRowAggregate,
+  IsolatedRelationshipRowHub,
+  IsolatedRowCheckbox,
+  IsolatedRelationshipsActionBar,
+  IsolatedManageRelationTypesModal,
+  IsolatedSelectControls,
+  IsolatedGroupByControlMutex,
+  IsolatedRelationshipGroupedCardAggregate,
+  IsolatedViewControls,
+  IsolatedSortControl,
+  IsolatedDirectionGlyph,
+} from "./catalog/demos";
 
-interface SidebarGroup {
-  label: string;
-  items: { id: string; label: string }[];
+import { sidebarGroups, allItemIds } from "./catalog/sidebarGroups";
+
+interface Props {
+  /** Called when the user clicks the "Return to app" button in the catalog
+   *  header. Routes the appView atom back to "entity". */
+  onReturn: () => void;
 }
 
-const sidebarGroups: SidebarGroup[] = [
-  {
-    label: "Style Guide",
-    items: [
-      { id: "sg-colors", label: "Colors" },
-      { id: "sg-typography", label: "Typography" },
-      { id: "sg-shadows", label: "Shadows" },
-      { id: "sg-radii", label: "Border Radius" },
-      { id: "sg-spacing", label: "Spacing" },
-    ],
-  },
-  {
-    label: "Elements",
-    items: [
-      { id: "el-entity-pill", label: "EntityPill" },
-      { id: "el-page-tag", label: "PageTag" },
-      { id: "el-count-badge", label: "CountBadge" },
-      { id: "el-buttons", label: "Buttons" },
-    ],
-  },
-  {
-    label: "Entity View — Layout",
-    items: [
-      { id: "ev-main-tabs", label: "MainTabs" },
-      { id: "ev-segmented-tabs", label: "SegmentedTabs" },
-      { id: "ev-drawer-tabs", label: "DrawerTabs" },
-    ],
-  },
-  {
-    label: "Entity View — Document",
-    items: [
-      { id: "ev-floating-menu", label: "FloatingMenu" },
-      { id: "ev-action-bar", label: "ActionBar" },
-      { id: "ev-hover-expand", label: "HoverExpand" },
-    ],
-  },
-  {
-    label: "Entity View — References",
-    items: [
-      { id: "ev-search-bar", label: "SearchBar" },
-      { id: "ev-filters-row", label: "FiltersRow" },
-      { id: "ev-relationship-row-ref", label: "RelationshipRow · reference" },
-      { id: "ev-relationship-grouped-card", label: "RelationshipGroupedCard" },
-      { id: "ev-highlight-card", label: "HighlightCard" },
-      { id: "ev-related-doc", label: "RelatedDocCard" },
-    ],
-  },
-  {
-    label: "Entity View — Metadata",
-    items: [
-      { id: "ev-metadata-card", label: "MetadataCard" },
-    ],
-  },
-  {
-    label: "Entity View — Files",
-    items: [
-      { id: "ev-file-table", label: "FileTable" },
-    ],
-  },
-  {
-    label: "Entity View — Drawer",
-    items: [
-      { id: "ev-drawer-action-bar", label: "DrawerActionBar" },
-    ],
-  },
-  {
-    label: "Import CSV — Layout",
-    items: [
-      { id: "csv-sidebar", label: "ToolsSidebar" },
-      { id: "csv-breadcrumb", label: "Breadcrumb" },
-    ],
-  },
-  {
-    label: "Import CSV — Components",
-    items: [
-      { id: "csv-status-badge", label: "StatusBadge" },
-      { id: "csv-progress-bar", label: "ProgressBar" },
-      { id: "csv-stats-card", label: "StatsCard" },
-      { id: "csv-stepper", label: "Stepper" },
-      { id: "csv-alert-banner", label: "AlertBanner" },
-    ],
-  },
-  {
-    label: "Filters & Lists",
-    items: [
-      { id: "fl-filters-button", label: "FiltersButton" },
-      { id: "fl-filters-drawer", label: "FiltersDrawer" },
-      { id: "fl-facet-section", label: "FacetSection" },
-      { id: "fl-active-filter-chip", label: "ActiveFilterChip" },
-      { id: "fl-view-mode-controls", label: "ViewModeControls" },
-      { id: "fl-collapse-controls", label: "CollapseControls" },
-      { id: "fl-list-info-row", label: "ListInfoRow" },
-      { id: "fl-list-card-row", label: "ListCardRow" },
-      { id: "fl-checkbox", label: "Checkbox" },
-      { id: "fl-zoom-control", label: "ZoomControl" },
-      { id: "fl-fade-truncate", label: "FadeTruncate" },
-    ],
-  },
-  {
-    label: "Entity View — Relationships",
-    items: [
-      { id: "relationship-row-aggregate", label: "RelationshipRow · aggregate" },
-      { id: "relationship-grouped-card-aggregate", label: "RelationshipGroupedCard · aggregate" },
-      { id: "view-controls", label: "ViewControls" },
-      { id: "group-by-control", label: "GroupByControl" },
-      { id: "sort-control", label: "SortControl" },
-      { id: "direction-glyph", label: "DirectionGlyph" },
-    ],
-  },
-  {
-    label: "Shared",
-    items: [
-      { id: "sh-confirm-dialog", label: "ConfirmDialog" },
-      { id: "sh-toast", label: "Toast" },
-      { id: "sh-uwazi-loader", label: "UwaziLoader" },
-    ],
-  },
-];
-
-const allItemIds = sidebarGroups.flatMap((g) => g.items.map((i) => i.id));
-
-export function ComponentCatalog() {
+export function ComponentCatalog({ onReturn }: Props) {
   const [activeId, setActiveId] = useState(allItemIds[0]);
   const contentRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Map<string, HTMLElement>>(new Map());
@@ -193,7 +88,30 @@ export function ComponentCatalog() {
           if (entry.isIntersecting) {
             const id = entry.target.id;
             setActiveId(id);
-            sidebarBtnRefs.current.get(id)?.scrollIntoView({ behavior: "smooth", block: "center" });
+            // Only nudge the sidebar if the active button is currently
+            // outside the nav's visible area — otherwise multiple intersecting
+            // entries during natural scroll cause the sidebar to jitter as
+            // the centering target shifts. No smooth animation either — that
+            // queues up overlapping tweens.
+            const btn = sidebarBtnRefs.current.get(id);
+            const nav = btn?.closest("nav");
+            if (btn && nav) {
+              const btnRect = btn.getBoundingClientRect();
+              const navRect = nav.getBoundingClientRect();
+              const btnTopInNav = btnRect.top - navRect.top;
+              const navHeight = nav.clientHeight;
+              const PADDING = 24;
+              if (
+                btnTopInNav < PADDING ||
+                btnTopInNav + btnRect.height > navHeight - PADDING
+              ) {
+                const btnCenterInScroll =
+                  btnRect.top - navRect.top + nav.scrollTop + btnRect.height / 2;
+                const target = btnCenterInScroll - navHeight / 2;
+                const max = nav.scrollHeight - navHeight;
+                nav.scrollTop = Math.max(0, Math.min(target, max));
+              }
+            }
             break;
           }
         }
@@ -213,8 +131,40 @@ export function ComponentCatalog() {
   const [blinkId, setBlinkId] = useState<string | null>(null);
 
   const scrollTo = (id: string) => {
-    itemRefs.current.get(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    sidebarBtnRefs.current.get(id)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const container = contentRef.current;
+    const target = itemRefs.current.get(id);
+    if (container && target) {
+      // Compute target's offset within the scrollable container.
+      const containerRect = container.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      const offset =
+        targetRect.top - containerRect.top + container.scrollTop;
+      // Hard-clamp to [0, max] so the last entry lands at the bottom of the
+      // visible area instead of producing blank space past its bottom.
+      const max = Math.max(0, container.scrollHeight - container.clientHeight);
+      // -16px gives the target a bit of breathing room from the column top
+      // (mirrors `scroll-pt-4`); only applied when not at scroll bounds.
+      const desired = Math.max(0, offset - 16);
+      const top = Math.min(desired, max);
+      container.scrollTo({ top, behavior: "smooth" });
+    }
+    // Same anti-feedback-loop pattern as the IntersectionObserver — scroll
+    // the nav directly rather than using scrollIntoView (which would also
+    // scroll the outer container).
+    const btn = sidebarBtnRefs.current.get(id);
+    const nav = btn?.closest("nav");
+    if (btn && nav) {
+      const btnRect = btn.getBoundingClientRect();
+      const navRect = nav.getBoundingClientRect();
+      const btnCenterInNav =
+        btnRect.top - navRect.top + nav.scrollTop + btnRect.height / 2;
+      const navTarget = btnCenterInNav - nav.clientHeight / 2;
+      const navMax = nav.scrollHeight - nav.clientHeight;
+      nav.scrollTo({
+        top: Math.max(0, Math.min(navTarget, navMax)),
+        behavior: "smooth",
+      });
+    }
     if (activeId === id) {
       // Force re-blink by toggling off then on
       setBlinkId(null);
@@ -230,9 +180,33 @@ export function ComponentCatalog() {
   };
 
   return (
-    <div className="flex-1 flex overflow-hidden">
-      {/* Sidebar */}
-      <nav className="w-[220px] shrink-0 bg-paper border-r border-border/60 py-4 px-3 overflow-y-auto">
+    // Catalog uses NATURAL PAGE SCROLL — no nested overflow-auto containers
+    // fighting each other. The outer div is the body's only scrollable child;
+    // sticky positions the header + sidebar to the viewport top while the
+    // content column flows below. Scroll is bounded by the content's natural
+    // height, so reaching the bottom shows the last entry with no phantom
+    // blank space beyond it.
+    <div
+      ref={contentRef}
+      className="h-screen overflow-y-auto overscroll-y-none bg-parchment"
+    >
+      {/* Sticky header — pinned at the top of the scroll container */}
+      <header
+        className="sticky top-0 z-30 h-[52px] bg-paper flex items-center justify-between px-5"
+        style={{ borderBottom: "1px solid var(--border-primary)" }}
+      >
+        <img src="/nu-logo.svg" alt="Uwazi" style={{ height: 14.7 }} className="logo-img" />
+        <button
+          onClick={onReturn}
+          className="flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium text-ink-secondary rounded-md bg-warm border border-border-soft/60 hover:bg-parchment transition-colors cursor-pointer"
+        >
+          <ArrowLeft size={14} /> Return to app
+        </button>
+      </header>
+      <div className="grid grid-cols-[220px_minmax(0,1fr)]">
+      {/* Sidebar — sticky to top:52 (below the header). Self-scrolls if its
+          own item list exceeds viewport height. */}
+      <nav className="sticky top-[52px] z-20 self-start bg-paper border-r border-border/60 py-4 px-3 overflow-y-auto overscroll-y-none" style={{ height: "calc(100vh - 52px)" }}>
         <h2 className="text-[10px] font-bold text-ink-muted uppercase tracking-widest px-2 mb-3">
           Component Catalog
         </h2>
@@ -262,7 +236,7 @@ export function ComponentCatalog() {
       </nav>
 
       {/* Content */}
-      <div ref={contentRef} className="flex-1 overflow-y-auto px-8 py-6">
+      <div className="px-8 pt-6 pb-12 scroll-pt-[68px]">
         <div className="max-w-3xl mx-auto flex flex-col gap-10">
 
           {/* ==================== STYLE GUIDE ==================== */}
@@ -526,6 +500,19 @@ export function ComponentCatalog() {
                       </p>
                     </div>
                   </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="ev-ref-minimap" ref={reg("ev-ref-minimap")}>
+                <CatalogEntry
+                  name="RefMinimap"
+                  description="Vertical reference track alongside the document. Dots cluster by position and colour by target entity type. Toggle between global (all pages) and current-page modes; click a dot to jump."
+                  code={`<RefMinimap numPages={numPages} />
+
+{/* Reads referencesAtom + currentPageAtom + activeRefIdAtom.
+    Entity-level refs (no page anchor) are filtered out. */}`}
+                >
+                  <IsolatedRefMinimap />
                 </CatalogEntry>
               </div>
             </div>
@@ -1053,6 +1040,22 @@ export function ComponentCatalog() {
                 </CatalogEntry>
               </div>
 
+              <div id="fl-select-controls" ref={reg("fl-select-controls")}>
+                <CatalogEntry
+                  name="SelectControls"
+                  description="Select all / Deselect all pair, scoped to (totalCount, selectedCount). Each button greys out when its action would be a no-op. Shared between FilesActionBar and RelationshipsActionBar."
+                  code={`<SelectControls
+  allSelected={allSelected}
+  hasSelection={selectedCount > 0}
+  totalCount={total}
+  onSelectAll={() => {}}
+  onDeselectAll={() => {}}
+/>`}
+                >
+                  <IsolatedSelectControls />
+                </CatalogEntry>
+              </div>
+
             </div>
           </section>
 
@@ -1072,6 +1075,18 @@ export function ComponentCatalog() {
 {/* rel comes from deriveRelationships(references) */}`}
                 >
                   <IsolatedRelationshipRowAggregate />
+                </CatalogEntry>
+              </div>
+
+              <div id="relationship-row-hub" ref={reg("relationship-row-hub")}>
+                <CatalogEntry
+                  name="RelationshipRow · hub"
+                  description="N-ary hub row — multiple member pills, evidence count badge, no direction (hubs are symmetric). Rendered when refs share a hubId."
+                  code={`<RelationshipRow kind="hub" hub={hub} />
+
+{/* hub comes from deriveHubs(references) */}`}
+                >
+                  <IsolatedRelationshipRowHub />
                 </CatalogEntry>
               </div>
 
@@ -1107,10 +1122,14 @@ export function ComponentCatalog() {
               <div id="group-by-control" ref={reg("group-by-control")}>
                 <CatalogEntry
                   name="GroupByControl"
-                  description="Dropdown selecting the grouping axis applied to list view (none / entity type / relation type)."
-                  code={`<GroupByControl />`}
+                  description="Primary + secondary grouping dropdowns. The pair mutex out each other's selection via excludeOption — picking 'Relation type' on primary removes it from secondary's options."
+                  code={`<GroupByControl axis="primary" />
+<GroupByControl
+  axis="secondary"
+  excludeOption={groupBy}
+/>`}
                 >
-                  <IsolatedGroupByControl />
+                  <IsolatedGroupByControlMutex />
                 </CatalogEntry>
               </div>
 
@@ -1127,11 +1146,45 @@ export function ComponentCatalog() {
               <div id="direction-glyph" ref={reg("direction-glyph")}>
                 <CatalogEntry
                   name="DirectionGlyph"
-                  description="Shared arrow badge — outgoing vs incoming. Small / medium footprints."
+                  description="Shared arrow badge — outgoing, incoming, or bidirectional ('both'). The 'both' variant lights up on aggregate rows whose backing refs cover both directions on the same (target, relationType)."
                   code={`<DirectionGlyph direction="outgoing" />
-<DirectionGlyph direction="incoming" size="md" />`}
+<DirectionGlyph direction="incoming" size="md" />
+<DirectionGlyph direction="both" />`}
                 >
                   <IsolatedDirectionGlyph />
+                </CatalogEntry>
+              </div>
+
+              <div id="row-checkbox" ref={reg("row-checkbox")}>
+                <CatalogEntry
+                  name="RowCheckbox"
+                  description="Per-row checkbox gated behind editModeAtom. Aggregate / hub rows pass every backing refId; toggling adds or removes the whole set atomically against selectedRefIdsAtom."
+                  code={`<RowCheckbox refIds={[reference.id]} />
+<RowCheckbox refIds={rel.refIds} />`}
+                >
+                  <IsolatedRowCheckbox />
+                </CatalogEntry>
+              </div>
+
+              <div id="relationships-action-bar" ref={reg("relationships-action-bar")}>
+                <CatalogEntry
+                  name="RelationshipsActionBar"
+                  description="Bottom action bar with Edit toggle. View mode shows just Edit; edit mode reveals Create relationship, Manage types, Select all/Deselect all on the left, and selection count + Delete + Cancel + Save on the right."
+                  code={`<RelationshipsActionBar />`}
+                >
+                  <IsolatedRelationshipsActionBar />
+                </CatalogEntry>
+              </div>
+
+              <div id="manage-relation-types-modal" ref={reg("manage-relation-types-modal")}>
+                <CatalogEntry
+                  name="ManageRelationTypesModal"
+                  description="CRUD for the relation-type registry. Add via slugified id; delete reassigns orphaned references to the no_label fallback. The fallback type is non-deletable."
+                  code={`<ManageRelationTypesModal />
+
+{/* Open from anywhere by writing manageRelationTypesOpenAtom */}`}
+                >
+                  <IsolatedManageRelationTypesModal />
                 </CatalogEntry>
               </div>
             </div>
@@ -1284,9 +1337,9 @@ export function ComponentCatalog() {
                     {/* Inline */}
                     <div className="flex flex-col gap-3">
                       <span className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider">Inline</span>
-                      <p className="text-sm text-ink-secondary flex items-center gap-1.5">
+                      <div className="text-sm text-ink-secondary flex items-center gap-1.5">
                         <UwaziLoader size="xs" /> Extracting information
-                      </p>
+                      </div>
                     </div>
 
                     {/* In card */}
@@ -1312,392 +1365,8 @@ export function ComponentCatalog() {
           </section>
         </div>
       </div>
-    </div>
-  );
-}
-
-// ---------- Isolated demos ----------
-
-function SegmentedTabsDemo() {
-  const [active, setActive] = useState("all");
-  return (
-    <SegmentedTabs
-      tabs={[
-        { id: "all", label: "All", count: 12 },
-        { id: "docs", label: "Documents", count: 4 },
-        { id: "refs", label: "References", count: 8 },
-      ]}
-      activeId={active}
-      onChange={setActive}
-    />
-  );
-}
-
-function DrawerTabsDemo() {
-  const [active, setActive] = useState("metadata");
-  return (
-    <DrawerTabs
-      tabs={[
-        { id: "metadata", label: "Metadata" },
-        { id: "references", label: "References", count: 12 },
-        { id: "toc", label: "TOC" },
-      ]}
-      activeId={active}
-      onChange={setActive}
-    />
-  );
-}
-
-function MainTabsDemo() {
-  const [active, setActive] = useState("document");
-  return (
-    <MainTabs
-      tabs={[
-        { id: "metadata", label: "Metadata" },
-        { id: "document", label: "Document" },
-        { id: "references", label: "References", count: 12 },
-        { id: "files", label: "Files", count: 6 },
-      ]}
-      activeId={active}
-      onChange={setActive}
-    />
-  );
-}
-
-function FileTableDemo() {
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const subset = files.slice(0, 4);
-  return (
-    <FileTable
-      files={subset}
-      selectedIds={selected}
-      onSelect={(id) =>
-        setSelected((prev) => {
-          const next = new Set(prev);
-          next.has(id) ? next.delete(id) : next.add(id);
-          return next;
-        })
-      }
-      onSelectAll={() =>
-        setSelected((prev) =>
-          prev.size === subset.length ? new Set() : new Set(subset.map((f) => f.id))
-        )
-      }
-      onRequestDelete={() => {}}
-    />
-  );
-}
-
-function IsolatedSearchBar() {
-  const [query, setQuery] = useState("");
-  return (
-    <div className="w-full max-w-sm">
-      <div className="relative">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search"
-          aria-label="Search"
-          className="w-full h-8 pl-3 pr-8 text-xs font-medium bg-warm border border-border rounded-md
-            placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-carbon/20
-            focus:border-carbon/40 transition-all"
-        />
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none">
-          <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
-        </svg>
       </div>
     </div>
   );
 }
 
-function IsolatedFiltersRow() {
-  const store = createStore();
-  return (
-    <Provider store={store}>
-      <div className="w-full">
-        <FiltersRow onCollapseAll={() => {}} onExpandAll={() => {}} />
-      </div>
-    </Provider>
-  );
-}
-
-function IsolatedRelationshipGroupedCard() {
-  const store = createStore();
-  return (
-    <Provider store={store}>
-      <RelationshipGroupedCard
-        title="Person"
-        color="#7C3AED"
-        count={3}
-        defaultExpanded
-      >
-        {references.slice(0, 3).map((ref) => (
-          <RelationshipRow
-            key={ref.id}
-            kind="reference"
-            reference={ref}
-            onDelete={() => {}}
-          />
-        ))}
-      </RelationshipGroupedCard>
-    </Provider>
-  );
-}
-
-function IsolatedRelationshipRowReference() {
-  const store = createStore();
-  return (
-    <Provider store={store}>
-      <RelationshipRow kind="reference" reference={references[0]} onDelete={() => {}} />
-      <RelationshipRow kind="reference" reference={references[1]} onDelete={() => {}} />
-    </Provider>
-  );
-}
-
-function IsolatedActionBar() {
-  const store = createStore();
-  return (
-    <Provider store={store}>
-      <div className="w-full border border-border/40 rounded-md overflow-hidden">
-        <ActionBar numPages={15} onScrollToPage={() => {}} />
-      </div>
-    </Provider>
-  );
-}
-
-function FiltersDrawerDemo() {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="w-full">
-      <FiltersButton activeCount={open ? 2 : 0} onClick={() => setOpen(true)} />
-      <div className="relative overflow-hidden mt-3 h-60 border border-border/60 rounded-md bg-paper">
-        <div className="px-3 py-2 text-xs text-ink-muted">
-          Demo container — FiltersDrawer is scoped to this pane.
-        </div>
-        <FiltersDrawer
-          open={open}
-          onClose={() => setOpen(false)}
-          footer={
-            <button className="text-[11px] font-medium text-ink-secondary hover:text-ink cursor-pointer">
-              Clear all filters
-            </button>
-          }
-        >
-          <FacetSection
-            title="Relation type"
-            total={3}
-            entries={[
-              ["cites", 31],
-              ["mentions", 12],
-              ["refers", 7],
-            ]}
-            selected={{ cites: true }}
-            onToggle={() => {}}
-            label={(id) =>
-              id === "cites" ? "Cites" : id === "mentions" ? "Mentions" : "Refers to"
-            }
-          />
-        </FiltersDrawer>
-      </div>
-    </div>
-  );
-}
-
-function FacetSectionDemo() {
-  const [selected, setSelected] = useState<Record<string, boolean>>({ person: true });
-  const entries: [string, number][] = [
-    ["person", 8],
-    ["country", 5],
-    ["org", 3],
-    ["case", 12],
-  ];
-  const colors: Record<string, string> = {
-    person: "#7C3AED",
-    country: "#16A34A",
-    org: "#C026D3",
-    case: "#0EA5E9",
-  };
-  const labels: Record<string, string> = {
-    person: "Person",
-    country: "Country",
-    org: "Organization",
-    case: "Court Case",
-  };
-  return (
-    <div className="w-full max-w-xs border border-border/60 rounded-md bg-paper overflow-hidden">
-      <FacetSection
-        title="Target entity type"
-        total={entries.length}
-        entries={entries}
-        selected={selected}
-        onToggle={(id) =>
-          setSelected((prev) => ({ ...prev, [id]: !prev[id] }))
-        }
-        label={(id) => labels[id] ?? id}
-        renderMarker={(id) => (
-          <span
-            className="shrink-0 rounded-[2px]"
-            style={{ width: 8, height: 8, backgroundColor: colors[id] }}
-          />
-        )}
-      />
-    </div>
-  );
-}
-
-function IsolatedViewModeControls() {
-  const store = createStore();
-  return (
-    <Provider store={store}>
-      <div className="flex flex-col gap-3">
-        <ViewModeControls />
-        <ViewModeControls modes={["all", "by-entity-type", "by-relation-type"]} />
-      </div>
-    </Provider>
-  );
-}
-
-function IsolatedCollapseControls() {
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-6">
-        <CollapseControls onCollapseAll={() => {}} onExpandAll={() => {}} />
-        <span className="text-[10px] text-ink-muted">default (atom-driven)</span>
-      </div>
-      <div className="flex items-center gap-6">
-        <CollapseControls
-          onCollapseAll={() => {}}
-          onExpandAll={() => {}}
-          disabled
-        />
-        <span className="text-[10px] text-ink-muted">disabled (e.g. viewMode === "all")</span>
-      </div>
-    </div>
-  );
-}
-
-function IsolatedListInfoRow() {
-  const store = createStore();
-  return (
-    <Provider store={store}>
-      <div className="w-full border border-border/40 rounded-md bg-paper">
-        <ListInfoRow
-          count={
-            <>
-              <span className="font-semibold text-ink-secondary tabular-nums">221</span>{" "}
-              references
-            </>
-          }
-          activeFilterCount={0}
-          rightSlot={
-            <CollapseControls onCollapseAll={() => {}} onExpandAll={() => {}} disabled />
-          }
-        />
-      </div>
-    </Provider>
-  );
-}
-
-function IsolatedZoomControl() {
-  const store = createStore();
-  return (
-    <Provider store={store}>
-      <ZoomControl />
-    </Provider>
-  );
-}
-
-function IsolatedCheckboxes() {
-  const [a, setA] = useState(false);
-  const [b, setB] = useState(true);
-  return (
-    <div className="flex items-center gap-5">
-      <label className="flex items-center gap-2 cursor-pointer">
-        <Checkbox checked={a} onChange={(e) => setA(e.target.checked)} ariaLabel="Unchecked demo" />
-        <span className="text-xs text-ink">Unchecked</span>
-      </label>
-      <label className="flex items-center gap-2 cursor-pointer">
-        <Checkbox checked={b} onChange={(e) => setB(e.target.checked)} ariaLabel="Checked demo" />
-        <span className="text-xs text-ink">Checked</span>
-      </label>
-      <label className="flex items-center gap-2 opacity-60 cursor-not-allowed">
-        <Checkbox checked={false} onChange={() => {}} disabled ariaLabel="Disabled demo" />
-        <span className="text-xs text-ink">Disabled</span>
-      </label>
-    </div>
-  );
-}
-
-function IsolatedRelationshipRowAggregate() {
-  const store = createStore();
-  const rels = deriveRelationships(references);
-  if (rels.length === 0) return null;
-  return (
-    <Provider store={store}>
-      <div className="border border-border/60 rounded-md overflow-hidden bg-paper">
-        {rels.slice(0, 2).map((rel) => (
-          <RelationshipRow key={rel.id} kind="aggregate" rel={rel} />
-        ))}
-      </div>
-    </Provider>
-  );
-}
-
-function IsolatedRelationshipGroupedCardAggregate() {
-  const store = createStore();
-  const rels = deriveRelationships(references);
-  if (rels.length === 0) return null;
-  return (
-    <Provider store={store}>
-      <RelationshipGroupedCard
-        title="Person"
-        color="#7C3AED"
-        count={rels.slice(0, 4).length}
-        defaultExpanded
-      >
-        {rels.slice(0, 4).map((rel) => (
-          <RelationshipRow key={rel.id} kind="aggregate" rel={rel} />
-        ))}
-      </RelationshipGroupedCard>
-    </Provider>
-  );
-}
-
-function IsolatedViewControls() {
-  const store = createStore();
-  return (
-    <Provider store={store}>
-      <ViewControls />
-    </Provider>
-  );
-}
-
-function IsolatedGroupByControl() {
-  const store = createStore();
-  return (
-    <Provider store={store}>
-      <GroupByControl />
-    </Provider>
-  );
-}
-
-function IsolatedSortControl() {
-  const store = createStore();
-  return (
-    <Provider store={store}>
-      <SortControl />
-    </Provider>
-  );
-}
-
-function IsolatedDirectionGlyph() {
-  return (
-    <div className="flex items-center gap-3">
-      <DirectionGlyph direction="outgoing" />
-      <DirectionGlyph direction="incoming" />
-      <DirectionGlyph direction="outgoing" size="md" />
-      <DirectionGlyph direction="incoming" size="md" />
-    </div>
-  );
-}

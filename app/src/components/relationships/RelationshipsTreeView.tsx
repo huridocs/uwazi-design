@@ -124,7 +124,7 @@ export function RelationshipsTreeView() {
   const showCollapse = groupBy !== "none";
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <div className="flex flex-col flex-1 min-h-0">
       <ListInfoRow
         count={
           <>
@@ -256,11 +256,13 @@ function HubNode({ hub, refs }: { hub: Hub; refs: Reference[] }) {
       />
       {expanded && (
         <div className="ml-[14px]">
-          {refs.map((ref) => (
-            <TreeNode key={ref.id}>
-              <RelationshipRow kind="reference" reference={ref} nested />
-            </TreeNode>
-          ))}
+          {refs
+            .filter((ref) => !!ref.sourceSelection)
+            .map((ref) => (
+              <TreeNode key={ref.id}>
+                <RelationshipRow kind="reference" reference={ref} nested />
+              </TreeNode>
+            ))}
         </div>
       )}
     </div>
@@ -301,11 +303,13 @@ function AggregateNode({
       />
       {expanded && (
         <div className="ml-[14px]">
-          {refs.map((ref) => (
-            <TreeNode key={ref.id}>
-              <RelationshipRow kind="reference" reference={ref} nested />
-            </TreeNode>
-          ))}
+          {refs
+            .filter((ref) => !!ref.sourceSelection)
+            .map((ref) => (
+              <TreeNode key={ref.id}>
+                <RelationshipRow kind="reference" reference={ref} nested />
+              </TreeNode>
+            ))}
         </div>
       )}
     </div>

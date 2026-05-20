@@ -4,7 +4,16 @@ export interface Relationship {
   id: string;
   targetEntityId: string;
   relationType: RelationType;
+  /** First direction encountered while aggregating — the "primary" direction.
+   *  When `directions.length === 2` the relationship is bidirectional and
+   *  this field is not meaningful on its own. Kept for backwards compat with
+   *  callers that need a single direction (e.g. graph node keying). */
   direction: Direction;
+  /** Every direction that appears among the backing refs. Length 1 for the
+   *  common case; length 2 when the same `(target, relationType)` pair has
+   *  both incoming and outgoing edges — those collapse into one aggregate
+   *  row with a bidirectional glyph. */
+  directions: Direction[];
   evidenceCount: number;
   /** Smallest page number across underlying refs that have a source text
    *  anchor. Undefined when every backing ref is entity-level (no
@@ -13,9 +22,10 @@ export interface Relationship {
   refIds: string[];
 }
 
-/** Dedupe references by (targetEntityId, relationType, direction) to produce a
- *  relationship view. Each direction becomes its own relationship so the
- *  arrow indicator is unambiguous. By default refs that belong to a hub
+/** Dedupe references by (targetEntityId, relationType) to produce a
+ *  relationship view. Incoming and outgoing edges with the same target +
+ *  type collapse into a single bidirectional aggregate; the row surfaces
+ *  the merged set via `directions[]`. By default refs that belong to a hub
  *  (hubId set) are skipped — see {@link deriveHubs}. Pass
  *  `{ includeHubMembers: true }` when the consumer renders one node per
  *  member (e.g. the graph view, which doesn't have a "hub container" node). */
@@ -27,12 +37,15 @@ export function deriveRelationships(
   for (const ref of refs) {
     if (ref.hubId && !opts.includeHubMembers) continue;
     const direction: Direction = ref.direction ?? "outgoing";
-    const key = `${ref.targetEntityId}::${ref.relationType}::${direction}`;
+    const key = `${ref.targetEntityId}::${ref.relationType}`;
     const page = ref.sourceSelection?.page;
     const existing = map.get(key);
     if (existing) {
       existing.evidenceCount += 1;
       existing.refIds.push(ref.id);
+      if (!existing.directions.includes(direction)) {
+        existing.directions.push(direction);
+      }
       if (
         page !== undefined &&
         (existing.firstPage === undefined || page < existing.firstPage)
@@ -45,6 +58,7 @@ export function deriveRelationships(
         targetEntityId: ref.targetEntityId,
         relationType: ref.relationType,
         direction,
+        directions: [direction],
         evidenceCount: 1,
         firstPage: page,
         refIds: [ref.id],

@@ -276,7 +276,7 @@ export function FileTable({
         <span>Size</span>
         <span>Lang</span>
         <span>Modified</span>
-        <span>Action</span>
+        <span className="sr-only">Actions</span>
       </div>
 
       {/* Rows */}

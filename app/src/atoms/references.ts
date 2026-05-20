@@ -1,7 +1,24 @@
 import { atom } from "jotai";
-import { references as initialRefs, Reference } from "../data/references";
+import {
+  references as initialRefs,
+  relationTypes as initialRelationTypes,
+  Reference,
+  RelationType,
+} from "../data/references";
 
 export const referencesAtom = atom<Reference[]>(initialRefs);
+
+/** Writable atom over the relation-type registry. Mirrors `entitiesAtom`'s
+ *  pattern so the Manage Types modal can add / delete types at runtime.
+ *  Seeded from data/references.ts but free to grow. */
+export interface RelationTypeDef {
+  id: RelationType;
+  label: string;
+}
+export const relationTypesAtom = atom<RelationTypeDef[]>(initialRelationTypes);
+
+/** Open-state for the Manage Relationship Types modal. */
+export const manageRelationTypesOpenAtom = atom(false);
 
 export const activeRefIdAtom = atom<string | null>(null);
 

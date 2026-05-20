@@ -1,0 +1,118 @@
+import { useAtomValue } from "jotai";
+import { ChevronRight, Link2 } from "lucide-react";
+import { zoomAtom } from "../../../atoms/filters";
+import { getEntity } from "../../../data/entities";
+import { relationTypes } from "../../../data/references";
+import { Hub } from "../../../utils/relationships";
+import { EntityPill } from "../../shared/EntityPill";
+import { ListCardRow } from "../../shared/ListCardRow";
+import { RowCheckbox } from "./RowCheckbox";
+
+export interface HubRowProps {
+  hub: Hub;
+  expanded?: boolean;
+  onToggleExpand?: () => void;
+}
+
+/** N-ary hub row. Renders the member entities as inline pills, no direction
+ *  glyph (hubs are symmetric — every member relates to every other). The
+ *  evidence-count badge mirrors aggregates. */
+export function HubRow({ hub, expanded, onToggleExpand }: HubRowProps) {
+  const zoom = useAtomValue(zoomAtom);
+  const relLabel =
+    relationTypes.find((r) => r.id === hub.relationType)?.label ??
+    hub.relationType.replace("_", " ");
+
+  const memberPills = hub.members.map((m) => {
+    const entity = getEntity(m.entityId);
+    return (
+      <EntityPill
+        key={m.entityId}
+        typeId={entity?.typeId ?? ""}
+        label={entity?.title}
+      />
+    );
+  });
+
+  const countBadge = (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggleExpand?.();
+      }}
+      aria-label={`${hub.refIds.length} evidence references`}
+      aria-expanded={onToggleExpand ? !!expanded : undefined}
+      className={`flex items-center gap-1 px-1.5 h-5 rounded text-[10px] font-medium tabular-nums transition-colors cursor-pointer ${
+        expanded
+          ? "bg-vellum text-ink-secondary"
+          : "bg-warm text-ink-tertiary hover:bg-parchment hover:text-ink-secondary"
+      }`}
+    >
+      <Link2 size={10} />
+      {hub.refIds.length}
+    </button>
+  );
+
+  const chevron = onToggleExpand ? (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggleExpand();
+      }}
+      aria-label={expanded ? "Collapse hub members" : "Expand hub members"}
+      className="shrink-0 p-0.5 -ml-0.5 text-ink-tertiary hover:text-ink cursor-pointer"
+    >
+      <ChevronRight
+        size={12}
+        className={`transition-transform ${expanded ? "rotate-90" : ""}`}
+      />
+    </button>
+  ) : null;
+
+  if (zoom === "overview") {
+    return (
+      <ListCardRow selected={false} onClick={() => onToggleExpand?.()} className="!py-1.5">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1 min-w-0 flex-wrap">
+            <RowCheckbox refIds={hub.refIds} />
+            {chevron}
+            {memberPills.slice(0, 3)}
+            {hub.members.length > 3 && (
+              <span className="text-[10px] text-ink-tertiary">
+                +{hub.members.length - 3}
+              </span>
+            )}
+          </div>
+          {countBadge}
+        </div>
+      </ListCardRow>
+    );
+  }
+
+  return (
+    <ListCardRow selected={false} onClick={() => onToggleExpand?.()} className={zoom === "compact" ? "!py-2" : ""}>
+      <div className="flex items-start justify-between gap-2 mb-1.5">
+        <div className="flex items-center gap-1 min-w-0 flex-wrap">
+          <RowCheckbox refIds={hub.refIds} />
+          {chevron}
+          {memberPills}
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="text-[10px] text-ink-tertiary uppercase tracking-wide">
+            hub
+          </span>
+          {countBadge}
+        </div>
+      </div>
+      {zoom !== "compact" && (
+        <div className="flex items-center gap-1 mt-1 text-[10px] text-ink-tertiary">
+          <span className="capitalize">{relLabel}</span>
+          <span>·</span>
+          <span>{hub.members.length} parties</span>
+        </div>
+      )}
+    </ListCardRow>
+  );
+}

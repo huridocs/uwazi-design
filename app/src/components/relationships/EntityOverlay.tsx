@@ -125,22 +125,17 @@ export function EntityOverlay() {
                     key={ref.id}
                     className="px-3 py-2.5 border-b border-border/50"
                   >
-                    <div className="flex items-center justify-between gap-2 mb-1.5">
-                      <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
-                      {ref.sourceSelection && (
+                    {ref.sourceSelection && (
+                      <div className="flex items-start justify-end gap-2 mb-1.5">
                         <PageTag page={ref.sourceSelection.page} />
-                      )}
-                    </div>
-                    {ref.sourceSelection ? (
+                      </div>
+                    )}
+                    {ref.sourceSelection && (
                       <FadeTruncate
                         text={ref.sourceSelection.text}
                         maxLines={2}
                         className="text-xs text-ink-secondary leading-relaxed"
                       />
-                    ) : (
-                      <p className="text-xs italic text-ink-tertiary">
-                        Entity-level connection — no text anchor
-                      </p>
                     )}
                     <div className="flex items-center mt-1">
                       <span className="text-[10px] text-ink-tertiary capitalize">

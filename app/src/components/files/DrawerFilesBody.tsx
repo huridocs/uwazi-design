@@ -1,4 +1,5 @@
-import { ArrowLeft, Download } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, ChevronDown, Check, Download, Pencil, X } from "lucide-react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { FileEntry } from "../../data/files";
 import {
@@ -14,21 +15,29 @@ import { FileViewerBody, resolveFileUrl } from "./FileViewerModal";
 import { DocumentViewer } from "../viewer/DocumentViewer";
 import { ViewButton } from "../shared/ViewButton";
 
+const KNOWN_LANGUAGES = ["EN", "ES", "FR", "AR", "PT", "DE", "—"];
+
 /** Drawer body listing every file grouped by its DocumentGroup. Mirrors the
  *  main Files view layout: one section per primary group with its
  *  translations beneath, then a flat Supporting files section. Used by both
  *  the Document tab drawer and the Metadata tab drawer so the file UI is
  *  consistent everywhere. */
 export function DrawerFilesBody() {
-  const files = useAtomValue(filesAtom);
+  const [files, setFiles] = useAtom(filesAtom);
   const groups = useAtomValue(documentGroupsAtom);
   const activeGroupId = useAtomValue(activePrimaryGroupIdAtom);
   const language = useAtomValue(languageAtom);
   const setAddFileTarget = useSetAtom(addFileTargetAtom);
   const [viewerFileId, setViewerFileId] = useAtom(viewerFileIdAtom);
+  const [editingFileId, setEditingFileId] = useState<string | null>(null);
   const viewingFile = viewerFileId
     ? files.find((f) => f.id === viewerFileId)
     : null;
+
+  const commitEdit = (id: string, patch: Partial<FileEntry>) => {
+    setFiles((all) => all.map((f) => (f.id === id ? { ...f, ...patch } : f)));
+    setEditingFileId(null);
+  };
 
   const primaryGroups = [...groups]
     .filter((g) => g.isPrimary)
@@ -98,8 +107,11 @@ export function DrawerFilesBody() {
   return (
     <div className="flex-1 min-h-0 flex flex-col">
       <div className="flex-1 min-h-0 overflow-auto px-3 py-4 pb-8">
-        {primaryGroups.length > 0 && (
-          <SectionHeader label="Primary documents" />
+        <SectionHeader label="Primary documents" />
+        {primaryGroups.length === 0 && (
+          <p className="text-xs italic text-ink-tertiary px-1 mb-5">
+            No primary documents yet. Promote a supporting file or add a new one.
+          </p>
         )}
         {primaryGroups.map((group) => {
           const groupFiles = files.filter((f) => f.groupId === group.id);
@@ -117,13 +129,14 @@ export function DrawerFilesBody() {
                 {groupFiles.map((file) => (
                   <DrawerFileRow
                     key={file.id}
-                    filename={file.name}
-                    type={file.type.toUpperCase()}
-                    size={file.size}
-                    language={file.language}
+                    file={file}
                     active={isInActivePrimary(file)}
                     thumbnail={<FileThumbnail type={file.type} />}
+                    editing={editingFileId === file.id}
                     onView={() => setViewerFileId(file.id)}
+                    onEdit={() => setEditingFileId(file.id)}
+                    onCancelEdit={() => setEditingFileId(null)}
+                    onCommit={(patch) => commitEdit(file.id, patch)}
                   />
                 ))}
               </div>
@@ -140,23 +153,26 @@ export function DrawerFilesBody() {
           );
         })}
 
-        {supportingFiles.length > 0 && (
-          <>
-            <SectionHeader label="Supporting files" />
-            <div className="space-y-2 mt-2">
-              {supportingFiles.map((file) => (
-                <DrawerFileRow
-                  key={file.id}
-                  filename={file.name}
-                  type={file.type.toUpperCase()}
-                  size={file.size}
-                  language={file.language}
-                  thumbnail={<FileThumbnail type={file.type} />}
-                  onView={() => setViewerFileId(file.id)}
-                />
-              ))}
-            </div>
-          </>
+        <SectionHeader label="Supporting files" />
+        {supportingFiles.length === 0 ? (
+          <p className="text-xs italic text-ink-tertiary px-1">
+            No supporting files yet. Add a file to get started.
+          </p>
+        ) : (
+          <div className="space-y-2 mt-2">
+            {supportingFiles.map((file) => (
+              <DrawerFileRow
+                key={file.id}
+                file={file}
+                thumbnail={<FileThumbnail type={file.type} />}
+                editing={editingFileId === file.id}
+                onView={() => setViewerFileId(file.id)}
+                onEdit={() => setEditingFileId(file.id)}
+                onCancelEdit={() => setEditingFileId(null)}
+                onCommit={(patch) => commitEdit(file.id, patch)}
+              />
+            ))}
+          </div>
         )}
       </div>
 
@@ -188,13 +204,14 @@ function SectionHeader({ label }: { label: string }) {
 }
 
 interface DrawerFileRowProps {
-  filename: string;
-  type: string;
-  size: string;
-  language: string;
+  file: FileEntry;
   active?: boolean;
   thumbnail: React.ReactNode;
+  editing?: boolean;
   onView?: () => void;
+  onEdit?: () => void;
+  onCancelEdit?: () => void;
+  onCommit?: (patch: Partial<FileEntry>) => void;
 }
 
 function FileThumbnail({ type }: { type: FileEntry["type"] }) {
@@ -235,14 +252,43 @@ function FileThumbnail({ type }: { type: FileEntry["type"] }) {
 }
 
 function DrawerFileRow({
-  filename,
-  type,
-  size,
-  language,
+  file,
   active,
   thumbnail,
+  editing,
   onView,
+  onEdit,
+  onCancelEdit,
+  onCommit,
 }: DrawerFileRowProps) {
+  const [draftName, setDraftName] = useState(file.name);
+  const [draftLang, setDraftLang] = useState(file.language);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing) {
+      setDraftName(file.name);
+      setDraftLang(file.language);
+      nameInputRef.current?.focus();
+      nameInputRef.current?.select();
+    }
+  }, [editing, file.name, file.language]);
+
+  const save = () => {
+    const trimmed = draftName.trim() || file.name;
+    onCommit?.({ name: trimmed, language: draftLang });
+  };
+
+  const cancel = () => {
+    setDraftName(file.name);
+    setDraftLang(file.language);
+    onCancelEdit?.();
+  };
+
+  const languageOptions = Array.from(
+    new Set([...KNOWN_LANGUAGES, file.language]),
+  );
+
   return (
     <div
       className={`flex items-stretch border rounded-md overflow-hidden transition-colors min-h-[58px] ${
@@ -253,21 +299,91 @@ function DrawerFileRow({
     >
       {thumbnail}
 
-      <div className="flex-1 min-w-0 px-3 py-2 flex flex-col justify-center gap-0.5">
-        <div className="flex items-center gap-1.5">
-          <p className="text-xs font-medium text-ink truncate">{filename}</p>
-          <span className="text-[9px] font-semibold text-ink-secondary bg-vellum px-1 py-px rounded shrink-0">
-            {language}
-          </span>
+      {editing ? (
+        <div className="flex-1 min-w-0 px-3 py-2 flex flex-col justify-center gap-1">
+          <input
+            ref={nameInputRef}
+            type="text"
+            value={draftName}
+            onChange={(e) => setDraftName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") save();
+              if (e.key === "Escape") cancel();
+            }}
+            className="w-full px-1.5 py-1 text-xs font-medium text-ink bg-paper border border-border rounded focus:outline-none focus:ring-1 focus:ring-carbon/30"
+            aria-label="File name"
+          />
+          <div className="flex items-center gap-2">
+            <div className="relative inline-flex items-center bg-paper rounded border border-border focus-within:ring-1 focus-within:ring-carbon/30">
+              <select
+                value={draftLang}
+                onChange={(e) => setDraftLang(e.target.value)}
+                className="appearance-none bg-transparent pl-2 pr-5 py-0.5 text-[10px] font-semibold text-ink-secondary focus:outline-none cursor-pointer"
+                aria-label="File language"
+              >
+                {languageOptions.map((lang) => (
+                  <option key={lang} value={lang}>
+                    {lang}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                size={10}
+                className="absolute right-1 text-ink-tertiary pointer-events-none"
+              />
+            </div>
+            <span className="text-[10px] text-ink-tertiary">{file.type.toUpperCase()}</span>
+            <span className="text-[10px] text-ink-tertiary">{file.size}</span>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] text-ink-tertiary">{type}</span>
-          <span className="text-[10px] text-ink-tertiary">{size}</span>
+      ) : (
+        <div className="flex-1 min-w-0 px-3 py-2 flex flex-col justify-center gap-0.5">
+          <div className="flex items-center gap-1.5">
+            <p className="text-xs font-medium text-ink truncate">{file.name}</p>
+            <span className="text-[9px] font-semibold text-ink-secondary bg-vellum px-1 py-px rounded shrink-0">
+              {file.language}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] text-ink-tertiary">{file.type.toUpperCase()}</span>
+            <span className="text-[10px] text-ink-tertiary">{file.size}</span>
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="flex items-center pr-2 shrink-0">
-        <ViewButton onClick={onView} />
+      <div className="flex items-center gap-1 pr-2 shrink-0">
+        {editing ? (
+          <>
+            <button
+              type="button"
+              onClick={save}
+              aria-label="Save changes"
+              className="flex items-center justify-center w-7 h-7 rounded-md bg-warm text-ink-secondary hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
+            >
+              <Check size={12} />
+            </button>
+            <button
+              type="button"
+              onClick={cancel}
+              aria-label="Cancel edit"
+              className="flex items-center justify-center w-7 h-7 rounded-md text-ink-tertiary hover:bg-warm hover:text-ink transition-colors cursor-pointer"
+            >
+              <X size={12} />
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={onEdit}
+              aria-label="Edit name and language"
+              className="flex items-center justify-center w-7 h-7 rounded-md text-ink-tertiary hover:bg-warm hover:text-ink transition-colors cursor-pointer"
+            >
+              <Pencil size={12} />
+            </button>
+            <ViewButton onClick={onView} />
+          </>
+        )}
       </div>
     </div>
   );

@@ -144,8 +144,11 @@ export function TreeNode({ children }: { children: ReactNode }) {
         // horizontal stub, giving a proper L corner.
         "last:before:bottom-auto last:before:h-[18px]",
         // Horizontal stub aligned with the visual centre of a single-line
-        // header (~18px from top of the row).
-        "after:content-[''] after:absolute after:left-0 after:top-[18px] after:w-[14px]",
+        // header (~18px from top of the row). The stub reaches the chevron's
+        // left edge — `pl-5` (20px) places the child at x=20; the chevron's
+        // own padding nudges its visual left edge to ~22-26px, so a 22px stub
+        // meets it cleanly.
+        "after:content-[''] after:absolute after:left-0 after:top-[18px] after:w-[22px]",
         "after:border-t after:border-border-soft",
       ].join(" ")}
     >

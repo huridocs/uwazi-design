@@ -46,8 +46,22 @@ export function App() {
     setAppView(view);
   };
 
+  // The catalog has its own self-contained layout (its own header, its own
+  // scroll containers) — it doesn't share the uwazi-app shell. That keeps the
+  // two surfaces from fighting over height propagation through a common
+  // ancestor. The uwazi-app shell renders Navbar + main flex column for
+  // EntityView / ImportCSVView.
+  if (appView === "catalog") {
+    return (
+      <>
+        <ComponentCatalog onReturn={() => setAppView("entity")} />
+        <ToastContainer />
+      </>
+    );
+  }
+
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden">
       <Navbar
         onLogoClick={handleLogoClick}
         appView={appView}
@@ -57,13 +71,9 @@ export function App() {
         rtl={rtl}
         onToggleRtl={handleToggleRtl}
       />
-      {appView === "catalog" ? (
-        <ComponentCatalog />
-      ) : appView === "import-csv" ? (
-        <ImportCSVView />
-      ) : (
-        <EntityView />
-      )}
+      <div className="flex-1 min-h-0 flex flex-col">
+        {appView === "import-csv" ? <ImportCSVView /> : <EntityView />}
+      </div>
       <ToastContainer />
     </div>
   );

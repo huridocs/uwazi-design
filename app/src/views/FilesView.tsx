@@ -7,7 +7,6 @@ import { FileTable } from "../components/files/FileTable";
 import { FileDrawer } from "../components/files/FileDrawer";
 import { DocumentGroupCard } from "../components/files/DocumentGroupCard";
 import { AddFileModal } from "../components/files/AddFileModal";
-import { AddFileDropArea } from "../components/files/AddFileDropArea";
 import {
   filesAtom,
   documentGroupsAtom,
@@ -16,6 +15,7 @@ import {
 } from "../atoms/files";
 import { languageAtom, type Language } from "../atoms/language";
 import { ConfirmDialog } from "../components/shared/ConfirmDialog";
+import { SelectControls } from "../components/shared/SelectControls";
 
 interface FilesViewProps {
   tabs: { id: string; label: string; count?: number }[];
@@ -181,28 +181,30 @@ export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
               <h3 className="text-xs font-semibold text-ink-tertiary uppercase tracking-wider mb-2 mt-5 px-1">
                 Supporting files
               </h3>
-              <FileTable
-                files={supportingFiles}
-                selectedIds={selectedIds}
-                onSelect={handleSelect}
-                onSelectAll={makeSelectAll(supportingFiles.map((f) => f.id))}
-                focusedId={focusedId}
-                onFocus={setFocusedId}
-                onRequestDelete={(id) => setPendingDelete([id])}
-              />
-              {files.length === 0 && (
-                <div className="mt-3">
-                  <AddFileDropArea
-                    variant="large"
-                    onAdded={(id) => setFocusedId(id)}
-                  />
-                </div>
+              {supportingFiles.length === 0 ? (
+                <p className="text-xs italic text-ink-tertiary px-1">
+                  No supporting files yet. Add a file to get started.
+                </p>
+              ) : (
+                <FileTable
+                  files={supportingFiles}
+                  selectedIds={selectedIds}
+                  onSelect={handleSelect}
+                  onSelectAll={makeSelectAll(supportingFiles.map((f) => f.id))}
+                  focusedId={focusedId}
+                  onFocus={setFocusedId}
+                  onRequestDelete={(id) => setPendingDelete([id])}
+                />
               )}
             </div>
             <FilesActionBar
               selectedCount={selectedIds.size}
               totalCount={files.length}
               onAddFile={() => setAddFileTarget({ mode: "new" })}
+              onSelectAll={() =>
+                setSelectedIds(new Set(files.map((f) => f.id)))
+              }
+              onDeselectAll={() => setSelectedIds(new Set())}
               onDelete={() => setPendingDelete(Array.from(selectedIds))}
             />
           </div>
@@ -253,14 +255,19 @@ function FilesActionBar({
   selectedCount,
   totalCount,
   onAddFile,
+  onSelectAll,
+  onDeselectAll,
   onDelete,
 }: {
   selectedCount: number;
   totalCount: number;
   onAddFile: () => void;
+  onSelectAll: () => void;
+  onDeselectAll: () => void;
   onDelete: () => void;
 }) {
   const hasSelection = selectedCount > 0;
+  const allSelected = totalCount > 0 && selectedCount === totalCount;
 
   return (
     <div
@@ -269,12 +276,21 @@ function FilesActionBar({
       }`}
       style={{ borderTop: "1px solid var(--border-primary)" }}
     >
-      <button
-        onClick={onAddFile}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
-      >
-        <span className="text-ink-tertiary">+</span> Add file
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={onAddFile}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+        >
+          <span className="text-ink-tertiary">+</span> Add file
+        </button>
+        <SelectControls
+          allSelected={allSelected}
+          hasSelection={hasSelection}
+          totalCount={totalCount}
+          onSelectAll={onSelectAll}
+          onDeselectAll={onDeselectAll}
+        />
+      </div>
 
       {hasSelection && (
         <div className="flex items-center gap-4">
@@ -292,3 +308,4 @@ function FilesActionBar({
     </div>
   );
 }
+

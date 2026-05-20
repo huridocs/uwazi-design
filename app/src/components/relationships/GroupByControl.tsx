@@ -15,6 +15,9 @@ interface Props {
   size?: "sm" | "md";
   /** When true, the control is rendered but inert (greyed out). */
   disabled?: boolean;
+  /** Option id to omit from the dropdown — used to mutex primary/secondary so
+   *  the same axis isn't offered on both levels. "none" is never excluded. */
+  excludeOption?: GroupBy;
 }
 
 /** Dropdown selecting a grouping axis. Reuses the same options list for both
@@ -23,6 +26,7 @@ export function GroupByControl({
   axis = "primary",
   size = "md",
   disabled = false,
+  excludeOption,
 }: Props) {
   const atom: WritableAtom<GroupBy, [GroupBy], void> =
     axis === "primary" ? groupByAtom : subGroupByAtom;
@@ -31,6 +35,9 @@ export function GroupByControl({
   const h = size === "sm" ? "h-6" : "h-8";
   const active = groupingOptions.find((o) => o.id === value);
   const labelPrefix = axis === "primary" ? "Group by:" : "Then by:";
+  const visibleOptions = groupingOptions.filter(
+    (o) => o.id === "none" || o.id !== excludeOption,
+  );
 
   return (
     <div className="relative">
@@ -62,7 +69,7 @@ export function GroupByControl({
             aria-label={labelPrefix}
             className="absolute top-full left-0 mt-1 z-20 bg-paper border border-border rounded-md shadow-lg overflow-hidden min-w-[180px]"
           >
-            {groupingOptions.map((opt) => (
+            {visibleOptions.map((opt) => (
               <button
                 key={opt.id}
                 role="option"

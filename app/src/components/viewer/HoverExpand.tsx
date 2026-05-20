@@ -23,13 +23,9 @@ export function HoverExpand({ reference, x, y }: HoverExpandProps) {
             {reference.relationType.replace("_", " ")}
           </span>
         </div>
-        {reference.sourceSelection ? (
+        {reference.sourceSelection && (
           <p className="text-xs text-ink-secondary leading-relaxed line-clamp-3">
             "{reference.sourceSelection.text}"
-          </p>
-        ) : (
-          <p className="text-xs italic text-ink-tertiary">
-            Entity-level connection
           </p>
         )}
       </div>

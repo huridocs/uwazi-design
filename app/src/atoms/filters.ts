@@ -59,6 +59,16 @@ export const entityTypeFiltersAtom = atom<Record<string, boolean>>({});
 /** Whether the toggleable filters slide-over is open (single shared flag). */
 export const filtersDrawerOpenAtom = atom(false);
 
+/** IDs of relationship rows the user has checkbox-selected for bulk actions
+ *  (delete, etc.). Aggregate rows expand to all backing refIds; hub rows to
+ *  every member's refIds. */
+export const selectedRefIdsAtom = atom<Set<string>>(new Set<string>());
+
+/** When true, the Relationships panel surfaces per-row checkboxes and the
+ *  action bar exposes bulk Delete + Select all. Toggled by the Edit button.
+ *  Selection state is cleared when leaving edit mode. */
+export const editModeAtom = atom(false);
+
 /** Relationships main-view zoom tier. Applies to grouped + tree modes. */
 export type Zoom = "detail" | "compact" | "overview";
 export const zoomAtom = atom<Zoom>("detail");

@@ -14,7 +14,7 @@ type ListCardRowProps =
   | ({ as: "button" } & BaseProps);
 
 const baseClasses =
-  "group px-3 py-2.5 border-b border-border/50 last:border-b-0 cursor-pointer transition-colors";
+  "group px-3 py-2.5 border-b border-border/50 last:border-b-0 cursor-pointer transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20";
 
 export const ListCardRow = forwardRef<HTMLElement, ListCardRowProps>(
   function ListCardRow(props, ref) {

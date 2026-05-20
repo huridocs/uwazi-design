@@ -1,9 +1,10 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAtom } from "jotai";
 import { referencesAtom, toastsAtom } from "../../atoms/references";
 import {
   viewAtom,
   groupByAtom,
+  subGroupByAtom,
   searchQueryAtom,
   sortOrderAtom,
   activeClusterRefIdsAtom,
@@ -23,6 +24,7 @@ import { RelationshipsPanelBody } from "./RelationshipsPanelBody";
 import { ViewControls } from "./ViewControls";
 import { GroupByControl } from "./GroupByControl";
 import { SortControl } from "./SortControl";
+import { RelationshipsActionBar } from "./RelationshipsActionBar";
 
 /** Drawer-style connections section: toolbar + body + scoped filters drawer.
  *  Used wherever the unified Relationships panel needs to render inside a
@@ -39,7 +41,14 @@ export function RelationshipsDrawerSection() {
   const [activeFilterCount] = useAtom(activeFilterCountAtom);
   const [view] = useAtom(viewAtom);
   const [groupBy] = useAtom(groupByAtom);
+  const [subGroupBy, setSubGroupBy] = useAtom(subGroupByAtom);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+
+  // Mirror RelationshipsView: snap secondary back to "none" if primary
+  // collides, so the dropdown never shows a stale value.
+  useEffect(() => {
+    if (groupBy !== "none" && subGroupBy === groupBy) setSubGroupBy("none");
+  }, [groupBy, subGroupBy, setSubGroupBy]);
 
   const handleDelete = useCallback((id: string) => setDeleteTarget(id), []);
 
@@ -73,11 +82,16 @@ export function RelationshipsDrawerSection() {
       <div className="px-3 pb-2 flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-1.5 flex-wrap">
           <ViewControls size="sm" />
-          <GroupByControl axis="primary" size="sm" />
+          <GroupByControl
+            axis="primary"
+            size="sm"
+            excludeOption={subGroupBy === "none" ? undefined : subGroupBy}
+          />
           <GroupByControl
             axis="secondary"
             size="sm"
             disabled={view === "graph" || groupBy === "none"}
+            excludeOption={groupBy === "none" ? undefined : groupBy}
           />
           <SortControl size="sm" />
         </div>
@@ -91,6 +105,7 @@ export function RelationshipsDrawerSection() {
         </div>
       </div>
       <RelationshipsPanelBody onDelete={handleDelete} />
+      <RelationshipsActionBar />
 
       <FiltersDrawer
         open={filtersOpen}

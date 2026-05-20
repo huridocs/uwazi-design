@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { useAtom } from "jotai";
 import { referencesAtom } from "../atoms/references";
+import { filesAtom } from "../atoms/files";
 import { languageAtom, type Language } from "../atoms/language";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { MainTabs } from "../components/layout/MainTabs";
@@ -10,6 +11,7 @@ import { ReferencePanel } from "../components/relationships/ReferencePanel";
 import { MetadataDrawerContent } from "../components/relationships/MetadataDrawerContent";
 import { ToCPanel } from "../components/relationships/ToCPanel";
 import { CreateRelationshipModal } from "../components/relationships/CreateRelationshipModal";
+import { ManageRelationTypesModal } from "../components/relationships/ManageRelationTypesModal";
 import { ToastContainer } from "./ToastContainer";
 import { FilesView } from "./FilesView";
 import { MetadataView } from "./MetadataView";
@@ -20,22 +22,27 @@ const mainTabs = [
   { id: "document", label: t("System", "Document") },
   { id: "metadata", label: t("System", "Metadata") },
   { id: "relationships", label: t("System", "Relationships"), count: 0 },
-  { id: "files", label: t("System", "Files"), count: 6 },
+  { id: "files", label: t("System", "Files"), count: 0 },
 ];
 
 export function EntityView() {
   const [activeTab, setActiveTab] = useState("document");
   const [references] = useAtom(referencesAtom);
+  const [files] = useAtom(filesAtom);
   const [language, setLanguage] = useAtom(languageAtom);
 
-  const tabs = mainTabs.map((tab) =>
-    tab.id === "relationships" ? { ...tab, count: references.length } : tab,
-  );
+  const tabs = mainTabs.map((tab) => {
+    if (tab.id === "relationships") return { ...tab, count: references.length };
+    if (tab.id === "files") return { ...tab, count: files.length };
+    return tab;
+  });
 
   if (activeTab === "metadata") {
     return (
       <>
         <MetadataView tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+        <CreateRelationshipModal />
+        <ManageRelationTypesModal />
         <ToastContainer />
       </>
     );
@@ -55,6 +62,7 @@ export function EntityView() {
       <>
         <RelationshipsView tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
         <CreateRelationshipModal />
+        <ManageRelationTypesModal />
         <ToastContainer />
       </>
     );
@@ -105,6 +113,7 @@ export function EntityView() {
         ]}
       />
       <CreateRelationshipModal />
+      <ManageRelationTypesModal />
       <ToastContainer />
     </>
   );
