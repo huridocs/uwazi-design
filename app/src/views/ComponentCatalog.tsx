@@ -82,31 +82,15 @@ export function ComponentCatalog({ onReturn }: Props) {
 
   useEffect(() => {
     if (!mounted) return;
+    // Track which section is "active" for highlight purposes only. The sidebar
+    // is not auto-scrolled here — any nav scrolling during natural content
+    // scroll caused visible jitter. The click handler still scrolls the nav
+    // when a sidebar item is explicitly tapped.
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
-            const id = entry.target.id;
-            setActiveId(id);
-            // Minimum-scroll-to-make-visible: only nudge nav.scrollTop by the
-            // exact amount needed to bring the button on-screen (no centering,
-            // no smooth animation). This prevents the sidebar from oscillating
-            // as the active section changes during natural scroll.
-            const btn = sidebarBtnRefs.current.get(id);
-            const nav = btn?.closest("nav");
-            if (btn && nav) {
-              const btnRect = btn.getBoundingClientRect();
-              const navRect = nav.getBoundingClientRect();
-              const btnTopInNav = btnRect.top - navRect.top;
-              const btnBottomInNav = btnTopInNav + btnRect.height;
-              const navHeight = nav.clientHeight;
-              if (btnTopInNav < 0) {
-                nav.scrollTop += btnTopInNav;
-              } else if (btnBottomInNav > navHeight) {
-                nav.scrollTop += btnBottomInNav - navHeight;
-              }
-              // Otherwise the button is already fully in view — leave nav alone.
-            }
+            setActiveId(entry.target.id);
             break;
           }
         }

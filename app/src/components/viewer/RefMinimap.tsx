@@ -72,7 +72,16 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
 
     // Apply same search filter as the drawer. Entity-level refs (no
     // sourceSelection) can't be plotted on the document, so drop them first.
-    let baseRefs = references.filter((r) => r.sourceSelection !== undefined);
+    // Also drop refs whose page is beyond the current document's range —
+    // happens after switching primary docs, when seeded refs from a longer
+    // doc still reference pages outside the new doc's `numPages` and would
+    // be positioned past the minimap's bottom edge.
+    let baseRefs = references.filter(
+      (r) =>
+        r.sourceSelection !== undefined &&
+        r.sourceSelection.page >= 1 &&
+        r.sourceSelection.page <= numPages,
+    );
     const matcher = buildMatcher(searchQuery);
     if (matcher) {
       baseRefs = baseRefs.filter((ref) => {

@@ -243,13 +243,15 @@ export function IsolatedActionBar() {
 
 export function IsolatedRefMinimap() {
   const store = createStore();
+  // `RefMinimap` uses `position: absolute` with top/bottom/right offsets so
+  // it can sit alongside the real document viewer. The catalog demo needs a
+  // positioned + min-height wrapper, otherwise the minimap escapes to the
+  // nearest positioned ancestor up the tree.
   return (
     <Provider store={store}>
-      <div className="flex items-stretch gap-4">
-        {/* Faux document column so the minimap reads as a track alongside a
-            page, just like in the real document viewer. */}
-        <div className="flex-1 max-w-md min-h-[320px] rounded-md border border-border/40 bg-paper px-6 py-4 text-[10px] text-ink-tertiary">
-          <p className="leading-relaxed">
+      <div className="relative w-full h-[360px] rounded-md border border-border/40 bg-paper overflow-hidden">
+        <div className="absolute inset-0 right-[80px] px-6 py-4 text-[10px] text-ink-tertiary leading-relaxed">
+          <p>
             (Document column — the minimap on the right shows a dot per text
             anchor in <code>referencesAtom</code>. Dots cluster by vertical
             position and colour by target entity type. Click a dot to jump to
