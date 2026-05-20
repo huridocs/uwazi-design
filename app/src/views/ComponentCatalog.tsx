@@ -88,29 +88,24 @@ export function ComponentCatalog({ onReturn }: Props) {
           if (entry.isIntersecting) {
             const id = entry.target.id;
             setActiveId(id);
-            // Only nudge the sidebar if the active button is currently
-            // outside the nav's visible area — otherwise multiple intersecting
-            // entries during natural scroll cause the sidebar to jitter as
-            // the centering target shifts. No smooth animation either — that
-            // queues up overlapping tweens.
+            // Minimum-scroll-to-make-visible: only nudge nav.scrollTop by the
+            // exact amount needed to bring the button on-screen (no centering,
+            // no smooth animation). This prevents the sidebar from oscillating
+            // as the active section changes during natural scroll.
             const btn = sidebarBtnRefs.current.get(id);
             const nav = btn?.closest("nav");
             if (btn && nav) {
               const btnRect = btn.getBoundingClientRect();
               const navRect = nav.getBoundingClientRect();
               const btnTopInNav = btnRect.top - navRect.top;
+              const btnBottomInNav = btnTopInNav + btnRect.height;
               const navHeight = nav.clientHeight;
-              const PADDING = 24;
-              if (
-                btnTopInNav < PADDING ||
-                btnTopInNav + btnRect.height > navHeight - PADDING
-              ) {
-                const btnCenterInScroll =
-                  btnRect.top - navRect.top + nav.scrollTop + btnRect.height / 2;
-                const target = btnCenterInScroll - navHeight / 2;
-                const max = nav.scrollHeight - navHeight;
-                nav.scrollTop = Math.max(0, Math.min(target, max));
+              if (btnTopInNav < 0) {
+                nav.scrollTop += btnTopInNav;
+              } else if (btnBottomInNav > navHeight) {
+                nav.scrollTop += btnBottomInNav - navHeight;
               }
+              // Otherwise the button is already fully in view — leave nav alone.
             }
             break;
           }
