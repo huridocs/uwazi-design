@@ -7,7 +7,7 @@ import { FileEntry, FileKind } from "../../data/files";
  *  Lets the viewer show real content for every kind in the prototype without
  *  bundling large binaries. */
 const SAMPLE_URLS: Record<FileKind, string | undefined> = {
-  pdf: "/sample.pdf",
+  pdf: "/docs/Velasquez-Rodriguez_v_Honduras_Judgment_1988_EN.pdf",
   document: undefined,
   audio: "https://www.w3schools.com/html/horse.mp3",
   video: "https://www.w3schools.com/html/mov_bbb.mp4",

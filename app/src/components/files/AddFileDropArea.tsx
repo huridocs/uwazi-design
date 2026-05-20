@@ -65,7 +65,10 @@ export function AddFileDropArea({
           type: kind,
           size,
           modified: new Date().toISOString().slice(0, 10),
-          url: kind === "pdf" ? "/sample.pdf" : undefined,
+          url:
+            kind === "pdf"
+              ? "/docs/Velasquez-Rodriguez_v_Honduras_Judgment_1988_EN.pdf"
+              : undefined,
         },
       ]);
       onAdded?.(fileId);

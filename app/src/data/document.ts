@@ -16,8 +16,8 @@ export const currentDocument: DocumentMeta = {
   entityTypeId: "court_case",
   language: "English",
   createdAt: "2024-06-15",
-  pages: 14,
-  filename: "sample.pdf",
+  pages: 17,
+  filename: "Velasquez-Rodriguez_v_Honduras_Judgment_1988_EN.pdf",
 };
 
 export const documentsByLanguage: Record<Language, DocumentMeta> = {

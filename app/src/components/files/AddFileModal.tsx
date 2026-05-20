@@ -203,7 +203,10 @@ export function AddFileModal() {
         type: entry.kind,
         size: entry.size,
         modified: today,
-        url: entry.kind === "pdf" ? "/sample.pdf" : undefined,
+        url:
+          entry.kind === "pdf"
+            ? "/docs/Velasquez-Rodriguez_v_Honduras_Judgment_1988_EN.pdf"
+            : undefined,
       });
     }
 

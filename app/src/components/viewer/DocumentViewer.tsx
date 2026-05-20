@@ -45,7 +45,7 @@ export function DocumentViewer({ actionBarLeft, showMinimap = true, fileOverride
 
   // Pick the file to render from (active primary group, current language).
   // Falls back to first primary, then first file in the active group, then
-  // the bundled /sample.pdf so the viewer always has something to show.
+  // the bundled Velasquez-Rodriguez judgment so the viewer always has something to show.
   const language = useAtomValue(languageAtom);
   const files = useAtomValue(filesAtom);
   const groups = useAtomValue(documentGroupsAtom);
@@ -66,7 +66,9 @@ export function DocumentViewer({ actionBarLeft, showMinimap = true, fileOverride
     // group so the viewer still renders something.
     return files.find((f) => f.groupId === resolvedActiveId) ?? null;
   }, [files, resolvedActiveId, language, fileOverride]);
-  const filePath = activeFile?.url ?? "/sample.pdf";
+  const filePath =
+    activeFile?.url ??
+    "/docs/Velasquez-Rodriguez_v_Honduras_Judgment_1988_EN.pdf";
   const showLangFallback =
     !fileOverride && activeFile !== null && activeFile.language !== language;
 

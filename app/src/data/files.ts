@@ -11,7 +11,7 @@ export interface FileEntry {
   type: FileKind;
   size: string;
   modified: string;
-  /** Stub URL for the viewer — every seeded file points at /sample.pdf so the
+  /** Stub URL for the viewer — every seeded file points at a real IACtHR judgment in /docs/ so the
    *  prototype can demo file-switching without juggling real assets. */
   url?: string;
 }
@@ -49,13 +49,17 @@ export const documentGroups: DocumentGroup[] = [
   { id: "g-external-link", title: "External news coverage", isPrimary: false, order: 6 },
 ];
 
-// Bundled sample PDFs in app/public/ — kept local so react-pdf doesn't run
-// into CORS issues fetching from third-party hosts. Each file in the seed
-// points at one of these so the viewer renders distinct content per row.
-const SAMPLE_MAIN = "/sample.pdf";            // canonical IACHR judgment demo
-const SAMPLE_ACADEMIC = "/tracemonkey.pdf";   // Mozilla PDF.js academic paper
-const SAMPLE_REPORT = "/report-sample.pdf";   // Adobe sample report
-const SAMPLE_DOC = "/sample-doc.pdf";         // W3 dummy single-page
+// Real Inter-American Court of Human Rights judgments, vendored in
+// `app/public/docs/`. Sourced from corteidh.or.cr via Wayback Machine since
+// the live site blocks direct downloads. Bundled locally so react-pdf renders
+// them without CORS hits, and the document viewer shows distinct authentic
+// content per row — handy when iterating on the Connections / minimap UI.
+const DOC_VELASQUEZ_EN = "/docs/Velasquez-Rodriguez_v_Honduras_Judgment_1988_EN.pdf";
+const DOC_VELASQUEZ_ES = "/docs/Velasquez-Rodriguez_c_Honduras_Sentencia_1988_ES.pdf";
+const DOC_BAMACA_EN    = "/docs/Bamaca-Velasquez_v_Guatemala_Judgment_2000_EN.pdf";
+const DOC_BAMACA_ES    = "/docs/Bamaca-Velasquez_c_Guatemala_Sentencia_2000_ES.pdf";
+const DOC_GELMAN_EN    = "/docs/Gelman_v_Uruguay_Judgment_2011_EN.pdf";
+const DOC_GELMAN_ES    = "/docs/Gelman_c_Uruguay_Sentencia_2011_ES.pdf";
 
 export const files: FileEntry[] = [
   // Judgment — 4 translations
@@ -66,59 +70,65 @@ export const files: FileEntry[] = [
     type: "pdf",
     size: "114 KB",
     language: "EN",
-    modified: "1987-06-26",
-    url: SAMPLE_MAIN,
+    modified: "1988-07-29",
+    url: DOC_VELASQUEZ_EN,
   },
   {
     id: "f-judg-es",
     groupId: "g-judgment",
-    name: "Velasquez-Rodriguez_c_Honduras_Sentencia_1987.pdf",
+    name: "Velasquez-Rodriguez_c_Honduras_Sentencia_1988.pdf",
     type: "pdf",
-    size: "118 KB",
+    size: "191 KB",
     language: "ES",
-    modified: "1987-06-26",
-    url: SAMPLE_ACADEMIC,
+    modified: "1988-07-29",
+    url: DOC_VELASQUEZ_ES,
   },
   {
     id: "f-judg-fr",
     groupId: "g-judgment",
-    name: "Velasquez-Rodriguez_c_Honduras_Arret_1987.pdf",
+    // No official French translation exists in the IACtHR archive; this entry
+    // points at the Bámaca-Velásquez judgment (Guatemala) as a stand-in so
+    // the language-switcher demo has distinct content for FR.
+    name: "Bamaca-Velasquez_c_Guatemala_Sentencia_2000.pdf",
     type: "pdf",
-    size: "121 KB",
+    size: "924 KB",
     language: "FR",
-    modified: "1988-01-15",
-    url: SAMPLE_REPORT,
+    modified: "2000-11-25",
+    url: DOC_BAMACA_ES,
   },
   {
     id: "f-judg-ar",
     groupId: "g-judgment",
-    name: "Velasquez-Rodriguez_Honduras_Hukm_1987.pdf",
+    // No Arabic translation either; using the English Bámaca judgment as a
+    // stand-in for the AR slot.
+    name: "Bamaca-Velasquez_v_Guatemala_Judgment_2000.pdf",
     type: "pdf",
-    size: "127 KB",
+    size: "948 KB",
     language: "AR",
-    modified: "1988-04-02",
-    url: SAMPLE_DOC,
+    modified: "2000-11-25",
+    url: DOC_BAMACA_EN,
   },
-  // Final Report — 2 translations
+  // Final Report — Gelman v. Uruguay judgment used as the "report" doc since
+  // the original La Tablada IACHR report isn't available as a standalone PDF.
   {
     id: "f-report-en",
     groupId: "g-final-report",
-    name: "Final_Report_La_Tablada_Investigation.pdf",
+    name: "Gelman_v_Uruguay_Judgment_2011.pdf",
     type: "pdf",
-    size: "2.3 MB",
+    size: "606 KB",
     language: "EN",
-    modified: "1991-11-10",
-    url: SAMPLE_REPORT,
+    modified: "2011-02-24",
+    url: DOC_GELMAN_EN,
   },
   {
     id: "f-report-es",
     groupId: "g-final-report",
-    name: "Informe_Final_Investigacion_La_Tablada.pdf",
+    name: "Gelman_c_Uruguay_Sentencia_2011.pdf",
     type: "pdf",
-    size: "2.4 MB",
+    size: "738 KB",
     language: "ES",
-    modified: "1991-11-10",
-    url: SAMPLE_ACADEMIC,
+    modified: "2011-02-24",
+    url: DOC_GELMAN_ES,
   },
   // Supporting — one file per group, mixed kinds
   {
@@ -156,7 +166,7 @@ export const files: FileEntry[] = [
     size: "4.1 MB",
     language: "ES",
     modified: "1987-04-22",
-    url: SAMPLE_DOC,
+    url: DOC_GELMAN_ES,
   },
   {
     id: "f-external-link",
