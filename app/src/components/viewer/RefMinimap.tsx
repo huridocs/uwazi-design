@@ -1,7 +1,8 @@
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { referencesAtom, scrollToHighlightAtom, scrollToRefAtom, activeRefIdAtom, activeDrawerTabAtom, expandGroupForRefAtom } from "../../atoms/references";
 import { collapseAllSignalAtom, searchQueryAtom, activeClusterRefIdsAtom } from "../../atoms/filters";
 import { currentPageAtom } from "../../atoms/selection";
+import { activePrimaryGroupIdAtom } from "../../atoms/files";
 import { getEntity, getEntityType } from "../../data/entities";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Reference } from "../../data/references";
@@ -40,6 +41,16 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
   const [searchQuery] = useAtom(searchQueryAtom);
   const setActiveClusterRefIds = useSetAtom(activeClusterRefIdsAtom);
   const minimapRef = useRef<HTMLDivElement>(null);
+  // Reset transient minimap state (expanded cluster, hovered dot, mode) when
+  // the user switches between primary documents — otherwise a tree from the
+  // previous doc remains expanded against the new doc's clusters, which is
+  // confusing since cluster indices don't carry across.
+  const activePrimaryGroupId = useAtomValue(activePrimaryGroupIdAtom);
+  useEffect(() => {
+    setExpandedCluster(null);
+    setHoveredDot(null);
+    setActiveClusterRefIds(null);
+  }, [activePrimaryGroupId, setActiveClusterRefIds]);
 
   const dotSize = DOT_SIZE;
 

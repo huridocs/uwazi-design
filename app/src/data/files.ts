@@ -34,10 +34,12 @@ export const documentGroups: DocumentGroup[] = [
     isPrimary: true,
     order: 0,
   },
-  // Final report with 2 translations.
+  // Second primary — Gelman v. Uruguay judgment with 2 translations.
+  // Group id kept as `g-final-report` for seed stability; only the
+  // selector-visible title reflects the actual vendored PDF.
   {
     id: "g-final-report",
-    title: "Final Report — La Tablada Investigation",
+    title: "Gelman v. Uruguay — Judgment (2011)",
     isPrimary: true,
     order: 1,
   },

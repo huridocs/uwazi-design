@@ -888,13 +888,24 @@ function generateBulkReferences(): Reference[] {
   ];
 
   const refs: Reference[] = [];
-  const totalPages = 14;
+  // Cover up to 120 pages so refs distribute across the FULL minimap track
+  // for every primary document, not just the shortest one. Page counts in
+  // the vendored set: Velásquez EN 17pp, ES 47pp; Bámaca EN 112pp, ES 116pp;
+  // Gelman EN 90pp, ES 92pp. For docs shorter than 120, RefMinimap drops
+  // refs with page > numPages so the track tail isn't padded with off-doc
+  // refs — but the seeded distribution still reaches the bottom for any
+  // primary the user switches to.
+  const totalPages = 120;
   let id = 38;
 
-  // Generate ~280 refs spread across all pages with natural clustering
+  // Per-page count tuned for the longest primary (Bámaca ES, 116pp). At
+  // ~3 refs per page that's ~350 refs for Bámaca and ~50 for Velásquez —
+  // both feel populated without overwhelming the panel. Each yPercent-merged
+  // cluster (~3-5 pages worth at 3.5% threshold) holds ~10 refs, which
+  // expands to ≤200px — safely inside the minimap track.
   for (let page = 1; page <= totalPages; page++) {
-    // Each page gets 14-26 refs, with some clustering
-    const refsPerPage = 14 + Math.floor(seededRandom(page * 7) * 12);
+    // Each page gets 2-5 refs
+    const refsPerPage = 2 + Math.floor(seededRandom(page * 7) * 4);
 
     for (let j = 0; j < refsPerPage; j++) {
       const seed = id * 31 + page * 13 + j * 7;
