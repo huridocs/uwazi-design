@@ -37,6 +37,13 @@ export const expandGroupForRefAtom = atom<string | null>(null);
 /** Entity overlay — shows target entity preview when "View" is clicked on a ref */
 export const overlayEntityIdAtom = atom<string | null>(null);
 
+/** The specific aggregate-row id the user just clicked. Tracked separately
+ *  from `overlayEntityIdAtom` because multiple aggregates can target the
+ *  same entity (one per relation type) — without this, opening the overlay
+ *  highlighted every sibling row pointing at that entity. Cleared when the
+ *  overlay closes. */
+export const activeAggregateIdAtom = atom<string | null>(null);
+
 /** Toast messages */
 export interface Toast {
   id: string;

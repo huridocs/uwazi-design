@@ -698,6 +698,53 @@ export const references: Reference[] = [
     relationType: "cites",
     createdAt: "2024-07-15",
   },
+  // Cross-source refs — source is NOT the current document. Carried over
+  // from other entities' own connection records, so the user sees something
+  // when grouping by source-entity / source-template. These are entity-level
+  // (no sourceSelection) since the source's text anchor isn't relevant when
+  // we're not viewing that document.
+  {
+    id: "ref-xs-1",
+    sourceEntityId: "e1", // Juan Carlos Abella (person)
+    targetEntityId: "e3", // → this doc
+    relationType: "mentions",
+    createdAt: "2024-07-18",
+  },
+  {
+    id: "ref-xs-2",
+    sourceEntityId: "e2", // Argentina (country)
+    targetEntityId: "e3",
+    relationType: "relates_to",
+    createdAt: "2024-07-18",
+  },
+  {
+    id: "ref-xs-3",
+    sourceEntityId: "e9", // Inter-American Commission (organization)
+    targetEntityId: "e3",
+    relationType: "cites",
+    createdAt: "2024-07-19",
+  },
+  {
+    id: "ref-xs-4",
+    sourceEntityId: "e14", // Bámaca Velásquez Judgment (court_case)
+    targetEntityId: "e3",
+    relationType: "cites",
+    createdAt: "2024-07-19",
+  },
+  {
+    id: "ref-xs-5",
+    sourceEntityId: "e31", // Truth Commission Report 1991 (document)
+    targetEntityId: "e3",
+    relationType: "refers_to",
+    createdAt: "2024-07-20",
+  },
+  {
+    id: "ref-xs-6",
+    sourceEntityId: "e22", // Amnesty International (organization)
+    targetEntityId: "e3",
+    relationType: "mentions",
+    createdAt: "2024-07-20",
+  },
   // Hubs (n-ary relationships) — refs sharing a hubId form one hub.
   // Hub "hub-hearing-1": Inter-American Court hearing parties.
   {

@@ -13,6 +13,8 @@ export const groupingOptions: GroupingDescriptor[] = [
   { id: "none", label: "None" },
   { id: "target-template", label: "Target template" },
   { id: "target-entity", label: "Target entity" },
+  { id: "source-template", label: "Source template" },
+  { id: "source-entity", label: "Source entity" },
   { id: "relation-type", label: "Relation type" },
   { id: "direction", label: "Direction" },
   { id: "source-page", label: "Source page" },
@@ -27,6 +29,12 @@ export function getGroupKey(ref: Reference, by: GroupBy): string {
     }
     case "target-entity":
       return ref.targetEntityId;
+    case "source-template": {
+      const entity = getEntity(ref.sourceEntityId);
+      return entity?.typeId ?? "unknown";
+    }
+    case "source-entity":
+      return ref.sourceEntityId;
     case "relation-type":
       return ref.relationType;
     case "direction":
@@ -45,8 +53,10 @@ export function getGroupKey(ref: Reference, by: GroupBy): string {
 export function getGroupLabel(key: string, by: GroupBy): string {
   switch (by) {
     case "target-template":
+    case "source-template":
       return getEntityType(key)?.name ?? "Unknown template";
     case "target-entity":
+    case "source-entity":
       return getEntity(key)?.title ?? "Unknown entity";
     case "relation-type":
       return relationTypes.find((r) => r.id === key)?.label ?? key;
@@ -64,8 +74,10 @@ export function getGroupLabel(key: string, by: GroupBy): string {
 export function getGroupColor(key: string, by: GroupBy): string | undefined {
   switch (by) {
     case "target-template":
+    case "source-template":
       return getEntityType(key)?.color;
-    case "target-entity": {
+    case "target-entity":
+    case "source-entity": {
       const entity = getEntity(key);
       return entity ? getEntityType(entity.typeId)?.color : undefined;
     }
@@ -79,8 +91,10 @@ export function getGroupColor(key: string, by: GroupBy): string | undefined {
 export function isUnknownGroupKey(key: string, by: GroupBy): boolean {
   switch (by) {
     case "target-template":
+    case "source-template":
       return key === "unknown";
     case "target-entity":
+    case "source-entity":
       return !getEntity(key);
     case "relation-type":
       return key === "no_label";
@@ -115,7 +129,10 @@ export function groupRefs(
 }
 
 /** Same as {@link getGroupKey} but for an aggregated Relationship. Used by
- *  the graph (whose nodes are relationships) so it can spoke by any axis. */
+ *  the graph (whose nodes are relationships) so it can spoke by any axis.
+ *  Source-side grouping (source-entity / source-template) isn't meaningful
+ *  at the aggregate level — aggregates dedupe by (target, relType) and may
+ *  span multiple sources — so those fall through to "none". */
 export function getRelGroupKey(rel: Relationship, by: GroupBy): string {
   switch (by) {
     case "target-template": {
@@ -130,6 +147,8 @@ export function getRelGroupKey(rel: Relationship, by: GroupBy): string {
       return rel.direction;
     case "source-page":
       return rel.firstPage === undefined ? "no-page" : String(rel.firstPage);
+    case "source-template":
+    case "source-entity":
     case "none":
     default:
       return "";

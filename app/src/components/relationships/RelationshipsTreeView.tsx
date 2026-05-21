@@ -86,9 +86,13 @@ export function RelationshipsTreeView() {
       });
     }
     if (sortOrder === "none") {
+      // Raw seed order — no sort applied.
+      return result;
+    }
+    if (sortOrder === "appearance") {
       return [...result].sort((a, b) => {
-        const pageA = a.sourceSelection?.page ?? Number.MAX_SAFE_INTEGER;
-        const pageB = b.sourceSelection?.page ?? Number.MAX_SAFE_INTEGER;
+        const pageA = a.sourceSelection?.page ?? -1;
+        const pageB = b.sourceSelection?.page ?? -1;
         if (pageA !== pageB) return pageA - pageB;
         const topA = a.sourceSelection?.top ?? 0;
         const topB = b.sourceSelection?.top ?? 0;

@@ -18,6 +18,8 @@ export type GroupBy =
   | "none"
   | "target-template"
   | "target-entity"
+  | "source-template"
+  | "source-entity"
   | "relation-type"
   | "direction"
   | "source-page";
@@ -40,8 +42,8 @@ export const expandAllSignalAtom = atom(0);
 export const collapseAllSignalAtom = atom(0);
 
 /** Sort order for references */
-export type SortOrder = "none" | "asc" | "desc";
-export const sortOrderAtom = atom<SortOrder>("none");
+export type SortOrder = "none" | "appearance" | "asc" | "desc";
+export const sortOrderAtom = atom<SortOrder>("appearance");
 
 /** Track expanded group count for greying out collapse/expand buttons */
 export const expandedGroupCountAtom = atom(0);

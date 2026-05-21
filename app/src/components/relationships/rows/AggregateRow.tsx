@@ -1,6 +1,7 @@
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { ChevronRight, Link2 } from "lucide-react";
 import {
+  activeAggregateIdAtom,
   activeRefIdAtom,
   activeDrawerTabAtom,
   overlayEntityIdAtom,
@@ -39,7 +40,8 @@ export function AggregateRow({
   const entity = getEntity(rel.targetEntityId);
   const type = entity ? getEntityType(entity.typeId) : undefined;
   const zoom = useAtomValue(zoomAtom);
-  const [overlayEntityId, setOverlayEntityId] = useAtom(overlayEntityIdAtom);
+  const setOverlayEntityId = useSetAtom(overlayEntityIdAtom);
+  const [activeAggregateId, setActiveAggregateId] = useAtom(activeAggregateIdAtom);
   const activeRefId = useAtomValue(activeRefIdAtom);
   const setActiveDrawerTab = useSetAtom(activeDrawerTabAtom);
   const setActiveClusterRefIds = useSetAtom(activeClusterRefIdsAtom);
@@ -47,11 +49,14 @@ export function AggregateRow({
   const relLabel =
     relationTypes.find((r) => r.id === rel.relationType)?.label ??
     rel.relationType.replace("_", " ");
-  // The aggregate is "selected" when the user is peeking at its entity in
-  // the overlay. When a nested ref is active, that ref row glows; we don't
-  // double-glow the parent — it competes with the child and reads as noise.
+  // Highlight only the aggregate row the user actually clicked, not every
+  // sibling pointing at the same entity. Multiple aggregates can share a
+  // target entity (one per relation type), so keying selection by entity id
+  // would light up all of them. When a nested ref under this aggregate is
+  // active, the child row glows instead — parent stays quiet so the two
+  // don't compete.
   const selected =
-    overlayEntityId === rel.targetEntityId &&
+    activeAggregateId === rel.id &&
     !(activeRefId && rel.refIds.includes(activeRefId));
   // Bidirectional when refs in both directions collapsed into this aggregate.
   const glyphDirection: "outgoing" | "incoming" | "both" =
@@ -114,7 +119,10 @@ export function AggregateRow({
     return (
       <ListCardRow
         selected={selected}
-        onClick={() => setOverlayEntityId(rel.targetEntityId)}
+        onClick={() => {
+          setActiveAggregateId(rel.id);
+          setOverlayEntityId(rel.targetEntityId);
+        }}
         className="!py-1.5"
       >
         <div className="flex items-center justify-between gap-2">
@@ -141,7 +149,10 @@ export function AggregateRow({
     return (
       <ListCardRow
         selected={selected}
-        onClick={() => setOverlayEntityId(rel.targetEntityId)}
+        onClick={() => {
+          setActiveAggregateId(rel.id);
+          setOverlayEntityId(rel.targetEntityId);
+        }}
         className="!py-2"
       >
         <div className="flex items-center justify-between gap-2">
@@ -173,7 +184,10 @@ export function AggregateRow({
   return (
     <ListCardRow
       selected={selected}
-      onClick={() => setOverlayEntityId(rel.targetEntityId)}
+      onClick={() => {
+          setActiveAggregateId(rel.id);
+          setOverlayEntityId(rel.targetEntityId);
+        }}
     >
       <div className="flex items-start justify-between gap-2 mb-1.5">
         <div className="flex items-center gap-1.5 min-w-0">

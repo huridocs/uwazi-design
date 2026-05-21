@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   FileText,
   Music,
@@ -9,6 +9,8 @@ import {
   ArrowDownCircle,
   ChevronDown,
   Eye,
+  Pencil,
+  Check,
   Trash2,
 } from "lucide-react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
@@ -68,6 +70,14 @@ export function FileDetailEditor({
   const nameRef = useRef<HTMLInputElement>(null);
   const langRef = useRef<HTMLSelectElement>(null);
 
+  // Edit mode — name + language fall back to read-only labels unless the
+  // user explicitly clicks Edit. Reset whenever the focused file changes so
+  // switching to a different row drops out of edit on the previous one.
+  const [editing, setEditing] = useState(false);
+  useEffect(() => {
+    setEditing(false);
+  }, [file.id]);
+
   const group = groups.find((g) => g.id === file.groupId);
   // Every translation in the group, including the focused one. Hiding the
   // focused one shifted positions on every selection — chips appeared to
@@ -75,15 +85,19 @@ export function FileDetailEditor({
   const translations = files.filter((f) => f.groupId === file.groupId);
 
   // Honour the one-shot focus signal from kebab "Rename" / "Change language".
+  // Flip into edit mode + focus the relevant field once mounted.
   useEffect(() => {
     if (!editFocus) return;
-    if (editFocus === "name") {
-      nameRef.current?.focus();
-      nameRef.current?.select();
-    } else if (editFocus === "language") {
-      langRef.current?.focus();
-    }
-    setEditFocus(null);
+    setEditing(true);
+    requestAnimationFrame(() => {
+      if (editFocus === "name") {
+        nameRef.current?.focus();
+        nameRef.current?.select();
+      } else if (editFocus === "language") {
+        langRef.current?.focus();
+      }
+      setEditFocus(null);
+    });
   }, [editFocus, setEditFocus]);
 
   const updateField = <K extends keyof FileEntry>(
@@ -119,48 +133,84 @@ export function FileDetailEditor({
   return (
     <>
       <div className="rounded-md bg-warm p-4 space-y-3">
-        <h4 className="text-xs font-semibold text-ink-tertiary uppercase tracking-wider">
-          File details
-        </h4>
+        <div className="flex items-center justify-between">
+          <h4 className="text-xs font-semibold text-ink-tertiary uppercase tracking-wider">
+            File details
+          </h4>
+          <button
+            type="button"
+            onClick={() => setEditing((e) => !e)}
+            className={`flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded transition-colors cursor-pointer ${
+              editing
+                ? "bg-ink text-parchment hover:bg-ink/90"
+                : "text-ink-secondary hover:bg-paper hover:text-ink"
+            }`}
+            aria-pressed={editing}
+          >
+            {editing ? (
+              <>
+                <Check size={11} /> Done
+              </>
+            ) : (
+              <>
+                <Pencil size={11} className="text-ink-tertiary" /> Edit
+              </>
+            )}
+          </button>
+        </div>
 
         <Field label="Name">
-          <div className="flex items-center gap-2 bg-paper rounded border border-border focus-within:ring-1 focus-within:ring-carbon/30">
-            <Icon size={14} className="text-ink-muted ml-2 shrink-0" />
-            <input
-              ref={nameRef}
-              type="text"
-              defaultValue={file.name}
-              onBlur={(e) => updateField("name", e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-              }}
-              className="flex-1 min-w-0 px-1 py-1.5 text-sm text-ink bg-transparent focus:outline-none"
-              aria-label="File name"
-            />
-          </div>
+          {editing ? (
+            <div className="flex items-center gap-2 bg-paper rounded border border-border focus-within:ring-1 focus-within:ring-carbon/30">
+              <Icon size={14} className="text-ink-muted ml-2 shrink-0" />
+              <input
+                ref={nameRef}
+                key={file.id}
+                type="text"
+                defaultValue={file.name}
+                onBlur={(e) => updateField("name", e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                }}
+                className="flex-1 min-w-0 px-1 py-1.5 text-sm text-ink bg-transparent focus:outline-none"
+                aria-label="File name"
+              />
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 px-2 py-1.5">
+              <Icon size={14} className="text-ink-muted shrink-0" />
+              <span className="text-sm text-ink truncate">{file.name}</span>
+            </div>
+          )}
         </Field>
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="Language">
-            <div className="relative inline-flex items-center bg-paper rounded border border-border focus-within:ring-1 focus-within:ring-carbon/30">
-              <select
-                ref={langRef}
-                value={file.language}
-                onChange={(e) => updateField("language", e.target.value)}
-                className="appearance-none bg-transparent pl-2 pr-6 py-0.5 text-xs font-medium text-ink focus:outline-none cursor-pointer"
-                aria-label="File language"
-              >
-                {languageOptions.map((lang) => (
-                  <option key={lang} value={lang}>
-                    {lang}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown
-                size={11}
-                className="absolute right-1.5 text-ink-tertiary pointer-events-none"
-              />
-            </div>
+            {editing ? (
+              <div className="relative inline-flex items-center bg-paper rounded border border-border focus-within:ring-1 focus-within:ring-carbon/30">
+                <select
+                  ref={langRef}
+                  value={file.language}
+                  onChange={(e) => updateField("language", e.target.value)}
+                  className="appearance-none bg-transparent pl-2 pr-6 py-0.5 text-xs font-medium text-ink focus:outline-none cursor-pointer"
+                  aria-label="File language"
+                >
+                  {languageOptions.map((lang) => (
+                    <option key={lang} value={lang}>
+                      {lang}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  size={11}
+                  className="absolute right-1.5 text-ink-tertiary pointer-events-none"
+                />
+              </div>
+            ) : (
+              <span className="inline-block px-2 py-0.5 text-xs font-medium text-ink-secondary bg-vellum rounded">
+                {file.language}
+              </span>
+            )}
           </Field>
 
           <Field label="Type">

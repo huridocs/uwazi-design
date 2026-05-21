@@ -30,7 +30,7 @@ export const documentGroups: DocumentGroup[] = [
   // Primary documents — the merits judgment with 4 translations.
   {
     id: "g-judgment",
-    title: "Velásquez-Rodríguez v. Honduras — Judgment (1987)",
+    title: "Velásquez-Rodríguez v. Honduras — Judgment (1988)",
     isPrimary: true,
     order: 0,
   },
@@ -68,7 +68,7 @@ export const files: FileEntry[] = [
   {
     id: "f-judg-en",
     groupId: "g-judgment",
-    name: "Velasquez-Rodriguez_v_Honduras_Judgment_1987.pdf",
+    name: "Velasquez-Rodriguez_v_Honduras_Judgment_1988.pdf",
     type: "pdf",
     size: "114 KB",
     language: "EN",

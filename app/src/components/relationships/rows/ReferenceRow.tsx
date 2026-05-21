@@ -140,22 +140,31 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
         </div>
       )}
       {selection ? (
-        <div className={nested ? "flex items-start justify-between gap-2" : ""}>
+        nested ? (
+          // Evidence-card treatment: indented warm bg + italic snippet. Reads
+          // as "a quoted passage supporting the relationship above" via
+          // typography and surface, no decorative glyph needed.
+          <div className="flex items-start justify-between gap-2 px-2 py-1.5 bg-warm/50 rounded">
+            <FadeTruncate
+              text={selection.text}
+              maxLines={2}
+              expandable
+              className="text-xs text-ink-secondary leading-relaxed flex-1 min-w-0 italic"
+              fadeTo={isActive ? "var(--bg-primary)" : "var(--bg-warm)"}
+            />
+            <span className="shrink-0">
+              <PageTag page={selection.page} onClick={handleClick} />
+            </span>
+          </div>
+        ) : (
           <FadeTruncate
             text={selection.text}
             maxLines={2}
             expandable
-            className={`text-xs text-ink-secondary leading-relaxed ${
-              nested ? "flex-1 min-w-0" : ""
-            }`}
+            className="text-xs text-ink-secondary leading-relaxed"
             fadeTo={isActive ? "var(--bg-primary)" : undefined}
           />
-          {nested && (
-            <span className="shrink-0">
-              <PageTag page={selection.page} onClick={handleClick} />
-            </span>
-          )}
-        </div>
+        )
       ) : null}
       <div className="flex items-center justify-between mt-1 text-[10px] text-ink-tertiary">
         {nested ? (

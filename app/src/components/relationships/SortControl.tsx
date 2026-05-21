@@ -4,7 +4,8 @@ import { useState } from "react";
 import { sortOrderAtom, type SortOrder } from "../../atoms/filters";
 
 const options: { id: SortOrder; label: string }[] = [
-  { id: "none", label: "Appearance" },
+  { id: "none", label: "None" },
+  { id: "appearance", label: "Appearance" },
   { id: "asc", label: "A → Z" },
   { id: "desc", label: "Z → A" },
 ];

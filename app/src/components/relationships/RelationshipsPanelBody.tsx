@@ -83,6 +83,11 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
       });
     }
     if (sortOrder === "none") {
+      // Raw seed/insertion order — no sort applied. Lets the user see refs
+      // exactly as the data layer hands them over.
+      return result;
+    }
+    if (sortOrder === "appearance") {
       // Entity-level refs (no sourceSelection) sort to the top: they're not
       // tied to a passage, so they read as "header" relationships about the
       // entity overall. Anchored refs follow in page-then-top order.
