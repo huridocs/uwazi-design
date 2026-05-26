@@ -73,7 +73,7 @@ function MetadataReadBody({ onEdit }: { onEdit: () => void }) {
       {/* Scrollable metadata body — responsive grid */}
       <div className="flex-1 overflow-auto px-4 py-2 pb-8">
         <div className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-          <MetadataCard title="Document" className="md:col-span-2 xl:col-span-1 md:row-span-2">
+          <MetadataCard title="Document" className="hidden md:block md:col-span-2 xl:col-span-1 md:row-span-2">
             <div className="flex items-center justify-center bg-warm rounded-md overflow-hidden h-[200px]">
               <div className="bg-paper rounded shadow-sm w-[45%] h-[180px] flex items-center justify-center">
                 <span className="text-xs text-ink-muted">PDF Preview</span>
