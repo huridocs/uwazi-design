@@ -131,8 +131,10 @@ export function RelationshipsView({ tabs, activeTab, onTabChange }: Props) {
 
           <div className="pt-2" />
           <SearchBar inlineSlot={<ActiveFilterChips />} />
-          <div className="px-3 pb-2 flex items-center justify-between gap-2 flex-wrap">
-            <div className="flex items-center gap-1.5 flex-wrap">
+          {/* Mobile: one row — refinement controls scroll horizontally,
+              Zoom + Filters stay pinned. Desktop (md+): wrap + space-between. */}
+          <div className="px-3 pb-2 flex items-center justify-between gap-2 flex-nowrap md:flex-wrap">
+            <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-x-auto no-scrollbar [&>*]:shrink-0 md:flex-none md:flex-wrap md:overflow-visible">
               <ViewControls size="sm" />
               <GroupByControl
                 axis="primary"
@@ -147,7 +149,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange }: Props) {
               />
               <SortControl size="sm" />
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 shrink-0">
               <ZoomControl size="sm" disabled={!showZoom} />
               <FiltersButton
                 activeCount={activeFilterCount}

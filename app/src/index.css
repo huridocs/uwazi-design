@@ -107,6 +107,16 @@ button:not(:disabled) {
   accent-color: var(--text-tertiary);
 }
 
+/* Opt-out of scrollbars for compact scroll regions (e.g. the mobile
+ * Relationships toolbar that scrolls horizontally). */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
 /* RTL: flip scrollbar to left side */
 [dir="rtl"] ::-webkit-scrollbar {
   direction: rtl;
