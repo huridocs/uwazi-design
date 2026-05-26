@@ -27,6 +27,7 @@ import {
   viewerFileIdAtom,
 } from "../../atoms/files";
 import { Checkbox } from "../shared/Checkbox";
+import { formatFileDate } from "../../utils/dates";
 
 interface FileTableProps {
   files: FileEntry[];
@@ -223,11 +224,7 @@ export function FileTable({
                   <span>{file.language}</span>
                 </div>
                 <div className="text-[10px] text-ink-muted mt-0.5">
-                  {new Date(file.modified).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
+                  {formatFileDate(file.modified)}
                 </div>
               </div>
               <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
@@ -317,11 +314,7 @@ export function FileTable({
             <span className="text-xs text-ink-tertiary">{file.size}</span>
             <span className="text-xs text-ink-tertiary">{file.language}</span>
             <span className="text-xs text-ink-tertiary">
-              {new Date(file.modified).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
+              {formatFileDate(file.modified)}
             </span>
             <div
               className="flex items-center justify-end"

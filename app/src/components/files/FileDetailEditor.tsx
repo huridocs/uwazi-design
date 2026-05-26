@@ -23,6 +23,7 @@ import {
   drawerEditFocusAtom,
 } from "../../atoms/files";
 import { languageAtom } from "../../atoms/language";
+import { formatFileDate } from "../../utils/dates";
 
 const typeIcons: Record<FileKind, typeof FileText> = {
   pdf: FileText,
@@ -226,11 +227,7 @@ export function FileDetailEditor({
 
           <Field label="Modified">
             <span className="text-sm text-ink-secondary">
-              {new Date(file.modified).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
+              {formatFileDate(file.modified)}
             </span>
           </Field>
         </div>
