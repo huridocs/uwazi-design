@@ -7,6 +7,7 @@ import {
   Settings,
   Sun,
   Moon,
+  Monitor,
   User,
   Server,
   Languages,
@@ -40,6 +41,9 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
   const toolsRef = useRef<HTMLDivElement>(null);
   const [breakpoint] = useAtom(breakpointAtom);
   const isMobile = breakpoint === "mobile";
+
+  const ThemeIcon = theme === "dark" ? Moon : theme === "auto" ? Monitor : Sun;
+  const themeLabel = theme === "dark" ? "Dark" : theme === "auto" ? "Auto" : "Light";
 
   useEffect(() => {
     if (!settingsOpen && !toolsOpen) return;
@@ -216,9 +220,10 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
           <button
             onClick={onToggleTheme}
             className="p-1.5 text-ink-tertiary hover:text-ink-secondary hover:bg-warm rounded-md transition-colors"
-            aria-label="Toggle theme"
+            aria-label={`Theme: ${themeLabel}`}
+            title={`Theme: ${themeLabel}`}
           >
-            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+            <ThemeIcon size={16} />
           </button>
         )}
       </div>
@@ -279,10 +284,15 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
             </div>
             <button
               onClick={() => { onToggleTheme?.(); }}
-              className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
+              className="flex items-center justify-between gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
             >
-              {theme === "dark" ? <Sun size={16} className="text-ink-tertiary" /> : <Moon size={16} className="text-ink-tertiary" />}
-              {theme === "dark" ? "Light mode" : "Dark mode"}
+              <div className="flex items-center gap-3">
+                <ThemeIcon size={16} className="text-ink-tertiary" />
+                Theme
+              </div>
+              <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded bg-warm text-ink-muted">
+                {themeLabel}
+              </span>
             </button>
             <button
               onClick={() => { onToggleRtl?.(); }}

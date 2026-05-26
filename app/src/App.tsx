@@ -5,7 +5,7 @@ import { EntityView } from "./views/EntityView";
 import { ComponentCatalog } from "./views/ComponentCatalog";
 import { ImportCSVView } from "./views/ImportCSVView";
 import { ToastContainer } from "./views/ToastContainer";
-import { themeAtom } from "./atoms/theme";
+import { themeAtom, resolveTheme } from "./atoms/theme";
 import { languageAtom } from "./atoms/language";
 import { appViewAtom, type AppView } from "./atoms/navigation";
 import { useBreakpointSync } from "./hooks/useBreakpointSync";
@@ -18,8 +18,15 @@ export function App() {
   const [rtl, setRtl] = useState(false);
 
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", theme === "dark");
+    const apply = () =>
+      document.documentElement.classList.toggle("dark", resolveTheme(theme) === "dark");
+    apply();
     localStorage.setItem("theme", theme);
+    if (theme !== "auto") return;
+    // Follow OS preference live while in auto mode.
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
   }, [theme]);
 
   useEffect(() => {
@@ -67,7 +74,9 @@ export function App() {
         appView={appView}
         onNavigate={handleNavigate}
         theme={theme}
-        onToggleTheme={() => setTheme((t) => (t === "light" ? "dark" : "light"))}
+        onToggleTheme={() =>
+          setTheme((t) => (t === "light" ? "dark" : t === "dark" ? "auto" : "light"))
+        }
         rtl={rtl}
         onToggleRtl={handleToggleRtl}
       />

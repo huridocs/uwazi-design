@@ -30,30 +30,38 @@ All components are bound to variables — switching a frame to Dark mode updates
 .
 ├── app/                           # Interactive prototype (Vite + React 18 + TS + Tailwind v4 + Jotai)
 │   ├── src/
-│   │   ├── atoms/                 # Jotai state (navigation, references, selection, filters, theme, language, viewport)
+│   │   ├── atoms/                 # Jotai state (navigation, entities, references, files, selection,
+│   │   │                          # filters, suggestions, theme, language, viewport)
 │   │   ├── components/
 │   │   │   ├── layout/            # Navbar, SplitView, AdaptiveSplitView, MainTabs, DrawerTabs, SegmentedTabs,
-│   │   │   │                      # Breadcrumb, ToolsSidebar, ToolsActionBar, MobileBottomSheet, MobileActionMenu
-│   │   │   ├── viewer/            # DocumentViewer, PageHighlights, FloatingMenu, ActionBar, RefMinimap
-│   │   │   ├── references/        # ReferencePanel, RefRow, GroupedCard, DensityCard, HighlightCard, SearchBar,
-│   │   │   │                      # FiltersRow (ViewModeControls + CollapseControls), ActiveFilterChips,
-│   │   │   │                      # EntityOverlay, DrawerActionBar, ZoomControl,
-│   │   │   │                      # RelationshipPanel, RelationshipRow, RelationshipGroupedCard,
-│   │   │   │                      # RelationshipsTreeView, RelationshipsGraphView, RelationshipsFilterDrawer
-│   │   │   ├── files/             # FileTable, FileDrawer
+│   │   │   │                      # Breadcrumb, DocMeta, ToolsSidebar, ToolsActionBar,
+│   │   │   │                      # MobileBottomSheet, MobileActionMenu, MobileNavDrawer
+│   │   │   ├── viewer/            # DocumentViewer, PageHighlights, FloatingMenu, ActionBar, RefMinimap, HoverExpand
+│   │   │   ├── relationships/     # The merged Relationships surface: ReferencePanel, RelationshipsPanelBody,
+│   │   │   │                      # RelationshipRow + rows/ (AggregateRow, HubRow, ReferenceRow, RowCheckbox),
+│   │   │   │                      # RelationshipGroupedCard, RelationshipsTreeView/TreeBranch,
+│   │   │   │                      # RelationshipsGraphView, RelationshipsActionBar, RelationshipsDrawerSection,
+│   │   │   │                      # RelationshipsFilterDrawer, SearchBar, ViewControls, GroupByControl,
+│   │   │   │                      # SortControl, ZoomControl, DirectionGlyph, ActiveFilterChips,
+│   │   │   │                      # EntityOverlay, HighlightCard, RelatedDocCard, ToCPanel, TemplateStructure,
+│   │   │   │                      # MetadataDrawerContent, DrawerActionBar, IxSuggestionsCard,
+│   │   │   │                      # CreateRelationshipModal, ManageRelationTypesModal
+│   │   │   ├── files/             # FileTable, FileDrawer, FileDetailEditor, FileViewerModal, DocumentGroupCard,
+│   │   │   │                      # DrawerFilesBody, AddFileModal, AddFileDropArea
 │   │   │   ├── metadata/          # MetadataCard
 │   │   │   ├── import-csv/        # ImportCSVLayout, ImportListView, ImportDetailView, ImportTable,
-│   │   │   │                      # IssuesTable, ImportEmptyState, NewImportModal
+│   │   │   │                      # EntitiesTable, IssuesTable, ImportEmptyState, NewImportModal
 │   │   │   ├── shared/            # List/filter primitives (ListInfoRow, ListCardRow, FiltersButton, FiltersDrawer,
-│   │   │   │                      # FacetSection, ActiveFilterChip, Checkbox, FadeTruncate);
-│   │   │   │                      # elements (EntityPill, PageTag, CountBadge); feedback (ConfirmDialog,
+│   │   │   │                      # FacetSection, ActiveFilterChip, Checkbox, SelectControls, FadeTruncate);
+│   │   │   │                      # elements (EntityPill, PageTag, CountBadge, ViewButton); feedback (ConfirmDialog,
 │   │   │   │                      # UwaziLoader, StatusBadge, ProgressBar, StatsCard, Stepper, AlertBanner)
 │   │   │   └── catalog/           # CatalogEntry, StyleGuide
-│   │   ├── data/                  # Mock data (entities, documents, references, files, metadata, toc, imports)
-│   │   ├── utils/                 # Pure helpers (searchQuery boolean matcher, deriveRelationships)
-│   │   └── views/                 # Page-level orchestrators (ReferencesView, FilesView, MetadataView,
-│   │                              # ImportCSVView, CreateRefView, EntityPickerModal, ComponentCatalog)
-│   └── public/                    # Static assets (sample.pdf, logos)
+│   │   ├── data/                  # Mock data (entities, document, references, files, metadata, toc, imports, suggestions)
+│   │   ├── utils/                 # Pure helpers (searchQuery boolean matcher, deriveRelationships,
+│   │   │                          # connectionGrouping, i18n shim)
+│   │   └── views/                 # Page-level orchestrators (EntityView, RelationshipsView, FilesView, MetadataView,
+│   │   │                          # ImportCSVView, CreateRefView, ComponentCatalog, ToastContainer; catalog/ demos)
+│   └── public/                    # Static assets (sample PDFs, logos)
 ├── images/                        # Logos, screenshots, assets
 │   └── screens/                   # Prototype screenshots (prototype/ + import_csv/)
 ├── ui/                            # Legacy design files
@@ -82,12 +90,11 @@ npm run dev        # → http://localhost:5173
 
 ### Navigation
 
-- **Library** (default) — Entity viewer with five main tabs:
+- **Library** (default) — Entity viewer with four main tabs (**Document · Metadata · Relationships · Files**):
   - **Document** — PDF viewer with highlights, floating menu, and `RefMinimap` scroll track
   - **Metadata** — Metadata cards + drawer (Document preview, Relationships, Files, Template)
-  - **References** — Reference list (All / by-entity-type / by-relation-type / density); boolean search (AND/OR/NOT/"exact"/wild\*); filters slide-over
-  - **Relationships** — Derived entity-to-entity links; Tree view (collapsible groups, detail → compact → overview zoom) + radial Graph view (pan/zoom, branch collapse); shares filters with References
-  - **Files** — Primary + supporting files with multi-select; drawer shows focused file (default: the entity's primary file)
+  - **Relationships** — The single surface for text references and entity-to-entity links (one `Reference` record, projected per-evidence or as derived aggregates). Three views: **List** (with grouping by target/source template, entity, relation type, direction, or page), **Tree** (collapsible relation-type → target → evidence, detail → compact → overview zoom), and radial **Graph** (pan/zoom, branch collapse). Boolean search (AND/OR/NOT/"exact"/wild\*); filters slide-over. Hosts AI (IX) suggestions and the Create-relationship flow.
+  - **Files** — Primary + supporting files with multi-select; drawer shows focused file (default: the entity's primary file) with an inline edit mode
 - **Tools > Import CSV** — Full import lifecycle with sidebar, list/detail screens, and upload simulation
 - **Logo click** — Toggles to/from the component catalog
 
@@ -99,8 +106,10 @@ The in-app design system (`ComponentCatalog`, opened via the logo) is organised 
 - **Elements** — EntityPill, PageTag, CountBadge, Buttons
 - **Entity View — Layout / Document / References / Metadata / Files / Drawer / Relationships**
 - **Import CSV — Layout / Components**
-- **Filters & Lists** — the reusable surface primitives: FiltersButton, FiltersDrawer, FacetSection, ActiveFilterChip, ViewModeControls, CollapseControls, ListInfoRow, ListCardRow, Checkbox, ZoomControl, FadeTruncate
+- **Filters & Lists** — the reusable surface primitives: FiltersButton, FiltersDrawer, FacetSection, ActiveFilterChip, ViewModeControls, CollapseControls, ListInfoRow, ListCardRow, Checkbox, ZoomControl, FadeTruncate, SelectControls
 - **Shared** — ConfirmDialog, Toast, UwaziLoader
+
+The **References** and **Relationships** groups both showcase `RelationshipRow` (reference / aggregate / hub variants) and `RelationshipGroupedCard` — the two projections of the same record.
 
 Each entry renders a live preview, the calling code, and the Tailwind token it's built from.
 
