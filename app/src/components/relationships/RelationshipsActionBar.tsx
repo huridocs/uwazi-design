@@ -11,10 +11,18 @@ import { editModeAtom, selectedRefIdsAtom } from "../../atoms/filters";
 import { ConfirmDialog } from "../shared/ConfirmDialog";
 import { SelectControls } from "../shared/SelectControls";
 
+interface RelationshipsActionBarProps {
+  /** Compact (drawer) flavour. Drops Create relationship + Manage types +
+   *  Select all/Deselect all — those belong on the dedicated Relationships
+   *  tab where there's room. The drawer keeps Edit ⇄ Cancel/Save and the
+   *  selection-aware Delete. */
+  compact?: boolean;
+}
+
 /** Sticky action bar at the bottom of the Relationships panel. Mirrors the
  *  Files surface: create on the left, selection-aware delete on the right.
  *  Creates work without a text selection (entity-level relationship). */
-export function RelationshipsActionBar() {
+export function RelationshipsActionBar({ compact = false }: RelationshipsActionBarProps = {}) {
   const [selected, setSelected] = useAtom(selectedRefIdsAtom);
   const [editMode, setEditMode] = useAtom(editModeAtom);
   const [references, setReferences] = useAtom(referencesAtom);
@@ -82,27 +90,29 @@ export function RelationshipsActionBar() {
       >
         <div className="flex items-center gap-2">
           {editMode ? (
-            <>
-              <button
-                onClick={handleCreate}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
-              >
-                <Plus size={12} className="text-ink-tertiary" /> Create relationship
-              </button>
-              <button
-                onClick={() => setManageOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary hover:bg-warm hover:text-ink rounded-md transition-colors cursor-pointer"
-              >
-                <Settings2 size={12} className="text-ink-tertiary" /> Manage types
-              </button>
-              <SelectControls
-                allSelected={allSelected}
-                hasSelection={hasSelection}
-                totalCount={totalCount}
-                onSelectAll={handleSelectAll}
-                onDeselectAll={handleDeselectAll}
-              />
-            </>
+            compact ? null : (
+              <>
+                <button
+                  onClick={handleCreate}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+                >
+                  <Plus size={12} className="text-ink-tertiary" /> Create relationship
+                </button>
+                <button
+                  onClick={() => setManageOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary hover:bg-warm hover:text-ink rounded-md transition-colors cursor-pointer"
+                >
+                  <Settings2 size={12} className="text-ink-tertiary" /> Manage types
+                </button>
+                <SelectControls
+                  allSelected={allSelected}
+                  hasSelection={hasSelection}
+                  totalCount={totalCount}
+                  onSelectAll={handleSelectAll}
+                  onDeselectAll={handleDeselectAll}
+                />
+              </>
+            )
           ) : (
             <button
               onClick={enterEdit}

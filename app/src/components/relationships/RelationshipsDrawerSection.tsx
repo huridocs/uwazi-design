@@ -105,7 +105,7 @@ export function RelationshipsDrawerSection() {
         </div>
       </div>
       <RelationshipsPanelBody onDelete={handleDelete} />
-      <RelationshipsActionBar />
+      <RelationshipsActionBar compact />
 
       <FiltersDrawer
         open={filtersOpen}

@@ -50,10 +50,11 @@ export function ReferencePanel() {
         </div>
       )}
 
-      {/* Files tab carries its own footer ("Add file" + learn-more link), so
-          skip the shared action bar slot — otherwise the empty 48px bar
-          stacks below it. */}
-      {activeDrawerTab !== "files" && (
+      {/* Files + connections both carry their own footers (Files' "Add file"
+          row, RelationshipsDrawerSection's bottom RelationshipsActionBar
+          with Edit/Cancel/Save), so skip the shared bar for those tabs —
+          otherwise a redundant 48px bar stacks underneath. */}
+      {activeDrawerTab !== "files" && activeDrawerTab !== "connections" && (
         <DrawerActionBar activeTab={activeDrawerTab} />
       )}
     </div>
