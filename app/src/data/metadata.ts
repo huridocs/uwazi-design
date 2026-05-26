@@ -28,7 +28,7 @@ export const metadataFields: MetadataField[] = [
     id: "date",
     label: "Date",
     type: "date",
-    value: "June 26, 1987",
+    value: "July 29, 1988",
   },
   {
     id: "date-incident",
@@ -87,7 +87,7 @@ export const metadataFieldsByLanguage: Record<Language, MetadataField[]> = {
       id: "date",
       label: "Fecha",
       type: "date",
-      value: "26 de junio de 1987",
+      value: "29 de julio de 1988",
     },
     {
       id: "date-incident",
@@ -143,7 +143,7 @@ export const metadataFieldsByLanguage: Record<Language, MetadataField[]> = {
       id: "date",
       label: "Date",
       type: "date",
-      value: "26 juin 1987",
+      value: "29 juillet 1988",
     },
     {
       id: "date-incident",
@@ -199,7 +199,7 @@ export const metadataFieldsByLanguage: Record<Language, MetadataField[]> = {
       id: "date",
       label: "التاريخ",
       type: "date",
-      value: "26 يونيو 1987",
+      value: "29 يوليو 1988",
     },
     {
       id: "date-incident",
@@ -240,34 +240,34 @@ export const metadataFieldsByLanguage: Record<Language, MetadataField[]> = {
 };
 
 export const pdfMetadata = {
-  name: "Velasquez-Rodriguez_v_Honduras_1987.pdf",
+  name: "Velasquez-Rodriguez_v_Honduras_Judgment_1988.pdf",
   type: "PDF",
-  size: "114 KB",
-  lastEdited: "26-06-1987",
+  size: "213 KB",
+  lastEdited: "29-07-1988",
   added: "15-03-2024",
 };
 
 export const pdfMetadataByLanguage: Record<Language, typeof pdfMetadata> = {
   EN: pdfMetadata,
   ES: {
-    name: "Velasquez-Rodriguez_c_Honduras_1987_ES.pdf",
+    name: "Velasquez-Rodriguez_c_Honduras_Sentencia_1988.pdf",
     type: "PDF",
-    size: "122 KB",
-    lastEdited: "26-06-1987",
+    size: "191 KB",
+    lastEdited: "29-07-1988",
     added: "15-03-2024",
   },
   FR: {
-    name: "Velasquez-Rodriguez_c_Honduras_1987_FR.pdf",
+    name: "Bamaca-Velasquez_c_Guatemala_Sentencia_2000.pdf",
     type: "PDF",
-    size: "118 KB",
-    lastEdited: "26-06-1987",
+    size: "924 KB",
+    lastEdited: "25-11-2000",
     added: "15-03-2024",
   },
   AR: {
-    name: "Velasquez-Rodriguez_c_Honduras_1987_AR.pdf",
+    name: "Bamaca-Velasquez_v_Guatemala_Judgment_2000.pdf",
     type: "PDF",
-    size: "120 KB",
-    lastEdited: "26-06-1987",
+    size: "948 KB",
+    lastEdited: "25-11-2000",
     added: "15-03-2024",
   },
 };

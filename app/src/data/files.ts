@@ -70,7 +70,7 @@ export const files: FileEntry[] = [
     groupId: "g-judgment",
     name: "Velasquez-Rodriguez_v_Honduras_Judgment_1988.pdf",
     type: "pdf",
-    size: "114 KB",
+    size: "213 KB",
     language: "EN",
     modified: "1988-07-29",
     url: DOC_VELASQUEZ_EN,
