@@ -13,8 +13,13 @@ interface MobileActionMenuProps {
   items: MobileMenuItem[];
 }
 
+const MENU_MIN_WIDTH = 180;
+
 export function MobileActionMenu({ items }: MobileActionMenuProps) {
   const [open, setOpen] = useState(false);
+  // Which edge of the trigger the menu hangs from. Picked on open so the menu
+  // grows into the viewport instead of off whichever edge the kebab sits near.
+  const [align, setAlign] = useState<"left" | "right">("left");
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -28,10 +33,21 @@ export function MobileActionMenu({ items }: MobileActionMenuProps) {
     return () => document.removeEventListener("mousedown", onClick);
   }, [open]);
 
+  const toggle = () => {
+    setOpen((o) => {
+      if (!o && containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        // Anchor left (grow right) only if there's room; otherwise hang right.
+        setAlign(rect.left + MENU_MIN_WIDTH <= window.innerWidth ? "left" : "right");
+      }
+      return !o;
+    });
+  };
+
   return (
     <div ref={containerRef} className="relative">
       <button
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggle}
         className="flex items-center justify-center rounded-md border border-border hover:bg-warm transition-colors"
         style={{ width: 32, height: 32, color: "var(--text-secondary)" }}
         aria-label="More options"
@@ -46,8 +62,8 @@ export function MobileActionMenu({ items }: MobileActionMenuProps) {
           className="absolute bg-paper rounded-md overflow-hidden"
           style={{
             bottom: "calc(100% + 6px)",
-            left: 0,
-            minWidth: 180,
+            [align]: 0,
+            minWidth: MENU_MIN_WIDTH,
             border: "1px solid var(--border-primary)",
             boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
             zIndex: 80,
