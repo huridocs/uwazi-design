@@ -25,10 +25,11 @@ export interface DocRendition {
 const ROMAN = /^(X{0,3})(IX|IV|V?I{0,3})$/;
 
 /** Re-flow the wrapped extraction into article blocks. Lines wrap at the PDF's
- *  line breaks, so a paragraph spans several lines with no blank separators —
- *  the only reliable boundary is a line that opens with the next sequential
- *  paragraph number. Sub-points reset their numbering, so they fall below the
- *  expected counter and get folded back into the current paragraph. */
+ *  line breaks, so a paragraph spans several lines with no blank separators.
+ *  Treat any line that opens with "N. " as a new numbered paragraph (the
+ *  judgment numbers run 1..194, and the operative section's sub-points read
+ *  fine as their own items); standalone roman numerals become section heads;
+ *  every other line is a continuation of the current block. */
 function parse(text: string): HtmlBlock[] {
   const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
   const blocks: HtmlBlock[] = [];
@@ -38,7 +39,6 @@ function parse(text: string): HtmlBlock[] {
   blocks.push({ type: "h2", text: lines[1] });
   blocks.push({ type: "p", text: `${lines[2]} ${lines[3]}` });
 
-  let expected = 1;
   let cur: { n?: string; parts: string[] } | null = { parts: [] };
   const flush = () => {
     if (!cur) return;
@@ -53,10 +53,9 @@ function parse(text: string): HtmlBlock[] {
   for (let i = 4; i < lines.length; i++) {
     const line = lines[i];
     const m = line.match(/^(\d{1,3})\.\s+(.*)$/);
-    if (m && Number(m[1]) === expected) {
+    if (m) {
       flush();
       cur = { n: `${m[1]}.`, parts: [m[2]] };
-      expected += 1;
       continue;
     }
     if (ROMAN.test(line) && line.length <= 4) {
