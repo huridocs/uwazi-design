@@ -72,7 +72,10 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
                 }`}
               >
                 {tab.label}
-                {tab.count !== undefined && (
+                {/* Counts are redundant on mobile (the panel's info row shows
+                    them) and their width pushes later tabs off-screen — hide
+                    them so all tabs fit without horizontal scroll. */}
+                {!isMobile && tab.count !== undefined && (
                   <span className="text-xs font-semibold text-ink-tertiary bg-warm px-1 rounded">
                     {tab.count}
                   </span>
