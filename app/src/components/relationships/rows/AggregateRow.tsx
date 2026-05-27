@@ -166,8 +166,14 @@ export function AggregateRow({
               </span>
             ) : (
               <>
-                <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
-                <span className="text-[10px] text-ink-tertiary truncate capitalize">
+                <EntityPill typeId={entity?.typeId ?? ""} label={type?.name} />
+                <span
+                  title={entity?.title}
+                  className="text-xs font-medium text-ink truncate min-w-0"
+                >
+                  {entity?.title}
+                </span>
+                <span className="text-[10px] text-ink-tertiary truncate capitalize shrink-0">
                   {relLabel}
                 </span>
               </>
@@ -201,15 +207,18 @@ export function AggregateRow({
               </span>
             </>
           ) : (
-            <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
+            <>
+              <EntityPill typeId={entity?.typeId ?? ""} label={type?.name} />
+              <span
+                title={entity?.title}
+                className="text-sm font-medium text-ink truncate min-w-0"
+              >
+                {entity?.title}
+              </span>
+            </>
           )}
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
-          {!hidePill && (
-            <span className="text-[10px] text-ink-tertiary">
-              {type?.name ?? ""}
-            </span>
-          )}
           {countBadge}
         </div>
       </div>
