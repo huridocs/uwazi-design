@@ -58,8 +58,6 @@ export const documentGroups: DocumentGroup[] = [
 // content per row — handy when iterating on the Connections / minimap UI.
 const DOC_VELASQUEZ_EN = "/docs/Velasquez-Rodriguez_v_Honduras_Judgment_1988_EN.pdf";
 const DOC_VELASQUEZ_ES = "/docs/Velasquez-Rodriguez_c_Honduras_Sentencia_1988_ES.pdf";
-const DOC_BAMACA_EN    = "/docs/Bamaca-Velasquez_v_Guatemala_Judgment_2000_EN.pdf";
-const DOC_BAMACA_ES    = "/docs/Bamaca-Velasquez_c_Guatemala_Sentencia_2000_ES.pdf";
 const DOC_GELMAN_EN    = "/docs/Gelman_v_Uruguay_Judgment_2011_EN.pdf";
 const DOC_GELMAN_ES    = "/docs/Gelman_c_Uruguay_Sentencia_2011_ES.pdf";
 
@@ -88,27 +86,28 @@ export const files: FileEntry[] = [
   {
     id: "f-judg-fr",
     groupId: "g-judgment",
-    // No official French translation exists in the IACtHR archive; this entry
-    // points at the Bámaca-Velásquez judgment (Guatemala) as a stand-in so
-    // the language-switcher demo has distinct content for FR.
-    name: "Bamaca-Velasquez_c_Guatemala_Sentencia_2000.pdf",
+    // No official French PDF exists in the IACtHR archive; this FR slot is the
+    // same Velásquez judgment, so the PDF view falls back to the EN file while
+    // the text/HTML rendition shows the French translation. Keeping one
+    // document keeps the references aligned across languages.
+    name: "Velasquez-Rodriguez_c_Honduras_Arret_1988.pdf",
     type: "pdf",
-    size: "924 KB",
+    size: "213 KB",
     language: "FR",
-    modified: "2000-11-25",
-    url: DOC_BAMACA_ES,
+    modified: "1988-07-29",
+    url: DOC_VELASQUEZ_EN,
   },
   {
     id: "f-judg-ar",
     groupId: "g-judgment",
-    // No Arabic translation either; using the English Bámaca judgment as a
-    // stand-in for the AR slot.
-    name: "Bamaca-Velasquez_v_Guatemala_Judgment_2000.pdf",
+    // No Arabic PDF either; same Velásquez judgment, EN PDF fallback with an
+    // Arabic text/HTML rendition.
+    name: "Velasquez-Rodriguez_Honduras_Hukm_1988.pdf",
     type: "pdf",
-    size: "948 KB",
+    size: "213 KB",
     language: "AR",
-    modified: "2000-11-25",
-    url: DOC_BAMACA_EN,
+    modified: "1988-07-29",
+    url: DOC_VELASQUEZ_EN,
   },
   // Final Report — Gelman v. Uruguay judgment used as the "report" doc since
   // the original La Tablada IACHR report isn't available as a standalone PDF.

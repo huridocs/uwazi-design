@@ -257,17 +257,17 @@ export const pdfMetadataByLanguage: Record<Language, typeof pdfMetadata> = {
     added: "15-03-2024",
   },
   FR: {
-    name: "Bamaca-Velasquez_c_Guatemala_Sentencia_2000.pdf",
+    name: "Velasquez-Rodriguez_c_Honduras_Arret_1988.pdf",
     type: "PDF",
-    size: "924 KB",
-    lastEdited: "25-11-2000",
+    size: "213 KB",
+    lastEdited: "29-07-1988",
     added: "15-03-2024",
   },
   AR: {
-    name: "Bamaca-Velasquez_v_Guatemala_Judgment_2000.pdf",
+    name: "Velasquez-Rodriguez_Honduras_Hukm_1988.pdf",
     type: "PDF",
-    size: "948 KB",
-    lastEdited: "25-11-2000",
+    size: "213 KB",
+    lastEdited: "29-07-1988",
     added: "15-03-2024",
   },
 };

@@ -33,24 +33,27 @@ export const documentsByLanguage: Record<Language, DocumentMeta> = {
     pages: 47,
     filename: "Velasquez-Rodriguez_c_Honduras_Sentencia_1988.pdf",
   },
+  // No genuine French/Arabic source PDF exists, so these are the same
+  // Velásquez judgment in translation — the PDF view falls back to the EN
+  // file, keeping references aligned to a single document across languages.
   FR: {
     id: "doc-1-fr",
     title:
-      "Cour interaméricaine des droits de l'homme — Affaire Bámaca Velásquez c. Guatemala — Arrêt du 25 novembre 2000",
+      "Cour interaméricaine des droits de l'homme — Affaire Velásquez-Rodríguez c. Honduras — Arrêt du 29 juillet 1988",
     entityTypeId: "court_case",
     language: "Français",
     createdAt: "2024-06-15",
-    pages: 116,
-    filename: "Bamaca-Velasquez_c_Guatemala_Sentencia_2000.pdf",
+    pages: 39,
+    filename: "Velasquez-Rodriguez_v_Honduras_Judgment_1988.pdf",
   },
   AR: {
     id: "doc-1-ar",
     title:
-      "محكمة البلدان الأمريكية لحقوق الإنسان — قضية باماكا فيلاسكيز ضد غواتيمالا — حكم 25 نوفمبر 2000",
+      "محكمة البلدان الأمريكية لحقوق الإنسان — قضية فيلاسكيز رودريغيز ضد هندوراس — حكم 29 يوليو 1988",
     entityTypeId: "court_case",
     language: "العربية",
     createdAt: "2024-06-15",
-    pages: 112,
-    filename: "Bamaca-Velasquez_v_Guatemala_Judgment_2000.pdf",
+    pages: 39,
+    filename: "Velasquez-Rodriguez_v_Honduras_Judgment_1988.pdf",
   },
 };
