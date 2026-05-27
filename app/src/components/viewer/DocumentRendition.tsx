@@ -6,7 +6,7 @@ import type { DocumentFormat } from "../../atoms/selection";
 export function DocumentRendition({ format }: { format: DocumentFormat }) {
   if (format === "text") {
     return (
-      <div className="absolute inset-0 overflow-auto flex justify-center py-6 px-4 bg-vellum">
+      <div className="absolute inset-0 overflow-auto flex justify-center items-start py-6 px-4 bg-vellum">
         <pre
           dir="ltr"
           className="w-full max-w-[44rem] whitespace-pre-wrap font-mono text-[12.5px] leading-relaxed text-ink-secondary bg-paper rounded-md p-6"
