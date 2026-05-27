@@ -3,7 +3,7 @@ import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { currentPageAtom, scrollToPageAtom, textSelectionAtom } from "../../atoms/selection";
+import { currentPageAtom, scrollToPageAtom, textSelectionAtom, documentFormatAtom } from "../../atoms/selection";
 import { scrollToHighlightAtom, referencesAtom, activeRefIdAtom } from "../../atoms/references";
 import { breakpointAtom } from "../../atoms/viewport";
 import { languageAtom } from "../../atoms/language";
@@ -16,6 +16,7 @@ import { PageHighlights } from "./PageHighlights";
 import { FloatingMenu } from "./FloatingMenu";
 import { ActionBar } from "./ActionBar";
 import { RefMinimap } from "./RefMinimap";
+import { DocumentRendition } from "./DocumentRendition";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
@@ -43,6 +44,10 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
   const setActiveRefId = useSetAtom(activeRefIdAtom);
   const [references] = useAtom(referencesAtom);
   const [containerWidth, setContainerWidth] = useState(800);
+  // Drawer previews (fileOverride) always render the PDF; the format picker
+  // only governs the main Document-tab pane.
+  const docFormat = useAtomValue(documentFormatAtom);
+  const renditionMode = !fileOverride && docFormat !== "pdf";
 
   // Pick the file to render from (active primary group, current language).
   // Falls back to first primary, then first file in the active group, then
@@ -200,6 +205,9 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
             No translation in {language}. Showing {activeFile?.language}.
           </div>
         )}
+        {renditionMode ? (
+          <DocumentRendition format={docFormat} />
+        ) : (
         <div
           ref={containerRef}
           className="absolute inset-0 overflow-auto flex flex-col items-center py-4 gap-4"
@@ -248,14 +256,15 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
           ))}
         </Document>
         </div>
-        {!isMobile && showMinimap && <RefMinimap numPages={numPages} />}
+        )}
+        {!isMobile && showMinimap && !renditionMode && <RefMinimap numPages={numPages} />}
       </div>
 
       {/* Bottom action bar — only on the main-pane viewer (no fileOverride).
           When the viewer is mounted inside a drawer to preview a specific
           file, the host drawer carries its own footer (Back / Download). */}
       {!fileOverride && (
-        <ActionBar numPages={numPages} onScrollToPage={scrollToPage} rightSlot={actionBarMenu} />
+        <ActionBar numPages={numPages} onScrollToPage={scrollToPage} rightSlot={actionBarMenu} showPager={!renditionMode} />
       )}
 
       {selection && (

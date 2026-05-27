@@ -1,39 +1,46 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, FileText } from "lucide-react";
+import { ChevronDown, FileText, FileType, Code2 } from "lucide-react";
 import { useAtom, useAtomValue } from "jotai";
 import { languageAtom } from "../../atoms/language";
 import {
   documentGroupsAtom,
   activePrimaryGroupIdAtom,
 } from "../../atoms/files";
+import { documentFormatAtom, type DocumentFormat } from "../../atoms/selection";
 import { documentsByLanguage } from "../../data/document";
 import { EntityPill } from "../shared/EntityPill";
 
 interface DocMetaProps {
+  /** Show the format picker (PDF / Plain text / HTML). Only the Document tab
+   *  wants it; the metadata/files headers pass false. */
   showPdfSelector?: boolean;
 }
 
-/** Doc tab header strip. Renders the entity pill, the title of the active
- *  primary `DocumentGroup`, and — when there's more than one primary —
- *  a small picker to switch between them. */
+const FORMATS: { id: DocumentFormat; label: string; icon: typeof FileText }[] = [
+  { id: "pdf", label: "PDF", icon: FileText },
+  { id: "text", label: "Plain text", icon: FileType },
+  { id: "html", label: "HTML", icon: Code2 },
+];
+
+/** Doc tab header strip. Renders the entity pill, the title of the default
+ *  primary document, and — on the Document tab — a picker that switches
+ *  between the document's renditions (PDF, plain text, HTML). */
 export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
   const language = useAtomValue(languageAtom);
   const groups = useAtomValue(documentGroupsAtom);
-  const [activeGroupId, setActiveGroupId] = useAtom(activePrimaryGroupIdAtom);
+  const activeGroupId = useAtomValue(activePrimaryGroupIdAtom);
+  const [format, setFormat] = useAtom(documentFormatAtom);
 
   const entity = documentsByLanguage[language];
   const primaryGroups = groups
     .filter((g) => g.isPrimary)
-    .sort((a, b) => {
-      if (a.id === activeGroupId) return -1;
-      if (b.id === activeGroupId) return 1;
-      return a.order - b.order;
-    });
-  const resolvedActiveId = activeGroupId ?? primaryGroups[0]?.id ?? null;
-  const activeGroup =
-    primaryGroups.find((g) => g.id === resolvedActiveId) ?? primaryGroups[0];
+    .sort((a, b) => a.order - b.order);
+  // The Document tab shows the default primary document — the active one if a
+  // selection floated it up, else the first by order.
+  const defaultGroup =
+    primaryGroups.find((g) => g.id === activeGroupId) ?? primaryGroups[0];
+  const title = defaultGroup?.title ?? entity.title;
 
-  const showPrimaryPicker = showPdfSelector && primaryGroups.length > 1;
   const [pickerOpen, setPickerOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
 
@@ -46,7 +53,8 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
     return () => document.removeEventListener("mousedown", onClick);
   }, [pickerOpen]);
 
-  const title = activeGroup?.title ?? entity.title;
+  const activeFormat = FORMATS.find((f) => f.id === format) ?? FORMATS[0];
+  const ActiveIcon = activeFormat.icon;
 
   return (
     <div
@@ -59,17 +67,18 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
         {title}
       </span>
 
-      {showPrimaryPicker && activeGroup && (
+      {showPdfSelector && (
         <div ref={pickerRef} className="relative shrink-0">
           <button
             type="button"
             onClick={() => setPickerOpen((o) => !o)}
             aria-haspopup="menu"
             aria-expanded={pickerOpen}
+            aria-label="Document format"
             className="flex items-center gap-1.5 pl-2 pr-2 py-1 text-xs font-medium text-ink-secondary rounded-md bg-warm hover:bg-parchment transition-colors cursor-pointer"
           >
-            <FileText size={12} className="text-ink-tertiary" />
-            {primaryGroups.length} primary
+            <ActiveIcon size={12} className="text-ink-tertiary" />
+            {activeFormat.label}
             <ChevronDown
               size={12}
               className={`text-ink-tertiary transition-transform ${pickerOpen ? "rotate-180" : ""}`}
@@ -78,28 +87,31 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
           {pickerOpen && (
             <div
               role="menu"
-              className="absolute right-0 top-full mt-1 z-30 min-w-[260px] rounded-md bg-paper shadow-xl py-1 animate-fade-in-up"
+              className="absolute right-0 top-full mt-1 z-30 min-w-[160px] rounded-md bg-paper shadow-xl py-1 animate-fade-in-up"
               style={{ border: "1px solid var(--border-primary)" }}
             >
-              {primaryGroups.map((g) => (
-                <button
-                  key={g.id}
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setActiveGroupId(g.id);
-                    setPickerOpen(false);
-                  }}
-                  className={`flex items-center gap-2 w-full px-3 py-1.5 text-xs text-left transition-colors cursor-pointer ${
-                    g.id === resolvedActiveId
-                      ? "bg-vellum text-ink font-semibold"
-                      : "text-ink-secondary hover:bg-warm"
-                  }`}
-                >
-                  <FileText size={12} className="text-ink-tertiary shrink-0" />
-                  <span className="truncate">{g.title}</span>
-                </button>
-              ))}
+              {FORMATS.map((f) => {
+                const Icon = f.icon;
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setFormat(f.id);
+                      setPickerOpen(false);
+                    }}
+                    className={`flex items-center gap-2 w-full px-3 py-1.5 text-xs text-left transition-colors cursor-pointer ${
+                      f.id === format
+                        ? "bg-vellum text-ink font-semibold"
+                        : "text-ink-secondary hover:bg-warm"
+                    }`}
+                  >
+                    <Icon size={12} className="text-ink-tertiary shrink-0" />
+                    <span className="truncate">{f.label}</span>
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>

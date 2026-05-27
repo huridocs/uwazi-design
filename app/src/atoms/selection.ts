@@ -17,6 +17,12 @@ export const entityPickerOpenAtom = atom(false);
 /** Current page number in PDF viewer */
 export const currentPageAtom = atom(1);
 
+/** Which rendition of the default primary document the Document tab shows.
+ *  Uwazi keeps the uploaded PDF plus a derived plain-text extraction and an
+ *  HTML version of the same document. */
+export type DocumentFormat = "pdf" | "text" | "html";
+export const documentFormatAtom = atom<DocumentFormat>("pdf");
+
 /** Signal: scroll the document viewer to this page number, then clear.
  *  Set by ToC entries, the page picker, anything that wants to jump pages
  *  without highlighting a specific reference. */
