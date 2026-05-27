@@ -13,10 +13,10 @@ interface DrawerTabsProps {
 export function DrawerTabs({ tabs, activeId, onChange }: DrawerTabsProps) {
   return (
     <div
-      className="px-3 py-2 shrink-0"
+      className="px-3 py-2 shrink-0 overflow-x-auto no-scrollbar"
     >
       <div
-        className="flex items-stretch rounded-md overflow-hidden w-fit max-w-full"
+        className="flex items-stretch rounded-md overflow-hidden w-fit"
         role="tablist"
         style={{
           border: "1px solid var(--border-primary)",
