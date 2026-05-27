@@ -93,6 +93,9 @@ export function RelationshipsView({ tabs, activeTab, onTabChange }: Props) {
   return (
     <>
     <AdaptiveSplitView
+      // On mobile the relationships panel (`left`) is already the full-screen
+      // view, so we only surface the Document in a bottom sheet — a
+      // "Relationships" section here would just duplicate what's behind it.
       mobileSections={[
         {
           id: "document",
@@ -101,17 +104,6 @@ export function RelationshipsView({ tabs, activeTab, onTabChange }: Props) {
             <div className="flex flex-col h-full min-h-0 relative overflow-hidden">
               <EntityOverlay />
               <DocumentViewer />
-            </div>
-          ),
-        },
-        {
-          id: "connections",
-          label: "Relationships",
-          count: references.length,
-          content: (
-            <div className="flex flex-col h-full min-h-0">
-              <RelationshipsPanelBody onDelete={handleDelete} />
-              <RelationshipsActionBar />
             </div>
           ),
         },
