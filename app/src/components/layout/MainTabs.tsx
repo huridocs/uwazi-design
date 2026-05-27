@@ -96,7 +96,7 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
             <button
               onClick={() => setLangOpen((o) => !o)}
               aria-label="Language"
-              className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-warm text-ink-secondary hover:bg-parchment transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md bg-warm text-ink-secondary hover:bg-parchment transition-colors"
             >
               {currentLang}
               <ChevronDown size={10} className="text-ink-tertiary" />
