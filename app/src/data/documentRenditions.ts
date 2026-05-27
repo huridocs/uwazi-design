@@ -2,7 +2,11 @@
 // (Velásquez-Rodríguez v. Honduras — Judgment). The source is the full text
 // extracted from the vendored PDF (app/public/docs/...EN.pdf), imported raw —
 // the way Uwazi derives a text layer and an HTML version from the upload.
-import rawText from "./velasquez-judgment-en.txt?raw";
+import enText from "./velasquez-judgment-en.txt?raw";
+import esText from "./velasquez-judgment-es.txt?raw";
+import frText from "./velasquez-judgment-fr.txt?raw";
+import arText from "./velasquez-judgment-ar.txt?raw";
+import type { Language } from "../atoms/language";
 
 export type HtmlBlock =
   | { type: "h1"; text: string }
@@ -68,7 +72,13 @@ function parse(text: string): HtmlBlock[] {
   return blocks;
 }
 
-export const defaultDocRendition: DocRendition = {
-  plainText: rawText,
-  html: parse(rawText),
+const build = (text: string): DocRendition => ({ plainText: text, html: parse(text) });
+
+/** Renditions per language. EN/ES are extracted from the real PDFs; FR/AR are
+ *  representative translations (no genuine French/Arabic source document). */
+export const renditionsByLanguage: Record<Language, DocRendition> = {
+  EN: build(enText),
+  ES: build(esText),
+  FR: build(frText),
+  AR: build(arText),
 };

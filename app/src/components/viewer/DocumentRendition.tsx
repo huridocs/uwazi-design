@@ -1,20 +1,26 @@
-import { defaultDocRendition } from "../../data/documentRenditions";
+import { useAtomValue } from "jotai";
+import { renditionsByLanguage } from "../../data/documentRenditions";
+import { languageAtom } from "../../atoms/language";
 import type { DocumentFormat } from "../../atoms/selection";
 
 /** Plain-text and HTML renditions of the default primary document, shown when
  *  the Document-tab format picker is set to something other than PDF. Renders
  *  on a paper surface that fills the pane (like the PDF area) with the text in
- *  a centred readable column — no vellum "desk", so wide panes don't leave a
- *  jarring gap around the content. */
+ *  a centred readable column. Language-aware: the content follows the active
+ *  language tab, and Arabic flows right-to-left. */
 export function DocumentRendition({ format }: { format: DocumentFormat }) {
+  const language = useAtomValue(languageAtom);
+  const rendition = renditionsByLanguage[language] ?? renditionsByLanguage.EN;
+  const rtl = language === "AR";
+
   if (format === "text") {
     return (
       <div className="absolute inset-0 overflow-auto bg-paper">
         <pre
-          dir="ltr"
+          dir={rtl ? "rtl" : "ltr"}
           className="mx-auto max-w-[44rem] whitespace-pre-wrap font-mono text-[12.5px] leading-relaxed text-ink-secondary px-6 py-8"
         >
-          {defaultDocRendition.plainText}
+          {rendition.plainText}
         </pre>
       </div>
     );
@@ -23,8 +29,8 @@ export function DocumentRendition({ format }: { format: DocumentFormat }) {
   // HTML — styled article rendering.
   return (
     <div className="absolute inset-0 overflow-auto bg-paper">
-      <article className="mx-auto max-w-[44rem] px-6 py-8">
-        {defaultDocRendition.html.map((block, i) => {
+      <article dir={rtl ? "rtl" : "ltr"} className="mx-auto max-w-[44rem] px-6 py-8">
+        {rendition.html.map((block, i) => {
           switch (block.type) {
             case "h1":
               return (
