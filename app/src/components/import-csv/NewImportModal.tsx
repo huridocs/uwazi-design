@@ -67,8 +67,9 @@ export function NewImportModal({ open, onClose, onImport }: NewImportModalProps)
           </button>
         </div>
 
-        {/* Body */}
-        <div className="px-6 py-5 space-y-5">
+        {/* Body — grows to fill the full-height mobile sheet so the footer
+            pins to the bottom; scrolls if the form outgrows the cap. */}
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
           {/* Dropzone */}
           <div>
             <label className="text-xs font-medium text-ink-secondary mb-2 block">CSV File</label>
