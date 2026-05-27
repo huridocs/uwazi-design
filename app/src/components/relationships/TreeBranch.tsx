@@ -152,6 +152,21 @@ export function TreeNode({ children }: { children: ReactNode }) {
         "after:border-t after:border-border-soft",
       ].join(" ")}
     >
+      {/* Node marker where the stub meets the row — gives the tree the defined
+          junction dots from the reference. Centred on the stub end (x≈20,
+          y=18) and drawn over the connector lines. */}
+      <span
+        aria-hidden
+        className="absolute z-[1] rounded-full"
+        style={{
+          left: "0.95rem",
+          top: "1.125rem",
+          width: 5,
+          height: 5,
+          transform: "translateY(-50%)",
+          backgroundColor: "var(--border-primary)",
+        }}
+      />
       {children}
     </div>
   );
