@@ -184,6 +184,7 @@ export function RelationshipsTreeView() {
                 {subGroupBy === "none"
                   ? renderAggregates(refs, {
                       hidePill: groupBy === "target-entity",
+                      hideRelLabel: groupBy === "relation-type",
                     })
                   : groupRefs(refs, subGroupBy).map(([subKey, subRefs]) => (
                       <TreeBranch
@@ -198,6 +199,9 @@ export function RelationshipsTreeView() {
                           hidePill:
                             subGroupBy === "target-entity" ||
                             groupBy === "target-entity",
+                          hideRelLabel:
+                            subGroupBy === "relation-type" ||
+                            groupBy === "relation-type",
                         })}
                       </TreeBranch>
                     ))}
@@ -219,13 +223,18 @@ export function RelationshipsTreeView() {
  *  Hubs never carry a single target entity, so hidePill doesn't apply. */
 function renderAggregates(
   refs: Reference[],
-  opts: { hidePill?: boolean } = {},
+  opts: { hidePill?: boolean; hideRelLabel?: boolean } = {},
 ) {
   const hubs = deriveHubs(refs);
   const rels = deriveRelationships(refs);
   return [
     ...hubs.map((hub) => (
-      <HubNode key={`hub:${hub.id}`} hub={hub} refs={refs.filter((r) => hub.refIds.includes(r.id))} />
+      <HubNode
+        key={`hub:${hub.id}`}
+        hub={hub}
+        refs={refs.filter((r) => hub.refIds.includes(r.id))}
+        hideRelLabel={opts.hideRelLabel}
+      />
     )),
     ...rels.map((rel) => (
       <AggregateNode
@@ -233,12 +242,21 @@ function renderAggregates(
         rel={rel}
         refs={refs.filter((r) => rel.refIds.includes(r.id))}
         hidePill={opts.hidePill}
+        hideRelLabel={opts.hideRelLabel}
       />
     )),
   ];
 }
 
-function HubNode({ hub, refs }: { hub: Hub; refs: Reference[] }) {
+function HubNode({
+  hub,
+  refs,
+  hideRelLabel,
+}: {
+  hub: Hub;
+  refs: Reference[];
+  hideRelLabel?: boolean;
+}) {
   const [expanded, setExpanded] = useState(false);
   const [expandForRef, setExpandForRef] = useAtom(expandGroupForRefAtom);
 
@@ -257,6 +275,7 @@ function HubNode({ hub, refs }: { hub: Hub; refs: Reference[] }) {
         hub={hub}
         expanded={expanded}
         onToggleExpand={() => setExpanded((e) => !e)}
+        hideRelLabel={hideRelLabel}
       />
       {expanded && (
         <div className="ml-[14px]">
@@ -277,10 +296,12 @@ function AggregateNode({
   rel,
   refs,
   hidePill,
+  hideRelLabel,
 }: {
   rel: Relationship;
   refs: Reference[];
   hidePill?: boolean;
+  hideRelLabel?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [expandForRef, setExpandForRef] = useAtom(expandGroupForRefAtom);
@@ -304,6 +325,7 @@ function AggregateNode({
         expanded={expanded}
         onToggleExpand={() => setExpanded((e) => !e)}
         hidePill={hidePill}
+        hideRelLabel={hideRelLabel}
       />
       {expanded && (
         <div className="ml-[14px]">

@@ -12,12 +12,15 @@ export interface HubRowProps {
   hub: Hub;
   expanded?: boolean;
   onToggleExpand?: () => void;
+  /** Hide the relation-type label in the footer (keeps "N parties"). Used when
+   *  the enclosing group already keys on relation type. */
+  hideRelLabel?: boolean;
 }
 
 /** N-ary hub row. Renders the member entities as inline pills, no direction
  *  glyph (hubs are symmetric — every member relates to every other). The
  *  evidence-count badge mirrors aggregates. */
-export function HubRow({ hub, expanded, onToggleExpand }: HubRowProps) {
+export function HubRow({ hub, expanded, onToggleExpand, hideRelLabel }: HubRowProps) {
   const zoom = useAtomValue(zoomAtom);
   const relLabel =
     relationTypes.find((r) => r.id === hub.relationType)?.label ??
@@ -108,8 +111,12 @@ export function HubRow({ hub, expanded, onToggleExpand }: HubRowProps) {
       </div>
       {zoom !== "compact" && (
         <div className="flex items-center gap-1 mt-1 text-[10px] text-ink-tertiary">
-          <span className="capitalize">{relLabel}</span>
-          <span>·</span>
+          {!hideRelLabel && (
+            <>
+              <span className="capitalize">{relLabel}</span>
+              <span>·</span>
+            </>
+          )}
           <span>{hub.members.length} parties</span>
         </div>
       )}

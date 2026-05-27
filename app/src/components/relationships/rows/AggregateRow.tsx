@@ -25,6 +25,10 @@ export interface AggregateRowProps {
    *  group that already keys on this entity (e.g. groupBy = target-entity),
    *  so the pill would just repeat the group header. */
   hidePill?: boolean;
+  /** Hide the relation-type label (keeps the direction glyph). Used when the
+   *  enclosing group already keys on relation type, so the label would just
+   *  repeat the branch header. */
+  hideRelLabel?: boolean;
 }
 
 /** Deduped relationship row — one per `(targetEntityId, relationType)` after
@@ -36,6 +40,7 @@ export function AggregateRow({
   expanded,
   onToggleExpand,
   hidePill,
+  hideRelLabel,
 }: AggregateRowProps) {
   const entity = getEntity(rel.targetEntityId);
   const type = entity ? getEntityType(entity.typeId) : undefined;
@@ -173,9 +178,11 @@ export function AggregateRow({
                 >
                   {entity?.title}
                 </span>
-                <span className="text-[10px] text-ink-tertiary truncate capitalize shrink-0">
-                  {relLabel}
-                </span>
+                {!hideRelLabel && (
+                  <span className="text-[10px] text-ink-tertiary truncate capitalize shrink-0">
+                    {relLabel}
+                  </span>
+                )}
               </>
             )}
           </div>
@@ -225,7 +232,7 @@ export function AggregateRow({
       {!hidePill && (
         <div className="flex items-center gap-1 mt-1 text-[10px] text-ink-tertiary">
           <DirectionGlyph direction={glyphDirection} />
-          <span className="capitalize">{relLabel}</span>
+          {!hideRelLabel && <span className="capitalize">{relLabel}</span>}
         </div>
       )}
     </ListCardRow>

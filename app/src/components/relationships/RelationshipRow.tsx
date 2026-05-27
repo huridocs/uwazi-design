@@ -25,6 +25,9 @@ interface AggregateKind {
    *  group that already keys on this entity (e.g. groupBy = target-entity),
    *  so the pill would just repeat the group header. */
   hidePill?: boolean;
+  /** Hide the relation-type label (keeps the direction glyph). Used when the
+   *  enclosing group already keys on relation type. */
+  hideRelLabel?: boolean;
 }
 
 interface HubKind {
@@ -32,6 +35,8 @@ interface HubKind {
   hub: Hub;
   expanded?: boolean;
   onToggleExpand?: () => void;
+  /** Hide the relation-type label in the hub footer (keeps "N parties"). */
+  hideRelLabel?: boolean;
 }
 
 type Props = ReferenceKind | AggregateKind | HubKind;
@@ -48,16 +53,24 @@ export function RelationshipRow(props: Props) {
     return <ReferenceRow reference={reference} onDelete={onDelete} nested={nested} />;
   }
   if (props.kind === "hub") {
-    const { hub, expanded, onToggleExpand } = props;
-    return <HubRow hub={hub} expanded={expanded} onToggleExpand={onToggleExpand} />;
+    const { hub, expanded, onToggleExpand, hideRelLabel } = props;
+    return (
+      <HubRow
+        hub={hub}
+        expanded={expanded}
+        onToggleExpand={onToggleExpand}
+        hideRelLabel={hideRelLabel}
+      />
+    );
   }
-  const { rel, expanded, onToggleExpand, hidePill } = props;
+  const { rel, expanded, onToggleExpand, hidePill, hideRelLabel } = props;
   return (
     <AggregateRow
       rel={rel}
       expanded={expanded}
       onToggleExpand={onToggleExpand}
       hidePill={hidePill}
+      hideRelLabel={hideRelLabel}
     />
   );
 }
