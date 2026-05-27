@@ -133,7 +133,7 @@ export function AggregateRow({
           setActiveAggregateId(rel.id);
           setOverlayEntityId(rel.targetEntityId);
         }}
-        className="!py-1.5"
+        className="!py-1.5 !border-b-0"
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1 min-w-0">

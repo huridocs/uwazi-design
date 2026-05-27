@@ -76,7 +76,7 @@ export function HubRow({ hub, expanded, onToggleExpand, hideRelLabel }: HubRowPr
 
   if (zoom === "overview") {
     return (
-      <ListCardRow selected={false} onClick={() => onToggleExpand?.()} className="!py-1.5">
+      <ListCardRow selected={false} onClick={() => onToggleExpand?.()} className="!py-1.5 !border-b-0">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1 min-w-0 flex-wrap">
             <RowCheckbox refIds={hub.refIds} />

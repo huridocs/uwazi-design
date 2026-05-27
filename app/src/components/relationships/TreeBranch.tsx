@@ -1,11 +1,12 @@
 import { Children, ReactNode, useEffect, useState } from "react";
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { ChevronRight } from "lucide-react";
 import {
   expandAllSignalAtom,
   collapseAllSignalAtom,
   expandedGroupCountAtom,
   totalGroupCountAtom,
+  zoomAtom,
 } from "../../atoms/filters";
 import { expandGroupForRefAtom } from "../../atoms/references";
 
@@ -133,6 +134,9 @@ export function TreeBranch({
  *  with inline-expanded refs) can render their children with the same
  *  connector geometry. */
 export function TreeNode({ children }: { children: ReactNode }) {
+  // Junction dots are an overview-zoom flourish — the airy, scannable tree.
+  // Compact/detail keep plain connectors so the denser rows don't read busy.
+  const showDot = useAtomValue(zoomAtom) === "overview";
   return (
     <div
       className={[
@@ -154,19 +158,21 @@ export function TreeNode({ children }: { children: ReactNode }) {
     >
       {/* Node marker where the stub meets the row — gives the tree the defined
           junction dots from the reference. Centred on the stub end (x≈20,
-          y=18) and drawn over the connector lines. */}
-      <span
-        aria-hidden
-        className="absolute z-[1] rounded-full"
-        style={{
-          left: "0.95rem",
-          top: "1.125rem",
-          width: 5,
-          height: 5,
-          transform: "translateY(-50%)",
-          backgroundColor: "var(--border-primary)",
-        }}
-      />
+          y=18) and drawn over the connector lines. Overview only. */}
+      {showDot && (
+        <span
+          aria-hidden
+          className="absolute z-[1] rounded-full"
+          style={{
+            left: "0.95rem",
+            top: "1.125rem",
+            width: 5,
+            height: 5,
+            transform: "translateY(-50%)",
+            backgroundColor: "var(--border-primary)",
+          }}
+        />
+      )}
       {children}
     </div>
   );
