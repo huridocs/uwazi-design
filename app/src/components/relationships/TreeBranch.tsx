@@ -156,19 +156,20 @@ export function TreeNode({ children }: { children: ReactNode }) {
         "after:border-t after:border-border-soft",
       ].join(" ")}
     >
-      {/* Node marker where the stub meets the row — gives the tree the defined
-          junction dots from the reference. Centred on the stub end (x≈20,
-          y=18) and drawn over the connector lines. Overview only. */}
+      {/* Node marker at the connector junction — centred on the vertical guide
+          (x=0) where the horizontal stub meets it, at the stub's height (y=18).
+          translate(-50%,-50%) pins the dot's centre to that corner. Overview
+          only. */}
       {showDot && (
         <span
           aria-hidden
           className="absolute z-[1] rounded-full"
           style={{
-            left: "0.95rem",
+            left: 0,
             top: "1.125rem",
             width: 5,
             height: 5,
-            transform: "translateY(-50%)",
+            transform: "translate(-50%, -50%)",
             backgroundColor: "var(--border-primary)",
           }}
         />
