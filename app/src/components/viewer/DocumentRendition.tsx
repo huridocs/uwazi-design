@@ -2,15 +2,17 @@ import { defaultDocRendition } from "../../data/documentRenditions";
 import type { DocumentFormat } from "../../atoms/selection";
 
 /** Plain-text and HTML renditions of the default primary document, shown when
- *  the Document-tab format picker is set to something other than PDF. */
+ *  the Document-tab format picker is set to something other than PDF. Renders
+ *  on a paper surface that fills the pane (like the PDF area) with the text in
+ *  a centred readable column — no vellum "desk", so wide panes don't leave a
+ *  jarring gap around the content. */
 export function DocumentRendition({ format }: { format: DocumentFormat }) {
   if (format === "text") {
     return (
-      <div className="absolute inset-0 overflow-auto flex justify-center items-start py-6 px-4 bg-vellum">
+      <div className="absolute inset-0 overflow-auto bg-paper">
         <pre
           dir="ltr"
-          className="w-full max-w-[44rem] whitespace-pre-wrap font-mono text-[12.5px] leading-relaxed text-ink-secondary bg-paper rounded-md p-6"
-          style={{ border: "1px solid var(--border-primary)" }}
+          className="mx-auto max-w-[44rem] whitespace-pre-wrap font-mono text-[12.5px] leading-relaxed text-ink-secondary px-6 py-8"
         >
           {defaultDocRendition.plainText}
         </pre>
@@ -20,11 +22,8 @@ export function DocumentRendition({ format }: { format: DocumentFormat }) {
 
   // HTML — styled article rendering.
   return (
-    <div className="absolute inset-0 overflow-auto flex justify-center items-start py-6 px-4 bg-vellum">
-      <article
-        className="w-full max-w-[44rem] bg-paper rounded-md px-8 py-7"
-        style={{ border: "1px solid var(--border-primary)" }}
-      >
+    <div className="absolute inset-0 overflow-auto bg-paper">
+      <article className="mx-auto max-w-[44rem] px-6 py-8">
         {defaultDocRendition.html.map((block, i) => {
           switch (block.type) {
             case "h1":
