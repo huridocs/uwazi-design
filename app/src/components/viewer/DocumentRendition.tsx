@@ -20,7 +20,7 @@ export function DocumentRendition({ format }: { format: DocumentFormat }) {
 
   // HTML — styled article rendering.
   return (
-    <div className="absolute inset-0 overflow-auto flex justify-center py-6 px-4 bg-vellum">
+    <div className="absolute inset-0 overflow-auto flex justify-center items-start py-6 px-4 bg-vellum">
       <article
         className="w-full max-w-[44rem] bg-paper rounded-md px-8 py-7"
         style={{ border: "1px solid var(--border-primary)" }}
