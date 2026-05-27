@@ -80,7 +80,7 @@ export function EntityView() {
         onLanguageChange={(lang) => setLanguage(lang as Language)}
       />
       <DocMeta />
-      <DocumentViewer actionBarLeft={menuTrigger} />
+      <DocumentViewer actionBarMenu={menuTrigger} />
     </div>
   );
 

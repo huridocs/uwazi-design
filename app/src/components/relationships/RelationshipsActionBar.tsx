@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Pencil, Plus, Settings2 } from "lucide-react";
 import { useAtom, useSetAtom } from "jotai";
 import { entityPickerOpenAtom, textSelectionAtom } from "../../atoms/selection";
@@ -17,12 +17,14 @@ interface RelationshipsActionBarProps {
    *  tab where there's room. The drawer keeps Edit ⇄ Cancel/Save and the
    *  selection-aware Delete. */
   compact?: boolean;
+  /** Mobile sheet trigger, pinned to the right of the bar. */
+  menuSlot?: ReactNode;
 }
 
 /** Sticky action bar at the bottom of the Relationships panel. Mirrors the
  *  Files surface: create on the left, selection-aware delete on the right.
  *  Creates work without a text selection (entity-level relationship). */
-export function RelationshipsActionBar({ compact = false }: RelationshipsActionBarProps = {}) {
+export function RelationshipsActionBar({ compact = false, menuSlot }: RelationshipsActionBarProps = {}) {
   const [selected, setSelected] = useAtom(selectedRefIdsAtom);
   const [editMode, setEditMode] = useAtom(editModeAtom);
   const [references, setReferences] = useAtom(referencesAtom);
@@ -123,35 +125,38 @@ export function RelationshipsActionBar({ compact = false }: RelationshipsActionB
           )}
         </div>
 
-        {editMode && (
-          <div className="flex items-center gap-3">
-            {hasSelection && (
-              <>
-                <span className="text-xs text-ink-secondary">
-                  Selected {selectedCount} of {totalCount}
-                </span>
-                <button
-                  onClick={() => setConfirmDelete(true)}
-                  className="px-3 py-1.5 text-xs font-medium text-white bg-seal rounded-md hover:bg-seal/90 transition-colors cursor-pointer"
-                >
-                  Delete
-                </button>
-              </>
-            )}
-            <button
-              onClick={cancelEdit}
-              className="px-3 py-1.5 text-xs font-medium text-ink-secondary hover:bg-warm hover:text-ink rounded-md transition-colors cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={saveEdit}
-              className="px-3 py-1.5 text-xs font-medium text-parchment bg-ink hover:bg-ink/90 rounded-md transition-colors cursor-pointer"
-            >
-              Save
-            </button>
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          {editMode && (
+            <>
+              {hasSelection && (
+                <>
+                  <span className="text-xs text-ink-secondary">
+                    Selected {selectedCount} of {totalCount}
+                  </span>
+                  <button
+                    onClick={() => setConfirmDelete(true)}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-seal rounded-md hover:bg-seal/90 transition-colors cursor-pointer"
+                  >
+                    Delete
+                  </button>
+                </>
+              )}
+              <button
+                onClick={cancelEdit}
+                className="px-3 py-1.5 text-xs font-medium text-ink-secondary hover:bg-warm hover:text-ink rounded-md transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveEdit}
+                className="px-3 py-1.5 text-xs font-medium text-parchment bg-ink hover:bg-ink/90 rounded-md transition-colors cursor-pointer"
+              >
+                Save
+              </button>
+            </>
+          )}
+          {menuSlot}
+        </div>
       </div>
 
       <ConfirmDialog

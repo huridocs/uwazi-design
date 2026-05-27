@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { MainTabs } from "../components/layout/MainTabs";
@@ -105,6 +105,87 @@ export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
     }
   };
 
+  const renderLeft = (menuTrigger?: ReactNode) => (
+    <div className="flex flex-col h-full min-h-0 bg-paper">
+      <MainTabs
+        tabs={tabs}
+        activeId={activeTab}
+        onChange={onTabChange}
+        languages={["EN", "ES", "FR", "AR"]}
+        availableLanguages={["EN", "ES", "FR", "AR"]}
+        activeLanguage={language}
+        onLanguageChange={(lang) => setLanguage(lang as Language)}
+      />
+      <DocMeta showPdfSelector={false} />
+      <div className="flex-1 overflow-auto p-4 pb-8 bg-warm">
+        <h3 className="text-xs font-semibold text-ink-tertiary uppercase tracking-wider mb-2 px-1">
+          Primary documents
+        </h3>
+        {primaryGroups.length === 0 ? (
+          <p className="text-xs italic text-ink-tertiary px-1 mb-5">
+            No primary documents yet. Promote a supporting file or add a new one.
+          </p>
+        ) : (
+          primaryGroups.map((group) => {
+            const groupFiles = files.filter((f) => f.groupId === group.id);
+            const resolvedActiveId =
+              activeGroupId ?? primaryGroups[0]?.id ?? null;
+            return (
+              <DocumentGroupCard
+                key={group.id}
+                group={group}
+                translationCount={groupFiles.length}
+                active={group.id === resolvedActiveId}
+              >
+                <FileTable
+                  files={groupFiles}
+                  selectedIds={selectedIds}
+                  onSelect={handleSelect}
+                  onSelectAll={makeSelectAll(groupFiles.map((f) => f.id))}
+                  focusedId={focusedId}
+                  onFocus={setFocusedId}
+                  onRequestDelete={(id) => setPendingDelete([id])}
+                  onAddTranslation={(groupId) =>
+                    setAddFileTarget({ mode: "translation", groupId })
+                  }
+                  embedded
+                />
+              </DocumentGroupCard>
+            );
+          })
+        )}
+
+        <h3 className="text-xs font-semibold text-ink-tertiary uppercase tracking-wider mb-2 mt-5 px-1">
+          Supporting files
+        </h3>
+        {supportingFiles.length === 0 ? (
+          <p className="text-xs italic text-ink-tertiary px-1">
+            No supporting files yet. Add a file to get started.
+          </p>
+        ) : (
+          <FileTable
+            files={supportingFiles}
+            selectedIds={selectedIds}
+            onSelect={handleSelect}
+            onSelectAll={makeSelectAll(supportingFiles.map((f) => f.id))}
+            focusedId={focusedId}
+            onFocus={setFocusedId}
+            onRequestDelete={(id) => setPendingDelete([id])}
+          />
+        )}
+      </div>
+      <FilesActionBar
+        selectedCount={selectedIds.size}
+        totalCount={files.length}
+        onAddFile={() => setAddFileTarget({ mode: "new" })}
+        onSelectAll={() => setSelectedIds(new Set(files.map((f) => f.id)))}
+        onDeselectAll={() => setSelectedIds(new Set())}
+        onDelete={() => setPendingDelete(Array.from(selectedIds))}
+        menuSlot={menuTrigger}
+      />
+    </div>
+  );
+
   return (
     <>
       <AdaptiveSplitView
@@ -128,87 +209,8 @@ export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
             ),
           },
         ]}
-        left={
-          <div className="flex flex-col h-full min-h-0 bg-paper">
-            <MainTabs
-              tabs={tabs}
-              activeId={activeTab}
-              onChange={onTabChange}
-              languages={["EN", "ES", "FR", "AR"]}
-              availableLanguages={["EN", "ES", "FR", "AR"]}
-              activeLanguage={language}
-              onLanguageChange={(lang) => setLanguage(lang as Language)}
-            />
-            <DocMeta showPdfSelector={false} />
-            <div className="flex-1 overflow-auto p-4 pb-8 bg-warm">
-              <h3 className="text-xs font-semibold text-ink-tertiary uppercase tracking-wider mb-2 px-1">
-                Primary documents
-              </h3>
-              {primaryGroups.length === 0 ? (
-                <p className="text-xs italic text-ink-tertiary px-1 mb-5">
-                  No primary documents yet. Promote a supporting file or add a new one.
-                </p>
-              ) : (
-                primaryGroups.map((group) => {
-                  const groupFiles = files.filter((f) => f.groupId === group.id);
-                  const resolvedActiveId =
-                    activeGroupId ?? primaryGroups[0]?.id ?? null;
-                  return (
-                    <DocumentGroupCard
-                      key={group.id}
-                      group={group}
-                      translationCount={groupFiles.length}
-                      active={group.id === resolvedActiveId}
-                    >
-                      <FileTable
-                        files={groupFiles}
-                        selectedIds={selectedIds}
-                        onSelect={handleSelect}
-                        onSelectAll={makeSelectAll(groupFiles.map((f) => f.id))}
-                        focusedId={focusedId}
-                        onFocus={setFocusedId}
-                        onRequestDelete={(id) => setPendingDelete([id])}
-                        onAddTranslation={(groupId) =>
-                          setAddFileTarget({ mode: "translation", groupId })
-                        }
-                        embedded
-                      />
-                    </DocumentGroupCard>
-                  );
-                })
-              )}
-
-              <h3 className="text-xs font-semibold text-ink-tertiary uppercase tracking-wider mb-2 mt-5 px-1">
-                Supporting files
-              </h3>
-              {supportingFiles.length === 0 ? (
-                <p className="text-xs italic text-ink-tertiary px-1">
-                  No supporting files yet. Add a file to get started.
-                </p>
-              ) : (
-                <FileTable
-                  files={supportingFiles}
-                  selectedIds={selectedIds}
-                  onSelect={handleSelect}
-                  onSelectAll={makeSelectAll(supportingFiles.map((f) => f.id))}
-                  focusedId={focusedId}
-                  onFocus={setFocusedId}
-                  onRequestDelete={(id) => setPendingDelete([id])}
-                />
-              )}
-            </div>
-            <FilesActionBar
-              selectedCount={selectedIds.size}
-              totalCount={files.length}
-              onAddFile={() => setAddFileTarget({ mode: "new" })}
-              onSelectAll={() =>
-                setSelectedIds(new Set(files.map((f) => f.id)))
-              }
-              onDeselectAll={() => setSelectedIds(new Set())}
-              onDelete={() => setPendingDelete(Array.from(selectedIds))}
-            />
-          </div>
-        }
+        left={renderLeft()}
+        mobileLeft={(menuTrigger) => renderLeft(menuTrigger)}
         right={
           <FileDrawer
             selectedFiles={drawerFiles}
@@ -258,6 +260,7 @@ function FilesActionBar({
   onSelectAll,
   onDeselectAll,
   onDelete,
+  menuSlot,
 }: {
   selectedCount: number;
   totalCount: number;
@@ -265,6 +268,8 @@ function FilesActionBar({
   onSelectAll: () => void;
   onDeselectAll: () => void;
   onDelete: () => void;
+  /** Mobile sheet trigger, pinned to the right of the bar. */
+  menuSlot?: ReactNode;
 }) {
   const hasSelection = selectedCount > 0;
   const allSelected = totalCount > 0 && selectedCount === totalCount;
@@ -292,20 +297,22 @@ function FilesActionBar({
         />
       </div>
 
-      {hasSelection && (
-        <div className="flex items-center gap-4">
-          <span className="text-xs text-ink-secondary">
-            Selected {selectedCount} of {totalCount}
-          </span>
-          <button
-            onClick={onDelete}
-            className="px-3 py-1.5 text-xs font-medium text-white bg-seal rounded-md hover:bg-seal/90 transition-colors cursor-pointer"
-          >
-            Delete
-          </button>
-        </div>
-      )}
+      <div className="flex items-center gap-4">
+        {hasSelection && (
+          <>
+            <span className="text-xs text-ink-secondary">
+              Selected {selectedCount} of {totalCount}
+            </span>
+            <button
+              onClick={onDelete}
+              className="px-3 py-1.5 text-xs font-medium text-white bg-seal rounded-md hover:bg-seal/90 transition-colors cursor-pointer"
+            >
+              Delete
+            </button>
+          </>
+        )}
+        {menuSlot}
+      </div>
     </div>
   );
 }
-

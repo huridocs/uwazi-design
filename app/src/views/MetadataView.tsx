@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useAtom } from "jotai";
 import { Download, Search } from "lucide-react";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
@@ -27,27 +27,34 @@ export function MetadataView({ tabs, activeTab, onTabChange }: MetadataViewProps
   const [editing, setEditing] = useState(false);
   const [language, setLanguage] = useAtom(languageAtom);
 
+  const renderLeft = (menuTrigger?: ReactNode) => (
+    <div className="flex flex-col h-full min-h-0 bg-paper">
+      <MainTabs
+        tabs={tabs}
+        activeId={activeTab}
+        onChange={onTabChange}
+        languages={["EN", "ES", "FR", "AR"]}
+        availableLanguages={["EN", "ES", "FR", "AR"]}
+        activeLanguage={language}
+        onLanguageChange={(lang) => setLanguage(lang as Language)}
+      />
+
+      {editing ? (
+        <MetadataEditBody
+          onCancel={() => setEditing(false)}
+          onSave={() => setEditing(false)}
+          menuSlot={menuTrigger}
+        />
+      ) : (
+        <MetadataReadBody onEdit={() => setEditing(true)} menuSlot={menuTrigger} />
+      )}
+    </div>
+  );
+
   return (
     <AdaptiveSplitView
-      left={
-        <div className="flex flex-col h-full min-h-0 bg-paper">
-          <MainTabs
-            tabs={tabs}
-            activeId={activeTab}
-            onChange={onTabChange}
-            languages={["EN", "ES", "FR", "AR"]}
-            availableLanguages={["EN", "ES", "FR", "AR"]}
-            activeLanguage={language}
-            onLanguageChange={(lang) => setLanguage(lang as Language)}
-          />
-
-          {editing ? (
-            <MetadataEditBody onCancel={() => setEditing(false)} onSave={() => setEditing(false)} />
-          ) : (
-            <MetadataReadBody onEdit={() => setEditing(true)} />
-          )}
-        </div>
-      }
+      left={renderLeft()}
+      mobileLeft={(menuTrigger) => renderLeft(menuTrigger)}
       right={<MetadataDrawer />}
       defaultRightWidth={560}
       minRightWidth={460}
@@ -61,7 +68,7 @@ export function MetadataView({ tabs, activeTab, onTabChange }: MetadataViewProps
 
 /* ── Read Mode ── */
 
-function MetadataReadBody({ onEdit }: { onEdit: () => void }) {
+function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?: ReactNode }) {
   const language = useAtom(languageAtom)[0];
   const fields = metadataFieldsByLanguage[language];
   const pdf = pdfMetadataByLanguage[language];
@@ -150,6 +157,7 @@ function MetadataReadBody({ onEdit }: { onEdit: () => void }) {
         <button className="px-3 py-1.5 text-xs font-medium text-seal bg-seal-tint/40 hover:bg-seal-tint rounded-md transition-colors cursor-pointer">
           Delete
         </button>
+        {menuSlot}
       </div>
     </>
   );
@@ -157,7 +165,7 @@ function MetadataReadBody({ onEdit }: { onEdit: () => void }) {
 
 /* ── Edit Mode ── */
 
-function MetadataEditBody({ onCancel, onSave }: { onCancel: () => void; onSave: () => void }) {
+function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void; onSave: () => void; menuSlot?: ReactNode }) {
   const language = useAtom(languageAtom)[0];
   const doc = documentsByLanguage[language];
   const initialFields = metadataFieldsByLanguage[language];
@@ -318,6 +326,7 @@ function MetadataEditBody({ onCancel, onSave }: { onCancel: () => void; onSave: 
         >
           Save
         </button>
+        {menuSlot}
       </div>
     </>
   );

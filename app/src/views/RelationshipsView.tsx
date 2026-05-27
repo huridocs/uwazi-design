@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useAtom } from "jotai";
 import { referencesAtom, toastsAtom } from "../atoms/references";
 import { languageAtom, type Language } from "../atoms/language";
@@ -90,25 +90,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange }: Props) {
   const showZoom = view !== "graph";
   const hideMinimap = view === "graph";
 
-  return (
-    <>
-    <AdaptiveSplitView
-      // On mobile the relationships panel (`left`) is already the full-screen
-      // view, so we only surface the Document in a bottom sheet — a
-      // "Relationships" section here would just duplicate what's behind it.
-      mobileSections={[
-        {
-          id: "document",
-          label: "Document",
-          content: (
-            <div className="flex flex-col h-full min-h-0 relative overflow-hidden">
-              <EntityOverlay />
-              <DocumentViewer />
-            </div>
-          ),
-        },
-      ]}
-      left={
+  const renderLeft = (menuTrigger?: ReactNode) => (
         <div className="flex flex-col h-full min-h-0 bg-paper relative overflow-hidden">
           <MainTabs
             tabs={tabs}
@@ -155,9 +137,30 @@ export function RelationshipsView({ tabs, activeTab, onTabChange }: Props) {
             onDelete={handleDelete}
             scrollBgClass="bg-warm"
           />
-          <RelationshipsActionBar />
+          <RelationshipsActionBar menuSlot={menuTrigger} />
         </div>
-      }
+  );
+
+  return (
+    <>
+    <AdaptiveSplitView
+      // On mobile the relationships panel (`left`) is already the full-screen
+      // view, so we only surface the Document in a bottom sheet — a
+      // "Relationships" section here would just duplicate what's behind it.
+      mobileSections={[
+        {
+          id: "document",
+          label: "Document",
+          content: (
+            <div className="flex flex-col h-full min-h-0 relative overflow-hidden">
+              <EntityOverlay />
+              <DocumentViewer />
+            </div>
+          ),
+        },
+      ]}
+      left={renderLeft()}
+      mobileLeft={(menuTrigger) => renderLeft(menuTrigger)}
       right={
         <div className="flex flex-col h-full min-h-0 relative overflow-hidden">
           <EntityOverlay />

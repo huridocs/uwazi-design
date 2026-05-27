@@ -7,9 +7,12 @@ interface ActionBarProps {
   onScrollToPage: (page: number) => void;
   /** Optional content to render on the left side instead of the OCR button */
   leftSlot?: ReactNode;
+  /** Optional trailing slot, right of the pager — hosts the mobile sheet
+   *  trigger so "show more" sits at the right of the bar, not over content. */
+  rightSlot?: ReactNode;
 }
 
-export function ActionBar({ numPages, onScrollToPage, leftSlot }: ActionBarProps) {
+export function ActionBar({ numPages, onScrollToPage, leftSlot, rightSlot }: ActionBarProps) {
   const [currentPage] = useAtom(currentPageAtom);
 
   const goTo = (page: number) => {
@@ -28,7 +31,7 @@ export function ActionBar({ numPages, onScrollToPage, leftSlot }: ActionBarProps
         </button>
       )}
 
-      {/* Right: Pager */}
+      {/* Right: Pager (+ optional trailing menu slot) */}
       <div className="flex items-center gap-4">
         <button
           onClick={() => goTo(Math.max(1, currentPage - 1))}
@@ -47,6 +50,7 @@ export function ActionBar({ numPages, onScrollToPage, leftSlot }: ActionBarProps
         >
           Next
         </button>
+        {rightSlot}
       </div>
     </div>
   );

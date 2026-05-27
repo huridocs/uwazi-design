@@ -20,8 +20,9 @@ import { RefMinimap } from "./RefMinimap";
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 interface DocumentViewerProps {
-  /** Optional left slot for the action bar — used to inject the mobile sheet trigger */
-  actionBarLeft?: ReactNode;
+  /** Optional trailing slot for the action bar — used to inject the mobile
+   *  sheet trigger so it sits at the right of the bar. */
+  actionBarMenu?: ReactNode;
   /** Hide the right-edge ref minimap. Default: shown on non-mobile. */
   showMinimap?: boolean;
   /** When set, render this specific file instead of resolving from the
@@ -30,7 +31,7 @@ interface DocumentViewerProps {
   fileOverride?: { url?: string; language: string } | null;
 }
 
-export function DocumentViewer({ actionBarLeft, showMinimap = true, fileOverride }: DocumentViewerProps = {}) {
+export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride }: DocumentViewerProps = {}) {
   const [breakpoint] = useAtom(breakpointAtom);
   const isMobile = breakpoint === "mobile";
   const [numPages, setNumPages] = useState<number>(0);
@@ -254,7 +255,7 @@ export function DocumentViewer({ actionBarLeft, showMinimap = true, fileOverride
           When the viewer is mounted inside a drawer to preview a specific
           file, the host drawer carries its own footer (Back / Download). */}
       {!fileOverride && (
-        <ActionBar numPages={numPages} onScrollToPage={scrollToPage} leftSlot={actionBarLeft} />
+        <ActionBar numPages={numPages} onScrollToPage={scrollToPage} rightSlot={actionBarMenu} />
       )}
 
       {selection && (
