@@ -219,7 +219,7 @@ export function FileTable({
                 <div className="flex items-center gap-3 text-[11px] text-ink-tertiary">
                   <span>{typeLabels[file.type]}</span>
                   <span>•</span>
-                  <span>{file.size}</span>
+                  <span dir="ltr">{file.size}</span>
                   <span>•</span>
                   <span>{file.language}</span>
                 </div>
@@ -311,7 +311,7 @@ export function FileTable({
             </div>
 
             <span className="text-xs text-ink-tertiary">{typeLabels[file.type]}</span>
-            <span className="text-xs text-ink-tertiary">{file.size}</span>
+            <span dir="ltr" className="text-xs text-ink-tertiary">{file.size}</span>
             <span className="text-xs text-ink-tertiary">{file.language}</span>
             <span className="text-xs text-ink-tertiary">
               {formatFileDate(file.modified)}

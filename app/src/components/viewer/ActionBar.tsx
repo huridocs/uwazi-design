@@ -40,7 +40,7 @@ export function ActionBar({ numPages, onScrollToPage, leftSlot, rightSlot }: Act
         >
           Previous
         </button>
-        <span className="text-[13px] font-semibold text-ink tabular-nums">
+        <span dir="ltr" className="text-[13px] font-semibold text-ink tabular-nums">
           {currentPage} / {numPages || "..."}
         </span>
         <button

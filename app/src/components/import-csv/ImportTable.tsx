@@ -81,7 +81,7 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
                   <div className="text-[11px] text-ink-tertiary truncate mb-1.5">{entry.template}</div>
                   <div className="flex items-center gap-2 mb-1.5">
                     <div className="flex-1"><ProgressBar value={entry.progress} color={progressColor(entry.status)} /></div>
-                    <span className="text-[11px] text-ink-tertiary tabular-nums">{progressLabel(entry)}</span>
+                    <span dir="ltr" className="text-[11px] text-ink-tertiary tabular-nums">{progressLabel(entry)}</span>
                   </div>
                   <div className="flex items-center gap-3 text-[11px] text-ink-tertiary">
                     <span><span className="tabular-nums">{entry.entities.toLocaleString()}</span> entities</span>
@@ -90,7 +90,7 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
                         <span className="tabular-nums">{entry.failed}</span> failed
                       </span>
                     )}
-                    <span className="ml-auto tabular-nums">{formatDate(entry.date)}</span>
+                    <span dir="ltr" className="ml-auto tabular-nums">{formatDate(entry.date)}</span>
                   </div>
                 </div>
                 <button
@@ -167,7 +167,7 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
                 <div className="flex-1 min-w-0">
                   <ProgressBar value={entry.progress} color={progressColor(entry.status)} />
                 </div>
-                <span className="text-[11px] text-ink-tertiary tabular-nums shrink-0">{progressLabel(entry)}</span>
+                <span dir="ltr" className="text-[11px] text-ink-tertiary tabular-nums shrink-0">{progressLabel(entry)}</span>
               </div>
 
               <span className="text-xs text-ink-tertiary tabular-nums">
@@ -178,7 +178,7 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
               >
                 {entry.status === "pending" ? "—" : entry.failed}
               </span>
-              <span className="text-xs text-ink-tertiary tabular-nums">{formatDate(entry.date)}</span>
+              <span dir="ltr" className="text-xs text-ink-tertiary tabular-nums">{formatDate(entry.date)}</span>
 
               <div className="flex items-center justify-center">
                 <button
