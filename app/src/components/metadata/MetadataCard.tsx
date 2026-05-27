@@ -25,15 +25,19 @@ interface PropertyProps {
   label?: string;
   value: string;
   linked?: boolean;
+  /** Keep the value left-to-right (filenames, sizes, dates) so RTL bidi
+   *  doesn't reorder it to e.g. "KB 948" or "2000-11-25". */
+  ltr?: boolean;
 }
 
-export function Property({ label, value, linked }: PropertyProps) {
+export function Property({ label, value, linked, ltr }: PropertyProps) {
   return (
     <div className="flex flex-col items-start">
       {label && (
         <span className="text-xs text-ink-tertiary leading-relaxed">{label}</span>
       )}
       <span
+        dir={ltr ? "ltr" : undefined}
         className={`text-sm font-medium text-ink leading-relaxed ${
           linked ? "underline decoration-solid" : ""
         }`}

@@ -89,12 +89,12 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
           </MetadataCard>
 
           <MetadataCard title="PDF Metadata" className="md:col-span-2 xl:col-span-2 xl:row-span-2">
-            <Property label="Name" value={pdf.name} />
+            <Property label="Name" value={pdf.name} ltr />
             <PropertyRow>
               <div className="flex-1"><Property label="Type" value={pdf.type} /></div>
-              <div className="flex-1"><Property label="Size" value={pdf.size} /></div>
-              <div className="flex-1"><Property label="Last Edited" value={pdf.lastEdited} /></div>
-              <div className="flex-1"><Property label="Added" value={pdf.added} /></div>
+              <div className="flex-1"><Property label="Size" value={pdf.size} ltr /></div>
+              <div className="flex-1"><Property label="Last Edited" value={pdf.lastEdited} ltr /></div>
+              <div className="flex-1"><Property label="Added" value={pdf.added} ltr /></div>
             </PropertyRow>
             <div className="flex items-center justify-between pt-2 mt-auto">
               <ViewButton size="md" />
