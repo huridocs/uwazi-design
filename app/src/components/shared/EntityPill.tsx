@@ -15,6 +15,7 @@ export function EntityPill({ typeId, label, size = "sm" }: EntityPillProps) {
 
   return (
     <span
+      title={name}
       className={`inline-flex items-center gap-1.5 rounded-md whitespace-nowrap ${
         isMissing ? "italic font-normal" : "font-medium"
       } ${size === "sm" ? "px-2 py-0.5 text-xs" : "px-2.5 py-1 text-sm"}`}
