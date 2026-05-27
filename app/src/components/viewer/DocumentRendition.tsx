@@ -39,6 +39,15 @@ export function DocumentRendition({ format }: { format: DocumentFormat }) {
                   {block.text}
                 </h2>
               );
+            case "section":
+              return (
+                <h2
+                  key={i}
+                  className="text-[13px] font-semibold uppercase tracking-wider text-ink-secondary text-center mt-7 mb-4"
+                >
+                  {block.text}
+                </h2>
+              );
             case "num":
               return (
                 <p key={i} className="flex gap-2 text-sm text-ink-secondary leading-relaxed mb-3">
