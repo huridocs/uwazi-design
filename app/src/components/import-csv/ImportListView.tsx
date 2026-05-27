@@ -69,7 +69,7 @@ export function ImportListView({
           <>
             {/* Stats breakdown row */}
             <div
-              className="flex items-center gap-6 px-4 h-10 shrink-0 text-xs text-ink-tertiary"
+              className="flex items-center gap-3 md:gap-6 px-4 h-10 shrink-0 text-xs text-ink-tertiary overflow-x-auto no-scrollbar [&>*]:shrink-0"
               style={{ borderBottom: "1px solid var(--border-primary)" }}
             >
               <Stat count={imports.length} label="Total imports" tone="ink" />
