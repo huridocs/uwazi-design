@@ -29,6 +29,10 @@ export interface AggregateRowProps {
    *  enclosing group already keys on relation type, so the label would just
    *  repeat the branch header. */
   hideRelLabel?: boolean;
+  /** Hide just the colored type pill, keeping the entity title. Used when the
+   *  group keys on the target template, so the type pill would repeat the
+   *  branch header but the title still varies per leaf. */
+  hideTypePill?: boolean;
 }
 
 /** Deduped relationship row — one per `(targetEntityId, relationType)` after
@@ -41,6 +45,7 @@ export function AggregateRow({
   onToggleExpand,
   hidePill,
   hideRelLabel,
+  hideTypePill,
 }: AggregateRowProps) {
   const entity = getEntity(rel.targetEntityId);
   const type = entity ? getEntityType(entity.typeId) : undefined;
@@ -171,7 +176,9 @@ export function AggregateRow({
               </span>
             ) : (
               <>
-                <EntityPill typeId={entity?.typeId ?? ""} label={type?.name} />
+                {!hideTypePill && (
+                  <EntityPill typeId={entity?.typeId ?? ""} label={type?.name} />
+                )}
                 <span
                   title={entity?.title}
                   className="text-xs font-medium text-ink truncate min-w-0"
@@ -215,7 +222,9 @@ export function AggregateRow({
             </>
           ) : (
             <>
-              <EntityPill typeId={entity?.typeId ?? ""} label={type?.name} />
+              {!hideTypePill && (
+                <EntityPill typeId={entity?.typeId ?? ""} label={type?.name} />
+              )}
               <span
                 title={entity?.title}
                 className="text-sm font-medium text-ink truncate min-w-0"

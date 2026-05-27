@@ -185,6 +185,7 @@ export function RelationshipsTreeView() {
                   ? renderAggregates(refs, {
                       hidePill: groupBy === "target-entity",
                       hideRelLabel: groupBy === "relation-type",
+                      hideTypePill: groupBy === "target-template",
                     })
                   : groupRefs(refs, subGroupBy).map(([subKey, subRefs]) => (
                       <TreeBranch
@@ -202,6 +203,9 @@ export function RelationshipsTreeView() {
                           hideRelLabel:
                             subGroupBy === "relation-type" ||
                             groupBy === "relation-type",
+                          hideTypePill:
+                            subGroupBy === "target-template" ||
+                            groupBy === "target-template",
                         })}
                       </TreeBranch>
                     ))}
@@ -223,7 +227,11 @@ export function RelationshipsTreeView() {
  *  Hubs never carry a single target entity, so hidePill doesn't apply. */
 function renderAggregates(
   refs: Reference[],
-  opts: { hidePill?: boolean; hideRelLabel?: boolean } = {},
+  opts: {
+    hidePill?: boolean;
+    hideRelLabel?: boolean;
+    hideTypePill?: boolean;
+  } = {},
 ) {
   const hubs = deriveHubs(refs);
   const rels = deriveRelationships(refs);
@@ -243,6 +251,7 @@ function renderAggregates(
         refs={refs.filter((r) => rel.refIds.includes(r.id))}
         hidePill={opts.hidePill}
         hideRelLabel={opts.hideRelLabel}
+        hideTypePill={opts.hideTypePill}
       />
     )),
   ];
@@ -297,11 +306,13 @@ function AggregateNode({
   refs,
   hidePill,
   hideRelLabel,
+  hideTypePill,
 }: {
   rel: Relationship;
   refs: Reference[];
   hidePill?: boolean;
   hideRelLabel?: boolean;
+  hideTypePill?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [expandForRef, setExpandForRef] = useAtom(expandGroupForRefAtom);
@@ -326,6 +337,7 @@ function AggregateNode({
         onToggleExpand={() => setExpanded((e) => !e)}
         hidePill={hidePill}
         hideRelLabel={hideRelLabel}
+        hideTypePill={hideTypePill}
       />
       {expanded && (
         <div className="ml-[14px]">

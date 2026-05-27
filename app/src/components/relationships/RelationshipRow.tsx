@@ -28,6 +28,9 @@ interface AggregateKind {
   /** Hide the relation-type label (keeps the direction glyph). Used when the
    *  enclosing group already keys on relation type. */
   hideRelLabel?: boolean;
+  /** Hide the colored type pill, keeping the entity title. Used when the group
+   *  keys on the target template. */
+  hideTypePill?: boolean;
 }
 
 interface HubKind {
@@ -63,7 +66,8 @@ export function RelationshipRow(props: Props) {
       />
     );
   }
-  const { rel, expanded, onToggleExpand, hidePill, hideRelLabel } = props;
+  const { rel, expanded, onToggleExpand, hidePill, hideRelLabel, hideTypePill } =
+    props;
   return (
     <AggregateRow
       rel={rel}
@@ -71,6 +75,7 @@ export function RelationshipRow(props: Props) {
       onToggleExpand={onToggleExpand}
       hidePill={hidePill}
       hideRelLabel={hideRelLabel}
+      hideTypePill={hideTypePill}
     />
   );
 }
