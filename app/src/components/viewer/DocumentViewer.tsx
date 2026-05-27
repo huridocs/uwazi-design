@@ -83,7 +83,9 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
     const el = containerRef.current;
     if (!el) return;
     const ro = new ResizeObserver(([entry]) => {
-      setContainerWidth(entry.contentRect.width);
+      // Ignore the 0-width report when the PDF pane is hidden behind a
+      // rendition — otherwise pages re-render at zero width and go blank.
+      if (entry.contentRect.width > 0) setContainerWidth(entry.contentRect.width);
     });
     ro.observe(el);
     return () => ro.disconnect();
@@ -205,12 +207,11 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
             No translation in {language}. Showing {activeFile?.language}.
           </div>
         )}
-        {renditionMode ? (
-          <DocumentRendition format={docFormat} />
-        ) : (
+        {/* PDF stays mounted (just hidden) under a rendition so it never has
+            to reload + repaint when the user switches back. */}
         <div
           ref={containerRef}
-          className="absolute inset-0 overflow-auto flex flex-col items-center py-4 gap-4"
+          className={`absolute inset-0 overflow-auto flex flex-col items-center py-4 gap-4 ${renditionMode ? "hidden" : ""}`}
           style={{
             paddingLeft: 16,
             paddingRight: isMobile ? 16 : showMinimap ? 80 : 16,
@@ -256,7 +257,7 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
           ))}
         </Document>
         </div>
-        )}
+        {renditionMode && <DocumentRendition format={docFormat} />}
         {!isMobile && showMinimap && !renditionMode && <RefMinimap numPages={numPages} />}
       </div>
 
