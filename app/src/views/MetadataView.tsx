@@ -258,9 +258,14 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
           <CountryPicker />
         </EditSection>
 
-        {/* Editable fields */}
+        {/* Editable scalar fields (date / link / text / multiline). file-list
+            fields render below as item editors; description/country handled
+            above with their own controls. */}
         {fields
-          .filter((f) => !["description", "country", "other-files"].includes(f.id))
+          .filter(
+            (f) =>
+              !["description", "country"].includes(f.id) && f.type !== "file-list",
+          )
           .map((field) => (
             <EditSection key={field.id} label={field.label}>
               {field.type === "date" ? (
@@ -271,13 +276,13 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
                   className="w-full px-3 py-2 text-sm text-ink bg-paper border border-border rounded-md
                     focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40"
                 />
-              ) : field.type === "link" ? (
-                <input
-                  type="text"
+              ) : field.type === "multiline" ? (
+                <textarea
                   value={field.value}
                   onChange={(e) => updateField(field.id, e.target.value)}
+                  rows={4}
                   className="w-full px-3 py-2 text-sm text-ink bg-paper border border-border rounded-md
-                    focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40"
+                    focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 resize-y"
                 />
               ) : (
                 <input
@@ -291,22 +296,27 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
             </EditSection>
           ))}
 
-        {/* Other Files */}
-        <EditSection label="Other Files">
-          {fields
-            .find((f) => f.id === "other-files")
-            ?.items?.map((item, i) => (
-              <div key={i} className="space-y-1">
-                <span className="text-xs text-ink-tertiary">{item.label}</span>
-                <input
-                  type="text"
-                  defaultValue={item.value}
-                  className="w-full px-3 py-2 text-sm text-ink bg-paper border border-border rounded-md
-                    focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40"
-                />
-              </div>
-            ))}
-        </EditSection>
+        {/* file-list fields (Bench, Other Files) — one section per field with
+            an inline editor for each item's value. */}
+        {fields
+          .filter((f) => f.type === "file-list")
+          .map((field) => (
+            <EditSection key={field.id} label={field.label}>
+              {field.items?.map((item, i) => (
+                <div key={i} className="space-y-1">
+                  {item.label && (
+                    <span className="text-xs text-ink-tertiary">{item.label}</span>
+                  )}
+                  <input
+                    type="text"
+                    defaultValue={item.value}
+                    className="w-full px-3 py-2 text-sm text-ink bg-paper border border-border rounded-md
+                      focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40"
+                  />
+                </div>
+              ))}
+            </EditSection>
+          ))}
       </div>
 
       {/* Edit action bar */}
