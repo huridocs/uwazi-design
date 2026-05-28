@@ -138,6 +138,29 @@ Card-row pattern:
 
 In tree mode, target cards are aggregate rows with inline-expand revealing their underlying ref rows. Selected state is read internally from `overlayEntityIdAtom` (aggregate) or `activeRefIdAtom`+`overlayEntityIdAtom` (reference).
 
+## Document tab — format renditions & language
+- The DocMeta header picker (`showPdfSelector`, Document tab only) switches the
+  **rendition** of the *one default primary document*, not between documents:
+  `documentFormatAtom` = `"pdf" | "text" | "html"` (`atoms/selection.ts`).
+- `DocumentViewer` keeps the PDF **mounted** and just hides it (`hidden`) behind
+  a rendition, so returning to PDF repaints instantly (don't unmount the
+  `<Document>` — remount leaves canvases blank). The ResizeObserver ignores the
+  0-width report while hidden.
+- `DocumentRendition` (text / HTML) fills the pane on `bg-paper` (no vellum
+  "desk" — that left a gap on wide panes) with a centred `max-w-[44rem]` column.
+  `ActionBar` takes `showPager` (false for non-paginated renditions) and
+  `rightSlot` (the mobile sheet trigger).
+- Rendition text lives in `data/velasquez-judgment-{en,es,fr,ar}.txt`, imported
+  `?raw` (needs `src/vite-env.d.ts`), parsed by `parse()` in
+  `data/documentRenditions.ts` (any `^N. ` line starts a paragraph; standalone
+  roman numerals are section heads). EN/ES are the real extracted judgments
+  (¶1–194); FR/AR are representative translations (no genuine source PDF). AR
+  renders RTL.
+- **Language = reading language of the *same* document.** All four languages
+  stay on the Velásquez judgment so references stay aligned; EN/ES have real
+  PDFs, FR/AR fall back to the EN PDF for the PDF view. Don't re-point FR/AR at
+  the Bámaca files — that's what made references "change" by language.
+
 ## Files view
 - `focusedId` (single click on row) is separate from `selectedIds` (checkboxes).
 - Default focus = `files.find(f => f.isDefault) ?? files[0]`.
