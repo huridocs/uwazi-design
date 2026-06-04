@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import {
   ArrowLeft,
   BookOpen,
@@ -17,11 +17,14 @@ import {
   Code2,
   Upload,
   Menu,
+  Sparkles,
 } from "lucide-react";
 import type { Theme } from "../../atoms/theme";
 import type { AppView } from "../../atoms/navigation";
 import { breakpointAtom } from "../../atoms/viewport";
+import { agentOpenAtom } from "../../atoms/agent";
 import { MobileBottomSheet } from "./MobileBottomSheet";
+import { Beacon } from "./Beacon";
 
 interface NavbarProps {
   onLogoClick?: () => void;
@@ -41,6 +44,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
   const toolsRef = useRef<HTMLDivElement>(null);
   const [breakpoint] = useAtom(breakpointAtom);
   const isMobile = breakpoint === "mobile";
+  const openAgent = useSetAtom(agentOpenAtom);
 
   const ThemeIcon = theme === "dark" ? Moon : theme === "auto" ? Monitor : Sun;
   const themeLabel = theme === "dark" ? "Dark" : theme === "auto" ? "Auto" : "Light";
@@ -71,7 +75,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
 
   return (
     <header
-      className="h-[52px] bg-paper flex items-center justify-between px-4 md:px-5 shrink-0"
+      className="relative h-[52px] bg-paper flex items-center justify-between px-4 md:px-5 shrink-0"
       style={{ borderBottom: "1px solid var(--border-primary)" }}
     >
       {/* Left: Logo + (mobile hamburger | desktop nav) */}
@@ -96,10 +100,10 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
           <div className="flex items-center gap-2">
             <button
               onClick={() => onNavigate?.("entity")}
-              className={`flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium rounded-md border transition-colors ${
+              className={`flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium rounded-md transition-colors ${
                 appView === "entity"
-                  ? "text-ink bg-vellum border-border-soft"
-                  : "text-ink-secondary bg-warm border-border-soft/60 hover:bg-parchment"
+                  ? "text-ink bg-vellum"
+                  : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
               }`}
             >
               <BookOpen size={14} /> Library
@@ -107,10 +111,10 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
             <div className="relative" ref={toolsRef}>
               <button
                 onClick={() => { setToolsOpen((o) => !o); setSettingsOpen(false); }}
-                className={`flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium rounded-md border transition-colors ${
+                className={`flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium rounded-md transition-colors ${
                   toolsOpen || appView === "import-csv"
-                    ? "text-ink bg-vellum border-border-soft"
-                    : "text-ink-secondary bg-warm border-border-soft/60 hover:bg-parchment"
+                    ? "text-ink bg-vellum"
+                    : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
                 }`}
               >
                 <Wrench size={14} /> Tools
@@ -157,12 +161,23 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
         )}
       </div>
 
-      {/* Right: Settings + Theme toggle */}
+      {/* Right: Assistant + Notifications + Settings + Theme toggle */}
       <div className="flex items-center gap-2">
+        {!showingCatalog && (
+          <button
+            onClick={() => openAgent(true)}
+            className="flex items-center gap-1.5 px-2.5 h-7 text-[13px] font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors"
+            title="Assistant (⌘K)"
+          >
+            <Sparkles size={14} className="text-carbon" />
+            {!isMobile && "Ask"}
+          </button>
+        )}
+        {!showingCatalog && <Beacon rtl={rtl} />}
         {showingCatalog ? (
           <button
             onClick={onLogoClick}
-            className="flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium text-ink-secondary rounded-md bg-warm border border-border-soft/60 hover:bg-parchment transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium text-ink-secondary rounded-md bg-warm hover:bg-parchment hover:text-ink transition-colors"
           >
             <ArrowLeft size={14} /> Return to app
           </button>
@@ -170,10 +185,10 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
           <div className="relative" ref={settingsRef}>
             <button
               onClick={() => { setSettingsOpen((o) => !o); setToolsOpen(false); }}
-              className={`flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium rounded-md border transition-colors ${
+              className={`flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium rounded-md transition-colors ${
                 settingsOpen
-                  ? "text-ink bg-vellum border-border-soft"
-                  : "text-ink-secondary bg-warm border-border-soft/60 hover:bg-parchment"
+                  ? "text-ink bg-vellum"
+                  : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
               }`}
             >
               <Settings size={14} /> Settings

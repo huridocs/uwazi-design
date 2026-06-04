@@ -31,10 +31,11 @@ All components are bound to variables — switching a frame to Dark mode updates
 ├── app/                           # Interactive prototype (Vite + React 18 + TS + Tailwind v4 + Jotai)
 │   ├── src/
 │   │   ├── atoms/                 # Jotai state (navigation, entities, references, files, selection,
-│   │   │                          # filters, suggestions, theme, language, viewport)
+│   │   │                          # filters, suggestions, notifications, theme, language, viewport)
 │   │   ├── components/
-│   │   │   ├── layout/            # Navbar, SplitView, AdaptiveSplitView, MainTabs, DrawerTabs, SegmentedTabs,
-│   │   │   │                      # Breadcrumb, DocMeta, ToolsSidebar, ToolsActionBar,
+│   │   │   ├── layout/            # Navbar, Beacon + NotificationsDrawer, SplitView, AdaptiveSplitView,
+│   │   │   │                      # MainTabs, DrawerTabs, SegmentedTabs, Breadcrumb, DocMeta,
+│   │   │   │                      # ToolsSidebar, ToolsActionBar,
 │   │   │   │                      # MobileBottomSheet, MobileActionMenu, MobileNavDrawer
 │   │   │   ├── viewer/            # DocumentViewer, PageHighlights, FloatingMenu, ActionBar, RefMinimap, HoverExpand
 │   │   │   ├── relationships/     # The merged Relationships surface: ReferencePanel, RelationshipsPanelBody,
@@ -92,10 +93,11 @@ npm run dev        # → http://localhost:5173
 
 - **Library** (default) — Entity viewer with four main tabs (**Document · Metadata · Relationships · Files**):
   - **Document** — PDF viewer with highlights, floating menu, and `RefMinimap` scroll track
-  - **Metadata** — Metadata cards + drawer (Document preview, Relationships, Files, Template)
+  - **Metadata** — Metadata cards + drawer (Document preview, Relationships, Files, Template). Includes **relationship & inherited properties**: fields whose values come from connected entities (single + multi-inheritance), shown with provenance (source entity + relation + inherited property) and a carbon "inherited" marker. Inherited values are read-only — you edit the **connection** (entity picker, syncs sibling fields) or jump to the **source entity** to change the native value.
   - **Relationships** — The single surface for text references and entity-to-entity links (one `Reference` record, projected per-evidence or as derived aggregates). Three views: **List** (with grouping by target/source template, entity, relation type, direction, or page), **Tree** (collapsible relation-type → target → evidence, detail → compact → overview zoom), and radial **Graph** (pan/zoom, branch collapse). Boolean search (AND/OR/NOT/"exact"/wild\*); filters slide-over. Hosts AI (IX) suggestions and the Create-relationship flow.
   - **Files** — Primary + supporting files with multi-select; drawer shows focused file (default: the entity's primary file) with an inline edit mode
 - **Tools > Import CSV** — Full import lifecycle with sidebar, list/detail screens, and upload simulation
+- **Notifications** — a navbar **Beacon**: a colour-coded `UwaziLoader` mark (seal = error, amber = warning, carbon = info/processing, ink = idle/done) that animates while tasks run, auto-expands on a new task and on hover to surface the most pressing item. Clicking opens a slide-over **drawer** — a live **Tasks** section (multi-task, progress) plus a grouped (New / Today / Earlier), filterable notification log with per-item Retry / mark-read / dismiss and expandable error traces. Action toasts are consolidated into this surface.
 - **Logo click** — Toggles to/from the component catalog
 
 ### Component catalog

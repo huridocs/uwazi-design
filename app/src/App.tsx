@@ -5,6 +5,7 @@ import { EntityView } from "./views/EntityView";
 import { ComponentCatalog } from "./views/ComponentCatalog";
 import { ImportCSVView } from "./views/ImportCSVView";
 import { ToastContainer } from "./views/ToastContainer";
+import { AgentModal } from "./components/agent/AgentModal";
 import { themeAtom, resolveTheme } from "./atoms/theme";
 import { languageAtom } from "./atoms/language";
 import { appViewAtom, type AppView } from "./atoms/navigation";
@@ -63,6 +64,7 @@ export function App() {
       <>
         <ComponentCatalog onReturn={() => setAppView("entity")} />
         <ToastContainer />
+        <AgentModal />
       </>
     );
   }
@@ -74,16 +76,14 @@ export function App() {
         appView={appView}
         onNavigate={handleNavigate}
         theme={theme}
-        onToggleTheme={() =>
-          setTheme((t) => (t === "light" ? "dark" : t === "dark" ? "auto" : "light"))
-        }
+        onToggleTheme={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
         rtl={rtl}
         onToggleRtl={handleToggleRtl}
       />
       <div className="flex-1 min-h-0 flex flex-col">
         {appView === "import-csv" ? <ImportCSVView /> : <EntityView />}
       </div>
-      <ToastContainer />
+      <AgentModal />
     </div>
   );
 }

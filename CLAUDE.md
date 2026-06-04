@@ -161,6 +161,58 @@ In tree mode, target cards are aggregate rows with inline-expand revealing their
   PDFs, FR/AR fall back to the EN PDF for the PDF view. Don't re-point FR/AR at
   the Bámaca files — that's what made references "change" by language.
 
+## Notifications — the navbar Beacon + drawer
+Two pieces: the **pill** (`components/layout/Beacon.tsx`) is the indicator; the
+**drawer** (`components/layout/NotificationsDrawer.tsx`) is the history log.
+Modelled on the real Uwazi notification drawer (tasks + tinted severity cards +
+expandable stack traces + Clear).
+
+- **Pill** — lives in the navbar **right cluster** (with Settings/theme), an
+  inline `rounded-md bg-warm` button (matches the borderless action buttons in the
+  bottom `ActionBar`; **don't** give it a border or make it a pill/circle). It
+  animates `width` (`beacon-spring`). The icon is always the **`UwaziLoader` mark**
+  (not a bell), coloured by the most pressing state and animated **only** while a
+  task runs:
+  - colour ladder (`loaderColor`, derived from `topUnread`): seal = unread error,
+    amber (`warning`) = unread warning, carbon = unread info / **processing**,
+    black (`default`) = idle or "done" (only an unread success left). `UwaziLoader`
+    gained `color` tones (`muted`/`carbon`/`seal`/`warning`) + an `animate` prop.
+  - **collapse / expand** (desktop): collapsed = just the mark. A starting task
+    expands the rail for ~3s (`activityIntro`) showing label + `%`, then
+    auto-collapses; **hover** re-expands — to the live label+`%` if a task runs,
+    else to the top unread item (severity-sorted) with its kind icon + `+N`. Mobile
+    stays collapsed (tap → drawer).
+  - **flash** — action toasts briefly expand the rail with the message, then
+    collapse (see consolidation). A springy **`animate-beacon-pop`** fires when the
+    unread count rises. Respects `prefers-reduced-motion`. Click → `beaconOpenAtom`.
+- **Drawer** — right slide-over (`fixed`, flips to left under RTL), scrim +
+  Escape to close.
+  - **Header**: title + unread count chip + **Mark all read** (opening no longer
+    auto-marks read) + close. An **All / Unread** filter row (with counts).
+  - **TASKS** section lists every `activitiesAtom` entry (multi-task) — loader mark
+    + label + detail + Running/Finishing + cancel + progress + `%`.
+  - **NOTIFICATIONS** grouped into **New** (unread) / **Today** / **Earlier**
+    (read, by calendar day); sticky section labels. Unread filter shows only New.
+  - Cards tinted by kind via real semantic tokens: success `bg-success-light`, info
+    `bg-carbon-tint`, warning `bg-warning-light`, error `bg-seal-tint`. Read cards
+    dim to `opacity-75`; unread carry a carbon dot. **Per-card actions**: error →
+    **Retry** (marks read + pushes a fresh task), **Mark read** check, and a
+    hover **dismiss** (animated collapse). New arrivals enter via `animate-fade-in-up`.
+  - `Notification.details` (optional) → **Show/Hide details** monospace stack-trace.
+    Timestamps relative (`3 min ago`, `2 hours ago`, `1 day ago`) then absolute
+    (`dd/mm/yyyy, HH:MM`) past 7 days. Footer **Clear all** empties the log.
+- State in `atoms/notifications.ts`: `notificationsAtom` (log),
+  `activitiesAtom` (**`Activity[]`** — in-flight tasks; the beacon derives one
+  combined indicator + aggregate `%`), `beaconOpenAtom`, derived `unreadCountAtom`.
+  The beacon owns the task tick/completion sim; each finished task → a success
+  notification (finalised once via a ref guard).
+- **Toasts are consolidated into the beacon.** All the old `setToasts(...)`
+  call-sites are untouched — the beacon *drains* `toastsAtom`: each toast becomes a
+  persistent notification AND briefly flashes on the pill. The floating
+  `ToastContainer` was removed from the app shell + EntityView; it survives **only**
+  in the catalog view (App's `catalog` branch), where the beacon isn't mounted and
+  `useCopyToast` still needs it.
+
 ## Files view
 - `focusedId` (single click on row) is separate from `selectedIds` (checkboxes).
 - Default focus = `files.find(f => f.isDefault) ?? files[0]`.
@@ -171,6 +223,42 @@ In tree mode, target cards are aggregate rows with inline-expand revealing their
 - Drawer tabs: **Document → Connections → Files → Template** (Document is first by request).
 - Files tab maps over real `files[]` from `data/files.ts` — *not* hardcoded.
 - Connections tab inside the drawer renders `<ConnectionsDrawerSection />`; default panel mode is `tree`.
+
+### Relationship & inherited metadata
+Mirrors Uwazi's relationship properties: a field that connects this entity to
+entities of a target template via a relation type and optionally **inherits** one
+*native* property from each connected entity (single-level only — never inherit an
+inherited value). Several fields sharing a `connectionKey` = **one connection, many
+inherited columns** (multi-inheritance), edited together.
+- **Data**: `MetadataField` got a sibling `RelationshipMetadataField` (`type:
+  "relationship"`, `relationType`, `targetTypeId`, `inheritProperty?`,
+  `inheritLabel?`, `connectedEntityIds`, `connectionKey?`); union `AnyMetadataField`.
+  `metadataFieldsByLanguage` is now `AnyMetadataField[]` (= scalar fields +
+  `relationshipFieldsByLanguage`). Source values live in **`data/entityMetadata.ts`**
+  (`entityMetadataByLanguage`, `getEntityProp`) — entities themselves stay
+  id/title/type. **Consumers that read `.value` must filter relationship fields out**
+  (a `(f): f is MetadataField => f.type !== "relationship"` guard) — done in
+  `MetadataView` read+edit bodies and `MetadataDrawerContent` (drawer stays scalar).
+- **Resolve/group**: `utils/inheritance.ts` — `resolveRelationshipField` (→ values +
+  provenance), `groupConnections` (buckets by `connectionKey` → `ConnectionGroup`s +
+  standalone `singles`), `relationLabel`.
+- **Read UI** (`MetadataReadBody`): hybrid — `ConnectionGroupCard` (a table, entities
+  once × inherited columns) for shared connections, `RelationshipFieldCard` for
+  singletons. Each value = `EntityPill` (click → source preview) + a carbon `Link2`
+  "inherited" marker; missing value → em-dash with a provenance title.
+  `components/metadata/{InheritedValueChip,ConnectionGroupCard,RelationshipFieldCard}`.
+- **Edit UI** (`MetadataEditBody`): inherited values are **read-only**;
+  `RelationshipFieldEditor` (one per connection, keyed) edits the **connection** (entity
+  picker filtered by `targetTypeId`); state is `connections: Record<key, ids>` so
+  multi-inheritance siblings sync. Each row has **"Source"** → opens `EntityOverlay`
+  (the "edit at source" route). The Metadata left pane is wrapped `relative
+  overflow-hidden` with `<EntityOverlay />` mounted so the slide-in is contained.
+- `EntityOverlay` now renders a **Properties** section from `entityMetadata` (the
+  inheritable native values) — also visible from the Relationships view.
+- `TemplateStructure` derives its Inherited group from the real relationship fields
+  (no longer the hardcoded `mechanism`/`signatories` flags).
+- Simplification vs. real Uwazi: connections are explicit `connectedEntityIds` on the
+  field (not derived from `references[]`), so direction/inverse is sidestepped.
 
 ## Import CSV
 The 5 sample rows in `data/imports.ts` are seeded to match `images/screens/import_csv/*.png`. Status set: `completed`, `processing`, `failed`, `completed_warnings`, `completed_errors`, `uploading`, `pending`. `pending` rows render with a grey StatusBadge, grey ProgressBar, em-dashes for entities/failed, and a disabled View button.
