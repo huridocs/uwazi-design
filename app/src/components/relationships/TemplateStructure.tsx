@@ -1,6 +1,6 @@
 import { CaseSensitive, Image, FileVideo, ScrollText, MapPin, CalendarDays, Type, Link2, ListOrdered, HelpCircle } from "lucide-react";
 import { ReactNode } from "react";
-import { metadataFields } from "../../data/metadata";
+import { metadataFields, relationshipFieldsByLanguage } from "../../data/metadata";
 
 interface TemplateProperty {
   icon: ReactNode;
@@ -26,16 +26,23 @@ const headerProperties: TemplateProperty[] = [
   { icon: <FileVideo size={18} />, name: "Document metadata", required: true, type: "generated" },
 ];
 
-// Derive body properties from actual metadata fields
-const bodyProperties: TemplateProperty[] = metadataFields.map((field) => ({
+// Direct (scalar) body properties.
+const directFields: TemplateProperty[] = metadataFields.map((field) => ({
   icon: typeIcons[field.type] || <Type size={18} />,
   name: field.label,
   type: field.type,
-  inherited: field.id === "mechanism" || field.id === "signatories",
 }));
 
-const inheritedFields = bodyProperties.filter((p) => p.inherited);
-const directFields = bodyProperties.filter((p) => !p.inherited);
+// Relationship properties: those that inherit a value are shown in the
+// "Inherited" group; link-only ones sit in the body as plain relationships.
+const relProps = relationshipFieldsByLanguage.EN.map((f) => ({
+  icon: <Link2 size={18} />,
+  name: f.label,
+  type: f.inheritProperty ? `relationship · inherits ${f.inheritLabel}` : "relationship",
+  inherited: !!f.inheritProperty,
+}));
+const inheritedFields = relProps.filter((p) => p.inherited);
+directFields.push(...relProps.filter((p) => !p.inherited));
 
 function PropertyItem({ prop }: { prop: TemplateProperty }) {
   return (

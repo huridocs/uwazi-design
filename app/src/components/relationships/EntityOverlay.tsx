@@ -1,7 +1,9 @@
 import { useAtom, useSetAtom } from "jotai";
 import { useEffect, useRef } from "react";
 import { activeAggregateIdAtom, overlayEntityIdAtom, referencesAtom } from "../../atoms/references";
+import { languageAtom } from "../../atoms/language";
 import { getEntity, getEntityType } from "../../data/entities";
+import { entityMetadataByLanguage } from "../../data/entityMetadata";
 import { EntityPill } from "../shared/EntityPill";
 import { PageTag } from "../shared/PageTag";
 import { FadeTruncate } from "../shared/FadeTruncate";
@@ -11,6 +13,7 @@ export function EntityOverlay() {
   const [entityId, setEntityId] = useAtom(overlayEntityIdAtom);
   const [references] = useAtom(referencesAtom);
   const setActiveAggregateId = useSetAtom(activeAggregateIdAtom);
+  const lang = useAtom(languageAtom)[0];
   const panelRef = useRef<HTMLDivElement>(null);
 
   // Clear the per-aggregate selection highlight whenever the overlay closes.
@@ -118,6 +121,26 @@ export function EntityOverlay() {
               <MetaRow icon={Link2} label="References" value={`${entityRefs.length} in this document`} />
             </div>
           </section>
+
+          {/* Native properties — the values other entities inherit from this
+              one. This is the "source" you'd edit to change an inherited value. */}
+          {entityId && entityMetadataByLanguage[lang]?.[entityId] && (
+            <section className="rounded-lg p-3 space-y-3" style={{ backgroundColor: "var(--bg-warm)" }}>
+              <h4 className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider">
+                Properties
+              </h4>
+              <div className="space-y-2.5">
+                {Object.entries(entityMetadataByLanguage[lang][entityId]).map(([key, value]) => (
+                  <MetaRow
+                    key={key}
+                    icon={Tag}
+                    label={key.charAt(0).toUpperCase() + key.slice(1)}
+                    value={value}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* References to this entity */}
           {entityRefs.length > 0 && (

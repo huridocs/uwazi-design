@@ -1,4 +1,5 @@
 import type { Language } from "../atoms/language";
+import type { RelationType } from "./references";
 
 export interface MetadataField {
   id: string;
@@ -9,6 +10,32 @@ export interface MetadataField {
   items?: { label?: string; value: string }[];
   columns?: { label: string; value: string }[];
 }
+
+/**
+ * A metadata field whose value comes from a RELATIONSHIP: it connects this
+ * entity to entities of `targetTypeId` via `relationType`, and optionally
+ * INHERITS one native property (`inheritProperty`, resolved against
+ * `data/entityMetadata`) from each connected entity.
+ *
+ * `connectionKey` ties sibling fields that share one connection (same relation
+ * + target) together → multi-inheritance: one set of connected entities feeding
+ * several inherited columns, edited (and kept in sync) as a single connection.
+ * Omit `inheritProperty` for a link-only relationship (connected entities, no
+ * inherited value).
+ */
+export interface RelationshipMetadataField {
+  id: string;
+  label: string;
+  type: "relationship";
+  relationType: RelationType;
+  targetTypeId: string;
+  inheritProperty?: string;
+  inheritLabel?: string;
+  connectedEntityIds: string[];
+  connectionKey?: string;
+}
+
+export type AnyMetadataField = MetadataField | RelationshipMetadataField;
 
 // Metadata for the default primary entity: Velásquez-Rodríguez v. Honduras —
 // Merits Judgment of the Inter-American Court of Human Rights, July 29, 1988
@@ -117,7 +144,7 @@ export const metadataFields: MetadataField[] = [
   },
 ];
 
-export const metadataFieldsByLanguage: Record<Language, MetadataField[]> = {
+const scalarFieldsByLanguage: Record<Language, MetadataField[]> = {
   EN: metadataFields,
   ES: [
     {
@@ -302,6 +329,46 @@ export const metadataFieldsByLanguage: Record<Language, MetadataField[]> = {
       ],
     },
   ],
+};
+
+/**
+ * Relationship/inherited fields appended after the scalar fields. The "People
+ * involved" + "Role" pair share `connectionKey: "people"` (multi-inheritance —
+ * one connection, two inherited columns). "Related cases" is link-only (no
+ * inherited value). Connected `e19` has no `entityMetadata` entry, so its
+ * inherited cells show the missing-value state. Connection sets are identical
+ * across languages; only the labels differ.
+ */
+const people = ["e1", "e16", "e17", "e18", "e19"];
+
+export const relationshipFieldsByLanguage: Record<Language, RelationshipMetadataField[]> = {
+  EN: [
+    { id: "rel-people", label: "People involved", type: "relationship", relationType: "relates_to", targetTypeId: "person", inheritProperty: "country", inheritLabel: "Country", connectedEntityIds: people, connectionKey: "people" },
+    { id: "rel-role", label: "Role", type: "relationship", relationType: "relates_to", targetTypeId: "person", inheritProperty: "role", inheritLabel: "Role", connectedEntityIds: people, connectionKey: "people" },
+    { id: "rel-cases", label: "Related cases", type: "relationship", relationType: "cites", targetTypeId: "court_case", connectedEntityIds: ["e13", "e31"] },
+  ],
+  ES: [
+    { id: "rel-people", label: "Personas involucradas", type: "relationship", relationType: "relates_to", targetTypeId: "person", inheritProperty: "country", inheritLabel: "País", connectedEntityIds: people, connectionKey: "people" },
+    { id: "rel-role", label: "Rol", type: "relationship", relationType: "relates_to", targetTypeId: "person", inheritProperty: "role", inheritLabel: "Rol", connectedEntityIds: people, connectionKey: "people" },
+    { id: "rel-cases", label: "Casos relacionados", type: "relationship", relationType: "cites", targetTypeId: "court_case", connectedEntityIds: ["e13", "e31"] },
+  ],
+  FR: [
+    { id: "rel-people", label: "Personnes impliquées", type: "relationship", relationType: "relates_to", targetTypeId: "person", inheritProperty: "country", inheritLabel: "Pays", connectedEntityIds: people, connectionKey: "people" },
+    { id: "rel-role", label: "Rôle", type: "relationship", relationType: "relates_to", targetTypeId: "person", inheritProperty: "role", inheritLabel: "Rôle", connectedEntityIds: people, connectionKey: "people" },
+    { id: "rel-cases", label: "Affaires liées", type: "relationship", relationType: "cites", targetTypeId: "court_case", connectedEntityIds: ["e13", "e31"] },
+  ],
+  AR: [
+    { id: "rel-people", label: "الأشخاص المعنيون", type: "relationship", relationType: "relates_to", targetTypeId: "person", inheritProperty: "country", inheritLabel: "البلد", connectedEntityIds: people, connectionKey: "people" },
+    { id: "rel-role", label: "الدور", type: "relationship", relationType: "relates_to", targetTypeId: "person", inheritProperty: "role", inheritLabel: "الدور", connectedEntityIds: people, connectionKey: "people" },
+    { id: "rel-cases", label: "القضايا ذات الصلة", type: "relationship", relationType: "cites", targetTypeId: "court_case", connectedEntityIds: ["e13", "e31"] },
+  ],
+};
+
+export const metadataFieldsByLanguage: Record<Language, AnyMetadataField[]> = {
+  EN: [...scalarFieldsByLanguage.EN, ...relationshipFieldsByLanguage.EN],
+  ES: [...scalarFieldsByLanguage.ES, ...relationshipFieldsByLanguage.ES],
+  FR: [...scalarFieldsByLanguage.FR, ...relationshipFieldsByLanguage.FR],
+  AR: [...scalarFieldsByLanguage.AR, ...relationshipFieldsByLanguage.AR],
 };
 
 export const pdfMetadata = {

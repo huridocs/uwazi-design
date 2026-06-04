@@ -6,8 +6,18 @@ import { MainTabs } from "../components/layout/MainTabs";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { DocMeta } from "../components/layout/DocMeta";
 import { MetadataCard, Property, PropertyRow } from "../components/metadata/MetadataCard";
+import { ConnectionGroupCard } from "../components/metadata/ConnectionGroupCard";
+import { RelationshipFieldCard } from "../components/metadata/RelationshipFieldCard";
+import { RelationshipFieldEditor } from "../components/metadata/RelationshipFieldEditor";
 import { TemplateStructure } from "../components/relationships/TemplateStructure";
-import { metadataFieldsByLanguage, pdfMetadataByLanguage, MetadataField } from "../data/metadata";
+import { EntityOverlay } from "../components/relationships/EntityOverlay";
+import { groupConnections, relationLabel } from "../utils/inheritance";
+import {
+  metadataFieldsByLanguage,
+  pdfMetadataByLanguage,
+  type MetadataField,
+  type RelationshipMetadataField,
+} from "../data/metadata";
 import { documentsByLanguage } from "../data/document";
 import { filesAtom } from "../atoms/files";
 import { languageAtom, type Language } from "../atoms/language";
@@ -70,7 +80,10 @@ export function MetadataView({ tabs, activeTab, onTabChange }: MetadataViewProps
 
 function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?: ReactNode }) {
   const language = useAtom(languageAtom)[0];
-  const fields = metadataFieldsByLanguage[language];
+  const allFields = metadataFieldsByLanguage[language];
+  const fields = allFields.filter((f): f is MetadataField => f.type !== "relationship");
+  const relFields = allFields.filter((f): f is RelationshipMetadataField => f.type === "relationship");
+  const { groups, singles } = groupConnections(relFields, language);
   const pdf = pdfMetadataByLanguage[language];
 
   return (
@@ -136,6 +149,16 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
               </MetadataCard>
             );
           })}
+
+          {/* Relationship / inherited fields. Shared connections (multi-
+              inheritance) render as one grouped table; standalone relationship
+              fields get their own card. */}
+          {groups.map((group) => (
+            <ConnectionGroupCard key={group.connectionKey} group={group} />
+          ))}
+          {singles.map((field) => (
+            <RelationshipFieldCard key={field.id} field={field} />
+          ))}
         </div>
       </div>
 
@@ -168,7 +191,11 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
 function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void; onSave: () => void; menuSlot?: ReactNode }) {
   const language = useAtom(languageAtom)[0];
   const doc = documentsByLanguage[language];
-  const initialFields = metadataFieldsByLanguage[language];
+  // Scalar fields edit inline here; relationship fields are edited via the
+  // connection editor (Phase 2).
+  const initialFields = metadataFieldsByLanguage[language].filter(
+    (f): f is MetadataField => f.type !== "relationship",
+  );
   const pdf = pdfMetadataByLanguage[language];
   const [title, setTitle] = useState(doc.title);
   const [fields, setFields] = useState<MetadataField[]>(initialFields);
@@ -179,6 +206,36 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
   const updateField = (id: string, value: string) => {
     setFields((prev) => prev.map((f) => (f.id === id ? { ...f, value } : f)));
   };
+
+  // Relationship fields → one editor per connection. The connection (entity
+  // set) is the source of truth, keyed so multi-inheritance siblings sync.
+  const relFields = metadataFieldsByLanguage[language].filter(
+    (f): f is RelationshipMetadataField => f.type === "relationship",
+  );
+  const { groups, singles } = groupConnections(relFields, language);
+  const connectionDefs = [
+    ...groups.map((g) => ({
+      key: g.connectionKey,
+      title: g.label,
+      relationLabel: g.relationLabel,
+      targetTypeId: g.targetTypeId,
+      columns: g.columns,
+      entityIds: g.rows.map((r) => r.entityId),
+    })),
+    ...singles.map((f) => ({
+      key: f.id,
+      title: f.label,
+      relationLabel: relationLabel(f.relationType),
+      targetTypeId: f.targetTypeId,
+      columns: f.inheritProperty
+        ? [{ fieldId: f.id, label: f.inheritLabel ?? f.label, inheritProperty: f.inheritProperty }]
+        : [],
+      entityIds: f.connectedEntityIds,
+    })),
+  ];
+  const [connections, setConnections] = useState<Record<string, string[]>>(() =>
+    Object.fromEntries(connectionDefs.map((d) => [d.key, d.entityIds])),
+  );
 
   return (
     <>
@@ -317,6 +374,20 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
               ))}
             </EditSection>
           ))}
+
+        {/* Relationship fields — edit the connection; inherited values shown
+            read-only. One editor per connection (siblings sync). */}
+        {connectionDefs.map((d) => (
+          <RelationshipFieldEditor
+            key={d.key}
+            title={d.title}
+            relationLabel={d.relationLabel}
+            targetTypeId={d.targetTypeId}
+            columns={d.columns}
+            entityIds={connections[d.key] ?? d.entityIds}
+            onChange={(ids) => setConnections((prev) => ({ ...prev, [d.key]: ids }))}
+          />
+        ))}
       </div>
 
       {/* Edit action bar */}
@@ -464,7 +535,10 @@ function MetadataDrawer() {
   ];
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="relative flex flex-col h-full overflow-hidden">
+      {/* Clicking a connected entity in a metadata relationship field opens its
+          source preview here in the drawer (not as a slide-over on the left). */}
+      <EntityOverlay />
       <DrawerTabs tabs={drawerTabs} activeId={activeDrawerTab} onChange={setActiveDrawerTab} />
 
       {activeDrawerTab === "document" ? (

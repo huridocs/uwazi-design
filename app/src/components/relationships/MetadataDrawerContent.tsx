@@ -3,7 +3,7 @@ import { useAtomValue } from "jotai";
 import { ChevronDown, ChevronRight, ExternalLink, FileText, Music, Video, Image, Link2 } from "lucide-react";
 import { languageAtom } from "../../atoms/language";
 import { documentsByLanguage } from "../../data/document";
-import { metadataFieldsByLanguage, pdfMetadataByLanguage } from "../../data/metadata";
+import { metadataFieldsByLanguage, pdfMetadataByLanguage, type MetadataField } from "../../data/metadata";
 import { FileEntry } from "../../data/files";
 import { filesAtom, documentGroupsAtom } from "../../atoms/files";
 import { EntityPill } from "../shared/EntityPill";
@@ -20,7 +20,11 @@ const fileTypeIcons: Record<FileEntry["type"], typeof FileText> = {
 export function MetadataDrawerContent() {
   const language = useAtomValue(languageAtom);
   const doc = documentsByLanguage[language];
-  const fields = metadataFieldsByLanguage[language];
+  // Condensed scalar summary — relationship/inherited fields live in the main
+  // Metadata view, not this drawer.
+  const fields = metadataFieldsByLanguage[language].filter(
+    (f): f is MetadataField => f.type !== "relationship",
+  );
   const pdf = pdfMetadataByLanguage[language];
   const allFiles = useAtomValue(filesAtom);
   const allGroups = useAtomValue(documentGroupsAtom);
