@@ -37,6 +37,7 @@ import {
   SegmentedTabsDemo,
   DrawerTabsDemo,
   MainTabsDemo,
+  IsolatedBeacon,
   FileTableDemo,
   IsolatedSearchBar,
   IsolatedFiltersRow,
@@ -422,6 +423,22 @@ export function ComponentCatalog({ onReturn }: Props) {
 />`}
                 >
                   <DrawerTabsDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="ev-beacon" ref={reg("ev-beacon")}>
+                <CatalogEntry
+                  name="Beacon"
+                  description="Navbar notification beacon — a colour-coded loader mark (seal/amber/carbon/black by severity, animated while processing) that expands on a new task or hover, and opens the notifications drawer on click"
+                  code={`// State lives in atoms/notifications.ts
+//   activityAtom        — the in-flight task (animates the mark + TASKS)
+//   notificationsAtom   — past events (the drawer log)
+//   beaconOpenAtom      — drawer open?
+// Collapsed = the UwaziLoader mark; expands for a task intro / on hover.
+// Renders <NotificationsDrawer /> internally.
+<Beacon />`}
+                >
+                  <IsolatedBeacon />
                 </CatalogEntry>
               </div>
             </div>

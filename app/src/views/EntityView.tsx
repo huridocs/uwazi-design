@@ -12,7 +12,6 @@ import { MetadataDrawerContent } from "../components/relationships/MetadataDrawe
 import { ToCPanel } from "../components/relationships/ToCPanel";
 import { CreateRelationshipModal } from "../components/relationships/CreateRelationshipModal";
 import { ManageRelationTypesModal } from "../components/relationships/ManageRelationTypesModal";
-import { ToastContainer } from "./ToastContainer";
 import { FilesView } from "./FilesView";
 import { MetadataView } from "./MetadataView";
 import { RelationshipsView } from "./RelationshipsView";
@@ -43,7 +42,6 @@ export function EntityView() {
         <MetadataView tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
         <CreateRelationshipModal />
         <ManageRelationTypesModal />
-        <ToastContainer />
       </>
     );
   }
@@ -52,7 +50,6 @@ export function EntityView() {
     return (
       <>
         <FilesView tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
-        <ToastContainer />
       </>
     );
   }
@@ -63,7 +60,6 @@ export function EntityView() {
         <RelationshipsView tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
         <CreateRelationshipModal />
         <ManageRelationTypesModal />
-        <ToastContainer />
       </>
     );
   }
@@ -114,7 +110,6 @@ export function EntityView() {
       />
       <CreateRelationshipModal />
       <ManageRelationTypesModal />
-      <ToastContainer />
     </>
   );
 }

@@ -32,6 +32,7 @@ export const sidebarGroups: SidebarGroup[] = [
       { id: "ev-main-tabs", label: "MainTabs" },
       { id: "ev-segmented-tabs", label: "SegmentedTabs" },
       { id: "ev-drawer-tabs", label: "DrawerTabs" },
+      { id: "ev-beacon", label: "Beacon" },
     ],
   },
   {

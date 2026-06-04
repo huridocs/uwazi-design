@@ -6,6 +6,7 @@ import { ChevronDown } from "lucide-react";
 import { SegmentedTabs } from "../../components/layout/SegmentedTabs";
 import { DrawerTabs } from "../../components/layout/DrawerTabs";
 import { MainTabs } from "../../components/layout/MainTabs";
+import { Beacon } from "../../components/layout/Beacon";
 import { FileTable } from "../../components/files/FileTable";
 import { FiltersRow, ViewModeControls, CollapseControls } from "../../components/relationships/FiltersRow";
 import { FiltersButton } from "../../components/shared/FiltersButton";
@@ -127,6 +128,19 @@ export function IsolatedSearchBar() {
         </svg>
       </div>
     </div>
+  );
+}
+
+export function IsolatedBeacon() {
+  // Fresh store → the demo runs its own seeded import + notifications and
+  // ticks to completion independently of the live navbar instance.
+  const store = createStore();
+  return (
+    <Provider store={store}>
+      <div className="relative h-[52px] w-full bg-paper border border-border-soft rounded-lg flex items-center justify-end px-4">
+        <Beacon />
+      </div>
+    </Provider>
   );
 }
 

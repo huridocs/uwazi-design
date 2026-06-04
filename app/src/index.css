@@ -202,6 +202,43 @@ button:not(:disabled) {
   animation: slide-in-right 0.2s ease-out;
 }
 
+/* Beacon morph — springy easing shared by the pill ↔ panel transition */
+.beacon-spring {
+  transition-timing-function: cubic-bezier(0.34, 1.4, 0.5, 1);
+}
+/* Panel content settles in just after the shell finishes growing */
+@keyframes beacon-content-in {
+  from { opacity: 0; transform: translateY(-0.375rem) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-beacon-content {
+  animation: beacon-content-in 0.28s cubic-bezier(0.34, 1.4, 0.5, 1) 0.04s both;
+}
+/* Live-activity rail content swap */
+@keyframes beacon-rail-in {
+  from { opacity: 0; transform: translateY(0.25rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-beacon-rail {
+  animation: beacon-rail-in 0.22s ease-out;
+}
+/* Attention pop — fires when a new activity/notification lands */
+@keyframes beacon-pop {
+  0% { transform: scale(1); }
+  42% { transform: scale(1.055); }
+  100% { transform: scale(1); }
+}
+.animate-beacon-pop {
+  animation: beacon-pop 0.46s cubic-bezier(0.34, 1.45, 0.5, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beacon-spring { transition-duration: 0.001ms !important; }
+  .animate-beacon-content,
+  .animate-beacon-rail,
+  .animate-beacon-pop { animation: none !important; }
+}
+
 /* Uwazi loader — left-to-right sweep across 3×2 grid
    Cells light up column by column: [0,3] → [1,4] → [2,5]
    Each cell fades in then out with overlap for a fluid sweep */

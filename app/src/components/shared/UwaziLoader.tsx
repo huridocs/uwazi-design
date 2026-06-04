@@ -1,6 +1,8 @@
 interface UwaziLoaderProps {
   size?: "xs" | "sm" | "md" | "lg";
-  color?: "default" | "white";
+  color?: "default" | "white" | "muted" | "carbon" | "seal" | "warning";
+  /** When false, renders the static brand mark (no sweep). Default true. */
+  animate?: boolean;
 }
 
 const sizes = {
@@ -10,9 +12,18 @@ const sizes = {
   lg: { cell: 16, gap: 4 },
 };
 
-export function UwaziLoader({ size = "md", color = "default" }: UwaziLoaderProps) {
+const colors: Record<NonNullable<UwaziLoaderProps["color"]>, string> = {
+  default: "var(--text-primary)",
+  white: "#FFFFFF",
+  muted: "var(--text-muted)",
+  carbon: "var(--accent-blue)",
+  seal: "var(--accent-seal)",
+  warning: "var(--warning)",
+};
+
+export function UwaziLoader({ size = "md", color = "default", animate = true }: UwaziLoaderProps) {
   const { cell, gap } = sizes[size];
-  const bg = color === "white" ? "#FFFFFF" : "var(--text-primary)";
+  const bg = colors[color];
 
   return (
     <div
@@ -22,13 +33,15 @@ export function UwaziLoader({ size = "md", color = "default" }: UwaziLoaderProps
         gridTemplateRows: `repeat(2, ${cell}px)`,
         gap,
       }}
-      role="status"
-      aria-label="Loading"
+      role={animate ? "status" : undefined}
+      aria-label={animate ? "Loading" : undefined}
     >
       {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={i}
-          className="uwazi-loader-cell rounded-[1px]"
+          // The sweep lives on `uwazi-loader-cell`; without it the cells rest
+          // at full opacity — the static brand mark.
+          className={animate ? "uwazi-loader-cell rounded-[1px]" : "rounded-[1px]"}
           style={{
             width: cell,
             height: cell,

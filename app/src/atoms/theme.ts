@@ -6,8 +6,11 @@ export type Theme = "light" | "dark" | "auto";
 /** The concrete theme actually painted — "auto" resolves to one of these. */
 export type ResolvedTheme = "light" | "dark";
 
+// The toggle is a plain light ↔ dark switch; a previously-stored "auto" is
+// coerced to "light" so the (retired) monitor icon never shows. `auto` stays in
+// the type / resolveTheme in case a dedicated control wants it back later.
 export const themeAtom = atom<Theme>(
-  (typeof window !== "undefined" && (localStorage.getItem("theme") as Theme)) || "light"
+  (typeof window !== "undefined" && localStorage.getItem("theme")) === "dark" ? "dark" : "light"
 );
 
 /** Read the current OS colour-scheme preference. */
