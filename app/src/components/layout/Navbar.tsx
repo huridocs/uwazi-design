@@ -161,19 +161,19 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
         )}
       </div>
 
-      {/* Right: Assistant + Notifications + Settings + Theme toggle */}
+      {/* Right: Notifications + Assistant + Settings + Theme toggle */}
       <div className="flex items-center gap-2">
+        {!showingCatalog && <Beacon rtl={rtl} />}
         {!showingCatalog && (
           <button
             onClick={() => openAgent(true)}
             className="flex items-center gap-1.5 px-2.5 h-7 text-[13px] font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors"
-            title={`Assistant (${shortcutLabel})`}
+            title={`Ask Bert (${shortcutLabel})`}
           >
             <Sparkles size={14} className="text-carbon" />
-            {!isMobile && "Ask"}
+            {!isMobile && "Ask Bert"}
           </button>
         )}
-        {!showingCatalog && <Beacon rtl={rtl} />}
         {showingCatalog ? (
           <button
             onClick={onLogoClick}
