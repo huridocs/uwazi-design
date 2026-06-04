@@ -22,7 +22,7 @@ import {
 import type { Theme } from "../../atoms/theme";
 import type { AppView } from "../../atoms/navigation";
 import { breakpointAtom } from "../../atoms/viewport";
-import { agentOpenAtom } from "../../atoms/agent";
+import { agentOpenAtom, shortcutLabel } from "../../atoms/agent";
 import { MobileBottomSheet } from "./MobileBottomSheet";
 import { Beacon } from "./Beacon";
 
@@ -167,7 +167,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
           <button
             onClick={() => openAgent(true)}
             className="flex items-center gap-1.5 px-2.5 h-7 text-[13px] font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors"
-            title="Assistant (⌘K)"
+            title={`Assistant (${shortcutLabel})`}
           >
             <Sparkles size={14} className="text-carbon" />
             {!isMobile && "Ask"}

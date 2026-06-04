@@ -8,6 +8,7 @@ import {
   scopePresets,
   scopeLabels,
   scopeIdForSources,
+  shortcutLabel,
   type ContextSource,
   type ScopeId,
   type AgentMessage,
@@ -127,7 +128,7 @@ export function AgentModal() {
           <div className="flex items-center gap-2 px-4 h-11">
             <Sparkles size={15} className="text-carbon" />
             <span className="text-sm font-semibold text-ink">Assistant</span>
-            <kbd className="px-1.5 py-0.5 text-[10px] font-medium text-ink-muted bg-warm rounded leading-none">⌘K</kbd>
+            <kbd className="px-1.5 py-0.5 text-[10px] font-medium text-ink-muted bg-warm rounded leading-none">{shortcutLabel}</kbd>
             <button
               onClick={() => setOpen(false)}
               className="ml-auto flex items-center justify-center w-7 h-7 rounded-md text-ink-muted hover:bg-warm hover:text-ink-secondary transition-colors"

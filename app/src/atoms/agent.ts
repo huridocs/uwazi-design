@@ -37,6 +37,11 @@ export const scopeLabels: Record<ScopeId, string> = {
   none: "None",
 };
 
+/** Shortcut hint label — ⌘K on macOS, Ctrl K elsewhere. The handler binds
+ *  both meta and ctrl, so the key works cross-platform regardless. */
+const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
+export const shortcutLabel = isMac ? "⌘K" : "Ctrl K";
+
 export const agentOpenAtom = atom(false);
 
 /** The enabled context sources — the source of truth. Presets set this; the
