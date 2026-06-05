@@ -213,6 +213,33 @@ expandable stack traces + Clear).
   in the catalog view (App's `catalog` branch), where the beacon isn't mounted and
   `useCopyToast` still needs it.
 
+## Bert — the agent assistant
+A centered modal (`components/agent/AgentModal.tsx`, state in `atoms/agent.ts`)
+mounted in `App` (both branches) so it opens from anywhere. **Named "Bert" as a
+HURIDOCS tribute** — surface the name, keep the code identifiers (`agent*`).
+- **Open**: navbar **"Ask Bert"** button (right cluster, *right* of the Beacon) or
+  global **⌘K / Ctrl K** (handler binds meta+ctrl; `shortcutLabel` shows the right
+  glyph per platform). Escape / scrim closes.
+- **Identity = the two Uwazi squares** (Seal above Carbon) via the `BertMark`
+  component — header lockup (staggered drop-in on open), empty state, and chat
+  avatars. The 6-square `UwaziLoader` is reserved for the *working* indicator (send
+  button while thinking). Don't use a generic sparkle/grid for Bert.
+- **Replies are mocked** — streamed word-by-word, varied by intent
+  (summarize/find/extract/relationship/default). A task-y prompt ("re-process…")
+  pushes an `activitiesAtom` entry → tracked in the Beacon (close-and-keep-working).
+- **Context = a dynamic chain**: `agentScopeAtom` (`auto/document/view/library/none`)
+  sets the spine (Library › View › Document); `agentChainAtom` (`ChainNode[]`) appends
+  nodes via **"+ Add"** → Deepen (Page/Selection), Facets (Template/Connections/Files),
+  Attach (Entity…/File… via a search picker). Scope nodes follow the selector;
+  appended nodes are removable. **No contradictory combos** (it's a narrowing chain,
+  not arbitrary toggles). Context dropdowns render in a **viewport-clamped portal**
+  (`createPortal`) because the modal is `overflow-hidden`.
+- **Layout**: landscape on desktop (`max-w-[46rem]`, `max-h-[min(70vh,34rem)]`),
+  anchored to the **lower third** (`items-end`, `pb-[8vh]`), gentle rise + fading
+  scrim entrance (`animate-agent-modal` / `agent-scrim`, `index.css`), `px-5` content.
+- Send button: arrow when idle (active = ink + white arrow on focus/text); the Uwazi
+  mark animates while thinking. Input auto-focuses on open.
+
 ## Files view
 - `focusedId` (single click on row) is separate from `selectedIds` (checkboxes).
 - Default focus = `files.find(f => f.isDefault) ?? files[0]`.
