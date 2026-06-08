@@ -29,6 +29,8 @@ export const entityMetadataByLanguage: Record<Language, EntityMetadata> = {
     // e19 intentionally absent → demonstrates a missing inherited value.
     e13: { country: "Honduras", region: "Central America" },
     e31: { country: "El Salvador", region: "Central America" },
+    // e32 has country but no region → missing single-inherited value.
+    e32: { country: "Uruguay" },
   },
   ES: {
     e1: { country: "Argentina", role: "Peticionario" },
@@ -37,6 +39,7 @@ export const entityMetadataByLanguage: Record<Language, EntityMetadata> = {
     e18: { country: "Chile", role: "Perito" },
     e13: { country: "Honduras", region: "Centroamérica" },
     e31: { country: "El Salvador", region: "Centroamérica" },
+    e32: { country: "Uruguay" },
   },
   FR: {
     e1: { country: "Argentine", role: "Requérant" },
@@ -45,6 +48,7 @@ export const entityMetadataByLanguage: Record<Language, EntityMetadata> = {
     e18: { country: "Chili", role: "Témoin expert" },
     e13: { country: "Honduras", region: "Amérique centrale" },
     e31: { country: "El Salvador", region: "Amérique centrale" },
+    e32: { country: "Uruguay" },
   },
   AR: {
     e1: { country: "الأرجنتين", role: "مقدِّم الطلب" },
@@ -53,6 +57,7 @@ export const entityMetadataByLanguage: Record<Language, EntityMetadata> = {
     e18: { country: "تشيلي", role: "شاهد خبير" },
     e13: { country: "هندوراس", region: "أمريكا الوسطى" },
     e31: { country: "السلفادور", region: "أمريكا الوسطى" },
+    e32: { country: "أوروغواي" },
   },
 };
 

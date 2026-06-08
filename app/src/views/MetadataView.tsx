@@ -1,11 +1,12 @@
 import { useState, type ReactNode } from "react";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { Download, Search } from "lucide-react";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { DocMeta } from "../components/layout/DocMeta";
 import { MetadataCard, Property, PropertyRow } from "../components/metadata/MetadataCard";
+import { spanClass, fieldSpan } from "../components/metadata/cardSpan";
 import { ConnectionGroupCard } from "../components/metadata/ConnectionGroupCard";
 import { RelationshipFieldCard } from "../components/metadata/RelationshipFieldCard";
 import { RelationshipFieldEditor } from "../components/metadata/RelationshipFieldEditor";
@@ -21,8 +22,10 @@ import {
 import { documentsByLanguage } from "../data/document";
 import { filesAtom } from "../atoms/files";
 import { languageAtom, type Language } from "../atoms/language";
+import { entityMetadataAtom, makeEntityPropReader } from "../atoms/entityMetadata";
 import { DrawerFilesBody } from "../components/files/DrawerFilesBody";
 import { ViewButton } from "../components/shared/ViewButton";
+import { EditInput } from "../components/metadata/EditInput";
 import { referencesAtom } from "../atoms/references";
 import { RelationshipsDrawerSection } from "../components/relationships/RelationshipsDrawerSection";
 import { DocumentViewer } from "../components/viewer/DocumentViewer";
@@ -80,10 +83,11 @@ export function MetadataView({ tabs, activeTab, onTabChange }: MetadataViewProps
 
 function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?: ReactNode }) {
   const language = useAtom(languageAtom)[0];
+  const getProp = makeEntityPropReader(useAtomValue(entityMetadataAtom));
   const allFields = metadataFieldsByLanguage[language];
   const fields = allFields.filter((f): f is MetadataField => f.type !== "relationship");
   const relFields = allFields.filter((f): f is RelationshipMetadataField => f.type === "relationship");
-  const { groups, singles } = groupConnections(relFields, language);
+  const { groups, singles } = groupConnections(relFields, language, getProp);
   const pdf = pdfMetadataByLanguage[language];
 
   return (
@@ -118,16 +122,8 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
           </MetadataCard>
 
           {fields.map((field) => {
-            // Large fields span more columns
-            const span =
-              field.type === "multiline"
-                ? "col-span-1 md:col-span-2 xl:col-span-3"
-                : field.type === "file-list"
-                  ? "col-span-1 md:col-span-2 xl:col-span-2"
-                  : "col-span-1";
-
             return (
-              <MetadataCard key={field.id} title={field.label} className={span}>
+              <MetadataCard key={field.id} title={field.label} className={spanClass(fieldSpan(field))}>
                 {field.type === "multiline" ? (
                   <p className="text-sm font-medium text-ink leading-relaxed">{field.value}</p>
                 ) : field.type === "country" ? (
@@ -152,7 +148,15 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
 
           {/* Relationship / inherited fields. Shared connections (multi-
               inheritance) render as one grouped table; standalone relationship
-              fields get their own card. */}
+              fields get their own card. A plain band separates them from the
+              scalar fields above — no border/colour accent. */}
+          {(groups.length > 0 || singles.length > 0) && (
+            <div className={`${spanClass("full")} mt-2 flex items-center`}>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-tertiary">
+                Relationships
+              </h3>
+            </div>
+          )}
           {groups.map((group) => (
             <ConnectionGroupCard key={group.connectionKey} group={group} />
           ))}
@@ -376,7 +380,13 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
           ))}
 
         {/* Relationship fields — edit the connection; inherited values shown
-            read-only. One editor per connection (siblings sync). */}
+            read-only. One editor per connection (siblings sync). The band
+            mirrors the read-mode "Relationships" separator. */}
+        {connectionDefs.length > 0 && (
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-tertiary pt-2">
+            Relationships
+          </h3>
+        )}
         {connectionDefs.map((d) => (
           <RelationshipFieldEditor
             key={d.key}
@@ -425,24 +435,6 @@ function EditSection({ label, icon, children }: { label: string; icon?: React.Re
         </div>
       )}
       {children}
-    </div>
-  );
-}
-
-function EditInput({ label, value, placeholder }: { label: string; value: string; placeholder?: string }) {
-  const [val, setVal] = useState(value);
-  return (
-    <div className="flex-1">
-      {label && <span className="text-xs text-ink-tertiary">{label}</span>}
-      <input
-        type="text"
-        value={val}
-        onChange={(e) => setVal(e.target.value)}
-        placeholder={placeholder}
-        className="w-full px-3 py-1.5 text-sm text-ink bg-paper border border-border rounded-md
-          focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40
-          placeholder:text-ink-muted"
-      />
     </div>
   );
 }

@@ -57,7 +57,13 @@ export const sidebarGroups: SidebarGroup[] = [
   },
   {
     label: "Entity View — Metadata",
-    items: [{ id: "ev-metadata-card", label: "MetadataCard" }],
+    items: [
+      { id: "ev-metadata-card", label: "MetadataCard" },
+      { id: "ev-connection-group-card", label: "ConnectionGroupCard · multi-inherit" },
+      { id: "ev-relationship-field-card", label: "RelationshipFieldCard · single + link" },
+      { id: "ev-inherited-value-chip", label: "InheritedValueChip" },
+      { id: "ev-relationship-field-editor", label: "RelationshipFieldEditor" },
+    ],
   },
   {
     label: "Entity View — Files",

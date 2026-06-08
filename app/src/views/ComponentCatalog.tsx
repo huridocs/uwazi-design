@@ -63,6 +63,10 @@ import {
   IsolatedViewControls,
   IsolatedSortControl,
   IsolatedDirectionGlyph,
+  IsolatedConnectionGroupCard,
+  IsolatedRelationshipFieldCard,
+  IsolatedInheritedValueChip,
+  IsolatedRelationshipFieldEditor,
 } from "./catalog/demos";
 
 import { sidebarGroups, allItemIds } from "./catalog/sidebarGroups";
@@ -638,6 +642,56 @@ export function ComponentCatalog({ onReturn }: Props) {
                       <Property label="Mechanism" value="Corte IDH" linked />
                     </MetadataCard>
                   </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="ev-connection-group-card" ref={reg("ev-connection-group-card")}>
+                <CatalogEntry
+                  name="ConnectionGroupCard · multi-inheritance"
+                  description="One connection, many inherited columns. Sibling relationship fields sharing a connectionKey collapse into a single table — entities listed once (rows), each inherited property a column. Missing source values show an em-dash."
+                  code={`const { groups } = groupConnections(relationshipFieldsByLanguage.EN, "EN");
+<ConnectionGroupCard group={groups[0]} span="full" />`}
+                >
+                  <IsolatedConnectionGroupCard />
+                </CatalogEntry>
+              </div>
+
+              <div id="ev-relationship-field-card" ref={reg("ev-relationship-field-card")}>
+                <CatalogEntry
+                  name="RelationshipFieldCard · single-inheritance + link-only"
+                  description="A standalone relationship field. Top: single-inheritance (Related cases → inherits Region, one row missing its value). Bottom: link-only (Rights invoked — connected entities, no inherited value, '· linked' caption)."
+                  code={`<RelationshipFieldCard field={relCases} />   {/* inherits Region */}
+<RelationshipFieldCard field={relRights} />  {/* link-only */}`}
+                >
+                  <IsolatedRelationshipFieldCard />
+                </CatalogEntry>
+              </div>
+
+              <div id="ev-inherited-value-chip" ref={reg("ev-inherited-value-chip")}>
+                <CatalogEntry
+                  name="InheritedValueChip + RelationCaption"
+                  description="One connected-entity row: an entity pill (opens the source preview) and its carbon-accented inherited value, or an em-dash when the source has none. RelationCaption is the shared provenance line used by every relationship card."
+                  code={`<RelationCaption relationLabel="Cites" inheritLabel="Region" />
+<InheritedValueChip value={v} inherits relationLabel="Cites" />`}
+                >
+                  <IsolatedInheritedValueChip />
+                </CatalogEntry>
+              </div>
+
+              <div id="ev-relationship-field-editor" ref={reg("ev-relationship-field-editor")}>
+                <CatalogEntry
+                  name="RelationshipFieldEditor"
+                  description="Edits one connection: add/remove connected entities (search filtered by target type). Inherited values are read-only previews — change the connection here, or edit the value at its source entity."
+                  code={`<RelationshipFieldEditor
+  title="People involved"
+  relationLabel="Relates to"
+  targetTypeId="person"
+  columns={columns}
+  entityIds={ids}
+  onChange={setIds}
+/>`}
+                >
+                  <IsolatedRelationshipFieldEditor />
                 </CatalogEntry>
               </div>
             </div>

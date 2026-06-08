@@ -34,6 +34,12 @@ import { manageRelationTypesOpenAtom } from "../../atoms/references";
 import { groupingOptions } from "../../utils/connectionGrouping";
 import { references } from "../../data/references";
 import { files } from "../../data/files";
+import { ConnectionGroupCard } from "../../components/metadata/ConnectionGroupCard";
+import { RelationshipFieldCard } from "../../components/metadata/RelationshipFieldCard";
+import { InheritedValueChip, RelationCaption } from "../../components/metadata/InheritedValueChip";
+import { RelationshipFieldEditor } from "../../components/metadata/RelationshipFieldEditor";
+import { groupConnections, resolveRelationshipField } from "../../utils/inheritance";
+import { relationshipFieldsByLanguage } from "../../data/metadata";
 
 // Re-export so the catalog can use it directly without re-importing.
 export { FadeTruncate };
@@ -252,6 +258,88 @@ export function IsolatedActionBar() {
         <ActionBar numPages={15} onScrollToPage={() => {}} />
       </div>
     </Provider>
+  );
+}
+
+/* ── Metadata: relationship & inherited fields ── */
+
+/** Multi-inheritance: the "People involved" connection (country + role columns)
+ *  rendered as one table. */
+export function IsolatedConnectionGroupCard() {
+  const store = createStore();
+  const { groups } = groupConnections(relationshipFieldsByLanguage.EN, "EN");
+  return (
+    <Provider store={store}>
+      <div className="flex flex-col gap-3 max-w-2xl">
+        {groups.map((g) => (
+          <ConnectionGroupCard key={g.connectionKey} group={g} span="single" />
+        ))}
+      </div>
+    </Provider>
+  );
+}
+
+/** Single-inheritance ("Related cases" → Region) and link-only ("Rights
+ *  invoked") on the same lightweight card. */
+export function IsolatedRelationshipFieldCard() {
+  const store = createStore();
+  const fields = relationshipFieldsByLanguage.EN;
+  const single = fields.find((f) => f.id === "rel-cases")!;
+  const link = fields.find((f) => f.id === "rel-rights")!;
+  return (
+    <Provider store={store}>
+      <div className="flex flex-col gap-3 max-w-md">
+        <RelationshipFieldCard field={single} span="single" />
+        <RelationshipFieldCard field={link} span="single" />
+      </div>
+    </Provider>
+  );
+}
+
+/** One connected-entity row: pill + inherited value, plus the missing-value
+ *  (em-dash) state. */
+export function IsolatedInheritedValueChip() {
+  const store = createStore();
+  const field = relationshipFieldsByLanguage.EN.find((f) => f.id === "rel-cases")!;
+  const resolved = resolveRelationshipField(field, "EN");
+  return (
+    <Provider store={store}>
+      <div className="flex flex-col gap-2 max-w-sm">
+        <RelationCaption relationLabel={resolved.relationLabel} inheritLabel={field.inheritLabel} />
+        {resolved.values.map((v) => (
+          <InheritedValueChip key={v.entityId} value={v} inherits relationLabel={resolved.relationLabel} />
+        ))}
+      </div>
+    </Provider>
+  );
+}
+
+/** The connection editor — add/remove entities; inherited previews are
+ *  read-only. Stateful so the catalog demo is interactive. */
+export function IsolatedRelationshipFieldEditor() {
+  const store = createStore();
+  return (
+    <Provider store={store}>
+      <RelationshipFieldEditorDemo />
+    </Provider>
+  );
+}
+
+function RelationshipFieldEditorDemo() {
+  const { groups } = groupConnections(relationshipFieldsByLanguage.EN, "EN");
+  const g = groups[0];
+  const [ids, setIds] = useState<string[]>(g.rows.map((r) => r.entityId));
+  return (
+    <div className="max-w-md">
+      <RelationshipFieldEditor
+        title={g.label}
+        relationLabel={g.relationLabel}
+        targetTypeId={g.targetTypeId}
+        columns={g.columns}
+        entityIds={ids}
+        onChange={setIds}
+      />
+    </div>
   );
 }
 

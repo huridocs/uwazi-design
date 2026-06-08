@@ -25,18 +25,29 @@ export function InheritedMarker({
   );
 }
 
-/** A small caption under a relationship card title: where the value comes from. */
+/** Shared caption under every relationship card title: where the value comes
+ *  from. `inheritCount` drives the multi-inheritance variant ("N inherited
+ *  properties"); otherwise `inheritLabel` → "inherits X" and a bare relation →
+ *  "linked". One caption for all three tiers keeps the provenance line identical. */
 export function RelationCaption({
   relationLabel,
   inheritLabel,
+  inheritCount,
 }: {
   relationLabel: string;
   inheritLabel?: string;
+  inheritCount?: number;
 }) {
   return (
     <p className="text-[11px] text-ink-tertiary -mt-1">
       via <span className="text-carbon font-medium">{relationLabel}</span>
-      {inheritLabel ? <> · inherits {inheritLabel}</> : <> · linked</>}
+      {inheritCount != null ? (
+        <> · {inheritCount} inherited {inheritCount === 1 ? "property" : "properties"}</>
+      ) : inheritLabel ? (
+        <> · inherits {inheritLabel}</>
+      ) : (
+        <> · linked</>
+      )}
     </p>
   );
 }
