@@ -1,5 +1,5 @@
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { referencesAtom, scrollToHighlightAtom, scrollToRefAtom, activeRefIdAtom, activeDrawerTabAtom, expandGroupForRefAtom } from "../../atoms/references";
+import { scopedReferencesAtom, scrollToHighlightAtom, scrollToRefAtom, activeRefIdAtom, activeDrawerTabAtom, expandGroupForRefAtom } from "../../atoms/references";
 import { collapseAllSignalAtom, searchQueryAtom, activeClusterRefIdsAtom } from "../../atoms/filters";
 import { currentPageAtom } from "../../atoms/selection";
 import { activePrimaryGroupIdAtom } from "../../atoms/files";
@@ -27,7 +27,7 @@ interface ClusterInfo {
 const DOT_SIZE = 10;
 
 export function RefMinimap({ numPages }: RefMinimapProps) {
-  const [references] = useAtom(referencesAtom);
+  const [references] = useAtom(scopedReferencesAtom);
   const [activeRefId, setActiveRefId] = useAtom(activeRefIdAtom);
   const setScrollToHighlight = useSetAtom(scrollToHighlightAtom);
   const setScrollToRef = useSetAtom(scrollToRefAtom);

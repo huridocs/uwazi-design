@@ -8,6 +8,9 @@ import {
 } from "../../atoms/files";
 import { documentFormatAtom, type DocumentFormat } from "../../atoms/selection";
 import { documentsByLanguage } from "../../data/document";
+import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
+import { getEntity } from "../../data/entities";
+import { MAIN_ENTITY_ID } from "../../data/entityProfiles";
 import { EntityPill } from "../shared/EntityPill";
 
 interface DocMetaProps {
@@ -30,16 +33,21 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
   const groups = useAtomValue(documentGroupsAtom);
   const activeGroupId = useAtomValue(activePrimaryGroupIdAtom);
   const [format, setFormat] = useAtom(documentFormatAtom);
+  const focusedId = useAtomValue(focusedEntityIdAtom);
+  const isMain = focusedId === MAIN_ENTITY_ID;
 
-  const entity = documentsByLanguage[language];
+  const docEntity = documentsByLanguage[language];
+  const focalEntity = getEntity(focusedId);
   const primaryGroups = groups
     .filter((g) => g.isPrimary)
     .sort((a, b) => a.order - b.order);
   // The Document tab shows the default primary document — the active one if a
-  // selection floated it up, else the first by order.
+  // selection floated it up, else the first by order. For the main entity this
+  // is the Velásquez document; other focal entities show their own identity.
   const defaultGroup =
     primaryGroups.find((g) => g.id === activeGroupId) ?? primaryGroups[0];
-  const title = defaultGroup?.title ?? entity.title;
+  const title = isMain ? defaultGroup?.title ?? docEntity.title : focalEntity?.title ?? docEntity.title;
+  const typeId = isMain ? docEntity.entityTypeId : focalEntity?.typeId ?? docEntity.entityTypeId;
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
@@ -61,7 +69,7 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
       className="flex items-center gap-2 h-10 px-3 shrink-0"
       style={{ borderBottom: "1px solid var(--border-primary)" }}
     >
-      <EntityPill typeId={entity.entityTypeId} />
+      <EntityPill typeId={typeId} />
 
       <span className="text-xs font-semibold text-ink truncate flex-1">
         {title}

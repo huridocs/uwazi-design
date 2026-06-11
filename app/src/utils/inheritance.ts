@@ -4,6 +4,10 @@ import { getEntityProp } from "../data/entityMetadata";
 import { relationTypes, type RelationType } from "../data/references";
 import type { RelationshipMetadataField } from "../data/metadata";
 
+/** Resolves one native prop of a source entity. Defaults to the static const;
+ *  pass a closure over `entityMetadataAtom` to make inherited values live. */
+export type EntityPropReader = (entityId: string, propId: string, lang: Language) => string | undefined;
+
 const relationLabelById = new Map(relationTypes.map((r) => [r.id, r.label]));
 /** Human label for a relation type id (falls back to the raw id). */
 export function relationLabel(type: RelationType): string {
@@ -31,6 +35,7 @@ export interface ResolvedRelationshipField {
 export function resolveRelationshipField(
   field: RelationshipMetadataField,
   lang: Language,
+  getProp: EntityPropReader = getEntityProp,
 ): ResolvedRelationshipField {
   const values: InheritedValue[] = field.connectedEntityIds.map((id) => {
     const entity = getEntity(id);
@@ -38,7 +43,7 @@ export function resolveRelationshipField(
       entityId: id,
       entityTitle: entity?.title ?? "Unknown entity",
       entityTypeId: entity?.typeId ?? field.targetTypeId,
-      inheritedValue: field.inheritProperty ? getEntityProp(id, field.inheritProperty, lang) : undefined,
+      inheritedValue: field.inheritProperty ? getProp(id, field.inheritProperty, lang) : undefined,
       sourcePropLabel: field.inheritLabel,
     };
   });
@@ -85,6 +90,7 @@ export interface GroupedConnections {
 export function groupConnections(
   relFields: RelationshipMetadataField[],
   lang: Language,
+  getProp: EntityPropReader = getEntityProp,
 ): GroupedConnections {
   const byKey = new Map<string, RelationshipMetadataField[]>();
   const singles: RelationshipMetadataField[] = [];
@@ -124,7 +130,7 @@ export function groupConnections(
         entityTypeId: entity?.typeId ?? primary.targetTypeId,
         cells: columns.map((c) => ({
           fieldId: c.fieldId,
-          value: c.inheritProperty ? getEntityProp(id, c.inheritProperty, lang) : undefined,
+          value: c.inheritProperty ? getProp(id, c.inheritProperty, lang) : undefined,
         })),
       };
     });

@@ -1,8 +1,11 @@
-import { useState, type ReactNode } from "react";
-import { useAtom } from "jotai";
-import { referencesAtom } from "../atoms/references";
+import { useEffect, useState, type ReactNode } from "react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { scopedReferencesAtom } from "../atoms/references";
 import { filesAtom } from "../atoms/files";
 import { languageAtom, type Language } from "../atoms/language";
+import { focusedEntityIdAtom, goBackAtom } from "../atoms/focusedEntity";
+import { getEntityProfile } from "../data/entityProfiles";
+import { tabsForType } from "../utils/entityTabs";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DocMeta } from "../components/layout/DocMeta";
@@ -17,29 +20,38 @@ import { MetadataView } from "./MetadataView";
 import { RelationshipsView } from "./RelationshipsView";
 import { t } from "../utils/i18n";
 
-const mainTabs = [
-  { id: "document", label: t("System", "Document") },
-  { id: "metadata", label: t("System", "Metadata") },
-  { id: "relationships", label: t("System", "Relationships"), count: 0 },
-  { id: "files", label: t("System", "Files"), count: 0 },
-];
-
 export function EntityView() {
-  const [activeTab, setActiveTab] = useState("document");
-  const [references] = useAtom(referencesAtom);
+  const focusedId = useAtomValue(focusedEntityIdAtom);
+  const profile = getEntityProfile(focusedId);
+
+  // Both atoms are already focal-scoped: scopedReferencesAtom returns this
+  // entity's slice of the corpus, and filesAtom is re-seeded to its files on
+  // focus change. So the tab counts are just their lengths.
+  const [references] = useAtom(scopedReferencesAtom);
   const [files] = useAtom(filesAtom);
   const [language, setLanguage] = useAtom(languageAtom);
+  const goBack = useSetAtom(goBackAtom);
 
-  const tabs = mainTabs.map((tab) => {
-    if (tab.id === "relationships") return { ...tab, count: references.length };
-    if (tab.id === "files") return { ...tab, count: files.length };
+  const [activeTab, setActiveTab] = useState(profile.hasDocument ? "document" : "metadata");
+
+  // Reset to the type's default tab whenever the focal entity changes.
+  useEffect(() => {
+    setActiveTab(profile.hasDocument ? "document" : "metadata");
+  }, [focusedId, profile.hasDocument]);
+
+  const relCount = references.length;
+  const filesCount = files.length;
+
+  const tabs = tabsForType(profile.typeId).map((tab) => {
+    if (tab.id === "relationships") return { ...tab, count: relCount };
+    if (tab.id === "files") return { ...tab, count: filesCount };
     return tab;
   });
 
   if (activeTab === "metadata") {
     return (
       <>
-        <MetadataView tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+        <MetadataView tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} onBack={goBack} />
         <CreateRelationshipModal />
         <ManageRelationTypesModal />
       </>
@@ -47,17 +59,13 @@ export function EntityView() {
   }
 
   if (activeTab === "files") {
-    return (
-      <>
-        <FilesView tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
-      </>
-    );
+    return <FilesView tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} onBack={goBack} />;
   }
 
   if (activeTab === "relationships") {
     return (
       <>
-        <RelationshipsView tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+        <RelationshipsView tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} onBack={goBack} />
         <CreateRelationshipModal />
         <ManageRelationTypesModal />
       </>
@@ -70,6 +78,7 @@ export function EntityView() {
         tabs={tabs}
         activeId={activeTab}
         onChange={setActiveTab}
+        onBack={goBack}
         languages={["EN", "ES", "FR", "AR"]}
         availableLanguages={["EN", "ES", "FR", "AR"]}
         activeLanguage={language}
@@ -93,7 +102,7 @@ export function EntityView() {
           {
             id: "connections",
             label: t("System", "Relationships"),
-            count: references.length,
+            count: relCount,
             content: <ReferencePanel />,
           },
           {

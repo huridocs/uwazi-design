@@ -1,25 +1,38 @@
-import { useAtom, useSetAtom } from "jotai";
-import { useEffect, useRef } from "react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useEffect, useRef, useState } from "react";
 import { activeAggregateIdAtom, overlayEntityIdAtom, referencesAtom } from "../../atoms/references";
 import { languageAtom } from "../../atoms/language";
+import { entityMetadataAtom, setEntityPropAtom } from "../../atoms/entityMetadata";
+import { openEntityAtom } from "../../atoms/focusedEntity";
 import { getEntity, getEntityType } from "../../data/entities";
-import { entityMetadataByLanguage } from "../../data/entityMetadata";
+import { relationshipFieldsByLanguage } from "../../data/metadata";
 import { EntityPill } from "../shared/EntityPill";
 import { PageTag } from "../shared/PageTag";
 import { FadeTruncate } from "../shared/FadeTruncate";
-import { X, FileText, Link2, Calendar, Tag } from "lucide-react";
+import { EditInput } from "../metadata/EditInput";
+import { X, FileText, Link2, Calendar, Tag, Info } from "lucide-react";
 
 export function EntityOverlay() {
   const [entityId, setEntityId] = useAtom(overlayEntityIdAtom);
   const [references] = useAtom(referencesAtom);
   const setActiveAggregateId = useSetAtom(activeAggregateIdAtom);
   const lang = useAtom(languageAtom)[0];
+  const entityMetadata = useAtomValue(entityMetadataAtom);
+  const setEntityProp = useSetAtom(setEntityPropAtom);
+  const openEntity = useSetAtom(openEntityAtom);
   const panelRef = useRef<HTMLDivElement>(null);
+  // Properties are read-only on open (this is a preview); editing is opt-in.
+  const [editingProps, setEditingProps] = useState(false);
 
   // Clear the per-aggregate selection highlight whenever the overlay closes.
   useEffect(() => {
     if (entityId === null) setActiveAggregateId(null);
   }, [entityId, setActiveAggregateId]);
+
+  // Reset to read-only whenever a different entity is opened.
+  useEffect(() => {
+    setEditingProps(false);
+  }, [entityId]);
 
   const entity = entityId ? getEntity(entityId) : undefined;
   const entityType = entity ? getEntityType(entity.typeId) : undefined;
@@ -28,6 +41,32 @@ export function EntityOverlay() {
   const entityRefs = entityId
     ? references.filter((r) => r.targetEntityId === entityId)
     : [];
+
+  // Editable native properties — the values other entities inherit from this
+  // one. The list is the union of (a) props this entity already has and (b)
+  // inheritable props any relationship field pulls from this entity's type, so a
+  // *missing* value (e.g. e19) still shows an empty, fillable row. Editing a row
+  // writes the atom and cascades into every inherited render.
+  const editableProps =
+    entityId && entity
+      ? (() => {
+          const live = entityMetadata[lang]?.[entityId] ?? {};
+          const labels = new Map<string, string>();
+          for (const f of relationshipFieldsByLanguage[lang]) {
+            if (f.targetTypeId === entity.typeId && f.inheritProperty) {
+              labels.set(f.inheritProperty, f.inheritLabel ?? f.inheritProperty);
+            }
+          }
+          for (const k of Object.keys(live)) {
+            if (!labels.has(k)) labels.set(k, k.charAt(0).toUpperCase() + k.slice(1));
+          }
+          return [...labels.entries()].map(([propId, label]) => ({
+            propId,
+            label,
+            value: live[propId] ?? "",
+          }));
+        })()
+      : [];
 
   const isOpen = entityId !== null && entity !== undefined;
 
@@ -60,7 +99,7 @@ export function EntityOverlay() {
       <div
         className="absolute inset-0 transition-opacity duration-200"
         style={{
-          backgroundColor: "color-mix(in srgb, var(--ink, #1a1a1a) 15%, transparent)",
+          backgroundColor: "color-mix(in srgb, var(--text-primary) 15%, transparent)",
           opacity: isOpen ? 1 : 0,
           pointerEvents: isOpen ? "auto" : "none",
           zIndex: 20,
@@ -123,22 +162,48 @@ export function EntityOverlay() {
           </section>
 
           {/* Native properties — the values other entities inherit from this
-              one. This is the "source" you'd edit to change an inherited value. */}
-          {entityId && entityMetadataByLanguage[lang]?.[entityId] && (
+              one. Read-only on open (preview); "Edit" reveals inputs, and each
+              change cascades to every inherited render (all resolve through
+              entityMetadataAtom). */}
+          {entityId && editableProps.length > 0 && (
             <section className="rounded-lg p-3 space-y-3" style={{ backgroundColor: "var(--bg-warm)" }}>
-              <h4 className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider">
-                Properties
-              </h4>
-              <div className="space-y-2.5">
-                {Object.entries(entityMetadataByLanguage[lang][entityId]).map(([key, value]) => (
-                  <MetaRow
-                    key={key}
-                    icon={Tag}
-                    label={key.charAt(0).toUpperCase() + key.slice(1)}
-                    value={value}
-                  />
-                ))}
+              <div className="flex items-center justify-between">
+                <h4 className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider">
+                  Properties
+                </h4>
+                <button
+                  onClick={() => setEditingProps((v) => !v)}
+                  className="text-[11px] font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
+                >
+                  {editingProps ? "Done" : "Edit"}
+                </button>
               </div>
+              {editingProps ? (
+                <>
+                  <div className="space-y-2.5">
+                    {editableProps.map(({ propId, label, value }) => (
+                      <div key={propId} className="space-y-1">
+                        <span className="text-[10px] text-ink-tertiary leading-tight block">{label}</span>
+                        <EditInput
+                          value={value}
+                          placeholder="Add a value…"
+                          onChange={(v) => setEntityProp({ entityId, propId, lang, value: v })}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="flex items-start gap-1.5 text-[11px] text-ink-tertiary">
+                    <Info size={12} className="text-carbon shrink-0 mt-px" />
+                    Editing the source updates inherited values.
+                  </p>
+                </>
+              ) : (
+                <div className="space-y-2.5">
+                  {editableProps.map(({ propId, label, value }) => (
+                    <MetaRow key={propId} icon={Tag} label={label} value={value || "—"} />
+                  ))}
+                </div>
+              )}
             </section>
           )}
 
@@ -218,8 +283,13 @@ export function EntityOverlay() {
           >
             Close
           </button>
-          <button className="px-3 py-1.5 text-xs font-medium text-white rounded-md transition-colors"
-            style={{ backgroundColor: "var(--ink)" }}
+          <button
+            onClick={() => {
+              if (entityId) openEntity(entityId);
+              setEntityId(null);
+            }}
+            className="px-3 py-1.5 text-xs font-medium text-white rounded-md transition-colors cursor-pointer"
+            style={{ backgroundColor: "var(--text-primary)" }}
           >
             Open entity
           </button>

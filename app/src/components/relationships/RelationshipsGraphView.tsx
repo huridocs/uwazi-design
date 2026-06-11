@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Link2 } from "lucide-react";
 import {
-  referencesAtom,
+  scopedReferencesAtom,
   overlayEntityIdAtom,
   activeRefIdAtom,
 } from "../../atoms/references";
@@ -59,7 +59,7 @@ const RING_GAP = 40;
 const ARC_GAP = 30;
 
 export function RelationshipsGraphView() {
-  const [references] = useAtom(referencesAtom);
+  const [references] = useAtom(scopedReferencesAtom);
   const [searchQuery] = useAtom(searchQueryAtom);
   const [activeClusterRefIds] = useAtom(activeClusterRefIdsAtom);
   const [relTypeFilters] = useAtom(relTypeFiltersAtom);

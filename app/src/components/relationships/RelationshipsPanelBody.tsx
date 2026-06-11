@@ -1,7 +1,7 @@
 import { useMemo, type ReactNode } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { Link2 } from "lucide-react";
-import { referencesAtom } from "../../atoms/references";
+import { scopedReferencesAtom } from "../../atoms/references";
 import {
   viewAtom,
   groupByAtom,
@@ -38,7 +38,7 @@ interface Props {
 
 /** Body of the merged Relationships panel — toolbar lives above. */
 export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
-  const [references] = useAtom(referencesAtom);
+  const [references] = useAtom(scopedReferencesAtom);
   const [view] = useAtom(viewAtom);
   const [groupBy] = useAtom(groupByAtom);
   const [subGroupBy] = useAtom(subGroupByAtom);

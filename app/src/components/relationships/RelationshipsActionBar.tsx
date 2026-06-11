@@ -4,7 +4,7 @@ import { useAtom, useSetAtom } from "jotai";
 import { entityPickerOpenAtom, textSelectionAtom } from "../../atoms/selection";
 import {
   manageRelationTypesOpenAtom,
-  referencesAtom,
+  scopedReferencesAtom,
   toastsAtom,
 } from "../../atoms/references";
 import { editModeAtom, selectedRefIdsAtom } from "../../atoms/filters";
@@ -27,7 +27,7 @@ interface RelationshipsActionBarProps {
 export function RelationshipsActionBar({ compact = false, menuSlot }: RelationshipsActionBarProps = {}) {
   const [selected, setSelected] = useAtom(selectedRefIdsAtom);
   const [editMode, setEditMode] = useAtom(editModeAtom);
-  const [references, setReferences] = useAtom(referencesAtom);
+  const [references, setReferences] = useAtom(scopedReferencesAtom);
   const setEntityPickerOpen = useSetAtom(entityPickerOpenAtom);
   const setTextSelection = useSetAtom(textSelectionAtom);
   const setManageOpen = useSetAtom(manageRelationTypesOpenAtom);

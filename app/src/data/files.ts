@@ -56,10 +56,10 @@ export const documentGroups: DocumentGroup[] = [
 // the live site blocks direct downloads. Bundled locally so react-pdf renders
 // them without CORS hits, and the document viewer shows distinct authentic
 // content per row — handy when iterating on the Connections / minimap UI.
-const DOC_VELASQUEZ_EN = "/docs/Velasquez-Rodriguez_v_Honduras_Judgment_1988_EN.pdf";
-const DOC_VELASQUEZ_ES = "/docs/Velasquez-Rodriguez_c_Honduras_Sentencia_1988_ES.pdf";
-const DOC_GELMAN_EN    = "/docs/Gelman_v_Uruguay_Judgment_2011_EN.pdf";
-const DOC_GELMAN_ES    = "/docs/Gelman_c_Uruguay_Sentencia_2011_ES.pdf";
+export const DOC_VELASQUEZ_EN = "/docs/Velasquez-Rodriguez_v_Honduras_Judgment_1988_EN.pdf";
+export const DOC_VELASQUEZ_ES = "/docs/Velasquez-Rodriguez_c_Honduras_Sentencia_1988_ES.pdf";
+export const DOC_GELMAN_EN    = "/docs/Gelman_v_Uruguay_Judgment_2011_EN.pdf";
+export const DOC_GELMAN_ES    = "/docs/Gelman_c_Uruguay_Sentencia_2011_ES.pdf";
 
 export const files: FileEntry[] = [
   // Judgment — 4 translations
@@ -179,4 +179,29 @@ export const files: FileEntry[] = [
     modified: "2019-03-10",
   },
 ];
+
+/** Per-entity primary document for doc-bearing entities other than the main
+ *  one. The actual PDF bytes are a stand-in (the bundled Velásquez / Gelman
+ *  judgments) — mock-only, same convention as the FR/AR fallbacks above — but
+ *  the group title, file names, and language set are derived from the entity so
+ *  the Files tab and Document viewer read as that entity's own corpus rather
+ *  than e3's. A single EN + ES primary group is enough to exercise the UI. */
+export function entityDocument(
+  entityId: string,
+  title: string,
+  modified: string,
+  variant: "velasquez" | "gelman" = "velasquez",
+): { group: DocumentGroup; files: FileEntry[] } {
+  const groupId = `g-${entityId}`;
+  const slug = title.replace(/[^A-Za-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+  const [enUrl, esUrl] =
+    variant === "gelman" ? [DOC_GELMAN_EN, DOC_GELMAN_ES] : [DOC_VELASQUEZ_EN, DOC_VELASQUEZ_ES];
+  return {
+    group: { id: groupId, title, isPrimary: true, order: 0 },
+    files: [
+      { id: `f-${entityId}-en`, groupId, name: `${slug}_EN.pdf`, type: "pdf", size: "213 KB", language: "EN", modified, url: enUrl },
+      { id: `f-${entityId}-es`, groupId, name: `${slug}_ES.pdf`, type: "pdf", size: "191 KB", language: "ES", modified, url: esUrl },
+    ],
+  };
+}
 

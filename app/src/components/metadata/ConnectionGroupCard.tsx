@@ -2,25 +2,24 @@ import { useSetAtom } from "jotai";
 import { Link2 } from "lucide-react";
 import { overlayEntityIdAtom } from "../../atoms/references";
 import { MetadataCard } from "./MetadataCard";
+import { spanClass, type CardSpan } from "./cardSpan";
+import { RelationCaption } from "./InheritedValueChip";
 import { EntityPill } from "../shared/EntityPill";
 import type { ConnectionGroup } from "../../utils/inheritance";
 
 /** Multi-inheritance: several relationship fields sharing one connection,
  *  rendered as a single table — connected entities listed once (rows), each
  *  inherited property a column. Avoids repeating the same entities per field. */
-export function ConnectionGroupCard({ group }: { group: ConnectionGroup }) {
+export function ConnectionGroupCard({ group, span = "full" }: { group: ConnectionGroup; span?: CardSpan }) {
   const setOverlay = useSetAtom(overlayEntityIdAtom);
 
   return (
     <MetadataCard
       title={group.label}
       icon={<Link2 size={14} className="text-carbon" />}
-      className="col-span-1 md:col-span-2 xl:col-span-3"
+      className={spanClass(span)}
     >
-      <p className="text-[11px] text-ink-tertiary -mt-1">
-        via <span className="text-carbon font-medium">{group.relationLabel}</span> ·{" "}
-        {group.columns.length} inherited {group.columns.length === 1 ? "property" : "properties"}
-      </p>
+      <RelationCaption relationLabel={group.relationLabel} inheritCount={group.columns.length} />
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm border-collapse">

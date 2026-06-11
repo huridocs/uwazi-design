@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { Link2 } from "lucide-react";
 import {
-  referencesAtom,
+  scopedReferencesAtom,
   overlayEntityIdAtom,
   activeRefIdAtom,
   expandGroupForRefAtom,
@@ -39,7 +39,7 @@ import {
  *  list view, but the leaves are aggregate `RelationshipRow kind="aggregate"`
  *  cards with inline-expand into their underlying refs. */
 export function RelationshipsTreeView() {
-  const [references] = useAtom(referencesAtom);
+  const [references] = useAtom(scopedReferencesAtom);
   const [searchQuery] = useAtom(searchQueryAtom);
   const [sortOrder] = useAtom(sortOrderAtom);
   const [activeClusterRefIds] = useAtom(activeClusterRefIdsAtom);

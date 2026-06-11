@@ -77,13 +77,16 @@ function PropertyGroup({
   variant: "header" | "body" | "inherited";
   children: ReactNode;
 }) {
-  const borderColor =
+  // Carbon is the inheritance accent (Seal is reserved for danger). The
+  // Inherited group gets a faint carbon tint so it reads as derived, not
+  // dangerous.
+  const variantClass =
     variant === "inherited"
-      ? "border-seal/40"
+      ? "border-carbon/40 bg-carbon-tint/40"
       : "border-carbon/30";
 
   return (
-    <div className={`border border-dashed ${borderColor} rounded-lg p-3 flex flex-col gap-2`}>
+    <div className={`border border-dashed ${variantClass} rounded-lg p-3 flex flex-col gap-2`}>
       <span className="text-xs font-medium text-ink-secondary text-center">{label}</span>
       {children}
     </div>

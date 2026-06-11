@@ -3,8 +3,8 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { X, Plus, Search, PenLine, Link2, Info } from "lucide-react";
 import { languageAtom } from "../../atoms/language";
 import { entitiesAtom } from "../../atoms/entities";
+import { entityMetadataAtom, makeEntityPropReader } from "../../atoms/entityMetadata";
 import { overlayEntityIdAtom } from "../../atoms/references";
-import { getEntityProp } from "../../data/entityMetadata";
 import { EntityPill } from "../shared/EntityPill";
 
 export interface ConnectionColumnDef {
@@ -36,6 +36,7 @@ export function RelationshipFieldEditor({
 }) {
   const lang = useAtomValue(languageAtom);
   const allEntities = useAtomValue(entitiesAtom);
+  const getEntityProp = makeEntityPropReader(useAtomValue(entityMetadataAtom));
   const setOverlay = useSetAtom(overlayEntityIdAtom);
   const [query, setQuery] = useState("");
   const [adding, setAdding] = useState(false);

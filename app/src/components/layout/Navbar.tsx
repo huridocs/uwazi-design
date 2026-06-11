@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   ArrowLeft,
   BookOpen,
+  ChevronRight,
   Wrench,
   Settings,
   Sun,
@@ -22,6 +23,8 @@ import {
 import type { Theme } from "../../atoms/theme";
 import type { AppView } from "../../atoms/navigation";
 import { breakpointAtom } from "../../atoms/viewport";
+import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
+import { getEntity } from "../../data/entities";
 import { agentOpenAtom, shortcutLabel } from "../../atoms/agent";
 import { MobileBottomSheet } from "./MobileBottomSheet";
 import { Beacon } from "./Beacon";
@@ -45,6 +48,8 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
   const [breakpoint] = useAtom(breakpointAtom);
   const isMobile = breakpoint === "mobile";
   const openAgent = useSetAtom(agentOpenAtom);
+  const focusedId = useAtomValue(focusedEntityIdAtom);
+  const focalTitle = getEntity(focusedId)?.title ?? "Entity";
 
   const ThemeIcon = theme === "dark" ? Moon : theme === "auto" ? Monitor : Sun;
   const themeLabel = theme === "dark" ? "Dark" : theme === "auto" ? "Auto" : "Light";
@@ -98,16 +103,35 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
         </button>
         {!showingCatalog && !isMobile && (
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => onNavigate?.("entity")}
-              className={`flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium rounded-md transition-colors ${
-                appView === "entity"
-                  ? "text-ink bg-vellum"
-                  : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
-              }`}
-            >
-              <BookOpen size={14} /> Library
-            </button>
+            {appView === "entity" ? (
+              // Locator/breadcrumb: Library (back) › current entity.
+              <div className="flex items-center gap-1 min-w-0">
+                <button
+                  onClick={() => onNavigate?.("library")}
+                  className="flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium rounded-md transition-colors text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
+                >
+                  <BookOpen size={14} /> Library
+                </button>
+                <ChevronRight size={14} className="text-ink-tertiary shrink-0" />
+                <span
+                  title={focalTitle}
+                  className="px-2.5 py-1 text-[13px] font-medium text-ink bg-vellum rounded-md truncate max-w-[16rem]"
+                >
+                  {focalTitle}
+                </span>
+              </div>
+            ) : (
+              <button
+                onClick={() => onNavigate?.("library")}
+                className={`flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium rounded-md transition-colors ${
+                  appView === "library"
+                    ? "text-ink bg-vellum"
+                    : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
+                }`}
+              >
+                <BookOpen size={14} /> Library
+              </button>
+            )}
             <div className="relative" ref={toolsRef}>
               <button
                 onClick={() => { setToolsOpen((o) => !o); setSettingsOpen(false); }}
@@ -253,9 +277,9 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
           <div className="flex flex-col py-2">
             {/* Library */}
             <button
-              onClick={() => { onNavigate?.("entity"); setMobileMenuOpen(false); }}
+              onClick={() => { onNavigate?.("library"); setMobileMenuOpen(false); }}
               className={`flex items-center gap-3 w-full px-4 py-3 text-sm font-medium transition-colors ${
-                appView === "entity" ? "bg-vellum text-ink" : "text-ink-secondary hover:bg-warm"
+                appView === "library" || appView === "entity" ? "bg-vellum text-ink" : "text-ink-secondary hover:bg-warm"
               }`}
             >
               <BookOpen size={16} className="text-ink-tertiary" />

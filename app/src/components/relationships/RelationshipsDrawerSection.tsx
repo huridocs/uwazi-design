@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAtom } from "jotai";
-import { referencesAtom, toastsAtom } from "../../atoms/references";
+import { scopedReferencesAtom, toastsAtom } from "../../atoms/references";
 import {
   viewAtom,
   groupByAtom,
@@ -30,7 +30,7 @@ import { RelationshipsActionBar } from "./RelationshipsActionBar";
  *  Used wherever the unified Relationships panel needs to render inside a
  *  drawer (ReferencePanel sub-tab, MetadataView's relationships tab, etc.). */
 export function RelationshipsDrawerSection() {
-  const [, setReferences] = useAtom(referencesAtom);
+  const [, setReferences] = useAtom(scopedReferencesAtom);
   const [, setToasts] = useAtom(toastsAtom);
   const [, setSearchQuery] = useAtom(searchQueryAtom);
   const [, setSortOrder] = useAtom(sortOrderAtom);

@@ -21,9 +21,10 @@ interface FilesViewProps {
   tabs: { id: string; label: string; count?: number }[];
   activeTab: string;
   onTabChange: (id: string) => void;
+  onBack?: () => void;
 }
 
-export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
+export function FilesView({ tabs, activeTab, onTabChange, onBack }: FilesViewProps) {
   const [language, setLanguage] = useAtom(languageAtom);
   const [files, setFiles] = useAtom(filesAtom);
   const [groups, setGroups] = useAtom(documentGroupsAtom);
@@ -111,6 +112,7 @@ export function FilesView({ tabs, activeTab, onTabChange }: FilesViewProps) {
         tabs={tabs}
         activeId={activeTab}
         onChange={onTabChange}
+        onBack={onBack}
         languages={["EN", "ES", "FR", "AR"]}
         availableLanguages={["EN", "ES", "FR", "AR"]}
         activeLanguage={language}

@@ -1,5 +1,5 @@
 import { useAtom, useAtomValue } from "jotai";
-import { referencesAtom, activeDrawerTabAtom } from "../../atoms/references";
+import { scopedReferencesAtom, activeDrawerTabAtom } from "../../atoms/references";
 import { filesAtom } from "../../atoms/files";
 import { DrawerTabs } from "../layout/DrawerTabs";
 import { DrawerActionBar } from "./DrawerActionBar";
@@ -19,7 +19,7 @@ const baseDrawerTabs = [
 ];
 
 export function ReferencePanel() {
-  const [references] = useAtom(referencesAtom);
+  const [references] = useAtom(scopedReferencesAtom);
   const files = useAtomValue(filesAtom);
   const [activeDrawerTab, setActiveDrawerTab] = useAtom(activeDrawerTabAtom);
 
