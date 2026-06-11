@@ -5,8 +5,77 @@ import {
   Reference,
   RelationType,
 } from "../data/references";
+import { focusedEntityIdAtom } from "./focusedEntity";
+import { MAIN_ENTITY_ID } from "../data/entityProfiles";
 
 export const referencesAtom = atom<Reference[]>(initialRefs);
+
+/** True if a reference touches the given entity on either endpoint. */
+const involvesEntity = (r: Reference, id: string) =>
+  r.sourceEntityId === id || r.targetEntityId === id;
+
+/**
+ * Re-express a reference *from the focal entity's point of view*: the focal
+ * entity becomes the source and the OTHER endpoint becomes the target, so the
+ * derivation (which keys on `targetEntityId`) renders the connected entity
+ * rather than the focal entity pointing at itself. The text anchor
+ * (`sourceSelection`) is preserved as the evidence snippet; direction flips when
+ * the focal entity was originally the target. The whole corpus is currently
+ * sourced from e3, so for any other focal entity this flips e3↔focal.
+ */
+function fromPerspective(r: Reference, id: string): Reference {
+  if (r.sourceEntityId === id) return r; // focal already the source — correct as-is
+  const origDir = r.direction ?? "outgoing";
+  return {
+    ...r,
+    sourceEntityId: id,
+    targetEntityId: r.sourceEntityId,
+    direction: origDir === "outgoing" ? "incoming" : "outgoing",
+  };
+}
+
+/**
+ * The focused entity's slice of the corpus. Every entity-scoped surface
+ * (Relationships panel/tree/graph, ReferencePanel, the document highlights, the
+ * Metadata drawer count) reads THIS so navigating into an entity shows its own
+ * connections — not e3's whole corpus. The main entity (`MAIN_ENTITY_ID`) sees
+ * the full corpus unchanged; other entities see their refs re-expressed from
+ * their own perspective (see {@link fromPerspective}).
+ *
+ * Reads are filtered + perspective-normalized; **writes reconcile against the
+ * full corpus by ref id** so deletes drop the right corpus rows and brand-new
+ * refs are appended verbatim (never the normalized projection). Library-level
+ * surfaces (LibraryView, EntityDrawerPreview, EntityOverlay, ManageRelationTypes)
+ * deliberately keep reading `referencesAtom`.
+ */
+export const scopedReferencesAtom = atom(
+  (get): Reference[] => {
+    const all = get(referencesAtom);
+    const id = get(focusedEntityIdAtom);
+    if (id === MAIN_ENTITY_ID) return all;
+    return all.filter((r) => involvesEntity(r, id)).map((r) => fromPerspective(r, id));
+  },
+  (get, set, update: Reference[] | ((prev: Reference[]) => Reference[])) => {
+    const all = get(referencesAtom);
+    const id = get(focusedEntityIdAtom);
+    if (id === MAIN_ENTITY_ID) {
+      set(referencesAtom, typeof update === "function" ? update(all) : update);
+      return;
+    }
+    const origInScope = all.filter((r) => involvesEntity(r, id));
+    const outOfScope = all.filter((r) => !involvesEntity(r, id));
+    const prevScoped = origInScope.map((r) => fromPerspective(r, id));
+    const nextScoped = typeof update === "function" ? update(prevScoped) : update;
+    // Reconcile by id: surviving originals stay un-normalized; ids not already
+    // in scope are brand-new refs (e.g. a freshly created relationship) kept
+    // verbatim. This makes deletes precise and never writes the flipped view back.
+    const nextIds = new Set(nextScoped.map((r) => r.id));
+    const origIds = new Set(origInScope.map((r) => r.id));
+    const survivors = origInScope.filter((r) => nextIds.has(r.id));
+    const created = nextScoped.filter((r) => !origIds.has(r.id));
+    set(referencesAtom, [...outOfScope, ...survivors, ...created]);
+  },
+);
 
 /** Writable atom over the relation-type registry. Mirrors `entitiesAtom`'s
  *  pattern so the Manage Types modal can add / delete types at runtime.

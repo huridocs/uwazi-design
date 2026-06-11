@@ -3,7 +3,7 @@ import { X, Search, Plus } from "lucide-react";
 import { useAtom, useSetAtom, useAtomValue } from "jotai";
 import { entityPickerOpenAtom, textSelectionAtom } from "../../atoms/selection";
 import {
-  referencesAtom,
+  scopedReferencesAtom,
   relationTypesAtom,
   toastsAtom,
 } from "../../atoms/references";
@@ -26,7 +26,7 @@ export function CreateRelationshipModal() {
   const [entities, setEntities] = useAtom(entitiesAtom);
   const entityTypes = useAtomValue(entityTypesAtom);
   const relationTypes = useAtomValue(relationTypesAtom);
-  const setReferences = useSetAtom(referencesAtom);
+  const setReferences = useSetAtom(scopedReferencesAtom);
   const setToasts = useSetAtom(toastsAtom);
   const [search, setSearch] = useState("");
   const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);

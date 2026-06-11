@@ -1,6 +1,6 @@
 import { useAtom, useSetAtom } from "jotai";
 import {
-  referencesAtom,
+  scopedReferencesAtom,
   scrollToRefAtom,
   scrollToHighlightAtom,
   activeRefIdAtom,
@@ -53,7 +53,7 @@ function splitIntoLineRects(sel: TextSelection) {
 }
 
 export function PageHighlights({ page }: PageHighlightsProps) {
-  const [references] = useAtom(referencesAtom);
+  const [references] = useAtom(scopedReferencesAtom);
   const [activeRefId] = useAtom(activeRefIdAtom);
   const setScrollToRef = useSetAtom(scrollToRefAtom);
   const setActiveDrawerTab = useSetAtom(activeDrawerTabAtom);

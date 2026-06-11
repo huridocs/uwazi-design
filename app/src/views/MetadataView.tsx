@@ -14,19 +14,19 @@ import { TemplateStructure } from "../components/relationships/TemplateStructure
 import { EntityOverlay } from "../components/relationships/EntityOverlay";
 import { groupConnections, relationLabel } from "../utils/inheritance";
 import {
-  metadataFieldsByLanguage,
-  pdfMetadataByLanguage,
   type MetadataField,
   type RelationshipMetadataField,
 } from "../data/metadata";
-import { documentsByLanguage } from "../data/document";
+import { focusedEntityIdAtom } from "../atoms/focusedEntity";
+import { getEntity } from "../data/entities";
+import { getEntityProfile } from "../data/entityProfiles";
 import { filesAtom } from "../atoms/files";
 import { languageAtom, type Language } from "../atoms/language";
 import { entityMetadataAtom, makeEntityPropReader } from "../atoms/entityMetadata";
 import { DrawerFilesBody } from "../components/files/DrawerFilesBody";
 import { ViewButton } from "../components/shared/ViewButton";
 import { EditInput } from "../components/metadata/EditInput";
-import { referencesAtom } from "../atoms/references";
+import { scopedReferencesAtom } from "../atoms/references";
 import { RelationshipsDrawerSection } from "../components/relationships/RelationshipsDrawerSection";
 import { DocumentViewer } from "../components/viewer/DocumentViewer";
 
@@ -34,9 +34,10 @@ interface MetadataViewProps {
   tabs: { id: string; label: string; count?: number }[];
   activeTab: string;
   onTabChange: (id: string) => void;
+  onBack?: () => void;
 }
 
-export function MetadataView({ tabs, activeTab, onTabChange }: MetadataViewProps) {
+export function MetadataView({ tabs, activeTab, onTabChange, onBack }: MetadataViewProps) {
   const [editing, setEditing] = useState(false);
   const [language, setLanguage] = useAtom(languageAtom);
 
@@ -46,6 +47,7 @@ export function MetadataView({ tabs, activeTab, onTabChange }: MetadataViewProps
         tabs={tabs}
         activeId={activeTab}
         onChange={onTabChange}
+        onBack={onBack}
         languages={["EN", "ES", "FR", "AR"]}
         availableLanguages={["EN", "ES", "FR", "AR"]}
         activeLanguage={language}
@@ -84,11 +86,12 @@ export function MetadataView({ tabs, activeTab, onTabChange }: MetadataViewProps
 function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?: ReactNode }) {
   const language = useAtom(languageAtom)[0];
   const getProp = makeEntityPropReader(useAtomValue(entityMetadataAtom));
-  const allFields = metadataFieldsByLanguage[language];
+  const profile = getEntityProfile(useAtomValue(focusedEntityIdAtom));
+  const allFields = profile.metadata[language];
   const fields = allFields.filter((f): f is MetadataField => f.type !== "relationship");
   const relFields = allFields.filter((f): f is RelationshipMetadataField => f.type === "relationship");
   const { groups, singles } = groupConnections(relFields, language, getProp);
-  const pdf = pdfMetadataByLanguage[language];
+  const pdf = profile.pdfMetadata?.[language];
 
   return (
     <>
@@ -97,29 +100,33 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
       {/* Scrollable metadata body — responsive grid */}
       <div className="flex-1 overflow-auto px-4 py-2 pb-8">
         <div className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-          <MetadataCard title="Document" className="hidden md:block md:col-span-2 xl:col-span-1 md:row-span-2">
-            <div className="flex items-center justify-center bg-warm rounded-md overflow-hidden h-[200px]">
-              <div className="bg-paper rounded shadow-sm w-[45%] h-[180px] flex items-center justify-center">
-                <span className="text-xs text-ink-muted">PDF Preview</span>
+          {profile.hasDocument && (
+            <MetadataCard title="Document" className="hidden md:block md:col-span-2 xl:col-span-1 md:row-span-2">
+              <div className="flex items-center justify-center bg-warm rounded-md overflow-hidden h-[200px]">
+                <div className="bg-paper rounded shadow-sm w-[45%] h-[180px] flex items-center justify-center">
+                  <span className="text-xs text-ink-muted">PDF Preview</span>
+                </div>
               </div>
-            </div>
-          </MetadataCard>
+            </MetadataCard>
+          )}
 
-          <MetadataCard title="PDF Metadata" className="md:col-span-2 xl:col-span-2 xl:row-span-2">
-            <Property label="Name" value={pdf.name} ltr />
-            <PropertyRow>
-              <div className="flex-1"><Property label="Type" value={pdf.type} /></div>
-              <div className="flex-1"><Property label="Size" value={pdf.size} ltr /></div>
-              <div className="flex-1"><Property label="Last Edited" value={pdf.lastEdited} ltr /></div>
-              <div className="flex-1"><Property label="Added" value={pdf.added} ltr /></div>
-            </PropertyRow>
-            <div className="flex items-center justify-between pt-2 mt-auto">
-              <ViewButton size="md" />
-              <button className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer flex items-center gap-1.5">
-                <Download size={12} className="text-ink-tertiary" /> Download
-              </button>
-            </div>
-          </MetadataCard>
+          {pdf && (
+            <MetadataCard title="PDF Metadata" className="md:col-span-2 xl:col-span-2 xl:row-span-2">
+              <Property label="Name" value={pdf.name} ltr />
+              <PropertyRow>
+                <div className="flex-1"><Property label="Type" value={pdf.type} /></div>
+                <div className="flex-1"><Property label="Size" value={pdf.size} ltr /></div>
+                <div className="flex-1"><Property label="Last Edited" value={pdf.lastEdited} ltr /></div>
+                <div className="flex-1"><Property label="Added" value={pdf.added} ltr /></div>
+              </PropertyRow>
+              <div className="flex items-center justify-between pt-2 mt-auto">
+                <ViewButton size="md" />
+                <button className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer flex items-center gap-1.5">
+                  <Download size={12} className="text-ink-tertiary" /> Download
+                </button>
+              </div>
+            </MetadataCard>
+          )}
 
           {fields.map((field) => {
             return (
@@ -194,14 +201,16 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
 
 function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void; onSave: () => void; menuSlot?: ReactNode }) {
   const language = useAtom(languageAtom)[0];
-  const doc = documentsByLanguage[language];
+  const focusedId = useAtomValue(focusedEntityIdAtom);
+  const profile = getEntityProfile(focusedId);
+  const docTitle = profile.document?.[language]?.title ?? getEntity(focusedId)?.title ?? "";
   // Scalar fields edit inline here; relationship fields are edited via the
-  // connection editor (Phase 2).
-  const initialFields = metadataFieldsByLanguage[language].filter(
+  // connection editor.
+  const initialFields = profile.metadata[language].filter(
     (f): f is MetadataField => f.type !== "relationship",
   );
-  const pdf = pdfMetadataByLanguage[language];
-  const [title, setTitle] = useState(doc.title);
+  const pdf = profile.pdfMetadata?.[language];
+  const [title, setTitle] = useState(docTitle);
   const [fields, setFields] = useState<MetadataField[]>(initialFields);
   const [showPreview, setShowPreview] = useState(true);
   const [showFileSize, setShowFileSize] = useState(true);
@@ -213,7 +222,7 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
 
   // Relationship fields → one editor per connection. The connection (entity
   // set) is the source of truth, keyed so multi-inheritance siblings sync.
-  const relFields = metadataFieldsByLanguage[language].filter(
+  const relFields = profile.metadata[language].filter(
     (f): f is RelationshipMetadataField => f.type === "relationship",
   );
   const { groups, singles } = groupConnections(relFields, language);
@@ -266,31 +275,33 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
           </div>
         </EditSection>
 
-        {/* Document */}
-        <EditSection label="Document*">
-          <div className="flex items-center gap-2">
-            <div className="flex-1 px-3 py-2 text-sm text-ink bg-paper border border-border rounded-md truncate">
-              Choose file &nbsp; {pdf.name}
+        {/* Document — only for document-bearing entities. */}
+        {profile.hasDocument && pdf && (
+          <EditSection label="Document*">
+            <div className="flex items-center gap-2">
+              <div className="flex-1 px-3 py-2 text-sm text-ink bg-paper border border-border rounded-md truncate">
+                Choose file &nbsp; {pdf.name}
+              </div>
+              <button className="px-3 py-1.5 text-xs font-medium text-seal rounded-md hover:bg-seal-tint transition-colors">
+                Remove file
+              </button>
             </div>
-            <button className="px-3 py-1.5 text-xs font-medium text-seal rounded-md hover:bg-seal-tint transition-colors">
-              Remove file
-            </button>
-          </div>
-          <div className="flex items-center gap-4 mt-2">
-            <Checkbox checked={showPreview} onChange={setShowPreview} label="Show preview" />
-            <Checkbox checked={true} onChange={() => {}} label="Extract file metadata" />
-          </div>
-
-          {/* Inline PDF metadata */}
-          <div className="mt-3 space-y-2">
-            <EditInput label="Name" value={pdf.name} />
-            <EditInput label="Type" value={pdf.type} />
             <div className="flex items-center gap-4 mt-2">
-              <Checkbox checked={showFileSize} onChange={setShowFileSize} label="Show file size" />
-              <Checkbox checked={showLastEdit} onChange={setShowLastEdit} label="Show last edit" />
+              <Checkbox checked={showPreview} onChange={setShowPreview} label="Show preview" />
+              <Checkbox checked={true} onChange={() => {}} label="Extract file metadata" />
             </div>
-          </div>
-        </EditSection>
+
+            {/* Inline PDF metadata */}
+            <div className="mt-3 space-y-2">
+              <EditInput label="Name" value={pdf.name} />
+              <EditInput label="Type" value={pdf.type} />
+              <div className="flex items-center gap-4 mt-2">
+                <Checkbox checked={showFileSize} onChange={setShowFileSize} label="Show file size" />
+                <Checkbox checked={showLastEdit} onChange={setShowLastEdit} label="Show last edit" />
+              </div>
+            </div>
+          </EditSection>
+        )}
 
         {/* Description */}
         <EditSection label="Description*">
@@ -514,9 +525,7 @@ function CountryPicker() {
 
 function MetadataDrawer() {
   const [activeDrawerTab, setActiveDrawerTab] = useState("document");
-  const language = useAtom(languageAtom)[0];
-  const doc = documentsByLanguage[language];
-  const [references] = useAtom(referencesAtom);
+  const [references] = useAtom(scopedReferencesAtom);
   const [files] = useAtom(filesAtom);
 
   const drawerTabs = [

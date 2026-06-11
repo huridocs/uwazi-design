@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAtom } from "jotai";
 import { Navbar } from "./components/layout/Navbar";
 import { EntityView } from "./views/EntityView";
+import { LibraryView } from "./views/LibraryView";
 import { ComponentCatalog } from "./views/ComponentCatalog";
 import { ImportCSVView } from "./views/ImportCSVView";
 import { ToastContainer } from "./views/ToastContainer";
@@ -43,11 +44,8 @@ export function App() {
   };
 
   const handleLogoClick = () => {
-    if (appView === "entity") {
-      setAppView("catalog");
-    } else {
-      setAppView("entity");
-    }
+    // Logo toggles the component catalog; returning lands on the Library home.
+    setAppView(appView === "catalog" ? "library" : "catalog");
   };
 
   const handleNavigate = (view: AppView) => {
@@ -62,7 +60,7 @@ export function App() {
   if (appView === "catalog") {
     return (
       <>
-        <ComponentCatalog onReturn={() => setAppView("entity")} />
+        <ComponentCatalog onReturn={() => setAppView("library")} />
         <ToastContainer />
         <AgentModal />
       </>
@@ -81,7 +79,13 @@ export function App() {
         onToggleRtl={handleToggleRtl}
       />
       <div className="flex-1 min-h-0 flex flex-col">
-        {appView === "import-csv" ? <ImportCSVView /> : <EntityView />}
+        {appView === "import-csv" ? (
+          <ImportCSVView />
+        ) : appView === "library" ? (
+          <LibraryView />
+        ) : (
+          <EntityView />
+        )}
       </div>
       <AgentModal />
     </div>

@@ -4,7 +4,7 @@ import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { currentPageAtom, scrollToPageAtom, textSelectionAtom, documentFormatAtom } from "../../atoms/selection";
-import { scrollToHighlightAtom, referencesAtom, activeRefIdAtom } from "../../atoms/references";
+import { scrollToHighlightAtom, scopedReferencesAtom, activeRefIdAtom } from "../../atoms/references";
 import { breakpointAtom } from "../../atoms/viewport";
 import { languageAtom } from "../../atoms/language";
 import {
@@ -42,7 +42,7 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
   const [selection, setSelection] = useAtom(textSelectionAtom);
   const setScrollToHighlight = useSetAtom(scrollToHighlightAtom);
   const setActiveRefId = useSetAtom(activeRefIdAtom);
-  const [references] = useAtom(referencesAtom);
+  const [references] = useAtom(scopedReferencesAtom);
   const [containerWidth, setContainerWidth] = useState(800);
   // Drawer previews (fileOverride) always render the PDF; the format picker
   // only governs the main Document-tab pane.

@@ -1,5 +1,7 @@
 import { atom } from "jotai";
 
-export type AppView = "entity" | "catalog" | "import-csv";
+export type AppView = "entity" | "library" | "catalog" | "import-csv";
 
-export const appViewAtom = atom<AppView>("entity");
+/** Land on the Library index — it's the home surface now that entities are
+ *  browsable as standalone records. */
+export const appViewAtom = atom<AppView>("library");

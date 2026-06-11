@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useAtom } from "jotai";
-import { referencesAtom, toastsAtom } from "../atoms/references";
+import { scopedReferencesAtom, toastsAtom } from "../atoms/references";
 import { languageAtom, type Language } from "../atoms/language";
 import {
   viewAtom,
@@ -37,13 +37,14 @@ interface Props {
   tabs: { id: string; label: string; count?: number }[];
   activeTab: string;
   onTabChange: (id: string) => void;
+  onBack?: () => void;
 }
 
 /** Single main-tab surface that absorbs the old References and Relationships
  *  tabs. The panel-mode toggle inside picks the projection (list / grouped /
  *  tree / graph) over the same underlying references[]. */
-export function RelationshipsView({ tabs, activeTab, onTabChange }: Props) {
-  const [references, setReferences] = useAtom(referencesAtom);
+export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Props) {
+  const [references, setReferences] = useAtom(scopedReferencesAtom);
   const [, setToasts] = useAtom(toastsAtom);
   const [language, setLanguage] = useAtom(languageAtom);
   const [view] = useAtom(viewAtom);
@@ -96,6 +97,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange }: Props) {
             tabs={tabs}
             activeId={activeTab}
             onChange={onTabChange}
+            onBack={onBack}
             languages={["EN", "ES", "FR", "AR"]}
             availableLanguages={["EN", "ES", "FR", "AR"]}
             activeLanguage={language}

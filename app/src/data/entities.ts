@@ -1,3 +1,6 @@
+import { getEntityProp } from "./entityMetadata";
+import { countryCoords, type LatLng } from "./geo";
+
 export interface EntityType {
   id: string;
   name: string;
@@ -19,9 +22,23 @@ export interface Entity {
   id: string;
   title: string;
   typeId: string;
+  /** When the entity was added to the library. Seeded deterministically below so
+   *  the Library has a natural, type-mixed order when sorted by date. Optional
+   *  so runtime-created entities (CreateRelationship flow) don't need it. */
+  createdAt?: string;
+  /** Publishing status (seeded). Published entities are public; the rest are
+   *  restricted. Drives the Library's Restricted/Published facet. */
+  published?: boolean;
+  /** Optional preview thumbnail kind shown on the Library card. Document-bearing
+   *  entities get a page preview; a few others get image/video/audio. */
+  preview?: PreviewKind;
+  /** Optional geolocation (from the entity's country) for the Library map view. */
+  geo?: LatLng;
 }
 
-export const entities: Entity[] = [
+export type PreviewKind = "document" | "image" | "video" | "audio";
+
+const baseEntities: Omit<Entity, "createdAt">[] = [
   // Persons
   { id: "e1", title: "Juan Carlos Abella", typeId: "person" },
   { id: "e11", title: "María Elena Almeida", typeId: "person" },
@@ -84,6 +101,53 @@ export const entities: Entity[] = [
   { id: "e52", title: "UN Universal Declaration of Human Rights", typeId: "document" },
   { id: "e53", title: "Final Report La Tablada Investigation", typeId: "document" },
 ];
+
+/** Stable string hash (no Math.random / Date.now) for deterministic seeding. */
+function hash(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 131 + s.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+/** Pseudo-random "date added" — spread across ~18 months ending 2024-06-30, so
+ *  the Library's date order looks natural and isn't type-grouped. */
+function seededDate(id: string): string {
+  const dayOffset = hash(id) % 540; // 0..539 days back
+  const d = new Date(Date.UTC(2024, 5, 30) - dayOffset * 86_400_000);
+  return d.toISOString().slice(0, 10);
+}
+
+/** ~80% published, the rest restricted — salted so it's independent of the date. */
+function seededPublished(id: string): boolean {
+  return hash(`${id}·pub`) % 5 !== 0;
+}
+
+const PREVIEW_DOC_TYPES = new Set(["court_case", "judgment", "document"]);
+/** Document-bearing entities get a page preview; a few others get image/video/
+ *  audio so the Library has varied thumbnails (most non-doc entities get none). */
+function seededPreview(id: string, typeId: string): PreviewKind | undefined {
+  if (PREVIEW_DOC_TYPES.has(typeId)) return "document";
+  const r = hash(`${id}·prev`) % 7;
+  if (r === 0) return "image";
+  if (r === 1) return "video";
+  if (r === 2) return "audio";
+  return undefined;
+}
+
+/** Geolocation from the entity's country: a country entity uses its own name, a
+ *  person/case uses its native `country` property (English). */
+function entityGeo(id: string, typeId: string, title: string): LatLng | undefined {
+  const country = typeId === "country" ? title : getEntityProp(id, "country", "EN");
+  return country ? countryCoords[country] : undefined;
+}
+
+export const entities: Entity[] = baseEntities.map((e) => ({
+  ...e,
+  createdAt: seededDate(e.id),
+  published: seededPublished(e.id),
+  preview: seededPreview(e.id, e.typeId),
+  geo: entityGeo(e.id, e.typeId, e.title),
+}));
 
 export function getEntityType(typeId: string): EntityType | undefined {
   return entityTypes.find((t) => t.id === typeId);

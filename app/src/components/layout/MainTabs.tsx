@@ -20,9 +20,12 @@ interface MainTabsProps {
   availableLanguages?: string[];
   activeLanguage?: string;
   onLanguageChange?: (lang: string) => void;
+  /** When provided, the header shows a back button that returns to the
+   *  precedent screen. */
+  onBack?: () => void;
 }
 
-export function MainTabs({ tabs, activeId, onChange, languages = [], availableLanguages, activeLanguage, onLanguageChange }: MainTabsProps) {
+export function MainTabs({ tabs, activeId, onChange, languages = [], availableLanguages, activeLanguage, onLanguageChange, onBack }: MainTabsProps) {
   const [breakpoint] = useAtom(breakpointAtom);
   const isMobile = breakpoint === "mobile";
   const [langOpen, setLangOpen] = useState(false);
@@ -45,8 +48,12 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
     >
       {/* Left: Back + Tabs */}
       <div className="flex items-center gap-3 md:gap-4 min-w-0 overflow-x-auto">
-        {!isMobile && (
-          <button className="text-ink-tertiary hover:text-ink transition-colors shrink-0" aria-label="Go back">
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="text-ink-tertiary hover:text-ink transition-colors shrink-0 cursor-pointer"
+            aria-label="Go back"
+          >
             <ArrowLeft size={20} />
           </button>
         )}

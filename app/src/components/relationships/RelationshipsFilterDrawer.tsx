@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useAtom } from "jotai";
-import { referencesAtom } from "../../atoms/references";
+import { scopedReferencesAtom } from "../../atoms/references";
 import {
   relTypeFiltersAtom,
   entityTypeFiltersAtom,
@@ -15,7 +15,7 @@ import { t } from "../../utils/i18n";
  * FiltersDrawer chrome; it no longer renders a source summary or footer.
  */
 export function RelationshipsFilterDrawer() {
-  const [references] = useAtom(referencesAtom);
+  const [references] = useAtom(scopedReferencesAtom);
   const [relTypeFilters, setRelTypeFilters] = useAtom(relTypeFiltersAtom);
   const [entityTypeFilters, setEntityTypeFilters] = useAtom(
     entityTypeFiltersAtom,
