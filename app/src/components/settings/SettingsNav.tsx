@@ -1,0 +1,73 @@
+import { useAtom, useSetAtom } from "jotai";
+import { ExternalLink } from "lucide-react";
+import { settingsGroups, settingsSectionAtom, settingsMobileDrilledAtom } from "../../atoms/settings";
+import type { AppView } from "../../atoms/navigation";
+
+/** The settings rail — three grouped sections (User / System / Tools) matching
+ *  Uwazi's V2 SettingsNavigation. Styled to the entity-view ToolsSidebar:
+ *  full-width items, px-5 py-2, active = bg-warm text-ink (no rounded inset). */
+export function SettingsNav({ onNavigate }: { onNavigate?: (view: AppView) => void }) {
+  const [section, setSection] = useAtom(settingsSectionAtom);
+  const setDrilled = useSetAtom(settingsMobileDrilledAtom);
+
+  return (
+    <nav
+      aria-label="Settings navigation"
+      className="h-full w-full md:w-[15.625rem] shrink-0 overflow-y-auto bg-paper py-4"
+      style={{ borderRight: "1px solid var(--border-primary)" }}
+    >
+      {settingsGroups.map((group) => (
+        <div key={group.id} className="mb-2">
+          {group.label && (
+            <h3 className="px-5 py-2 text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
+              {group.label}
+            </h3>
+          )}
+          {group.items.map((item) => {
+            const Icon = item.icon;
+            const active = section === item.id && !item.navigateTo && !item.external;
+
+            const inner = (
+              <>
+                <Icon size={15} className="text-ink-tertiary shrink-0" />
+                <span className="truncate flex-1">{item.label}</span>
+                {item.badge && (
+                  <span className="text-[10px] font-semibold text-carbon">{item.badge}</span>
+                )}
+                {item.external && <ExternalLink size={12} className="text-ink-muted shrink-0" />}
+              </>
+            );
+
+            const cls = `flex items-center gap-2.5 w-full px-5 py-2 text-[13px] font-medium text-left transition-colors ${
+              active ? "bg-warm text-ink" : "text-ink-secondary hover:bg-warm hover:text-ink"
+            }`;
+
+            if (item.external) {
+              return (
+                <a key={item.id} href={item.external} target="_blank" rel="noopener noreferrer" className={cls}>
+                  {inner}
+                </a>
+              );
+            }
+
+            return (
+              <button
+                key={item.id}
+                className={cls}
+                onClick={() => {
+                  if (item.navigateTo) onNavigate?.(item.navigateTo);
+                  else {
+                    setSection(item.id);
+                    setDrilled(true); // mobile: reveal the section (ignored on desktop)
+                  }
+                }}
+              >
+                {inner}
+              </button>
+            );
+          })}
+        </div>
+      ))}
+    </nav>
+  );
+}

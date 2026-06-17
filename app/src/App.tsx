@@ -5,6 +5,7 @@ import { EntityView } from "./views/EntityView";
 import { LibraryView } from "./views/LibraryView";
 import { ComponentCatalog } from "./views/ComponentCatalog";
 import { ImportCSVView } from "./views/ImportCSVView";
+import { SettingsView } from "./views/SettingsView";
 import { ToastContainer } from "./views/ToastContainer";
 import { AgentModal } from "./components/agent/AgentModal";
 import { themeAtom, resolveTheme } from "./atoms/theme";
@@ -81,6 +82,8 @@ export function App() {
       <div className="flex-1 min-h-0 flex flex-col">
         {appView === "import-csv" ? (
           <ImportCSVView />
+        ) : appView === "settings" ? (
+          <SettingsView onNavigate={handleNavigate} />
         ) : appView === "library" ? (
           <LibraryView />
         ) : (
