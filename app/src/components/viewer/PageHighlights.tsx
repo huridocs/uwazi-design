@@ -1,4 +1,4 @@
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   scopedReferencesAtom,
   scrollToRefAtom,
@@ -8,6 +8,8 @@ import {
   expandGroupForRefAtom,
 } from "../../atoms/references";
 import { collapseAllSignalAtom } from "../../atoms/filters";
+import { highlightsAtom } from "../../atoms/highlights";
+import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { getEntity, getEntityType } from "../../data/entities";
 import { TextSelection } from "../../data/references";
 import { useEffect, useState } from "react";
@@ -60,11 +62,18 @@ export function PageHighlights({ page }: PageHighlightsProps) {
   const setExpandGroupForRef = useSetAtom(expandGroupForRefAtom);
   const setCollapseSignal = useSetAtom(collapseAllSignalAtom);
   const [scrollToHighlight, setScrollToHighlight] = useAtom(scrollToHighlightAtom);
+  const [highlights, setHighlights] = useAtom(highlightsAtom);
+  const focusedEntityId = useAtomValue(focusedEntityIdAtom);
   const [flashId, setFlashId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   const pageRefs = references.filter(
     (r) => r.sourceSelection?.page === page,
+  );
+
+  // Standalone highlights for this document + page — always painted.
+  const pageHighlights = highlights.filter(
+    (h) => h.entityId === focusedEntityId && h.page === page,
   );
 
   // Clear flash when active ref changes
@@ -81,10 +90,10 @@ export function PageHighlights({ page }: PageHighlightsProps) {
     }
   }, [scrollToHighlight, pageRefs, setScrollToHighlight]);
 
-  // Only show highlights that are active or flashing
+  // Only show reference highlights that are active or flashing
   const visibleRefs = pageRefs.filter((r) => r.id === activeRefId || r.id === flashId);
 
-  if (visibleRefs.length === 0) return null;
+  if (visibleRefs.length === 0 && pageHighlights.length === 0) return null;
 
   const handleHighlightClick = (refId: string) => {
     setActiveDrawerTab("connections");
@@ -95,6 +104,38 @@ export function PageHighlights({ page }: PageHighlightsProps) {
 
   return (
     <>
+      {/* Standalone highlights — always visible, click to remove. Painted from
+          the exact per-line rects captured at selection time. */}
+      {pageHighlights.map((hl) => {
+        const isHovered = hoveredId === hl.id;
+        return hl.rects.map((rect, i) => (
+          <div
+            key={`${hl.id}-${i}`}
+            role={i === 0 ? "button" : undefined}
+            tabIndex={i === 0 ? 0 : undefined}
+            aria-label={i === 0 ? `Remove highlight: ${hl.text.slice(0, 60)}` : undefined}
+            title={i === 0 ? "Remove highlight" : undefined}
+            onClick={() => setHighlights((prev) => prev.filter((h) => h.id !== hl.id))}
+            onKeyDown={i === 0 ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setHighlights((prev) => prev.filter((h) => h.id !== hl.id));
+              }
+            } : undefined}
+            onMouseEnter={() => setHoveredId(hl.id)}
+            onMouseLeave={() => setHoveredId(null)}
+            className="absolute cursor-pointer rounded-[2px] transition-colors duration-150"
+            style={{
+              top: `${rect.top * 100}%`,
+              left: `${rect.left * 100}%`,
+              width: `${rect.width * 100}%`,
+              height: `${rect.height * 100}%`,
+              backgroundColor: hexToRgba(hl.color, isHovered ? 0.42 : 0.3),
+              zIndex: isHovered ? 10 : 4,
+            }}
+          />
+        ));
+      })}
       {visibleRefs.map((ref) => {
         const sel = ref.sourceSelection;
         if (!sel) return null;

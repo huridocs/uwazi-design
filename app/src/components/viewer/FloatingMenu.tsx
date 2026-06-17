@@ -1,6 +1,9 @@
 import { Link2, Copy, Highlighter } from "lucide-react";
-import { useSetAtom } from "jotai";
-import { entityPickerOpenAtom } from "../../atoms/selection";
+import { useAtomValue, useSetAtom } from "jotai";
+import { entityPickerOpenAtom, textSelectionAtom } from "../../atoms/selection";
+import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
+import { highlightsAtom, HIGHLIGHT_COLOR } from "../../atoms/highlights";
+import { toastsAtom } from "../../atoms/references";
 import { t } from "../../utils/i18n";
 
 interface FloatingMenuProps {
@@ -11,6 +14,11 @@ interface FloatingMenuProps {
 
 export function FloatingMenu({ x, y, text }: FloatingMenuProps) {
   const setEntityPickerOpen = useSetAtom(entityPickerOpenAtom);
+  const selection = useAtomValue(textSelectionAtom);
+  const focusedEntityId = useAtomValue(focusedEntityIdAtom);
+  const setHighlights = useSetAtom(highlightsAtom);
+  const setSelection = useSetAtom(textSelectionAtom);
+  const setToasts = useSetAtom(toastsAtom);
 
   const handleCreateRef = () => {
     setEntityPickerOpen(true);
@@ -18,6 +26,28 @@ export function FloatingMenu({ x, y, text }: FloatingMenuProps) {
 
   const handleCopy = () => {
     navigator.clipboard.writeText(text);
+  };
+
+  const handleHighlight = () => {
+    if (!selection || selection.rects.length === 0) return;
+    setHighlights((prev) => [
+      ...prev,
+      {
+        id: `hl-${Date.now()}`,
+        entityId: focusedEntityId,
+        text: selection.text,
+        page: selection.page,
+        rects: selection.rects,
+        color: HIGHLIGHT_COLOR,
+        createdAt: new Date().toISOString().split("T")[0],
+      },
+    ]);
+    setToasts((prev) => [
+      ...prev,
+      { id: Date.now().toString(), message: t("System", "Highlight added"), type: "success" as const },
+    ]);
+    setSelection(null);
+    window.getSelection()?.removeAllRanges();
   };
 
   // Clamp horizontally so the menu doesn't escape the viewport
@@ -52,6 +82,7 @@ export function FloatingMenu({ x, y, text }: FloatingMenuProps) {
           <Copy size={14} />
         </button>
         <button
+          onClick={handleHighlight}
           className="p-1.5 text-white/70 rounded-md hover:bg-white/15 hover:text-white transition-colors"
           aria-label={t("System", "Highlight text")}
         >

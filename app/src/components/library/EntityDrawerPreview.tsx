@@ -58,13 +58,9 @@ export function EntityDrawerPreview({ entityId }: { entityId: string }) {
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-paper">
-      {/* Main-tab navigation on top — mirrors the entity view so the divider
-          beneath it lines up with the library toolbar's. Compact: no language
-          switcher / back button. */}
-      <MainTabs tabs={tabs} activeId={activeTab} onChange={setActiveTab} />
-
-      {/* Title row — same height (h-10) and divider as the entity view's
-          DocMeta. Carries the close affordance back to the filters list. */}
+      {/* Identity header on top — the entity title + close, acting as the
+          panel header. Tabs sit beneath it (flipped from the entity view so the
+          drawer reads title-first). */}
       <div
         className="flex items-center gap-2 h-10 px-3 shrink-0"
         style={{ borderBottom: "1px solid var(--border-primary)" }}
@@ -85,14 +81,17 @@ export function EntityDrawerPreview({ entityId }: { entityId: string }) {
         </button>
       </div>
 
+      {/* Main-tab navigation beneath the identity header. */}
+      <MainTabs tabs={tabs} activeId={activeTab} onChange={setActiveTab} />
+
       {/* Tab content — drawer-flavoured bodies, scoped to the focused entity. */}
       <div className="flex-1 min-h-0 relative overflow-hidden">
         {activeTab === "document" ? (
-          <DocumentViewer showMinimap={false} />
+          <DocumentViewer showMinimap={false} hideActionBar />
         ) : activeTab === "relationships" ? (
-          <RelationshipsDrawerSection />
+          <RelationshipsDrawerSection hideActionBar />
         ) : activeTab === "files" ? (
-          <DrawerFilesBody />
+          <DrawerFilesBody hideActionBar />
         ) : (
           <MetadataSummary language={language} entityId={entityId} />
         )}

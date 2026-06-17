@@ -28,8 +28,14 @@ import { RelationshipsActionBar } from "./RelationshipsActionBar";
 
 /** Drawer-style connections section: toolbar + body + scoped filters drawer.
  *  Used wherever the unified Relationships panel needs to render inside a
- *  drawer (ReferencePanel sub-tab, MetadataView's relationships tab, etc.). */
-export function RelationshipsDrawerSection() {
+ *  drawer (ReferencePanel sub-tab, MetadataView's relationships tab, etc.).
+ *  `hideActionBar` drops the bottom RelationshipsActionBar for hosts that
+ *  supply their own footer (the library preview's Close / View entity bar). */
+export function RelationshipsDrawerSection({
+  hideActionBar = false,
+}: {
+  hideActionBar?: boolean;
+} = {}) {
   const [, setReferences] = useAtom(scopedReferencesAtom);
   const [, setToasts] = useAtom(toastsAtom);
   const [, setSearchQuery] = useAtom(searchQueryAtom);
@@ -105,7 +111,7 @@ export function RelationshipsDrawerSection() {
         </div>
       </div>
       <RelationshipsPanelBody onDelete={handleDelete} />
-      <RelationshipsActionBar compact />
+      {!hideActionBar && <RelationshipsActionBar compact />}
 
       <FiltersDrawer
         open={filtersOpen}

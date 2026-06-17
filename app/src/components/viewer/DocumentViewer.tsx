@@ -30,9 +30,12 @@ interface DocumentViewerProps {
    *  active primary + language atoms. Used by the drawer's inline viewer
    *  to display any file the user "View"s without disturbing global state. */
   fileOverride?: { url?: string; language: string } | null;
+  /** Drop the bottom pager action bar — for hosts that supply their own
+   *  footer (the library preview's Close / View entity bar). */
+  hideActionBar?: boolean;
 }
 
-export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride }: DocumentViewerProps = {}) {
+export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride, hideActionBar = false }: DocumentViewerProps = {}) {
   const [breakpoint] = useAtom(breakpointAtom);
   const isMobile = breakpoint === "mobile";
   const [numPages, setNumPages] = useState<number>(0);
@@ -110,21 +113,41 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
     const range = sel.getRangeAt(0);
     const rect = range.getBoundingClientRect();
 
-    // Find which page this selection is in
+    // Find which page this selection is in, and convert the screen rect into
+    // page-relative (0-1) coords so highlights / references paint at the right
+    // spot regardless of zoom or page size.
     let page = currentPage;
+    let pageRelRect = { top: 0, left: 0, width: 0, height: 0 };
+    let pageRelRects: { top: number; left: number; width: number; height: number }[] = [];
     const anchorNode = sel.anchorNode;
     if (anchorNode) {
       const pageEl = (anchorNode instanceof HTMLElement ? anchorNode : anchorNode.parentElement)
         ?.closest("[data-page-number]");
       if (pageEl) {
         page = parseInt(pageEl.getAttribute("data-page-number") || "1", 10);
+        const pageRect = pageEl.getBoundingClientRect();
+        if (pageRect.width > 0 && pageRect.height > 0) {
+          const norm = (r: DOMRect) => ({
+            top: (r.top - pageRect.top) / pageRect.height,
+            left: (r.left - pageRect.left) / pageRect.width,
+            width: r.width / pageRect.width,
+            height: r.height / pageRect.height,
+          });
+          pageRelRect = norm(rect);
+          // Exact per-line boxes the browser computed for the selection — drop
+          // zero-area fragments the text layer sometimes emits.
+          pageRelRects = Array.from(range.getClientRects())
+            .filter((r) => r.width > 1 && r.height > 1)
+            .map(norm);
+        }
       }
     }
 
     setSelection({
       text,
       page,
-      rect: { top: 0, left: 0, width: 0, height: 0 },
+      rect: pageRelRect,
+      rects: pageRelRects,
       screenX: rect.left + rect.width / 2,
       screenY: rect.top,
     });
@@ -264,7 +287,7 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
       {/* Bottom action bar — only on the main-pane viewer (no fileOverride).
           When the viewer is mounted inside a drawer to preview a specific
           file, the host drawer carries its own footer (Back / Download). */}
-      {!fileOverride && (
+      {!fileOverride && !hideActionBar && (
         <ActionBar numPages={numPages} onScrollToPage={scrollToPage} rightSlot={actionBarMenu} showPager={!renditionMode} />
       )}
 
