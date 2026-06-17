@@ -8,12 +8,15 @@ interface DrawerTabsProps {
   tabs: DrawerTab[];
   activeId: string;
   onChange: (id: string) => void;
+  /** Wrapper padding — defaults to the drawer's `px-3 py-2`. Pass e.g. `""`
+   *  to render flush within a page body that owns its own padding. */
+  className?: string;
 }
 
-export function DrawerTabs({ tabs, activeId, onChange }: DrawerTabsProps) {
+export function DrawerTabs({ tabs, activeId, onChange, className = "px-3 py-2" }: DrawerTabsProps) {
   return (
     <div
-      className="px-3 py-2 shrink-0 overflow-x-auto no-scrollbar"
+      className={`${className} shrink-0 overflow-x-auto no-scrollbar`}
     >
       <div
         className="flex items-stretch rounded-md overflow-hidden w-fit"

@@ -29,7 +29,7 @@ export function SegmentedControl({
     <div
       role="group"
       aria-label={ariaLabel}
-      className={`flex items-center rounded-md overflow-hidden ${h}`}
+      className={`inline-flex w-fit items-center rounded-md overflow-hidden ${h}`}
       style={{ border: "1px solid var(--border-primary)" }}
     >
       {options.map((opt, i) => {
