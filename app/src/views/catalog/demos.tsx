@@ -12,6 +12,8 @@ import { FiltersRow, ViewModeControls, CollapseControls } from "../../components
 import { FiltersButton } from "../../components/shared/FiltersButton";
 import { FiltersDrawer } from "../../components/shared/FiltersDrawer";
 import { FacetSection } from "../../components/shared/FacetSection";
+import { RadioGroup } from "../../components/shared/RadioGroup";
+import { DataTable } from "../../components/shared/DataTable";
 import { FadeTruncate } from "../../components/shared/FadeTruncate";
 import { ListInfoRow } from "../../components/shared/ListInfoRow";
 import { Checkbox } from "../../components/shared/Checkbox";
@@ -850,5 +852,44 @@ export function IsolatedDirectionGlyph() {
         <span className="text-[10px] text-ink-muted">md</span>
       </div>
     </div>
+  );
+}
+
+export function IsolatedRadioGroup() {
+  const [value, setValue] = useState("cards");
+  return (
+    <RadioGroup
+      name="catalog-radio"
+      ariaLabel="Default view"
+      value={value}
+      onChange={setValue}
+      options={[
+        { id: "cards", label: "Cards", hint: "Visual entity cards" },
+        { id: "table", label: "Table", hint: "Dense rows" },
+        { id: "map", label: "Map", hint: "Geographic" },
+      ]}
+    />
+  );
+}
+
+export function IsolatedDataTable() {
+  const [selected, setSelected] = useState<string | null>("r2");
+  const rows = [
+    { id: "r1", name: "Court Case", count: 18 },
+    { id: "r2", name: "Person", count: 13 },
+    { id: "r3", name: "Country", count: 9 },
+  ];
+  return (
+    <DataTable
+      data={rows}
+      getRowId={(r) => r.id}
+      onRowClick={(r) => setSelected(r.id)}
+      isRowSelected={(r) => r.id === selected}
+      footer={<span>{rows.length} rows</span>}
+      columns={[
+        { id: "name", header: "Template", cell: (r) => <span className="text-xs font-medium text-ink">{r.name}</span> },
+        { id: "count", header: "Entities", width: "6rem", align: "right", cell: (r) => <span className="text-xs text-ink-tertiary tabular-nums">{r.count}</span> },
+      ]}
+    />
   );
 }

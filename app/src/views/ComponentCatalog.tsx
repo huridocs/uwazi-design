@@ -24,6 +24,12 @@ import { AlertBanner } from "../components/shared/AlertBanner";
 import { Breadcrumb } from "../components/layout/Breadcrumb";
 import { ToolsSidebar } from "../components/layout/ToolsSidebar";
 
+// Settings primitives (static demos)
+import { Button as SettingsButton } from "../components/settings/Button";
+import { Field, TextInput } from "../components/settings/Field";
+import { RowActions } from "../components/settings/RowActions";
+import { StatusPill } from "../components/settings/StatusPill";
+
 // Icons
 import { ArrowLeft, FileText, Pencil, Download, Trash2, Share2, Plus } from "lucide-react";
 
@@ -67,6 +73,8 @@ import {
   IsolatedRelationshipFieldCard,
   IsolatedInheritedValueChip,
   IsolatedRelationshipFieldEditor,
+  IsolatedRadioGroup,
+  IsolatedDataTable,
 } from "./catalog/demos";
 
 import { sidebarGroups, allItemIds } from "./catalog/sidebarGroups";
@@ -1411,6 +1419,120 @@ export function ComponentCatalog({ onReturn }: Props) {
                 </CatalogEntry>
               </div>
 
+            </div>
+          </section>
+
+          {/* ==================== SETTINGS ==================== */}
+          <section>
+            <h2 className="text-lg font-bold text-ink mb-6">Settings</h2>
+            <div className="flex flex-col gap-6">
+              <div id="set-data-table" ref={reg("set-data-table")}>
+                <CatalogEntry
+                  name="DataTable"
+                  description="The canonical data table (entity-view Files style), generic via a declarative column API. Backs FileTable and every Settings list."
+                  code={`<DataTable
+  data={rows}
+  getRowId={(r) => r.id}
+  onRowClick={(r) => …}
+  isRowSelected={(r) => r.id === selected}
+  footer={<span>{rows.length} rows</span>}
+  columns={[
+    { id: "name", header: "Template", cell: (r) => r.name },
+    { id: "count", header: "Entities", width: "6rem", align: "right", cell: (r) => r.count },
+  ]}
+/>`}
+                >
+                  <div className="w-full max-w-md">
+                    <IsolatedDataTable />
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="set-radio-group" ref={reg("set-radio-group")}>
+                <CatalogEntry
+                  name="RadioGroup"
+                  description="Single-choice control (native radios, label + hint). For picking one setting value — not navigation (that's tabs)."
+                  code={`<RadioGroup
+  name="default-view"
+  value={value}
+  onChange={setValue}
+  options={[
+    { id: "cards", label: "Cards", hint: "Visual entity cards" },
+    { id: "table", label: "Table", hint: "Dense rows" },
+  ]}
+/>`}
+                >
+                  <div className="w-full max-w-md">
+                    <IsolatedRadioGroup />
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="set-button" ref={reg("set-button")}>
+                <CatalogEntry
+                  name="Button"
+                  description="Settings-scoped action button. Warm fill is canonical; seal for danger only."
+                  code={`<Button variant="primary" size="sm">Save</Button>
+<Button variant="secondary" size="sm">Translate</Button>
+<Button variant="ghost" size="sm">Cancel</Button>
+<Button variant="danger" size="sm">Delete</Button>`}
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <SettingsButton variant="primary" size="sm">Save</SettingsButton>
+                    <SettingsButton variant="secondary" size="sm">Translate</SettingsButton>
+                    <SettingsButton variant="ghost" size="sm">Cancel</SettingsButton>
+                    <SettingsButton variant="danger" size="sm">Delete</SettingsButton>
+                    <SettingsButton variant="primary" size="sm" disabled>Disabled</SettingsButton>
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="set-field" ref={reg("set-field")}>
+                <CatalogEntry
+                  name="Field"
+                  description="Labelled form field wrapper (label + hint/error) with the warm TextInput."
+                  code={`<Field label="Email" hint="Used to sign in.">
+  <TextInput type="email" defaultValue="admin@uwazi.io" />
+</Field>`}
+                >
+                  <div className="w-full max-w-sm flex flex-col gap-3">
+                    <Field label="Email" hint="Used to sign in.">
+                      <TextInput type="email" defaultValue="admin@uwazi.io" />
+                    </Field>
+                    <Field label="Password" error="Passwords don't match">
+                      <TextInput type="password" defaultValue="••••••" />
+                    </Field>
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="set-status-pill" ref={reg("set-status-pill")}>
+                <CatalogEntry
+                  name="StatusPill"
+                  description="Status badge for extraction / processing jobs, on semantic tints."
+                  code={`<StatusPill status="ready" /> // ready | training | processing | error`}
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusPill status="ready" />
+                    <StatusPill status="training" />
+                    <StatusPill status="processing" />
+                    <StatusPill status="error" />
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="set-row-actions" ref={reg("set-row-actions")}>
+                <CatalogEntry
+                  name="RowActions"
+                  description="Edit + delete icon pair for a table row. Stops row-click propagation."
+                  code={`<RowActions label="Court Case" onEdit={() => …} onDelete={() => …} />`}
+                >
+                  <div className="w-full max-w-xs flex items-center justify-between bg-paper border border-border-soft rounded-md px-3 py-2">
+                    <span className="text-sm text-ink">Court Case</span>
+                    <RowActions label="Court Case" onEdit={() => {}} onDelete={() => {}} />
+                  </div>
+                </CatalogEntry>
+              </div>
             </div>
           </section>
         </div>

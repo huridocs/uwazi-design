@@ -130,6 +130,17 @@ export const sidebarGroups: SidebarGroup[] = [
       { id: "sh-uwazi-loader", label: "UwaziLoader" },
     ],
   },
+  {
+    label: "Settings",
+    items: [
+      { id: "set-data-table", label: "DataTable" },
+      { id: "set-radio-group", label: "RadioGroup" },
+      { id: "set-button", label: "Button" },
+      { id: "set-field", label: "Field" },
+      { id: "set-status-pill", label: "StatusPill" },
+      { id: "set-row-actions", label: "RowActions" },
+    ],
+  },
 ];
 
 export const allItemIds = sidebarGroups.flatMap((g) =>
