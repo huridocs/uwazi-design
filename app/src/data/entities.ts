@@ -1,6 +1,7 @@
 import { getEntityProp } from "./entityMetadata";
 import { countryCoords, type LatLng } from "./geo";
 import { cejilTypeById } from "./cejil/typesAdapter";
+import { cejilLibraryEntities } from "./cejil/adapt";
 
 export interface EntityType {
   id: string;
@@ -160,6 +161,8 @@ export function getEntityType(typeId: string): EntityType | undefined {
   return entityTypes.find((t) => t.id === typeId) ?? cejilTypeById.get(typeId);
 }
 
+const cejilEntityById = new Map(cejilLibraryEntities.map((e) => [e.id, e]));
+
 export function getEntity(id: string): Entity | undefined {
-  return entities.find((e) => e.id === id);
+  return entities.find((e) => e.id === id) ?? cejilEntityById.get(id);
 }
