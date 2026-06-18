@@ -27,6 +27,7 @@ import {
   viewerFileIdAtom,
 } from "../../atoms/files";
 import { Checkbox } from "../shared/Checkbox";
+import { DataTable, type Column } from "../shared/DataTable";
 import { formatFileDate } from "../../utils/dates";
 
 interface FileTableProps {
@@ -245,100 +246,66 @@ export function FileTable({
     );
   }
 
-  return (
-    <div
-      className="rounded-md overflow-hidden bg-paper"
-      style={{
-        boxShadow: "0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)",
-      }}
-    >
-      {/* Header */}
-      <div
-        className="grid items-center gap-3 px-4 h-10 text-[11px] font-semibold text-ink-tertiary uppercase tracking-wider"
-        style={{
-          gridTemplateColumns: "28px 1fr 70px 70px 50px 90px 32px",
-          backgroundColor: "var(--bg-warm)",
-          borderBottom: "1px solid var(--border-primary)",
-        }}
-      >
-        <label className="flex items-center justify-center">
+  const columns: Column<FileEntry>[] = [
+    {
+      id: "select",
+      width: "28px",
+      align: "center",
+      header: (
+        <label className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+          <Checkbox checked={allSelected} onChange={onSelectAll} ariaLabel="Select all files" />
+        </label>
+      ),
+      cell: (file) => (
+        <label className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
           <Checkbox
-            checked={allSelected}
-            onChange={onSelectAll}
-            ariaLabel="Select all files"
+            checked={selectedIds.has(file.id)}
+            onChange={() => onSelect(file.id)}
+            ariaLabel={`Select ${file.name}`}
           />
         </label>
-        <span>File name</span>
-        <span>Type</span>
-        <span>Size</span>
-        <span>Lang</span>
-        <span>Modified</span>
-        <span className="sr-only">Actions</span>
-      </div>
-
-      {/* Rows */}
-      {files.map((file) => {
-        const isSelected = selectedIds.has(file.id);
-        const isFocused = focusedId === file.id;
+      ),
+    },
+    {
+      id: "name",
+      header: "File name",
+      cell: (file) => {
         const Icon = typeIcons[file.type];
-
         return (
-          <div
-            key={file.id}
-            role="row"
-            tabIndex={0}
-            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onFocus?.(file.id); } }}
-            className={`grid items-center gap-3 px-4 h-11 text-sm transition-colors cursor-pointer
-              hover:bg-warm ${isFocused ? "bg-parchment" : ""}`}
-            style={{
-              gridTemplateColumns: "28px 1fr 70px 70px 50px 90px 32px",
-              borderBottom: "1px solid var(--border-primary)",
-            }}
-            onClick={() => onFocus?.(file.id)}
-          >
-            <label className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-              <Checkbox
-                checked={isSelected}
-                onChange={() => onSelect(file.id)}
-                ariaLabel={`Select ${file.name}`}
-              />
-            </label>
-
-            <div className="flex items-center gap-2 min-w-0">
-              <Icon size={14} className="text-ink-muted shrink-0" />
-              <span className="text-xs font-medium text-ink truncate">{file.name}</span>
-              {renderBadge(file)}
-            </div>
-
-            <span className="text-xs text-ink-tertiary">{typeLabels[file.type]}</span>
-            <span dir="ltr" className="text-xs text-ink-tertiary">{file.size}</span>
-            <span className="text-xs text-ink-tertiary">{file.language}</span>
-            <span className="text-xs text-ink-tertiary">
-              {formatFileDate(file.modified)}
-            </span>
-            <div
-              className="flex items-center justify-end"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {renderMenu(file)}
-            </div>
+          <div className="flex items-center gap-2 min-w-0">
+            <Icon size={14} className="text-ink-muted shrink-0" />
+            <span className="text-xs font-medium text-ink truncate">{file.name}</span>
+            {renderBadge(file)}
           </div>
         );
-      })}
-
-      {/* Footer */}
-      {!embedded && (
-        <div
-          className="flex items-center justify-between px-4 h-10 text-xs text-ink-muted"
-          style={{
-            backgroundColor: "var(--bg-warm)",
-            borderTop: "1px solid var(--border-primary)",
-          }}
-        >
-          <span>{files.length} files</span>
+      },
+    },
+    { id: "type", header: "Type", width: "70px", cell: (file) => <span className="text-xs text-ink-tertiary">{typeLabels[file.type]}</span> },
+    { id: "size", header: "Size", width: "70px", cell: (file) => <span dir="ltr" className="text-xs text-ink-tertiary">{file.size}</span> },
+    { id: "lang", header: "Lang", width: "50px", cell: (file) => <span className="text-xs text-ink-tertiary">{file.language}</span> },
+    { id: "modified", header: "Modified", width: "90px", cell: (file) => <span className="text-xs text-ink-tertiary">{formatFileDate(file.modified)}</span> },
+    {
+      id: "actions",
+      header: <span className="sr-only">Actions</span>,
+      width: "32px",
+      align: "right",
+      cell: (file) => (
+        <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
+          {renderMenu(file)}
         </div>
-      )}
-    </div>
+      ),
+    },
+  ];
+
+  return (
+    <DataTable
+      columns={columns}
+      data={files}
+      getRowId={(f) => f.id}
+      onRowClick={(f) => onFocus?.(f.id)}
+      isRowSelected={(f) => focusedId === f.id}
+      footer={embedded ? undefined : <span>{files.length} files</span>}
+    />
   );
 }
 

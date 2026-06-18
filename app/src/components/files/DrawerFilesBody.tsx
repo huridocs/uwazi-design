@@ -21,8 +21,13 @@ const KNOWN_LANGUAGES = ["EN", "ES", "FR", "AR", "PT", "DE", "—"];
  *  main Files view layout: one section per primary group with its
  *  translations beneath, then a flat Supporting files section. Used by both
  *  the Document tab drawer and the Metadata tab drawer so the file UI is
- *  consistent everywhere. */
-export function DrawerFilesBody() {
+ *  consistent everywhere. `hideActionBar` drops the bottom "Add file" footer
+ *  for hosts that supply their own (the library preview's Close / View bar). */
+export function DrawerFilesBody({
+  hideActionBar = false,
+}: {
+  hideActionBar?: boolean;
+} = {}) {
   const [files, setFiles] = useAtom(filesAtom);
   const groups = useAtomValue(documentGroupsAtom);
   const activeGroupId = useAtomValue(activePrimaryGroupIdAtom);
@@ -176,20 +181,22 @@ export function DrawerFilesBody() {
         )}
       </div>
 
-      <div
-        className="flex items-center gap-3 h-12 px-3 bg-paper shrink-0"
-        style={{ borderTop: "1px solid var(--border-primary)" }}
-      >
-        <button
-          onClick={() => setAddFileTarget({ mode: "new" })}
-          className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+      {!hideActionBar && (
+        <div
+          className="flex items-center gap-3 h-12 px-3 bg-paper shrink-0"
+          style={{ borderTop: "1px solid var(--border-primary)" }}
         >
-          Add file
-        </button>
-        <span className="text-xs text-ink-muted">
-          Learn more about <span className="font-bold underline">files</span>
-        </span>
-      </div>
+          <button
+            onClick={() => setAddFileTarget({ mode: "new" })}
+            className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+          >
+            Add file
+          </button>
+          <span className="text-xs text-ink-muted">
+            Learn more about <span className="font-bold underline">files</span>
+          </span>
+        </div>
+      )}
       <AddFileModal />
     </div>
   );

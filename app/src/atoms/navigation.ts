@@ -1,7 +1,8 @@
-import { atom } from "jotai";
+import { atomWithStorage } from "jotai/utils";
 
-export type AppView = "entity" | "library" | "catalog" | "import-csv";
+export type AppView = "entity" | "library" | "catalog" | "import-csv" | "settings";
 
-/** Land on the Library index — it's the home surface now that entities are
- *  browsable as standalone records. */
-export const appViewAtom = atom<AppView>("library");
+/** Which top-level surface is showing. Persisted so a browser reload keeps you
+ *  on the same page instead of bouncing back to the Library home. Default
+ *  (first visit) lands on the Library index. */
+export const appViewAtom = atomWithStorage<AppView>("uwazi:appView", "library");

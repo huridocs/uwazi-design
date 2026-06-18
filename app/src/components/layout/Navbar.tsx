@@ -242,11 +242,17 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                     </div>
                     <Languages size={14} className="text-ink-tertiary" />
                   </button>
-                  <button className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors">
+                  <button
+                    onClick={() => { onNavigate?.("settings"); setSettingsOpen(false); }}
+                    className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors"
+                  >
                     User settings
                     <User size={14} className="text-ink-tertiary" />
                   </button>
-                  <button className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors">
+                  <button
+                    onClick={() => { onNavigate?.("settings"); setSettingsOpen(false); }}
+                    className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors"
+                  >
                     System settings
                     <Server size={14} className="text-ink-tertiary" />
                   </button>
@@ -349,11 +355,17 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                 {rtl ? "ON" : "OFF"}
               </span>
             </button>
-            <button className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors">
+            <button
+              onClick={() => { onNavigate?.("settings"); setMobileMenuOpen(false); }}
+              className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
+            >
               <User size={16} className="text-ink-tertiary" />
               User settings
             </button>
-            <button className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors">
+            <button
+              onClick={() => { onNavigate?.("settings"); setMobileMenuOpen(false); }}
+              className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
+            >
               <Server size={16} className="text-ink-tertiary" />
               System settings
             </button>

@@ -1,9 +1,21 @@
 import { atom } from "jotai";
 
+export interface NormRect {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+}
+
 export interface TextSelectionState {
   text: string;
   page: number;
-  rect: { top: number; left: number; width: number; height: number };
+  /** Page-relative (0-1) bounding box of the whole selection. */
+  rect: NormRect;
+  /** Page-relative per-line rects from the selection Range's getClientRects().
+   *  These are the exact line boxes the browser computed, so highlights paint
+   *  precisely instead of approximating line breaks. */
+  rects: NormRect[];
   /** Screen coordinates for floating menu positioning */
   screenX: number;
   screenY: number;
