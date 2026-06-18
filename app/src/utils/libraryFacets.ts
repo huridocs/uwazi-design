@@ -8,6 +8,8 @@ import type { Entity } from "../data/entities";
 export function entityCountries(e: Entity, lang: Language): string[] {
   const out: string[] = [];
   if (e.typeId === "country") out.push(e.title);
+  // Adapter-supplied country (e.g. CEJIL) wins; else the mock native property.
+  if (e.country && !out.includes(e.country)) out.push(e.country);
   const native = getEntityProp(e.id, "country", lang);
   if (native && !out.includes(native)) out.push(native);
   return out;

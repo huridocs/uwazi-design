@@ -1,7 +1,7 @@
 import { useMemo, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Search, X, LayoutGrid, List, Map as MapIcon, Plus, Upload, FileSpreadsheet } from "lucide-react";
-import { entitiesAtom } from "../atoms/entities";
+import { dataSourceAtom, libraryEntitiesAtom } from "../atoms/dataSource";
 import { referencesAtom } from "../atoms/references";
 import { languageAtom, type Language } from "../atoms/language";
 import { appViewAtom } from "../atoms/navigation";
@@ -36,7 +36,8 @@ import { SegmentedControl } from "../components/shared/SegmentedControl";
 const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
 
 export function LibraryView() {
-  const entities = useAtomValue(entitiesAtom);
+  const entities = useAtomValue(libraryEntitiesAtom);
+  const [dataSource, setDataSource] = useAtom(dataSourceAtom);
   const references = useAtomValue(referencesAtom);
   const [query, setQuery] = useAtom(libraryQueryAtom);
   const [typeFilters, setTypeFilters] = useAtom(libraryTypeFiltersAtom);
@@ -81,7 +82,7 @@ export function LibraryView() {
     const list = entities.filter(
       (e) =>
         (activeTypeIds.length === 0 || activeTypeIds.includes(e.typeId)) &&
-        (!hasDocOnly || typeHasDocument(e.typeId)) &&
+        (!hasDocOnly || (dataSource === "cejil" ? e.preview === "document" : typeHasDocument(e.typeId))) &&
         (!statusActive || (wantPublished && e.published) || (wantRestricted && !e.published)) &&
         matchesCountries(entityCountries(e, language), activeCountries, countryMode) &&
         (!q || e.title.toLowerCase().includes(q)),
@@ -92,7 +93,7 @@ export function LibraryView() {
       sorted.sort((a, b) => (countByEntity.get(b.id) ?? 0) - (countByEntity.get(a.id) ?? 0));
     else sorted.sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? "")); // recent first
     return sorted;
-  }, [entities, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, language, q, sort, countByEntity]);
+  }, [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, language, q, sort, countByEntity]);
 
   const toggleType = (id: string) => setTypeFilters((prev) => ({ ...prev, [id]: !prev[id] }));
   const toggleStatus = (id: string) => setStatusFilters((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -140,6 +141,22 @@ export function LibraryView() {
             </button>
           )}
         </div>
+        <SegmentedControl
+          ariaLabel="Data source"
+          value={dataSource}
+          onChange={(v) => {
+            setDataSource(v as typeof dataSource);
+            // type/country ids differ per source — clear stale facets + preview.
+            setTypeFilters({});
+            setCountryFilters({});
+            setStatusFilters({});
+            setSelectedId(null);
+          }}
+          options={[
+            { id: "mock", label: "Sample" },
+            { id: "cejil", label: "CEJIL" },
+          ]}
+        />
         <Select
           value={sort}
           onChange={(v) => setSort(v as typeof sort)}

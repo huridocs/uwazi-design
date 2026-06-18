@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue } from "jotai";
 import { ChevronRight, Search, Lock, Globe, type LucideIcon } from "lucide-react";
-import { entitiesAtom } from "../../atoms/entities";
+import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom } from "../../atoms/dataSource";
 import { languageAtom } from "../../atoms/language";
 import {
   libraryQueryAtom,
@@ -12,7 +12,6 @@ import {
   libraryCountryModeAtom,
   libraryActiveFilterCountAtom,
 } from "../../atoms/library";
-import { entityTypes } from "../../data/entities";
 import { typeHasDocument } from "../../data/entityProfiles";
 import { entityCountries } from "../../utils/libraryFacets";
 import { Checkbox } from "../shared/Checkbox";
@@ -21,8 +20,13 @@ import { Checkbox } from "../shared/Checkbox";
  *  bordered facet cards, an expandable Documents group, a keyword-style
  *  Countries card (AND/OR + search, faceted counts), and a Clear at the bottom. */
 export function LibraryFilters() {
-  const entities = useAtomValue(entitiesAtom);
+  const entities = useAtomValue(libraryEntitiesAtom);
+  const types = useAtomValue(libraryTypesAtom);
+  const dataSource = useAtomValue(dataSourceAtom);
   const language = useAtomValue(languageAtom);
+  // Doc-ness is per-entity for CEJIL (real files) and per-type for the mock seed.
+  const isDoc = (e: { typeId: string; preview?: string }) =>
+    dataSource === "cejil" ? e.preview === "document" : typeHasDocument(e.typeId);
   const query = useAtomValue(libraryQueryAtom);
   const [typeFilters, setTypeFilters] = useAtom(libraryTypeFiltersAtom);
   const [hasDocOnly, setHasDocOnly] = useAtom(libraryHasDocAtom);
@@ -36,8 +40,8 @@ export function LibraryFilters() {
     return m;
   }, [entities]);
   const docCount = useMemo(
-    () => entities.filter((e) => typeHasDocument(e.typeId)).length,
-    [entities],
+    () => entities.filter(isDoc).length,
+    [entities, dataSource],
   );
   const publishedCount = useMemo(() => entities.filter((e) => e.published).length, [entities]);
   const restrictedCount = entities.length - publishedCount;
@@ -51,10 +55,10 @@ export function LibraryFilters() {
       entities.filter(
         (e) =>
           (activeTypeIds.length === 0 || activeTypeIds.includes(e.typeId)) &&
-          (!hasDocOnly || typeHasDocument(e.typeId)) &&
+          (!hasDocOnly || isDoc(e)) &&
           (!q || e.title.toLowerCase().includes(q)),
       ),
-    [entities, activeTypeIds.join(","), hasDocOnly, q],
+    [entities, dataSource, activeTypeIds.join(","), hasDocOnly, q],
   );
   const countryCounts = useMemo(() => {
     const m = new Map<string, number>();
@@ -62,8 +66,12 @@ export function LibraryFilters() {
     return m;
   }, [baseEntities, language]);
 
-  const nonDocTypes = entityTypes.filter((t) => !typeHasDocument(t.id));
-  const docTypes = entityTypes.filter((t) => typeHasDocument(t.id));
+  const nonDocTypes = types.filter((t) => !typeHasDocument(t.id));
+  const docTypes = types.filter((t) => typeHasDocument(t.id));
+  // CEJIL: a flat list of the templates actually present in results (by count).
+  const presentTypes = types
+    .filter((t) => (typeCounts[t.id] ?? 0) > 0)
+    .sort((a, b) => (typeCounts[b.id] ?? 0) - (typeCounts[a.id] ?? 0));
 
   const toggleType = (id: string) => setTypeFilters((prev) => ({ ...prev, [id]: !prev[id] }));
   const toggleStatus = (id: string) => setStatusFilters((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -107,42 +115,71 @@ export function LibraryFilters() {
           />
         </FacetCard>
 
-        <FacetCard>
-          {nonDocTypes.map((t) => (
-            <FacetRow
-              key={t.id}
-              checked={!!typeFilters[t.id]}
-              onToggle={() => toggleType(t.id)}
-              label={t.name}
-              count={typeCounts[t.id] ?? 0}
-              bold
-            />
-          ))}
-        </FacetCard>
-
-        <FacetCard>
-          <FacetRow
-            checked={hasDocOnly}
-            onToggle={() => setHasDocOnly((v) => !v)}
-            label="Documents"
-            count={docCount}
-            expandable
-            expanded={docOpen}
-            onExpand={() => setDocOpen((o) => !o)}
-            bold
-          />
-          {docOpen &&
-            docTypes.map((t) => (
+        {dataSource === "cejil" ? (
+          <>
+            {/* CEJIL: a flat list of the templates present in results. */}
+            <FacetCard>
+              {presentTypes.map((t) => (
+                <FacetRow
+                  key={t.id}
+                  checked={!!typeFilters[t.id]}
+                  onToggle={() => toggleType(t.id)}
+                  label={t.name}
+                  count={typeCounts[t.id] ?? 0}
+                  bold
+                />
+              ))}
+            </FacetCard>
+            <FacetCard>
               <FacetRow
-                key={t.id}
-                checked={!!typeFilters[t.id]}
-                onToggle={() => toggleType(t.id)}
-                label={t.name}
-                count={typeCounts[t.id] ?? 0}
-                indent
+                checked={hasDocOnly}
+                onToggle={() => setHasDocOnly((v) => !v)}
+                label="Documents"
+                count={docCount}
+                bold
               />
-            ))}
-        </FacetCard>
+            </FacetCard>
+          </>
+        ) : (
+          <>
+            <FacetCard>
+              {nonDocTypes.map((t) => (
+                <FacetRow
+                  key={t.id}
+                  checked={!!typeFilters[t.id]}
+                  onToggle={() => toggleType(t.id)}
+                  label={t.name}
+                  count={typeCounts[t.id] ?? 0}
+                  bold
+                />
+              ))}
+            </FacetCard>
+
+            <FacetCard>
+              <FacetRow
+                checked={hasDocOnly}
+                onToggle={() => setHasDocOnly((v) => !v)}
+                label="Documents"
+                count={docCount}
+                expandable
+                expanded={docOpen}
+                onExpand={() => setDocOpen((o) => !o)}
+                bold
+              />
+              {docOpen &&
+                docTypes.map((t) => (
+                  <FacetRow
+                    key={t.id}
+                    checked={!!typeFilters[t.id]}
+                    onToggle={() => toggleType(t.id)}
+                    label={t.name}
+                    count={typeCounts[t.id] ?? 0}
+                    indent
+                  />
+                ))}
+            </FacetCard>
+          </>
+        )}
 
         <CountriesCard counts={countryCounts} selected={countryFilters} onToggle={toggleCountry} />
       </div>

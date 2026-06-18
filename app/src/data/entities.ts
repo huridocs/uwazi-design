@@ -1,5 +1,6 @@
 import { getEntityProp } from "./entityMetadata";
 import { countryCoords, type LatLng } from "./geo";
+import { cejilTypeById } from "./cejil/typesAdapter";
 
 export interface EntityType {
   id: string;
@@ -34,6 +35,9 @@ export interface Entity {
   preview?: PreviewKind;
   /** Optional geolocation (from the entity's country) for the Library map view. */
   geo?: LatLng;
+  /** Optional country name (for the Countries facet) — set by adapters whose
+   *  entities don't carry a mock entityMetadata profile (e.g. CEJIL). */
+  country?: string;
 }
 
 export type PreviewKind = "document" | "image" | "video" | "audio";
@@ -150,7 +154,7 @@ export const entities: Entity[] = baseEntities.map((e) => ({
 }));
 
 export function getEntityType(typeId: string): EntityType | undefined {
-  return entityTypes.find((t) => t.id === typeId);
+  return entityTypes.find((t) => t.id === typeId) ?? cejilTypeById.get(typeId);
 }
 
 export function getEntity(id: string): Entity | undefined {
