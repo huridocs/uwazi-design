@@ -8,6 +8,8 @@ export { cejilSettings } from "./settings";
 export { cejilEntities } from "./entities";
 export { cejilRelationships } from "./relationships";
 export { cejilFiles } from "./files";
+export { cejilMenu } from "./menu";
+export { cejilPages } from "./pages";
 export { cejilFullText } from "./fullText";
 
-export const cejilManifest = {"cases":30,"entities":1338,"sharedEntities":446,"relationships":888,"files":483,"pdfs":30,"fullTextDocs":30};
+export const cejilManifest = {"cases":30,"entities":1338,"sharedEntities":446,"relationships":888,"files":483,"pdfs":30,"fullTextDocs":30,"menu":6,"pages":6};

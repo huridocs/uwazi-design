@@ -91,6 +91,20 @@ export interface CejilFile {
   toc?: CejilTocEntry[];
 }
 
+export interface CejilMenuLink {
+  id: string;
+  title: string;
+  url: string;
+  type: "link" | "group";
+}
+
+export interface CejilPage {
+  id: string;
+  title: string;
+  slug: string;
+  published: boolean;
+}
+
 /** A library filter node: a template leaf (`id`) or a named group of leaves. */
 export interface CejilFilterNode {
   id?: string;

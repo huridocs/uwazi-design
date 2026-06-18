@@ -45,6 +45,7 @@ const dictionaries = readAll("dictionaries.bson");
 const settingsDoc = readAll("settings.bson")[0];
 const entities = readAll("entities.bson");
 const connections = readAll("connections.bson");
+const pages = readAll("pages.bson");
 
 const tplName = Object.fromEntries(templates.map((t) => [String(t._id), t.name]));
 const relName = Object.fromEntries(relationtypes.map((r) => [String(r._id), r.name]));
@@ -221,6 +222,20 @@ const mapFilter = (n) =>
   n.items
     ? { name: n.name, items: n.items.map(mapFilter) }
     : { id: String(n.id), name: n.name || tplName[String(n.id)] || String(n.id) };
+// Menu (settings.links) — flatten one level (group header + its sublinks).
+const outMenu = [];
+(settingsDoc.links || []).forEach((l, i) => {
+  if (l.sublinks && l.sublinks.length) {
+    outMenu.push({ id: l._id ? String(l._id) : `g${i}`, title: l.title, url: "", type: "group" });
+    l.sublinks.forEach((s, j) => outMenu.push({ id: s._id ? String(s._id) : `g${i}s${j}`, title: s.title, url: s.url || "", type: "link" }));
+  } else {
+    outMenu.push({ id: l._id ? String(l._id) : `l${i}`, title: l.title, url: l.url || "", type: "link" });
+  }
+});
+
+// Pages (custom collection pages) — public content pages.
+const outPages = pages.map((p) => ({ id: String(p._id), title: p.title, slug: p.sharedId, published: true }));
+
 const outSettings = {
   siteName: settingsDoc.site_name || "SUMMA",
   defaultLibraryView: settingsDoc.defaultLibraryView || "cards",
@@ -260,8 +275,10 @@ write("settings.ts", `import type { CejilSettings } from "./types";\nexport cons
 write("entities.ts", `import type { CejilEntity } from "./types";\nexport const cejilEntities: CejilEntity[] = ${JSON.stringify(outEntities)};`);
 write("relationships.ts", `import type { CejilRelationship } from "./types";\nexport const cejilRelationships: CejilRelationship[] = ${JSON.stringify(outRels)};`);
 write("files.ts", `import type { CejilFile } from "./types";\nexport const cejilFiles: CejilFile[] = ${JSON.stringify(outFiles)};`);
+write("menu.ts", `import type { CejilMenuLink } from "./types";\nexport const cejilMenu: CejilMenuLink[] = ${JSON.stringify(outMenu)};`);
+write("pages.ts", `import type { CejilPage } from "./types";\nexport const cejilPages: CejilPage[] = ${JSON.stringify(outPages)};`);
 write("fullText.ts", `export const cejilFullText: Record<string, string[]> = ${JSON.stringify(fullTextByFile)};`);
-write("index.ts", `export * from "./types";\nexport { cejilTemplates } from "./templates";\nexport { cejilThesauri } from "./thesauri";\nexport { cejilRelationTypes } from "./relationTypes";\nexport { cejilSettings } from "./settings";\nexport { cejilEntities } from "./entities";\nexport { cejilRelationships } from "./relationships";\nexport { cejilFiles } from "./files";\nexport { cejilFullText } from "./fullText";\n\nexport const cejilManifest = ${JSON.stringify({ cases: causas.length, entities: outEntities.length, sharedEntities: keptSids.size, relationships: outRels.length, files: outFiles.length, pdfs: toDownload.length, fullTextDocs: Object.keys(fullTextByFile).length })};`);
+write("index.ts", `export * from "./types";\nexport { cejilTemplates } from "./templates";\nexport { cejilThesauri } from "./thesauri";\nexport { cejilRelationTypes } from "./relationTypes";\nexport { cejilSettings } from "./settings";\nexport { cejilEntities } from "./entities";\nexport { cejilRelationships } from "./relationships";\nexport { cejilFiles } from "./files";\nexport { cejilMenu } from "./menu";\nexport { cejilPages } from "./pages";\nexport { cejilFullText } from "./fullText";\n\nexport const cejilManifest = ${JSON.stringify({ cases: causas.length, entities: outEntities.length, sharedEntities: keptSids.size, relationships: outRels.length, files: outFiles.length, pdfs: toDownload.length, fullTextDocs: Object.keys(fullTextByFile).length, menu: outMenu.length, pages: outPages.length })};`);
 
 console.log("Manifest:", { cases: causas.length, entities: outEntities.length, sharedEntities: keptSids.size, relationships: outRels.length, files: outFiles.length, pdfs: toDownload.length });
 

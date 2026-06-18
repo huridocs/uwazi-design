@@ -9,6 +9,8 @@ import type {
   SettingsThesaurus,
   SettingsRelationType,
   SettingsLanguage,
+  SettingsMenuLink,
+  SettingsPage,
 } from "../settings";
 import { cejilTemplates } from "./templates";
 import { cejilThesauri } from "./thesauri";
@@ -16,6 +18,8 @@ import { cejilRelationTypes } from "./relationTypes";
 import { cejilEntities } from "./entities";
 import { cejilRelationships } from "./relationships";
 import { cejilSettings } from "./settings";
+import { cejilMenu } from "./menu";
+import { cejilPages } from "./pages";
 import { cejilTypeById } from "./typesAdapter";
 
 function ptype(t: string): PropertyType {
@@ -86,6 +90,20 @@ export const cejilSettingsLanguages: SettingsLanguage[] = cejilSettings.language
   ltr: l.key !== "ar",
   default: l.default,
   translationsCount: 100,
+}));
+
+export const cejilSettingsMenu: SettingsMenuLink[] = cejilMenu.map((m) => ({
+  id: m.id,
+  title: m.title,
+  url: m.url,
+  type: m.type,
+}));
+
+export const cejilSettingsPages: SettingsPage[] = cejilPages.map((p) => ({
+  id: p.id,
+  title: p.title,
+  slug: p.slug,
+  published: p.published,
 }));
 
 export const cejilCollection = {
