@@ -91,9 +91,18 @@ export interface CejilFile {
   toc?: CejilTocEntry[];
 }
 
+/** A library filter node: a template leaf (`id`) or a named group of leaves. */
+export interface CejilFilterNode {
+  id?: string;
+  name: string;
+  items?: CejilFilterNode[];
+}
+
 export interface CejilSettings {
   siteName: string;
   defaultLibraryView: string;
   dateFormat: string;
   languages: { key: string; label: string; default: boolean }[];
+  /** The curated library filter config (real summa.cejil.org grouping). */
+  filters: CejilFilterNode[];
 }

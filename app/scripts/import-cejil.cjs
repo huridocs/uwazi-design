@@ -217,11 +217,16 @@ function cleanProp(p) {
   if (p.inherit) o.inherit = { property: String(p.inherit.property), type: p.inherit.type };
   return o;
 }
+const mapFilter = (n) =>
+  n.items
+    ? { name: n.name, items: n.items.map(mapFilter) }
+    : { id: String(n.id), name: n.name || tplName[String(n.id)] || String(n.id) };
 const outSettings = {
   siteName: settingsDoc.site_name || "SUMMA",
   defaultLibraryView: settingsDoc.defaultLibraryView || "cards",
   dateFormat: settingsDoc.dateFormat || "yyyy/MM/dd",
   languages: (settingsDoc.languages || []).map((l) => ({ key: l.key, label: l.label, default: !!l.default })),
+  filters: (settingsDoc.filters || []).map(mapFilter),
 };
 
 // ── download PDFs ──

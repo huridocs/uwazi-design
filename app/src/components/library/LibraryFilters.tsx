@@ -13,6 +13,7 @@ import {
   libraryActiveFilterCountAtom,
 } from "../../atoms/library";
 import { typeHasDocument } from "../../data/entityProfiles";
+import { cejilSettings } from "../../data/cejil/settings";
 import { entityCountries } from "../../utils/libraryFacets";
 import { Checkbox } from "../shared/Checkbox";
 
@@ -68,10 +69,6 @@ export function LibraryFilters() {
 
   const nonDocTypes = types.filter((t) => !typeHasDocument(t.id));
   const docTypes = types.filter((t) => typeHasDocument(t.id));
-  // CEJIL: a flat list of the templates actually present in results (by count).
-  const presentTypes = types
-    .filter((t) => (typeCounts[t.id] ?? 0) > 0)
-    .sort((a, b) => (typeCounts[b.id] ?? 0) - (typeCounts[a.id] ?? 0));
 
   const toggleType = (id: string) => setTypeFilters((prev) => ({ ...prev, [id]: !prev[id] }));
   const toggleStatus = (id: string) => setStatusFilters((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -84,6 +81,17 @@ export function LibraryFilters() {
   };
 
   const [docOpen, setDocOpen] = useState(true);
+  // CEJIL filter groups (e.g. "Documentos") — expanded by default.
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  const groupActive = (ids: string[]) => ids.length > 0 && ids.every((id) => typeFilters[id]);
+  const toggleGroup = (ids: string[]) => {
+    const turnOff = groupActive(ids);
+    setTypeFilters((prev) => {
+      const next = { ...prev };
+      for (const id of ids) next[id] = !turnOff;
+      return next;
+    });
+  };
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-warm">
@@ -117,27 +125,51 @@ export function LibraryFilters() {
 
         {dataSource === "cejil" ? (
           <>
-            {/* CEJIL: a flat list of the templates present in results. */}
+            {/* CEJIL: the curated summa.cejil.org filter config — top-level
+                templates + the expandable "Documentos" group. */}
             <FacetCard>
-              {presentTypes.map((t) => (
-                <FacetRow
-                  key={t.id}
-                  checked={!!typeFilters[t.id]}
-                  onToggle={() => toggleType(t.id)}
-                  label={t.name}
-                  count={typeCounts[t.id] ?? 0}
-                  bold
-                />
-              ))}
-            </FacetCard>
-            <FacetCard>
-              <FacetRow
-                checked={hasDocOnly}
-                onToggle={() => setHasDocOnly((v) => !v)}
-                label="Documents"
-                count={docCount}
-                bold
-              />
+              {cejilSettings.filters.map((node) => {
+                if (!node.items) {
+                  return (
+                    <FacetRow
+                      key={node.id}
+                      checked={!!typeFilters[node.id!]}
+                      onToggle={() => toggleType(node.id!)}
+                      label={node.name}
+                      count={typeCounts[node.id!] ?? 0}
+                      bold
+                    />
+                  );
+                }
+                const ids = node.items.map((c) => c.id!).filter(Boolean);
+                const open = openGroups[node.name] ?? true;
+                const total = ids.reduce((s, id) => s + (typeCounts[id] ?? 0), 0);
+                return (
+                  <div key={node.name}>
+                    <FacetRow
+                      checked={groupActive(ids)}
+                      onToggle={() => toggleGroup(ids)}
+                      label={node.name}
+                      count={total}
+                      expandable
+                      expanded={open}
+                      onExpand={() => setOpenGroups((p) => ({ ...p, [node.name]: !open }))}
+                      bold
+                    />
+                    {open &&
+                      node.items.map((c) => (
+                        <FacetRow
+                          key={c.id}
+                          checked={!!typeFilters[c.id!]}
+                          onToggle={() => toggleType(c.id!)}
+                          label={c.name}
+                          count={typeCounts[c.id!] ?? 0}
+                          indent
+                        />
+                      ))}
+                  </div>
+                );
+              })}
             </FacetCard>
           </>
         ) : (
