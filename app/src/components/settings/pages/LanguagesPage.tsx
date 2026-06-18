@@ -124,7 +124,7 @@ export function LanguagesPage() {
         <Table columns={columns} data={languages} getRowId={(l) => l.key} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" icon={<Plus size={14} />}>
+        <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />}>
           Install language
         </Button>
       </SettingsContent.Footer>

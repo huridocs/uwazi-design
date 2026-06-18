@@ -62,7 +62,7 @@ export function MenuPage() {
         <Table columns={columns} data={links} getRowId={(m) => m.id} onRowClick={(m) => setEditing(m)} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
+        <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
           Add link
         </Button>
       </SettingsContent.Footer>

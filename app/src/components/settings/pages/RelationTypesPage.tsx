@@ -59,7 +59,7 @@ export function RelationTypesPage() {
         <Table columns={columns} data={types} getRowId={(r) => r.id} onRowClick={(r) => setEditing(r)} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
+        <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
           Add type
         </Button>
       </SettingsContent.Footer>

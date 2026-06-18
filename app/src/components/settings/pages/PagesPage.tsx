@@ -63,7 +63,7 @@ export function PagesPage() {
         <Table columns={columns} data={pages} getRowId={(p) => p.id} onRowClick={(p) => setEditing(p)} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
+        <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
           Add page
         </Button>
       </SettingsContent.Footer>

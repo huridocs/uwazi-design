@@ -70,7 +70,7 @@ export function TranslationsPage() {
         <Table columns={columns} data={seedTranslationContexts} getRowId={(c) => c.id} onRowClick={(c) => setEditing(c)} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="secondary" size="sm" icon={<Upload size={14} />}>
+        <Button variant="secondary" size="sm" className="me-auto" icon={<Upload size={14} />}>
           Import translations (CSV)
         </Button>
       </SettingsContent.Footer>

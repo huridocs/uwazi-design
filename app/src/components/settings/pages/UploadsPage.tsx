@@ -45,7 +45,7 @@ export function UploadsPage() {
         <Table columns={columns} data={uploads} getRowId={(u) => u.id} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" icon={<Upload size={14} />}>
+        <Button variant="primary" size="sm" className="me-auto" icon={<Upload size={14} />}>
           Upload file
         </Button>
       </SettingsContent.Footer>
