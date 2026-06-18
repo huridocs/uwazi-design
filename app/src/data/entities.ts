@@ -38,6 +38,9 @@ export interface Entity {
   /** Optional country name (for the Countries facet) — set by adapters whose
    *  entities don't carry a mock entityMetadata profile (e.g. CEJIL). */
   country?: string;
+  /** Adapter-supplied display fields (label/value) for the Library card, when the
+   *  entity has no mock entityMetadata profile. Resolved from real metadata. */
+  fields?: { label: string; value: string }[];
 }
 
 export type PreviewKind = "document" | "image" | "video" | "audio";

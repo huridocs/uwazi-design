@@ -4,8 +4,53 @@ import type { Entity } from "../entities";
 import { countryCoords } from "../geo";
 import { cejilEntities } from "./entities";
 import { cejilFiles } from "./files";
+import { cejilTemplates } from "./templates";
 
 const docEntities = new Set(cejilFiles.map((f) => f.entity));
+
+/** template _id → ordered [{name,label,type}] for resolving display fields. */
+const propsByTemplate = new Map(
+  cejilTemplates.map((t) => [
+    t._id,
+    [...(t.commonProperties || []), ...t.properties].map((p) => ({ name: p.name, label: p.label, type: p.type })),
+  ]),
+);
+
+const SKIP_TYPES = new Set(["preview", "geolocation", "image", "link", "media", "nested", "generatedtoc"]);
+
+function formatVals(type: string, vals: { value?: unknown; label?: unknown }[]): string {
+  if (SKIP_TYPES.has(type)) return "";
+  if (type === "date") {
+    const v = vals[0]?.value;
+    return typeof v === "number" && v > 0 ? String(new Date(v * 1000).getUTCFullYear()) : "";
+  }
+  const labels = vals.map((v) => v?.label).filter((l): l is string => typeof l === "string" && !!l);
+  if (labels.length) return labels.slice(0, 2).join(", ");
+  const v = vals[0]?.value;
+  if (typeof v === "string" && v.trim()) {
+    const s = v.replace(/\s+/g, " ").trim();
+    // Skip raw URLs / JSON blobs (media, embed configs) — not card-displayable.
+    if (/^https?:\/\//.test(s) || s.startsWith("{") || s.startsWith("[")) return "";
+    return s.length > 90 ? s.slice(0, 90) + "…" : s;
+  }
+  return "";
+}
+
+/** First few non-empty metadata fields (label + display value), in template order. */
+function fieldsOf(e: { template: string; metadata?: Record<string, { value?: unknown; label?: unknown }[]> }) {
+  const props = propsByTemplate.get(e.template) || [];
+  const out: { label: string; value: string }[] = [];
+  for (const p of props) {
+    if (p.name === "title") continue;
+    const vals = e.metadata?.[p.name];
+    if (!vals || !vals.length) continue;
+    const value = formatVals(p.type, vals);
+    if (!value) continue;
+    out.push({ label: p.label, value });
+    if (out.length >= 3) break;
+  }
+  return out.length ? out : undefined;
+}
 
 /** Spanish doc is canonical for the card list (titles/labels are richest in es). */
 const esEntities = cejilEntities.filter((e) => e.language === "es");
@@ -38,5 +83,6 @@ export const cejilLibraryEntities: Entity[] = esEntities.map((e) => {
     country,
     geo: country ? countryCoords[country] : undefined,
     createdAt: createdOf(e),
+    fields: fieldsOf(e),
   };
 });

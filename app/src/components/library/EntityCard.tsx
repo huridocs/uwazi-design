@@ -25,14 +25,16 @@ export function EntityCard({
   onView: () => void;
 }) {
   const language = useAtomValue(languageAtom);
-  const profile = getEntityProfile(entity.id);
 
-  // A few metadata field label/value pairs (template properties), plus Language —
-  // matching the Figma card. Only fields that resolved to a value.
-  const scalarFields = (profile.metadata[language] ?? [])
-    .filter((f): f is MetadataField => f.type !== "relationship" && !!(f as MetadataField).value && (f as MetadataField).value !== "—")
-    .slice(0, 3);
-  const fields = [...scalarFields, { id: "language", label: "Language", value: language } as MetadataField];
+  // Adapter-supplied real fields (e.g. CEJIL) win; otherwise derive from the mock
+  // entityMetadata profile. Only fields that resolved to a value.
+  const scalarFields: { id: string; label: string; value: string }[] = entity.fields
+    ? entity.fields.map((f, i) => ({ id: `${f.label}-${i}`, label: f.label, value: f.value }))
+    : (getEntityProfile(entity.id).metadata[language] ?? [])
+        .filter((f): f is MetadataField => f.type !== "relationship" && !!(f as MetadataField).value && (f as MetadataField).value !== "—")
+        .slice(0, 3)
+        .map((f) => ({ id: f.id, label: f.label, value: String(f.value) }));
+  const fields = [...scalarFields, { id: "language", label: "Language", value: language }];
 
   const viewButton = (
     <button
