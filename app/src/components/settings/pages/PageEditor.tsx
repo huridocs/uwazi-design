@@ -31,6 +31,12 @@ export function PageEditor({
   const [published, setPublished] = useState(base?.published ?? false);
   const [body, setBody] = useState(isNew ? "" : SAMPLE_BODY);
 
+  const dirty =
+    title !== (base?.title ?? "") ||
+    slug !== (base?.slug ?? "") ||
+    published !== (base?.published ?? false) ||
+    body !== (isNew ? "" : SAMPLE_BODY);
+
   const save = () => {
     setToasts((p) => [
       ...p,
@@ -41,7 +47,7 @@ export function PageEditor({
 
   return (
     <SettingsContent>
-      <SettingsContent.Header path={["Pages"]} title={isNew ? "New page" : base!.title} />
+      <SettingsContent.Header path={["Pages"]} title={isNew ? "New page" : base!.title} onBack={onClose} />
       <SettingsContent.Body className="flex flex-col min-h-0">
         <section className="grid sm:grid-cols-2 gap-3 mb-4">
           <Field label="Title">
@@ -69,10 +75,10 @@ export function PageEditor({
         </Field>
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" disabled={!title} onClick={save}>
+        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+        <Button variant="success" size="sm" disabled={!dirty || !title} onClick={save}>
           {isNew ? "Create page" : "Save"}
         </Button>
-        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
       </SettingsContent.Footer>
     </SettingsContent>
   );

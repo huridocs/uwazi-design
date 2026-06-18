@@ -43,6 +43,8 @@ export function TranslationEditor({
       prev.map((r, i) => (i === rowIndex ? { ...r, values: { ...r.values, [langKey]: value } } : r)),
     );
 
+  const dirty = JSON.stringify(rows) !== JSON.stringify(buildRows(context));
+
   const save = () => {
     setToasts((p) => [
       ...p,
@@ -91,7 +93,7 @@ export function TranslationEditor({
 
   return (
     <SettingsContent>
-      <SettingsContent.Header path={["Translations"]} title={context.name} />
+      <SettingsContent.Header path={["Translations"]} title={context.name} onBack={onClose} />
       <SettingsContent.Body>
         <p className="text-xs text-ink-tertiary mb-4">
           Translate each term into your active languages. The source language is shown for reference.
@@ -99,11 +101,11 @@ export function TranslationEditor({
         <Table columns={columns} data={rows} getRowId={(r) => r.key} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" onClick={save}>
-          Save
-        </Button>
         <Button variant="ghost" size="sm" onClick={onClose}>
           Cancel
+        </Button>
+        <Button variant="success" size="sm" disabled={!dirty} onClick={save}>
+          Save
         </Button>
       </SettingsContent.Footer>
     </SettingsContent>

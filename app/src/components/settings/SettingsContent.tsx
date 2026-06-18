@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useSetAtom } from "jotai";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, ArrowLeft } from "lucide-react";
 import { settingsMobileDrilledAtom } from "../../atoms/settings";
 
 /** Content-area shell for a settings page, mirroring Uwazi's V2
@@ -25,11 +25,14 @@ interface HeaderProps {
   /** Breadcrumb trail before the title (e.g. ["Templates"]). */
   path?: string[];
   title: ReactNode;
+  /** Provided by a nested (child) view — renders a back arrow on all sizes and
+   *  makes the breadcrumb crumbs clickable, all returning to the parent list. */
+  onBack?: () => void;
 }
 
 // Title/breadcrumb only — actions live in the bottom action bar (Footer), per
 // our convention (we don't put primary actions in a top bar).
-SettingsContent.Header = function SettingsHeader({ path, title }: HeaderProps) {
+SettingsContent.Header = function SettingsHeader({ path, title, onBack }: HeaderProps) {
   const setDrilled = useSetAtom(settingsMobileDrilledAtom);
   return (
     <div
@@ -37,20 +40,44 @@ SettingsContent.Header = function SettingsHeader({ path, title }: HeaderProps) {
       style={{ borderBottom: "1px solid var(--border-primary)" }}
       data-testid="settings-content-header"
     >
-      <button
-        onClick={() => setDrilled(false)}
-        aria-label="Back to settings"
-        className="md:hidden -ms-1 p-1 rounded-md text-ink-tertiary hover:bg-warm hover:text-ink transition-colors shrink-0"
-      >
-        <ChevronLeft size={18} />
-      </button>
+      {onBack ? (
+        // Nested view: a back arrow on every breakpoint → returns to the list.
+        <button
+          onClick={onBack}
+          aria-label="Back"
+          className="-ms-1 p-1 rounded-md text-ink-tertiary hover:bg-warm hover:text-ink transition-colors shrink-0"
+        >
+          <ArrowLeft size={18} />
+        </button>
+      ) : (
+        // Top-level page: the mobile drill-out to the settings rail.
+        <button
+          onClick={() => setDrilled(false)}
+          aria-label="Back to settings"
+          className="md:hidden -ms-1 p-1 rounded-md text-ink-tertiary hover:bg-warm hover:text-ink transition-colors shrink-0"
+        >
+          <ChevronLeft size={18} />
+        </button>
+      )}
       <div className="flex items-center gap-1.5 min-w-0 flex-1 text-sm">
-        {path?.map((crumb) => (
-          <span key={crumb} className="flex items-center gap-1.5 text-ink-tertiary">
-            <span className="truncate">{crumb}</span>
-            <span className="text-ink-muted">/</span>
-          </span>
-        ))}
+        {path?.map((crumb) =>
+          onBack ? (
+            <span key={crumb} className="flex items-center gap-1.5">
+              <button
+                onClick={onBack}
+                className="truncate text-ink-tertiary hover:text-ink hover:underline transition-colors cursor-pointer"
+              >
+                {crumb}
+              </button>
+              <span className="text-ink-muted">/</span>
+            </span>
+          ) : (
+            <span key={crumb} className="flex items-center gap-1.5 text-ink-tertiary">
+              <span className="truncate">{crumb}</span>
+              <span className="text-ink-muted">/</span>
+            </span>
+          ),
+        )}
         <span className="font-semibold text-ink truncate">{title}</span>
       </div>
     </div>
@@ -83,7 +110,7 @@ SettingsContent.Footer = function SettingsFooter({
 }) {
   return (
     <div
-      className={`sticky bottom-0 z-10 flex items-center gap-2 h-12 px-4 shrink-0 ${
+      className={`sticky bottom-0 z-10 flex items-center justify-end gap-2 h-12 px-4 shrink-0 ${
         highlighted ? "bg-carbon-tint" : "bg-paper"
       }`}
       style={{ borderTop: "1px solid var(--border-primary)" }}

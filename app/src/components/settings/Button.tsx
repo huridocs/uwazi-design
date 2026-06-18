@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
-type Variant = "primary" | "secondary" | "danger" | "ghost";
+type Variant = "primary" | "secondary" | "danger" | "ghost" | "success";
 type Size = "sm" | "md";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -18,6 +18,8 @@ const variants: Record<Variant, string> = {
   secondary: "bg-warm text-ink-secondary hover:bg-parchment hover:text-ink",
   danger: "bg-seal text-white hover:bg-seal/90",
   ghost: "text-ink-secondary hover:bg-warm hover:text-ink",
+  // Active save affordance — green only once there's an unsaved change.
+  success: "bg-success text-white hover:bg-success/90",
 };
 
 // Padding-based, matching the app's hand-rolled pills (ToolsActionBar /

@@ -32,6 +32,12 @@ export function UserEditor({
   const [role, setRole] = useState<UserRole>(base?.role ?? "collaborator");
   const [groups, setGroups] = useState<string[]>(base?.groups ?? []);
 
+  const dirty =
+    username !== (base?.username ?? "") ||
+    email !== (base?.email ?? "") ||
+    role !== (base?.role ?? "collaborator") ||
+    JSON.stringify(groups) !== JSON.stringify(base?.groups ?? []);
+
   const toggleGroup = (name: string) =>
     setGroups((prev) => (prev.includes(name) ? prev.filter((g) => g !== name) : [...prev, name]));
 
@@ -45,7 +51,7 @@ export function UserEditor({
 
   return (
     <SettingsContent>
-      <SettingsContent.Header path={["Users & Groups"]} title={isNew ? "New user" : base!.username} />
+      <SettingsContent.Header path={["Users & Groups"]} title={isNew ? "New user" : base!.username} onBack={onClose} />
       <SettingsContent.Body>
         <div className="flex flex-col gap-6">
           <section className="grid sm:grid-cols-2 gap-3">
@@ -102,10 +108,10 @@ export function UserEditor({
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" disabled={!username || !email} onClick={save}>
+        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+        <Button variant="success" size="sm" disabled={!dirty || !username || !email} onClick={save}>
           {isNew ? "Invite user" : "Save"}
         </Button>
-        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
       </SettingsContent.Footer>
     </SettingsContent>
   );

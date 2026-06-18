@@ -38,6 +38,15 @@ export function TemplateEditor({
     isNew ? [...defaultTemplateProperties] : templatePropertiesByTemplate[base!.id] ?? defaultTemplateProperties,
   );
 
+  const initialColor = base?.color ?? PALETTE[0];
+  const initialProps = isNew
+    ? defaultTemplateProperties
+    : templatePropertiesByTemplate[base!.id] ?? defaultTemplateProperties;
+  const dirty =
+    name !== (base?.name ?? "") ||
+    color !== initialColor ||
+    JSON.stringify(props) !== JSON.stringify(initialProps);
+
   const patchProp = (id: string, patch: Partial<TemplateProperty>) =>
     setProps((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
 
@@ -110,7 +119,7 @@ export function TemplateEditor({
 
   return (
     <SettingsContent>
-      <SettingsContent.Header path={["Templates"]} title={isNew ? "New template" : base!.name} />
+      <SettingsContent.Header path={["Templates"]} title={isNew ? "New template" : base!.name} onBack={onClose} />
       <SettingsContent.Body>
         <div className="flex flex-col gap-6">
           <section className="grid sm:grid-cols-2 gap-3">
@@ -144,11 +153,11 @@ export function TemplateEditor({
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" onClick={save}>
-          {isNew ? "Create template" : "Save"}
-        </Button>
         <Button variant="ghost" size="sm" onClick={onClose}>
           Cancel
+        </Button>
+        <Button variant="success" size="sm" disabled={!dirty} onClick={save}>
+          {isNew ? "Create template" : "Save"}
         </Button>
       </SettingsContent.Footer>
     </SettingsContent>

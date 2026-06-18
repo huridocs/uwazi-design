@@ -32,6 +32,11 @@ export function ThesaurusEditor({
     isNew ? [] : (seedThesaurusItems[base!.id] ?? []).map((label, i) => ({ id: `i${i}`, label })),
   );
 
+  const initialLabels = isNew ? [] : seedThesaurusItems[base!.id] ?? [];
+  const dirty =
+    name !== (base?.name ?? "") ||
+    JSON.stringify(items.map((i) => i.label)) !== JSON.stringify(initialLabels);
+
   const patch = (id: string, label: string) =>
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, label } : it)));
   const addItem = () =>
@@ -75,7 +80,7 @@ export function ThesaurusEditor({
 
   return (
     <SettingsContent>
-      <SettingsContent.Header path={["Thesauri"]} title={isNew ? "New thesaurus" : base!.name} />
+      <SettingsContent.Header path={["Thesauri"]} title={isNew ? "New thesaurus" : base!.name} onBack={onClose} />
       <SettingsContent.Body>
         <div className="flex flex-col gap-6">
           <section className="max-w-sm">
@@ -96,10 +101,10 @@ export function ThesaurusEditor({
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" disabled={!name} onClick={save}>
+        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+        <Button variant="success" size="sm" disabled={!dirty || !name} onClick={save}>
           {isNew ? "Create thesaurus" : "Save"}
         </Button>
-        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
       </SettingsContent.Footer>
     </SettingsContent>
   );

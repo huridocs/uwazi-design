@@ -26,6 +26,9 @@ export function ExtractorEditor({
   const [template, setTemplate] = useState(base?.template ?? TEMPLATE_OPTIONS[0].value);
   const [property, setProperty] = useState(base?.property ?? "");
 
+  const dirty =
+    template !== (base?.template ?? TEMPLATE_OPTIONS[0].value) || property !== (base?.property ?? "");
+
   const save = () => {
     setToasts((p) => [
       ...p,
@@ -36,7 +39,7 @@ export function ExtractorEditor({
 
   return (
     <SettingsContent>
-      <SettingsContent.Header path={["Metadata Extraction"]} title={isNew ? "New extractor" : base!.property} />
+      <SettingsContent.Header path={["Metadata Extraction"]} title={isNew ? "New extractor" : base!.property} onBack={onClose} />
       <SettingsContent.Body>
         <div className="flex flex-col gap-6 max-w-lg">
           <section className="flex flex-col gap-3">
@@ -63,10 +66,10 @@ export function ExtractorEditor({
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" disabled={!property} onClick={save}>
+        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+        <Button variant="success" size="sm" disabled={!dirty || !property} onClick={save}>
           {isNew ? "Create extractor" : "Save"}
         </Button>
-        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
       </SettingsContent.Footer>
     </SettingsContent>
   );

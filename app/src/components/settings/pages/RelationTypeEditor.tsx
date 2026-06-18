@@ -19,6 +19,7 @@ export function RelationTypeEditor({
   const base = isNew ? undefined : relationType;
 
   const [name, setName] = useState(base?.name ?? "");
+  const dirty = name !== (base?.name ?? "");
 
   const save = () => {
     setToasts((p) => [
@@ -30,7 +31,7 @@ export function RelationTypeEditor({
 
   return (
     <SettingsContent>
-      <SettingsContent.Header path={["Relationship types"]} title={isNew ? "New relationship type" : base!.name} />
+      <SettingsContent.Header path={["Relationship types"]} title={isNew ? "New relationship type" : base!.name} onBack={onClose} />
       <SettingsContent.Body>
         <div className="flex flex-col gap-4 max-w-sm">
           <Field label="Name" hint="The label shown when connecting two entities.">
@@ -44,10 +45,10 @@ export function RelationTypeEditor({
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" disabled={!name} onClick={save}>
+        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+        <Button variant="success" size="sm" disabled={!dirty || !name} onClick={save}>
           {isNew ? "Create type" : "Save"}
         </Button>
-        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
       </SettingsContent.Footer>
     </SettingsContent>
   );

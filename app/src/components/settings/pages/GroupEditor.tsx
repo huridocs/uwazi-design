@@ -24,6 +24,12 @@ export function GroupEditor({
     isNew ? [] : seedUsers.filter((u) => u.groups.includes(base!.name)).map((u) => u.id),
   );
 
+  const initialMembers = isNew
+    ? []
+    : seedUsers.filter((u) => u.groups.includes(base!.name)).map((u) => u.id);
+  const dirty =
+    name !== (base?.name ?? "") || JSON.stringify(members) !== JSON.stringify(initialMembers);
+
   const toggle = (id: string) =>
     setMembers((prev) => (prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id]));
 
@@ -37,7 +43,7 @@ export function GroupEditor({
 
   return (
     <SettingsContent>
-      <SettingsContent.Header path={["Users & Groups"]} title={isNew ? "New group" : base!.name} />
+      <SettingsContent.Header path={["Users & Groups"]} title={isNew ? "New group" : base!.name} onBack={onClose} />
       <SettingsContent.Body>
         <div className="flex flex-col gap-6">
           <section className="max-w-sm">
@@ -70,10 +76,10 @@ export function GroupEditor({
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" disabled={!name} onClick={save}>
+        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+        <Button variant="success" size="sm" disabled={!dirty || !name} onClick={save}>
           {isNew ? "Create group" : "Save"}
         </Button>
-        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
       </SettingsContent.Footer>
     </SettingsContent>
   );

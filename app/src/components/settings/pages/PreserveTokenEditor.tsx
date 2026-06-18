@@ -24,6 +24,8 @@ export function PreserveTokenEditor({
   const [name, setName] = useState(base?.name ?? "");
   const [schedule, setSchedule] = useState("daily");
 
+  const dirty = name !== (base?.name ?? "") || schedule !== "daily";
+
   const toast = (message: string) =>
     setToasts((p) => [...p, { id: Date.now().toString(), message, type: "success" as const }]);
 
@@ -34,7 +36,7 @@ export function PreserveTokenEditor({
 
   return (
     <SettingsContent>
-      <SettingsContent.Header path={["Preserve"]} title={isNew ? "New capture source" : base!.name} />
+      <SettingsContent.Header path={["Preserve"]} title={isNew ? "New capture source" : base!.name} onBack={onClose} />
       <SettingsContent.Body>
         <div className="flex flex-col gap-6 max-w-lg">
           <Field label="Source name">
@@ -84,10 +86,10 @@ export function PreserveTokenEditor({
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" disabled={!name} onClick={save}>
+        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+        <Button variant="success" size="sm" disabled={!dirty || !name} onClick={save}>
           {isNew ? "Add source" : "Save"}
         </Button>
-        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
       </SettingsContent.Footer>
     </SettingsContent>
   );

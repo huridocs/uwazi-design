@@ -24,6 +24,9 @@ export function MenuLinkEditor({
   const [title, setTitle] = useState(base?.title ?? "");
   const [url, setUrl] = useState(base?.url ?? "");
 
+  const dirty =
+    type !== (base?.type ?? "link") || title !== (base?.title ?? "") || url !== (base?.url ?? "");
+
   const save = () => {
     setToasts((p) => [
       ...p,
@@ -34,7 +37,7 @@ export function MenuLinkEditor({
 
   return (
     <SettingsContent>
-      <SettingsContent.Header path={["Menu"]} title={isNew ? "New menu item" : base!.title} />
+      <SettingsContent.Header path={["Menu"]} title={isNew ? "New menu item" : base!.title} onBack={onClose} />
       <SettingsContent.Body>
         <div className="flex flex-col gap-6 max-w-lg">
           <RadioGroup
@@ -59,10 +62,10 @@ export function MenuLinkEditor({
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" disabled={!title} onClick={save}>
+        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+        <Button variant="success" size="sm" disabled={!dirty || !title} onClick={save}>
           {isNew ? "Add item" : "Save"}
         </Button>
-        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
       </SettingsContent.Footer>
     </SettingsContent>
   );

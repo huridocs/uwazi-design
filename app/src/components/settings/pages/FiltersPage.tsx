@@ -39,6 +39,8 @@ export function FiltersPage() {
   );
 
   const activeCount = rows.filter((r) => r.active).length;
+  const initialRows = seedFilterConfig.map((f) => ({ templateId: f.templateId, active: f.active, groupId: "" }));
+  const dirty = groups.length > 0 || JSON.stringify(rows) !== JSON.stringify(initialRows);
   const groupOptions = [
     { value: "", label: "No group" },
     ...groups.map((g) => ({ value: g.id, label: g.name || "Untitled group" })),
@@ -168,10 +170,10 @@ export function FiltersPage() {
         <Table columns={columns} data={rows} getRowId={(r) => r.templateId} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" onClick={save}>
+        <span className="text-xs text-ink-tertiary me-auto">{activeCount} filters shown</span>
+        <Button variant="success" size="sm" disabled={!dirty} onClick={save}>
           Save
         </Button>
-        <span className="text-xs text-ink-tertiary">{activeCount} filters shown</span>
       </SettingsContent.Footer>
     </SettingsContent>
   );

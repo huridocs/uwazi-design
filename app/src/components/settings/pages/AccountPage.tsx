@@ -85,10 +85,10 @@ export function AccountPage() {
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" disabled={!dirty || mismatch} onClick={save}>
+        {dirty && <span className="text-xs text-ink-tertiary me-auto">Unsaved changes</span>}
+        <Button variant="success" size="sm" disabled={!dirty || mismatch} onClick={save}>
           Update account
         </Button>
-        {dirty && <span className="text-xs text-ink-tertiary">Unsaved changes</span>}
       </SettingsContent.Footer>
     </SettingsContent>
   );

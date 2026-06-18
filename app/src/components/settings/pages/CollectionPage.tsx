@@ -38,6 +38,14 @@ export function CollectionPage() {
   const [cookiePolicy, setCookiePolicy] = useState(true);
   const [publicSharing, setPublicSharing] = useState(true);
 
+  const dirty =
+    name !== "Inter-American Human Rights Archive" ||
+    landing !== "/library" ||
+    defaultView !== "cards" ||
+    privateInstance !== false ||
+    cookiePolicy !== true ||
+    publicSharing !== true;
+
   const save = () =>
     setToasts((p) => [...p, { id: Date.now().toString(), message: "Collection settings saved", type: "success" as const }]);
 
@@ -96,7 +104,7 @@ export function CollectionPage() {
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" onClick={save}>
+        <Button variant="success" size="sm" disabled={!dirty} onClick={save}>
           Save
         </Button>
       </SettingsContent.Footer>

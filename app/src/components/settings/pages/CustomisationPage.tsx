@@ -19,6 +19,8 @@ export function CustomisationPage() {
   const [css, setCss] = useState(SAMPLE_CSS);
   const [js, setJs] = useState(SAMPLE_JS);
 
+  const dirty = css !== SAMPLE_CSS || js !== SAMPLE_JS;
+
   const save = () =>
     setToasts((p) => [...p, { id: Date.now().toString(), message: "Customisation saved", type: "success" as const }]);
 
@@ -49,7 +51,7 @@ export function CustomisationPage() {
         />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" onClick={save}>
+        <Button variant="success" size="sm" disabled={!dirty} onClick={save}>
           Save
         </Button>
       </SettingsContent.Footer>

@@ -35,7 +35,7 @@ export function ParagraphJobEditor({
 
   return (
     <SettingsContent>
-      <SettingsContent.Header path={["Paragraph Extraction"]} title={isNew ? "New extraction" : base!.template} />
+      <SettingsContent.Header path={["Paragraph Extraction"]} title={isNew ? "New extraction" : base!.template} onBack={onClose} />
       <SettingsContent.Body>
         <div className="flex flex-col gap-6 max-w-lg">
           <p className="text-xs text-ink-tertiary">
@@ -66,10 +66,10 @@ export function ParagraphJobEditor({
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
+        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
         <Button variant="primary" size="sm" onClick={save}>
           {isNew ? "Start extraction" : "Re-run"}
         </Button>
-        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
       </SettingsContent.Footer>
     </SettingsContent>
   );
