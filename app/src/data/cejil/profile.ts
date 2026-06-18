@@ -108,16 +108,39 @@ function mdFields(e: (typeof cejilEntities)[number]): MetadataField[] {
 }
 
 const FILE_LANG: Record<string, string> = { spa: "ES", eng: "EN", por: "ES" };
+const SENTENCIA_TPL = cejilTemplates.find((t) => t.name === "Sentencia de la CorteIDH")?._id;
 
-/** A text rendition from the real extracted fullText (one paragraph per line). */
-function buildRendition(title: string, pages: string[]): DocRendition {
-  const blocks: HtmlBlock[] = [{ type: "h1", text: title }];
+/** Reflow wrapped extraction lines into prose paragraphs (split on blank lines;
+ *  join the single-newline wraps within each block). */
+function reflow(pages: string[]): string[] {
+  const out: string[] = [];
   for (const page of pages) {
-    for (const line of page.split(/\n+/).map((l) => l.trim()).filter(Boolean)) {
-      blocks.push({ type: "p", text: line });
+    for (const chunk of page.split(/\n\s*\n/)) {
+      const joined = chunk.split(/\n/).map((l) => l.trim()).filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
+      if (joined) out.push(joined);
     }
   }
-  return { plainText: pages.join("\n\n"), html: blocks };
+  return out;
+}
+
+/** A text rendition from the real extracted fullText. */
+function buildRendition(title: string, pages: string[]): DocRendition {
+  const paras = reflow(pages);
+  const blocks: HtmlBlock[] = [{ type: "h1", text: title }, ...paras.map((p) => ({ type: "p" as const, text: p }))];
+  return { plainText: paras.join("\n\n"), html: blocks };
+}
+
+/** Url'd PDF files for an entity, else borrow from a connected document entity
+ *  (a Causa → its Sentencia), so opening a case shows its primary judgment. */
+function docFilesFor(sharedId: string): { files: typeof cejilFiles; titleSid: string } {
+  const own = (filesBySid.get(sharedId) || []).filter((f) => f.url && f.isPdf);
+  if (own.length) return { files: own, titleSid: sharedId };
+  const candidates = (relsByEntity.get(sharedId) || [])
+    .map((r) => (r.from === sharedId ? r.to : r.from))
+    .map((o) => ({ o, files: (filesBySid.get(o) || []).filter((f) => f.url && f.isPdf), tpl: bySidLang.get(`${o}::es`)?.template }))
+    .filter((c) => c.files.length)
+    .sort((a, b) => (b.tpl === SENTENCIA_TPL ? 1 : 0) - (a.tpl === SENTENCIA_TPL ? 1 : 0));
+  return candidates.length ? { files: candidates[0].files, titleSid: candidates[0].o } : { files: [], titleSid: sharedId };
 }
 
 export function buildCejilProfile(sharedId: string): EntityProfile {
@@ -128,12 +151,13 @@ export function buildCejilProfile(sharedId: string): EntityProfile {
     return acc;
   }, {} as Record<Language, MetadataField[]>);
 
-  // A CEJIL entity is document-bearing only when we fetched its real PDF (url
-  // set) — otherwise the viewer would fall back to the bundled mock PDF.
-  const urlFiles = (filesBySid.get(sharedId) || []).filter((f) => f.url && f.isPdf);
+  // Document-bearing when we fetched a real PDF for this entity OR for one of its
+  // connected documents (a Causa surfaces its Sentencia) — never the mock PDF.
+  const { files: urlFiles, titleSid } = docFilesFor(sharedId);
   if (urlFiles.length === 0) {
     return { id: sharedId, typeId: es.template, hasDocument: false, metadata, documentGroups: [], files: [], relationships: { kind: "references" } };
   }
+  const docTitle = bySidLang.get(`${titleSid}::es`)?.title || es.title;
 
   const groupId = `g-cejil-${sharedId}`;
   const files: FileEntry[] = urlFiles.map((f) => ({
@@ -146,14 +170,14 @@ export function buildCejilProfile(sharedId: string): EntityProfile {
     modified: "",
     url: f.url!,
   }));
-  const group: DocumentGroup = { id: groupId, title: es.title, isPrimary: true, order: 0 };
+  const group: DocumentGroup = { id: groupId, title: docTitle, isPrimary: true, order: 0 };
 
   const primary = urlFiles[0];
   const pages = cejilFullText[primary.filename] || [];
-  const rendition = buildRendition(es.title, pages);
+  const rendition = buildRendition(docTitle, pages);
   const docMeta: DocumentMeta = {
     id: `doc-${sharedId}`,
-    title: es.title,
+    title: docTitle,
     entityTypeId: es.template,
     language: FILE_LANG[primary.language] || "ES",
     createdAt: "",
