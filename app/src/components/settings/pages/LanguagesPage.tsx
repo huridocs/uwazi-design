@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSetAtom } from "jotai";
+import { useSetAtom, useAtomValue } from "jotai";
 import { Plus, RotateCcw, Trash2, Check } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { Button } from "../Button";
@@ -7,11 +7,16 @@ import { Table, type Column } from "../Table";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { ProgressBar } from "../../shared/ProgressBar";
 import { seedLanguages, type SettingsLanguage } from "../../../data/settings";
+import { dataSourceAtom } from "../../../atoms/dataSource";
+import { cejilSettingsLanguages } from "../../../data/cejil/settingsAdapt";
 import { toastsAtom } from "../../../atoms/references";
 
 export function LanguagesPage() {
   const setToasts = useSetAtom(toastsAtom);
-  const [languages, setLanguages] = useState<SettingsLanguage[]>(seedLanguages);
+  const dataSource = useAtomValue(dataSourceAtom);
+  const [languages, setLanguages] = useState<SettingsLanguage[]>(
+    dataSource === "cejil" ? cejilSettingsLanguages : seedLanguages,
+  );
   const [confirm, setConfirm] = useState<{ kind: "reset" | "uninstall"; lang: SettingsLanguage } | null>(
     null,
   );

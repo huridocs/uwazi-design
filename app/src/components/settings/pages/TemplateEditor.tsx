@@ -14,6 +14,7 @@ import {
   type SettingsTemplate,
   type TemplateProperty,
 } from "../../../data/settings";
+import { cejilTemplateProperties } from "../../../data/cejil/settingsAdapt";
 import { entityTypes } from "../../../data/entities";
 import { toastsAtom } from "../../../atoms/references";
 
@@ -35,13 +36,15 @@ export function TemplateEditor({
   const [name, setName] = useState(base?.name ?? "");
   const [color, setColor] = useState(base?.color ?? PALETTE[0]);
   const [props, setProps] = useState<TemplateProperty[]>(
-    isNew ? [...defaultTemplateProperties] : templatePropertiesByTemplate[base!.id] ?? defaultTemplateProperties,
+    isNew
+      ? [...defaultTemplateProperties]
+      : cejilTemplateProperties[base!.id] ?? templatePropertiesByTemplate[base!.id] ?? defaultTemplateProperties,
   );
 
   const initialColor = base?.color ?? PALETTE[0];
   const initialProps = isNew
     ? defaultTemplateProperties
-    : templatePropertiesByTemplate[base!.id] ?? defaultTemplateProperties;
+    : cejilTemplateProperties[base!.id] ?? templatePropertiesByTemplate[base!.id] ?? defaultTemplateProperties;
   const dirty =
     name !== (base?.name ?? "") ||
     color !== initialColor ||

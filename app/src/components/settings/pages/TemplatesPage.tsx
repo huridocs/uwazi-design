@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSetAtom } from "jotai";
+import { useSetAtom, useAtomValue } from "jotai";
 import { Plus } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { Button } from "../Button";
@@ -8,11 +8,16 @@ import { RowActions } from "../RowActions";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { TemplateEditor } from "./TemplateEditor";
 import { seedTemplates, type SettingsTemplate } from "../../../data/settings";
+import { dataSourceAtom } from "../../../atoms/dataSource";
+import { cejilSettingsTemplates } from "../../../data/cejil/settingsAdapt";
 import { toastsAtom } from "../../../atoms/references";
 
 export function TemplatesPage() {
   const setToasts = useSetAtom(toastsAtom);
-  const [templates, setTemplates] = useState<SettingsTemplate[]>(seedTemplates);
+  const dataSource = useAtomValue(dataSourceAtom);
+  const [templates, setTemplates] = useState<SettingsTemplate[]>(
+    dataSource === "cejil" ? cejilSettingsTemplates : seedTemplates,
+  );
   const [confirm, setConfirm] = useState<SettingsTemplate | null>(null);
   const [editing, setEditing] = useState<SettingsTemplate | "new" | null>(null);
 

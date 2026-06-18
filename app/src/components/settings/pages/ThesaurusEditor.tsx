@@ -7,6 +7,7 @@ import { Table, type Column } from "../Table";
 import { RowActions } from "../RowActions";
 import { Field, TextInput } from "../Field";
 import { seedThesaurusItems, type SettingsThesaurus } from "../../../data/settings";
+import { cejilThesaurusItems } from "../../../data/cejil/settingsAdapt";
 import { toastsAtom } from "../../../atoms/references";
 
 interface Item {
@@ -29,10 +30,12 @@ export function ThesaurusEditor({
 
   const [name, setName] = useState(base?.name ?? "");
   const [items, setItems] = useState<Item[]>(
-    isNew ? [] : (seedThesaurusItems[base!.id] ?? []).map((label, i) => ({ id: `i${i}`, label })),
+    isNew
+      ? []
+      : (cejilThesaurusItems[base!.id] ?? seedThesaurusItems[base!.id] ?? []).map((label, i) => ({ id: `i${i}`, label })),
   );
 
-  const initialLabels = isNew ? [] : seedThesaurusItems[base!.id] ?? [];
+  const initialLabels = isNew ? [] : cejilThesaurusItems[base!.id] ?? seedThesaurusItems[base!.id] ?? [];
   const dirty =
     name !== (base?.name ?? "") ||
     JSON.stringify(items.map((i) => i.label)) !== JSON.stringify(initialLabels);
