@@ -42,6 +42,8 @@ export interface Entity {
   /** Adapter-supplied display fields (label/value) for the Library card, when the
    *  entity has no mock entityMetadata profile. Resolved from real metadata. */
   fields?: { label: string; value: string }[];
+  /** Adapter-supplied keyword facet values (e.g. CEJIL "descriptores"/violations). */
+  descriptors?: string[];
 }
 
 export type PreviewKind = "document" | "image" | "video" | "audio";

@@ -30,6 +30,9 @@ export const libraryCountryFiltersAtom = atom<Record<string, boolean>>({});
 export type FacetMode = "AND" | "OR";
 export const libraryCountryModeAtom = atom<FacetMode>("OR");
 
+/** Keyword-style Descriptores (violations) facet — CEJIL property facet (OR). */
+export const libraryDescriptorFiltersAtom = atom<Record<string, boolean>>({});
+
 /** Results layout. */
 export type LibraryViewMode = "cards" | "list" | "map";
 export const libraryViewModeAtom = atom<LibraryViewMode>("cards");
@@ -45,5 +48,6 @@ export const libraryActiveFilterCountAtom = atom((get) => {
   if (get(libraryHasDocAtom)) n += 1;
   n += Object.values(get(libraryStatusFiltersAtom)).filter(Boolean).length;
   n += Object.values(get(libraryCountryFiltersAtom)).filter(Boolean).length;
+  n += Object.values(get(libraryDescriptorFiltersAtom)).filter(Boolean).length;
   return n;
 });

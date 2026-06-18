@@ -10,6 +10,7 @@ import {
   libraryStatusFiltersAtom,
   libraryCountryFiltersAtom,
   libraryCountryModeAtom,
+  libraryDescriptorFiltersAtom,
   libraryActiveFilterCountAtom,
 } from "../../atoms/library";
 import { typeHasDocument } from "../../data/entityProfiles";
@@ -33,6 +34,7 @@ export function LibraryFilters() {
   const [hasDocOnly, setHasDocOnly] = useAtom(libraryHasDocAtom);
   const [statusFilters, setStatusFilters] = useAtom(libraryStatusFiltersAtom);
   const [countryFilters, setCountryFilters] = useAtom(libraryCountryFiltersAtom);
+  const [descriptorFilters, setDescriptorFilters] = useAtom(libraryDescriptorFiltersAtom);
   const activeFilterCount = useAtomValue(libraryActiveFilterCountAtom);
 
   const typeCounts = useMemo(() => {
@@ -66,6 +68,11 @@ export function LibraryFilters() {
     for (const e of baseEntities) for (const c of entityCountries(e, language)) m.set(c, (m.get(c) ?? 0) + 1);
     return m;
   }, [baseEntities, language]);
+  const descriptorCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const e of baseEntities) for (const d of e.descriptors ?? []) m.set(d, (m.get(d) ?? 0) + 1);
+    return m;
+  }, [baseEntities]);
 
   const nonDocTypes = types.filter((t) => !typeHasDocument(t.id));
   const docTypes = types.filter((t) => typeHasDocument(t.id));
@@ -73,11 +80,13 @@ export function LibraryFilters() {
   const toggleType = (id: string) => setTypeFilters((prev) => ({ ...prev, [id]: !prev[id] }));
   const toggleStatus = (id: string) => setStatusFilters((prev) => ({ ...prev, [id]: !prev[id] }));
   const toggleCountry = (c: string) => setCountryFilters((prev) => ({ ...prev, [c]: !prev[c] }));
+  const toggleDescriptor = (d: string) => setDescriptorFilters((prev) => ({ ...prev, [d]: !prev[d] }));
   const clearAll = () => {
     setTypeFilters({});
     setHasDocOnly(false);
     setStatusFilters({});
     setCountryFilters({});
+    setDescriptorFilters({});
   };
 
   const [docOpen, setDocOpen] = useState(true);
@@ -171,6 +180,7 @@ export function LibraryFilters() {
                 );
               })}
             </FacetCard>
+            <DescriptorsCard counts={descriptorCounts} selected={descriptorFilters} onToggle={toggleDescriptor} />
           </>
         ) : (
           <>
@@ -372,6 +382,67 @@ function CountriesCard({
               <span className="shrink-0 text-sm font-medium tabular-nums text-ink-tertiary">
                 {counts.get(c) ?? 0}
               </span>
+            </label>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ── Descriptores (violations) keyword card — CEJIL property facet ── */
+
+function DescriptorsCard({
+  counts,
+  selected,
+  onToggle,
+}: {
+  counts: Map<string, number>;
+  selected: Record<string, boolean>;
+  onToggle: (d: string) => void;
+}) {
+  const [search, setSearch] = useState("");
+  const q = search.trim().toLowerCase();
+
+  const list = useMemo(() => {
+    const names = new Set<string>([...counts.keys()].filter((d) => (counts.get(d) ?? 0) > 0));
+    for (const d of Object.keys(selected)) if (selected[d]) names.add(d);
+    return [...names].sort((a, b) => (counts.get(b) ?? 0) - (counts.get(a) ?? 0) || a.localeCompare(b));
+  }, [counts, selected]);
+  const visible = q ? list.filter((d) => d.toLowerCase().includes(q)) : list;
+
+  if (list.length === 0) return null;
+
+  return (
+    <div className="bg-paper border border-border/60 rounded-lg p-1.5 space-y-1.5">
+      <div className="px-2 pt-1">
+        <span className="text-sm font-bold text-ink">Descriptores</span>
+      </div>
+      <div className="px-1">
+        <div className="relative flex items-center gap-1.5 h-8 px-2 bg-warm border border-border rounded-md focus-within:ring-2 focus-within:ring-carbon/20 focus-within:border-carbon/40 transition-all">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search"
+            aria-label="Search descriptores"
+            className="flex-1 min-w-0 bg-transparent text-xs font-medium placeholder:text-ink-muted focus:outline-none"
+          />
+          <Search size={14} className="text-ink-muted shrink-0" />
+        </div>
+      </div>
+      <div className="max-h-64 overflow-auto">
+        {visible.length === 0 ? (
+          <p className="px-2 py-1 text-xs text-ink-muted">No descriptores match.</p>
+        ) : (
+          visible.map((d) => (
+            <label
+              key={d}
+              className="flex items-center gap-2.5 py-1 px-2 rounded-sm hover:bg-warm transition-colors cursor-pointer"
+            >
+              <Checkbox checked={!!selected[d]} onChange={() => onToggle(d)} ariaLabel={d} />
+              <span className="flex-1 truncate text-sm text-ink-secondary">{d}</span>
+              <span className="shrink-0 text-sm font-medium tabular-nums text-ink-tertiary">{counts.get(d) ?? 0}</span>
             </label>
           ))
         )}

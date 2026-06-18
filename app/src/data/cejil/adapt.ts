@@ -108,5 +108,8 @@ export const cejilLibraryEntities: Entity[] = esEntities.map((e) => {
     geo: country ? CEJIL_COORDS[country] ?? countryCoords[country] : undefined,
     createdAt: createdOf(e),
     fields: fieldsOf(e),
+    descriptors: (e.metadata?.descriptores || [])
+      .map((v) => (typeof v.label === "string" ? v.label : ""))
+      .filter(Boolean),
   };
 });

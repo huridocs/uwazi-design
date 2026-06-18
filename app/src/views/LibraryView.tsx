@@ -14,6 +14,7 @@ import {
   libraryStatusFiltersAtom,
   libraryCountryFiltersAtom,
   libraryCountryModeAtom,
+  libraryDescriptorFiltersAtom,
   libraryActiveFilterCountAtom,
   libraryViewModeAtom,
   librarySortAtom,
@@ -45,6 +46,7 @@ export function LibraryView() {
   const [statusFilters, setStatusFilters] = useAtom(libraryStatusFiltersAtom);
   const [countryFilters, setCountryFilters] = useAtom(libraryCountryFiltersAtom);
   const countryMode = useAtomValue(libraryCountryModeAtom);
+  const [descriptorFilters, setDescriptorFilters] = useAtom(libraryDescriptorFiltersAtom);
   const activeFilterCount = useAtomValue(libraryActiveFilterCountAtom);
   const [viewMode, setViewMode] = useAtom(libraryViewModeAtom);
   const [sort, setSort] = useAtom(librarySortAtom);
@@ -73,6 +75,9 @@ export function LibraryView() {
   const activeCountries = Object.entries(countryFilters)
     .filter(([, on]) => on)
     .map(([c]) => c);
+  const activeDescriptors = Object.entries(descriptorFilters)
+    .filter(([, on]) => on)
+    .map(([d]) => d);
   const wantPublished = !!statusFilters.published;
   const wantRestricted = !!statusFilters.restricted;
   const statusActive = wantPublished || wantRestricted;
@@ -85,6 +90,7 @@ export function LibraryView() {
         (!hasDocOnly || (dataSource === "cejil" ? e.preview === "document" : typeHasDocument(e.typeId))) &&
         (!statusActive || (wantPublished && e.published) || (wantRestricted && !e.published)) &&
         matchesCountries(entityCountries(e, language), activeCountries, countryMode) &&
+        (activeDescriptors.length === 0 || (e.descriptors ?? []).some((d) => activeDescriptors.includes(d))) &&
         (!q || e.title.toLowerCase().includes(q)),
     );
     const sorted = [...list];
@@ -93,7 +99,7 @@ export function LibraryView() {
       sorted.sort((a, b) => (countByEntity.get(b.id) ?? 0) - (countByEntity.get(a.id) ?? 0));
     else sorted.sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? "")); // recent first
     return sorted;
-  }, [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, language, q, sort, countByEntity]);
+  }, [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), language, q, sort, countByEntity]);
 
   const toggleType = (id: string) => setTypeFilters((prev) => ({ ...prev, [id]: !prev[id] }));
   const toggleStatus = (id: string) => setStatusFilters((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -150,6 +156,7 @@ export function LibraryView() {
             setTypeFilters({});
             setCountryFilters({});
             setStatusFilters({});
+            setDescriptorFilters({});
             setSelectedId(null);
           }}
           options={[
