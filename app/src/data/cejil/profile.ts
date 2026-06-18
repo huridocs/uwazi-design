@@ -5,8 +5,12 @@
 import type { Language } from "../../atoms/language";
 import type { EntityProfile } from "../entityProfiles";
 import type { MetadataField } from "../metadata";
+import type { DocumentMeta } from "../document";
+import type { DocRendition, HtmlBlock } from "../documentRenditions";
+import type { FileEntry, DocumentGroup } from "../files";
 import { cejilEntities } from "./entities";
 import { cejilFiles } from "./files";
+import { cejilFullText } from "./fullText";
 import { cejilTemplates } from "./templates";
 
 const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
@@ -74,6 +78,19 @@ function mdFields(e: (typeof cejilEntities)[number]): MetadataField[] {
   return out;
 }
 
+const FILE_LANG: Record<string, string> = { spa: "ES", eng: "EN", por: "ES" };
+
+/** A text rendition from the real extracted fullText (one paragraph per line). */
+function buildRendition(title: string, pages: string[]): DocRendition {
+  const blocks: HtmlBlock[] = [{ type: "h1", text: title }];
+  for (const page of pages) {
+    for (const line of page.split(/\n+/).map((l) => l.trim()).filter(Boolean)) {
+      blocks.push({ type: "p", text: line });
+    }
+  }
+  return { plainText: pages.join("\n\n"), html: blocks };
+}
+
 export function buildCejilProfile(sharedId: string): EntityProfile {
   const es = bySidLang.get(`${sharedId}::es`) || bySidLang.get(`${sharedId}::en`)!;
   const metadata = LANGS.reduce((acc, lang) => {
@@ -82,14 +99,49 @@ export function buildCejilProfile(sharedId: string): EntityProfile {
     return acc;
   }, {} as Record<Language, MetadataField[]>);
 
+  // A CEJIL entity is document-bearing only when we fetched its real PDF (url
+  // set) — otherwise the viewer would fall back to the bundled mock PDF.
+  const urlFiles = (filesBySid.get(sharedId) || []).filter((f) => f.url && f.isPdf);
+  if (urlFiles.length === 0) {
+    return { id: sharedId, typeId: es.template, hasDocument: false, metadata, documentGroups: [], files: [], relationships: { kind: "references" } };
+  }
+
+  const groupId = `g-cejil-${sharedId}`;
+  const files: FileEntry[] = urlFiles.map((f) => ({
+    id: f._id,
+    groupId,
+    name: f.originalname || f.filename,
+    language: FILE_LANG[f.language] || "ES",
+    type: "pdf",
+    size: "",
+    modified: "",
+    url: f.url!,
+  }));
+  const group: DocumentGroup = { id: groupId, title: es.title, isPrimary: true, order: 0 };
+
+  const primary = urlFiles[0];
+  const pages = cejilFullText[primary.filename] || [];
+  const rendition = buildRendition(es.title, pages);
+  const docMeta: DocumentMeta = {
+    id: `doc-${sharedId}`,
+    title: es.title,
+    entityTypeId: es.template,
+    language: FILE_LANG[primary.language] || "ES",
+    createdAt: "",
+    pages: primary.totalPages || pages.length || 1,
+    filename: primary.originalname || primary.filename,
+  };
+  const byLang = <T,>(v: T) => LANGS.reduce((a, l) => ((a[l] = v), a), {} as Record<Language, T>);
+
   return {
     id: sharedId,
     typeId: es.template,
-    // Step 1: metadata only — document/files come next, so default to Metadata.
-    hasDocument: false,
+    hasDocument: true,
     metadata,
-    documentGroups: [],
-    files: [],
+    document: byLang(docMeta),
+    renditions: byLang(rendition),
+    documentGroups: [group],
+    files,
     relationships: { kind: "references" },
   };
 }
