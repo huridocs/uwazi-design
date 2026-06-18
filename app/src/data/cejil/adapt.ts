@@ -8,6 +8,30 @@ import { cejilTemplates } from "./templates";
 
 const docEntities = new Set(cejilFiles.map((f) => f.entity));
 
+// Approximate centroids for the CEJIL countries (Spanish names), since the mock
+// countryCoords only covers the sample seed. Lets the Library map plot real cases.
+const CEJIL_COORDS: Record<string, { lat: number; lng: number }> = {
+  Bolivia: { lat: -16.3, lng: -63.6 },
+  Brasil: { lat: -10.3, lng: -53.2 },
+  Chile: { lat: -35.7, lng: -71.5 },
+  Colombia: { lat: 4.6, lng: -74.1 },
+  "Costa Rica": { lat: 9.7, lng: -83.8 },
+  "El Salvador": { lat: 13.8, lng: -88.9 },
+  Guatemala: { lat: 15.8, lng: -90.2 },
+  Honduras: { lat: 15.2, lng: -86.2 },
+  México: { lat: 23.6, lng: -102.5 },
+  Nicaragua: { lat: 12.9, lng: -85.2 },
+  Panamá: { lat: 8.5, lng: -80.8 },
+  Paraguay: { lat: -23.4, lng: -58.4 },
+  Perú: { lat: -9.2, lng: -75.0 },
+  "República Dominicana": { lat: 18.7, lng: -70.2 },
+  Surinam: { lat: 4.0, lng: -56.0 },
+  "Trinidad y Tobago": { lat: 10.7, lng: -61.2 },
+  Venezuela: { lat: 6.4, lng: -66.6 },
+  Argentina: { lat: -38.4, lng: -63.6 },
+  Ecuador: { lat: -1.8, lng: -78.2 },
+};
+
 /** template _id → ordered [{name,label,type}] for resolving display fields. */
 const propsByTemplate = new Map(
   cejilTemplates.map((t) => [
@@ -81,7 +105,7 @@ export const cejilLibraryEntities: Entity[] = esEntities.map((e) => {
     published: e.published,
     preview: docEntities.has(e.sharedId) ? ("document" as const) : undefined,
     country,
-    geo: country ? countryCoords[country] : undefined,
+    geo: country ? CEJIL_COORDS[country] ?? countryCoords[country] : undefined,
     createdAt: createdOf(e),
     fields: fieldsOf(e),
   };
