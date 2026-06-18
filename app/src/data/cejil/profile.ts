@@ -8,9 +8,11 @@ import type { MetadataField } from "../metadata";
 import type { DocumentMeta } from "../document";
 import type { DocRendition, HtmlBlock } from "../documentRenditions";
 import type { FileEntry, DocumentGroup } from "../files";
+import type { Reference } from "../references";
 import { cejilEntities } from "./entities";
 import { cejilFiles } from "./files";
 import { cejilFullText } from "./fullText";
+import { cejilRelationships } from "./relationships";
 import { cejilTemplates } from "./templates";
 
 const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
@@ -23,6 +25,33 @@ for (const e of cejilEntities) bySidLang.set(`${e.sharedId}::${e.language}`, e);
 
 export const cejilSharedIds = new Set(cejilEntities.map((e) => e.sharedId));
 export const isCejilEntity = (id: string) => cejilSharedIds.has(id);
+
+// relationships touching each entity (either endpoint)
+const relsByEntity = new Map<string, typeof cejilRelationships>();
+for (const r of cejilRelationships) {
+  for (const sid of new Set([r.from, r.to])) {
+    const a = relsByEntity.get(sid) || [];
+    a.push(r);
+    relsByEntity.set(sid, a);
+  }
+}
+
+/** This entity's connections as perspective-normalized References (read-only). */
+export function cejilReferencesFor(sharedId: string): Reference[] {
+  const rels = relsByEntity.get(sharedId) || [];
+  return rels.map((r, i) => {
+    const outgoing = r.from === sharedId;
+    return {
+      id: `cejil-${r.hub}-${i}-${r.from}-${r.to}`,
+      sourceEntityId: sharedId,
+      targetEntityId: outgoing ? r.to : r.from,
+      relationType: r.typeName || "related",
+      direction: outgoing ? ("outgoing" as const) : ("incoming" as const),
+      hubId: r.hub,
+      createdAt: "",
+    };
+  });
+}
 
 const filesBySid = new Map<string, typeof cejilFiles>();
 for (const f of cejilFiles) {

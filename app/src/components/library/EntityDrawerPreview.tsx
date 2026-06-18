@@ -7,6 +7,7 @@ import { librarySelectedEntityIdAtom } from "../../atoms/library";
 import { openEntityAtom, focusEntityForPreviewAtom } from "../../atoms/focusedEntity";
 import { getEntity, getEntityType } from "../../data/entities";
 import { getEntityProfile } from "../../data/entityProfiles";
+import { isCejilEntity, cejilReferencesFor } from "../../data/cejil/profile";
 import type { MetadataField } from "../../data/metadata";
 import { tabsForType } from "../../utils/entityTabs";
 import { MainTabs } from "../layout/MainTabs";
@@ -40,7 +41,9 @@ export function EntityDrawerPreview({ entityId }: { entityId: string }) {
   // both count refs touching this entity).
   const connectionCount = useMemo(
     () =>
-      references.filter((r) => r.sourceEntityId === entityId || r.targetEntityId === entityId).length,
+      isCejilEntity(entityId)
+        ? cejilReferencesFor(entityId).length
+        : references.filter((r) => r.sourceEntityId === entityId || r.targetEntityId === entityId).length,
     [references, entityId],
   );
   const filesCount = profile.files?.length ?? 0;
