@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useSetAtom } from "jotai";
-import { Plus, GripVertical } from "lucide-react";
+import { Plus, GripVertical, FolderOpen } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { Button } from "../Button";
-import { Table, type Column } from "../Table";
 import { RowActions } from "../RowActions";
 import { Field, TextInput } from "../Field";
 import { seedThesaurusItems, type SettingsThesaurus } from "../../../data/settings";
@@ -13,10 +12,22 @@ import { toastsAtom } from "../../../atoms/references";
 interface Item {
   id: string;
   label: string;
+  children?: Item[];
 }
 
+const isGroup = (it: Item): boolean => Array.isArray(it.children);
+const countItems = (items: Item[]): number =>
+  items.reduce((n, it) => n + 1 + (it.children ? it.children.length : 0), 0);
+/** Serialize the full nested structure (labels + grouping) for dirty checks. */
+const serialize = (items: Item[]): string =>
+  JSON.stringify(items.map((it) => (it.children ? { g: it.label, c: it.children.map((c) => c.label) } : it.label)));
+
+let uid = 0;
+const newId = () => `n${++uid}`;
+
 /** Thesaurus detail/editor — name + the editable item list (a thesaurus's
- *  children). Opened from the Thesauri list (list → detail). */
+ *  children). Items can be flat or grouped: a group is a parent Item carrying
+ *  a `children` array of sub-items. Opened from the Thesauri list. */
 export function ThesaurusEditor({
   thesaurus,
   onClose,
@@ -28,22 +39,43 @@ export function ThesaurusEditor({
   const isNew = thesaurus === "new";
   const base = isNew ? undefined : thesaurus;
 
+  const seedLabels = isNew ? [] : cejilThesaurusItems[base!.id] ?? seedThesaurusItems[base!.id] ?? [];
+  const seedItems = (): Item[] => seedLabels.map((label, i) => ({ id: `i${i}`, label }));
+
   const [name, setName] = useState(base?.name ?? "");
-  const [items, setItems] = useState<Item[]>(
-    isNew
-      ? []
-      : (cejilThesaurusItems[base!.id] ?? seedThesaurusItems[base!.id] ?? []).map((label, i) => ({ id: `i${i}`, label })),
-  );
+  const [items, setItems] = useState<Item[]>(seedItems);
 
-  const initialLabels = isNew ? [] : cejilThesaurusItems[base!.id] ?? seedThesaurusItems[base!.id] ?? [];
-  const dirty =
-    name !== (base?.name ?? "") ||
-    JSON.stringify(items.map((i) => i.label)) !== JSON.stringify(initialLabels);
+  const initialSerialized = serialize(seedItems());
+  const dirty = name !== (base?.name ?? "") || serialize(items) !== initialSerialized;
 
+  // Top-level edits
   const patch = (id: string, label: string) =>
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, label } : it)));
-  const addItem = () =>
-    setItems((prev) => [...prev, { id: `n-${prev.length}-${name.length}`, label: "" }]);
+  const remove = (id: string) => setItems((prev) => prev.filter((x) => x.id !== id));
+  const addItem = () => setItems((prev) => [...prev, { id: newId(), label: "" }]);
+  const addGroup = () => setItems((prev) => [...prev, { id: newId(), label: "", children: [] }]);
+
+  // Sub-item edits (scoped to a group)
+  const patchChild = (groupId: string, childId: string, label: string) =>
+    setItems((prev) =>
+      prev.map((g) =>
+        g.id === groupId && g.children
+          ? { ...g, children: g.children.map((c) => (c.id === childId ? { ...c, label } : c)) }
+          : g,
+      ),
+    );
+  const removeChild = (groupId: string, childId: string) =>
+    setItems((prev) =>
+      prev.map((g) =>
+        g.id === groupId && g.children ? { ...g, children: g.children.filter((c) => c.id !== childId) } : g,
+      ),
+    );
+  const addChild = (groupId: string) =>
+    setItems((prev) =>
+      prev.map((g) =>
+        g.id === groupId && g.children ? { ...g, children: [...g.children, { id: newId(), label: "" }] } : g,
+      ),
+    );
 
   const save = () => {
     setToasts((p) => [
@@ -53,33 +85,15 @@ export function ThesaurusEditor({
     onClose();
   };
 
-  const columns: Column<Item>[] = [
-    {
-      id: "label",
-      header: "Item",
-      cell: (it) => (
-        <div className="flex items-center gap-2 w-full">
-          <GripVertical size={14} className="text-ink-muted shrink-0 cursor-grab" />
-          <input
-            value={it.label}
-            onChange={(e) => patch(it.id, e.target.value)}
-            placeholder="Item label"
-            className="flex-1 min-w-0 bg-transparent text-sm text-ink focus:outline-none focus:bg-warm rounded px-1 py-0.5"
-            aria-label="Item label"
-          />
-        </div>
-      ),
-    },
-    {
-      id: "actions",
-      header: "",
-      width: "4rem",
-      align: "right",
-      cell: (it) => (
-        <RowActions label={it.label || "item"} onDelete={() => setItems((prev) => prev.filter((x) => x.id !== it.id))} />
-      ),
-    },
-  ];
+  const itemInput = (value: string, onChange: (v: string) => void, placeholder: string, ariaLabel: string) => (
+    <input
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="flex-1 min-w-0 bg-transparent text-sm text-ink focus:outline-none focus:bg-warm rounded px-1 py-0.5"
+      aria-label={ariaLabel}
+    />
+  );
 
   return (
     <SettingsContent>
@@ -94,12 +108,67 @@ export function ThesaurusEditor({
 
           <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
             <div className="flex items-center justify-between gap-2 mb-3">
-              <h3 className="text-sm font-semibold text-ink">Items <span className="text-ink-tertiary font-normal">({items.length})</span></h3>
-              <Button variant="secondary" size="sm" icon={<Plus size={14} />} onClick={addItem}>
-                Add item
-              </Button>
+              <h3 className="text-sm font-semibold text-ink">
+                Items <span className="text-ink-tertiary font-normal">({countItems(items)})</span>
+              </h3>
+              <div className="flex items-center gap-2">
+                <Button variant="secondary" size="sm" icon={<FolderOpen size={14} />} onClick={addGroup}>
+                  Add group
+                </Button>
+                <Button variant="secondary" size="sm" icon={<Plus size={14} />} onClick={addItem}>
+                  Add item
+                </Button>
+              </div>
             </div>
-            <Table columns={columns} data={items} getRowId={(it) => it.id} emptyState="No items yet." />
+
+            {items.length === 0 ? (
+              <div className="rounded-md py-8 text-center text-sm text-ink-tertiary" style={{ border: "1px solid var(--border-soft)" }}>
+                No items yet.
+              </div>
+            ) : (
+              <ul className="flex flex-col divide-y" style={{ borderColor: "var(--border-soft)" }}>
+                {items.map((it) =>
+                  isGroup(it) ? (
+                    <li key={it.id} className="py-1">
+                      {/* Group header */}
+                      <div className="flex items-center gap-2 py-1.5">
+                        <GripVertical size={14} className="text-ink-muted shrink-0 cursor-grab" />
+                        <FolderOpen size={14} className="text-ink-tertiary shrink-0" />
+                        <input
+                          value={it.label}
+                          onChange={(e) => patch(it.id, e.target.value)}
+                          placeholder="Group name"
+                          className="flex-1 min-w-0 bg-transparent text-sm font-semibold text-ink focus:outline-none focus:bg-warm rounded px-1 py-0.5"
+                          aria-label="Group name"
+                        />
+                        <RowActions label={it.label || "group"} onDelete={() => remove(it.id)} />
+                      </div>
+                      {/* Sub-items, indented via padding */}
+                      <div className="pl-7 flex flex-col">
+                        {it.children!.map((child) => (
+                          <div key={child.id} className="flex items-center gap-2 py-1.5">
+                            <GripVertical size={14} className="text-ink-muted shrink-0 cursor-grab" />
+                            {itemInput(child.label, (v) => patchChild(it.id, child.id, v), "Item label", "Item label")}
+                            <RowActions label={child.label || "item"} onDelete={() => removeChild(it.id, child.id)} />
+                          </div>
+                        ))}
+                        <div className="py-1.5">
+                          <Button variant="ghost" size="sm" icon={<Plus size={14} />} onClick={() => addChild(it.id)}>
+                            Add item
+                          </Button>
+                        </div>
+                      </div>
+                    </li>
+                  ) : (
+                    <li key={it.id} className="flex items-center gap-2 py-1.5">
+                      <GripVertical size={14} className="text-ink-muted shrink-0 cursor-grab" />
+                      {itemInput(it.label, (v) => patch(it.id, v), "Item label", "Item label")}
+                      <RowActions label={it.label || "item"} onDelete={() => remove(it.id)} />
+                    </li>
+                  ),
+                )}
+              </ul>
+            )}
           </section>
         </div>
       </SettingsContent.Body>
