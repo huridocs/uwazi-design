@@ -1,5 +1,6 @@
 import { useAtomValue } from "jotai";
 import { settingsSectionAtom, settingsMobileDrilledAtom } from "../atoms/settings";
+import { dataSourceAtom } from "../atoms/dataSource";
 import { breakpointAtom } from "../atoms/viewport";
 import type { AppView } from "../atoms/navigation";
 import { SettingsNav } from "../components/settings/SettingsNav";
@@ -30,6 +31,9 @@ export function SettingsView({ onNavigate }: { onNavigate?: (view: AppView) => v
   const section = useAtomValue(settingsSectionAtom);
   const drilled = useAtomValue(settingsMobileDrilledAtom);
   const isMobile = useAtomValue(breakpointAtom) === "mobile";
+  // Pages init their useState from the active source; remount on a source flip
+  // (rail toggle) so their tables re-seed from CEJIL ↔ Sample.
+  const dataSource = useAtomValue(dataSourceAtom);
 
   const page = (() => {
     switch (section) {
@@ -79,7 +83,7 @@ export function SettingsView({ onNavigate }: { onNavigate?: (view: AppView) => v
   if (isMobile) {
     return (
       <div className="h-full min-h-0">
-        {drilled ? page : <SettingsNav onNavigate={onNavigate} />}
+        {drilled ? <div key={dataSource} className="h-full min-h-0">{page}</div> : <SettingsNav onNavigate={onNavigate} />}
       </div>
     );
   }
@@ -87,7 +91,7 @@ export function SettingsView({ onNavigate }: { onNavigate?: (view: AppView) => v
   return (
     <div className="flex h-full min-h-0">
       <SettingsNav onNavigate={onNavigate} />
-      <div className="flex-1 min-w-0 min-h-0">{page}</div>
+      <div key={dataSource} className="flex-1 min-w-0 min-h-0">{page}</div>
     </div>
   );
 }

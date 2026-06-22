@@ -111,3 +111,38 @@ export const cejilCollection = {
   defaultView: cejilSettings.defaultLibraryView,
   dateFormat: cejilSettings.dateFormat,
 };
+
+// --- Filters page: the real summa.cejil.org library filter config ----------
+// `cejilSettings.filters` is the curated sidebar config (top-level templates +
+// the expandable "Documentos" group). Mapped onto the Filters page's grouped
+// row model: a node with `items` becomes a FilterGroup, its children become
+// rows assigned to it; bare nodes are ungrouped. All are active (configured).
+const cejilFilterGroupIndex = cejilSettings.filters
+  .map((n, i) => ({ node: n, gid: `cejil-grp-${i}` }))
+  .filter((x) => x.node.items);
+
+export const cejilFilterGroups = cejilFilterGroupIndex.map((x) => ({
+  id: x.gid,
+  name: x.node.name,
+}));
+
+export const cejilFilterRows = cejilSettings.filters.flatMap((n, i) => {
+  if (!n.items) return [{ templateId: n.id!, active: true, groupId: "" }];
+  const gid = `cejil-grp-${i}`;
+  return n.items.map((c) => ({ templateId: c.id!, active: true, groupId: gid }));
+});
+
+/** name / colour / entity-count for every CEJIL template, by id — drives the
+ *  Filters page row rendering when the source is CEJIL. */
+export const cejilFilterMeta: Record<string, { name: string; color: string; count: number }> =
+  Object.fromEntries(
+    cejilSettingsTemplates.map((t) => [t.id, { name: t.name, color: t.color, count: t.entityCount }]),
+  );
+
+// --- Dashboard: source-aware headline stats --------------------------------
+export const cejilDashboardStats = {
+  entities: cejilEntities.filter((e) => e.language === "es").length,
+  connections: cejilRelationships.length,
+  templates: cejilSettingsTemplates.length,
+  languages: cejilSettingsLanguages.length,
+};

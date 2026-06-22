@@ -1,7 +1,10 @@
+import { useAtomValue } from "jotai";
 import { SettingsContent } from "../SettingsContent";
 import { StatsCard } from "../../shared/StatsCard";
 import { Table, type Column } from "../Table";
 import { entities } from "../../../data/entities";
+import { dataSourceAtom } from "../../../atoms/dataSource";
+import { cejilDashboardStats } from "../../../data/cejil/settingsAdapt";
 import {
   seedUsers,
   seedLanguages,
@@ -19,6 +22,8 @@ const methodStyle: Record<LogMethod, string> = {
 };
 
 export function DashboardPage() {
+  const dataSource = useAtomValue(dataSourceAtom);
+  const cejil = dataSource === "cejil";
   const connectionTotal = seedRelationTypes.reduce((n, r) => n + r.usageCount, 0);
 
   const columns: Column<SettingsLogEntry>[] = [
@@ -41,13 +46,31 @@ export function DashboardPage() {
       <SettingsContent.Header title="Dashboard" />
       <SettingsContent.Body>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-          <StatsCard label="Entities" value={entities.length} accent="blue" />
-          <StatsCard label="Connections" value={connectionTotal} accent="green" />
-          <StatsCard label="Users" value={seedUsers.length} />
-          <StatsCard label="Languages" value={seedLanguages.length} accent="amber" />
+          {cejil ? (
+            <>
+              <StatsCard label="Entities" value={cejilDashboardStats.entities} accent="blue" />
+              <StatsCard label="Connections" value={cejilDashboardStats.connections} accent="green" />
+              <StatsCard label="Templates" value={cejilDashboardStats.templates} />
+              <StatsCard label="Languages" value={cejilDashboardStats.languages} accent="amber" />
+            </>
+          ) : (
+            <>
+              <StatsCard label="Entities" value={entities.length} accent="blue" />
+              <StatsCard label="Connections" value={connectionTotal} accent="green" />
+              <StatsCard label="Users" value={seedUsers.length} />
+              <StatsCard label="Languages" value={seedLanguages.length} accent="amber" />
+            </>
+          )}
         </div>
         <h3 className="text-sm font-semibold text-ink mb-3">Recent activity</h3>
-        <Table columns={columns} data={seedActivityLog.slice(0, 5)} getRowId={(e) => e.id} />
+        {cejil ? (
+          <p className="text-xs text-ink-tertiary">
+            The activity log isn't part of the public summa.cejil.org sample. Switch to the Sample
+            source to see demo activity.
+          </p>
+        ) : (
+          <Table columns={columns} data={seedActivityLog.slice(0, 5)} getRowId={(e) => e.id} />
+        )}
       </SettingsContent.Body>
     </SettingsContent>
   );
