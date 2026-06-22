@@ -70,6 +70,18 @@ export function TemplateEditor({
   const [config, setConfig] = useState<Record<string, PropConfig>>({});
   // The property being edited in the dialog: an existing property, "new", or none.
   const [editing, setEditing] = useState<TemplateProperty | "new" | null>(null);
+  // Drag-to-reorder: the index being dragged (live-reorders on drag-enter).
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const reorder = (to: number) => {
+    if (dragIdx === null || dragIdx === to) return;
+    setProps((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(dragIdx, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+    setDragIdx(to);
+  };
 
   const initialColor = base?.color ?? PALETTE[0];
   const initialProps = isNew
@@ -181,7 +193,7 @@ export function TemplateEditor({
               {props.length === 0 ? (
                 <div className="px-3 py-6 text-sm text-ink-muted text-center">No properties yet.</div>
               ) : (
-                props.map((p) => {
+                props.map((p, i) => {
                   const cfg = config[p.id] ?? {};
                   const detail =
                     p.type === "relationship"
@@ -192,11 +204,21 @@ export function TemplateEditor({
                   return (
                     <div
                       key={p.id}
-                      className="grid items-center gap-3 px-3 py-2"
+                      onDragEnter={() => reorder(i)}
+                      onDragOver={(e) => e.preventDefault()}
+                      className={`grid items-center gap-3 px-3 py-2 transition-opacity ${dragIdx === i ? "opacity-40" : ""}`}
                       style={{ gridTemplateColumns: "1fr 9rem 6rem 5rem 4rem", borderTop: "1px solid var(--border-soft)" }}
                     >
                       <div className="flex items-center gap-2 w-full min-w-0">
-                        <GripVertical size={14} className="text-ink-muted shrink-0 cursor-grab" />
+                        <span
+                          draggable
+                          onDragStart={() => setDragIdx(i)}
+                          onDragEnd={() => setDragIdx(null)}
+                          aria-label="Drag to reorder"
+                          className="shrink-0 cursor-grab active:cursor-grabbing"
+                        >
+                          <GripVertical size={14} className="text-ink-muted" />
+                        </span>
                         <span className="truncate text-sm font-medium text-ink">{p.label}</span>
                         {detail && (
                           <span className="truncate text-xs text-ink-tertiary shrink-0">· {detail}</span>
