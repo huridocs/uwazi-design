@@ -12,4 +12,4 @@ export { cejilMenu } from "./menu";
 export { cejilPages } from "./pages";
 export { cejilFullText } from "./fullText";
 
-export const cejilManifest = {"cases":30,"entities":1338,"sharedEntities":446,"relationships":888,"files":483,"pdfs":30,"fullTextDocs":30,"menu":6,"pages":6};
+export const cejilManifest = {"cases":30,"entities":1338,"sharedEntities":446,"relationships":888,"files":483,"pdfs":60,"fullTextDocs":60,"menu":6,"pages":6};

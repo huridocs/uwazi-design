@@ -22,7 +22,7 @@ const REPO = path.resolve(__dirname, "..");
 const OUT = path.join(REPO, "src/data/cejil");
 const PDF_DIR = path.join(REPO, "public/cejil-docs");
 const CASE_COUNT = Number(process.env.CEJIL_CASES || 30);
-const PDF_CAP = Number(process.env.CEJIL_PDF_CAP || 40);
+const PDF_CAP = Number(process.env.CEJIL_PDF_CAP || 80);
 const FILE_HOST = "https://summa.cejil.org/api/files";
 
 const readAll = (file) => {
@@ -155,16 +155,21 @@ const outFiles = [];
 const toDownload = []; // {filename}
 const fullTextByFile = {};
 
+// Feature up to FEATURED_PER_CASE document-entities per case (best by
+// PRIMARY_ORDER rank). Each featured doc gets fullText + a downloaded PDF, so a
+// higher count = wider document coverage (more readable docs per case).
+const FEATURED_PER_CASE = Number(process.env.CEJIL_FEATURED_PER_CASE || 2);
 const featuredDocEntities = new Set();
 for (const c of causas) {
-  let best = null;
+  const ranked = [];
   for (const m of c.mates) {
     if (!keptSids.has(m) || !filesByEntity[m]) continue;
     const rank = PRIMARY_ORDER.indexOf(tplOfSid(m));
     if (rank === -1) continue;
-    if (!best || rank < best.rank) best = { sid: m, rank };
+    ranked.push({ sid: m, rank });
   }
-  if (best) featuredDocEntities.add(best.sid);
+  ranked.sort((a, b) => a.rank - b.rank);
+  for (const r of ranked.slice(0, FEATURED_PER_CASE)) featuredDocEntities.add(r.sid);
 }
 
 for (const sid of keptSids) {
