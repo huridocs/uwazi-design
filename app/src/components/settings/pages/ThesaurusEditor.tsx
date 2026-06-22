@@ -25,6 +25,13 @@ const serialize = (items: Item[]): string =>
 let uid = 0;
 const newId = () => `n${++uid}`;
 
+const move = <T,>(arr: T[], from: number, to: number): T[] => {
+  const next = [...arr];
+  const [moved] = next.splice(from, 1);
+  next.splice(to, 0, moved);
+  return next;
+};
+
 /** Thesaurus detail/editor — name + the editable item list (a thesaurus's
  *  children). Items can be flat or grouped: a group is a parent Item carrying
  *  a `children` array of sub-items. Opened from the Thesauri list. */
@@ -77,6 +84,23 @@ export function ThesaurusEditor({
       ),
     );
 
+  // Drag-to-reorder: top-level items/groups, and sub-items within one group.
+  const [dragTop, setDragTop] = useState<number | null>(null);
+  const reorderTop = (to: number) => {
+    if (dragTop === null || dragTop === to) return;
+    setItems((prev) => move(prev, dragTop, to));
+    setDragTop(to);
+  };
+  const [dragChild, setDragChild] = useState<{ g: string; i: number } | null>(null);
+  const reorderChild = (groupId: string, to: number) => {
+    if (!dragChild || dragChild.g !== groupId || dragChild.i === to) return;
+    const from = dragChild.i;
+    setItems((prev) =>
+      prev.map((g) => (g.id === groupId && g.children ? { ...g, children: move(g.children, from, to) } : g)),
+    );
+    setDragChild({ g: groupId, i: to });
+  };
+
   const save = () => {
     setToasts((p) => [
       ...p,
@@ -84,6 +108,18 @@ export function ThesaurusEditor({
     ]);
     onClose();
   };
+
+  const dragGrip = (props: { onDragStart: () => void; onDragEnd: () => void }) => (
+    <span
+      draggable
+      onDragStart={props.onDragStart}
+      onDragEnd={props.onDragEnd}
+      aria-label="Drag to reorder"
+      className="shrink-0 cursor-grab active:cursor-grabbing"
+    >
+      <GripVertical size={14} className="text-ink-muted" />
+    </span>
+  );
 
   const itemInput = (value: string, onChange: (v: string) => void, placeholder: string, ariaLabel: string) => (
     <input
@@ -127,12 +163,17 @@ export function ThesaurusEditor({
               </div>
             ) : (
               <ul className="flex flex-col divide-y" style={{ borderColor: "var(--border-soft)" }}>
-                {items.map((it) =>
+                {items.map((it, i) =>
                   isGroup(it) ? (
-                    <li key={it.id} className="py-1">
+                    <li
+                      key={it.id}
+                      onDragEnter={() => reorderTop(i)}
+                      onDragOver={(e) => e.preventDefault()}
+                      className={`py-1 transition-opacity ${dragTop === i ? "opacity-40" : ""}`}
+                    >
                       {/* Group header */}
                       <div className="flex items-center gap-2 py-1.5">
-                        <GripVertical size={14} className="text-ink-muted shrink-0 cursor-grab" />
+                        {dragGrip({ onDragStart: () => setDragTop(i), onDragEnd: () => setDragTop(null) })}
                         <FolderOpen size={14} className="text-ink-tertiary shrink-0" />
                         <input
                           value={it.label}
@@ -145,9 +186,14 @@ export function ThesaurusEditor({
                       </div>
                       {/* Sub-items, indented via padding */}
                       <div className="pl-7 flex flex-col">
-                        {it.children!.map((child) => (
-                          <div key={child.id} className="flex items-center gap-2 py-1.5">
-                            <GripVertical size={14} className="text-ink-muted shrink-0 cursor-grab" />
+                        {it.children!.map((child, ci) => (
+                          <div
+                            key={child.id}
+                            onDragEnter={() => reorderChild(it.id, ci)}
+                            onDragOver={(e) => e.preventDefault()}
+                            className={`flex items-center gap-2 py-1.5 transition-opacity ${dragChild?.g === it.id && dragChild.i === ci ? "opacity-40" : ""}`}
+                          >
+                            {dragGrip({ onDragStart: () => setDragChild({ g: it.id, i: ci }), onDragEnd: () => setDragChild(null) })}
                             {itemInput(child.label, (v) => patchChild(it.id, child.id, v), "Item label", "Item label")}
                             <RowActions label={child.label || "item"} onDelete={() => removeChild(it.id, child.id)} />
                           </div>
@@ -160,8 +206,13 @@ export function ThesaurusEditor({
                       </div>
                     </li>
                   ) : (
-                    <li key={it.id} className="flex items-center gap-2 py-1.5">
-                      <GripVertical size={14} className="text-ink-muted shrink-0 cursor-grab" />
+                    <li
+                      key={it.id}
+                      onDragEnter={() => reorderTop(i)}
+                      onDragOver={(e) => e.preventDefault()}
+                      className={`flex items-center gap-2 py-1.5 transition-opacity ${dragTop === i ? "opacity-40" : ""}`}
+                    >
+                      {dragGrip({ onDragStart: () => setDragTop(i), onDragEnd: () => setDragTop(null) })}
                       {itemInput(it.label, (v) => patch(it.id, v), "Item label", "Item label")}
                       <RowActions label={it.label || "item"} onDelete={() => remove(it.id)} />
                     </li>
