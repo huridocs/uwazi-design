@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useSetAtom } from "jotai";
-import { Plus, GripVertical, FolderOpen } from "lucide-react";
+import { Plus, FolderOpen } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { Button } from "../Button";
 import { RowActions } from "../RowActions";
+import { DragGrip } from "../DragGrip";
+import { useReorder } from "../../../hooks/useReorder";
 import { Field, TextInput } from "../Field";
 import { seedThesaurusItems, type SettingsThesaurus } from "../../../data/settings";
 import { cejilThesaurusItems } from "../../../data/cejil/settingsAdapt";
@@ -84,13 +86,9 @@ export function ThesaurusEditor({
       ),
     );
 
-  // Drag-to-reorder: top-level items/groups, and sub-items within one group.
-  const [dragTop, setDragTop] = useState<number | null>(null);
-  const reorderTop = (to: number) => {
-    if (dragTop === null || dragTop === to) return;
-    setItems((prev) => move(prev, dragTop, to));
-    setDragTop(to);
-  };
+  // Drag-to-reorder: top-level via the shared hook; sub-items within one group
+  // need a (group, index) key, so they stay bespoke.
+  const { dragIdx: dragTop, rowProps: topRow, gripProps: topGrip } = useReorder(setItems);
   const [dragChild, setDragChild] = useState<{ g: string; i: number } | null>(null);
   const reorderChild = (groupId: string, to: number) => {
     if (!dragChild || dragChild.g !== groupId || dragChild.i === to) return;
@@ -108,18 +106,6 @@ export function ThesaurusEditor({
     ]);
     onClose();
   };
-
-  const dragGrip = (props: { onDragStart: () => void; onDragEnd: () => void }) => (
-    <span
-      draggable
-      onDragStart={props.onDragStart}
-      onDragEnd={props.onDragEnd}
-      aria-label="Drag to reorder"
-      className="shrink-0 cursor-grab active:cursor-grabbing"
-    >
-      <GripVertical size={14} className="text-ink-muted" />
-    </span>
-  );
 
   const itemInput = (value: string, onChange: (v: string) => void, placeholder: string, ariaLabel: string) => (
     <input
@@ -167,13 +153,12 @@ export function ThesaurusEditor({
                   isGroup(it) ? (
                     <li
                       key={it.id}
-                      onDragEnter={() => reorderTop(i)}
-                      onDragOver={(e) => e.preventDefault()}
+                      {...topRow(i)}
                       className={`py-1 transition-opacity ${dragTop === i ? "opacity-40" : ""}`}
                     >
                       {/* Group header */}
                       <div className="flex items-center gap-2 py-1.5">
-                        {dragGrip({ onDragStart: () => setDragTop(i), onDragEnd: () => setDragTop(null) })}
+                        <DragGrip {...topGrip(i)} />
                         <FolderOpen size={14} className="text-ink-tertiary shrink-0" />
                         <input
                           value={it.label}
@@ -193,7 +178,11 @@ export function ThesaurusEditor({
                             onDragOver={(e) => e.preventDefault()}
                             className={`flex items-center gap-2 py-1.5 transition-opacity ${dragChild?.g === it.id && dragChild.i === ci ? "opacity-40" : ""}`}
                           >
-                            {dragGrip({ onDragStart: () => setDragChild({ g: it.id, i: ci }), onDragEnd: () => setDragChild(null) })}
+                            <DragGrip
+                              draggable
+                              onDragStart={() => setDragChild({ g: it.id, i: ci })}
+                              onDragEnd={() => setDragChild(null)}
+                            />
                             {itemInput(child.label, (v) => patchChild(it.id, child.id, v), "Item label", "Item label")}
                             <RowActions label={child.label || "item"} onDelete={() => removeChild(it.id, child.id)} />
                           </div>
@@ -208,11 +197,10 @@ export function ThesaurusEditor({
                   ) : (
                     <li
                       key={it.id}
-                      onDragEnter={() => reorderTop(i)}
-                      onDragOver={(e) => e.preventDefault()}
+                      {...topRow(i)}
                       className={`flex items-center gap-2 py-1.5 transition-opacity ${dragTop === i ? "opacity-40" : ""}`}
                     >
-                      {dragGrip({ onDragStart: () => setDragTop(i), onDragEnd: () => setDragTop(null) })}
+                      <DragGrip {...topGrip(i)} />
                       {itemInput(it.label, (v) => patch(it.id, v), "Item label", "Item label")}
                       <RowActions label={it.label || "item"} onDelete={() => remove(it.id)} />
                     </li>

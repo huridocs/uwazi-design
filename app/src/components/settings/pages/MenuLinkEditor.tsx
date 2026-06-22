@@ -5,6 +5,8 @@ import { SettingsContent } from "../SettingsContent";
 import { Button } from "../Button";
 import { RowActions } from "../RowActions";
 import { Field, TextInput } from "../Field";
+import { DragGrip } from "../DragGrip";
+import { useReorder } from "../../../hooks/useReorder";
 import { SegmentedControl } from "../../shared/SegmentedControl";
 import { type SettingsMenuLink } from "../../../data/settings";
 import { toastsAtom } from "../../../atoms/references";
@@ -57,6 +59,7 @@ export function MenuLinkEditor({
     setSubLinks((prev) => [...prev, { id: `ns-${prev.length}-${Date.now()}`, title: "", url: "" }]);
 
   const deleteSubLink = (id: string) => setSubLinks((prev) => prev.filter((s) => s.id !== id));
+  const { dragIdx, rowProps, gripProps } = useReorder(setSubLinks);
 
   const save = () => {
     setToasts((p) => [
@@ -110,12 +113,16 @@ export function MenuLinkEditor({
                 {subLinks.length === 0 ? (
                   <div className="px-3 py-6 text-sm text-ink-muted text-center">No sub-links yet.</div>
                 ) : (
-                  subLinks.map((s) => (
+                  subLinks.map((s, i) => (
                     <div
                       key={s.id}
-                      className="grid items-end gap-3 px-3 py-2.5"
-                      style={{ gridTemplateColumns: "1fr 1fr 2.5rem", borderTop: "1px solid var(--border-soft)" }}
+                      {...rowProps(i)}
+                      className={`grid items-end gap-3 px-3 py-2.5 transition-opacity ${dragIdx === i ? "opacity-40" : ""}`}
+                      style={{ gridTemplateColumns: "1.25rem 1fr 1fr 2.5rem", borderTop: "1px solid var(--border-soft)" }}
                     >
+                      <div className="flex justify-center pb-2.5">
+                        <DragGrip {...gripProps(i)} />
+                      </div>
                       <Field label="Title">
                         <TextInput value={s.title} onChange={(e) => patchSubLink(s.id, { title: e.target.value })} placeholder="e.g. Methodology" />
                       </Field>
