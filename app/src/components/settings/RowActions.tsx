@@ -13,13 +13,15 @@ export function RowActions({
 }) {
   return (
     <div className="flex items-center justify-end gap-1">
-      <button
-        onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
-        aria-label={`Edit ${label}`}
-        className="p-1.5 rounded-md text-ink-tertiary hover:bg-warm hover:text-ink transition-colors cursor-pointer"
-      >
-        <Pencil size={14} />
-      </button>
+      {onEdit && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onEdit(); }}
+          aria-label={`Edit ${label}`}
+          className="p-1.5 rounded-md text-ink-tertiary hover:bg-warm hover:text-ink transition-colors cursor-pointer"
+        >
+          <Pencil size={14} />
+        </button>
+      )}
       <button
         onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
         aria-label={`Delete ${label}`}
