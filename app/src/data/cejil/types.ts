@@ -2,6 +2,21 @@
 // Shapes mirror the Uwazi Mongo documents (and the Postgres JSONB lift-and-shift
 // target): metadata / properties / values stay as document-shaped blobs.
 
+/** Baked corpus aggregates (counts only — no heavy data), so Settings and the
+ *  Dashboard render without fetching the lazy-loaded JSON. */
+export interface CejilStats {
+  entities: number;
+  entityDocs: number;
+  relationships: number;
+  files: number;
+  pdfs: number;
+  fullTextDocs: number;
+  templates: number;
+  thesauri: number;
+  relationTypes: number;
+  languages: number;
+}
+
 export interface CejilTemplateProperty {
   name: string;
   label: string;

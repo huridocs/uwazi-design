@@ -15,8 +15,7 @@ import type {
 import { cejilTemplates } from "./templates";
 import { cejilThesauri } from "./thesauri";
 import { cejilRelationTypes } from "./relationTypes";
-import { cejilEntities } from "./entities";
-import { cejilRelationships } from "./relationships";
+import { cejilEntityCountByTemplate, cejilUsageByRelationType, cejilStats } from "./aggregates";
 import { cejilSettings } from "./settings";
 import { cejilMenu } from "./menu";
 import { cejilPages } from "./pages";
@@ -39,11 +38,10 @@ function ptype(t: string): PropertyType {
   }
 }
 
-// entity count per template (es docs) + relationship usage per relation type
-const entityCountByTpl: Record<string, number> = {};
-for (const e of cejilEntities) if (e.language === "es") entityCountByTpl[e.template] = (entityCountByTpl[e.template] ?? 0) + 1;
-const usageByType: Record<string, number> = {};
-for (const r of cejilRelationships) if (r.type) usageByType[r.type] = (usageByType[r.type] ?? 0) + 1;
+// entity count per template (es docs) + relationship usage per relation type —
+// baked into aggregates.ts by the importer, so Settings never loads the corpus.
+const entityCountByTpl = cejilEntityCountByTemplate;
+const usageByType = cejilUsageByRelationType;
 
 export const cejilSettingsTemplates: SettingsTemplate[] = cejilTemplates.map((t) => ({
   id: t._id,
@@ -141,8 +139,8 @@ export const cejilFilterMeta: Record<string, { name: string; color: string; coun
 
 // --- Dashboard: source-aware headline stats --------------------------------
 export const cejilDashboardStats = {
-  entities: cejilEntities.filter((e) => e.language === "es").length,
-  connections: cejilRelationships.length,
-  templates: cejilSettingsTemplates.length,
-  languages: cejilSettingsLanguages.length,
+  entities: cejilStats.entities,
+  connections: cejilStats.relationships,
+  templates: cejilStats.templates,
+  languages: cejilStats.languages,
 };

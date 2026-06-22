@@ -1,7 +1,8 @@
-import { useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Search, X, LayoutGrid, List, Map as MapIcon, Plus, Upload, FileSpreadsheet } from "lucide-react";
-import { dataSourceAtom, libraryEntitiesAtom } from "../atoms/dataSource";
+import { dataSourceAtom, libraryEntitiesAtom, cejilReadyAtom } from "../atoms/dataSource";
+import { loadCejilData } from "../data/cejil/load";
 import { referencesAtom } from "../atoms/references";
 import { languageAtom, type Language } from "../atoms/language";
 import { appViewAtom } from "../atoms/navigation";
@@ -37,9 +38,24 @@ import { SegmentedControl } from "../components/shared/SegmentedControl";
 
 const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
 
+/** How many cards to reveal per page in the Library grid/list. */
+const DISPLAY_STEP = 120;
+
 export function LibraryView() {
   const entities = useAtomValue(libraryEntitiesAtom);
   const [dataSource, setDataSource] = useAtom(dataSourceAtom);
+  const [cejilReady, setCejilReady] = useAtom(cejilReadyAtom);
+  // Fetch the full CEJIL corpus on demand the first time the source is selected.
+  useEffect(() => {
+    if (dataSource === "cejil" && !cejilReady) {
+      let alive = true;
+      loadCejilData().then(() => alive && setCejilReady(true));
+      return () => {
+        alive = false;
+      };
+    }
+  }, [dataSource, cejilReady, setCejilReady]);
+  const cejilLoading = dataSource === "cejil" && !cejilReady;
   const references = useAtomValue(referencesAtom);
   const [query, setQuery] = useAtom(libraryQueryAtom);
   const [typeFilters, setTypeFilters] = useAtom(libraryTypeFiltersAtom);
@@ -102,6 +118,12 @@ export function LibraryView() {
     else sorted.sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? "")); // recent first
     return sorted;
   }, [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), language, q, sort, countByEntity]);
+
+  // The full CEJIL corpus is thousands of entities — cap the rendered cards and
+  // let the user reveal more, so the card/list grid never paints them all at once.
+  const [visibleCount, setVisibleCount] = useState(DISPLAY_STEP);
+  useEffect(() => setVisibleCount(DISPLAY_STEP), [filtered]);
+  const shown = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
 
   const toggleType = (id: string) => setTypeFilters((prev) => ({ ...prev, [id]: !prev[id] }));
   const toggleStatus = (id: string) => setStatusFilters((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -230,7 +252,12 @@ export function LibraryView() {
           </div>
         )}
 
-        {viewMode === "map" ? (
+        {cejilLoading ? (
+          <div className="flex flex-col items-center justify-center h-40 gap-3 text-sm text-ink-muted">
+            <span className="w-5 h-5 rounded-full border-2 border-border border-t-carbon animate-spin" />
+            Loading the full CEJIL collection…
+          </div>
+        ) : viewMode === "map" ? (
           <div className="flex-1 min-h-0">
             <LibraryMapView entities={filtered} />
           </div>
@@ -240,7 +267,7 @@ export function LibraryView() {
           </div>
         ) : viewMode === "cards" ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-            {filtered.map((e) => (
+            {shown.map((e) => (
               <EntityCard
                 key={e.id}
                 entity={e}
@@ -253,7 +280,7 @@ export function LibraryView() {
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            {filtered.map((e) => (
+            {shown.map((e) => (
               <EntityCard
                 key={e.id}
                 entity={e}
@@ -263,6 +290,17 @@ export function LibraryView() {
                 onView={() => openEntity(e.id)}
               />
             ))}
+          </div>
+        )}
+
+        {!cejilLoading && viewMode !== "map" && shown.length < filtered.length && (
+          <div className="flex justify-center pt-4">
+            <button
+              onClick={() => setVisibleCount((n) => n + DISPLAY_STEP)}
+              className="px-4 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+            >
+              Show more — {(filtered.length - shown.length).toLocaleString()} remaining
+            </button>
           </div>
         )}
       </div>
@@ -288,7 +326,7 @@ export function LibraryView() {
           onClick={() => setAppView("import-csv")}
         />
         <span className="ms-2 text-[11px] text-ink-tertiary">
-          Showing <span className="font-semibold text-ink-secondary">{filtered.length}</span> of {entities.length}
+          Showing <span className="font-semibold text-ink-secondary">{shown.length.toLocaleString()}</span> of {filtered.length.toLocaleString()}
         </span>
       </div>
     </div>

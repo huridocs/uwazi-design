@@ -163,8 +163,19 @@ export function getEntityType(typeId: string): EntityType | undefined {
   return entityTypes.find((t) => t.id === typeId) ?? cejilTypeById.get(typeId);
 }
 
-const cejilEntityById = new Map(cejilLibraryEntities.map((e) => [e.id, e]));
+// Lazy CEJIL lookup — the corpus loads on demand, and cejilLibraryEntities()
+// returns a new (memoized) array once present, so rebuild the index only then.
+let _cejilById: Map<string, Entity> | null = null;
+let _cejilArr: Entity[] | null = null;
+function cejilEntityById(): Map<string, Entity> {
+  const arr = cejilLibraryEntities();
+  if (arr !== _cejilArr) {
+    _cejilArr = arr;
+    _cejilById = new Map(arr.map((e) => [e.id, e]));
+  }
+  return _cejilById!;
+}
 
 export function getEntity(id: string): Entity | undefined {
-  return entities.find((e) => e.id === id) ?? cejilEntityById.get(id);
+  return entities.find((e) => e.id === id) ?? cejilEntityById().get(id);
 }

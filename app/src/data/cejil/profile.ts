@@ -9,36 +9,27 @@ import type { DocumentMeta } from "../document";
 import type { DocRendition, HtmlBlock } from "../documentRenditions";
 import type { FileEntry, DocumentGroup } from "../files";
 import type { Reference } from "../references";
-import { cejilEntities } from "./entities";
-import { cejilFiles } from "./files";
-import { cejilFullText } from "./fullText";
-import { cejilRelationships } from "./relationships";
+import type { CejilEntity, CejilFile } from "./types";
 import { cejilTemplates } from "./templates";
+import {
+  cejilBySidLang,
+  cejilRelsByEntity,
+  cejilFilesBySid,
+  cejilSharedIdSet,
+  cejilFullText,
+  cejilLoaded,
+} from "./load";
 
 const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
 // App language → CEJIL language code (es/en/pt). FR/AR fall back to es (canonical).
 const LANG_CODE: Record<Language, string> = { EN: "en", ES: "es", FR: "es", AR: "es" };
 
-// (sharedId, langCode) → entity doc
-const bySidLang = new Map<string, (typeof cejilEntities)[number]>();
-for (const e of cejilEntities) bySidLang.set(`${e.sharedId}::${e.language}`, e);
-
-export const cejilSharedIds = new Set(cejilEntities.map((e) => e.sharedId));
-export const isCejilEntity = (id: string) => cejilSharedIds.has(id);
-
-// relationships touching each entity (either endpoint)
-const relsByEntity = new Map<string, typeof cejilRelationships>();
-for (const r of cejilRelationships) {
-  for (const sid of new Set([r.from, r.to])) {
-    const a = relsByEntity.get(sid) || [];
-    a.push(r);
-    relsByEntity.set(sid, a);
-  }
-}
+/** True once the corpus is loaded and this id is one of its shared entities. */
+export const isCejilEntity = (id: string) => cejilSharedIdSet().has(id);
 
 /** This entity's connections as perspective-normalized References (read-only). */
 export function cejilReferencesFor(sharedId: string): Reference[] {
-  const rels = relsByEntity.get(sharedId) || [];
+  const rels = cejilRelsByEntity().get(sharedId) || [];
   return rels.map((r, i) => {
     const outgoing = r.from === sharedId;
     return {
@@ -51,13 +42,6 @@ export function cejilReferencesFor(sharedId: string): Reference[] {
       createdAt: "",
     };
   });
-}
-
-const filesBySid = new Map<string, typeof cejilFiles>();
-for (const f of cejilFiles) {
-  const arr = filesBySid.get(f.entity) || [];
-  arr.push(f);
-  filesBySid.set(f.entity, arr);
 }
 
 const propsByTemplate = new Map(
@@ -77,7 +61,7 @@ function fmtDate(v: unknown): string {
 }
 
 /** Resolve one entity-language doc's metadata into scalar MetadataField[]. */
-function mdFields(e: (typeof cejilEntities)[number]): MetadataField[] {
+function mdFields(e: CejilEntity): MetadataField[] {
   const props = propsByTemplate.get(e.template) || [];
   const out: MetadataField[] = [];
   for (const p of props) {
@@ -132,12 +116,12 @@ function buildRendition(title: string, pages: string[]): DocRendition {
 
 /** Url'd PDF files for an entity, else borrow from a connected document entity
  *  (a Causa → its Sentencia), so opening a case shows its primary judgment. */
-function docFilesFor(sharedId: string): { files: typeof cejilFiles; titleSid: string } {
-  const own = (filesBySid.get(sharedId) || []).filter((f) => f.url && f.isPdf);
+function docFilesFor(sharedId: string): { files: CejilFile[]; titleSid: string } {
+  const own = (cejilFilesBySid().get(sharedId) || []).filter((f) => f.url && f.isPdf);
   if (own.length) return { files: own, titleSid: sharedId };
-  const candidates = (relsByEntity.get(sharedId) || [])
+  const candidates = (cejilRelsByEntity().get(sharedId) || [])
     .map((r) => (r.from === sharedId ? r.to : r.from))
-    .map((o) => ({ o, files: (filesBySid.get(o) || []).filter((f) => f.url && f.isPdf), tpl: bySidLang.get(`${o}::es`)?.template }))
+    .map((o) => ({ o, files: (cejilFilesBySid().get(o) || []).filter((f) => f.url && f.isPdf), tpl: cejilBySidLang().get(`${o}::es`)?.template }))
     .filter((c) => c.files.length)
     .sort((a, b) => (b.tpl === SENTENCIA_TPL ? 1 : 0) - (a.tpl === SENTENCIA_TPL ? 1 : 0));
   return candidates.length ? { files: candidates[0].files, titleSid: candidates[0].o } : { files: [], titleSid: sharedId };
@@ -148,14 +132,19 @@ function docFilesFor(sharedId: string): { files: typeof cejilFiles; titleSid: st
  *  the Library card's "has document" indicator, so it matches exactly what
  *  buildCejilProfile renders (a file record alone isn't enough — most are
  *  metadata-only, with no fetched binary). */
-export const cejilDocBearingIds = new Set(
-  [...cejilSharedIds].filter((sid) => docFilesFor(sid).files.length > 0),
-);
+let _docBearing: Set<string> | null = null;
+export function cejilDocBearingIds(): Set<string> {
+  if (!cejilLoaded()) return new Set();
+  if (!_docBearing) {
+    _docBearing = new Set([...cejilSharedIdSet()].filter((sid) => docFilesFor(sid).files.length > 0));
+  }
+  return _docBearing;
+}
 
 export function buildCejilProfile(sharedId: string): EntityProfile {
-  const es = bySidLang.get(`${sharedId}::es`) || bySidLang.get(`${sharedId}::en`)!;
+  const es = cejilBySidLang().get(`${sharedId}::es`) || cejilBySidLang().get(`${sharedId}::en`)!;
   const metadata = LANGS.reduce((acc, lang) => {
-    const doc = bySidLang.get(`${sharedId}::${LANG_CODE[lang]}`) || es;
+    const doc = cejilBySidLang().get(`${sharedId}::${LANG_CODE[lang]}`) || es;
     acc[lang] = mdFields(doc);
     return acc;
   }, {} as Record<Language, MetadataField[]>);
@@ -166,7 +155,7 @@ export function buildCejilProfile(sharedId: string): EntityProfile {
   if (urlFiles.length === 0) {
     return { id: sharedId, typeId: es.template, hasDocument: false, metadata, documentGroups: [], files: [], relationships: { kind: "references" } };
   }
-  const docTitle = bySidLang.get(`${titleSid}::es`)?.title || es.title;
+  const docTitle = cejilBySidLang().get(`${titleSid}::es`)?.title || es.title;
 
   const groupId = `g-cejil-${sharedId}`;
   const files: FileEntry[] = urlFiles.map((f) => ({
@@ -182,7 +171,7 @@ export function buildCejilProfile(sharedId: string): EntityProfile {
   const group: DocumentGroup = { id: groupId, title: docTitle, isPrimary: true, order: 0 };
 
   const primary = urlFiles[0];
-  const pages = cejilFullText[primary.filename] || [];
+  const pages = cejilFullText()[primary.filename] || [];
   const rendition = buildRendition(docTitle, pages);
   const docMeta: DocumentMeta = {
     id: `doc-${sharedId}`,

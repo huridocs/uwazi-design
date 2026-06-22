@@ -12,10 +12,18 @@ export type DataSource = "mock" | "cejil";
  *  Scoped to the Library — EntityView/Relationships stay on the mock seed. */
 export const dataSourceAtom = atomWithStorage<DataSource>("uwazi:dataSource", "mock");
 
-/** The entity list the Library shows, by source. */
-export const libraryEntitiesAtom = atom<Entity[]>((get) =>
-  get(dataSourceAtom) === "cejil" ? cejilLibraryEntities : get(entitiesAtom),
-);
+/** Flipped true once the lazy CEJIL corpus (public/cejil-data/*.json) has been
+ *  fetched. LibraryView triggers the load and sets this; the entity atom below
+ *  re-evaluates when it changes. */
+export const cejilReadyAtom = atom(false);
+
+/** The entity list the Library shows, by source. CEJIL data loads on demand, so
+ *  this is [] until `cejilReadyAtom` flips (the Library shows a loading state). */
+export const libraryEntitiesAtom = atom<Entity[]>((get) => {
+  if (get(dataSourceAtom) !== "cejil") return get(entitiesAtom);
+  get(cejilReadyAtom); // subscribe: recompute once the corpus is present
+  return cejilLibraryEntities();
+});
 
 /** The entity types present for the active source (drives facet lists + colours). */
 export const libraryTypesAtom = atom<EntityType[]>((get) =>
