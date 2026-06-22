@@ -209,8 +209,8 @@ export function ParagraphJobEditor({
           {/* Stats + run */}
           {!isNew && (
             <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
-              <div className="flex items-end justify-between gap-3 mb-4">
-                <div className="grid grid-cols-4 gap-6">
+              <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3">
                   <Stat label="Documents" value={documents} />
                   <Stat label="Paragraphs" value={totalParagraphs.toLocaleString()} />
                   <div className="flex flex-col gap-1">
@@ -225,7 +225,7 @@ export function ParagraphJobEditor({
               </div>
 
               {/* Per-document breakdown */}
-              <div className="flex items-center justify-between gap-2 mb-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                 <h3 className="text-sm font-semibold text-ink">
                   Documents <span className="text-ink-tertiary font-normal">({visible.length})</span>
                 </h3>

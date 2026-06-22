@@ -232,8 +232,8 @@ export function PreserveTokenEditor({
           {/* Stats + capture + evidence table (existing source) */}
           {!isNew && (
             <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
-              <div className="flex items-end justify-between gap-3 mb-4">
-                <div className="grid grid-cols-4 gap-6">
+              <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3">
                   <Stat label="Captures" value={captured} />
                   <Stat label="Schedule" value={schedule[0].toUpperCase() + schedule.slice(1)} />
                   <Stat label="Failed" value={failed} />
@@ -257,7 +257,7 @@ export function PreserveTokenEditor({
               </Field>
 
               {/* Evidence table */}
-              <div className="flex items-center justify-between gap-2 mt-6 mb-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 mt-6 mb-3">
                 <h3 className="text-sm font-semibold text-ink">
                   Captures <span className="text-ink-tertiary font-normal">({visible.length})</span>
                 </h3>

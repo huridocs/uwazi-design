@@ -228,8 +228,8 @@ export function ExtractorEditor({
           {/* Stats + train */}
           {!isNew && (
             <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
-              <div className="flex items-end justify-between gap-3 mb-4">
-                <div className="grid grid-cols-4 gap-6">
+              <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3">
                   <Stat label="Documents" value={base!.documents} />
                   <Stat label="Reviewed" value={reviewed} />
                   <Stat label="Pending" value={pending} />
@@ -241,7 +241,7 @@ export function ExtractorEditor({
               </div>
 
               {/* Review table */}
-              <div className="flex items-center justify-between gap-2 mb-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                 <h3 className="text-sm font-semibold text-ink">
                   Suggestions <span className="text-ink-tertiary font-normal">({visible.length})</span>
                 </h3>

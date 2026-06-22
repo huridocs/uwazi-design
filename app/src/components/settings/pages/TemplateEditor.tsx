@@ -121,12 +121,7 @@ export function TemplateEditor({
           </section>
 
           <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
-            <div className="flex items-center justify-between gap-2 mb-3">
-              <h3 className="text-sm font-semibold text-ink">Properties</h3>
-              <Button variant="secondary" size="sm" icon={<Plus size={14} />} onClick={addProperty}>
-                Add property
-              </Button>
-            </div>
+            <h3 className="text-sm font-semibold text-ink mb-3">Properties</h3>
 
             <div className="flex flex-col rounded-md overflow-hidden" style={{ border: "1px solid var(--border-soft)" }}>
               {/* Header row */}
@@ -226,6 +221,9 @@ export function TemplateEditor({
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
+        <Button variant="secondary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={addProperty}>
+          Add property
+        </Button>
         <Button variant="ghost" size="sm" onClick={onClose}>
           Cancel
         </Button>
