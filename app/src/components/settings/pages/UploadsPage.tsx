@@ -45,7 +45,18 @@ export function UploadsPage() {
         <Table columns={columns} data={uploads} getRowId={(u) => u.id} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" className="me-auto" icon={<Upload size={14} />}>
+        <Button
+          variant="primary"
+          size="sm"
+          className="me-auto"
+          icon={<Upload size={14} />}
+          onClick={() =>
+            setToasts((p) => [
+              ...p,
+              { id: Date.now().toString(), message: "File uploaded", type: "success" as const },
+            ])
+          }
+        >
           Upload file
         </Button>
       </SettingsContent.Footer>

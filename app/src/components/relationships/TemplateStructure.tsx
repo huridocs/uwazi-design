@@ -1,6 +1,7 @@
 import { CaseSensitive, Image, FileVideo, ScrollText, MapPin, CalendarDays, Type, Link2, ListOrdered, HelpCircle } from "lucide-react";
 import { ReactNode } from "react";
 import { metadataFields, relationshipFieldsByLanguage } from "../../data/metadata";
+import { useNotify } from "../../hooks/useNotify";
 
 interface TemplateProperty {
   icon: ReactNode;
@@ -45,6 +46,7 @@ const inheritedFields = relProps.filter((p) => p.inherited);
 directFields.push(...relProps.filter((p) => !p.inherited));
 
 function PropertyItem({ prop }: { prop: TemplateProperty }) {
+  const notify = useNotify();
   return (
     <div className="flex items-center gap-3 p-3 bg-warm rounded-md shadow-sm">
       <span className="text-ink-tertiary shrink-0">{prop.icon}</span>
@@ -56,6 +58,11 @@ function PropertyItem({ prop }: { prop: TemplateProperty }) {
       </span>
       <span className="text-[10px] text-ink-muted shrink-0 capitalize">{prop.type}</span>
       <button
+        onClick={() =>
+          prop.inherited
+            ? notify("Inherited property — edit at its source")
+            : notify(`Editing “${prop.name}”`)
+        }
         className={`px-2.5 py-0.5 text-xs font-medium rounded-md transition-colors shrink-0 ${
           prop.inherited
             ? "bg-carbon-tint/50 text-carbon/50"
@@ -94,6 +101,7 @@ function PropertyGroup({
 }
 
 export function TemplateStructure() {
+  const notify = useNotify();
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-auto px-4 py-3 pb-8">
@@ -129,9 +137,18 @@ export function TemplateStructure() {
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
         <span className="text-xs text-ink-tertiary">
-          Learn more about <span className="font-bold text-ink-secondary underline cursor-pointer">entities</span>
+          Learn more about{" "}
+          <button
+            type="button"
+            onClick={() => notify("Opening entities guide")}
+            className="font-bold text-ink-secondary underline cursor-pointer"
+          >
+            entities
+          </button>
         </span>
-        <HelpCircle size={18} className="text-ink-muted" />
+        <button type="button" onClick={() => notify("Opening entities guide")} aria-label="Help">
+          <HelpCircle size={18} className="text-ink-muted" />
+        </button>
       </div>
     </div>
   );

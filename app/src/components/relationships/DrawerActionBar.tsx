@@ -1,4 +1,5 @@
 import { HelpCircle, Pencil, Share2, Trash2 } from "lucide-react";
+import { useNotify } from "../../hooks/useNotify";
 
 interface DrawerActionBarProps {
   activeTab: string;
@@ -11,10 +12,12 @@ function ActionPill({
   icon: Icon,
   label,
   variant = "default",
+  onClick,
 }: {
   icon?: typeof Pencil;
   label: string;
   variant?: "default" | "danger";
+  onClick?: () => void;
 }) {
   const tone =
     variant === "danger"
@@ -23,6 +26,7 @@ function ActionPill({
   return (
     <button
       type="button"
+      onClick={onClick}
       className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${tone}`}
     >
       {Icon && (
@@ -37,6 +41,7 @@ function ActionPill({
 }
 
 export function DrawerActionBar({ activeTab }: DrawerActionBarProps) {
+  const notify = useNotify();
   return (
     <div
       className="flex items-center justify-between h-12 px-3 bg-paper shrink-0"
@@ -45,10 +50,10 @@ export function DrawerActionBar({ activeTab }: DrawerActionBarProps) {
       {activeTab === "metadata" && (
         <>
           <div className="flex items-center gap-2">
-            <ActionPill icon={Pencil} label="Edit" />
-            <ActionPill icon={Share2} label="Share" />
+            <ActionPill icon={Pencil} label="Edit" onClick={() => notify("Editing metadata")} />
+            <ActionPill icon={Share2} label="Share" onClick={() => notify("Share link copied", "success")} />
           </div>
-          <ActionPill icon={Trash2} label="Delete" variant="danger" />
+          <ActionPill icon={Trash2} label="Delete" variant="danger" onClick={() => notify("Entity deleted", "success")} />
         </>
       )}
 
@@ -56,24 +61,30 @@ export function DrawerActionBar({ activeTab }: DrawerActionBarProps) {
         <>
           <div className="flex items-center gap-1">
             <span className="text-[11px] text-ink-tertiary">To add references check this</span>
-            <span className="text-[11px] font-medium text-carbon cursor-pointer hover:underline">
+            <button
+              type="button"
+              onClick={() => notify("Opening references guide")}
+              className="text-[11px] font-medium text-carbon cursor-pointer hover:underline"
+            >
               guide here.
-            </span>
+            </button>
           </div>
-          <HelpCircle size={18} className="text-carbon" aria-label="Help" />
+          <button type="button" onClick={() => notify("Opening references guide")} aria-label="Help">
+            <HelpCircle size={18} className="text-carbon" />
+          </button>
         </>
       )}
 
       {activeTab === "toc" && (
         <>
-          <ActionPill label="Edit" />
-          <ActionPill label="Mark as reviewed" />
+          <ActionPill label="Edit" onClick={() => notify("Editing table of contents")} />
+          <ActionPill label="Mark as reviewed" onClick={() => notify("Marked as reviewed", "success")} />
         </>
       )}
 
       {activeTab === "relationships" && (
         <>
-          <ActionPill label="Add relationship" />
+          <ActionPill label="Add relationship" onClick={() => notify("Relationship added", "success")} />
           <div />
         </>
       )}
@@ -81,7 +92,9 @@ export function DrawerActionBar({ activeTab }: DrawerActionBarProps) {
       {activeTab === "search" && (
         <>
           <span className="text-[11px] text-ink-tertiary">Search tips</span>
-          <HelpCircle size={18} className="text-carbon" aria-label="Search tips" />
+          <button type="button" onClick={() => notify("Opening search tips")} aria-label="Search tips">
+            <HelpCircle size={18} className="text-carbon" />
+          </button>
         </>
       )}
     </div>

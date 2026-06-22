@@ -19,6 +19,7 @@ import {
   documentGroupsAtom,
   viewerFileIdAtom,
 } from "../../atoms/files";
+import { useNotify } from "../../hooks/useNotify";
 import { FileDetailEditor } from "./FileDetailEditor";
 import { AddFileDropArea } from "./AddFileDropArea";
 import { FileViewerBody, resolveFileUrl } from "./FileViewerModal";
@@ -52,6 +53,7 @@ export function FileDrawer({
   onFocusFile,
 }: FileDrawerProps) {
   const [activeTab, setActiveTab] = useState("file");
+  const notify = useNotify();
   const allFiles = useAtomValue(filesAtom);
   const allGroups = useAtomValue(documentGroupsAtom);
   const [viewerFileId, setViewerFileId] = useAtom(viewerFileIdAtom);
@@ -209,7 +211,10 @@ export function FileDrawer({
                     >
                       <Eye size={12} className="text-ink-tertiary" /> View
                     </button>
-                    <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer">
+                    <button
+                      onClick={() => notify("File downloaded", "success")}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+                    >
                       <Download size={12} className="text-ink-tertiary" /> Download
                     </button>
                   </div>
@@ -228,7 +233,10 @@ export function FileDrawer({
               className="flex items-center justify-between h-12 px-3 shrink-0"
               style={{ borderTop: "1px solid var(--border-primary)" }}
             >
-              <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer">
+              <button
+                onClick={() => notify(`Downloading ${selectedFiles.length} files`, "success")}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+              >
                 <Download size={12} className="text-ink-tertiary" /> Download all
               </button>
               <button

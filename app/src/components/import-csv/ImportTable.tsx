@@ -3,6 +3,7 @@ import { StatusBadge } from "../shared/StatusBadge";
 import { ProgressBar } from "../shared/ProgressBar";
 import { Checkbox } from "../shared/Checkbox";
 import { breakpointAtom } from "../../atoms/viewport";
+import { useNotify } from "../../hooks/useNotify";
 import type { ImportEntry } from "../../data/imports";
 
 interface ImportTableProps {
@@ -53,6 +54,7 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
   const allSelected = imports.length > 0 && imports.every((i) => selectedIds.has(i.id));
   const [breakpoint] = useAtom(breakpointAtom);
   const isMobile = breakpoint === "mobile";
+  const notify = useNotify();
 
   if (isMobile) {
     return (
@@ -121,13 +123,13 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
         <label className="flex items-center justify-center">
           <Checkbox checked={allSelected} onChange={onSelectAll} ariaLabel="Select all imports" />
         </label>
-        <span>Status</span>
-        <span>File</span>
-        <span>Template</span>
-        <span>Progress</span>
-        <span>Entities</span>
-        <span>Failed</span>
-        <span>Date</span>
+        <SortHeader label="Status" onSort={notify} />
+        <SortHeader label="File" onSort={notify} />
+        <SortHeader label="Template" onSort={notify} />
+        <SortHeader label="Progress" onSort={notify} />
+        <SortHeader label="Entities" onSort={notify} />
+        <SortHeader label="Failed" onSort={notify} />
+        <SortHeader label="Date" onSort={notify} />
         <span className="text-center">Action</span>
       </div>
 
@@ -199,6 +201,18 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
 
       <PaginationFooter total={imports.length} />
     </>
+  );
+}
+
+function SortHeader({ label, onSort }: { label: string; onSort: (msg: string) => void }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onSort(`Sorted by ${label.toLowerCase()}`)}
+      className="text-left uppercase tracking-wider hover:text-ink transition-colors cursor-pointer"
+    >
+      {label}
+    </button>
   );
 }
 

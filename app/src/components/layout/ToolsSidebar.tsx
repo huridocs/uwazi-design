@@ -10,6 +10,7 @@ import {
   GitFork,
   Archive,
 } from "lucide-react";
+import { useNotify } from "../../hooks/useNotify";
 
 interface ToolsSidebarProps {
   activeItem?: string;
@@ -53,6 +54,7 @@ function SidebarSection({
   items: { id: string; label: string; icon: typeof Cog }[];
   activeItem: string;
 }) {
+  const notify = useNotify();
   return (
     <div className="mb-2">
       <h3 className="px-5 py-2 text-[10px] font-semibold text-ink-muted uppercase tracking-wider">
@@ -64,6 +66,7 @@ function SidebarSection({
         return (
           <button
             key={item.id}
+            onClick={() => notify(`Opening ${item.label}`)}
             className={`flex items-center gap-2.5 w-full px-5 py-2 text-[13px] font-medium transition-colors ${
               isActive
                 ? "bg-warm text-ink"

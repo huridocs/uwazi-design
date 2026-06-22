@@ -7,6 +7,7 @@ import { languageAtom, type Language } from "../atoms/language";
 import { appViewAtom } from "../atoms/navigation";
 import { breakpointAtom } from "../atoms/viewport";
 import { openEntityAtom, focusEntityForPreviewAtom } from "../atoms/focusedEntity";
+import { useNotify } from "../hooks/useNotify";
 import {
   libraryQueryAtom,
   libraryTypeFiltersAtom,
@@ -57,6 +58,7 @@ export function LibraryView() {
   const openEntity = useSetAtom(openEntityAtom);
   const focusForPreview = useSetAtom(focusEntityForPreviewAtom);
   const setAppView = useSetAtom(appViewAtom);
+  const notify = useNotify();
 
   const isMobile = breakpoint === "mobile";
 
@@ -270,8 +272,16 @@ export function LibraryView() {
         className="shrink-0 flex items-center gap-2 h-12 px-3 bg-paper"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
-        <FooterButton icon={<Plus size={13} className="text-ink-tertiary" />} label="Create entity" />
-        <FooterButton icon={<Upload size={13} className="text-ink-tertiary" />} label="Upload PDF" />
+        <FooterButton
+          icon={<Plus size={13} className="text-ink-tertiary" />}
+          label="Create entity"
+          onClick={() => notify("Create entity isn't available in the prototype")}
+        />
+        <FooterButton
+          icon={<Upload size={13} className="text-ink-tertiary" />}
+          label="Upload PDF"
+          onClick={() => notify("Upload started")}
+        />
         <FooterButton
           icon={<FileSpreadsheet size={13} className="text-ink-tertiary" />}
           label="Import / Export CSV"
