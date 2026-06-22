@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useAtom } from "jotai";
 import { scopedReferencesAtom, toastsAtom } from "../atoms/references";
 import { languageAtom, type Language } from "../atoms/language";
+import { focusedEntityIdAtom } from "../atoms/focusedEntity";
+import { getEntityProfile } from "../data/entityProfiles";
 import {
   viewAtom,
   groupByAtom,
@@ -45,6 +47,8 @@ interface Props {
  *  tree / graph) over the same underlying references[]. */
 export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Props) {
   const [references, setReferences] = useAtom(scopedReferencesAtom);
+  const [focusedId] = useAtom(focusedEntityIdAtom);
+  const profile = getEntityProfile(focusedId);
   const [, setToasts] = useAtom(toastsAtom);
   const [language, setLanguage] = useAtom(languageAtom);
   const [view] = useAtom(viewAtom);
@@ -166,11 +170,15 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
       right={
         <div className="flex flex-col h-full min-h-0 relative overflow-hidden">
           <EntityOverlay />
-          <DrawerTabs
-            tabs={[{ id: "document", label: "Document" }]}
-            activeId="document"
-            onChange={() => {}}
-          />
+          {/* The document projection only makes sense for document-bearing
+              entities — otherwise the viewer falls back to the sample PDF. */}
+          {profile.hasDocument && (
+            <DrawerTabs
+              tabs={[{ id: "document", label: "Document" }]}
+              activeId="document"
+              onChange={() => {}}
+            />
+          )}
           <FiltersDrawer
             open={filtersOpen}
             onClose={() => setFiltersOpen(false)}
@@ -188,7 +196,13 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
           >
             <RelationshipsFilterDrawer />
           </FiltersDrawer>
-          <DocumentViewer showMinimap={!hideMinimap} />
+          {profile.hasDocument ? (
+            <DocumentViewer showMinimap={!hideMinimap} />
+          ) : (
+            <div className="flex-1 flex items-center justify-center p-6 text-center">
+              <p className="text-sm text-ink-muted">This entity has no document.</p>
+            </div>
+          )}
           <ConfirmDialog
             open={deleteTarget !== null}
             title="Delete Reference"

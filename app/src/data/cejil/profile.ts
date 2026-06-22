@@ -143,6 +143,15 @@ function docFilesFor(sharedId: string): { files: typeof cejilFiles; titleSid: st
   return candidates.length ? { files: candidates[0].files, titleSid: candidates[0].o } : { files: [], titleSid: sharedId };
 }
 
+/** Shared-ids that actually surface a viewable PDF — their own downloaded PDF
+ *  or one borrowed from a connected Sentencia. The single source of truth for
+ *  the Library card's "has document" indicator, so it matches exactly what
+ *  buildCejilProfile renders (a file record alone isn't enough — most are
+ *  metadata-only, with no fetched binary). */
+export const cejilDocBearingIds = new Set(
+  [...cejilSharedIds].filter((sid) => docFilesFor(sid).files.length > 0),
+);
+
 export function buildCejilProfile(sharedId: string): EntityProfile {
   const es = bySidLang.get(`${sharedId}::es`) || bySidLang.get(`${sharedId}::en`)!;
   const metadata = LANGS.reduce((acc, lang) => {

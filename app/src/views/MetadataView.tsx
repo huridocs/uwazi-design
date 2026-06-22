@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue } from "jotai";
 import { Download, Search } from "lucide-react";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
@@ -29,6 +29,7 @@ import { EditInput } from "../components/metadata/EditInput";
 import { scopedReferencesAtom } from "../atoms/references";
 import { RelationshipsDrawerSection } from "../components/relationships/RelationshipsDrawerSection";
 import { DocumentViewer } from "../components/viewer/DocumentViewer";
+import { useNotify } from "../hooks/useNotify";
 
 interface MetadataViewProps {
   tabs: { id: string; label: string; count?: number }[];
@@ -92,6 +93,7 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
   const relFields = allFields.filter((f): f is RelationshipMetadataField => f.type === "relationship");
   const { groups, singles } = groupConnections(relFields, language, getProp);
   const pdf = profile.pdfMetadata?.[language];
+  const notify = useNotify();
 
   return (
     <>
@@ -121,7 +123,10 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
               </PropertyRow>
               <div className="flex items-center justify-between pt-2 mt-auto">
                 <ViewButton size="md" />
-                <button className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer flex items-center gap-1.5">
+                <button
+                  onClick={() => notify("Download started", "success")}
+                  className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer flex items-center gap-1.5"
+                >
                   <Download size={12} className="text-ink-tertiary" /> Download
                 </button>
               </div>
@@ -184,11 +189,17 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
         >
           Edit
         </button>
-        <button className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer">
+        <button
+          onClick={() => notify("Link copied")}
+          className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+        >
           Share
         </button>
         <div className="flex-1" />
-        <button className="px-3 py-1.5 text-xs font-medium text-seal bg-seal-tint/40 hover:bg-seal-tint rounded-md transition-colors cursor-pointer">
+        <button
+          onClick={() => notify("Entity deleted", "success")}
+          className="px-3 py-1.5 text-xs font-medium text-seal bg-seal-tint/40 hover:bg-seal-tint rounded-md transition-colors cursor-pointer"
+        >
           Delete
         </button>
         {menuSlot}
@@ -215,6 +226,9 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
   const [showPreview, setShowPreview] = useState(true);
   const [showFileSize, setShowFileSize] = useState(true);
   const [showLastEdit, setShowLastEdit] = useState(true);
+  const [showIcon, setShowIcon] = useState(true);
+  const [extractMeta, setExtractMeta] = useState(true);
+  const notify = useNotify();
 
   const updateField = (id: string, value: string) => {
     setFields((prev) => prev.map((f) => (f.id === id ? { ...f, value } : f)));
@@ -266,12 +280,20 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
 
         {/* Select icon */}
         <EditSection label="Icon">
-          <button className="w-full px-3 py-2 text-sm text-ink-muted bg-paper border border-border rounded-md text-left">
+          <button
+            onClick={() => notify("Icon picker isn't available in the prototype")}
+            className="w-full px-3 py-2 text-sm text-ink-muted bg-paper border border-border rounded-md text-left"
+          >
             Select icon...
           </button>
           <div className="flex items-center justify-between mt-2">
-            <Checkbox checked={true} onChange={() => {}} label="Show icon" />
-            <button className="text-xs text-ink-muted hover:text-ink-secondary">Clear</button>
+            <Checkbox checked={showIcon} onChange={setShowIcon} label="Show icon" />
+            <button
+              onClick={() => setShowIcon(false)}
+              className="text-xs text-ink-muted hover:text-ink-secondary cursor-pointer"
+            >
+              Clear
+            </button>
           </div>
         </EditSection>
 
@@ -282,13 +304,16 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
               <div className="flex-1 px-3 py-2 text-sm text-ink bg-paper border border-border rounded-md truncate">
                 Choose file &nbsp; {pdf.name}
               </div>
-              <button className="px-3 py-1.5 text-xs font-medium text-seal rounded-md hover:bg-seal-tint transition-colors">
+              <button
+                onClick={() => notify("File removed")}
+                className="px-3 py-1.5 text-xs font-medium text-seal rounded-md hover:bg-seal-tint transition-colors cursor-pointer"
+              >
                 Remove file
               </button>
             </div>
             <div className="flex items-center gap-4 mt-2">
               <Checkbox checked={showPreview} onChange={setShowPreview} label="Show preview" />
-              <Checkbox checked={true} onChange={() => {}} label="Extract file metadata" />
+              <Checkbox checked={extractMeta} onChange={setExtractMeta} label="Extract file metadata" />
             </div>
 
             {/* Inline PDF metadata */}
@@ -524,16 +549,30 @@ function CountryPicker() {
 /* ── Drawer ── */
 
 function MetadataDrawer() {
-  const [activeDrawerTab, setActiveDrawerTab] = useState("document");
+  const focusedId = useAtomValue(focusedEntityIdAtom);
+  const profile = getEntityProfile(focusedId);
   const [references] = useAtom(scopedReferencesAtom);
   const [files] = useAtom(filesAtom);
 
+  // The Document tab only exists for document-bearing entities — otherwise the
+  // viewer would fall back to the bundled sample PDF and show a phantom doc on
+  // entities that have none (e.g. an Audiencia with Files 0).
   const drawerTabs = [
-    { id: "document", label: "Document" },
+    ...(profile.hasDocument ? [{ id: "document", label: "Document" }] : []),
     { id: "connections", label: "Relationships", count: references.length },
     { id: "files", label: "Files", count: files.length },
     { id: "template", label: "Template" },
   ];
+
+  const [activeDrawerTab, setActiveDrawerTab] = useState(
+    profile.hasDocument ? "document" : "connections",
+  );
+  // Re-pick the default tab when the focal entity changes (the drawer stays
+  // mounted across navigation), so a no-document entity never lands on a
+  // phantom Document tab carried over from the previous one.
+  useEffect(() => {
+    setActiveDrawerTab(profile.hasDocument ? "document" : "connections");
+  }, [focusedId, profile.hasDocument]);
 
   return (
     <div className="relative flex flex-col h-full overflow-hidden">
@@ -542,7 +581,7 @@ function MetadataDrawer() {
       <EntityOverlay />
       <DrawerTabs tabs={drawerTabs} activeId={activeDrawerTab} onChange={setActiveDrawerTab} />
 
-      {activeDrawerTab === "document" ? (
+      {activeDrawerTab === "document" && profile.hasDocument ? (
         <DocumentViewer showMinimap={false} />
       ) : activeDrawerTab === "template" ? (
         <TemplateStructure />

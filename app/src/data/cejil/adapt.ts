@@ -3,10 +3,8 @@
 import type { Entity } from "../entities";
 import { countryCoords } from "../geo";
 import { cejilEntities } from "./entities";
-import { cejilFiles } from "./files";
 import { cejilTemplates } from "./templates";
-
-const docEntities = new Set(cejilFiles.map((f) => f.entity));
+import { cejilDocBearingIds } from "./profile";
 
 // Approximate centroids for the CEJIL countries (Spanish names), since the mock
 // countryCoords only covers the sample seed. Lets the Library map plot real cases.
@@ -103,7 +101,7 @@ export const cejilLibraryEntities: Entity[] = esEntities.map((e) => {
     title: e.title.trim(),
     typeId: e.template,
     published: e.published,
-    preview: docEntities.has(e.sharedId) ? ("document" as const) : undefined,
+    preview: cejilDocBearingIds.has(e.sharedId) ? ("document" as const) : undefined,
     country,
     geo: country ? CEJIL_COORDS[country] ?? countryCoords[country] : undefined,
     createdAt: createdOf(e),
