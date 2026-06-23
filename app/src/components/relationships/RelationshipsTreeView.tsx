@@ -225,6 +225,9 @@ export function RelationshipsTreeView() {
  *  `hidePill` is forwarded to the aggregate row when the enclosing group is
  *  keyed on the target entity — the pill would just repeat the group title.
  *  Hubs never carry a single target entity, so hidePill doesn't apply. */
+/** Max aggregate nodes mounted per group before a "switch to List" note. */
+const TREE_CAP = 80;
+
 function renderAggregates(
   refs: Reference[],
   opts: {
@@ -234,26 +237,40 @@ function renderAggregates(
   } = {},
 ) {
   const hubs = deriveHubs(refs);
-  const rels = deriveRelationships(refs);
+  const allRels = deriveRelationships(refs);
+  // A node carries its backing refs, which we resolve by id. Cap the rendered
+  // aggregates (top by evidence) so a País with hundreds of connections neither
+  // mounts hundreds of rows nor pays the O(n²) ref-matching.
+  const cap = Math.max(0, TREE_CAP - hubs.length);
+  const rels =
+    allRels.length > cap
+      ? [...allRels].sort((a, b) => b.evidenceCount - a.evidenceCount).slice(0, cap)
+      : allRels;
+  const hidden = allRels.length - rels.length;
+  // Resolve backing refs via a single id→ref index instead of a per-node scan.
+  const byId = new Map(refs.map((r) => [r.id, r]));
+  const pick = (ids: string[]) => ids.map((id) => byId.get(id)).filter((r): r is Reference => !!r);
   return [
     ...hubs.map((hub) => (
-      <HubNode
-        key={`hub:${hub.id}`}
-        hub={hub}
-        refs={refs.filter((r) => hub.refIds.includes(r.id))}
-        hideRelLabel={opts.hideRelLabel}
-      />
+      <HubNode key={`hub:${hub.id}`} hub={hub} refs={pick(hub.refIds)} hideRelLabel={opts.hideRelLabel} />
     )),
     ...rels.map((rel) => (
       <AggregateNode
         key={rel.id}
         rel={rel}
-        refs={refs.filter((r) => rel.refIds.includes(r.id))}
+        refs={pick(rel.refIds)}
         hidePill={opts.hidePill}
         hideRelLabel={opts.hideRelLabel}
         hideTypePill={opts.hideTypePill}
       />
     )),
+    ...(hidden > 0
+      ? [
+          <div key="more" className="px-3 py-2 text-xs text-ink-tertiary bg-warm/40 text-center">
+            + {hidden.toLocaleString()} more — switch to List view to see all
+          </div>,
+        ]
+      : []),
   ];
 }
 

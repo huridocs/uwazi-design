@@ -57,6 +57,8 @@ const LABEL_DIST = 88;
 const FIRST_RING_R = 170;
 const RING_GAP = 40;
 const ARC_GAP = 30;
+/** Max relationships plotted — beyond this the radial graph is slow + unreadable. */
+const GRAPH_CAP = 150;
 
 export function RelationshipsGraphView() {
   const [references] = useAtom(scopedReferencesAtom);
@@ -112,10 +114,17 @@ export function RelationshipsGraphView() {
     return result;
   }, [references, searchQuery, activeClusterRefIds, relTypeFilters, entityTypeFilters]);
 
-  const { spokes, nodes } = useMemo(() => {
+  const { spokes, nodes, truncated } = useMemo(() => {
     // Graph has no "hub container" node — every entity that participates
     // shows up as its own node, so let hub members through deriveRelationships.
-    const rels = deriveRelationships(filteredRefs, { includeHubMembers: true });
+    const allRels = deriveRelationships(filteredRefs, { includeHubMembers: true });
+    // A radial graph of thousands of nodes is both unreadable and slow — keep
+    // the most-evidenced relationships and surface how many were dropped.
+    const rels =
+      allRels.length > GRAPH_CAP
+        ? [...allRels].sort((a, b) => b.evidenceCount - a.evidenceCount).slice(0, GRAPH_CAP)
+        : allRels;
+    const truncated = allRels.length - rels.length;
 
     // Bucket each relationship by the active primary grouping axis. When
     // groupBy === "none" everything lands in one big sector around the source.
@@ -205,7 +214,7 @@ export function RelationshipsGraphView() {
       });
     });
 
-    return { spokes: spokesArr, nodes };
+    return { spokes: spokesArr, nodes, truncated };
   }, [filteredRefs, collapsed, groupBy, activeRefId, overlayEntityId]);
 
   const sourceType = getEntityType(currentDocument.entityTypeId);
@@ -264,6 +273,14 @@ export function RelationshipsGraphView() {
 
   return (
     <div ref={containerRef} className="relative flex-1 overflow-hidden bg-warm">
+      {truncated > 0 && (
+        <div
+          className="absolute top-2 left-1/2 -translate-x-1/2 z-10 px-3 py-1 rounded-md bg-paper/90 text-[11px] text-ink-tertiary shadow-sm"
+          style={{ border: "1px solid var(--border-soft)" }}
+        >
+          Showing the top {GRAPH_CAP} of {(GRAPH_CAP + truncated).toLocaleString()} relationships
+        </div>
+      )}
       <svg
         ref={svgRef}
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}

@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { Link2 } from "lucide-react";
 import { scopedReferencesAtom } from "../../atoms/references";
@@ -35,6 +35,9 @@ interface Props {
   onDelete?: (id: string) => void;
   scrollBgClass?: string;
 }
+
+/** How many flat reference rows to render before "Show more". */
+const LIST_CAP = 100;
 
 /** Body of the merged Relationships panel — toolbar lives above. */
 export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
@@ -115,6 +118,11 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
     entityTypeFilters,
   ]);
 
+  // Well-connected entities (e.g. a País) can have thousands of references —
+  // cap the flat list render and reveal more on demand so it never paints them all.
+  const [listLimit, setListLimit] = useState(LIST_CAP);
+  useEffect(() => setListLimit(LIST_CAP), [filtered]);
+
   const entityCount = new Set(filtered.map((r) => r.targetEntityId)).size;
   const aggregateCount = useMemo(
     () => deriveRelationships(filtered).length + deriveHubs(filtered).length,
@@ -148,7 +156,7 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
     body = (
       <div className="px-3 py-3">
         <div className="border border-border/60 rounded-md overflow-hidden bg-paper">
-          {filtered.map((ref) => (
+          {filtered.slice(0, listLimit).map((ref) => (
             <RelationshipRow
               key={ref.id}
               kind="reference"
@@ -157,6 +165,16 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
             />
           ))}
         </div>
+        {filtered.length > listLimit && (
+          <div className="flex justify-center pt-3">
+            <button
+              onClick={() => setListLimit((n) => n + LIST_CAP)}
+              className="px-4 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+            >
+              Show more — {(filtered.length - listLimit).toLocaleString()} more references
+            </button>
+          </div>
+        )}
       </div>
     );
   } else {
