@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Search, X, LayoutGrid, List, Map as MapIcon, Plus, Upload, FileSpreadsheet } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, cejilReadyAtom } from "../atoms/dataSource";
-import { loadCejilData } from "../data/cejil/load";
+import { loadCejilData, cejilRelsByEntity } from "../data/cejil/load";
 import { referencesAtom } from "../atoms/references";
 import { languageAtom, type Language } from "../atoms/language";
 import { appViewAtom } from "../atoms/navigation";
@@ -80,12 +80,18 @@ export function LibraryView() {
 
   const countByEntity = useMemo(() => {
     const m = new Map<string, number>();
+    // CEJIL connection counts come from the loaded corpus index (one entry per
+    // entity), not the mock references atom — so sort-by-connections is real.
+    if (dataSource === "cejil") {
+      if (cejilReady) for (const [sid, arr] of cejilRelsByEntity()) m.set(sid, arr.length);
+      return m;
+    }
     for (const r of references) {
       m.set(r.sourceEntityId, (m.get(r.sourceEntityId) ?? 0) + 1);
       m.set(r.targetEntityId, (m.get(r.targetEntityId) ?? 0) + 1);
     }
     return m;
-  }, [references]);
+  }, [references, dataSource, cejilReady]);
 
   const activeTypeIds = Object.entries(typeFilters)
     .filter(([, on]) => on)
@@ -107,7 +113,7 @@ export function LibraryView() {
         (activeTypeIds.length === 0 || activeTypeIds.includes(e.typeId)) &&
         (!hasDocOnly || (dataSource === "cejil" ? e.preview === "document" : typeHasDocument(e.typeId))) &&
         (!statusActive || (wantPublished && e.published) || (wantRestricted && !e.published)) &&
-        matchesCountries(entityCountries(e, language), activeCountries, countryMode) &&
+        (activeCountries.length === 0 || matchesCountries(entityCountries(e, language), activeCountries, countryMode)) &&
         (activeDescriptors.length === 0 || (e.descriptors ?? []).some((d) => activeDescriptors.includes(d))) &&
         (!q || e.title.toLowerCase().includes(q)),
     );
@@ -132,14 +138,18 @@ export function LibraryView() {
   // Tap-to-preview on desktop/tablet; tap-to-open on mobile (no side drawer).
   // Previewing focuses the entity so the drawer's tabbed bodies (Relationships /
   // Files / Document read the focused + scoped atoms) reflect it immediately.
-  const handleSelect = (id: string) => {
-    if (isMobile) {
-      openEntity(id);
-    } else {
-      focusForPreview(id);
-      setSelectedId(id);
-    }
-  };
+  // Stable so memoized EntityCards don't re-render on every selection/hover.
+  const handleSelect = useCallback(
+    (id: string) => {
+      if (isMobile) {
+        openEntity(id);
+      } else {
+        focusForPreview(id);
+        setSelectedId(id);
+      }
+    },
+    [isMobile, openEntity, focusForPreview, setSelectedId],
+  );
 
   const renderLeft = (menuTrigger?: ReactNode) => (
     <div className="flex flex-col h-full min-h-0 bg-paper">
@@ -273,8 +283,8 @@ export function LibraryView() {
                 entity={e}
                 layout="cards"
                 selected={selectedId === e.id}
-                onSelect={() => handleSelect(e.id)}
-                onView={() => openEntity(e.id)}
+                onSelect={handleSelect}
+                onView={openEntity}
               />
             ))}
           </div>
@@ -286,8 +296,8 @@ export function LibraryView() {
                 entity={e}
                 layout="list"
                 selected={selectedId === e.id}
-                onSelect={() => handleSelect(e.id)}
-                onView={() => openEntity(e.id)}
+                onSelect={handleSelect}
+                onView={openEntity}
               />
             ))}
           </div>

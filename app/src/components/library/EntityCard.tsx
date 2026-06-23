@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useAtomValue } from "jotai";
 import { languageAtom } from "../../atoms/language";
 import { EntityPill } from "../shared/EntityPill";
@@ -11,7 +12,7 @@ import type { LibraryViewMode } from "../../atoms/library";
  *  title → metadata field label/value pairs → footer (template pill · View).
  *  Clicking the surface opens the entity in the drawer; "View" navigates in.
  *  Selected (previewed) = bg-parchment; no left-border accent. */
-export function EntityCard({
+export const EntityCard = memo(function EntityCard({
   entity,
   layout,
   selected,
@@ -21,8 +22,8 @@ export function EntityCard({
   entity: Entity;
   layout: LibraryViewMode;
   selected: boolean;
-  onSelect: () => void;
-  onView: () => void;
+  onSelect: (id: string) => void;
+  onView: (id: string) => void;
 }) {
   const language = useAtomValue(languageAtom);
 
@@ -40,7 +41,7 @@ export function EntityCard({
     <button
       onClick={(e) => {
         e.stopPropagation();
-        onView();
+        onView(entity.id);
       }}
       className="shrink-0 inline-flex items-center px-2.5 h-6 text-[11px] font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
     >
@@ -57,8 +58,8 @@ export function EntityCard({
       <div
         role="button"
         tabIndex={0}
-        onClick={onSelect}
-        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onSelect()}
+        onClick={() => onSelect(entity.id)}
+        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onSelect(entity.id)}
         className={`${base} ${surface} w-full px-3 py-2.5 flex items-center gap-3`}
       >
         {entity.preview && (
@@ -80,8 +81,8 @@ export function EntityCard({
     <div
       role="button"
       tabIndex={0}
-      onClick={onSelect}
-      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onSelect()}
+      onClick={() => onSelect(entity.id)}
+      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onSelect(entity.id)}
       className={`${base} ${surface} p-3 flex flex-col gap-2.5 h-full`}
     >
       {entity.preview && (
@@ -107,4 +108,4 @@ export function EntityCard({
       </div>
     </div>
   );
-}
+});
