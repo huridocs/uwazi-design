@@ -93,6 +93,18 @@ export function LibraryView() {
     return m;
   }, [references, dataSource, cejilReady]);
 
+  // Precomputed lowercase searchable text per entity (title + country + the
+  // displayed metadata field values + descriptors), so search matches real
+  // metadata — not just titles — without scanning the corpus on each keystroke.
+  const searchIndex = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const e of entities) {
+      const parts = [e.title, e.country ?? "", ...(e.fields?.map((f) => f.value) ?? []), ...(e.descriptors ?? [])];
+      m.set(e.id, parts.join(" ").toLowerCase());
+    }
+    return m;
+  }, [entities]);
+
   const activeTypeIds = Object.entries(typeFilters)
     .filter(([, on]) => on)
     .map(([id]) => id);
@@ -115,7 +127,7 @@ export function LibraryView() {
         (!statusActive || (wantPublished && e.published) || (wantRestricted && !e.published)) &&
         (activeCountries.length === 0 || matchesCountries(entityCountries(e, language), activeCountries, countryMode)) &&
         (activeDescriptors.length === 0 || (e.descriptors ?? []).some((d) => activeDescriptors.includes(d))) &&
-        (!q || e.title.toLowerCase().includes(q)),
+        (!q || (searchIndex.get(e.id) ?? "").includes(q)),
     );
     const sorted = [...list];
     if (sort === "title") sorted.sort((a, b) => a.title.localeCompare(b.title));
@@ -123,7 +135,7 @@ export function LibraryView() {
       sorted.sort((a, b) => (countByEntity.get(b.id) ?? 0) - (countByEntity.get(a.id) ?? 0));
     else sorted.sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? "")); // recent first
     return sorted;
-  }, [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), language, q, sort, countByEntity]);
+  }, [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), language, q, sort, countByEntity, searchIndex]);
 
   // The full CEJIL corpus is thousands of entities — cap the rendered cards and
   // let the user reveal more, so the card/list grid never paints them all at once.
@@ -167,7 +179,7 @@ export function LibraryView() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search"
+            placeholder="Search title & metadata"
             aria-label="Search entities"
             className="flex-1 min-w-[60px] bg-transparent text-xs font-medium placeholder:text-ink-muted focus:outline-none"
           />
