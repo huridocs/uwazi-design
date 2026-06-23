@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { Link2 } from "lucide-react";
 import { useAtomValue } from "jotai";
 import { languageAtom } from "../../atoms/language";
 import { EntityPill } from "../shared/EntityPill";
@@ -16,16 +17,25 @@ export const EntityCard = memo(function EntityCard({
   entity,
   layout,
   selected,
+  connections = 0,
   onSelect,
   onView,
 }: {
   entity: Entity;
   layout: LibraryViewMode;
   selected: boolean;
+  connections?: number;
   onSelect: (id: string) => void;
   onView: (id: string) => void;
 }) {
   const language = useAtomValue(languageAtom);
+
+  const connectionBadge = connections > 0 && (
+    <span className="inline-flex items-center gap-1 text-[11px] text-ink-tertiary tabular-nums" title={`${connections} connections`}>
+      <Link2 size={11} className="text-ink-muted" />
+      {connections.toLocaleString()}
+    </span>
+  );
 
   // Adapter-supplied real fields (e.g. CEJIL) win; otherwise derive from the mock
   // entityMetadata profile. Only fields that resolved to a value.
@@ -72,6 +82,7 @@ export const EntityCard = memo(function EntityCard({
             {scalarFields[0].label}: <span className="text-ink-secondary">{scalarFields[0].value}</span>
           </span>
         )}
+        {connectionBadge}
         {viewButton}
       </div>
     );
@@ -104,7 +115,10 @@ export const EntityCard = memo(function EntityCard({
 
       <div className="flex items-center justify-between gap-2 pt-1">
         <EntityPill typeId={entity.typeId} />
-        {viewButton}
+        <div className="flex items-center gap-2">
+          {connectionBadge}
+          {viewButton}
+        </div>
       </div>
     </div>
   );

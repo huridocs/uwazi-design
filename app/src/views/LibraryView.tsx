@@ -295,6 +295,7 @@ export function LibraryView() {
                 entity={e}
                 layout="cards"
                 selected={selectedId === e.id}
+                connections={countByEntity.get(e.id) ?? 0}
                 onSelect={handleSelect}
                 onView={openEntity}
               />
@@ -308,6 +309,7 @@ export function LibraryView() {
                 entity={e}
                 layout="list"
                 selected={selectedId === e.id}
+                connections={countByEntity.get(e.id) ?? 0}
                 onSelect={handleSelect}
                 onView={openEntity}
               />
