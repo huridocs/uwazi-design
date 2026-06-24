@@ -348,6 +348,33 @@ const people = ["e1", "e16", "e17", "e18", "e19"];
 const cases = ["e13", "e31", "e32"];
 const rights = ["e4", "e5", "e34"];
 
+/** An inherited relationship property surfaced as a dynamic filter: the value
+ *  inherited from each connected target of `targetTypeId`. Country is excluded —
+ *  it has a dedicated Target-country facet. */
+export interface InheritedFilterProp {
+  propId: string;
+  label: string;
+  targetTypeId: string;
+}
+
+export function inheritedFilterProps(lang: Language): InheritedFilterProp[] {
+  const seen = new Map<string, InheritedFilterProp>();
+  for (const f of relationshipFieldsByLanguage[lang] ?? []) {
+    if (
+      f.inheritProperty &&
+      f.inheritProperty !== "country" &&
+      !seen.has(f.inheritProperty)
+    ) {
+      seen.set(f.inheritProperty, {
+        propId: f.inheritProperty,
+        label: f.inheritLabel ?? f.inheritProperty,
+        targetTypeId: f.targetTypeId,
+      });
+    }
+  }
+  return [...seen.values()];
+}
+
 export const relationshipFieldsByLanguage: Record<Language, RelationshipMetadataField[]> = {
   EN: [
     { id: "rel-people", label: "People involved", type: "relationship", relationType: "relates_to", targetTypeId: "person", inheritProperty: "country", inheritLabel: "Country", connectedEntityIds: people, connectionKey: "people" },

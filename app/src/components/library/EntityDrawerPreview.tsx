@@ -114,8 +114,8 @@ export function EntityDrawerPreview({ entityId }: { entityId: string }) {
         </button>
         <button
           onClick={() => openEntity(entityId)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white rounded-md transition-colors cursor-pointer"
-          style={{ backgroundColor: "var(--text-primary)" }}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer"
+          style={{ backgroundColor: "var(--text-primary)", color: "var(--bg-surface)" }}
         >
           View entity <ArrowRight size={13} />
         </button>

@@ -83,6 +83,33 @@ function countryOf(e: CejilEntity): string | undefined {
   return pais && typeof pais.label === "string" ? pais.label : undefined;
 }
 
+/** CEJIL inherited-property facets: each maps a relationship/select metadata key
+ *  to a facet label. `mecanismo` inherits the connected body's name (Corte IDH /
+ *  CIDH …); `tipo` is the document's type term. Drives the Library's dynamic
+ *  inherited-property filters on CEJIL (mirrors the mock Role/Region facets). */
+export const cejilInheritedDefs: { propId: string; label: string }[] = [
+  { propId: "mecanismo", label: "Mecanismo" },
+  { propId: "tipo", label: "Tipo" },
+];
+
+function labelsOf(
+  e: { metadata?: Record<string, { value?: unknown; label?: unknown }[]> },
+  key: string,
+): string[] {
+  return (e.metadata?.[key] || [])
+    .map((v) => (typeof v.label === "string" ? v.label.trim() : ""))
+    .filter(Boolean);
+}
+
+function inheritedOf(e: CejilEntity): Record<string, string[]> | undefined {
+  const out: Record<string, string[]> = {};
+  for (const { propId } of cejilInheritedDefs) {
+    const vals = labelsOf(e, propId);
+    if (vals.length) out[propId] = vals;
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
 /** A representative unix-seconds date from the metadata, → ISO, for sort-by-date. */
 function createdOf(e: CejilEntity): string | undefined {
   for (const key of ["fecha", "presentaci_n_ante_la_corteidh", "denuncia_ante_la_cidh"]) {
@@ -117,6 +144,7 @@ export function cejilLibraryEntities(): Entity[] {
         descriptors: (e.metadata?.descriptores || [])
           .map((v) => (typeof v.label === "string" ? v.label : ""))
           .filter(Boolean),
+        inherited: inheritedOf(e),
       };
     });
   return _libraryEntities;

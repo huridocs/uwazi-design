@@ -11,11 +11,19 @@ import {
   activeClusterRefIdsAtom,
   relTypeFiltersAtom,
   entityTypeFiltersAtom,
+  relTargetCountryFiltersAtom,
+  relTargetDescriptorFiltersAtom,
+  relTargetDescriptorModeAtom,
+  relInheritedFiltersAtom,
   expandAllSignalAtom,
   collapseAllSignalAtom,
   activeFilterCountAtom,
 } from "../../atoms/filters";
+import { languageAtom } from "../../atoms/language";
 import { getEntity } from "../../data/entities";
+import { getEntityProp } from "../../data/entityMetadata";
+import { inheritedFilterProps } from "../../data/metadata";
+import { entityCountries } from "../../utils/libraryFacets";
 import { Reference } from "../../data/references";
 import { buildMatcher } from "../../utils/searchQuery";
 import { deriveHubs, deriveRelationships } from "../../utils/relationships";
@@ -50,6 +58,11 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
   const [activeClusterRefIds] = useAtom(activeClusterRefIdsAtom);
   const [relTypeFilters] = useAtom(relTypeFiltersAtom);
   const [entityTypeFilters] = useAtom(entityTypeFiltersAtom);
+  const [countryFilters] = useAtom(relTargetCountryFiltersAtom);
+  const [descriptorFilters] = useAtom(relTargetDescriptorFiltersAtom);
+  const [descriptorMode] = useAtom(relTargetDescriptorModeAtom);
+  const [inheritedFilters] = useAtom(relInheritedFiltersAtom);
+  const [language] = useAtom(languageAtom);
   const [activeFilterCount] = useAtom(activeFilterCountAtom);
   const setExpandSignal = useSetAtom(expandAllSignalAtom);
   const setCollapseSignal = useSetAtom(collapseAllSignalAtom);
@@ -75,6 +88,46 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
       result = result.filter((r) => {
         const entity = getEntity(r.targetEntityId);
         return entity ? set.has(entity.typeId) : false;
+      });
+    }
+    const activeCountries = Object.entries(countryFilters)
+      .filter(([, v]) => v)
+      .map(([k]) => k);
+    if (activeCountries.length > 0) {
+      const set = new Set(activeCountries);
+      result = result.filter((r) => {
+        const entity = getEntity(r.targetEntityId);
+        return entity
+          ? entityCountries(entity, language).some((c) => set.has(c))
+          : false;
+      });
+    }
+    const activeDescriptors = Object.entries(descriptorFilters)
+      .filter(([, v]) => v)
+      .map(([k]) => k);
+    if (activeDescriptors.length > 0) {
+      result = result.filter((r) => {
+        const ds = getEntity(r.targetEntityId)?.descriptors;
+        if (!ds || ds.length === 0) return false;
+        const have = new Set(ds);
+        return descriptorMode === "AND"
+          ? activeDescriptors.every((d) => have.has(d))
+          : activeDescriptors.some((d) => have.has(d));
+      });
+    }
+    const inheritedDefs = inheritedFilterProps(language);
+    for (const [propId, vals] of Object.entries(inheritedFilters)) {
+      const active = Object.entries(vals)
+        .filter(([, v]) => v)
+        .map(([k]) => k);
+      if (active.length === 0) continue;
+      const targetTypeId = inheritedDefs.find((d) => d.propId === propId)?.targetTypeId;
+      const set = new Set(active);
+      result = result.filter((r) => {
+        const entity = getEntity(r.targetEntityId);
+        if (targetTypeId && entity?.typeId !== targetTypeId) return false;
+        const v = getEntityProp(r.targetEntityId, propId, language);
+        return v ? set.has(v) : false;
       });
     }
     const matcher = buildMatcher(searchQuery);
@@ -116,6 +169,11 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
     activeClusterRefIds,
     relTypeFilters,
     entityTypeFilters,
+    countryFilters,
+    descriptorFilters,
+    descriptorMode,
+    inheritedFilters,
+    language,
   ]);
 
   // Well-connected entities (e.g. a País) can have thousands of references —

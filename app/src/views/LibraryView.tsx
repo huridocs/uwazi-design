@@ -17,22 +17,32 @@ import {
   libraryCountryFiltersAtom,
   libraryCountryModeAtom,
   libraryDescriptorFiltersAtom,
+  libraryDescriptorModeAtom,
+  libraryDateFromAtom,
+  libraryDateToAtom,
+  libraryInheritedFiltersAtom,
   libraryActiveFilterCountAtom,
   libraryViewModeAtom,
+  libraryInfoAtom,
   librarySortAtom,
+  librarySortDirAtom,
+  defaultSortDir,
   librarySelectedEntityIdAtom,
   librarySelectedClusterAtom,
 } from "../atoms/library";
-import { getEntityType } from "../data/entities";
-import { typeHasDocument } from "../data/entityProfiles";
-import { entityCountries, matchesCountries } from "../utils/libraryFacets";
+import { getEntityType, type Entity } from "../data/entities";
+import { libraryInheritedDefs } from "../utils/libraryFacets";
+import { matchesAll, buildSearchIndex, type LibraryFilterState } from "../utils/libraryFilter";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { EntityCard } from "../components/library/EntityCard";
 import { LibraryMapView } from "../components/library/LibraryMapView";
 import { LibraryFilters } from "../components/library/LibraryFilters";
 import { LibraryClusterDrawer } from "../components/library/LibraryClusterDrawer";
 import { EntityDrawerPreview } from "../components/library/EntityDrawerPreview";
+import { DisplayMenu } from "../components/library/DisplayMenu";
 import { ActiveFilterChip } from "../components/shared/ActiveFilterChip";
+import { DataTable, type Column } from "../components/shared/DataTable";
+import { EntityTypeChip } from "../components/shared/EntityTypeChip";
 import { Select } from "../components/shared/Select";
 import { SegmentedControl } from "../components/shared/SegmentedControl";
 
@@ -64,9 +74,27 @@ export function LibraryView() {
   const [countryFilters, setCountryFilters] = useAtom(libraryCountryFiltersAtom);
   const countryMode = useAtomValue(libraryCountryModeAtom);
   const [descriptorFilters, setDescriptorFilters] = useAtom(libraryDescriptorFiltersAtom);
+  const descriptorMode = useAtomValue(libraryDescriptorModeAtom);
+  const [dateFrom, setDateFrom] = useAtom(libraryDateFromAtom);
+  const [dateTo, setDateTo] = useAtom(libraryDateToAtom);
+  const [inheritedFilters, setInheritedFilters] = useAtom(libraryInheritedFiltersAtom);
   const activeFilterCount = useAtomValue(libraryActiveFilterCountAtom);
   const [viewMode, setViewMode] = useAtom(libraryViewModeAtom);
+  const info = useAtomValue(libraryInfoAtom);
   const [sort, setSort] = useAtom(librarySortAtom);
+  const [sortDir, setSortDir] = useAtom(librarySortDirAtom);
+  const setSortKey = useCallback(
+    (key: typeof sort) =>
+      setSort((prev) => {
+        if (prev === key) {
+          setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+          return prev;
+        }
+        setSortDir(defaultSortDir(key));
+        return key;
+      }),
+    [setSort, setSortDir],
+  );
   const [language, setLanguage] = useAtom(languageAtom);
   const breakpoint = useAtomValue(breakpointAtom);
   const [selectedId, setSelectedId] = useAtom(librarySelectedEntityIdAtom);
@@ -96,14 +124,7 @@ export function LibraryView() {
   // Precomputed lowercase searchable text per entity (title + country + the
   // displayed metadata field values + descriptors), so search matches real
   // metadata — not just titles — without scanning the corpus on each keystroke.
-  const searchIndex = useMemo(() => {
-    const m = new Map<string, string>();
-    for (const e of entities) {
-      const parts = [e.title, e.country ?? "", ...(e.fields?.map((f) => f.value) ?? []), ...(e.descriptors ?? [])];
-      m.set(e.id, parts.join(" ").toLowerCase());
-    }
-    return m;
-  }, [entities]);
+  const searchIndex = useMemo(() => buildSearchIndex(entities), [entities]);
 
   const activeTypeIds = Object.entries(typeFilters)
     .filter(([, on]) => on)
@@ -118,24 +139,68 @@ export function LibraryView() {
   const wantRestricted = !!statusFilters.restricted;
   const statusActive = wantPublished || wantRestricted;
   const q = query.trim().toLowerCase();
+  const fromMs = dateFrom ? Date.parse(dateFrom) : null;
+  // Inclusive of the whole "to" day.
+  const toMs = dateTo ? Date.parse(dateTo) + 86_400_000 - 1 : null;
+  // Inherited-property filters with at least one value selected, paired with the
+  // facet definition (target type, source-specific value accessor).
+  const inheritedDefs = libraryInheritedDefs(dataSource, language);
+  const activeInherited = Object.entries(inheritedFilters)
+    .map(([propId, vals]) => ({
+      def: inheritedDefs.find((d) => d.propId === propId),
+      values: new Set(Object.entries(vals).filter(([, on]) => on).map(([v]) => v)),
+    }))
+    .filter((f) => f.def && f.values.size > 0) as {
+    def: (typeof inheritedDefs)[number];
+    values: Set<string>;
+  }[];
+  const inheritedKey = activeInherited
+    .map((f) => `${f.def.propId}:${[...f.values].join("|")}`)
+    .join(";");
+
+  const filterState: LibraryFilterState = {
+    source: dataSource,
+    language,
+    typeIds: activeTypeIds,
+    hasDocOnly,
+    wantPublished,
+    wantRestricted,
+    countries: activeCountries,
+    countryMode,
+    descriptors: activeDescriptors,
+    descriptorMode,
+    fromMs,
+    toMs,
+    inherited: activeInherited,
+    q,
+    searchIndex,
+  };
 
   const filtered = useMemo(() => {
-    const list = entities.filter(
-      (e) =>
-        (activeTypeIds.length === 0 || activeTypeIds.includes(e.typeId)) &&
-        (!hasDocOnly || (dataSource === "cejil" ? e.preview === "document" : typeHasDocument(e.typeId))) &&
-        (!statusActive || (wantPublished && e.published) || (wantRestricted && !e.published)) &&
-        (activeCountries.length === 0 || matchesCountries(entityCountries(e, language), activeCountries, countryMode)) &&
-        (activeDescriptors.length === 0 || (e.descriptors ?? []).some((d) => activeDescriptors.includes(d))) &&
-        (!q || (searchIndex.get(e.id) ?? "").includes(q)),
-    );
-    const sorted = [...list];
-    if (sort === "title") sorted.sort((a, b) => a.title.localeCompare(b.title));
-    else if (sort === "connections")
-      sorted.sort((a, b) => (countByEntity.get(b.id) ?? 0) - (countByEntity.get(a.id) ?? 0));
-    else sorted.sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? "")); // recent first
-    return sorted;
-  }, [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), language, q, sort, countByEntity, searchIndex]);
+    const list = entities.filter((e) => matchesAll(e, filterState));
+    const typeName = (e: Entity) => getEntityType(e.typeId)?.name ?? e.typeId;
+    const cmp = (a: Entity, b: Entity) => {
+      let r = 0;
+      switch (sort) {
+        case "title":
+          r = a.title.localeCompare(b.title);
+          break;
+        case "type":
+          r = typeName(a).localeCompare(typeName(b));
+          break;
+        case "country":
+          r = (a.country ?? "").localeCompare(b.country ?? "");
+          break;
+        case "connections":
+          r = (countByEntity.get(a.id) ?? 0) - (countByEntity.get(b.id) ?? 0);
+          break;
+        default: // recent / date
+          r = (a.createdAt ?? "").localeCompare(b.createdAt ?? "");
+      }
+      return sortDir === "asc" ? r : -r;
+    };
+    return [...list].sort(cmp);
+  }, [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, language, q, sort, sortDir, countByEntity, searchIndex]);
 
   // The full CEJIL corpus is thousands of entities — cap the rendered cards and
   // let the user reveal more, so the card/list grid never paints them all at once.
@@ -146,6 +211,18 @@ export function LibraryView() {
   const toggleType = (id: string) => setTypeFilters((prev) => ({ ...prev, [id]: !prev[id] }));
   const toggleStatus = (id: string) => setStatusFilters((prev) => ({ ...prev, [id]: !prev[id] }));
   const toggleCountry = (c: string) => setCountryFilters((prev) => ({ ...prev, [c]: !prev[c] }));
+  const toggleDescriptor = (d: string) => setDescriptorFilters((prev) => ({ ...prev, [d]: !prev[d] }));
+  const clearAllFilters = () => {
+    setTypeFilters({});
+    setHasDocOnly(false);
+    setStatusFilters({});
+    setCountryFilters({});
+    setDescriptorFilters({});
+    setDateFrom("");
+    setDateTo("");
+    setInheritedFilters({});
+    setQuery("");
+  };
 
   // Tap-to-preview on desktop/tablet; tap-to-open on mobile (no side drawer).
   // Previewing focuses the entity so the drawer's tabbed bodies (Relationships /
@@ -162,6 +239,54 @@ export function LibraryView() {
     },
     [isMobile, openEntity, focusForPreview, setSelectedId],
   );
+
+  const tableColumns: Column<Entity>[] = [
+    {
+      id: "type",
+      header: "Type",
+      width: "3.5rem",
+      sortKey: "type",
+      cell: (e: Entity) => <EntityTypeChip typeId={e.typeId} />,
+    },
+    {
+      id: "title",
+      header: "Title",
+      sortKey: "title",
+      cell: (e: Entity) => <span className="font-medium text-ink truncate">{e.title}</span>,
+    },
+    info.country !== false && {
+      id: "country",
+      header: "Country",
+      width: "9rem",
+      sortKey: "country",
+      cell: (e: Entity) => (
+        <span className="text-ink-secondary truncate">{e.country ?? "—"}</span>
+      ),
+    },
+    info.date !== false && {
+      id: "date",
+      header: "Date",
+      width: "5rem",
+      sortKey: "recent",
+      cell: (e: Entity) => (
+        <span className="text-ink-tertiary tabular-nums">
+          {e.createdAt ? new Date(e.createdAt).getUTCFullYear() : "—"}
+        </span>
+      ),
+    },
+    info.connections !== false && {
+      id: "connections",
+      header: "Connections",
+      width: "8rem",
+      align: "right" as const,
+      sortKey: "connections",
+      cell: (e: Entity) => (
+        <span className="text-ink-secondary tabular-nums">
+          {(countByEntity.get(e.id) ?? 0).toLocaleString()}
+        </span>
+      ),
+    },
+  ].filter(Boolean) as Column<Entity>[];
 
   const renderLeft = (menuTrigger?: ReactNode) => (
     <div className="flex flex-col h-full min-h-0 bg-paper">
@@ -203,6 +328,9 @@ export function LibraryView() {
             setCountryFilters({});
             setStatusFilters({});
             setDescriptorFilters({});
+            setDateFrom("");
+            setDateTo("");
+            setInheritedFilters({});
             setSelectedId(null);
           }}
           options={[
@@ -212,12 +340,18 @@ export function LibraryView() {
         />
         <Select
           value={sort}
-          onChange={(v) => setSort(v as typeof sort)}
+          onChange={(v) => {
+            const key = v as typeof sort;
+            setSort(key);
+            setSortDir(defaultSortDir(key));
+          }}
           ariaLabel="Sort"
           options={[
             { value: "recent", label: "Date added" },
             { value: "title", label: "Title" },
             { value: "connections", label: "Connections" },
+            { value: "type", label: "Type" },
+            { value: "country", label: "Country" },
           ]}
         />
         <div className="hidden sm:block">
@@ -232,6 +366,11 @@ export function LibraryView() {
             ]}
           />
         </div>
+        {viewMode !== "map" && (
+          <div className="hidden sm:block">
+            <DisplayMenu />
+          </div>
+        )}
         <div className="hidden md:flex items-center gap-1">
           {LANGUAGES.map((l) => (
             <button
@@ -268,9 +407,44 @@ export function LibraryView() {
             {wantRestricted && <ActiveFilterChip label="Restricted" onRemove={() => toggleStatus("restricted")} />}
             {wantPublished && <ActiveFilterChip label="Published" onRemove={() => toggleStatus("published")} />}
             {activeCountries.map((c) => (
-              <ActiveFilterChip key={c} label={c} onRemove={() => toggleCountry(c)} />
+              <ActiveFilterChip key={`country-${c}`} label={c} onRemove={() => toggleCountry(c)} />
             ))}
+            {activeDescriptors.map((d) => (
+              <ActiveFilterChip key={`desc-${d}`} label={d} onRemove={() => toggleDescriptor(d)} />
+            ))}
+            {(dateFrom || dateTo) && (
+              <ActiveFilterChip
+                label={`${dateFrom || "…"} → ${dateTo || "…"}`}
+                onRemove={() => {
+                  setDateFrom("");
+                  setDateTo("");
+                }}
+              />
+            )}
+            {activeInherited.flatMap((f) =>
+              [...f.values].map((v) => (
+                <ActiveFilterChip
+                  key={`inh-${f.def.propId}-${v}`}
+                  label={v}
+                  onRemove={() =>
+                    setInheritedFilters((s) => {
+                      const next = { ...(s[f.def.propId] ?? {}) };
+                      delete next[v];
+                      return { ...s, [f.def.propId]: next };
+                    })
+                  }
+                />
+              )),
+            )}
             {q && <ActiveFilterChip label={`“${query.trim()}”`} onRemove={() => setQuery("")} />}
+            {activeFilterCount > 1 && (
+              <button
+                onClick={clearAllFilters}
+                className="text-[11px] font-medium text-ink-tertiary hover:text-ink transition-colors cursor-pointer ms-0.5"
+              >
+                Clear all
+              </button>
+            )}
           </div>
         )}
 
@@ -302,19 +476,16 @@ export function LibraryView() {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col gap-2">
-            {shown.map((e) => (
-              <EntityCard
-                key={e.id}
-                entity={e}
-                layout="list"
-                selected={selectedId === e.id}
-                connections={countByEntity.get(e.id) ?? 0}
-                onSelect={handleSelect}
-                onView={openEntity}
-              />
-            ))}
-          </div>
+          <DataTable
+            columns={tableColumns}
+            data={shown}
+            getRowId={(e) => e.id}
+            onRowClick={(e) => handleSelect(e.id)}
+            isRowSelected={(e) => selectedId === e.id}
+            sort={{ key: sort, dir: sortDir }}
+            onSort={(key) => setSortKey(key as typeof sort)}
+            minWidthRem={34}
+          />
         )}
 
         {!cejilLoading && viewMode !== "map" && shown.length < filtered.length && (

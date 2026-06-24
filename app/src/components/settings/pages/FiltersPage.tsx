@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useSetAtom, useAtomValue } from "jotai";
-import { GripVertical, ChevronUp, ChevronDown, FolderPlus, Trash2 } from "lucide-react";
+import { ChevronUp, ChevronDown, FolderPlus, Trash2 } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { Button } from "../Button";
 import { Table, type Column } from "../Table";
+import { DragGrip } from "../DragGrip";
+import { useReorder } from "../../../hooks/useReorder";
 import { Checkbox } from "../../shared/Checkbox";
 import { Select } from "../../shared/Select";
 import { seedFilterConfig, seedTemplates } from "../../../data/settings";
@@ -54,6 +56,7 @@ export function FiltersPage() {
 
   const [groups, setGroups] = useState<FilterGroup[]>(initialGroups);
   const [rows, setRows] = useState<FilterRow[]>(initialRows);
+  const { dragIdx, rowProps, gripProps } = useReorder(setRows);
 
   const activeCount = rows.filter((r) => r.active).length;
   const dirty =
@@ -88,9 +91,9 @@ export function FiltersPage() {
       header: "Filter",
       cell: (r, i) => (
         <div className="flex items-center gap-2 w-full min-w-0">
-          <GripVertical size={14} className="text-ink-muted shrink-0 cursor-grab" />
+          <DragGrip {...gripProps(i)} />
           <Checkbox checked={r.active} onChange={() => toggle(r.templateId)} ariaLabel={`Show ${meta[r.templateId]?.name}`} />
-          <span className="w-2.5 h-2.5 rounded-[2px] shrink-0" style={{ backgroundColor: meta[r.templateId]?.color }} />
+          <span className="w-2.5 h-2.5 rounded-[2px] border border-ink/20 shrink-0" style={{ backgroundColor: meta[r.templateId]?.color }} />
           <span className={`truncate text-sm ${r.active ? "text-ink" : "text-ink-tertiary"}`}>
             {meta[r.templateId]?.name}
           </span>
@@ -185,7 +188,15 @@ export function FiltersPage() {
           </div>
         )}
 
-        <Table columns={columns} data={rows} getRowId={(r) => r.templateId} />
+        <Table
+          columns={columns}
+          data={rows}
+          getRowId={(r) => r.templateId}
+          rowProps={(_r, i) => ({
+            ...rowProps(i),
+            className: dragIdx === i ? "opacity-60" : undefined,
+          })}
+        />
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <span className="text-xs text-ink-tertiary me-auto">{activeCount} filters shown</span>

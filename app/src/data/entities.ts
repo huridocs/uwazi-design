@@ -44,6 +44,11 @@ export interface Entity {
   fields?: { label: string; value: string }[];
   /** Adapter-supplied keyword facet values (e.g. CEJIL "descriptores"/violations). */
   descriptors?: string[];
+  /** Adapter-supplied INHERITED relationship-property values, keyed by propId
+   *  (e.g. CEJIL `mecanismo` → the connected body's name). Drives the dynamic
+   *  inherited-property filters for sources without a mock entityMetadata
+   *  profile. */
+  inherited?: Record<string, string[]>;
 }
 
 export type PreviewKind = "document" | "image" | "video" | "audio";

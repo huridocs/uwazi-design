@@ -54,9 +54,13 @@ interface PropertyDraft extends PropConfig {
 export function TemplateEditor({
   template,
   onClose,
+  onSave,
 }: {
   template: SettingsTemplate | "new";
   onClose: () => void;
+  /** Persist the edited name/colour back to the list so changes stick for the
+   *  session (the mock has no backend). */
+  onSave?: (patch: { name: string; color: string }) => void;
 }) {
   const setToasts = useSetAtom(toastsAtom);
   const isNew = template === "new";
@@ -110,6 +114,7 @@ export function TemplateEditor({
   };
 
   const save = () => {
+    onSave?.({ name: name.trim() || base?.name || "Untitled template", color });
     setToasts((p) => [
       ...p,
       { id: Date.now().toString(), message: isNew ? "Template created" : `${name || "Template"} saved`, type: "success" as const },
@@ -135,13 +140,13 @@ export function TemplateEditor({
                     key={c}
                     onClick={() => setColor(c)}
                     aria-label={`Colour ${c}`}
-                    className={`w-6 h-6 rounded-md transition-transform ${color.toLowerCase() === c.toLowerCase() ? "ring-2 ring-offset-1 ring-ink scale-105" : "hover:scale-105"}`}
+                    className={`w-6 h-6 rounded-md border border-ink/20 transition-transform ${color.toLowerCase() === c.toLowerCase() ? "ring-2 ring-offset-1 ring-ink scale-105" : "hover:scale-105"}`}
                     style={{ backgroundColor: c }}
                   />
                 ))}
                 {customSelected && (
                   <span
-                    className="w-6 h-6 rounded-md ring-2 ring-offset-1 ring-ink"
+                    className="w-6 h-6 rounded-md border border-ink/20 ring-2 ring-offset-1 ring-ink"
                     style={{ backgroundColor: color }}
                     aria-label="Custom colour (selected)"
                   />

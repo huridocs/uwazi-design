@@ -15,6 +15,10 @@ import {
   activeFilterCountAtom,
   relTypeFiltersAtom,
   entityTypeFiltersAtom,
+  relTargetCountryFiltersAtom,
+  relTargetDescriptorFiltersAtom,
+  relTargetDescriptorModeAtom,
+  relInheritedFiltersAtom,
 } from "../atoms/filters";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
@@ -61,6 +65,10 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
   const [, setActiveClusterRefIds] = useAtom(activeClusterRefIdsAtom);
   const [, setRelTypeFilters] = useAtom(relTypeFiltersAtom);
   const [, setEntityTypeFilters] = useAtom(entityTypeFiltersAtom);
+  const [, setCountryFilters] = useAtom(relTargetCountryFiltersAtom);
+  const [, setDescriptorFilters] = useAtom(relTargetDescriptorFiltersAtom);
+  const [, setDescriptorMode] = useAtom(relTargetDescriptorModeAtom);
+  const [, setInheritedFilters] = useAtom(relInheritedFiltersAtom);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const handleDelete = useCallback((id: string) => setDeleteTarget(id), []);
@@ -87,6 +95,10 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
   const clearAllFilters = () => {
     setRelTypeFilters({});
     setEntityTypeFilters({});
+    setCountryFilters({});
+    setDescriptorFilters({});
+    setDescriptorMode("OR");
+    setInheritedFilters({});
     setSearchQuery("");
     setSortOrder("none");
     setActiveClusterRefIds(null);
