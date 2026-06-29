@@ -15,6 +15,7 @@ import {
   libraryDateFromAtom,
   libraryDateToAtom,
   libraryInheritedFiltersAtom,
+  libraryChainFiltersAtom,
   libraryActiveFilterCountAtom,
   type FacetMode,
 } from "../../atoms/library";
@@ -26,8 +27,14 @@ import {
   entityInheritedValues,
 } from "../../utils/libraryFacets";
 import {
+  cejilChainFacetDefs,
+  buildActiveChains,
+  cejilChainGraph,
+} from "../../data/cejil/chainFacets";
+import {
   matchesAll,
   buildSearchIndex,
+  chainFacetCounts,
   entityIsDoc,
   type LibraryFilterState,
 } from "../../utils/libraryFilter";
@@ -52,11 +59,16 @@ export function LibraryFilters() {
   const [dateFrom, setDateFrom] = useAtom(libraryDateFromAtom);
   const [dateTo, setDateTo] = useAtom(libraryDateToAtom);
   const [inheritedFilters, setInheritedFilters] = useAtom(libraryInheritedFiltersAtom);
+  const [chainFilters, setChainFilters] = useAtom(libraryChainFiltersAtom);
   const activeFilterCount = useAtomValue(libraryActiveFilterCountAtom);
 
   const inheritedDefs = useMemo(
     () => libraryInheritedDefs(dataSource, language),
     [dataSource, language],
+  );
+  const chainDefs = useMemo(
+    () => (dataSource === "cejil" ? cejilChainFacetDefs() : []),
+    [dataSource],
   );
   const searchIndex = useMemo(() => buildSearchIndex(entities), [entities]);
 
@@ -89,13 +101,14 @@ export function LibraryFilters() {
       fromMs: dateFrom ? Date.parse(dateFrom) : null,
       toMs: dateTo ? Date.parse(dateTo) + 86_400_000 - 1 : null,
       inherited,
+      chains: buildActiveChains(chainFilters, dataSource === "cejil" ? cejilChainGraph() : null),
       q: query.trim().toLowerCase(),
       searchIndex,
     };
   }, [
     dataSource, language, inheritedDefs, searchIndex, typeFilters, hasDocOnly,
     statusFilters, countryFilters, countryMode, descriptorFilters, descriptorMode,
-    dateFrom, dateTo, inheritedFilters, query,
+    dateFrom, dateTo, inheritedFilters, chainFilters, query,
   ]);
 
   const typeCounts = useMemo(() => {
@@ -140,6 +153,19 @@ export function LibraryFilters() {
     }
     return m;
   }, [entities, filterState, inheritedDefs, language, dataSource]);
+  // Relationship-chain facet counts (path-coupled). CEJIL only; empty otherwise.
+  const chainCounts = useMemo(() => {
+    const graph = dataSource === "cejil" ? cejilChainGraph() : null;
+    const m: Record<string, Map<string, number>> = {};
+    if (!graph) return m;
+    for (const def of chainDefs) m[def.key] = chainFacetCounts(entities, filterState, def, graph);
+    return m;
+  }, [entities, filterState, chainDefs, dataSource]);
+  const chainHasAny = chainDefs.some(
+    (d) =>
+      (chainCounts[d.key]?.size ?? 0) > 0 ||
+      Object.values(chainFilters[d.key] ?? {}).some(Boolean),
+  );
 
   const nonDocTypes = types.filter((t) => !typeHasDocument(t.id));
   const docTypes = types.filter((t) => typeHasDocument(t.id));
@@ -159,7 +185,13 @@ export function LibraryFilters() {
     setDateFrom("");
     setDateTo("");
     setInheritedFilters({});
+    setChainFilters({});
   };
+  const toggleChain = (key: string, value: string) =>
+    setChainFilters((s) => ({
+      ...s,
+      [key]: { ...(s[key] ?? {}), [value]: !s[key]?.[value] },
+    }));
   // Date presets with faceted counts (relative to the newest dated entity that
   // passes the other filters) — quick ranges that read like aggregations.
   const datePresets = useMemo<DatePreset[]>(() => {
@@ -383,6 +415,30 @@ export function LibraryFilters() {
             hideWhenEmpty
           />
         ))}
+
+        {chainHasAny && (
+          <div className="space-y-2">
+            {/* Chain-filter group: facets that traverse a relationship path
+                (Causa › Sentencia › Juez › País). Combine path-coupled. */}
+            <div className="px-1.5 pt-1 flex items-center gap-1.5">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-ink-tertiary truncate">
+                {chainDefs[0].groupLabel}
+              </span>
+            </div>
+            {chainDefs.map((def) => (
+              <KeywordFacetCard
+                key={def.key}
+                title={def.label}
+                counts={chainCounts[def.key] ?? new Map()}
+                selected={chainFilters[def.key] ?? {}}
+                onToggle={(v) => toggleChain(def.key, v)}
+                onClear={() => setChainFilters((s) => ({ ...s, [def.key]: {} }))}
+                sort="count"
+                hideWhenEmpty
+              />
+            ))}
+          </div>
+        )}
 
         {hasDates && (
           <DateRangeCard

@@ -21,6 +21,7 @@ import {
   libraryDateFromAtom,
   libraryDateToAtom,
   libraryInheritedFiltersAtom,
+  libraryChainFiltersAtom,
   libraryActiveFilterCountAtom,
   libraryViewModeAtom,
   libraryInfoAtom,
@@ -32,6 +33,7 @@ import {
 } from "../atoms/library";
 import { getEntityType, type Entity } from "../data/entities";
 import { libraryInheritedDefs } from "../utils/libraryFacets";
+import { buildActiveChains, cejilChainGraph } from "../data/cejil/chainFacets";
 import { matchesAll, buildSearchIndex, type LibraryFilterState } from "../utils/libraryFilter";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { EntityCard } from "../components/library/EntityCard";
@@ -78,6 +80,7 @@ export function LibraryView() {
   const [dateFrom, setDateFrom] = useAtom(libraryDateFromAtom);
   const [dateTo, setDateTo] = useAtom(libraryDateToAtom);
   const [inheritedFilters, setInheritedFilters] = useAtom(libraryInheritedFiltersAtom);
+  const [chainFilters, setChainFilters] = useAtom(libraryChainFiltersAtom);
   const activeFilterCount = useAtomValue(libraryActiveFilterCountAtom);
   const [viewMode, setViewMode] = useAtom(libraryViewModeAtom);
   const info = useAtomValue(libraryInfoAtom);
@@ -157,6 +160,12 @@ export function LibraryView() {
   const inheritedKey = activeInherited
     .map((f) => `${f.def.propId}:${[...f.values].join("|")}`)
     .join(";");
+  // Relationship-chain filters (CEJIL only — needs the loaded graph).
+  const activeChains = useMemo(
+    () => (dataSource === "cejil" ? buildActiveChains(chainFilters, cejilChainGraph()) : []),
+    [dataSource, chainFilters, cejilReady],
+  );
+  const chainKey = JSON.stringify(chainFilters);
 
   const filterState: LibraryFilterState = {
     source: dataSource,
@@ -172,6 +181,7 @@ export function LibraryView() {
     fromMs,
     toMs,
     inherited: activeInherited,
+    chains: activeChains,
     q,
     searchIndex,
   };
@@ -200,7 +210,7 @@ export function LibraryView() {
       return sortDir === "asc" ? r : -r;
     };
     return [...list].sort(cmp);
-  }, [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, language, q, sort, sortDir, countByEntity, searchIndex]);
+  }, [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, chainKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex]);
 
   // The full CEJIL corpus is thousands of entities — cap the rendered cards and
   // let the user reveal more, so the card/list grid never paints them all at once.
@@ -221,6 +231,7 @@ export function LibraryView() {
     setDateFrom("");
     setDateTo("");
     setInheritedFilters({});
+    setChainFilters({});
     setQuery("");
   };
 

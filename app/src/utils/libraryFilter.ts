@@ -1,6 +1,7 @@
 import type { Entity } from "../data/entities";
 import type { Language } from "../atoms/language";
 import { typeHasDocument } from "../data/entityProfiles";
+import { chains, valueAt, type ChainGraph, type ChainSegment } from "./chainTraversal";
 import {
   entityCountries,
   matchesCountries,
@@ -13,6 +14,28 @@ import {
 export interface ActiveInherited {
   def: LibraryInheritedDef;
   values: Set<string>;
+}
+
+/** One active value-constraint on a chain segment — the selections of a single
+ *  chain-segment facet (Approach B), e.g. "signing judge ∈ {…}". */
+export interface ActiveChainConstraint {
+  segmentIndex: number;
+  facetKey: string;
+  property: string;
+  values: Set<string>;
+}
+
+/** A relationship CHAIN with ≥1 active segment constraint. The constraints are
+ *  PATH-COUPLED: a row matches only when a SINGLE traversed path satisfies them
+ *  all at once (so "judge from Brasil who signed" can't be faked by two
+ *  unrelated paths). See utils/chainTraversal.ts + docs/relationship-chain-filters.md. */
+export interface ActiveChain {
+  chainId: string;
+  rootTypeId: string;
+  segments: ChainSegment[];
+  graph: ChainGraph;
+  maxPaths: number;
+  constraints: ActiveChainConstraint[];
 }
 
 /** Everything the library filters by, resolved from the atoms once per render.
@@ -32,6 +55,8 @@ export interface LibraryFilterState {
   fromMs: number | null;
   toMs: number | null;
   inherited: ActiveInherited[];
+  /** Active relationship-chain filters (CEJIL only; empty otherwise). */
+  chains: ActiveChain[];
   q: string;
   searchIndex: Map<string, string>;
 }
@@ -105,16 +130,85 @@ const PREDICATES: Record<
 
 const ALL_KEYS = Object.keys(PREDICATES) as FacetKey[];
 
+/** Path-coupled chain predicate. For each active chain, the entity must be of
+ *  the chain's root type and have at least ONE traversed path that satisfies
+ *  every active segment constraint jointly. `except` skips one segment facet (by
+ *  its facetKey) so that facet's own aggregation doesn't count against itself. */
+function chainMatches(e: Entity, s: LibraryFilterState, except?: string): boolean {
+  for (const ac of s.chains) {
+    const active = ac.constraints.filter(
+      (c) => c.values.size > 0 && c.facetKey !== except,
+    );
+    if (active.length === 0) continue;
+    // A chain narrows results to its root type — like an inherited facet, an
+    // entity that can't carry the value is filtered out, not passed through.
+    if (e.typeId !== ac.rootTypeId) return false;
+    const { tuples } = chains(ac.graph, e.id, ac.segments, { maxPaths: ac.maxPaths });
+    const ok = tuples.some((t) =>
+      active.every((c) =>
+        valueAt(ac.graph, t, c.segmentIndex, c.property).some((v) => c.values.has(v)),
+      ),
+    );
+    if (!ok) return false;
+  }
+  return true;
+}
+
 /** Does the entity pass every active filter, optionally skipping one dimension?
- *  Skip a facet's own key to get the faceted-aggregation base for that facet. */
+ *  Skip a facet's own key to get the faceted-aggregation base for that facet.
+ *  `except` is a static FacetKey or a chain-segment facetKey (`chainId:segIdx`). */
 export function matchesAll(
   e: Entity,
   s: LibraryFilterState,
-  except?: FacetKey,
+  except?: FacetKey | string,
 ): boolean {
   for (const key of ALL_KEYS) {
     if (key === except) continue;
     if (!PREDICATES[key](e, s)) return false;
   }
-  return true;
+  return chainMatches(e, s, except);
+}
+
+/** Faceted value counts for one chain-segment facet. For each root-type entity
+ *  passing the other dimensions AND the chain's OTHER active constraints, tally
+ *  the distinct values it reaches at this segment on a path that also satisfies
+ *  those other constraints (path-coupling). `graph`/`def` come from the facet
+ *  registry so counts work even before the chain has any selection. */
+export function chainFacetCounts(
+  entities: Entity[],
+  s: LibraryFilterState,
+  def: {
+    key: string;
+    chainId: string;
+    rootTypeId: string;
+    segments: ChainSegment[];
+    segmentIndex: number;
+    property: string;
+    maxPaths: number;
+  },
+  graph: ChainGraph,
+): Map<string, number> {
+  const m = new Map<string, number>();
+  const ac = s.chains.find((c) => c.chainId === def.chainId);
+  const others = ac
+    ? ac.constraints.filter((c) => c.facetKey !== def.key && c.values.size > 0)
+    : [];
+  for (const e of entities) {
+    if (e.typeId !== def.rootTypeId) continue;
+    if (!matchesAll(e, s, def.key)) continue;
+    const { tuples } = chains(graph, e.id, def.segments, { maxPaths: def.maxPaths });
+    const reached = new Set<string>();
+    for (const t of tuples) {
+      if (
+        others.every((c) =>
+          valueAt(graph, t, c.segmentIndex, c.property).some((v) => c.values.has(v)),
+        )
+      ) {
+        for (const v of valueAt(graph, t, def.segmentIndex, def.property))
+          if (v) reached.add(v);
+      }
+    }
+    for (const v of reached) m.set(v, (m.get(v) ?? 0) + 1);
+  }
+  return m;
 }

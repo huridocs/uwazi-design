@@ -49,6 +49,13 @@ export const libraryInheritedFiltersAtom = atom<
   Record<string, Record<string, boolean>>
 >({});
 
+/** Relationship-CHAIN facet selections (CEJIL only) — keyed `${chainId}:${seg}`
+ *  → (value → on). Several keys of one chain combine path-coupled (a single
+ *  traversed path must satisfy them all). See utils/chainTraversal.ts. */
+export const libraryChainFiltersAtom = atom<
+  Record<string, Record<string, boolean>>
+>({});
+
 /** Results layout. */
 export type LibraryViewMode = "cards" | "list" | "map";
 export const libraryViewModeAtom = atom<LibraryViewMode>("cards");
@@ -89,6 +96,8 @@ export const libraryActiveFilterCountAtom = atom((get) => {
   n += Object.values(get(libraryDescriptorFiltersAtom)).filter(Boolean).length;
   if (get(libraryDateFromAtom) || get(libraryDateToAtom)) n += 1;
   for (const vals of Object.values(get(libraryInheritedFiltersAtom)))
+    n += Object.values(vals).filter(Boolean).length;
+  for (const vals of Object.values(get(libraryChainFiltersAtom)))
     n += Object.values(vals).filter(Boolean).length;
   return n;
 });
