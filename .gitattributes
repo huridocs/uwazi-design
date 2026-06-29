@@ -1,2 +1,0 @@
-app/public/cejil-docs/* filter=lfs diff=lfs merge=lfs -text
-app/public/cejil-data/*.json filter=lfs diff=lfs merge=lfs -text
