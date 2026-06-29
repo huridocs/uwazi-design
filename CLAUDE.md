@@ -298,10 +298,10 @@ The 5 sample rows in `data/imports.ts` are seeded to match `images/screens/impor
 Logo click toggles in/out of `ComponentCatalog`. Sidebar groups: Style Guide, Elements, Entity View — Layout / Document / References / Metadata / Files / Drawer / Relationships, Import CSV — Layout / Components, **Filters & Lists**, Shared. Add new shared/connections components here as a `CatalogEntry` with a live `Isolated…` demo. Note: the Entity View → References + Relationships groups now both showcase `ConnectionRow` (reference and aggregate variants) and `ConnectionGroupedCard`.
 
 ## Mobile
-Breakpoints: mobile `<768`, tablet `768-1023`, desktop `≥1024` (`atoms/viewport.ts`). `AdaptiveSplitView` swaps to `MobileBottomSheet` on mobile. Outstanding mobile follow-ups in `~/.claude/projects/-Users-juanmnl-Documents-Claude-uwazi-2026/memory/pending.md` — read before touching mobile.
+Breakpoints: mobile `<768`, tablet `768-1023`, desktop `≥1024` (`atoms/viewport.ts`). `AdaptiveSplitView` swaps to `MobileBottomSheet` on mobile. Outstanding mobile follow-ups in `~/.claude/projects/-Users-juanmnl-Developer-huridocs-uwazi-app/memory/pending.md` — read before touching mobile.
 
 ## Where the long-lived context lives
-- **Auto-memory**: `~/.claude/projects/-Users-juanmnl-Documents-Claude-uwazi-2026/memory/`
+- **Auto-memory**: `~/.claude/projects/-Users-juanmnl-Developer-huridocs-uwazi-app/memory/`
   - `MEMORY.md` (index, always loaded)
   - `session-handoff.md` (current state, recent commits, follow-ups)
   - `feedback-list-primitives.md`, `feedback-tokens-and-svg.md`, `feedback-styles.md` (load when relevant)
