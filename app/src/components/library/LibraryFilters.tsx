@@ -1,7 +1,9 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue } from "jotai";
-import { Play, Search, Lock, Globe, X, type LucideIcon } from "lucide-react";
+import { Play, Search, Lock, Globe, X, ChevronRight, Link2, type LucideIcon } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom } from "../../atoms/dataSource";
+import { getEntityType } from "../../data/entities";
+import type { ChainFacetDef } from "../../data/cejil/chainFacets";
 import { languageAtom } from "../../atoms/language";
 import {
   libraryQueryAtom,
@@ -418,12 +420,14 @@ export function LibraryFilters() {
 
         {chainHasAny && (
           <div className="space-y-2">
-            {/* Chain-filter group: facets that traverse a relationship path
-                (Causa › Sentencia › Juez › País). Combine path-coupled. */}
-            <div className="px-1.5 pt-1 flex items-center gap-1.5">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-ink-tertiary truncate">
+            {/* Chain-filter group: a relationship path the facets traverse. The
+                breadcrumb shows the full path; the segments these facets filter
+                are emphasised. Selections combine path-coupled. */}
+            <div className="px-1.5 pt-1 space-y-1">
+              <span className="block text-[11px] font-semibold uppercase tracking-wide text-ink-tertiary truncate">
                 {chainDefs[0].groupLabel}
               </span>
+              <ChainPathHelper defs={chainDefs} />
             </div>
             {chainDefs.map((def) => (
               <KeywordFacetCard
@@ -496,6 +500,37 @@ const FACET_CARD = "bg-paper rounded-lg p-1.5 shadow-sm";
 
 function FacetCard({ children }: { children: ReactNode }) {
   return <div className={FACET_CARD}>{children}</div>;
+}
+
+/** Visual helper above a chain-filter group: the relationship path the facets
+ *  traverse, as a breadcrumb (root › hop › hop …). The path nodes these facets
+ *  actually filter are emphasised in carbon, so it's clear which point along the
+ *  chain each card narrows. */
+function ChainPathHelper({ defs }: { defs: ChainFacetDef[] }) {
+  const { segments, rootTypeId } = defs[0];
+  const facetIdx = new Set(defs.map((d) => d.segmentIndex));
+  // Path nodes line up with tuple indices: [root, seg0, seg1, …].
+  const nodes = [
+    getEntityType(rootTypeId)?.name ?? "…",
+    ...segments.map((s) => s.label ?? s.toTypeId ?? s.relationType),
+  ];
+  return (
+    <div className="flex items-center flex-wrap gap-x-0.5 gap-y-0.5">
+      <Link2 size={10} className="text-carbon shrink-0 me-0.5" />
+      {nodes.map((n, i) => (
+        <span key={i} className="inline-flex items-center">
+          {i > 0 && <ChevronRight size={10} className="text-ink-muted shrink-0" />}
+          <span
+            className={`text-[11px] ${
+              facetIdx.has(i) ? "font-semibold text-carbon" : "text-ink-tertiary"
+            }`}
+          >
+            {n}
+          </span>
+        </span>
+      ))}
+    </div>
+  );
 }
 
 /** Indented children of an expandable row, connected by a vertical tree guide
