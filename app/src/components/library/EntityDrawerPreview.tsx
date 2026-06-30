@@ -48,7 +48,7 @@ export function EntityDrawerPreview({ entityId }: { entityId: string }) {
   );
   const filesCount = profile.files?.length ?? 0;
 
-  const tabs = tabsForType(profile.typeId).map((tab) => {
+  const tabs = tabsForType(profile.typeId, profile.hasDocument).map((tab) => {
     if (tab.id === "relationships") return { ...tab, count: connectionCount };
     if (tab.id === "files") return { ...tab, count: filesCount };
     return tab;

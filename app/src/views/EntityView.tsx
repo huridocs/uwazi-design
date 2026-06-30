@@ -42,7 +42,7 @@ export function EntityView() {
   const relCount = references.length;
   const filesCount = files.length;
 
-  const tabs = tabsForType(profile.typeId).map((tab) => {
+  const tabs = tabsForType(profile.typeId, profile.hasDocument).map((tab) => {
     if (tab.id === "relationships") return { ...tab, count: relCount };
     if (tab.id === "files") return { ...tab, count: filesCount };
     return tab;
