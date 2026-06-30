@@ -33,6 +33,17 @@ const FLAGS: Record<string, string> = {
   "trinidad y tobago": "🇹🇹",
   uruguay: "🇺🇾",
   venezuela: "🇻🇪",
+  // Judge nationalities reach beyond the respondent states.
+  barbados: "🇧🇧",
+  jamaica: "🇯🇲",
+  "united states": "🇺🇸",
+  "estados unidos": "🇺🇸",
+  spain: "🇪🇸",
+  españa: "🇪🇸",
+  france: "🇫🇷",
+  francia: "🇫🇷",
+  italy: "🇮🇹",
+  italia: "🇮🇹",
 };
 
 export function countryFlag(name?: string | null): string | undefined {

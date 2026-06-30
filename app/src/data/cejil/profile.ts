@@ -4,13 +4,19 @@
 // data is already in the bundle via the Library, so this adds no new weight.
 import type { Language } from "../../atoms/language";
 import type { EntityProfile } from "../entityProfiles";
-import type { MetadataField } from "../metadata";
+import type { AnyMetadataField, MetadataField, RelationshipMetadataField } from "../metadata";
 import type { DocumentMeta } from "../document";
 import type { DocRendition, HtmlBlock } from "../documentRenditions";
 import type { FileEntry, DocumentGroup } from "../files";
 import type { Reference } from "../references";
 import type { CejilEntity, CejilFile } from "./types";
 import { cejilTemplates } from "./templates";
+import { chains } from "../../utils/chainTraversal";
+import { cejilChainGraph, CEJIL_PERPETRATOR_CHAIN } from "./graph";
+import {
+  registerCejilInherited,
+  CEJIL_INHERIT_FIRMANTE_PAIS,
+} from "./inheritedRegistry";
 import {
   cejilBySidLang,
   cejilRelsByEntity,
@@ -141,13 +147,91 @@ export function cejilDocBearingIds(): Set<string> {
   return _docBearing;
 }
 
+/** Cap connected entities rendered per relationship card — a País hub has
+ *  thousands of edges; show a workable slice rather than the whole fan-out. */
+const REL_CONN_CAP = 15;
+const CHAIN_JUDGE_CAP = 12;
+
+const templateIdByName = (name: string) => cejilTemplates.find((t) => t.name === name)?._id;
+const SENTENCIA_TEMPLATE = templateIdByName("Sentencia de la CorteIDH");
+
+/** Relationship fields for a CEJIL entity, surfaced in the Metadata view.
+ *
+ *  1. Direct connections grouped by relation type → one link-only field each
+ *     (capped). Makes every CEJIL entity show its graph neighbours.
+ *  2. For a Causa: a chain-derived "Jueces firmantes" field that traverses
+ *     Causa → Sentencia → Juez and INHERITS each judge's País (one more hop),
+ *     pre-resolved into the inherited registry. The headline inheritance demo. */
+function cejilRelationshipFields(sharedId: string, template: string): RelationshipMetadataField[] {
+  const out: RelationshipMetadataField[] = [];
+
+  // 1. Direct connections grouped by relation type.
+  const rels = cejilRelsByEntity().get(sharedId) || [];
+  const byType = new Map<string, { ids: string[]; seen: Set<string> }>();
+  for (const r of rels) {
+    const other = r.from === sharedId ? r.to : r.from;
+    const typeName = r.typeName || "Relacionado";
+    let g = byType.get(typeName);
+    if (!g) byType.set(typeName, (g = { ids: [], seen: new Set() }));
+    if (!g.seen.has(other)) {
+      g.seen.add(other);
+      g.ids.push(other);
+    }
+  }
+  for (const [typeName, g] of byType) {
+    out.push({
+      id: `cejil-rel-${sharedId}-${typeName}`,
+      label: typeName,
+      type: "relationship",
+      relationType: typeName,
+      targetTypeId: "",
+      connectedEntityIds: g.ids.slice(0, REL_CONN_CAP),
+    });
+  }
+
+  // 2. Causa → signing judges (+ inherited país), via the chain engine.
+  if (template === CEJIL_PERPETRATOR_CHAIN.rootTypeId) {
+    const graph = cejilChainGraph();
+    if (graph) {
+      const { tuples } = chains(graph, sharedId, CEJIL_PERPETRATOR_CHAIN.segments, { maxPaths: 400 });
+      const judges: string[] = [];
+      const seen = new Set<string>();
+      for (const t of tuples) {
+        const judge = t[2]?.entityId; // Causa, Sentencia, Juez, País
+        const pais = t[3] ? graph.titleOf(t[3].entityId) : undefined;
+        if (!judge || seen.has(judge)) continue;
+        seen.add(judge);
+        judges.push(judge);
+        if (pais) for (const l of ["EN", "ES", "FR", "AR"] as Language[])
+          registerCejilInherited(judge, CEJIL_INHERIT_FIRMANTE_PAIS, l, pais);
+        if (judges.length >= CHAIN_JUDGE_CAP) break;
+      }
+      if (judges.length) {
+        out.unshift({
+          id: `cejil-firmantes-${sharedId}`,
+          label: "Jueces firmantes",
+          type: "relationship",
+          relationType: "Firmantes",
+          targetTypeId: SENTENCIA_TEMPLATE ? templateIdByName("Juez y/o Comisionado") ?? "" : "",
+          inheritProperty: CEJIL_INHERIT_FIRMANTE_PAIS,
+          inheritLabel: "País",
+          connectedEntityIds: judges,
+        });
+      }
+    }
+  }
+
+  return out;
+}
+
 export function buildCejilProfile(sharedId: string): EntityProfile {
   const es = cejilBySidLang().get(`${sharedId}::es`) || cejilBySidLang().get(`${sharedId}::en`)!;
+  const relFields = cejilRelationshipFields(sharedId, es.template);
   const metadata = LANGS.reduce((acc, lang) => {
     const doc = cejilBySidLang().get(`${sharedId}::${LANG_CODE[lang]}`) || es;
-    acc[lang] = mdFields(doc);
+    acc[lang] = [...mdFields(doc), ...relFields];
     return acc;
-  }, {} as Record<Language, MetadataField[]>);
+  }, {} as Record<Language, AnyMetadataField[]>);
 
   // Document-bearing when we fetched a real PDF for this entity OR for one of its
   // connected documents (a Causa surfaces its Sentencia) — never the mock PDF.
