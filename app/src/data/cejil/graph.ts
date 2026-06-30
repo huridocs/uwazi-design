@@ -85,12 +85,14 @@ function templateId(name: string): string | undefined {
 export const CEJIL_PERPETRATOR_CHAIN: {
   id: string;
   label: string;
+  description: string;
   rootTypeId: string | undefined;
   segments: ChainSegment[];
   leaf: { property: string; label: string };
 } = {
   id: "causa-sentencia-juez-pais",
-  label: "Jurisdicción de los jueces firmantes",
+  label: "Jueces firmantes",
+  description: "Filter cases by a signing judge and their jurisdiction",
   rootTypeId: templateId("Causa"),
   segments: [
     {

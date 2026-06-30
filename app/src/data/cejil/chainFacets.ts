@@ -13,6 +13,8 @@ export interface ChainFacetDef {
   chainId: string;
   /** Header shown above the chain's group of facets. */
   groupLabel: string;
+  /** One-line helper under the group header (what the group filters). */
+  groupDescription: string;
   /** This facet's title. */
   label: string;
   rootTypeId: string;
@@ -36,6 +38,7 @@ export function cejilChainFacetDefs(): ChainFacetDef[] {
   const base = {
     chainId: c.id,
     groupLabel: c.label,
+    groupDescription: c.description,
     rootTypeId: c.rootTypeId,
     segments: c.segments,
     property: "title",

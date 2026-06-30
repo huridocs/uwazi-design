@@ -424,9 +424,12 @@ export function LibraryFilters() {
                 breadcrumb shows the full path; the segments these facets filter
                 are emphasised. Selections combine path-coupled. */}
             <div className="px-1.5 pt-1 space-y-1">
-              <span className="block text-[11px] font-semibold uppercase tracking-wide text-ink-tertiary truncate">
+              <span className="block text-sm font-bold text-ink">
                 {chainDefs[0].groupLabel}
               </span>
+              <p className="text-[11px] text-ink-tertiary leading-snug">
+                {chainDefs[0].groupDescription}
+              </p>
               <ChainPathHelper defs={chainDefs} />
             </div>
             {chainDefs.map((def) => (
