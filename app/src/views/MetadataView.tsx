@@ -213,6 +213,7 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
 function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void; onSave: () => void; menuSlot?: ReactNode }) {
   const language = useAtom(languageAtom)[0];
   const focusedId = useAtomValue(focusedEntityIdAtom);
+  const getProp = makeEntityPropReader(useAtomValue(entityMetadataAtom));
   const profile = getEntityProfile(focusedId);
   const docTitle = profile.document?.[language]?.title ?? getEntity(focusedId)?.title ?? "";
   // Scalar fields edit inline here; relationship fields are edited via the
@@ -236,9 +237,13 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
 
   // Relationship fields → one editor per connection. The connection (entity
   // set) is the source of truth, keyed so multi-inheritance siblings sync.
-  const relFields = profile.metadata[language].filter(
+  // Read-only fields (CEJIL projections, chain-traversed inheritance) are NOT
+  // editable inline — they render as read cards below (design doc Q6).
+  const allRelFields = profile.metadata[language].filter(
     (f): f is RelationshipMetadataField => f.type === "relationship",
   );
+  const relFields = allRelFields.filter((f) => !f.readOnly);
+  const readOnlyRel = groupConnections(allRelFields.filter((f) => f.readOnly), language, getProp);
   const { groups, singles } = groupConnections(relFields, language);
   const connectionDefs = [
     ...groups.map((g) => ({
@@ -434,6 +439,24 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
             onChange={(ids) => setConnections((prev) => ({ ...prev, [d.key]: ids }))}
           />
         ))}
+
+        {/* Derived / chain-traversed relationships — shown read-only here; they
+            aren't edited inline (managed via the relationship graph). */}
+        {(readOnlyRel.groups.length > 0 || readOnlyRel.singles.length > 0) && (
+          <>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-tertiary pt-2">
+              Derived relationships · read-only
+            </h3>
+            <div className="grid gap-3 grid-cols-1">
+              {readOnlyRel.groups.map((group) => (
+                <ConnectionGroupCard key={group.connectionKey} group={group} />
+              ))}
+              {readOnlyRel.singles.map((field) => (
+                <RelationshipFieldCard key={field.id} field={field} span="full" />
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Edit action bar */}

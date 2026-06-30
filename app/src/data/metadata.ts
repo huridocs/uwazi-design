@@ -33,6 +33,11 @@ export interface RelationshipMetadataField {
   inheritLabel?: string;
   connectedEntityIds: string[];
   connectionKey?: string;
+  /** A derived/graph projection (e.g. CEJIL connections, a chain-traversed
+   *  inherited field) — not editable inline. The edit view shows it read-only
+   *  rather than as an entity-picker (design doc Q6: chain fields are edited via
+   *  a relationship tree, not inline). */
+  readOnly?: boolean;
 }
 
 export type AnyMetadataField = MetadataField | RelationshipMetadataField;

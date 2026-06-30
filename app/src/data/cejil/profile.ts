@@ -186,6 +186,7 @@ function cejilRelationshipFields(sharedId: string, template: string): Relationsh
       relationType: typeName,
       targetTypeId: "",
       connectedEntityIds: g.ids.slice(0, REL_CONN_CAP),
+      readOnly: true,
     });
   }
 
@@ -216,6 +217,7 @@ function cejilRelationshipFields(sharedId: string, template: string): Relationsh
           inheritProperty: CEJIL_INHERIT_FIRMANTE_PAIS,
           inheritLabel: "País",
           connectedEntityIds: judges,
+          readOnly: true,
         });
       }
     }
