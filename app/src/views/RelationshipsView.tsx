@@ -4,6 +4,7 @@ import { scopedReferencesAtom, toastsAtom } from "../atoms/references";
 import { languageAtom, type Language } from "../atoms/language";
 import { focusedEntityIdAtom } from "../atoms/focusedEntity";
 import { getEntityProfile } from "../data/entityProfiles";
+import { MOCK_DOCUMENT_FILE } from "../data/files";
 import {
   viewAtom,
   groupByAtom,
@@ -211,9 +212,9 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
           {profile.hasDocument ? (
             <DocumentViewer showMinimap={!hideMinimap} />
           ) : (
-            <div className="flex-1 flex items-center justify-center p-6 text-center">
-              <p className="text-sm text-ink-muted">This entity has no document.</p>
-            </div>
+            /* No bundled document — show the shared placeholder PDF rather than a
+               bare empty state (the real doc isn't shipped in this sample). */
+            <DocumentViewer fileOverride={MOCK_DOCUMENT_FILE} showMinimap={false} />
           )}
           <ConfirmDialog
             open={deleteTarget !== null}

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { X, ArrowRight } from "lucide-react";
-import { languageAtom } from "../../atoms/language";
+import { languageAtom, type Language } from "../../atoms/language";
 import { referencesAtom } from "../../atoms/references";
 import { librarySelectedEntityIdAtom } from "../../atoms/library";
 import { openEntityAtom, focusEntityForPreviewAtom } from "../../atoms/focusedEntity";
@@ -14,6 +14,7 @@ import { MainTabs } from "../layout/MainTabs";
 import { DocumentViewer } from "../viewer/DocumentViewer";
 import { RelationshipsDrawerSection } from "../relationships/RelationshipsDrawerSection";
 import { DrawerFilesBody } from "../files/DrawerFilesBody";
+import { RelationshipCards } from "../metadata/RelationshipCards";
 
 /** The right-drawer entity preview. Selecting a library entity focuses it (see
  *  {@link focusEntityForPreviewAtom}) and renders the same main-tab navigation
@@ -124,15 +125,19 @@ export function EntityDrawerPreview({ entityId }: { entityId: string }) {
   );
 }
 
-/** Compact scalar-metadata body for the drawer's Metadata tab, read from the
- *  previewed entity's own profile (not the e3-hardcoded MetadataDrawerContent). */
+/** Compact metadata body for the drawer's Metadata tab, read from the previewed
+ *  entity's own profile (not the e3-hardcoded MetadataDrawerContent). Scalar
+ *  fields first, then the shared RelationshipCards so relationship/inherited
+ *  properties match the main Metadata view. */
 function MetadataSummary({ language, entityId }: { language: string; entityId: string }) {
   const profile = getEntityProfile(entityId);
-  const fields = (profile.metadata[language as keyof typeof profile.metadata] ?? []).filter(
+  const lang = language as Language;
+  const fields = (profile.metadata[lang] ?? []).filter(
     (f): f is MetadataField => f.type !== "relationship" && !!(f as MetadataField).value,
   );
+  const hasRel = (profile.metadata[lang] ?? []).some((f) => f.type === "relationship");
 
-  if (fields.length === 0) {
+  if (fields.length === 0 && !hasRel) {
     return (
       <div className="h-full flex items-center justify-center px-6 text-center">
         <p className="text-xs text-ink-muted">No metadata for this entity yet.</p>
@@ -151,6 +156,7 @@ function MetadataSummary({ language, entityId }: { language: string; entityId: s
             <p className="text-sm text-ink leading-snug">{f.value}</p>
           </div>
         ))}
+        <RelationshipCards profile={profile} language={lang} span="full" />
       </div>
     </div>
   );

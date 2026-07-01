@@ -98,7 +98,7 @@ export const EntityCard = memo(function EntityCard({
       tabIndex={0}
       onClick={() => onSelect(entity.id)}
       onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onSelect(entity.id)}
-      className={`${base} ${surface} p-3 flex flex-col gap-2.5 h-full`}
+      className={`${base} ${surface} p-3 flex flex-col gap-2.5`}
     >
       {showPreview && entity.preview && (
         <EntityThumbnail

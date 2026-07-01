@@ -12,6 +12,7 @@ import {
   documentGroupsAtom,
   activePrimaryGroupIdAtom,
 } from "../../atoms/files";
+import { MOCK_DOCUMENT_PDF } from "../../data/files";
 import { PageHighlights } from "./PageHighlights";
 import { FloatingMenu } from "./FloatingMenu";
 import { ActionBar } from "./ActionBar";
@@ -75,9 +76,7 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
     // group so the viewer still renders something.
     return files.find((f) => f.groupId === resolvedActiveId) ?? null;
   }, [files, resolvedActiveId, language, fileOverride]);
-  const filePath =
-    activeFile?.url ??
-    "/docs/Velasquez-Rodriguez_v_Honduras_Judgment_1988_EN.pdf";
+  const filePath = activeFile?.url ?? MOCK_DOCUMENT_PDF;
   const showLangFallback =
     !fileOverride && activeFile !== null && activeFile.language !== language;
 

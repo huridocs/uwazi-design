@@ -61,6 +61,21 @@ export const DOC_VELASQUEZ_ES = "/docs/Velasquez-Rodriguez_c_Honduras_Sentencia_
 export const DOC_GELMAN_EN    = "/docs/Gelman_v_Uruguay_Judgment_2011_EN.pdf";
 export const DOC_GELMAN_ES    = "/docs/Gelman_c_Uruguay_Sentencia_2011_ES.pdf";
 
+/** Neutral placeholder PDF shown wherever an entity has no bundled document —
+ *  the real CEJIL PDFs aren't all shipped in this sample. One file, used
+ *  everywhere an empty document pane would otherwise appear. */
+export const MOCK_DOCUMENT_PDF = "/cejil-docs/sample-document.pdf";
+export const MOCK_DOCUMENT_FILE: FileEntry = {
+  id: "mock-document",
+  groupId: "mock-document",
+  name: "sample-document.pdf",
+  type: "pdf",
+  size: "1 KB",
+  language: "EN",
+  modified: "",
+  url: MOCK_DOCUMENT_PDF,
+};
+
 export const files: FileEntry[] = [
   // Judgment — 4 translations
   {
