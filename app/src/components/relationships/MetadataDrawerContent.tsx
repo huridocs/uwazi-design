@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useAtomValue } from "jotai";
-import { ChevronDown, ChevronRight, ExternalLink, FileText, Music, Video, Image, Link2 } from "lucide-react";
+import { ChevronDown, ChevronRight, FileText, Music, Video, Image, Link2 } from "lucide-react";
 import { languageAtom } from "../../atoms/language";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { getEntityProfile } from "../../data/entityProfiles";
@@ -10,6 +10,7 @@ import { FileEntry } from "../../data/files";
 import { filesAtom, documentGroupsAtom } from "../../atoms/files";
 import { EntityPill } from "../shared/EntityPill";
 import { RelationshipCards } from "../metadata/RelationshipCards";
+import { MetadataFieldsTable } from "../metadata/MetadataFieldsTable";
 
 const fileTypeIcons: Record<FileEntry["type"], typeof FileText> = {
   pdf: FileText,
@@ -87,27 +88,13 @@ export function MetadataDrawerContent() {
         </div>
       </CollapsibleSection>
 
-      {/* Metadata fields */}
-      {regularFields.map((field) => (
-        <div key={field.id} className="bg-paper border border-border/40 rounded-md px-3 py-2.5">
-          <h4 className="text-[11px] font-semibold text-ink-tertiary uppercase tracking-wider mb-1">
-            {field.label}
-          </h4>
-          {field.type === "country" ? (
-            <div className="flex items-center gap-2">
-              <span className="text-base leading-none">{field.flag}</span>
-              <span className="text-sm font-medium text-ink">{field.value}</span>
-            </div>
-          ) : field.type === "link" ? (
-            <div className="flex items-center gap-1">
-              <span className="text-sm font-medium text-ink underline">{field.value}</span>
-              <ExternalLink size={10} className="text-ink-muted shrink-0" />
-            </div>
-          ) : (
-            <p className="text-sm font-medium text-ink">{field.value}</p>
-          )}
+      {/* Metadata fields — bordered label|value table, matching the relationship
+          cards below so the whole drawer reads as one tabular surface. */}
+      {regularFields.length > 0 && (
+        <div className="bg-paper border border-border/40 rounded-md px-3 py-2.5">
+          <MetadataFieldsTable fields={regularFields} />
         </div>
-      ))}
+      )}
 
       {/* Relationship / inherited properties — shared with the main Metadata
           view so the drawer shows the same connections + inherited values. */}

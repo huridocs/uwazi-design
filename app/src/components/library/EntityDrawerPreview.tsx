@@ -15,6 +15,7 @@ import { DocumentViewer } from "../viewer/DocumentViewer";
 import { RelationshipsDrawerSection } from "../relationships/RelationshipsDrawerSection";
 import { DrawerFilesBody } from "../files/DrawerFilesBody";
 import { RelationshipCards } from "../metadata/RelationshipCards";
+import { MetadataFieldsTable } from "../metadata/MetadataFieldsTable";
 
 /** The right-drawer entity preview. Selecting a library entity focuses it (see
  *  {@link focusEntityForPreviewAtom}) and renders the same main-tab navigation
@@ -148,14 +149,7 @@ function MetadataSummary({ language, entityId }: { language: string; entityId: s
   return (
     <div className="h-full overflow-auto p-4">
       <div className="grid grid-cols-1 gap-3">
-        {fields.map((f) => (
-          <div key={f.id} className="rounded-lg p-3" style={{ backgroundColor: "var(--bg-warm)" }}>
-            <span className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider block mb-1">
-              {f.label}
-            </span>
-            <p className="text-sm text-ink leading-snug">{f.value}</p>
-          </div>
-        ))}
+        <MetadataFieldsTable fields={fields} />
         <RelationshipCards profile={profile} language={lang} span="full" />
       </div>
     </div>
