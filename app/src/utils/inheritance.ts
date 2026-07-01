@@ -3,6 +3,7 @@ import { getEntity } from "../data/entities";
 import { getEntityProp } from "../data/entityMetadata";
 import { relationTypes, type RelationType } from "../data/references";
 import type { RelationshipMetadataField } from "../data/metadata";
+import { chains, leafValues, type ChainGraph, type ChainSegment } from "./chainTraversal";
 
 /** Resolves one native prop of a source entity. Defaults to the static const;
  *  pass a closure over `entityMetadataAtom` to make inherited values live. */
@@ -12,6 +13,55 @@ const relationLabelById = new Map(relationTypes.map((r) => [r.id, r.label]));
 /** Human label for a relation type id (falls back to the raw id). */
 export function relationLabel(type: RelationType): string {
   return relationLabelById.get(type) ?? type;
+}
+
+/* ── Unified inheritance resolution ──
+ *
+ * One resolver for both inheritance shapes. `inheritProperty` (a native scalar on
+ * the connected entity) is the degenerate zero-hop case of `inheritPath` (traverse
+ * further, then project a leaf). Multi-hop resolution needs a graph; rather than
+ * thread it through every React call site, a graph PROVIDER is registered once by
+ * the data layer (CEJIL) via dependency inversion — this module never imports it.
+ * A field with no path resolves without any graph at all. */
+
+let graphProvider: (() => ChainGraph | null) | null = null;
+
+/** Register the graph backing multi-hop (`inheritPath`) inheritance. Called once
+ *  by the data layer; keeps this util graph-source-agnostic. */
+export function registerInheritanceGraph(provider: () => ChainGraph | null): void {
+  graphProvider = provider;
+}
+
+/** Spec fields describing what a connection inherits (from a field or a column). */
+export interface InheritSpec {
+  inheritProperty?: string;
+  inheritPath?: ChainSegment[];
+  inheritLeaf?: string;
+}
+
+/** Whether a spec carries any inheritance (native or multi-hop). */
+export function specInherits(spec: InheritSpec): boolean {
+  return !!spec.inheritProperty || !!(spec.inheritPath && spec.inheritPath.length);
+}
+
+/** The connected entity's inherited value. `inheritPath` → walk the graph from it
+ *  and join the distinct leaf values; else read the native `inheritProperty`.
+ *  Returns undefined when there's nothing to inherit or the value is absent. */
+export function resolveInheritedValue(
+  connectedEntityId: string,
+  spec: InheritSpec,
+  lang: Language,
+  getProp: EntityPropReader,
+): string | undefined {
+  if (spec.inheritPath && spec.inheritPath.length) {
+    const graph = graphProvider?.();
+    if (!graph) return undefined;
+    const { tuples } = chains(graph, connectedEntityId, spec.inheritPath, { maxPaths: 200 });
+    const seen = new Set<string>();
+    for (const t of tuples) for (const v of leafValues(graph, t, spec.inheritLeaf ?? "title")) seen.add(v);
+    return seen.size ? [...seen].join(", ") : undefined;
+  }
+  return spec.inheritProperty ? getProp(connectedEntityId, spec.inheritProperty, lang) : undefined;
 }
 
 /** One connected entity + the value it contributes to a relationship field. */
@@ -43,7 +93,7 @@ export function resolveRelationshipField(
       entityId: id,
       entityTitle: entity?.title ?? "Unknown entity",
       entityTypeId: entity?.typeId ?? field.targetTypeId,
-      inheritedValue: field.inheritProperty ? getProp(id, field.inheritProperty, lang) : undefined,
+      inheritedValue: resolveInheritedValue(id, field, lang, getProp),
       sourcePropLabel: field.inheritLabel,
     };
   });
@@ -56,6 +106,8 @@ export interface ConnectionColumn {
   fieldId: string;
   label: string;
   inheritProperty?: string;
+  inheritPath?: ChainSegment[];
+  inheritLeaf?: string;
 }
 export interface ConnectionRow {
   entityId: string;
@@ -184,8 +236,14 @@ export function groupConnections(
     for (const f of fields) for (const id of f.connectedEntityIds) if (!ids.includes(id)) ids.push(id);
 
     const columns: ConnectionColumn[] = fields
-      .filter((f) => f.inheritProperty)
-      .map((f) => ({ fieldId: f.id, label: f.inheritLabel ?? f.label, inheritProperty: f.inheritProperty }));
+      .filter((f) => specInherits(f))
+      .map((f) => ({
+        fieldId: f.id,
+        label: f.inheritLabel ?? f.label,
+        inheritProperty: f.inheritProperty,
+        inheritPath: f.inheritPath,
+        inheritLeaf: f.inheritLeaf,
+      }));
 
     const rows: ConnectionRow[] = ids.map((id) => {
       const entity = getEntity(id);
@@ -195,7 +253,7 @@ export function groupConnections(
         entityTypeId: entity?.typeId ?? primary.targetTypeId,
         cells: columns.map((c) => ({
           fieldId: c.fieldId,
-          value: c.inheritProperty ? getProp(id, c.inheritProperty, lang) : undefined,
+          value: resolveInheritedValue(id, c, lang, getProp),
         })),
       };
     });

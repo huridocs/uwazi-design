@@ -13,7 +13,7 @@ import { RelationshipCards } from "../components/metadata/RelationshipCards";
 import { RelationshipFieldEditor } from "../components/metadata/RelationshipFieldEditor";
 import { TemplateStructure } from "../components/relationships/TemplateStructure";
 import { EntityOverlay } from "../components/relationships/EntityOverlay";
-import { groupConnections, relationLabel } from "../utils/inheritance";
+import { groupConnections, relationLabel, specInherits } from "../utils/inheritance";
 import {
   type MetadataField,
   type RelationshipMetadataField,
@@ -244,8 +244,14 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
       title: f.label,
       relationLabel: relationLabel(f.relationType),
       targetTypeId: f.targetTypeId,
-      columns: f.inheritProperty
-        ? [{ fieldId: f.id, label: f.inheritLabel ?? f.label, inheritProperty: f.inheritProperty }]
+      columns: specInherits(f)
+        ? [{
+            fieldId: f.id,
+            label: f.inheritLabel ?? f.label,
+            inheritProperty: f.inheritProperty,
+            inheritPath: f.inheritPath,
+            inheritLeaf: f.inheritLeaf,
+          }]
         : [],
       entityIds: f.connectedEntityIds,
     })),

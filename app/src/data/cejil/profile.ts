@@ -12,11 +12,8 @@ import type { Reference } from "../references";
 import type { CejilEntity, CejilFile } from "./types";
 import { cejilTemplates } from "./templates";
 import { chains, type ChainGraph } from "../../utils/chainTraversal";
+import { registerInheritanceGraph } from "../../utils/inheritance";
 import { cejilChainGraph, CEJIL_PERPETRATOR_CHAIN } from "./graph";
-import {
-  registerCejilInherited,
-  CEJIL_INHERIT_FIRMANTE_PAIS,
-} from "./inheritedRegistry";
 import {
   cejilBySidLang,
   cejilRelsByEntity,
@@ -25,6 +22,12 @@ import {
   cejilFullText,
   cejilLoaded,
 } from "./load";
+
+// Back multi-hop (`inheritPath`) inheritance with the CEJIL graph. Registered
+// once here (dependency inversion — utils/inheritance never imports CEJIL). The
+// provider returns null until the corpus loads; resolution simply yields nothing
+// until then. Idempotent, so importing this module wires it up.
+registerInheritanceGraph(cejilChainGraph);
 
 const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
 // App language → CEJIL language code (es/en/pt). FR/AR fall back to es (canonical).
@@ -169,24 +172,26 @@ const SIGNING_DOC_TEMPLATES = new Set(
     .map((t) => t._id),
 );
 
-const LANGS_ARR: Language[] = ["EN", "ES", "FR", "AR"];
+/** The inheritance hop shared by both routes: from a signing judge to their
+ *  País. Declared on the field as `inheritPath`; the unified resolver traverses
+ *  it live per judge (no pre-baked values). */
+const JUDGE_TO_PAIS = CEJIL_PERPETRATOR_CHAIN.segments.slice(2); // [Juez → País]
 
-/** Signing judges for an entity + each judge's inherited país (registered into
- *  the inherited registry). Two routes to the same Juez → País hop:
- *   - a **Causa** reaches its judges through its Sentencia — the full
- *     Causa → Sentencia → Juez → País chain;
- *   - a **signing document** (Sentencia/Resolución/…) connects to its judges
- *     directly, so it walks only the last two segments (Juez, then País).
+/** Signing judges for an entity — the materialised connection only; each judge's
+ *  País is inherited LIVE via `JUDGE_TO_PAIS`, not resolved here. Two routes to
+ *  the judges:
+ *   - a **Causa** reaches them through its Sentencia — walk the first two
+ *     segments (Causa → Sentencia → Juez);
+ *   - a **signing document** (Sentencia/Resolución/…) connects to them directly
+ *     — walk one segment (Doc → Juez).
  *  Returns deduped judge ids, or null when the entity has no signing judges. */
 function signingJudges(graph: ChainGraph, sharedId: string, template: string): string[] | null {
-  let segments = CEJIL_PERPETRATOR_CHAIN.segments;
-  let judgeIdx = 2; // [Causa, Sentencia, Juez, País]
-  let paisIdx = 3;
+  let segments = CEJIL_PERPETRATOR_CHAIN.segments.slice(0, 2); // [Causa→Sentencia, Sentencia→Juez]
+  let judgeIdx = 2; // [Causa, Sentencia, Juez]
   if (template !== CEJIL_PERPETRATOR_CHAIN.rootTypeId) {
     if (!SIGNING_DOC_TEMPLATES.has(template)) return null;
-    segments = CEJIL_PERPETRATOR_CHAIN.segments.slice(1); // [Firmantes→Juez, País→País]
-    judgeIdx = 1; // [Doc, Juez, País]
-    paisIdx = 2;
+    segments = CEJIL_PERPETRATOR_CHAIN.segments.slice(1, 2); // [Firmantes→Juez]
+    judgeIdx = 1; // [Doc, Juez]
   }
   const { tuples } = chains(graph, sharedId, segments, { maxPaths: 400 });
   const judges: string[] = [];
@@ -196,8 +201,6 @@ function signingJudges(graph: ChainGraph, sharedId: string, template: string): s
     if (!judge || seen.has(judge)) continue;
     seen.add(judge);
     judges.push(judge);
-    const pais = t[paisIdx] ? graph.titleOf(t[paisIdx].entityId) : undefined;
-    if (pais) for (const l of LANGS_ARR) registerCejilInherited(judge, CEJIL_INHERIT_FIRMANTE_PAIS, l, pais);
   }
   return judges.length ? judges : null;
 }
@@ -225,7 +228,8 @@ function cejilRelationshipFields(sharedId: string, template: string): Relationsh
         type: "relationship",
         relationType: "Firmantes",
         targetTypeId: JUEZ_TEMPLATE ?? "",
-        inheritProperty: CEJIL_INHERIT_FIRMANTE_PAIS,
+        inheritPath: JUDGE_TO_PAIS,
+        inheritLeaf: CEJIL_PERPETRATOR_CHAIN.leaf.property,
         inheritLabel: "País",
         connectedEntityIds: judges.slice(0, CHAIN_JUDGE_CAP),
         totalConnected: judges.length,

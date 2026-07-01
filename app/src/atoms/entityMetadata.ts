@@ -1,7 +1,6 @@
 import { atom } from "jotai";
 import type { Language } from "./language";
 import { entityMetadataByLanguage, type EntityMetadata } from "../data/entityMetadata";
-import { cejilInheritedValue } from "../data/cejil/inheritedRegistry";
 
 /** A reader closure over entity metadata: same signature as `getEntityProp`,
  *  resolved against live atom state instead of the static const. The inheritance
@@ -35,10 +34,9 @@ export const setEntityPropAtom = atom(
   },
 );
 
-/** Build a `getEntityProp`-shaped reader bound to the current atom value. Falls
- *  back to the CEJIL inherited-value registry (graph-derived values) so CEJIL
- *  inherited props resolve through the same renderer as mock native props. */
+/** Build a `getEntityProp`-shaped reader bound to the current atom value. Native
+ *  props only; multi-hop (graph-derived) inheritance resolves separately via
+ *  `resolveInheritedValue` (utils/inheritance). */
 export function makeEntityPropReader(all: Record<Language, EntityMetadata>): EntityPropReader {
-  return (entityId, propId, lang) =>
-    all[lang]?.[entityId]?.[propId] ?? cejilInheritedValue(entityId, propId, lang);
+  return (entityId, propId, lang) => all[lang]?.[entityId]?.[propId];
 }

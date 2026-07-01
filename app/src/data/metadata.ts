@@ -1,5 +1,6 @@
 import type { Language } from "../atoms/language";
 import type { RelationType } from "./references";
+import type { ChainSegment } from "../utils/chainTraversal";
 
 export interface MetadataField {
   id: string;
@@ -14,13 +15,19 @@ export interface MetadataField {
 /**
  * A metadata field whose value comes from a RELATIONSHIP: it connects this
  * entity to entities of `targetTypeId` via `relationType`, and optionally
- * INHERITS one native property (`inheritProperty`, resolved against
- * `data/entityMetadata`) from each connected entity.
+ * INHERITS a value from each connected entity. Inheritance is ONE spec, two
+ * shapes (the second generalises the first):
+ *   - `inheritProperty` — a native scalar prop on the connected entity, resolved
+ *     against `data/entityMetadata` (the single-hop lookup; Uwazi's model).
+ *   - `inheritPath` + `inheritLeaf` — a multi-hop projection: traverse the graph
+ *     FROM each connected entity along `inheritPath`, project the leaf's
+ *     `inheritLeaf` property. `inheritProperty` is the degenerate zero-segment
+ *     case of this; both flow through the same resolver (utils/inheritance.ts).
  *
  * `connectionKey` ties sibling fields that share one connection (same relation
  * + target) together → multi-inheritance: one set of connected entities feeding
  * several inherited columns, edited (and kept in sync) as a single connection.
- * Omit `inheritProperty` for a link-only relationship (connected entities, no
+ * Omit all inherit fields for a link-only relationship (connected entities, no
  * inherited value).
  */
 export interface RelationshipMetadataField {
@@ -31,6 +38,11 @@ export interface RelationshipMetadataField {
   targetTypeId: string;
   inheritProperty?: string;
   inheritLabel?: string;
+  /** Multi-hop inheritance: graph path FROM each connected entity. Resolved live
+   *  against the registered inheritance graph — never pre-baked. */
+  inheritPath?: ChainSegment[];
+  /** Leaf property projected at the end of `inheritPath` (default `"title"`). */
+  inheritLeaf?: string;
   connectedEntityIds: string[];
   connectionKey?: string;
   /** When `connectedEntityIds` is a capped slice of a larger set (hub entities

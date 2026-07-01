@@ -8,7 +8,7 @@ import { MetadataCard } from "./MetadataCard";
 import { spanClass, type CardSpan } from "./cardSpan";
 import { InheritedValueTag, MissingValue, RelationCaption } from "./InheritedValueChip";
 import { EntityPill } from "../shared/EntityPill";
-import { resolveRelationshipField } from "../../utils/inheritance";
+import { resolveRelationshipField, specInherits } from "../../utils/inheritance";
 import type { RelationshipMetadataField } from "../../data/metadata";
 
 /** A standalone relationship field (no shared connection). Two shapes:
@@ -21,7 +21,7 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
   const getProp = makeEntityPropReader(useAtomValue(entityMetadataAtom));
   const setOverlay = useSetAtom(overlayEntityIdAtom);
   const resolved = resolveRelationshipField(field, lang, getProp);
-  const inherits = !!field.inheritProperty;
+  const inherits = specInherits(field);
 
   const pill = (v: (typeof resolved.values)[number]) => (
     <button
