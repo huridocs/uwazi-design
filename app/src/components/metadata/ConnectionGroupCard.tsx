@@ -45,14 +45,20 @@ export function ConnectionGroupCard({ group, span = "full" }: { group: Connectio
             </tr>
           </thead>
           <tbody>
+            {/* Horizontal dividers live on each LEADING cell, not the row — so a
+                new top-level value (a country) rules a line across every column,
+                a new sub-value (a role) rules Role+Person only, and each person
+                gets a hairline under Person. The dividers "step" with the merge,
+                so a spanned group reads as one block instead of a flat grid.
+                Spanning labels are vertically centred against their group. */}
             {rows.map((row) => (
-              <tr key={row.entityId} className="border-t border-border/40 hover:bg-warm/40 transition-colors">
+              <tr key={row.entityId} className="hover:bg-warm/30 transition-colors">
                 {row.cells.map((cell, i) =>
                   cell.lead ? (
                     <td
                       key={cell.fieldId}
                       rowSpan={cell.rowSpan}
-                      className="py-1.5 px-3 whitespace-nowrap align-top border-s border-border/30 first:border-s-0"
+                      className="py-1.5 px-3 whitespace-nowrap align-middle border-t border-s border-border/40 first:border-s-0"
                     >
                       {cell.value ? (
                         <InheritedValueTag
@@ -67,7 +73,7 @@ export function ConnectionGroupCard({ group, span = "full" }: { group: Connectio
                     </td>
                   ) : null,
                 )}
-                <td className="py-1.5 px-1 align-top border-s border-border/30">
+                <td className="py-1.5 px-1 align-middle border-t border-s border-border/40">
                   <button
                     onClick={() => setOverlay(row.entityId)}
                     className="rounded-md hover:opacity-80 transition-opacity cursor-pointer"
