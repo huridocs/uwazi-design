@@ -252,29 +252,53 @@ HURIDOCS tribute** — surface the name, keep the code identifiers (`agent*`).
 - Connections tab inside the drawer renders `<ConnectionsDrawerSection />`; default panel mode is `tree`.
 
 ### Relationship & inherited metadata
-Mirrors Uwazi's relationship properties: a field that connects this entity to
-entities of a target template via a relation type and optionally **inherits** one
-*native* property from each connected entity (single-level only — never inherit an
-inherited value). Several fields sharing a `connectionKey` = **one connection, many
-inherited columns** (multi-inheritance), edited together.
-- **Data**: `MetadataField` got a sibling `RelationshipMetadataField` (`type:
-  "relationship"`, `relationType`, `targetTypeId`, `inheritProperty?`,
-  `inheritLabel?`, `connectedEntityIds`, `connectionKey?`); union `AnyMetadataField`.
-  `metadataFieldsByLanguage` is now `AnyMetadataField[]` (= scalar fields +
-  `relationshipFieldsByLanguage`). Source values live in **`data/entityMetadata.ts`**
-  (`entityMetadataByLanguage`, `getEntityProp`) — entities themselves stay
-  id/title/type. **Consumers that read `.value` must filter relationship fields out**
-  (a `(f): f is MetadataField => f.type !== "relationship"` guard) — done in
-  `MetadataView` read+edit bodies and `MetadataDrawerContent` (drawer stays scalar).
-- **Resolve/group**: `utils/inheritance.ts` — `resolveRelationshipField` (→ values +
-  provenance), `groupConnections` (buckets by `connectionKey` → `ConnectionGroup`s +
-  standalone `singles`), `relationLabel`.
-- **Read UI** (`MetadataReadBody`): hybrid — `ConnectionGroupCard` (a table, entities
-  once × inherited columns) for shared connections, `RelationshipFieldCard` for
-  singletons. Each value = `EntityPill` (click → source preview) + a carbon `Link2`
-  "inherited" marker; missing value → em-dash with a provenance title.
-  `components/metadata/{InheritedValueChip,ConnectionGroupCard,RelationshipFieldCard}`.
-- **Edit UI** (`MetadataEditBody`): inherited values are **read-only**;
+Mirrors Uwazi's relationship properties: a field connects this entity to entities of
+a target template via a relation type and optionally **inherits** a value from each
+connected entity. Inheritance is now **one spec, two shapes** (the second
+generalises the first):
+- `inheritProperty` — a *native* scalar prop on the connected entity (the classic
+  single-hop lookup, Uwazi's model).
+- `inheritPath` (`ChainSegment[]`) + `inheritLeaf` — a **multi-hop** projection:
+  traverse the graph FROM each connected entity, project the leaf property.
+  `inheritProperty` is the degenerate zero-segment case of this. **We DO inherit
+  through hops now** (e.g. Causa's "Jueces firmantes" inherits each judge's País via
+  `[Juez → País]`) — the old "single-level only" rule is gone.
+
+Several fields sharing a `connectionKey` = **one connection, many inherited columns**
+(multi-inheritance), edited together.
+- **Data**: `RelationshipMetadataField` (`type: "relationship"`, `relationType`,
+  `targetTypeId`, `inheritProperty?`, `inheritPath?`, `inheritLeaf?`, `inheritLabel?`,
+  `connectedEntityIds`, `connectionKey?`, `reduce?`, `entityLabel?`,
+  `connectionProvenance?`, `totalConnected?`, `readOnly?`); union `AnyMetadataField`.
+  Scalar source values live in **`data/entityMetadata.ts`** (`entityMetadataByLanguage`,
+  `getEntityProp` — native props ONLY now). **Consumers that read `.value` must filter
+  relationship fields out** (`(f): f is MetadataField => f.type !== "relationship"`) —
+  done in `MetadataView` read+edit bodies and `MetadataDrawerContent`.
+- **Resolve (ONE path resolver)**: `utils/inheritance.ts` — `resolveInherited(entity,
+  spec, lang, getProp)` returns `{ value, steps }`: single-hop reads the native prop;
+  multi-hop walks `chains()` (`utils/chainTraversal.ts`) and projects the leaf.
+  `resolveInheritedValue` is the string-only wrapper. The backing graph is **injected**
+  via `registerInheritanceGraph(provider)` (dependency inversion — inheritance.ts never
+  imports CEJIL; `data/cejil/profile.ts` registers `cejilChainGraph`). `resolveRelationshipField`
+  + `groupConnections` (buckets by `connectionKey` → `ConnectionGroup`s + `singles`) route
+  through it. **The old `data/cejil/inheritedRegistry.ts` (pre-baked chain values) is
+  DELETED** — chain-derived values resolve LIVE at render, not stored.
+- **Provenance** (`ProvenanceStep` in chainTraversal.ts): a derived value carries the
+  intermediary nodes it was reached through (the connection's hidden middleman, e.g. the
+  Sentencia a judge signed — `field.connectionProvenance[id]` — plus value-side hops).
+  Rendered as a clickable `↳ via …` `ProvenanceTrail`; when every row shares one
+  signature it's **hoisted** to a single `all inherited via …` line.
+- **Reduce/rollup**: `reduce?: InheritReduce` (`list|distinct|count|min|max|first`) →
+  `reduceInherited()` → a carbon `Σ` `RollupChip` (Notion/Airtable "calculation"). Shown
+  per-column on the grouped table and in the single card's value-column header.
+- **Read UI** (`MetadataReadBody`): `ConnectionGroupCard` (a table, entities once ×
+  inherited columns, cell-merged) for shared connections; `RelationshipFieldCard` for
+  singletons — an **inheriting single now renders as the SAME bordered table** (entity
+  column + value column, `entityLabel` names the entity col) rather than a floating
+  2-col grid; link-only stays a pill list. `EntityPill` → source preview; missing value
+  → em-dash. `components/metadata/{InheritedValueChip,ConnectionGroupCard,RelationshipFieldCard}`.
+- **Edit UI** (`MetadataEditBody`): inherited values are **read-only** (derived/CEJIL
+  fields carry `readOnly` and render as read cards, not editors);
   `RelationshipFieldEditor` (one per connection, keyed) edits the **connection** (entity
   picker filtered by `targetTypeId`); state is `connections: Record<key, ids>` so
   multi-inheritance siblings sync. Each row has **"Source"** → opens `EntityOverlay`
