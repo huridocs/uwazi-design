@@ -11,7 +11,7 @@ import type { FileEntry, DocumentGroup } from "../files";
 import type { Reference } from "../references";
 import type { CejilEntity, CejilFile } from "./types";
 import { cejilTemplates } from "./templates";
-import { chains } from "../../utils/chainTraversal";
+import { chains, type ChainGraph } from "../../utils/chainTraversal";
 import { cejilChainGraph, CEJIL_PERPETRATOR_CHAIN } from "./graph";
 import {
   registerCejilInherited,
@@ -153,24 +153,95 @@ const REL_CONN_CAP = 15;
 const CHAIN_JUDGE_CAP = 12;
 
 const templateIdByName = (name: string) => cejilTemplates.find((t) => t.name === name)?._id;
-const SENTENCIA_TEMPLATE = templateIdByName("Sentencia de la CorteIDH");
+const JUEZ_TEMPLATE = templateIdByName("Juez y/o Comisionado");
+
+/** Relation-type id of a `firmantes` (signing-judges) property. */
+const FIRMANTES_REL_ID = "5ab920b3163b080aaa44310f";
+/** Template ids of documents that carry a `firmantes` relationship (Sentencia,
+ *  Resolución, Voto Separado, Informe de Fondo, …) — the ones whose signing
+ *  judges we can surface WITH inherited país directly, one hop from the doc,
+ *  rather than only reaching them from a Causa via the full chain. */
+const SIGNING_DOC_TEMPLATES = new Set(
+  cejilTemplates
+    .filter((t) =>
+      (t.properties || []).some((p) => p.type === "relationship" && p.relationType === FIRMANTES_REL_ID),
+    )
+    .map((t) => t._id),
+);
+
+const LANGS_ARR: Language[] = ["EN", "ES", "FR", "AR"];
+
+/** Signing judges for an entity + each judge's inherited país (registered into
+ *  the inherited registry). Two routes to the same Juez → País hop:
+ *   - a **Causa** reaches its judges through its Sentencia — the full
+ *     Causa → Sentencia → Juez → País chain;
+ *   - a **signing document** (Sentencia/Resolución/…) connects to its judges
+ *     directly, so it walks only the last two segments (Juez, then País).
+ *  Returns deduped judge ids, or null when the entity has no signing judges. */
+function signingJudges(graph: ChainGraph, sharedId: string, template: string): string[] | null {
+  let segments = CEJIL_PERPETRATOR_CHAIN.segments;
+  let judgeIdx = 2; // [Causa, Sentencia, Juez, País]
+  let paisIdx = 3;
+  if (template !== CEJIL_PERPETRATOR_CHAIN.rootTypeId) {
+    if (!SIGNING_DOC_TEMPLATES.has(template)) return null;
+    segments = CEJIL_PERPETRATOR_CHAIN.segments.slice(1); // [Firmantes→Juez, País→País]
+    judgeIdx = 1; // [Doc, Juez, País]
+    paisIdx = 2;
+  }
+  const { tuples } = chains(graph, sharedId, segments, { maxPaths: 400 });
+  const judges: string[] = [];
+  const seen = new Set<string>();
+  for (const t of tuples) {
+    const judge = t[judgeIdx]?.entityId;
+    if (!judge || seen.has(judge)) continue;
+    seen.add(judge);
+    judges.push(judge);
+    const pais = t[paisIdx] ? graph.titleOf(t[paisIdx].entityId) : undefined;
+    if (pais) for (const l of LANGS_ARR) registerCejilInherited(judge, CEJIL_INHERIT_FIRMANTE_PAIS, l, pais);
+  }
+  return judges.length ? judges : null;
+}
 
 /** Relationship fields for a CEJIL entity, surfaced in the Metadata view.
  *
- *  1. Direct connections grouped by relation type → one link-only field each
- *     (capped). Makes every CEJIL entity show its graph neighbours.
- *  2. For a Causa: a chain-derived "Jueces firmantes" field that traverses
- *     Causa → Sentencia → Juez and INHERITS each judge's País (one more hop),
- *     pre-resolved into the inherited registry. The headline inheritance demo. */
+ *  1. Signing judges (+ inherited País) as the lead field — for a Causa via the
+ *     full chain, for a signing document directly (see `signingJudges`). This is
+ *     the inheritance surface; when present it replaces the raw "Firmantes"
+ *     link-only group so judges aren't listed twice.
+ *  2. Direct connections grouped by relation type → one link-only field each
+ *     (capped). Makes every CEJIL entity show its remaining graph neighbours. */
 function cejilRelationshipFields(sharedId: string, template: string): RelationshipMetadataField[] {
   const out: RelationshipMetadataField[] = [];
 
-  // 1. Direct connections grouped by relation type.
+  // 1. Signing judges + inherited país (Causa via chain, signing doc directly).
+  let promotedRelType: string | undefined;
+  const graph = cejilChainGraph();
+  if (graph) {
+    const judges = signingJudges(graph, sharedId, template);
+    if (judges) {
+      out.push({
+        id: `cejil-firmantes-${sharedId}`,
+        label: "Jueces firmantes",
+        type: "relationship",
+        relationType: "Firmantes",
+        targetTypeId: JUEZ_TEMPLATE ?? "",
+        inheritProperty: CEJIL_INHERIT_FIRMANTE_PAIS,
+        inheritLabel: "País",
+        connectedEntityIds: judges.slice(0, CHAIN_JUDGE_CAP),
+        totalConnected: judges.length,
+        readOnly: true,
+      });
+      promotedRelType = "Firmantes"; // shown inherited above — don't repeat below
+    }
+  }
+
+  // 2. Direct connections grouped by relation type (skip the promoted group).
   const rels = cejilRelsByEntity().get(sharedId) || [];
   const byType = new Map<string, { ids: string[]; seen: Set<string> }>();
   for (const r of rels) {
     const other = r.from === sharedId ? r.to : r.from;
     const typeName = r.typeName || "Relacionado";
+    if (typeName === promotedRelType) continue;
     let g = byType.get(typeName);
     if (!g) byType.set(typeName, (g = { ids: [], seen: new Set() }));
     if (!g.seen.has(other)) {
@@ -189,40 +260,6 @@ function cejilRelationshipFields(sharedId: string, template: string): Relationsh
       totalConnected: g.ids.length,
       readOnly: true,
     });
-  }
-
-  // 2. Causa → signing judges (+ inherited país), via the chain engine.
-  if (template === CEJIL_PERPETRATOR_CHAIN.rootTypeId) {
-    const graph = cejilChainGraph();
-    if (graph) {
-      const { tuples } = chains(graph, sharedId, CEJIL_PERPETRATOR_CHAIN.segments, { maxPaths: 400 });
-      // Dedupe judges across all paths first, so the cap can report a true total.
-      const judges: string[] = [];
-      const seen = new Set<string>();
-      for (const t of tuples) {
-        const judge = t[2]?.entityId; // Causa, Sentencia, Juez, País
-        const pais = t[3] ? graph.titleOf(t[3].entityId) : undefined;
-        if (!judge || seen.has(judge)) continue;
-        seen.add(judge);
-        judges.push(judge);
-        if (pais) for (const l of ["EN", "ES", "FR", "AR"] as Language[])
-          registerCejilInherited(judge, CEJIL_INHERIT_FIRMANTE_PAIS, l, pais);
-      }
-      if (judges.length) {
-        out.unshift({
-          id: `cejil-firmantes-${sharedId}`,
-          label: "Jueces firmantes",
-          type: "relationship",
-          relationType: "Firmantes",
-          targetTypeId: SENTENCIA_TEMPLATE ? templateIdByName("Juez y/o Comisionado") ?? "" : "",
-          inheritProperty: CEJIL_INHERIT_FIRMANTE_PAIS,
-          inheritLabel: "País",
-          connectedEntityIds: judges.slice(0, CHAIN_JUDGE_CAP),
-          totalConnected: judges.length,
-          readOnly: true,
-        });
-      }
-    }
   }
 
   return out;
