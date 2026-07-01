@@ -46,6 +46,9 @@ export interface RelationshipMetadataField {
   inheritLabel?: string;
   /** Roll the inherited values up into a summary chip (see `InheritReduce`). */
   reduce?: InheritReduce;
+  /** Column header for the connected-entity column when rendered as a table
+   *  (e.g. "Juez"). Falls back to the entity type's name, else "Entity". */
+  entityLabel?: string;
   /** Multi-hop inheritance: graph path FROM each connected entity. Resolved live
    *  against the registered inheritance graph — never pre-baked. */
   inheritPath?: ChainSegment[];
