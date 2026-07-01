@@ -186,6 +186,7 @@ function cejilRelationshipFields(sharedId: string, template: string): Relationsh
       relationType: typeName,
       targetTypeId: "",
       connectedEntityIds: g.ids.slice(0, REL_CONN_CAP),
+      totalConnected: g.ids.length,
       readOnly: true,
     });
   }
@@ -195,6 +196,7 @@ function cejilRelationshipFields(sharedId: string, template: string): Relationsh
     const graph = cejilChainGraph();
     if (graph) {
       const { tuples } = chains(graph, sharedId, CEJIL_PERPETRATOR_CHAIN.segments, { maxPaths: 400 });
+      // Dedupe judges across all paths first, so the cap can report a true total.
       const judges: string[] = [];
       const seen = new Set<string>();
       for (const t of tuples) {
@@ -205,7 +207,6 @@ function cejilRelationshipFields(sharedId: string, template: string): Relationsh
         judges.push(judge);
         if (pais) for (const l of ["EN", "ES", "FR", "AR"] as Language[])
           registerCejilInherited(judge, CEJIL_INHERIT_FIRMANTE_PAIS, l, pais);
-        if (judges.length >= CHAIN_JUDGE_CAP) break;
       }
       if (judges.length) {
         out.unshift({
@@ -216,7 +217,8 @@ function cejilRelationshipFields(sharedId: string, template: string): Relationsh
           targetTypeId: SENTENCIA_TEMPLATE ? templateIdByName("Juez y/o Comisionado") ?? "" : "",
           inheritProperty: CEJIL_INHERIT_FIRMANTE_PAIS,
           inheritLabel: "País",
-          connectedEntityIds: judges,
+          connectedEntityIds: judges.slice(0, CHAIN_JUDGE_CAP),
+          totalConnected: judges.length,
           readOnly: true,
         });
       }

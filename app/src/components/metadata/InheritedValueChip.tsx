@@ -41,14 +41,16 @@ export function InheritedValueTag({
 }
 
 /** Empty inherited value — the connected entity carries no value for the
- *  inherited property. Calm, explicit, and distinct from a real value. */
+ *  inherited property. A quiet em-dash (the editorial convention for "no value"
+ *  in a table) rather than words; provenance stays on hover. */
 export function MissingValue({ propLabel }: { propLabel?: string }) {
   return (
     <span
       title={`No ${propLabel ?? "value"} on the connected entity`}
-      className="text-sm text-ink-muted italic"
+      className="text-sm text-ink-muted select-none"
+      aria-label={`No ${propLabel ?? "value"}`}
     >
-      no value
+      —
     </span>
   );
 }
