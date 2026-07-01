@@ -99,7 +99,7 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
 
       {/* Scrollable metadata body — responsive grid */}
       <div className="flex-1 overflow-auto px-4 py-2 pb-8">
-        <div className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 items-start grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
           {profile.hasDocument && (
             <MetadataCard title="Document" className="hidden md:block md:col-span-2 xl:col-span-1 md:row-span-2">
               <div className="flex items-center justify-center bg-warm rounded-md overflow-hidden h-[200px]">
