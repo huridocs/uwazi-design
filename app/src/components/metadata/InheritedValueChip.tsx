@@ -1,9 +1,10 @@
+import { Fragment } from "react";
 import { useSetAtom } from "jotai";
-import { Link2 } from "lucide-react";
+import { CornerDownRight, Link2 } from "lucide-react";
 import { overlayEntityIdAtom } from "../../atoms/references";
 import { EntityPill } from "../shared/EntityPill";
 import { countryFlag } from "../../utils/countryFlag";
-import type { InheritedValue } from "../../utils/inheritance";
+import type { InheritedValue, ProvenanceStep } from "../../utils/inheritance";
 
 /** A single INHERITED value — visually distinct from a native value so it reads
  *  as "pulled from the connected entity": a carbon link glyph, an optional
@@ -36,6 +37,34 @@ export function InheritedValueTag({
         </span>
       )}
       <span className="truncate">{value}</span>
+    </span>
+  );
+}
+
+/** The provenance trail under an inherited value: the intermediary nodes the
+ *  value was reached through (e.g. the Sentencia a signing judge reached this
+ *  Causa by). Each hop is a clickable link that opens that entity's preview, so
+ *  the "how" of a derived value is inspectable rather than hidden. Renders
+ *  nothing when there are no intermediaries (a plain single-hop inheritance). */
+export function ProvenanceTrail({ steps }: { steps: ProvenanceStep[] }) {
+  const setOverlay = useSetAtom(overlayEntityIdAtom);
+  if (!steps.length) return null;
+  return (
+    <span className="flex items-center gap-1 min-w-0 text-[11px] text-ink-tertiary">
+      <CornerDownRight size={10} className="shrink-0 text-ink-muted" aria-hidden />
+      <span className="shrink-0">via</span>
+      {steps.map((s, i) => (
+        <Fragment key={s.entityId}>
+          {i > 0 && <span className="shrink-0 text-ink-muted" aria-hidden>→</span>}
+          <button
+            onClick={() => setOverlay(s.entityId)}
+            title={`${s.relationLabel ? `${s.relationLabel}: ` : ""}${s.title} — open`}
+            className="min-w-0 truncate text-carbon hover:underline cursor-pointer"
+          >
+            {s.title}
+          </button>
+        </Fragment>
+      ))}
     </span>
   );
 }

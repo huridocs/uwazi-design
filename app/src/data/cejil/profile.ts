@@ -11,7 +11,7 @@ import type { FileEntry, DocumentGroup } from "../files";
 import type { Reference } from "../references";
 import type { CejilEntity, CejilFile } from "./types";
 import { cejilTemplates } from "./templates";
-import { chains, type ChainGraph } from "../../utils/chainTraversal";
+import { chains, type ChainGraph, type ProvenanceStep } from "../../utils/chainTraversal";
 import { registerInheritanceGraph } from "../../utils/inheritance";
 import { cejilChainGraph, CEJIL_PERPETRATOR_CHAIN } from "./graph";
 import {
@@ -184,8 +184,14 @@ const JUDGE_TO_PAIS = CEJIL_PERPETRATOR_CHAIN.segments.slice(2); // [Juez → Pa
  *     segments (Causa → Sentencia → Juez);
  *   - a **signing document** (Sentencia/Resolución/…) connects to them directly
  *     — walk one segment (Doc → Juez).
- *  Returns deduped judge ids, or null when the entity has no signing judges. */
-function signingJudges(graph: ChainGraph, sharedId: string, template: string): string[] | null {
+ *  Returns deduped judge ids + per-judge provenance (the intermediary nodes
+ *  between the root and the judge — the Sentencia they signed, on the Causa
+ *  route; none on the direct route), or null when there are no signing judges. */
+function signingJudges(
+  graph: ChainGraph,
+  sharedId: string,
+  template: string,
+): { judges: string[]; provenance: Record<string, ProvenanceStep[]> } | null {
   let segments = CEJIL_PERPETRATOR_CHAIN.segments.slice(0, 2); // [Causa→Sentencia, Sentencia→Juez]
   let judgeIdx = 2; // [Causa, Sentencia, Juez]
   if (template !== CEJIL_PERPETRATOR_CHAIN.rootTypeId) {
@@ -195,14 +201,27 @@ function signingJudges(graph: ChainGraph, sharedId: string, template: string): s
   }
   const { tuples } = chains(graph, sharedId, segments, { maxPaths: 400 });
   const judges: string[] = [];
+  const provenance: Record<string, ProvenanceStep[]> = {};
   const seen = new Set<string>();
   for (const t of tuples) {
     const judge = t[judgeIdx]?.entityId;
     if (!judge || seen.has(judge)) continue;
     seen.add(judge);
     judges.push(judge);
+    // Intermediaries strictly between the root (index 0) and the judge.
+    const steps: ProvenanceStep[] = [];
+    for (let i = 1; i < judgeIdx; i++) {
+      const s = t[i];
+      steps.push({
+        entityId: s.entityId,
+        title: graph.titleOf(s.entityId) ?? s.entityId,
+        typeId: graph.templateOf(s.entityId),
+        relationLabel: segments[i - 1]?.label ?? s.relationType ?? undefined,
+      });
+    }
+    if (steps.length) provenance[judge] = steps;
   }
-  return judges.length ? judges : null;
+  return judges.length ? { judges, provenance } : null;
 }
 
 /** Relationship fields for a CEJIL entity, surfaced in the Metadata view.
@@ -220,8 +239,9 @@ function cejilRelationshipFields(sharedId: string, template: string): Relationsh
   let promotedRelType: string | undefined;
   const graph = cejilChainGraph();
   if (graph) {
-    const judges = signingJudges(graph, sharedId, template);
-    if (judges) {
+    const signing = signingJudges(graph, sharedId, template);
+    if (signing) {
+      const { judges, provenance } = signing;
       out.push({
         id: `cejil-firmantes-${sharedId}`,
         label: "Jueces firmantes",
@@ -232,6 +252,7 @@ function cejilRelationshipFields(sharedId: string, template: string): Relationsh
         inheritLeaf: CEJIL_PERPETRATOR_CHAIN.leaf.property,
         inheritLabel: "País",
         connectedEntityIds: judges.slice(0, CHAIN_JUDGE_CAP),
+        connectionProvenance: provenance,
         totalConnected: judges.length,
         readOnly: true,
       });

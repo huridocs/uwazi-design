@@ -6,7 +6,7 @@ import { entityMetadataAtom, makeEntityPropReader } from "../../atoms/entityMeta
 import { overlayEntityIdAtom } from "../../atoms/references";
 import { MetadataCard } from "./MetadataCard";
 import { spanClass, type CardSpan } from "./cardSpan";
-import { InheritedValueTag, MissingValue, RelationCaption } from "./InheritedValueChip";
+import { InheritedValueTag, MissingValue, ProvenanceTrail, RelationCaption } from "./InheritedValueChip";
 import { EntityPill } from "../shared/EntityPill";
 import { resolveRelationshipField, specInherits } from "../../utils/inheritance";
 import type { RelationshipMetadataField } from "../../data/metadata";
@@ -42,19 +42,22 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
     >
       <RelationCaption relationLabel={resolved.relationLabel} inheritLabel={field.inheritLabel} />
       {inherits ? (
-        <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 items-center">
+        <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 items-start">
           {resolved.values.map((v) => (
             <Fragment key={v.entityId}>
-              {pill(v)}
-              {v.inheritedValue ? (
-                <InheritedValueTag
-                  value={v.inheritedValue}
-                  propLabel={v.sourcePropLabel}
-                  relationLabel={resolved.relationLabel}
-                />
-              ) : (
-                <MissingValue propLabel={v.sourcePropLabel} />
-              )}
+              <div className="pt-0.5">{pill(v)}</div>
+              <div className="min-w-0 flex flex-col gap-0.5 pt-0.5">
+                {v.inheritedValue ? (
+                  <InheritedValueTag
+                    value={v.inheritedValue}
+                    propLabel={v.sourcePropLabel}
+                    relationLabel={resolved.relationLabel}
+                  />
+                ) : (
+                  <MissingValue propLabel={v.sourcePropLabel} />
+                )}
+                {v.provenance && <ProvenanceTrail steps={v.provenance} />}
+              </div>
             </Fragment>
           ))}
         </div>

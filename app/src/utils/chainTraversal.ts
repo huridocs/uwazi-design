@@ -80,6 +80,18 @@ export interface ChainStep {
 /** A complete path: [root, step₁, …, leaf]. Length === segments + 1. */
 export type ChainTuple = ChainStep[];
 
+/** One resolved, displayable node on a provenance path — how an inherited value
+ *  was reached. Lives here (the leaf graph module) so both the resolver
+ *  (utils/inheritance) and the field type (data/metadata) can name it without an
+ *  import cycle. */
+export interface ProvenanceStep {
+  entityId: string;
+  title: string;
+  typeId?: string;
+  /** Label of the relation edge that arrived at this node (the hop's name). */
+  relationLabel?: string;
+}
+
 export interface ChainOptions {
   /** Hard cap on tuples enumerated per root — bounds blow-up at hub nodes
    *  (CEJIL's heaviest País/Court fan out to thousands). Default 500. */

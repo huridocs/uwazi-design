@@ -1,6 +1,6 @@
 import type { Language } from "../atoms/language";
 import type { RelationType } from "./references";
-import type { ChainSegment } from "../utils/chainTraversal";
+import type { ChainSegment, ProvenanceStep } from "../utils/chainTraversal";
 
 export interface MetadataField {
   id: string;
@@ -43,6 +43,11 @@ export interface RelationshipMetadataField {
   inheritPath?: ChainSegment[];
   /** Leaf property projected at the end of `inheritPath` (default `"title"`). */
   inheritLeaf?: string;
+  /** Per connected-entity provenance: the intermediary nodes between the root
+   *  entity and that connected entity (the connection's hidden middlemen, e.g. the
+   *  Sentencia a signing judge reached this Causa through). Surfaced as a "via …"
+   *  trail. Keyed by connected entity id. */
+  connectionProvenance?: Record<string, ProvenanceStep[]>;
   connectedEntityIds: string[];
   connectionKey?: string;
   /** When `connectedEntityIds` is a capped slice of a larger set (hub entities

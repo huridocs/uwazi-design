@@ -3,7 +3,8 @@ import { getEntity } from "../data/entities";
 import { getEntityProp } from "../data/entityMetadata";
 import { relationTypes, type RelationType } from "../data/references";
 import type { RelationshipMetadataField } from "../data/metadata";
-import { chains, leafValues, type ChainGraph, type ChainSegment } from "./chainTraversal";
+import { chains, leafValues, type ChainGraph, type ChainSegment, type ProvenanceStep } from "./chainTraversal";
+export type { ProvenanceStep } from "./chainTraversal";
 
 /** Resolves one native prop of a source entity. Defaults to the static const;
  *  pass a closure over `entityMetadataAtom` to make inherited values live. */
@@ -44,24 +45,46 @@ export function specInherits(spec: InheritSpec): boolean {
   return !!spec.inheritProperty || !!(spec.inheritPath && spec.inheritPath.length);
 }
 
-/** The connected entity's inherited value. `inheritPath` → walk the graph from it
- *  and join the distinct leaf values; else read the native `inheritProperty`.
- *  Returns undefined when there's nothing to inherit or the value is absent. */
+/** Resolve a connected entity's inherited value AND the path walked to reach it.
+ *  `inheritPath` → traverse the graph and project the distinct leaf values, also
+ *  returning the intermediary nodes strictly between the connected entity and the
+ *  leaf (the value's provenance). Native `inheritProperty` has no path, so no
+ *  steps. `value` is undefined when there's nothing to inherit or it's absent. */
+export function resolveInherited(
+  connectedEntityId: string,
+  spec: InheritSpec,
+  lang: Language,
+  getProp: EntityPropReader,
+): { value?: string; steps: ProvenanceStep[] } {
+  if (spec.inheritPath && spec.inheritPath.length) {
+    const graph = graphProvider?.();
+    if (!graph) return { steps: [] };
+    const { tuples } = chains(graph, connectedEntityId, spec.inheritPath, { maxPaths: 200 });
+    const seen = new Set<string>();
+    for (const t of tuples) for (const v of leafValues(graph, t, spec.inheritLeaf ?? "title")) seen.add(v);
+    // Intermediaries between the connected entity (index 0) and the leaf (last)
+    // of the first path — the value's own provenance hops (empty for a 1-hop path).
+    const first = tuples[0] ?? [];
+    const steps: ProvenanceStep[] = first.slice(1, -1).map((s, i) => ({
+      entityId: s.entityId,
+      title: graph.titleOf(s.entityId) ?? s.entityId,
+      typeId: graph.templateOf(s.entityId),
+      relationLabel: spec.inheritPath?.[i]?.label ?? s.relationType ?? undefined,
+    }));
+    return { value: seen.size ? [...seen].join(", ") : undefined, steps };
+  }
+  return { value: spec.inheritProperty ? getProp(connectedEntityId, spec.inheritProperty, lang) : undefined, steps: [] };
+}
+
+/** The connected entity's inherited value only (string). Thin wrapper over
+ *  `resolveInherited` for callers that don't render provenance. */
 export function resolveInheritedValue(
   connectedEntityId: string,
   spec: InheritSpec,
   lang: Language,
   getProp: EntityPropReader,
 ): string | undefined {
-  if (spec.inheritPath && spec.inheritPath.length) {
-    const graph = graphProvider?.();
-    if (!graph) return undefined;
-    const { tuples } = chains(graph, connectedEntityId, spec.inheritPath, { maxPaths: 200 });
-    const seen = new Set<string>();
-    for (const t of tuples) for (const v of leafValues(graph, t, spec.inheritLeaf ?? "title")) seen.add(v);
-    return seen.size ? [...seen].join(", ") : undefined;
-  }
-  return spec.inheritProperty ? getProp(connectedEntityId, spec.inheritProperty, lang) : undefined;
+  return resolveInherited(connectedEntityId, spec, lang, getProp).value;
 }
 
 /** One connected entity + the value it contributes to a relationship field. */
@@ -73,6 +96,11 @@ export interface InheritedValue {
   inheritedValue?: string;
   /** Provenance: the inherited property's display label. */
   sourcePropLabel?: string;
+  /** How the value was reached: the intermediary nodes between the source entity
+   *  (root) and this value — the connection's hidden middlemen (e.g. the Sentencia
+   *  a judge signed) plus any value-side hops. Empty for a plain single-hop
+   *  inheritance. Rendered as a clickable "via …" trail. */
+  provenance?: ProvenanceStep[];
 }
 
 export interface ResolvedRelationshipField {
@@ -89,12 +117,17 @@ export function resolveRelationshipField(
 ): ResolvedRelationshipField {
   const values: InheritedValue[] = field.connectedEntityIds.map((id) => {
     const entity = getEntity(id);
+    const { value, steps } = resolveInherited(id, field, lang, getProp);
+    // Full provenance = the connection's intermediaries (root → this entity, e.g.
+    // the Sentencia a judge signed) followed by the value-side hops.
+    const provenance = [...(field.connectionProvenance?.[id] ?? []), ...steps];
     return {
       entityId: id,
       entityTitle: entity?.title ?? "Unknown entity",
       entityTypeId: entity?.typeId ?? field.targetTypeId,
-      inheritedValue: resolveInheritedValue(id, field, lang, getProp),
+      inheritedValue: value,
       sourcePropLabel: field.inheritLabel,
+      provenance: provenance.length ? provenance : undefined,
     };
   });
   return { field, relationLabel: relationLabel(field.relationType), values };
