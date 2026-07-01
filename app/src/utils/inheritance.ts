@@ -85,6 +85,71 @@ export interface GroupedConnections {
   singles: RelationshipMetadataField[];
 }
 
+/* ── Section-2 Option 1: cell-merged multi-inheritance table ── */
+
+export interface MergedCell {
+  fieldId: string;
+  value?: string;
+  /** Vertical span; >1 when this value repeats down consecutive rows. */
+  rowSpan: number;
+  /** False when this cell is absorbed into the merged span above it (skip render). */
+  lead: boolean;
+}
+export interface MergedConnectionRow {
+  entityId: string;
+  entityTitle: string;
+  entityTypeId: string;
+  cells: MergedCell[];
+}
+
+/** Render the connection table the "Option 1" way: rows sorted by the inherited
+ *  columns (left→right) and consecutive repeats merged into one spanning cell —
+ *  so shared values (a country, a role) group their entities together instead of
+ *  repeating. A cell merges upward only when it AND every column to its left
+ *  match the row above (hierarchical grouping). Missing values sort to the
+ *  bottom and merge among themselves. The entity (leaf) never merges. */
+export function mergeConnectionRows(group: ConnectionGroup): MergedConnectionRow[] {
+  const cols = group.columns.length;
+  const norm = (v?: string) => v ?? "￿"; // missing → sort last
+  const sorted = [...group.rows].sort((a, b) => {
+    for (let i = 0; i < cols; i++) {
+      const c = norm(a.cells[i]?.value).localeCompare(norm(b.cells[i]?.value));
+      if (c) return c;
+    }
+    return a.entityTitle.localeCompare(b.entityTitle);
+  });
+  const rows: MergedConnectionRow[] = sorted.map((r) => ({
+    entityId: r.entityId,
+    entityTitle: r.entityTitle,
+    entityTypeId: r.entityTypeId,
+    cells: group.columns.map((c, i) => ({
+      fieldId: c.fieldId,
+      value: r.cells[i]?.value,
+      rowSpan: 1,
+      lead: true,
+    })),
+  }));
+  for (let j = 0; j < cols; j++) {
+    let leadIdx = 0;
+    for (let i = 1; i < rows.length; i++) {
+      let sameLeft = true;
+      for (let k = 0; k <= j; k++) {
+        if (norm(rows[i].cells[k].value) !== norm(rows[i - 1].cells[k].value)) {
+          sameLeft = false;
+          break;
+        }
+      }
+      if (sameLeft) {
+        rows[i].cells[j].lead = false;
+        rows[leadIdx].cells[j].rowSpan += 1;
+      } else {
+        leadIdx = i;
+      }
+    }
+  }
+  return rows;
+}
+
 /** Partition relationship fields: those sharing a `connectionKey` collapse into
  *  one `ConnectionGroup`; everything else is a standalone field. */
 export function groupConnections(

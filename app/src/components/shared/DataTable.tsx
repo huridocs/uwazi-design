@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import type { HTMLAttributes, ReactNode } from "react";
+import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 
 export interface Column<T> {
   id: string;
@@ -7,7 +8,12 @@ export interface Column<T> {
   /** Grid track width (e.g. "1fr", "8rem", "70px"). Default "1fr". */
   width?: string;
   align?: "left" | "center" | "right";
+  /** When set (with the table's `onSort`), the header is clickable and sorts by
+   *  this key — toggling direction. Omit for non-sortable columns. */
+  sortKey?: string;
 }
+
+export type SortDir = "asc" | "desc";
 
 interface DataTableProps<T> {
   columns: Column<T>[];
@@ -22,6 +28,13 @@ interface DataTableProps<T> {
   /** When set, the grid gets this min-width (rem) and scrolls horizontally
    *  below it instead of squishing. Omit for tables whose columns always fit. */
   minWidthRem?: number;
+  /** Extra attributes spread onto each row container — used for drag-to-reorder
+   *  (the row is the drop target; the grip in a cell is the drag handle). */
+  rowProps?: (row: T, index: number) => HTMLAttributes<HTMLDivElement>;
+  /** Controlled sort state + handler. The consumer sorts its own data; the table
+   *  just renders clickable headers and the active arrow. */
+  sort?: { key: string; dir: SortDir };
+  onSort?: (key: string) => void;
 }
 
 const alignClass = {
@@ -46,6 +59,9 @@ export function DataTable<T>({
   emptyState,
   footer,
   minWidthRem,
+  rowProps,
+  sort,
+  onSort,
 }: DataTableProps<T>) {
   const gridTemplateColumns = columns.map((c) => c.width ?? "1fr").join(" ");
   const scrolls = minWidthRem !== undefined;
@@ -65,11 +81,35 @@ export function DataTable<T>({
             borderBottom: "1px solid var(--border-primary)",
           }}
         >
-          {columns.map((col) => (
-            <div key={col.id} className={`flex items-center min-w-0 ${alignClass[col.align ?? "left"]}`}>
-              {col.header}
-            </div>
-          ))}
+          {columns.map((col) => {
+            const sortable = !!col.sortKey && !!onSort;
+            const active = sortable && sort?.key === col.sortKey;
+            return (
+              <div key={col.id} className={`flex items-center min-w-0 ${alignClass[col.align ?? "left"]}`}>
+                {sortable ? (
+                  <button
+                    onClick={() => onSort!(col.sortKey!)}
+                    className={`group/sort inline-flex items-center gap-1 min-w-0 uppercase tracking-wider cursor-pointer transition-colors ${
+                      active ? "text-ink-secondary" : "hover:text-ink-secondary"
+                    }`}
+                  >
+                    <span className="truncate">{col.header}</span>
+                    {active ? (
+                      sort!.dir === "asc" ? (
+                        <ChevronUp size={12} className="shrink-0" />
+                      ) : (
+                        <ChevronDown size={12} className="shrink-0" />
+                      )
+                    ) : (
+                      <ChevronsUpDown size={12} className="shrink-0 opacity-0 group-hover/sort:opacity-50 transition-opacity" />
+                    )}
+                  </button>
+                ) : (
+                  col.header
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* Rows */}
@@ -82,9 +122,12 @@ export function DataTable<T>({
             const id = getRowId(row);
             const selected = isRowSelected?.(row) ?? false;
             const clickable = !!onRowClick;
+            const { className: extraClass, style: extraStyle, ...extra } =
+              rowProps?.(row, i) ?? {};
             return (
               <div
                 key={id}
+                {...extra}
                 role={clickable ? "button" : "row"}
                 tabIndex={clickable ? 0 : undefined}
                 aria-pressed={clickable ? selected : undefined}
@@ -101,8 +144,8 @@ export function DataTable<T>({
                 }
                 className={`group grid items-center gap-3 px-4 min-h-11 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20 ${
                   clickable ? "cursor-pointer" : ""
-                } ${selected ? "bg-parchment" : "hover:bg-warm"}`}
-                style={{ gridTemplateColumns, borderBottom: "1px solid var(--border-primary)" }}
+                } ${selected ? "bg-parchment" : "hover:bg-warm"} ${extraClass ?? ""}`}
+                style={{ gridTemplateColumns, borderBottom: "1px solid var(--border-primary)", ...extraStyle }}
               >
                 {columns.map((col) => (
                   <div

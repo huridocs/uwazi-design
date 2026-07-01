@@ -4,3 +4,8 @@ memory/
 *.swp
 *~
 app/tsconfig.tsbuildinfo
+
+# CEJIL Mongo dump — raw data, never commit (regenerate seed via scripts/import-cejil.cjs)
+cejil_db_*.zip
+*.bson
+/tmp/cejil/

@@ -9,6 +9,7 @@ import type { FileEntry, DocumentGroup } from "./files";
 import { files, documentGroups, entityDocument } from "./files";
 import { getEntity, type Entity } from "./entities";
 import { getEntityProps } from "./entityMetadata";
+import { isCejilEntity, buildCejilProfile } from "./cejil/profile";
 
 const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -268,7 +269,11 @@ export function getEntityProfile(id: string): EntityProfile {
   if (authored) return authored;
   const cached = lightweightCache.get(id);
   if (cached) return cached;
-  const built = buildLightweightProfile(getEntity(id) ?? { ...FALLBACK_ENTITY, id });
+  // Real CEJIL entities get a real profile (metadata / document / relationships);
+  // everything else gets the synthesized lightweight profile.
+  const built = isCejilEntity(id)
+    ? buildCejilProfile(id)
+    : buildLightweightProfile(getEntity(id) ?? { ...FALLBACK_ENTITY, id });
   lightweightCache.set(id, built);
   return built;
 }

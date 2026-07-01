@@ -1,5 +1,7 @@
 import { getEntityProp } from "./entityMetadata";
 import { countryCoords, type LatLng } from "./geo";
+import { cejilTypeById } from "./cejil/typesAdapter";
+import { cejilLibraryEntities } from "./cejil/adapt";
 
 export interface EntityType {
   id: string;
@@ -34,6 +36,19 @@ export interface Entity {
   preview?: PreviewKind;
   /** Optional geolocation (from the entity's country) for the Library map view. */
   geo?: LatLng;
+  /** Optional country name (for the Countries facet) — set by adapters whose
+   *  entities don't carry a mock entityMetadata profile (e.g. CEJIL). */
+  country?: string;
+  /** Adapter-supplied display fields (label/value) for the Library card, when the
+   *  entity has no mock entityMetadata profile. Resolved from real metadata. */
+  fields?: { label: string; value: string }[];
+  /** Adapter-supplied keyword facet values (e.g. CEJIL "descriptores"/violations). */
+  descriptors?: string[];
+  /** Adapter-supplied INHERITED relationship-property values, keyed by propId
+   *  (e.g. CEJIL `mecanismo` → the connected body's name). Drives the dynamic
+   *  inherited-property filters for sources without a mock entityMetadata
+   *  profile. */
+  inherited?: Record<string, string[]>;
 }
 
 export type PreviewKind = "document" | "image" | "video" | "audio";
@@ -150,9 +165,22 @@ export const entities: Entity[] = baseEntities.map((e) => ({
 }));
 
 export function getEntityType(typeId: string): EntityType | undefined {
-  return entityTypes.find((t) => t.id === typeId);
+  return entityTypes.find((t) => t.id === typeId) ?? cejilTypeById.get(typeId);
+}
+
+// Lazy CEJIL lookup — the corpus loads on demand, and cejilLibraryEntities()
+// returns a new (memoized) array once present, so rebuild the index only then.
+let _cejilById: Map<string, Entity> | null = null;
+let _cejilArr: Entity[] | null = null;
+function cejilEntityById(): Map<string, Entity> {
+  const arr = cejilLibraryEntities();
+  if (arr !== _cejilArr) {
+    _cejilArr = arr;
+    _cejilById = new Map(arr.map((e) => [e.id, e]));
+  }
+  return _cejilById!;
 }
 
 export function getEntity(id: string): Entity | undefined {
-  return entities.find((e) => e.id === id);
+  return entities.find((e) => e.id === id) ?? cejilEntityById().get(id);
 }

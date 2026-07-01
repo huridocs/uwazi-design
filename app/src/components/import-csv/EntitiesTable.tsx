@@ -1,5 +1,6 @@
 import { Eye } from "lucide-react";
 import type { CreatedEntity } from "../../data/imports";
+import { useNotify } from "../../hooks/useNotify";
 
 interface EntitiesTableProps {
   entities: CreatedEntity[];
@@ -8,6 +9,7 @@ interface EntitiesTableProps {
 const cols = "1fr 10rem 5.625rem 2.75rem";
 
 export function EntitiesTable({ entities }: EntitiesTableProps) {
+  const notify = useNotify();
   if (entities.length === 0) return null;
 
   return (
@@ -53,6 +55,7 @@ export function EntitiesTable({ entities }: EntitiesTableProps) {
             </span>
             <button
               aria-label={`View ${entity.title}`}
+              onClick={() => notify(`Opening ${entity.title}`)}
               className="flex items-center justify-center p-1 rounded hover:bg-parchment transition-colors"
             >
               <Eye size={14} className="text-ink-tertiary" />

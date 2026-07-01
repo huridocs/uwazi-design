@@ -56,7 +56,7 @@ export function MetadataExtractionPage() {
         <Table columns={columns} data={extractors} getRowId={(x) => x.id} onRowClick={(x) => setEditing(x)} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
+        <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
           Create extractor
         </Button>
       </SettingsContent.Footer>

@@ -45,7 +45,7 @@ export function PreservePage() {
         <Table columns={columns} data={tokens} getRowId={(t) => t.id} onRowClick={(t) => setEditing(t)} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
+        <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
           New token
         </Button>
       </SettingsContent.Footer>

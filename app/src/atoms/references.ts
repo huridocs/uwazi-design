@@ -7,6 +7,7 @@ import {
 } from "../data/references";
 import { focusedEntityIdAtom } from "./focusedEntity";
 import { MAIN_ENTITY_ID } from "../data/entityProfiles";
+import { isCejilEntity, cejilReferencesFor } from "../data/cejil/profile";
 
 export const referencesAtom = atom<Reference[]>(initialRefs);
 
@@ -53,11 +54,16 @@ export const scopedReferencesAtom = atom(
     const all = get(referencesAtom);
     const id = get(focusedEntityIdAtom);
     if (id === MAIN_ENTITY_ID) return all;
+    // CEJIL entities derive their connections from the real CEJIL relationships.
+    if (isCejilEntity(id)) return cejilReferencesFor(id);
     return all.filter((r) => involvesEntity(r, id)).map((r) => fromPerspective(r, id));
   },
   (get, set, update: Reference[] | ((prev: Reference[]) => Reference[])) => {
     const all = get(referencesAtom);
     const id = get(focusedEntityIdAtom);
+    // CEJIL relationships are read-only in the prototype — never write them back
+    // into the mock corpus.
+    if (isCejilEntity(id)) return;
     if (id === MAIN_ENTITY_ID) {
       set(referencesAtom, typeof update === "function" ? update(all) : update);
       return;

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSetAtom } from "jotai";
+import { useSetAtom, useAtomValue } from "jotai";
 import { Plus } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { Button } from "../Button";
@@ -8,15 +8,44 @@ import { RowActions } from "../RowActions";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { TemplateEditor } from "./TemplateEditor";
 import { seedTemplates, type SettingsTemplate } from "../../../data/settings";
+import { dataSourceAtom } from "../../../atoms/dataSource";
+import { cejilSettingsTemplates } from "../../../data/cejil/settingsAdapt";
 import { toastsAtom } from "../../../atoms/references";
 
 export function TemplatesPage() {
   const setToasts = useSetAtom(toastsAtom);
-  const [templates, setTemplates] = useState<SettingsTemplate[]>(seedTemplates);
+  const dataSource = useAtomValue(dataSourceAtom);
+  const [templates, setTemplates] = useState<SettingsTemplate[]>(
+    dataSource === "cejil" ? cejilSettingsTemplates : seedTemplates,
+  );
   const [confirm, setConfirm] = useState<SettingsTemplate | null>(null);
   const [editing, setEditing] = useState<SettingsTemplate | "new" | null>(null);
 
-  if (editing) return <TemplateEditor template={editing} onClose={() => setEditing(null)} />;
+  const handleSave = (patch: { name: string; color: string }) => {
+    if (editing === "new") {
+      setTemplates((prev) => [
+        ...prev,
+        {
+          id: `tpl-${prev.length}-${patch.name.length}`,
+          name: patch.name,
+          color: patch.color,
+          propertyCount: 0,
+          entityCount: 0,
+          isDefault: false,
+        },
+      ]);
+    } else if (editing) {
+      const id = editing.id;
+      setTemplates((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, name: patch.name, color: patch.color } : t)),
+      );
+    }
+  };
+
+  if (editing)
+    return (
+      <TemplateEditor template={editing} onClose={() => setEditing(null)} onSave={handleSave} />
+    );
 
   const columns: Column<SettingsTemplate>[] = [
     {
@@ -24,7 +53,7 @@ export function TemplatesPage() {
       header: "Template",
       cell: (t) => (
         <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-[2px] shrink-0" style={{ backgroundColor: t.color }} />
+          <span className="w-2.5 h-2.5 rounded-[2px] border border-ink/20 shrink-0" style={{ backgroundColor: t.color }} />
           <span className="font-medium text-ink truncate">{t.name}</span>
           {t.isDefault && (
             <span className="text-[10px] font-semibold text-carbon bg-carbon-tint px-1.5 py-px rounded w-fit">
@@ -65,7 +94,7 @@ export function TemplatesPage() {
         <Table columns={columns} data={templates} getRowId={(t) => t.id} onRowClick={(t) => setEditing(t)} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
+        <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
           Add template
         </Button>
       </SettingsContent.Footer>

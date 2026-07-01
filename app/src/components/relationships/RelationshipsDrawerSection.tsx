@@ -12,6 +12,10 @@ import {
   activeFilterCountAtom,
   relTypeFiltersAtom,
   entityTypeFiltersAtom,
+  relTargetCountryFiltersAtom,
+  relTargetDescriptorFiltersAtom,
+  relTargetDescriptorModeAtom,
+  relInheritedFiltersAtom,
 } from "../../atoms/filters";
 import { SearchBar } from "./SearchBar";
 import { ZoomControl } from "./ZoomControl";
@@ -43,6 +47,10 @@ export function RelationshipsDrawerSection({
   const [, setActiveClusterRefIds] = useAtom(activeClusterRefIdsAtom);
   const [, setRelTypeFilters] = useAtom(relTypeFiltersAtom);
   const [, setEntityTypeFilters] = useAtom(entityTypeFiltersAtom);
+  const [, setCountryFilters] = useAtom(relTargetCountryFiltersAtom);
+  const [, setDescriptorFilters] = useAtom(relTargetDescriptorFiltersAtom);
+  const [, setDescriptorMode] = useAtom(relTargetDescriptorModeAtom);
+  const [, setInheritedFilters] = useAtom(relInheritedFiltersAtom);
   const [filtersOpen, setFiltersOpen] = useAtom(filtersDrawerOpenAtom);
   const [activeFilterCount] = useAtom(activeFilterCountAtom);
   const [view] = useAtom(viewAtom);
@@ -75,6 +83,10 @@ export function RelationshipsDrawerSection({
   const clearAllFilters = () => {
     setRelTypeFilters({});
     setEntityTypeFilters({});
+    setCountryFilters({});
+    setDescriptorFilters({});
+    setDescriptorMode("OR");
+    setInheritedFilters({});
     setSearchQuery("");
     setSortOrder("none");
     setActiveClusterRefIds(null);

@@ -4,6 +4,9 @@ import {
   sortOrderAtom,
   relTypeFiltersAtom,
   entityTypeFiltersAtom,
+  relTargetCountryFiltersAtom,
+  relTargetDescriptorFiltersAtom,
+  relInheritedFiltersAtom,
   activeClusterRefIdsAtom,
 } from "../../atoms/filters";
 import { getEntityType } from "../../data/entities";
@@ -15,16 +18,33 @@ export function ActiveFilterChips() {
   const [sort, setSort] = useAtom(sortOrderAtom);
   const [relTypeFilters, setRelTypeFilters] = useAtom(relTypeFiltersAtom);
   const [entityTypeFilters, setEntityTypeFilters] = useAtom(entityTypeFiltersAtom);
+  const [countryFilters, setCountryFilters] = useAtom(relTargetCountryFiltersAtom);
+  const [descriptorFilters, setDescriptorFilters] = useAtom(relTargetDescriptorFiltersAtom);
+  const [inheritedFilters, setInheritedFilters] = useAtom(relInheritedFiltersAtom);
   const [cluster, setCluster] = useAtom(activeClusterRefIdsAtom);
 
   const activeRelTypes = Object.entries(relTypeFilters).filter(([, v]) => v).map(([k]) => k);
   const activeEntityTypes = Object.entries(entityTypeFilters).filter(([, v]) => v).map(([k]) => k);
+  const activeCountries = Object.entries(countryFilters).filter(([, v]) => v).map(([k]) => k);
+  const activeDescriptors = Object.entries(descriptorFilters).filter(([, v]) => v).map(([k]) => k);
+  const activeInherited = Object.entries(inheritedFilters).flatMap(([propId, vals]) =>
+    Object.entries(vals).filter(([, v]) => v).map(([value]) => ({ propId, value })),
+  );
+
+  const dropKey = (id: string) => (s: Record<string, boolean>) => {
+    const next = { ...s };
+    delete next[id];
+    return next;
+  };
 
   const hasAny =
     !!search.trim() ||
     sort !== "none" ||
     activeRelTypes.length > 0 ||
     activeEntityTypes.length > 0 ||
+    activeCountries.length > 0 ||
+    activeDescriptors.length > 0 ||
+    activeInherited.length > 0 ||
     !!cluster;
 
   if (!hasAny) return null;
@@ -74,6 +94,32 @@ export function ActiveFilterChips() {
           />
         );
       })}
+      {activeCountries.map((c) => (
+        <ActiveFilterChip
+          key={`country-${c}`}
+          label={c}
+          onRemove={() => setCountryFilters(dropKey(c))}
+        />
+      ))}
+      {activeDescriptors.map((d) => (
+        <ActiveFilterChip
+          key={`descriptor-${d}`}
+          label={d}
+          onRemove={() => setDescriptorFilters(dropKey(d))}
+        />
+      ))}
+      {activeInherited.map(({ propId, value }) => (
+        <ActiveFilterChip
+          key={`inh-${propId}-${value}`}
+          label={value}
+          onRemove={() =>
+            setInheritedFilters((s) => ({
+              ...s,
+              [propId]: dropKey(value)(s[propId] ?? {}),
+            }))
+          }
+        />
+      ))}
       {cluster && (
         <ActiveFilterChip
           label="From selection"

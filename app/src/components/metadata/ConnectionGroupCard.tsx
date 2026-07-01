@@ -3,15 +3,20 @@ import { Link2 } from "lucide-react";
 import { overlayEntityIdAtom } from "../../atoms/references";
 import { MetadataCard } from "./MetadataCard";
 import { spanClass, type CardSpan } from "./cardSpan";
-import { RelationCaption } from "./InheritedValueChip";
+import { RelationCaption, InheritedValueTag, MissingValue } from "./InheritedValueChip";
 import { EntityPill } from "../shared/EntityPill";
-import type { ConnectionGroup } from "../../utils/inheritance";
+import { getEntityType } from "../../data/entities";
+import { mergeConnectionRows, type ConnectionGroup } from "../../utils/inheritance";
 
-/** Multi-inheritance: several relationship fields sharing one connection,
- *  rendered as a single table — connected entities listed once (rows), each
- *  inherited property a column. Avoids repeating the same entities per field. */
+/** Multi-inheritance, Section-2 "Option 1": several relationship fields sharing
+ *  one connection rendered as a single table. Rows are sorted by the inherited
+ *  columns and repeated values are MERGED (cell-spanned), so shared values group
+ *  their entities together. The inherited columns lead; the connected entity
+ *  (leaf) is the last column. */
 export function ConnectionGroupCard({ group, span = "full" }: { group: ConnectionGroup; span?: CardSpan }) {
   const setOverlay = useSetAtom(overlayEntityIdAtom);
+  const entityHeader = getEntityType(group.targetTypeId)?.name ?? "Entity";
+  const rows = mergeConnectionRows(group);
 
   return (
     <MetadataCard
@@ -19,30 +24,50 @@ export function ConnectionGroupCard({ group, span = "full" }: { group: Connectio
       icon={<Link2 size={14} className="text-carbon" />}
       className={spanClass(span)}
     >
-      <RelationCaption relationLabel={group.relationLabel} inheritCount={group.columns.length} />
+      <RelationCaption
+        relationLabel={group.relationLabel}
+        inheritLabels={group.columns.map((c) => c.label)}
+      />
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto -mx-1">
         <table className="w-full text-sm border-collapse">
           <thead>
-            <tr>
-              <th className="py-1.5 pe-3 text-start" />
+            <tr className="text-[11px] uppercase tracking-wide text-ink-tertiary">
               {group.columns.map((c) => (
-                <th
-                  key={c.fieldId}
-                  className="py-1.5 px-3 text-start text-xs font-normal text-ink-tertiary whitespace-nowrap"
-                >
+                <th key={c.fieldId} className="py-1.5 px-3 text-start font-medium whitespace-nowrap align-top">
                   <span className="inline-flex items-center gap-1">
                     <Link2 size={10} className="text-carbon" />
                     {c.label}
                   </span>
                 </th>
               ))}
+              <th className="py-1.5 px-1 text-start font-medium">{entityHeader}</th>
             </tr>
           </thead>
           <tbody>
-            {group.rows.map((row) => (
-              <tr key={row.entityId} className="border-t border-border/40">
-                <td className="py-1.5 pe-3">
+            {rows.map((row) => (
+              <tr key={row.entityId} className="border-t border-border/40 hover:bg-warm/40 transition-colors">
+                {row.cells.map((cell, i) =>
+                  cell.lead ? (
+                    <td
+                      key={cell.fieldId}
+                      rowSpan={cell.rowSpan}
+                      className="py-1.5 px-3 whitespace-nowrap align-top border-s border-border/30 first:border-s-0"
+                    >
+                      {cell.value ? (
+                        <InheritedValueTag
+                          value={cell.value}
+                          propLabel={group.columns[i]?.label}
+                          relationLabel={group.relationLabel}
+                          hideGlyph
+                        />
+                      ) : (
+                        <MissingValue propLabel={group.columns[i]?.label} />
+                      )}
+                    </td>
+                  ) : null,
+                )}
+                <td className="py-1.5 px-1 align-top border-s border-border/30">
                   <button
                     onClick={() => setOverlay(row.entityId)}
                     className="rounded-md hover:opacity-80 transition-opacity cursor-pointer"
@@ -51,15 +76,6 @@ export function ConnectionGroupCard({ group, span = "full" }: { group: Connectio
                     <EntityPill typeId={row.entityTypeId} label={row.entityTitle} />
                   </button>
                 </td>
-                {row.cells.map((cell) => (
-                  <td key={cell.fieldId} className="py-1.5 px-3 font-medium text-ink whitespace-nowrap">
-                    {cell.value ?? (
-                      <span className="text-ink-muted font-normal" title="No value on source">
-                        —
-                      </span>
-                    )}
-                  </td>
-                ))}
               </tr>
             ))}
           </tbody>

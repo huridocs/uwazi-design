@@ -6,6 +6,9 @@ interface CheckboxProps {
   ariaLabel?: string;
   disabled?: boolean;
   className?: string;
+  /** Accent of the filled (checked) box. Default "ink" (app convention); the
+   *  filter facets use "carbon" to match the canonical filter styling. */
+  tone?: "ink" | "carbon";
 }
 
 export function Checkbox({
@@ -14,6 +17,7 @@ export function Checkbox({
   ariaLabel,
   disabled,
   className,
+  tone = "ink",
 }: CheckboxProps) {
   return (
     <input
@@ -22,7 +26,9 @@ export function Checkbox({
       onChange={onChange}
       aria-label={ariaLabel}
       disabled={disabled}
-      className={`w-3.5 h-3.5 rounded accent-ink cursor-pointer shrink-0 ${className ?? ""}`}
+      className={`w-3.5 h-3.5 rounded cursor-pointer shrink-0 ${
+        tone === "carbon" ? "accent-carbon" : "accent-ink"
+      } ${className ?? ""}`}
     />
   );
 }

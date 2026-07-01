@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSetAtom } from "jotai";
+import { useSetAtom, useAtomValue } from "jotai";
 import { Plus, Spline } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { Button } from "../Button";
@@ -8,11 +8,16 @@ import { RowActions } from "../RowActions";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { RelationTypeEditor } from "./RelationTypeEditor";
 import { seedRelationTypes, type SettingsRelationType } from "../../../data/settings";
+import { dataSourceAtom } from "../../../atoms/dataSource";
+import { cejilSettingsRelationTypes } from "../../../data/cejil/settingsAdapt";
 import { toastsAtom } from "../../../atoms/references";
 
 export function RelationTypesPage() {
   const setToasts = useSetAtom(toastsAtom);
-  const [types, setTypes] = useState<SettingsRelationType[]>(seedRelationTypes);
+  const dataSource = useAtomValue(dataSourceAtom);
+  const [types, setTypes] = useState<SettingsRelationType[]>(
+    dataSource === "cejil" ? cejilSettingsRelationTypes : seedRelationTypes,
+  );
   const [confirm, setConfirm] = useState<SettingsRelationType | null>(null);
   const [editing, setEditing] = useState<SettingsRelationType | "new" | null>(null);
 
@@ -59,7 +64,7 @@ export function RelationTypesPage() {
         <Table columns={columns} data={types} getRowId={(r) => r.id} onRowClick={(r) => setEditing(r)} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
+        <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
           Add type
         </Button>
       </SettingsContent.Footer>

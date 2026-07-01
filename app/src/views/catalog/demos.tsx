@@ -374,37 +374,80 @@ export function IsolatedRefMinimap() {
   );
 }
 
+const DESCRIPTOR_FACET: [string, number][] = [
+  ["Derecho a la vida", 142],
+  ["Integridad personal", 118],
+  ["Garantías judiciales", 96],
+  ["Libertad personal", 74],
+  ["Protección judicial", 61],
+  ["Desaparición forzada", 53],
+  ["Derechos del niño", 38],
+  ["Libertad de expresión", 29],
+  ["Propiedad privada", 22],
+  ["Circulación y residencia", 14],
+];
+
 export function FiltersDrawerDemo() {
   const [open, setOpen] = useState(false);
+  const [relSel, setRelSel] = useState<Record<string, boolean>>({ cites: true });
+  const [descSel, setDescSel] = useState<Record<string, boolean>>({});
+  const [descMode, setDescMode] = useState<"AND" | "OR">("OR");
+  const activeCount =
+    Object.values(relSel).filter(Boolean).length +
+    Object.values(descSel).filter(Boolean).length;
+  const toggle =
+    (set: typeof setRelSel) => (id: string) =>
+      set((s) => ({ ...s, [id]: !s[id] }));
   return (
     <div className="w-full">
-      <FiltersButton activeCount={open ? 2 : 0} onClick={() => setOpen(true)} />
-      <div className="relative overflow-hidden mt-3 h-60 border border-border/60 rounded-md bg-paper">
+      <FiltersButton activeCount={activeCount} onClick={() => setOpen(true)} />
+      <div className="relative overflow-hidden mt-3 h-72 border border-border/60 rounded-md bg-paper">
         <div className="px-3 py-2 text-xs text-ink-muted">
-          Demo container — FiltersDrawer is scoped to this pane.
+          Demo container — FiltersDrawer is scoped to this pane. The descriptor
+          block is searchable, capped with “Show more”, and has an Any/All mode.
         </div>
         <FiltersDrawer
           open={open}
           onClose={() => setOpen(false)}
           footer={
-            <button className="text-[11px] font-medium text-ink-secondary hover:text-ink cursor-pointer">
+            <button
+              onClick={() => {
+                setRelSel({});
+                setDescSel({});
+              }}
+              className="text-[11px] font-medium text-ink-secondary hover:text-ink cursor-pointer"
+            >
               Clear all filters
             </button>
           }
         >
           <FacetSection
             title="Relation type"
-            total={3}
+            total={50}
             entries={[
               ["cites", 31],
               ["mentions", 12],
               ["refers", 7],
             ]}
-            selected={{ cites: true }}
-            onToggle={() => {}}
+            selected={relSel}
+            onToggle={toggle(setRelSel)}
+            onClear={() => setRelSel({})}
             label={(id) =>
               id === "cites" ? "Cites" : id === "mentions" ? "Mentions" : "Refers to"
             }
+          />
+          <FacetSection
+            title="Descriptores"
+            total={216}
+            entries={DESCRIPTOR_FACET}
+            selected={descSel}
+            onToggle={toggle(setDescSel)}
+            onClear={() => setDescSel({})}
+            mode={descMode}
+            onModeChange={setDescMode}
+            searchable
+            label={(id) => id}
+            defaultExpanded
           />
         </FiltersDrawer>
       </div>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSetAtom } from "jotai";
+import { useSetAtom, useAtomValue } from "jotai";
 import { Plus, Link2, Folder } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { Button } from "../Button";
@@ -8,11 +8,16 @@ import { RowActions } from "../RowActions";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { MenuLinkEditor } from "./MenuLinkEditor";
 import { seedMenuLinks, type SettingsMenuLink } from "../../../data/settings";
+import { dataSourceAtom } from "../../../atoms/dataSource";
+import { cejilSettingsMenu } from "../../../data/cejil/settingsAdapt";
 import { toastsAtom } from "../../../atoms/references";
 
 export function MenuPage() {
   const setToasts = useSetAtom(toastsAtom);
-  const [links, setLinks] = useState<SettingsMenuLink[]>(seedMenuLinks);
+  const dataSource = useAtomValue(dataSourceAtom);
+  const [links, setLinks] = useState<SettingsMenuLink[]>(
+    dataSource === "cejil" ? cejilSettingsMenu : seedMenuLinks,
+  );
   const [confirm, setConfirm] = useState<SettingsMenuLink | null>(null);
   const [editing, setEditing] = useState<SettingsMenuLink | "new" | null>(null);
 
@@ -62,7 +67,7 @@ export function MenuPage() {
         <Table columns={columns} data={links} getRowId={(m) => m.id} onRowClick={(m) => setEditing(m)} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
+        <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
           Add link
         </Button>
       </SettingsContent.Footer>

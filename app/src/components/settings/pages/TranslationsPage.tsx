@@ -4,6 +4,7 @@ import { SettingsContent } from "../SettingsContent";
 import { Button } from "../Button";
 import { Table, type Column } from "../Table";
 import { TranslationEditor } from "./TranslationEditor";
+import { useNotify } from "../../../hooks/useNotify";
 import { seedTranslationContexts, type SettingsTranslationContext } from "../../../data/settings";
 
 const typeStyle: Record<SettingsTranslationContext["type"], string> = {
@@ -14,6 +15,7 @@ const typeStyle: Record<SettingsTranslationContext["type"], string> = {
 };
 
 export function TranslationsPage() {
+  const notify = useNotify();
   const [editing, setEditing] = useState<SettingsTranslationContext | null>(null);
 
   if (editing) return <TranslationEditor context={editing} onClose={() => setEditing(null)} />;
@@ -70,7 +72,13 @@ export function TranslationsPage() {
         <Table columns={columns} data={seedTranslationContexts} getRowId={(c) => c.id} onRowClick={(c) => setEditing(c)} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="secondary" size="sm" icon={<Upload size={14} />}>
+        <Button
+          variant="secondary"
+          size="sm"
+          className="me-auto"
+          icon={<Upload size={14} />}
+          onClick={() => notify("Translations imported", "success")}
+        >
           Import translations (CSV)
         </Button>
       </SettingsContent.Footer>

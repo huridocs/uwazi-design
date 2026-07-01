@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSetAtom } from "jotai";
+import { useSetAtom, useAtomValue } from "jotai";
 import { Plus } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { Button } from "../Button";
@@ -8,11 +8,16 @@ import { RowActions } from "../RowActions";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { PageEditor } from "./PageEditor";
 import { seedPages, type SettingsPage } from "../../../data/settings";
+import { dataSourceAtom } from "../../../atoms/dataSource";
+import { cejilSettingsPages } from "../../../data/cejil/settingsAdapt";
 import { toastsAtom } from "../../../atoms/references";
 
 export function PagesPage() {
   const setToasts = useSetAtom(toastsAtom);
-  const [pages, setPages] = useState<SettingsPage[]>(seedPages);
+  const dataSource = useAtomValue(dataSourceAtom);
+  const [pages, setPages] = useState<SettingsPage[]>(
+    dataSource === "cejil" ? cejilSettingsPages : seedPages,
+  );
   const [confirm, setConfirm] = useState<SettingsPage | null>(null);
   const [editing, setEditing] = useState<SettingsPage | "new" | null>(null);
 
@@ -63,7 +68,7 @@ export function PagesPage() {
         <Table columns={columns} data={pages} getRowId={(p) => p.id} onRowClick={(p) => setEditing(p)} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
+        <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
           Add page
         </Button>
       </SettingsContent.Footer>

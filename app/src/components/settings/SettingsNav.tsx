@@ -1,6 +1,15 @@
 import { useAtom, useSetAtom } from "jotai";
 import { ExternalLink } from "lucide-react";
 import { settingsGroups, settingsSectionAtom, settingsMobileDrilledAtom } from "../../atoms/settings";
+import { dataSourceAtom } from "../../atoms/dataSource";
+import {
+  libraryTypeFiltersAtom,
+  libraryStatusFiltersAtom,
+  libraryCountryFiltersAtom,
+  libraryDescriptorFiltersAtom,
+  librarySelectedEntityIdAtom,
+} from "../../atoms/library";
+import { SegmentedControl } from "../shared/SegmentedControl";
 import type { AppView } from "../../atoms/navigation";
 
 /** The settings rail — three grouped sections (User / System / Tools) matching
@@ -9,6 +18,12 @@ import type { AppView } from "../../atoms/navigation";
 export function SettingsNav({ onNavigate }: { onNavigate?: (view: AppView) => void }) {
   const [section, setSection] = useAtom(settingsSectionAtom);
   const setDrilled = useSetAtom(settingsMobileDrilledAtom);
+  const [dataSource, setDataSource] = useAtom(dataSourceAtom);
+  const setTypeFilters = useSetAtom(libraryTypeFiltersAtom);
+  const setStatusFilters = useSetAtom(libraryStatusFiltersAtom);
+  const setCountryFilters = useSetAtom(libraryCountryFiltersAtom);
+  const setDescriptorFilters = useSetAtom(libraryDescriptorFiltersAtom);
+  const setSelectedId = useSetAtom(librarySelectedEntityIdAtom);
 
   return (
     <nav
@@ -16,6 +31,31 @@ export function SettingsNav({ onNavigate }: { onNavigate?: (view: AppView) => vo
       className="h-full w-full md:w-[15.625rem] shrink-0 overflow-y-auto bg-paper py-4"
       style={{ borderRight: "1px solid var(--border-primary)" }}
     >
+      {/* Data-source toggle — flip Sample↔CEJIL without going to the Library.
+          Settings pages remount on change (SettingsView keys on the source). */}
+      <div className="px-5 pb-3 mb-2" style={{ borderBottom: "1px solid var(--border-soft)" }}>
+        <h3 className="pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
+          Data source
+        </h3>
+        <SegmentedControl
+          ariaLabel="Data source"
+          value={dataSource}
+          onChange={(v) => {
+            setDataSource(v as typeof dataSource);
+            // type/country ids differ per source — clear stale library facets.
+            setTypeFilters({});
+            setStatusFilters({});
+            setCountryFilters({});
+            setDescriptorFilters({});
+            setSelectedId(null);
+          }}
+          options={[
+            { id: "mock", label: "Sample" },
+            { id: "cejil", label: "CEJIL" },
+          ]}
+        />
+      </div>
+
       {settingsGroups.map((group) => (
         <div key={group.id} className="mb-2">
           {group.label && (

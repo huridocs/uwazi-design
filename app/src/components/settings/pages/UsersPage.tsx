@@ -178,6 +178,7 @@ export function UsersPage() {
         <Button
           variant="primary"
           size="sm"
+          className="me-auto"
           icon={<Plus size={14} />}
           onClick={() => (tab === "users" ? setEditingUser("new") : setEditingGroup("new"))}
         >

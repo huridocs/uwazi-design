@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSetAtom } from "jotai";
+import { useSetAtom, useAtomValue } from "jotai";
 import { Plus, BookOpen } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { Button } from "../Button";
@@ -8,11 +8,16 @@ import { RowActions } from "../RowActions";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { ThesaurusEditor } from "./ThesaurusEditor";
 import { seedThesauri, type SettingsThesaurus } from "../../../data/settings";
+import { dataSourceAtom } from "../../../atoms/dataSource";
+import { cejilSettingsThesauri } from "../../../data/cejil/settingsAdapt";
 import { toastsAtom } from "../../../atoms/references";
 
 export function ThesauriPage() {
   const setToasts = useSetAtom(toastsAtom);
-  const [thesauri, setThesauri] = useState<SettingsThesaurus[]>(seedThesauri);
+  const dataSource = useAtomValue(dataSourceAtom);
+  const [thesauri, setThesauri] = useState<SettingsThesaurus[]>(
+    dataSource === "cejil" ? cejilSettingsThesauri : seedThesauri,
+  );
   const [confirm, setConfirm] = useState<SettingsThesaurus | null>(null);
   const [editing, setEditing] = useState<SettingsThesaurus | "new" | null>(null);
 
@@ -54,7 +59,7 @@ export function ThesauriPage() {
         <Table columns={columns} data={thesauri} getRowId={(t) => t.id} onRowClick={(t) => setEditing(t)} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
+        <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
           Add thesaurus
         </Button>
       </SettingsContent.Footer>

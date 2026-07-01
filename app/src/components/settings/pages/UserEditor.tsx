@@ -101,7 +101,18 @@ export function UserEditor({
                 <p className="text-sm text-ink flex-1 min-w-0">
                   {base!.using2fa ? "2FA is enabled for this account." : "This account has not enabled 2FA."}
                 </p>
-                <Button variant="secondary" size="sm">Reset</Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() =>
+                    setToasts((p) => [
+                      ...p,
+                      { id: Date.now().toString(), message: "2FA reset for this user", type: "success" as const },
+                    ])
+                  }
+                >
+                  Reset
+                </Button>
               </div>
             </section>
           )}

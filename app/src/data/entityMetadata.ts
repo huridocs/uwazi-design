@@ -1,4 +1,5 @@
 import type { Language } from "../atoms/language";
+import { cejilInheritedValue } from "./cejil/inheritedRegistry";
 
 /**
  * Native metadata properties per entity — the values the UI shows on cards, in
@@ -139,9 +140,11 @@ export const entityMetadataByLanguage: Record<Language, EntityMetadata> = Object
   ]),
 ) as Record<Language, EntityMetadata>;
 
-/** Resolve one native property of an entity in the given language. */
+/** Resolve one native property of an entity in the given language. Falls back to
+ *  the CEJIL inherited-value registry so graph-derived CEJIL values resolve
+ *  through the same path as mock native props. */
 export function getEntityProp(entityId: string, propId: string, lang: Language): string | undefined {
-  return entityMetadataByLanguage[lang]?.[entityId]?.[propId];
+  return entityMetadataByLanguage[lang]?.[entityId]?.[propId] ?? cejilInheritedValue(entityId, propId, lang);
 }
 
 /** All native props of an entity in the given language. */

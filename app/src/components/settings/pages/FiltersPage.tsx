@@ -1,17 +1,21 @@
 import { useState } from "react";
-import { useSetAtom } from "jotai";
-import { GripVertical, ChevronUp, ChevronDown, FolderPlus, Trash2 } from "lucide-react";
+import { useSetAtom, useAtomValue } from "jotai";
+import { ChevronUp, ChevronDown, FolderPlus, Trash2 } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { Button } from "../Button";
 import { Table, type Column } from "../Table";
+import { DragGrip } from "../DragGrip";
+import { useReorder } from "../../../hooks/useReorder";
 import { Checkbox } from "../../shared/Checkbox";
 import { Select } from "../../shared/Select";
 import { seedFilterConfig, seedTemplates } from "../../../data/settings";
+import { dataSourceAtom } from "../../../atoms/dataSource";
+import {
+  cejilFilterRows,
+  cejilFilterGroups,
+  cejilFilterMeta,
+} from "../../../data/cejil/settingsAdapt";
 import { toastsAtom } from "../../../atoms/references";
-
-const entityCountById = Object.fromEntries(seedTemplates.map((t) => [t.id, t.entityCount]));
-const colorById = Object.fromEntries(seedFilterConfig.map((f) => [f.templateId, f.color]));
-const nameById = Object.fromEntries(seedFilterConfig.map((f) => [f.templateId, f.name]));
 
 interface FilterGroup {
   id: string;
@@ -23,6 +27,18 @@ interface FilterRow {
   groupId: string; // "" = ungrouped
 }
 
+/** name / colour / entity-count per template, by id, for the active source. */
+const mockMeta: Record<string, { name: string; color: string; count: number }> =
+  Object.fromEntries(
+    seedFilterConfig.map((f) => [
+      f.templateId,
+      { name: f.name, color: f.color, count: seedTemplates.find((t) => t.id === f.templateId)?.entityCount ?? 0 },
+    ]),
+  );
+
+const mockRows = (): FilterRow[] =>
+  seedFilterConfig.map((f) => ({ templateId: f.templateId, active: f.active, groupId: "" }));
+
 function swap<T>(arr: T[], i: number, dir: -1 | 1): T[] {
   const j = i + dir;
   if (j < 0 || j >= arr.length) return arr;
@@ -33,14 +49,19 @@ function swap<T>(arr: T[], i: number, dir: -1 | 1): T[] {
 
 export function FiltersPage() {
   const setToasts = useSetAtom(toastsAtom);
-  const [groups, setGroups] = useState<FilterGroup[]>([]);
-  const [rows, setRows] = useState<FilterRow[]>(
-    seedFilterConfig.map((f) => ({ templateId: f.templateId, active: f.active, groupId: "" })),
-  );
+  const cejil = useAtomValue(dataSourceAtom) === "cejil";
+  const meta = cejil ? cejilFilterMeta : mockMeta;
+  const initialRows = cejil ? cejilFilterRows : mockRows();
+  const initialGroups: FilterGroup[] = cejil ? cejilFilterGroups : [];
+
+  const [groups, setGroups] = useState<FilterGroup[]>(initialGroups);
+  const [rows, setRows] = useState<FilterRow[]>(initialRows);
+  const { dragIdx, rowProps, gripProps } = useReorder(setRows);
 
   const activeCount = rows.filter((r) => r.active).length;
-  const initialRows = seedFilterConfig.map((f) => ({ templateId: f.templateId, active: f.active, groupId: "" }));
-  const dirty = groups.length > 0 || JSON.stringify(rows) !== JSON.stringify(initialRows);
+  const dirty =
+    JSON.stringify(groups) !== JSON.stringify(initialGroups) ||
+    JSON.stringify(rows) !== JSON.stringify(initialRows);
   const groupOptions = [
     { value: "", label: "No group" },
     ...groups.map((g) => ({ value: g.id, label: g.name || "Untitled group" })),
@@ -70,11 +91,11 @@ export function FiltersPage() {
       header: "Filter",
       cell: (r, i) => (
         <div className="flex items-center gap-2 w-full min-w-0">
-          <GripVertical size={14} className="text-ink-muted shrink-0 cursor-grab" />
-          <Checkbox checked={r.active} onChange={() => toggle(r.templateId)} ariaLabel={`Show ${nameById[r.templateId]}`} />
-          <span className="w-2.5 h-2.5 rounded-[2px] shrink-0" style={{ backgroundColor: colorById[r.templateId] }} />
+          <DragGrip {...gripProps(i)} />
+          <Checkbox checked={r.active} onChange={() => toggle(r.templateId)} ariaLabel={`Show ${meta[r.templateId]?.name}`} />
+          <span className="w-2.5 h-2.5 rounded-[2px] border border-ink/20 shrink-0" style={{ backgroundColor: meta[r.templateId]?.color }} />
           <span className={`truncate text-sm ${r.active ? "text-ink" : "text-ink-tertiary"}`}>
-            {nameById[r.templateId]}
+            {meta[r.templateId]?.name}
           </span>
           <span className="sr-only">{`row ${i + 1}`}</span>
         </div>
@@ -84,7 +105,7 @@ export function FiltersPage() {
       id: "entities",
       header: "Entities",
       width: "7rem",
-      cell: (r) => <span className="text-xs text-ink-tertiary tabular-nums">{entityCountById[r.templateId] ?? 0}</span>,
+      cell: (r) => <span className="text-xs text-ink-tertiary tabular-nums">{meta[r.templateId]?.count ?? 0}</span>,
     },
     {
       id: "group",
@@ -167,7 +188,15 @@ export function FiltersPage() {
           </div>
         )}
 
-        <Table columns={columns} data={rows} getRowId={(r) => r.templateId} />
+        <Table
+          columns={columns}
+          data={rows}
+          getRowId={(r) => r.templateId}
+          rowProps={(_r, i) => ({
+            ...rowProps(i),
+            className: dragIdx === i ? "opacity-60" : undefined,
+          })}
+        />
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <span className="text-xs text-ink-tertiary me-auto">{activeCount} filters shown</span>

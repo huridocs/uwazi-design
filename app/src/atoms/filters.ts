@@ -58,6 +58,28 @@ export const relTypeFiltersAtom = atom<Record<string, boolean>>({});
 /** Selected target-entity-type facet (used by both refs + rels surfaces). */
 export const entityTypeFiltersAtom = atom<Record<string, boolean>>({});
 
+/** Selected target-entity country facet. Slices a heavily-connected entity's
+ *  connections by the country of the target entity (mirrors the Library facet).
+ *  Empty/hidden when no target carries a country (e.g. the mock seed). */
+export const relTargetCountryFiltersAtom = atom<Record<string, boolean>>({});
+
+/** Selected target-entity descriptor facet (CEJIL violations). Same idea as the
+ *  country facet — another axis to slice connections at full-corpus scale. */
+export const relTargetDescriptorFiltersAtom = atom<Record<string, boolean>>({});
+
+/** Match mode for the descriptor facet: "OR" = target has any selected
+ *  descriptor, "AND" = target has all of them. Meaningful because a target
+ *  entity can carry several descriptors. */
+export const relTargetDescriptorModeAtom = atom<"AND" | "OR">("OR");
+
+/** Dynamic facets generated from the focal entity's INHERITED relationship
+ *  properties (e.g. a connection that inherits each person's Role, or each
+ *  case's Region). Keyed `inheritProperty → (value → on)`. Mirrors Uwazi, where
+ *  an inherited relationship property becomes a filter of the inherited type. */
+export const relInheritedFiltersAtom = atom<
+  Record<string, Record<string, boolean>>
+>({});
+
 /** Whether the toggleable filters slide-over is open (single shared flag). */
 export const filtersDrawerOpenAtom = atom(false);
 
@@ -87,6 +109,10 @@ export const activeFilterCountAtom = atom((get) => {
   if (get(sortOrderAtom) !== "none") n++;
   n += Object.values(get(relTypeFiltersAtom)).filter(Boolean).length;
   n += Object.values(get(entityTypeFiltersAtom)).filter(Boolean).length;
+  n += Object.values(get(relTargetCountryFiltersAtom)).filter(Boolean).length;
+  n += Object.values(get(relTargetDescriptorFiltersAtom)).filter(Boolean).length;
+  for (const vals of Object.values(get(relInheritedFiltersAtom)))
+    n += Object.values(vals).filter(Boolean).length;
   if (get(activeClusterRefIdsAtom)) n++;
   return n;
 });

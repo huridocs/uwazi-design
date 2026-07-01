@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { useAtom } from "jotai";
 import { currentPageAtom } from "../../atoms/selection";
+import { useNotify } from "../../hooks/useNotify";
 
 interface ActionBarProps {
   numPages: number;
@@ -17,6 +18,7 @@ interface ActionBarProps {
 
 export function ActionBar({ numPages, onScrollToPage, leftSlot, rightSlot, showPager = true }: ActionBarProps) {
   const [currentPage] = useAtom(currentPageAtom);
+  const notify = useNotify();
 
   const goTo = (page: number) => {
     onScrollToPage(page);
@@ -29,7 +31,10 @@ export function ActionBar({ numPages, onScrollToPage, leftSlot, rightSlot, showP
     >
       {/* Left: optional slot or default OCR button (PDF only) */}
       {leftSlot ?? (showPager ? (
-        <button className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer">
+        <button
+          onClick={() => notify("OCR queued")}
+          className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+        >
           OCR PDF
         </button>
       ) : <span />)}

@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { useSetAtom } from "jotai";
+import { useSetAtom, useAtomValue } from "jotai";
 import { SettingsContent } from "../SettingsContent";
 import { Button } from "../Button";
 import { Field, TextInput } from "../Field";
 import { RadioGroup } from "../../shared/RadioGroup";
 import { Checkbox } from "../../shared/Checkbox";
 import { LayoutGrid, Table2, Map } from "lucide-react";
+import { dataSourceAtom } from "../../../atoms/dataSource";
+import { cejilCollection } from "../../../data/cejil/settingsAdapt";
 import { toastsAtom } from "../../../atoms/references";
 
 interface ToggleRowProps {
@@ -31,17 +33,22 @@ function ToggleRow({ label, hint, checked, onChange }: ToggleRowProps) {
 
 export function CollectionPage() {
   const setToasts = useSetAtom(toastsAtom);
-  const [name, setName] = useState("Inter-American Human Rights Archive");
+  const dataSource = useAtomValue(dataSourceAtom);
+  const init =
+    dataSource === "cejil"
+      ? { name: cejilCollection.name, view: cejilCollection.defaultView }
+      : { name: "Inter-American Human Rights Archive", view: "cards" };
+  const [name, setName] = useState(init.name);
   const [landing, setLanding] = useState("/library");
-  const [defaultView, setDefaultView] = useState("cards");
+  const [defaultView, setDefaultView] = useState(init.view);
   const [privateInstance, setPrivateInstance] = useState(false);
   const [cookiePolicy, setCookiePolicy] = useState(true);
   const [publicSharing, setPublicSharing] = useState(true);
 
   const dirty =
-    name !== "Inter-American Human Rights Archive" ||
+    name !== init.name ||
     landing !== "/library" ||
-    defaultView !== "cards" ||
+    defaultView !== init.view ||
     privateInstance !== false ||
     cookiePolicy !== true ||
     publicSharing !== true;

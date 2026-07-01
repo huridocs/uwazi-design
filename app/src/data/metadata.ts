@@ -33,6 +33,11 @@ export interface RelationshipMetadataField {
   inheritLabel?: string;
   connectedEntityIds: string[];
   connectionKey?: string;
+  /** A derived/graph projection (e.g. CEJIL connections, a chain-traversed
+   *  inherited field) — not editable inline. The edit view shows it read-only
+   *  rather than as an entity-picker (design doc Q6: chain fields are edited via
+   *  a relationship tree, not inline). */
+  readOnly?: boolean;
 }
 
 export type AnyMetadataField = MetadataField | RelationshipMetadataField;
@@ -347,6 +352,33 @@ const scalarFieldsByLanguage: Record<Language, MetadataField[]> = {
 const people = ["e1", "e16", "e17", "e18", "e19"];
 const cases = ["e13", "e31", "e32"];
 const rights = ["e4", "e5", "e34"];
+
+/** An inherited relationship property surfaced as a dynamic filter: the value
+ *  inherited from each connected target of `targetTypeId`. Country is excluded —
+ *  it has a dedicated Target-country facet. */
+export interface InheritedFilterProp {
+  propId: string;
+  label: string;
+  targetTypeId: string;
+}
+
+export function inheritedFilterProps(lang: Language): InheritedFilterProp[] {
+  const seen = new Map<string, InheritedFilterProp>();
+  for (const f of relationshipFieldsByLanguage[lang] ?? []) {
+    if (
+      f.inheritProperty &&
+      f.inheritProperty !== "country" &&
+      !seen.has(f.inheritProperty)
+    ) {
+      seen.set(f.inheritProperty, {
+        propId: f.inheritProperty,
+        label: f.inheritLabel ?? f.inheritProperty,
+        targetTypeId: f.targetTypeId,
+      });
+    }
+  }
+  return [...seen.values()];
+}
 
 export const relationshipFieldsByLanguage: Record<Language, RelationshipMetadataField[]> = {
   EN: [

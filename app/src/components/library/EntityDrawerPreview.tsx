@@ -7,6 +7,7 @@ import { librarySelectedEntityIdAtom } from "../../atoms/library";
 import { openEntityAtom, focusEntityForPreviewAtom } from "../../atoms/focusedEntity";
 import { getEntity, getEntityType } from "../../data/entities";
 import { getEntityProfile } from "../../data/entityProfiles";
+import { isCejilEntity, cejilReferencesFor } from "../../data/cejil/profile";
 import type { MetadataField } from "../../data/metadata";
 import { tabsForType } from "../../utils/entityTabs";
 import { MainTabs } from "../layout/MainTabs";
@@ -40,12 +41,14 @@ export function EntityDrawerPreview({ entityId }: { entityId: string }) {
   // both count refs touching this entity).
   const connectionCount = useMemo(
     () =>
-      references.filter((r) => r.sourceEntityId === entityId || r.targetEntityId === entityId).length,
+      isCejilEntity(entityId)
+        ? cejilReferencesFor(entityId).length
+        : references.filter((r) => r.sourceEntityId === entityId || r.targetEntityId === entityId).length,
     [references, entityId],
   );
   const filesCount = profile.files?.length ?? 0;
 
-  const tabs = tabsForType(profile.typeId).map((tab) => {
+  const tabs = tabsForType(profile.typeId, profile.hasDocument).map((tab) => {
     if (tab.id === "relationships") return { ...tab, count: connectionCount };
     if (tab.id === "files") return { ...tab, count: filesCount };
     return tab;
@@ -111,8 +114,8 @@ export function EntityDrawerPreview({ entityId }: { entityId: string }) {
         </button>
         <button
           onClick={() => openEntity(entityId)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white rounded-md transition-colors cursor-pointer"
-          style={{ backgroundColor: "var(--text-primary)" }}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer"
+          style={{ backgroundColor: "var(--text-primary)", color: "var(--bg-surface)" }}
         >
           View entity <ArrowRight size={13} />
         </button>
