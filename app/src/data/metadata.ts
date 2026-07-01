@@ -33,6 +33,10 @@ export interface RelationshipMetadataField {
   inheritLabel?: string;
   connectedEntityIds: string[];
   connectionKey?: string;
+  /** When `connectedEntityIds` is a capped slice of a larger set (hub entities
+   *  fan out to thousands), the true total — so the card can say "showing N of
+   *  M" instead of silently truncating. Omit when nothing was dropped. */
+  totalConnected?: number;
   /** A derived/graph projection (e.g. CEJIL connections, a chain-traversed
    *  inherited field) — not editable inline. The edit view shows it read-only
    *  rather than as an entity-picker (design doc Q6: chain fields are edited via

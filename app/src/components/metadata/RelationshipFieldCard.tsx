@@ -61,6 +61,11 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
       ) : (
         <div className="flex flex-wrap gap-1.5">{resolved.values.map((v) => pill(v))}</div>
       )}
+      {field.totalConnected != null && field.totalConnected > resolved.values.length && (
+        <p className="text-[11px] text-ink-tertiary mt-0.5">
+          showing {resolved.values.length} of {field.totalConnected}
+        </p>
+      )}
     </MetadataCard>
   );
 }
