@@ -8,10 +8,13 @@ import type { MetadataField } from "../../data/metadata";
  *  table, since a paragraph doesn't belong in a value cell. Renders nothing when
  *  given no fields. */
 export function MetadataFieldsTable({ fields }: { fields: MetadataField[] }) {
+  // Skip empty-valued fields (some callers pass them) so we don't render a bare
+  // label with no value — an empty ruled row reads as a rendering bug.
+  const shown = fields.filter((f) => !!f.value?.trim());
   const isLong = (f: MetadataField) => f.type === "multiline" || (f.value?.length ?? 0) > 100;
-  const longFields = fields.filter(isLong);
-  const shortFields = fields.filter((f) => !isLong(f));
-  if (fields.length === 0) return null;
+  const longFields = shown.filter(isLong);
+  const shortFields = shown.filter((f) => !isLong(f));
+  if (shown.length === 0) return null;
 
   return (
     <div className="space-y-2">
