@@ -251,6 +251,7 @@ function cejilRelationshipFields(sharedId: string, template: string): Relationsh
         inheritPath: JUDGE_TO_PAIS,
         inheritLeaf: CEJIL_PERPETRATOR_CHAIN.leaf.property,
         inheritLabel: "País",
+        reduce: "distinct", // the bench spans N distinct jurisdictions
         connectedEntityIds: judges.slice(0, CHAIN_JUDGE_CAP),
         connectionProvenance: provenance,
         totalConnected: judges.length,

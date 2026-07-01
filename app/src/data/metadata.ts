@@ -30,6 +30,12 @@ export interface MetadataField {
  * Omit all inherit fields for a link-only relationship (connected entities, no
  * inherited value).
  */
+/** How a column of inherited values rolls up into a single summary (the Notion /
+ *  Airtable "rollup calculation"). `list` = no summary (the values are the
+ *  presentation); `distinct`/`count` summarise the set; `min`/`max`/`first` pick
+ *  one. Omitted → no rollup chip (unchanged). */
+export type InheritReduce = "list" | "distinct" | "count" | "min" | "max" | "first";
+
 export interface RelationshipMetadataField {
   id: string;
   label: string;
@@ -38,6 +44,8 @@ export interface RelationshipMetadataField {
   targetTypeId: string;
   inheritProperty?: string;
   inheritLabel?: string;
+  /** Roll the inherited values up into a summary chip (see `InheritReduce`). */
+  reduce?: InheritReduce;
   /** Multi-hop inheritance: graph path FROM each connected entity. Resolved live
    *  against the registered inheritance graph — never pre-baked. */
   inheritPath?: ChainSegment[];
@@ -403,27 +411,27 @@ export function inheritedFilterProps(lang: Language): InheritedFilterProp[] {
 
 export const relationshipFieldsByLanguage: Record<Language, RelationshipMetadataField[]> = {
   EN: [
-    { id: "rel-people", label: "People involved", type: "relationship", relationType: "relates_to", targetTypeId: "person", inheritProperty: "country", inheritLabel: "Country", connectedEntityIds: people, connectionKey: "people" },
-    { id: "rel-role", label: "Role", type: "relationship", relationType: "relates_to", targetTypeId: "person", inheritProperty: "role", inheritLabel: "Role", connectedEntityIds: people, connectionKey: "people" },
-    { id: "rel-cases", label: "Related cases", type: "relationship", relationType: "cites", targetTypeId: "court_case", inheritProperty: "region", inheritLabel: "Region", connectedEntityIds: cases },
+    { id: "rel-people", label: "People involved", type: "relationship", relationType: "relates_to", targetTypeId: "person", inheritProperty: "country", inheritLabel: "Country", reduce: "distinct", connectedEntityIds: people, connectionKey: "people" },
+    { id: "rel-role", label: "Role", type: "relationship", relationType: "relates_to", targetTypeId: "person", inheritProperty: "role", inheritLabel: "Role", reduce: "distinct", connectedEntityIds: people, connectionKey: "people" },
+    { id: "rel-cases", label: "Related cases", type: "relationship", relationType: "cites", targetTypeId: "court_case", inheritProperty: "region", inheritLabel: "Region", reduce: "distinct", connectedEntityIds: cases },
     { id: "rel-rights", label: "Rights invoked", type: "relationship", relationType: "cites", targetTypeId: "right", connectedEntityIds: rights },
   ],
   ES: [
-    { id: "rel-people", label: "Personas involucradas", type: "relationship", relationType: "relates_to", targetTypeId: "person", inheritProperty: "country", inheritLabel: "País", connectedEntityIds: people, connectionKey: "people" },
-    { id: "rel-role", label: "Rol", type: "relationship", relationType: "relates_to", targetTypeId: "person", inheritProperty: "role", inheritLabel: "Rol", connectedEntityIds: people, connectionKey: "people" },
-    { id: "rel-cases", label: "Casos relacionados", type: "relationship", relationType: "cites", targetTypeId: "court_case", inheritProperty: "region", inheritLabel: "Región", connectedEntityIds: cases },
+    { id: "rel-people", label: "Personas involucradas", type: "relationship", relationType: "relates_to", targetTypeId: "person", inheritProperty: "country", inheritLabel: "País", reduce: "distinct", connectedEntityIds: people, connectionKey: "people" },
+    { id: "rel-role", label: "Rol", type: "relationship", relationType: "relates_to", targetTypeId: "person", inheritProperty: "role", inheritLabel: "Rol", reduce: "distinct", connectedEntityIds: people, connectionKey: "people" },
+    { id: "rel-cases", label: "Casos relacionados", type: "relationship", relationType: "cites", targetTypeId: "court_case", inheritProperty: "region", inheritLabel: "Región", reduce: "distinct", connectedEntityIds: cases },
     { id: "rel-rights", label: "Derechos invocados", type: "relationship", relationType: "cites", targetTypeId: "right", connectedEntityIds: rights },
   ],
   FR: [
-    { id: "rel-people", label: "Personnes impliquées", type: "relationship", relationType: "relates_to", targetTypeId: "person", inheritProperty: "country", inheritLabel: "Pays", connectedEntityIds: people, connectionKey: "people" },
-    { id: "rel-role", label: "Rôle", type: "relationship", relationType: "relates_to", targetTypeId: "person", inheritProperty: "role", inheritLabel: "Rôle", connectedEntityIds: people, connectionKey: "people" },
-    { id: "rel-cases", label: "Affaires liées", type: "relationship", relationType: "cites", targetTypeId: "court_case", inheritProperty: "region", inheritLabel: "Région", connectedEntityIds: cases },
+    { id: "rel-people", label: "Personnes impliquées", type: "relationship", relationType: "relates_to", targetTypeId: "person", inheritProperty: "country", inheritLabel: "Pays", reduce: "distinct", connectedEntityIds: people, connectionKey: "people" },
+    { id: "rel-role", label: "Rôle", type: "relationship", relationType: "relates_to", targetTypeId: "person", inheritProperty: "role", inheritLabel: "Rôle", reduce: "distinct", connectedEntityIds: people, connectionKey: "people" },
+    { id: "rel-cases", label: "Affaires liées", type: "relationship", relationType: "cites", targetTypeId: "court_case", inheritProperty: "region", inheritLabel: "Région", reduce: "distinct", connectedEntityIds: cases },
     { id: "rel-rights", label: "Droits invoqués", type: "relationship", relationType: "cites", targetTypeId: "right", connectedEntityIds: rights },
   ],
   AR: [
-    { id: "rel-people", label: "الأشخاص المعنيون", type: "relationship", relationType: "relates_to", targetTypeId: "person", inheritProperty: "country", inheritLabel: "البلد", connectedEntityIds: people, connectionKey: "people" },
-    { id: "rel-role", label: "الدور", type: "relationship", relationType: "relates_to", targetTypeId: "person", inheritProperty: "role", inheritLabel: "الدور", connectedEntityIds: people, connectionKey: "people" },
-    { id: "rel-cases", label: "القضايا ذات الصلة", type: "relationship", relationType: "cites", targetTypeId: "court_case", inheritProperty: "region", inheritLabel: "المنطقة", connectedEntityIds: cases },
+    { id: "rel-people", label: "الأشخاص المعنيون", type: "relationship", relationType: "relates_to", targetTypeId: "person", inheritProperty: "country", inheritLabel: "البلد", reduce: "distinct", connectedEntityIds: people, connectionKey: "people" },
+    { id: "rel-role", label: "الدور", type: "relationship", relationType: "relates_to", targetTypeId: "person", inheritProperty: "role", inheritLabel: "الدور", reduce: "distinct", connectedEntityIds: people, connectionKey: "people" },
+    { id: "rel-cases", label: "القضايا ذات الصلة", type: "relationship", relationType: "cites", targetTypeId: "court_case", inheritProperty: "region", inheritLabel: "المنطقة", reduce: "distinct", connectedEntityIds: cases },
     { id: "rel-rights", label: "الحقوق المُحتجّ بها", type: "relationship", relationType: "cites", targetTypeId: "right", connectedEntityIds: rights },
   ],
 };

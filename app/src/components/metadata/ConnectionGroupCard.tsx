@@ -3,10 +3,10 @@ import { Link2 } from "lucide-react";
 import { overlayEntityIdAtom } from "../../atoms/references";
 import { MetadataCard } from "./MetadataCard";
 import { spanClass, type CardSpan } from "./cardSpan";
-import { RelationCaption, InheritedValueTag, MissingValue } from "./InheritedValueChip";
+import { RelationCaption, InheritedValueTag, MissingValue, RollupChip } from "./InheritedValueChip";
 import { EntityPill } from "../shared/EntityPill";
 import { getEntityType } from "../../data/entities";
-import { mergeConnectionRows, type ConnectionGroup } from "../../utils/inheritance";
+import { mergeConnectionRows, reduceInherited, type ConnectionGroup } from "../../utils/inheritance";
 
 /** Multi-inheritance, Section-2 "Option 1": several relationship fields sharing
  *  one connection rendered as a single table. Rows are sorted by the inherited
@@ -17,6 +17,10 @@ export function ConnectionGroupCard({ group, span = "full" }: { group: Connectio
   const setOverlay = useSetAtom(overlayEntityIdAtom);
   const entityHeader = getEntityType(group.targetTypeId)?.name ?? "Entity";
   const rows = mergeConnectionRows(group);
+  // Per-column rollups computed over the UNMERGED values (one per connected entity).
+  const summaries = group.columns.map((c, i) =>
+    reduceInherited(group.rows.map((r) => r.cells[i]?.value), c.reduce),
+  );
 
   return (
     <MetadataCard
@@ -33,11 +37,14 @@ export function ConnectionGroupCard({ group, span = "full" }: { group: Connectio
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="text-[11px] uppercase tracking-wide text-ink-tertiary">
-              {group.columns.map((c) => (
+              {group.columns.map((c, i) => (
                 <th key={c.fieldId} className="py-1.5 px-3 text-start font-medium whitespace-nowrap align-top">
-                  <span className="inline-flex items-center gap-1">
-                    <Link2 size={10} className="text-carbon" />
-                    {c.label}
+                  <span className="flex flex-col items-start gap-1">
+                    <span className="inline-flex items-center gap-1">
+                      <Link2 size={10} className="text-carbon" />
+                      {c.label}
+                    </span>
+                    {summaries[i] && <RollupChip summary={summaries[i]!} />}
                   </span>
                 </th>
               ))}

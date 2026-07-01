@@ -6,9 +6,9 @@ import { entityMetadataAtom, makeEntityPropReader } from "../../atoms/entityMeta
 import { overlayEntityIdAtom } from "../../atoms/references";
 import { MetadataCard } from "./MetadataCard";
 import { spanClass, type CardSpan } from "./cardSpan";
-import { InheritedValueTag, MissingValue, ProvenanceTrail, RelationCaption } from "./InheritedValueChip";
+import { InheritedValueTag, MissingValue, ProvenanceTrail, RelationCaption, RollupChip } from "./InheritedValueChip";
 import { EntityPill } from "../shared/EntityPill";
-import { resolveRelationshipField, specInherits } from "../../utils/inheritance";
+import { reduceInherited, resolveRelationshipField, specInherits } from "../../utils/inheritance";
 import type { RelationshipMetadataField } from "../../data/metadata";
 
 /** A standalone relationship field (no shared connection). Two shapes:
@@ -22,6 +22,7 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
   const setOverlay = useSetAtom(overlayEntityIdAtom);
   const resolved = resolveRelationshipField(field, lang, getProp);
   const inherits = specInherits(field);
+  const rollup = reduceInherited(resolved.values.map((v) => v.inheritedValue), field.reduce);
 
   const pill = (v: (typeof resolved.values)[number]) => (
     <button
@@ -40,7 +41,10 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
       icon={<Link2 size={14} className="text-carbon" />}
       className={spanClass(span)}
     >
-      <RelationCaption relationLabel={resolved.relationLabel} inheritLabel={field.inheritLabel} />
+      <div className="flex items-center justify-between gap-2">
+        <RelationCaption relationLabel={resolved.relationLabel} inheritLabel={field.inheritLabel} />
+        {rollup && <RollupChip summary={rollup} />}
+      </div>
       {inherits ? (
         <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 items-start">
           {resolved.values.map((v) => (

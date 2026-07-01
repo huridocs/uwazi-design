@@ -2,7 +2,7 @@ import type { Language } from "../atoms/language";
 import { getEntity } from "../data/entities";
 import { getEntityProp } from "../data/entityMetadata";
 import { relationTypes, type RelationType } from "../data/references";
-import type { RelationshipMetadataField } from "../data/metadata";
+import type { InheritReduce, RelationshipMetadataField } from "../data/metadata";
 import { chains, leafValues, type ChainGraph, type ChainSegment, type ProvenanceStep } from "./chainTraversal";
 export type { ProvenanceStep } from "./chainTraversal";
 
@@ -38,6 +38,42 @@ export interface InheritSpec {
   inheritProperty?: string;
   inheritPath?: ChainSegment[];
   inheritLeaf?: string;
+}
+
+/** Roll a column of inherited values up into a single summary, per the declared
+ *  reduce mode (Notion/Airtable "calculation"). `values` are the per-connected-
+ *  entity inherited values (undefined = the source had none). Returns a short
+ *  chip descriptor, or null when there's nothing to summarise (`list`, no mode, or
+ *  no present values). `min`/`max` compare numerically when every value parses as
+ *  a number, else lexicographically. */
+export function reduceInherited(
+  values: (string | undefined)[],
+  mode: InheritReduce | undefined,
+): { text: string; title: string } | null {
+  if (!mode || mode === "list") return null;
+  const present = values.filter((v): v is string => !!v);
+  if (!present.length) return null;
+  switch (mode) {
+    case "count":
+      return { text: `${present.length} total`, title: `${present.length} inherited values` };
+    case "distinct": {
+      const n = new Set(present).size;
+      return { text: `${n} distinct`, title: `${n} distinct values across ${present.length}` };
+    }
+    case "first":
+      return { text: present[0], title: `First value: ${present[0]}` };
+    case "min":
+    case "max": {
+      const nums = present.map(Number);
+      const numeric = nums.every((n) => Number.isFinite(n));
+      const pick = (arr: string[]) =>
+        numeric
+          ? present[nums.indexOf(mode === "min" ? Math.min(...nums) : Math.max(...nums))]
+          : [...arr].sort((a, b) => a.localeCompare(b))[mode === "min" ? 0 : arr.length - 1];
+      const v = pick(present);
+      return { text: `${mode} ${v}`, title: `${mode === "min" ? "Lowest" : "Highest"}: ${v}` };
+    }
+  }
 }
 
 /** Whether a spec carries any inheritance (native or multi-hop). */
@@ -141,6 +177,7 @@ export interface ConnectionColumn {
   inheritProperty?: string;
   inheritPath?: ChainSegment[];
   inheritLeaf?: string;
+  reduce?: InheritReduce;
 }
 export interface ConnectionRow {
   entityId: string;
@@ -276,6 +313,7 @@ export function groupConnections(
         inheritProperty: f.inheritProperty,
         inheritPath: f.inheritPath,
         inheritLeaf: f.inheritLeaf,
+        reduce: f.reduce,
       }));
 
     const rows: ConnectionRow[] = ids.map((id) => {
