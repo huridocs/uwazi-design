@@ -62,13 +62,13 @@ export function RollupChip({ summary }: { summary: { text: string; title: string
  *  Causa by). Each hop is a clickable link that opens that entity's preview, so
  *  the "how" of a derived value is inspectable rather than hidden. Renders
  *  nothing when there are no intermediaries (a plain single-hop inheritance). */
-export function ProvenanceTrail({ steps }: { steps: ProvenanceStep[] }) {
+export function ProvenanceTrail({ steps, sharedLabel }: { steps: ProvenanceStep[]; sharedLabel?: string }) {
   const setOverlay = useSetAtom(overlayEntityIdAtom);
   if (!steps.length) return null;
   return (
     <span className="flex items-center gap-1 min-w-0 text-[11px] text-ink-tertiary">
       <CornerDownRight size={10} className="shrink-0 text-ink-muted" aria-hidden />
-      <span className="shrink-0">via</span>
+      <span className="shrink-0">{sharedLabel ? `${sharedLabel} via` : "via"}</span>
       {steps.map((s, i) => (
         <Fragment key={s.entityId}>
           {i > 0 && <span className="shrink-0 text-ink-muted" aria-hidden>→</span>}

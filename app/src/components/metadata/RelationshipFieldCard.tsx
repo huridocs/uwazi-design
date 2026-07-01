@@ -24,6 +24,17 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
   const inherits = specInherits(field);
   const rollup = reduceInherited(resolved.values.map((v) => v.inheritedValue), field.reduce);
 
+  // When every value shares the SAME provenance (e.g. all judges signed one
+  // Sentencia), hoist that trail to a single shared line rather than repeating it
+  // on every row — the repetition was pure noise. Per-row trails only when they
+  // actually differ.
+  const provSig = (v: (typeof resolved.values)[number]) => (v.provenance ?? []).map((s) => s.entityId).join(">");
+  const sigs = resolved.values.map(provSig);
+  const sharedProvenance =
+    inherits && resolved.values.length > 1 && sigs[0] !== "" && sigs.every((s) => s === sigs[0])
+      ? resolved.values[0].provenance
+      : undefined;
+
   const pill = (v: (typeof resolved.values)[number]) => (
     <button
       key={v.entityId}
@@ -41,26 +52,38 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
       icon={<Link2 size={14} className="text-carbon" />}
       className={spanClass(span)}
     >
-      <div className="flex items-center justify-between gap-2">
-        <RelationCaption relationLabel={resolved.relationLabel} inheritLabel={field.inheritLabel} />
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <RelationCaption relationLabel={resolved.relationLabel} inheritLabel={field.inheritLabel} />
+          {sharedProvenance && (
+            <div className="mt-0.5">
+              <ProvenanceTrail steps={sharedProvenance} sharedLabel="all inherited" />
+            </div>
+          )}
+        </div>
         {rollup && <RollupChip summary={rollup} />}
       </div>
       {inherits ? (
-        <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 items-start">
+        <div
+          className={`mt-1 grid grid-cols-[auto_1fr] gap-x-3 ${
+            sharedProvenance ? "gap-y-1.5 items-center" : "gap-y-2 items-start"
+          }`}
+        >
           {resolved.values.map((v) => (
             <Fragment key={v.entityId}>
-              <div className="pt-0.5">{pill(v)}</div>
-              <div className="min-w-0 flex flex-col gap-0.5 pt-0.5">
+              <div className={sharedProvenance ? "" : "pt-0.5"}>{pill(v)}</div>
+              <div className="min-w-0 flex flex-col gap-0.5">
                 {v.inheritedValue ? (
                   <InheritedValueTag
                     value={v.inheritedValue}
                     propLabel={v.sourcePropLabel}
                     relationLabel={resolved.relationLabel}
+                    hideGlyph
                   />
                 ) : (
                   <MissingValue propLabel={v.sourcePropLabel} />
                 )}
-                {v.provenance && <ProvenanceTrail steps={v.provenance} />}
+                {!sharedProvenance && v.provenance && <ProvenanceTrail steps={v.provenance} />}
               </div>
             </Fragment>
           ))}
