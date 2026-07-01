@@ -9,6 +9,7 @@ import { MetadataCard, Property, PropertyRow } from "../components/metadata/Meta
 import { spanClass, fieldSpan } from "../components/metadata/cardSpan";
 import { ConnectionGroupCard } from "../components/metadata/ConnectionGroupCard";
 import { RelationshipFieldCard } from "../components/metadata/RelationshipFieldCard";
+import { RelationshipCards } from "../components/metadata/RelationshipCards";
 import { RelationshipFieldEditor } from "../components/metadata/RelationshipFieldEditor";
 import { TemplateStructure } from "../components/relationships/TemplateStructure";
 import { EntityOverlay } from "../components/relationships/EntityOverlay";
@@ -86,12 +87,9 @@ export function MetadataView({ tabs, activeTab, onTabChange, onBack }: MetadataV
 
 function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?: ReactNode }) {
   const language = useAtom(languageAtom)[0];
-  const getProp = makeEntityPropReader(useAtomValue(entityMetadataAtom));
   const profile = getEntityProfile(useAtomValue(focusedEntityIdAtom));
   const allFields = profile.metadata[language];
   const fields = allFields.filter((f): f is MetadataField => f.type !== "relationship");
-  const relFields = allFields.filter((f): f is RelationshipMetadataField => f.type === "relationship");
-  const { groups, singles } = groupConnections(relFields, language, getProp);
   const pdf = profile.pdfMetadata?.[language];
   const notify = useNotify();
 
@@ -158,23 +156,10 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
             );
           })}
 
-          {/* Relationship / inherited fields. Shared connections (multi-
-              inheritance) render as one grouped table; standalone relationship
-              fields get their own card. A plain band separates them from the
-              scalar fields above — no border/colour accent. */}
-          {(groups.length > 0 || singles.length > 0) && (
-            <div className={`${spanClass("full")} mt-2 flex items-center`}>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-tertiary">
-                Relationships
-              </h3>
-            </div>
-          )}
-          {groups.map((group) => (
-            <ConnectionGroupCard key={group.connectionKey} group={group} />
-          ))}
-          {singles.map((field) => (
-            <RelationshipFieldCard key={field.id} field={field} />
-          ))}
+          {/* Relationship / inherited fields — shared with the drawers via
+              RelationshipCards so they can't drift. Shared connections render as
+              a grouped table; standalone relationship fields get their own card. */}
+          <RelationshipCards profile={profile} language={language} />
         </div>
       </div>
 

@@ -2,11 +2,14 @@ import { useMemo, useState } from "react";
 import { useAtomValue } from "jotai";
 import { ChevronDown, ChevronRight, ExternalLink, FileText, Music, Video, Image, Link2 } from "lucide-react";
 import { languageAtom } from "../../atoms/language";
+import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
+import { getEntityProfile } from "../../data/entityProfiles";
 import { documentsByLanguage } from "../../data/document";
 import { metadataFieldsByLanguage, pdfMetadataByLanguage, type MetadataField } from "../../data/metadata";
 import { FileEntry } from "../../data/files";
 import { filesAtom, documentGroupsAtom } from "../../atoms/files";
 import { EntityPill } from "../shared/EntityPill";
+import { RelationshipCards } from "../metadata/RelationshipCards";
 
 const fileTypeIcons: Record<FileEntry["type"], typeof FileText> = {
   pdf: FileText,
@@ -19,6 +22,7 @@ const fileTypeIcons: Record<FileEntry["type"], typeof FileText> = {
 
 export function MetadataDrawerContent() {
   const language = useAtomValue(languageAtom);
+  const profile = getEntityProfile(useAtomValue(focusedEntityIdAtom));
   const doc = documentsByLanguage[language];
   // Condensed scalar summary — relationship/inherited fields live in the main
   // Metadata view, not this drawer.
@@ -104,6 +108,10 @@ export function MetadataDrawerContent() {
           )}
         </div>
       ))}
+
+      {/* Relationship / inherited properties — shared with the main Metadata
+          view so the drawer shows the same connections + inherited values. */}
+      <RelationshipCards profile={profile} language={language} span="full" />
 
       {/* Supporting Files — synced with the Files view */}
       {supportingFiles.length > 0 && (
