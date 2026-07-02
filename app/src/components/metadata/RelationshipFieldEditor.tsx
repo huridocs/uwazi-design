@@ -3,15 +3,12 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { X, Plus, Search, PenLine, Link2, Info } from "lucide-react";
 import { languageAtom } from "../../atoms/language";
 import { entitiesAtom } from "../../atoms/entities";
+import { getEntityType } from "../../data/entities";
 import { entityMetadataAtom, makeEntityPropReader } from "../../atoms/entityMetadata";
 import { overlayEntityIdAtom } from "../../atoms/references";
 import { EntityPill } from "../shared/EntityPill";
-
-export interface ConnectionColumnDef {
-  fieldId: string;
-  label: string;
-  inheritProperty?: string;
-}
+import { InheritedValueTag, MissingValue } from "./InheritedValueChip";
+import { resolveInheritedValue, type ConnectionColumn } from "../../utils/inheritance";
 
 /**
  * Edits ONE connection. The connection (`entityIds`) is the editable part;
@@ -30,7 +27,7 @@ export function RelationshipFieldEditor({
   title: string;
   relationLabel: string;
   targetTypeId: string;
-  columns: ConnectionColumnDef[];
+  columns: ConnectionColumn[];
   entityIds: string[];
   onChange: (ids: string[]) => void;
 }) {
@@ -40,6 +37,7 @@ export function RelationshipFieldEditor({
   const setOverlay = useSetAtom(overlayEntityIdAtom);
   const [query, setQuery] = useState("");
   const [adding, setAdding] = useState(false);
+  const entityHeader = getEntityType(targetTypeId)?.name ?? "Entity";
 
   const candidates = allEntities.filter(
     (e) => e.typeId === targetTypeId && !entityIds.includes(e.id) && e.title.toLowerCase().includes(query.toLowerCase()),
@@ -62,53 +60,90 @@ export function RelationshipFieldEditor({
         </span>
       </div>
 
-      {/* Connected entities — the editable part */}
-      <div className="border border-border rounded-md divide-y divide-border/40">
-        {entityIds.length === 0 && (
-          <div className="px-3 py-2.5 text-xs text-ink-muted">No connected entities yet.</div>
-        )}
-        {entityIds.map((id) => {
-          const entity = allEntities.find((e) => e.id === id);
-          return (
-            <div key={id} className="flex items-center gap-2 px-3 py-2 flex-wrap">
-              <EntityPill typeId={entity?.typeId ?? targetTypeId} label={entity?.title ?? "Unknown entity"} />
-              {columns.map((c) => {
-                const v = c.inheritProperty ? getEntityProp(id, c.inheritProperty, lang) : undefined;
-                return (
-                  <span key={c.fieldId} className="inline-flex items-center gap-1 text-xs text-ink-secondary">
-                    <span className="text-ink-tertiary">{c.label}:</span>
-                    {v ? (
-                      <span className="inline-flex items-center gap-1 font-medium text-ink">
-                        <Link2 size={10} className="text-carbon" />
-                        {v}
-                      </span>
-                    ) : (
-                      <span className="text-ink-muted" title="No value on source">
-                        —
-                      </span>
-                    )}
-                  </span>
-                );
-              })}
-              <div className="ms-auto flex items-center gap-0.5">
-                <button
-                  onClick={() => setOverlay(id)}
-                  title="Edit at source"
-                  className="flex items-center gap-1 px-1.5 h-6 text-[11px] font-medium text-ink-secondary rounded hover:bg-warm transition-colors"
-                >
-                  <PenLine size={12} /> Source
-                </button>
-                <button
-                  onClick={() => remove(id)}
-                  title="Remove from connection"
-                  className="flex items-center justify-center w-6 h-6 rounded text-ink-muted hover:bg-warm hover:text-seal transition-colors"
-                >
-                  <X size={13} />
-                </button>
-              </div>
-            </div>
-          );
-        })}
+      {/* Connected entities — the editable part, as the same bordered table the
+          read view uses (entity + inherited value columns), plus per-row edit
+          actions (Source / Remove). */}
+      <div className="border border-border rounded-md overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="text-[11px] uppercase tracking-wide text-ink-tertiary">
+                <th className="py-1.5 px-3 text-start font-medium">{entityHeader}</th>
+                {columns.map((c) => (
+                  <th key={c.fieldId} className="py-1.5 px-3 text-start font-medium whitespace-nowrap">
+                    <span className="inline-flex items-center gap-1">
+                      <Link2 size={10} className="text-carbon" />
+                      {c.label}
+                    </span>
+                  </th>
+                ))}
+                <th className="w-0 px-2" aria-label="Actions" />
+              </tr>
+            </thead>
+            <tbody>
+              {entityIds.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={columns.length + 2}
+                    className="px-3 py-2.5 text-xs text-ink-muted border-t border-border/40"
+                  >
+                    No connected entities yet.
+                  </td>
+                </tr>
+              ) : (
+                entityIds.map((id) => {
+                  const entity = allEntities.find((e) => e.id === id);
+                  return (
+                    <tr key={id} className="border-t border-border/40 hover:bg-warm/30 transition-colors">
+                      <td className="py-1.5 px-3 align-middle">
+                        <button
+                          onClick={() => setOverlay(id)}
+                          title="Preview source entity"
+                          className="rounded-md hover:opacity-80 transition-opacity cursor-pointer"
+                        >
+                          <EntityPill typeId={entity?.typeId ?? targetTypeId} label={entity?.title ?? "Unknown entity"} />
+                        </button>
+                      </td>
+                      {columns.map((c) => {
+                        const v = resolveInheritedValue(id, c, lang, getEntityProp);
+                        return (
+                          <td
+                            key={c.fieldId}
+                            className="py-1.5 px-3 align-middle whitespace-nowrap border-s border-border/40"
+                          >
+                            {v ? (
+                              <InheritedValueTag value={v} propLabel={c.label} relationLabel={relationLabel} hideGlyph />
+                            ) : (
+                              <MissingValue propLabel={c.label} />
+                            )}
+                          </td>
+                        );
+                      })}
+                      <td className="py-1 px-2 align-middle border-s border-border/40">
+                        <div className="flex items-center justify-end gap-0.5">
+                          <button
+                            onClick={() => setOverlay(id)}
+                            title="Edit at source"
+                            className="flex items-center gap-1 px-1.5 h-6 text-[11px] font-medium text-ink-secondary rounded hover:bg-warm transition-colors cursor-pointer"
+                          >
+                            <PenLine size={12} /> Source
+                          </button>
+                          <button
+                            onClick={() => remove(id)}
+                            title="Remove from connection"
+                            className="flex items-center justify-center w-6 h-6 rounded text-ink-muted hover:bg-warm hover:text-seal transition-colors cursor-pointer"
+                          >
+                            <X size={13} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Add an entity to the connection */}
