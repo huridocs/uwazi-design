@@ -39,6 +39,11 @@ export function EntityOverlay() {
   const openEntity = useSetAtom(openEntityAtom);
   // One ref serves both the focus trap and the outside-click check.
   const panelRef = useFocusTrap<HTMLDivElement>(entityId !== null);
+  // Inert while closed — the panel stays mounted off-pane and its controls
+  // must not be tabbable (focusing one force-scrolls hidden overflow).
+  useEffect(() => {
+    panelRef.current?.toggleAttribute("inert", entityId === null);
+  }, [entityId, panelRef]);
   // Properties are read-only on open (this is a preview); editing is opt-in.
   const [editingProps, setEditingProps] = useState(false);
 

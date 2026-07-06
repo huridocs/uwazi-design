@@ -72,8 +72,13 @@ export function DataTable<T>({
       style={{ boxShadow: CARD_SHADOW }}
     >
       <div style={scrolls ? { minWidth: `${minWidthRem}rem` } : undefined}>
+        {/* ARIA table wrapper — header + rows only (footer/empty state live
+            outside so the table has no invalid children). Each row carries its
+            own grid, so this extra div changes nothing visually. */}
+        <div role="table">
         {/* Header */}
         <div
+          role="row"
           className="grid items-center gap-3 px-4 h-10 text-[11px] font-semibold text-ink-tertiary uppercase tracking-wider"
           style={{
             gridTemplateColumns,
@@ -85,7 +90,20 @@ export function DataTable<T>({
             const sortable = !!col.sortKey && !!onSort;
             const active = sortable && sort?.key === col.sortKey;
             return (
-              <div key={col.id} className={`flex items-center min-w-0 ${alignClass[col.align ?? "left"]}`}>
+              <div
+                key={col.id}
+                role="columnheader"
+                aria-sort={
+                  sortable
+                    ? active
+                      ? sort!.dir === "asc"
+                        ? "ascending"
+                        : "descending"
+                      : "none"
+                    : undefined
+                }
+                className={`flex items-center min-w-0 ${alignClass[col.align ?? "left"]}`}
+              >
                 {sortable ? (
                   <button
                     onClick={() => onSort!(col.sortKey!)}
@@ -112,12 +130,10 @@ export function DataTable<T>({
           })}
         </div>
 
-        {/* Rows */}
-        {data.length === 0 ? (
-          <div className="px-4 py-10 text-center text-xs text-ink-muted">
-            {emptyState ?? "Nothing here yet."}
-          </div>
-        ) : (
+        {/* Rows — always role="row" so column/row relationships survive for
+            AT; clickable rows stay keyboard-operable via tabIndex + Enter/Space
+            and signal selection with aria-selected. */}
+        {data.length > 0 &&
           data.map((row, i) => {
             const id = getRowId(row);
             const selected = isRowSelected?.(row) ?? false;
@@ -128,9 +144,9 @@ export function DataTable<T>({
               <div
                 key={id}
                 {...extra}
-                role={clickable ? "button" : "row"}
+                role="row"
                 tabIndex={clickable ? 0 : undefined}
-                aria-pressed={clickable ? selected : undefined}
+                aria-selected={clickable ? selected : undefined}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
                 onKeyDown={
                   clickable
@@ -150,6 +166,7 @@ export function DataTable<T>({
                 {columns.map((col) => (
                   <div
                     key={col.id}
+                    role="cell"
                     className={`flex items-center min-w-0 text-ink ${alignClass[col.align ?? "left"]}`}
                   >
                     {col.cell(row, i)}
@@ -157,7 +174,14 @@ export function DataTable<T>({
                 ))}
               </div>
             );
-          })
+          })}
+        </div>
+
+        {/* Empty state — outside the ARIA table so it has no invalid children. */}
+        {data.length === 0 && (
+          <div className="px-4 py-10 text-center text-xs text-ink-muted">
+            {emptyState ?? "Nothing here yet."}
+          </div>
         )}
 
         {/* Footer */}

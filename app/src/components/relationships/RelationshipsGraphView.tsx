@@ -63,6 +63,7 @@ export function RelationshipsGraphView() {
   const [transform, setTransform] = useState({ tx: 0, ty: 0, scale: 1 });
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [hover, setHover] = useState<{ node: GraphNode; x: number; y: number } | null>(null);
+  const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
   const dragRef = useRef<{
     active: boolean;
     startX: number;
@@ -333,12 +334,26 @@ export function RelationshipsGraphView() {
             return (
               <g
                 key={`label-${s.key}`}
+                tabIndex={0}
+                role="button"
+                aria-expanded={!isCollapsed}
+                aria-label={`${s.label} branch — ${s.targets.length} relationships, ${
+                  isCollapsed ? "collapsed" : "expanded"
+                }`}
                 onClick={(e) => {
                   e.stopPropagation();
                   if (dragRef.current.moved) return;
                   setCollapsed((c) => ({ ...c, [s.key]: !c[s.key] }));
                 }}
-                style={{ cursor: "pointer" }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setCollapsed((c) => ({ ...c, [s.key]: !c[s.key] }));
+                  }
+                }}
+                onFocus={() => setFocusedNodeId(`label-${s.key}`)}
+                onBlur={() => setFocusedNodeId(null)}
+                style={{ cursor: "pointer", outline: "none" }}
               >
                 <rect
                   x={s.labelX - 55}
@@ -347,8 +362,12 @@ export function RelationshipsGraphView() {
                   height={22}
                   rx={4}
                   fill="var(--bg-surface)"
-                  stroke={s.color ?? "var(--border-primary)"}
-                  strokeWidth={1}
+                  stroke={
+                    focusedNodeId === `label-${s.key}`
+                      ? "var(--accent-blue)"
+                      : s.color ?? "var(--border-primary)"
+                  }
+                  strokeWidth={focusedNodeId === `label-${s.key}` ? 1.5 : 1}
                 />
                 <text
                   x={s.labelX}
@@ -386,7 +405,10 @@ export function RelationshipsGraphView() {
             </text>
           </g>
 
-          {/* Target nodes */}
+          {/* Target nodes — keyboard-operable: each circle is a focusable
+              button (Enter/Space opens the entity overlay, same as click).
+              Focus shows a carbon halo + the tooltip, so keyboard users get
+              the same identification hover users do. */}
           {nodes.map((n) => (
             <g key={n.id}>
               {n.selected && (
@@ -400,6 +422,16 @@ export function RelationshipsGraphView() {
                   opacity={0.55}
                 />
               )}
+              {focusedNodeId === n.id && !n.selected && (
+                <circle
+                  cx={n.x}
+                  cy={n.y}
+                  r={n.r + 5}
+                  fill="none"
+                  stroke="var(--accent-blue)"
+                  strokeWidth={1.5}
+                />
+              )}
               <circle
                 data-node="1"
                 cx={n.x}
@@ -410,6 +442,9 @@ export function RelationshipsGraphView() {
                   n.selected ? "var(--text-primary)" : "var(--bg-surface)"
                 }
                 strokeWidth={n.selected ? 2.5 : 1.5}
+                tabIndex={0}
+                role="button"
+                aria-label={`${n.title} — ${n.typeName}, ${n.evidenceCount} evidence`}
                 onPointerEnter={(e) => {
                   const rect = containerRef.current?.getBoundingClientRect();
                   if (!rect) return;
@@ -425,12 +460,33 @@ export function RelationshipsGraphView() {
                   );
                 }}
                 onPointerLeave={() => setHover(null)}
+                onFocus={(e) => {
+                  setFocusedNodeId(n.id);
+                  const rect = containerRef.current?.getBoundingClientRect();
+                  const c = (e.currentTarget as SVGCircleElement).getBoundingClientRect();
+                  if (!rect) return;
+                  setHover({
+                    node: n,
+                    x: c.left + c.width / 2 - rect.left,
+                    y: c.top - rect.top,
+                  });
+                }}
+                onBlur={() => {
+                  setFocusedNodeId(null);
+                  setHover(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setOverlayEntityId(n.id.split("::")[0]);
+                  }
+                }}
                 onClick={(e) => {
                   e.stopPropagation();
                   if (dragRef.current.moved) return;
                   setOverlayEntityId(n.id.split("::")[0]);
                 }}
-                style={{ cursor: "pointer" }}
+                style={{ cursor: "pointer", outline: "none" }}
               />
             </g>
           ))}

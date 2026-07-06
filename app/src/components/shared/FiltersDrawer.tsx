@@ -24,6 +24,14 @@ export function FiltersDrawer({
   // Slide from the inline end — flips to the left edge under RTL (Arabic).
   const rtl = useAtomValue(languageAtom) === "AR";
   const trapRef = useFocusTrap<HTMLElement>(open);
+
+  // While closed the drawer stays mounted (translated off-pane) — mark it
+  // inert so Tab can never focus its controls: focusing a child would make
+  // the browser force-scroll the overflow-hidden pane to reveal it, leaving
+  // the "closed" drawer visually parked over the content.
+  useEffect(() => {
+    trapRef.current?.toggleAttribute("inert", !open);
+  }, [open, trapRef]);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {

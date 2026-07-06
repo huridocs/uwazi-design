@@ -56,6 +56,11 @@ export function NotificationsDrawer({ rtl = false }: { rtl?: boolean }) {
   const [activities, setActivities] = useAtom(activitiesAtom);
   const [open, setOpen] = useAtom(beaconOpenAtom);
   const trapRef = useFocusTrap<HTMLElement>(open);
+  // Inert while closed — the drawer stays mounted off-screen and its controls
+  // must not be tabbable (focusing one force-scrolls hidden overflow).
+  useEffect(() => {
+    trapRef.current?.toggleAttribute("inert", !open);
+  }, [open, trapRef]);
   const [unread] = useAtom(unreadCountAtom);
   const [filter, setFilter] = useState<"all" | "unread">("all");
   const [removing, setRemoving] = useState<Set<string>>(new Set());
