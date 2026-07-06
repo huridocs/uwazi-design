@@ -22,8 +22,8 @@ export function EntityTypeChip({ typeId }: { typeId: string }) {
 
   const dot = (
     <span
-      className="rounded-[2px] shrink-0 ring-1 ring-inset ring-ink/20"
-      style={{ backgroundColor: color, width: 7, height: 7 }}
+      className="rounded-[2px] shrink-0 ring-1 ring-inset ring-ink/20 w-[0.4375rem] h-[0.4375rem]"
+      style={{ backgroundColor: color }}
     />
   );
 

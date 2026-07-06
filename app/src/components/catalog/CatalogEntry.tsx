@@ -20,7 +20,7 @@ export function CatalogEntry({ name, description, code, children, tailwind }: Ca
       </div>
 
       {/* Preview */}
-      <div className="px-4 py-6 bg-warm flex items-start justify-center min-h-[80px] w-full">
+      <div className="px-4 py-6 bg-warm flex items-start justify-center min-h-20 w-full">
         <div className="w-full">{children}</div>
       </div>
 

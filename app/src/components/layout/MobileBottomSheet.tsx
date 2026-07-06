@@ -91,7 +91,7 @@ export function MobileBottomSheet({
       <div
         className="fixed inset-0 transition-opacity duration-200"
         style={{
-          backgroundColor: "color-mix(in srgb, var(--ink, #1a1a1a) 30%, transparent)",
+          backgroundColor: "color-mix(in srgb, var(--text-primary) 30%, transparent)",
           opacity: open ? 1 : 0,
           pointerEvents: open ? "auto" : "none",
           zIndex: 70,
@@ -126,8 +126,8 @@ export function MobileBottomSheet({
           onPointerCancel={handlePointerUp}
         >
           <div
-            className="rounded-full"
-            style={{ width: 36, height: 4, backgroundColor: "var(--border-soft)" }}
+            className="rounded-full w-9 h-1"
+            style={{ backgroundColor: "var(--border-soft)" }}
           />
         </div>
 

@@ -1,4 +1,5 @@
 import type { ImportIssue } from "../../data/imports";
+import { formatShortDate } from "../../utils/dates";
 
 interface IssuesTableProps {
   issues: ImportIssue[];
@@ -53,12 +54,7 @@ export function IssuesTable({ issues }: IssuesTableProps) {
             >
               {issue.type === "warning" ? "Warning" : "Error"}
             </span>
-            <span className="text-xs text-ink-tertiary">
-              {new Date(issue.date).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-              })}
-            </span>
+            <span className="text-xs text-ink-tertiary">{formatShortDate(issue.date)}</span>
           </div>
         ))}
       </div>

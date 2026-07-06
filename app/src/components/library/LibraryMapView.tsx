@@ -4,7 +4,7 @@ import { ComposableMap, Geographies, Geography, Graticule, Marker, ZoomableGroup
 import worldData from "world-atlas/countries-110m.json";
 import { languageAtom } from "../../atoms/language";
 import { librarySelectedClusterAtom, librarySelectedEntityIdAtom } from "../../atoms/library";
-import { getEntityProp } from "../../data/entityMetadata";
+import { entityCountries } from "../../utils/libraryFacets";
 import type { Entity } from "../../data/entities";
 
 interface Cluster {
@@ -29,7 +29,9 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
     for (const e of entities) {
       if (!e.geo) continue;
       const key = `${e.geo.lat},${e.geo.lng}`;
-      const label = e.typeId === "country" ? e.title : getEntityProp(e.id, "country", language) ?? "";
+      // entityCountries handles all sources: own title for país entities,
+      // adapter-supplied country (CEJIL), or the Sample native prop.
+      const label = entityCountries(e, language)[0] ?? "";
       const c = m.get(key) ?? { key, label, lat: e.geo.lat, lng: e.geo.lng, count: 0, ids: [] };
       c.count += 1;
       c.ids.push(e.id);
@@ -88,8 +90,8 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
                     r={r}
                     strokeWidth={1}
                     style={{ cursor: "pointer" }}
-                    fill={active ? "var(--text-primary)" : "color-mix(in srgb, var(--color-carbon) 16%, transparent)"}
-                    stroke={active ? "var(--text-primary)" : "color-mix(in srgb, var(--color-carbon) 70%, transparent)"}
+                    fill={active ? "var(--text-primary)" : "color-mix(in srgb, var(--accent-blue) 16%, transparent)"}
+                    stroke={active ? "var(--text-primary)" : "color-mix(in srgb, var(--accent-blue) 70%, transparent)"}
                   />
                   <text
                     textAnchor="middle"

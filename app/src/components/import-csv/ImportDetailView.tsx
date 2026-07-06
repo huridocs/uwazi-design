@@ -6,6 +6,7 @@ import { AlertBanner } from "../shared/AlertBanner";
 import { IssuesTable } from "./IssuesTable";
 import { EntitiesTable } from "./EntitiesTable";
 import { generateCreatedEntities, type ImportEntry } from "../../data/imports";
+import { formatSlashDate } from "../../utils/dates";
 
 interface ImportDetailViewProps {
   entry: ImportEntry;
@@ -41,13 +42,8 @@ function progressColor(status: ImportEntry["status"]): "green" | "blue" | "red" 
   return "green";
 }
 
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${mm}/${dd}/${d.getFullYear()}`;
-}
+// UTC-pinned so `YYYY-MM-DD` seeds don't render the previous day in the Americas.
+const formatDate = formatSlashDate;
 
 function totalRows(entry: ImportEntry): number {
   return entry.entities + entry.failed;

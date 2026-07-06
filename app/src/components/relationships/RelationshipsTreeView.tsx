@@ -2,24 +2,18 @@ import { useEffect, useMemo, useState } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { Link2 } from "lucide-react";
 import {
-  scopedReferencesAtom,
   overlayEntityIdAtom,
   activeRefIdAtom,
   expandGroupForRefAtom,
 } from "../../atoms/references";
 import {
-  searchQueryAtom,
-  activeClusterRefIdsAtom,
-  sortOrderAtom,
-  relTypeFiltersAtom,
-  entityTypeFiltersAtom,
   activeFilterCountAtom,
   groupByAtom,
   subGroupByAtom,
 } from "../../atoms/filters";
+import { useFilteredReferences } from "./useFilteredReferences";
 import { getEntity } from "../../data/entities";
 import { Reference } from "../../data/references";
-import { buildMatcher } from "../../utils/searchQuery";
 import { Hub, Relationship, deriveHubs, deriveRelationships } from "../../utils/relationships";
 import {
   getGroupColor,
@@ -39,12 +33,6 @@ import {
  *  list view, but the leaves are aggregate `RelationshipRow kind="aggregate"`
  *  cards with inline-expand into their underlying refs. */
 export function RelationshipsTreeView() {
-  const [references] = useAtom(scopedReferencesAtom);
-  const [searchQuery] = useAtom(searchQueryAtom);
-  const [sortOrder] = useAtom(sortOrderAtom);
-  const [activeClusterRefIds] = useAtom(activeClusterRefIdsAtom);
-  const [relTypeFilters] = useAtom(relTypeFiltersAtom);
-  const [entityTypeFilters] = useAtom(entityTypeFiltersAtom);
   const [activeFilterCount] = useAtom(activeFilterCountAtom);
   const [groupBy] = useAtom(groupByAtom);
   const [subGroupBy] = useAtom(subGroupByAtom);
@@ -53,66 +41,9 @@ export function RelationshipsTreeView() {
   const setExpandSignal = useSetAtom(expandAllSignalAtom);
   const setCollapseSignal = useSetAtom(collapseAllSignalAtom);
 
-  const filtered = useMemo<Reference[]>(() => {
-    let result = references;
-
-    if (activeClusterRefIds) {
-      const cluster = new Set(activeClusterRefIds);
-      result = result.filter((r) => cluster.has(r.id));
-    }
-    const activeRelTypes = Object.entries(relTypeFilters)
-      .filter(([, v]) => v)
-      .map(([k]) => k);
-    if (activeRelTypes.length > 0) {
-      const set = new Set(activeRelTypes);
-      result = result.filter((r) => set.has(r.relationType));
-    }
-    const activeEntityTypes = Object.entries(entityTypeFilters)
-      .filter(([, v]) => v)
-      .map(([k]) => k);
-    if (activeEntityTypes.length > 0) {
-      const set = new Set(activeEntityTypes);
-      result = result.filter((r) => {
-        const entity = getEntity(r.targetEntityId);
-        return entity ? set.has(entity.typeId) : false;
-      });
-    }
-    const matcher = buildMatcher(searchQuery);
-    if (matcher) {
-      result = result.filter((ref) => {
-        const entity = getEntity(ref.targetEntityId);
-        const haystack = `${ref.sourceSelection?.text ?? ""} ${entity?.title ?? ""} ${ref.relationType}`;
-        return matcher(haystack);
-      });
-    }
-    if (sortOrder === "none") {
-      // Raw seed order — no sort applied.
-      return result;
-    }
-    if (sortOrder === "appearance") {
-      return [...result].sort((a, b) => {
-        const pageA = a.sourceSelection?.page ?? -1;
-        const pageB = b.sourceSelection?.page ?? -1;
-        if (pageA !== pageB) return pageA - pageB;
-        const topA = a.sourceSelection?.top ?? 0;
-        const topB = b.sourceSelection?.top ?? 0;
-        return topA - topB;
-      });
-    }
-    const dir = sortOrder === "asc" ? 1 : -1;
-    return [...result].sort((a, b) => {
-      const nameA = getEntity(a.targetEntityId)?.title ?? "";
-      const nameB = getEntity(b.targetEntityId)?.title ?? "";
-      return nameA.localeCompare(nameB) * dir;
-    });
-  }, [
-    references,
-    searchQuery,
-    sortOrder,
-    activeClusterRefIds,
-    relTypeFilters,
-    entityTypeFilters,
-  ]);
+  // Shared pipeline — applies every facet the list view applies (country,
+  // descriptor, inherited included), so mode switches can't un-filter rows.
+  const filtered = useFilteredReferences();
 
   const entityCount = new Set(filtered.map((r) => r.targetEntityId)).size;
   const aggregateCount = useMemo(
@@ -120,10 +51,12 @@ export function RelationshipsTreeView() {
     [filtered],
   );
 
+  // Clear the row selection whenever the filtered set changes — the selected
+  // ref/entity may no longer be visible.
   useEffect(() => {
     setActiveRefId(null);
     setOverlayEntityId(null);
-  }, [relTypeFilters, entityTypeFilters, setActiveRefId, setOverlayEntityId]);
+  }, [filtered, setActiveRefId, setOverlayEntityId]);
 
   const showCollapse = groupBy !== "none";
 

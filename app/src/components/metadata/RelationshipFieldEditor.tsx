@@ -161,7 +161,7 @@ export function RelationshipFieldEditor({
             />
             <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none" />
           </div>
-          <div className="max-h-[180px] overflow-auto">
+          <div className="max-h-[11.25rem] overflow-auto">
             {candidates.length === 0 ? (
               <div className="px-3 py-2 text-xs text-ink-muted">No matching entities.</div>
             ) : (

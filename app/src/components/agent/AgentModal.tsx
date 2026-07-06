@@ -310,8 +310,14 @@ export function AgentModal() {
           </div>
         </div>
 
-        {/* Thread */}
-        <div ref={threadRef} className="flex-1 overflow-y-auto px-5 py-4 min-h-[11rem]">
+        {/* Thread — role="log" + polite live region so streamed replies are
+            announced to screen readers as they arrive. */}
+        <div
+          ref={threadRef}
+          role="log"
+          aria-live="polite"
+          className="flex-1 overflow-y-auto px-5 py-4 min-h-[11rem]"
+        >
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center gap-2.5 py-6">
               <div className="flex items-center justify-center w-9 h-9 rounded-full bg-warm">
@@ -441,7 +447,7 @@ function AddMenu({
           />
           <Search size={13} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted" />
         </div>
-        <div className="max-h-[200px] overflow-auto py-1">
+        <div className="max-h-50 overflow-auto py-1">
           {items.length === 0 ? (
             <div className="px-3 py-2 text-xs text-ink-muted">No matches.</div>
           ) : (

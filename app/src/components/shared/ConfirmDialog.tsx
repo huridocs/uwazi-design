@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { AlertTriangle, X } from "lucide-react";
 
 interface ConfirmDialogProps {
@@ -19,6 +20,16 @@ export function ConfirmDialog({
   onCancel,
   variant = "default",
 }: ConfirmDialogProps) {
+  // Escape cancels — same convention as the drawers/modals.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onCancel();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onCancel]);
+
   if (!open) return null;
 
   return (
@@ -35,6 +46,7 @@ export function ConfirmDialog({
           </div>
           <button
             onClick={onCancel}
+            aria-label="Close"
             className="p-1 rounded-md hover:bg-parchment transition-colors"
           >
             <X size={18} className="text-ink-muted" />

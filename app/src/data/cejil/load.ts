@@ -64,7 +64,12 @@ export function loadCejilData(): Promise<CejilCorpus> {
 
       corpus = { entities, relationships, files, fullText };
       return corpus;
-    })();
+    })().catch((err) => {
+      // Don't cache the rejection — clearing the promise lets a later call
+      // retry the fetch instead of wedging every consumer forever.
+      promise = null;
+      throw err;
+    });
   }
   return promise;
 }

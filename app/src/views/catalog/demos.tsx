@@ -145,7 +145,7 @@ export function IsolatedBeacon() {
   const store = createStore();
   return (
     <Provider store={store}>
-      <div className="relative h-[52px] w-full bg-paper border border-border-soft rounded-lg flex items-center justify-end px-4">
+      <div className="relative h-13 w-full bg-paper border border-border-soft rounded-lg flex items-center justify-end px-4">
         <Beacon />
       </div>
     </Provider>
@@ -353,7 +353,7 @@ export function IsolatedRefMinimap() {
   // nearest positioned ancestor up the tree.
   return (
     <Provider store={store}>
-      <div className="relative w-full h-[360px] rounded-md border border-border/40 bg-paper overflow-hidden">
+      <div className="relative w-full h-[22.5rem] rounded-md border border-border/40 bg-paper overflow-hidden">
         <div className="absolute inset-0 right-[80px] px-6 py-4 text-[10px] text-ink-tertiary leading-relaxed">
           <p>
             (Document column — the minimap on the right shows a dot per text
@@ -488,8 +488,8 @@ export function FacetSectionDemo() {
         label={(id) => labels[id] ?? id}
         renderMarker={(id) => (
           <span
-            className="shrink-0 rounded-[2px]"
-            style={{ width: 8, height: 8, backgroundColor: colors[id] }}
+            className="shrink-0 rounded-[2px] w-2 h-2"
+            style={{ backgroundColor: colors[id] }}
           />
         )}
       />

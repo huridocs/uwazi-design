@@ -172,8 +172,9 @@ export function NotificationsDrawer({ rtl = false }: { rtl?: boolean }) {
           </div>
         </div>
 
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto bg-warm">
+        {/* Body — polite live region so task progress + new arrivals are
+            announced while the drawer is open. */}
+        <div aria-live="polite" className="flex-1 overflow-y-auto bg-warm">
           {/* Tasks */}
           {activities.length > 0 && (
             <section>
@@ -342,7 +343,7 @@ function NotifCard({
           e.stopPropagation();
           onDismiss();
         }}
-        className="absolute top-2.5 right-2.5 flex items-center justify-center w-5 h-5 rounded text-ink-muted opacity-0 group-hover:opacity-100 hover:bg-ink/5 transition-opacity"
+        className="absolute top-2.5 right-2.5 flex items-center justify-center w-5 h-5 rounded text-ink-muted opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-ink/5 transition-opacity"
         aria-label="Dismiss"
       >
         <X size={13} />

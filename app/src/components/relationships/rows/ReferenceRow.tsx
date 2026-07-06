@@ -182,7 +182,7 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
               setOverlayEntityId(reference.targetEntityId);
             }}
             aria-label="Preview entity"
-            className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-warm text-ink-muted hover:text-ink transition-all cursor-pointer"
+            className="p-1 rounded opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-warm text-ink-muted hover:text-ink transition-all cursor-pointer"
           >
             <Eye size={12} />
           </button>
@@ -193,7 +193,7 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
                 onDelete(reference.id);
               }}
               aria-label="Delete reference"
-              className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-seal-tint text-ink-muted hover:text-seal transition-all cursor-pointer"
+              className="p-1 rounded opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-seal-tint text-ink-muted hover:text-seal transition-all cursor-pointer"
             >
               <Trash2 size={12} />
             </button>

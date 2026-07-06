@@ -48,8 +48,8 @@ export function MobileActionMenu({ items }: MobileActionMenuProps) {
     <div ref={containerRef} className="relative">
       <button
         onClick={toggle}
-        className="flex items-center justify-center rounded-md border border-border hover:bg-warm transition-colors"
-        style={{ width: 36, height: 36, color: "var(--text-secondary)" }}
+        className="flex items-center justify-center rounded-md border border-border hover:bg-warm transition-colors w-9 h-9"
+        style={{ color: "var(--text-secondary)" }}
         aria-label="More options"
         aria-expanded={open}
       >

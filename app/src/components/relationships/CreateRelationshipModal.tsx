@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { X, Search, Plus } from "lucide-react";
 import { useAtom, useSetAtom, useAtomValue } from "jotai";
 import { entityPickerOpenAtom, textSelectionAtom } from "../../atoms/selection";
@@ -68,6 +68,17 @@ export function CreateRelationshipModal() {
     setOpen(false);
     reset();
   };
+
+  // Escape closes — same convention as the drawers/dialogs.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const handleStartNewEntity = () => {
     // Copy the selection text into the title field as a starting point.
@@ -287,6 +298,7 @@ export function CreateRelationshipModal() {
                     <button
                       key={type.id}
                       onClick={() => setNewEntityTypeId(type.id)}
+                      aria-pressed={newEntityTypeId === type.id}
                       className={`flex items-center gap-2 px-3 py-2 rounded-md text-left text-sm transition-colors cursor-pointer ${
                         newEntityTypeId === type.id
                           ? "bg-warm ring-1 ring-carbon/30"
@@ -339,6 +351,7 @@ export function CreateRelationshipModal() {
                 <button
                   key={rel.id}
                   onClick={() => setSelectedRelation(rel.id)}
+                  aria-pressed={selectedRelation === rel.id}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-left
                     transition-colors cursor-pointer ${
                       selectedRelation === rel.id

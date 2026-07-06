@@ -18,12 +18,16 @@ export function ToastContainer() {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2">
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed top-14 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2"
+    >
       {toasts.map((toast) => (
         <div
           key={toast.id}
           className="flex items-center gap-2 px-4 py-2.5 bg-paper border border-border
-            rounded-md shadow-lg animate-slide-in-right min-w-[250px]"
+            rounded-md shadow-lg animate-slide-in-right min-w-64"
         >
           {toast.type === "success" && (
             <CheckCircle2 size={16} className="text-success shrink-0" />
@@ -37,7 +41,8 @@ export function ToastContainer() {
           <span className="text-sm text-ink">{toast.message}</span>
           <button
             onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
-            className="ml-auto p-0.5 rounded hover:bg-parchment"
+            aria-label="Dismiss"
+            className="ms-auto p-0.5 rounded hover:bg-parchment"
           >
             <X size={14} className="text-ink-muted" />
           </button>

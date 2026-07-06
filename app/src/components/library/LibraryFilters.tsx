@@ -542,13 +542,13 @@ function ChainPathHelper({ defs }: { defs: ChainFacetDef[] }) {
  *  belong to the row above" and the child checkboxes form their own column. */
 function TreeChildren({ children }: { children: ReactNode }) {
   return (
-    <div className="relative ps-[3.125rem]">
-      {/* Slim group line in the parent's checkbox column (≈2rem). Child rows drop
-          their own padding so their checkboxes align under the parent's LABEL
-          (≈3.125rem) — mirroring the parent row one level in. */}
+    <div className="relative ps-[2.375rem]">
+      {/* Slim group line in the parent's checkbox column (≈1.25rem). Child rows
+          drop their own padding so their checkboxes align under the parent's
+          LABEL (≈2.375rem) — mirroring the parent row one level in. */}
       <span
         aria-hidden
-        className="absolute inset-y-1 start-[2rem] w-px bg-border"
+        className="absolute inset-y-1 start-[1.25rem] w-px bg-border"
       />
       {children}
     </div>
@@ -589,11 +589,17 @@ function FacetRow({
 }) {
   const Icon = icon;
   return (
-    <label className={`flex items-center rounded-md py-1.5 pe-2 cursor-pointer hover:bg-warm transition-colors ${child ? "ps-0" : "ps-2"}`}>
+    <label
+      className={`flex items-center rounded-md py-1.5 pe-2 cursor-pointer hover:bg-warm transition-colors ${
+        child ? "ps-0" : expandable || reserveGutter ? "ps-0" : "ps-2"
+      }`}
+    >
       {/* Chevron gutter — reserved only in cards that have an expandable row, so
-          checkboxes there align; the triangle itself renders for expandable parents. */}
+          checkboxes there align; the triangle itself renders for expandable
+          parents. Hugs the row's start edge (no start padding) so the caret sits
+          far left and the checkbox column stays close to the other cards'. */}
       {!child && (expandable || reserveGutter) && (
-        <span className="shrink-0 w-3.5 me-1 flex items-center justify-center">
+        <span className="shrink-0 w-3 me-0.5 flex items-center justify-center">
           {expandable && (
             <button
               onClick={(e) => {

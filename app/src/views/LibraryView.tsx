@@ -58,15 +58,23 @@ export function LibraryView() {
   const [dataSource, setDataSource] = useAtom(dataSourceAtom);
   const [cejilReady, setCejilReady] = useAtom(cejilReadyAtom);
   // Fetch the full CEJIL corpus on demand the first time the source is selected.
+  // `cejilRetry` bumps to re-run the effect after a failed load (the loader
+  // clears its cached promise on rejection, so this genuinely refetches).
+  const [cejilError, setCejilError] = useState(false);
+  const [cejilRetry, setCejilRetry] = useState(0);
   useEffect(() => {
     if (dataSource === "cejil" && !cejilReady) {
       let alive = true;
-      loadCejilData().then(() => alive && setCejilReady(true));
+      setCejilError(false);
+      loadCejilData().then(
+        () => alive && setCejilReady(true),
+        () => alive && setCejilError(true),
+      );
       return () => {
         alive = false;
       };
     }
-  }, [dataSource, cejilReady, setCejilReady]);
+  }, [dataSource, cejilReady, setCejilReady, cejilRetry]);
   const cejilLoading = dataSource === "cejil" && !cejilReady;
   const references = useAtomValue(referencesAtom);
   const [query, setQuery] = useAtom(libraryQueryAtom);
@@ -460,10 +468,22 @@ export function LibraryView() {
         )}
 
         {cejilLoading ? (
-          <div className="flex flex-col items-center justify-center h-40 gap-3 text-sm text-ink-muted">
-            <span className="w-5 h-5 rounded-full border-2 border-border border-t-carbon animate-spin" />
-            Loading the full CEJIL collection…
-          </div>
+          cejilError ? (
+            <div className="flex flex-col items-center justify-center h-40 gap-3 text-sm text-ink-muted">
+              <span>Couldn’t load the CEJIL collection.</span>
+              <button
+                onClick={() => setCejilRetry((n) => n + 1)}
+                className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+              >
+                Retry
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-40 gap-3 text-sm text-ink-muted">
+              <span className="w-5 h-5 rounded-full border-2 border-border border-t-carbon animate-spin" />
+              Loading the full CEJIL collection…
+            </div>
+          )
         ) : viewMode === "map" ? (
           <div className="flex-1 min-h-0">
             <LibraryMapView entities={filtered} />
@@ -473,7 +493,7 @@ export function LibraryView() {
             No entities match your filters.
           </div>
         ) : viewMode === "cards" ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 items-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
             {shown.map((e) => (
               <EntityCard
                 key={e.id}

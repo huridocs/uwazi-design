@@ -119,7 +119,9 @@ export const EntityCard = memo(function EntityCard({
         </div>
       )}
 
-      <div className="flex items-center justify-between gap-2 pt-1">
+      {/* mt-auto pins the footer to the card's bottom edge even when metadata
+          is hidden/empty, so footers align across a stretched grid row. */}
+      <div className="mt-auto flex items-center justify-between gap-2 pt-1">
         <EntityPill typeId={entity.typeId} />
         <div className="flex items-center gap-2">
           {connectionBadge}

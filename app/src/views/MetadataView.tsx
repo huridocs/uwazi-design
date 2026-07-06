@@ -102,8 +102,8 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
         <div className="grid gap-3 items-start grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
           {profile.hasDocument && (
             <MetadataCard title="Document" className="hidden md:block md:col-span-2 xl:col-span-1 md:row-span-2">
-              <div className="flex items-center justify-center bg-warm rounded-md overflow-hidden h-[200px]">
-                <div className="bg-paper rounded shadow-sm w-[45%] h-[180px] flex items-center justify-center">
+              <div className="flex items-center justify-center bg-warm rounded-md overflow-hidden h-50">
+                <div className="bg-paper rounded shadow-sm w-[45%] h-[11.25rem] flex items-center justify-center">
                   <span className="text-xs text-ink-muted">PDF Preview</span>
                 </div>
               </div>
@@ -337,7 +337,7 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
 
         {/* Geolocation */}
         <EditSection label="Geolocation">
-          <div className="h-[160px] bg-warm rounded-md flex items-center justify-center overflow-hidden">
+          <div className="h-40 bg-warm rounded-md flex items-center justify-center overflow-hidden">
             <span className="text-xs text-ink-muted">Map Preview</span>
           </div>
           <div className="flex items-center gap-2 mt-2">
@@ -537,7 +537,7 @@ function CountryPicker() {
         />
         <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none" />
       </div>
-      <div className="border border-border rounded-md max-h-[240px] overflow-auto">
+      <div className="border border-border rounded-md max-h-60 overflow-auto">
         {/* Selected */}
         <div className="flex items-center gap-2 px-3 py-2 bg-carbon-tint">
           <span className="text-lg leading-none">🇦🇷</span>

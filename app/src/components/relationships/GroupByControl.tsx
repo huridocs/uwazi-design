@@ -67,7 +67,7 @@ export function GroupByControl({
           <div
             role="listbox"
             aria-label={labelPrefix}
-            className="absolute top-full left-0 mt-1 z-20 bg-paper border border-border rounded-md shadow-lg overflow-hidden min-w-[180px]"
+            className="absolute top-full left-0 mt-1 z-20 bg-paper border border-border rounded-md shadow-lg overflow-hidden min-w-45"
           >
             {visibleOptions.map((opt) => (
               <button

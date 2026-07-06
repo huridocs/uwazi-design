@@ -298,7 +298,7 @@ function DrawerFileRow({
 
   return (
     <div
-      className={`flex items-stretch border rounded-md overflow-hidden transition-colors min-h-[58px] ${
+      className={`flex items-stretch border rounded-md overflow-hidden transition-colors min-h-[3.625rem] ${
         active
           ? "border-ink/30 bg-parchment hover:bg-parchment"
           : "border-border/50 bg-paper hover:bg-warm/50"

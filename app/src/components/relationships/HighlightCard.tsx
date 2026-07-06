@@ -13,7 +13,7 @@ export function HighlightCard({ reference }: HighlightCardProps) {
   const selection = reference.sourceSelection;
 
   return (
-    <div className="border-l-2 border-highlight-active bg-highlight/20 rounded-r-lg px-3 py-2.5">
+    <div className="bg-highlight/20 rounded-lg px-3 py-2.5">
       <div className="flex items-center justify-between mb-1.5">
         <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
         {selection && <PageTag page={selection.page} />}

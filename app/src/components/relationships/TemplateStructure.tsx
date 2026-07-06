@@ -1,6 +1,9 @@
 import { CaseSensitive, Image, FileVideo, ScrollText, MapPin, CalendarDays, Type, Link2, ListOrdered, HelpCircle } from "lucide-react";
-import { ReactNode } from "react";
-import { metadataFields, relationshipFieldsByLanguage } from "../../data/metadata";
+import { ReactNode, useMemo } from "react";
+import { useAtomValue } from "jotai";
+import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
+import { languageAtom } from "../../atoms/language";
+import { getEntityProfile } from "../../data/entityProfiles";
 import { useNotify } from "../../hooks/useNotify";
 
 interface TemplateProperty {
@@ -19,31 +22,6 @@ const typeIcons: Record<string, ReactNode> = {
   link: <Link2 size={18} />,
   "file-list": <ListOrdered size={18} />,
 };
-
-// Header properties (always present on any entity)
-const headerProperties: TemplateProperty[] = [
-  { icon: <CaseSensitive size={18} />, name: "Title", required: true, type: "text" },
-  { icon: <Image size={18} />, name: "Document", required: true, type: "media" },
-  { icon: <FileVideo size={18} />, name: "Document metadata", required: true, type: "generated" },
-];
-
-// Direct (scalar) body properties.
-const directFields: TemplateProperty[] = metadataFields.map((field) => ({
-  icon: typeIcons[field.type] || <Type size={18} />,
-  name: field.label,
-  type: field.type,
-}));
-
-// Relationship properties: those that inherit a value are shown in the
-// "Inherited" group; link-only ones sit in the body as plain relationships.
-const relProps = relationshipFieldsByLanguage.EN.map((f) => ({
-  icon: <Link2 size={18} />,
-  name: f.label,
-  type: f.inheritProperty ? `relationship · inherits ${f.inheritLabel}` : "relationship",
-  inherited: !!f.inheritProperty,
-}));
-const inheritedFields = relProps.filter((p) => p.inherited);
-directFields.push(...relProps.filter((p) => !p.inherited));
 
 function PropertyItem({ prop }: { prop: TemplateProperty }) {
   const notify = useNotify();
@@ -102,28 +80,70 @@ function PropertyGroup({
 
 export function TemplateStructure() {
   const notify = useNotify();
+  // Derive the structure from the FOCUSED entity's real template (profile
+  // metadata is CEJIL-aware), not a hardcoded Sample schema — the Template tab
+  // must describe whatever entity is open.
+  const focusedId = useAtomValue(focusedEntityIdAtom);
+  const lang = useAtomValue(languageAtom);
+  const { headerProperties, directFields, inheritedFields } = useMemo(() => {
+    const profile = getEntityProfile(focusedId);
+    const header: TemplateProperty[] = [
+      { icon: <CaseSensitive size={18} />, name: "Title", required: true, type: "text" },
+      ...(profile.hasDocument
+        ? [
+            { icon: <Image size={18} />, name: "Document", required: true, type: "media" },
+            { icon: <FileVideo size={18} />, name: "Document metadata", required: true, type: "generated" },
+          ]
+        : []),
+    ];
+    const direct: TemplateProperty[] = [];
+    const inherited: TemplateProperty[] = [];
+    for (const f of profile.metadata[lang] ?? []) {
+      if (f.type === "relationship") {
+        // Inheriting relationship fields (single- or multi-hop) group under
+        // "Inherited"; link-only ones sit in the body as plain relationships.
+        const inherits = !!(f.inheritProperty || f.inheritPath?.length || f.inheritLeaf);
+        const inheritLabel = f.inheritLabel ?? f.inheritLeaf ?? f.inheritProperty;
+        const prop: TemplateProperty = {
+          icon: <Link2 size={18} />,
+          name: f.label,
+          type: inherits ? `relationship · inherits ${inheritLabel}` : "relationship",
+          inherited: inherits,
+        };
+        (inherits ? inherited : direct).push(prop);
+      } else {
+        direct.push({
+          icon: typeIcons[f.type] || <Type size={18} />,
+          name: f.label,
+          type: f.type,
+        });
+      }
+    }
+    return { headerProperties: header, directFields: direct, inheritedFields: inherited };
+  }, [focusedId, lang]);
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-auto px-4 py-3 pb-8">
         <div className="flex flex-col gap-2">
           {/* Header group */}
           <PropertyGroup label="Header" variant="header">
-            {headerProperties.map((p) => (
-              <PropertyItem key={p.name} prop={p} />
+            {headerProperties.map((p, i) => (
+              <PropertyItem key={`${p.name}-${i}`} prop={p} />
             ))}
           </PropertyGroup>
 
           {/* Body group */}
           <PropertyGroup label="Body" variant="body">
-            {directFields.map((p) => (
-              <PropertyItem key={p.name} prop={p} />
+            {directFields.map((p, i) => (
+              <PropertyItem key={`${p.name}-${i}`} prop={p} />
             ))}
 
             {/* Inherited nested group */}
             {inheritedFields.length > 0 && (
               <PropertyGroup label="Inherited" variant="inherited">
-                {inheritedFields.map((p) => (
-                  <PropertyItem key={p.name} prop={p} />
+                {inheritedFields.map((p, i) => (
+                  <PropertyItem key={`${p.name}-${i}`} prop={p} />
                 ))}
               </PropertyGroup>
             )}

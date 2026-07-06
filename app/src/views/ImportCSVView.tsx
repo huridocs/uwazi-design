@@ -76,15 +76,18 @@ export function ImportCSVView() {
     []
   );
 
-  // Upload simulation
+  // Upload/processing simulation — ticks every in-flight import (not just the
+  // one open in the detail view), so a row's progress keeps running on the
+  // list after "Back to list" instead of freezing mid-bar.
   useEffect(() => {
-    const uploading = imports.find((i) => i.id === activeImportId && i.status === "uploading");
-    if (!uploading) return;
+    const inFlight = imports.some(
+      (i) => i.status === "uploading" || i.status === "processing"
+    );
+    if (!inFlight) return;
 
     const interval = setInterval(() => {
       setImports((prev) =>
         prev.map((entry) => {
-          if (entry.id !== activeImportId) return entry;
           if (entry.status === "uploading") {
             const next = Math.min(100, entry.progress + 3 + Math.random() * 5);
             if (next >= 100) {
@@ -92,23 +95,6 @@ export function ImportCSVView() {
             }
             return { ...entry, progress: next };
           }
-          return entry;
-        })
-      );
-    }, 200);
-
-    return () => clearInterval(interval);
-  }, [activeImportId, imports]);
-
-  // Processing simulation
-  useEffect(() => {
-    const processing = imports.find((i) => i.id === activeImportId && i.status === "processing");
-    if (!processing) return;
-
-    const interval = setInterval(() => {
-      setImports((prev) =>
-        prev.map((entry) => {
-          if (entry.id !== activeImportId) return entry;
           if (entry.status === "processing") {
             const next = Math.min(100, entry.progress + 2 + Math.random() * 4);
             const entities = Math.round((next / 100) * (300 + Math.random() * 200));
@@ -132,10 +118,10 @@ export function ImportCSVView() {
           return entry;
         })
       );
-    }, 250);
+    }, 200);
 
     return () => clearInterval(interval);
-  }, [activeImportId, imports]);
+  }, [imports]);
 
   const handleDeleteCurrent = useCallback(() => {
     if (!activeImportId) return;

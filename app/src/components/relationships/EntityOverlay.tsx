@@ -5,18 +5,34 @@ import { languageAtom } from "../../atoms/language";
 import { entityMetadataAtom, setEntityPropAtom } from "../../atoms/entityMetadata";
 import { openEntityAtom } from "../../atoms/focusedEntity";
 import { getEntity, getEntityType } from "../../data/entities";
-import { relationshipFieldsByLanguage } from "../../data/metadata";
+import { relationshipFieldsByLanguage, type MetadataField } from "../../data/metadata";
+import { getEntityProfile } from "../../data/entityProfiles";
 import { EntityPill } from "../shared/EntityPill";
 import { PageTag } from "../shared/PageTag";
 import { FadeTruncate } from "../shared/FadeTruncate";
 import { EditInput } from "../metadata/EditInput";
-import { X, FileText, Link2, Calendar, Tag, Info } from "lucide-react";
+import { X, Link2, Calendar, Tag, Info } from "lucide-react";
+
+/** ISO date (YYYY-MM-DD) → "June 30, 2024". Renders in UTC so the seeded date
+ *  doesn't drift a day across timezones. Falls back to em-dash when absent. */
+function formatCreated(iso: string | undefined): string {
+  if (!iso) return "—";
+  const d = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
 
 export function EntityOverlay() {
   const [entityId, setEntityId] = useAtom(overlayEntityIdAtom);
   const [references] = useAtom(referencesAtom);
   const setActiveAggregateId = useSetAtom(activeAggregateIdAtom);
   const lang = useAtom(languageAtom)[0];
+  const rtl = lang === "AR";
   const entityMetadata = useAtomValue(entityMetadataAtom);
   const setEntityProp = useSetAtom(setEntityPropAtom);
   const openEntity = useSetAtom(openEntityAtom);
@@ -68,6 +84,21 @@ export function EntityOverlay() {
         })()
       : [];
 
+  // Entities outside the Sample metadata atom (CEJIL) still have real native
+  // properties on their profile — surface them read-only so the overlay never
+  // silently drops the Properties section. (CEJIL "inherited" values like a
+  // judge's País are graph-derived, not scalar props, so there's nothing to
+  // edit here — display is the right scope.)
+  const readOnlyProps =
+    entityId && editableProps.length === 0
+      ? getEntityProfile(entityId)
+          .metadata[lang].filter(
+            (f): f is MetadataField => f.type !== "relationship"
+          )
+          .filter((f) => !!f.value?.trim())
+          .map((f) => ({ propId: f.id, label: f.label, value: f.value! }))
+      : [];
+
   const isOpen = entityId !== null && entity !== undefined;
 
   useEffect(() => {
@@ -107,16 +138,27 @@ export function EntityOverlay() {
         onClick={() => setEntityId(null)}
       />
 
-      {/* Panel */}
+      {/* Panel — anchored to the inline end so it flips sides under RTL. */}
       <div
         ref={panelRef}
-        className="absolute top-0 right-0 bottom-0 flex flex-col bg-paper transition-transform duration-250 ease-out"
+        role="dialog"
+        aria-modal="true"
+        aria-label={entity?.title ?? "Entity details"}
+        className={`absolute top-0 bottom-0 flex flex-col bg-paper transition-transform duration-250 ease-out ${
+          rtl ? "left-0" : "right-0"
+        }`}
         style={{
-          width: "calc(100% - 12px)",
+          width: "calc(100% - 0.75rem)",
           zIndex: 21,
-          transform: isOpen ? "translateX(0)" : "translateX(100%)",
-          borderLeft: "1px solid var(--border-primary)",
-          boxShadow: isOpen ? "-4px 0 16px rgba(0,0,0,0.08)" : "none",
+          transform: isOpen
+            ? "translateX(0)"
+            : rtl
+              ? "translateX(-100%)"
+              : "translateX(100%)",
+          borderInlineStart: "1px solid var(--border-primary)",
+          boxShadow: isOpen
+            ? `${rtl ? "4px" : "-4px"} 0 16px rgba(0,0,0,0.08)`
+            : "none",
         }}
       >
         {/* Header */}
@@ -135,6 +177,7 @@ export function EntityOverlay() {
           </div>
           <button
             onClick={() => setEntityId(null)}
+            aria-label="Close"
             className="p-1.5 rounded-md hover:bg-warm text-ink-muted hover:text-ink transition-colors shrink-0"
           >
             <X size={16} />
@@ -148,15 +191,19 @@ export function EntityOverlay() {
             <EntityPill typeId={entity?.typeId ?? ""} size="md" />
           </div>
 
-          {/* Metadata section */}
+          {/* Metadata section — Type/Title live in the header + EntityPill above,
+              so this shows only the non-redundant facts: real creation date and
+              how many references in this document point at the entity. */}
           <section className="rounded-lg p-3 space-y-3" style={{ backgroundColor: "var(--bg-warm)" }}>
             <h4 className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider">
               Metadata
             </h4>
             <div className="space-y-2.5">
-              <MetaRow icon={Tag} label="Type" value={entityType?.name ?? "Unknown"} />
-              <MetaRow icon={FileText} label="Title" value={entity?.title ?? ""} />
-              <MetaRow icon={Calendar} label="Created" value="June 15, 2024" />
+              {/* Only when we actually have a date — a bare em-dash row reads as a
+                  rendering gap (CEJIL entities carry no createdAt). */}
+              {entity?.createdAt && (
+                <MetaRow icon={Calendar} label="Created" value={formatCreated(entity.createdAt)} />
+              )}
               <MetaRow icon={Link2} label="References" value={`${entityRefs.length} in this document`} />
             </div>
           </section>
@@ -164,21 +211,24 @@ export function EntityOverlay() {
           {/* Native properties — the values other entities inherit from this
               one. Read-only on open (preview); "Edit" reveals inputs, and each
               change cascades to every inherited render (all resolve through
-              entityMetadataAtom). */}
-          {entityId && editableProps.length > 0 && (
+              entityMetadataAtom). Profile-only entities (CEJIL) show their
+              props read-only, no Edit toggle. */}
+          {entityId && (editableProps.length > 0 || readOnlyProps.length > 0) && (
             <section className="rounded-lg p-3 space-y-3" style={{ backgroundColor: "var(--bg-warm)" }}>
               <div className="flex items-center justify-between">
                 <h4 className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider">
                   Properties
                 </h4>
-                <button
-                  onClick={() => setEditingProps((v) => !v)}
-                  className="text-[11px] font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
-                >
-                  {editingProps ? "Done" : "Edit"}
-                </button>
+                {editableProps.length > 0 && (
+                  <button
+                    onClick={() => setEditingProps((v) => !v)}
+                    className="text-[11px] font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
+                  >
+                    {editingProps ? "Done" : "Edit"}
+                  </button>
+                )}
               </div>
-              {editingProps ? (
+              {editingProps && editableProps.length > 0 ? (
                 <>
                   <div className="space-y-2.5">
                     {editableProps.map(({ propId, label, value }) => (
@@ -186,6 +236,7 @@ export function EntityOverlay() {
                         <span className="text-[10px] text-ink-tertiary leading-tight block">{label}</span>
                         <EditInput
                           value={value}
+                          ariaLabel={label}
                           placeholder="Add a value…"
                           onChange={(v) => setEntityProp({ entityId, propId, lang, value: v })}
                         />
@@ -199,9 +250,11 @@ export function EntityOverlay() {
                 </>
               ) : (
                 <div className="space-y-2.5">
-                  {editableProps.map(({ propId, label, value }) => (
-                    <MetaRow key={propId} icon={Tag} label={label} value={value || "—"} />
-                  ))}
+                  {(editableProps.length > 0 ? editableProps : readOnlyProps).map(
+                    ({ propId, label, value }) => (
+                      <MetaRow key={propId} icon={Tag} label={label} value={value || "—"} />
+                    )
+                  )}
                 </div>
               )}
             </section>

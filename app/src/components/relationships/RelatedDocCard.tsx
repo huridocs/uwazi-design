@@ -20,7 +20,7 @@ export function RelatedDocCard({ title, entityTypeId, referenceCount }: RelatedD
       <CountBadge count={referenceCount} />
       <ExternalLink
         size={14}
-        className="text-ink-muted opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+        className="text-ink-muted opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity shrink-0"
       />
     </div>
   );

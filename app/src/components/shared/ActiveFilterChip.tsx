@@ -9,25 +9,24 @@ interface ActiveFilterChipProps {
 export function ActiveFilterChip({ label, color, onRemove }: ActiveFilterChipProps) {
   return (
     <span
-      className="inline-flex items-center gap-1 h-6 pl-1.5 pr-1 rounded text-[11px] font-medium text-ink-secondary"
+      className="inline-flex items-center gap-1 h-6 ps-1.5 pe-1 rounded text-[11px] font-medium text-ink-secondary"
       style={{
-        backgroundColor: "color-mix(in srgb, var(--ink) 6%, var(--bg-surface))",
-        border: "1px solid color-mix(in srgb, var(--ink) 14%, var(--bg-surface))",
+        backgroundColor: "color-mix(in srgb, var(--text-primary) 6%, var(--bg-surface))",
+        border: "1px solid color-mix(in srgb, var(--text-primary) 14%, var(--bg-surface))",
       }}
     >
       {color && (
         <span
-          className="shrink-0 rounded-[2px]"
-          style={{ backgroundColor: color, width: 6, height: 6 }}
+          className="shrink-0 rounded-[2px] w-1.5 h-1.5"
+          style={{ backgroundColor: color }}
         />
       )}
-      <span className="truncate max-w-[160px]">{label}</span>
+      <span className="truncate max-w-40">{label}</span>
       <button
         type="button"
         onClick={onRemove}
         aria-label={`Remove filter: ${label}`}
-        className="shrink-0 flex items-center justify-center rounded-sm text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
-        style={{ width: 16, height: 16 }}
+        className="shrink-0 flex items-center justify-center w-4 h-4 rounded-sm text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
       >
         <X size={10} />
       </button>

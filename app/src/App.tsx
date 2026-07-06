@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useAtom } from "jotai";
 import { Navbar } from "./components/layout/Navbar";
 import { EntityView } from "./views/EntityView";
@@ -18,7 +18,10 @@ export function App() {
   const [appView, setAppView] = useAtom(appViewAtom);
   const [theme, setTheme] = useAtom(themeAtom);
   const [language, setLanguage] = useAtom(languageAtom);
-  const [rtl, setRtl] = useState(false);
+  // Direction derives from the reading language — selecting AR anywhere
+  // (language pills or the navbar toggle) flips the document, and leaving
+  // AR restores LTR. No separate direction state to fall out of sync.
+  const rtl = language === "AR";
 
   useEffect(() => {
     const apply = () =>
@@ -37,11 +40,7 @@ export function App() {
   }, [rtl]);
 
   const handleToggleRtl = () => {
-    setRtl((r) => {
-      const next = !r;
-      setLanguage(next ? "AR" : "EN");
-      return next;
-    });
+    setLanguage(rtl ? "EN" : "AR");
   };
 
   const handleLogoClick = () => {

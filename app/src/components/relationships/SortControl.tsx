@@ -40,7 +40,7 @@ export function SortControl({ size = "md" }: { size?: "sm" | "md" }) {
           <div
             role="listbox"
             aria-label="Sort order"
-            className="absolute top-full left-0 mt-1 z-20 bg-paper border border-border rounded-md shadow-lg overflow-hidden min-w-[120px]"
+            className="absolute top-full left-0 mt-1 z-20 bg-paper border border-border rounded-md shadow-lg overflow-hidden min-w-30"
           >
             {options.map((opt) => (
               <button

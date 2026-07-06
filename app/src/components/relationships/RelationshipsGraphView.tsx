@@ -2,21 +2,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Link2 } from "lucide-react";
 import {
-  scopedReferencesAtom,
   overlayEntityIdAtom,
   activeRefIdAtom,
 } from "../../atoms/references";
-import {
-  searchQueryAtom,
-  activeClusterRefIdsAtom,
-  relTypeFiltersAtom,
-  entityTypeFiltersAtom,
-  groupByAtom,
-} from "../../atoms/filters";
+import { groupByAtom } from "../../atoms/filters";
+import { useFilteredReferences } from "./useFilteredReferences";
 import { getEntity, getEntityType } from "../../data/entities";
 import { Direction } from "../../data/references";
 import { currentDocument } from "../../data/document";
-import { buildMatcher } from "../../utils/searchQuery";
 import { deriveRelationships, Relationship } from "../../utils/relationships";
 import {
   getGroupColor,
@@ -61,11 +54,6 @@ const ARC_GAP = 30;
 const GRAPH_CAP = 150;
 
 export function RelationshipsGraphView() {
-  const [references] = useAtom(scopedReferencesAtom);
-  const [searchQuery] = useAtom(searchQueryAtom);
-  const [activeClusterRefIds] = useAtom(activeClusterRefIdsAtom);
-  const [relTypeFilters] = useAtom(relTypeFiltersAtom);
-  const [entityTypeFilters] = useAtom(entityTypeFiltersAtom);
   const [groupBy] = useAtom(groupByAtom);
   const [overlayEntityId, setOverlayEntityId] = useAtom(overlayEntityIdAtom);
   const activeRefId = useAtomValue(activeRefIdAtom);
@@ -84,35 +72,9 @@ export function RelationshipsGraphView() {
     moved: boolean;
   }>({ active: false, startX: 0, startY: 0, initTx: 0, initTy: 0, moved: false });
 
-  const filteredRefs = useMemo(() => {
-    let result = references;
-    if (activeClusterRefIds) {
-      const cluster = new Set(activeClusterRefIds);
-      result = result.filter((r) => cluster.has(r.id));
-    }
-    const activeRelTypes = Object.entries(relTypeFilters).filter(([, v]) => v).map(([k]) => k);
-    if (activeRelTypes.length > 0) {
-      const set = new Set(activeRelTypes);
-      result = result.filter((r) => set.has(r.relationType));
-    }
-    const activeEntityTypes = Object.entries(entityTypeFilters).filter(([, v]) => v).map(([k]) => k);
-    if (activeEntityTypes.length > 0) {
-      const set = new Set(activeEntityTypes);
-      result = result.filter((r) => {
-        const entity = getEntity(r.targetEntityId);
-        return entity ? set.has(entity.typeId) : false;
-      });
-    }
-    const matcher = buildMatcher(searchQuery);
-    if (matcher) {
-      result = result.filter((ref) => {
-        const entity = getEntity(ref.targetEntityId);
-        const haystack = `${ref.sourceSelection?.text ?? ""} ${entity?.title ?? ""} ${ref.relationType}`;
-        return matcher(haystack);
-      });
-    }
-    return result;
-  }, [references, searchQuery, activeClusterRefIds, relTypeFilters, entityTypeFilters]);
+  // Shared pipeline — applies every facet the list view applies (country,
+  // descriptor, inherited included). Sort is irrelevant to the radial layout.
+  const filteredRefs = useFilteredReferences({ sort: false });
 
   const { spokes, nodes, truncated } = useMemo(() => {
     // Graph has no "hub container" node — every entity that participates
@@ -146,10 +108,12 @@ export function RelationshipsGraphView() {
     const spokesArr: Spoke[] = [];
 
     // Angular width each branch may use (leave a gap between sectors).
+    // Clamped: past ~52 spokes the gap subtraction would go negative and
+    // collapse every fan into a straight radial line.
     const sectorSpan =
       spokeCount === 1
         ? Math.PI * 1.4
-        : (Math.PI * 2) / spokeCount - 0.12;
+        : Math.max(0.05, (Math.PI * 2) / spokeCount - 0.12);
 
     sorted.forEach(([key, targets], i) => {
       const angle =
@@ -483,7 +447,7 @@ export function RelationshipsGraphView() {
         const top = Math.min(rect.height - estHeight - pad, Math.max(pad, hover.y - estHeight - 10));
         return (
           <div
-            className="absolute z-10 pointer-events-none px-2.5 py-1.5 rounded-md bg-ink text-paper shadow-md max-w-[240px]"
+            className="absolute z-10 pointer-events-none px-2.5 py-1.5 rounded-md bg-ink text-paper shadow-md max-w-60"
             style={{ left, top, opacity: 0.94 }}
           >
             <div className="text-[11px] font-semibold truncate">{hover.node.title}</div>

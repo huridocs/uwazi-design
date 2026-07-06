@@ -35,6 +35,16 @@ export function NewImportModal({ open, onClose, onImport }: NewImportModalProps)
     }
   }, [open]);
 
+  // Escape closes — same convention as the drawers/dialogs.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
   if (!open) return null;
 
   const filtered = templates.filter((t) =>
@@ -61,6 +71,7 @@ export function NewImportModal({ open, onClose, onImport }: NewImportModalProps)
           <h2 id="import-modal-title" className="text-base font-semibold text-ink">New Import</h2>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="p-1 rounded-md hover:bg-parchment transition-colors"
           >
             <X size={18} className="text-ink-muted" />
@@ -134,6 +145,7 @@ export function NewImportModal({ open, onClose, onImport }: NewImportModalProps)
                     {search && (
                       <button
                         onClick={() => setSearch("")}
+                        aria-label="Clear search"
                         className="p-0.5 rounded-full hover:bg-parchment text-ink-muted hover:text-ink cursor-pointer transition-colors shrink-0"
                       >
                         <X size={12} />

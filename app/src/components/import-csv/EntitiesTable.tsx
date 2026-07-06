@@ -1,6 +1,7 @@
 import { Eye } from "lucide-react";
 import type { CreatedEntity } from "../../data/imports";
 import { useNotify } from "../../hooks/useNotify";
+import { formatShortDate } from "../../utils/dates";
 
 interface EntitiesTableProps {
   entities: CreatedEntity[];
@@ -47,12 +48,7 @@ export function EntitiesTable({ entities }: EntitiesTableProps) {
           >
             <span className="text-xs font-medium text-ink truncate">{entity.title}</span>
             <span className="text-xs text-ink-tertiary">{entity.template}</span>
-            <span className="text-xs text-ink-tertiary">
-              {new Date(entity.date).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-              })}
-            </span>
+            <span className="text-xs text-ink-tertiary">{formatShortDate(entity.date)}</span>
             <button
               aria-label={`View ${entity.title}`}
               onClick={() => notify(`Opening ${entity.title}`)}

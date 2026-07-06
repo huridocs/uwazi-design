@@ -4,6 +4,7 @@ import { ProgressBar } from "../shared/ProgressBar";
 import { Checkbox } from "../shared/Checkbox";
 import { breakpointAtom } from "../../atoms/viewport";
 import { useNotify } from "../../hooks/useNotify";
+import { formatSlashDate } from "../../utils/dates";
 import type { ImportEntry } from "../../data/imports";
 
 interface ImportTableProps {
@@ -42,13 +43,8 @@ function progressLabel(entry: ImportEntry): string {
   return `${current.toLocaleString()}/${total.toLocaleString()}`;
 }
 
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${mm}/${dd}/${d.getFullYear()}`;
-}
+// UTC-pinned so `YYYY-MM-DD` seeds don't render the previous day in the Americas.
+const formatDate = formatSlashDate;
 
 export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onView }: ImportTableProps) {
   const allSelected = imports.length > 0 && imports.every((i) => selectedIds.has(i.id));
@@ -69,7 +65,7 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
                 tabIndex={0}
                 onClick={() => onSelect(entry.id)}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(entry.id); } }}
-                className={`flex items-start gap-3 p-3 cursor-pointer transition-colors hover:bg-warm ${isSelected ? "bg-warm" : ""}`}
+                className={`flex items-start gap-3 p-3 cursor-pointer transition-colors hover:bg-warm ${isSelected ? "bg-parchment" : ""}`}
                 style={{ borderBottom: "1px solid var(--border-primary)" }}
               >
                 <label className="flex items-center pt-0.5" onClick={(e) => e.stopPropagation()}>
@@ -149,7 +145,7 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
                 }
               }}
               className={`grid items-center gap-3 px-4 h-11 text-sm transition-colors cursor-pointer
-                hover:bg-warm ${isSelected ? "bg-warm" : ""}`}
+                hover:bg-warm ${isSelected ? "bg-parchment" : ""}`}
               style={{
                 gridTemplateColumns: cols,
                 borderBottom: "1px solid var(--border-primary)",

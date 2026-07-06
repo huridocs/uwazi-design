@@ -41,16 +41,17 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
   const [searchQuery] = useAtom(searchQueryAtom);
   const setActiveClusterRefIds = useSetAtom(activeClusterRefIdsAtom);
   const minimapRef = useRef<HTMLDivElement>(null);
-  // Reset transient minimap state (expanded cluster, hovered dot, mode) when
-  // the user switches between primary documents — otherwise a tree from the
-  // previous doc remains expanded against the new doc's clusters, which is
-  // confusing since cluster indices don't carry across.
+  // Reset transient minimap state (expanded cluster, hovered dot) whenever
+  // the cluster array is about to be recomputed — doc switch, search query,
+  // or global/page mode change all reshuffle cluster boundaries and order,
+  // so a stale index would expand an unrelated cluster and the captured
+  // "from selection" ref-ids would keep filtering by the pre-recompute set.
   const activePrimaryGroupId = useAtomValue(activePrimaryGroupIdAtom);
   useEffect(() => {
     setExpandedCluster(null);
     setHoveredDot(null);
     setActiveClusterRefIds(null);
-  }, [activePrimaryGroupId, setActiveClusterRefIds]);
+  }, [activePrimaryGroupId, searchQuery, mode, setActiveClusterRefIds]);
 
   const dotSize = DOT_SIZE;
 

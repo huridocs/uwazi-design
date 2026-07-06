@@ -92,6 +92,16 @@ export function AddFileModal() {
     if (!open) setEntries([]);
   }, [open]);
 
+  // Escape closes — same convention as the drawers/dialogs.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setTarget(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, setTarget]);
+
   // Simulate upload progress for queued entries.
   useEffect(() => {
     if (!open) return;

@@ -184,6 +184,11 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
 
   return (
     <>
+      {/* Visually-hidden live region — announces flashes (action feedback /
+          new arrivals) to screen readers; the pill itself is purely visual. */}
+      <span aria-live="polite" className="sr-only">
+        {flash?.message ?? ""}
+      </span>
       <div
         dir="ltr"
         className="relative shrink-0"

@@ -184,7 +184,7 @@ export function ComponentCatalog({ onReturn }: Props) {
     >
       {/* Sticky header — pinned at the top of the scroll container */}
       <header
-        className="sticky top-0 z-30 h-[52px] bg-paper flex items-center justify-between px-5"
+        className="sticky top-0 z-30 h-13 bg-paper flex items-center justify-between px-5"
         style={{ borderBottom: "1px solid var(--border-primary)" }}
       >
         <img src="/nu-logo.svg" alt="Uwazi" style={{ height: 14.7 }} className="logo-img" />
@@ -198,7 +198,7 @@ export function ComponentCatalog({ onReturn }: Props) {
       <div className="grid grid-cols-[220px_minmax(0,1fr)]">
       {/* Sidebar — sticky to top:52 (below the header). Self-scrolls if its
           own item list exceeds viewport height. */}
-      <nav className="sticky top-[52px] z-20 self-start bg-paper border-r border-border/60 py-4 px-3 overflow-y-auto overscroll-y-none" style={{ height: "calc(100vh - 52px)" }}>
+      <nav className="sticky top-13 z-20 self-start bg-paper border-r border-border/60 py-4 px-3 overflow-y-auto overscroll-y-none" style={{ height: "calc(100vh - 3.25rem)" }}>
         <h2 className="text-[10px] font-bold text-ink-muted uppercase tracking-widest px-2 mb-3">
           Component Catalog
         </h2>
@@ -228,7 +228,7 @@ export function ComponentCatalog({ onReturn }: Props) {
       </nav>
 
       {/* Content */}
-      <div className="px-8 pt-6 pb-12 scroll-pt-[68px]">
+      <div className="px-8 pt-6 pb-12 scroll-pt-[4.25rem]">
         <div className="max-w-3xl mx-auto flex flex-col gap-10">
 
           {/* ==================== STYLE GUIDE ==================== */}
@@ -295,7 +295,7 @@ export function ComponentCatalog({ onReturn }: Props) {
                   code={`<CountBadge count={5} />
 <CountBadge count={12} />
 <CountBadge count={128} />`}
-                  tailwind="min-w-[20px] h-5 rounded-full bg-parchment text-ink-tertiary"
+                  tailwind="min-w-5 h-5 rounded-full bg-parchment text-ink-tertiary"
                 >
                   <div className="flex items-center gap-3">
                     <CountBadge count={3} />

@@ -80,7 +80,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
 
   return (
     <header
-      className="relative h-[52px] bg-paper flex items-center justify-between px-4 md:px-5 shrink-0"
+      className="relative h-13 bg-paper flex items-center justify-between px-4 md:px-5 shrink-0"
       style={{ borderBottom: "1px solid var(--border-primary)" }}
     >
       {/* Left: Logo + (mobile hamburger | desktop nav) */}
@@ -88,8 +88,8 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
         {isMobile && !showingCatalog && (
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="flex items-center justify-center rounded-md hover:bg-warm transition-colors"
-            style={{ width: 32, height: 32, color: "var(--text-secondary)" }}
+            className="flex items-center justify-center rounded-md hover:bg-warm transition-colors w-8 h-8"
+            style={{ color: "var(--text-secondary)" }}
             aria-label="Open menu"
           >
             <Menu size={18} />

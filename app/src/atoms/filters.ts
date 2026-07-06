@@ -80,6 +80,19 @@ export const relInheritedFiltersAtom = atom<
   Record<string, Record<string, boolean>>
 >({});
 
+/** Write-only: clear the per-entity relationship facets. Fired on focal-entity
+ *  change — facet values derive from the previous entity's targets, so a
+ *  leftover selection can silently filter the new entity's rows to nothing
+ *  while the facet UI self-hides (no visible control left to clear it). */
+export const resetRelFacetsAtom = atom(null, (_get, set) => {
+  set(relTypeFiltersAtom, {});
+  set(entityTypeFiltersAtom, {});
+  set(relTargetCountryFiltersAtom, {});
+  set(relTargetDescriptorFiltersAtom, {});
+  set(relInheritedFiltersAtom, {});
+  set(activeClusterRefIdsAtom, null);
+});
+
 /** Whether the toggleable filters slide-over is open (single shared flag). */
 export const filtersDrawerOpenAtom = atom(false);
 

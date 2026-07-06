@@ -1,5 +1,7 @@
 import { useEffect, type ReactNode } from "react";
+import { useAtomValue } from "jotai";
 import { X } from "lucide-react";
+import { languageAtom } from "../../atoms/language";
 
 interface FiltersDrawerProps {
   open: boolean;
@@ -18,6 +20,8 @@ export function FiltersDrawer({
   footer,
   width = 340,
 }: FiltersDrawerProps) {
+  // Slide from the inline end — flips to the left edge under RTL (Arabic).
+  const rtl = useAtomValue(languageAtom) === "AR";
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -41,12 +45,12 @@ export function FiltersDrawer({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`absolute top-0 bottom-0 right-0 z-40 bg-paper shadow-lg flex flex-col transition-transform duration-200 ease-out ${
-          open ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`absolute top-0 bottom-0 z-40 bg-paper shadow-lg flex flex-col transition-transform duration-200 ease-out ${
+          rtl ? "left-0" : "right-0"
+        } ${open ? "translate-x-0" : rtl ? "-translate-x-full" : "translate-x-full"}`}
         style={{
-          width: `min(100%, ${width}px)`,
-          borderLeft: "1px solid var(--border-primary)",
+          width: `min(100%, ${width / 16}rem)`,
+          borderInlineStart: "1px solid var(--border-primary)",
         }}
       >
         <header
@@ -57,8 +61,7 @@ export function FiltersDrawer({
           <button
             onClick={onClose}
             aria-label="Close filters"
-            className="flex items-center justify-center rounded-sm text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
-            style={{ width: 20, height: 20 }}
+            className="flex items-center justify-center w-5 h-5 rounded-sm text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
           >
             <X size={14} />
           </button>

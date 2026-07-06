@@ -1,31 +1,15 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { Link2 } from "lucide-react";
-import { scopedReferencesAtom } from "../../atoms/references";
 import {
   viewAtom,
   groupByAtom,
   subGroupByAtom,
-  searchQueryAtom,
-  sortOrderAtom,
-  activeClusterRefIdsAtom,
-  relTypeFiltersAtom,
-  entityTypeFiltersAtom,
-  relTargetCountryFiltersAtom,
-  relTargetDescriptorFiltersAtom,
-  relTargetDescriptorModeAtom,
-  relInheritedFiltersAtom,
   expandAllSignalAtom,
   collapseAllSignalAtom,
   activeFilterCountAtom,
 } from "../../atoms/filters";
-import { languageAtom } from "../../atoms/language";
-import { getEntity } from "../../data/entities";
-import { getEntityProp } from "../../data/entityMetadata";
-import { inheritedFilterProps } from "../../data/metadata";
-import { entityCountries } from "../../utils/libraryFacets";
-import { Reference } from "../../data/references";
-import { buildMatcher } from "../../utils/searchQuery";
+import { useFilteredReferences } from "./useFilteredReferences";
 import { deriveHubs, deriveRelationships } from "../../utils/relationships";
 import {
   getGroupColor,
@@ -49,132 +33,16 @@ const LIST_CAP = 100;
 
 /** Body of the merged Relationships panel — toolbar lives above. */
 export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
-  const [references] = useAtom(scopedReferencesAtom);
   const [view] = useAtom(viewAtom);
   const [groupBy] = useAtom(groupByAtom);
   const [subGroupBy] = useAtom(subGroupByAtom);
-  const [searchQuery] = useAtom(searchQueryAtom);
-  const [sortOrder] = useAtom(sortOrderAtom);
-  const [activeClusterRefIds] = useAtom(activeClusterRefIdsAtom);
-  const [relTypeFilters] = useAtom(relTypeFiltersAtom);
-  const [entityTypeFilters] = useAtom(entityTypeFiltersAtom);
-  const [countryFilters] = useAtom(relTargetCountryFiltersAtom);
-  const [descriptorFilters] = useAtom(relTargetDescriptorFiltersAtom);
-  const [descriptorMode] = useAtom(relTargetDescriptorModeAtom);
-  const [inheritedFilters] = useAtom(relInheritedFiltersAtom);
-  const [language] = useAtom(languageAtom);
   const [activeFilterCount] = useAtom(activeFilterCountAtom);
   const setExpandSignal = useSetAtom(expandAllSignalAtom);
   const setCollapseSignal = useSetAtom(collapseAllSignalAtom);
 
-  const filtered = useMemo<Reference[]>(() => {
-    let result = references;
-    if (activeClusterRefIds) {
-      const cluster = new Set(activeClusterRefIds);
-      result = result.filter((r) => cluster.has(r.id));
-    }
-    const activeRelTypes = Object.entries(relTypeFilters)
-      .filter(([, v]) => v)
-      .map(([k]) => k);
-    if (activeRelTypes.length > 0) {
-      const set = new Set(activeRelTypes);
-      result = result.filter((r) => set.has(r.relationType));
-    }
-    const activeEntityTypes = Object.entries(entityTypeFilters)
-      .filter(([, v]) => v)
-      .map(([k]) => k);
-    if (activeEntityTypes.length > 0) {
-      const set = new Set(activeEntityTypes);
-      result = result.filter((r) => {
-        const entity = getEntity(r.targetEntityId);
-        return entity ? set.has(entity.typeId) : false;
-      });
-    }
-    const activeCountries = Object.entries(countryFilters)
-      .filter(([, v]) => v)
-      .map(([k]) => k);
-    if (activeCountries.length > 0) {
-      const set = new Set(activeCountries);
-      result = result.filter((r) => {
-        const entity = getEntity(r.targetEntityId);
-        return entity
-          ? entityCountries(entity, language).some((c) => set.has(c))
-          : false;
-      });
-    }
-    const activeDescriptors = Object.entries(descriptorFilters)
-      .filter(([, v]) => v)
-      .map(([k]) => k);
-    if (activeDescriptors.length > 0) {
-      result = result.filter((r) => {
-        const ds = getEntity(r.targetEntityId)?.descriptors;
-        if (!ds || ds.length === 0) return false;
-        const have = new Set(ds);
-        return descriptorMode === "AND"
-          ? activeDescriptors.every((d) => have.has(d))
-          : activeDescriptors.some((d) => have.has(d));
-      });
-    }
-    const inheritedDefs = inheritedFilterProps(language);
-    for (const [propId, vals] of Object.entries(inheritedFilters)) {
-      const active = Object.entries(vals)
-        .filter(([, v]) => v)
-        .map(([k]) => k);
-      if (active.length === 0) continue;
-      const targetTypeId = inheritedDefs.find((d) => d.propId === propId)?.targetTypeId;
-      const set = new Set(active);
-      result = result.filter((r) => {
-        const entity = getEntity(r.targetEntityId);
-        if (targetTypeId && entity?.typeId !== targetTypeId) return false;
-        const v = getEntityProp(r.targetEntityId, propId, language);
-        return v ? set.has(v) : false;
-      });
-    }
-    const matcher = buildMatcher(searchQuery);
-    if (matcher) {
-      result = result.filter((ref) => {
-        const entity = getEntity(ref.targetEntityId);
-        const haystack = `${ref.sourceSelection?.text ?? ""} ${entity?.title ?? ""} ${ref.relationType}`;
-        return matcher(haystack);
-      });
-    }
-    if (sortOrder === "none") {
-      // Raw seed/insertion order — no sort applied. Lets the user see refs
-      // exactly as the data layer hands them over.
-      return result;
-    }
-    if (sortOrder === "appearance") {
-      // Entity-level refs (no sourceSelection) sort to the top: they're not
-      // tied to a passage, so they read as "header" relationships about the
-      // entity overall. Anchored refs follow in page-then-top order.
-      return [...result].sort((a, b) => {
-        const pageA = a.sourceSelection?.page ?? -1;
-        const pageB = b.sourceSelection?.page ?? -1;
-        if (pageA !== pageB) return pageA - pageB;
-        const topA = a.sourceSelection?.top ?? 0;
-        const topB = b.sourceSelection?.top ?? 0;
-        return topA - topB;
-      });
-    }
-    const dir = sortOrder === "asc" ? 1 : -1;
-    return [...result].sort((a, b) => {
-      const nameA = getEntity(a.targetEntityId)?.title ?? "";
-      const nameB = getEntity(b.targetEntityId)?.title ?? "";
-      return nameA.localeCompare(nameB) * dir;
-    });
-  }, [
-    references,
-    searchQuery,
-    sortOrder,
-    activeClusterRefIds,
-    relTypeFilters,
-    entityTypeFilters,
-    countryFilters,
-    descriptorFilters,
-    descriptorMode,
-    inheritedFilters,
-    language,
-  ]);
+  // The one shared pipeline (cluster → facets → search → sort) — List, Tree,
+  // and Graph all filter through it. See useFilteredReferences.
+  const filtered = useFilteredReferences();
 
   // Well-connected entities (e.g. a País) can have thousands of references —
   // cap the flat list render and reveal more on demand so it never paints them all.

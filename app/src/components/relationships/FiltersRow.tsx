@@ -83,7 +83,7 @@ export function ViewModeControls({
               aria-hidden="true"
               onClick={() => setDropdownOpen(false)}
             />
-            <div role="listbox" aria-label="Sort order" className="absolute top-full right-0 mt-1 z-20 bg-paper border border-border rounded-md shadow-lg overflow-hidden w-[100px]">
+            <div role="listbox" aria-label="Sort order" className="absolute top-full right-0 mt-1 z-20 bg-paper border border-border rounded-md shadow-lg overflow-hidden w-[6.25rem]">
               {sortOptions.map((opt) => (
                 <button
                   key={opt.id}

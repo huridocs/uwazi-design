@@ -409,7 +409,7 @@ function RowKebab({ items }: { items: KebabItem[] }) {
         <div
           ref={menuRef}
           role="menu"
-          className="fixed z-50 min-w-[220px] rounded-md bg-paper shadow-xl py-1 animate-fade-in-up"
+          className="fixed z-50 min-w-55 rounded-md bg-paper shadow-xl py-1 animate-fade-in-up"
           style={{
             top: pos.top,
             left: pos.left,
