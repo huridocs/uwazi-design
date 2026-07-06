@@ -303,6 +303,7 @@ export function FileTable({
       data={files}
       getRowId={(f) => f.id}
       onRowClick={(f) => onFocus?.(f.id)}
+      rowAriaLabel={(f) => `Focus ${f.name}`}
       isRowSelected={(f) => focusedId === f.id}
       footer={embedded ? undefined : <span>{files.length} files</span>}
     />

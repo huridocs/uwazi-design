@@ -64,42 +64,52 @@ export const EntityCard = memo(function EntityCard({
   );
 
   const base =
-    "group text-start rounded-md border transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30";
+    "group relative text-start rounded-md border transition-colors cursor-pointer";
   const surface = selected ? "bg-parchment border-border" : "bg-paper border-border/60 hover:bg-parchment";
+
+  // The card container is NOT a button — it hosts nested controls (View,
+  // connection badge), so a stretched invisible primary-action button carries
+  // the keyboard/AT path instead, and the content sits above it. Clicks on
+  // content bubble to the container's plain onClick (mouse path unchanged).
+  const primaryAction = (
+    <button
+      type="button"
+      aria-pressed={selected}
+      aria-label={`Select ${entity.title}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelect(entity.id);
+      }}
+      className="absolute inset-0 w-full cursor-pointer rounded-[inherit] focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"
+    />
+  );
 
   if (layout === "list") {
     return (
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={() => onSelect(entity.id)}
-        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onSelect(entity.id)}
-        className={`${base} ${surface} w-full px-3 py-2.5 flex items-center gap-3`}
-      >
-        {showPreview && entity.preview && (
-          <EntityThumbnail kind={entity.preview} className="w-9 h-9 rounded shrink-0 overflow-hidden" />
-        )}
-        <EntityPill typeId={entity.typeId} />
-        <span className="flex-1 min-w-0 text-sm font-semibold text-ink truncate">{entity.title}</span>
-        {showMetadata && scalarFields[0] && (
-          <span className="hidden md:block text-[11px] text-ink-tertiary truncate max-w-[14rem]">
-            {scalarFields[0].label}: <span className="text-ink-secondary">{scalarFields[0].value}</span>
-          </span>
-        )}
-        {connectionBadge}
-        {viewButton}
+      <div onClick={() => onSelect(entity.id)} className={`${base} ${surface} w-full`}>
+        {primaryAction}
+        <div className="relative px-3 py-2.5 flex items-center gap-3">
+          {showPreview && entity.preview && (
+            <EntityThumbnail kind={entity.preview} className="w-9 h-9 rounded shrink-0 overflow-hidden" />
+          )}
+          <EntityPill typeId={entity.typeId} />
+          <span className="flex-1 min-w-0 text-sm font-semibold text-ink truncate">{entity.title}</span>
+          {showMetadata && scalarFields[0] && (
+            <span className="hidden md:block text-[11px] text-ink-tertiary truncate max-w-[14rem]">
+              {scalarFields[0].label}: <span className="text-ink-secondary">{scalarFields[0].value}</span>
+            </span>
+          )}
+          {connectionBadge}
+          {viewButton}
+        </div>
       </div>
     );
   }
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={() => onSelect(entity.id)}
-      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onSelect(entity.id)}
-      className={`${base} ${surface} p-3 flex flex-col gap-2.5`}
-    >
+    <div onClick={() => onSelect(entity.id)} className={`${base} ${surface}`}>
+      {primaryAction}
+      <div className="relative h-full p-3 flex flex-col gap-2.5">
       {showPreview && entity.preview && (
         <EntityThumbnail
           kind={entity.preview}
@@ -127,6 +137,7 @@ export const EntityCard = memo(function EntityCard({
           {connectionBadge}
           {viewButton}
         </div>
+      </div>
       </div>
     </div>
   );

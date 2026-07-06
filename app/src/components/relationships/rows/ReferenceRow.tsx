@@ -72,6 +72,9 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
       <ListCardRow
         ref={rowRef as unknown as React.Ref<HTMLElement>}
         selected={isActive}
+        ariaLabel={`Reference to ${entity?.title ?? "unknown entity"}${
+          selection ? `, page ${selection.page}` : ""
+        }`}
         onClick={handleClick}
         className="!py-1.5"
       >
@@ -94,6 +97,9 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
       <ListCardRow
         ref={rowRef as unknown as React.Ref<HTMLElement>}
         selected={isActive}
+        ariaLabel={`Reference to ${entity?.title ?? "unknown entity"}${
+          selection ? `, page ${selection.page}` : ""
+        }`}
         onClick={handleClick}
         className="!py-2"
       >
@@ -123,6 +129,9 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
     <ListCardRow
       ref={rowRef as unknown as React.Ref<HTMLElement>}
       selected={isActive}
+      ariaLabel={`Reference to ${entity?.title ?? "unknown entity"}${
+        selection ? `, page ${selection.page}` : ""
+      }`}
       onClick={handleClick}
     >
       {!nested && (

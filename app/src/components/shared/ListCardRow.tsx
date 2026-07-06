@@ -14,7 +14,7 @@ type ListCardRowProps =
   | ({ as: "button" } & BaseProps);
 
 const baseClasses =
-  "group px-3 py-2.5 border-b border-border/50 last:border-b-0 cursor-pointer transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20";
+  "group px-3 py-2.5 border-b border-border/50 last:border-b-0 cursor-pointer transition-colors";
 
 export const ListCardRow = forwardRef<HTMLElement, ListCardRowProps>(
   function ListCardRow(props, ref) {
@@ -38,24 +38,31 @@ export const ListCardRow = forwardRef<HTMLElement, ListCardRowProps>(
       );
     }
 
+    // The container is NOT a button — rows host nested interactive controls
+    // (page tags, chevrons, checkboxes), and an interactive ancestor around
+    // interactive children is invalid for AT. Instead a stretched, invisible
+    // primary-action button (first child) carries the keyboard/AT path:
+    // focusable, labeled, aria-pressed, Enter/Space native. The content
+    // wrapper is positioned above it, so nested controls stay clickable and
+    // clicks on content bubble to the container's plain onClick as before.
     return (
       <div
         ref={ref as React.Ref<HTMLDivElement>}
-        role="button"
-        tabIndex={0}
-        aria-pressed={selected}
-        aria-label={ariaLabel}
         onClick={onClick}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            onClick();
-          }
-          onKeyDown?.(e);
-        }}
-        className={composed}
+        className={`relative ${composed}`}
       >
-        {children}
+        <button
+          type="button"
+          aria-pressed={selected}
+          aria-label={ariaLabel ?? "Open row"}
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick();
+          }}
+          onKeyDown={onKeyDown}
+          className="absolute inset-0 w-full cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20"
+        />
+        <div className="relative">{children}</div>
       </div>
     );
   },

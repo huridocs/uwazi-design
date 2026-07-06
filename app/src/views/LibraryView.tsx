@@ -539,6 +539,7 @@ export function LibraryView() {
             data={shown}
             getRowId={(e) => e.id}
             onRowClick={(e) => handleSelect(e.id)}
+            rowAriaLabel={(e) => `Select ${e.title}`}
             isRowSelected={(e) => selectedId === e.id}
             sort={{ key: sort, dir: sortDir }}
             onSort={(key) => setSortKey(key as typeof sort)}

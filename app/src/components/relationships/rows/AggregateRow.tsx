@@ -129,6 +129,7 @@ export function AggregateRow({
     return (
       <ListCardRow
         selected={selected}
+        ariaLabel={`${entity?.title ?? "Unknown entity"} — ${relLabel}`}
         onClick={() => {
           setActiveAggregateId(rel.id);
           setOverlayEntityId(rel.targetEntityId);
@@ -159,6 +160,7 @@ export function AggregateRow({
     return (
       <ListCardRow
         selected={selected}
+        ariaLabel={`${entity?.title ?? "Unknown entity"} — ${relLabel}`}
         onClick={() => {
           setActiveAggregateId(rel.id);
           setOverlayEntityId(rel.targetEntityId);

@@ -61,17 +61,23 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
             return (
               <div
                 key={entry.id}
-                role="button"
-                tabIndex={0}
                 onClick={() => onSelect(entry.id)}
-                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(entry.id); } }}
-                className={`flex items-start gap-3 p-3 cursor-pointer transition-colors hover:bg-warm ${isSelected ? "bg-parchment" : ""}`}
+                className={`relative flex items-start gap-3 p-3 cursor-pointer transition-colors hover:bg-warm ${isSelected ? "bg-parchment" : ""}`}
                 style={{ borderBottom: "1px solid var(--border-primary)" }}
               >
-                <label className="flex items-center pt-0.5" onClick={(e) => e.stopPropagation()}>
+                {/* Stretched primary action — the row hosts nested controls
+                    (checkbox, View), so the container itself is not a button. */}
+                <button
+                  type="button"
+                  aria-pressed={isSelected}
+                  aria-label={`Select ${entry.filename}`}
+                  onClick={(e) => { e.stopPropagation(); onSelect(entry.id); }}
+                  className="absolute inset-0 w-full cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20"
+                />
+                <label className="relative flex items-center pt-0.5" onClick={(e) => e.stopPropagation()}>
                   <Checkbox checked={isSelected} onChange={() => onSelect(entry.id)} ariaLabel={`Select ${entry.filename}`} />
                 </label>
-                <div className="flex-1 min-w-0">
+                <div className="relative flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2 mb-1.5">
                     <span className="text-sm font-medium text-ink truncate">{entry.filename}</span>
                     <StatusBadge status={entry.status} />
@@ -93,7 +99,7 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
                 </div>
                 <button
                   onClick={(e) => { e.stopPropagation(); onView(entry.id); }}
-                  className="px-2.5 py-1 text-[11px] font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors shrink-0"
+                  className="relative px-2.5 py-1 text-[11px] font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors shrink-0"
                 >
                   View
                 </button>
@@ -137,14 +143,7 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
             <div
               key={entry.id}
               role="row"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  onSelect(entry.id);
-                }
-              }}
-              className={`grid items-center gap-3 px-4 h-11 text-sm transition-colors cursor-pointer
+              className={`relative grid items-center gap-3 px-4 h-11 text-sm transition-colors cursor-pointer
                 hover:bg-warm ${isSelected ? "bg-parchment" : ""}`}
               style={{
                 gridTemplateColumns: cols,
@@ -152,7 +151,17 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
               }}
               onClick={() => onSelect(entry.id)}
             >
-              <label className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+              {/* Stretched primary action — the focusable path lives here, not
+                  on the row (a focusable row wrapping the checkbox/View button
+                  is invalid nesting for AT). */}
+              <button
+                type="button"
+                aria-pressed={isSelected}
+                aria-label={`Select ${entry.filename}`}
+                onClick={(e) => { e.stopPropagation(); onSelect(entry.id); }}
+                className="absolute inset-0 w-full cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20"
+              />
+              <label className="relative flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
                 <Checkbox checked={isSelected} onChange={() => onSelect(entry.id)} ariaLabel={`Select ${entry.filename}`} />
               </label>
 
@@ -178,7 +187,7 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
               </span>
               <span dir="ltr" className="text-xs text-ink-tertiary tabular-nums">{formatDate(entry.date)}</span>
 
-              <div className="flex items-center justify-center">
+              <div className="relative flex items-center justify-center">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();

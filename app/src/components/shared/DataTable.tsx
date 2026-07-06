@@ -35,6 +35,9 @@ interface DataTableProps<T> {
    *  just renders clickable headers and the active arrow. */
   sort?: { key: string; dir: SortDir };
   onSort?: (key: string) => void;
+  /** Accessible name for a clickable row's primary action (the invisible
+   *  stretched button). Defaults to "Open row". */
+  rowAriaLabel?: (row: T) => string;
 }
 
 const alignClass = {
@@ -62,6 +65,7 @@ export function DataTable<T>({
   rowProps,
   sort,
   onSort,
+  rowAriaLabel,
 }: DataTableProps<T>) {
   const gridTemplateColumns = columns.map((c) => c.width ?? "1fr").join(" ");
   const scrolls = minWidthRem !== undefined;
@@ -145,29 +149,35 @@ export function DataTable<T>({
                 key={id}
                 {...extra}
                 role="row"
-                tabIndex={clickable ? 0 : undefined}
-                aria-selected={clickable ? selected : undefined}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
-                onKeyDown={
-                  clickable
-                    ? (e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          onRowClick!(row);
-                        }
-                      }
-                    : undefined
-                }
-                className={`group grid items-center gap-3 px-4 min-h-11 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20 ${
+                className={`group relative grid items-center gap-3 px-4 min-h-11 py-2 text-sm transition-colors ${
                   clickable ? "cursor-pointer" : ""
                 } ${selected ? "bg-parchment" : "hover:bg-warm"} ${extraClass ?? ""}`}
                 style={{ gridTemplateColumns, borderBottom: "1px solid var(--border-primary)", ...extraStyle }}
               >
+                {/* The row itself is not focusable (a focusable row wrapping
+                    the cells' own buttons is invalid nesting for AT) — this
+                    stretched invisible button is the row's primary action.
+                    Cells are positioned above it so their controls stay
+                    clickable; clicks on cell content bubble to the row's
+                    plain onClick as before. */}
+                {clickable && (
+                  <button
+                    type="button"
+                    aria-pressed={selected}
+                    aria-label={rowAriaLabel?.(row) ?? "Open row"}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRowClick!(row);
+                    }}
+                    className="absolute inset-0 w-full cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20"
+                  />
+                )}
                 {columns.map((col) => (
                   <div
                     key={col.id}
                     role="cell"
-                    className={`flex items-center min-w-0 text-ink ${alignClass[col.align ?? "left"]}`}
+                    className={`relative flex items-center min-w-0 text-ink ${alignClass[col.align ?? "left"]}`}
                   >
                     {col.cell(row, i)}
                   </div>
