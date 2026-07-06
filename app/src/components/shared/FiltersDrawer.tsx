@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from "react";
 import { useAtomValue } from "jotai";
 import { X } from "lucide-react";
 import { languageAtom } from "../../atoms/language";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 
 interface FiltersDrawerProps {
   open: boolean;
@@ -22,6 +23,7 @@ export function FiltersDrawer({
 }: FiltersDrawerProps) {
   // Slide from the inline end — flips to the left edge under RTL (Arabic).
   const rtl = useAtomValue(languageAtom) === "AR";
+  const trapRef = useFocusTrap<HTMLElement>(open);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -42,6 +44,7 @@ export function FiltersDrawer({
         style={{ backgroundColor: "rgba(38, 30, 20, 0.18)" }}
       />
       <aside
+        ref={trapRef as React.Ref<HTMLElement>}
         role="dialog"
         aria-modal="true"
         aria-label={title}

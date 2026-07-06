@@ -1,5 +1,6 @@
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { activeAggregateIdAtom, overlayEntityIdAtom, referencesAtom } from "../../atoms/references";
 import { languageAtom } from "../../atoms/language";
 import { entityMetadataAtom, setEntityPropAtom } from "../../atoms/entityMetadata";
@@ -36,7 +37,8 @@ export function EntityOverlay() {
   const entityMetadata = useAtomValue(entityMetadataAtom);
   const setEntityProp = useSetAtom(setEntityPropAtom);
   const openEntity = useSetAtom(openEntityAtom);
-  const panelRef = useRef<HTMLDivElement>(null);
+  // One ref serves both the focus trap and the outside-click check.
+  const panelRef = useFocusTrap<HTMLDivElement>(entityId !== null);
   // Properties are read-only on open (this is a preview); editing is opt-in.
   const [editingProps, setEditingProps] = useState(false);
 

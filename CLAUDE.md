@@ -95,33 +95,36 @@ The prototype keeps a simpler shape: every row in `data/references.ts` is a `Ref
 The Relationships top tab is the single surface, hosting both the text-anchored (snippet + page) and aggregated (entity-level) projections of the same `references[]` array. Both the main view and the document-tab drawer route through the same body.
 
 ```
-src/components/connections/
-  ConnectionRow.tsx              // discriminated union: kind="reference" | kind="aggregate"
-  ConnectionGroupedCard.tsx      // shared group shell (expand/collapse signal, refIdsToWatch)
-  ConnectionsPanelBody.tsx       // filter pipeline + body switch on panelModeAtom
-  ConnectionsDrawerSection.tsx   // drawer-flavour wrapper: toolbar + body + scoped drawer
-  PanelModeControls.tsx          // 5-way pill driving panelModeAtom
+src/components/relationships/
+  RelationshipRow.tsx            // discriminated union: kind="reference" | "aggregate" | "hub"
+  RelationshipGroupedCard.tsx    // shared group shell (expand/collapse signal, refIdsToWatch)
+  RelationshipsPanelBody.tsx     // body switch on viewAtom; filters via useFilteredReferences
+  useFilteredReferences.ts       // THE filter pipeline (cluster→facets→search→sort) —
+                                 // List, Tree, AND Graph all consume this one hook
+  RelationshipsDrawerSection.tsx // drawer-flavour wrapper: toolbar + body + scoped drawer
+  ViewControls.tsx               // list | tree | graph pill driving viewAtom
+  GroupByControl.tsx             // grouping axis (+ subGroupBy "Then by")
   DirectionGlyph.tsx             // shared arrow badge
+  SearchBar.tsx                  // has rightSlot AND inlineSlot
+  FiltersRow.tsx                 // exports CollapseControls
+  ZoomControl.tsx                // detail / compact / overview
+  RelationshipsTreeView.tsx      // tree body — target cards use RelationshipRow kind="aggregate"
+  RelationshipsGraphView.tsx     // radial SVG body
+  RelationshipsFilterDrawer.tsx  // facet drawer (self-hides empty facets)
 src/views/
-  ConnectionsView.tsx            // the merged main-tab surface (Relationships tab)
+  RelationshipsView.tsx          // the merged main-tab surface (Relationships tab)
 src/components/shared/
   ListInfoRow.tsx                // count + chips + rightSlot
   ListCardRow.tsx                // forwardRef shell, owns selected/hover/focus
   Checkbox.tsx                   // single shared native checkbox
-  FiltersDrawer.tsx              // slide-over scoped to relative parent
+  FiltersDrawer.tsx              // slide-over scoped to relative parent (RTL-aware)
   FiltersButton.tsx              // size="sm" → h-6, size="md" → h-8
   FacetSection.tsx               // checkbox group with counts
   ActiveFilterChip.tsx
   FadeTruncate.tsx
-src/components/references/
-  SearchBar.tsx                  // has rightSlot AND inlineSlot
-  FiltersRow.tsx                 // exports ViewModeControls (legacy) + CollapseControls
-  ZoomControl.tsx                // detail / compact / overview (graph is now a PanelMode)
-  RelationshipsTreeView.tsx      // tree body — its target cards use ConnectionRow kind="aggregate"
-  RelationshipsGraphView.tsx     // radial SVG body
 ```
 
-`PanelMode = "list" | "by-entity-type" | "by-relation-type" | "tree" | "graph"`. The zoom toggle (`detail` / `compact` / `overview`) is orthogonal — applies to grouped + tree, hidden in list + graph.
+`View = "list" | "tree" | "graph"` (`viewAtom`); grouping is orthogonal via `groupByAtom`/`subGroupByAtom`. The zoom toggle (`detail` / `compact` / `overview`) applies to grouped + tree, hidden in list + graph. **Never re-implement filtering in a view body — consume `useFilteredReferences` so facets can't silently drop in one mode.**
 
 Atom rename history: `relationshipTypeFiltersAtom` → `relTypeFiltersAtom`, `relationshipEntityTypeFiltersAtom` → `entityTypeFiltersAtom`, `relationshipsZoomAtom` → `zoomAtom`, `relationshipsActiveFilterCountAtom`/`referencesActiveFilterCountAtom` → `activeFilterCountAtom`. Removed: `viewModeAtom`'s `density` and `by-document` variants, `DensityCard`.
 
@@ -131,7 +134,7 @@ Toolbar pattern (main view):
   inlineSlot={<ActiveFilterChips />}
   rightSlot={
     <>
-      <PanelModeControls />
+      <ViewControls />
       {showZoom && <ZoomControl />}
       <FiltersButton size="sm" activeCount={n} onClick={…} />
     </>
@@ -143,8 +146,8 @@ Drawer flavour stacks the controls vertically and uses `size="sm"`.
 
 Card-row pattern:
 ```tsx
-<ConnectionRow kind="reference" ref={ref} onDelete={…} />
-<ConnectionRow kind="aggregate" rel={rel} expanded={…} onToggleExpand={…} />
+<RelationshipRow kind="reference" ref={ref} onDelete={…} />
+<RelationshipRow kind="aggregate" rel={rel} expanded={…} onToggleExpand={…} />
 ```
 
 In tree mode, target cards are aggregate rows with inline-expand revealing their underlying ref rows. Selected state is read internally from `overlayEntityIdAtom` (aggregate) or `activeRefIdAtom`+`overlayEntityIdAtom` (reference).

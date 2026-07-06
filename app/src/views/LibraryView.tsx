@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Search, X, LayoutGrid, List, Map as MapIcon, Plus, Upload, FileSpreadsheet } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, cejilReadyAtom } from "../atoms/dataSource";
@@ -37,7 +37,12 @@ import { buildActiveChains, cejilChainGraph } from "../data/cejil/chainFacets";
 import { matchesAll, buildSearchIndex, type LibraryFilterState } from "../utils/libraryFilter";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { EntityCard } from "../components/library/EntityCard";
-import { LibraryMapView } from "../components/library/LibraryMapView";
+// Lazy: react-simple-maps + the world atlas are the heaviest static chunk in
+// the bundle and only the map view needs them — split so the default Library
+// (and everything else) never downloads them.
+const LibraryMapView = lazy(() =>
+  import("../components/library/LibraryMapView").then((m) => ({ default: m.LibraryMapView })),
+);
 import { LibraryFilters } from "../components/library/LibraryFilters";
 import { LibraryClusterDrawer } from "../components/library/LibraryClusterDrawer";
 import { EntityDrawerPreview } from "../components/library/EntityDrawerPreview";
@@ -217,6 +222,20 @@ export function LibraryView() {
       }
       return sortDir === "asc" ? r : -r;
     };
+    // With an active query, match quality outranks the sort: exact title →
+    // title prefix → title contains → metadata/full-text hit. Otherwise a
+    // "Date added" sort buries the entity literally named what you typed
+    // under documents that merely mention it.
+    if (q) {
+      const rank = (e: Entity) => {
+        const t = e.title.toLowerCase();
+        if (t === q) return 0;
+        if (t.startsWith(q)) return 1;
+        if (t.includes(q)) return 2;
+        return 3;
+      };
+      return [...list].sort((a, b) => rank(a) - rank(b) || cmp(a, b));
+    }
     return [...list].sort(cmp);
   }, [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, chainKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex]);
 
@@ -486,7 +505,15 @@ export function LibraryView() {
           )
         ) : viewMode === "map" ? (
           <div className="flex-1 min-h-0">
-            <LibraryMapView entities={filtered} />
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center h-40 text-sm text-ink-muted">
+                  Loading map…
+                </div>
+              }
+            >
+              <LibraryMapView entities={filtered} />
+            </Suspense>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex items-center justify-center h-40 text-sm text-ink-muted">

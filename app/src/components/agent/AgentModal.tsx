@@ -28,6 +28,7 @@ import { filesAtom } from "../../atoms/files";
 import { entitiesAtom } from "../../atoms/entities";
 import { activitiesAtom } from "../../atoms/notifications";
 import { documentsByLanguage } from "../../data/document";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 
 interface Chip {
   source: ContextSource;
@@ -37,6 +38,7 @@ interface Chip {
 
 export function AgentModal() {
   const [open, setOpen] = useAtom(agentOpenAtom);
+  const trapRef = useFocusTrap<HTMLDivElement>(open);
   const [scope, setScope] = useAtom(agentScopeAtom);
   const [chainNodes, setChainNodes] = useAtom(agentChainAtom);
   const [messages, setMessages] = useAtom(agentMessagesAtom);
@@ -203,7 +205,9 @@ export function AgentModal() {
       {/* Panel. "Bert" — named in tribute to a long-time HURIDOCS member.
           Landscape on desktop, anchored to the lower third. */}
       <div
+        ref={trapRef}
         role="dialog"
+        aria-modal="true"
         aria-label="Bert"
         className="relative w-full max-w-[46rem] max-h-[min(70vh,34rem)] bg-paper border border-border rounded-xl shadow-2xl flex flex-col animate-agent-modal overflow-hidden"
       >

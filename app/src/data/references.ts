@@ -1007,3 +1007,21 @@ export const relationTypes: { id: RelationType; label: string }[] = [
   { id: "refers_to", label: "Refers to" },
   { id: "no_label", label: "No label" },
 ];
+
+/** Runtime registry mutators — the ONLY sanctioned way to change the
+ *  relation-type list at runtime. `relationTypes` is read statically by pure
+ *  utils (connectionGrouping, inheritance) that can't subscribe to
+ *  `relationTypesAtom`, so the Manage Types modal writes BOTH: the atom (for
+ *  reactive consumers) and this array (for static label lookups). That's safe
+ *  because static consumers only resolve labels for types that appear on a
+ *  reference, and any change that adds/removes such a type also writes
+ *  `referencesAtom` — re-rendering them through that path. Don't mutate the
+ *  array anywhere else. */
+export function registerRelationType(def: { id: RelationType; label: string }): void {
+  if (!relationTypes.some((t) => t.id === def.id)) relationTypes.push(def);
+}
+
+export function unregisterRelationType(id: RelationType): void {
+  const idx = relationTypes.findIndex((t) => t.id === id);
+  if (idx >= 0) relationTypes.splice(idx, 1);
+}

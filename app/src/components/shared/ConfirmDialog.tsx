@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { AlertTriangle, X } from "lucide-react";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -20,6 +21,7 @@ export function ConfirmDialog({
   onCancel,
   variant = "default",
 }: ConfirmDialogProps) {
+  const trapRef = useFocusTrap<HTMLDivElement>(open);
   // Escape cancels — same convention as the drawers/modals.
   useEffect(() => {
     if (!open) return;
@@ -34,7 +36,7 @@ export function ConfirmDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
-      <div className="bg-paper rounded-lg shadow-xl w-full max-w-md p-6 animate-fade-in-up">
+      <div ref={trapRef} className="bg-paper rounded-lg shadow-xl w-full max-w-md p-6 animate-fade-in-up">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
             {variant === "danger" && (

@@ -9,7 +9,8 @@ import {
 } from "../../atoms/references";
 import {
   NO_LABEL_RELATION_TYPE,
-  relationTypes as seedRelationTypes,
+  registerRelationType,
+  unregisterRelationType,
 } from "../../data/references";
 import { t } from "../../utils/i18n";
 
@@ -63,9 +64,9 @@ export function ManageRelationTypesModal() {
       return;
     }
     const def = { id, label };
-    // Mirror to the seed array so utils that read `relationTypes` statically
-    // (e.g. connectionGrouping.getGroupLabel) resolve the new label too.
-    seedRelationTypes.push(def);
+    // Write-through to the static registry (see registerRelationType's contract)
+    // so utils reading `relationTypes` statically resolve the new label too.
+    registerRelationType(def);
     setTypes((prev) => [...prev, def]);
     setDraftLabel("");
     setToasts((prev) => [
@@ -92,8 +93,7 @@ export function ManageRelationTypesModal() {
       );
     }
     setTypes((prev) => prev.filter((tdef) => tdef.id !== id));
-    const seedIdx = seedRelationTypes.findIndex((tdef) => tdef.id === id);
-    if (seedIdx >= 0) seedRelationTypes.splice(seedIdx, 1);
+    unregisterRelationType(id);
     setPendingDelete(null);
     setToasts((prev) => [
       ...prev,

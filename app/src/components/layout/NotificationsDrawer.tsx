@@ -22,6 +22,7 @@ import {
   type NotificationKind,
 } from "../../atoms/notifications";
 import { UwaziLoader } from "../shared/UwaziLoader";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 
 const kindStyle: Record<
   NotificationKind,
@@ -54,6 +55,7 @@ export function NotificationsDrawer({ rtl = false }: { rtl?: boolean }) {
   const [notifications, setNotifications] = useAtom(notificationsAtom);
   const [activities, setActivities] = useAtom(activitiesAtom);
   const [open, setOpen] = useAtom(beaconOpenAtom);
+  const trapRef = useFocusTrap<HTMLElement>(open);
   const [unread] = useAtom(unreadCountAtom);
   const [filter, setFilter] = useState<"all" | "unread">("all");
   const [removing, setRemoving] = useState<Set<string>>(new Set());
@@ -131,8 +133,10 @@ export function NotificationsDrawer({ rtl = false }: { rtl?: boolean }) {
 
       {/* Drawer */}
       <aside
+        ref={trapRef as React.Ref<HTMLElement>}
         dir={rtl ? "rtl" : "ltr"}
         role="dialog"
+        aria-modal="true"
         aria-label="Notifications"
         className={`fixed top-0 bottom-0 ${side} z-[61] w-[23rem] max-w-[calc(100vw-2.5rem)]
           bg-paper border-border shadow-xl flex flex-col beacon-spring
