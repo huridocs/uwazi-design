@@ -24,10 +24,16 @@ export function EntityPill({ typeId, label, size = "sm" }: EntityPillProps) {
   const isMissing = !resolved;
   const name = isMissing ? "Unknown entity" : resolved;
 
-  // Saturated/dark colours read fine as label text; pale ones fall back to ink
-  // so the label stays legible in both themes. The dot keeps the true colour.
+  // The label never uses the raw type colour: pale colours fall back to ink
+  // entirely, and saturated ones are mixed ~30% toward ink so small text
+  // clears WCAG contrast on the 12% tint (e.g. violet #8B5CF6 alone sits just
+  // under 4.5:1). Mixing with var(--text-primary) is theme-aware — it darkens
+  // labels in light mode and lightens them in dark. The dot keeps the true
+  // colour, so the type hue stays recognisable.
   const isPale = luminance(color) > 0.6;
-  const textColor = isPale ? "var(--text-primary)" : color;
+  const textColor = isPale
+    ? "var(--text-primary)"
+    : `color-mix(in srgb, ${color} 70%, var(--text-primary))`;
 
   return (
     <span

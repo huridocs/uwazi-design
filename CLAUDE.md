@@ -25,6 +25,32 @@ Keep it in sync when tokens.css or the style rules change.
 - "Calm and editorial" feel. Ink is primary; Seal is for danger only. Semantic colours (amber warning, green success, red danger) stay as-is.
 - Asks for changes, not designs — show, don't deliberate. After a non-trivial edit, prefer to commit on request rather than waiting.
 
+## A11y patterns (post-audit, 2026-07 — don't regress these)
+- **Rows/cards with nested controls are NEVER `role="button"`.** The shells
+  (`ListCardRow`, `EntityCard`, `DataTable` rows, `ImportTable` rows) render a
+  stretched invisible **primary-action button** as first child (focus ring,
+  `aria-pressed`, accessible name, native Enter/Space); content sits above it in
+  a `relative` wrapper so nested controls stay clickable, and the container keeps
+  a plain `onClick` for mouse. Copy this pattern for any new clickable row.
+- **Always-mounted slide-overs get `inert` while closed** (FiltersDrawer,
+  NotificationsDrawer, EntityOverlay do this via `toggleAttribute("inert")`).
+  Without it, tabbing into the closed drawer's controls force-scrolls the
+  overflow-hidden pane and visually parks the drawer over the content.
+- **Overlays trap focus**: `hooks/useFocusTrap.ts` — attach to the PANEL, wraps
+  Tab, restores focus to the trigger on close. Used by ConfirmDialog, AgentModal,
+  NotificationsDrawer, FiltersDrawer, EntityOverlay. New modals get it + Escape.
+- **Hover-revealed actions** need `group-focus-within:opacity-100` next to
+  `opacity-0 group-hover:opacity-100`, or keyboard users focus invisible buttons.
+- **SVG interactive elements** (graph nodes/labels) get `tabIndex`, `role`,
+  `aria-label`, Enter/Space, and a drawn focus ring (carbon halo) — never rely on
+  default outlines inside the zoom transform.
+- **EntityPill labels never use the raw type colour** — pale → ink, saturated →
+  `color-mix(… 70%, var(--text-primary))` so small text clears WCAG on the tint
+  in both themes. The dot keeps the true colour.
+- Live updates (streams, toasts, task progress) get `aria-live="polite"` /
+  `role="status"`/`role="log"` — see Beacon/AgentModal/ToastContainer.
+- The Storybook a11y addon checks every story; keep new primitives violation-free.
+
 ## Style rules that bite
 - **Layout in `rem`, never `px`.** Tailwind spacing utilities (`px-4`, `gap-3`) are fine. Reserve raw `px` for borders, shadows, sub-pixel details.
 - **No thick left-border accents** on cards or sidebar items. Use a small dot, an icon colour, or a bg tint.
