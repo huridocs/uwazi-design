@@ -1,3 +1,6 @@
 node_modules/
 dist/
 .vite/
+
+*storybook.log
+storybook-static

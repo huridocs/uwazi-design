@@ -7,6 +7,17 @@
 - Dev: `cd app && npm run dev` → http://localhost:5173.
 - Type check: `cd app && npx tsc --noEmit`.
 - No backend, no router — `views/` are page-level orchestrators switched via top-level state.
+- **Storybook 10** (react-vite + a11y + docs): `cd app && npm run storybook` → :6006.
+  Stories in `app/src/stories/*.stories.tsx`; `.storybook/preview.tsx` imports
+  `src/index.css` (real tokens) and has a light/dark toolbar that flips `:root.dark`.
+  New shared primitives get BOTH a story and a CatalogEntry.
+
+## Style handoff → huridocs/uwazi
+`handoff/` holds the migration kit for the real repo (branch `production`, also
+Tailwind v4 + Storybook 10): `uwazi-semantic-tokens.css` (PR-ready additive token
+layer, scoped to their `.tw-content`) and `TOKENS-MAPPING.md` (token map — e.g.
+carbon replaces their `primary-700 #2b56c1` —, the two-layer var rule, phase plan).
+Keep it in sync when tokens.css or the style rules change.
 
 ## Working with the user
 - **Terse, directive**, expects you to infer scope. Iterates visually — image-driven feedback is the norm.
