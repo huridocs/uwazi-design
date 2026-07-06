@@ -1,0 +1,162 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Uwazi 2026 — semantic design tokens (additive layer)
+ *
+ * Drop-in for huridocs/uwazi. To install:
+ *   1. Copy this file to app/react/App/styles/semantic-tokens.css
+ *   2. Add `@import './semantic-tokens.css';` in app/react/App/styles/tailwind.css
+ *      (after the existing @theme block) and rebuild globals.css.
+ *
+ * This layer is ADDITIVE: it defines new utilities (bg-paper, text-ink,
+ * border-border, bg-parchment, …) without touching the existing numeric ramps
+ * (primary-*, error-*, success-*, …), so nothing currently rendered changes.
+ * New/migrated components use the semantic names; the ramps retire later.
+ *
+ * Two layers, mirroring the 2026 prototype:
+ *   1. REAL vars (--text-*, --bg-*, --border-*, --accent-*) — light/dark aware,
+ *      defined on .tw-content (Uwazi's Tailwind scope root). These are the ONLY
+ *      names to reference from raw CSS / inline styles / SVG fills.
+ *   2. BRIDGE aliases in @theme (--color-ink, --color-paper, …) — exist only so
+ *      Tailwind v4 generates the utilities. Never reference these from raw
+ *      var(...) and NEVER write a hex fallback (var(--ink, #1a1a1a) silently
+ *      breaks dark mode).
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+.tw-content {
+  /* Brand — Parchment palette */
+  --bg-primary: #F5F0E8;   /* parchment — canonical SELECTED-card bg */
+  --bg-surface: #FFFFFF;   /* paper */
+  --bg-warm: #FCFAF8;      /* warm — action buttons, hover, section fills */
+  --bg-muted: #F5EED7;     /* vellum */
+  --bg-overlay: #00000066;
+  --bg-selected: #F0EDED;
+
+  /* Text (ink ladder) */
+  --text-primary: #1A1A1A;
+  --text-secondary: #333333;
+  --text-tertiary: #555555;
+  --text-muted: #777777;
+
+  /* Borders */
+  --border-primary: #E0D9C8;
+  --border-soft: #D4CDB8;
+  --border-primary-64: #E0D9C8A3;
+  --border-soft-64: #D4CDB8A3;
+
+  /* Accents — carbon (data/links) + seal (danger ONLY) */
+  --accent-blue: #00B4F0;
+  --accent-seal: #E8432A;
+  --accent-primary: #1A1A1A;
+  --accent-blue-tint: #DDF3FD;
+  --accent-seal-tint: #FEE2E2;
+
+  /* Semantic status */
+  --success: #059669;
+  --success-light: #D1FAE5;
+  --warning: #F59E0B;
+  --warning-light: #FEF3C7;
+  --danger: #E8432A;
+  --danger-light: #FEE2E2;
+
+  /* Text highlights */
+  --highlight-yellow: #FDE68A;
+  --highlight-yellow-active: #FCD34D;
+  --highlight-blue: #BFDBFE;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+}
+
+/* Dark mode. The prototype toggles :root.dark; in Uwazi, wire this to the V2
+ * ThemeProvider's mode instead — keep the selector in ONE place. Whichever
+ * element carries the mode class must also flip color-scheme so native form
+ * controls follow. */
+.tw-content.dark,
+.tw-content .dark {
+  color-scheme: dark;
+
+  --bg-primary: #1A1A1A;
+  --bg-surface: #242424;
+  --bg-warm: #2A2A2A;
+  --bg-muted: #333333;
+  --bg-overlay: #000000AA;
+  --bg-selected: #333333;
+
+  --text-primary: #F5F0E8;
+  --text-secondary: #D4CDB8;
+  --text-tertiary: #9A9A9A;
+  --text-muted: #6B6B6B;
+
+  --border-primary: #3D3D3D;
+  --border-soft: #4A4A4A;
+  --border-primary-64: #3D3D3DA3;
+  --border-soft-64: #4A4A4AA3;
+
+  --accent-primary: #F5F0E8;
+  --accent-blue-tint: #0C3A4D;
+  --accent-seal-tint: #4A1A1A;
+
+  --success-light: #064E3B;
+  --warning-light: #78350F;
+  --danger-light: #4A1A1A;
+
+  --highlight-yellow: #78350F;
+  --highlight-yellow-active: #92400E;
+  --highlight-blue: #1E3A5F;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.35), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.25);
+}
+
+/* Tailwind bridges — utility generators ONLY (see header). Coexists with the
+ * numeric ramps: `bg-success` (this layer) and `bg-success-600` (ramp) are
+ * distinct utilities. */
+@theme {
+  --color-parchment: var(--bg-primary);
+  --color-paper: var(--bg-surface);
+  --color-warm: var(--bg-warm);
+  --color-vellum: var(--bg-muted);
+  --color-ink: var(--text-primary);
+  --color-ink-secondary: var(--text-secondary);
+  --color-ink-tertiary: var(--text-tertiary);
+  --color-ink-muted: var(--text-muted);
+  --color-border: var(--border-primary);
+  --color-border-soft: var(--border-soft);
+  --color-carbon: var(--accent-blue);
+  --color-seal: var(--accent-seal);
+  --color-carbon-tint: var(--accent-blue-tint);
+  --color-seal-tint: var(--accent-seal-tint);
+  --color-success: var(--success);
+  --color-success-light: var(--success-light);
+  --color-warning: var(--warning);
+  --color-warning-light: var(--warning-light);
+  --color-highlight: var(--highlight-yellow);
+  --color-highlight-active: var(--highlight-yellow-active);
+  --color-highlight-blue: var(--highlight-blue);
+  --color-overlay: var(--bg-overlay);
+  --color-selected: var(--bg-selected);
+}
+
+/* ── OPT-IN (Phase 3): brand radii ──────────────────────────────────────────
+ * Scales Tailwind's rounded-* ramp down ~½ ("soft but not pillowy").
+ * UNLIKE everything above, uncommenting this changes EVERY existing rounded-*
+ * in the app — ship it as its own reviewed step, not with the token PR.
+ *
+ * @layer theme {
+ *   .tw-content {
+ *     --radius-xs: 2px;
+ *     --radius-sm: 3px;
+ *     --radius: 4px;
+ *     --radius-md: 6px;
+ *     --radius-lg: 8px;
+ *     --radius-xl: 10px;
+ *     --radius-2xl: 12px;
+ *     --radius-3xl: 14px;
+ *     --radius-4xl: 16px;
+ *   }
+ * }
+ * ─────────────────────────────────────────────────────────────────────────── */
