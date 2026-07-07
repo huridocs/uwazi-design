@@ -23,12 +23,14 @@ const drawerFrame = (Story: React.ComponentType) => (
   </div>
 );
 
-export const MainEntity: Story = {
+export const Default: Story = {
   args: { entityId: MAIN_ENTITY_ID },
   decorators: [drawerFrame],
 };
 
-export const PersonEntity: Story = {
+// An entity whose profile has only scalar fields — exercises the summary
+// without relationship cards.
+export const Minimal: Story = {
   args: { entityId: entities.find((e) => e.typeId === "person")?.id ?? "e1" },
   decorators: [drawerFrame],
 };

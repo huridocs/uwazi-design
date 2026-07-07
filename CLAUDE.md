@@ -11,6 +11,9 @@
   Stories in `app/src/stories/*.stories.tsx`; `.storybook/preview.tsx` imports
   `src/index.css` (real tokens) and has a light/dark toolbar that flips `:root.dark`.
   New shared primitives get BOTH a story and a CatalogEntry.
+  **Story names stay generic** (Default, Minimal, AllStates, Empty…) — never
+  domain-specific ("PersonEntity", case names). Domain strings are fine as
+  demo DATA, not as export/story names.
 
 ## Style handoff → huridocs/uwazi
 `handoff/` holds the migration kit for the real repo (branch `production`, also

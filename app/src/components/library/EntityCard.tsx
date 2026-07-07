@@ -1,10 +1,11 @@
-import { memo } from "react";
+import { Fragment, memo } from "react";
 import { Link2 } from "lucide-react";
 import { useAtomValue } from "jotai";
 import { languageAtom } from "../../atoms/language";
 import { EntityPill } from "../shared/EntityPill";
 import { EntityThumbnail } from "./EntityThumbnail";
 import { getEntityProfile } from "../../data/entityProfiles";
+import { getEntityType } from "../../data/entities";
 import type { MetadataField } from "../../data/metadata";
 import type { Entity } from "../../data/entities";
 import { libraryInfoAtom, type LibraryViewMode } from "../../atoms/library";
@@ -85,22 +86,56 @@ export const EntityCard = memo(function EntityCard({
   );
 
   if (layout === "list") {
+    const type = getEntityType(entity.typeId);
+    const metaFields = scalarFields.slice(0, 2);
+    // Two-line editorial row: title leads, a quiet meta line (type + key
+    // fields, middot-separated) sits beneath. The leading block is the
+    // thumbnail when there is one, else a vellum well with the type's square
+    // dot — so rows always align and carry the entity colour without
+    // repeating a pill per row.
     return (
       <div onClick={() => onSelect(entity.id)} className={`${base} ${surface} w-full`}>
         {primaryAction}
-        <div className="relative px-3 py-2.5 flex items-center gap-3">
-          {showPreview && entity.preview && (
-            <EntityThumbnail kind={entity.preview} className="w-9 h-9 rounded shrink-0 overflow-hidden" />
-          )}
-          <EntityPill typeId={entity.typeId} />
-          <span className="flex-1 min-w-0 text-sm font-semibold text-ink truncate">{entity.title}</span>
-          {showMetadata && scalarFields[0] && (
-            <span className="hidden md:block text-[11px] text-ink-tertiary truncate max-w-[14rem]">
-              {scalarFields[0].label}: <span className="text-ink-secondary">{scalarFields[0].value}</span>
-            </span>
-          )}
-          {connectionBadge}
-          {viewButton}
+        <div className="relative px-3 py-2 flex items-center gap-3">
+          {showPreview &&
+            (entity.preview ? (
+              <EntityThumbnail
+                kind={entity.preview}
+                className="w-9 h-9 rounded shrink-0 overflow-hidden"
+              />
+            ) : (
+              <span className="w-9 h-9 rounded bg-vellum flex items-center justify-center shrink-0">
+                <span
+                  className="w-2 h-2 rounded-[2px]"
+                  style={{ backgroundColor: type?.color ?? "#6B7280" }}
+                />
+              </span>
+            ))}
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold text-ink truncate leading-snug">
+              {entity.title}
+            </div>
+            <div className="flex items-center gap-1.5 text-[11px] text-ink-tertiary min-w-0">
+              {!showPreview && (
+                <span
+                  className="w-1.5 h-1.5 rounded-[2px] shrink-0"
+                  style={{ backgroundColor: type?.color ?? "#6B7280" }}
+                />
+              )}
+              <span className="shrink-0">{type?.name ?? entity.typeId}</span>
+              {showMetadata &&
+                metaFields.map((f) => (
+                  <Fragment key={f.id}>
+                    <span className="shrink-0 text-ink-muted">·</span>
+                    <span className="truncate">{f.value}</span>
+                  </Fragment>
+                ))}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {connectionBadge}
+            {viewButton}
+          </div>
         </div>
       </div>
     );
