@@ -7,13 +7,18 @@ import type { MetadataField } from "../../data/metadata";
  *  Long-form fields (multiline, or a long value) stay as labelled blocks above the
  *  table, since a paragraph doesn't belong in a value cell. Renders nothing when
  *  given no fields. */
+/** Long-form fields (paragraphs) don't belong in a value cell — callers that
+ *  card-wrap their metadata use this to split them out. */
+export function isLongField(f: MetadataField): boolean {
+  return f.type === "multiline" || (f.value?.length ?? 0) > 100;
+}
+
 export function MetadataFieldsTable({ fields }: { fields: MetadataField[] }) {
   // Skip empty-valued fields (some callers pass them) so we don't render a bare
   // label with no value — an empty ruled row reads as a rendering bug.
   const shown = fields.filter((f) => !!f.value?.trim());
-  const isLong = (f: MetadataField) => f.type === "multiline" || (f.value?.length ?? 0) > 100;
-  const longFields = shown.filter(isLong);
-  const shortFields = shown.filter((f) => !isLong(f));
+  const longFields = shown.filter(isLongField);
+  const shortFields = shown.filter((f) => !isLongField(f));
   if (shown.length === 0) return null;
 
   return (

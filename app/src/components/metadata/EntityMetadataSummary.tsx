@@ -2,7 +2,8 @@ import { useAtomValue } from "jotai";
 import { languageAtom } from "../../atoms/language";
 import { getEntityProfile } from "../../data/entityProfiles";
 import type { MetadataField } from "../../data/metadata";
-import { MetadataFieldsTable } from "./MetadataFieldsTable";
+import { MetadataFieldsTable, isLongField } from "./MetadataFieldsTable";
+import { MetadataCard } from "./MetadataCard";
 import { RelationshipCards } from "./RelationshipCards";
 
 /** The condensed metadata body shared by EVERY drawer/preview context (library
@@ -27,9 +28,25 @@ export function EntityMetadataSummary({ entityId }: { entityId: string }) {
     );
   }
 
+  // Card-wrap the scalar block so it reads like the relationship cards below:
+  // each long-form field is its own titled card; the short label|value rows
+  // share one "Details" card.
+  const filled = scalar.filter((f) => !!f.value?.trim());
+  const longFields = filled.filter(isLongField);
+  const shortFields = filled.filter((f) => !isLongField(f));
+
   return (
     <div className="h-full overflow-auto p-4 space-y-3">
-      <MetadataFieldsTable fields={scalar} />
+      {longFields.map((f) => (
+        <MetadataCard key={f.id} title={f.label}>
+          <p className="text-sm text-ink leading-snug">{f.value}</p>
+        </MetadataCard>
+      ))}
+      {shortFields.length > 0 && (
+        <MetadataCard title="Details">
+          <MetadataFieldsTable fields={shortFields} />
+        </MetadataCard>
+      )}
       <RelationshipCards profile={profile} language={language} span="full" />
     </div>
   );
