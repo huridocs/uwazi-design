@@ -169,18 +169,18 @@ export function EntityOverlay() {
       >
         {/* Header */}
         <div
-          className="flex items-center justify-between px-4 py-3 shrink-0"
+          className="flex items-start justify-between px-4 py-3 shrink-0"
           style={{ borderBottom: "1px solid var(--border-primary)" }}
         >
-          {/* Title + type tag share the line — the tag's dot carries the
+          {/* Type tag stacked above the title — the tag's dot carries the
               entity colour, so no separate dot. */}
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-sm font-semibold text-ink truncate">
-              {entity?.title}
-            </span>
-            <span className="shrink-0">
+          <div className="min-w-0 space-y-1">
+            <div>
               <EntityPill typeId={entity?.typeId ?? ""} />
-            </span>
+            </div>
+            <div className="text-sm font-semibold text-ink truncate">
+              {entity?.title}
+            </div>
           </div>
           <button
             onClick={() => setEntityId(null)}
