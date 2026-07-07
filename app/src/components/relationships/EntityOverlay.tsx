@@ -5,7 +5,7 @@ import { activeAggregateIdAtom, overlayEntityIdAtom, referencesAtom } from "../.
 import { languageAtom } from "../../atoms/language";
 import { entityMetadataAtom, setEntityPropAtom } from "../../atoms/entityMetadata";
 import { openEntityAtom } from "../../atoms/focusedEntity";
-import { getEntity, getEntityType } from "../../data/entities";
+import { getEntity } from "../../data/entities";
 import { relationshipFieldsByLanguage, type MetadataField } from "../../data/metadata";
 import { getEntityProfile } from "../../data/entityProfiles";
 import { EntityPill } from "../shared/EntityPill";
@@ -58,7 +58,6 @@ export function EntityOverlay() {
   }, [entityId]);
 
   const entity = entityId ? getEntity(entityId) : undefined;
-  const entityType = entity ? getEntityType(entity.typeId) : undefined;
 
   // References that point to this entity
   const entityRefs = entityId
@@ -173,13 +172,14 @@ export function EntityOverlay() {
           className="flex items-center justify-between px-4 py-3 shrink-0"
           style={{ borderBottom: "1px solid var(--border-primary)" }}
         >
+          {/* Title + type tag share the line — the tag's dot carries the
+              entity colour, so no separate dot. */}
           <div className="flex items-center gap-2 min-w-0">
-            <div
-              className="w-2 h-2 rounded-[2px] shrink-0"
-              style={{ backgroundColor: entityType?.color ?? "#6B7280" }}
-            />
             <span className="text-sm font-semibold text-ink truncate">
               {entity?.title}
+            </span>
+            <span className="shrink-0">
+              <EntityPill typeId={entity?.typeId ?? ""} />
             </span>
           </div>
           <button
@@ -193,11 +193,6 @@ export function EntityOverlay() {
 
         {/* Content */}
         <div className="flex-1 overflow-auto p-4 space-y-4">
-          {/* Entity type badge */}
-          <div>
-            <EntityPill typeId={entity?.typeId ?? ""} />
-          </div>
-
           {/* Metadata section — Type/Title live in the header + EntityPill above,
               so this shows only the non-redundant facts: real creation date and
               how many references in this document point at the entity. */}
