@@ -158,20 +158,24 @@ export function DataTable<T>({
                 {/* The row itself is not focusable (a focusable row wrapping
                     the cells' own buttons is invalid nesting for AT) — this
                     stretched invisible button is the row's primary action.
-                    Cells are positioned above it so their controls stay
-                    clickable; clicks on cell content bubble to the row's
-                    plain onClick as before. */}
+                    It lives inside an absolutely-positioned role="cell" so the
+                    row's children stay valid for ARIA (rows may only contain
+                    cells) without consuming a grid track. Data cells are
+                    positioned above it so their controls stay clickable;
+                    clicks on cell content bubble to the row's plain onClick. */}
                 {clickable && (
-                  <button
-                    type="button"
-                    aria-pressed={selected}
-                    aria-label={rowAriaLabel?.(row) ?? "Open row"}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRowClick!(row);
-                    }}
-                    className="absolute inset-0 w-full cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20"
-                  />
+                  <div role="cell" className="absolute inset-0">
+                    <button
+                      type="button"
+                      aria-pressed={selected}
+                      aria-label={rowAriaLabel?.(row) ?? "Open row"}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRowClick!(row);
+                      }}
+                      className="absolute inset-0 w-full cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20"
+                    />
+                  </div>
                 )}
                 {columns.map((col) => (
                   <div

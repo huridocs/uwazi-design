@@ -142,7 +142,6 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
           return (
             <div
               key={entry.id}
-              role="row"
               className={`relative grid items-center gap-3 px-4 h-11 text-sm transition-colors cursor-pointer
                 hover:bg-warm ${isSelected ? "bg-parchment" : ""}`}
               style={{
