@@ -32,7 +32,7 @@ export function MetadataFieldsTable({ fields }: { fields: MetadataField[] }) {
         </div>
       ))}
       {shortFields.length > 0 && (
-        <div className="overflow-x-auto -mx-1">
+        <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <tbody>
               {shortFields.map((f) => (
