@@ -195,7 +195,7 @@ export function EntityOverlay() {
         <div className="flex-1 overflow-auto p-4 space-y-4">
           {/* Entity type badge */}
           <div>
-            <EntityPill typeId={entity?.typeId ?? ""} size="md" />
+            <EntityPill typeId={entity?.typeId ?? ""} />
           </div>
 
           {/* Metadata section — Type/Title live in the header + EntityPill above,
