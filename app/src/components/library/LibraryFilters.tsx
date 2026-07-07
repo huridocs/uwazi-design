@@ -267,7 +267,7 @@ export function LibraryFilters() {
       {/* Facet cards — top padding matches the main content (py-3) so the first
           block lines up with the first library card. */}
       <div className="flex-1 overflow-auto px-3.5 pt-3 pb-3 space-y-2">
-        <FacetCard>
+        <FacetCard title="Status">
           <FacetRow
             checked={!!statusFilters.restricted}
             onToggle={() => toggleStatus("restricted")}
@@ -290,7 +290,7 @@ export function LibraryFilters() {
           <>
             {/* CEJIL: the curated summa.cejil.org filter config — top-level
                 templates + the expandable "Documentos" group. */}
-            <FacetCard>
+            <FacetCard title="Type">
               {cejilSettings.filters.map((node) => {
                 if (!node.items) {
                   return (
@@ -352,7 +352,7 @@ export function LibraryFilters() {
           </>
         ) : (
           <>
-            <FacetCard>
+            <FacetCard title="Type">
               {nonDocTypes.map((t) => (
                 <FacetRow
                   key={t.id}
@@ -501,8 +501,19 @@ export function LibraryFilters() {
  *  subtle shadow like the app's other cards. */
 const FACET_CARD = "bg-paper rounded-lg p-1.5 shadow-sm";
 
-function FacetCard({ children }: { children: ReactNode }) {
-  return <div className={FACET_CARD}>{children}</div>;
+/** `title` gives the card the same bold header the keyword cards (Countries,
+ *  Descriptores) carry, so every filter block reads as one titled system. */
+function FacetCard({ title, children }: { title?: string; children: ReactNode }) {
+  return (
+    <div className={FACET_CARD}>
+      {title && (
+        <div className="px-2 pt-1 pb-0.5">
+          <span className="text-sm font-bold text-ink">{title}</span>
+        </div>
+      )}
+      {children}
+    </div>
+  );
 }
 
 /** Visual helper above a chain-filter group: the relationship path the facets
@@ -596,10 +607,10 @@ function FacetRow({
     >
       {/* Chevron gutter — reserved only in cards that have an expandable row, so
           checkboxes there align; the triangle itself renders for expandable
-          parents. Hugs the row's start edge (no start padding) so the caret sits
-          far left and the checkbox column stays close to the other cards'. */}
+          parents. justify-start: the triangle hugs the row's start edge so it
+          sits optically balanced between the card border and the label. */}
       {!child && (expandable || reserveGutter) && (
-        <span className="shrink-0 w-3 me-0.5 flex items-center justify-center">
+        <span className="shrink-0 w-3 me-0.5 flex items-center justify-start">
           {expandable && (
             <button
               onClick={(e) => {
