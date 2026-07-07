@@ -23,7 +23,7 @@ import { appViewAtom } from "../../atoms/navigation";
 import { languageAtom } from "../../atoms/language";
 import { selectedRefIdsAtom } from "../../atoms/filters";
 import { currentPageAtom } from "../../atoms/selection";
-import { referencesAtom, scopedReferencesAtom } from "../../atoms/references";
+import { referencesAtom, referencesFor } from "../../atoms/references";
 import { filesAtom } from "../../atoms/files";
 import { entitiesAtom } from "../../atoms/entities";
 import { activitiesAtom } from "../../atoms/notifications";
@@ -86,12 +86,20 @@ export function AgentModal() {
   // the static sample document.
   const viewLabel = appView === "entity" ? "Library" : appView === "import-csv" ? "Import CSV" : "Component catalog";
   const focusedId = useAtomValue(focusedEntityIdAtom);
-  const scopedRefs = useAtomValue(scopedReferencesAtom);
   const focusedEntity = getEntity(focusedId);
-  const profile = getEntityProfile(focusedId);
+  const focusedProfile = getEntityProfile(focusedId);
   const docTitle =
-    profile.document?.[language]?.title ?? focusedEntity?.title ?? "Untitled document";
-  const scalarFields = (profile.metadata[language] ?? []).filter(
+    focusedProfile.document?.[language]?.title ?? focusedEntity?.title ?? "Untitled document";
+
+  // Grounding target: the LAST entity attached to the context chain wins over
+  // the focused entity — attaching "Entity…" via + Add genuinely retargets
+  // what Bert answers about, not just the chip row.
+  const attachedEntityNode = [...chainNodes].reverse().find((n) => n.kind === "entity");
+  const groundId = attachedEntityNode?.refId ?? focusedId;
+  const groundEntity = getEntity(groundId);
+  const groundProfile = getEntityProfile(groundId);
+  const scopedRefs = referencesFor(groundId, references);
+  const scalarFields = (groundProfile.metadata[language] ?? []).filter(
     (f): f is MetadataField => f.type !== "relationship" && !!f.value?.trim(),
   );
   const resolve = (s: ContextSource): Chip | null => {
@@ -158,8 +166,8 @@ export function AgentModal() {
   // snippets — so the prototype demos what a wired agent would say.
   const docShort = shortDoc(docTitle);
   const ctx = chain.length ? chain.map((c) => c.value).join(" › ") : "no context";
-  const entityLabel = focusedEntity?.title ?? docShort;
-  const typeName = focusedEntity ? getEntityType(focusedEntity.typeId)?.name : undefined;
+  const entityLabel = groundEntity?.title ?? docShort;
+  const typeName = groundEntity ? getEntityType(groundEntity.typeId)?.name : undefined;
 
   const replyFor = (q: string): string => {
     // Top connected entities by evidence, from the entity's real references.
@@ -207,6 +215,25 @@ export function AgentModal() {
         .slice(0, 5)
         .map((f) => `• ${f.label} — ${f.value!.length > 80 ? `${f.value!.slice(0, 77)}…` : f.value}`);
       return `The filled fields on ${entityLabel}:\n\n${rows.join("\n")}\n\nI can write updates straight into the template; just confirm.`;
+    }
+    if (/inherit|provenance|derived|\bvia\b|rollup/i.test(q)) {
+      const relFields = (groundProfile.metadata[language] ?? []).filter(
+        (f) => f.type === "relationship",
+      );
+      const inheriting = relFields.filter(
+        (f) => f.inheritProperty || (f.inheritPath?.length ?? 0) > 0 || f.inheritLeaf,
+      );
+      if (inheriting.length === 0)
+        return `${entityLabel} has no inheriting fields — its relationship fields are plain links. Connect it to a template with inherited properties and I'll trace the values.`;
+      const rows = inheriting.map((f) => {
+        const what = f.inheritLabel ?? f.inheritLeaf ?? f.inheritProperty;
+        const hops = f.inheritPath?.length
+          ? ` via ${f.inheritPath.map((s) => s.label ?? s.relationType).join(" → ")}`
+          : "";
+        const n = f.connectedEntityIds.length;
+        return `• ${f.label} inherits ${what}${hops} from ${n} connected entit${n === 1 ? "y" : "ies"}${f.reduce ? ` (rolled up as ${f.reduce})` : ""}`;
+      });
+      return `Inherited values on ${entityLabel} resolve live from the graph — nothing is stored:\n\n${rows.join("\n")}\n\nEach value carries its provenance trail; click "via …" on a row to walk it.`;
     }
     if (/relationship|connect|graph|link/i.test(q)) {
       const byType = new Map<string, number>();

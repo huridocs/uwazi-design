@@ -49,15 +49,18 @@ function fromPerspective(r: Reference, id: string): Reference {
  * surfaces (LibraryView, EntityDrawerPreview, EntityOverlay, ManageRelationTypes)
  * deliberately keep reading `referencesAtom`.
  */
+/** Pure per-entity slice — the same derivation `scopedReferencesAtom` applies
+ *  to the focused entity, reusable for ANY id (e.g. Bert grounding replies on
+ *  an entity attached to its context chain). */
+export function referencesFor(id: string, all: Reference[]): Reference[] {
+  if (id === MAIN_ENTITY_ID) return all;
+  // CEJIL entities derive their connections from the real CEJIL relationships.
+  if (isCejilEntity(id)) return cejilReferencesFor(id);
+  return all.filter((r) => involvesEntity(r, id)).map((r) => fromPerspective(r, id));
+}
+
 export const scopedReferencesAtom = atom(
-  (get): Reference[] => {
-    const all = get(referencesAtom);
-    const id = get(focusedEntityIdAtom);
-    if (id === MAIN_ENTITY_ID) return all;
-    // CEJIL entities derive their connections from the real CEJIL relationships.
-    if (isCejilEntity(id)) return cejilReferencesFor(id);
-    return all.filter((r) => involvesEntity(r, id)).map((r) => fromPerspective(r, id));
-  },
+  (get): Reference[] => referencesFor(get(focusedEntityIdAtom), get(referencesAtom)),
   (get, set, update: Reference[] | ((prev: Reference[]) => Reference[])) => {
     const all = get(referencesAtom);
     const id = get(focusedEntityIdAtom);
