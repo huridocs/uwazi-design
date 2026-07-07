@@ -4,6 +4,15 @@ For devs migrating `huridocs/uwazi` (branch `production`) onto the 2026 prototyp
 design language. Companion file: [`uwazi-semantic-tokens.css`](./uwazi-semantic-tokens.css)
 — the PR-ready additive token layer.
 
+> **Validated 2026-07-06 against a fresh `production` clone**: installed the file,
+> added the `@import`, ran their build (`npx @tailwindcss/cli`, Tailwind v4.3.2) —
+> compiles clean; the compiled `globals.css` diff is **purely additive (0 lines
+> removed, +471)**. Bonus: the V2 **Dataviz** components (`DatavizEditor`,
+> `DatavizChartView`, embeds, …) already reference `bg-parchment`/`text-ink` —
+> classes that currently compile to *nothing* — so this layer also fixes live
+> undefined utilities. PR commit is staged locally (branch
+> `feat/semantic-design-tokens`, 2 files, +164) awaiting a maintainer push.
+
 ## Where each side stands
 
 | | `huridocs/uwazi` today | 2026 prototype |
