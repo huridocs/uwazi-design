@@ -23,11 +23,15 @@ import { appViewAtom } from "../../atoms/navigation";
 import { languageAtom } from "../../atoms/language";
 import { selectedRefIdsAtom } from "../../atoms/filters";
 import { currentPageAtom } from "../../atoms/selection";
-import { referencesAtom } from "../../atoms/references";
+import { referencesAtom, scopedReferencesAtom } from "../../atoms/references";
 import { filesAtom } from "../../atoms/files";
 import { entitiesAtom } from "../../atoms/entities";
 import { activitiesAtom } from "../../atoms/notifications";
-import { documentsByLanguage } from "../../data/document";
+import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
+import { getEntity, getEntityType } from "../../data/entities";
+import { getEntityProfile } from "../../data/entityProfiles";
+import { relationTypes, type Reference } from "../../data/references";
+import type { MetadataField } from "../../data/metadata";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 
 interface Chip {
@@ -77,9 +81,19 @@ export function AgentModal() {
     if (open) threadRef.current?.scrollTo({ top: threadRef.current.scrollHeight });
   }, [messages, thinking, open]);
 
-  // Resolve the enabled sources against the live app state.
+  // Resolve the enabled sources against the live app state. Everything Bert
+  // says is grounded in the FOCUSED entity's real profile (CEJIL-aware), not
+  // the static sample document.
   const viewLabel = appView === "entity" ? "Library" : appView === "import-csv" ? "Import CSV" : "Component catalog";
-  const docTitle = documentsByLanguage[language]?.title ?? "Untitled document";
+  const focusedId = useAtomValue(focusedEntityIdAtom);
+  const scopedRefs = useAtomValue(scopedReferencesAtom);
+  const focusedEntity = getEntity(focusedId);
+  const profile = getEntityProfile(focusedId);
+  const docTitle =
+    profile.document?.[language]?.title ?? focusedEntity?.title ?? "Untitled document";
+  const scalarFields = (profile.metadata[language] ?? []).filter(
+    (f): f is MetadataField => f.type !== "relationship" && !!f.value?.trim(),
+  );
   const resolve = (s: ContextSource): Chip | null => {
     switch (s) {
       case "view":
@@ -139,18 +153,71 @@ export function AgentModal() {
   ];
   const sendActive = focused || input.trim().length > 0;
 
-  // A short, context-aware canned reply keyed loosely off the prompt's intent.
+  // Replies are still MOCK (no model behind them) but grounded in the focused
+  // entity's real data — its metadata fields, its actual connections, real
+  // snippets — so the prototype demos what a wired agent would say.
   const docShort = shortDoc(docTitle);
   const ctx = chain.length ? chain.map((c) => c.value).join(" › ") : "no context";
+  const entityLabel = focusedEntity?.title ?? docShort;
+  const typeName = focusedEntity ? getEntityType(focusedEntity.typeId)?.name : undefined;
+
   const replyFor = (q: string): string => {
-    if (/summar|gist|tl;?dr|overview/i.test(q))
-      return `Here's the short version of ${docShort}:\n\n• The Commission brought the case against the respondent State.\n• Core claims centre on the rights invoked and the State's duty to investigate.\n• The Court found violations and ordered reparations.\n\nWant me to expand any of these?`;
-    if (/find|search|related|similar|cases?/i.test(q))
-      return `Searching ${ctx}… I surfaced 3 related matters:\n\n• A companion case on the same rights\n• An earlier petition from the same period\n• A later judgment that cites this one\n\nOpen any of them, or refine the search?`;
-    if (/extract|metadata|fields?|fill/i.test(q))
-      return `I pulled the key fields from ${docShort} — parties, date of judgment, articles invoked, and the operative paragraphs. I can write these straight into the template; just confirm.`;
-    if (/relationship|connect|graph|link/i.test(q))
-      return `Tracing connections for ${docShort}: links to the issuing Court, the respondent State, and the people involved — with their inherited country and role. Want me to draft a relationship graph?`;
+    // Top connected entities by evidence, from the entity's real references.
+    const topRelated = (n: number) => {
+      const byTarget = new Map<string, Reference[]>();
+      for (const r of scopedRefs) {
+        const list = byTarget.get(r.targetEntityId) ?? [];
+        list.push(r);
+        byTarget.set(r.targetEntityId, list);
+      }
+      return [...byTarget.entries()]
+        .sort((a, b) => b[1].length - a[1].length)
+        .slice(0, n)
+        .map(([id, refs]) => {
+          const e = getEntity(id);
+          const t = e ? getEntityType(e.typeId)?.name : undefined;
+          return `• ${e?.title ?? id}${t ? ` (${t}` : ""}${t ? ` · ${refs.length} reference${refs.length !== 1 ? "s" : ""})` : ""}`;
+        });
+    };
+
+    if (/summar|gist|tl;?dr|overview/i.test(q)) {
+      const longField = scalarFields.find((f) => (f.value?.length ?? 0) > 120);
+      const shortFields = scalarFields.filter((f) => f !== longField).slice(0, 3);
+      const lines = [
+        `Here's the short version of ${entityLabel}${typeName ? ` (${typeName})` : ""}:`,
+        "",
+        ...(longField ? [`${longField.value!.split(/(?<=\.)\s/)[0]}`, ""] : []),
+        ...shortFields.map((f) => `• ${f.label}: ${f.value}`),
+        `• ${scopedRefs.length} connection${scopedRefs.length !== 1 ? "s" : ""} in scope`,
+        "",
+        "Want me to expand any of these?",
+      ];
+      return lines.join("\n");
+    }
+    if (/find|search|related|similar|cases?/i.test(q)) {
+      const related = topRelated(3);
+      if (related.length === 0)
+        return `Searching ${ctx}… ${entityLabel} has no connections yet — link an entity first and I'll trace outward from there.`;
+      return `Searching ${ctx}… the most-evidenced connections of ${entityLabel}:\n\n${related.join("\n")}\n\nOpen any of them, or refine the search?`;
+    }
+    if (/extract|metadata|fields?|fill/i.test(q)) {
+      if (scalarFields.length === 0)
+        return `${entityLabel} has no filled metadata fields yet. Point me at a document and I can propose values for the template.`;
+      const rows = scalarFields
+        .slice(0, 5)
+        .map((f) => `• ${f.label} — ${f.value!.length > 80 ? `${f.value!.slice(0, 77)}…` : f.value}`);
+      return `The filled fields on ${entityLabel}:\n\n${rows.join("\n")}\n\nI can write updates straight into the template; just confirm.`;
+    }
+    if (/relationship|connect|graph|link/i.test(q)) {
+      const byType = new Map<string, number>();
+      for (const r of scopedRefs) byType.set(r.relationType, (byType.get(r.relationType) ?? 0) + 1);
+      const parts = [...byType.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 4)
+        .map(([t, n]) => `${n} ${relationTypes.find((rt) => rt.id === t)?.label ?? t}`);
+      const entityCount = new Set(scopedRefs.map((r) => r.targetEntityId)).size;
+      return `Tracing connections for ${entityLabel}: ${scopedRefs.length} reference${scopedRefs.length !== 1 ? "s" : ""} across ${entityCount} entit${entityCount === 1 ? "y" : "ies"}${parts.length ? ` — ${parts.join(", ")}` : ""}. The graph view has the full picture; want me to group it by relation type?`;
+    }
     return `Working in context of ${ctx}. I'd ground my answer in the documents in scope and cite the passages as I go, then summarise what I find.`;
   };
 
