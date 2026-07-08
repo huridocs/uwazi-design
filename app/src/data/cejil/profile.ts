@@ -14,6 +14,7 @@ import { cejilTemplates } from "./templates";
 import { chains, type ChainGraph, type ProvenanceStep } from "../../utils/chainTraversal";
 import { registerInheritanceGraph } from "../../utils/inheritance";
 import { cejilChainGraph, CEJIL_PERPETRATOR_CHAIN } from "./graph";
+import { curatedCejilRefsFor } from "./textAnchors";
 import {
   cejilBySidLang,
   cejilRelsByEntity,
@@ -39,7 +40,7 @@ export const isCejilEntity = (id: string) => cejilSharedIdSet().has(id);
 /** This entity's connections as perspective-normalized References (read-only). */
 export function cejilReferencesFor(sharedId: string): Reference[] {
   const rels = cejilRelsByEntity().get(sharedId) || [];
-  return rels.map((r, i) => {
+  const derived = rels.map((r, i) => {
     const outgoing = r.from === sharedId;
     return {
       id: `cejil-${r.hub}-${i}-${r.from}-${r.to}`,
@@ -51,6 +52,9 @@ export function cejilReferencesFor(sharedId: string): Reference[] {
       createdAt: "",
     };
   });
+  // Plus the hand-curated text↔text references (the published corpus is
+  // entity-level only, so anchored quotes are curated — see textAnchors.ts).
+  return [...derived, ...curatedCejilRefsFor(sharedId)];
 }
 
 const propsByTemplate = new Map(
