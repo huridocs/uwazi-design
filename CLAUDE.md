@@ -114,7 +114,12 @@ The prototype keeps a simpler shape: every row in `data/references.ts` is a `Ref
 - The aggregate row's "evidence count" badge is `relationship.evidenceCount`.
 
 **Known gaps vs Uwazi v2 (intentional, don't paper over):**
-- We always anchor source to the current document; Uwazi's `from`/`to` are symmetric. So "target-side text anchor" (a quote on the *target's* document) doesn't exist in our seed data, and grouping/filtering by target-side text would be empty.
+- ~~Target-side text anchors don't exist in seed data~~ **Partially closed
+  (2026-07-08):** `ref-tt-1..3` seed text↔text references (BOTH endpoints
+  anchored, mirroring v2's symmetric `from`/`to`); rows + the entity overlay
+  render the target quote as a second warm/italic snippet ("target p.N" /
+  "here p.N"). Still open: jump-to-target-passage navigation, and
+  grouping/filtering by target-side text.
 - No inverse relation labels — Uwazi v2 stores a single `type` per relationship; the "source rel type vs target rel type" pair from the mockup has no backing data.
 - No `createdBy`, `sourceKind` (manual / IX-suggested), or confidence on refs. If we add filters by source/author/confidence, the data layer has to grow first.
 - No no-anchor relationships in seed data — every relationship has at least one underlying reference. A manual entity link with no quote is representable (`Reference` requires `sourceSelection` so… not actually representable without loosening the type). Future expansion if we model it.

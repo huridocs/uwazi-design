@@ -175,6 +175,24 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
           />
         )
       ) : null}
+      {/* Text↔text: the anchor on the TARGET's own document, as a second,
+          quieter snippet — labelled so the two quotes read as the two ends
+          of one relationship. */}
+      {reference.targetSelection && (
+        <div className="flex items-start justify-between gap-2 px-2 py-1.5 mt-1.5 bg-warm/50 rounded">
+          <FadeTruncate
+            text={reference.targetSelection.text}
+            maxLines={2}
+            expandable
+            className="text-xs text-ink-secondary leading-relaxed flex-1 min-w-0 italic"
+            fadeTo={isActive ? "var(--bg-primary)" : "var(--bg-warm)"}
+          />
+          <span className="shrink-0 flex items-center gap-1">
+            <span className="text-[10px] text-ink-tertiary">target</span>
+            <PageTag page={reference.targetSelection.page} />
+          </span>
+        </div>
+      )}
       <div className="flex items-center justify-between mt-1 text-[10px] text-ink-tertiary">
         {nested ? (
           <span />

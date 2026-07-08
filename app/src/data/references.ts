@@ -698,6 +698,80 @@ export const references: Reference[] = [
     relationType: "cites",
     createdAt: "2024-07-15",
   },
+  // Text↔text references — BOTH endpoints carry a quote, mirroring Uwazi v2's
+  // symmetric from/to anchors: the source selection lives on this document,
+  // the target selection on the TARGET entity's own document. Rows and the
+  // entity overlay surface the target quote as a second snippet.
+  {
+    id: "ref-tt-1",
+    sourceEntityId: "e3",
+    targetEntityId: "e13",
+    relationType: "cites",
+    sourceSelection: {
+      text: "The Commission asked the Court to apply the standard of State responsibility for forced disappearance established in prior case law.",
+      page: 9,
+      top: 0.38,
+      left: 0.08,
+      width: 0.84,
+      height: 0.04,
+    },
+    targetSelection: {
+      text: "The State has a legal duty to take reasonable steps to prevent human rights violations and to use the means at its disposal to carry out a serious investigation.",
+      page: 29,
+      top: 0.41,
+      left: 0.08,
+      width: 0.84,
+      height: 0.04,
+    },
+    createdAt: "2024-07-16",
+  },
+  {
+    id: "ref-tt-2",
+    sourceEntityId: "e3",
+    targetEntityId: "e33",
+    relationType: "refers_to",
+    sourceSelection: {
+      text: "Detention without a warrant followed by incommunicado confinement constitutes a violation of the right to personal liberty.",
+      page: 12,
+      top: 0.22,
+      left: 0.08,
+      width: 0.84,
+      height: 0.04,
+    },
+    targetSelection: {
+      text: "Bámaca Velásquez was held in clandestine detention centres, without judicial oversight, for a prolonged period.",
+      page: 44,
+      top: 0.3,
+      left: 0.08,
+      width: 0.84,
+      height: 0.04,
+    },
+    createdAt: "2024-07-16",
+  },
+  {
+    id: "ref-tt-3",
+    sourceEntityId: "e3",
+    targetEntityId: "e38",
+    relationType: "cites",
+    direction: "incoming",
+    sourceSelection: {
+      text: "The duty to investigate is not breached merely because the investigation does not produce a satisfactory result.",
+      page: 31,
+      top: 0.52,
+      left: 0.08,
+      width: 0.84,
+      height: 0.04,
+    },
+    targetSelection: {
+      text: "An investigation must be undertaken in a serious manner and not as a mere formality preordained to be ineffective.",
+      page: 33,
+      top: 0.47,
+      left: 0.08,
+      width: 0.84,
+      height: 0.04,
+    },
+    createdAt: "2024-07-17",
+  },
   // Cross-source refs — source is NOT the current document. Carried over
   // from other entities' own connection records, so the user sees something
   // when grouping by source-entity / source-template. These are entity-level

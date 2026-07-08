@@ -286,6 +286,22 @@ export function EntityOverlay() {
                             maxLines={2}
                             className="text-xs text-ink-secondary leading-relaxed"
                           />
+                          {/* Text↔text: the anchor on THIS entity's own
+                              document — the local end of the relationship. */}
+                          {ref.targetSelection && (
+                            <div className="flex items-start justify-between gap-2 px-2 py-1.5 mt-1.5 bg-warm/50 rounded">
+                              <FadeTruncate
+                                text={ref.targetSelection.text}
+                                maxLines={2}
+                                className="text-xs text-ink-secondary leading-relaxed flex-1 min-w-0 italic"
+                                fadeTo="var(--bg-warm)"
+                              />
+                              <span className="shrink-0 flex items-center gap-1">
+                                <span className="text-[10px] text-ink-tertiary">here</span>
+                                <PageTag page={ref.targetSelection.page} />
+                              </span>
+                            </div>
+                          )}
                         </>
                       ) : (
                         // Entity-level ref: no quote, so surface the source
