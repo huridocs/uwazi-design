@@ -19,10 +19,14 @@ import {
   Upload,
   Menu,
   Sparkles,
+  ChevronDown,
+  Check,
 } from "lucide-react";
 import type { Theme } from "../../atoms/theme";
 import type { AppView } from "../../atoms/navigation";
 import { breakpointAtom } from "../../atoms/viewport";
+import { dataSourceAtom, type DataSource } from "../../atoms/dataSource";
+import { selectDataSourceAtom } from "../../atoms/library";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { getEntity } from "../../data/entities";
 import { agentOpenAtom, shortcutLabel } from "../../atoms/agent";
@@ -42,9 +46,13 @@ interface NavbarProps {
 export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onToggleTheme, rtl, onToggleRtl }: NavbarProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
+  const [collectionOpen, setCollectionOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
   const toolsRef = useRef<HTMLDivElement>(null);
+  const collectionRef = useRef<HTMLDivElement>(null);
+  const dataSource = useAtomValue(dataSourceAtom);
+  const selectSource = useSetAtom(selectDataSourceAtom);
   const [breakpoint] = useAtom(breakpointAtom);
   const isMobile = breakpoint === "mobile";
   const openAgent = useSetAtom(agentOpenAtom);
@@ -55,7 +63,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
   const themeLabel = theme === "dark" ? "Dark" : theme === "auto" ? "Auto" : "Light";
 
   useEffect(() => {
-    if (!settingsOpen && !toolsOpen) return;
+    if (!settingsOpen && !toolsOpen && !collectionOpen) return;
     const handleClick = (e: MouseEvent) => {
       if (settingsOpen && settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
         setSettingsOpen(false);
@@ -63,12 +71,25 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
       if (toolsOpen && toolsRef.current && !toolsRef.current.contains(e.target as Node)) {
         setToolsOpen(false);
       }
+      if (
+        collectionOpen &&
+        collectionRef.current &&
+        !collectionRef.current.contains(e.target as Node)
+      ) {
+        setCollectionOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
-  }, [settingsOpen, toolsOpen]);
+  }, [settingsOpen, toolsOpen, collectionOpen]);
 
   const showingCatalog = appView === "catalog";
+
+  const COLLECTIONS: { id: DataSource; label: string; detail: string }[] = [
+    { id: "mock", label: "Sample", detail: "Curated demo entities" },
+    { id: "cejil", label: "CEJIL", detail: "Published corpus · 4,398" },
+  ];
+  const collection = COLLECTIONS.find((c) => c.id === dataSource) ?? COLLECTIONS[0];
 
   const toolsItems = [
     { id: "processes", label: "Processes", icon: Cog, enabled: false },
@@ -121,16 +142,84 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                 </span>
               </div>
             ) : (
-              <button
-                onClick={() => onNavigate?.("library")}
-                className={`flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium rounded-md transition-colors ${
-                  appView === "library"
-                    ? "text-ink bg-vellum"
-                    : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
-                }`}
-              >
-                <BookOpen size={14} /> Library
-              </button>
+              // Library + its COLLECTION picker. The dataset switch used to sit in
+              // the Library toolbar, where it was one more thing pushing the view
+              // controls around; it belongs to the destination, not the view.
+              <div ref={collectionRef} className="relative flex items-center">
+                <button
+                  onClick={() => onNavigate?.("library")}
+                  className={`flex items-center gap-1.5 ps-3 pe-2 py-1 text-[13px] font-medium rounded-s-md transition-colors ${
+                    appView === "library"
+                      ? "text-ink bg-vellum"
+                      : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
+                  }`}
+                >
+                  <BookOpen size={14} /> Library
+                </button>
+                <button
+                  onClick={() => {
+                    setCollectionOpen((o) => !o);
+                    setToolsOpen(false);
+                    setSettingsOpen(false);
+                  }}
+                  aria-haspopup="listbox"
+                  aria-expanded={collectionOpen}
+                  aria-label={`Collection: ${collection.label}`}
+                  title={`Collection: ${collection.label}`}
+                  className={`flex items-center gap-1 ps-1.5 pe-2 py-1 text-[13px] font-medium rounded-e-md transition-colors ${
+                    collectionOpen || appView === "library"
+                      ? "text-ink bg-vellum"
+                      : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
+                  }`}
+                  style={{ borderInlineStart: "1px solid var(--border-primary)" }}
+                >
+                  <span className="text-ink-tertiary">{collection.label}</span>
+                  <ChevronDown
+                    size={13}
+                    className={`text-ink-tertiary transition-transform ${collectionOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {collectionOpen && (
+                  <div
+                    role="listbox"
+                    className="absolute top-full mt-1.5 end-0 w-52 bg-paper border border-border rounded-lg shadow-lg overflow-hidden z-50 py-1"
+                  >
+                    <p className="px-3 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+                      Collection
+                    </p>
+                    {COLLECTIONS.map((c) => {
+                      const on = c.id === dataSource;
+                      return (
+                        <button
+                          key={c.id}
+                          role="option"
+                          aria-selected={on}
+                          onClick={() => {
+                            selectSource(c.id);
+                            setCollectionOpen(false);
+                            onNavigate?.("library");
+                          }}
+                          className={`w-full flex items-start gap-2 px-3 py-1.5 text-start transition-colors cursor-pointer ${
+                            on ? "bg-vellum" : "hover:bg-warm"
+                          }`}
+                        >
+                          <span className="w-4 shrink-0 pt-0.5 text-carbon">
+                            {on && <Check size={13} />}
+                          </span>
+                          <span className="min-w-0">
+                            <span
+                              className={`block text-xs ${on ? "text-ink font-semibold" : "text-ink-secondary"}`}
+                            >
+                              {c.label}
+                            </span>
+                            <span className="block text-[10px] text-ink-tertiary">{c.detail}</span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             )}
             <div className="relative" ref={toolsRef}>
               <button

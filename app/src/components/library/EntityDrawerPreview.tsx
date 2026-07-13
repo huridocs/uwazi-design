@@ -5,7 +5,7 @@ import { referencesAtom } from "../../atoms/references";
 import { librarySelectedEntityIdAtom } from "../../atoms/library";
 import { openEntityAtom, focusEntityForPreviewAtom } from "../../atoms/focusedEntity";
 import { getEntity } from "../../data/entities";
-import { EntityPill } from "../shared/EntityPill";
+import { EntityIdentity } from "../shared/EntityIdentity";
 import { getEntityProfile } from "../../data/entityProfiles";
 import { isCejilEntity, cejilReferencesFor } from "../../data/cejil/profile";
 import { tabsForType } from "../../utils/entityTabs";
@@ -63,23 +63,14 @@ export function EntityDrawerPreview({ entityId }: { entityId: string }) {
           panel header. Tabs sit beneath it (flipped from the entity view so the
           drawer reads title-first). */}
       <div
-        className="flex items-start gap-2 px-3 py-2 shrink-0"
+        className="flex items-start gap-2 px-3 pt-3 pb-2.5 shrink-0"
         style={{ borderBottom: "1px solid var(--border-primary)" }}
       >
-        {/* Type tag stacked above the title — same treatment as EntityOverlay;
-            the tag's dot carries the entity colour. */}
-        <div className="min-w-0 flex-1 space-y-1">
-          <div>
-            <EntityPill typeId={entity?.typeId ?? ""} />
-          </div>
-          <div className="text-xs font-semibold text-ink truncate">
-            {entity?.title ?? "Unknown entity"}
-          </div>
-        </div>
+        <EntityIdentity entity={entity} />
         <button
           onClick={() => setSelected(null)}
           aria-label="Back to filters"
-          className="p-1.5 rounded-md hover:bg-warm text-ink-muted hover:text-ink transition-colors shrink-0"
+          className="-mt-0.5 p-1.5 rounded-md hover:bg-warm text-ink-muted hover:text-ink transition-colors shrink-0"
         >
           <X size={16} />
         </button>

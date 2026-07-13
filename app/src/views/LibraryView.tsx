@@ -1,6 +1,16 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Search, X, LayoutGrid, List, Map as MapIcon, Plus, Upload, FileSpreadsheet } from "lucide-react";
+import {
+  Search,
+  X,
+  LayoutGrid,
+  List,
+  Map as MapIcon,
+  CalendarRange,
+  Plus,
+  Upload,
+  FileSpreadsheet,
+} from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, cejilReadyAtom } from "../atoms/dataSource";
 import { loadCejilData, cejilRelsByEntity } from "../data/cejil/load";
 import { referencesAtom } from "../atoms/references";
@@ -43,11 +53,13 @@ import { EntityCard } from "../components/library/EntityCard";
 const LibraryMapView = lazy(() =>
   import("../components/library/LibraryMapView").then((m) => ({ default: m.LibraryMapView })),
 );
+import { LibraryTimelineView } from "../components/library/LibraryTimelineView";
+import { TimeBrush } from "../components/library/TimeBrush";
 import { LibraryFilters } from "../components/library/LibraryFilters";
 import { LibraryClusterDrawer } from "../components/library/LibraryClusterDrawer";
 import { EntityDrawerPreview } from "../components/library/EntityDrawerPreview";
 import { DisplayMenu } from "../components/library/DisplayMenu";
-import { ActiveFilterChip } from "../components/shared/ActiveFilterChip";
+import { ActiveFiltersButton } from "../components/library/ActiveFiltersButton";
 import { DataTable, type Column } from "../components/shared/DataTable";
 import { EntityTypeChip } from "../components/shared/EntityTypeChip";
 import { Select } from "../components/shared/Select";
@@ -60,7 +72,7 @@ const DISPLAY_STEP = 120;
 
 export function LibraryView() {
   const entities = useAtomValue(libraryEntitiesAtom);
-  const [dataSource, setDataSource] = useAtom(dataSourceAtom);
+  const dataSource = useAtomValue(dataSourceAtom);
   const [cejilReady, setCejilReady] = useAtom(cejilReadyAtom);
   // Fetch the full CEJIL corpus on demand the first time the source is selected.
   // `cejilRetry` bumps to re-run the effect after a failed load (the loader
@@ -239,28 +251,33 @@ export function LibraryView() {
     return [...list].sort(cmp);
   }, [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, chainKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex]);
 
+  // The time brush rides under the two spatial/temporal views — map + timeline —
+  // the Bellingcat pairing: a canvas above, the range you're looking at below.
+  const showBrush = (viewMode === "map" || viewMode === "timeline") && !cejilLoading;
+
+  // The brush's histogram is the results with EVERY facet applied except the
+  // date one — so the bars keep showing what widening the window would give back
+  // (dimmed outside the range), instead of collapsing to the current selection.
+  const timeChart = useMemo(
+    () => (showBrush ? entities.filter((e) => matchesAll(e, filterState, "date")) : []),
+    [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, chainKey, activeChains, language, q, searchIndex, showBrush],
+  );
+  // …and the Lanes grid drops the template facet too, so drilling into one lane
+  // doesn't shrink the grid to that single lane.
+  const laneChart = useMemo(
+    () =>
+      viewMode === "timeline" && !cejilLoading
+        ? entities.filter((e) => matchesAll(e, { ...filterState, typeIds: [] }, "date"))
+        : [],
+    [entities, dataSource, hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, chainKey, activeChains, language, q, searchIndex, viewMode, cejilLoading],
+  );
+
   // The full CEJIL corpus is thousands of entities — cap the rendered cards and
   // let the user reveal more, so the card/list grid never paints them all at once.
   const [visibleCount, setVisibleCount] = useState(DISPLAY_STEP);
   useEffect(() => setVisibleCount(DISPLAY_STEP), [filtered]);
   const shown = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
 
-  const toggleType = (id: string) => setTypeFilters((prev) => ({ ...prev, [id]: !prev[id] }));
-  const toggleStatus = (id: string) => setStatusFilters((prev) => ({ ...prev, [id]: !prev[id] }));
-  const toggleCountry = (c: string) => setCountryFilters((prev) => ({ ...prev, [c]: !prev[c] }));
-  const toggleDescriptor = (d: string) => setDescriptorFilters((prev) => ({ ...prev, [d]: !prev[d] }));
-  const clearAllFilters = () => {
-    setTypeFilters({});
-    setHasDocOnly(false);
-    setStatusFilters({});
-    setCountryFilters({});
-    setDescriptorFilters({});
-    setDateFrom("");
-    setDateTo("");
-    setInheritedFilters({});
-    setChainFilters({});
-    setQuery("");
-  };
 
   // Tap-to-preview on desktop/tablet; tap-to-open on mobile (no side drawer).
   // Previewing focuses the entity so the drawer's tabbed bodies (Relationships /
@@ -356,26 +373,6 @@ export function LibraryView() {
             </button>
           )}
         </div>
-        <SegmentedControl
-          ariaLabel="Data source"
-          value={dataSource}
-          onChange={(v) => {
-            setDataSource(v as typeof dataSource);
-            // type/country ids differ per source — clear stale facets + preview.
-            setTypeFilters({});
-            setCountryFilters({});
-            setStatusFilters({});
-            setDescriptorFilters({});
-            setDateFrom("");
-            setDateTo("");
-            setInheritedFilters({});
-            setSelectedId(null);
-          }}
-          options={[
-            { id: "mock", label: "Sample" },
-            { id: "cejil", label: "CEJIL" },
-          ]}
-        />
         <Select
           value={sort}
           onChange={(v) => {
@@ -401,26 +398,27 @@ export function LibraryView() {
               { id: "cards", label: "Cards", icon: LayoutGrid },
               { id: "list", label: "List", icon: List },
               { id: "map", label: "Map", icon: MapIcon },
+              { id: "timeline", label: "Timeline", icon: CalendarRange },
             ]}
           />
         </div>
-        {viewMode !== "map" && (
-          <div className="hidden sm:block">
-            <DisplayMenu />
-          </div>
-        )}
-        <div className="hidden md:flex items-center gap-1">
-          {LANGUAGES.map((l) => (
-            <button
-              key={l}
-              onClick={() => setLanguage(l)}
-              className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-                language === l ? "bg-vellum text-ink" : "bg-warm text-ink-tertiary hover:text-ink-secondary"
-              }`}
-            >
-              {l}
-            </button>
-          ))}
+        {/* Display is icon-only and ALWAYS mounted; the view-specific modifiers
+            (timeline layout) live inside its popover. Anything that appears and
+            disappears from this row shoves every other control sideways when you
+            change view — which is exactly what it used to do. */}
+        <div className="hidden sm:block">
+          <DisplayMenu />
+        </div>
+        {/* Languages: one dropdown of fixed width (codes, not names — a "Français"
+            label would resize the trigger and shift the row again). */}
+        <div className="hidden md:block">
+          <Select
+            value={language}
+            onChange={(v) => setLanguage(v as Language)}
+            ariaLabel="Language"
+            align="end"
+            options={LANGUAGES.map((l) => ({ value: l, label: l }))}
+          />
         </div>
         {menuTrigger}
       </div>
@@ -428,64 +426,11 @@ export function LibraryView() {
       {/* Results */}
       <div
         className={`flex-1 min-h-0 px-3 py-3 bg-warm ${
-          viewMode === "map" ? "flex flex-col overflow-hidden" : "overflow-auto"
+          viewMode === "map" || viewMode === "timeline"
+            ? "flex flex-col overflow-hidden"
+            : "overflow-auto"
         }`}
       >
-        {activeFilterCount > 0 && (
-          <div className="flex items-center gap-2 flex-wrap pb-3">
-            {activeTypeIds.map((id) => (
-              <ActiveFilterChip
-                key={id}
-                label={getEntityType(id)?.name ?? id}
-                color={getEntityType(id)?.color}
-                onRemove={() => toggleType(id)}
-              />
-            ))}
-            {hasDocOnly && <ActiveFilterChip label="Has a document" onRemove={() => setHasDocOnly(false)} />}
-            {wantRestricted && <ActiveFilterChip label="Restricted" onRemove={() => toggleStatus("restricted")} />}
-            {wantPublished && <ActiveFilterChip label="Published" onRemove={() => toggleStatus("published")} />}
-            {activeCountries.map((c) => (
-              <ActiveFilterChip key={`country-${c}`} label={c} onRemove={() => toggleCountry(c)} />
-            ))}
-            {activeDescriptors.map((d) => (
-              <ActiveFilterChip key={`desc-${d}`} label={d} onRemove={() => toggleDescriptor(d)} />
-            ))}
-            {(dateFrom || dateTo) && (
-              <ActiveFilterChip
-                label={`${dateFrom || "…"} → ${dateTo || "…"}`}
-                onRemove={() => {
-                  setDateFrom("");
-                  setDateTo("");
-                }}
-              />
-            )}
-            {activeInherited.flatMap((f) =>
-              [...f.values].map((v) => (
-                <ActiveFilterChip
-                  key={`inh-${f.def.propId}-${v}`}
-                  label={v}
-                  onRemove={() =>
-                    setInheritedFilters((s) => {
-                      const next = { ...(s[f.def.propId] ?? {}) };
-                      delete next[v];
-                      return { ...s, [f.def.propId]: next };
-                    })
-                  }
-                />
-              )),
-            )}
-            {q && <ActiveFilterChip label={`“${query.trim()}”`} onRemove={() => setQuery("")} />}
-            {activeFilterCount > 1 && (
-              <button
-                onClick={clearAllFilters}
-                className="text-[11px] font-medium text-ink-tertiary hover:text-ink transition-colors cursor-pointer ms-0.5"
-              >
-                Clear all
-              </button>
-            )}
-          </div>
-        )}
-
         {cejilLoading ? (
           cejilError ? (
             <div className="flex flex-col items-center justify-center h-40 gap-3 text-sm text-ink-muted">
@@ -514,6 +459,18 @@ export function LibraryView() {
             >
               <LibraryMapView entities={filtered} />
             </Suspense>
+          </div>
+        ) : viewMode === "timeline" ? (
+          <div className="flex-1 min-h-0">
+            <LibraryTimelineView
+              entities={filtered}
+              chart={timeChart}
+              laneChart={laneChart}
+              selectedId={selectedId}
+              onSelect={handleSelect}
+              onView={openEntity}
+              countByEntity={countByEntity}
+            />
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex items-center justify-center h-40 text-sm text-ink-muted">
@@ -547,7 +504,7 @@ export function LibraryView() {
           />
         )}
 
-        {!cejilLoading && viewMode !== "map" && shown.length < filtered.length && (
+        {!cejilLoading && viewMode !== "map" && viewMode !== "timeline" && shown.length < filtered.length && (
           <div className="flex justify-center pt-4">
             <button
               onClick={() => setVisibleCount((n) => n + DISPLAY_STEP)}
@@ -558,6 +515,9 @@ export function LibraryView() {
           </div>
         )}
       </div>
+
+      {/* Time brush — map + timeline */}
+      {showBrush && <TimeBrush entities={timeChart} />}
 
       {/* Footer action bar */}
       <div
@@ -579,9 +539,16 @@ export function LibraryView() {
           label="Import / Export CSV"
           onClick={() => setAppView("import-csv")}
         />
+        {/* Result status. Nothing is mounted or unmounted here — only the text
+            changes — so the results above it never move. This is also the only
+            place the active-filter count survives while the drawer is showing an
+            entity instead of the Filters panel; clicking it puts the panel back. */}
         <span className="ms-2 text-[11px] text-ink-tertiary">
-          Showing <span className="font-semibold text-ink-secondary">{shown.length.toLocaleString()}</span> of {filtered.length.toLocaleString()}
+          Showing{" "}
+          <span className="font-semibold text-ink-secondary">{shown.length.toLocaleString()}</span> of{" "}
+          {filtered.length.toLocaleString()}
         </span>
+        <ActiveFiltersButton />
       </div>
     </div>
   );

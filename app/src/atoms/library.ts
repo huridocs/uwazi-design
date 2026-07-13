@@ -1,4 +1,5 @@
 import { atom } from "jotai";
+import { dataSourceAtom, type DataSource } from "./dataSource";
 
 /** Library search box. */
 export const libraryQueryAtom = atom("");
@@ -57,8 +58,25 @@ export const libraryChainFiltersAtom = atom<
 >({});
 
 /** Results layout. */
-export type LibraryViewMode = "cards" | "list" | "map";
+export type LibraryViewMode = "cards" | "list" | "map" | "timeline";
 export const libraryViewModeAtom = atom<LibraryViewMode>("cards");
+
+/** Timeline body flavour — four ways to read the same chronology:
+ *  - `rail`     the text-references minimap on a vertical time track: dots and
+ *               counted clusters that fan out into their members. Navigation —
+ *               clicking picks an entity, it does not filter.
+ *  - `density`  the same track as a volume histogram; clicking a bar FILTERS the
+ *               Library to that period.
+ *  - `spine`    a proportional chronology — every entity at its exact instant
+ *  - `lanes`    a template × period grid */
+export type TimelineLayout = "rail" | "density" | "spine" | "lanes";
+export const libraryTimelineLayoutAtom = atom<TimelineLayout>("rail");
+
+/** Track scope, mirroring the document minimap's whole-document / this-page
+ *  toggle: `all` plots the entire corpus span, `year` zooms the track to the
+ *  year you're currently reading (months, with ↑/↓ counts for the rest). */
+export type TimelineScope = "all" | "year";
+export const libraryTimelineScopeAtom = atom<TimelineScope>("all");
 
 /** Which information pieces the results show — a key is visible unless explicitly
  *  false, so the default (`{}`) shows everything. Driven by the header "Display"
@@ -85,6 +103,42 @@ export const librarySortDirAtom = atom<LibrarySortDir>("desc");
 /** Natural direction for a freshly-picked sort key: text → A→Z, value → high→low. */
 export const defaultSortDir = (key: LibrarySort): LibrarySortDir =>
   key === "title" || key === "type" || key === "country" ? "asc" : "desc";
+
+/** Switch collection. Template ids, countries and descriptors are per-source, so
+ *  every facet and the open preview have to go with it — this lives in an atom
+ *  (not in the view) because the collection picker now sits in the navbar, and
+ *  two call-sites clearing "most of" the facets would drift. */
+export const selectDataSourceAtom = atom(null, (_get, set, source: DataSource) => {
+  set(dataSourceAtom, source);
+  set(libraryTypeFiltersAtom, {});
+  set(libraryCountryFiltersAtom, {});
+  set(libraryStatusFiltersAtom, {});
+  set(libraryDescriptorFiltersAtom, {});
+  set(libraryInheritedFiltersAtom, {});
+  set(libraryChainFiltersAtom, {});
+  set(libraryDateFromAtom, "");
+  set(libraryDateToAtom, "");
+  set(librarySelectedEntityIdAtom, null);
+  set(librarySelectedClusterAtom, null);
+});
+
+/** Clear every filter. ONE definition: the Filters panel and the view each had
+ *  their own, and they had already drifted — the panel's forgot the search box,
+ *  the view's forgot the AND/OR modes. */
+export const clearLibraryFiltersAtom = atom(null, (_get, set) => {
+  set(libraryQueryAtom, "");
+  set(libraryTypeFiltersAtom, {});
+  set(libraryHasDocAtom, false);
+  set(libraryStatusFiltersAtom, {});
+  set(libraryCountryFiltersAtom, {});
+  set(libraryCountryModeAtom, "OR");
+  set(libraryDescriptorFiltersAtom, {});
+  set(libraryDescriptorModeAtom, "OR");
+  set(libraryDateFromAtom, "");
+  set(libraryDateToAtom, "");
+  set(libraryInheritedFiltersAtom, {});
+  set(libraryChainFiltersAtom, {});
+});
 
 /** Count of active filters (search + each selected type + has-doc + countries). */
 export const libraryActiveFilterCountAtom = atom((get) => {

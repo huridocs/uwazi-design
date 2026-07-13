@@ -2,34 +2,10 @@
 // Library. Imported only by the library-data atom (pulls the full entity list).
 import type { Entity } from "../entities";
 import type { CejilEntity } from "./types";
-import { countryCoords } from "../geo";
+import type { LatLng } from "../geo";
 import { cejilTemplates } from "./templates";
 import { cejilDocBearingIds } from "./profile";
-import { cejilCorpus, cejilLoaded } from "./load";
-
-// Approximate centroids for the CEJIL countries (Spanish names), since the mock
-// countryCoords only covers the sample seed. Lets the Library map plot real cases.
-const CEJIL_COORDS: Record<string, { lat: number; lng: number }> = {
-  Bolivia: { lat: -16.3, lng: -63.6 },
-  Brasil: { lat: -10.3, lng: -53.2 },
-  Chile: { lat: -35.7, lng: -71.5 },
-  Colombia: { lat: 4.6, lng: -74.1 },
-  "Costa Rica": { lat: 9.7, lng: -83.8 },
-  "El Salvador": { lat: 13.8, lng: -88.9 },
-  Guatemala: { lat: 15.8, lng: -90.2 },
-  Honduras: { lat: 15.2, lng: -86.2 },
-  México: { lat: 23.6, lng: -102.5 },
-  Nicaragua: { lat: 12.9, lng: -85.2 },
-  Panamá: { lat: 8.5, lng: -80.8 },
-  Paraguay: { lat: -23.4, lng: -58.4 },
-  Perú: { lat: -9.2, lng: -75.0 },
-  "República Dominicana": { lat: 18.7, lng: -70.2 },
-  Surinam: { lat: 4.0, lng: -56.0 },
-  "Trinidad y Tobago": { lat: 10.7, lng: -61.2 },
-  Venezuela: { lat: 6.4, lng: -66.6 },
-  Argentina: { lat: -38.4, lng: -63.6 },
-  Ecuador: { lat: -1.8, lng: -78.2 },
-};
+import { cejilCorpus, cejilLoaded, cejilRelsByEntity } from "./load";
 
 /** template _id → ordered [{name,label,type}] for resolving display fields. */
 const propsByTemplate = new Map(
@@ -83,6 +59,28 @@ function countryOf(e: CejilEntity): string | undefined {
   return pais && typeof pais.label === "string" ? pais.label : undefined;
 }
 
+/** The entity's REAL geolocation property, if it has one.
+ *
+ *  CEJIL carries genuine coordinates on two keys: `ubicaci_n_geogr_fica_geolocation`
+ *  (the 343 "Geolocalización de los hechos del caso" entities — where the events
+ *  of a case actually happened) and `localizaci_n_geolocation` (the País entities'
+ *  own centroids). 373 entities in all.
+ *
+ *  The map used to plot `country ? COORDS[country] : undefined` — every entity
+ *  that merely NAMED a country got pinned to a hardcoded centroid, so thousands
+ *  of judgments, resolutions and votes appeared as "locations". That is a
+ *  country facet drawn on a map, not a geolocation. If an entity has no
+ *  geolocation property, it has no place on the map. */
+function geoOf(e: CejilEntity): LatLng | undefined {
+  for (const key of ["ubicaci_n_geogr_fica_geolocation", "localizaci_n_geolocation"]) {
+    const v = e.metadata?.[key]?.[0]?.value as { lat?: number; lon?: number } | undefined;
+    if (v && typeof v.lat === "number" && typeof v.lon === "number") {
+      return { lat: v.lat, lng: v.lon };
+    }
+  }
+  return undefined;
+}
+
 /** CEJIL inherited-property facets: each maps a relationship/select metadata key
  *  to a facet label. `mecanismo` inherits the connected body's name (Corte IDH /
  *  CIDH …); `tipo` is the document's type term. Drives the Library's dynamic
@@ -110,11 +108,45 @@ function inheritedOf(e: CejilEntity): Record<string, string[]> | undefined {
   return Object.keys(out).length ? out : undefined;
 }
 
+const DATE_KEYS = ["fecha", "presentaci_n_ante_la_corteidh", "denuncia_ante_la_cidh"];
+
 /** A representative unix-seconds date from the metadata, → ISO, for sort-by-date. */
-function createdOf(e: CejilEntity): string | undefined {
-  for (const key of ["fecha", "presentaci_n_ante_la_corteidh", "denuncia_ante_la_cidh"]) {
+function ownDate(e: CejilEntity): string | undefined {
+  for (const key of DATE_KEYS) {
     const v = e.metadata?.[key]?.[0]?.value;
     if (typeof v === "number" && v > 0) return new Date(v * 1000).toISOString();
+  }
+  return undefined;
+}
+
+/** The entity's date. A GEOLOCATED entity with no date of its own inherits its
+ *  Causa's.
+ *
+ *  Every one of the 373 geolocated entities is undated — a "Geolocalización de
+ *  los hechos del caso" carries coordinates and a país, nothing else. So any date
+ *  filter emptied the map completely: narrow the timeline and every pin vanished,
+ *  because the only entities that CAN be pinned were the only ones with no date.
+ *
+ *  They are connected to their Causa (336 of 343), and the Causa is dated. "The
+ *  geolocation of the events of case X" is dated by case X, so the date comes
+ *  down that relationship and map + timeline finally compose.
+ *
+ *  Deliberately NARROW: only geolocated entities, only from a Causa. Letting any
+ *  undated entity borrow a date from any connected one would invent dates for
+ *  the ~1,100 others — a Persona would silently acquire whichever document
+ *  happened to be first in its relationship list. */
+function createdOf(
+  e: CejilEntity,
+  geo: LatLng | undefined,
+  causaDateBySid: Map<string, string>,
+): string | undefined {
+  const own = ownDate(e);
+  if (own) return own;
+  if (!geo) return undefined;
+  for (const r of cejilRelsByEntity().get(e.sharedId) ?? []) {
+    const other = r.from === e.sharedId ? r.to : r.from;
+    const d = causaDateBySid.get(other);
+    if (d) return d;
   }
   return undefined;
 }
@@ -127,10 +159,20 @@ export function cejilLibraryEntities(): Entity[] {
   if (!cejilLoaded()) return [];
   if (_libraryEntities) return _libraryEntities;
   const docBearing = cejilDocBearingIds();
-  _libraryEntities = cejilCorpus()!
-    .entities.filter((e) => e.language === "es")
+  const es = cejilCorpus()!.entities.filter((e) => e.language === "es");
+
+  // Pass 1: the CAUSA dates, so pass 2 can pull one down a geolocation's edge.
+  const causaDateBySid = new Map<string, string>();
+  for (const e of es) {
+    if (e.templateName !== "Causa") continue;
+    const d = ownDate(e);
+    if (d) causaDateBySid.set(e.sharedId, d);
+  }
+
+  _libraryEntities = es
     .map((e) => {
       const country = countryOf(e);
+      const geo = geoOf(e);
       return {
         id: e.sharedId,
         title: e.title.trim(),
@@ -138,8 +180,8 @@ export function cejilLibraryEntities(): Entity[] {
         published: e.published,
         preview: docBearing.has(e.sharedId) ? ("document" as const) : undefined,
         country,
-        geo: country ? CEJIL_COORDS[country] ?? countryCoords[country] : undefined,
-        createdAt: createdOf(e),
+        geo,
+        createdAt: createdOf(e, geo, causaDateBySid),
         fields: fieldsOf(e),
         descriptors: (e.metadata?.descriptores || [])
           .map((v) => (typeof v.label === "string" ? v.label : ""))

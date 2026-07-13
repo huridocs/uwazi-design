@@ -9,6 +9,7 @@ import { getEntity } from "../../data/entities";
 import { relationshipFieldsByLanguage, type MetadataField } from "../../data/metadata";
 import { getEntityProfile } from "../../data/entityProfiles";
 import { EntityPill } from "../shared/EntityPill";
+import { EntityIdentity } from "../shared/EntityIdentity";
 import { PageTag } from "../shared/PageTag";
 import { FadeTruncate } from "../shared/FadeTruncate";
 import { EditInput } from "../metadata/EditInput";
@@ -172,20 +173,13 @@ export function EntityOverlay() {
           className="flex items-start justify-between px-4 py-3 shrink-0"
           style={{ borderBottom: "1px solid var(--border-primary)" }}
         >
-          {/* Type tag stacked above the title — the tag's dot carries the
-              entity colour, so no separate dot. */}
-          <div className="min-w-0 space-y-1">
-            <div>
-              <EntityPill typeId={entity?.typeId ?? ""} />
-            </div>
-            <div className="text-sm font-semibold text-ink truncate">
-              {entity?.title}
-            </div>
-          </div>
+          {/* Same identity block as the Library drawer — one component, so the
+              two panels can't drift apart. */}
+          <EntityIdentity entity={entity} size="sm" />
           <button
             onClick={() => setEntityId(null)}
             aria-label="Close"
-            className="p-1.5 rounded-md hover:bg-warm text-ink-muted hover:text-ink transition-colors shrink-0"
+            className="-mt-0.5 p-1.5 rounded-md hover:bg-warm text-ink-muted hover:text-ink transition-colors shrink-0"
           >
             <X size={16} />
           </button>
