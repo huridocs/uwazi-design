@@ -439,17 +439,24 @@ export function LibraryView() {
         {menuTrigger}
       </div>
 
-      {/* Results */}
+      {/* Active filters — a PERSISTENT bar in the chrome, not a block inside the
+          scrolling results.
+          · Always mounted at a fixed height, so applying or clearing the last
+            filter no longer shoves the whole result set up and down.
+          · One line that scrolls sideways instead of wrapping: a wrapping row
+            changes height as chips come and go, which moved the row under the
+            cursor mid-click and removed the wrong filter.
+          · "Clear all" is pinned to the end, so it never moves either. */}
       <div
-        className={`flex-1 min-h-0 px-3 py-3 bg-warm ${
-          viewMode === "map" || viewMode === "timeline"
-            ? "flex flex-col overflow-hidden"
-            : "overflow-auto"
-        }`}
+        className="shrink-0 flex items-center gap-2 h-9 px-3 bg-warm"
+        style={{ borderBottom: "1px solid var(--border-primary)" }}
       >
-        {activeFilterCount > 0 && (
-          <div className="flex items-center gap-2 flex-wrap pb-3">
-            {activeTypeIds.map((id) => (
+        {activeFilterCount === 0 ? (
+          <span className="text-[11px] text-ink-muted">No filters</span>
+        ) : (
+          <>
+            <div className="flex-1 min-w-0 flex items-center gap-2 overflow-x-auto no-scrollbar">
+              {activeTypeIds.map((id) => (
               <ActiveFilterChip
                 key={id}
                 label={getEntityType(id)?.name ?? id}
@@ -490,18 +497,26 @@ export function LibraryView() {
                 />
               )),
             )}
-            {q && <ActiveFilterChip label={`“${query.trim()}”`} onRemove={() => setQuery("")} />}
-            {activeFilterCount > 1 && (
-              <button
-                onClick={clearAllFilters}
-                className="text-[11px] font-medium text-ink-tertiary hover:text-ink transition-colors cursor-pointer ms-0.5"
-              >
-                Clear all
-              </button>
-            )}
-          </div>
+              {q && <ActiveFilterChip label={`“${query.trim()}”`} onRemove={() => setQuery("")} />}
+            </div>
+            <button
+              onClick={clearAllFilters}
+              className="shrink-0 px-2 h-6 text-[11px] font-medium text-ink-tertiary hover:text-ink hover:bg-parchment rounded-md transition-colors cursor-pointer"
+            >
+              Clear all
+            </button>
+          </>
         )}
+      </div>
 
+      {/* Results */}
+      <div
+        className={`flex-1 min-h-0 px-3 py-3 bg-warm ${
+          viewMode === "map" || viewMode === "timeline"
+            ? "flex flex-col overflow-hidden"
+            : "overflow-auto"
+        }`}
+      >
         {cejilLoading ? (
           cejilError ? (
             <div className="flex flex-col items-center justify-center h-40 gap-3 text-sm text-ink-muted">

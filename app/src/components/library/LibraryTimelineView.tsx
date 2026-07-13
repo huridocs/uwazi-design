@@ -297,7 +297,9 @@ function TrackedList({
   return (
     <div className="flex h-full min-h-0 gap-3">
       {/* Period-grouped body */}
-      <div ref={scrollRef} onScroll={onScroll} className="flex-1 min-w-0 overflow-auto pe-1">
+      {/* no-scrollbar: the OS scrollbar landed between the list and the track,
+          reading as a second axis. The track is the scroll indicator here. */}
+      <div ref={scrollRef} onScroll={onScroll} className="flex-1 min-w-0 overflow-auto no-scrollbar pe-1">
         {groups.map((g) => {
           const open = openGroups[g.key];
           const shown = open ? g.entities : g.entities.slice(0, GROUP_CAP);
@@ -917,7 +919,7 @@ function SpineLayout({ dated, selectedId, onSelect }: LayoutProps) {
   }, [plotted, extent]);
 
   return (
-    <div className="h-full overflow-auto">
+    <div className="h-full overflow-auto no-scrollbar">
       <div className="relative" style={{ height }}>
         {/* Axis — right rail */}
         <div
@@ -1081,7 +1083,7 @@ function LanesLayout({ laneChart }: LayoutProps) {
   const colW = 26;
 
   return (
-    <div className="h-full overflow-auto">
+    <div className="h-full overflow-auto no-scrollbar">
       <div dir="ltr" className="inline-block min-w-full">
         {/* Column heads */}
         <div className="flex sticky top-0 z-10 bg-warm pb-1">
