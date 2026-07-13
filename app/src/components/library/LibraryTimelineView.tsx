@@ -144,8 +144,9 @@ const TRACK_LABEL = 26;
 const TRACK_AXIS = 44;
 const TRACK_BAR = 42;
 const TRACK_W = TRACK_AXIS + TRACK_BAR + 4;
-/** A period small enough to fan out into its members, rather than jump to. */
-const FAN_CAP = 12;
+/** A period quiet enough to read as a single dot; busier ones become a
+ *  counted ring. */
+const DOT_CAP = 12;
 
 interface TrackProps {
   buckets: TimeBucket[];
@@ -163,8 +164,6 @@ interface TrackProps {
   hovered: string | null;
   setHovered: (k: string | null) => void;
   scrollToTime: (t: number) => void;
-  selectedId: string | null;
-  onSelect: (id: string) => void;
 }
 
 function TrackedList({
@@ -290,8 +289,6 @@ function TrackedList({
     hovered,
     setHovered,
     scrollToTime,
-    selectedId,
-    onSelect,
   };
 
   return (
@@ -445,16 +442,18 @@ function EdgeCount({ dir, n, axisEnd }: { dir: "up" | "down"; n: number; axisEnd
   );
 }
 
-/** The RefMinimap idiom: a dot per small period (which fans out into its
- *  entities), a counted ring per busy one.
+/** The RefMinimap idiom: a dot per quiet period, a counted ring per busy one.
  *
- *  Clicking a node FILTERS the Library to that period — it doesn't merely scroll
- *  the list to it. Scrolling left you looking at the same 4,398 results with the
+ *  Clicking a node FILTERS the Library to that period — it doesn't scroll the
+ *  list to it. Scrolling left you looking at the same 4,398 results with the
  *  viewport moved; the point of picking a period is to be left with that period.
- *  Click it again to clear. A picked period that's small enough also fans out,
- *  so its members are one more click away. */
+ *  Click it again to clear.
+ *
+ *  No fan: once a click filters, the period's members are already the list —
+ *  fanning them onto the track as well was the same information twice, in a
+ *  cramped 40px gutter, one of them unclickable-adjacent to the other. */
 function ClusterTrack(props: TrackProps) {
-  const { buckets, extent, pos, activeKey, hovered, setHovered, selectedId, onSelect } = props;
+  const { buckets, extent, pos, activeKey, hovered, setHovered } = props;
   const range = useRange();
   const maxCount = Math.max(1, ...buckets.map((b) => b.entities.length));
 
@@ -474,9 +473,7 @@ function ClusterTrack(props: TrackProps) {
         const n = b.entities.length;
         const picked = !range.isAll && range.covers(b);
         const inRange = range.overlaps(b);
-        const small = n <= FAN_CAP;
-        // A picked period fans out — the filter and the fan are the same gesture.
-        const isOpen = picked && small;
+        const small = n <= DOT_CAP;
         const lit = picked || activeKey === b.key || hovered === b.key;
         const size = small ? (lit ? 12 : 9) : 15 + Math.min(Math.sqrt(n / maxCount) * 11, 11);
         const color = dominantColor(b.entities);
@@ -526,27 +523,12 @@ function ClusterTrack(props: TrackProps) {
                   {n > 99 ? "99+" : n}
                 </span>
               )}
-              {hovered === b.key && !isOpen && (
+              {hovered === b.key && (
                 <ChartTip>
                   {b.label} · {n.toLocaleString()}
                 </ChartTip>
               )}
             </button>
-
-            {/* Fan — the picked period's members, branching out as in RefMinimap.
-                Picking one previews that entity; it does NOT re-toggle the
-                period, so the filter survives choosing something inside it. */}
-            {isOpen && (
-              <ClusterFan
-                entities={b.entities}
-                yPct={pos(Math.max(b.start, extent.min))}
-                outer={size}
-                selectedId={selectedId}
-                hovered={hovered}
-                setHovered={setHovered}
-                onPick={(e) => onSelect(e.id)}
-              />
-            )}
           </div>
         );
       })}
@@ -631,149 +613,6 @@ function DensityTrack(props: TrackProps) {
         );
       })}
     </TrackFrame>
-  );
-}
-
-/** The expanded cluster: an SVG trunk with one branch per member, growing LEFT
- *  off the rail into the body — mirrored from the document minimap, which hangs
- *  off the right edge of the page. */
-function ClusterFan({
-  entities,
-  yPct,
-  outer,
-  selectedId,
-  hovered,
-  setHovered,
-  onPick,
-}: {
-  entities: Entity[];
-  yPct: number;
-  outer: number;
-  selectedId: string | null;
-  hovered: string | null;
-  setHovered: (id: string | null) => void;
-  onPick: (e: Entity) => void;
-}) {
-  const members = entities.slice(0, FAN_CAP);
-  const rowH = 20;
-  const dot = 9;
-  const pad = 2;
-  const branch = 14;
-  const trunkX = dot + pad + branch;
-  const stem = 10;
-  const svgW = trunkX + stem;
-  const totalH = (members.length - 1) * rowH + dot;
-  const top =
-    yPct < 25 ? outer / 2 : yPct > 75 ? -(totalH - dot) - outer / 2 : -totalH / 2 + outer / 2;
-  const midY = yPct < 25 ? dot / 2 : yPct > 75 ? totalH - dot / 2 : totalH / 2;
-
-  return (
-    <div
-      className="absolute top-1/2"
-      style={{ right: "calc(100% + 4px)", marginTop: top - outer / 2 }}
-    >
-      <svg width={svgW} height={totalH} style={{ overflow: "visible" }}>
-        {/* Stem: trunk → the rail node */}
-        <line
-          x1={trunkX}
-          y1={midY}
-          x2={svgW}
-          y2={midY}
-          stroke="var(--text-tertiary)"
-          strokeWidth={1}
-          opacity={0.4}
-        />
-        {/* Trunk */}
-        <line
-          x1={trunkX}
-          y1={dot / 2}
-          x2={trunkX}
-          y2={totalH - dot / 2}
-          stroke="var(--text-tertiary)"
-          strokeWidth={1}
-          opacity={0.4}
-        />
-        {members.map((e, i) => {
-          const cy = i * rowH + dot / 2;
-          const color = getEntityType(e.typeId)?.color ?? "#6B7280";
-          const on = selectedId === e.id || hovered === e.id;
-          const s = on ? 12 : dot;
-          return (
-            <g key={e.id}>
-              <line
-                x1={dot + pad}
-                y1={cy}
-                x2={trunkX}
-                y2={cy}
-                stroke="var(--text-tertiary)"
-                strokeWidth={1}
-                opacity={0.4}
-              />
-              <circle
-                cx={dot / 2}
-                cy={cy}
-                r={s / 2}
-                fill={color}
-                opacity={on ? 1 : 0.8}
-                tabIndex={0}
-                role="button"
-                aria-label={e.title}
-                className="cursor-pointer focus:outline-none"
-                onClick={() => onPick(e)}
-                onKeyDown={(ev) => {
-                  if (ev.key === "Enter" || ev.key === " ") {
-                    ev.preventDefault();
-                    onPick(e);
-                  }
-                }}
-                onMouseEnter={() => setHovered(e.id)}
-                onMouseLeave={() => setHovered(null)}
-              />
-              {on && (
-                <circle
-                  cx={dot / 2}
-                  cy={cy}
-                  r={s / 2 + 2.5}
-                  fill="none"
-                  stroke={color}
-                  strokeWidth={1.5}
-                  opacity={0.35}
-                />
-              )}
-            </g>
-          );
-        })}
-      </svg>
-      {/* Hover labels as HTML overlays — never SVG text inside the track */}
-      {members.map((e, i) => {
-        if (hovered !== e.id) return null;
-        return (
-          <span
-            key={`t-${e.id}`}
-            className="absolute z-50 pointer-events-none text-[10px] font-medium whitespace-nowrap rounded-md"
-            style={{
-              top: i * rowH + dot / 2,
-              right: "calc(100% + 8px)",
-              transform: "translateY(-50%)",
-              padding: "3px 7px",
-              backgroundColor: "var(--text-primary)",
-              color: "var(--bg-surface)",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-            }}
-          >
-            {e.title}
-          </span>
-        );
-      })}
-      {entities.length > FAN_CAP && (
-        <span
-          className="absolute text-[9px] tabular-nums text-ink-muted whitespace-nowrap"
-          style={{ top: totalH + 2, right: stem }}
-        >
-          +{entities.length - FAN_CAP}
-        </span>
-      )}
-    </div>
   );
 }
 
