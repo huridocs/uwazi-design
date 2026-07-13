@@ -59,6 +59,7 @@ import { LibraryFilters } from "../components/library/LibraryFilters";
 import { LibraryClusterDrawer } from "../components/library/LibraryClusterDrawer";
 import { EntityDrawerPreview } from "../components/library/EntityDrawerPreview";
 import { DisplayMenu } from "../components/library/DisplayMenu";
+import { ActiveFiltersButton } from "../components/library/ActiveFiltersButton";
 import { DataTable, type Column } from "../components/shared/DataTable";
 import { EntityTypeChip } from "../components/shared/EntityTypeChip";
 import { Select } from "../components/shared/Select";
@@ -277,18 +278,6 @@ export function LibraryView() {
   useEffect(() => setVisibleCount(DISPLAY_STEP), [filtered]);
   const shown = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
 
-  const clearAllFilters = () => {
-    setTypeFilters({});
-    setHasDocOnly(false);
-    setStatusFilters({});
-    setCountryFilters({});
-    setDescriptorFilters({});
-    setDateFrom("");
-    setDateTo("");
-    setInheritedFilters({});
-    setChainFilters({});
-    setQuery("");
-  };
 
   // Tap-to-preview on desktop/tablet; tap-to-open on mobile (no side drawer).
   // Previewing focuses the entity so the drawer's tabbed bodies (Relationships /
@@ -559,20 +548,7 @@ export function LibraryView() {
           <span className="font-semibold text-ink-secondary">{shown.length.toLocaleString()}</span> of{" "}
           {filtered.length.toLocaleString()}
         </span>
-        {activeFilterCount > 0 && (
-          <button
-            onClick={() => setSelectedId(null)}
-            title="Show the Filters panel"
-            className="inline-flex items-center gap-1 px-1.5 h-5 text-[11px] font-medium rounded-md
-              text-ink-secondary hover:bg-warm hover:text-ink transition-colors cursor-pointer"
-          >
-            <span
-              className="w-1.5 h-1.5 rounded-full"
-              style={{ backgroundColor: "var(--accent-blue)" }}
-            />
-            {activeFilterCount} {activeFilterCount === 1 ? "filter" : "filters"}
-          </button>
-        )}
+        <ActiveFiltersButton />
       </div>
     </div>
   );

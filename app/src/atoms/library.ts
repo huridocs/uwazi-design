@@ -122,6 +122,24 @@ export const selectDataSourceAtom = atom(null, (_get, set, source: DataSource) =
   set(librarySelectedClusterAtom, null);
 });
 
+/** Clear every filter. ONE definition: the Filters panel and the view each had
+ *  their own, and they had already drifted — the panel's forgot the search box,
+ *  the view's forgot the AND/OR modes. */
+export const clearLibraryFiltersAtom = atom(null, (_get, set) => {
+  set(libraryQueryAtom, "");
+  set(libraryTypeFiltersAtom, {});
+  set(libraryHasDocAtom, false);
+  set(libraryStatusFiltersAtom, {});
+  set(libraryCountryFiltersAtom, {});
+  set(libraryCountryModeAtom, "OR");
+  set(libraryDescriptorFiltersAtom, {});
+  set(libraryDescriptorModeAtom, "OR");
+  set(libraryDateFromAtom, "");
+  set(libraryDateToAtom, "");
+  set(libraryInheritedFiltersAtom, {});
+  set(libraryChainFiltersAtom, {});
+});
+
 /** Count of active filters (search + each selected type + has-doc + countries). */
 export const libraryActiveFilterCountAtom = atom((get) => {
   let n = get(libraryQueryAtom).trim() ? 1 : 0;

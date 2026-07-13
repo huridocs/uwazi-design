@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Play, Search, Lock, Globe, X, ChevronRight, Link2, type LucideIcon } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom } from "../../atoms/dataSource";
 import { getEntityType } from "../../data/entities";
@@ -19,6 +19,7 @@ import {
   libraryInheritedFiltersAtom,
   libraryChainFiltersAtom,
   libraryActiveFilterCountAtom,
+  clearLibraryFiltersAtom,
   type FacetMode,
 } from "../../atoms/library";
 import { typeHasDocument } from "../../data/entityProfiles";
@@ -176,19 +177,10 @@ export function LibraryFilters() {
   const toggleStatus = (id: string) => setStatusFilters((prev) => ({ ...prev, [id]: !prev[id] }));
   const toggleCountry = (c: string) => setCountryFilters((prev) => ({ ...prev, [c]: !prev[c] }));
   const toggleDescriptor = (d: string) => setDescriptorFilters((prev) => ({ ...prev, [d]: !prev[d] }));
-  const clearAll = () => {
-    setTypeFilters({});
-    setHasDocOnly(false);
-    setStatusFilters({});
-    setCountryFilters({});
-    setDescriptorFilters({});
-    setCountryMode("OR");
-    setDescriptorMode("OR");
-    setDateFrom("");
-    setDateTo("");
-    setInheritedFilters({});
-    setChainFilters({});
-  };
+  // One clear, shared with the footer readout (clearLibraryFiltersAtom). This
+  // used to be a local copy that forgot the search box, while the view's copy
+  // forgot the AND/OR modes — the two had already drifted.
+  const clearAll = useSetAtom(clearLibraryFiltersAtom);
   const toggleChain = (key: string, value: string) =>
     setChainFilters((s) => ({
       ...s,
