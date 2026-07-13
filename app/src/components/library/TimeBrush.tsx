@@ -1,6 +1,11 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { useAtom } from "jotai";
-import { libraryDateFromAtom, libraryDateToAtom } from "../../atoms/library";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import {
+  libraryDateFromAtom,
+  libraryDateToAtom,
+  libraryActiveFilterCountAtom,
+  clearLibraryFiltersAtom,
+} from "../../atoms/library";
 import {
   bucketSeries,
   entityTime,
@@ -38,6 +43,8 @@ interface DragState {
 export function TimeBrush({ entities }: { entities: Entity[] }) {
   const [dateFrom, setDateFrom] = useAtom(libraryDateFromAtom);
   const [dateTo, setDateTo] = useAtom(libraryDateToAtom);
+  const activeFilterCount = useAtomValue(libraryActiveFilterCountAtom);
+  const clearFilters = useSetAtom(clearLibraryFiltersAtom);
   const trackRef = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState<TimeBucket | null>(null);
   // The live window during a drag. Held in a ref as well as state: the ref is
@@ -158,7 +165,46 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
     commit(d.from, d.to, d.from <= axis.min && d.to >= axis.max);
   };
 
-  if (!axis || !buckets.length) return null;
+  // Nothing dated to chart. Hold the strip's place and SAY so, rather than
+  // vanishing: an empty result set is a state worth reading, and a strip that
+  // unmounts drops the results pane down by its own height at the exact moment
+  // the user is trying to work out why they got nothing.
+  if (!axis || !buckets.length) {
+    return (
+      <div
+        dir="ltr"
+        className="shrink-0 bg-paper px-3 pt-1.5 pb-2 select-none"
+        style={{ borderTop: "1px solid var(--border-primary)" }}
+      >
+        <div className="flex items-center gap-2 h-6">
+          <span className="text-[11px] text-ink-tertiary">
+            {entities.length
+              ? `None of these ${entities.length.toLocaleString()} results carry a date`
+              : "No results to plot"}
+          </span>
+          <div className="flex-1" />
+          {activeFilterCount > 0 && (
+            <button
+              onClick={() => clearFilters()}
+              className="px-2 h-5 text-[11px] font-medium rounded-md bg-warm text-ink-tertiary hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
+        <div className="relative h-11">
+          <div
+            className="absolute left-0 right-0 bottom-0"
+            style={{ height: 1, backgroundColor: "var(--border-primary)" }}
+          />
+          <span className="absolute inset-0 flex items-center justify-center text-[11px] text-ink-muted">
+            {entities.length ? "Nothing to plot on the timeline" : "Widen your filters to see the timeline"}
+          </span>
+        </div>
+        <div className="h-3.5" />
+      </div>
+    );
+  }
 
   const span = axis.max - axis.min;
   const pct = (ms: number) => ((ms - axis.min) / span) * 100;

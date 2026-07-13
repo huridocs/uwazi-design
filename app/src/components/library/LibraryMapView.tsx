@@ -3,7 +3,13 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { ComposableMap, Geographies, Geography, Graticule, Marker, ZoomableGroup } from "react-simple-maps";
 import worldData from "world-atlas/countries-110m.json";
 import { languageAtom } from "../../atoms/language";
-import { librarySelectedClusterAtom, librarySelectedEntityIdAtom } from "../../atoms/library";
+import {
+  librarySelectedClusterAtom,
+  librarySelectedEntityIdAtom,
+  libraryActiveFilterCountAtom,
+  clearLibraryFiltersAtom,
+} from "../../atoms/library";
+import { MapPinOff } from "lucide-react";
 import { entityCountries } from "../../utils/libraryFacets";
 import { getEntity, type Entity } from "../../data/entities";
 
@@ -50,6 +56,8 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
   const language = useAtomValue(languageAtom);
   const [selectedCluster, setSelectedCluster] = useAtom(librarySelectedClusterAtom);
   const setSelectedId = useSetAtom(librarySelectedEntityIdAtom);
+  const activeFilterCount = useAtomValue(libraryActiveFilterCountAtom);
+  const clearFilters = useSetAtom(clearLibraryFiltersAtom);
   const [zoom, setZoom] = useState(START_ZOOM);
 
   // MUST be stable. react-simple-maps' useZoomPan lists onMove/onMoveEnd in the
@@ -215,6 +223,36 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
             })}
           </ZoomableGroup>
         </ComposableMap>
+
+        {/* Empty state — a map with no pins is indistinguishable from a map that
+            failed to load. Say which, over the map rather than instead of it, so
+            the geography stays as context and the way out is right there. */}
+        {located === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+            <div
+              className="pointer-events-auto max-w-[20rem] text-center bg-paper/90 backdrop-blur-sm rounded-lg px-4 py-3"
+              style={{ border: "1px solid var(--border-primary)", boxShadow: "0 6px 18px rgba(0,0,0,0.08)" }}
+            >
+              <MapPinOff size={18} className="mx-auto text-ink-muted" />
+              <p className="mt-2 text-xs font-semibold text-ink">
+                {entities.length ? "Nothing to place on the map" : "No results"}
+              </p>
+              <p className="mt-1 text-[11px] text-ink-tertiary leading-snug">
+                {entities.length
+                  ? `None of these ${entities.length.toLocaleString()} results carry a geolocation. Only entities with coordinates of their own are plotted.`
+                  : "No entities match your filters."}
+              </p>
+              {activeFilterCount > 0 && (
+                <button
+                  onClick={() => clearFilters()}
+                  className="mt-2.5 px-2.5 h-6 text-[11px] font-medium rounded-md bg-warm text-ink-secondary hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
+                >
+                  Clear filters
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Caption — states what ISN'T here. Only entities with a real
             geolocation property are plotted, and in a corpus like CEJIL that is
