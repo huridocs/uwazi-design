@@ -209,7 +209,11 @@ export function ActiveFiltersButton() {
   if (count === 0) return null;
 
   return (
-    <div ref={ref} className="relative">
+    // `flex`, not a bare block: as a block, the inline-flex button below sits in
+    // a LINE BOX and gets baseline-aligned, leaving room for descenders under it.
+    // The wrapper measured 25px tall around a 20px button, so the button rode
+    // 2.5px low and the count fell out of line with "Showing N of M" beside it.
+    <div ref={ref} className="relative flex items-center">
       <button
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="dialog"
