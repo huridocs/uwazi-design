@@ -130,13 +130,20 @@ function useRange() {
  *                    FILTERS the Library to that period.
  * ------------------------------------------------------------------ */
 
-/** Reserved for the year marks at the rail's outer edge. */
-const RAIL_LABEL = 26;
-/** Longest a density bar can grow, inward from the axis. */
-const RAIL_BAR = 46;
-/** Where the cluster track's axis sits — far enough in that a counted ring can
- *  straddle it without landing on the year marks. */
-const CLUSTER_AXIS = 40;
+/* ONE track geometry, shared by Rail, Density and Spine. The axis lands at the
+ * same x in every layout, so switching between them doesn't slide the timeline
+ * across the pane. All three measure from the pane's inline-end edge:
+ *
+ *   |<-- TRACK_BAR -->|<- TRACK_AXIS ->|
+ *   [ bars / leaders ]|                | axis line
+ *                     |     marks      | TRACK_LABEL
+ *
+ * TRACK_AXIS has to clear TRACK_LABEL by more than a counted ring's radius —
+ * the cluster nodes straddle the axis, the density bars only grow inward. */
+const TRACK_LABEL = 26;
+const TRACK_AXIS = 44;
+const TRACK_BAR = 42;
+const TRACK_W = TRACK_AXIS + TRACK_BAR + 4;
 /** A period small enough to fan out into its members, rather than jump to. */
 const FAN_CAP = 12;
 
@@ -409,7 +416,7 @@ function TrackFrame({
           <span
             key={`l-${m.label}`}
             className="absolute text-[9px] tabular-nums text-ink-muted -translate-y-1/2 pointer-events-none text-start"
-            style={{ top: `${m.yPct}%`, insetInlineEnd: 0, width: RAIL_LABEL }}
+            style={{ top: `${m.yPct}%`, insetInlineEnd: 0, width: TRACK_LABEL }}
           >
             {m.label}
           </span>
@@ -448,8 +455,8 @@ function ClusterTrack(props: TrackProps) {
 
   return (
     <TrackFrame
-      width={RAIL_BAR + RAIL_LABEL + 8}
-      axisEnd={CLUSTER_AXIS}
+      width={TRACK_W}
+      axisEnd={TRACK_AXIS}
       label="Timeline — periods"
       scope={props.scope}
       setScope={props.setScope}
@@ -471,7 +478,7 @@ function ClusterTrack(props: TrackProps) {
             key={b.key}
             // Anchored so the node's centre lands ON the axis line.
             className="absolute -translate-y-1/2 translate-x-1/2"
-            style={{ top: `${pos(Math.max(b.start, extent.min))}%`, insetInlineEnd: CLUSTER_AXIS }}
+            style={{ top: `${pos(Math.max(b.start, extent.min))}%`, insetInlineEnd: TRACK_AXIS }}
           >
             <button
               aria-label={`${b.label} — ${n.toLocaleString()} ${n === 1 ? "entity" : "entities"}`}
@@ -553,8 +560,8 @@ function DensityTrack(props: TrackProps) {
 
   return (
     <TrackFrame
-      width={RAIL_BAR + RAIL_LABEL + 8}
-      axisEnd={RAIL_LABEL}
+      width={TRACK_W}
+      axisEnd={TRACK_AXIS}
       label="Timeline — volume by period"
       scope={props.scope}
       setScope={props.setScope}
@@ -568,7 +575,7 @@ function DensityTrack(props: TrackProps) {
         const lit = range.overlaps(b);
         const picked = !range.isAll && range.covers(b);
         const isHov = hovered === b.key;
-        const w = 4 + Math.sqrt(n / maxCount) * (RAIL_BAR - 4);
+        const w = 4 + Math.sqrt(n / maxCount) * (TRACK_BAR - 4);
         // Bars are as tall as their period is long — a period that is 1/40th of
         // the corpus occupies 1/40th of the rail. Gaps in time stay gaps.
         const top = pos(Math.max(b.start, extent.min));
@@ -591,11 +598,11 @@ function DensityTrack(props: TrackProps) {
             className="absolute cursor-pointer transition-[width,opacity] duration-150
               focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
             style={{
-              insetInlineEnd: RAIL_LABEL + 1,
+              insetInlineEnd: TRACK_AXIS + 1,
               top: `${top}%`,
               height: `calc(${h}% - 1px)`,
               minHeight: 3,
-              width: isHov || picked ? Math.min(RAIL_BAR, w + 4) : w,
+              width: isHov || picked ? Math.min(TRACK_BAR, w + 4) : w,
               opacity: lit ? (isHov || picked || activeKey === b.key ? 1 : 0.65) : 0.16,
             }}
           >
@@ -794,7 +801,9 @@ const PX_PER_YEAR = 190;
 const EVENT_H = 22;
 /** The axis lives on the right, like the rail and the document's ref minimap.
  *  This is the gutter kept for its year marks. */
-const AXIS_GUTTER = 58;
+/** The spine's axis sits at the SAME inset as the Rail/Density track, so the
+ *  timeline doesn't slide across the pane when you switch layout. */
+const AXIS_GUTTER = TRACK_AXIS;
 const LEADER_W = 22;
 /** The longest stretch of nothing the axis will draw at true scale before it
  *  elides — see the break markers. */
@@ -876,7 +885,11 @@ function SpineLayout({ dated, selectedId, onSelect }: LayoutProps) {
         m = new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth() + step, 1))
       ) {
         const pos = at(m.getTime());
-        if (pos >= 0) years.push({ label: bucketOf(m.getTime(), "month").label, y: pos });
+        // Compact: "Jan 2009" doesn't fit the shared 26px label column. January
+        // carries the year, every other month is just its name.
+        const full = bucketOf(m.getTime(), "month").label;
+        const label = m.getUTCMonth() === 0 ? String(m.getUTCFullYear()) : full.slice(0, 3);
+        if (pos >= 0) years.push({ label, y: pos });
       }
     } else {
       const y0 = d0.getUTCFullYear();
@@ -890,10 +903,8 @@ function SpineLayout({ dated, selectedId, onSelect }: LayoutProps) {
     // The first mark is often clipped (a range starting 17 Jan has no 1 Jan
     // tick above it) — anchor the top of the axis explicitly.
     if (!years.length || years[0].y > 14) {
-      years.unshift({
-        label: bucketOf(extent.min, spanYears < 2.5 ? "month" : "year").label,
-        y: 6,
-      });
+      const anchor = bucketOf(extent.min, spanYears < 2.5 ? "month" : "year").label;
+      years.unshift({ label: spanYears < 2.5 ? anchor.slice(0, 3) : anchor, y: 6 });
     }
     return { rows, height, years, gaps };
   }, [plotted, extent]);
@@ -917,7 +928,10 @@ function SpineLayout({ dated, selectedId, onSelect }: LayoutProps) {
             style={{ top: y.y, insetInlineEnd: 0 }}
           >
             <span className="w-1.5 h-px" style={{ backgroundColor: "var(--border-primary)" }} />
-            <span className="w-12 text-[9px] tabular-nums text-ink-tertiary whitespace-nowrap">
+            <span
+              className="text-[9px] tabular-nums text-ink-muted whitespace-nowrap"
+              style={{ width: TRACK_LABEL }}
+            >
               {y.label}
             </span>
           </div>

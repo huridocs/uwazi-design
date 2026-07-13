@@ -20,6 +20,11 @@ interface DragState {
   grabMs: number;
   from: number;
   to: number;
+  /** Where the pointer went down. A gesture that ends near here is a TAP, not a
+   *  drag — whatever mode it started in. (When the range is full the window
+   *  overlay covers the whole strip, so a plain click arrives as a "pan".) */
+  origin: number;
+  moved: boolean;
 }
 
 /** The Bellingcat-style time strip: a density histogram of the (date-unfiltered)
@@ -116,6 +121,7 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
     const span = axis.max - axis.min;
     const MIN_WIN = span / 200;
     const at = msAt(ev.clientX);
+    if (Math.abs(at - d.origin) > span / 300) d.moved = true;
     let next: DragState;
     if (d.mode === "start") next = { ...d, from: Math.min(at, d.to - MIN_WIN) };
     else if (d.mode === "end") next = { ...d, to: Math.max(at, d.from + MIN_WIN) };
@@ -137,9 +143,18 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
     setDrag(null);
     if (!d || !axis) return;
     trackRef.current?.releasePointerCapture?.(ev.pointerId);
-    // A tap (a "new" drag that never moved) shouldn't collapse the window to an
-    // instant — leave the range alone.
-    if (d.mode === "new" && d.to - d.from < (axis.max - axis.min) / 200) return;
+
+    // Tap (no real movement) → select the PERIOD under the pointer, exactly like
+    // clicking a bar on the Density track. Tap the selected period again to clear.
+    if (!d.moved) {
+      const hit = bucketsRef.current.find((b) => d.origin >= b.start && d.origin < b.end);
+      if (!hit) return;
+      const alreadyOn =
+        fromMs !== null && toMs !== null && hit.start >= fromMs && hit.end - 1 <= toMs + 86_399_999;
+      if (alreadyOn) commit(axis.min, axis.max, true);
+      else commit(hit.start, hit.end - 86_400_000, false);
+      return;
+    }
     commit(d.from, d.to, d.from <= axis.min && d.to >= axis.max);
   };
 
@@ -190,8 +205,8 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
     const at = msAt(ev.clientX);
     const d: DragState =
       mode === "new"
-        ? { mode, grabMs: at, from: at, to: at }
-        : { mode, grabMs: at, from: winFrom, to: winTo };
+        ? { mode, grabMs: at, from: at, to: at, origin: at, moved: false }
+        : { mode, grabMs: at, from: winFrom, to: winTo, origin: at, moved: false };
     dragRef.current = d;
     setDrag(d);
     // Capture on the track, so moves that leave the strip still land here.
