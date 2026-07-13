@@ -5,7 +5,7 @@ import worldData from "world-atlas/countries-110m.json";
 import { languageAtom } from "../../atoms/language";
 import { librarySelectedClusterAtom, librarySelectedEntityIdAtom } from "../../atoms/library";
 import { entityCountries } from "../../utils/libraryFacets";
-import type { Entity } from "../../data/entities";
+import { getEntity, type Entity } from "../../data/entities";
 
 interface Cluster {
   key: string;
@@ -35,12 +35,17 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
       const c = m.get(key) ?? { key, label, lat: e.geo.lat, lng: e.geo.lng, count: 0, ids: [] };
       c.count += 1;
       c.ids.push(e.id);
+      // A pin now sits on a real coordinate, so most hold exactly one entity —
+      // an incident site, not a country. Name it after the entity; keep the
+      // country name only when the pin genuinely aggregates several.
+      c.label = c.count === 1 ? getEntity(e.id)?.title ?? label : label || c.label;
       m.set(key, c);
     }
     return [...m.values()];
   }, [entities, language]);
 
   const located = clusters.reduce((n, c) => n + c.count, 0);
+  const unlocated = entities.length - located;
   const openCluster = (c: Cluster) => {
     setSelectedId(null);
     setSelectedCluster({ label: c.label, ids: c.ids });
@@ -112,10 +117,18 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
           </ZoomableGroup>
         </ComposableMap>
 
-        {/* Caption */}
+        {/* Caption — states what ISN'T here. Only entities with a real
+            geolocation property are plotted, and in a corpus like CEJIL that is
+            a small minority; without this the map reads as the whole library. */}
         <div className="absolute bottom-2 left-2 text-[11px] text-ink-tertiary bg-paper/70 backdrop-blur-sm rounded px-2 py-0.5">
-          {located} located {located === 1 ? "entity" : "entities"} · {clusters.length}{" "}
-          {clusters.length === 1 ? "place" : "places"}
+          {located.toLocaleString()} located {located === 1 ? "entity" : "entities"} ·{" "}
+          {clusters.length.toLocaleString()} {clusters.length === 1 ? "place" : "places"}
+          {unlocated > 0 && (
+            <span className="text-ink-muted">
+              {" · "}
+              {unlocated.toLocaleString()} with no geolocation
+            </span>
+          )}
         </div>
       </div>
     </div>

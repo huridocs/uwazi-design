@@ -2,34 +2,10 @@
 // Library. Imported only by the library-data atom (pulls the full entity list).
 import type { Entity } from "../entities";
 import type { CejilEntity } from "./types";
-import { countryCoords } from "../geo";
+import type { LatLng } from "../geo";
 import { cejilTemplates } from "./templates";
 import { cejilDocBearingIds } from "./profile";
 import { cejilCorpus, cejilLoaded } from "./load";
-
-// Approximate centroids for the CEJIL countries (Spanish names), since the mock
-// countryCoords only covers the sample seed. Lets the Library map plot real cases.
-const CEJIL_COORDS: Record<string, { lat: number; lng: number }> = {
-  Bolivia: { lat: -16.3, lng: -63.6 },
-  Brasil: { lat: -10.3, lng: -53.2 },
-  Chile: { lat: -35.7, lng: -71.5 },
-  Colombia: { lat: 4.6, lng: -74.1 },
-  "Costa Rica": { lat: 9.7, lng: -83.8 },
-  "El Salvador": { lat: 13.8, lng: -88.9 },
-  Guatemala: { lat: 15.8, lng: -90.2 },
-  Honduras: { lat: 15.2, lng: -86.2 },
-  México: { lat: 23.6, lng: -102.5 },
-  Nicaragua: { lat: 12.9, lng: -85.2 },
-  Panamá: { lat: 8.5, lng: -80.8 },
-  Paraguay: { lat: -23.4, lng: -58.4 },
-  Perú: { lat: -9.2, lng: -75.0 },
-  "República Dominicana": { lat: 18.7, lng: -70.2 },
-  Surinam: { lat: 4.0, lng: -56.0 },
-  "Trinidad y Tobago": { lat: 10.7, lng: -61.2 },
-  Venezuela: { lat: 6.4, lng: -66.6 },
-  Argentina: { lat: -38.4, lng: -63.6 },
-  Ecuador: { lat: -1.8, lng: -78.2 },
-};
 
 /** template _id → ordered [{name,label,type}] for resolving display fields. */
 const propsByTemplate = new Map(
@@ -81,6 +57,28 @@ function countryOf(e: CejilEntity): string | undefined {
   if (e.templateName === "País") return e.title;
   const pais = e.metadata?.pa_s?.[0];
   return pais && typeof pais.label === "string" ? pais.label : undefined;
+}
+
+/** The entity's REAL geolocation property, if it has one.
+ *
+ *  CEJIL carries genuine coordinates on two keys: `ubicaci_n_geogr_fica_geolocation`
+ *  (the 343 "Geolocalización de los hechos del caso" entities — where the events
+ *  of a case actually happened) and `localizaci_n_geolocation` (the País entities'
+ *  own centroids). 373 entities in all.
+ *
+ *  The map used to plot `country ? COORDS[country] : undefined` — every entity
+ *  that merely NAMED a country got pinned to a hardcoded centroid, so thousands
+ *  of judgments, resolutions and votes appeared as "locations". That is a
+ *  country facet drawn on a map, not a geolocation. If an entity has no
+ *  geolocation property, it has no place on the map. */
+function geoOf(e: CejilEntity): LatLng | undefined {
+  for (const key of ["ubicaci_n_geogr_fica_geolocation", "localizaci_n_geolocation"]) {
+    const v = e.metadata?.[key]?.[0]?.value as { lat?: number; lon?: number } | undefined;
+    if (v && typeof v.lat === "number" && typeof v.lon === "number") {
+      return { lat: v.lat, lng: v.lon };
+    }
+  }
+  return undefined;
 }
 
 /** CEJIL inherited-property facets: each maps a relationship/select metadata key
@@ -138,7 +136,7 @@ export function cejilLibraryEntities(): Entity[] {
         published: e.published,
         preview: docBearing.has(e.sharedId) ? ("document" as const) : undefined,
         country,
-        geo: country ? CEJIL_COORDS[country] ?? countryCoords[country] : undefined,
+        geo: geoOf(e),
         createdAt: createdOf(e),
         fields: fieldsOf(e),
         descriptors: (e.metadata?.descriptores || [])
