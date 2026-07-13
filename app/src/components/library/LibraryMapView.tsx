@@ -94,14 +94,18 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
     return acc.map((c): Cluster => {
       const [lng, lat] = invert(c.x, c.y);
       // A lone pin is one incident — name it after the entity. A cluster is a
-      // place; name it after the country its members share, if they share one.
+      // place; name it after the country its members share, and when they
+      // straddle a border, after the main one. NOT "N locations": that made
+      // every multi-country cluster of the same size share a label.
       const countries = [...new Set(c.labels.filter(Boolean))];
       const label =
         c.ids.length === 1
           ? getEntity(c.ids[0])?.title ?? countries[0] ?? "Location"
-          : countries.length === 1
-            ? countries[0]
-            : `${c.ids.length} locations`;
+          : countries.length === 0
+            ? `${c.ids.length} locations`
+            : countries.length === 1
+              ? countries[0]
+              : `${countries[0]} +${countries.length - 1}`;
       return { key: c.ids[0], label, lng, lat, count: c.ids.length, ids: c.ids };
     });
   }, [entities, language, zoom]);
@@ -166,7 +170,13 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
               // this the markers balloon as you zoom and re-swamp the map.
               const base = c.count === 1 ? 3.5 : 4.5 + Math.min(Math.sqrt(c.count) * 1.6, 7);
               const r = base / zoom;
-              const active = selectedCluster?.ids.length === c.ids.length && selectedCluster?.label === c.label;
+              // Selected = the SAME cluster, identified by its members. Matching
+              // on (label, count) lit up every other cluster that happened to
+              // share both — three unrelated pins of 10 all went black at once.
+              const active =
+                !!selectedCluster &&
+                selectedCluster.ids.length === c.ids.length &&
+                selectedCluster.ids[0] === c.ids[0];
               return (
                 <Marker key={c.key} coordinates={[c.lng, c.lat]} onClick={() => open(c)}>
                   <circle
