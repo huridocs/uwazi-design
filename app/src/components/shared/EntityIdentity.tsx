@@ -44,7 +44,7 @@ export function EntityIdentity({
       <h2
         title={entity?.title}
         className={`mt-1 font-semibold text-ink leading-snug line-clamp-2 ${
-          size === "sm" ? "text-[15px]" : "text-[17px]"
+          size === "sm" ? "text-[13px]" : "text-[15px]"
         }`}
       >
         {entity?.title ?? "Unknown entity"}
