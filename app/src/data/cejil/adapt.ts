@@ -5,7 +5,7 @@ import type { CejilEntity } from "./types";
 import type { LatLng } from "../geo";
 import { cejilTemplates } from "./templates";
 import { cejilDocBearingIds } from "./profile";
-import { cejilCorpus, cejilLoaded } from "./load";
+import { cejilCorpus, cejilLoaded, cejilRelsByEntity } from "./load";
 
 /** template _id → ordered [{name,label,type}] for resolving display fields. */
 const propsByTemplate = new Map(
@@ -108,11 +108,45 @@ function inheritedOf(e: CejilEntity): Record<string, string[]> | undefined {
   return Object.keys(out).length ? out : undefined;
 }
 
+const DATE_KEYS = ["fecha", "presentaci_n_ante_la_corteidh", "denuncia_ante_la_cidh"];
+
 /** A representative unix-seconds date from the metadata, → ISO, for sort-by-date. */
-function createdOf(e: CejilEntity): string | undefined {
-  for (const key of ["fecha", "presentaci_n_ante_la_corteidh", "denuncia_ante_la_cidh"]) {
+function ownDate(e: CejilEntity): string | undefined {
+  for (const key of DATE_KEYS) {
     const v = e.metadata?.[key]?.[0]?.value;
     if (typeof v === "number" && v > 0) return new Date(v * 1000).toISOString();
+  }
+  return undefined;
+}
+
+/** The entity's date. A GEOLOCATED entity with no date of its own inherits its
+ *  Causa's.
+ *
+ *  Every one of the 373 geolocated entities is undated — a "Geolocalización de
+ *  los hechos del caso" carries coordinates and a país, nothing else. So any date
+ *  filter emptied the map completely: narrow the timeline and every pin vanished,
+ *  because the only entities that CAN be pinned were the only ones with no date.
+ *
+ *  They are connected to their Causa (336 of 343), and the Causa is dated. "The
+ *  geolocation of the events of case X" is dated by case X, so the date comes
+ *  down that relationship and map + timeline finally compose.
+ *
+ *  Deliberately NARROW: only geolocated entities, only from a Causa. Letting any
+ *  undated entity borrow a date from any connected one would invent dates for
+ *  the ~1,100 others — a Persona would silently acquire whichever document
+ *  happened to be first in its relationship list. */
+function createdOf(
+  e: CejilEntity,
+  geo: LatLng | undefined,
+  causaDateBySid: Map<string, string>,
+): string | undefined {
+  const own = ownDate(e);
+  if (own) return own;
+  if (!geo) return undefined;
+  for (const r of cejilRelsByEntity().get(e.sharedId) ?? []) {
+    const other = r.from === e.sharedId ? r.to : r.from;
+    const d = causaDateBySid.get(other);
+    if (d) return d;
   }
   return undefined;
 }
@@ -125,10 +159,20 @@ export function cejilLibraryEntities(): Entity[] {
   if (!cejilLoaded()) return [];
   if (_libraryEntities) return _libraryEntities;
   const docBearing = cejilDocBearingIds();
-  _libraryEntities = cejilCorpus()!
-    .entities.filter((e) => e.language === "es")
+  const es = cejilCorpus()!.entities.filter((e) => e.language === "es");
+
+  // Pass 1: the CAUSA dates, so pass 2 can pull one down a geolocation's edge.
+  const causaDateBySid = new Map<string, string>();
+  for (const e of es) {
+    if (e.templateName !== "Causa") continue;
+    const d = ownDate(e);
+    if (d) causaDateBySid.set(e.sharedId, d);
+  }
+
+  _libraryEntities = es
     .map((e) => {
       const country = countryOf(e);
+      const geo = geoOf(e);
       return {
         id: e.sharedId,
         title: e.title.trim(),
@@ -136,8 +180,8 @@ export function cejilLibraryEntities(): Entity[] {
         published: e.published,
         preview: docBearing.has(e.sharedId) ? ("document" as const) : undefined,
         country,
-        geo: geoOf(e),
-        createdAt: createdOf(e),
+        geo,
+        createdAt: createdOf(e, geo, causaDateBySid),
         fields: fieldsOf(e),
         descriptors: (e.metadata?.descriptores || [])
           .map((v) => (typeof v.label === "string" ? v.label : ""))
