@@ -5,6 +5,7 @@ import {
   libraryInfoAtom,
   libraryViewModeAtom,
   libraryTimelineLayoutAtom,
+  libraryTimeHubAtom,
   type LibraryInfoKey,
   type TimelineLayout,
 } from "../../atoms/library";
@@ -18,7 +19,7 @@ const ITEMS: { key: LibraryInfoKey; label: string }[] = [
 ];
 
 const LAYOUTS: { id: TimelineLayout; label: string; detail: string }[] = [
-  { id: "rail", label: "Rail", detail: "Periods on a track, fan out" },
+  { id: "rail", label: "Rail", detail: "Periods on a track, click to filter" },
   { id: "density", label: "Density", detail: "Volume per period, click to filter" },
   { id: "spine", label: "Spine", detail: "Every entity at its exact date" },
   { id: "lanes", label: "Lanes", detail: "Template × period grid" },
@@ -34,10 +35,11 @@ const LAYOUTS: { id: TimelineLayout; label: string; detail: string }[] = [
 export function DisplayMenu() {
   const [info, setInfo] = useAtom(libraryInfoAtom);
   const [layout, setLayout] = useAtom(libraryTimelineLayoutAtom);
+  const [timeHub, setTimeHub] = useAtom(libraryTimeHubAtom);
   const viewMode = useAtomValue(libraryViewModeAtom);
   const [open, setOpen] = useState(false);
 
-  const hiddenCount = ITEMS.filter((i) => info[i.key] === false).length;
+  const hiddenCount = ITEMS.filter((i) => info[i.key] === false).length + (timeHub ? 0 : 1);
   // The map draws no cards or rows, so the info toggles have nothing to act on.
   const showInfo = viewMode !== "map";
   const showLayouts = viewMode === "timeline";
@@ -68,6 +70,29 @@ export function DisplayMenu() {
         <>
           <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} aria-hidden />
           <div className="absolute end-0 mt-1 z-40 w-52 bg-paper border border-border rounded-md shadow-lg p-1">
+            {/* The time strip belongs to EVERY layout — it filters by date and
+                charts the whole result set, so cards and the table want it as
+                much as the map and the timeline it started under. */}
+            <p className="px-2 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+              Chart
+            </p>
+            <button
+              onClick={() => setTimeHub((v) => !v)}
+              aria-pressed={timeHub}
+              className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-warm transition-colors cursor-pointer text-start"
+            >
+              <span className="w-4 shrink-0 flex items-center justify-center text-carbon">
+                {timeHub && <Check size={13} />}
+              </span>
+              <span className={`text-xs ${timeHub ? "text-ink" : "text-ink-tertiary"}`}>
+                Time strip
+              </span>
+            </button>
+
+            {(showLayouts || showInfo) && (
+              <div className="my-1 h-px" style={{ backgroundColor: "var(--border-soft)" }} />
+            )}
+
             {showLayouts && (
               <>
                 <p className="px-2 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
@@ -130,11 +155,6 @@ export function DisplayMenu() {
               </>
             )}
 
-            {!showInfo && !showLayouts && (
-              <p className="px-2 py-2 text-[11px] text-ink-tertiary">
-                No display options for this view.
-              </p>
-            )}
           </div>
         </>
       )}

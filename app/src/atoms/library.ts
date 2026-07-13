@@ -90,6 +90,11 @@ export type LibraryInfoKey =
   | "connections";
 export const libraryInfoAtom = atom<Partial<Record<LibraryInfoKey, boolean>>>({});
 
+/** The time strip under the results. It filters by date and reads the whole
+ *  result set, so it is useful under EVERY layout — not just the map and the
+ *  timeline it started under. A display option, on by default. */
+export const libraryTimeHubAtom = atom(true);
+
 /** Sort order. */
 export type LibrarySort =
   | "recent"

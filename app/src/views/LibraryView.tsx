@@ -35,6 +35,7 @@ import {
   libraryActiveFilterCountAtom,
   libraryViewModeAtom,
   libraryInfoAtom,
+  libraryTimeHubAtom,
   librarySortAtom,
   librarySortDirAtom,
   defaultSortDir,
@@ -109,6 +110,7 @@ export function LibraryView() {
   const activeFilterCount = useAtomValue(libraryActiveFilterCountAtom);
   const [viewMode, setViewMode] = useAtom(libraryViewModeAtom);
   const info = useAtomValue(libraryInfoAtom);
+  const timeHub = useAtomValue(libraryTimeHubAtom);
   const [sort, setSort] = useAtom(librarySortAtom);
   const [sortDir, setSortDir] = useAtom(librarySortDirAtom);
   const setSortKey = useCallback(
@@ -251,9 +253,11 @@ export function LibraryView() {
     return [...list].sort(cmp);
   }, [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, chainKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex]);
 
-  // The time brush rides under the two spatial/temporal views — map + timeline —
-  // the Bellingcat pairing: a canvas above, the range you're looking at below.
-  const showBrush = (viewMode === "map" || viewMode === "timeline") && !cejilLoading;
+  // The time strip rides under EVERY layout, not just the map and the timeline it
+  // started under — it filters by date and charts the whole result set, so cards
+  // and the table want it just as much. A display option (Display → Time strip),
+  // on by default.
+  const showBrush = timeHub && !cejilLoading;
 
   // The brush's histogram is the results with EVERY facet applied except the
   // date one — so the bars keep showing what widening the window would give back
