@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { CalendarDays, Layers } from "lucide-react";
 import {
@@ -183,13 +183,14 @@ function TrackedList({
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const [scope, setScope] = useAtom(libraryTimelineScopeAtom);
 
-  // The DENSITY track plots the date-unfiltered results, so picking a period
-  // doesn't erase the very chart you picked from — the rest stays, dimmed. The
-  // CLUSTER track only navigates, so it tracks the results as they are.
-  const source = useMemo(
-    () => (track === "density" ? sortByTime(chart) : dated),
-    [track, chart, dated],
-  );
+  // BOTH tracks plot the date-unfiltered results. Picking a period on either one
+  // filters the Library to it — if the track drew the filtered set, it would
+  // collapse to the single node you just clicked and there'd be no way back.
+  // Out-of-range periods stay on the track, dimmed.
+  const source = useMemo(() => {
+    const c = sortByTime(chart);
+    return c.length ? c : dated;
+  }, [chart, dated]);
   const fullExtent = useMemo(() => timeExtent(source) ?? timeExtent(dated)!, [source, dated]);
   const unit = useMemo(() => pickUnit(fullExtent.max - fullExtent.min), [fullExtent]);
   const groups = useMemo(() => groupByBucket(dated, unit), [dated, unit]);
@@ -442,15 +443,17 @@ function EdgeCount({ dir, n, axisEnd }: { dir: "up" | "down"; n: number; axisEnd
   );
 }
 
-/** The RefMinimap idiom: a dot per small period (fans out into its entities), a
- *  counted ring per busy one. Volume is NOT the point here — that's what the
- *  Density track and the brush strip below are for. This one navigates. */
+/** The RefMinimap idiom: a dot per small period (which fans out into its
+ *  entities), a counted ring per busy one.
+ *
+ *  Clicking a node FILTERS the Library to that period — it doesn't merely scroll
+ *  the list to it. Scrolling left you looking at the same 4,398 results with the
+ *  viewport moved; the point of picking a period is to be left with that period.
+ *  Click it again to clear. A picked period that's small enough also fans out,
+ *  so its members are one more click away. */
 function ClusterTrack(props: TrackProps) {
-  const { buckets, extent, pos, activeKey, hovered, setHovered, scrollToTime, selectedId, onSelect } =
-    props;
-  const [expanded, setExpanded] = useState<string | null>(null);
-  useEffect(() => setExpanded(null), [buckets]);
-
+  const { buckets, extent, pos, activeKey, hovered, setHovered, selectedId, onSelect } = props;
+  const range = useRange();
   const maxCount = Math.max(1, ...buckets.map((b) => b.entities.length));
 
   return (
@@ -467,9 +470,12 @@ function ClusterTrack(props: TrackProps) {
     >
       {buckets.map((b) => {
         const n = b.entities.length;
-        const isOpen = expanded === b.key;
-        const lit = isOpen || activeKey === b.key || hovered === b.key;
+        const picked = !range.isAll && range.covers(b);
+        const inRange = range.overlaps(b);
         const small = n <= FAN_CAP;
+        // A picked period fans out — the filter and the fan are the same gesture.
+        const isOpen = picked && small;
+        const lit = picked || activeKey === b.key || hovered === b.key;
         const size = small ? (lit ? 12 : 9) : 15 + Math.min(Math.sqrt(n / maxCount) * 11, 11);
         const color = dominantColor(b.entities);
 
@@ -478,15 +484,17 @@ function ClusterTrack(props: TrackProps) {
             key={b.key}
             // Anchored so the node's centre lands ON the axis line.
             className="absolute -translate-y-1/2 translate-x-1/2"
-            style={{ top: `${pos(Math.max(b.start, extent.min))}%`, insetInlineEnd: TRACK_AXIS }}
+            style={{
+              top: `${pos(Math.max(b.start, extent.min))}%`,
+              insetInlineEnd: TRACK_AXIS,
+              // Out-of-range periods recede but stay: the way back is the track.
+              opacity: inRange ? 1 : 0.28,
+            }}
           >
             <button
               aria-label={`${b.label} — ${n.toLocaleString()} ${n === 1 ? "entity" : "entities"}`}
-              aria-expanded={small ? isOpen : undefined}
-              onClick={() => {
-                scrollToTime(b.start);
-                if (small) setExpanded(isOpen ? null : b.key);
-              }}
+              aria-pressed={picked}
+              onClick={() => range.toggle(b)}
               onMouseEnter={() => setHovered(b.key)}
               onMouseLeave={() => setHovered(null)}
               className="flex items-center justify-center rounded-full transition-all cursor-pointer
@@ -523,8 +531,10 @@ function ClusterTrack(props: TrackProps) {
               )}
             </button>
 
-            {/* Fan — the period's members branching out, as in RefMinimap */}
-            {isOpen && small && (
+            {/* Fan — the picked period's members, branching out as in RefMinimap.
+                Picking one previews that entity; it does NOT re-toggle the
+                period, so the filter survives choosing something inside it. */}
+            {isOpen && (
               <ClusterFan
                 entities={b.entities}
                 yPct={pos(Math.max(b.start, extent.min))}
@@ -532,10 +542,7 @@ function ClusterTrack(props: TrackProps) {
                 selectedId={selectedId}
                 hovered={hovered}
                 setHovered={setHovered}
-                onPick={(e) => {
-                  onSelect(e.id);
-                  scrollToTime(entityTime(e)!);
-                }}
+                onPick={(e) => onSelect(e.id)}
               />
             )}
           </div>

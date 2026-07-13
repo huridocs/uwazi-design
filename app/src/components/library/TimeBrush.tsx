@@ -297,8 +297,11 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
               />
             </clipPath>
           </defs>
-          {/* Whole span, receded — what widening the window would give back */}
-          <path d={shape} fill="var(--accent-blue)" opacity={isFull ? 0.16 : 0.08} />
+          {/* Whole span, receded — what widening the window would give back. It
+              has to stay legible: at 0.08 a narrow window made the rest of the
+              corpus vanish, which is the failure this two-layer draw exists to
+              prevent. */}
+          <path d={shape} fill="var(--accent-blue)" opacity={isFull ? 0.18 : 0.14} />
           {/* Inside the window, lit */}
           <g clipPath="url(#brush-window)">
             <path d={shape} fill="var(--accent-blue)" opacity={0.26} />
