@@ -254,14 +254,39 @@ export function LibraryFilters() {
   return (
     <div className="flex flex-col h-full min-h-0 bg-warm">
       {/* Filters header — same height + divider as the main-view toolbar so the
-          pill aligns with the toolbar controls. */}
+          pill aligns with the toolbar controls.
+          This panel is now the ONLY place active filters live: the chip row that
+          used to sit above the results was a block that appeared and vanished,
+          shoving the whole result set up and down, and re-flowing under the
+          cursor as chips were removed. Filters are set here, so they are read
+          here — the ticked boxes already say what's on; the header just totals
+          them and offers the way out. The h-8 pill fixes the header's height, so
+          the count appearing changes nothing else. */}
       <div
-        className="shrink-0 px-3.5 py-2"
+        className="shrink-0 flex items-center gap-2 px-3.5 py-2"
         style={{ borderBottom: "1px solid var(--border-primary)" }}
       >
         <span className="inline-flex items-center px-3 h-8 text-[13px] font-semibold text-ink bg-vellum rounded-md">
           Filters
         </span>
+        {activeFilterCount > 0 && (
+          <>
+            <span className="inline-flex items-center gap-1.5 text-[11px] text-ink-tertiary tabular-nums">
+              <span
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ backgroundColor: "var(--accent-blue)" }}
+              />
+              {activeFilterCount} active
+            </span>
+            <button
+              onClick={clearAll}
+              className="ms-auto px-2 h-6 text-[11px] font-medium rounded-md text-ink-tertiary
+                hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
+            >
+              Clear all
+            </button>
+          </>
+        )}
       </div>
 
       {/* Facet cards — top padding matches the main content (py-3) so the first

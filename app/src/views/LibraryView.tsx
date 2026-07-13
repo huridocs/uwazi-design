@@ -59,7 +59,6 @@ import { LibraryFilters } from "../components/library/LibraryFilters";
 import { LibraryClusterDrawer } from "../components/library/LibraryClusterDrawer";
 import { EntityDrawerPreview } from "../components/library/EntityDrawerPreview";
 import { DisplayMenu } from "../components/library/DisplayMenu";
-import { ActiveFilterChip } from "../components/shared/ActiveFilterChip";
 import { DataTable, type Column } from "../components/shared/DataTable";
 import { EntityTypeChip } from "../components/shared/EntityTypeChip";
 import { Select } from "../components/shared/Select";
@@ -278,10 +277,6 @@ export function LibraryView() {
   useEffect(() => setVisibleCount(DISPLAY_STEP), [filtered]);
   const shown = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
 
-  const toggleType = (id: string) => setTypeFilters((prev) => ({ ...prev, [id]: !prev[id] }));
-  const toggleStatus = (id: string) => setStatusFilters((prev) => ({ ...prev, [id]: !prev[id] }));
-  const toggleCountry = (c: string) => setCountryFilters((prev) => ({ ...prev, [c]: !prev[c] }));
-  const toggleDescriptor = (d: string) => setDescriptorFilters((prev) => ({ ...prev, [d]: !prev[d] }));
   const clearAllFilters = () => {
     setTypeFilters({});
     setHasDocOnly(false);
@@ -439,76 +434,6 @@ export function LibraryView() {
         {menuTrigger}
       </div>
 
-      {/* Active filters — a PERSISTENT bar in the chrome, not a block inside the
-          scrolling results.
-          · Always mounted at a fixed height, so applying or clearing the last
-            filter no longer shoves the whole result set up and down.
-          · One line that scrolls sideways instead of wrapping: a wrapping row
-            changes height as chips come and go, which moved the row under the
-            cursor mid-click and removed the wrong filter.
-          · "Clear all" is pinned to the end, so it never moves either. */}
-      <div
-        className="shrink-0 flex items-center gap-2 h-9 px-3 bg-warm"
-        style={{ borderBottom: "1px solid var(--border-primary)" }}
-      >
-        {activeFilterCount === 0 ? (
-          <span className="text-[11px] text-ink-muted">No filters</span>
-        ) : (
-          <>
-            <div className="flex-1 min-w-0 flex items-center gap-2 overflow-x-auto no-scrollbar">
-              {activeTypeIds.map((id) => (
-              <ActiveFilterChip
-                key={id}
-                label={getEntityType(id)?.name ?? id}
-                color={getEntityType(id)?.color}
-                onRemove={() => toggleType(id)}
-              />
-            ))}
-            {hasDocOnly && <ActiveFilterChip label="Has a document" onRemove={() => setHasDocOnly(false)} />}
-            {wantRestricted && <ActiveFilterChip label="Restricted" onRemove={() => toggleStatus("restricted")} />}
-            {wantPublished && <ActiveFilterChip label="Published" onRemove={() => toggleStatus("published")} />}
-            {activeCountries.map((c) => (
-              <ActiveFilterChip key={`country-${c}`} label={c} onRemove={() => toggleCountry(c)} />
-            ))}
-            {activeDescriptors.map((d) => (
-              <ActiveFilterChip key={`desc-${d}`} label={d} onRemove={() => toggleDescriptor(d)} />
-            ))}
-            {(dateFrom || dateTo) && (
-              <ActiveFilterChip
-                label={`${dateFrom || "…"} → ${dateTo || "…"}`}
-                onRemove={() => {
-                  setDateFrom("");
-                  setDateTo("");
-                }}
-              />
-            )}
-            {activeInherited.flatMap((f) =>
-              [...f.values].map((v) => (
-                <ActiveFilterChip
-                  key={`inh-${f.def.propId}-${v}`}
-                  label={v}
-                  onRemove={() =>
-                    setInheritedFilters((s) => {
-                      const next = { ...(s[f.def.propId] ?? {}) };
-                      delete next[v];
-                      return { ...s, [f.def.propId]: next };
-                    })
-                  }
-                />
-              )),
-            )}
-              {q && <ActiveFilterChip label={`“${query.trim()}”`} onRemove={() => setQuery("")} />}
-            </div>
-            <button
-              onClick={clearAllFilters}
-              className="shrink-0 px-2 h-6 text-[11px] font-medium text-ink-tertiary hover:text-ink hover:bg-parchment rounded-md transition-colors cursor-pointer"
-            >
-              Clear all
-            </button>
-          </>
-        )}
-      </div>
-
       {/* Results */}
       <div
         className={`flex-1 min-h-0 px-3 py-3 bg-warm ${
@@ -625,9 +550,29 @@ export function LibraryView() {
           label="Import / Export CSV"
           onClick={() => setAppView("import-csv")}
         />
+        {/* Result status. Nothing is mounted or unmounted here — only the text
+            changes — so the results above it never move. This is also the only
+            place the active-filter count survives while the drawer is showing an
+            entity instead of the Filters panel; clicking it puts the panel back. */}
         <span className="ms-2 text-[11px] text-ink-tertiary">
-          Showing <span className="font-semibold text-ink-secondary">{shown.length.toLocaleString()}</span> of {filtered.length.toLocaleString()}
+          Showing{" "}
+          <span className="font-semibold text-ink-secondary">{shown.length.toLocaleString()}</span> of{" "}
+          {filtered.length.toLocaleString()}
         </span>
+        {activeFilterCount > 0 && (
+          <button
+            onClick={() => setSelectedId(null)}
+            title="Show the Filters panel"
+            className="inline-flex items-center gap-1 px-1.5 h-5 text-[11px] font-medium rounded-md
+              text-ink-secondary hover:bg-warm hover:text-ink transition-colors cursor-pointer"
+          >
+            <span
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ backgroundColor: "var(--accent-blue)" }}
+            />
+            {activeFilterCount} {activeFilterCount === 1 ? "filter" : "filters"}
+          </button>
+        )}
       </div>
     </div>
   );
