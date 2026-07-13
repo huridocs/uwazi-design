@@ -1,7 +1,6 @@
 import { getEntityType, type Entity } from "../../data/entities";
 
-/** The identity block at the top of an entity panel: type eyebrow → title →
- *  quiet meta line.
+/** The identity block at the top of an entity panel: type eyebrow → title.
  *
  *  It replaced a pill stacked over a small title. The pill was a filled, tinted
  *  chip and the title was `text-xs` — the same size as the metadata labels
@@ -9,6 +8,10 @@ import { getEntityType, type Entity } from "../../data/entities";
  *  the entity's name read as its caption. Here the type is an eyebrow (a square
  *  dot in the true type colour + a small-caps label) and the title is a real
  *  heading. Same information, correct hierarchy.
+ *
+ *  Two lines, not three: a country/date meta line under the title just repeated
+ *  what the Metadata tab says two rows further down, and cost the header a third
+ *  of its height to do it.
  *
  *  Shared by the Library drawer preview and the EntityOverlay so the two headers
  *  can't drift apart. */
@@ -22,11 +25,6 @@ export function EntityIdentity({
 }) {
   const type = entity ? getEntityType(entity.typeId) : undefined;
   const color = type?.color ?? "#6B7280";
-  const year = entity?.createdAt ? new Date(entity.createdAt).getUTCFullYear() : null;
-
-  // Country and date are context, not headline — one dimmed line, em-dash free
-  // (a missing value is simply absent rather than a row of placeholders).
-  const meta = [entity?.country, year ? String(year) : null].filter(Boolean) as string[];
 
   return (
     <div className="min-w-0 flex-1">
@@ -49,23 +47,6 @@ export function EntityIdentity({
       >
         {entity?.title ?? "Unknown entity"}
       </h2>
-
-      {meta.length > 0 && (
-        <p className="mt-1 text-[11px] text-ink-tertiary truncate">
-          {meta.map((m, i) => (
-            <span key={m}>
-              {i > 0 && <span className="text-ink-muted px-1">·</span>}
-              {m}
-            </span>
-          ))}
-          {entity && entity.published === false && (
-            <>
-              <span className="text-ink-muted px-1">·</span>
-              <span className="text-ink-muted">Restricted</span>
-            </>
-          )}
-        </p>
-      )}
     </div>
   );
 }
