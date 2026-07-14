@@ -66,7 +66,7 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
 
   return (
     <div
-      className="flex items-center gap-2 h-11 px-3 shrink-0"
+      className="flex items-center gap-2 h-12 px-3 shrink-0"
       style={{ borderBottom: "1px solid var(--border-primary)" }}
     >
       {/* Same identity block as the Library drawer and the overlay — the type as

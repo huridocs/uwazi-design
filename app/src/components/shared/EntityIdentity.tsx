@@ -37,9 +37,11 @@ export function EntityIdentity({
       // BASELINE, not centre. Box-centring a 10px caps tag against a 15px title
       // aligns their boxes, not their text — which is exactly what reads as
       // "these aren't lined up". On the baseline they sit on one line.
+      // The entity view is the ENTITY's page — its name is the loudest thing on
+      // it, not a caption beside a tag.
       <div className="flex items-baseline gap-2.5 min-w-0 flex-1">
         <EntityTypeTag typeId={tid} className="shrink-0 max-w-[12rem]" />
-        <h2 title={label} className="text-[15px] font-semibold text-ink truncate min-w-0">
+        <h2 title={label} className="text-[17px] font-semibold text-ink truncate min-w-0">
           {label}
         </h2>
       </div>

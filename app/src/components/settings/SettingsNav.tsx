@@ -53,8 +53,15 @@ export function SettingsNav({ onNavigate }: { onNavigate?: (view: AppView) => vo
               </>
             );
 
-            const cls = `flex items-center gap-2.5 w-full px-5 py-2 text-[13px] font-medium text-left transition-colors ${
-              active ? "bg-warm text-ink" : "text-ink-secondary hover:bg-warm hover:text-ink"
+            // Active was `bg-warm` — the SAME token as hover, so the selected
+            // page looked exactly like whatever the cursor happened to be over.
+            // It steps up to vellum + semibold: a real state, not a hover echo.
+            // (Still no left-border accent, and the icon keeps its colour — the
+            // background carries the state.)
+            const cls = `flex items-center gap-2.5 w-full px-5 py-2 text-[13px] text-left transition-colors ${
+              active
+                ? "bg-vellum text-ink font-semibold"
+                : "font-medium text-ink-secondary hover:bg-warm hover:text-ink"
             }`;
 
             const sub = startsSub && (
