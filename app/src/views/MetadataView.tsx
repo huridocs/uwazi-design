@@ -6,7 +6,7 @@ import { MainTabs } from "../components/layout/MainTabs";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { DocMeta } from "../components/layout/DocMeta";
 import { MetadataCard, Property, PropertyRow } from "../components/metadata/MetadataCard";
-import { spanClass, fieldSpan } from "../components/metadata/cardSpan";
+import { MetadataFieldsTable, isLongField } from "../components/metadata/MetadataFieldsTable";
 import { ConnectionGroupCard } from "../components/metadata/ConnectionGroupCard";
 import { RelationshipFieldCard } from "../components/metadata/RelationshipFieldCard";
 import { RelationshipCards } from "../components/metadata/RelationshipCards";
@@ -93,76 +93,80 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
   const pdf = profile.pdfMetadata?.[language];
   const notify = useNotify();
 
+  // ONE record, not a mosaic. This was a 3-column masonry grid with a card per
+  // field and heuristic column spans (`fieldSpan`), so every property was an
+  // island with its own border at a width nothing else shared — which is exactly
+  // what made the page read as disconnected blocks.
+  //
+  // The composition below is the one the DRAWER already proves: long-form fields
+  // are titled cards, every short field shares ONE ruled Details table, and the
+  // relationships sit under their heading at the same width. Same components,
+  // one column, one measure — so the surfaces finally agree.
+  const filled = fields.filter((f) => !!f.value?.trim());
+  const longFields = filled.filter(isLongField);
+  const shortFields = filled.filter((f) => !isLongField(f));
+
   return (
     <>
       <DocMeta showPdfSelector={false} />
 
-      {/* Scrollable metadata body — responsive grid */}
-      <div className="flex-1 overflow-auto px-4 py-2 pb-8">
-        <div className="grid gap-3 items-start grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-          {profile.hasDocument && (
-            <MetadataCard title="Document" className="hidden md:block md:col-span-2 xl:col-span-1 md:row-span-2">
-              <div className="flex items-center justify-center bg-warm rounded-md overflow-hidden h-50">
-                <div className="bg-paper rounded shadow-sm w-[45%] h-[11.25rem] flex items-center justify-center">
-                  <span className="text-xs text-ink-muted">PDF Preview</span>
+      <div className="flex-1 overflow-auto px-4 py-3 pb-8">
+        {/* A readable measure. Metadata stretched across 1400px is a line nobody
+            can scan back from. */}
+        <div className="mx-auto w-full max-w-[56rem] space-y-3">
+          {pdf && (
+            <MetadataCard title="Document">
+              <div className="flex items-start gap-4">
+                {profile.hasDocument && (
+                  <div className="hidden md:flex shrink-0 w-24 h-32 items-center justify-center bg-warm rounded overflow-hidden">
+                    <div className="bg-paper rounded shadow-sm w-[70%] h-[80%] flex items-center justify-center">
+                      <span className="text-[10px] text-ink-muted">PDF</span>
+                    </div>
+                  </div>
+                )}
+                <div className="flex-1 min-w-0 space-y-2">
+                  <Property label="Name" value={pdf.name} ltr />
+                  <PropertyRow>
+                    <div className="flex-1"><Property label="Type" value={pdf.type} /></div>
+                    <div className="flex-1"><Property label="Size" value={pdf.size} ltr /></div>
+                    <div className="flex-1"><Property label="Last Edited" value={pdf.lastEdited} ltr /></div>
+                    <div className="flex-1"><Property label="Added" value={pdf.added} ltr /></div>
+                  </PropertyRow>
+                  <div className="flex items-center gap-2 pt-1">
+                    <ViewButton size="md" />
+                    <button
+                      onClick={() => notify("Download started", "success")}
+                      className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Download size={12} className="text-ink-tertiary" /> Download
+                    </button>
+                  </div>
                 </div>
               </div>
             </MetadataCard>
           )}
 
-          {pdf && (
-            <MetadataCard title="PDF Metadata" className="md:col-span-2 xl:col-span-2 xl:row-span-2">
-              <Property label="Name" value={pdf.name} ltr />
-              <PropertyRow>
-                <div className="flex-1"><Property label="Type" value={pdf.type} /></div>
-                <div className="flex-1"><Property label="Size" value={pdf.size} ltr /></div>
-                <div className="flex-1"><Property label="Last Edited" value={pdf.lastEdited} ltr /></div>
-                <div className="flex-1"><Property label="Added" value={pdf.added} ltr /></div>
-              </PropertyRow>
-              <div className="flex items-center justify-between pt-2 mt-auto">
-                <ViewButton size="md" />
-                <button
-                  onClick={() => notify("Download started", "success")}
-                  className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer flex items-center gap-1.5"
-                >
-                  <Download size={12} className="text-ink-tertiary" /> Download
-                </button>
-              </div>
+          {longFields.map((f) => (
+            <MetadataCard key={f.id} title={f.label}>
+              <p className="text-sm text-ink leading-relaxed">{f.value}</p>
+            </MetadataCard>
+          ))}
+
+          {shortFields.length > 0 && (
+            <MetadataCard title="Details">
+              <MetadataFieldsTable fields={shortFields} />
             </MetadataCard>
           )}
 
-          {fields.map((field) => {
-            return (
-              <MetadataCard key={field.id} title={field.label} className={spanClass(fieldSpan(field))}>
-                {field.type === "multiline" ? (
-                  <p className="text-sm font-medium text-ink leading-relaxed">{field.value}</p>
-                ) : field.type === "country" ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-[22px] leading-none">{field.flag}</span>
-                    <span className="text-sm font-medium text-ink">{field.value}</span>
-                  </div>
-                ) : field.type === "link" ? (
-                  <Property value={field.value} linked />
-                ) : field.type === "file-list" ? (
-                  <div className="space-y-2">
-                    {field.items?.map((item, i) => (
-                      <Property key={i} label={item.label} value={item.value} linked />
-                    ))}
-                  </div>
-                ) : (
-                  <Property value={field.value} />
-                )}
-              </MetadataCard>
-            );
-          })}
-
           {/* Relationship / inherited fields — shared with the drawers via
-              RelationshipCards so they can't drift. Shared connections render as
-              a grouped table; standalone relationship fields get their own card. */}
-          <RelationshipCards profile={profile} language={language} />
+              RelationshipCards so they can't drift. */}
+          <div className="space-y-3">
+            <RelationshipCards profile={profile} language={language} span="full" />
+          </div>
         </div>
       </div>
 
+      
       {/* Action bar */}
       <div
         className="flex items-center gap-3 h-12 px-4 bg-paper shrink-0"
