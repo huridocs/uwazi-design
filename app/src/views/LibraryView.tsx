@@ -313,7 +313,12 @@ export function LibraryView() {
     {
       id: "type",
       header: "Type",
-      width: "3.5rem",
+      // The chip is 1.5rem but the header needs room for its label AND its sort
+      // arrow — so the track can't shrink to the chip. Align the column to its
+      // END instead: the dead space falls to the LEFT of the chip, and the chip
+      // ends up sitting one grid-gap from the title rather than 2rem adrift.
+      width: "3.25rem",
+      align: "right" as const,
       sortKey: "type",
       cell: (e: Entity) => <EntityTypeChip typeId={e.typeId} />,
     },
