@@ -5,18 +5,33 @@ interface MetadataCardProps {
   icon?: ReactNode;
   children: ReactNode;
   className?: string;
+  /** Body runs edge to edge — for content that draws its own rules to the card's
+   *  border (the fields lattice). Padding it would leave a gutter between the
+   *  grid's hairlines and the card's, which is the very seam we're removing. */
+  flush?: boolean;
 }
 
-export function MetadataCard({ title, icon, children, className = "" }: MetadataCardProps) {
+export function MetadataCard({ title, icon, children, className = "", flush }: MetadataCardProps) {
+  const header = (
+    <div className={`flex items-center gap-1.5 ${flush ? "px-4 py-3" : ""}`}>
+      {icon}
+      <h4 className="text-sm font-bold text-ink leading-tight">{title}</h4>
+    </div>
+  );
+
   return (
     <div className={`bg-paper border border-border/40 rounded-md overflow-hidden ${className}`}>
-      <div className="flex flex-col gap-2 px-4 py-3">
-        <div className="flex items-center gap-1.5">
-          {icon}
-          <h4 className="text-sm font-bold text-ink leading-tight">{title}</h4>
+      {flush ? (
+        <>
+          {header}
+          {children}
+        </>
+      ) : (
+        <div className="flex flex-col gap-2 px-4 py-3">
+          {header}
+          {children}
         </div>
-        {children}
-      </div>
+      )}
     </div>
   );
 }

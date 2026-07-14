@@ -6,7 +6,7 @@ import { MainTabs } from "../components/layout/MainTabs";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { DocMeta } from "../components/layout/DocMeta";
 import { MetadataCard, Property, PropertyRow } from "../components/metadata/MetadataCard";
-import { MetadataFieldsTable, isLongField } from "../components/metadata/MetadataFieldsTable";
+import { MetadataFieldsGrid } from "../components/metadata/MetadataFieldsGrid";
 import { ConnectionGroupCard } from "../components/metadata/ConnectionGroupCard";
 import { RelationshipFieldCard } from "../components/metadata/RelationshipFieldCard";
 import { RelationshipCards } from "../components/metadata/RelationshipCards";
@@ -93,18 +93,13 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
   const pdf = profile.pdfMetadata?.[language];
   const notify = useNotify();
 
-  // ONE record, not a mosaic. This was a 3-column masonry grid with a card per
-  // field and heuristic column spans (`fieldSpan`), so every property was an
-  // island with its own border at a width nothing else shared — which is exactly
-  // what made the page read as disconnected blocks.
-  //
-  // The composition below is the one the DRAWER already proves: long-form fields
-  // are titled cards, every short field shares ONE ruled Details table, and the
-  // relationships sit under their heading at the same width. Same components,
-  // one column, one measure — so the surfaces finally agree.
+  // Still a grid — but a LATTICE, not a mosaic. The old read view tiled a
+  // bordered card per field with heuristic column spans (`fieldSpan`): the grid
+  // shape was right, the disconnection came from each cell owning its own
+  // border, its own width and its own edges, so nothing lined up with anything.
+  // `MetadataFieldsGrid` keeps the tiling and moves the hairlines into the gaps
+  // between cells, inside one card. Long-form fields take the full row.
   const filled = fields.filter((f) => !!f.value?.trim());
-  const longFields = filled.filter(isLongField);
-  const shortFields = filled.filter((f) => !isLongField(f));
 
   return (
     <>
@@ -146,15 +141,9 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
             </MetadataCard>
           )}
 
-          {longFields.map((f) => (
-            <MetadataCard key={f.id} title={f.label}>
-              <p className="text-sm text-ink leading-relaxed">{f.value}</p>
-            </MetadataCard>
-          ))}
-
-          {shortFields.length > 0 && (
-            <MetadataCard title="Details">
-              <MetadataFieldsTable fields={shortFields} />
+          {filled.length > 0 && (
+            <MetadataCard title="Details" flush>
+              <MetadataFieldsGrid fields={filled} />
             </MetadataCard>
           )}
 
