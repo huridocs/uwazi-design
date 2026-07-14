@@ -1,5 +1,5 @@
 import { FileText, ExternalLink } from "lucide-react";
-import { EntityPill } from "../shared/EntityPill";
+import { EntityTypeTag } from "../shared/EntityTypeTag";
 import { CountBadge } from "../shared/CountBadge";
 
 interface RelatedDocCardProps {
@@ -15,7 +15,7 @@ export function RelatedDocCard({ title, entityTypeId, referenceCount }: RelatedD
       <FileText size={16} className="text-ink-muted shrink-0" />
       <div className="flex-1 min-w-0">
         <p className="text-sm text-ink truncate">{title}</p>
-        <EntityPill typeId={entityTypeId} size="sm" />
+        <EntityTypeTag typeId={entityTypeId} />
       </div>
       <CountBadge count={referenceCount} />
       <ExternalLink

@@ -11,6 +11,7 @@ import { getEntity, getEntityType } from "../../../data/entities";
 import { relationTypes } from "../../../data/references";
 import { Relationship } from "../../../utils/relationships";
 import { EntityPill } from "../../shared/EntityPill";
+import { EntityTypeTag } from "../../shared/EntityTypeTag";
 import { ListCardRow } from "../../shared/ListCardRow";
 import { DirectionGlyph } from "../DirectionGlyph";
 import { RowCheckbox } from "./RowCheckbox";
@@ -179,7 +180,7 @@ export function AggregateRow({
             ) : (
               <>
                 {!hideTypePill && (
-                  <EntityPill typeId={entity?.typeId ?? ""} label={type?.name} />
+                  <EntityTypeTag typeId={entity?.typeId ?? ""} label={type?.name} />
                 )}
                 <span
                   title={entity?.title}
@@ -225,7 +226,7 @@ export function AggregateRow({
           ) : (
             <>
               {!hideTypePill && (
-                <EntityPill typeId={entity?.typeId ?? ""} label={type?.name} />
+                <EntityTypeTag typeId={entity?.typeId ?? ""} label={type?.name} />
               )}
               <span
                 title={entity?.title}

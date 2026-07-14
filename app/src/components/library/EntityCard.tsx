@@ -2,7 +2,7 @@ import { Fragment, memo } from "react";
 import { Link2 } from "lucide-react";
 import { useAtomValue } from "jotai";
 import { languageAtom } from "../../atoms/language";
-import { EntityPill } from "../shared/EntityPill";
+import { EntityTypeTag } from "../shared/EntityTypeTag";
 import { EntityThumbnail } from "./EntityThumbnail";
 import { getEntityProfile } from "../../data/entityProfiles";
 import { getEntityType } from "../../data/entities";
@@ -167,7 +167,7 @@ export const EntityCard = memo(function EntityCard({
       {/* mt-auto pins the footer to the card's bottom edge even when metadata
           is hidden/empty, so footers align across a stretched grid row. */}
       <div className="mt-auto flex items-center justify-between gap-2 pt-1">
-        <EntityPill typeId={entity.typeId} />
+        <EntityTypeTag typeId={entity.typeId} />
         <div className="flex items-center gap-2">
           {connectionBadge}
           {viewButton}

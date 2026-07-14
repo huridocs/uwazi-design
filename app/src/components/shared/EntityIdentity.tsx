@@ -1,16 +1,13 @@
-import { getEntityType, type Entity } from "../../data/entities";
+import { type Entity } from "../../data/entities";
+import { EntityTypeTag } from "./EntityTypeTag";
 
-/** The identity block at the top of an entity surface: type eyebrow → title.
+/** The identity block at the top of an entity surface: type tag → title.
  *
  *  It replaced a pill stacked over a small title. The pill was a filled, tinted
  *  chip and the title was `text-xs` — the same size as the metadata labels
  *  underneath — so the loudest thing in the header was the *template name*, and
- *  the entity's name read as its caption. Here the type is an eyebrow (a square
- *  dot in the true type colour + a small-caps label) and the title is a real
- *  heading. Same information, correct hierarchy.
- *
- *  Two lines, not three: a country/date meta line under the title just repeated
- *  what the Metadata tab says two rows further down.
+ *  the entity's name read as its caption. Now the type is a quiet tag and the
+ *  title is a real heading. Same information, correct hierarchy.
  *
  *  Shared by the Library drawer preview, EntityOverlay and the entity view's own
  *  header (`inline`, for a single-row strip) so the surfaces can't drift apart.
@@ -29,32 +26,19 @@ export function EntityIdentity({
   title?: string;
   /** `sm` for the slide-over, `md` for the drawer panel. */
   size?: "sm" | "md";
-  /** One row — dot, type, title — for a header strip that has no vertical room. */
+  /** One row — tag, title — for a header strip with no vertical room. */
   inline?: boolean;
 }) {
-  const tid = typeId ?? entity?.typeId;
-  const type = tid ? getEntityType(tid) : undefined;
-  const color = type?.color ?? "#6B7280";
-  const name = type?.name ?? tid ?? "Unknown";
+  const tid = typeId ?? entity?.typeId ?? "";
   const label = title ?? entity?.title ?? "Unknown entity";
-
-  const eyebrow = (
-    <>
-      <span
-        className="w-2 h-2 rounded-[2px] shrink-0"
-        style={{ backgroundColor: color }}
-        aria-hidden
-      />
-      <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-tertiary truncate">
-        {name}
-      </span>
-    </>
-  );
 
   if (inline) {
     return (
-      <div className="flex items-center gap-3 min-w-0 flex-1">
-        <span className="flex items-center gap-1.5 shrink-0 max-w-[14rem]">{eyebrow}</span>
+      // BASELINE, not centre. Box-centring a 10px caps tag against a 15px title
+      // aligns their boxes, not their text — which is exactly what reads as
+      // "these aren't lined up". On the baseline they sit on one line.
+      <div className="flex items-baseline gap-2.5 min-w-0 flex-1">
+        <EntityTypeTag typeId={tid} className="shrink-0 max-w-[12rem]" />
         <h2 title={label} className="text-[15px] font-semibold text-ink truncate min-w-0">
           {label}
         </h2>
@@ -64,7 +48,7 @@ export function EntityIdentity({
 
   return (
     <div className="min-w-0 flex-1">
-      <div className="flex items-center gap-1.5">{eyebrow}</div>
+      <EntityTypeTag typeId={tid} className="flex" />
       <h2
         title={label}
         className={`mt-1 font-semibold text-ink leading-snug line-clamp-2 ${

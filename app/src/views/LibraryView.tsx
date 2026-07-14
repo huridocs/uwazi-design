@@ -311,22 +311,24 @@ export function LibraryView() {
 
   const tableColumns: Column<Entity>[] = [
     {
-      id: "type",
-      header: "Type",
-      // The chip is 1.5rem but the header needs room for its label AND its sort
-      // arrow — so the track can't shrink to the chip. Align the column to its
-      // END instead: the dead space falls to the LEFT of the chip, and the chip
-      // ends up sitting one grid-gap from the title rather than 2rem adrift.
-      width: "3.25rem",
-      align: "right" as const,
-      sortKey: "type",
-      cell: (e: Entity) => <EntityTypeChip typeId={e.typeId} />,
-    },
-    {
+      // The type rides WITH the title, not in a column of its own.
+      //
+      // A column can't work here: the chip is 1.5rem but the "TYPE" header needs
+      // room for its label and its sort arrow, so the track is always ~2rem wider
+      // than what's in it. Left-aligned, that gap sits between the chip and the
+      // title; right-aligned, it sits between the row edge and the chip. The
+      // space has to go somewhere — unless the column goes.
+      //
+      // Sorting by type is still there, in the toolbar's Sort control.
       id: "title",
       header: "Title",
       sortKey: "title",
-      cell: (e: Entity) => <span className="font-medium text-ink truncate">{e.title}</span>,
+      cell: (e: Entity) => (
+        <span className="flex items-center gap-2 min-w-0">
+          <EntityTypeChip typeId={e.typeId} />
+          <span className="font-medium text-ink truncate">{e.title}</span>
+        </span>
+      ),
     },
     info.country !== false && {
       id: "country",
