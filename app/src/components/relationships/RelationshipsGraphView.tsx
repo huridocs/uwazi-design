@@ -6,6 +6,7 @@ import {
   activeRefIdAtom,
 } from "../../atoms/references";
 import { groupByAtom } from "../../atoms/filters";
+import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { useFilteredReferences } from "./useFilteredReferences";
 import { getEntity, getEntityType } from "../../data/entities";
 import { Direction } from "../../data/references";
@@ -55,6 +56,7 @@ const GRAPH_CAP = 150;
 
 export function RelationshipsGraphView() {
   const [groupBy] = useAtom(groupByAtom);
+  const focusedId = useAtomValue(focusedEntityIdAtom);
   const [overlayEntityId, setOverlayEntityId] = useAtom(overlayEntityIdAtom);
   const activeRefId = useAtomValue(activeRefIdAtom);
 
@@ -190,7 +192,13 @@ export function RelationshipsGraphView() {
     return { spokes: spokesArr, nodes, truncated };
   }, [filteredRefs, collapsed, groupBy, activeRefId, overlayEntityId]);
 
-  const sourceType = getEntityType(currentDocument.entityTypeId);
+  // The root is THIS entity — the one whose relationships these are. It was
+  // `currentDocument`, the hardcoded sample document, so every graph claimed a
+  // "Court Case" at its centre no matter whose page you were on: a Sentencia's
+  // own connections radiated from someone else's node.
+  const sourceEntity = getEntity(focusedId);
+  const sourceType = getEntityType(sourceEntity?.typeId ?? currentDocument.entityTypeId);
+  const sourceTitle = sourceEntity?.title ?? currentDocument.title;
 
   // Did the open entity get opened FROM the graph? If it was selected elsewhere
   // (a list row, the overlay), no single node owns the click — so every node of
@@ -252,10 +260,12 @@ export function RelationshipsGraphView() {
     if (nodes.length === 0) return { tx: 0, ty: 0, scale: 1 };
 
     // Start from the source node — it's always drawn, and its label hangs below.
-    let minX = CX - SOURCE_R;
-    let maxX = CX + SOURCE_R;
+    // The source's own label is wider than its circle and hangs below it — bound
+    // the LABEL, or a fit crops the name of the entity the graph is about.
+    let minX = CX - 120;
+    let maxX = CX + 120;
     let minY = CY - SOURCE_R;
-    let maxY = CY + SOURCE_R + 18;
+    let maxY = CY + SOURCE_R + 34;
 
     for (const n of nodes) {
       minX = Math.min(minX, n.x - n.r);
@@ -463,15 +473,27 @@ export function RelationshipsGraphView() {
               stroke="var(--text-primary)"
               strokeWidth={1.5}
             />
+            {/* Its NAME first — the entity is the subject of the page, not an
+                example of its template — with the template underneath, quieter. */}
+            <title>{sourceTitle}</title>
             <text
               x={CX}
-              y={CY + SOURCE_R + 14}
+              y={CY + SOURCE_R + 15}
               textAnchor="middle"
-              fontSize={11}
+              fontSize={12}
               fontWeight={600}
               fill="var(--text-primary)"
             >
-              {sourceType?.name ?? "Source"}
+              {truncate(sourceTitle, 34)}
+            </text>
+            <text
+              x={CX}
+              y={CY + SOURCE_R + 29}
+              textAnchor="middle"
+              fontSize={10}
+              fill="var(--text-tertiary)"
+            >
+              {sourceType?.name ?? "Entity"}
             </text>
           </g>
 
@@ -623,4 +645,10 @@ export function RelationshipsGraphView() {
       </div>
     </div>
   );
+}
+
+/** Node labels are drawn, not laid out — SVG text doesn't wrap or ellipsize, so a
+ *  long entity name would run straight across the canvas. */
+function truncate(s: string, max: number): string {
+  return s.length > max ? `${s.slice(0, max - 1).trimEnd()}…` : s;
 }
