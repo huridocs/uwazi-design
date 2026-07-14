@@ -120,12 +120,11 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
             inlineSlot={<ActiveFilterChips />}
             rightSlot={
               <>
-                <ViewControls size="sm" />
-                <DisplayMenu size="sm" />
+                <ViewControls />
+                <DisplayMenu />
                 <FiltersButton
                   activeCount={activeFilterCount}
                   onClick={() => setFiltersOpen(true)}
-                  size="sm"
                 />
               </>
             }

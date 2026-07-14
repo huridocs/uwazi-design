@@ -25,12 +25,21 @@ export function SearchBar({ rightSlot, inlineSlot }: SearchBarProps = {}) {
   }, [hintOpen]);
 
   return (
-    <div className="px-3 pt-0.5 pb-2 flex items-center gap-1.5">
+    // The Library's toolbar, to the pixel: gap-2 between peers, an h-8 input with
+    // a LEADING search icon, h-8 controls beside it. This row used gap-1.5, a
+    // trailing magnifier and h-6 controls against an h-8 box — small buttons
+    // floating beside a taller field, which is what read as unbalanced.
+    <div className="px-3 pt-0.5 pb-2 flex items-center gap-2">
+      {/* min-h-8, not h-8: the chips wrap onto extra rows. But py-1 around an h-6
+          input plus borders came to 34px — 2px taller than every control beside
+          it, so the row sat a pixel off at both edges. py-0.5 keeps the content
+          under the 32px floor and lets min-h do the work. */}
       <div
-        className="relative flex-1 min-w-0 flex items-center gap-1 min-h-8 py-1 pl-2 pr-2 bg-warm border border-border rounded-md
+        className="relative flex-1 min-w-0 flex items-center gap-1.5 min-h-8 py-0.5 ps-2 pe-2 bg-warm border border-border rounded-md
           focus-within:ring-2 focus-within:ring-carbon/20 focus-within:border-carbon/40 transition-all flex-wrap"
         onClick={() => inputRef.current?.focus()}
       >
+        <Search size={14} className="text-ink-muted shrink-0" />
         {inlineSlot}
         <input
           ref={inputRef}
@@ -52,14 +61,16 @@ export function SearchBar({ rightSlot, inlineSlot }: SearchBarProps = {}) {
           </button>
         )}
 
+        {/* The magnifier moved to the front, so the tips affordance is what it
+            always was — a question mark, not a search icon doing double duty. */}
         <div ref={hintRef} className="shrink-0 relative">
           <button
             onClick={(e) => { e.stopPropagation(); setHintOpen((o) => !o); }}
             aria-label="Search tips"
             aria-expanded={hintOpen}
-            className="p-0.5 rounded-full text-ink-muted hover:text-ink transition-colors cursor-pointer"
+            className="flex p-0.5 rounded-full text-ink-muted hover:text-ink transition-colors cursor-pointer"
           >
-            {query ? <HelpCircle size={13} /> : <Search size={14} />}
+            <HelpCircle size={13} />
           </button>
 
           {hintOpen && (

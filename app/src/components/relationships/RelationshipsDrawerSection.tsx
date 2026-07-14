@@ -87,12 +87,11 @@ export function RelationshipsDrawerSection({
         inlineSlot={<ActiveFilterChips />}
         rightSlot={
           <>
-            <ViewControls size="sm" />
-            <DisplayMenu size="sm" />
+            <ViewControls />
+            <DisplayMenu />
             <FiltersButton
               activeCount={activeFilterCount}
               onClick={() => setFiltersOpen(true)}
-              size="sm"
             />
           </>
         }

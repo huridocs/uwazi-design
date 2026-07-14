@@ -44,7 +44,7 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
  *  exists once you've grouped, density only where rows have density — without
  *  costing the toolbar a pixel of shift. The trigger carries a dot when anything
  *  is off its default, so a collapsed control is never a hidden one. */
-export function DisplayMenu({ size = "sm" }: { size?: "sm" | "md" }) {
+export function DisplayMenu({ size = "md" }: { size?: "sm" | "md" }) {
   const view = useAtomValue(viewAtom);
   const [groupBy, setGroupBy] = useAtom(groupByAtom);
   const [subGroupBy, setSubGroupBy] = useAtom(subGroupByAtom);
