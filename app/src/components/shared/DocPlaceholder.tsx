@@ -38,10 +38,10 @@ export function DocPlaceholder({
           every thumbnail. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-1/5 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[14%] opacity-0 transition-opacity duration-200 group-hover:opacity-100"
         style={{
           background:
-            "radial-gradient(120% 100% at 50% 118%, rgba(0,0,0,0.14) 0%, rgba(0,0,0,0.05) 48%, transparent 74%)",
+            "radial-gradient(90% 100% at 50% 122%, rgba(0,0,0,0.13) 0%, rgba(0,0,0,0.04) 52%, transparent 78%)",
         }}
       />
 

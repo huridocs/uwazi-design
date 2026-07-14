@@ -503,13 +503,15 @@ function ClusterTrack(props: TrackProps) {
         return (
           <div
             key={b.key}
-            // Anchored so the node's centre lands ON the axis line.
+            // Anchored so the node's centre lands ON the axis line. The out-of-range
+            // DIMMING goes on the dot, not this wrapper: opacity < 1 makes a stacking
+            // context, which both faded the hover tooltip to 28% AND trapped its
+            // z-index so a list card painted over it. The wrapper stays opaque; the
+            // tooltip is its child (a sibling of the dot), so it clears everything.
             className="absolute -translate-y-1/2 translate-x-1/2"
             style={{
               top: `${pos(Math.max(b.start, extent.min))}%`,
               insetInlineEnd: geom.AXIS,
-              // Out-of-range periods recede but stay: the way back is the track.
-              opacity: inRange ? 1 : 0.28,
             }}
           >
             <button
@@ -526,7 +528,7 @@ function ClusterTrack(props: TrackProps) {
                       width: size,
                       height: size,
                       backgroundColor: color,
-                      opacity: lit ? 1 : 0.75,
+                      opacity: inRange ? (lit ? 1 : 0.75) : 0.28,
                       boxShadow: lit ? `0 0 0 3px ${color}33` : "none",
                     }
                   : {
@@ -534,6 +536,7 @@ function ClusterTrack(props: TrackProps) {
                       height: size,
                       border: `1.5px solid ${lit ? "var(--text-secondary)" : "var(--border-soft)"}`,
                       backgroundColor: lit ? "var(--bg-muted)" : "var(--bg-surface)",
+                      opacity: inRange ? 1 : 0.28,
                     }
               }
             >
@@ -545,12 +548,12 @@ function ClusterTrack(props: TrackProps) {
                   {n > 99 ? "99+" : n}
                 </span>
               )}
-              {hovered === b.key && (
-                <ChartTip>
-                  {b.label} · {n.toLocaleString()}
-                </ChartTip>
-              )}
             </button>
+            {hovered === b.key && (
+              <ChartTip>
+                {b.label} · {n.toLocaleString()}
+              </ChartTip>
+            )}
           </div>
         );
       })}
@@ -618,7 +621,10 @@ function DensityTrack(props: TrackProps) {
               height: `calc(${h}% - 1px)`,
               minHeight: 3,
               width: isHov || picked ? Math.min(geom.BAR, w + 4) : w,
-              opacity: lit ? (isHov || picked || activeKey === b.key ? 1 : 0.65) : 0.16,
+              // Hover wins over the out-of-range fade (0.16): the bar you're pointing
+              // at goes fully opaque, so its tooltip — a child of the bar — is fully
+              // readable instead of ghosted at 16%.
+              opacity: isHov ? 1 : lit ? (picked || activeKey === b.key ? 1 : 0.65) : 0.16,
             }}
           >
             {/* Reversed so the biggest slice hugs the axis — the axis is the
