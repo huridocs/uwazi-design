@@ -47,8 +47,8 @@ const VIEW_H = 900;
 const CX = VIEW_W / 2;
 const CY = VIEW_H / 2;
 const SOURCE_R = 26;
-const LABEL_DIST = 88;
-const FIRST_RING_R = 170;
+const LABEL_DIST = 122;
+const FIRST_RING_R = 200;
 const RING_GAP = 40;
 const ARC_GAP = 30;
 /** Max relationships plotted — beyond this the radial graph is slow + unreadable. */
@@ -199,6 +199,13 @@ export function RelationshipsGraphView() {
   const sourceEntity = getEntity(focusedId);
   const sourceType = getEntityType(sourceEntity?.typeId ?? currentDocument.entityTypeId);
   const sourceTitle = sourceEntity?.title ?? currentDocument.title;
+  const sourceLabel = truncate(sourceTitle, 26);
+  // SVG text can't be measured before layout, so the pill is sized from the glyph
+  // count — 5.6 units per char at fontSize 10 is a safe average for this face.
+  const sourceLabelW = Math.max(
+    72,
+    Math.max(sourceLabel.length, (sourceType?.name ?? "").length) * 5.6 + 18,
+  );
 
   // Did the open entity get opened FROM the graph? If it was selected elsewhere
   // (a list row, the overlay), no single node owns the click — so every node of
@@ -262,10 +269,10 @@ export function RelationshipsGraphView() {
     // Start from the source node — it's always drawn, and its label hangs below.
     // The source's own label is wider than its circle and hangs below it — bound
     // the LABEL, or a fit crops the name of the entity the graph is about.
-    let minX = CX - 120;
-    let maxX = CX + 120;
+    let minX = CX - sourceLabelW / 2;
+    let maxX = CX + sourceLabelW / 2;
     let minY = CY - SOURCE_R;
-    let maxY = CY + SOURCE_R + 34;
+    let maxY = CY + SOURCE_R + 36;
 
     for (const n of nodes) {
       minX = Math.min(minX, n.x - n.r);
@@ -293,7 +300,7 @@ export function RelationshipsGraphView() {
     const cx = (minX + maxX) / 2;
     const cy = (minY + maxY) / 2;
     return { scale, tx: scale * (CX - cx), ty: scale * (CY - cy) };
-  }, [nodes, spokes]);
+  }, [nodes, spokes, sourceLabelW]);
 
   // Re-fit when the DRAWING changes (filters, grouping, collapse) — not on every
   // render, or panning and zooming would snap back under your cursor.
@@ -473,24 +480,37 @@ export function RelationshipsGraphView() {
               stroke="var(--text-primary)"
               strokeWidth={1.5}
             />
-            {/* Its NAME first — the entity is the subject of the page, not an
-                example of its template — with the template underneath, quieter. */}
+            {/* The name sits in a PILL, like the branch labels — opaque, so an
+                edge or a node passing behind it doesn't run through the text — and
+                it's truncated hard: a full CEJIL title ("Bedoya Lima y otra.
+                Resolución de …") is wider than the whole first ring, and it was
+                sprawling straight across the branch labels. Full title on hover. */}
             <title>{sourceTitle}</title>
+            <rect
+              x={CX - sourceLabelW / 2}
+              y={CY + SOURCE_R + 6}
+              width={sourceLabelW}
+              height={30}
+              rx={4}
+              fill="var(--bg-surface)"
+              stroke="var(--border-primary)"
+              strokeWidth={1}
+            />
             <text
               x={CX}
-              y={CY + SOURCE_R + 15}
+              y={CY + SOURCE_R + 18}
               textAnchor="middle"
-              fontSize={12}
+              fontSize={10}
               fontWeight={600}
               fill="var(--text-primary)"
             >
-              {truncate(sourceTitle, 34)}
+              {sourceLabel}
             </text>
             <text
               x={CX}
-              y={CY + SOURCE_R + 29}
+              y={CY + SOURCE_R + 30}
               textAnchor="middle"
-              fontSize={10}
+              fontSize={8}
               fill="var(--text-tertiary)"
             >
               {sourceType?.name ?? "Entity"}
