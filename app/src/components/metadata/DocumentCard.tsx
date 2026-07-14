@@ -82,16 +82,21 @@ export function DocumentCard({
             <Property label="Last Edited" value={doc.lastEdited} ltr />
             <Property label="Added" value={doc.added} ltr />
           </div>
-          <div className="flex items-center gap-2 pt-1">
-            <ViewButton size="md" />
-            <button
-              onClick={() => notify("Download started", "success")}
-              className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer flex items-center gap-1.5"
-            >
-              <Download size={12} className="text-ink-tertiary" /> Download
-            </button>
-          </div>
         </div>
+      </div>
+
+      {/* The actions belong to the CARD, not to the facts column — inside it they
+          sat indented by the width of the thumbnail, floating in the middle of a
+          narrow drawer instead of starting where every other line of the card
+          does. */}
+      <div className="flex items-center gap-2 pt-1">
+        <ViewButton size="md" />
+        <button
+          onClick={() => notify("Download started", "success")}
+          className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer flex items-center gap-1.5"
+        >
+          <Download size={12} className="text-ink-tertiary" /> Download
+        </button>
       </div>
     </MetadataCard>
   );
