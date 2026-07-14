@@ -2,12 +2,13 @@ import { X, Download, ExternalLink } from "lucide-react";
 import { useAtom, useAtomValue } from "jotai";
 import { filesAtom, viewerFileIdAtom } from "../../atoms/files";
 import { FileEntry, FileKind } from "../../data/files";
+import { asset } from "../../utils/asset";
 
 /** Per-kind fallback sample URLs used when a FileEntry doesn't carry one.
  *  Lets the viewer show real content for every kind in the prototype without
  *  bundling large binaries. */
 const SAMPLE_URLS: Record<FileKind, string | undefined> = {
-  pdf: "/docs/Velasquez-Rodriguez_v_Honduras_Judgment_1988_EN.pdf",
+  pdf: asset("/docs/Velasquez-Rodriguez_v_Honduras_Judgment_1988_EN.pdf"),
   document: undefined,
   audio: "https://www.w3schools.com/html/horse.mp3",
   video: "https://www.w3schools.com/html/mov_bbb.mp4",

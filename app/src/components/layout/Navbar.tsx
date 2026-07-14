@@ -35,6 +35,7 @@ import { getEntity } from "../../data/entities";
 import { agentOpenAtom, shortcutLabel } from "../../atoms/agent";
 import { MobileBottomSheet } from "./MobileBottomSheet";
 import { Beacon } from "./Beacon";
+import { asset } from "../../utils/asset";
 
 interface NavbarProps {
   onLogoClick?: () => void;
@@ -130,7 +131,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
           onClick={onLogoClick}
           className="flex items-center"
         >
-          <img src="/nu-logo.svg" alt="Uwazi" style={{ height: 14.7 }} className="logo-img" />
+          <img src={asset("/nu-logo.svg")} alt="Uwazi" style={{ height: 14.7 }} className="logo-img" />
         </button>
         {!showingCatalog && !isMobile && (
           <div className="flex items-center gap-2">

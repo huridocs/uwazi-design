@@ -10,6 +10,11 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineConfig({
+  // GitHub Pages serves a project site from a SUBPATH (/uwazi-design/), so the
+  // build needs to know its base. Dev and any root-hosted deploy stay at "/".
+  // Everything under public/ resolves through `utils/asset.ts`, which reads the
+  // same value back out of import.meta.env.BASE_URL.
+  base: process.env.VITE_BASE ?? "/",
   plugins: [react(), tailwindcss()],
   optimizeDeps: {
     include: ["react-pdf"]

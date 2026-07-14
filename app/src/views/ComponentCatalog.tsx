@@ -78,6 +78,7 @@ import {
 } from "./catalog/demos";
 
 import { sidebarGroups, allItemIds } from "./catalog/sidebarGroups";
+import { asset } from "../utils/asset";
 
 interface Props {
   /** Called when the user clicks the "Return to app" button in the catalog
@@ -187,7 +188,7 @@ export function ComponentCatalog({ onReturn }: Props) {
         className="sticky top-0 z-30 h-13 bg-paper flex items-center justify-between px-5"
         style={{ borderBottom: "1px solid var(--border-primary)" }}
       >
-        <img src="/nu-logo.svg" alt="Uwazi" style={{ height: 14.7 }} className="logo-img" />
+        <img src={asset("/nu-logo.svg")} alt="Uwazi" style={{ height: 14.7 }} className="logo-img" />
         <button
           onClick={onReturn}
           className="flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium text-ink-secondary rounded-md bg-warm border border-border-soft/60 hover:bg-parchment transition-colors cursor-pointer"
