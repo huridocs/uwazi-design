@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { Fragment, useState, useRef, useEffect } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   ArrowLeft,
@@ -249,8 +249,12 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                   style={{ left: rtl ? undefined : 0, right: rtl ? 0 : undefined }}
                 >
                   <div className="py-1">
-                    {toolsItems.map((item) => {
+                    {toolsItems.map((item, i) => {
                       const Icon = item.icon;
+                      // Same subsections as the rail behind it — "ML tools" reads
+                      // as its own shelf in both places.
+                      const startsSub =
+                        !!item.subgroup && item.subgroup !== toolsItems[i - 1]?.subgroup;
                       const cls =
                         "flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer";
                       const inner = (
@@ -270,36 +274,49 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                         </>
                       );
 
+                      const sub = startsSub && (
+                        <div
+                          className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wide text-ink-muted"
+                          style={{ borderTop: "1px solid var(--border-soft)" }}
+                        >
+                          {item.subgroup}
+                        </div>
+                      );
+
                       if (item.external) {
                         return (
-                          <a
-                            key={item.id}
-                            href={item.external}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={cls}
-                            onClick={() => setToolsOpen(false)}
-                          >
-                            {inner}
-                          </a>
+                          <Fragment key={item.id}>
+                            {sub}
+                            <a
+                              href={item.external}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={cls}
+                              onClick={() => setToolsOpen(false)}
+                            >
+                              {inner}
+                            </a>
+                          </Fragment>
                         );
                       }
 
                       return (
-                        <button
-                          key={item.id}
-                          onClick={() => {
-                            // Import CSV is its own top-level view; the rest are
-                            // settings pages that were sitting unreachable in a
-                            // rail group nothing linked to.
-                            if (item.navigateTo) onNavigate?.(item.navigateTo);
-                            else openSettings(item.id);
-                            setToolsOpen(false);
-                          }}
-                          className={cls}
-                        >
-                          {inner}
-                        </button>
+                        <Fragment key={item.id}>
+                          {sub}
+                          <button
+                            onClick={() => {
+                              // Import CSV is its own top-level view; the rest are
+                              // settings pages that were sitting unreachable in a
+                              // rail group nothing linked to.
+                              if (item.navigateTo) onNavigate?.(item.navigateTo);
+                              else openSettings(item.id);
+                              setToolsOpen(false);
+                            }}
+                            className={cls}
+                          >
+                            {inner}
+                          </button>
+                        </Fragment>
                       );
                     })}
                     <DocumentationLink onDone={() => setToolsOpen(false)} />

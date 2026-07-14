@@ -37,6 +37,10 @@ export interface SettingsItem {
   badge?: string;
   navigateTo?: AppView;
   external?: string;
+  /** Optional heading ABOVE this item — a visual subsection inside a group. The
+   *  rail and the Tools dropdown both start a new block when it changes, so
+   *  "ML tools" reads as its own shelf without becoming a fourth top-level door. */
+  subgroup?: string;
 }
 
 export interface SettingsGroup {
@@ -72,15 +76,17 @@ export const settingsGroups: SettingsGroup[] = [
     id: "tools",
     label: "Tools",
     items: [
-      // Extraction is a tool you RUN, not a system setting you configure — it
-      // sat under System purely because Uwazi's V2 rail listed it there.
-      { id: "metadata-extraction", label: "Metadata Extraction", icon: ScanText },
-      { id: "paragraph-extraction", label: "Paragraph Extraction", icon: AlignLeft },
       { id: "preserve", label: "Preserve", icon: Archive },
       { id: "activitylog", label: "Activity log", icon: Activity },
       { id: "customisation", label: "Global CSS & JS", icon: Code2 },
       { id: "uploads", label: "Uploads", icon: Upload },
       { id: "import-csv", label: "Import CSV", icon: FileSpreadsheet, navigateTo: "import-csv" },
+      // Extraction is a tool you RUN, not a system setting you configure — it sat
+      // under System purely because Uwazi's V2 rail listed it there. And it's ML,
+      // which is a different kind of tool from an activity log, so it gets its own
+      // shelf inside the group rather than a fourth top-level door.
+      { id: "metadata-extraction", label: "Metadata Extraction", icon: ScanText, subgroup: "ML tools" },
+      { id: "paragraph-extraction", label: "Paragraph Extraction", icon: AlignLeft, subgroup: "ML tools" },
     ],
   },
 ];

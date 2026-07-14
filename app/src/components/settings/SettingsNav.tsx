@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { ExternalLink } from "lucide-react";
 import {
@@ -72,9 +73,11 @@ export function SettingsNav({ onNavigate }: { onNavigate?: (view: AppView) => vo
               {group.label}
             </h3>
           )}
-          {group.items.map((item) => {
+          {group.items.map((item, i) => {
             const Icon = item.icon;
             const active = section === item.id && !item.navigateTo && !item.external;
+            // A subsection starts wherever the subgroup changes.
+            const startsSub = !!item.subgroup && item.subgroup !== group.items[i - 1]?.subgroup;
 
             const inner = (
               <>
@@ -91,28 +94,42 @@ export function SettingsNav({ onNavigate }: { onNavigate?: (view: AppView) => vo
               active ? "bg-warm text-ink" : "text-ink-secondary hover:bg-warm hover:text-ink"
             }`;
 
+            const sub = startsSub && (
+              <h4
+                key={`sub-${item.subgroup}`}
+                className="px-5 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-ink-muted"
+              >
+                {item.subgroup}
+              </h4>
+            );
+
             if (item.external) {
               return (
-                <a key={item.id} href={item.external} target="_blank" rel="noopener noreferrer" className={cls}>
-                  {inner}
-                </a>
+                <Fragment key={item.id}>
+                  {sub}
+                  <a href={item.external} target="_blank" rel="noopener noreferrer" className={cls}>
+                    {inner}
+                  </a>
+                </Fragment>
               );
             }
 
             return (
-              <button
-                key={item.id}
-                className={cls}
-                onClick={() => {
-                  if (item.navigateTo) onNavigate?.(item.navigateTo);
-                  else {
-                    setSection(item.id);
-                    setDrilled(true); // mobile: reveal the section (ignored on desktop)
-                  }
-                }}
-              >
-                {inner}
-              </button>
+              <Fragment key={item.id}>
+                {sub}
+                <button
+                  className={cls}
+                  onClick={() => {
+                    if (item.navigateTo) onNavigate?.(item.navigateTo);
+                    else {
+                      setSection(item.id);
+                      setDrilled(true); // mobile: reveal the section (ignored on desktop)
+                    }
+                  }}
+                >
+                  {inner}
+                </button>
+              </Fragment>
             );
           })}
         </div>
