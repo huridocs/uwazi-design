@@ -1,15 +1,19 @@
 import { Image as ImageIcon, Play, AudioLines } from "lucide-react";
 import type { PreviewKind } from "../../data/entities";
 import { getEntityProfile } from "../../data/entityProfiles";
-import { DocPlaceholder } from "../shared/DocPlaceholder";
+import { resolvePrimaryFile } from "../../data/files";
+import { PdfPageThumb } from "../shared/PdfPageThumb";
 
-/** A Library card's preview — a mock, and honest about it: we don't rasterise
- *  pages.
+/** A Library card's preview.
  *
- *  For a document it's a sheet cropped by the frame (see DocPlaceholder) carrying
- *  the file's extension — the one real fact a preview can offer without rendering
- *  the document. image/video/audio keep their glyphs; there are no assets there
- *  either. */
+ *  For a document-bearing entity it's page one of its ACTUAL document, in the
+ *  cropped-sheet frame — the same preview the Metadata card shows, so a card and
+ *  the entity behind it look like each other. The drawn sheet with ruled lines is
+ *  gone: it was a picture of a document pretending to be the document, identical
+ *  on every card.
+ *
+ *  image/video/audio keep their glyphs — there are genuinely no assets for those.
+ */
 export function EntityThumbnail({
   kind,
   entityId,
@@ -17,16 +21,14 @@ export function EntityThumbnail({
   className = "",
 }: {
   kind: PreviewKind;
-  /** Only used to read the file's extension off the entity's profile. */
   entityId?: string;
   size?: "sm" | "md" | "lg";
   className?: string;
 }) {
   if (kind === "document") {
+    const file = entityId ? primaryFile(entityId) : null;
     return (
-      <div className={className}>
-        <DocPlaceholder ext={entityId ? fileExt(entityId) : undefined} size={size} />
-      </div>
+      <PdfPageThumb url={file?.url} ext={file?.type} size={size} className={className} />
     );
   }
   if (kind === "image") {
@@ -56,13 +58,11 @@ export function EntityThumbnail({
   );
 }
 
-/** The entity's primary file type ("pdf"). Profiles are cached, so calling this
- *  per card is cheap. */
-function fileExt(entityId: string): string | undefined {
+/** The entity's primary document. Profiles are cached, so per-card is cheap; the
+ *  card has no atoms to read, so it resolves against the profile's own files
+ *  (which is what the atoms are seeded from when you open the entity). */
+function primaryFile(entityId: string) {
   const profile = getEntityProfile(entityId);
-  if (!profile.hasDocument) return undefined;
-  const primary = (profile.documentGroups ?? []).filter((g) => g.isPrimary)[0];
-  const files = profile.files ?? [];
-  const inGroup = primary ? files.filter((f) => f.groupId === primary.id) : files;
-  return (inGroup[0] ?? files[0])?.type;
+  if (!profile.hasDocument) return null;
+  return resolvePrimaryFile(profile.files ?? [], profile.documentGroups ?? [], null, "EN");
 }

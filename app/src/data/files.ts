@@ -222,3 +222,22 @@ export function entityDocument(
   };
 }
 
+
+/** The document the viewer would open for this entity: the active primary group's
+ *  file in the current language, falling back to any file in that group.
+ *
+ *  Shared, because three places were each resolving it: the viewer, the thumbnail,
+ *  and the metadata Document block. If they disagree, a card shows one document's
+ *  page above another document's filename. */
+export function resolvePrimaryFile(
+  files: FileEntry[],
+  groups: DocumentGroup[],
+  activeGroupId: string | null,
+  language: string,
+): FileEntry | null {
+  const primary = groups.filter((g) => g.isPrimary).sort((a, b) => a.order - b.order);
+  const id = activeGroupId ?? primary[0]?.id ?? null;
+  if (!id) return null;
+  const inGroup = files.filter((f) => f.groupId === id);
+  return inGroup.find((f) => f.language === language) ?? inGroup[0] ?? null;
+}

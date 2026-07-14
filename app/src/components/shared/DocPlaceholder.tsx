@@ -1,61 +1,34 @@
-/** A document preview that doesn't pretend to be the document.
- *
- *  A sheet of paper pinned to the top of the frame and running off the bottom
- *  edge — partially hidden, the way a page sits in a stack. It reads as "a
- *  document" without claiming to show its contents, which the old centred,
- *  fully-visible rectangle did: a page you couldn't quite read, identical on every
- *  card.
- *
- *  The extension chip carries the only fact a preview can honestly offer when
- *  nothing is rendered — what kind of file this is.
- *
- *  Rule sizes are in px per `size`, not percentages: a 2px hairline is a 2px
- *  hairline, and percentage heights inside a percentage gap collapse into mush at
- *  thumbnail scale. */
-const SCALE = {
-  sm: { pad: 4, gap: 2, heading: 0, rule: 0, lines: 0 },
-  md: { pad: 8, gap: 4, heading: 3, rule: 2, lines: 4 },
-  lg: { pad: 11, gap: 5, heading: 4, rule: 2, lines: 6 },
-} as const;
+import type { ReactNode } from "react";
 
+/** The preview FRAME: a sheet of paper pinned near the top and running off the
+ *  bottom edge, so the page is partially hidden the way one sits in a stack.
+ *
+ *  What fills the sheet is the caller's business — `DocumentPreview` puts the
+ *  document's real first page in it. On its own it's the empty state: a blank
+ *  sheet, no invented ruled lines. Those lines were a drawing of a document
+ *  pretending to be the document, identical on every card, and they read as a
+ *  wireframe that never loaded. */
 export function DocPlaceholder({
   ext,
   size = "md",
+  children,
 }: {
   /** e.g. "pdf". Hidden at `sm` — there's no room, and a 5px word is noise. */
   ext?: string;
   size?: "sm" | "md" | "lg";
+  /** Page content. Absent → a blank sheet. */
+  children?: ReactNode;
 }) {
-  const s = SCALE[size];
-
   return (
     <div className="relative w-full h-full overflow-hidden bg-vellum">
-      {/* Inset at the sides, pinned near the top, and running PAST the bottom so
-          the frame crops it. Rounded on the top corners only — the bottom is
+      {/* Inset at the sides, pinned near the top, running PAST the bottom so the
+          frame crops it. Rounded on the top corners only — the bottom is
           off-frame, and rounding it would put the sheet back inside the box. */}
       <div
-        className="absolute inset-x-[16%] top-[10%] -bottom-[15%] bg-paper rounded-t-[3px] shadow-sm flex flex-col"
-        style={{
-          border: "1px solid var(--border-soft)",
-          padding: s.pad,
-          gap: s.gap,
-        }}
+        className="absolute inset-x-[16%] top-[10%] -bottom-[15%] bg-paper rounded-t-[3px] shadow-sm overflow-hidden"
+        style={{ border: "1px solid var(--border-soft)" }}
       >
-        {s.lines > 0 && (
-          <>
-            <div
-              className="w-3/5 rounded-full bg-border"
-              style={{ height: s.heading }}
-            />
-            {Array.from({ length: s.lines }).map((_, i) => (
-              <div
-                key={i}
-                className="rounded-full bg-border-soft"
-                style={{ height: s.rule, width: i % 3 === 2 ? "70%" : "100%" }}
-              />
-            ))}
-          </>
-        )}
+        {children}
       </div>
 
       {ext && size !== "sm" && (

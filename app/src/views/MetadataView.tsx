@@ -22,7 +22,8 @@ import {
 import { focusedEntityIdAtom } from "../atoms/focusedEntity";
 import { getEntity } from "../data/entities";
 import { getEntityProfile } from "../data/entityProfiles";
-import { filesAtom } from "../atoms/files";
+import { filesAtom, documentGroupsAtom, activePrimaryGroupIdAtom } from "../atoms/files";
+import { resolvePrimaryFile } from "../data/files";
 import { languageAtom, type Language } from "../atoms/language";
 import { entityMetadataAtom, makeEntityPropReader } from "../atoms/entityMetadata";
 import { DrawerFilesBody } from "../components/files/DrawerFilesBody";
@@ -91,8 +92,30 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
   const profile = getEntityProfile(useAtomValue(focusedEntityIdAtom));
   const allFields = profile.metadata[language];
   const fields = allFields.filter((f): f is MetadataField => f.type !== "relationship");
-  const pdf = profile.pdfMetadata?.[language];
   const notify = useNotify();
+
+  // The Document block used to render ONLY from `pdfMetadata`, which exists on
+  // exactly one hand-authored profile. Every other document-bearing entity —
+  // every CEJIL record, every synthesised sample — has real files and no such
+  // block, so the card silently vanished for all of them. The file IS the
+  // document's metadata; read it from there and fall back to the authored block.
+  const files = useAtomValue(filesAtom);
+  const groups = useAtomValue(documentGroupsAtom);
+  const activeGroupId = useAtomValue(activePrimaryGroupIdAtom);
+  const authored = profile.pdfMetadata?.[language];
+  const file = resolvePrimaryFile(
+    files.length ? files : profile.files ?? [],
+    groups.length ? groups : profile.documentGroups ?? [],
+    activeGroupId,
+    language,
+  );
+  const pdf = authored ?? (file && {
+    name: file.name,
+    type: file.type.toUpperCase(), // the authored block says "PDF"; the file says "pdf"
+    size: file.size,
+    lastEdited: file.modified,
+    added: file.modified,
+  });
 
   return (
     <>
@@ -103,10 +126,10 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
             to the labels and lets values run in one column, so a wide pane just
             gives the values more room rather than stretching a line of prose. */}
         <div className="w-full space-y-3">
-          {pdf && (
+          {profile.hasDocument && pdf && (
             <MetadataCard title="Document">
               <div className="flex items-start gap-4">
-                {profile.hasDocument && <DocumentThumbnail ext={pdf.type} />}
+                <DocumentThumbnail />
                 <div className="flex-1 min-w-0 space-y-2">
                   <Property label="Name" value={pdf.name} ltr />
                   <PropertyRow>

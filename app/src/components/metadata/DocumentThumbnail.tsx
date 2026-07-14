@@ -1,18 +1,31 @@
-import { DocPlaceholder } from "../shared/DocPlaceholder";
+import { useAtomValue } from "jotai";
+import { languageAtom } from "../../atoms/language";
+import { filesAtom, documentGroupsAtom, activePrimaryGroupIdAtom } from "../../atoms/files";
+import { resolvePrimaryFile } from "../../data/files";
+import { PdfPageThumb } from "../shared/PdfPageThumb";
 
-/** The Document card's preview on the Metadata view.
- *
- *  Was a grey box with the word "PDF" centred in it — a picture of a file type
- *  next to a filename that already ended in .pdf. Now it's the same cropped sheet
- *  the Library cards use, at card size, so the two surfaces show one idea of what
- *  a document looks like. */
-export function DocumentThumbnail({ ext = "pdf", width = 96 }: { ext?: string; width?: number }) {
+/** The Metadata Document card's preview — the document's own first page, in the
+ *  same cropped frame the Library cards use. Resolved through the SAME primary-file
+ *  path as the viewer, so the page you see is the page View opens. */
+export function DocumentThumbnail({ width = 96 }: { width?: number }) {
+  const language = useAtomValue(languageAtom);
+  const files = useAtomValue(filesAtom);
+  const groups = useAtomValue(documentGroupsAtom);
+  const activeGroupId = useAtomValue(activePrimaryGroupIdAtom);
+
+  const file = resolvePrimaryFile(files, groups, activeGroupId, language);
+
   return (
-    <div
+    <PdfPageThumb
+      url={file?.url}
+      ext={file?.type}
+      size="lg"
       className="hidden md:block shrink-0 rounded overflow-hidden"
-      style={{ width, height: Math.round(width * 1.33), border: "1px solid var(--border-primary)" }}
-    >
-      <DocPlaceholder ext={ext} size="lg" />
-    </div>
+      style={{
+        width,
+        height: Math.round(width * 1.33),
+        border: "1px solid var(--border-primary)",
+      }}
+    />
   );
 }
