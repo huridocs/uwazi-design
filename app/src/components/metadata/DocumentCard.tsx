@@ -60,6 +60,13 @@ export function DocumentCard({
 
   if (!doc) return null;
 
+  const facts = [
+    { label: "Type", value: doc.type, ltr: false },
+    { label: "Size", value: doc.size, ltr: true },
+    { label: "Last Edited", value: doc.lastEdited, ltr: true },
+    { label: "Added", value: doc.added, ltr: true },
+  ].filter((f) => !!f.value?.trim());
+
   return (
     <MetadataCard title="Document">
       <div className="flex items-start gap-4">
@@ -78,15 +85,15 @@ export function DocumentCard({
         />
         <div className="@container flex-1 min-w-0 space-y-2">
           <Property label="Name" value={doc.name} ltr truncate />
-          {/* A grid keyed to the CONTAINER, not the viewport. Four facts across a
-              narrow drawer left "Last Edited" wrapping onto two lines — and a
-              `lg:` breakpoint wouldn't have helped, because the viewport is wide
-              while the pane is not. It's the pane that has to decide. */}
+          {/* Only the facts we actually have. CEJIL files carry a type but no size
+              or dates, and a label sitting over an empty value reads as a bug, not
+              as "unknown". A grid keyed to the CONTAINER, not the viewport — a
+              `lg:` breakpoint can't see that the drawer is narrow while the window
+              is wide. */}
           <div className="grid grid-cols-2 @sm:grid-cols-4 gap-x-6 gap-y-2">
-            <Property label="Type" value={doc.type} />
-            <Property label="Size" value={doc.size} ltr />
-            <Property label="Last Edited" value={doc.lastEdited} ltr />
-            <Property label="Added" value={doc.added} ltr />
+            {facts.map((f) => (
+              <Property key={f.label} label={f.label} value={f.value} ltr={f.ltr} />
+            ))}
           </div>
         </div>
       </div>
