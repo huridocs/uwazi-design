@@ -31,6 +31,19 @@ export function DocPlaceholder({
         {children}
       </div>
 
+      {/* Folder pocket: an elliptical shadow pooled along the bottom edge, over
+          the sheet, so the page reads as tucked INTO the frame rather than laid on
+          top of it. A radial gradient gives the ellipse — an inset box-shadow can
+          only be rectangular. Sits above the page (children) but below the chip. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3"
+        style={{
+          background:
+            "radial-gradient(120% 100% at 50% 100%, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.07) 45%, transparent 72%)",
+        }}
+      />
+
       {ext && size !== "sm" && (
         <span className="absolute bottom-1 end-1 px-1 py-px rounded-[2px] bg-ink/70 text-paper text-[8px] font-semibold uppercase tracking-wider leading-none">
           {ext}
