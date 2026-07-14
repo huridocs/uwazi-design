@@ -20,7 +20,7 @@ export function DocPlaceholder({
   children?: ReactNode;
 }) {
   return (
-    <div className="relative w-full h-full overflow-hidden bg-vellum">
+    <div className="group relative w-full h-full overflow-hidden bg-vellum">
       {/* Inset at the sides, pinned near the top, running PAST the bottom so the
           frame crops it. Rounded on the top corners only — the bottom is
           off-frame, and rounding it would put the sheet back inside the box. */}
@@ -31,16 +31,17 @@ export function DocPlaceholder({
         {children}
       </div>
 
-      {/* Folder pocket: a whisper of an elliptical shadow pooled along the bottom,
-          over the sheet, so the page reads as tucked INTO the frame — a radial
-          gradient gives the ellipse, which an inset box-shadow can't. Kept
-          extremely subtle: a hint you notice only if you look, not a smudge. */}
+      {/* Folder pocket: a small elliptical shadow pooled along the bottom, over the
+          sheet, so the page reads as tucked INTO the frame — a radial gradient
+          gives the ellipse, which an inset box-shadow can't. Only on hover, and
+          faint: a flourish when you're looking at this one, not a permanent mark on
+          every thumbnail. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-1/5 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
         style={{
           background:
-            "radial-gradient(130% 100% at 50% 112%, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.04) 45%, transparent 72%)",
+            "radial-gradient(120% 100% at 50% 118%, rgba(0,0,0,0.14) 0%, rgba(0,0,0,0.05) 48%, transparent 74%)",
         }}
       />
 
