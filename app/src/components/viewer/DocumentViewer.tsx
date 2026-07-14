@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo, ReactNode } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
+import { X } from "lucide-react";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
@@ -77,8 +78,17 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
     return files.find((f) => f.groupId === resolvedActiveId) ?? null;
   }, [files, resolvedActiveId, language, fileOverride]);
   const filePath = activeFile?.url ?? MOCK_DOCUMENT_PDF;
+  // Dismissable: it's a notice, not an alert — once you know this doc is in ES,
+  // you don't need telling again while you read it. It comes back when the
+  // FACTS change (a different language or a different file), not on every
+  // re-render, so dismissing it doesn't hide a genuinely new fallback.
+  const [langNoticeDismissed, setLangNoticeDismissed] = useState(false);
+  useEffect(() => setLangNoticeDismissed(false), [language, activeFile?.url]);
   const showLangFallback =
-    !fileOverride && activeFile !== null && activeFile.language !== language;
+    !fileOverride &&
+    activeFile !== null &&
+    activeFile.language !== language &&
+    !langNoticeDismissed;
 
   // Measure container width for responsive PDF scaling
   useEffect(() => {
@@ -223,10 +233,17 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
       <div className="flex-1 relative min-h-0">
         {showLangFallback && (
           <div
-            className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 px-3 py-1.5 rounded-md bg-warning-light text-warning text-xs font-medium shadow-sm animate-fade-in-up"
+            className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 ps-3 pe-1.5 py-1.5 rounded-md bg-warning-light text-warning text-xs font-medium shadow-sm animate-fade-in-up"
             role="status"
           >
             No translation in {language}. Showing {activeFile?.language}.
+            <button
+              onClick={() => setLangNoticeDismissed(true)}
+              aria-label="Dismiss"
+              className="shrink-0 p-0.5 rounded hover:bg-warning/15 transition-colors cursor-pointer"
+            >
+              <X size={12} />
+            </button>
           </div>
         )}
         {/* PDF stays mounted (just hidden) under a rendition so it never has

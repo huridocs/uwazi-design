@@ -24,9 +24,13 @@ export function EntityIdentity({
   entity?: Entity;
   typeId?: string;
   title?: string;
-  /** `sm` for the slide-over, `md` for the drawer panel. */
+  /** `md` — the same `text-sm` semibold an entity's name gets on a card or a
+   *  row, so one title doesn't change size as you move between surfaces.
+   *  `sm` for the slide-over, which is denser. */
   size?: "sm" | "md";
-  /** One row — tag, title — for a header strip with no vertical room. */
+  /** One row — tag, title. Only for a strip with no vertical room; a long
+   *  template name ("Resolución de Presidencia de la CorteIDH") eats the row and
+   *  squeezes the title, which is the wrong thing to squeeze. */
   inline?: boolean;
 }) {
   const tid = typeId ?? entity?.typeId ?? "";
@@ -41,7 +45,7 @@ export function EntityIdentity({
       // it, not a caption beside a tag.
       <div className="flex items-baseline gap-2.5 min-w-0 flex-1">
         <EntityTypeTag typeId={tid} className="shrink-0 max-w-[12rem]" />
-        <h2 title={label} className="text-[17px] font-semibold text-ink truncate min-w-0">
+        <h2 title={label} className="text-sm font-semibold text-ink truncate min-w-0">
           {label}
         </h2>
       </div>
@@ -53,8 +57,8 @@ export function EntityIdentity({
       <EntityTypeTag typeId={tid} className="flex" />
       <h2
         title={label}
-        className={`mt-1 font-semibold text-ink leading-snug line-clamp-2 ${
-          size === "sm" ? "text-[13px]" : "text-[15px]"
+        className={`mt-0.5 font-semibold text-ink leading-snug line-clamp-2 ${
+          size === "sm" ? "text-[13px]" : "text-sm"
         }`}
       >
         {label}

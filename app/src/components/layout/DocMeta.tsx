@@ -66,13 +66,13 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
 
   return (
     <div
-      className="flex items-center gap-2 h-12 px-3 shrink-0"
+      className="flex items-center gap-2 min-h-12 py-2 px-3 shrink-0"
       style={{ borderBottom: "1px solid var(--border-primary)" }}
     >
-      {/* Same identity block as the Library drawer and the overlay — the type as
-          a quiet eyebrow, the title as the heading. This header had it the other
-          way round: a filled pill shouting the template beside a text-xs title. */}
-      <EntityIdentity typeId={typeId} title={title} inline />
+      {/* Stacked, like the drawer: tag over title. Side by side, a long template
+          name ("Resolución de Presidencia de la CorteIDH") ran halfway across the
+          strip and squeezed the entity's own name — squeezing the wrong thing. */}
+      <EntityIdentity typeId={typeId} title={title} />
 
       {showPdfSelector && (
         <div ref={pickerRef} className="relative shrink-0">
