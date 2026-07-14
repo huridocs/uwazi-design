@@ -70,13 +70,17 @@ export function MetadataFieldsGrid({ items }: { items: GridItem[] }) {
         ? "grid-cols-1 sm:grid-cols-2"
         : "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3";
 
-  // The last short cell stretches over whatever its row has left over.
+  // The last short cell stretches over whatever its row has left over. The span
+  // is per-BREAKPOINT and always explicit: a bare `sm:col-span-2` keeps applying
+  // at xl, where the row is 3 columns wide, not 2 — which left three fields
+  // showing an empty third column AND a last cell spanning two of three. Each
+  // breakpoint states its own span, including the 1 that means "don't stretch".
   const r2 = n % 2;
   const r3 = n % 3;
-  const lastSpan = [
-    n >= 2 && r2 === 1 ? "sm:col-span-2" : "",
-    n >= 3 && r3 === 1 ? "xl:col-span-3" : n >= 3 && r3 === 2 ? "xl:col-span-2" : "",
-  ].join(" ");
+  const smSpan = n >= 2 ? (r2 === 1 ? "sm:col-span-2" : "sm:col-span-1") : "";
+  const xlSpan =
+    n >= 3 ? (r3 === 1 ? "xl:col-span-3" : r3 === 2 ? "xl:col-span-2" : "xl:col-span-1") : "";
+  const lastSpan = `${smSpan} ${xlSpan}`;
 
   const cell = (item: GridItem, cls = "") => (
     <div

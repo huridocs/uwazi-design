@@ -8,6 +8,7 @@ import { DocMeta } from "../components/layout/DocMeta";
 import { MetadataCard, Property, PropertyRow } from "../components/metadata/MetadataCard";
 import { MetadataFieldsGrid, fieldItem } from "../components/metadata/MetadataFieldsGrid";
 import { connectionItem } from "../components/metadata/ConnectionPills";
+import { DocumentThumbnail } from "../components/metadata/DocumentThumbnail";
 import { ConnectionGroupCard } from "../components/metadata/ConnectionGroupCard";
 import { RelationshipFieldCard } from "../components/metadata/RelationshipFieldCard";
 import { RelationshipCards } from "../components/metadata/RelationshipCards";
@@ -123,13 +124,7 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
           {pdf && (
             <MetadataCard title="Document">
               <div className="flex items-start gap-4">
-                {profile.hasDocument && (
-                  <div className="hidden md:flex shrink-0 w-24 h-32 items-center justify-center bg-warm rounded overflow-hidden">
-                    <div className="bg-paper rounded shadow-sm w-[70%] h-[80%] flex items-center justify-center">
-                      <span className="text-[10px] text-ink-muted">PDF</span>
-                    </div>
-                  </div>
-                )}
+                {profile.hasDocument && <DocumentThumbnail />}
                 <div className="flex-1 min-w-0 space-y-2">
                   <Property label="Name" value={pdf.name} ltr />
                   <PropertyRow>
