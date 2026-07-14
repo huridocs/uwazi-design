@@ -79,8 +79,12 @@ export function EntityDrawerPreview({ entityId }: { entityId: string }) {
       {/* Main-tab navigation beneath the identity header. */}
       <MainTabs tabs={tabs} activeId={activeTab} onChange={setActiveTab} />
 
-      {/* Tab content — drawer-flavoured bodies, scoped to the focused entity. */}
-      <div className="flex-1 min-h-0 relative overflow-hidden">
+      {/* Tab content — drawer-flavoured bodies, scoped to the focused entity.
+          flex COLUMN: the bodies are toolbar + flex-1 pane (the graph canvas, the
+          scrolling list). As a plain block this box gave `flex-1` nothing to grow
+          against, so the graph collapsed to the SVG's intrinsic height and sat in
+          the top half of an empty pane. */}
+      <div className="flex-1 min-h-0 relative overflow-hidden flex flex-col">
         {activeTab === "document" ? (
           <DocumentViewer showMinimap={false} hideActionBar />
         ) : activeTab === "relationships" ? (
