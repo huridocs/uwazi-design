@@ -449,7 +449,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
             <div className="px-4 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-ink-tertiary">
               Tools
             </div>
-            {toolsItems.map((item) => {
+            {toolsItems.map((item, i) => {
               const Icon = item.icon;
               const active =
                 (item.navigateTo && appView === item.navigateTo) ||
@@ -457,36 +457,46 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
               const cls = `flex items-center gap-3 w-full px-4 py-3 text-sm font-medium transition-colors ${
                 active ? "bg-vellum text-ink" : "text-ink-secondary hover:bg-warm"
               }`;
+              // Same "ML tools" shelf as the rail and the desktop dropdown.
+              const sub = !!item.subgroup && item.subgroup !== toolsItems[i - 1]?.subgroup && (
+                <div className="px-4 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-ink-tertiary">
+                  {item.subgroup}
+                </div>
+              );
 
               if (item.external) {
                 return (
-                  <a
-                    key={item.id}
-                    href={item.external}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={cls}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Icon size={16} className="text-ink-tertiary" />
-                    {item.label}
-                  </a>
+                  <Fragment key={item.id}>
+                    {sub}
+                    <a
+                      href={item.external}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cls}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Icon size={16} className="text-ink-tertiary" />
+                      {item.label}
+                    </a>
+                  </Fragment>
                 );
               }
 
               return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    if (item.navigateTo) onNavigate?.(item.navigateTo);
-                    else openSettings(item.id);
-                    setMobileMenuOpen(false);
-                  }}
-                  className={cls}
-                >
-                  <Icon size={16} className="text-ink-tertiary" />
-                  {item.label}
-                </button>
+                <Fragment key={item.id}>
+                  {sub}
+                  <button
+                    onClick={() => {
+                      if (item.navigateTo) onNavigate?.(item.navigateTo);
+                      else openSettings(item.id);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={cls}
+                  >
+                    <Icon size={16} className="text-ink-tertiary" />
+                    {item.label}
+                  </button>
+                </Fragment>
               );
             })}
             <a

@@ -25,6 +25,7 @@ import {
   typeOrder,
   type TimeBucket,
 } from "../../utils/timeline";
+import { breakpointAtom } from "../../atoms/viewport";
 import { BucketBreakdown, ChartTip } from "./BucketBreakdown";
 import { EntityCard } from "./EntityCard";
 
@@ -144,6 +145,23 @@ const TRACK_LABEL = 26;
 const TRACK_AXIS = 44;
 const TRACK_BAR = 42;
 const TRACK_W = TRACK_AXIS + TRACK_BAR + 4;
+/** On a phone the track was taking 90px of a 414px screen — a fifth of the width,
+ *  spent on a gutter, while the rows beside it truncated to "Kimel. Informe …".
+ *  Same geometry, scaled down. */
+const MOBILE_SCALE = 0.62;
+
+/** The track's geometry, scaled for the viewport. ONE source, so the cluster
+ *  nodes, the density bars, the marks and the spine's axis all stay on the same
+ *  line at every width. */
+function useTrackGeom() {
+  const k = useAtomValue(breakpointAtom) === "mobile" ? MOBILE_SCALE : 1;
+  return {
+    W: Math.round(TRACK_W * k),
+    AXIS: Math.round(TRACK_AXIS * k),
+    BAR: Math.round(TRACK_BAR * k),
+    LABEL: Math.round(TRACK_LABEL * k),
+  };
+}
 /** A period quiet enough to read as a single dot; busier ones become a
  *  counted ring. */
 const DOT_CAP = 12;
@@ -349,6 +367,7 @@ function TrackedList({
 function TrackFrame({
   width,
   axisEnd,
+  labelW,
   label,
   scope,
   setScope,
@@ -363,6 +382,7 @@ function TrackFrame({
    *  centres its nodes ON the axis, so it needs room on both sides; the density
    *  track only grows inward, so its axis can hug the year marks. */
   axisEnd: number;
+  labelW: number;
   label: string;
   scope: TimelineScope;
   setScope: (s: TimelineScope) => void;
@@ -416,7 +436,7 @@ function TrackFrame({
           <span
             key={`l-${m.label}`}
             className="absolute text-[9px] tabular-nums text-ink-muted -translate-y-1/2 pointer-events-none text-start"
-            style={{ top: `${m.yPct}%`, insetInlineEnd: 0, width: TRACK_LABEL }}
+            style={{ top: `${m.yPct}%`, insetInlineEnd: 0, width: labelW }}
           >
             {m.label}
           </span>
@@ -454,13 +474,15 @@ function EdgeCount({ dir, n, axisEnd }: { dir: "up" | "down"; n: number; axisEnd
  *  cramped 40px gutter, one of them unclickable-adjacent to the other. */
 function ClusterTrack(props: TrackProps) {
   const { buckets, extent, pos, activeKey, hovered, setHovered } = props;
+  const geom = useTrackGeom();
   const range = useRange();
   const maxCount = Math.max(1, ...buckets.map((b) => b.entities.length));
 
   return (
     <TrackFrame
-      width={TRACK_W}
-      axisEnd={TRACK_AXIS}
+      width={geom.W}
+      axisEnd={geom.AXIS}
+      labelW={geom.LABEL}
       label="Timeline — periods"
       scope={props.scope}
       setScope={props.setScope}
@@ -485,7 +507,7 @@ function ClusterTrack(props: TrackProps) {
             className="absolute -translate-y-1/2 translate-x-1/2"
             style={{
               top: `${pos(Math.max(b.start, extent.min))}%`,
-              insetInlineEnd: TRACK_AXIS,
+              insetInlineEnd: geom.AXIS,
               // Out-of-range periods recede but stay: the way back is the track.
               opacity: inRange ? 1 : 0.28,
             }}
@@ -544,6 +566,7 @@ function ClusterTrack(props: TrackProps) {
  *  Clicking a period filters the Library to it (click again to clear). */
 function DensityTrack(props: TrackProps) {
   const { buckets, extent, pos, activeKey, hovered, setHovered, scrollToTime } = props;
+  const geom = useTrackGeom();
   const range = useRange();
   const maxCount = Math.max(1, ...buckets.map((b) => b.entities.length));
   // ONE segment order for the whole track, or the stacks wouldn't be comparable.
@@ -551,8 +574,9 @@ function DensityTrack(props: TrackProps) {
 
   return (
     <TrackFrame
-      width={TRACK_W}
-      axisEnd={TRACK_AXIS}
+      width={geom.W}
+      axisEnd={geom.AXIS}
+      labelW={geom.LABEL}
       label="Timeline — volume by period"
       scope={props.scope}
       setScope={props.setScope}
@@ -566,7 +590,7 @@ function DensityTrack(props: TrackProps) {
         const lit = range.overlaps(b);
         const picked = !range.isAll && range.covers(b);
         const isHov = hovered === b.key;
-        const w = 4 + Math.sqrt(n / maxCount) * (TRACK_BAR - 4);
+        const w = 4 + Math.sqrt(n / maxCount) * (geom.BAR - 4);
         // Bars are as tall as their period is long — a period that is 1/40th of
         // the corpus occupies 1/40th of the rail. Gaps in time stay gaps.
         const top = pos(Math.max(b.start, extent.min));
@@ -589,11 +613,11 @@ function DensityTrack(props: TrackProps) {
             className="absolute cursor-pointer transition-[width,opacity] duration-150
               focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
             style={{
-              insetInlineEnd: TRACK_AXIS + 1,
+              insetInlineEnd: geom.AXIS + 1,
               top: `${top}%`,
               height: `calc(${h}% - 1px)`,
               minHeight: 3,
-              width: isHov || picked ? Math.min(TRACK_BAR, w + 4) : w,
+              width: isHov || picked ? Math.min(geom.BAR, w + 4) : w,
               opacity: lit ? (isHov || picked || activeKey === b.key ? 1 : 0.65) : 0.16,
             }}
           >
@@ -649,9 +673,6 @@ const PX_PER_YEAR = 190;
 const EVENT_H = 22;
 /** The axis lives on the right, like the rail and the document's ref minimap.
  *  This is the gutter kept for its year marks. */
-/** The spine's axis sits at the SAME inset as the Rail/Density track, so the
- *  timeline doesn't slide across the pane when you switch layout. */
-const AXIS_GUTTER = TRACK_AXIS;
 const LEADER_W = 22;
 /** The longest stretch of nothing the axis will draw at true scale before it
  *  elides — see the break markers. */
@@ -666,6 +687,10 @@ function elapsed(ms: number): string {
 }
 
 function SpineLayout({ dated, selectedId, onSelect }: LayoutProps) {
+  // The spine's axis sits at the SAME inset as the Rail/Density track, so the
+  // timeline doesn't slide across the pane when you switch layout — at any width.
+  const geom = useTrackGeom();
+  const AXIS_GUTTER = geom.AXIS;
   const plotted = dated.slice(0, SPINE_CAP);
   const extent = useMemo(() => timeExtent(plotted)!, [plotted]);
 
@@ -778,7 +803,7 @@ function SpineLayout({ dated, selectedId, onSelect }: LayoutProps) {
             <span className="w-1.5 h-px" style={{ backgroundColor: "var(--border-primary)" }} />
             <span
               className="text-[9px] tabular-nums text-ink-muted whitespace-nowrap"
-              style={{ width: TRACK_LABEL }}
+              style={{ width: geom.LABEL }}
             >
               {y.label}
             </span>

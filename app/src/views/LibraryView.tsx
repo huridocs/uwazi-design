@@ -68,6 +68,16 @@ import { SegmentedControl } from "../components/shared/SegmentedControl";
 
 const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
 
+/** Sort keys — shared by the toolbar Select and (on mobile, where the Select
+ *  steps aside for the view switcher) the Display popover. */
+export const SORTS = [
+  { value: "recent", label: "Date added" },
+  { value: "title", label: "Title" },
+  { value: "connections", label: "Connections" },
+  { value: "type", label: "Type" },
+  { value: "country", label: "Country" },
+];
+
 /** How many cards to reveal per page in the Library grid/list. */
 const DISPLAY_STEP = 120;
 
@@ -377,42 +387,38 @@ export function LibraryView() {
             </button>
           )}
         </div>
-        <Select
-          value={sort}
-          onChange={(v) => {
-            const key = v as typeof sort;
-            setSort(key);
-            setSortDir(defaultSortDir(key));
-          }}
-          ariaLabel="Sort"
-          options={[
-            { value: "recent", label: "Date added" },
-            { value: "title", label: "Title" },
-            { value: "connections", label: "Connections" },
-            { value: "type", label: "Type" },
-            { value: "country", label: "Country" },
-          ]}
-        />
+        {/* Sort steps aside on a phone — it moves into the Display popover, where
+            it costs no width. The VIEW switcher does not: cards / list / map /
+            timeline are the point of the Library, and they were unreachable on
+            mobile because this whole cluster was `hidden sm:block`. */}
         <div className="hidden sm:block">
-          <SegmentedControl
-            ariaLabel="View"
-            value={viewMode}
-            onChange={(v) => setViewMode(v as typeof viewMode)}
-            options={[
-              { id: "cards", label: "Cards", icon: LayoutGrid },
-              { id: "list", label: "List", icon: List },
-              { id: "map", label: "Map", icon: MapIcon },
-              { id: "timeline", label: "Timeline", icon: CalendarRange },
-            ]}
+          <Select
+            value={sort}
+            onChange={(v) => {
+              const key = v as typeof sort;
+              setSort(key);
+              setSortDir(defaultSortDir(key));
+            }}
+            ariaLabel="Sort"
+            options={SORTS}
           />
         </div>
+        <SegmentedControl
+          ariaLabel="View"
+          value={viewMode}
+          onChange={(v) => setViewMode(v as typeof viewMode)}
+          options={[
+            { id: "cards", label: "Cards", icon: LayoutGrid },
+            { id: "list", label: "List", icon: List },
+            { id: "map", label: "Map", icon: MapIcon },
+            { id: "timeline", label: "Timeline", icon: CalendarRange },
+          ]}
+        />
         {/* Display is icon-only and ALWAYS mounted; the view-specific modifiers
             (timeline layout) live inside its popover. Anything that appears and
             disappears from this row shoves every other control sideways when you
             change view — which is exactly what it used to do. */}
-        <div className="hidden sm:block">
-          <DisplayMenu />
-        </div>
+        <DisplayMenu />
         {/* Languages: one dropdown of fixed width (codes, not names — a "Français"
             label would resize the trigger and shift the row again). */}
         <div className="hidden md:block">

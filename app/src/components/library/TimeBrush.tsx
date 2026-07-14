@@ -17,6 +17,7 @@ import {
   typeOrder,
   type TimeBucket,
 } from "../../utils/timeline";
+import { breakpointAtom } from "../../atoms/viewport";
 import { BucketBreakdown, ChartTip } from "./BucketBreakdown";
 import type { Entity } from "../../data/entities";
 
@@ -44,6 +45,7 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
   const [dateFrom, setDateFrom] = useAtom(libraryDateFromAtom);
   const [dateTo, setDateTo] = useAtom(libraryDateToAtom);
   const activeFilterCount = useAtomValue(libraryActiveFilterCountAtom);
+  const isMobile = useAtomValue(breakpointAtom) === "mobile";
   const clearFilters = useSetAtom(clearLibraryFiltersAtom);
   const trackRef = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState<TimeBucket | null>(null);
@@ -274,30 +276,37 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
       className="shrink-0 bg-paper px-3 pt-1.5 pb-2 select-none"
       style={{ borderTop: "1px solid var(--border-primary)" }}
     >
-      {/* Caption + presets */}
+      {/* Caption + presets. On a phone the range reads as YEARS, not full dates,
+          and the zoom presets step aside — five of them plus "All" ran straight
+          off a 414px screen. "All" stays: it's the way back. */}
       <div className="flex items-center gap-2 h-6">
         <span className="text-[11px] text-ink-tertiary tabular-nums whitespace-nowrap">
           <span className="font-semibold text-ink-secondary">{inRange.toLocaleString()}</span>
           {" dated · "}
-          <span className="text-ink-secondary">{formatDay(winFrom)}</span>
+          <span className="text-ink-secondary">
+            {isMobile ? new Date(winFrom).getUTCFullYear() : formatDay(winFrom)}
+          </span>
           {" → "}
-          <span className="text-ink-secondary">{formatDay(winTo)}</span>
+          <span className="text-ink-secondary">
+            {isMobile ? new Date(winTo).getUTCFullYear() : formatDay(winTo)}
+          </span>
         </span>
         <div className="flex-1" />
-        {hovered && (
+        {hovered && !isMobile && (
           <span className="text-[11px] text-ink-tertiary tabular-nums whitespace-nowrap">
             {hovered.label} · {hovered.entities.length.toLocaleString()}
           </span>
         )}
-        {presets.map((p) => (
-          <button
-            key={p.label}
-            onClick={() => commit(axis.max - p.ms, axis.max, false)}
-            className="px-2 h-5 text-[11px] font-medium rounded-md bg-warm text-ink-tertiary hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
-          >
-            {p.label}
-          </button>
-        ))}
+        {!isMobile &&
+          presets.map((p) => (
+            <button
+              key={p.label}
+              onClick={() => commit(axis.max - p.ms, axis.max, false)}
+              className="px-2 h-5 text-[11px] font-medium rounded-md bg-warm text-ink-tertiary hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
+            >
+              {p.label}
+            </button>
+          ))}
         <button
           onClick={() => commit(axis.min, axis.max, true)}
           disabled={isFull}

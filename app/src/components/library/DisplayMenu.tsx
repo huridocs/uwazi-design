@@ -1,14 +1,19 @@
 import { useState } from "react";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { SlidersHorizontal, Check } from "lucide-react";
 import {
   libraryInfoAtom,
   libraryViewModeAtom,
   libraryTimelineLayoutAtom,
   libraryTimeHubAtom,
+  librarySortAtom,
+  librarySortDirAtom,
+  defaultSortDir,
   type LibraryInfoKey,
   type TimelineLayout,
 } from "../../atoms/library";
+import { breakpointAtom } from "../../atoms/viewport";
+import { SORTS } from "../../views/LibraryView";
 
 const ITEMS: { key: LibraryInfoKey; label: string }[] = [
   { key: "preview", label: "Thumbnail" },
@@ -36,7 +41,10 @@ export function DisplayMenu() {
   const [info, setInfo] = useAtom(libraryInfoAtom);
   const [layout, setLayout] = useAtom(libraryTimelineLayoutAtom);
   const [timeHub, setTimeHub] = useAtom(libraryTimeHubAtom);
+  const [sort, setSort] = useAtom(librarySortAtom);
+  const setSortDir = useSetAtom(librarySortDirAtom);
   const viewMode = useAtomValue(libraryViewModeAtom);
+  const isMobile = useAtomValue(breakpointAtom) === "mobile";
   const [open, setOpen] = useState(false);
 
   const hiddenCount = ITEMS.filter((i) => info[i.key] === false).length + (timeHub ? 0 : 1);
@@ -89,8 +97,40 @@ export function DisplayMenu() {
               </span>
             </button>
 
-            {(showLayouts || showInfo) && (
-              <div className="my-1 h-px" style={{ backgroundColor: "var(--border-soft)" }} />
+            <div className="my-1 h-px" style={{ backgroundColor: "var(--border-soft)" }} />
+
+            {/* Sort lives here on a phone — the toolbar gives its width to the
+                view switcher, which matters more than a sort key you set once. */}
+            {isMobile && (
+              <>
+                <p className="px-2 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+                  Sort by
+                </p>
+                {SORTS.map((s) => {
+                  const on = sort === s.value;
+                  return (
+                    <button
+                      key={s.value}
+                      onClick={() => {
+                        setSort(s.value as typeof sort);
+                        setSortDir(defaultSortDir(s.value as typeof sort));
+                      }}
+                      aria-pressed={on}
+                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-warm transition-colors cursor-pointer text-start"
+                    >
+                      <span className="w-4 shrink-0 flex items-center justify-center text-carbon">
+                        {on && <Check size={13} />}
+                      </span>
+                      <span className={`text-xs ${on ? "text-ink font-semibold" : "text-ink-secondary"}`}>
+                        {s.label}
+                      </span>
+                    </button>
+                  );
+                })}
+                {(showLayouts || showInfo) && (
+                  <div className="my-1 h-px" style={{ backgroundColor: "var(--border-soft)" }} />
+                )}
+              </>
             )}
 
             {showLayouts && (
