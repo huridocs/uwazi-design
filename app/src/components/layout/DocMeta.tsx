@@ -66,7 +66,7 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
 
   return (
     <div
-      className="flex items-center gap-2 min-h-12 py-2 px-3 shrink-0"
+      className="flex items-center gap-2 min-h-11 pt-1 pb-2 px-3 shrink-0"
       style={{ borderBottom: "1px solid var(--border-primary)" }}
     >
       {/* Stacked, like the drawer: tag over title. Side by side, a long template
