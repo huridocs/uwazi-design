@@ -31,16 +31,26 @@ export function DocPlaceholder({
         {children}
       </div>
 
-      {/* Folder pocket: an elliptical shadow pooled along the bottom edge, over
-          the sheet, so the page reads as tucked INTO the frame rather than laid on
-          top of it. A radial gradient gives the ellipse — an inset box-shadow can
-          only be rectangular. Sits above the page (children) but below the chip. */}
+      {/* Folder pocket. Two parts, both over the sheet so the page reads as tucked
+          INTO the frame rather than laid on top of it — a radial gradient gives the
+          ellipse, which an inset box-shadow can't. First the deep well pooled along
+          the bottom; then a hard, thin lip right at the edge, the fold of the
+          pocket the page slips behind. The first pass had only the well, at a third
+          of this strength, so it barely registered. Above the page, below the chip. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2"
         style={{
           background:
-            "radial-gradient(120% 100% at 50% 100%, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.07) 45%, transparent 72%)",
+            "radial-gradient(140% 90% at 50% 118%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.28) 32%, rgba(0,0,0,0.08) 60%, transparent 80%)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[6%] min-h-[3px]"
+        style={{
+          background:
+            "radial-gradient(100% 140% at 50% 100%, rgba(0,0,0,0.5) 0%, transparent 70%)",
         }}
       />
 
