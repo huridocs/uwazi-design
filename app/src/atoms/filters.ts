@@ -23,7 +23,7 @@ export type GroupBy =
   | "relation-type"
   | "direction"
   | "source-page";
-export const groupByAtom = atom<GroupBy>("none");
+export const groupByAtom = atom<GroupBy>("relation-type"); // the axis people actually read connections by
 
 /** Secondary grouping axis ("Then by"). Mirrors Uwazi's relation-type → template
  *  two-level facet pattern; the prototype lets you pick any pair. */

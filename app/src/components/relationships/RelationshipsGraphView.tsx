@@ -64,6 +64,14 @@ export function RelationshipsGraphView() {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [hover, setHover] = useState<{ node: GraphNode; x: number; y: number } | null>(null);
   const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
+  // WHICH node you clicked. Selection is stored per ENTITY (overlayEntityIdAtom),
+  // but a node is a relationship AGGREGATE — target × type × direction — so one
+  // entity can own several nodes ("Cites", "Refers To", "Relates To"… all to the
+  // same case). Keying the highlight off the entity alone lit every one of them
+  // and there was no way to tell which you'd picked. They ARE all that entity, so
+  // dimming them would be a lie: the clicked node goes primary, its siblings keep
+  // a quiet ring that says "same entity, different relation".
+  const [clickedNodeId, setClickedNodeId] = useState<string | null>(null);
   const dragRef = useRef<{
     active: boolean;
     startX: number;
@@ -183,6 +191,12 @@ export function RelationshipsGraphView() {
   }, [filteredRefs, collapsed, groupBy, activeRefId, overlayEntityId]);
 
   const sourceType = getEntityType(currentDocument.entityTypeId);
+
+  // Did the open entity get opened FROM the graph? If it was selected elsewhere
+  // (a list row, the overlay), no single node owns the click — so every node of
+  // that entity reads as primary, the old behaviour, rather than all of them
+  // going faint with nothing to anchor them.
+  const pickedInGraph = nodes.some((n) => n.selected && n.id === clickedNodeId);
 
   useEffect(() => {
     const el = svgRef.current;
@@ -409,7 +423,14 @@ export function RelationshipsGraphView() {
               button (Enter/Space opens the entity overlay, same as click).
               Focus shows a carbon halo + the tooltip, so keyboard users get
               the same identification hover users do. */}
-          {nodes.map((n) => (
+          {nodes.map((n) => {
+            // `n.selected` = this node's entity is the one open. `primary` = this
+            // is the node you actually clicked. When one entity owns several
+            // nodes (one per relation type), the siblings stay marked — they ARE
+            // that entity — but only the clicked one gets the solid ring.
+            const primary = n.selected && (pickedInGraph ? clickedNodeId === n.id : true);
+            const sibling = n.selected && !primary;
+            return (
             <g key={n.id}>
               {n.selected && (
                 <circle
@@ -418,8 +439,9 @@ export function RelationshipsGraphView() {
                   r={n.r + 5}
                   fill="none"
                   stroke="var(--text-primary)"
-                  strokeWidth={1.5}
-                  opacity={0.55}
+                  strokeWidth={primary ? 1.5 : 1}
+                  strokeDasharray={sibling ? "2 2" : undefined}
+                  opacity={primary ? 0.55 : 0.3}
                 />
               )}
               {focusedNodeId === n.id && !n.selected && (
@@ -439,9 +461,9 @@ export function RelationshipsGraphView() {
                 r={n.r}
                 fill={n.color}
                 stroke={
-                  n.selected ? "var(--text-primary)" : "var(--bg-surface)"
+                  primary ? "var(--text-primary)" : "var(--bg-surface)"
                 }
-                strokeWidth={n.selected ? 2.5 : 1.5}
+                strokeWidth={primary ? 2.5 : 1.5}
                 tabIndex={0}
                 role="button"
                 aria-label={`${n.title} — ${n.typeName}, ${n.evidenceCount} evidence`}
@@ -478,18 +500,21 @@ export function RelationshipsGraphView() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
+                    setClickedNodeId(n.id);
                     setOverlayEntityId(n.id.split("::")[0]);
                   }
                 }}
                 onClick={(e) => {
                   e.stopPropagation();
                   if (dragRef.current.moved) return;
+                  setClickedNodeId(n.id);
                   setOverlayEntityId(n.id.split("::")[0]);
                 }}
                 style={{ cursor: "pointer", outline: "none" }}
               />
             </g>
-          ))}
+            );
+          })}
 
         </g>
       </svg>

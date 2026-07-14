@@ -212,41 +212,49 @@ export function AggregateRow({
           setOverlayEntityId(rel.targetEntityId);
         }}
     >
-      <div className="flex items-start justify-between gap-2 mb-1.5">
-        <div className="flex items-center gap-1.5 min-w-0">
+      {/* Checkbox + chevron are a gutter; title and caption share ONE column
+          beside it. The caption used to start at the row's left edge while the
+          title started after the controls, so the two lines of the same row began
+          at different x. */}
+      <div className="flex items-start gap-1.5">
+        <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
           <RowCheckbox refIds={rel.refIds} />
           {chevron}
-          {hidePill ? (
-            <>
-              <DirectionGlyph direction={glyphDirection} />
-              <span className="text-sm font-medium text-ink capitalize truncate">
-                {relLabel}
-              </span>
-            </>
-          ) : (
-            <>
-              {!hideTypePill && (
-                <EntityTypeTag typeId={entity?.typeId ?? ""} label={type?.name} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-1.5 min-w-0">
+              {hidePill ? (
+                <>
+                  <DirectionGlyph direction={glyphDirection} />
+                  <span className="text-sm font-medium text-ink capitalize truncate">
+                    {relLabel}
+                  </span>
+                </>
+              ) : (
+                <>
+                  {!hideTypePill && (
+                    <EntityTypeTag typeId={entity?.typeId ?? ""} label={type?.name} />
+                  )}
+                  <span
+                    title={entity?.title}
+                    className="text-sm font-medium text-ink truncate min-w-0"
+                  >
+                    {entity?.title}
+                  </span>
+                </>
               )}
-              <span
-                title={entity?.title}
-                className="text-sm font-medium text-ink truncate min-w-0"
-              >
-                {entity?.title}
-              </span>
-            </>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">{countBadge}</div>
+          </div>
+          {!hidePill && (
+            <div className="flex items-center gap-1 mt-1 text-[10px] text-ink-tertiary">
+              <DirectionGlyph direction={glyphDirection} />
+              {!hideRelLabel && <span className="capitalize">{relLabel}</span>}
+            </div>
           )}
         </div>
-        <div className="flex items-center gap-1.5 shrink-0">
-          {countBadge}
-        </div>
       </div>
-      {!hidePill && (
-        <div className="flex items-center gap-1 mt-1 text-[10px] text-ink-tertiary">
-          <DirectionGlyph direction={glyphDirection} />
-          {!hideRelLabel && <span className="capitalize">{relLabel}</span>}
-        </div>
-      )}
     </ListCardRow>
   );
 }

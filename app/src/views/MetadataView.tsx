@@ -6,7 +6,8 @@ import { MainTabs } from "../components/layout/MainTabs";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { DocMeta } from "../components/layout/DocMeta";
 import { MetadataCard, Property, PropertyRow } from "../components/metadata/MetadataCard";
-import { MetadataFieldsGrid } from "../components/metadata/MetadataFieldsGrid";
+import { MetadataFieldsGrid, fieldItem } from "../components/metadata/MetadataFieldsGrid";
+import { connectionItem } from "../components/metadata/ConnectionPills";
 import { ConnectionGroupCard } from "../components/metadata/ConnectionGroupCard";
 import { RelationshipFieldCard } from "../components/metadata/RelationshipFieldCard";
 import { RelationshipCards } from "../components/metadata/RelationshipCards";
@@ -93,13 +94,23 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
   const pdf = profile.pdfMetadata?.[language];
   const notify = useNotify();
 
-  // Still a grid — but a LATTICE, not a mosaic. The old read view tiled a
-  // bordered card per field with heuristic column spans (`fieldSpan`): the grid
-  // shape was right, the disconnection came from each cell owning its own
-  // border, its own width and its own edges, so nothing lined up with anything.
-  // `MetadataFieldsGrid` keeps the tiling and moves the hairlines into the gaps
-  // between cells, inside one card. Long-form fields take the full row.
-  const filled = fields.filter((f) => !!f.value?.trim());
+  // ONE record. Scalar properties AND link-only connections share the lattice: a
+  // connection that inherits nothing is a property whose value happens to be an
+  // entity, and it was getting a whole bordered card — title, a caption reading
+  // "via Mecanismo · linked" under a heading already saying Mecanismo, and a
+  // single pill. An entity with two dates and four links rendered as four
+  // near-empty boxes.
+  //
+  // Connections that DO inherit keep their cards below: they carry a table
+  // (entities × inherited columns), provenance and rollups — real content.
+  const relFields = allFields.filter(
+    (f): f is RelationshipMetadataField => f.type === "relationship",
+  );
+  const linkOnly = relFields.filter((f) => !specInherits(f) && !f.connectionKey);
+  const items = [
+    ...fields.filter((f) => !!f.value?.trim()).map(fieldItem),
+    ...linkOnly.map(connectionItem),
+  ];
 
   return (
     <>
@@ -141,16 +152,21 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
             </MetadataCard>
           )}
 
-          {filled.length > 0 && (
+          {items.length > 0 && (
             <MetadataCard title="Details" flush>
-              <MetadataFieldsGrid fields={filled} />
+              <MetadataFieldsGrid items={items} />
             </MetadataCard>
           )}
 
-          {/* Relationship / inherited fields — shared with the drawers via
+          {/* Inheriting connections only — shared with the drawers via
               RelationshipCards so they can't drift. */}
           <div className="space-y-3">
-            <RelationshipCards profile={profile} language={language} span="full" />
+            <RelationshipCards
+              profile={profile}
+              language={language}
+              span="full"
+              inheritingOnly
+            />
           </div>
         </div>
       </div>
