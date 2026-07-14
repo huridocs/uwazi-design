@@ -12,21 +12,24 @@ import {
   User,
   Server,
   Languages,
-  Cog,
-  FileSpreadsheet,
-  Activity,
-  Code2,
-  Upload,
   Menu,
   Sparkles,
   ChevronDown,
   Check,
+  ExternalLink,
 } from "lucide-react";
 import type { Theme } from "../../atoms/theme";
 import type { AppView } from "../../atoms/navigation";
 import { breakpointAtom } from "../../atoms/viewport";
 import { dataSourceAtom, type DataSource } from "../../atoms/dataSource";
 import { selectDataSourceAtom } from "../../atoms/library";
+import {
+  settingsSectionAtom,
+  settingsMobileDrilledAtom,
+  settingsToolsItems,
+  settingsEntryOf,
+  settingsDocumentation,
+} from "../../atoms/settings";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { getEntity } from "../../data/entities";
 import { agentOpenAtom, shortcutLabel } from "../../atoms/agent";
@@ -53,6 +56,8 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
   const collectionRef = useRef<HTMLDivElement>(null);
   const dataSource = useAtomValue(dataSourceAtom);
   const selectSource = useSetAtom(selectDataSourceAtom);
+  const [settingsSection, setSettingsSection] = useAtom(settingsSectionAtom);
+  const setSettingsDrilled = useSetAtom(settingsMobileDrilledAtom);
   const [breakpoint] = useAtom(breakpointAtom);
   const isMobile = breakpoint === "mobile";
   const openAgent = useSetAtom(agentOpenAtom);
@@ -91,13 +96,18 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
   ];
   const collection = COLLECTIONS.find((c) => c.id === dataSource) ?? COLLECTIONS[0];
 
-  const toolsItems = [
-    { id: "processes", label: "Processes", icon: Cog, enabled: false },
-    { id: "import-csv", label: "Import CSV", icon: FileSpreadsheet, enabled: true },
-    { id: "activity-log", label: "Activity Log", icon: Activity, enabled: false },
-    { id: "global-css", label: "Global CSS", icon: Code2, enabled: false },
-    { id: "uploads", label: "Uploads", icon: Upload, enabled: false },
-  ];
+  // The Tools dropdown IS the Tools settings group — one list, not a hardcoded
+  // copy of it that had drifted into five mostly-disabled placeholders while the
+  // real pages sat unreachable in the settings rail.
+  const toolsItems = settingsToolsItems();
+
+  /** Open a settings destination. The rail scopes itself to the group the
+   *  section belongs to, so this is also what picks User vs System vs Tools. */
+  const openSettings = (sectionId: string) => {
+    setSettingsSection(sectionId);
+    setSettingsDrilled(true); // mobile: land on the page, not the rail
+    onNavigate?.("settings");
+  };
 
   return (
     <header
@@ -241,31 +251,58 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                   <div className="py-1">
                     {toolsItems.map((item) => {
                       const Icon = item.icon;
+                      const cls =
+                        "flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer";
+                      const inner = (
+                        <>
+                          <span className="flex items-center gap-2">
+                            <Icon size={14} className="text-ink-tertiary" />
+                            {item.label}
+                          </span>
+                          {item.external ? (
+                            <ExternalLink size={12} className="text-ink-muted" />
+                          ) : (
+                            ((item.navigateTo && appView === item.navigateTo) ||
+                              (appView === "settings" && settingsSection === item.id)) && (
+                              <span className="w-1.5 h-1.5 rounded-[1px] bg-carbon" />
+                            )
+                          )}
+                        </>
+                      );
+
+                      if (item.external) {
+                        return (
+                          <a
+                            key={item.id}
+                            href={item.external}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={cls}
+                            onClick={() => setToolsOpen(false)}
+                          >
+                            {inner}
+                          </a>
+                        );
+                      }
+
                       return (
                         <button
                           key={item.id}
                           onClick={() => {
-                            if (item.enabled && item.id === "import-csv") {
-                              onNavigate?.("import-csv");
-                            }
+                            // Import CSV is its own top-level view; the rest are
+                            // settings pages that were sitting unreachable in a
+                            // rail group nothing linked to.
+                            if (item.navigateTo) onNavigate?.(item.navigateTo);
+                            else openSettings(item.id);
                             setToolsOpen(false);
                           }}
-                          className={`flex items-center justify-between w-full px-3 py-2 text-xs font-medium transition-colors ${
-                            item.enabled
-                              ? "text-ink-secondary hover:bg-warm"
-                              : "text-ink-muted cursor-default"
-                          }`}
+                          className={cls}
                         >
-                          <div className="flex items-center gap-2">
-                            <Icon size={14} className={item.enabled ? "text-ink-tertiary" : "text-ink-muted/50"} />
-                            {item.label}
-                          </div>
-                          {appView === "import-csv" && item.id === "import-csv" && (
-                            <span className="w-1.5 h-1.5 rounded-[1px] bg-carbon" />
-                          )}
+                          {inner}
                         </button>
                       );
                     })}
+                    <DocumentationLink onDone={() => setToolsOpen(false)} />
                   </div>
                 </div>
               )}
@@ -331,20 +368,30 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                     </div>
                     <Languages size={14} className="text-ink-tertiary" />
                   </button>
+                  {/* Two doors, two destinations. Both used to dump you on the
+                      same page with the same twenty-item rail — the distinction
+                      was a label, not a place. */}
                   <button
-                    onClick={() => { onNavigate?.("settings"); setSettingsOpen(false); }}
-                    className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors"
+                    onClick={() => {
+                      openSettings(settingsEntryOf("user"));
+                      setSettingsOpen(false);
+                    }}
+                    className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
                   >
                     User settings
                     <User size={14} className="text-ink-tertiary" />
                   </button>
                   <button
-                    onClick={() => { onNavigate?.("settings"); setSettingsOpen(false); }}
-                    className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors"
+                    onClick={() => {
+                      openSettings(settingsEntryOf("system"));
+                      setSettingsOpen(false);
+                    }}
+                    className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
                   >
                     System settings
                     <Server size={14} className="text-ink-tertiary" />
                   </button>
+                  <DocumentationLink onDone={() => setSettingsOpen(false)} />
                 </div>
               </div>
             )}
@@ -387,30 +434,54 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
             </div>
             {toolsItems.map((item) => {
               const Icon = item.icon;
-              const active = appView === "import-csv" && item.id === "import-csv";
+              const active =
+                (item.navigateTo && appView === item.navigateTo) ||
+                (appView === "settings" && settingsSection === item.id);
+              const cls = `flex items-center gap-3 w-full px-4 py-3 text-sm font-medium transition-colors ${
+                active ? "bg-vellum text-ink" : "text-ink-secondary hover:bg-warm"
+              }`;
+
+              if (item.external) {
+                return (
+                  <a
+                    key={item.id}
+                    href={item.external}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cls}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Icon size={16} className="text-ink-tertiary" />
+                    {item.label}
+                  </a>
+                );
+              }
+
               return (
                 <button
                   key={item.id}
                   onClick={() => {
-                    if (item.enabled && item.id === "import-csv") {
-                      onNavigate?.("import-csv");
-                      setMobileMenuOpen(false);
-                    }
+                    if (item.navigateTo) onNavigate?.(item.navigateTo);
+                    else openSettings(item.id);
+                    setMobileMenuOpen(false);
                   }}
-                  disabled={!item.enabled}
-                  className={`flex items-center gap-3 w-full px-4 py-3 text-sm font-medium transition-colors ${
-                    active
-                      ? "bg-vellum text-ink"
-                      : item.enabled
-                        ? "text-ink-secondary hover:bg-warm"
-                        : "text-ink-muted/60"
-                  }`}
+                  className={cls}
                 >
-                  <Icon size={16} className={item.enabled ? "text-ink-tertiary" : "text-ink-muted/40"} />
+                  <Icon size={16} className="text-ink-tertiary" />
                   {item.label}
                 </button>
               );
             })}
+            <a
+              href={settingsDocumentation.external}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
+            >
+              <ExternalLink size={16} className="text-ink-tertiary" />
+              {settingsDocumentation.label}
+            </a>
 
             {/* Settings section */}
             <div className="px-4 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-ink-tertiary">
@@ -462,5 +533,28 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
         </MobileBottomSheet>
       )}
     </header>
+  );
+}
+
+/** Documentation, appended to every menu that opens onto settings. It belongs to
+ *  no group — it's the way OUT of all of them — so it isn't a Tools item that you
+ *  only find if you already went looking somewhere else. */
+function DocumentationLink({ onDone }: { onDone: () => void }) {
+  const Icon = settingsDocumentation.icon;
+  return (
+    <a
+      href={settingsDocumentation.external}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={onDone}
+      className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
+      style={{ borderTop: "1px solid var(--border-soft)" }}
+    >
+      <span className="flex items-center gap-2">
+        <Icon size={14} className="text-ink-tertiary" />
+        {settingsDocumentation.label}
+      </span>
+      <ExternalLink size={12} className="text-ink-muted" />
+    </a>
   );
 }

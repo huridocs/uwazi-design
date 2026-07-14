@@ -1,6 +1,11 @@
 import { useAtom, useSetAtom } from "jotai";
 import { ExternalLink } from "lucide-react";
-import { settingsGroups, settingsSectionAtom, settingsMobileDrilledAtom } from "../../atoms/settings";
+import {
+  settingsGroupOf,
+  settingsSectionAtom,
+  settingsMobileDrilledAtom,
+  settingsDocumentation,
+} from "../../atoms/settings";
 import { dataSourceAtom } from "../../atoms/dataSource";
 import {
   libraryTypeFiltersAtom,
@@ -56,7 +61,11 @@ export function SettingsNav({ onNavigate }: { onNavigate?: (view: AppView) => vo
         />
       </div>
 
-      {settingsGroups.map((group) => (
+      {/* ONE group — the one you came in through. Settings ▸ User settings,
+          Settings ▸ System settings and the Tools dropdown are three separate
+          doors; the rail behind each shows that door's destinations rather than
+          all twenty under every one. */}
+      {[settingsGroupOf(section)].map((group) => (
         <div key={group.id} className="mb-2">
           {group.label && (
             <h3 className="px-5 py-2 text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
@@ -108,6 +117,21 @@ export function SettingsNav({ onNavigate }: { onNavigate?: (view: AppView) => vo
           })}
         </div>
       ))}
+
+      {/* Documentation — pinned under every group, because it's the way out of
+          all of them, not a member of one. */}
+      <div className="mt-2 pt-2" style={{ borderTop: "1px solid var(--border-soft)" }}>
+        <a
+          href={settingsDocumentation.external}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2.5 w-full px-5 py-2 text-[13px] font-medium text-left text-ink-secondary hover:bg-warm hover:text-ink transition-colors"
+        >
+          <settingsDocumentation.icon size={15} className="text-ink-tertiary shrink-0" />
+          <span className="truncate flex-1">{settingsDocumentation.label}</span>
+          <ExternalLink size={12} className="text-ink-muted shrink-0" />
+        </a>
+      </div>
     </nav>
   );
 }
