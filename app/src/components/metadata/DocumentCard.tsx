@@ -68,7 +68,10 @@ export function DocumentCard({
           ext={file?.type ?? doc.type}
           size="lg"
           className="hidden sm:block shrink-0 rounded overflow-hidden"
-          style={{ width: 88, height: 117, border: "1px solid var(--border-primary)" }}
+          // Shorter than a page's aspect: the frame CROPS, so a squatter box just
+          // shows less of the sheet — and the point is to recognise the document,
+          // which happens at the masthead, not four inches down.
+          style={{ width: 88, height: 92, border: "1px solid var(--border-primary)" }}
         />
         <div className="@container flex-1 min-w-0 space-y-2">
           <Property label="Name" value={doc.name} ltr />
