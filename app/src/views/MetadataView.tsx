@@ -6,8 +6,7 @@ import { MainTabs } from "../components/layout/MainTabs";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { DocMeta } from "../components/layout/DocMeta";
 import { MetadataCard, Property, PropertyRow } from "../components/metadata/MetadataCard";
-import { MetadataFieldsGrid, fieldItem } from "../components/metadata/MetadataFieldsGrid";
-import { connectionItem } from "../components/metadata/ConnectionPills";
+import { MetadataRecord } from "../components/metadata/MetadataRecord";
 import { DocumentThumbnail } from "../components/metadata/DocumentThumbnail";
 import { ConnectionGroupCard } from "../components/metadata/ConnectionGroupCard";
 import { RelationshipFieldCard } from "../components/metadata/RelationshipFieldCard";
@@ -95,32 +94,14 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
   const pdf = profile.pdfMetadata?.[language];
   const notify = useNotify();
 
-  // ONE record. Scalar properties AND link-only connections share the lattice: a
-  // connection that inherits nothing is a property whose value happens to be an
-  // entity, and it was getting a whole bordered card — title, a caption reading
-  // "via Mecanismo · linked" under a heading already saying Mecanismo, and a
-  // single pill. An entity with two dates and four links rendered as four
-  // near-empty boxes.
-  //
-  // Connections that DO inherit keep their cards below: they carry a table
-  // (entities × inherited columns), provenance and rollups — real content.
-  const relFields = allFields.filter(
-    (f): f is RelationshipMetadataField => f.type === "relationship",
-  );
-  const linkOnly = relFields.filter((f) => !specInherits(f) && !f.connectionKey);
-  const items = [
-    ...fields.filter((f) => !!f.value?.trim()).map(fieldItem),
-    ...linkOnly.map(connectionItem),
-  ];
-
   return (
     <>
       <DocMeta showPdfSelector={false} />
 
       <div className="flex-1 overflow-auto px-4 py-3 pb-8">
-        {/* Full width. The lattice already keeps text readable — a paragraph cell
-            spans a row, but a row is 2–3 columns, so no line runs the whole pane.
-            Capping the whole record at 56rem just left a gutter. */}
+        {/* Full width — no 56rem cap. The label|value table sizes its label column
+            to the labels and lets values run in one column, so a wide pane just
+            gives the values more room rather than stretching a line of prose. */}
         <div className="w-full space-y-3">
           {pdf && (
             <MetadataCard title="Document">
@@ -148,22 +129,8 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
             </MetadataCard>
           )}
 
-          {items.length > 0 && (
-            <MetadataCard title="Details" flush>
-              <MetadataFieldsGrid items={items} />
-            </MetadataCard>
-          )}
-
-          {/* Inheriting connections only — shared with the drawers via
-              RelationshipCards so they can't drift. */}
-          <div className="space-y-3">
-            <RelationshipCards
-              profile={profile}
-              language={language}
-              span="full"
-              inheritingOnly
-            />
-          </div>
+          {/* The record itself — the SAME component the drawer renders. */}
+          <MetadataRecord profile={profile} language={language} />
         </div>
       </div>
 
