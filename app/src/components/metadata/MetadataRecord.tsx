@@ -5,6 +5,7 @@ import { entityMetadataAtom } from "../../atoms/entityMetadata";
 import type { MetadataField, RelationshipMetadataField } from "../../data/metadata";
 import { specInherits } from "../../utils/inheritance";
 import { MetadataCard } from "./MetadataCard";
+import { DocumentCard } from "./DocumentCard";
 import { RelationshipCards } from "./RelationshipCards";
 import { fieldItem, connectionItem, isLongField, type MetadataItem } from "./items";
 
@@ -73,7 +74,10 @@ export function MetadataRecord({
 
   const hasRelCards = relFields.some((f) => specInherits(f) || !!f.connectionKey);
 
-  if (longItems.length === 0 && shortItems.length === 0 && !hasRelCards) {
+  // Don't say "no metadata" when there's a document to show: the card below IS
+  // metadata, and an entity that is a PDF and little else isn't empty.
+  const empty = longItems.length === 0 && shortItems.length === 0 && !hasRelCards;
+  if (empty && !(profile.files ?? []).length) {
     return (
       <div className="flex items-center justify-center py-10 text-center">
         <p className="text-xs text-ink-muted">No metadata for this entity yet.</p>
@@ -83,6 +87,8 @@ export function MetadataRecord({
 
   return (
     <div className="space-y-3">
+      {/* The document leads: it's the thing the record is about. */}
+      <DocumentCard profile={profile} language={language} />
       {longItems.map((item) => (
         <MetadataCard key={item.id} title={item.label}>
           {item.content}

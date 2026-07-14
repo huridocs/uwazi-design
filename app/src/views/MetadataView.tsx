@@ -1,13 +1,11 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue } from "jotai";
-import { Download, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { DocMeta } from "../components/layout/DocMeta";
-import { MetadataCard, Property, PropertyRow } from "../components/metadata/MetadataCard";
 import { MetadataRecord } from "../components/metadata/MetadataRecord";
-import { DocumentThumbnail } from "../components/metadata/DocumentThumbnail";
 import { ConnectionGroupCard } from "../components/metadata/ConnectionGroupCard";
 import { RelationshipFieldCard } from "../components/metadata/RelationshipFieldCard";
 import { RelationshipCards } from "../components/metadata/RelationshipCards";
@@ -22,12 +20,10 @@ import {
 import { focusedEntityIdAtom } from "../atoms/focusedEntity";
 import { getEntity } from "../data/entities";
 import { getEntityProfile } from "../data/entityProfiles";
-import { filesAtom, documentGroupsAtom, activePrimaryGroupIdAtom } from "../atoms/files";
-import { resolvePrimaryFile } from "../data/files";
+import { filesAtom } from "../atoms/files";
 import { languageAtom, type Language } from "../atoms/language";
 import { entityMetadataAtom, makeEntityPropReader } from "../atoms/entityMetadata";
 import { DrawerFilesBody } from "../components/files/DrawerFilesBody";
-import { ViewButton } from "../components/shared/ViewButton";
 import { EditInput } from "../components/metadata/EditInput";
 import { scopedReferencesAtom } from "../atoms/references";
 import { RelationshipsDrawerSection } from "../components/relationships/RelationshipsDrawerSection";
@@ -94,29 +90,6 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
   const fields = allFields.filter((f): f is MetadataField => f.type !== "relationship");
   const notify = useNotify();
 
-  // The Document block used to render ONLY from `pdfMetadata`, which exists on
-  // exactly one hand-authored profile. Every other document-bearing entity —
-  // every CEJIL record, every synthesised sample — has real files and no such
-  // block, so the card silently vanished for all of them. The file IS the
-  // document's metadata; read it from there and fall back to the authored block.
-  const files = useAtomValue(filesAtom);
-  const groups = useAtomValue(documentGroupsAtom);
-  const activeGroupId = useAtomValue(activePrimaryGroupIdAtom);
-  const authored = profile.pdfMetadata?.[language];
-  const file = resolvePrimaryFile(
-    files.length ? files : profile.files ?? [],
-    groups.length ? groups : profile.documentGroups ?? [],
-    activeGroupId,
-    language,
-  );
-  const pdf = authored ?? (file && {
-    name: file.name,
-    type: file.type.toUpperCase(), // the authored block says "PDF"; the file says "pdf"
-    size: file.size,
-    lastEdited: file.modified,
-    added: file.modified,
-  });
-
   return (
     <>
       <DocMeta showPdfSelector={false} />
@@ -126,32 +99,6 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
             to the labels and lets values run in one column, so a wide pane just
             gives the values more room rather than stretching a line of prose. */}
         <div className="w-full space-y-3">
-          {profile.hasDocument && pdf && (
-            <MetadataCard title="Document">
-              <div className="flex items-start gap-4">
-                <DocumentThumbnail />
-                <div className="flex-1 min-w-0 space-y-2">
-                  <Property label="Name" value={pdf.name} ltr />
-                  <PropertyRow>
-                    <div className="flex-1"><Property label="Type" value={pdf.type} /></div>
-                    <div className="flex-1"><Property label="Size" value={pdf.size} ltr /></div>
-                    <div className="flex-1"><Property label="Last Edited" value={pdf.lastEdited} ltr /></div>
-                    <div className="flex-1"><Property label="Added" value={pdf.added} ltr /></div>
-                  </PropertyRow>
-                  <div className="flex items-center gap-2 pt-1">
-                    <ViewButton size="md" />
-                    <button
-                      onClick={() => notify("Download started", "success")}
-                      className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer flex items-center gap-1.5"
-                    >
-                      <Download size={12} className="text-ink-tertiary" /> Download
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </MetadataCard>
-          )}
-
           {/* The record itself — the SAME component the drawer renders. */}
           <MetadataRecord profile={profile} language={language} />
         </div>
