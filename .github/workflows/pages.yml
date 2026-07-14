@@ -5,7 +5,10 @@ name: Deploy prototype to GitHub Pages
 # (the artifact is downloadable from the run even when it isn't deployed).
 on:
   push:
-    branches: [main]
+    # `main` is the live site. The feature branch is here so the prototype can be
+    # looked at before it merges — a push-triggered run uses the workflow file
+    # from the branch it was pushed to, which workflow_dispatch cannot do.
+    branches: [main, feature/library-timeline]
   workflow_dispatch:
 
 # Pages needs these; the token is scoped per-run, nothing long-lived is stored.
