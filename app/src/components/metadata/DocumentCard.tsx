@@ -67,14 +67,17 @@ export function DocumentCard({
           url={file?.url}
           ext={file?.type ?? doc.type}
           size="lg"
-          className="hidden sm:block shrink-0 rounded overflow-hidden"
+          // Shown on mobile too. It was `hidden sm:block`, so the one surface
+          // where a page thumbnail is most useful — a phone, where you cannot see
+          // the document beside the record — was the one that dropped it.
+          className="block shrink-0 rounded overflow-hidden"
           // Shorter than a page's aspect: the frame CROPS, so a squatter box just
           // shows less of the sheet — and the point is to recognise the document,
           // which happens at the masthead, not four inches down.
-          style={{ width: 88, height: 92, border: "1px solid var(--border-primary)" }}
+          style={{ width: 76, height: 84, border: "1px solid var(--border-primary)" }}
         />
         <div className="@container flex-1 min-w-0 space-y-2">
-          <Property label="Name" value={doc.name} ltr />
+          <Property label="Name" value={doc.name} ltr truncate />
           {/* A grid keyed to the CONTAINER, not the viewport. Four facts across a
               narrow drawer left "Last Edited" wrapping onto two lines — and a
               `lg:` breakpoint wouldn't have helped, because the viewport is wide

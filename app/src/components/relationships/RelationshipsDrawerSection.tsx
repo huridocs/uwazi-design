@@ -86,14 +86,16 @@ export function RelationshipsDrawerSection({
       <SearchBar
         inlineSlot={<ActiveFilterChips />}
         rightSlot={
-          <>
+          // ONE flex child, so the controls wrap as a CLUSTER rather than one at
+          // a time — a narrow pane was stranding Filters on its own line.
+          <div className="flex items-center gap-2 shrink-0">
             <ViewControls />
             <DisplayMenu />
             <FiltersButton
               activeCount={activeFilterCount}
               onClick={() => setFiltersOpen(true)}
             />
-          </>
+          </div>
         }
       />
       <RelationshipsPanelBody onDelete={handleDelete} />

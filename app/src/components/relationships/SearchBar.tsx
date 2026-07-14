@@ -29,13 +29,18 @@ export function SearchBar({ rightSlot, inlineSlot }: SearchBarProps = {}) {
     // a LEADING search icon, h-8 controls beside it. This row used gap-1.5, a
     // trailing magnifier and h-6 controls against an h-8 box — small buttons
     // floating beside a taller field, which is what read as unbalanced.
-    <div className="px-3 pt-0.5 pb-2 flex items-center gap-2">
+    // WRAPS on a phone. One row is right at any width the pane actually has —
+    // but at 390px the controls (view + display + filters ≈ 210px) left the search
+    // field too narrow to hold its own placeholder, and the help icon dropped onto
+    // a second line INSIDE the input. Let the controls take the second row instead;
+    // the field keeps a floor of 12rem and reclaims the first.
+    <div className="px-3 pt-0.5 pb-2 flex items-center gap-2 flex-wrap">
       {/* min-h-8, not h-8: the chips wrap onto extra rows. But py-1 around an h-6
           input plus borders came to 34px — 2px taller than every control beside
           it, so the row sat a pixel off at both edges. py-0.5 keeps the content
           under the 32px floor and lets min-h do the work. */}
       <div
-        className="relative flex-1 min-w-0 flex items-center gap-1.5 min-h-8 py-0.5 ps-2 pe-2 bg-warm border border-border rounded-md
+        className="relative flex-1 min-w-[12rem] flex items-center gap-1.5 min-h-8 py-0.5 ps-2 pe-2 bg-warm border border-border rounded-md
           focus-within:ring-2 focus-within:ring-carbon/20 focus-within:border-carbon/40 transition-all flex-wrap"
         onClick={() => inputRef.current?.focus()}
       >

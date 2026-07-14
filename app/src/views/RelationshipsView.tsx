@@ -119,14 +119,17 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
           <SearchBar
             inlineSlot={<ActiveFilterChips />}
             rightSlot={
-              <>
+              // ONE flex child, so the controls wrap as a CLUSTER. As three
+              // siblings they wrapped one at a time, and a phone got Filters
+              // stranded on a line of its own.
+              <div className="flex items-center gap-2 shrink-0">
                 <ViewControls />
                 <DisplayMenu />
                 <FiltersButton
                   activeCount={activeFilterCount}
                   onClick={() => setFiltersOpen(true)}
                 />
-              </>
+              </div>
             }
           />
 

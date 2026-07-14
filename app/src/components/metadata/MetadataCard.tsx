@@ -25,22 +25,27 @@ interface PropertyProps {
   label?: string;
   value: string;
   linked?: boolean;
+  /** Clip to one line, full value on hover. Filenames don't wrap or break — a
+   *  Velasquez-Rodriguez_v_Honduras_Judgment_1988.pdf ran straight out of the
+   *  card on a phone. */
+  truncate?: boolean;
   /** Keep the value left-to-right (filenames, sizes, dates) so RTL bidi
    *  doesn't reorder it to e.g. "KB 948" or "2000-11-25". */
   ltr?: boolean;
 }
 
-export function Property({ label, value, linked, ltr }: PropertyProps) {
+export function Property({ label, value, linked, ltr, truncate }: PropertyProps) {
   return (
-    <div className="flex flex-col items-start">
+    <div className="flex flex-col items-start min-w-0 w-full">
       {label && (
         <span className="text-xs text-ink-tertiary leading-relaxed">{label}</span>
       )}
       <span
         dir={ltr ? "ltr" : undefined}
-        className={`text-sm font-medium text-ink leading-relaxed ${
+        title={truncate ? value : undefined}
+        className={`text-sm font-medium text-ink leading-relaxed max-w-full ${
           linked ? "underline decoration-solid" : ""
-        }`}
+        } ${truncate ? "truncate" : ""}`}
       >
         {value}
       </span>
