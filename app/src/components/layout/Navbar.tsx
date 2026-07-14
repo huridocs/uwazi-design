@@ -320,7 +320,6 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                         </Fragment>
                       );
                     })}
-                    <DocumentationLink onDone={() => setToolsOpen(false)} />
                   </div>
                 </div>
               )}
@@ -500,17 +499,6 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                 </Fragment>
               );
             })}
-            <a
-              href={settingsDocumentation.external}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
-            >
-              <ExternalLink size={16} className="text-ink-tertiary" />
-              {settingsDocumentation.label}
-            </a>
-
             {/* Settings section */}
             <div className="px-4 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-ink-tertiary">
               Settings
