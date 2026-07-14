@@ -119,7 +119,10 @@ export const relationshipsViewModeAtom = atom<RelationshipsViewMode>("tree");
 export const activeFilterCountAtom = atom((get) => {
   let n = 0;
   if (get(searchQueryAtom).trim()) n++;
-  if (get(sortOrderAtom) !== "none") n++;
+  // Sort is NOT a filter — it changes the order, not what's in the set — and it
+  // lives in the Display menu now. Counting it (as `!== "none"`, which the
+  // default "appearance" satisfies) put a permanent "1" on the Filters badge of
+  // a panel with nothing filtered.
   n += Object.values(get(relTypeFiltersAtom)).filter(Boolean).length;
   n += Object.values(get(entityTypeFiltersAtom)).filter(Boolean).length;
   n += Object.values(get(relTargetCountryFiltersAtom)).filter(Boolean).length;

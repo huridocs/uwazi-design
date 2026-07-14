@@ -1,10 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useAtom } from "jotai";
 import { scopedReferencesAtom, toastsAtom } from "../../atoms/references";
 import {
-  viewAtom,
-  groupByAtom,
-  subGroupByAtom,
   searchQueryAtom,
   sortOrderAtom,
   activeClusterRefIdsAtom,
@@ -18,7 +15,7 @@ import {
   relInheritedFiltersAtom,
 } from "../../atoms/filters";
 import { SearchBar } from "./SearchBar";
-import { ZoomControl } from "./ZoomControl";
+import { DisplayMenu } from "./DisplayMenu";
 import { ActiveFilterChips } from "./ActiveFilterChips";
 import { RelationshipsFilterDrawer } from "./RelationshipsFilterDrawer";
 import { FiltersButton } from "../shared/FiltersButton";
@@ -26,8 +23,6 @@ import { FiltersDrawer } from "../shared/FiltersDrawer";
 import { ConfirmDialog } from "../shared/ConfirmDialog";
 import { RelationshipsPanelBody } from "./RelationshipsPanelBody";
 import { ViewControls } from "./ViewControls";
-import { GroupByControl } from "./GroupByControl";
-import { SortControl } from "./SortControl";
 import { RelationshipsActionBar } from "./RelationshipsActionBar";
 
 /** Drawer-style connections section: toolbar + body + scoped filters drawer.
@@ -53,16 +48,7 @@ export function RelationshipsDrawerSection({
   const [, setInheritedFilters] = useAtom(relInheritedFiltersAtom);
   const [filtersOpen, setFiltersOpen] = useAtom(filtersDrawerOpenAtom);
   const [activeFilterCount] = useAtom(activeFilterCountAtom);
-  const [view] = useAtom(viewAtom);
-  const [groupBy] = useAtom(groupByAtom);
-  const [subGroupBy, setSubGroupBy] = useAtom(subGroupByAtom);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-
-  // Mirror RelationshipsView: snap secondary back to "none" if primary
-  // collides, so the dropdown never shows a stale value.
-  useEffect(() => {
-    if (groupBy !== "none" && subGroupBy === groupBy) setSubGroupBy("none");
-  }, [groupBy, subGroupBy, setSubGroupBy]);
 
   const handleDelete = useCallback((id: string) => setDeleteTarget(id), []);
 
@@ -88,40 +74,29 @@ export function RelationshipsDrawerSection({
     setDescriptorMode("OR");
     setInheritedFilters({});
     setSearchQuery("");
-    setSortOrder("none");
+    setSortOrder("appearance"); // the default, not "none" (which is a real choice)
     setActiveClusterRefIds(null);
   };
 
-  const showZoom = view !== "graph";
-
   return (
     <>
-      <SearchBar inlineSlot={<ActiveFilterChips />} />
-      <div className="px-3 pb-2 flex items-center justify-between gap-2 flex-wrap">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <ViewControls size="sm" />
-          <GroupByControl
-            axis="primary"
-            size="sm"
-            excludeOption={subGroupBy === "none" ? undefined : subGroupBy}
-          />
-          <GroupByControl
-            axis="secondary"
-            size="sm"
-            disabled={view === "graph" || groupBy === "none"}
-            excludeOption={groupBy === "none" ? undefined : groupBy}
-          />
-          <SortControl size="sm" />
-        </div>
-        <div className="flex items-center gap-1.5">
-          <ZoomControl size="sm" disabled={!showZoom} />
-          <FiltersButton
-            activeCount={activeFilterCount}
-            onClick={() => setFiltersOpen(true)}
-            size="sm"
-          />
-        </div>
-      </div>
+      {/* Same one-row toolbar as the main surface — search + view + Display +
+          Filters. In a drawer the old second row was even worse: four dropdowns
+          wrapping onto two or three lines of a 460px panel. */}
+      <SearchBar
+        inlineSlot={<ActiveFilterChips />}
+        rightSlot={
+          <>
+            <ViewControls size="sm" />
+            <DisplayMenu size="sm" />
+            <FiltersButton
+              activeCount={activeFilterCount}
+              onClick={() => setFiltersOpen(true)}
+              size="sm"
+            />
+          </>
+        }
+      />
       <RelationshipsPanelBody onDelete={handleDelete} />
       {!hideActionBar && <RelationshipsActionBar compact />}
 

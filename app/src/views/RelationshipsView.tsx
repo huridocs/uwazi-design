@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { useAtom } from "jotai";
 import { scopedReferencesAtom, toastsAtom } from "../atoms/references";
 import { languageAtom, type Language } from "../atoms/language";
@@ -7,8 +7,6 @@ import { getEntityProfile } from "../data/entityProfiles";
 import { MOCK_DOCUMENT_FILE } from "../data/files";
 import {
   viewAtom,
-  groupByAtom,
-  subGroupByAtom,
   searchQueryAtom,
   sortOrderAtom,
   activeClusterRefIdsAtom,
@@ -27,7 +25,7 @@ import { MainTabs } from "../components/layout/MainTabs";
 import { DocMeta } from "../components/layout/DocMeta";
 import { DocumentViewer } from "../components/viewer/DocumentViewer";
 import { SearchBar } from "../components/relationships/SearchBar";
-import { ZoomControl } from "../components/relationships/ZoomControl";
+import { DisplayMenu } from "../components/relationships/DisplayMenu";
 import { ActiveFilterChips } from "../components/relationships/ActiveFilterChips";
 import { RelationshipsFilterDrawer } from "../components/relationships/RelationshipsFilterDrawer";
 import { EntityOverlay } from "../components/relationships/EntityOverlay";
@@ -36,8 +34,6 @@ import { FiltersDrawer } from "../components/shared/FiltersDrawer";
 import { ConfirmDialog } from "../components/shared/ConfirmDialog";
 import { RelationshipsPanelBody } from "../components/relationships/RelationshipsPanelBody";
 import { ViewControls } from "../components/relationships/ViewControls";
-import { GroupByControl } from "../components/relationships/GroupByControl";
-import { SortControl } from "../components/relationships/SortControl";
 import { RelationshipsActionBar } from "../components/relationships/RelationshipsActionBar";
 
 interface Props {
@@ -57,8 +53,6 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
   const [, setToasts] = useAtom(toastsAtom);
   const [language, setLanguage] = useAtom(languageAtom);
   const [view] = useAtom(viewAtom);
-  const [groupBy] = useAtom(groupByAtom);
-  const [subGroupBy, setSubGroupBy] = useAtom(subGroupByAtom);
   const [filtersOpen, setFiltersOpen] = useAtom(filtersDrawerOpenAtom);
   const [activeFilterCount] = useAtom(activeFilterCountAtom);
   const [, setSearchQuery] = useAtom(searchQueryAtom);
@@ -87,12 +81,6 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
     ]);
   }, [deleteTarget, setReferences, setToasts]);
 
-  // Snap secondary back to "none" when primary collides with it — otherwise
-  // the dropdown could render a stale value that's no longer in the option list.
-  useEffect(() => {
-    if (groupBy !== "none" && subGroupBy === groupBy) setSubGroupBy("none");
-  }, [groupBy, subGroupBy, setSubGroupBy]);
-
   const clearAllFilters = () => {
     setRelTypeFilters({});
     setEntityTypeFilters({});
@@ -101,11 +89,10 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
     setDescriptorMode("OR");
     setInheritedFilters({});
     setSearchQuery("");
-    setSortOrder("none");
+    setSortOrder("appearance"); // the default, not "none" (which is a real choice)
     setActiveClusterRefIds(null);
   };
 
-  const showZoom = view !== "graph";
   const hideMinimap = view === "graph";
 
   const renderLeft = (menuTrigger?: ReactNode) => (
@@ -123,34 +110,26 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
           <DocMeta showPdfSelector={false} />
 
           <div className="pt-2" />
-          <SearchBar inlineSlot={<ActiveFilterChips />} />
-          {/* Mobile: one row — refinement controls scroll horizontally,
-              Zoom + Filters stay pinned. Desktop (md+): wrap + space-between. */}
-          <div className="px-3 pb-2 flex items-center justify-between gap-2 flex-nowrap md:flex-wrap">
-            <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-x-auto no-scrollbar [&>*]:shrink-0 md:flex-none md:flex-wrap md:overflow-visible">
-              <ViewControls size="sm" />
-              <GroupByControl
-                axis="primary"
-                size="sm"
-                excludeOption={subGroupBy === "none" ? undefined : subGroupBy}
-              />
-              <GroupByControl
-                axis="secondary"
-                size="sm"
-                disabled={view === "graph" || groupBy === "none"}
-                excludeOption={groupBy === "none" ? undefined : groupBy}
-              />
-              <SortControl size="sm" />
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0">
-              <ZoomControl size="sm" disabled={!showZoom} />
-              <FiltersButton
-                activeCount={activeFilterCount}
-                onClick={() => setFiltersOpen(true)}
-                size="sm"
-              />
-            </div>
-          </div>
+          {/* ONE row. Search carries the active-filter chips; beside it the three
+              things you actually steer with: WHICH projection (view), HOW it's
+              arranged (Display — grouping, sort, density, folded away), and WHAT
+              is in it (Filters). The second row of half-a-dozen "Group by: None"
+              dropdowns is gone into the Display popover — same idiom as the
+              Library, and the row no longer reflows when you change view. */}
+          <SearchBar
+            inlineSlot={<ActiveFilterChips />}
+            rightSlot={
+              <>
+                <ViewControls size="sm" />
+                <DisplayMenu size="sm" />
+                <FiltersButton
+                  activeCount={activeFilterCount}
+                  onClick={() => setFiltersOpen(true)}
+                  size="sm"
+                />
+              </>
+            }
+          />
 
           <RelationshipsPanelBody
             onDelete={handleDelete}

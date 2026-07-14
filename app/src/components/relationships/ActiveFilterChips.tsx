@@ -37,9 +37,15 @@ export function ActiveFilterChips() {
     return next;
   };
 
+  // Only an EXPLICIT alphabetical sort is a chip. This read `sort !== "none"`
+  // with a label of `sort === "asc" ? "A → Z" : "Z → A"`, so the DEFAULT
+  // ("appearance") fell into the else branch and every panel opened advertising
+  // a Z → A sort it wasn't doing.
+  const sorted = sort === "asc" || sort === "desc";
+
   const hasAny =
     !!search.trim() ||
-    sort !== "none" ||
+    sorted ||
     activeRelTypes.length > 0 ||
     activeEntityTypes.length > 0 ||
     activeCountries.length > 0 ||
@@ -57,10 +63,10 @@ export function ActiveFilterChips() {
           onRemove={() => setSearch("")}
         />
       )}
-      {sort !== "none" && (
+      {sorted && (
         <ActiveFilterChip
           label={sort === "asc" ? "A → Z" : "Z → A"}
-          onRemove={() => setSort("none")}
+          onRemove={() => setSort("appearance")}
         />
       )}
       {activeRelTypes.map((id) => (
