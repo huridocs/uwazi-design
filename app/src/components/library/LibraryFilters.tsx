@@ -42,6 +42,7 @@ import {
   type LibraryFilterState,
 } from "../../utils/libraryFilter";
 import { Checkbox } from "../shared/Checkbox";
+import { ActiveFiltersSheet } from "./ActiveFiltersSheet";
 
 /** Carded, grouped facets matching the Uwazi library filters: a "Filters" pill,
  *  bordered facet cards, an expandable Documents group, a keyword-style
@@ -482,6 +483,11 @@ export function LibraryFilters() {
           />
         )}
       </div>
+
+      {/* What's actually ON — a sheet across the foot of the panel. The facet
+          cards above say what you COULD filter by; scrolling them to find the
+          four boxes you ticked isn't reading your query. This is the query. */}
+      <ActiveFiltersSheet />
 
       {/* Footer — Collapse all / Expand all (left) + Clear (right). */}
       <div
