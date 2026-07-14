@@ -17,10 +17,10 @@ import { MOCK_DOCUMENT_PDF } from "../../data/files";
 import { PageHighlights } from "./PageHighlights";
 import { FloatingMenu } from "./FloatingMenu";
 import { ActionBar } from "./ActionBar";
+import "../../utils/pdfWorker";
 import { RefMinimap } from "./RefMinimap";
 import { DocumentRendition } from "./DocumentRendition";
 
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 interface DocumentViewerProps {
   /** Optional trailing slot for the action bar — used to inject the mobile
