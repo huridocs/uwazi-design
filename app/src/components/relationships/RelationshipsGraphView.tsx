@@ -239,7 +239,63 @@ export function RelationshipsGraphView() {
     dragRef.current.active = false;
   };
 
-  const resetView = () => setTransform({ tx: 0, ty: 0, scale: 1 });
+  // FIT the drawing to the pane instead of opening at a flat 100%. The layout is
+  // laid out in a fixed 1200×900 viewBox sized for a big fan, so an entity with
+  // five connections drew a speck in the middle of the canvas while a País with
+  // a hundred overflowed it. The scale that matters is the one that makes the
+  // content fill the space it has.
+  //
+  // The group is `translate(tx ty) scale(s)` about the origin (CX,CY), so a point
+  // p lands at O + t + s·(p − O). Putting the content's centre c at the viewport
+  // centre gives t = s·(O − c).
+  const fitTransform = useMemo(() => {
+    if (nodes.length === 0) return { tx: 0, ty: 0, scale: 1 };
+
+    // Start from the source node — it's always drawn, and its label hangs below.
+    let minX = CX - SOURCE_R;
+    let maxX = CX + SOURCE_R;
+    let minY = CY - SOURCE_R;
+    let maxY = CY + SOURCE_R + 18;
+
+    for (const n of nodes) {
+      minX = Math.min(minX, n.x - n.r);
+      maxX = Math.max(maxX, n.x + n.r);
+      minY = Math.min(minY, n.y - n.r);
+      maxY = Math.max(maxY, n.y + n.r);
+    }
+    // Spoke labels are pills around their anchor — bound them generously, since a
+    // clipped label is exactly the thing a "fit" is supposed to prevent.
+    for (const s of spokes) {
+      minX = Math.min(minX, s.labelX - 60);
+      maxX = Math.max(maxX, s.labelX + 60);
+      minY = Math.min(minY, s.labelY - 14);
+      maxY = Math.max(maxY, s.labelY + 14);
+    }
+
+    const PAD = 40;
+    const scale = Math.max(
+      0.4,
+      Math.min(
+        2.5,
+        Math.min((VIEW_W - PAD * 2) / (maxX - minX), (VIEW_H - PAD * 2) / (maxY - minY)),
+      ),
+    );
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    return { scale, tx: scale * (CX - cx), ty: scale * (CY - cy) };
+  }, [nodes, spokes]);
+
+  // Re-fit when the DRAWING changes (filters, grouping, collapse) — not on every
+  // render, or panning and zooming would snap back under your cursor.
+  const fitKey = `${nodes.map((n) => n.id).join("|")}::${spokes.map((s) => s.key).join("|")}`;
+  const lastFitKey = useRef<string | null>(null);
+  useEffect(() => {
+    if (lastFitKey.current === fitKey) return;
+    lastFitKey.current = fitKey;
+    setTransform(fitTransform);
+  }, [fitKey, fitTransform]);
+
+  const resetView = () => setTransform(fitTransform);
 
   if (nodes.length === 0) {
     return (
