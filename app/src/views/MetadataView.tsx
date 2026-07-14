@@ -106,7 +106,7 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
           {pdf && (
             <MetadataCard title="Document">
               <div className="flex items-start gap-4">
-                {profile.hasDocument && <DocumentThumbnail />}
+                {profile.hasDocument && <DocumentThumbnail ext={pdf.type} />}
                 <div className="flex-1 min-w-0 space-y-2">
                   <Property label="Name" value={pdf.name} ltr />
                   <PropertyRow>

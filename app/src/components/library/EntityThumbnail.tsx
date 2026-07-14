@@ -1,50 +1,31 @@
 import { Image as ImageIcon, Play, AudioLines } from "lucide-react";
 import type { PreviewKind } from "../../data/entities";
 import { getEntityProfile } from "../../data/entityProfiles";
-import { PdfPageThumb } from "../shared/PdfPageThumb";
+import { DocPlaceholder } from "../shared/DocPlaceholder";
 
-/** A Library card's preview.
+/** A Library card's preview — a mock, and honest about it: we don't rasterise
+ *  pages.
  *
- *  For a document-bearing entity this is now PAGE ONE OF ITS DOCUMENT, not a
- *  drawing of a document: the same thing the Metadata card shows, so a card and
- *  the entity behind it look like each other. The old skeleton-lines mock was
- *  identical on every card, which made the preview column pure texture — it told
- *  you "this has a document", which the card already said.
- *
- *  It stays a mock for image/video/audio: there genuinely are no assets for those.
- *  And the skeleton lives on as the loading/failure state under the page, so a
- *  card is never a blank rectangle while pdf.js works.
- *
- *  `entityId` is optional — without it (or without a PDF) you get the placeholder,
- *  which is what the audio/video/image kinds want anyway. */
+ *  For a document it's a sheet cropped by the frame (see DocPlaceholder) carrying
+ *  the file's extension — the one real fact a preview can offer without rendering
+ *  the document. image/video/audio keep their glyphs; there are no assets there
+ *  either. */
 export function EntityThumbnail({
   kind,
   entityId,
-  width,
+  size = "md",
   className = "",
 }: {
   kind: PreviewKind;
+  /** Only used to read the file's extension off the entity's profile. */
   entityId?: string;
-  /** Render width of the page in px — pdf.js rasterises to this, so pass the real
-   *  box size or the page comes out blurry (or needlessly huge). */
-  width?: number;
+  size?: "sm" | "md" | "lg";
   className?: string;
 }) {
   if (kind === "document") {
-    const pdfUrl = entityId ? firstPdf(entityId) : null;
-    if (pdfUrl && width) {
-      return (
-        <PdfPageThumb
-          url={pdfUrl}
-          width={width}
-          className={className}
-          fallback={<DocumentPlaceholder />}
-        />
-      );
-    }
     return (
-      <div className={`flex items-center justify-center bg-vellum ${className}`}>
-        <DocumentPlaceholder />
+      <div className={className}>
+        <DocPlaceholder ext={entityId ? fileExt(entityId) : undefined} size={size} />
       </div>
     );
   }
@@ -57,7 +38,10 @@ export function EntityThumbnail({
   }
   if (kind === "video") {
     return (
-      <div className={`flex items-center justify-center ${className}`} style={{ backgroundColor: "var(--text-primary)" }}>
+      <div
+        className={`flex items-center justify-center ${className}`}
+        style={{ backgroundColor: "var(--text-primary)" }}
+      >
         <div className="flex items-center justify-center w-8 h-8 rounded-full bg-paper/90">
           <Play size={14} className="text-ink ms-0.5" fill="currentColor" />
         </div>
@@ -72,29 +56,13 @@ export function EntityThumbnail({
   );
 }
 
-/** The stylised page — now the loading/failure state behind a real thumbnail, and
- *  still the whole story for a document we have no file for. */
-function DocumentPlaceholder() {
-  return (
-    <div className="w-full h-full flex items-center justify-center bg-vellum">
-      <div className="bg-paper shadow-sm rounded-[2px] w-[38%] h-[78%] p-2 flex flex-col gap-1.5">
-        <div className="h-1.5 w-2/3 rounded-full bg-border" />
-        <div className="h-1 w-full rounded-full bg-border-soft" />
-        <div className="h-1 w-full rounded-full bg-border-soft" />
-        <div className="h-1 w-4/5 rounded-full bg-border-soft" />
-        <div className="h-1 w-full rounded-full bg-border-soft" />
-      </div>
-    </div>
-  );
-}
-
-/** The entity's first PDF, if it has one. Profiles are cached, so this is cheap
- *  to call per card. */
-function firstPdf(entityId: string): string | null {
+/** The entity's primary file type ("pdf"). Profiles are cached, so calling this
+ *  per card is cheap. */
+function fileExt(entityId: string): string | undefined {
   const profile = getEntityProfile(entityId);
-  if (!profile.hasDocument) return null;
+  if (!profile.hasDocument) return undefined;
   const primary = (profile.documentGroups ?? []).filter((g) => g.isPrimary)[0];
   const files = profile.files ?? [];
   const inGroup = primary ? files.filter((f) => f.groupId === primary.id) : files;
-  return (inGroup.find((f) => f.type === "pdf") ?? files.find((f) => f.type === "pdf"))?.url ?? null;
+  return (inGroup[0] ?? files[0])?.type;
 }

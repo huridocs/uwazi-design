@@ -102,7 +102,7 @@ export const EntityCard = memo(function EntityCard({
               <EntityThumbnail
                 kind={entity.preview}
                 entityId={entity.id}
-                width={36}
+                size="sm"
                 className="w-9 h-9 rounded shrink-0 overflow-hidden"
               />
             ) : (
@@ -151,7 +151,6 @@ export const EntityCard = memo(function EntityCard({
         <EntityThumbnail
           kind={entity.preview}
           entityId={entity.id}
-          width={280}
           className="h-24 w-full shrink-0 rounded overflow-hidden border border-border/60"
         />
       )}
