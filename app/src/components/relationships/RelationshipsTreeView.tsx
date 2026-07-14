@@ -217,6 +217,11 @@ function HubNode({
   hideRelLabel?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
+  // A node expands into its EVIDENCE — the underlying text-anchored references.
+  // A relationship with no anchored refs (all of CEJIL: entity-to-entity links
+  // with no quoted passage) has nothing to reveal, and offering a chevron that
+  // opens an empty box is a promise the row can't keep.
+  const evidence = refs.filter((ref) => !!ref.sourceSelection);
   const [expandForRef, setExpandForRef] = useAtom(expandGroupForRefAtom);
 
   useEffect(() => {
@@ -233,13 +238,12 @@ function HubNode({
         kind="hub"
         hub={hub}
         expanded={expanded}
-        onToggleExpand={() => setExpanded((e) => !e)}
+        onToggleExpand={evidence.length > 0 ? () => setExpanded((e) => !e) : undefined}
         hideRelLabel={hideRelLabel}
       />
       {expanded && (
         <div className="ml-[14px]">
-          {refs
-            .filter((ref) => !!ref.sourceSelection)
+          {evidence
             .map((ref) => (
               <TreeNode key={ref.id}>
                 <RelationshipRow kind="reference" reference={ref} nested />
@@ -266,6 +270,7 @@ function AggregateNode({
 }) {
   const [expanded, setExpanded] = useState(false);
   const [expandForRef, setExpandForRef] = useAtom(expandGroupForRefAtom);
+  const evidence = refs.filter((ref) => !!ref.sourceSelection);
 
   // Minimap dot click sets expandGroupForRef to the ref id. The chain of
   // TreeBranches above us auto-expand; we (the leaf containing the actual
@@ -284,15 +289,14 @@ function AggregateNode({
         kind="aggregate"
         rel={rel}
         expanded={expanded}
-        onToggleExpand={() => setExpanded((e) => !e)}
+        onToggleExpand={evidence.length > 0 ? () => setExpanded((e) => !e) : undefined}
         hidePill={hidePill}
         hideRelLabel={hideRelLabel}
         hideTypePill={hideTypePill}
       />
       {expanded && (
         <div className="ml-[14px]">
-          {refs
-            .filter((ref) => !!ref.sourceSelection)
+          {evidence
             .map((ref) => (
               <TreeNode key={ref.id}>
                 <RelationshipRow kind="reference" reference={ref} nested />

@@ -37,15 +37,18 @@ export function HubRow({ hub, expanded, onToggleExpand, hideRelLabel }: HubRowPr
     );
   });
 
-  const countBadge = (
+  // With nothing to expand into (no text-anchored evidence — every CEJIL link),
+  // the badge is a FACT, not a control: a count you can't act on shouldn't hover,
+  // shouldn't take the cursor, and shouldn't claim aria-expanded.
+  const countBadge = onToggleExpand ? (
     <button
       type="button"
       onClick={(e) => {
         e.stopPropagation();
-        onToggleExpand?.();
+        onToggleExpand();
       }}
       aria-label={`${hub.refIds.length} evidence references`}
-      aria-expanded={onToggleExpand ? !!expanded : undefined}
+      aria-expanded={!!expanded}
       className={`flex items-center gap-1 px-1.5 h-5 rounded text-[10px] font-medium tabular-nums transition-colors cursor-pointer ${
         expanded
           ? "bg-vellum text-ink-secondary"
@@ -55,6 +58,14 @@ export function HubRow({ hub, expanded, onToggleExpand, hideRelLabel }: HubRowPr
       <Link2 size={10} />
       {hub.refIds.length}
     </button>
+  ) : (
+    <span
+      aria-label={`${hub.refIds.length} references`}
+      className="flex items-center gap-1 px-1.5 h-5 rounded text-[10px] font-medium tabular-nums bg-warm text-ink-tertiary"
+    >
+      <Link2 size={10} />
+      {hub.refIds.length}
+    </span>
   );
 
   const chevron = onToggleExpand ? (
