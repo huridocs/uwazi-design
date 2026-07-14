@@ -118,9 +118,10 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
       <DocMeta showPdfSelector={false} />
 
       <div className="flex-1 overflow-auto px-4 py-3 pb-8">
-        {/* A readable measure. Metadata stretched across 1400px is a line nobody
-            can scan back from. */}
-        <div className="mx-auto w-full max-w-[56rem] space-y-3">
+        {/* Full width. The lattice already keeps text readable — a paragraph cell
+            spans a row, but a row is 2–3 columns, so no line runs the whole pane.
+            Capping the whole record at 56rem just left a gutter. */}
+        <div className="w-full space-y-3">
           {pdf && (
             <MetadataCard title="Document">
               <div className="flex items-start gap-4">
