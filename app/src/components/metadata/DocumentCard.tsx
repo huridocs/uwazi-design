@@ -74,7 +74,7 @@ export function DocumentCard({
           // Shorter than a page's aspect: the frame CROPS, so a squatter box just
           // shows less of the sheet — and the point is to recognise the document,
           // which happens at the masthead, not four inches down.
-          style={{ width: 76, height: 84, border: "1px solid var(--border-primary)" }}
+          style={{ width: 104, height: 118, border: "1px solid var(--border-primary)" }}
         />
         <div className="@container flex-1 min-w-0 space-y-2">
           <Property label="Name" value={doc.name} ltr truncate />
