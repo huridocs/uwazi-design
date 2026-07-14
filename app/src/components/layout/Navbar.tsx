@@ -111,8 +111,12 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
   };
 
   return (
+    // px-3 matches the content gutter below it — the Library toolbar, the card
+    // grid, the entity MainTabs and DocMeta all sit at px-3, so a wider navbar
+    // padding parked the logo (and the right cluster) 8px inboard of everything it
+    // sits above. The chrome and its content share a left edge now.
     <header
-      className="relative h-13 bg-paper flex items-center justify-between px-4 md:px-5 shrink-0"
+      className="relative h-13 bg-paper flex items-center justify-between px-3 shrink-0"
       style={{ borderBottom: "1px solid var(--border-primary)" }}
     >
       {/* Left: Logo + (mobile hamburger | desktop nav) */}
