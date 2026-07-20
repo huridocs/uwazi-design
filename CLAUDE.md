@@ -90,17 +90,17 @@ The Tailwind aliases (`--color-ink`, `--color-paper`, `--color-vellum`, `--color
 
 Uwazi v2's data model is a single `Relationship { from, to, type }` where each pointer may optionally carry a text anchor `{file, selections[], text}`. A row is "text-anchored" iff either endpoint has selections. There is no separate "References" collection — text references and entity-to-entity edges are the same record, viewed differently.
 
-The prototype keeps a simpler shape: every row in `data/references.ts` is a `Reference` with a required `sourceSelection` (text anchor) plus `sourceEntityId` (always the current doc), `targetEntityId`, `relationType`, and `direction`. What we call a `Relationship` (`utils/relationships.ts`) is **runtime aggregation** — `deriveRelationships(refs)` collapses by `(targetEntityId, relationType, direction)` and exposes `evidenceCount` + `refIds[]`. It is not stored.
+The prototype keeps a simpler shape: every row in `data/references.ts` is a `Reference` with an **optional** `sourceSelection` (text anchor — absent = pure entity link) plus `sourceEntityId` (always the current doc), `targetEntityId`, `relationType`, `direction`, and optional `hubId`. What we call a `Relationship` (`utils/relationships.ts`) is **runtime aggregation** — `deriveRelationships(refs)` collapses by `(targetEntityId, relationType)` (direction is NOT in the key: incoming+outgoing to the same target/type merge into one bidirectional row via `directions[]`) and exposes `evidenceCount` + `refIds[]`. It is not stored. Full dev-facing writeup: `handoff/DATA-SEAMS.md`.
 
 **Property cheat sheet:**
 
 | Property | `Reference` (per evidence) | `Relationship` (aggregate) |
 |---|---|---|
-| `id` | per ref | composite `target::type::direction` |
+| `id` | per ref | composite `target::type` |
 | `targetEntityId` | required | required |
 | `relationType` | required | required |
-| `direction` | optional, default `outgoing` | propagated |
-| `sourceSelection` (text+page+box) | required — the text anchor | — |
+| `direction` | optional, default `outgoing` | first seen; `directions[]` holds all (len 2 = bidirectional) |
+| `sourceSelection` (text+page+box) | optional — the text anchor | — |
 | `targetSelection` | optional (never populated today) | — |
 | `evidenceCount` | — | `refIds.length` |
 | `firstPage` | — | `min(ref.page)` |
@@ -122,7 +122,7 @@ The prototype keeps a simpler shape: every row in `data/references.ts` is a `Ref
   grouping/filtering by target-side text.
 - No inverse relation labels — Uwazi v2 stores a single `type` per relationship; the "source rel type vs target rel type" pair from the mockup has no backing data.
 - No `createdBy`, `sourceKind` (manual / IX-suggested), or confidence on refs. If we add filters by source/author/confidence, the data layer has to grow first.
-- No no-anchor relationships in seed data — every relationship has at least one underlying reference. A manual entity link with no quote is representable (`Reference` requires `sourceSelection` so… not actually representable without loosening the type). Future expansion if we model it.
+- No-anchor relationships ARE representable now (`sourceSelection` is optional; `firstPage` stays undefined when no backing ref is anchored) — seed data just has few of them.
 
 ## Connections panel — refs and rels are one surface
 
