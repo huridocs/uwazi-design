@@ -59,6 +59,7 @@ import { TimeBrush } from "../components/library/TimeBrush";
 import { LibraryFilters } from "../components/library/LibraryFilters";
 import { LibraryClusterDrawer } from "../components/library/LibraryClusterDrawer";
 import { EntityDrawerPreview } from "../components/library/EntityDrawerPreview";
+import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { DisplayMenu } from "../components/library/DisplayMenu";
 import { ActiveFiltersButton } from "../components/library/ActiveFiltersButton";
 import { DataTable, type Column } from "../components/shared/DataTable";
@@ -106,6 +107,10 @@ export function LibraryView() {
   const cejilLoading = dataSource === "cejil" && !cejilReady;
   const references = useAtomValue(referencesAtom);
   const [query, setQuery] = useAtom(libraryQueryAtom);
+  // Filters / Results drawer tabs. Results auto-activates while the search box
+  // carries a query and falls back to Filters when it's cleared; between those
+  // transitions the tab can still be switched by hand.
+  const [drawerTab, setDrawerTab] = useState<"filters" | "results">("filters");
   const [typeFilters, setTypeFilters] = useAtom(libraryTypeFiltersAtom);
   const [hasDocOnly, setHasDocOnly] = useAtom(libraryHasDocAtom);
   const [statusFilters, setStatusFilters] = useAtom(libraryStatusFiltersAtom);
@@ -179,6 +184,10 @@ export function LibraryView() {
   const wantRestricted = !!statusFilters.restricted;
   const statusActive = wantPublished || wantRestricted;
   const q = query.trim().toLowerCase();
+  const hasQuery = q.length > 0;
+  useEffect(() => {
+    setDrawerTab(hasQuery ? "results" : "filters");
+  }, [hasQuery]);
   const fromMs = dateFrom ? Date.parse(dateFrom) : null;
   // Inclusive of the whole "to" day.
   const toMs = dateTo ? Date.parse(dateTo) + 86_400_000 - 1 : null;
@@ -570,12 +579,35 @@ export function LibraryView() {
     </div>
   );
 
+  // Results tab body — placeholder until Design provides the spec.
+  const resultsBody = (
+    <div className="flex-1 min-h-0 flex items-center justify-center px-6 text-center text-[0.8125rem] text-ink-tertiary">
+      Results view coming soon.
+    </div>
+  );
+
+  const filtersDrawer = (
+    <div className="flex flex-col h-full min-h-0 bg-warm">
+      <DrawerTabs
+        tabs={[
+          { id: "filters", label: "Filters" },
+          { id: "results", label: "Results" },
+        ]}
+        activeId={drawerTab}
+        onChange={(id) => setDrawerTab(id as "filters" | "results")}
+      />
+      <div className="flex-1 min-h-0 overflow-hidden">
+        {drawerTab === "filters" ? <LibraryFilters /> : resultsBody}
+      </div>
+    </div>
+  );
+
   const drawer = selectedId ? (
     <EntityDrawerPreview entityId={selectedId} />
   ) : selectedCluster && viewMode === "map" ? (
     <LibraryClusterDrawer />
   ) : (
-    <LibraryFilters />
+    filtersDrawer
   );
 
   return (
@@ -586,7 +618,14 @@ export function LibraryView() {
       defaultRightWidth={460}
       minRightWidth={360}
       maxRightWidth={680}
-      mobileSections={[{ id: "filters", label: "Filters", content: <LibraryFilters /> }]}
+      mobileSections={[
+        { id: "filters", label: "Filters", content: <LibraryFilters /> },
+        {
+          id: "results",
+          label: "Results",
+          content: <div className="flex flex-col h-full min-h-0 bg-warm">{resultsBody}</div>,
+        },
+      ]}
     />
   );
 }
