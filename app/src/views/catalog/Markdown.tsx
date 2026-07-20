@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode } from "react";
+import { Check } from "lucide-react";
 
 /** Minimal markdown renderer for the `handoff/` docs — no npm dependency.
  *
@@ -17,14 +18,30 @@ type Block =
   | { kind: "code"; lang: string; code: string }
   | { kind: "table"; header: string[]; rows: string[][] }
   | { kind: "quote"; blocks: Block[] }
-  | { kind: "list"; ordered: boolean; items: string[] }
+  | { kind: "list"; ordered: boolean; items: ListItem[] }
   | { kind: "rule" };
+
+/** `checked` is undefined for a plain item, boolean for a `- [ ]` / `- [x]`
+ *  task item. Both shapes can coexist in one list. */
+interface ListItem {
+  text: string;
+  checked?: boolean;
+}
 
 const isTableRow = (line: string) => /^\s*\|/.test(line);
 /** A table's delimiter row: `|---|:--:|` */
 const isTableDelimiter = (line: string) =>
   /^\s*\|(\s*:?-{2,}:?\s*\|)+\s*$/.test(line);
 const listMarker = (line: string) => /^(\s*)([-*]|\d+\.)\s+(.*)$/.exec(line);
+
+/** Peel a `[ ]` / `[x]` task marker off an item's text. A link at the start of
+ *  an item (`[label](href)`) can't collide — the marker is exactly one char. */
+function toListItem(text: string): ListItem {
+  const task = /^\[([ xX])\]\s+(.*)$/.exec(text);
+  return task
+    ? { text: task[2], checked: task[1].toLowerCase() === "x" }
+    : { text };
+}
 
 /** Split a table row on `|`, ignoring pipes inside inline-code spans — the
  *  token tables are full of cells like `` `a|b` ``, which a naive split
@@ -120,15 +137,15 @@ function parseBlocks(src: string): Block[] {
     const marker = listMarker(line);
     if (marker) {
       const ordered = /\d/.test(marker[2]);
-      const items: string[] = [marker[3]];
+      const items: ListItem[] = [toListItem(marker[3])];
       i++;
       while (i < lines.length && lines[i].trim()) {
         const next = listMarker(lines[i]);
         if (next) {
-          items.push(next[3]);
+          items.push(toListItem(next[3]));
         } else {
           // Lazy continuation — the docs hard-wrap long items.
-          items[items.length - 1] += ` ${lines[i].trim()}`;
+          items[items.length - 1].text += ` ${lines[i].trim()}`;
         }
         i++;
       }
@@ -160,9 +177,78 @@ function parseBlocks(src: string): Block[] {
   return blocks;
 }
 
+/** How a doc's relative links are resolved. Supplied by the catalog, which
+ *  owns both the doc list and the scroll behaviour. */
+interface LinkCtx {
+  /** Relative target → in-page anchor id, or null if we don't render it. */
+  resolve: (target: string) => string | null;
+  /** Scroll the resolved section into view. */
+  navigate: (id: string) => void;
+}
+
+const isAbsolute = (href: string) => /^(https?:)?\/\//i.test(href);
+
+const CODE_CLASS =
+  "rounded-sm bg-vellum px-1 py-px font-mono text-[0.85em] text-ink";
+
+/** Three outcomes, so no link in these docs can be dead:
+ *  - absolute → a normal new-tab link;
+ *  - relative to a doc we render → an in-page jump to that section;
+ *  - any other relative path (`./uwazi-semantic-tokens.css` — a real repo file,
+ *    but not one the catalog renders) → inert code span naming the file. */
+function renderLink(
+  label: string,
+  href: string,
+  key: string,
+  ctx: LinkCtx
+): ReactNode {
+  if (isAbsolute(href)) {
+    return (
+      <a
+        key={key}
+        href={href}
+        target="_blank"
+        rel="noreferrer"
+        className="text-carbon underline decoration-carbon/30 underline-offset-2 hover:decoration-carbon"
+      >
+        {renderInline(label, key, ctx)}
+      </a>
+    );
+  }
+
+  const anchor = ctx.resolve(href);
+  if (anchor) {
+    return (
+      <a
+        key={key}
+        href={`#${anchor}`}
+        onClick={(e) => {
+          // The catalog scrolls its own container and syncs the sidebar; a raw
+          // hash jump would do neither.
+          e.preventDefault();
+          ctx.navigate(anchor);
+        }}
+        className="text-carbon underline decoration-carbon/30 underline-offset-2 hover:decoration-carbon"
+      >
+        {renderInline(label, key, ctx)}
+      </a>
+    );
+  }
+
+  return (
+    <code key={key} className={CODE_CLASS} title={`${href} — in the repo, not rendered here`}>
+      {label.replace(/`/g, "")}
+    </code>
+  );
+}
+
 /** Inline spans: code, bold, italic (asterisk or underscore), and links.
  *  Code wins over everything else so `**` inside a code span stays literal. */
-function renderInline(text: string, keyPrefix: string): ReactNode[] {
+function renderInline(
+  text: string,
+  keyPrefix: string,
+  ctx: LinkCtx
+): ReactNode[] {
   const pattern =
     /(`[^`]+`)|(\*\*[^*]+\*\*)|(\[[^\]]+\]\([^)]+\))|(\*[^*\s][^*]*\*)|(_[^_\s][^_]*_)/g;
   const out: ReactNode[] = [];
@@ -177,36 +263,23 @@ function renderInline(text: string, keyPrefix: string): ReactNode[] {
 
     if (token.startsWith("`")) {
       out.push(
-        <code
-          key={key}
-          className="rounded-sm bg-vellum px-1 py-px font-mono text-[0.85em] text-ink"
-        >
+        <code key={key} className={CODE_CLASS}>
           {token.slice(1, -1)}
         </code>
       );
     } else if (token.startsWith("**")) {
       out.push(
         <strong key={key} className="font-semibold text-ink">
-          {renderInline(token.slice(2, -2), key)}
+          {renderInline(token.slice(2, -2), key, ctx)}
         </strong>
       );
     } else if (token.startsWith("[")) {
       const link = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(token)!;
-      out.push(
-        <a
-          key={key}
-          href={link[2]}
-          target="_blank"
-          rel="noreferrer"
-          className="text-carbon underline decoration-carbon/30 underline-offset-2 hover:decoration-carbon"
-        >
-          {renderInline(link[1], key)}
-        </a>
-      );
+      out.push(renderLink(link[1], link[2], key, ctx));
     } else {
       out.push(
         <em key={key} className="italic">
-          {renderInline(token.slice(1, -1), key)}
+          {renderInline(token.slice(1, -1), key, ctx)}
         </em>
       );
     }
@@ -226,7 +299,29 @@ const HEADING_CLASS: Record<number, string> = {
   6: "text-[0.8125rem] font-semibold text-ink-tertiary mt-4 mb-1.5",
 };
 
-function renderBlocks(blocks: Block[], keyPrefix: string): ReactNode[] {
+/** Non-interactive state glyph for a `- [ ]` / `- [x]` item — these checklists
+ *  are printed matter, not app state, so it's a box, not a control. */
+function TaskGlyph({ checked }: { checked: boolean }) {
+  return (
+    <span className="inline-flex shrink-0 translate-y-px items-center">
+      <span
+        aria-hidden="true"
+        className={`flex h-3.5 w-3.5 items-center justify-center rounded-[2px] border ${
+          checked ? "border-ink bg-ink text-paper" : "border-border bg-paper"
+        }`}
+      >
+        {checked && <Check size={10} strokeWidth={3} />}
+      </span>
+      <span className="sr-only">{checked ? "Done: " : "To do: "}</span>
+    </span>
+  );
+}
+
+function renderBlocks(
+  blocks: Block[],
+  keyPrefix: string,
+  ctx: LinkCtx
+): ReactNode[] {
   return blocks.map((block, idx) => {
     const key = `${keyPrefix}-${idx}`;
 
@@ -235,7 +330,7 @@ function renderBlocks(blocks: Block[], keyPrefix: string): ReactNode[] {
         const Tag = `h${Math.min(block.level + 1, 6)}` as "h2";
         return (
           <Tag key={key} className={HEADING_CLASS[block.level]}>
-            {renderInline(block.text, key)}
+            {renderInline(block.text, key, ctx)}
           </Tag>
         );
       }
@@ -246,7 +341,7 @@ function renderBlocks(blocks: Block[], keyPrefix: string): ReactNode[] {
             key={key}
             className="my-3 text-[0.8125rem] leading-relaxed text-ink-secondary"
           >
-            {renderInline(block.text, key)}
+            {renderInline(block.text, key, ctx)}
           </p>
         );
 
@@ -269,22 +364,37 @@ function renderBlocks(blocks: Block[], keyPrefix: string): ReactNode[] {
             key={key}
             className="my-4 rounded-md bg-warm px-4 py-2 text-ink-tertiary"
           >
-            {renderBlocks(block.blocks, key)}
+            {renderBlocks(block.blocks, key, ctx)}
           </blockquote>
         );
 
       case "list": {
         const Tag = block.ordered ? "ol" : "ul";
+        // A pure checklist drops the bullet column entirely — the glyph is the
+        // marker. A mixed list keeps its bullets and just inlines the glyph.
+        const allTasks = block.items.every((item) => item.checked !== undefined);
         return (
           <Tag
             key={key}
-            className={`my-3 flex flex-col gap-1.5 ps-5 text-[0.8125rem] leading-relaxed text-ink-secondary ${
-              block.ordered ? "list-decimal" : "list-disc"
+            className={`my-3 flex flex-col gap-1.5 text-[0.8125rem] leading-relaxed text-ink-secondary ${
+              allTasks
+                ? "list-none ps-0"
+                : `ps-5 ${block.ordered ? "list-decimal" : "list-disc"}`
             }`}
           >
             {block.items.map((item, n) => (
-              <li key={n} className="ps-1 marker:text-ink-muted">
-                {renderInline(item, `${key}-${n}`)}
+              <li
+                key={n}
+                className={
+                  item.checked === undefined
+                    ? "ps-1 marker:text-ink-muted"
+                    : "flex items-start gap-2"
+                }
+              >
+                {item.checked !== undefined && (
+                  <TaskGlyph checked={item.checked} />
+                )}
+                <span>{renderInline(item.text, `${key}-${n}`, ctx)}</span>
               </li>
             ))}
           </Tag>
@@ -307,7 +417,7 @@ function renderBlocks(blocks: Block[], keyPrefix: string): ReactNode[] {
                       key={n}
                       className="border-b border-border-soft px-3 py-2 text-start align-bottom font-semibold text-ink"
                     >
-                      {renderInline(cell, `${key}-h-${n}`)}
+                      {renderInline(cell, `${key}-h-${n}`, ctx)}
                     </th>
                   ))}
                 </tr>
@@ -320,7 +430,7 @@ function renderBlocks(blocks: Block[], keyPrefix: string): ReactNode[] {
                         key={c}
                         className="px-3 py-2 align-top text-ink-secondary"
                       >
-                        {renderInline(row[c] ?? "", `${key}-${r}-${c}`)}
+                        {renderInline(row[c] ?? "", `${key}-${r}-${c}`, ctx)}
                       </td>
                     ))}
                   </tr>
@@ -333,6 +443,16 @@ function renderBlocks(blocks: Block[], keyPrefix: string): ReactNode[] {
   });
 }
 
-export function Markdown({ source }: { source: string }) {
-  return <Fragment>{renderBlocks(parseBlocks(source), "md")}</Fragment>;
+interface Props {
+  source: string;
+  /** Relative link target (`./TOKENS-MAPPING.md`) → in-page anchor id, or null
+   *  if it isn't a rendered doc. See `resolveHandoffAnchor`. */
+  resolveLink: (target: string) => string | null;
+  /** Scroll a resolved section into view. */
+  onNavigate: (id: string) => void;
+}
+
+export function Markdown({ source, resolveLink, onNavigate }: Props) {
+  const ctx: LinkCtx = { resolve: resolveLink, navigate: onNavigate };
+  return <Fragment>{renderBlocks(parseBlocks(source), "md", ctx)}</Fragment>;
 }

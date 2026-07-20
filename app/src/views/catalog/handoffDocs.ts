@@ -64,3 +64,16 @@ export const handoffDocs: HandoffDoc[] = [...known, ...unknown].map(
     source: byFile.get(file)!,
   })
 );
+
+/** Resolve a relative link written inside a doc (`./TOKENS-MAPPING.md`, with or
+ *  without a `#fragment`) to the anchor id of the section rendering it — the
+ *  docs cross-reference each other by filename, which means nothing in the SPA.
+ *  Returns null for anything that isn't a doc we render, so the caller can
+ *  degrade it instead of emitting a dead href.
+ *
+ *  Heading-level fragments are dropped: sections carry one id per doc, not one
+ *  per heading, so `#style-rules-…` lands at the top of that doc. */
+export function resolveHandoffAnchor(target: string): string | null {
+  const file = basename(target.split("#")[0]);
+  return byFile.has(file) ? toId(file) : null;
+}

@@ -78,7 +78,7 @@ import {
 } from "./catalog/demos";
 
 import { sidebarGroups, allItemIds } from "./catalog/sidebarGroups";
-import { handoffDocs } from "./catalog/handoffDocs";
+import { handoffDocs, resolveHandoffAnchor } from "./catalog/handoffDocs";
 import { Markdown } from "./catalog/Markdown";
 import { asset } from "../utils/asset";
 
@@ -248,7 +248,11 @@ export function ComponentCatalog({ onReturn }: Props) {
                   <p className="mb-4 font-mono text-[0.6875rem] text-ink-muted">
                     {doc.file}
                   </p>
-                  <Markdown source={doc.source} />
+                  <Markdown
+                    source={doc.source}
+                    resolveLink={resolveHandoffAnchor}
+                    onNavigate={scrollTo}
+                  />
                 </section>
               ))}
             </div>
