@@ -78,6 +78,8 @@ import {
 } from "./catalog/demos";
 
 import { sidebarGroups, allItemIds } from "./catalog/sidebarGroups";
+import { handoffDocs } from "./catalog/handoffDocs";
+import { Markdown } from "./catalog/Markdown";
 import { asset } from "../utils/asset";
 
 interface Props {
@@ -231,6 +233,26 @@ export function ComponentCatalog({ onReturn }: Props) {
       {/* Content */}
       <div className="px-8 pt-6 pb-12 scroll-pt-[4.25rem]">
         <div className="max-w-3xl mx-auto flex flex-col gap-10">
+
+          {/* ==================== HANDOFF ==================== */}
+          <section>
+            <h2 className="text-lg font-bold text-ink mb-6">Handoff</h2>
+            <div className="flex flex-col gap-10">
+              {handoffDocs.map((doc) => (
+                <section
+                  key={doc.id}
+                  id={doc.id}
+                  ref={reg(doc.id)}
+                  className="max-w-[44rem] rounded-md bg-paper px-6 py-5 border border-border-soft"
+                >
+                  <p className="mb-4 font-mono text-[0.6875rem] text-ink-muted">
+                    {doc.file}
+                  </p>
+                  <Markdown source={doc.source} />
+                </section>
+              ))}
+            </div>
+          </section>
 
           {/* ==================== STYLE GUIDE ==================== */}
           <div ref={(el) => {

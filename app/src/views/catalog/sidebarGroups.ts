@@ -1,3 +1,5 @@
+import { handoffDocs } from "./handoffDocs";
+
 export interface SidebarGroup {
   label: string;
   items: { id: string; label: string }[];
@@ -7,6 +9,11 @@ export interface SidebarGroup {
  *  anchors in the catalog body (`ComponentCatalog.tsx`) — otherwise the
  *  active-section highlight jumps non-sequentially as the user scrolls. */
 export const sidebarGroups: SidebarGroup[] = [
+  {
+    // Derived from the files in `handoff/` — see `handoffDocs.ts`.
+    label: "Handoff",
+    items: handoffDocs.map((doc) => ({ id: doc.id, label: doc.label })),
+  },
   {
     label: "Style Guide",
     items: [
