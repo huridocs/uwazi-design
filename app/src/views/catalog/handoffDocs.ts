@@ -16,6 +16,9 @@ const files = import.meta.glob("../../../../handoff/*.md", {
 const MANIFEST: { file: string; label: string }[] = [
   { file: "TOKENS-MAPPING.md", label: "Tokens mapping" },
   { file: "DATA-SEAMS.md", label: "Data seams" },
+  { file: "PATTERNS.md", label: "Patterns" },
+  { file: "COMPONENT-INVENTORY.md", label: "Component inventory" },
+  { file: "PILOT-COMPONENTS.md", label: "Pilot components" },
   { file: "PR-BODY.md", label: "PR body" },
 ];
 
