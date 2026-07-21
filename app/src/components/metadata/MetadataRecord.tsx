@@ -42,7 +42,15 @@ export function MetadataItemsTable({ items }: { items: MetadataItem[] }) {
               >
                 {item.label}
               </th>
-              <td className="py-1.5 align-baseline text-ink">{item.content}</td>
+              {/* `w-full max-w-0` gives the value column a DEFINITE width to
+                  resolve against. Without it the cell is auto-sized from its
+                  content, so a pill's `max-w-full` had no basis to clamp to: the
+                  pill took its natural width and long connection titles ran off
+                  the drawer's edge, clipped mid-pill instead of truncating.
+                  With a definite basis, multi-pill values wrap (ConnectionPills
+                  is `flex flex-wrap`) and a single over-long pill ellipsises
+                  inside itself, keeping its full text in the `title` tooltip. */}
+              <td className="w-full max-w-0 py-1.5 align-baseline text-ink">{item.content}</td>
             </tr>
           ))}
         </tbody>

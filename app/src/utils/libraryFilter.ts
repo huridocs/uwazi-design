@@ -157,7 +157,11 @@ const PREDICATES: Record<
   // common case and short-circuits BEFORE categorising, so the (blob-scanning)
   // categorisation is only paid when the user has actually narrowed.
   matchType: (e, s) => {
-    const { title, properties, document } = s.matchTypes;
+    // Defaulted, NOT destructured bare: a filter state that predates this
+    // dimension (a caller yet to be updated, or a half-swapped module during an
+    // HMR reload) would otherwise throw here and unmount the whole Library. A
+    // missing dimension must mean "no narrowing", never a blank view.
+    const { title = true, properties = true, document = true } = s.matchTypes ?? {};
     if (title && properties && document) return true;
     if (!s.q) return true;
     const c = matchCategories(e, s.q, s.language, s.source);
