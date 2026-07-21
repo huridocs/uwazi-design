@@ -371,6 +371,43 @@ The 5 sample rows in `data/imports.ts` are seeded to match `images/screens/impor
 
 `ToolsActionBar` has `mode: "list" | "detail"`. Detail mode = "Back to list" + "Delete Import" with its own confirm dialog. List-mode "New Import" is a solid `bg-ink` button.
 
+## Library search — where the evidence lives
+
+Search matches can hide in a property or a document body. Three surfaces answer
+"why is this row here?", all off ONE data path (`buildSnippetsFor` /
+`matchCategories` in `utils/librarySnippets.ts`, tokenized by `utils/queryTokens.ts`):
+
+- **`MatchOrigin`** (`components/library/MatchOrigin.tsx`) — the row-level mark for
+  layouts with no room for a snippet: the **List table** (a 3.5rem "Match" column,
+  mounted only while a query is active) and the **timeline Spine** (a fixed
+  2.25rem slot at the row's end). Renders ONLY where the evidence is off-row —
+  `hiddenMatchOrigin` takes the field keys the row already marks, **per row**
+  (a Country column showing an em-dash proves nothing). Carbon `Tag` = property,
+  `FileText` = document body; hover/focus builds that one entity's excerpt into a
+  portalled popover, click routes to the field or the page. No page tag or jump
+  where `page` is null.
+- **Results view** — the drawer's evidence list promoted to the main pane as a 5th
+  `libraryViewModeAtom` mode (`"results"`, always in the switcher; it renders its
+  own no-query state rather than appearing when you type). Body:
+  `components/library/ResultsSnippets/ResultsMainView.tsx`, layout picked in the
+  Display menu via `libraryResultsLayoutAtom` — **grouped** (wide card, properties
+  beside passages) / **tree** (entity → field → snippets) / **passages** (flat
+  ranked passage list, entity secondary) / **spine** (best passage on a time axis).
+  Every layout drops the TITLE snippet — each already prints the title marked.
+  With the main pane in Results, a query no longer auto-opens the drawer's Results
+  tab (two copies of one list).
+- **`TimeSpine`** (`components/library/TimeSpine.tsx`) — ONE proportional
+  chronology, rendered by both `LibraryTimelineView`'s Spine layout and the
+  Results spine. It owns `useTrackGeom` (the axis inset the Rail and Density
+  tracks share), the adaptive scale, year/month marks, elided-silence breaks,
+  collision push, leader lines and `SpineDate`. Callers pass rows + `rowHeight` +
+  `renderRow` and nothing else — **don't re-derive spine geometry anywhere.**
+
+Match-type chips (Title / Properties / Document) are `ToggleChip`
+(`components/shared/ToggleChip.tsx`) — `ActiveFilterChip`'s visual twin with
+`aria-pressed` instead of an X — and ride the count row via `ListInfoRow`'s
+`inlineSlot`, in both the drawer tab and the main view.
+
 ## Component catalog
 Logo click toggles in/out of `ComponentCatalog`. Sidebar groups: Style Guide, Elements, Entity View — Layout / Document / References / Metadata / Files / Drawer / Relationships, Import CSV — Layout / Components, **Filters & Lists**, Shared. Add new shared/connections components here as a `CatalogEntry` with a live `Isolated…` demo. Note: the Entity View → References + Relationships groups now both showcase `ConnectionRow` (reference and aggregate variants) and `ConnectionGroupedCard`.
 

@@ -594,6 +594,45 @@ The same class of bug already bit once on this surface: two `clearAll`
 implementations over one filter state drifted, one forgetting the search box and the
 other the AND/OR modes. One state, one parser, one clear.
 
+### 4.4 A dense row owes the reader its evidence — as a mark, not a snippet
+
+A card can carry an excerpt. A table row and a one-line chronology cannot, and they
+are exactly the layouts that render thousands of results at once. When the query hit
+a property the row doesn't display, or the document body, the row looks like it
+matched nothing — and a screen of those reads as a broken filter, not a result list.
+
+Three rules, in order:
+
+1. **Only mark what the row can't already show.** Title and Country are marked in
+   place; that mark IS the evidence, and a marker beside it is duplication. Compute
+   the marker against what the row *renders* — per ROW, not per table: a Country
+   column showing an em-dash proves nothing, so an entity whose Country property
+   matched while `country` is empty still earns its marker. (That case shipped
+   wrong first.)
+2. **The marker is a glyph with a route, not a label.** One 1rem carbon glyph per
+   origin — `Tag` for a property, `FileText` for the body. Hover *and focus* build
+   the excerpt for that ONE entity and show it in a portalled, rect-positioned
+   popover (rows live in `overflow-auto` panes that clip a nested one); clicking
+   opens the entity where the evidence is — the Metadata tab focused on the field,
+   or the document scrolled to the page. Hover-only evidence fails keyboard and
+   touch; a text label truncates at any width a dense row can spare.
+3. **The slot is reserved by the surface, for the duration of the query.** A fixed
+   table column / a fixed-width span in the row, mounted while a query is active;
+   per-row contents come and go *inside* it. Refining a query then never moves a
+   title or a column under the cursor. The slot's own appearance is bound to
+   empty-query → query — the one transition that replaces every row anyway (§3,
+   "never shift layout on state change").
+
+Cost check before you ship one: the marker's origin scan must be O(what's rendered)
+and reuse the memoised blobs the filter already built. Measured on the 4,398-entity
+corpus, a keystroke cost the same with markers (444 ms) as without (449 ms) — the
+number is the pre-existing full-text pass, and a per-row scan that shows up next to
+it is a per-row scan doing the filter's work twice.
+
+Excerpts stay lazy: building them for every rendered row is the mistake the Results
+tab avoids by capping, and these surfaces render far more rows than that tab renders
+cards. See `components/library/MatchOrigin.tsx` and `hiddenMatchOrigin`.
+
 ---
 
 ## Review checklist
@@ -612,6 +651,7 @@ Before merging a component onto the 2026 language:
 - [ ] Nothing mounts on state change inside a scrollable column — signal moved onto an existing control, or space reserved
 - [ ] Highlight marks don't change text metrics (padding cancelled by equal negative margin, weight inherited)
 - [ ] No page tag, count or jump target the data can't back — absent beats invented
+- [ ] Dense rows show WHERE they matched when the row can't; marker reserved by the surface, computed per row, keyboard-reachable, excerpt built lazily
 - [ ] Filter, snippet and mark all read one tokenizer
 - [ ] No raw px in layout; no hex fallbacks in `var()`; no second selected colour
 - [ ] Verified in light **and** dark, and in RTL if the component has directional layout
