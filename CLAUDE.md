@@ -322,8 +322,8 @@ Several fields sharing a `connectionKey` = **one connection, many inherited colu
   `getEntityProp` — native props ONLY now). **Consumers that read `.value` must filter
   relationship fields out** (`(f): f is MetadataField => f.type !== "relationship"`) —
   done in `MetadataView` read+edit bodies and `MetadataDrawerContent`.
-- **Resolve (ONE path resolver)**: `utils/inheritance.ts` — `resolveInherited(entity,
-  spec, lang, getProp)` returns `{ value, steps }`: single-hop reads the native prop;
+- **Resolve (ONE path resolver)**: `utils/inheritance.ts` —
+  `resolveInherited(connectedEntityId, spec, lang, getProp)` returns `{ value, steps }`: single-hop reads the native prop;
   multi-hop walks `chains()` (`utils/chainTraversal.ts`) and projects the leaf.
   `resolveInheritedValue` is the string-only wrapper. The backing graph is **injected**
   via `registerInheritanceGraph(provider)` (dependency inversion — inheritance.ts never

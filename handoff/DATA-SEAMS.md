@@ -147,8 +147,8 @@ interface RelationshipMetadataField {
 
 Design decisions that ARE spec:
 
-- **One resolver.** `resolveInherited(entity, spec, lang, getProp)` handles
-  both shapes; `inheritProperty` is the degenerate zero-segment case of
+- **One resolver.** `resolveInherited(connectedEntityId, spec, lang, getProp)`
+  handles both shapes; `inheritProperty` is the degenerate zero-segment case of
   `inheritPath`. Don't fork single-hop and multi-hop code paths.
 - **Chain values resolve live at render, never pre-baked.** A pre-baked
   registry existed and was deliberately deleted — stored derived values go

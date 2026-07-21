@@ -25,7 +25,7 @@ blast radius is still small:
 | **Table** | `shared/DataTable.tsx` | `UI/DataTable/DataTable.tsx` | **M** | Data density + the clickable-row a11y pattern |
 | **Tabs** | `layout/{DrawerTabs,MainTabs}.tsx` | `UI/Tabs/Tabs.tsx` | **M** | Segmented navigation + state-by-bg |
 | **Beacon** | `layout/Beacon.tsx` | `UI/Notifications/ThemedBeacon.tsx` | **S** | Motion + live regions (the convergent feature) |
-| **Sidepanel** | `shared/FiltersDrawer.tsx` | `UI/Drawer.tsx` | **S→M** | Overlay contract: focus trap, `inert`, RTL |
+| **Sidepanel** | `shared/FiltersDrawer.tsx` | `UI/FiltersDrawer.tsx` (on `UI/Drawer.tsx`) | **S→M** | Overlay contract: focus trap, `inert`, RTL |
 
 What the set is engineered to exercise:
 
@@ -114,14 +114,21 @@ hardcoded mix target needs a `dark:` branch and will drift (`PATTERNS.md` §3,
 "Dark mode is automatic"). Do **not** write a hex fallback inside `color-mix()`
 — it invalidates the whole declaration and the pill renders unstyled.
 
-The missing/unknown state italicises and reads "Unknown entity" — keep it; it's
-the empty state.
+**Two degraded states — keep both, and don't collapse them.** They differ by
+what's missing (`resolved = label ?? type?.name ?? typeId`):
+- **Unknown `typeId`** (no matching type, no label): `type` is undefined, so the
+  dot falls back to grey (`#6B7280`) and the label renders the **raw id** — not
+  italic, not "Unknown entity". A recognisable id still names something.
+- **Empty `typeId`** (`resolved` falsy): the true empty state — italicises and
+  reads **"Unknown entity"**.
+Only the empty case is italic; an unknown-but-present id keeps normal weight.
 
 **Verify** — light + dark × { pale hue (lime/yellow), saturated hue (violet),
-missing type, a very long label that must truncate, `sm` and `md` }. Confirm the
-label mix darkens in light and lightens in dark from the *same* expression.
+unknown `typeId` (grey dot + raw id, non-italic), empty `typeId` (italic
+"Unknown entity"), a very long label that must truncate, `sm` and `md` }. Confirm
+the label mix darkens in light and lightens in dark from the *same* expression.
 
-**Ship** — story stays generic (`Default`, `AllColors`, `Missing`,
+**Ship** — story stays generic (`Default`, `AllColors`, `Unknown`, `Empty`,
 `Truncated`) — never a domain name. A11y addon must be clean at every colour.
 
 ---
@@ -357,7 +364,7 @@ reduced-motion states if they're not already covered. Keep story names generic.
 
 ---
 
-## 6 · Sidepanel — `FiltersDrawer` → `UI/Drawer`
+## 6 · Sidepanel — `FiltersDrawer` → `UI/FiltersDrawer` (on `UI/Drawer`)
 
 **Rating S→M.** `FiltersDrawer` itself is **S** ("same header/close/footer shape,
 built on the shared Drawer"), but it's the pilot's job to prove the **overlay

@@ -191,6 +191,15 @@ const isAbsolute = (href: string) => /^(https?:)?\/\//i.test(href);
 const CODE_CLASS =
   "rounded-sm bg-vellum px-1 py-px font-mono text-[0.85em] text-ink";
 
+/** A code span sitting *inside* a link (the docs write `[`FILE.md`](…)`). It must
+ *  read as the link, not as an inert code chip — so it inherits the anchor's
+ *  carbon + underline instead of the neutral vellum/ink chip, keeping the mono
+ *  shape but a faint carbon tint. Without this the nested `<code>` overrides the
+ *  `<a>` and real links look pixel-identical to non-clickable code. */
+const LINK_CODE_CLASS =
+  "rounded-sm bg-carbon-tint px-1 py-px font-mono text-[0.85em] text-carbon " +
+  "underline decoration-carbon/30 underline-offset-2";
+
 /** Three outcomes, so no link in these docs can be dead:
  *  - absolute → a normal new-tab link;
  *  - relative to a doc we render → an in-page jump to that section;
@@ -211,7 +220,7 @@ function renderLink(
         rel="noreferrer"
         className="text-carbon underline decoration-carbon/30 underline-offset-2 hover:decoration-carbon"
       >
-        {renderInline(label, key, ctx)}
+        {renderInline(label, key, ctx, true)}
       </a>
     );
   }
@@ -230,7 +239,7 @@ function renderLink(
         }}
         className="text-carbon underline decoration-carbon/30 underline-offset-2 hover:decoration-carbon"
       >
-        {renderInline(label, key, ctx)}
+        {renderInline(label, key, ctx, true)}
       </a>
     );
   }
@@ -247,7 +256,10 @@ function renderLink(
 function renderInline(
   text: string,
   keyPrefix: string,
-  ctx: LinkCtx
+  ctx: LinkCtx,
+  /** True while rendering a link's label, so nested code/emphasis keep the
+   *  anchor's affordance instead of the inert code-chip look. */
+  inLink = false
 ): ReactNode[] {
   const pattern =
     /(`[^`]+`)|(\*\*[^*]+\*\*)|(\[[^\]]+\]\([^)]+\))|(\*[^*\s][^*]*\*)|(_[^_\s][^_]*_)/g;
@@ -263,14 +275,14 @@ function renderInline(
 
     if (token.startsWith("`")) {
       out.push(
-        <code key={key} className={CODE_CLASS}>
+        <code key={key} className={inLink ? LINK_CODE_CLASS : CODE_CLASS}>
           {token.slice(1, -1)}
         </code>
       );
     } else if (token.startsWith("**")) {
       out.push(
         <strong key={key} className="font-semibold text-ink">
-          {renderInline(token.slice(2, -2), key, ctx)}
+          {renderInline(token.slice(2, -2), key, ctx, inLink)}
         </strong>
       );
     } else if (token.startsWith("[")) {
@@ -279,7 +291,7 @@ function renderInline(
     } else {
       out.push(
         <em key={key} className="italic">
-          {renderInline(token.slice(1, -1), key, ctx)}
+          {renderInline(token.slice(1, -1), key, ctx, inLink)}
         </em>
       );
     }
