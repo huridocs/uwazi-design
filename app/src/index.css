@@ -316,3 +316,15 @@ button:not(:disabled) {
   background-color: color-mix(in srgb, var(--highlight-yellow-active) 92%, transparent);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--text-primary) 30%, transparent);
 }
+/* THE match you stepped to — the same attribute, one level down: on the page
+   wrapper it lights every hit on that page, on the mark itself it singles out
+   the current one. MUST stay after the page rule: identical specificity (0,2,0),
+   so only source order decides which wins when both apply. */
+.pdf-search-hit[data-search-active] {
+  /* Stays translucent ON PURPOSE. The glyphs live on the PDF canvas underneath
+     and the text layer itself is transparent, so an opaque fill paints the word
+     out and leaves a blank yellow box. The RING carries the "you are here", not
+     the opacity. */
+  background-color: color-mix(in srgb, var(--highlight-yellow-active) 75%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--text-primary) 55%, transparent);
+}

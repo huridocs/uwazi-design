@@ -19,6 +19,10 @@ interface Props {
   onFocusProperty: (id: string, fieldKey: string) => void;
   /** Clicking a Document hit — select + jump the doc to that page. */
   onSelectSnippet: (id: string, page: number) => void;
+  /** Whether this card is showing every page-snippet or the capped few. Owned by
+   *  ResultsBody (it re-builds the snippets uncapped), same as `expanded`. */
+  showAllFullText: boolean;
+  onToggleFullText: () => void;
 }
 
 /** A quiet section label echoing Uwazi's SnippetList structure (metadata field
@@ -44,10 +48,18 @@ export function EntityResultCard({
   onToggle,
   onFocusProperty,
   onSelectSnippet,
+  showAllFullText,
+  onToggleFullText,
 }: Props) {
   const color = getEntityType(entity.typeId)?.color ?? "#6B7280";
   const hasMeta = snippets.metadata.length > 0;
   const hasFullText = snippets.fullText.length > 0;
+  const shown = snippets.fullText.length;
+  const total = snippets.fullTextTotal;
+  // Stays rendered once expanded — `shown === total` then, so testing only
+  // "is there more?" would unmount the control the user just clicked and jump
+  // the card out from under them.
+  const canShowAll = total > shown || showAllFullText;
 
   return (
     // `standalone` keeps this card off the relationships-panel expand/collapse
@@ -96,6 +108,27 @@ export function EntityResultCard({
               query={query}
               onSelect={onSelectSnippet}
             />
+            {/* "5 of 23 · Show all" — the count is the TRUE page-hit total
+                (`fullTextTotal`), so the card never passes its cap off as the
+                whole document. Indented to the spine's text column. */}
+            {canShowAll && (
+              <p dir="ltr" className="ps-4 px-2 text-[11px] text-ink-tertiary">
+                <span className="tabular-nums">
+                  {shown.toLocaleString()} of {total.toLocaleString()}
+                </span>{" "}
+                {total === 1 ? "page" : "pages"}
+                <span className="mx-1 text-ink-muted">·</span>
+                <button
+                  type="button"
+                  onClick={onToggleFullText}
+                  aria-expanded={showAllFullText}
+                  className="font-medium text-carbon hover:underline cursor-pointer
+                    focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40 rounded-sm"
+                >
+                  {showAllFullText ? "Show fewer" : "Show all"}
+                </button>
+              </p>
+            )}
           </div>
         )}
       </div>

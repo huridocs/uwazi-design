@@ -65,16 +65,24 @@ export interface FullTextSnippet {
 }
 
 export interface EntitySnippets {
-  /** metadata groups + fullText hits. */
+  /** metadata groups + **every** matched page — NOT `fullText.length`. The
+   *  excerpt list is capped (`MAX_FULLTEXT`); this count isn't, so a card can say
+   *  "5 of 23" instead of quietly presenting 5 as the whole story. */
   count: number;
   metadata: MetadataSnippet[];
+  /** The excerpts actually built — at most `maxFullText` of them. */
   fullText: FullTextSnippet[];
+  /** How many document pages matched in total. `≥ fullText.length`; strictly
+   *  greater means the rest were counted but not excerpted (see
+   *  `buildSnippetsFor`'s `maxFullText`). */
+  fullTextTotal: number;
 }
 
 /** Words of context on each side of a hit — ~12-word windows. */
 const CONTEXT_WORDS = 6;
-/** Cap full-text excerpts per document so a long doc doesn't flood one card. */
-const MAX_FULLTEXT = 5;
+/** How many full-text excerpts a card shows before "Show all" — a cap on what's
+ *  RENDERED, never on what's counted (`fullTextTotal` always sees every page). */
+export const MAX_FULLTEXT = 5;
 
 /** The searchable metadata fields of an entity, in display order — the same
  *  parts `buildSearchIndex` concatenates (title, country, adapter fields,
@@ -248,17 +256,24 @@ function paginate(text: string, pageCount: number): string[] {
  *  operators dropped) — the SAME tokens the filter ANDs and `HighlightedText`
  *  marks, so an entity that matched via any token is guaranteed a snippet here
  *  (count > 0). An empty/termless query yields `count: 0` (the caller drops
- *  those). */
+ *  those).
+ *
+ *  EVERY page is scanned, always. `maxFullText` caps only how many excerpts get
+ *  BUILT — pages past the cap are still counted into `fullTextTotal`, which is
+ *  what lets a card offer "5 of 23 · Show all" instead of implying 5 is all
+ *  there is. Pass `Infinity` to excerpt them all (what Show-all re-builds with);
+ *  the extra work is the windowing pass, so it stays off the default path. */
 export function buildSnippetsFor(
   entity: Entity,
   q: string,
   language: Language,
   source: DataSource,
+  { maxFullText = MAX_FULLTEXT }: { maxFullText?: number } = {},
 ): EntitySnippets {
   const terms = highlightTerms(q); // already folded (lowercase + de-accented)
   const metadata: MetadataSnippet[] = [];
   const fullText: FullTextSnippet[] = [];
-  if (terms.length === 0) return { count: 0, metadata, fullText };
+  if (terms.length === 0) return { count: 0, metadata, fullText, fullTextTotal: 0 };
 
   for (const { field, fieldKey, text } of entityFields(entity, language)) {
     const lower = fold(text);
@@ -268,15 +283,22 @@ export function buildSnippetsFor(
   }
 
   const { pages, paged } = documentPages(entity, language, source);
-  for (let i = 0; i < pages.length && fullText.length < MAX_FULLTEXT; i++) {
+  // No early break: the loop used to stop at the cap, which is exactly why the
+  // total was unknowable. Folding every page is the same work the search filter
+  // already does for this entity (`entityFullTextBlob` folds the whole doc), so
+  // the honest count costs the windowing pass, not a second scan.
+  let fullTextTotal = 0;
+  for (let i = 0; i < pages.length; i++) {
     const lower = fold(pages[i]);
     const hits = terms.reduce((n, t) => n + countOccurrences(lower, t), 0);
     if (hits === 0) continue;
+    fullTextTotal++; // counted whether or not it gets excerpted below
+    if (fullText.length >= maxFullText) continue;
     const excerpt = excerptAroundTerms(pages[i], terms);
     if (excerpt) fullText.push({ page: paged ? i + 1 : null, text: excerpt, hits });
   }
 
-  return { count: metadata.length + fullText.length, metadata, fullText };
+  return { count: metadata.length + fullTextTotal, metadata, fullText, fullTextTotal };
 }
 
 export interface MatchCategories {

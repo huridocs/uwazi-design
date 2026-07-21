@@ -105,6 +105,10 @@ export function ResultsBody({
   // all can drive every card; each card is standalone (off the relationships
   // globals), so this never bleeds across surfaces.
   const [expandedMap, setExpandedMap] = useState<Record<string, boolean>>({});
+  // Per-entity "show every page-snippet". Kept here, next to `expandedMap`, for
+  // the same reason: the card is standalone, so nothing about its expansion may
+  // ride the relationships panel's expand/collapse atoms.
+  const [showAllMap, setShowAllMap] = useState<Record<string, boolean>>({});
   const trimmed = query.trim();
 
   // `entities` is the already-filtered set. The left-pane filter and
@@ -112,7 +116,7 @@ export function ResultsBody({
   // guaranteed ≥1 metadata snippet — the match count is just `entities.length`,
   // and we only compute snippets for the visible slice, not the whole (thousands-
   // strong CEJIL) set.
-  const rendered = useMemo(
+  const capped = useMemo(
     () =>
       entities
         .slice(0, visible)
@@ -121,9 +125,30 @@ export function ResultsBody({
     [entities, visible, trimmed, language, source],
   );
 
+  // Only the cards the user actually expanded are rebuilt uncapped — the excerpt
+  // WINDOWING is the cost, so paying it for every card would tax the common case
+  // to serve the rare one. The honest total (`fullTextTotal`) comes back either
+  // way, which is what the capped cards need to offer "5 of N". Kept as its own
+  // memo so toggling one card doesn't re-derive the other thirty-nine.
+  const rendered = useMemo(
+    () =>
+      capped.map((x) =>
+        showAllMap[x.entity.id]
+          ? {
+              entity: x.entity,
+              snippets: buildSnippetsFor(x.entity, trimmed, language, source, {
+                maxFullText: Infinity,
+              }),
+            }
+          : x,
+      ),
+    [capped, showAllMap, trimmed, language, source],
+  );
+
   useEffect(() => {
     setVisible(RESULTS_STEP);
     setExpandedMap({});
+    setShowAllMap({});
   }, [entities, trimmed, language, source]);
 
   const isExpanded = (id: string) => expandedMap[id] ?? true;
@@ -285,6 +310,10 @@ export function ResultsBody({
             }
             onFocusProperty={onFocusProperty}
             onSelectSnippet={onSelectSnippet}
+            showAllFullText={showAllMap[entity.id] ?? false}
+            onToggleFullText={() =>
+              setShowAllMap((m) => ({ ...m, [entity.id]: !m[entity.id] }))
+            }
           />
         ))}
         {visible < entities.length && (
