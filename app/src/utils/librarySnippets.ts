@@ -4,7 +4,8 @@ import type { DataSource } from "./libraryFacets";
 import { typeHasDocument, getEntityProfile } from "../data/entityProfiles";
 import { renditionsByLanguage } from "../data/documentRenditions";
 import { documentsByLanguage } from "../data/document";
-import { cejilFullText, cejilFilesBySid, cejilLoaded } from "../data/cejil/load";
+import { cejilLoaded } from "../data/cejil/load";
+import { cejilDocPagesFor } from "../data/cejil/profile";
 import { highlightTerms, fold, foldWithMap } from "./queryTokens";
 
 /** Synthesizes Uwazi's per-entity search-snippets shape from the data we already
@@ -26,12 +27,18 @@ import { highlightTerms, fold, foldWithMap } from "./queryTokens";
  *  `<b>`. `HighlightedText` re-derives the marks from the query by string-split,
  *  so nothing renders `dangerouslySetInnerHTML`.
  *
- *  Full-text is now IN the search (`entityFullTextBlob` + the filter's
+ *  Full-text is IN the search (`entityFullTextBlob` + the filter's
  *  `fullTextSearch` guard), so an entity whose term appears only in its document
- *  body surfaces in both the left pane and here, with its page snippets. Residual
- *  limits (named follow-ups, not v1): full-text is gated behind `q.length ≥ 3`
- *  for CEJIL-corpus perf, and the mock rendition's page numbers are approximate
- *  (the extracted text isn't page-mapped). */
+ *  body surfaces in both the left pane and here.
+ *
+ *  PAGE NUMBERS ARE ONLY CLAIMED WHERE THEY'RE REAL. CEJIL carries genuine
+ *  per-page text, so its snippets get a page and a jump. The mock corpus shares
+ *  one Velásquez rendition across every doc-bearing entity — text that isn't
+ *  page-mapped and isn't even the PDF rendered next to it — so its snippets
+ *  carry `page: null`: excerpt only, no "p.N", no jump. Beside the actual
+ *  document a made-up page number is plainly wrong, and it was only invisible in
+ *  the Library because nothing was there to contradict it. Residual limit:
+ *  full-text is gated behind `q.length ≥ 3` for CEJIL-corpus perf. */
 
 export interface MetadataSnippet {
   /** Field label ("Title", or an adapter-localized `entity.fields[].label`). */
@@ -46,8 +53,11 @@ export interface MetadataSnippet {
 }
 
 export interface FullTextSnippet {
-  /** 1-based page number the excerpt came from. */
-  page: number;
+  /** 1-based page in the OPEN FILE — or `null` when the corpus can't say
+   *  honestly which page this is (see `documentPages`). A null page renders
+   *  without a "p.N" tag and isn't clickable: printing a number that points
+   *  nowhere is worse than printing none. */
+  page: number | null;
   text: string;
   /** How many times the query occurs on this page — drives the spine's
    *  counted-ring node (>1 → a counted ring, 1 → a plain dot). */
@@ -186,25 +196,28 @@ function excerptAroundTerms(
   return windowAround(text, start, len, ctx);
 }
 
-/** The document's per-page text, or `[]` when the entity has no parsed body.
- *   - CEJIL: real per-page arrays keyed by the primary file's name (page = index+1).
- *   - mock: doc-bearing types share the one Velásquez rendition, which is a single
- *     unpaginated blob — split into the doc's page count so excerpts carry a
- *     plausible page number. The jump is therefore APPROXIMATE for the mock
- *     corpus (the rendition text isn't page-mapped); CEJIL page jumps are exact. */
-function documentPages(e: Entity, language: Language, source: DataSource): string[] {
+/** The document's text, split for excerpting, plus whether those splits are the
+ *  REAL pages of the file on screen.
+ *   - CEJIL (`paged: true`): genuine per-page arrays keyed by the primary file's
+ *     name, so index+1 IS the page the viewer shows.
+ *   - mock (`paged: false`): doc-bearing types share one Velásquez rendition
+ *     whose text isn't page-mapped — and isn't even the PDF rendered beside it.
+ *     We still chunk it so excerpts come from across the document, but those
+ *     chunks are NOT pages, so they carry no page number and no jump.
+ */
+function documentPages(
+  e: Entity,
+  language: Language,
+  source: DataSource,
+): { pages: string[]; paged: boolean } {
   if (source === "cejil") {
-    const ft = cejilFullText();
-    for (const f of cejilFilesBySid().get(e.id) ?? []) {
-      const pages = ft[f.filename];
-      if (pages?.length) return pages;
-    }
-    return [];
+    // The pages of the file the VIEWER renders — see `cejilDocPagesFor`.
+    return { pages: cejilDocPagesFor(e.id), paged: true };
   }
-  if (!typeHasDocument(e.typeId)) return [];
+  if (!typeHasDocument(e.typeId)) return { pages: [], paged: false };
   const rendition = renditionsByLanguage[language] ?? renditionsByLanguage.EN;
   const pageCount = (documentsByLanguage[language] ?? documentsByLanguage.EN).pages;
-  return paginate(rendition.plainText, pageCount);
+  return { pages: paginate(rendition.plainText, pageCount), paged: false };
 }
 
 /** Evenly bucket a text's paragraphs into `pageCount` pages by cumulative
@@ -254,13 +267,13 @@ export function buildSnippetsFor(
     if (excerpt) metadata.push({ field, fieldKey, texts: [excerpt] });
   }
 
-  const pages = documentPages(entity, language, source);
+  const { pages, paged } = documentPages(entity, language, source);
   for (let i = 0; i < pages.length && fullText.length < MAX_FULLTEXT; i++) {
     const lower = fold(pages[i]);
     const hits = terms.reduce((n, t) => n + countOccurrences(lower, t), 0);
     if (hits === 0) continue;
     const excerpt = excerptAroundTerms(pages[i], terms);
-    if (excerpt) fullText.push({ page: i + 1, text: excerpt, hits });
+    if (excerpt) fullText.push({ page: paged ? i + 1 : null, text: excerpt, hits });
   }
 
   return { count: metadata.length + fullText.length, metadata, fullText };
@@ -321,7 +334,7 @@ export function entityFullTextBlob(
   const cached = fullTextBlobCache.get(key);
   if (cached !== undefined) return cached;
 
-  const blob = fold(documentPages(entity, language, source).join("\n"));
+  const blob = fold(documentPages(entity, language, source).pages.join("\n"));
   if (source === "cejil" && !cejilLoaded()) return blob; // "" — don't wedge the cache
   fullTextBlobCache.set(key, blob);
   return blob;

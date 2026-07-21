@@ -129,6 +129,19 @@ function buildRendition(title: string, pages: string[]): DocRendition {
 
 /** Url'd PDF files for an entity, else borrow from a connected document entity
  *  (a Causa → its Sentencia), so opening a case shows its primary judgment. */
+/** The per-page text of the PDF the viewer ACTUALLY renders for this entity.
+ *
+ *  Goes through `docFilesFor`, the same selection the profile/viewer uses — which
+ *  falls back to a RELATED entity's PDF (a Causa shows its Sentencia). Reading
+ *  the entity's own files instead gave two wrong answers: no pages at all for a
+ *  Causa, and — when a differently-languaged file happened to carry fullText —
+ *  page numbers belonging to a file that wasn't on screen (the "p.9 lands on 15"
+ *  report). Page numbers must refer to the document being displayed. */
+export function cejilDocPagesFor(sharedId: string): string[] {
+  const primary = docFilesFor(sharedId).files[0];
+  return primary ? cejilFullText()[primary.filename] ?? [] : [];
+}
+
 function docFilesFor(sharedId: string): { files: CejilFile[]; titleSid: string } {
   const own = (cejilFilesBySid().get(sharedId) || []).filter((f) => f.url && f.isPdf);
   if (own.length) return { files: own, titleSid: sharedId };

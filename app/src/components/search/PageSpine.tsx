@@ -30,17 +30,40 @@ export function PageSpine({ entityId, fullText, query, onSelect }: Props) {
         className="absolute inset-y-1.5 w-px bg-border/60"
         style={{ insetInlineStart: "0.1875rem" }}
       />
-      {fullText.map((snippet) => {
-        const isActive = active?.entityId === entityId && active.page === snippet.page;
+      {fullText.map((snippet, i) => {
+        const isActive =
+          snippet.page !== null &&
+          active?.entityId === entityId &&
+          active.page === snippet.page;
+        // A snippet whose corpus can't name a real page is a passive excerpt:
+        // no "p.N", no click. Jumping to a page we invented would land nowhere.
+        if (snippet.page === null) {
+          return (
+            <div key={i} className="w-full rounded-md px-2 py-1.5">
+              <p className="text-sm text-ink leading-relaxed">
+                <HighlightedText text={snippet.text} query={query} />
+              </p>
+              {snippet.hits > 1 && (
+                <span
+                  dir="ltr"
+                  className="mt-0.5 block text-end text-xs font-semibold text-ink-tertiary tabular-nums"
+                >
+                  {snippet.hits}×
+                </span>
+              )}
+            </div>
+          );
+        }
+        const page = snippet.page;
         return (
           <button
-            key={snippet.page}
+            key={i}
             type="button"
             aria-pressed={isActive}
-            aria-label={`Page ${snippet.page}, ${snippet.hits} ${
+            aria-label={`Page ${page}, ${snippet.hits} ${
               snippet.hits === 1 ? "match" : "matches"
             }`}
-            onClick={() => onSelect(entityId, snippet.page)}
+            onClick={() => onSelect(entityId, page)}
             className={`w-full text-start rounded-md px-2 py-1.5 transition-colors cursor-pointer
               focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20 ${
                 isActive ? "bg-parchment" : "hover:bg-warm"
@@ -53,7 +76,7 @@ export function PageSpine({ entityId, fullText, query, onSelect }: Props) {
               dir="ltr"
               className="mt-0.5 block text-end text-xs font-semibold text-ink-tertiary tabular-nums"
             >
-              p.{snippet.page}
+              p.{page}
               {snippet.hits > 1 ? ` · ${snippet.hits}×` : ""}
             </span>
           </button>

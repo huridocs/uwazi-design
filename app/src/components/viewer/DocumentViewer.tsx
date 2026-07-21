@@ -200,32 +200,53 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
     }
   }, []);
 
-  // Scroll-to-page signal (from ToC clicks, Results-tab snippet jumps, etc.).
-  // The target page's element may not be mounted yet when the signal arrives —
-  // a snippet jump swaps the drawer to this preview and fires while the PDF is
-  // still rendering. `pageRefs` is a ref, so this effect won't re-run on mount;
-  // retry across frames until the element exists, THEN scroll and clear. Only
-  // clearing on success (or after a cap) keeps the jump from silently no-op'ing.
+  // Scroll-to-page signal (from ToC clicks, Search-tab / Results snippet jumps).
+  //
+  // Two things have to be true before this can work, and waiting for only the
+  // first is why the jump silently no-op'd: the page element must EXIST, and it
+  // must have been LAID OUT. A snippet jump swaps the drawer to this preview and
+  // fires while the PDF is still rendering — react-pdf mounts every page div
+  // immediately but they're zero-height until each canvas paints, so all of them
+  // sit at the same offset and `scrollIntoView(page 5)` lands at ~0. The pages
+  // then grow underneath the scroll position and nothing appears to have moved.
+  //
+  // So retry until the target has real height, then scroll. `pageRefs` is a ref,
+  // so this effect can't re-run on mount — the frame loop is what waits.
   const [pageJump, setPageJump] = useAtom(scrollToPageAtom);
   useEffect(() => {
     if (pageJump === null) return;
+    // Behind a text/HTML rendition the PDF pane is `display:none` (it stays
+    // mounted so switching back repaints instantly). Inside a hidden container
+    // `scrollIntoView` does nothing and every page measures 0 tall, so the loop
+    // below would spin out its budget and drop the jump on the floor. HOLD the
+    // signal instead — don't clear it — and let `renditionMode` re-run this
+    // effect when the pane becomes visible, so the jump lands then. A page
+    // number only means anything in the paginated PDF view anyway.
+    if (renditionMode) return;
     let raf = 0;
     let attempts = 0;
-    const MAX_ATTEMPTS = 120; // ~2s at 60fps — covers PDF page mount + layout
+    const MAX_ATTEMPTS = 240; // ~4s at 60fps — covers PDF mount + canvas paint
+    const MIN_LAID_OUT = 40; // px: a rendered page, not a collapsed placeholder
     const tryScroll = () => {
-      const pageEl = pageRefs.current.get(pageJump);
-      if (pageEl) {
+      const cached = pageRefs.current.get(pageJump);
+      // `isConnected` rejects a node left over from a previously-rendered
+      // document; `offsetHeight` rejects one that's mounted but not yet painted.
+      const pageEl = cached?.isConnected ? cached : undefined;
+      if (pageEl && pageEl.offsetHeight > MIN_LAID_OUT) {
         pageEl.scrollIntoView({ behavior: "smooth", block: "start" });
         setPageJump(null);
       } else if (attempts++ < MAX_ATTEMPTS) {
         raf = requestAnimationFrame(tryScroll);
       } else {
-        setPageJump(null); // give up rather than wedge the signal
+        // Give up rather than wedge the signal — but still make a best-effort
+        // jump if the element is at least present.
+        pageEl?.scrollIntoView({ behavior: "smooth", block: "start" });
+        setPageJump(null);
       }
     };
     tryScroll();
     return () => cancelAnimationFrame(raf);
-  }, [pageJump, setPageJump]);
+  }, [pageJump, setPageJump, renditionMode]);
 
   // Scroll to highlight centered in viewport
   const [scrollTarget] = useAtom(scrollToHighlightAtom);
@@ -296,7 +317,13 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
             <div
               key={pageNum}
               ref={(el) => {
+                // DELETE on unmount, don't just set on mount. Without this the
+                // map keeps detached nodes from the previously-rendered document
+                // (the drawer preview swaps documents in place), so a page-jump
+                // looked up page N, got a stale node that is no longer in the
+                // DOM, and "scrolled" it — a silent no-op. That was the jump bug.
                 if (el) pageRefs.current.set(pageNum, el);
+                else pageRefs.current.delete(pageNum);
               }}
               className="relative mb-4"
               style={{
