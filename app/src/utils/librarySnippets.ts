@@ -339,6 +339,66 @@ export function matchCategories(
   return { title, properties, document };
 }
 
+/** Where a query matched an entity that THE ROW ITSELF cannot show.
+ *
+ *  A list row or a spine line renders a title (marked) and — in the table — a
+ *  country column (also marked). Those matches are self-evident: the mark IS the
+ *  evidence. A hit in an unrendered property, or in the document body, leaves the
+ *  row looking like it matched nothing, which is the whole problem in a result set
+ *  of thousands. This is what the row's match marker names.
+ *
+ *  `visibleFieldKeys` are the field keys the surface already renders WITH marks
+ *  (list: `title` + `country` when that column is on; spine: `title` only).
+ *  Anything matched outside that set is hidden evidence.
+ *
+ *  Only the FIRST hidden property is returned, plus how many more there were: the
+ *  marker names one place and routes there; the drawer's Results card is where the
+ *  full account lives, and duplicating it in a 4rem column would be noise.
+ *
+ *  Full text is gated on `q.length ≥ 3`, exactly like the library filter's
+ *  `fullTextSearch` — a marker for a body hit the filter never made would be an
+ *  affordance the data can't back. */
+export interface HiddenMatchOrigin {
+  /** First matched metadata field the row doesn't already display. */
+  property: { field: string; fieldKey: string } | null;
+  /** Further hidden property fields beyond `property`. */
+  moreProperties: number;
+  /** The query hit the document body. */
+  document: boolean;
+}
+
+export function hiddenMatchOrigin(
+  entity: Entity,
+  q: string,
+  language: Language,
+  source: DataSource,
+  visibleFieldKeys: readonly string[],
+): HiddenMatchOrigin {
+  const empty: HiddenMatchOrigin = { property: null, moreProperties: 0, document: false };
+  const terms = highlightTerms(q); // already folded — one tokenizer, see §4.3
+  if (terms.length === 0) return empty;
+
+  const visible = new Set(visibleFieldKeys);
+  let property: HiddenMatchOrigin["property"] = null;
+  let moreProperties = 0;
+  for (const f of entityFields(entity, language)) {
+    if (visible.has(f.fieldKey)) continue;
+    const lower = fold(f.text);
+    if (!terms.some((t) => lower.includes(t))) continue;
+    if (property) moreProperties++;
+    else property = { field: f.field, fieldKey: f.fieldKey };
+  }
+
+  const document =
+    q.trim().length >= 3 &&
+    (() => {
+      const blob = entityFullTextBlob(entity, language, source);
+      return terms.some((t) => blob.includes(t));
+    })();
+
+  return { property, moreProperties, document };
+}
+
 /** Per-entity lowercase full-text blob (all its document pages joined), for the
  *  library search predicate to scan alongside the metadata index. Lazily built
  *  and MEMOIZED so the CEJIL corpus is walked once on the first full-text search,

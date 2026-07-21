@@ -54,6 +54,7 @@ import {
   IsolatedRefMinimap,
   FiltersDrawerDemo,
   FacetSectionDemo,
+  ToggleChipDemo,
   IsolatedViewModeControls,
   IsolatedCollapseControls,
   IsolatedListInfoRow,
@@ -1019,6 +1020,16 @@ export function ComponentCatalog({ onReturn }: Props) {
                     <ActiveFilterChip label="Country" color="#16A34A" onRemove={() => {}} />
                     <ActiveFilterChip label={'"rights"'} onRemove={() => {}} />
                   </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="fl-toggle-chip" ref={reg("fl-toggle-chip")}>
+                <CatalogEntry
+                  name="ToggleChip"
+                  description="ActiveFilterChip's toggleable sibling — same chip, aria-pressed instead of an X. Off drops the fill."
+                  code={`<ToggleChip label="Document" count={658} active={on} onToggle={...} />`}
+                >
+                  <ToggleChipDemo />
                 </CatalogEntry>
               </div>
 

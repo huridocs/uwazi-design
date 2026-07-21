@@ -102,9 +102,24 @@ export const libraryChainFiltersAtom = atom<
   Record<string, Record<string, boolean>>
 >({});
 
-/** Results layout. */
-export type LibraryViewMode = "cards" | "list" | "map" | "timeline";
+/** Results layout. `results` is the evidence view promoted out of the drawer: it
+ *  reads the same `buildSnippetsFor` output the Results tab does, at full width.
+ *  It stays selectable with no query (the switcher may not gain and lose a
+ *  segment as you type — that shifts every control beside it); the view renders
+ *  its own "search to see where terms match" state instead. */
+export type LibraryViewMode = "cards" | "list" | "map" | "timeline" | "results";
 export const libraryViewModeAtom = atom<LibraryViewMode>("cards");
+
+/** Results body flavour — four readings of the same snippets:
+ *  - `grouped`   one wide card per entity: its matched properties beside its
+ *                document passages (the drawer's card, given room)
+ *  - `tree`      entity → matched field → its snippets, collapsible at both levels
+ *  - `passages`  every matching passage as one flat ranked list, entity secondary
+ *                — the reading view
+ *  - `spine`     passages on a proportional time axis, each entity carrying its
+ *                strongest one */
+export type ResultsLayout = "grouped" | "tree" | "passages" | "spine";
+export const libraryResultsLayoutAtom = atom<ResultsLayout>("grouped");
 
 /** Timeline body flavour — four ways to read the same chronology:
  *  - `rail`     the text-references minimap on a vertical time track: dots and

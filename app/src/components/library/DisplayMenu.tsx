@@ -5,12 +5,14 @@ import {
   libraryInfoAtom,
   libraryViewModeAtom,
   libraryTimelineLayoutAtom,
+  libraryResultsLayoutAtom,
   libraryTimeHubAtom,
   librarySortAtom,
   librarySortDirAtom,
   defaultSortDir,
   type LibraryInfoKey,
   type TimelineLayout,
+  type ResultsLayout,
 } from "../../atoms/library";
 import { breakpointAtom } from "../../atoms/viewport";
 import { SORTS } from "../../views/LibraryView";
@@ -30,6 +32,13 @@ const LAYOUTS: { id: TimelineLayout; label: string; detail: string }[] = [
   { id: "lanes", label: "Lanes", detail: "Template × period grid" },
 ];
 
+const RESULTS_LAYOUTS: { id: ResultsLayout; label: string; detail: string }[] = [
+  { id: "grouped", label: "Grouped", detail: "One card per entity, fields beside pages" },
+  { id: "tree", label: "Tree", detail: "Entity → field → snippets, collapsible" },
+  { id: "passages", label: "Passages", detail: "Every passage, ranked; entity secondary" },
+  { id: "spine", label: "Spine", detail: "Best passage at its date on a time axis" },
+];
+
 /** Header control for how the results are drawn: which info pieces the cards and
  *  rows carry, plus the view-specific modifiers.
  *
@@ -40,6 +49,7 @@ const LAYOUTS: { id: TimelineLayout; label: string; detail: string }[] = [
 export function DisplayMenu() {
   const [info, setInfo] = useAtom(libraryInfoAtom);
   const [layout, setLayout] = useAtom(libraryTimelineLayoutAtom);
+  const [resultsLayout, setResultsLayout] = useAtom(libraryResultsLayoutAtom);
   const [timeHub, setTimeHub] = useAtom(libraryTimeHubAtom);
   const [sort, setSort] = useAtom(librarySortAtom);
   const setSortDir = useSetAtom(librarySortDirAtom);
@@ -48,9 +58,11 @@ export function DisplayMenu() {
   const [open, setOpen] = useState(false);
 
   const hiddenCount = ITEMS.filter((i) => info[i.key] === false).length + (timeHub ? 0 : 1);
-  // The map draws no cards or rows, so the info toggles have nothing to act on.
-  const showInfo = viewMode !== "map";
+  // The map draws no cards or rows, so the info toggles have nothing to act on —
+  // and neither does Results, whose rows are snippets, not metadata summaries.
+  const showInfo = viewMode !== "map" && viewMode !== "results";
   const showLayouts = viewMode === "timeline";
+  const showResultsLayouts = viewMode === "results";
   const toggle = (key: LibraryInfoKey) => setInfo((s) => ({ ...s, [key]: s[key] === false }));
 
   return (
@@ -127,9 +139,42 @@ export function DisplayMenu() {
                     </button>
                   );
                 })}
-                {(showLayouts || showInfo) && (
+                {(showLayouts || showResultsLayouts || showInfo) && (
                   <div className="my-1 h-px" style={{ backgroundColor: "var(--border-soft)" }} />
                 )}
+              </>
+            )}
+
+            {showResultsLayouts && (
+              <>
+                <p className="px-2 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+                  Results layout
+                </p>
+                {RESULTS_LAYOUTS.map((l) => {
+                  const on = resultsLayout === l.id;
+                  return (
+                    <button
+                      key={l.id}
+                      onClick={() => setResultsLayout(l.id)}
+                      aria-pressed={on}
+                      className="w-full flex items-start gap-2 px-2 py-1.5 rounded hover:bg-warm transition-colors cursor-pointer text-start"
+                    >
+                      <span className="w-4 shrink-0 pt-0.5 flex justify-center text-carbon">
+                        {on && <Check size={13} />}
+                      </span>
+                      <span className="min-w-0">
+                        <span
+                          className={`block text-xs ${on ? "text-ink font-semibold" : "text-ink-secondary"}`}
+                        >
+                          {l.label}
+                        </span>
+                        <span className="block text-[10px] text-ink-tertiary leading-tight">
+                          {l.detail}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
               </>
             )}
 

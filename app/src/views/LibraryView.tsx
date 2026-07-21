@@ -10,6 +10,7 @@ import {
   Plus,
   Upload,
   FileSpreadsheet,
+  TextSearch,
 } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, cejilReadyAtom } from "../atoms/dataSource";
 import { loadCejilData, cejilRelsByEntity } from "../data/cejil/load";
@@ -56,6 +57,7 @@ import { highlightTerms, fold } from "../utils/queryTokens";
 import { matchCategories } from "../utils/librarySnippets";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { EntityCard } from "../components/library/EntityCard";
+import { MatchOrigin } from "../components/library/MatchOrigin";
 // Lazy: react-simple-maps + the world atlas are the heaviest static chunk in
 // the bundle and only the map view needs them — split so the default Library
 // (and everything else) never downloads them.
@@ -69,6 +71,7 @@ import { LibraryClusterDrawer } from "../components/library/LibraryClusterDrawer
 import { EntityDrawerPreview } from "../components/library/EntityDrawerPreview";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { ResultsBody } from "../components/library/ResultsSnippets/ResultsBody";
+import { ResultsMainView } from "../components/library/ResultsSnippets/ResultsMainView";
 import { SearchTipsPopover } from "../components/library/SearchTipsPopover";
 import { DisplayMenu } from "../components/library/DisplayMenu";
 import { ActiveFiltersButton } from "../components/library/ActiveFiltersButton";
@@ -92,6 +95,11 @@ export const SORTS = [
 
 /** How many cards to reveal per page in the Library grid/list. */
 const DISPLAY_STEP = 120;
+
+/** Stable identities for the "what does this row already mark?" sets — a fresh
+ *  literal per row would re-run every marker's match scan on every render. */
+const TITLE_ONLY = ["title"] as const;
+const TITLE_AND_COUNTRY = ["title", "country"] as const;
 
 export function LibraryView() {
   const entities = useAtomValue(libraryEntitiesAtom);
@@ -202,8 +210,11 @@ export function LibraryView() {
   const q = query.trim().toLowerCase();
   const hasQuery = q.length > 0;
   useEffect(() => {
-    setDrawerTab(hasQuery ? "results" : "filters");
-  }, [hasQuery]);
+    // …but not when the MAIN pane is already the Results view: two copies of the
+    // same evidence list side by side is one too many. The tab stays reachable;
+    // it just isn't what a query auto-opens there.
+    setDrawerTab(hasQuery && viewMode !== "results" ? "results" : "filters");
+  }, [hasQuery, viewMode]);
   // Query tokens for the search predicate (shared with snippets + marks). Derived
   // from the raw `query` so uppercase AND/OR/NOT are recognised before lowering.
   // Full-text body scanning is gated on `q.length ≥ 3` for CEJIL-corpus perf.
@@ -420,6 +431,16 @@ export function LibraryView() {
     setCejilRetry((n) => n + 1);
   }, []);
 
+  // What the TABLE row already marks in place — everything else the query hit is
+  // off-row evidence (see `MatchOrigin`). Country counts only when the column is
+  // ON *and this row has a value in it*: a profile field labelled "Country" can
+  // match on an entity whose `country` is empty, and that cell renders an
+  // em-dash — suppressing the marker there hides the only evidence there was.
+  const rowMarkedFields = useCallback(
+    (e: Entity) => (info.country !== false && e.country ? TITLE_AND_COUNTRY : TITLE_ONLY),
+    [info.country],
+  );
+
   const tableColumns: Column<Entity>[] = [
     {
       // The type rides WITH the title, not in a column of its own.
@@ -441,6 +462,23 @@ export function LibraryView() {
             <HighlightedText text={e.title} query={query} />
           </span>
         </span>
+      ),
+    },
+    // WHERE it matched, when the row can't show it.
+    //
+    // Title and Country are marked in place — that mark is the evidence. A hit in
+    // any other property, or in the document body, leaves the row looking
+    // unmatched, which in a few thousand results is the difference between a
+    // result list and a list. The column is 3.5rem of reserved track: contents
+    // come and go per row as the query is refined, the track never moves. It
+    // mounts only while a query is active — the one transition (no query → query)
+    // that replaces every row anyway.
+    hasQuery && {
+      id: "match",
+      header: "Match",
+      width: "3.5rem",
+      cell: (e: Entity) => (
+        <MatchOrigin entity={e} visibleFieldKeys={rowMarkedFields(e)} onSelect={handleSelect} />
       ),
     },
     info.country !== false && {
@@ -535,6 +573,10 @@ export function LibraryView() {
             { id: "list", label: "List", icon: List },
             { id: "map", label: "Map", icon: MapIcon },
             { id: "timeline", label: "Timeline", icon: CalendarRange },
+            // Always mounted, query or not. A segment that appears when you type
+            // would resize the switcher and shove every control beside it — the
+            // view renders its own "search to see where terms match" state.
+            { id: "results", label: "Results", icon: TextSearch },
           ]}
         />
         {/* Display is icon-only and ALWAYS mounted; the view-specific modifiers
@@ -558,8 +600,11 @@ export function LibraryView() {
 
       {/* Results */}
       <div
-        className={`flex-1 min-h-0 px-3 py-3 bg-warm ${
-          viewMode === "map" || viewMode === "timeline"
+        // Results brings its own gutters — its header is a `ListInfoRow`, which
+        // carries the app's standard `px-3`. Doubling up would indent the whole
+        // view past every other layout.
+        className={`flex-1 min-h-0 py-3 bg-warm ${viewMode === "results" ? "" : "px-3"} ${
+          viewMode === "map" || viewMode === "timeline" || viewMode === "results"
             ? "flex flex-col overflow-hidden"
             : "overflow-auto"
         }`}
@@ -605,6 +650,30 @@ export function LibraryView() {
               countByEntity={countByEntity}
             />
           </div>
+        ) : viewMode === "results" ? (
+          // The evidence view at full width. It owns its own scroll, paging and
+          // blank states (including "no query yet"), so it sits above the shared
+          // empty-state branch below.
+          <div className="flex-1 min-h-0">
+            <ResultsMainView
+              query={query}
+              entities={filtered}
+              source={dataSource}
+              language={language}
+              cejilLoading={cejilLoading}
+              cejilError={cejilError}
+              onRetry={handleCejilRetry}
+              onFocusProperty={handleFocusProperty}
+              onSelectSnippet={handleSnippetSelect}
+              onSelect={handleSelect}
+              selectedId={selectedId}
+              onClearSearch={() => setQuery("")}
+              hiddenByFilters={Math.max(0, searchMatchCount - matchTypeBase.length)}
+              onClearFilters={() => clearFacets()}
+              matchTypeCounts={matchTypeCounts}
+              totalMatches={matchTypeBase.length}
+            />
+          </div>
         ) : filtered.length === 0 ? (
           <div className="flex items-center justify-center h-40 text-sm text-ink-muted">
             No entities match your filters.
@@ -637,7 +706,7 @@ export function LibraryView() {
           />
         )}
 
-        {!cejilLoading && viewMode !== "map" && viewMode !== "timeline" && shown.length < filtered.length && (
+        {!cejilLoading && viewMode !== "map" && viewMode !== "timeline" && viewMode !== "results" && shown.length < filtered.length && (
           <div className="flex justify-center pt-4">
             <button
               onClick={() => setVisibleCount((n) => n + DISPLAY_STEP)}

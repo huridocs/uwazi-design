@@ -7,6 +7,7 @@ import { buildSnippetsFor } from "../../../utils/librarySnippets";
 import { useAtom } from "jotai";
 import { matchTypeFiltersAtom, type MatchTypeFilters } from "../../../atoms/library";
 import { ListInfoRow } from "../../shared/ListInfoRow";
+import { ToggleChip } from "../../shared/ToggleChip";
 import { CollapseControls } from "../../relationships/FiltersRow";
 import { EntityResultCard } from "./EntityResultCard";
 
@@ -16,38 +17,6 @@ const MATCH_TYPES: { key: MatchType; label: string }[] = [
   { key: "properties", label: "Properties" },
   { key: "document", label: "Document" },
 ];
-
-/** A match-type toggle chip with a count — filters which cards show by WHERE the
- *  query matched. */
-function TypeChip({
-  label,
-  count,
-  active,
-  onToggle,
-}: {
-  label: string;
-  count: number;
-  active: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      aria-pressed={active}
-      className={`inline-flex items-center gap-1 h-6 px-2 rounded-md border text-[11px] font-medium
-        transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1
-        focus-visible:ring-inset focus-visible:ring-ink/20 ${
-          active
-            ? "bg-parchment border-border text-ink"
-            : "bg-paper border-border/40 text-ink-tertiary hover:text-ink-secondary"
-        }`}
-    >
-      {label}
-      <span className="tabular-nums text-ink-tertiary">{count.toLocaleString()}</span>
-    </button>
-  );
-}
 
 /** How many entity cards to render before "Show more" (the drawer is narrow and
  *  the CEJIL corpus is thousands of entities — mirror the left pane's paging). */
@@ -237,10 +206,30 @@ export function ResultsBody({
   return (
     <Shell>
       <div className="shrink-0" style={{ borderBottom: "1px solid var(--border-primary)" }}>
+        {/* Count, match-type chips and the collapse controls on ONE row —
+            count + inlineSlot + rightSlot, the shared list-header shape. The
+            chips used to sit in a strip of their own below, which is height this
+            row was already paying for. */}
         <ListInfoRow
           count={countLabel}
           activeFilterCount={0}
           showFilterChips={false}
+          // Ahead of the count for the same reason as the main view: the chips
+          // are stable-width and clickable, the count rewrites itself to
+          // "N of M" the moment one is toggled. Trailing chips would slide.
+          leadingSlot={
+            <span className="flex items-center gap-1">
+              {MATCH_TYPES.map(({ key, label }) => (
+                <ToggleChip
+                  key={key}
+                  label={label}
+                  count={matchTypeCounts[key]}
+                  active={activeTypes[key]}
+                  onToggle={() => setActiveTypes((t) => ({ ...t, [key]: !t[key] }))}
+                />
+              ))}
+            </span>
+          }
           rightSlot={
             <CollapseControls
               expandedCount={expandedCount}
@@ -272,19 +261,6 @@ export function ResultsBody({
           >
             Clear filters
           </button>
-        </div>
-
-        {/* Match-type chips — filter which cards show by where the query hit. */}
-        <div className="px-3 pb-2 flex items-center gap-1.5">
-          {MATCH_TYPES.map(({ key, label }) => (
-            <TypeChip
-              key={key}
-              label={label}
-              count={matchTypeCounts[key]}
-              active={activeTypes[key]}
-              onToggle={() => setActiveTypes((t) => ({ ...t, [key]: !t[key] }))}
-            />
-          ))}
         </div>
       </div>
 
