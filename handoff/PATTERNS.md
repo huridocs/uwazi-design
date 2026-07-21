@@ -477,6 +477,36 @@ A count badge is the *inline* counterpart: it sits in the button's flow (not
 absolutely positioned), `bg-ink text-paper`, ~14px, `tabular-nums` — see
 `FiltersButton`. Inline because a number needs room and must not overlap a glyph.
 
+### Never shift layout on state change
+
+A row that appears only when it has something to say — an "N active / Clear all"
+summary, a count line, a chip sheet — shoves everything below it the moment a user
+ticks a box. Inside a scrollable column that isn't a polish issue: the facet you
+were reaching for slides out from under the cursor as you click it.
+
+Three remedies, in order of preference:
+
+1. **Move the signal onto a control that's already there.** A count badge on the tab
+   that owns the panel costs no new height and can't shift anything.
+2. **Render nothing.** If the state is legible elsewhere, don't restate it.
+3. **Reserve the space** — mount permanently and toggle only the contents
+   (`invisible` + `aria-hidden`), never a conditional mount. Last resort.
+
+**Worked example — the Filters panel's "N active" row.** It began as a conditional
+mount and shoved the facet list on every tick. The fix was to reserve a fixed band,
+and that was **also wrong**, for two reasons: it pays a permanent empty strip in a
+scrollable column for a message that is usually absent, and it left a *second*
+account of the same state — an active-filters sheet docked at the foot of the same
+panel already listed those filters, and it mounted on first activation too.
+
+The answer was neither mount nor reserve. The count moved onto the Filters tab (a
+control already on screen) and the full account moved into one always-present
+constraint summary. Zero new elements, zero reserved emptiness, one place that
+answers "what's affecting this data".
+
+The lesson generalises: when a signal needs somewhere to live, look for a control
+that is already paying for its space before you add a row.
+
 **Action buttons are warm and borderless.**
 
 ```tsx
@@ -497,6 +527,75 @@ as real bugs here. The real names are in `TOKENS-MAPPING.md`.
 
 ---
 
+## Part 4 — Search surfaces
+
+Three rules that came out of building the Library's search: the highlight, the
+snippet, and the query parse. Each fixed a bug that was invisible until the
+surface sat next to the thing it described.
+
+### 4.1 A highlight must not change text metrics
+
+A mark that adds width or weight re-wraps the line it sits in — the same sentence
+breaks differently highlighted than plain, and a column of snippets jitters as the
+query changes under it.
+
+```tsx
+const MARK_CLASS = "rounded-[2px] px-0.5 -mx-0.5 bg-highlight-active/70 text-ink";
+```
+
+- `px-0.5` paints the tint slightly past the glyphs; **`-mx-0.5` cancels exactly
+  that width**, so the mark occupies the same horizontal space as the plain text.
+- **No `font-weight`.** The mark inherits it, so a hit inside a semibold title stays
+  semibold and one in body copy stays regular. Changing weight changes glyph advance
+  widths, which re-wraps the line — the thing the negative margin just paid to avoid.
+- `-mx-*` is symmetric, so this is RTL-safe.
+
+See `HighlightedText`. Marking is done by **string-split, never
+`dangerouslySetInnerHTML`** — snippets carry arbitrary corpus text.
+
+Colour is the *active* highlight token at 70% (`--highlight-yellow-active`), not the
+base yellow: at low alpha over warm paper the base reads muddy rather than marked.
+
+### 4.2 Don't render an affordance the data can't back
+
+A page tag, a count, or a jump target that isn't real is worse than none. It looks
+authoritative, and it stays invisible exactly until the user puts it beside the
+thing it claims to describe.
+
+**Worked example.** Full-text snippets claim `p.N` **only where the page is real**.
+CEJIL carries genuine per-page text, so its snippets get a page tag *and* a
+jump-to-page. The mock corpus shares one rendition across every doc-bearing entity —
+text that isn't page-mapped and isn't even the PDF rendered beside it — so those
+snippets carry `page: null`: excerpt only, no tag, no jump. The invented number was
+unnoticeable in the Library and plainly wrong the moment a snippet sat next to the
+actual document.
+
+Rule: derive the affordance from the data and let it be **absent**. Don't fabricate
+a plausible value to keep a layout regular — the regularity is worth less than the
+claim being true.
+
+### 4.3 One matching semantics — filter, snippet and mark share a tokenizer
+
+If the thing that FILTERS, the thing that EXCERPTS and the thing that MARKS each
+parse the query themselves, they drift. The failure is silent and confusing: a row
+matches but nothing highlights inside it, or a phrase marks a word it didn't match on.
+
+Keep **one** tokenizer (`utils/queryTokens.ts`) and have all three consume it.
+`tokenizeQuery` treats `"quoted phrases"` as single tokens and `AND`/`OR`/`NOT` as
+operators; `highlightTerms` derives the literal strings to mark from that same parse.
+The filter, the snippet matcher and `HighlightedText` all read it, so what matches
+and what gets marked cannot disagree.
+
+If matching folds diacritics, the mark must fold identically and then map hits back
+to the ORIGINAL string's indices — the mark has to wrap the source characters,
+accents and case intact.
+
+The same class of bug already bit once on this surface: two `clearAll`
+implementations over one filter state drifted, one forgetting the search box and the
+other the AND/OR modes. One state, one parser, one clear.
+
+---
+
 ## Review checklist
 
 Before merging a component onto the 2026 language:
@@ -510,5 +609,9 @@ Before merging a component onto the 2026 language:
 - [ ] Self-updating regions have `aria-live` / `role="status"` / `role="log"`
 - [ ] Every new animation appears in a `prefers-reduced-motion` block
 - [ ] Sticky-state control carries a dot (illegible state) or a count (countable) — never both, never a marker that mounts on activation
+- [ ] Nothing mounts on state change inside a scrollable column — signal moved onto an existing control, or space reserved
+- [ ] Highlight marks don't change text metrics (padding cancelled by equal negative margin, weight inherited)
+- [ ] No page tag, count or jump target the data can't back — absent beats invented
+- [ ] Filter, snippet and mark all read one tokenizer
 - [ ] No raw px in layout; no hex fallbacks in `var()`; no second selected colour
 - [ ] Verified in light **and** dark, and in RTL if the component has directional layout
