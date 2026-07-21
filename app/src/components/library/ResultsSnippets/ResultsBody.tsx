@@ -226,20 +226,28 @@ export function ResultsBody({
           }
         />
 
-        {hiddenByFilters > 0 && (
-          <div className="px-3 pb-2 text-[11px] text-ink-tertiary">
-            {hiddenByFilters.toLocaleString()} more{" "}
-            {hiddenByFilters === 1 ? "match" : "matches"} hidden by filters
-            <span className="mx-1 text-ink-muted">·</span>
-            <button
-              type="button"
-              onClick={onClearFilters}
-              className="font-medium text-carbon hover:underline cursor-pointer"
-            >
-              Clear filters
-            </button>
-          </div>
-        )}
+        {/* Always mounted, contents hidden when nothing is excluded: this line
+            appears and vanishes as facets are ticked — exactly while the user is
+            reading the list below — so mounting it late shoved every card down.
+            The height is reserved; only the contents toggle. */}
+        <div
+          aria-hidden={hiddenByFilters === 0}
+          className={`px-3 pb-2 text-[11px] text-ink-tertiary ${
+            hiddenByFilters === 0 ? "invisible" : ""
+          }`}
+        >
+          {hiddenByFilters.toLocaleString()} more{" "}
+          {hiddenByFilters === 1 ? "match" : "matches"} hidden by filters
+          <span className="mx-1 text-ink-muted">·</span>
+          <button
+            type="button"
+            onClick={onClearFilters}
+            tabIndex={hiddenByFilters === 0 ? -1 : undefined}
+            className="font-medium text-carbon hover:underline cursor-pointer"
+          >
+            Clear filters
+          </button>
+        </div>
 
         {/* Match-type chips — filter which cards show by where the query hit. */}
         <div className="px-3 pb-2 flex items-center gap-1.5">

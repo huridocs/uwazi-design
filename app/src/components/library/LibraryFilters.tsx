@@ -259,29 +259,40 @@ export function LibraryFilters() {
           the results was a block that appeared and vanished, shoving the whole
           result set up and down. Filters are set here, so they are read here —
           the ticked boxes already say what's on; this row totals them and offers
-          the way out. It only mounts when something is active, so with no filters
-          the facet cards sit flush under the tabs. */}
-      {activeFilterCount > 0 && (
-        <div
-          className="shrink-0 flex items-center gap-2 px-3.5 py-2"
-          style={{ borderBottom: "1px solid var(--border-primary)" }}
+          the way out. The row is ALWAYS mounted at a fixed height — see below. */}
+      <div
+        className="shrink-0 flex items-center gap-2 px-3.5 py-2 h-10"
+        style={{ borderBottom: "1px solid var(--border-primary)" }}
+      >
+        {/* Contents are hidden, NOT unmounted: ticking the first filter used to
+            mount this row and shove every facet card down the pane. The row keeps
+            its height at all times so the list below never moves; `invisible` +
+            `aria-hidden` + `tabIndex={-1}` keep the empty state out of the
+            pointer, screen-reader, and tab paths. */}
+        <span
+          aria-hidden={activeFilterCount === 0}
+          className={`inline-flex items-center gap-1.5 text-[11px] text-ink-tertiary tabular-nums ${
+            activeFilterCount === 0 ? "invisible" : ""
+          }`}
         >
-          <span className="inline-flex items-center gap-1.5 text-[11px] text-ink-tertiary tabular-nums">
-            <span
-              className="w-1.5 h-1.5 rounded-full"
-              style={{ backgroundColor: "var(--accent-blue)" }}
-            />
-            {activeFilterCount} active
-          </span>
-          <button
-            onClick={clearAll}
-            className="ms-auto px-2 h-6 text-[11px] font-medium rounded-md text-ink-tertiary
-              hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
-          >
-            Clear all
-          </button>
-        </div>
-      )}
+          <span
+            className="w-1.5 h-1.5 rounded-full"
+            style={{ backgroundColor: "var(--accent-blue)" }}
+          />
+          {activeFilterCount} active
+        </span>
+        <button
+          onClick={clearAll}
+          aria-hidden={activeFilterCount === 0}
+          tabIndex={activeFilterCount === 0 ? -1 : undefined}
+          className={`ms-auto px-2 h-6 text-[11px] font-medium rounded-md text-ink-tertiary
+            hover:bg-parchment hover:text-ink transition-colors cursor-pointer ${
+              activeFilterCount === 0 ? "invisible" : ""
+            }`}
+        >
+          Clear all
+        </button>
+      </div>
 
       {/* Facet cards — top padding matches the main content (py-3) so the first
           block lines up with the first library card. */}
