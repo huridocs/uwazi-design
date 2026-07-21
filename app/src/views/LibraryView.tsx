@@ -710,7 +710,9 @@ export function LibraryView() {
     <div className="flex flex-col h-full min-h-0 bg-warm">
       <DrawerTabs
         tabs={[
-          { id: "filters", label: "Filters" },
+          // Count rides as a badge here rather than as a row inside the panel —
+          // a row that mounts on first tick shifted every facet card.
+          { id: "filters", label: "Filters", count: activeFilterCount || undefined },
           { id: "results", label: "Results" },
         ]}
         activeId={drawerTab}
@@ -738,7 +740,12 @@ export function LibraryView() {
       defaultRightWidth={460}
       minRightWidth={360}
       mobileSections={[
-        { id: "filters", label: "Filters", content: <LibraryFilters /> },
+        {
+          id: "filters",
+          label: "Filters",
+          count: activeFilterCount || undefined,
+          content: <LibraryFilters />,
+        },
         { id: "results", label: "Results", content: resultsBody },
       ]}
     />

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { ChevronDown } from "lucide-react";
-import { libraryActiveFilterCountAtom, clearLibraryFiltersAtom } from "../../atoms/library";
+import { libraryActiveFilterCountAtom, clearLibraryFacetsAtom } from "../../atoms/library";
 import { useActiveFilters } from "../../hooks/useActiveFilters";
 import { ActiveFilterChip } from "../shared/ActiveFilterChip";
 
@@ -18,7 +18,7 @@ import { ActiveFilterChip } from "../shared/ActiveFilterChip";
  *  collapsed to its handle when the facets below matter more. */
 export function ActiveFiltersSheet() {
   const count = useAtomValue(libraryActiveFilterCountAtom);
-  const clearAll = useSetAtom(clearLibraryFiltersAtom);
+  const clearAll = useSetAtom(clearLibraryFacetsAtom);
   const items = useActiveFilters();
   const [open, setOpen] = useState(true);
 
@@ -58,7 +58,7 @@ export function ActiveFiltersSheet() {
       </div>
 
       {open && (
-        <div className="max-h-32 overflow-y-auto px-3.5 pb-3 flex flex-wrap gap-1.5">
+        <div className="h-16 overflow-y-auto px-3.5 pb-3 flex flex-wrap gap-1.5">
           {items.map((it) => (
             <ActiveFilterChip
               key={it.id}

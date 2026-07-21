@@ -19,7 +19,7 @@ import {
   libraryInheritedFiltersAtom,
   libraryChainFiltersAtom,
   libraryActiveFilterCountAtom,
-  clearLibraryFiltersAtom,
+  clearLibraryFacetsAtom,
   matchTypeFiltersAtom,
   type FacetMode,
 } from "../../atoms/library";
@@ -184,10 +184,12 @@ export function LibraryFilters() {
   const toggleStatus = (id: string) => setStatusFilters((prev) => ({ ...prev, [id]: !prev[id] }));
   const toggleCountry = (c: string) => setCountryFilters((prev) => ({ ...prev, [c]: !prev[c] }));
   const toggleDescriptor = (d: string) => setDescriptorFilters((prev) => ({ ...prev, [d]: !prev[d] }));
-  // One clear, shared with the footer readout (clearLibraryFiltersAtom). This
+  // One clear, shared with the footer readout. Clears the FACETS and keeps the
+  // query: the search box has its own X, and wiping someone's query from a
+  // "Clear" under the facet list is not what that button looks like it does.
   // used to be a local copy that forgot the search box, while the view's copy
   // forgot the AND/OR modes — the two had already drifted.
-  const clearAll = useSetAtom(clearLibraryFiltersAtom);
+  const clearAll = useSetAtom(clearLibraryFacetsAtom);
   const toggleChain = (key: string, value: string) =>
     setChainFilters((s) => ({
       ...s,
@@ -252,48 +254,11 @@ export function LibraryFilters() {
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-warm">
-      {/* Active-filter summary — count + Clear all. The "Filters" label itself
-          now lives in the drawer tab (and the mobile sheet title), so the old
-          "Filters" pill was removed to stop it doubling up. This panel is still
-          the ONLY place active filters live: the chip row that used to sit above
-          the results was a block that appeared and vanished, shoving the whole
-          result set up and down. Filters are set here, so they are read here —
-          the ticked boxes already say what's on; this row totals them and offers
-          the way out. The row is ALWAYS mounted at a fixed height — see below. */}
-      <div
-        className="shrink-0 flex items-center gap-2 px-3.5 py-2 h-10"
-        style={{ borderBottom: "1px solid var(--border-primary)" }}
-      >
-        {/* Contents are hidden, NOT unmounted: ticking the first filter used to
-            mount this row and shove every facet card down the pane. The row keeps
-            its height at all times so the list below never moves; `invisible` +
-            `aria-hidden` + `tabIndex={-1}` keep the empty state out of the
-            pointer, screen-reader, and tab paths. */}
-        <span
-          aria-hidden={activeFilterCount === 0}
-          className={`inline-flex items-center gap-1.5 text-[11px] text-ink-tertiary tabular-nums ${
-            activeFilterCount === 0 ? "invisible" : ""
-          }`}
-        >
-          <span
-            className="w-1.5 h-1.5 rounded-full"
-            style={{ backgroundColor: "var(--accent-blue)" }}
-          />
-          {activeFilterCount} active
-        </span>
-        <button
-          onClick={clearAll}
-          aria-hidden={activeFilterCount === 0}
-          tabIndex={activeFilterCount === 0 ? -1 : undefined}
-          className={`ms-auto px-2 h-6 text-[11px] font-medium rounded-md text-ink-tertiary
-            hover:bg-parchment hover:text-ink transition-colors cursor-pointer ${
-              activeFilterCount === 0 ? "invisible" : ""
-            }`}
-        >
-          Clear all
-        </button>
-      </div>
-
+      {/* No active-filter summary row here: the count rides as a BADGE on the
+          "Filters" drawer tab, and "Clear" lives in this panel's footer. A row
+          that mounts on first tick shoved every facet card down; reserving a
+          permanent band for something usually absent just traded the shift for
+          dead space. The facet cards sit flush under the tabs at all times. */}
       {/* Facet cards — top padding matches the main content (py-3) so the first
           block lines up with the first library card. */}
       <div className="flex-1 overflow-auto px-3.5 pt-3 pb-3 space-y-2">
