@@ -1,9 +1,10 @@
 import { Fragment, type ReactNode } from "react";
 import { highlightTerms } from "../../utils/queryTokens";
 
-/** The search-match mark. Reuses the app's own highlight token (softened) so
- *  search matches and document highlights read as one visual family; theme-aware
- *  via `--highlight-yellow`.
+/** The search-match mark. Reuses the app's highlight family — the *active*
+ *  highlight token (`--highlight-yellow-active`) at 70%, a cleaner marigold than
+ *  the muddier base yellow washed out over warm paper. Theme-aware, so it flips
+ *  to a warm amber in dark.
  *
  *  Spacing: `px-0.5` paints the tint slightly past the glyphs, and `-mx-0.5`
  *  cancels that width so the mark occupies the SAME horizontal space as the
@@ -12,7 +13,7 @@ import { highlightTerms } from "../../utils/queryTokens";
  *  a match inside a semibold title stays semibold and a match in body text stays
  *  regular — a weight change would shift glyph metrics and re-wrap the line.
  *  `-mx-*` is symmetric, so this is RTL-safe. */
-const MARK_CLASS = "rounded-[2px] px-0.5 -mx-0.5 bg-highlight/60 text-ink";
+const MARK_CLASS = "rounded-[2px] px-0.5 -mx-0.5 bg-highlight-active/70 text-ink";
 
 /** Renders `text` with every case-insensitive occurrence of each query TERM
  *  wrapped in a highlight `<mark>`. The query is tokenised the same way the
