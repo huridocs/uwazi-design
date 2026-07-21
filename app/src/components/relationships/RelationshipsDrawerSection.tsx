@@ -84,7 +84,7 @@ export function RelationshipsDrawerSection({
           Filters. In a drawer the old second row was even worse: four dropdowns
           wrapping onto two or three lines of a 460px panel. */}
       <SearchBar
-        inlineSlot={<ActiveFilterChips />}
+        inlineSlot={<ActiveFilterChips omitSearch />}
         rightSlot={
           // ONE flex child, so the controls wrap as a CLUSTER rather than one at
           // a time — a narrow pane was stranding Filters on its own line.

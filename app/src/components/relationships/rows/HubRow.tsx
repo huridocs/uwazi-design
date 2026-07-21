@@ -1,10 +1,11 @@
 import { useAtomValue } from "jotai";
 import { ChevronRight, Link2 } from "lucide-react";
-import { zoomAtom } from "../../../atoms/filters";
+import { searchQueryAtom, zoomAtom } from "../../../atoms/filters";
 import { getEntity } from "../../../data/entities";
 import { relationTypes } from "../../../data/references";
 import { Hub } from "../../../utils/relationships";
 import { EntityPill } from "../../shared/EntityPill";
+import { HighlightedText } from "../../shared/HighlightedText";
 import { ListCardRow } from "../../shared/ListCardRow";
 import { RowCheckbox } from "./RowCheckbox";
 
@@ -22,6 +23,9 @@ export interface HubRowProps {
  *  evidence-count badge mirrors aggregates. */
 export function HubRow({ hub, expanded, onToggleExpand, hideRelLabel }: HubRowProps) {
   const zoom = useAtomValue(zoomAtom);
+  // Same query that filtered the hub in — marked on the member pills and the
+  // relation label, the two things the filter actually reads.
+  const query = useAtomValue(searchQueryAtom);
   const relLabel =
     relationTypes.find((r) => r.id === hub.relationType)?.label ??
     hub.relationType.replace("_", " ");
@@ -33,6 +37,7 @@ export function HubRow({ hub, expanded, onToggleExpand, hideRelLabel }: HubRowPr
         key={m.entityId}
         typeId={entity?.typeId ?? ""}
         label={entity?.title}
+        highlight={query}
       />
     );
   });
@@ -138,7 +143,9 @@ export function HubRow({ hub, expanded, onToggleExpand, hideRelLabel }: HubRowPr
             <div className="flex items-center gap-1 mt-1 text-[10px] text-ink-tertiary">
               {!hideRelLabel && (
                 <>
-                  <span className="capitalize">{relLabel}</span>
+                  <span className="capitalize">
+                    <HighlightedText text={relLabel} query={query} />
+                  </span>
                   <span>·</span>
                 </>
               )}

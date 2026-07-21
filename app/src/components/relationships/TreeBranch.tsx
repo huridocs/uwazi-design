@@ -9,9 +9,13 @@ import {
   zoomAtom,
 } from "../../atoms/filters";
 import { expandGroupForRefAtom } from "../../atoms/references";
+import { HighlightedText } from "../shared/HighlightedText";
 
 interface Props {
   title: string;
+  /** Query whose hits get marked in the title — the branch header is where a
+   *  relation-type or entity match SHOWS when the leaf rows hide that label. */
+  highlight?: string;
   color?: string;
   count: number;
   defaultExpanded?: boolean;
@@ -29,6 +33,7 @@ interface Props {
  *  when those children are aggregate rows or fragments. */
 export function TreeBranch({
   title,
+  highlight = "",
   color,
   count,
   defaultExpanded = true,
@@ -108,7 +113,9 @@ export function TreeBranch({
             style={{ backgroundColor: color }}
           />
         )}
-        <span className="text-sm font-medium text-ink truncate">{title}</span>
+        <span className="text-sm font-medium text-ink truncate">
+          <HighlightedText text={title} query={highlight} />
+        </span>
         <span className="ml-auto text-[11px] text-ink-tertiary tabular-nums shrink-0">
           {count}
         </span>

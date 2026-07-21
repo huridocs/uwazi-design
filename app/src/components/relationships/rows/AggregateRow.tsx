@@ -6,12 +6,13 @@ import {
   activeDrawerTabAtom,
   overlayEntityIdAtom,
 } from "../../../atoms/references";
-import { activeClusterRefIdsAtom, zoomAtom } from "../../../atoms/filters";
+import { activeClusterRefIdsAtom, searchQueryAtom, zoomAtom } from "../../../atoms/filters";
 import { getEntity, getEntityType } from "../../../data/entities";
 import { relationTypes } from "../../../data/references";
 import { Relationship } from "../../../utils/relationships";
 import { EntityPill } from "../../shared/EntityPill";
 import { EntityTypeTag } from "../../shared/EntityTypeTag";
+import { HighlightedText } from "../../shared/HighlightedText";
 import { ListCardRow } from "../../shared/ListCardRow";
 import { DirectionGlyph } from "../DirectionGlyph";
 import { RowCheckbox } from "./RowCheckbox";
@@ -51,6 +52,9 @@ export function AggregateRow({
   const entity = getEntity(rel.targetEntityId);
   const type = entity ? getEntityType(entity.typeId) : undefined;
   const zoom = useAtomValue(zoomAtom);
+  // Mark the query that filtered this row in — same query, same tokenizer as
+  // the snippet/PDF marks (`utils/queryTokens.ts`, PATTERNS 4.3).
+  const query = useAtomValue(searchQueryAtom);
   const setOverlayEntityId = useSetAtom(overlayEntityIdAtom);
   const [activeAggregateId, setActiveAggregateId] = useAtom(activeAggregateIdAtom);
   const activeRefId = useAtomValue(activeRefIdAtom);
@@ -144,10 +148,10 @@ export function AggregateRow({
             {hidePill ? (
               <span className="flex items-center gap-1.5 text-xs text-ink-secondary capitalize">
                 <DirectionGlyph direction={glyphDirection} />
-                {relLabel}
+                <HighlightedText text={relLabel} query={query} />
               </span>
             ) : (
-              <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
+              <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} highlight={query} />
             )}
           </div>
           {countBadge}
@@ -175,7 +179,7 @@ export function AggregateRow({
             <DirectionGlyph direction={glyphDirection} />
             {hidePill ? (
               <span className="text-xs text-ink-secondary capitalize truncate">
-                {relLabel}
+                <HighlightedText text={relLabel} query={query} />
               </span>
             ) : (
               <>
@@ -186,11 +190,11 @@ export function AggregateRow({
                   title={entity?.title}
                   className="text-xs font-medium text-ink truncate min-w-0"
                 >
-                  {entity?.title}
+                  <HighlightedText text={entity?.title ?? ""} query={query} />
                 </span>
                 {!hideRelLabel && (
                   <span className="text-[10px] text-ink-tertiary truncate capitalize shrink-0">
-                    {relLabel}
+                    <HighlightedText text={relLabel} query={query} />
                   </span>
                 )}
               </>
@@ -228,7 +232,7 @@ export function AggregateRow({
                 <>
                   <DirectionGlyph direction={glyphDirection} />
                   <span className="text-sm font-medium text-ink capitalize truncate">
-                    {relLabel}
+                    <HighlightedText text={relLabel} query={query} />
                   </span>
                 </>
               ) : (
@@ -240,7 +244,7 @@ export function AggregateRow({
                     title={entity?.title}
                     className="text-sm font-medium text-ink truncate min-w-0"
                   >
-                    {entity?.title}
+                    <HighlightedText text={entity?.title ?? ""} query={query} />
                   </span>
                 </>
               )}
@@ -250,7 +254,11 @@ export function AggregateRow({
           {!hidePill && (
             <div className="flex items-center gap-1 mt-1 text-[10px] text-ink-tertiary">
               <DirectionGlyph direction={glyphDirection} />
-              {!hideRelLabel && <span className="capitalize">{relLabel}</span>}
+              {!hideRelLabel && (
+                <span className="capitalize">
+                  <HighlightedText text={relLabel} query={query} />
+                </span>
+              )}
             </div>
           )}
         </div>

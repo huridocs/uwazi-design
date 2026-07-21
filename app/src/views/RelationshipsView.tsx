@@ -117,7 +117,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
               dropdowns is gone into the Display popover — same idiom as the
               Library, and the row no longer reflows when you change view. */}
           <SearchBar
-            inlineSlot={<ActiveFilterChips />}
+            inlineSlot={<ActiveFilterChips omitSearch />}
             rightSlot={
               // ONE flex child, so the controls wrap as a CLUSTER. As three
               // siblings they wrapped one at a time, and a phone got Filters

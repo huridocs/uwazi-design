@@ -5,8 +5,10 @@ import {
   overlayEntityIdAtom,
   activeRefIdAtom,
 } from "../../atoms/references";
-import { groupByAtom } from "../../atoms/filters";
+import { groupByAtom, searchQueryAtom } from "../../atoms/filters";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
+import { HighlightedText } from "../shared/HighlightedText";
+import { fold, highlightTerms } from "../../utils/queryTokens";
 import { useFilteredReferences } from "./useFilteredReferences";
 import { getEntity, getEntityType } from "../../data/entities";
 import { Direction } from "../../data/references";
@@ -54,8 +56,23 @@ const ARC_GAP = 30;
 /** Max relationships plotted — beyond this the radial graph is slow + unreadable. */
 const GRAPH_CAP = 150;
 
+/** Does `text` contain any query term? The graph's labels live in SVG `<text>`,
+ *  which cannot host a `<mark>` — so where the list and tree mark the matched
+ *  RUN, the graph can only say "this one matched" at the whole-label level. That
+ *  is a deliberately weaker claim, made with a tint rather than a fake mark:
+ *  drawing a rect behind a guessed glyph range would assert a precision the
+ *  renderer can't actually measure (PATTERNS 4.2). Terms come from the shared
+ *  tokenizer, so what tints here is what marks elsewhere. */
+function matchesQuery(text: string, terms: string[]): boolean {
+  if (terms.length === 0) return false;
+  const folded = fold(text); // same fold the marks match under — no second dialect
+  return terms.some((t) => folded.includes(t));
+}
+
 export function RelationshipsGraphView() {
   const [groupBy] = useAtom(groupByAtom);
+  const query = useAtomValue(searchQueryAtom);
+  const terms = useMemo(() => highlightTerms(query), [query]);
   const focusedId = useAtomValue(focusedEntityIdAtom);
   const [overlayEntityId, setOverlayEntityId] = useAtom(overlayEntityIdAtom);
   const activeRefId = useAtomValue(activeRefIdAtom);
@@ -418,6 +435,7 @@ export function RelationshipsGraphView() {
               meaningful label to apply. */}
           {groupBy !== "none" && spokes.map((s) => {
             const isCollapsed = !!collapsed[s.key];
+            const hit = matchesQuery(s.label, terms);
             return (
               <g
                 key={`label-${s.key}`}
@@ -448,7 +466,10 @@ export function RelationshipsGraphView() {
                   width={110}
                   height={22}
                   rx={4}
-                  fill="var(--bg-surface)"
+                  // Matched branches take the highlight tint — the SVG stand-in
+                  // for the <mark> the list and tree put on this same label.
+                  fill={hit ? "var(--highlight-yellow-active)" : "var(--bg-surface)"}
+                  fillOpacity={hit ? 0.7 : 1}
                   stroke={
                     focusedNodeId === `label-${s.key}`
                       ? "var(--accent-blue)"
@@ -629,7 +650,11 @@ export function RelationshipsGraphView() {
             className="absolute z-10 pointer-events-none px-2.5 py-1.5 rounded-md bg-ink text-paper shadow-md max-w-60"
             style={{ left, top, opacity: 0.94 }}
           >
-            <div className="text-[11px] font-semibold truncate">{hover.node.title}</div>
+            {/* The tooltip is HTML, not SVG — the one place in the graph where a
+                target's title can carry a real mark. */}
+            <div className="text-[11px] font-semibold truncate">
+              <HighlightedText text={hover.node.title} query={query} />
+            </div>
             <div className="text-[10px] opacity-80 truncate">
               {hover.node.typeName} · {hover.node.evidenceCount} evidence
             </div>

@@ -9,9 +9,14 @@ import {
 } from "../../atoms/filters";
 import { expandGroupForRefAtom } from "../../atoms/references";
 import { CountBadge } from "../shared/CountBadge";
+import { HighlightedText } from "../shared/HighlightedText";
 
 interface Props {
   title: string;
+  /** Query whose hits get marked in the group title. Explicit rather than read
+   *  from an atom: this shell is also the Library Results card, which filters on
+   *  a DIFFERENT query and must not inherit this surface's. */
+  highlight?: string;
   color?: string;
   count: number;
   defaultExpanded?: boolean;
@@ -37,6 +42,7 @@ interface Props {
  *  `standalone` to reuse it elsewhere without the relationships-panel coupling. */
 export function RelationshipGroupedCard({
   title,
+  highlight = "",
   color,
   count,
   defaultExpanded = false,
@@ -131,7 +137,9 @@ export function RelationshipGroupedCard({
             style={{ backgroundColor: color }}
           />
         )}
-        <span className="text-sm font-medium text-ink truncate">{title}</span>
+        <span className="text-sm font-medium text-ink truncate">
+          <HighlightedText text={title} query={highlight} />
+        </span>
         <CountBadge count={count} />
       </button>
       {expanded && <div className="border-t border-border/40">{children}</div>}

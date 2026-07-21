@@ -9,6 +9,7 @@ import {
 import {
   activeFilterCountAtom,
   groupByAtom,
+  searchQueryAtom,
   subGroupByAtom,
 } from "../../atoms/filters";
 import { useFilteredReferences } from "./useFilteredReferences";
@@ -36,6 +37,9 @@ export function RelationshipsTreeView() {
   const [activeFilterCount] = useAtom(activeFilterCountAtom);
   const [groupBy] = useAtom(groupByAtom);
   const [subGroupBy] = useAtom(subGroupByAtom);
+  // Group headers carry the match when the leaves suppress that label (a
+  // relation-type group hides `relLabel` on every row beneath it).
+  const [query] = useAtom(searchQueryAtom);
   const [, setOverlayEntityId] = useAtom(overlayEntityIdAtom);
   const [, setActiveRefId] = useAtom(activeRefIdAtom);
   const setExpandSignal = useSetAtom(expandAllSignalAtom);
@@ -109,6 +113,7 @@ export function RelationshipsTreeView() {
               <TreeBranch
                 key={`p:${key}`}
                 title={getGroupLabel(key, groupBy)}
+                highlight={query}
                 color={getGroupColor(key, groupBy)}
                 count={deriveRelationships(refs).length + deriveHubs(refs).length}
                 refIdsToWatch={refs.map((r) => r.id)}
@@ -124,6 +129,7 @@ export function RelationshipsTreeView() {
                       <TreeBranch
                         key={`s:${key}::${subKey}`}
                         title={getGroupLabel(subKey, subGroupBy)}
+                        highlight={query}
                         color={getGroupColor(subKey, subGroupBy)}
                         count={deriveRelationships(subRefs).length + deriveHubs(subRefs).length}
                         refIdsToWatch={subRefs.map((r) => r.id)}

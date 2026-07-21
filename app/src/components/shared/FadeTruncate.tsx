@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTextMeasure } from "../../hooks/useTextMeasure";
+import { HighlightedText } from "./HighlightedText";
 
 interface FadeTruncateProps {
   text: string;
@@ -7,6 +8,10 @@ interface FadeTruncateProps {
   expandable?: boolean;
   fadeTo?: string;
   className?: string;
+  /** Search query whose hits get marked. Safe alongside the line measurement:
+   *  the mark adds no width and no weight (PATTERNS 4.1), so the measured height
+   *  for `text` still describes the highlighted render. */
+  highlight?: string;
 }
 
 export function FadeTruncate({
@@ -15,6 +20,7 @@ export function FadeTruncate({
   expandable = false,
   fadeTo = "var(--bg-surface)",
   className = "",
+  highlight = "",
 }: FadeTruncateProps) {
   const [expanded, setExpanded] = useState(false);
   const { containerRef, isTruncated, visibleHeight } = useTextMeasure({
@@ -30,7 +36,7 @@ export function FadeTruncate({
         className={`overflow-hidden transition-[max-height] duration-200 ease-out ${className}`}
         style={{ maxHeight: expanded ? 1000 : visibleHeight }}
       >
-        &ldquo;{text}&rdquo;
+        &ldquo;<HighlightedText text={text} query={highlight} />&rdquo;
       </p>
       {showFade && (
         <div

@@ -7,12 +7,13 @@ import {
   scrollToHighlightAtom,
   scrollToRefAtom,
 } from "../../../atoms/references";
-import { zoomAtom } from "../../../atoms/filters";
+import { searchQueryAtom, zoomAtom } from "../../../atoms/filters";
 import { currentPageAtom } from "../../../atoms/selection";
 import { getEntity, getEntityType } from "../../../data/entities";
 import { Reference, relationTypes } from "../../../data/references";
 import { EntityPill } from "../../shared/EntityPill";
 import { FadeTruncate } from "../../shared/FadeTruncate";
+import { HighlightedText } from "../../shared/HighlightedText";
 import { ListCardRow } from "../../shared/ListCardRow";
 import { PageTag } from "../../shared/PageTag";
 import { DirectionGlyph } from "../DirectionGlyph";
@@ -33,6 +34,10 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
   const entity = getEntity(reference.targetEntityId);
   const type = entity ? getEntityType(entity.typeId) : undefined;
   const zoom = useAtomValue(zoomAtom);
+  // The row marks the SAME query that filtered it in (`useFilteredReferences`
+  // matches snippet text + target title + relation type), so the user can see
+  // WHY a row is here instead of re-reading it to find the term.
+  const query = useAtomValue(searchQueryAtom);
   const setScrollToHighlight = useSetAtom(scrollToHighlightAtom);
   const [scrollToRef, setScrollToRef] = useAtom(scrollToRefAtom);
   const [activeRefId, setActiveRefId] = useAtom(activeRefIdAtom);
@@ -81,7 +86,7 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 min-w-0">
             <RowCheckbox refIds={[reference.id]} />
-            <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
+            <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} highlight={query} />
           </div>
           {selection && (
             <PageTag page={selection.page} onClick={handleClick} />
@@ -106,10 +111,10 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 min-w-0">
             <RowCheckbox refIds={[reference.id]} />
-            <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
+            <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} highlight={query} />
             <DirectionGlyph direction={direction} />
             <span className="text-[10px] text-ink-tertiary truncate capitalize">
-              {relLabel}
+              <HighlightedText text={relLabel} query={query} />
             </span>
           </div>
           {selection && (
@@ -138,7 +143,7 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
         <div className="flex items-start justify-between gap-2 mb-1.5">
           <div className="flex items-center gap-1.5 min-w-0">
             <RowCheckbox refIds={[reference.id]} />
-            <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
+            <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} highlight={query} />
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             <span className="text-[10px] text-ink-tertiary">{type?.name ?? ""}</span>
@@ -158,6 +163,7 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
               text={selection.text}
               maxLines={2}
               expandable
+              highlight={query}
               className="text-xs text-ink-secondary leading-relaxed flex-1 min-w-0 italic"
               fadeTo={isActive ? "var(--bg-primary)" : "var(--bg-warm)"}
             />
@@ -170,6 +176,7 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
             text={selection.text}
             maxLines={2}
             expandable
+            highlight={query}
             className="text-xs text-ink-secondary leading-relaxed"
             fadeTo={isActive ? "var(--bg-primary)" : undefined}
           />
@@ -184,6 +191,7 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
             text={reference.targetSelection.text}
             maxLines={2}
             expandable
+            highlight={query}
             className="text-xs text-ink-secondary leading-relaxed flex-1 min-w-0 italic"
             fadeTo={isActive ? "var(--bg-primary)" : "var(--bg-warm)"}
           />
@@ -199,7 +207,9 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
         ) : (
           <span className="flex items-center gap-1">
             <DirectionGlyph direction={direction} />
-            <span className="capitalize">{relLabel}</span>
+            <span className="capitalize">
+              <HighlightedText text={relLabel} query={query} />
+            </span>
           </span>
         )}
         <div className="flex items-center gap-0.5">
