@@ -109,6 +109,10 @@ export const scrollToRefAtom = atom<string | null>(null);
 /** Active drawer tab — shared so highlight clicks can switch to "references" */
 export const activeDrawerTabAtom = atom("metadata");
 
+/** The entity-view drawer's Search-tab query. Lifted out of the tab body so the
+ *  action bar's "Search tips" popover can drop an example straight into it. */
+export const docSearchQueryAtom = atom("");
+
 /** One-shot signal: expand the group containing this ref ID, then clear */
 export const expandGroupForRefAtom = atom<string | null>(null);
 

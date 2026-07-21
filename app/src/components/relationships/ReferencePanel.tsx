@@ -8,6 +8,7 @@ import { ToCPanel } from "./ToCPanel";
 import { EntityOverlay } from "./EntityOverlay";
 import { RelationshipsDrawerSection } from "./RelationshipsDrawerSection";
 import { DrawerFilesBody } from "../files/DrawerFilesBody";
+import { DocumentSearchBody } from "../search/DocumentSearchBody";
 import { t } from "../../utils/i18n";
 
 const baseDrawerTabs = [
@@ -41,8 +42,9 @@ export function ReferencePanel() {
       {activeDrawerTab === "toc" && <ToCPanel />}
       {activeDrawerTab === "connections" && <RelationshipsDrawerSection />}
       {activeDrawerTab === "files" && <DrawerFilesBody />}
+      {activeDrawerTab === "search" && <DocumentSearchBody />}
 
-      {!["metadata", "toc", "connections", "files"].includes(activeDrawerTab) && (
+      {!["metadata", "toc", "connections", "files", "search"].includes(activeDrawerTab) && (
         <div className="flex-1 flex items-center justify-center">
           <p className="text-sm text-ink-muted capitalize">
             {activeDrawerTab} content

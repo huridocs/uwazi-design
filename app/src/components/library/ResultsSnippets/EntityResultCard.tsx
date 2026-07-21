@@ -4,7 +4,7 @@ import { getEntityType } from "../../../data/entities";
 import type { EntitySnippets } from "../../../utils/librarySnippets";
 import { RelationshipGroupedCard } from "../../relationships/RelationshipGroupedCard";
 import { HighlightedText } from "../../shared/HighlightedText";
-import { PageSpine } from "./PageSpine";
+import { PageSpine } from "../../search/PageSpine";
 
 interface Props {
   entity: Entity;

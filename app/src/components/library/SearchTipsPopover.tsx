@@ -5,6 +5,8 @@ import { Lightbulb } from "lucide-react";
 import { libraryQueryAtom } from "../../atoms/library";
 
 const PANEL_ID = "library-search-tips";
+/** Rough panel height (header + 5 fixed rows) — only used to decide flip. */
+const PANEL_EST_HEIGHT = 232;
 const PANEL_WIDTH = 432; // 27rem — sized so the longest example+prose pair fits on ONE line
 
 /** The operator tips, copied (shortened) from real Uwazi's
@@ -55,7 +57,13 @@ const PROSE_CLASS = "min-w-0 text-[11px] leading-snug text-ink-secondary";
  *
  *  Each tip row is a button: clicking drops its example into the search box
  *  (which live-runs the search) and closes the popover. */
-export function SearchTipsPopover() {
+export function SearchTipsPopover({
+  onInsert,
+}: {
+  /** Where a clicked example goes. Defaults to the Library search box; the
+   *  entity drawer's Search tab passes its own setter. */
+  onInsert?: (example: string) => void;
+} = {}) {
   const [open, setOpen] = useState(false);
   const chipRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -71,7 +79,13 @@ export function SearchTipsPopover() {
       // grows leftward toward the search box — never rightward over the toolbar
       // controls. Viewport-clamped on both edges so it's never clipped.
       const left = Math.max(8, Math.min(r.right - PANEL_WIDTH, window.innerWidth - PANEL_WIDTH - 8));
-      const top = Math.min(r.bottom + 6, window.innerHeight - 8);
+      // Flip ABOVE the trigger when there isn't room below — the drawer's action
+      // bar sits at the foot of the pane, so "below" would be off-screen.
+      const below = r.bottom + 6;
+      const top =
+        below + PANEL_EST_HEIGHT > window.innerHeight - 8
+          ? Math.max(8, r.top - PANEL_EST_HEIGHT - 6)
+          : below;
       setPos({ top, left });
     };
     place();
@@ -104,7 +118,7 @@ export function SearchTipsPopover() {
   }, [open]);
 
   const insert = (example: string) => {
-    setQuery(example);
+    (onInsert ?? setQuery)(example);
     setOpen(false);
   };
 

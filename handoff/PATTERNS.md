@@ -424,6 +424,59 @@ and info. A red primary button is always a bug in this system.
 
 **Badges and pills are `w-fit`** so they don't stretch to fill a flex or grid cell.
 
+### Non-default state: a dot, a count, or nothing
+
+A control holding sticky state has to admit it. Which marker depends on one
+question — **can the control already show its own state?**
+
+| Case | Marker |
+|---|---|
+| State is **not legible** from the control (icon-only trigger, fixed label) | **Dot** |
+| State is **countable and worth knowing** ("3 filters on") | **Count badge** |
+| Control already **displays its value** (a select reading "Title", a segmented control with its active segment lit) | **Nothing** |
+
+**Never both** on one control, and **never a row that appears only when active** —
+a marker that mounts on first use shifts the layout underneath it (see the
+layout-shift rule). Reserve the space or render nothing.
+
+The third row is the one that keeps the signal worth reading: dotting a control
+that already states its value is duplication, and once everything carries a dot
+the dot means nothing.
+
+```tsx
+// The trigger must be `relative`. Dot sits in the top inline-end corner,
+// slightly outside the glyph so it never crowds it.
+<button className="relative inline-flex items-center justify-center w-8 h-8 rounded-md …">
+  <SlidersHorizontal size={14} />
+  {isNonDefault && (
+    <span
+      className="absolute -top-0.5 -end-0.5 w-1.5 h-1.5 rounded-full"
+      style={{ backgroundColor: "var(--accent-blue)" }}
+    />
+  )}
+</button>
+```
+
+Exact treatment, so it stays one mark everywhere:
+
+- **Size** `w-1.5 h-1.5` (6px), `rounded-full`. Big enough to read at 100% zoom,
+  small enough not to read as a badge.
+- **Colour** carbon (`var(--accent-blue)`) — **not** the control's own ink. Carbon
+  is the app's "data/attention" accent; ink would blend into the glyph it sits on.
+  Never seal: this is information, not danger.
+- **Position** `-top-0.5 -end-0.5` on a `relative` trigger. **Logical `-end-`, not
+  `-right-`** — it must mirror under RTL, and Uwazi ships Arabic.
+- **Dark mode** automatic: carbon is a real var and reads on both `bg-warm` and
+  `bg-vellum` triggers. No `dark:` variant.
+- **Pair it with the active surface** the control already uses (`bg-vellum
+  text-ink`); the dot sharpens that state, it doesn't replace it.
+- The dot is decorative — the accessible name carries the state
+  (`aria-label="Display options, 3 hidden"`), so screen readers don't depend on it.
+
+A count badge is the *inline* counterpart: it sits in the button's flow (not
+absolutely positioned), `bg-ink text-paper`, ~14px, `tabular-nums` — see
+`FiltersButton`. Inline because a number needs room and must not overlap a glyph.
+
 **Action buttons are warm and borderless.**
 
 ```tsx
@@ -456,5 +509,6 @@ Before merging a component onto the 2026 language:
 - [ ] Coloured labels pass contrast in both themes (mix toward `--text-primary`)
 - [ ] Self-updating regions have `aria-live` / `role="status"` / `role="log"`
 - [ ] Every new animation appears in a `prefers-reduced-motion` block
+- [ ] Sticky-state control carries a dot (illegible state) or a count (countable) — never both, never a marker that mounts on activation
 - [ ] No raw px in layout; no hex fallbacks in `var()`; no second selected colour
 - [ ] Verified in light **and** dark, and in RTL if the component has directional layout

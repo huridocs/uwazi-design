@@ -1,7 +1,7 @@
 import { useAtomValue } from "jotai";
-import type { FullTextSnippet } from "../../../utils/librarySnippets";
-import { resultsActivePageAtom } from "../../../atoms/library";
-import { HighlightedText } from "../../shared/HighlightedText";
+import type { FullTextSnippet } from "../../utils/librarySnippets";
+import { resultsActivePageAtom } from "../../atoms/library";
+import { HighlightedText } from "../shared/HighlightedText";
 
 interface Props {
   entityId: string;
