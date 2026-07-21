@@ -20,6 +20,7 @@ import {
   libraryChainFiltersAtom,
   libraryActiveFilterCountAtom,
   clearLibraryFiltersAtom,
+  matchTypeFiltersAtom,
   type FacetMode,
 } from "../../atoms/library";
 import { typeHasDocument } from "../../data/entityProfiles";
@@ -66,6 +67,7 @@ export function LibraryFilters() {
   const [inheritedFilters, setInheritedFilters] = useAtom(libraryInheritedFiltersAtom);
   const [chainFilters, setChainFilters] = useAtom(libraryChainFiltersAtom);
   const activeFilterCount = useAtomValue(libraryActiveFilterCountAtom);
+  const matchTypes = useAtomValue(matchTypeFiltersAtom);
 
   const inheritedDefs = useMemo(
     () => libraryInheritedDefs(dataSource, language),
@@ -109,13 +111,14 @@ export function LibraryFilters() {
       chains: buildActiveChains(chainFilters, dataSource === "cejil" ? cejilChainGraph() : null),
       q: query.trim().toLowerCase(),
       searchIndex,
-      searchTerms: highlightTerms(query).map((t) => t.toLowerCase()),
+      searchTerms: highlightTerms(query), // folded
       fullTextSearch: query.trim().length >= 3,
+      matchTypes,
     };
   }, [
     dataSource, language, inheritedDefs, searchIndex, typeFilters, hasDocOnly,
     statusFilters, countryFilters, countryMode, descriptorFilters, descriptorMode,
-    dateFrom, dateTo, inheritedFilters, chainFilters, query,
+    dateFrom, dateTo, inheritedFilters, chainFilters, query, matchTypes,
   ]);
 
   const typeCounts = useMemo(() => {

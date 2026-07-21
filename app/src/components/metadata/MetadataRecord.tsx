@@ -24,15 +24,25 @@ export function MetadataItemsTable({ items }: { items: MetadataItem[] }) {
             <tr
               key={item.id}
               data-field-key={item.id}
-              className="align-top border-t border-border/40 first:border-t-0 hover:bg-warm/30 transition-colors"
+              className="border-t border-border/40 first:border-t-0 hover:bg-warm/30 transition-colors"
             >
+              {/* Label and value sit on a SHARED BASELINE, not a shared top
+                  edge. They're different sizes (11px caps vs 14px body), so
+                  `align-top` lined up their line-BOXES and left the glyphs on
+                  visibly different levels — obvious once a deep-focus flash
+                  paints the row box. Baseline alignment survives the two cases
+                  `align-top` + a compensating padding can't: a value that WRAPS
+                  (a cell's baseline is its FIRST line box, so the label stays
+                  level with line one) and a value that's a PILL rather than
+                  text (an inline-flex pill's baseline is its inner text, so the
+                  label reads level with the pill's label, not its box). */}
               <th
                 scope="row"
-                className="w-0 py-1.5 pr-6 text-start align-top font-medium text-[11px] uppercase tracking-wide text-ink-tertiary whitespace-nowrap"
+                className="w-0 py-1.5 pr-6 text-start align-baseline font-medium text-[11px] uppercase tracking-wide text-ink-tertiary whitespace-nowrap"
               >
                 {item.label}
               </th>
-              <td className="py-1.5 align-top text-ink">{item.content}</td>
+              <td className="py-1.5 align-baseline text-ink">{item.content}</td>
             </tr>
           ))}
         </tbody>

@@ -29,6 +29,31 @@ export interface ResultsActivePage {
 }
 export const resultsActivePageAtom = atom<ResultsActivePage | null>(null);
 
+/** Which KINDS of match the results keep — the Results tab's title/properties/
+ *  document chips.
+ *
+ *  DECISION (2026-07-21): these are a real FILTER, not a panel-local view toggle,
+ *  so they narrow the LEFT PANE too. A researcher who turns off "Document" is
+ *  saying "show me entities that matched in their metadata", and a grid that kept
+ *  showing full-text-only hits would contradict the panel beside it — the two
+ *  panes are one result set at two levels of detail. Living in the filter state
+ *  also makes the Results header count correct by construction (it counts the
+ *  filtered set) rather than needing a separate "N of M" reconciliation.
+ *
+ *  They are query-relative, so they no-op without a query and reset whenever the
+ *  query changes — that keeps them from becoming an invisible sticky filter. */
+export interface MatchTypeFilters {
+  title: boolean;
+  properties: boolean;
+  document: boolean;
+}
+export const ALL_MATCH_TYPES: MatchTypeFilters = {
+  title: true,
+  properties: true,
+  document: true,
+};
+export const matchTypeFiltersAtom = atom<MatchTypeFilters>(ALL_MATCH_TYPES);
+
 /** A Results-tab "Properties" hit the user clicked: open the entity preview on
  *  its Metadata tab and flash the matching field. Matched by field KEY (stable,
  *  not the localized label) against the drawer's `MetadataField.id`. The metadata

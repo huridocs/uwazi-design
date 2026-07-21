@@ -45,12 +45,15 @@ import {
   resultsActivePageAtom,
   focusMetadataFieldAtom,
   clearLibraryFacetsAtom,
+  matchTypeFiltersAtom,
+  ALL_MATCH_TYPES,
 } from "../atoms/library";
 import { getEntityType, type Entity } from "../data/entities";
 import { libraryInheritedDefs } from "../utils/libraryFacets";
 import { buildActiveChains, cejilChainGraph } from "../data/cejil/chainFacets";
 import { matchesAll, matchesSearch, buildSearchIndex, type LibraryFilterState } from "../utils/libraryFilter";
-import { highlightTerms } from "../utils/queryTokens";
+import { highlightTerms, fold } from "../utils/queryTokens";
+import { matchCategories } from "../utils/librarySnippets";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { EntityCard } from "../components/library/EntityCard";
 // Lazy: react-simple-maps + the world atlas are the heaviest static chunk in
@@ -158,6 +161,7 @@ export function LibraryView() {
   const setResultsActivePage = useSetAtom(resultsActivePageAtom);
   const setFocusMetadataField = useSetAtom(focusMetadataFieldAtom);
   const clearFacets = useSetAtom(clearLibraryFacetsAtom);
+  const [matchTypes, setMatchTypes] = useAtom(matchTypeFiltersAtom);
   const setAppView = useSetAtom(appViewAtom);
   const notify = useNotify();
 
@@ -204,7 +208,7 @@ export function LibraryView() {
   // from the raw `query` so uppercase AND/OR/NOT are recognised before lowering.
   // Full-text body scanning is gated on `q.length ≥ 3` for CEJIL-corpus perf.
   const searchTerms = useMemo(
-    () => highlightTerms(query).map((t) => t.toLowerCase()),
+    () => highlightTerms(query), // already folded
     [query],
   );
   const fullTextSearch = q.length >= 3;
@@ -252,6 +256,7 @@ export function LibraryView() {
     searchIndex,
     searchTerms,
     fullTextSearch,
+    matchTypes,
   };
 
   const filtered = useMemo(() => {
@@ -282,19 +287,33 @@ export function LibraryView() {
     // "Date added" sort buries the entity literally named what you typed
     // under documents that merely mention it.
     if (q) {
-      const rank = (e: Entity) => {
-        const t = e.title.toLowerCase();
-        if (t === q) return 0;
-        if (t.startsWith(q)) return 1;
-        if (t.includes(q)) return 2;
-        return 3;
-      };
-      return [...list].sort((a, b) => rank(a) - rank(b) || cmp(a, b));
+      // Relevance tiers: exact title → title prefix → title contains → a title
+      // TOKEN hit → a property hit → document-only. Folded, so an unaccented
+      // query ranks accented titles correctly. Precomputed per entity (O(n)):
+      // calling `matchCategories` inside the comparator would re-scan blobs
+      // O(n log n) times.
+      const qf = fold(q);
+      const rankOf = new Map<string, number>();
+      for (const e of list) {
+        const t = fold(e.title);
+        let r: number;
+        if (t === qf) r = 0;
+        else if (t.startsWith(qf)) r = 1;
+        else if (t.includes(qf)) r = 2;
+        else {
+          const c = matchCategories(e, query, language, dataSource);
+          r = c.title ? 3 : c.properties ? 4 : 5;
+        }
+        rankOf.set(e.id, r);
+      }
+      return [...list].sort(
+        (a, b) => (rankOf.get(a.id) ?? 9) - (rankOf.get(b.id) ?? 9) || cmp(a, b),
+      );
     }
     return [...list].sort(cmp);
     // `cejilReady`: once the corpus loads, full-text blobs go empty→real, so the
     // filtered set must recompute to surface document-body-only matches.
-  }, [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, chainKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex, cejilReady]);
+  }, [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, chainKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex, cejilReady, matchTypes]);
 
   // How many entities the query matches with the FACETS widened — so the Results
   // tab can offer to reveal the ones the current facets are hiding.
@@ -302,6 +321,30 @@ export function LibraryView() {
     () => (q ? entities.reduce((n, e) => n + (matchesSearch(e, filterState) ? 1 : 0), 0) : 0),
     [entities, filterState, q],
   );
+
+  // Chip counts + the pre-chip total: entities passing every filter EXCEPT the
+  // match-type chips (the same faceted-aggregation pattern the facets use), then
+  // categorised by where they matched.
+  const matchTypeBase = useMemo(
+    () => (q ? entities.filter((e) => matchesAll(e, filterState, "matchType")) : []),
+    [entities, filterState, q],
+  );
+  const matchTypeCounts = useMemo(() => {
+    const c = { title: 0, properties: 0, document: 0 };
+    for (const e of matchTypeBase) {
+      const m = matchCategories(e, query, language, dataSource);
+      if (m.title) c.title++;
+      if (m.properties) c.properties++;
+      if (m.document) c.document++;
+    }
+    return c;
+  }, [matchTypeBase, query, language, dataSource]);
+
+  // The chips are query-relative — a new query starts from "all kinds" so they
+  // never linger as an invisible filter.
+  useEffect(() => {
+    setMatchTypes(ALL_MATCH_TYPES);
+  }, [q, setMatchTypes]);
 
   // The time strip rides under EVERY layout, not just the map and the timeline it
   // started under — it filters by date and charts the whole result set, so cards
@@ -656,8 +699,10 @@ export function LibraryView() {
       onFocusProperty={handleFocusProperty}
       onSelectSnippet={handleSnippetSelect}
       onClearSearch={() => setQuery("")}
-      hiddenByFilters={Math.max(0, searchMatchCount - filtered.length)}
+      hiddenByFilters={Math.max(0, searchMatchCount - matchTypeBase.length)}
       onClearFilters={() => clearFacets()}
+      matchTypeCounts={matchTypeCounts}
+      totalMatches={matchTypeBase.length}
     />
   );
 

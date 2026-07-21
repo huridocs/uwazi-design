@@ -3,12 +3,14 @@ import { Search } from "lucide-react";
 import type { Entity } from "../../../data/entities";
 import type { Language } from "../../../atoms/language";
 import type { DataSource } from "../../../utils/libraryFacets";
-import { buildSnippetsFor, matchCategories, type MatchCategories } from "../../../utils/librarySnippets";
+import { buildSnippetsFor } from "../../../utils/librarySnippets";
+import { useAtom } from "jotai";
+import { matchTypeFiltersAtom, type MatchTypeFilters } from "../../../atoms/library";
 import { ListInfoRow } from "../../shared/ListInfoRow";
 import { CollapseControls } from "../../relationships/FiltersRow";
 import { EntityResultCard } from "./EntityResultCard";
 
-type MatchType = keyof MatchCategories;
+type MatchType = keyof MatchTypeFilters;
 const MATCH_TYPES: { key: MatchType; label: string }[] = [
   { key: "title", label: "Title" },
   { key: "properties", label: "Properties" },
@@ -67,6 +69,10 @@ interface Props {
   hiddenByFilters: number;
   /** Widen the facets (keeping the query) to reveal the hidden matches. */
   onClearFilters: () => void;
+  /** How many matches each chip represents (counted with the chips widened). */
+  matchTypeCounts: Record<MatchType, number>;
+  /** Matches before the chips narrow them — the "of M" in the header count. */
+  totalMatches: number;
 }
 
 /** The Results-tab evidence view: per matched entity, WHERE the term hit — which
@@ -88,13 +94,13 @@ export function ResultsBody({
   onClearSearch,
   hiddenByFilters,
   onClearFilters,
+  matchTypeCounts,
+  totalMatches,
 }: Props) {
   const [visible, setVisible] = useState(RESULTS_STEP);
-  const [activeTypes, setActiveTypes] = useState<Record<MatchType, boolean>>({
-    title: true,
-    properties: true,
-    document: true,
-  });
+  // The chips are FILTER state (they narrow the left pane too — see
+  // `matchTypeFiltersAtom`), so `entities` already reflects them.
+  const [activeTypes, setActiveTypes] = useAtom(matchTypeFiltersAtom);
   // Per-entity expand state (absent = expanded). Owned here so Collapse/Expand
   // all can drive every card; each card is standalone (off the relationships
   // globals), so this never bleeds across surfaces.
@@ -106,52 +112,18 @@ export function ResultsBody({
   // guaranteed ≥1 metadata snippet — the match count is just `entities.length`,
   // and we only compute snippets for the visible slice, not the whole (thousands-
   // strong CEJIL) set.
-  // Where each match landed (title / properties / document) — drives the chip
-  // counts and which cards show.
-  const categories = useMemo(() => {
-    const m = new Map<string, MatchCategories>();
-    if (trimmed) for (const e of entities) m.set(e.id, matchCategories(e, trimmed, language, source));
-    return m;
-  }, [entities, trimmed, language, source]);
-
-  const typeCounts = useMemo(() => {
-    const c = { title: 0, properties: 0, document: 0 };
-    for (const cat of categories.values()) {
-      if (cat.title) c.title++;
-      if (cat.properties) c.properties++;
-      if (cat.document) c.document++;
-    }
-    return c;
-  }, [categories]);
-
-  // Entities passing the active match-type chips (an entity shows if any of its
-  // match types is toggled on).
-  const shownEntities = useMemo(() => {
-    if (!trimmed) return [];
-    return entities.filter((e) => {
-      const cat = categories.get(e.id);
-      return (
-        !!cat &&
-        ((activeTypes.title && cat.title) ||
-          (activeTypes.properties && cat.properties) ||
-          (activeTypes.document && cat.document))
-      );
-    });
-  }, [entities, categories, activeTypes, trimmed]);
-
   const rendered = useMemo(
     () =>
-      shownEntities
+      entities
         .slice(0, visible)
         .map((e) => ({ entity: e, snippets: buildSnippetsFor(e, trimmed, language, source) }))
         .filter((x) => x.snippets.count > 0),
-    [shownEntities, visible, trimmed, language, source],
+    [entities, visible, trimmed, language, source],
   );
 
   useEffect(() => {
     setVisible(RESULTS_STEP);
     setExpandedMap({});
-    setActiveTypes({ title: true, properties: true, document: true });
   }, [entities, trimmed, language, source]);
 
   const isExpanded = (id: string) => expandedMap[id] ?? true;
@@ -200,8 +172,9 @@ export function ResultsBody({
     );
   }
 
-  // no-results — query set, nothing matched.
-  if (entities.length === 0) {
+  // no-results — query set, nothing matched AT ALL. (Chips hiding everything is
+  // a different state: the header + chips still render so they can be re-enabled.)
+  if (totalMatches === 0) {
     return (
       <Shell>
         <Centered>
@@ -224,9 +197,14 @@ export function ResultsBody({
     );
   }
 
+  // When the chips narrow the set, say so: "1 of 16 results".
+  const narrowed = entities.length !== totalMatches;
   const countLabel = (
     <span dir="ltr">
-      {entities.length.toLocaleString()} {entities.length === 1 ? "result" : "results"} for{" "}
+      {narrowed
+        ? `${entities.length.toLocaleString()} of ${totalMatches.toLocaleString()}`
+        : entities.length.toLocaleString()}{" "}
+      {totalMatches === 1 ? "result" : "results"} for{" "}
       <span className="font-medium text-ink">“{trimmed}”</span>
     </span>
   );
@@ -269,7 +247,7 @@ export function ResultsBody({
             <TypeChip
               key={key}
               label={label}
-              count={typeCounts[key]}
+              count={matchTypeCounts[key]}
               active={activeTypes[key]}
               onToggle={() => setActiveTypes((t) => ({ ...t, [key]: !t[key] }))}
             />
@@ -282,6 +260,11 @@ export function ResultsBody({
           their header height and clip their own content. Block flow keeps each
           card at its natural height and lets this container scroll. */}
       <div className="flex-1 overflow-auto px-3 py-3 space-y-2">
+        {entities.length === 0 && (
+          <p className="px-1 pt-2 text-xs text-ink-tertiary">
+            No results for the selected match types.
+          </p>
+        )}
         {rendered.map(({ entity, snippets }) => (
           <EntityResultCard
             key={entity.id}
@@ -296,7 +279,7 @@ export function ResultsBody({
             onSelectSnippet={onSelectSnippet}
           />
         ))}
-        {visible < shownEntities.length && (
+        {visible < entities.length && (
           <div className="flex justify-center pt-1">
             <button
               type="button"
@@ -304,7 +287,7 @@ export function ResultsBody({
               className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm
                 hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
             >
-              Show more ({(shownEntities.length - visible).toLocaleString()})
+              Show more ({(entities.length - visible).toLocaleString()})
             </button>
           </div>
         )}

@@ -2,8 +2,9 @@ import type { Entity } from "../data/entities";
 import type { Language } from "../atoms/language";
 import { typeHasDocument } from "../data/entityProfiles";
 import { chains, valueAt, type ChainGraph, type ChainSegment } from "./chainTraversal";
-import { entityFullTextBlob } from "./librarySnippets";
+import { entityFullTextBlob, matchCategories } from "./librarySnippets";
 import { getEntityProfile } from "../data/entityProfiles";
+import { fold } from "./queryTokens";
 import {
   entityCountries,
   matchesCountries,
@@ -68,6 +69,8 @@ export interface LibraryFilterState {
   searchTerms: string[];
   /** Whether to scan document bodies (gated on `q.length ≥ 3` for corpus perf). */
   fullTextSearch: boolean;
+  /** Which KINDS of match to keep (Results-tab chips). All-true = no narrowing. */
+  matchTypes: { title: boolean; properties: boolean; document: boolean };
 }
 
 /** One independent filter dimension. A facet's own key is excluded when
@@ -81,7 +84,8 @@ export type FacetKey =
   | "descriptor"
   | "date"
   | "inherited"
-  | "search";
+  | "search"
+  | "matchType";
 
 export function entityIsDoc(e: Entity, source: DataSource): boolean {
   return source === "cejil" ? e.preview === "document" : typeHasDocument(e.typeId);
@@ -107,7 +111,7 @@ export function buildSearchIndex(entities: Entity[], language: Language): Map<st
         if (f.type !== "relationship" && f.value) parts.push(f.value);
       }
     }
-    m.set(e.id, parts.join(" ").toLowerCase());
+    m.set(e.id, fold(parts.join(" ")));
   }
   return m;
 }
@@ -149,6 +153,16 @@ const PREDICATES: Record<
   // one semantics (so "torture cruel" matches an entity carrying both words in
   // different fields/pages, and both get marked).
   search: (e, s) => matchesSearch(e, s),
+  // Where the query matched (title / properties / document). All-on is the
+  // common case and short-circuits BEFORE categorising, so the (blob-scanning)
+  // categorisation is only paid when the user has actually narrowed.
+  matchType: (e, s) => {
+    const { title, properties, document } = s.matchTypes;
+    if (title && properties && document) return true;
+    if (!s.q) return true;
+    const c = matchCategories(e, s.q, s.language, s.source);
+    return (title && c.title) || (properties && c.properties) || (document && c.document);
+  },
 };
 
 /** The search predicate on its own (facets excepted) — every query token must

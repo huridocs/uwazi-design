@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from "react";
-import { highlightTerms } from "../../utils/queryTokens";
+import { highlightTerms, foldWithMap } from "../../utils/queryTokens";
 
 /** The search-match mark. Reuses the app's highlight family — the *active*
  *  highlight token (`--highlight-yellow-active`) at 70%, a cleaner marigold than
@@ -30,18 +30,23 @@ export function HighlightedText({ text, query }: { text: string; query: string }
   const terms = highlightTerms(query);
   if (terms.length === 0) return <>{text}</>;
 
-  // Collect every term's match ranges, then sort + merge overlaps so a mark is
-  // never opened inside another (e.g. a word that also sits inside a phrase).
-  const lower = text.toLowerCase();
+  // Match on the FOLDED text (so an unaccented query marks accented text), then
+  // map each hit back to the original string's indices via `map` — the mark must
+  // wrap the source characters, accents and case intact. Ranges are then sorted +
+  // merged so a mark is never opened inside another (e.g. a word that also sits
+  // inside a phrase).
+  const { folded, map } = foldWithMap(text);
   const ranges: [number, number][] = [];
-  for (const term of terms) {
-    const needle = term.toLowerCase();
+  for (const needle of terms) {
     let from = 0;
     for (;;) {
-      const hit = lower.indexOf(needle, from);
+      const hit = folded.indexOf(needle, from);
       if (hit < 0) break;
-      ranges.push([hit, hit + needle.length]);
-      from = hit + needle.length;
+      const start = map[hit] ?? 0;
+      const stop = hit + needle.length;
+      const end = stop < map.length ? map[stop] : text.length;
+      if (end > start) ranges.push([start, end]);
+      from = stop;
     }
   }
   if (ranges.length === 0) return <>{text}</>;

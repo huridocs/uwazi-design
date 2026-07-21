@@ -5,7 +5,7 @@ import { typeHasDocument, getEntityProfile } from "../data/entityProfiles";
 import { renditionsByLanguage } from "../data/documentRenditions";
 import { documentsByLanguage } from "../data/document";
 import { cejilFullText, cejilFilesBySid, cejilLoaded } from "../data/cejil/load";
-import { highlightTerms } from "./queryTokens";
+import { highlightTerms, fold, foldWithMap } from "./queryTokens";
 
 /** Synthesizes Uwazi's per-entity search-snippets shape from the data we already
  *  hold — no backend. Mirrors `SnippetsSearchResponse`
@@ -136,37 +136,54 @@ function windowAround(text: string, idx: number, len: number, ctx: number): stri
   return `${prefix}${body}${suffix}`;
 }
 
-/** A window around the first case-insensitive occurrence of `needle`. Returns
- *  null if it isn't found. */
+/** Map a folded-text match span back to the ORIGINAL string's indices, so the
+ *  window is cut from the accented/cased source even though matching was folded. */
+function originalSpan(
+  map: number[],
+  textLength: number,
+  from: number,
+  to: number,
+): { start: number; len: number } {
+  const start = map[from] ?? 0;
+  const end = to < map.length ? map[to] : textLength;
+  return { start, len: Math.max(1, end - start) };
+}
+
+/** A window around the first occurrence of `needle`, matched case- AND
+ *  diacritic-insensitively. Returns null if it isn't found. */
 export function excerptAround(
   text: string,
   needle: string,
   ctx: number = CONTEXT_WORDS,
 ): string | null {
-  const idx = text.toLowerCase().indexOf(needle.toLowerCase());
-  if (idx < 0) return null;
-  return windowAround(text, idx, needle.length, ctx);
+  const { folded, map } = foldWithMap(text);
+  const f = fold(needle);
+  const i = folded.indexOf(f);
+  if (i < 0) return null;
+  const { start, len } = originalSpan(map, text.length, i, i + f.length);
+  return windowAround(text, start, len, ctx);
 }
 
-/** A window around the EARLIEST occurrence of any of `terms` (already
- *  lowercased) — so a multi-token query excerpts wherever it first hits. */
+/** A window around the EARLIEST occurrence of any of `terms` (already folded) —
+ *  so a multi-token query excerpts wherever it first hits. */
 function excerptAroundTerms(
   text: string,
   terms: string[],
   ctx: number = CONTEXT_WORDS,
 ): string | null {
-  const lower = text.toLowerCase();
+  const { folded, map } = foldWithMap(text);
   let best = -1;
-  let bestLen = 0;
+  let bestEnd = 0;
   for (const t of terms) {
-    const i = lower.indexOf(t);
+    const i = folded.indexOf(t);
     if (i >= 0 && (best < 0 || i < best)) {
       best = i;
-      bestLen = t.length;
+      bestEnd = i + t.length;
     }
   }
   if (best < 0) return null;
-  return windowAround(text, best, bestLen, ctx);
+  const { start, len } = originalSpan(map, text.length, best, bestEnd);
+  return windowAround(text, start, len, ctx);
 }
 
 /** The document's per-page text, or `[]` when the entity has no parsed body.
@@ -225,13 +242,13 @@ export function buildSnippetsFor(
   language: Language,
   source: DataSource,
 ): EntitySnippets {
-  const terms = highlightTerms(q).map((t) => t.toLowerCase());
+  const terms = highlightTerms(q); // already folded (lowercase + de-accented)
   const metadata: MetadataSnippet[] = [];
   const fullText: FullTextSnippet[] = [];
   if (terms.length === 0) return { count: 0, metadata, fullText };
 
   for (const { field, fieldKey, text } of entityFields(entity, language)) {
-    const lower = text.toLowerCase();
+    const lower = fold(text);
     if (!terms.some((t) => lower.includes(t))) continue;
     const excerpt = excerptAroundTerms(text, terms);
     if (excerpt) metadata.push({ field, fieldKey, texts: [excerpt] });
@@ -239,7 +256,7 @@ export function buildSnippetsFor(
 
   const pages = documentPages(entity, language, source);
   for (let i = 0; i < pages.length && fullText.length < MAX_FULLTEXT; i++) {
-    const lower = pages[i].toLowerCase();
+    const lower = fold(pages[i]);
     const hits = terms.reduce((n, t) => n + countOccurrences(lower, t), 0);
     if (hits === 0) continue;
     const excerpt = excerptAroundTerms(pages[i], terms);
@@ -267,10 +284,10 @@ export function matchCategories(
   language: Language,
   source: DataSource,
 ): MatchCategories {
-  const terms = highlightTerms(q).map((t) => t.toLowerCase());
+  const terms = highlightTerms(q); // already folded (lowercase + de-accented)
   if (terms.length === 0) return { title: false, properties: false, document: false };
   const hit = (text: string) => {
-    const lower = text.toLowerCase();
+    const lower = fold(text);
     return terms.some((t) => lower.includes(t));
   };
 
@@ -304,7 +321,7 @@ export function entityFullTextBlob(
   const cached = fullTextBlobCache.get(key);
   if (cached !== undefined) return cached;
 
-  const blob = documentPages(entity, language, source).join("\n").toLowerCase();
+  const blob = fold(documentPages(entity, language, source).join("\n"));
   if (source === "cejil" && !cejilLoaded()) return blob; // "" — don't wedge the cache
   fullTextBlobCache.set(key, blob);
   return blob;

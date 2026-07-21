@@ -5,23 +5,47 @@ import { Lightbulb } from "lucide-react";
 import { libraryQueryAtom } from "../../atoms/library";
 
 const PANEL_ID = "library-search-tips";
-const PANEL_WIDTH = 364; // ~22.75rem
+const PANEL_WIDTH = 432; // 27rem — sized so the longest example+prose pair fits on ONE line
 
-/** The five operator tips, copied (shortened) from real Uwazi's
- *  `SearchTipsContent.tsx`. Each row is: a mono `chip` (the operator), a mono
- *  `example` (concrete usage — clickable to drop into the search box), and a
- *  plain-language `prose` outcome.
+/** The operator tips, copied (shortened) from real Uwazi's
+ *  `SearchTipsContent.tsx`. Each row is a mono `example` (the syntax itself —
+ *  clickable to drop into the search box) and a plain-language `prose` outcome.
+ *
+ *  There are deliberately NO symbol chips. A shared column of `*` … `AND OR NOT`
+ *  can never align — one glyph against eleven — and the column had to be sized
+ *  for the widest, which stranded the short ones and squeezed every description
+ *  into two lines. The EXAMPLE is the syntax, so the symbol column was carrying
+ *  no information the example didn't already show.
  *
  *  GUIDANCE — the Library filter matches literal tokens (quoted phrases as
  *  units); it doesn't parse `*`/`?`/`~N` yet (a named follow-up), so clicking an
- *  example is a "try this shape" affordance, not a promise the operator runs. */
-const TIPS: { chip: string; example: string; prose: string }[] = [
-  { chip: "*", example: "juris*", prose: "matches jurisdiction, jurists, jurisprudence…" },
-  { chip: "?", example: "198?", prose: "one character — matches 1980–1989, 198a…" },
-  { chip: '"…"', example: '"Costa Rica"', prose: "the words together, in that order" },
-  { chip: "~N", example: '"the status"~5', prose: "the two words within N of each other" },
-  { chip: "AND·OR·NOT", example: "status AND women NOT Nicaragua", prose: "combine or exclude terms" },
+ *  example is a "try this shape" affordance, not a promise the operator runs.
+ *  Quotes are STRAIGHT: the tokenizer's phrase regex only recognises `"`, so a
+ *  typographic quote would insert a query that silently matches nothing. */
+const TIPS: { example: string; prose: string }[] = [
+  { example: "juris*", prose: "matches jurisdiction, jurists, jurisprudence" },
+  { example: "198?", prose: "any single character" },
+  { example: '"Costa Rica"', prose: "the words together, in that order" },
+  { example: '"the status"~5', prose: "the words within 5 of each other" },
 ];
+
+/** The booleans sit in a final FULL-WIDTH row: the example alone is ~30 mono
+ *  characters, so holding it in the start column would have set that column's
+ *  width for all five rows and pushed the panel past 30rem. Spanning is the
+ *  cheaper compromise — it costs this one row's column alignment, not the
+ *  panel's whole proportion. */
+const BOOLEAN_TIP = {
+  example: "status AND women NOT Nicaragua",
+  prose: "combine or exclude terms",
+};
+
+/** One rhythm for every row — the grid rows and the spanning boolean row share
+ *  these so the vertical spacing stays even across the break in layout. */
+const ROW_CLASS =
+  "w-full rounded-md px-2 py-2 text-left hover:bg-parchment transition-colors cursor-pointer " +
+  "focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20";
+const EXAMPLE_CLASS = "whitespace-nowrap font-mono text-[11px] leading-snug text-ink";
+const PROSE_CLASS = "min-w-0 text-[11px] leading-snug text-ink-secondary";
 
 /** A small tag-style "tips" chip that sits inside the Library search box (after
  *  the clear button). Clicking opens the operator tips as a popover anchored
@@ -121,37 +145,38 @@ export function SearchTipsPopover() {
 
             <ul className="flex flex-col">
               {TIPS.map((tip) => (
-                <li key={tip.chip}>
+                <li key={tip.example}>
                   <button
                     type="button"
                     onClick={() => insert(tip.example)}
                     aria-label={`Search: ${tip.example}`}
-                    className="group grid w-full grid-cols-[5.5rem_1fr] items-baseline gap-x-3 rounded-md
-                      px-2 py-1.5 text-left hover:bg-parchment transition-colors cursor-pointer
-                      focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20"
+                    className={ROW_CLASS + " grid grid-cols-[7rem_1fr] items-baseline gap-x-3"}
                   >
-                    {/* Chip — fixed start column, aligned to the description
-                        gutter (inline-end) so every description begins at the
-                        same x. `dir=ltr` keeps operators readable under RTL. */}
-                    <span
-                      dir="ltr"
-                      className="justify-self-end whitespace-nowrap rounded-[3px] border border-border-soft
-                        bg-warm px-1.5 py-0.5 font-mono text-[11px] leading-none text-ink"
-                    >
-                      {tip.chip}
+                    {/* Both columns start-aligned: the example is the syntax, so
+                        it reads as a column of things you could type, and every
+                        description begins at the same x. The panel is sized so
+                        neither side wraps — one line per rule. */}
+                    <span dir="ltr" className={EXAMPLE_CLASS}>
+                      {tip.example}
                     </span>
-                    {/* Description — the example (mono, ink) reads as the thing
-                        you'd type; the prose (regular, secondary) explains it.
-                        Wrapped lines hang under the example, never the chip. */}
-                    <span className="min-w-0 text-[11px] leading-snug">
-                      <span dir="ltr" className="font-mono text-ink group-hover:text-ink">
-                        {tip.example}
-                      </span>{" "}
-                      <span className="text-ink-secondary">{tip.prose}</span>
-                    </span>
+                    <span className={PROSE_CLASS}>{tip.prose}</span>
                   </button>
                 </li>
               ))}
+              {/* Booleans — full width, example and prose on one line. */}
+              <li>
+                <button
+                  type="button"
+                  onClick={() => insert(BOOLEAN_TIP.example)}
+                  aria-label={`Search: ${BOOLEAN_TIP.example}`}
+                  className={ROW_CLASS + " flex items-baseline gap-x-3"}
+                >
+                  <span dir="ltr" className={EXAMPLE_CLASS}>
+                    {BOOLEAN_TIP.example}
+                  </span>
+                  <span className={PROSE_CLASS}>{BOOLEAN_TIP.prose}</span>
+                </button>
+              </li>
             </ul>
           </div>,
           document.body,
