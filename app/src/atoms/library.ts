@@ -150,6 +150,23 @@ export const selectDataSourceAtom = atom(null, (_get, set, source: DataSource) =
 /** Clear every filter. ONE definition: the Filters panel and the view each had
  *  their own, and they had already drifted — the panel's forgot the search box,
  *  the view's forgot the AND/OR modes. */
+/** Clear the facet filters but KEEP the query — for the Results tab's "hidden by
+ *  filters · Clear filters" line, which widens the facets to reveal the matches
+ *  the current query found but the facets excluded. */
+export const clearLibraryFacetsAtom = atom(null, (_get, set) => {
+  set(libraryTypeFiltersAtom, {});
+  set(libraryHasDocAtom, false);
+  set(libraryStatusFiltersAtom, {});
+  set(libraryCountryFiltersAtom, {});
+  set(libraryCountryModeAtom, "OR");
+  set(libraryDescriptorFiltersAtom, {});
+  set(libraryDescriptorModeAtom, "OR");
+  set(libraryDateFromAtom, "");
+  set(libraryDateToAtom, "");
+  set(libraryInheritedFiltersAtom, {});
+  set(libraryChainFiltersAtom, {});
+});
+
 export const clearLibraryFiltersAtom = atom(null, (_get, set) => {
   set(libraryQueryAtom, "");
   set(libraryTypeFiltersAtom, {});

@@ -44,11 +44,12 @@ import {
   librarySelectedClusterAtom,
   resultsActivePageAtom,
   focusMetadataFieldAtom,
+  clearLibraryFacetsAtom,
 } from "../atoms/library";
 import { getEntityType, type Entity } from "../data/entities";
 import { libraryInheritedDefs } from "../utils/libraryFacets";
 import { buildActiveChains, cejilChainGraph } from "../data/cejil/chainFacets";
-import { matchesAll, buildSearchIndex, type LibraryFilterState } from "../utils/libraryFilter";
+import { matchesAll, matchesSearch, buildSearchIndex, type LibraryFilterState } from "../utils/libraryFilter";
 import { highlightTerms } from "../utils/queryTokens";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { EntityCard } from "../components/library/EntityCard";
@@ -156,6 +157,7 @@ export function LibraryView() {
   const setScrollToPage = useSetAtom(scrollToPageAtom);
   const setResultsActivePage = useSetAtom(resultsActivePageAtom);
   const setFocusMetadataField = useSetAtom(focusMetadataFieldAtom);
+  const clearFacets = useSetAtom(clearLibraryFacetsAtom);
   const setAppView = useSetAtom(appViewAtom);
   const notify = useNotify();
 
@@ -179,7 +181,7 @@ export function LibraryView() {
   // Precomputed lowercase searchable text per entity (title + country + the
   // displayed metadata field values + descriptors), so search matches real
   // metadata — not just titles — without scanning the corpus on each keystroke.
-  const searchIndex = useMemo(() => buildSearchIndex(entities), [entities]);
+  const searchIndex = useMemo(() => buildSearchIndex(entities, language), [entities, language]);
 
   const activeTypeIds = Object.entries(typeFilters)
     .filter(([, on]) => on)
@@ -293,6 +295,13 @@ export function LibraryView() {
     // `cejilReady`: once the corpus loads, full-text blobs go empty→real, so the
     // filtered set must recompute to surface document-body-only matches.
   }, [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, chainKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex, cejilReady]);
+
+  // How many entities the query matches with the FACETS widened — so the Results
+  // tab can offer to reveal the ones the current facets are hiding.
+  const searchMatchCount = useMemo(
+    () => (q ? entities.reduce((n, e) => n + (matchesSearch(e, filterState) ? 1 : 0), 0) : 0),
+    [entities, filterState, q],
+  );
 
   // The time strip rides under EVERY layout, not just the map and the timeline it
   // started under — it filters by date and charts the whole result set, so cards
@@ -647,6 +656,8 @@ export function LibraryView() {
       onFocusProperty={handleFocusProperty}
       onSelectSnippet={handleSnippetSelect}
       onClearSearch={() => setQuery("")}
+      hiddenByFilters={Math.max(0, searchMatchCount - filtered.length)}
+      onClearFilters={() => clearFacets()}
     />
   );
 

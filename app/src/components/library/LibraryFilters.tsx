@@ -75,7 +75,7 @@ export function LibraryFilters() {
     () => (dataSource === "cejil" ? cejilChainFacetDefs() : []),
     [dataSource],
   );
-  const searchIndex = useMemo(() => buildSearchIndex(entities), [entities]);
+  const searchIndex = useMemo(() => buildSearchIndex(entities, language), [entities, language]);
 
   // The shared filter state — each facet's aggregation counts entities passing
   // every OTHER active filter (excluding its own dimension), so the numbers are

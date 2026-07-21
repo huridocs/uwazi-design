@@ -3,6 +3,7 @@ import type { Language } from "../atoms/language";
 import { typeHasDocument } from "../data/entityProfiles";
 import { chains, valueAt, type ChainGraph, type ChainSegment } from "./chainTraversal";
 import { entityFullTextBlob } from "./librarySnippets";
+import { getEntityProfile } from "../data/entityProfiles";
 import {
   entityCountries,
   matchesCountries,
@@ -89,7 +90,7 @@ export function entityIsDoc(e: Entity, source: DataSource): boolean {
 /** Per-entity searchable text (title + country + field values + descriptors),
  *  lowercased. Built once and shared by the result filter and the facet
  *  aggregations so search narrows both identically. */
-export function buildSearchIndex(entities: Entity[]): Map<string, string> {
+export function buildSearchIndex(entities: Entity[], language: Language): Map<string, string> {
   const m = new Map<string, string>();
   for (const e of entities) {
     const parts = [
@@ -98,6 +99,14 @@ export function buildSearchIndex(entities: Entity[]): Map<string, string> {
       ...(e.fields?.map((f) => f.value) ?? []),
       ...(e.descriptors ?? []),
     ];
+    // Mock entities carry their scalar metadata in the PROFILE, not `fields`, so
+    // fold it in — otherwise the search reaches only titles. CEJIL entities have
+    // `fields`, so they skip this (and its per-entity profile build).
+    if (!e.fields?.length) {
+      for (const f of getEntityProfile(e.id).metadata[language] ?? []) {
+        if (f.type !== "relationship" && f.value) parts.push(f.value);
+      }
+    }
     m.set(e.id, parts.join(" ").toLowerCase());
   }
   return m;
@@ -139,17 +148,23 @@ const PREDICATES: Record<
   // with the snippet builder + highlighter keeps filter, snippets, and marks in
   // one semantics (so "torture cruel" matches an entity carrying both words in
   // different fields/pages, and both get marked).
-  search: (e, s) => {
-    if (!s.q) return true;
-    if (s.searchTerms.length === 0) return true;
-    const meta = s.searchIndex.get(e.id) ?? "";
-    return s.searchTerms.every(
-      (t) =>
-        meta.includes(t) ||
-        (s.fullTextSearch && entityFullTextBlob(e, s.language, s.source).includes(t)),
-    );
-  },
+  search: (e, s) => matchesSearch(e, s),
 };
+
+/** The search predicate on its own (facets excepted) — every query token must
+ *  hit the entity's metadata index OR its document body. Exported so callers can
+ *  count "entities matching the search regardless of facets" (e.g. the Results
+ *  tab's hidden-by-filters line). */
+export function matchesSearch(e: Entity, s: LibraryFilterState): boolean {
+  if (!s.q) return true;
+  if (s.searchTerms.length === 0) return true;
+  const meta = s.searchIndex.get(e.id) ?? "";
+  return s.searchTerms.every(
+    (t) =>
+      meta.includes(t) ||
+      (s.fullTextSearch && entityFullTextBlob(e, s.language, s.source).includes(t)),
+  );
+}
 
 const ALL_KEYS = Object.keys(PREDICATES) as FacetKey[];
 

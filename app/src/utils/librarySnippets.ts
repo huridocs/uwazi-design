@@ -1,7 +1,7 @@
 import type { Entity } from "../data/entities";
 import type { Language } from "../atoms/language";
 import type { DataSource } from "./libraryFacets";
-import { typeHasDocument } from "../data/entityProfiles";
+import { typeHasDocument, getEntityProfile } from "../data/entityProfiles";
 import { renditionsByLanguage } from "../data/documentRenditions";
 import { documentsByLanguage } from "../data/document";
 import { cejilFullText, cejilFilesBySid, cejilLoaded } from "../data/cejil/load";
@@ -72,13 +72,27 @@ const MAX_FULLTEXT = 5;
  *  granularity the flat index throws away. */
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-function entityFields(e: Entity): { field: string; fieldKey: string; text: string }[] {
+/** The searchable + snippet-able metadata fields of an entity, each with a stable
+ *  key for deep-focus. Adapter entities (CEJIL) carry their scalars in `fields`
+ *  (label/value, no id — slug the label); mock entities carry theirs in the
+ *  PROFILE, whose fields have real ids matching the drawer's `MetadataField.id`,
+ *  so `country`/`definition`/etc. deep-focus cleanly and localization-safely. */
+function entityFields(
+  e: Entity,
+  language: Language,
+): { field: string; fieldKey: string; text: string }[] {
   const out = [{ field: "Title", fieldKey: "title", text: e.title }];
   if (e.country) out.push({ field: "Country", fieldKey: "country", text: e.country });
-  for (const f of e.fields ?? []) {
-    // Adapter fields carry no stable key — slug the label as a best-effort match
-    // for deep-focus (localization-safe keying needs a data-layer field id).
-    if (f.value) out.push({ field: f.label, fieldKey: slug(f.label), text: f.value });
+  if (e.fields?.length) {
+    for (const f of e.fields) {
+      if (f.value) out.push({ field: f.label, fieldKey: slug(f.label), text: f.value });
+    }
+  } else {
+    for (const f of getEntityProfile(e.id).metadata[language] ?? []) {
+      if (f.type !== "relationship" && f.value) {
+        out.push({ field: f.label, fieldKey: f.id, text: f.value });
+      }
+    }
   }
   if (e.descriptors?.length) {
     out.push({ field: "Descriptors", fieldKey: "descriptors", text: e.descriptors.join(", ") });
@@ -216,7 +230,7 @@ export function buildSnippetsFor(
   const fullText: FullTextSnippet[] = [];
   if (terms.length === 0) return { count: 0, metadata, fullText };
 
-  for (const { field, fieldKey, text } of entityFields(entity)) {
+  for (const { field, fieldKey, text } of entityFields(entity, language)) {
     const lower = text.toLowerCase();
     if (!terms.some((t) => lower.includes(t))) continue;
     const excerpt = excerptAroundTerms(text, terms);
@@ -233,6 +247,44 @@ export function buildSnippetsFor(
   }
 
   return { count: metadata.length + fullText.length, metadata, fullText };
+}
+
+export interface MatchCategories {
+  /** The query hit the entity's title. */
+  title: boolean;
+  /** The query hit a non-title metadata field (country / adapter / profile). */
+  properties: boolean;
+  /** The query hit the entity's document body. */
+  document: boolean;
+}
+
+/** Where a query matched an entity — for the Results tab's match-type chips.
+ *  Uses the SAME sources as the filter/snippets so the categories agree with
+ *  what surfaces. */
+export function matchCategories(
+  entity: Entity,
+  q: string,
+  language: Language,
+  source: DataSource,
+): MatchCategories {
+  const terms = highlightTerms(q).map((t) => t.toLowerCase());
+  if (terms.length === 0) return { title: false, properties: false, document: false };
+  const hit = (text: string) => {
+    const lower = text.toLowerCase();
+    return terms.some((t) => lower.includes(t));
+  };
+
+  let title = false;
+  let properties = false;
+  for (const f of entityFields(entity, language)) {
+    if (!hit(f.text)) continue;
+    if (f.fieldKey === "title") title = true;
+    else properties = true;
+  }
+  const blob = entityFullTextBlob(entity, language, source);
+  const document = terms.some((t) => blob.includes(t));
+
+  return { title, properties, document };
 }
 
 /** Per-entity lowercase full-text blob (all its document pages joined), for the

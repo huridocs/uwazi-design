@@ -3,10 +3,49 @@ import { Search } from "lucide-react";
 import type { Entity } from "../../../data/entities";
 import type { Language } from "../../../atoms/language";
 import type { DataSource } from "../../../utils/libraryFacets";
-import { buildSnippetsFor } from "../../../utils/librarySnippets";
+import { buildSnippetsFor, matchCategories, type MatchCategories } from "../../../utils/librarySnippets";
 import { ListInfoRow } from "../../shared/ListInfoRow";
 import { CollapseControls } from "../../relationships/FiltersRow";
 import { EntityResultCard } from "./EntityResultCard";
+
+type MatchType = keyof MatchCategories;
+const MATCH_TYPES: { key: MatchType; label: string }[] = [
+  { key: "title", label: "Title" },
+  { key: "properties", label: "Properties" },
+  { key: "document", label: "Document" },
+];
+
+/** A match-type toggle chip with a count — filters which cards show by WHERE the
+ *  query matched. */
+function TypeChip({
+  label,
+  count,
+  active,
+  onToggle,
+}: {
+  label: string;
+  count: number;
+  active: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={active}
+      className={`inline-flex items-center gap-1 h-6 px-2 rounded-md border text-[11px] font-medium
+        transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1
+        focus-visible:ring-inset focus-visible:ring-ink/20 ${
+          active
+            ? "bg-parchment border-border text-ink"
+            : "bg-paper border-border/40 text-ink-tertiary hover:text-ink-secondary"
+        }`}
+    >
+      {label}
+      <span className="tabular-nums text-ink-tertiary">{count.toLocaleString()}</span>
+    </button>
+  );
+}
 
 /** How many entity cards to render before "Show more" (the drawer is narrow and
  *  the CEJIL corpus is thousands of entities — mirror the left pane's paging). */
@@ -24,6 +63,10 @@ interface Props {
   onFocusProperty: (id: string, fieldKey: string) => void;
   onSelectSnippet: (id: string, page: number) => void;
   onClearSearch: () => void;
+  /** How many query matches the active facets are excluding (0 = none hidden). */
+  hiddenByFilters: number;
+  /** Widen the facets (keeping the query) to reveal the hidden matches. */
+  onClearFilters: () => void;
 }
 
 /** The Results-tab evidence view: per matched entity, WHERE the term hit — which
@@ -43,8 +86,15 @@ export function ResultsBody({
   onFocusProperty,
   onSelectSnippet,
   onClearSearch,
+  hiddenByFilters,
+  onClearFilters,
 }: Props) {
   const [visible, setVisible] = useState(RESULTS_STEP);
+  const [activeTypes, setActiveTypes] = useState<Record<MatchType, boolean>>({
+    title: true,
+    properties: true,
+    document: true,
+  });
   // Per-entity expand state (absent = expanded). Owned here so Collapse/Expand
   // all can drive every card; each card is standalone (off the relationships
   // globals), so this never bleeds across surfaces.
@@ -56,20 +106,52 @@ export function ResultsBody({
   // guaranteed ≥1 metadata snippet — the match count is just `entities.length`,
   // and we only compute snippets for the visible slice, not the whole (thousands-
   // strong CEJIL) set.
+  // Where each match landed (title / properties / document) — drives the chip
+  // counts and which cards show.
+  const categories = useMemo(() => {
+    const m = new Map<string, MatchCategories>();
+    if (trimmed) for (const e of entities) m.set(e.id, matchCategories(e, trimmed, language, source));
+    return m;
+  }, [entities, trimmed, language, source]);
+
+  const typeCounts = useMemo(() => {
+    const c = { title: 0, properties: 0, document: 0 };
+    for (const cat of categories.values()) {
+      if (cat.title) c.title++;
+      if (cat.properties) c.properties++;
+      if (cat.document) c.document++;
+    }
+    return c;
+  }, [categories]);
+
+  // Entities passing the active match-type chips (an entity shows if any of its
+  // match types is toggled on).
+  const shownEntities = useMemo(() => {
+    if (!trimmed) return [];
+    return entities.filter((e) => {
+      const cat = categories.get(e.id);
+      return (
+        !!cat &&
+        ((activeTypes.title && cat.title) ||
+          (activeTypes.properties && cat.properties) ||
+          (activeTypes.document && cat.document))
+      );
+    });
+  }, [entities, categories, activeTypes, trimmed]);
+
   const rendered = useMemo(
     () =>
-      trimmed
-        ? entities
-            .slice(0, visible)
-            .map((e) => ({ entity: e, snippets: buildSnippetsFor(e, trimmed, language, source) }))
-            .filter((x) => x.snippets.count > 0)
-        : [],
-    [entities, trimmed, language, source, visible],
+      shownEntities
+        .slice(0, visible)
+        .map((e) => ({ entity: e, snippets: buildSnippetsFor(e, trimmed, language, source) }))
+        .filter((x) => x.snippets.count > 0),
+    [shownEntities, visible, trimmed, language, source],
   );
 
   useEffect(() => {
     setVisible(RESULTS_STEP);
     setExpandedMap({});
+    setActiveTypes({ title: true, properties: true, document: true });
   }, [entities, trimmed, language, source]);
 
   const isExpanded = (id: string) => expandedMap[id] ?? true;
@@ -165,6 +247,34 @@ export function ResultsBody({
             />
           }
         />
+
+        {hiddenByFilters > 0 && (
+          <div className="px-3 pb-2 text-[11px] text-ink-tertiary">
+            {hiddenByFilters.toLocaleString()} more{" "}
+            {hiddenByFilters === 1 ? "match" : "matches"} hidden by filters
+            <span className="mx-1 text-ink-muted">·</span>
+            <button
+              type="button"
+              onClick={onClearFilters}
+              className="font-medium text-carbon hover:underline cursor-pointer"
+            >
+              Clear filters
+            </button>
+          </div>
+        )}
+
+        {/* Match-type chips — filter which cards show by where the query hit. */}
+        <div className="px-3 pb-2 flex items-center gap-1.5">
+          {MATCH_TYPES.map(({ key, label }) => (
+            <TypeChip
+              key={key}
+              label={label}
+              count={typeCounts[key]}
+              active={activeTypes[key]}
+              onToggle={() => setActiveTypes((t) => ({ ...t, [key]: !t[key] }))}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Block flow (space-y), NOT flex-col: the grouped cards are
@@ -186,7 +296,7 @@ export function ResultsBody({
             onSelectSnippet={onSelectSnippet}
           />
         ))}
-        {visible < entities.length && (
+        {visible < shownEntities.length && (
           <div className="flex justify-center pt-1">
             <button
               type="button"
@@ -194,7 +304,7 @@ export function ResultsBody({
               className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm
                 hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
             >
-              Show more ({(entities.length - visible).toLocaleString()})
+              Show more ({(shownEntities.length - visible).toLocaleString()})
             </button>
           </div>
         )}

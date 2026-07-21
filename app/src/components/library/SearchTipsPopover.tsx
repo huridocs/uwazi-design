@@ -18,8 +18,8 @@ const PANEL_WIDTH = 364; // ~22.75rem
 const TIPS: { chip: string; example: string; prose: string }[] = [
   { chip: "*", example: "juris*", prose: "matches jurisdiction, jurists, jurisprudence…" },
   { chip: "?", example: "198?", prose: "one character — matches 1980–1989, 198a…" },
-  { chip: "“…”", example: "“Costa Rica”", prose: "the words together, in that order" },
-  { chip: "~N", example: "“the status”~5", prose: "the two words within N of each other" },
+  { chip: '"…"', example: '"Costa Rica"', prose: "the words together, in that order" },
+  { chip: "~N", example: '"the status"~5', prose: "the two words within N of each other" },
   { chip: "AND·OR·NOT", example: "status AND women NOT Nicaragua", prose: "combine or exclude terms" },
 ];
 
