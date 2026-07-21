@@ -31,6 +31,7 @@ import { scopedReferencesAtom } from "../atoms/references";
 import { RelationshipsDrawerSection } from "../components/relationships/RelationshipsDrawerSection";
 import { DocumentViewer } from "../components/viewer/DocumentViewer";
 import { useNotify } from "../hooks/useNotify";
+import { ShareEntityModal } from "../components/share/ShareEntityModal";
 
 interface MetadataViewProps {
   tabs: { id: string; label: string; count?: number }[];
@@ -92,10 +93,12 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
   const fields = allFields.filter((f): f is MetadataField => f.type !== "relationship");
   const pdf = profile.pdfMetadata?.[language];
   const notify = useNotify();
+  const [shareOpen, setShareOpen] = useState(false);
 
   return (
     <>
       <DocMeta showPdfSelector={false} />
+      <ShareEntityModal open={shareOpen} onClose={() => setShareOpen(false)} />
 
       {/* Scrollable metadata body — responsive grid */}
       <div className="flex-1 overflow-auto px-4 py-2 pb-8">
@@ -175,7 +178,7 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
           Edit
         </button>
         <button
-          onClick={() => notify("Link copied")}
+          onClick={() => setShareOpen(true)}
           className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
         >
           Share

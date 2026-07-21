@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { HelpCircle, Pencil, Share2, Trash2 } from "lucide-react";
 import { useNotify } from "../../hooks/useNotify";
+import { ShareEntityModal } from "../share/ShareEntityModal";
 
 interface DrawerActionBarProps {
   activeTab: string;
@@ -42,16 +44,19 @@ function ActionPill({
 
 export function DrawerActionBar({ activeTab }: DrawerActionBarProps) {
   const notify = useNotify();
+  const [shareOpen, setShareOpen] = useState(false);
+
   return (
     <div
       className="flex items-center justify-between h-12 px-3 bg-paper shrink-0"
       style={{ borderTop: "1px solid var(--border-primary)" }}
     >
+      <ShareEntityModal open={shareOpen} onClose={() => setShareOpen(false)} />
       {activeTab === "metadata" && (
         <>
           <div className="flex items-center gap-2">
             <ActionPill icon={Pencil} label="Edit" onClick={() => notify("Editing metadata")} />
-            <ActionPill icon={Share2} label="Share" onClick={() => notify("Share link copied", "success")} />
+            <ActionPill icon={Share2} label="Share" onClick={() => setShareOpen(true)} />
           </div>
           <ActionPill icon={Trash2} label="Delete" variant="danger" onClick={() => notify("Entity deleted", "success")} />
         </>
