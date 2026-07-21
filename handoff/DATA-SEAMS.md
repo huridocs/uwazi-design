@@ -186,7 +186,45 @@ back in. Porting plan: keep the resolver and UI contracts, replace
 | Per-member hub roles | single shared label per hub | add `role` to hub member |
 | IX suggestions surface | built but unmounted (atoms/data/component live) | remount = 2 imports + 1 prop |
 
-## 8. Porting checklist
+## 8. Library search — the snippets seam
+
+The Library's Results tab mirrors v2's search response so the UI ports 1:1.
+The prototype computes client-side what production gets from Elasticsearch —
+every "replace with ES" row below is a deletion, not a rewrite.
+
+**Shape** (`utils/librarySnippets.ts`, mirrors `SnippetsSearchResponse` from
+`/api/search` — verified against a live instance):
+
+```ts
+EntitySnippets {
+  count: number;                       // metadata groups + fullText hits
+  metadata: { field, texts[] }[];      // per-field excerpts, term marked
+  fullText: { page, text, hits }[];    // per-page excerpts
+}
+```
+
+**One tokenizer, three consumers** (`utils/queryTokens.ts`): the filter
+predicate, the snippet builder, and the `<mark>` highlighter all tokenize the
+same way (quoted phrases as units, `AND/OR/NOT` as operators). This is the
+invariant to preserve when porting: what matches, what snips, and what marks
+must never drift — in v2 that means driving all three from the same ES query.
+
+| Prototype piece | In the real repo |
+|---|---|
+| Client substring/token matcher | ES `simple_query_string` (free: `*` `?` `~N` booleans, stemming) |
+| `buildSnippetsFor` excerpt windows | ES highlighter (`<b>` marks — sanitize, parse to nodes, never innerHTML) |
+| Diacritic folding in the matcher | ES `asciifolding` analyzer |
+| Relevance ranking | ES `_score` (the prototype fakes it; production gets it free) |
+| Per-card full-text cap | lazy `/api/search_snippets?id=` per entity |
+| `HighlightedText` re-marking plain text | keep — it renders API `<b>` output safely |
+
+UI seams that carry over regardless of backend: results are a drawer tab
+sibling to Filters (auto-switches with the query), hits group under
+**Properties** (click → the entity's metadata, field focused) and **Document**
+(click → the doc at that page), and the match mark is layout-neutral
+(`px-0.5 -mx-0.5`, weight inherited) so highlighting never re-wraps a line.
+
+## 9. Porting checklist
 
 1. Map `Reference` → v2 `Relationship` rows (`direction` flag → from/to
    position; selections carry over per-endpoint).
