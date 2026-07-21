@@ -2,6 +2,7 @@ import type { Entity } from "../data/entities";
 import type { Language } from "../atoms/language";
 import { typeHasDocument } from "../data/entityProfiles";
 import { chains, valueAt, type ChainGraph, type ChainSegment } from "./chainTraversal";
+import { entityFullTextBlob } from "./librarySnippets";
 import {
   entityCountries,
   matchesCountries,
@@ -59,6 +60,13 @@ export interface LibraryFilterState {
   chains: ActiveChain[];
   q: string;
   searchIndex: Map<string, string>;
+  /** Lowercased highlight terms of `q` (quoted phrases as units, bare words
+   *  separately, operators dropped) — shared with snippets + marks via
+   *  `utils/queryTokens.ts`. A term must hit metadata OR full text; all must hit
+   *  (AND). */
+  searchTerms: string[];
+  /** Whether to scan document bodies (gated on `q.length ≥ 3` for corpus perf). */
+  fullTextSearch: boolean;
 }
 
 /** One independent filter dimension. A facet's own key is excluded when
@@ -125,7 +133,22 @@ const PREDICATES: Record<
         f.values.has(v),
       ),
     ),
-  search: (e, s) => !s.q || (s.searchIndex.get(e.id) ?? "").includes(s.q),
+  // Match every query token (AND) somewhere in the entity's metadata index OR —
+  // when the query is long enough to be worth the corpus scan — its document
+  // body. Quoted phrases are single contiguous tokens. Sharing `searchTerms`
+  // with the snippet builder + highlighter keeps filter, snippets, and marks in
+  // one semantics (so "torture cruel" matches an entity carrying both words in
+  // different fields/pages, and both get marked).
+  search: (e, s) => {
+    if (!s.q) return true;
+    if (s.searchTerms.length === 0) return true;
+    const meta = s.searchIndex.get(e.id) ?? "";
+    return s.searchTerms.every(
+      (t) =>
+        meta.includes(t) ||
+        (s.fullTextSearch && entityFullTextBlob(e, s.language, s.source).includes(t)),
+    );
+  },
 };
 
 const ALL_KEYS = Object.keys(PREDICATES) as FacetKey[];

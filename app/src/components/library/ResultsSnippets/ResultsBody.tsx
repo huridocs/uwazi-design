@@ -4,18 +4,9 @@ import type { Entity } from "../../../data/entities";
 import type { Language } from "../../../atoms/language";
 import type { DataSource } from "../../../utils/libraryFacets";
 import { buildSnippetsFor } from "../../../utils/librarySnippets";
-import { EntitySnippetCard } from "./EntitySnippetCard";
-import { SearchTipsDisclosure } from "./SearchTipsDisclosure";
-
-/** The last full-text snippet the user jumped to. Lifted to LibraryView (this
- *  body unmounts while its entity's preview is showing), so on RETURN to the
- *  Results list that snippet stays lit — the affordance the spec wanted, which
- *  the original `selectedId === e.id && currentPage` derivation could never
- *  reach (jumping swaps the drawer away from the list; closing clears the id). */
-export interface JumpedSnippet {
-  entityId: string;
-  page: number;
-}
+import { ListInfoRow } from "../../shared/ListInfoRow";
+import { CollapseControls } from "../../relationships/FiltersRow";
+import { EntityResultCard } from "./EntityResultCard";
 
 /** How many entity cards to render before "Show more" (the drawer is narrow and
  *  the CEJIL corpus is thousands of entities — mirror the left pane's paging). */
@@ -30,17 +21,17 @@ interface Props {
   cejilLoading: boolean;
   cejilError: boolean;
   onRetry: () => void;
-  onSelectEntity: (id: string) => void;
+  onFocusProperty: (id: string, fieldKey: string) => void;
   onSelectSnippet: (id: string, page: number) => void;
   onClearSearch: () => void;
-  /** The last-jumped snippet, so it stays lit on return to the list. */
-  lastJumped: JumpedSnippet | null;
 }
 
 /** The Results-tab evidence view: per matched entity, WHERE the term hit — which
- *  metadata field, which document page — with the term highlighted. The left
- *  pane already lists the entity set; this shows the snippets the grid can't.
- *  Blank-state order: error → loading → no-search → no-results → list. */
+ *  metadata field, which document page — with the term highlighted. Composed
+ *  from shared primitives (§11): `ListInfoRow` header, `RelationshipGroupedCard`
+ *  per entity, and the full-text page spine. The left pane already lists the
+ *  entity set; this shows the snippets the grid can't. Blank-state order: error →
+ *  loading → no-search → no-results → list. */
 export function ResultsBody({
   query,
   entities,
@@ -49,19 +40,22 @@ export function ResultsBody({
   cejilLoading,
   cejilError,
   onRetry,
-  onSelectEntity,
+  onFocusProperty,
   onSelectSnippet,
   onClearSearch,
-  lastJumped,
 }: Props) {
   const [visible, setVisible] = useState(RESULTS_STEP);
+  // Per-entity expand state (absent = expanded). Owned here so Collapse/Expand
+  // all can drive every card; each card is standalone (off the relationships
+  // globals), so this never bleeds across surfaces.
+  const [expandedMap, setExpandedMap] = useState<Record<string, boolean>>({});
   const trimmed = query.trim();
 
   // `entities` is the already-filtered set. The left-pane filter and
-  // `buildSnippetsFor` scan the SAME metadata fields (title/country/fields/
-  // descriptors), so every filtered entity is guaranteed ≥1 metadata snippet —
-  // the match count is just `entities.length`, and we only compute snippets for
-  // the visible slice instead of the whole (thousands-strong CEJIL) set.
+  // `buildSnippetsFor` scan the SAME metadata fields, so every filtered entity is
+  // guaranteed ≥1 metadata snippet — the match count is just `entities.length`,
+  // and we only compute snippets for the visible slice, not the whole (thousands-
+  // strong CEJIL) set.
   const rendered = useMemo(
     () =>
       trimmed
@@ -73,7 +67,15 @@ export function ResultsBody({
     [entities, trimmed, language, source, visible],
   );
 
-  useEffect(() => setVisible(RESULTS_STEP), [entities, trimmed, language, source]);
+  useEffect(() => {
+    setVisible(RESULTS_STEP);
+    setExpandedMap({});
+  }, [entities, trimmed, language, source]);
+
+  const isExpanded = (id: string) => expandedMap[id] ?? true;
+  const expandedCount = rendered.filter((x) => isExpanded(x.entity.id)).length;
+  const setAllExpanded = (val: boolean) =>
+    setExpandedMap(Object.fromEntries(rendered.map((x) => [x.entity.id, val])));
 
   // error → loading (CEJIL corpus is the only real async path in mock mode).
   if (source === "cejil" && cejilLoading) {
@@ -121,7 +123,9 @@ export function ResultsBody({
     return (
       <Shell>
         <Centered>
-          <span className="text-sm text-ink-tertiary">
+          {/* Whole phrase is English; `dir="ltr"` keeps it from reordering in an
+              RTL drawer (isolating only the digit wasn't enough). */}
+          <span dir="ltr" className="text-sm text-ink-tertiary">
             No matches for{" "}
             <span className="font-medium text-ink-secondary">“{trimmed}”</span>
           </span>
@@ -138,43 +142,61 @@ export function ResultsBody({
     );
   }
 
+  const countLabel = (
+    <span dir="ltr">
+      {entities.length.toLocaleString()} {entities.length === 1 ? "result" : "results"} for{" "}
+      <span className="font-medium text-ink">“{trimmed}”</span>
+    </span>
+  );
+
   return (
     <Shell>
-      <div
-        className="shrink-0 flex items-start justify-between gap-3 px-3 py-2"
-        style={{ borderBottom: "1px solid var(--border-primary)" }}
-      >
-        <span className="pt-1 text-xs text-ink-secondary">
-          {/* <bdi> isolates the leading count so an RTL (Arabic) drawer doesn't
-              reorder it to the end of the phrase. */}
-          <bdi>{entities.length.toLocaleString()}</bdi>{" "}
-          {entities.length === 1 ? "result" : "results"} for{" "}
-          <span className="font-medium text-ink">“{trimmed}”</span>
-        </span>
-        <SearchTipsDisclosure />
+      <div className="shrink-0" style={{ borderBottom: "1px solid var(--border-primary)" }}>
+        <ListInfoRow
+          count={countLabel}
+          activeFilterCount={0}
+          showFilterChips={false}
+          rightSlot={
+            <CollapseControls
+              expandedCount={expandedCount}
+              totalCount={rendered.length}
+              onExpandAll={() => setAllExpanded(true)}
+              onCollapseAll={() => setAllExpanded(false)}
+            />
+          }
+        />
       </div>
 
-      <div className="flex-1 overflow-auto flex flex-col gap-3 px-3 py-3">
+      {/* Block flow (space-y), NOT flex-col: the grouped cards are
+          `overflow-hidden`, so in a flex column that overflows they'd shrink to
+          their header height and clip their own content. Block flow keeps each
+          card at its natural height and lets this container scroll. */}
+      <div className="flex-1 overflow-auto px-3 py-3 space-y-2">
         {rendered.map(({ entity, snippets }) => (
-          <EntitySnippetCard
+          <EntityResultCard
             key={entity.id}
             entity={entity}
             snippets={snippets}
             query={trimmed}
-            onSelectEntity={onSelectEntity}
+            expanded={isExpanded(entity.id)}
+            onToggle={() =>
+              setExpandedMap((m) => ({ ...m, [entity.id]: !(m[entity.id] ?? true) }))
+            }
+            onFocusProperty={onFocusProperty}
             onSelectSnippet={onSelectSnippet}
-            activePage={lastJumped?.entityId === entity.id ? lastJumped.page : null}
           />
         ))}
         {visible < entities.length && (
-          <button
-            type="button"
-            onClick={() => setVisible((n) => n + RESULTS_STEP)}
-            className="mt-1 self-center px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm
-              hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
-          >
-            Show more ({(entities.length - visible).toLocaleString()})
-          </button>
+          <div className="flex justify-center pt-1">
+            <button
+              type="button"
+              onClick={() => setVisible((n) => n + RESULTS_STEP)}
+              className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm
+                hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+            >
+              Show more ({(entities.length - visible).toLocaleString()})
+            </button>
+          </div>
         )}
       </div>
     </Shell>

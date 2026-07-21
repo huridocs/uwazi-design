@@ -1,4 +1,5 @@
 import type { Entity } from "../data/entities";
+import { tokenizeQuery } from "./queryTokens";
 
 /** Per-entity search snippets, mirroring Uwazi's `SnippetsSearchResponse` shape
  *  (`app/shared/types` → `EntitySchema['snippets']`) so the Results-tab UI maps
@@ -122,12 +123,10 @@ function wordRegex(word: string): RegExp {
   return new RegExp(`^${pattern}$`);
 }
 
-/** Split the query into raw tokens, keeping `"quoted phrases"` intact. */
-const QUERY_TOKEN_RE = /"[^"]*"|\S+/g;
-
 /** Parse the query string into clauses. Returns an empty array when the query
  *  has no actual terms (blank, or operators only) — the caller treats that as
- *  "no search".
+ *  "no search". Raw tokenisation is shared with the highlighter via
+ *  `tokenizeQuery` so matching and marking can't drift.
  *
  *  Rules (the documented subset):
  *   - `"exact phrase"` — consecutive-token match.
@@ -141,34 +140,19 @@ export function parseQuery(query: string): Clause[] {
   let explicitOp: "AND" | "OR" | null = null;
   let neg = false;
 
-  for (const m of query.matchAll(QUERY_TOKEN_RE)) {
-    const tok = m[0];
-    if (tok === "AND" || tok === "OR") {
-      explicitOp = tok;
-      continue;
-    }
-    if (tok === "NOT") {
-      neg = true;
+  for (const t of tokenizeQuery(query)) {
+    if (t.kind === "op") {
+      if (t.value === "NOT") neg = true;
+      else explicitOp = t.value as "AND" | "OR";
       continue;
     }
 
-    let term: Term | null = null;
-    if (tok.startsWith('"')) {
-      const inner = tok.slice(1, -1).trim();
-      if (inner) {
-        term = {
-          kind: "phrase",
-          source: inner,
-          words: inner.split(/\s+/).map(wordRegex),
-        };
-      }
-    } else {
-      term = { kind: "word", source: tok, re: wordRegex(tok) };
-    }
+    const term: Term =
+      t.kind === "phrase"
+        ? { kind: "phrase", source: t.value, words: t.value.split(/\s+/).map(wordRegex) }
+        : { kind: "word", source: t.value, re: wordRegex(t.value) };
 
-    if (term) {
-      clauses.push({ op: explicitOp ?? (neg ? "AND" : "OR"), neg, term });
-    }
+    clauses.push({ op: explicitOp ?? (neg ? "AND" : "OR"), neg, term });
     explicitOp = null;
     neg = false;
   }

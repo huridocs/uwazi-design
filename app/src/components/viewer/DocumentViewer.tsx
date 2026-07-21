@@ -200,13 +200,31 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
     }
   }, []);
 
-  // Scroll-to-page signal (from ToC clicks etc.)
+  // Scroll-to-page signal (from ToC clicks, Results-tab snippet jumps, etc.).
+  // The target page's element may not be mounted yet when the signal arrives —
+  // a snippet jump swaps the drawer to this preview and fires while the PDF is
+  // still rendering. `pageRefs` is a ref, so this effect won't re-run on mount;
+  // retry across frames until the element exists, THEN scroll and clear. Only
+  // clearing on success (or after a cap) keeps the jump from silently no-op'ing.
   const [pageJump, setPageJump] = useAtom(scrollToPageAtom);
   useEffect(() => {
     if (pageJump === null) return;
-    const pageEl = pageRefs.current.get(pageJump);
-    if (pageEl) pageEl.scrollIntoView({ behavior: "smooth", block: "start" });
-    setPageJump(null);
+    let raf = 0;
+    let attempts = 0;
+    const MAX_ATTEMPTS = 120; // ~2s at 60fps — covers PDF page mount + layout
+    const tryScroll = () => {
+      const pageEl = pageRefs.current.get(pageJump);
+      if (pageEl) {
+        pageEl.scrollIntoView({ behavior: "smooth", block: "start" });
+        setPageJump(null);
+      } else if (attempts++ < MAX_ATTEMPTS) {
+        raf = requestAnimationFrame(tryScroll);
+      } else {
+        setPageJump(null); // give up rather than wedge the signal
+      }
+    };
+    tryScroll();
+    return () => cancelAnimationFrame(raf);
   }, [pageJump, setPageJump]);
 
   // Scroll to highlight centered in viewport

@@ -18,7 +18,6 @@ interface AdaptiveSplitViewProps {
   right: ReactNode;
   defaultRightWidth?: number;
   minRightWidth?: number;
-  maxRightWidth?: number;
   /** Mobile-only: each section opens in its own bottom sheet via the action menu */
   mobileSections?: MobileSection[];
   /** Render-prop: receives a node containing the action menu trigger to embed inside `left` */
@@ -30,7 +29,6 @@ export function AdaptiveSplitView({
   right,
   defaultRightWidth,
   minRightWidth,
-  maxRightWidth,
   mobileSections,
   mobileLeft,
 }: AdaptiveSplitViewProps) {
@@ -89,7 +87,6 @@ export function AdaptiveSplitView({
       right={right}
       defaultRightWidth={defaultRightWidth}
       minRightWidth={minRightWidth}
-      maxRightWidth={maxRightWidth}
     />
   );
 }

@@ -210,7 +210,6 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
       }
       defaultRightWidth={560}
       minRightWidth={460}
-      maxRightWidth={720}
     />
     </>
   );

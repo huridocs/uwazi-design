@@ -4,33 +4,43 @@ import type { DataSource } from "./libraryFacets";
 import { typeHasDocument } from "../data/entityProfiles";
 import { renditionsByLanguage } from "../data/documentRenditions";
 import { documentsByLanguage } from "../data/document";
-import { cejilFullText, cejilFilesBySid } from "../data/cejil/load";
+import { cejilFullText, cejilFilesBySid, cejilLoaded } from "../data/cejil/load";
+import { highlightTerms } from "./queryTokens";
 
 /** Synthesizes Uwazi's per-entity search-snippets shape from the data we already
  *  hold — no backend. Mirrors `SnippetsSearchResponse`
  *  (`{ count, metadata: [{ field, texts[] }], fullText: [{ page, text }] }`) so
  *  the Results-tab UI maps 1:1 onto what the real V2 sidepanel renders.
  *
- *  Matching is **substring, case-insensitive** — deliberately the SAME test the
- *  Library's left-pane filter uses (`buildSearchIndex` → `.toLowerCase()
- *  .includes(q)`, utils/libraryFilter.ts). That keeps the two consistent: any
- *  entity in the filtered set is guaranteed ≥1 metadata snippet here. (The
- *  operator-aware engine in `searchSnippets.ts` — wildcards/phrases/AND-OR-NOT —
- *  is the follow-up for when the FILTER itself parses operators; wiring it here
- *  first would drop entities the substring filter kept.)
+ *  Matching is **per-token, case-insensitive** — the SAME tokens the left-pane
+ *  filter ANDs (`highlightTerms` via `utils/queryTokens.ts`) and that
+ *  `HighlightedText` marks: quoted phrases as contiguous units, bare words
+ *  separately, `AND`/`OR`/`NOT` dropped. Filter, snippets, and marks therefore
+ *  share ONE matching semantics — an entity that passed the filter (every token
+ *  hit somewhere in its metadata index OR its full-text blob) is guaranteed a
+ *  snippet here, so `count > 0` holds. (The operator-aware engine in
+ *  `searchSnippets.ts` — wildcards, real AND/OR/NOT precedence — is the follow-up
+ *  for when the filter parses operators as connectives, not just literal tokens.)
  *
  *  Excerpts are returned as PLAIN text (windowed, ellipsed) — NOT HTML with
- *  `<b>`. The `SnippetText` component re-derives the highlight marks from the
- *  query by string-split, so nothing renders `dangerouslySetInnerHTML`.
+ *  `<b>`. `HighlightedText` re-derives the marks from the query by string-split,
+ *  so nothing renders `dangerouslySetInnerHTML`.
  *
- *  Known limitation (don't hide it): our search index is metadata-only, so an
- *  entity whose term appears ONLY in its PDF body isn't in the filtered set at
- *  all. Full-text snippets therefore surface as a bonus on entities that also
- *  matched metadata. Deep full-text indexing is a follow-up, not v1. */
+ *  Full-text is now IN the search (`entityFullTextBlob` + the filter's
+ *  `fullTextSearch` guard), so an entity whose term appears only in its document
+ *  body surfaces in both the left pane and here, with its page snippets. Residual
+ *  limits (named follow-ups, not v1): full-text is gated behind `q.length ≥ 3`
+ *  for CEJIL-corpus perf, and the mock rendition's page numbers are approximate
+ *  (the extracted text isn't page-mapped). */
 
 export interface MetadataSnippet {
   /** Field label ("Title", or an adapter-localized `entity.fields[].label`). */
   field: string;
+  /** Stable field key (NOT the localized label) for deep-focus: matched against
+   *  the drawer's `MetadataField.id`. Natural keys for the pseudo-fields
+   *  (`title`/`country`/`descriptors`); adapter fields fall back to a label slug
+   *  (see `entityFields`). */
+  fieldKey: string;
   /** One windowed excerpt per matched field (around the first hit). */
   texts: string[];
 }
@@ -39,6 +49,9 @@ export interface FullTextSnippet {
   /** 1-based page number the excerpt came from. */
   page: number;
   text: string;
+  /** How many times the query occurs on this page — drives the spine's
+   *  counted-ring node (>1 → a counted ring, 1 → a plain dot). */
+  hits: number;
 }
 
 export interface EntitySnippets {
@@ -57,35 +70,44 @@ const MAX_FULLTEXT = 5;
  *  parts `buildSearchIndex` concatenates (title, country, adapter fields,
  *  descriptors), kept per-field with labels because snippets need the field
  *  granularity the flat index throws away. */
-function entityFields(e: Entity): { field: string; text: string }[] {
-  const out: { field: string; text: string }[] = [{ field: "Title", text: e.title }];
-  if (e.country) out.push({ field: "Country", text: e.country });
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+function entityFields(e: Entity): { field: string; fieldKey: string; text: string }[] {
+  const out = [{ field: "Title", fieldKey: "title", text: e.title }];
+  if (e.country) out.push({ field: "Country", fieldKey: "country", text: e.country });
   for (const f of e.fields ?? []) {
-    if (f.value) out.push({ field: f.label, text: f.value });
+    // Adapter fields carry no stable key — slug the label as a best-effort match
+    // for deep-focus (localization-safe keying needs a data-layer field id).
+    if (f.value) out.push({ field: f.label, fieldKey: slug(f.label), text: f.value });
   }
   if (e.descriptors?.length) {
-    out.push({ field: "Descriptors", text: e.descriptors.join(", ") });
+    out.push({ field: "Descriptors", fieldKey: "descriptors", text: e.descriptors.join(", ") });
   }
   return out;
 }
 
-/** A ~`2·ctx`-word window around the first case-insensitive occurrence of
- *  `needle` (already lowercased) in `text`, whitespace collapsed to a single
- *  line, with `…` on any clipped side. Returns null if the needle isn't found. */
-export function excerptAround(
-  text: string,
-  needle: string,
-  ctx: number = CONTEXT_WORDS,
-): string | null {
-  const idx = text.toLowerCase().indexOf(needle);
-  if (idx < 0) return null;
-  const matchEnd = idx + needle.length;
+/** How many times `needle` (already lowercased) occurs in `lowerText`. */
+function countOccurrences(lowerText: string, needle: string): number {
+  let n = 0;
+  let from = 0;
+  for (;;) {
+    const i = lowerText.indexOf(needle, from);
+    if (i < 0) break;
+    n++;
+    from = i + needle.length;
+  }
+  return n;
+}
 
+/** A ~`2·ctx`-word window around the match at `[idx, idx+len)` in `text`,
+ *  whitespace collapsed to a single line, with `…` on any clipped side. */
+function windowAround(text: string, idx: number, len: number, ctx: number): string {
+  const matchEnd = idx + len;
   const words = [...text.matchAll(/\S+/g)].map((m) => {
     const start = m.index ?? 0;
     return { start, end: start + m[0].length };
   });
-  if (words.length === 0) return text.trim() || null;
+  if (words.length === 0) return text.trim();
 
   let first = words.findIndex((w) => w.end > idx);
   if (first < 0) first = words.length - 1;
@@ -98,6 +120,39 @@ export function excerptAround(
   const prefix = a > 0 ? "… " : "";
   const suffix = b < words.length - 1 ? " …" : "";
   return `${prefix}${body}${suffix}`;
+}
+
+/** A window around the first case-insensitive occurrence of `needle`. Returns
+ *  null if it isn't found. */
+export function excerptAround(
+  text: string,
+  needle: string,
+  ctx: number = CONTEXT_WORDS,
+): string | null {
+  const idx = text.toLowerCase().indexOf(needle.toLowerCase());
+  if (idx < 0) return null;
+  return windowAround(text, idx, needle.length, ctx);
+}
+
+/** A window around the EARLIEST occurrence of any of `terms` (already
+ *  lowercased) — so a multi-token query excerpts wherever it first hits. */
+function excerptAroundTerms(
+  text: string,
+  terms: string[],
+  ctx: number = CONTEXT_WORDS,
+): string | null {
+  const lower = text.toLowerCase();
+  let best = -1;
+  let bestLen = 0;
+  for (const t of terms) {
+    const i = lower.indexOf(t);
+    if (i >= 0 && (best < 0 || i < best)) {
+      best = i;
+      bestLen = t.length;
+    }
+  }
+  if (best < 0) return null;
+  return windowAround(text, best, bestLen, ctx);
 }
 
 /** The document's per-page text, or `[]` when the entity has no parsed body.
@@ -144,31 +199,61 @@ function paginate(text: string, pageCount: number): string[] {
   return pages;
 }
 
-/** Build the snippet response for one entity against query `q`. An empty/blank
- *  query yields `count: 0` (the caller drops those). */
+/** Build the snippet response for one entity against query `q`. Matching is
+ *  per-TOKEN (`highlightTerms`: quoted phrases as units, bare words separately,
+ *  operators dropped) — the SAME tokens the filter ANDs and `HighlightedText`
+ *  marks, so an entity that matched via any token is guaranteed a snippet here
+ *  (count > 0). An empty/termless query yields `count: 0` (the caller drops
+ *  those). */
 export function buildSnippetsFor(
   entity: Entity,
   q: string,
   language: Language,
   source: DataSource,
 ): EntitySnippets {
-  const needle = q.trim().toLowerCase();
+  const terms = highlightTerms(q).map((t) => t.toLowerCase());
   const metadata: MetadataSnippet[] = [];
   const fullText: FullTextSnippet[] = [];
-  if (!needle) return { count: 0, metadata, fullText };
+  if (terms.length === 0) return { count: 0, metadata, fullText };
 
-  for (const { field, text } of entityFields(entity)) {
-    if (!text.toLowerCase().includes(needle)) continue;
-    const excerpt = excerptAround(text, needle);
-    if (excerpt) metadata.push({ field, texts: [excerpt] });
+  for (const { field, fieldKey, text } of entityFields(entity)) {
+    const lower = text.toLowerCase();
+    if (!terms.some((t) => lower.includes(t))) continue;
+    const excerpt = excerptAroundTerms(text, terms);
+    if (excerpt) metadata.push({ field, fieldKey, texts: [excerpt] });
   }
 
   const pages = documentPages(entity, language, source);
   for (let i = 0; i < pages.length && fullText.length < MAX_FULLTEXT; i++) {
-    if (!pages[i].toLowerCase().includes(needle)) continue;
-    const excerpt = excerptAround(pages[i], needle);
-    if (excerpt) fullText.push({ page: i + 1, text: excerpt });
+    const lower = pages[i].toLowerCase();
+    const hits = terms.reduce((n, t) => n + countOccurrences(lower, t), 0);
+    if (hits === 0) continue;
+    const excerpt = excerptAroundTerms(pages[i], terms);
+    if (excerpt) fullText.push({ page: i + 1, text: excerpt, hits });
   }
 
   return { count: metadata.length + fullText.length, metadata, fullText };
+}
+
+/** Per-entity lowercase full-text blob (all its document pages joined), for the
+ *  library search predicate to scan alongside the metadata index. Lazily built
+ *  and MEMOIZED so the CEJIL corpus is walked once on the first full-text search,
+ *  not per keystroke. A CEJIL entity queried before its corpus loads returns an
+ *  empty blob that is NOT cached, so the real text is picked up once `cejilReady`
+ *  flips. Keyed by source+language+entity because the mock rendition is
+ *  language-specific. */
+const fullTextBlobCache = new Map<string, string>();
+export function entityFullTextBlob(
+  entity: Entity,
+  language: Language,
+  source: DataSource,
+): string {
+  const key = `${source}:${language}:${entity.id}`;
+  const cached = fullTextBlobCache.get(key);
+  if (cached !== undefined) return cached;
+
+  const blob = documentPages(entity, language, source).join("\n").toLowerCase();
+  if (source === "cejil" && !cejilLoaded()) return blob; // "" — don't wedge the cache
+  fullTextBlobCache.set(key, blob);
+  return blob;
 }

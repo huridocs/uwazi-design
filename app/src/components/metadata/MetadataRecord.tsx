@@ -1,7 +1,9 @@
-import { useAtomValue } from "jotai";
+import { useEffect, useRef } from "react";
+import { useAtomValue, useSetAtom } from "jotai";
 import type { Language } from "../../atoms/language";
 import type { EntityProfile } from "../../data/entityProfiles";
 import { entityMetadataAtom } from "../../atoms/entityMetadata";
+import { focusMetadataFieldAtom } from "../../atoms/library";
 import type { MetadataField, RelationshipMetadataField } from "../../data/metadata";
 import { specInherits } from "../../utils/inheritance";
 import { MetadataCard } from "./MetadataCard";
@@ -21,6 +23,7 @@ export function MetadataItemsTable({ items }: { items: MetadataItem[] }) {
           {items.map((item) => (
             <tr
               key={item.id}
+              data-field-key={item.id}
               className="align-top border-t border-border/40 first:border-t-0 hover:bg-warm/30 transition-colors"
             >
               <th
@@ -56,6 +59,28 @@ export function MetadataRecord({
   // Subscribing here keeps the record live when a value is edited at source.
   useAtomValue(entityMetadataAtom);
 
+  // Deep-focus from the Results tab: when a field of THIS entity is requested,
+  // scroll it into view and flash it (the shared `flash-highlight` keyframe),
+  // then clear the request so it fires once. Matched by field KEY (`data-field-
+  // key` = the non-localized `MetadataField.id`), so it survives translation.
+  const focusField = useAtomValue(focusMetadataFieldAtom);
+  const clearFocus = useSetAtom(focusMetadataFieldAtom);
+  const rootRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!focusField || focusField.entityId !== profile.id) return;
+    const el = rootRef.current?.querySelector<HTMLElement>(
+      `[data-field-key="${CSS.escape(focusField.fieldKey)}"]`,
+    );
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.add("flash-highlight");
+      const t = setTimeout(() => el.classList.remove("flash-highlight"), 1100);
+      clearFocus(null);
+      return () => clearTimeout(t);
+    }
+    clearFocus(null); // field not on this record — don't leave the request hanging
+  }, [focusField, profile.id, clearFocus]);
+
   const all = profile.metadata[language] ?? [];
   const scalar = all.filter((f): f is MetadataField => f.type !== "relationship");
   const relFields = all.filter(
@@ -86,13 +111,13 @@ export function MetadataRecord({
   }
 
   return (
-    <div className="space-y-3">
+    <div ref={rootRef} className="space-y-3">
       {/* The document leads: it's the thing the record is about. */}
       <DocumentCard profile={profile} language={language} />
       {longItems.map((item) => (
-        <MetadataCard key={item.id} title={item.label}>
-          {item.content}
-        </MetadataCard>
+        <div key={item.id} data-field-key={item.id}>
+          <MetadataCard title={item.label}>{item.content}</MetadataCard>
+        </div>
       ))}
       {shortItems.length > 0 && (
         <MetadataCard title="Details">

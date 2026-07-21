@@ -22,9 +22,19 @@ export const NoQuery: Story = {
   args: { query: "" },
 };
 
-/** Multiple matches in one string, all marked. */
+/** Multiple matches of a single term, all marked. */
 export const MultipleMatches: Story = {
   args: { text: "the case, this case, and that case", query: "case" },
+};
+
+/** Multi-word query — tokenised like the matcher, so EACH word is marked wherever
+ *  it appears (not only the exact phrase). `AND`/`OR`/`NOT` are dropped, and a
+ *  `"quoted phrase"` is treated as one unit. */
+export const MultiWordTokens: Story = {
+  args: {
+    text: "Alegó tortura y otros tratos crueles; la tortura psicológica quedó probada.",
+    query: "tortura psicológica",
+  },
 };
 
 /** Wrapping parity: the same paragraph plain vs. highlighted — line breaks land

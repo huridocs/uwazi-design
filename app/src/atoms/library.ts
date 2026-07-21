@@ -19,6 +19,26 @@ export const libraryFiltersOpenAtom = atom(false);
 /** Entity previewed in the right drawer. null → the drawer shows Filters. */
 export const librarySelectedEntityIdAtom = atom<string | null>(null);
 
+/** The Results-tab full-text page the user last jumped to. Lives here (not in the
+ *  drawer subtree, which unmounts while a preview shows) so its spine node stays
+ *  lit + `aria-pressed` when the user closes the preview and lands back on the
+ *  Results list — the fix for the otherwise-unreachable active state. */
+export interface ResultsActivePage {
+  entityId: string;
+  page: number;
+}
+export const resultsActivePageAtom = atom<ResultsActivePage | null>(null);
+
+/** A Results-tab "Properties" hit the user clicked: open the entity preview on
+ *  its Metadata tab and flash the matching field. Matched by field KEY (stable,
+ *  not the localized label) against the drawer's `MetadataField.id`. The metadata
+ *  body clears it once it has scrolled + flashed. */
+export interface FocusMetadataField {
+  entityId: string;
+  fieldKey: string;
+}
+export const focusMetadataFieldAtom = atom<FocusMetadataField | null>(null);
+
 /** A map cluster opened in the drawer — the entities located at one place. */
 export interface LibraryCluster {
   label: string;

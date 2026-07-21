@@ -73,7 +73,6 @@ export function MetadataView({ tabs, activeTab, onTabChange, onBack }: MetadataV
       right={<MetadataDrawer />}
       defaultRightWidth={560}
       minRightWidth={460}
-      maxRightWidth={720}
       mobileSections={[
         { id: "details", label: "Details", content: <MetadataDrawer /> },
       ]}

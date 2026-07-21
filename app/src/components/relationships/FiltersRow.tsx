@@ -114,13 +114,22 @@ export function CollapseControls({
   onCollapseAll,
   onExpandAll,
   disabled = false,
+  expandedCount: expandedProp,
+  totalCount: totalProp,
 }: {
   onCollapseAll?: () => void;
   onExpandAll?: () => void;
   disabled?: boolean;
+  /** Override the group counts (default: the relationships-panel atoms). Pass
+   *  these when reusing outside that panel — e.g. the Library Results tab, whose
+   *  cards are standalone and keep their own expand state. */
+  expandedCount?: number;
+  totalCount?: number;
 }) {
-  const [expandedCount] = useAtom(expandedGroupCountAtom);
-  const [totalCount] = useAtom(totalGroupCountAtom);
+  const [expandedAtom] = useAtom(expandedGroupCountAtom);
+  const [totalAtom] = useAtom(totalGroupCountAtom);
+  const expandedCount = expandedProp ?? expandedAtom;
+  const totalCount = totalProp ?? totalAtom;
 
   const collapseDisabled = disabled || expandedCount === 0;
   const expandDisabled =

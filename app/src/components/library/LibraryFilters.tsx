@@ -41,6 +41,7 @@ import {
   entityIsDoc,
   type LibraryFilterState,
 } from "../../utils/libraryFilter";
+import { highlightTerms } from "../../utils/queryTokens";
 import { Checkbox } from "../shared/Checkbox";
 import { ActiveFiltersSheet } from "./ActiveFiltersSheet";
 
@@ -108,6 +109,8 @@ export function LibraryFilters() {
       chains: buildActiveChains(chainFilters, dataSource === "cejil" ? cejilChainGraph() : null),
       q: query.trim().toLowerCase(),
       searchIndex,
+      searchTerms: highlightTerms(query).map((t) => t.toLowerCase()),
+      fullTextSearch: query.trim().length >= 3,
     };
   }, [
     dataSource, language, inheritedDefs, searchIndex, typeFilters, hasDocOnly,

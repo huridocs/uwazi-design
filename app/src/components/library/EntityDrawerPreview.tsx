@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { X, ArrowRight } from "lucide-react";
 import { referencesAtom } from "../../atoms/references";
-import { librarySelectedEntityIdAtom } from "../../atoms/library";
+import { librarySelectedEntityIdAtom, focusMetadataFieldAtom } from "../../atoms/library";
 import { openEntityAtom, focusEntityForPreviewAtom } from "../../atoms/focusedEntity";
 import { getEntity } from "../../data/entities";
 import { EntityIdentity } from "../shared/EntityIdentity";
@@ -56,6 +56,16 @@ export function EntityDrawerPreview({ entityId }: { entityId: string }) {
   useEffect(() => {
     setActiveTab(profile.hasDocument ? "document" : "metadata");
   }, [entityId, profile.hasDocument]);
+
+  // A Results-tab Properties click deep-focuses a metadata field: force the
+  // Metadata tab so `MetadataRecord` can scroll + flash it. Runs AFTER the
+  // default-tab effect (both fire on entity change), so it wins; clearing the
+  // atom later re-runs this with a falsy condition — a no-op, so it won't yank
+  // the tab back.
+  const focusField = useAtomValue(focusMetadataFieldAtom);
+  useEffect(() => {
+    if (focusField?.entityId === entityId) setActiveTab("metadata");
+  }, [focusField, entityId]);
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-paper">

@@ -42,11 +42,14 @@ import {
   defaultSortDir,
   librarySelectedEntityIdAtom,
   librarySelectedClusterAtom,
+  resultsActivePageAtom,
+  focusMetadataFieldAtom,
 } from "../atoms/library";
 import { getEntityType, type Entity } from "../data/entities";
 import { libraryInheritedDefs } from "../utils/libraryFacets";
 import { buildActiveChains, cejilChainGraph } from "../data/cejil/chainFacets";
 import { matchesAll, buildSearchIndex, type LibraryFilterState } from "../utils/libraryFilter";
+import { highlightTerms } from "../utils/queryTokens";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { EntityCard } from "../components/library/EntityCard";
 // Lazy: react-simple-maps + the world atlas are the heaviest static chunk in
@@ -61,7 +64,8 @@ import { LibraryFilters } from "../components/library/LibraryFilters";
 import { LibraryClusterDrawer } from "../components/library/LibraryClusterDrawer";
 import { EntityDrawerPreview } from "../components/library/EntityDrawerPreview";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
-import { ResultsBody, type JumpedSnippet } from "../components/library/ResultsSnippets/ResultsBody";
+import { ResultsBody } from "../components/library/ResultsSnippets/ResultsBody";
+import { SearchTipsPopover } from "../components/library/SearchTipsPopover";
 import { DisplayMenu } from "../components/library/DisplayMenu";
 import { ActiveFiltersButton } from "../components/library/ActiveFiltersButton";
 import { DataTable, type Column } from "../components/shared/DataTable";
@@ -114,9 +118,6 @@ export function LibraryView() {
   // carries a query and falls back to Filters when it's cleared; between those
   // transitions the tab can still be switched by hand.
   const [drawerTab, setDrawerTab] = useState<"filters" | "results">("filters");
-  // Last full-text snippet jumped to from the Results tab — kept here (above the
-  // drawer, which unmounts while a preview shows) so it stays lit on return.
-  const [lastJumped, setLastJumped] = useState<JumpedSnippet | null>(null);
   const [typeFilters, setTypeFilters] = useAtom(libraryTypeFiltersAtom);
   const [hasDocOnly, setHasDocOnly] = useAtom(libraryHasDocAtom);
   const [statusFilters, setStatusFilters] = useAtom(libraryStatusFiltersAtom);
@@ -153,6 +154,8 @@ export function LibraryView() {
   const openEntity = useSetAtom(openEntityAtom);
   const focusForPreview = useSetAtom(focusEntityForPreviewAtom);
   const setScrollToPage = useSetAtom(scrollToPageAtom);
+  const setResultsActivePage = useSetAtom(resultsActivePageAtom);
+  const setFocusMetadataField = useSetAtom(focusMetadataFieldAtom);
   const setAppView = useSetAtom(appViewAtom);
   const notify = useNotify();
 
@@ -195,6 +198,14 @@ export function LibraryView() {
   useEffect(() => {
     setDrawerTab(hasQuery ? "results" : "filters");
   }, [hasQuery]);
+  // Query tokens for the search predicate (shared with snippets + marks). Derived
+  // from the raw `query` so uppercase AND/OR/NOT are recognised before lowering.
+  // Full-text body scanning is gated on `q.length ≥ 3` for CEJIL-corpus perf.
+  const searchTerms = useMemo(
+    () => highlightTerms(query).map((t) => t.toLowerCase()),
+    [query],
+  );
+  const fullTextSearch = q.length >= 3;
   const fromMs = dateFrom ? Date.parse(dateFrom) : null;
   // Inclusive of the whole "to" day.
   const toMs = dateTo ? Date.parse(dateTo) + 86_400_000 - 1 : null;
@@ -237,6 +248,8 @@ export function LibraryView() {
     chains: activeChains,
     q,
     searchIndex,
+    searchTerms,
+    fullTextSearch,
   };
 
   const filtered = useMemo(() => {
@@ -277,7 +290,9 @@ export function LibraryView() {
       return [...list].sort((a, b) => rank(a) - rank(b) || cmp(a, b));
     }
     return [...list].sort(cmp);
-  }, [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, chainKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex]);
+    // `cejilReady`: once the corpus loads, full-text blobs go empty→real, so the
+    // filtered set must recompute to surface document-body-only matches.
+  }, [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, chainKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex, cejilReady]);
 
   // The time strip rides under EVERY layout, not just the map and the timeline it
   // started under — it filters by date and charts the whole result set, so cards
@@ -332,9 +347,19 @@ export function LibraryView() {
     (id: string, page: number) => {
       handleSelect(id);
       setScrollToPage(page);
-      setLastJumped({ entityId: id, page });
+      setResultsActivePage({ entityId: id, page });
     },
-    [handleSelect, setScrollToPage],
+    [handleSelect, setScrollToPage, setResultsActivePage],
+  );
+
+  // Results-tab Properties hit: open the entity preview and deep-focus the field
+  // (the drawer switches to its Metadata tab and flashes the field by key).
+  const handleFocusProperty = useCallback(
+    (id: string, fieldKey: string) => {
+      handleSelect(id);
+      setFocusMetadataField({ entityId: id, fieldKey });
+    },
+    [handleSelect, setFocusMetadataField],
   );
 
   // Retry the CEJIL load — mirrors the left pane's Retry (re-runs the effect).
@@ -431,6 +456,7 @@ export function LibraryView() {
               <X size={12} />
             </button>
           )}
+          <SearchTipsPopover />
         </div>
         {/* Sort steps aside on a phone — it moves into the Display popover, where
             it costs no width. The VIEW switcher does not: cards / list / map /
@@ -618,10 +644,9 @@ export function LibraryView() {
       cejilLoading={cejilLoading}
       cejilError={cejilError}
       onRetry={handleCejilRetry}
-      onSelectEntity={handleSelect}
+      onFocusProperty={handleFocusProperty}
       onSelectSnippet={handleSnippetSelect}
       onClearSearch={() => setQuery("")}
-      lastJumped={lastJumped}
     />
   );
 
@@ -656,7 +681,6 @@ export function LibraryView() {
       right={drawer}
       defaultRightWidth={460}
       minRightWidth={360}
-      maxRightWidth={680}
       mobileSections={[
         { id: "filters", label: "Filters", content: <LibraryFilters /> },
         { id: "results", label: "Results", content: resultsBody },

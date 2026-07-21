@@ -1,11 +1,10 @@
-import { ReactNode, useState, useCallback } from "react";
+import { ReactNode, useState, useCallback, useRef, useEffect } from "react";
 
 interface SplitViewProps {
   left: ReactNode;
   right: ReactNode;
   defaultRightWidth?: number;
   minRightWidth?: number;
-  maxRightWidth?: number;
 }
 
 export function SplitView({
@@ -13,10 +12,17 @@ export function SplitView({
   right,
   defaultRightWidth = 400,
   minRightWidth = 320,
-  maxRightWidth = 600,
 }: SplitViewProps) {
   const [rightWidth, setRightWidth] = useState(defaultRightWidth);
   const [isDragging, setIsDragging] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // The drawer grows to at most HALF the split container's width — no fixed
+  // pixel cap. Read live so it tracks the container, not the viewport.
+  const maxRightWidth = useCallback(
+    () => (containerRef.current?.clientWidth ?? Infinity) / 2,
+    [],
+  );
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -28,9 +34,9 @@ export function SplitView({
 
       const handleMouseMove = (e: MouseEvent) => {
         const delta = startX - e.clientX;
-        const newWidth = Math.min(
-          maxRightWidth,
-          Math.max(minRightWidth, startWidth + delta)
+        const newWidth = Math.max(
+          minRightWidth,
+          Math.min(maxRightWidth(), startWidth + delta)
         );
         setRightWidth(newWidth);
       };
@@ -47,8 +53,16 @@ export function SplitView({
     [rightWidth, minRightWidth, maxRightWidth]
   );
 
+  // Shrinking the window must pull the drawer back so it never exceeds half.
+  useEffect(() => {
+    const onResize = () =>
+      setRightWidth((w) => Math.max(minRightWidth, Math.min(maxRightWidth(), w)));
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [minRightWidth, maxRightWidth]);
+
   return (
-    <div className="flex flex-1 overflow-hidden">
+    <div ref={containerRef} className="flex flex-1 overflow-hidden">
       <div className="flex-1 overflow-hidden">{left}</div>
       <div
         className={`w-1 cursor-col-resize hover:bg-carbon/30 transition-colors shrink-0 ${

@@ -97,7 +97,6 @@ export function EntityView() {
         right={<ReferencePanel />}
         defaultRightWidth={560}
         minRightWidth={460}
-        maxRightWidth={720}
         mobileSections={[
           {
             id: "connections",
