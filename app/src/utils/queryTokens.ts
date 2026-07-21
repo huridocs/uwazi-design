@@ -69,3 +69,40 @@ export function highlightTerms(query: string): string[] {
     .map((t) => fold(t.value.replace(/[*?]/g, "").trim()))
     .filter(Boolean);
 }
+
+
+/** Every [start, end) range in `text` matched by any of `terms` (already folded),
+ *  in ORIGINAL string indices, sorted and merged so no range nests inside
+ *  another (a bare word that also sits inside a quoted phrase).
+ *
+ *  The single source of truth for "where are the hits" — shared by the snippet
+ *  marks (`HighlightedText`) and the marks painted into the PDF text layer, so
+ *  the two can never disagree about what counts as a match (diacritics
+ *  included: matching is folded, the ranges point back at the original glyphs). */
+export function highlightRanges(text: string, terms: string[]): [number, number][] {
+  if (terms.length === 0) return [];
+  const { folded, map } = foldWithMap(text);
+  const ranges: [number, number][] = [];
+  for (const needle of terms) {
+    if (!needle) continue;
+    let from = 0;
+    for (;;) {
+      const hit = folded.indexOf(needle, from);
+      if (hit < 0) break;
+      const start = map[hit] ?? 0;
+      const stop = hit + needle.length;
+      const end = stop < map.length ? map[stop] : text.length;
+      if (end > start) ranges.push([start, end]);
+      from = stop;
+    }
+  }
+  if (ranges.length === 0) return [];
+  ranges.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const merged: [number, number][] = [];
+  for (const [start, end] of ranges) {
+    const last = merged[merged.length - 1];
+    if (last && start <= last[1]) last[1] = Math.max(last[1], end);
+    else merged.push([start, end]);
+  }
+  return merged;
+}

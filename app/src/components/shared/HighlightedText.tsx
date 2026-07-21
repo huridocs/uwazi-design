@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from "react";
-import { highlightTerms, foldWithMap } from "../../utils/queryTokens";
+import { highlightTerms, highlightRanges } from "../../utils/queryTokens";
 
 /** The search-match mark. Reuses the app's highlight family — the *active*
  *  highlight token (`--highlight-yellow-active`) at 70%, a cleaner marigold than
@@ -30,34 +30,10 @@ export function HighlightedText({ text, query }: { text: string; query: string }
   const terms = highlightTerms(query);
   if (terms.length === 0) return <>{text}</>;
 
-  // Match on the FOLDED text (so an unaccented query marks accented text), then
-  // map each hit back to the original string's indices via `map` — the mark must
-  // wrap the source characters, accents and case intact. Ranges are then sorted +
-  // merged so a mark is never opened inside another (e.g. a word that also sits
-  // inside a phrase).
-  const { folded, map } = foldWithMap(text);
-  const ranges: [number, number][] = [];
-  for (const needle of terms) {
-    let from = 0;
-    for (;;) {
-      const hit = folded.indexOf(needle, from);
-      if (hit < 0) break;
-      const start = map[hit] ?? 0;
-      const stop = hit + needle.length;
-      const end = stop < map.length ? map[stop] : text.length;
-      if (end > start) ranges.push([start, end]);
-      from = stop;
-    }
-  }
-  if (ranges.length === 0) return <>{text}</>;
-
-  ranges.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-  const merged: [number, number][] = [];
-  for (const [start, end] of ranges) {
-    const last = merged[merged.length - 1];
-    if (last && start <= last[1]) last[1] = Math.max(last[1], end);
-    else merged.push([start, end]);
-  }
+  // Ranges come from the SHARED matcher, so these marks and the ones painted
+  // into the PDF text layer always agree about what a hit is.
+  const merged = highlightRanges(text, terms);
+  if (merged.length === 0) return <>{text}</>;
 
   const parts: ReactNode[] = [];
   let cursor = 0;

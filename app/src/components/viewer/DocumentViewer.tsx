@@ -5,7 +5,10 @@ import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { currentPageAtom, scrollToPageAtom, textSelectionAtom, documentFormatAtom } from "../../atoms/selection";
-import { scrollToHighlightAtom, scopedReferencesAtom, activeRefIdAtom } from "../../atoms/references";
+import { scrollToHighlightAtom, scopedReferencesAtom, activeRefIdAtom, docHighlightQueryAtom } from "../../atoms/references";
+import { resultsActivePageAtom } from "../../atoms/library";
+import { highlightTerms } from "../../utils/queryTokens";
+import { markSearchHits } from "../../utils/pdfTextHighlight";
 import { breakpointAtom } from "../../atoms/viewport";
 import { languageAtom } from "../../atoms/language";
 import {
@@ -53,6 +56,30 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
   // only governs the main Document-tab pane.
   const docFormat = useAtomValue(documentFormatAtom);
   const renditionMode = !fileOverride && docFormat !== "pdf";
+
+  // Search-term marking over the PDF. `customTextRenderer` is react-pdf's
+  // documented hook for this: it wraps matches inside the already-rendered text
+  // layer, so marks align with the glyphs and survive zoom without us computing
+  // a single rect. Terms come from the shared tokenizer, so what's marked here
+  // is exactly what the snippet rows marked.
+  const highlightQuery = useAtomValue(docHighlightQueryAtom);
+  const activeJump = useAtomValue(resultsActivePageAtom);
+  const searchTerms = useMemo(() => highlightTerms(highlightQuery), [highlightQuery]);
+  const termsKey = searchTerms.join("\u0000");
+  const activeJumpPage = activeJump?.page ?? null;
+  // NOTE: this must depend ONLY on the terms. Folding the active page in here
+  // changed the renderer's identity on every jump, which re-rendered every text
+  // layer and reset the scroll container to 0 — the jump landed and was then
+  // immediately undone. The emphasis is applied by CSS via `data-search-active`
+  // on the page wrapper instead, so jumping never re-renders the text layer.
+  const customTextRenderer = useMemo(
+    () =>
+      searchTerms.length === 0
+        ? undefined
+        : ({ str }: { str: string }) => markSearchHits(str, searchTerms),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [termsKey],
+  );
 
   // Pick the file to render from (active primary group, current language).
   // Falls back to first primary, then first file in the active group, then
@@ -214,39 +241,41 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
   // so this effect can't re-run on mount — the frame loop is what waits.
   const [pageJump, setPageJump] = useAtom(scrollToPageAtom);
   useEffect(() => {
-    if (pageJump === null) return;
+    if (!pageJump) return;
     // Behind a text/HTML rendition the PDF pane is `display:none` (it stays
     // mounted so switching back repaints instantly). Inside a hidden container
-    // `scrollIntoView` does nothing and every page measures 0 tall, so the loop
-    // below would spin out its budget and drop the jump on the floor. HOLD the
-    // signal instead — don't clear it — and let `renditionMode` re-run this
-    // effect when the pane becomes visible, so the jump lands then. A page
-    // number only means anything in the paginated PDF view anyway.
+    // `scrollIntoView` does nothing and every page measures 0 tall. HOLD the
+    // signal — don't consume it — and let `renditionMode` re-run this effect
+    // when the pane is visible, so the jump lands then.
     if (renditionMode) return;
+    const target = pageJump.page;
     let raf = 0;
     let attempts = 0;
     const MAX_ATTEMPTS = 240; // ~4s at 60fps — covers PDF mount + canvas paint
     const MIN_LAID_OUT = 40; // px: a rendered page, not a collapsed placeholder
     const tryScroll = () => {
-      const cached = pageRefs.current.get(pageJump);
+      const cached = pageRefs.current.get(target);
       // `isConnected` rejects a node left over from a previously-rendered
       // document; `offsetHeight` rejects one that's mounted but not yet painted.
       const pageEl = cached?.isConnected ? cached : undefined;
       if (pageEl && pageEl.offsetHeight > MIN_LAID_OUT) {
         pageEl.scrollIntoView({ behavior: "smooth", block: "start" });
-        setPageJump(null);
+        setCurrentPage(target); // pager reflects the jump immediately
+        setPageJump(null); // serviced — now it's safe to consume
       } else if (attempts++ < MAX_ATTEMPTS) {
         raf = requestAnimationFrame(tryScroll);
-      } else {
-        // Give up rather than wedge the signal — but still make a best-effort
-        // jump if the element is at least present.
-        pageEl?.scrollIntoView({ behavior: "smooth", block: "start" });
-        setPageJump(null);
       }
+      // NOTE: no give-up clear. This viewer is one of EIGHT mount sites and the
+      // signal is global, so an instance that isn't rendering this document (a
+      // hidden drawer preview, another tab's pane) also receives it — its
+      // `pageRefs` are empty or detached and it can never service the jump. If
+      // it cleared on give-up it would swallow the signal before the visible
+      // viewer could act, which is exactly why clicking a hit did nothing. Only
+      // the instance that actually scrolls consumes it; the rest leave it be.
     };
     tryScroll();
     return () => cancelAnimationFrame(raf);
-  }, [pageJump, setPageJump, renditionMode]);
+  }, [pageJump, setPageJump, renditionMode, setCurrentPage]);
 
   // Scroll to highlight centered in viewport
   const [scrollTarget] = useAtom(scrollToHighlightAtom);
@@ -326,6 +355,7 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
                 else pageRefs.current.delete(pageNum);
               }}
               className="relative mb-4"
+              data-search-active={activeJumpPage === pageNum ? "" : undefined}
               style={{
                 boxShadow: "0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)",
               }}
@@ -334,6 +364,7 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
                 pageNumber={pageNum}
                 width={pageWidth}
                 renderTextLayer={true}
+                customTextRenderer={customTextRenderer}
                 renderAnnotationLayer={true}
               />
               <PageHighlights page={pageNum} />

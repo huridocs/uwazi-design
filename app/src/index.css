@@ -296,3 +296,23 @@ button:not(:disabled) {
 .uwazi-loader-cell:nth-child(6) {
   animation: uwazi-cell-pulse 1.2s ease-in-out infinite 0.4s;
 }
+
+/* Search-term marks painted INTO the react-pdf text layer (customTextRenderer).
+   The text layer renders transparent glyphs over the canvas for selection, and
+   a UA <mark> would force its own background AND color — so both are set here.
+   Background only: no weight or size change, so glyph metrics are untouched and
+   selection, the highlighter tool, and reference-highlight overlays all behave
+   exactly as before. Same highlight family as the snippet marks. */
+.pdf-search-hit {
+  color: inherit;
+  border-radius: 2px;
+  background-color: color-mix(in srgb, var(--highlight-yellow-active) 55%, transparent);
+}
+/* The page you jumped to — stronger tint plus a hairline, so you can see which
+   hit the click landed on rather than hunting the page. Driven by an attribute
+   on the page wrapper, NOT by re-rendering the text layer: re-rendering it on
+   every jump reset the scroll position and undid the jump. */
+[data-search-active] .pdf-search-hit {
+  background-color: color-mix(in srgb, var(--highlight-yellow-active) 92%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--text-primary) 30%, transparent);
+}

@@ -35,7 +35,31 @@ export const currentPageAtom = atom(1);
 export type DocumentFormat = "pdf" | "text" | "html";
 export const documentFormatAtom = atom<DocumentFormat>("pdf");
 
-/** Signal: scroll the document viewer to this page number, then clear.
- *  Set by ToC entries, the page picker, anything that wants to jump pages
- *  without highlighting a specific reference. */
-export const scrollToPageAtom = atom<number | null>(null);
+/** A pending page jump. `nonce` makes every request distinct. */
+export interface PageJump {
+  page: number;
+  nonce: number;
+}
+
+const pageJumpStateAtom = atom<PageJump | null>(null);
+let pageJumpNonce = 0;
+
+/** Signal: scroll the document viewer to this page, then clear. Set by ToC
+ *  entries, the page picker, the Library Results panel, the drawer's Search tab
+ *  — anything that wants to jump pages without highlighting a reference.
+ *
+ *  Writers still set a plain page number (or `null`); readers get `{page,
+ *  nonce}`. Two reasons for the nonce:
+ *   - SAME-PAGE REQUESTS. Writing the same number twice used to leave the atom
+ *     unchanged, so clicking the row for the page you're already on did nothing
+ *     at all. Each write is now a new signal.
+ *   - The viewer that can service a jump isn't always the one that sees it
+ *     first: `DocumentViewer` is mounted in eight places and this signal is
+ *     global, so a hidden instance (a drawer's file preview, another tab's pane)
+ *     also receives it. Instances that can't service a jump must LEAVE IT ALONE
+ *     rather than consume it — see `DocumentViewer`. */
+export const scrollToPageAtom = atom(
+  (get) => get(pageJumpStateAtom),
+  (_get, set, page: number | null) =>
+    set(pageJumpStateAtom, page === null ? null : { page, nonce: ++pageJumpNonce }),
+);
