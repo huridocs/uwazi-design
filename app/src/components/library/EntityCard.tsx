@@ -3,12 +3,13 @@ import { Link2 } from "lucide-react";
 import { useAtomValue } from "jotai";
 import { languageAtom } from "../../atoms/language";
 import { EntityTypeTag } from "../shared/EntityTypeTag";
+import { HighlightedText } from "../shared/HighlightedText";
 import { EntityThumbnail } from "./EntityThumbnail";
 import { getEntityProfile } from "../../data/entityProfiles";
 import { getEntityType } from "../../data/entities";
 import type { MetadataField } from "../../data/metadata";
 import type { Entity } from "../../data/entities";
-import { libraryInfoAtom, type LibraryViewMode } from "../../atoms/library";
+import { libraryInfoAtom, libraryQueryAtom, type LibraryViewMode } from "../../atoms/library";
 
 /** A Library result for one standalone entity. Mirrors the Uwazi card IA:
  *  title → metadata field label/value pairs → footer (template pill · View).
@@ -30,6 +31,7 @@ export const EntityCard = memo(function EntityCard({
   onView: (id: string) => void;
 }) {
   const language = useAtomValue(languageAtom);
+  const query = useAtomValue(libraryQueryAtom);
   const info = useAtomValue(libraryInfoAtom);
   const showPreview = info.preview !== false;
   const showMetadata = info.metadata !== false;
@@ -115,7 +117,7 @@ export const EntityCard = memo(function EntityCard({
             ))}
           <div className="flex-1 min-w-0">
             <div className="text-sm font-semibold text-ink truncate leading-snug">
-              {entity.title}
+              <HighlightedText text={entity.title} query={query} />
             </div>
             <div className="flex items-center gap-1.5 text-[11px] text-ink-tertiary min-w-0">
               {!showPreview && (
@@ -129,7 +131,9 @@ export const EntityCard = memo(function EntityCard({
                 metaFields.map((f) => (
                   <Fragment key={f.id}>
                     <span className="shrink-0 text-ink-muted">·</span>
-                    <span className="truncate">{f.value}</span>
+                    <span className="truncate">
+                      <HighlightedText text={f.value} query={query} />
+                    </span>
                   </Fragment>
                 ))}
             </div>
@@ -154,14 +158,18 @@ export const EntityCard = memo(function EntityCard({
           className="h-24 w-full shrink-0 rounded overflow-hidden border border-border/60"
         />
       )}
-      <span className="text-sm font-semibold text-ink leading-snug line-clamp-2">{entity.title}</span>
+      <span className="text-sm font-semibold text-ink leading-snug line-clamp-2">
+        <HighlightedText text={entity.title} query={query} />
+      </span>
 
       {showMetadata && (
         <div className="flex-1 space-y-1.5">
           {fields.map((f) => (
             <div key={f.id} className="min-w-0">
               <span className="block text-[10px] text-ink-tertiary leading-tight">{f.label}</span>
-              <span className="block text-xs text-ink leading-snug line-clamp-1">{f.value}</span>
+              <span className="block text-xs text-ink leading-snug line-clamp-1">
+                {f.id === "language" ? f.value : <HighlightedText text={f.value} query={query} />}
+              </span>
             </div>
           ))}
         </div>

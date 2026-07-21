@@ -132,6 +132,7 @@ export const sidebarGroups: SidebarGroup[] = [
   {
     label: "Shared",
     items: [
+      { id: "sh-highlighted-text", label: "HighlightedText" },
       { id: "sh-confirm-dialog", label: "ConfirmDialog" },
       { id: "sh-toast", label: "Toast" },
       { id: "sh-uwazi-loader", label: "UwaziLoader" },

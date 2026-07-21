@@ -7,6 +7,7 @@ import {
   libraryDateFromAtom,
   libraryDateToAtom,
   libraryTypeFiltersAtom,
+  libraryQueryAtom,
   type TimelineLayout,
   type TimelineScope,
 } from "../../atoms/library";
@@ -28,6 +29,7 @@ import {
 import { breakpointAtom } from "../../atoms/viewport";
 import { BucketBreakdown, ChartTip } from "./BucketBreakdown";
 import { EntityCard } from "./EntityCard";
+import { HighlightedText } from "../shared/HighlightedText";
 
 /** How many entities the proportional spine plots before it stops — the corpus
  *  runs to thousands and a row each would be a 200k-pixel column. Narrow the
@@ -693,6 +695,7 @@ function elapsed(ms: number): string {
 }
 
 function SpineLayout({ dated, selectedId, onSelect }: LayoutProps) {
+  const query = useAtomValue(libraryQueryAtom);
   // The spine's axis sits at the SAME inset as the Rail/Density track, so the
   // timeline doesn't slide across the pane when you switch layout — at any width.
   const geom = useTrackGeom();
@@ -885,7 +888,7 @@ function SpineLayout({ dated, selectedId, onSelect }: LayoutProps) {
                 <span
                   className={`flex-1 min-w-0 truncate text-xs ${sel ? "text-ink font-medium" : "text-ink-secondary"}`}
                 >
-                  {e.title}
+                  <HighlightedText text={e.title} query={query} />
                 </span>
                 <span className="shrink-0 text-[10px] text-ink-muted hidden md:block">
                   {getEntityType(e.typeId)?.name ?? e.typeId}

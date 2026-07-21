@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { CatalogEntry } from "../components/catalog/CatalogEntry";
+import { HighlightedText } from "../components/shared/HighlightedText";
 import { StyleGuide } from "../components/catalog/StyleGuide";
 
 // Components rendered directly inside the catalog body (not wrapped in an
@@ -1279,6 +1280,29 @@ export function ComponentCatalog({ onReturn }: Props) {
           <section>
             <h2 className="text-lg font-bold text-ink mb-6">Shared</h2>
             <div className="flex flex-col gap-6">
+              <div id="sh-highlighted-text" ref={reg("sh-highlighted-text")}>
+                <CatalogEntry
+                  name="HighlightedText"
+                  description="Wraps case-insensitive query matches in the shared search-highlight mark. Used across the Library query surfaces (cards, table, timeline) and the Results-tab snippets — one visual family with document highlights. Paints without shifting layout (px-0.5 cancelled by -mx-0.5, no weight change) so wrapping is identical to plain text; RTL-safe."
+                  code={`<HighlightedText text={entity.title} query={q} />
+
+{/* Empty query → text unchanged (drop-in for {text}). */}
+{/* Mark: rounded-[2px] px-0.5 -mx-0.5 bg-highlight/60 text-ink */}`}
+                >
+                  <div className="flex flex-col gap-3 w-full max-w-md text-sm text-ink leading-relaxed">
+                    <p>
+                      <HighlightedText text="Case 12.045 (Velásquez Rodríguez)" query="Velásquez" />
+                    </p>
+                    <p className="text-ink-secondary">
+                      <HighlightedText
+                        text="…the Court found the State responsible in this case, and in every case since."
+                        query="case"
+                      />
+                    </p>
+                  </div>
+                </CatalogEntry>
+              </div>
+
               <div id="sh-confirm-dialog" ref={reg("sh-confirm-dialog")}>
                 <CatalogEntry
                   name="ConfirmDialog"

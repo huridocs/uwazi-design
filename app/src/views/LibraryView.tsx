@@ -18,6 +18,7 @@ import { languageAtom, type Language } from "../atoms/language";
 import { appViewAtom } from "../atoms/navigation";
 import { breakpointAtom } from "../atoms/viewport";
 import { openEntityAtom, focusEntityForPreviewAtom } from "../atoms/focusedEntity";
+import { scrollToPageAtom } from "../atoms/selection";
 import { useNotify } from "../hooks/useNotify";
 import {
   libraryQueryAtom,
@@ -60,10 +61,12 @@ import { LibraryFilters } from "../components/library/LibraryFilters";
 import { LibraryClusterDrawer } from "../components/library/LibraryClusterDrawer";
 import { EntityDrawerPreview } from "../components/library/EntityDrawerPreview";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
+import { ResultsBody, type JumpedSnippet } from "../components/library/ResultsSnippets/ResultsBody";
 import { DisplayMenu } from "../components/library/DisplayMenu";
 import { ActiveFiltersButton } from "../components/library/ActiveFiltersButton";
 import { DataTable, type Column } from "../components/shared/DataTable";
 import { EntityTypeChip } from "../components/shared/EntityTypeChip";
+import { HighlightedText } from "../components/shared/HighlightedText";
 import { Select } from "../components/shared/Select";
 import { SegmentedControl } from "../components/shared/SegmentedControl";
 
@@ -111,6 +114,9 @@ export function LibraryView() {
   // carries a query and falls back to Filters when it's cleared; between those
   // transitions the tab can still be switched by hand.
   const [drawerTab, setDrawerTab] = useState<"filters" | "results">("filters");
+  // Last full-text snippet jumped to from the Results tab — kept here (above the
+  // drawer, which unmounts while a preview shows) so it stays lit on return.
+  const [lastJumped, setLastJumped] = useState<JumpedSnippet | null>(null);
   const [typeFilters, setTypeFilters] = useAtom(libraryTypeFiltersAtom);
   const [hasDocOnly, setHasDocOnly] = useAtom(libraryHasDocAtom);
   const [statusFilters, setStatusFilters] = useAtom(libraryStatusFiltersAtom);
@@ -146,6 +152,7 @@ export function LibraryView() {
   const selectedCluster = useAtomValue(librarySelectedClusterAtom);
   const openEntity = useSetAtom(openEntityAtom);
   const focusForPreview = useSetAtom(focusEntityForPreviewAtom);
+  const setScrollToPage = useSetAtom(scrollToPageAtom);
   const setAppView = useSetAtom(appViewAtom);
   const notify = useNotify();
 
@@ -318,6 +325,24 @@ export function LibraryView() {
     [isMobile, openEntity, focusForPreview, setSelectedId],
   );
 
+  // Results-tab full-text snippet: select the entity, then jump the preview's
+  // document to the hit page (DocumentViewer consumes scrollToPageAtom). On
+  // mobile handleSelect opens the full view; the page jump still applies.
+  const handleSnippetSelect = useCallback(
+    (id: string, page: number) => {
+      handleSelect(id);
+      setScrollToPage(page);
+      setLastJumped({ entityId: id, page });
+    },
+    [handleSelect, setScrollToPage],
+  );
+
+  // Retry the CEJIL load — mirrors the left pane's Retry (re-runs the effect).
+  const handleCejilRetry = useCallback(() => {
+    setCejilError(false);
+    setCejilRetry((n) => n + 1);
+  }, []);
+
   const tableColumns: Column<Entity>[] = [
     {
       // The type rides WITH the title, not in a column of its own.
@@ -335,7 +360,9 @@ export function LibraryView() {
       cell: (e: Entity) => (
         <span className="flex items-center gap-2 min-w-0">
           <EntityTypeChip typeId={e.typeId} />
-          <span className="font-medium text-ink truncate">{e.title}</span>
+          <span className="font-medium text-ink truncate">
+            <HighlightedText text={e.title} query={query} />
+          </span>
         </span>
       ),
     },
@@ -345,7 +372,9 @@ export function LibraryView() {
       width: "9rem",
       sortKey: "country",
       cell: (e: Entity) => (
-        <span className="text-ink-secondary truncate">{e.country ?? "—"}</span>
+        <span className="text-ink-secondary truncate">
+          {e.country ? <HighlightedText text={e.country} query={query} /> : "—"}
+        </span>
       ),
     },
     info.date !== false && {
@@ -579,11 +608,21 @@ export function LibraryView() {
     </div>
   );
 
-  // Results tab body — placeholder until Design provides the spec.
+  // Results tab body — the per-entity evidence view (where each term hit).
   const resultsBody = (
-    <div className="flex-1 min-h-0 flex items-center justify-center px-6 text-center text-[0.8125rem] text-ink-tertiary">
-      Results view coming soon.
-    </div>
+    <ResultsBody
+      query={query}
+      entities={filtered}
+      source={dataSource}
+      language={language}
+      cejilLoading={cejilLoading}
+      cejilError={cejilError}
+      onRetry={handleCejilRetry}
+      onSelectEntity={handleSelect}
+      onSelectSnippet={handleSnippetSelect}
+      onClearSearch={() => setQuery("")}
+      lastJumped={lastJumped}
+    />
   );
 
   const filtersDrawer = (
@@ -620,11 +659,7 @@ export function LibraryView() {
       maxRightWidth={680}
       mobileSections={[
         { id: "filters", label: "Filters", content: <LibraryFilters /> },
-        {
-          id: "results",
-          label: "Results",
-          content: <div className="flex flex-col h-full min-h-0 bg-warm">{resultsBody}</div>,
-        },
+        { id: "results", label: "Results", content: resultsBody },
       ]}
     />
   );
