@@ -59,6 +59,11 @@ Keep it in sync when tokens.css or the style rules change.
 - **No thick left-border accents** on cards or sidebar items. Use a small dot, an icon colour, or a bg tint.
 - **Selected card state = `bg-parchment`** (#F5F0E8). Don't reach for inline `color-mix`, `bg-warm`, or `bg-vellum`.
 - **Badges are `w-fit`** so they don't stretch in flex/grid.
+- **Never shift layout on state change.** A row that appears only when it has
+  something to say (an "N active / Clear all" summary, a count line, a chip row)
+  must stay MOUNTED at a fixed height with only its contents toggling — a
+  conditional mount inside a scrollable column shoves everything below it the
+  moment a user ticks a box. Reserve the space; don't grow into it.
 - **Active sidebar items**: `bg-warm text-ink` with the *same* icon colour as inactive. Background change alone signals state.
 
 ## CSS tokens — use real names
