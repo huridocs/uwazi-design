@@ -46,13 +46,16 @@ export const EntityCard = memo(function EntityCard({
 
   // Adapter-supplied real fields (e.g. CEJIL) win; otherwise derive from the mock
   // entityMetadata profile. Only fields that resolved to a value.
-  const scalarFields: { id: string; label: string; value: string }[] = entity.fields
-    ? entity.fields.map((f, i) => ({ id: `${f.label}-${i}`, label: f.label, value: f.value }))
+  const scalarFields: { id: string; label: string; value: string; more?: number }[] = entity.fields
+    ? entity.fields.map((f, i) => ({ id: `${f.label}-${i}`, label: f.label, value: f.value, more: f.more }))
     : (getEntityProfile(entity.id).metadata[language] ?? [])
         .filter((f): f is MetadataField => f.type !== "relationship" && !!(f as MetadataField).value && (f as MetadataField).value !== "—")
-        .slice(0, 3)
         .map((f) => ({ id: f.id, label: f.label, value: String(f.value) }));
-  const fields = [...scalarFields, { id: "language", label: "Language", value: language }];
+  // At most THREE fields, and no appended "Language" row: the card is a
+  // scan-target, not a record. Language repeats the toolbar's own selector on
+  // every card, and beyond three rows the grid stops reading as cards and starts
+  // reading as prose. The full record is one click away in the drawer.
+  const fields = scalarFields.slice(0, 3);
 
   const viewButton = (
     <button
@@ -147,18 +150,40 @@ export const EntityCard = memo(function EntityCard({
     );
   }
 
+  // A floor, not a fixed height: entities carry 1–3 display fields, and without
+  // it a one-field card sits visibly short of a three-field neighbour. Only
+  // applies when the preview slot is in play — with previews off the card is a
+  // compact text block and the floor would just add dead space.
+  const minHeight = showPreview ? "min-h-[15.5rem]" : "";
+
   return (
-    <div onClick={() => onSelect(entity.id)} className={`${base} ${surface}`}>
+    <div onClick={() => onSelect(entity.id)} className={`${base} ${surface} ${minHeight}`}>
       {primaryAction}
       <div className="relative h-full p-3 flex flex-col gap-2.5">
-      {showPreview && entity.preview && (
-        <EntityThumbnail
-          kind={entity.preview}
-          entityId={entity.id}
-          className="h-24 w-full shrink-0 rounded overflow-hidden border border-border/60"
-        />
-      )}
-      <span className="text-sm font-semibold text-ink leading-snug line-clamp-2">
+      {/* The preview slot is ALWAYS filled when previews are on: an entity with
+          no thumbnail gets a quiet vellum well carrying its type colour (the
+          same idiom the list layout uses). Rendering the thumbnail only when one
+          exists made every row as tall as its tallest card and left the grid
+          ragged — reserving the slot is what lets rows line up. */}
+      {showPreview &&
+        (entity.preview ? (
+          <EntityThumbnail
+            kind={entity.preview}
+            entityId={entity.id}
+            className="h-24 w-full shrink-0 rounded overflow-hidden border border-border/60"
+          />
+        ) : (
+          <span className="h-24 w-full shrink-0 rounded border border-border/60 bg-vellum flex items-center justify-center">
+            <span
+              className="w-2.5 h-2.5 rounded-[2px]"
+              style={{ backgroundColor: getEntityType(entity.typeId)?.color ?? "#6B7280" }}
+            />
+          </span>
+        ))}
+      {/* Two lines are RESERVED, not just permitted: a one-line title would
+          otherwise pull its whole card ~1.2rem shorter than its neighbours and
+          stagger the row. */}
+      <span className="text-sm font-semibold text-ink leading-snug line-clamp-2 min-h-[2.375rem]">
         <HighlightedText text={entity.title} query={query} />
       </span>
 
@@ -167,8 +192,19 @@ export const EntityCard = memo(function EntityCard({
           {fields.map((f) => (
             <div key={f.id} className="min-w-0">
               <span className="block text-[10px] text-ink-tertiary leading-tight">{f.label}</span>
-              <span className="block text-xs text-ink leading-snug line-clamp-1">
-                {f.id === "language" ? f.value : <HighlightedText text={f.value} query={query} />}
+              {/* Exactly ONE line per field, always. `truncate` rather than
+                  `line-clamp-1` because the old `block line-clamp-1` pair fought
+                  over `display` (block won) and the clamp silently never
+                  applied — which is how three-line values reached the grid. The
+                  "+N more" is a shrink-0 sibling, so it survives the ellipsis
+                  instead of being cut off inside it. */}
+              <span className="flex items-baseline gap-1 min-w-0 text-xs text-ink leading-snug">
+                <span className="truncate" title={f.value}>
+                  <HighlightedText text={f.value} query={query} />
+                </span>
+                {!!f.more && (
+                  <span className="shrink-0 text-[10px] text-ink-tertiary">+{f.more} more</span>
+                )}
               </span>
             </div>
           ))}

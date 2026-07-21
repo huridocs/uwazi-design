@@ -116,6 +116,76 @@ export function buildSearchIndex(entities: Entity[], language: Language): Map<st
   return m;
 }
 
+/** Inert defaults for every filter dimension — each value means "don't narrow". */
+const EMPTY_SEARCH_INDEX: Map<string, string> = new Map();
+const ALL_MATCH_TYPES = { title: true, properties: true, document: true };
+const DEFAULT_FILTER_STATE: LibraryFilterState = {
+  source: "mock",
+  language: "EN",
+  typeIds: [],
+  hasDocOnly: false,
+  wantPublished: false,
+  wantRestricted: false,
+  countries: [],
+  countryMode: "OR",
+  descriptors: [],
+  descriptorMode: "OR",
+  fromMs: null,
+  toMs: null,
+  inherited: [],
+  chains: [],
+  q: "",
+  searchIndex: EMPTY_SEARCH_INDEX,
+  searchTerms: [],
+  fullTextSearch: false,
+  matchTypes: ALL_MATCH_TYPES,
+};
+
+/** Fill in any dimension the caller didn't supply.
+ *
+ *  EVERY entry point normalises through this, so a filter state that predates a
+ *  dimension — a call-site not yet updated, or a half-swapped module during an
+ *  HMR reload — degrades to "no narrowing" instead of throwing inside a
+ *  predicate and unmounting the entire Library. That failure mode blanked the
+ *  view twice while these dimensions were being added; defaulting centrally
+ *  means adding the NEXT dimension can't repeat it, and no predicate has to
+ *  defend itself.
+ *
+ *  Cached by state identity: `matchesAll` runs per entity per facet aggregation,
+ *  so normalising on every call would allocate thousands of objects per render.
+ *  The state is rebuilt each render, so the WeakMap turns over on its own; the
+ *  result is also mapped to itself, making normalisation idempotent. */
+const normalizedStates = new WeakMap<LibraryFilterState, LibraryFilterState>();
+function withDefaults(s: LibraryFilterState | null | undefined): LibraryFilterState {
+  if (!s) return DEFAULT_FILTER_STATE;
+  const hit = normalizedStates.get(s);
+  if (hit) return hit;
+  const out: LibraryFilterState = {
+    source: s.source ?? DEFAULT_FILTER_STATE.source,
+    language: s.language ?? DEFAULT_FILTER_STATE.language,
+    typeIds: s.typeIds ?? [],
+    hasDocOnly: s.hasDocOnly ?? false,
+    wantPublished: s.wantPublished ?? false,
+    wantRestricted: s.wantRestricted ?? false,
+    countries: s.countries ?? [],
+    countryMode: s.countryMode ?? "OR",
+    descriptors: s.descriptors ?? [],
+    descriptorMode: s.descriptorMode ?? "OR",
+    fromMs: s.fromMs ?? null,
+    toMs: s.toMs ?? null,
+    inherited: s.inherited ?? [],
+    chains: s.chains ?? [],
+    q: s.q ?? "",
+    searchIndex: s.searchIndex ?? EMPTY_SEARCH_INDEX,
+    searchTerms: s.searchTerms ?? [],
+    fullTextSearch: s.fullTextSearch ?? false,
+    matchTypes: s.matchTypes ?? ALL_MATCH_TYPES,
+  };
+  normalizedStates.set(s, out);
+  normalizedStates.set(out, out);
+  return out;
+}
+
 const PREDICATES: Record<
   FacetKey,
   (e: Entity, s: LibraryFilterState) => boolean
@@ -157,11 +227,7 @@ const PREDICATES: Record<
   // common case and short-circuits BEFORE categorising, so the (blob-scanning)
   // categorisation is only paid when the user has actually narrowed.
   matchType: (e, s) => {
-    // Defaulted, NOT destructured bare: a filter state that predates this
-    // dimension (a caller yet to be updated, or a half-swapped module during an
-    // HMR reload) would otherwise throw here and unmount the whole Library. A
-    // missing dimension must mean "no narrowing", never a blank view.
-    const { title = true, properties = true, document = true } = s.matchTypes ?? {};
+    const { title, properties, document } = s.matchTypes;
     if (title && properties && document) return true;
     if (!s.q) return true;
     const c = matchCategories(e, s.q, s.language, s.source);
@@ -173,7 +239,8 @@ const PREDICATES: Record<
  *  hit the entity's metadata index OR its document body. Exported so callers can
  *  count "entities matching the search regardless of facets" (e.g. the Results
  *  tab's hidden-by-filters line). */
-export function matchesSearch(e: Entity, s: LibraryFilterState): boolean {
+export function matchesSearch(e: Entity, state: LibraryFilterState): boolean {
+  const s = withDefaults(state);
   if (!s.q) return true;
   if (s.searchTerms.length === 0) return true;
   const meta = s.searchIndex.get(e.id) ?? "";
@@ -215,9 +282,10 @@ function chainMatches(e: Entity, s: LibraryFilterState, except?: string): boolea
  *  `except` is a static FacetKey or a chain-segment facetKey (`chainId:segIdx`). */
 export function matchesAll(
   e: Entity,
-  s: LibraryFilterState,
+  state: LibraryFilterState,
   except?: FacetKey | string,
 ): boolean {
+  const s = withDefaults(state);
   for (const key of ALL_KEYS) {
     if (key === except) continue;
     if (!PREDICATES[key](e, s)) return false;
@@ -232,7 +300,7 @@ export function matchesAll(
  *  registry so counts work even before the chain has any selection. */
 export function chainFacetCounts(
   entities: Entity[],
-  s: LibraryFilterState,
+  state: LibraryFilterState,
   def: {
     key: string;
     chainId: string;
@@ -244,6 +312,7 @@ export function chainFacetCounts(
   },
   graph: ChainGraph,
 ): Map<string, number> {
+  const s = withDefaults(state);
   const m = new Map<string, number>();
   const ac = s.chains.find((c) => c.chainId === def.chainId);
   const others = ac

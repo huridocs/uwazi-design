@@ -40,8 +40,13 @@ export interface Entity {
    *  entities don't carry a mock entityMetadata profile (e.g. CEJIL). */
   country?: string;
   /** Adapter-supplied display fields (label/value) for the Library card, when the
-   *  entity has no mock entityMetadata profile. Resolved from real metadata. */
-  fields?: { label: string; value: string }[];
+   *  entity has no mock entityMetadata profile. Resolved from real metadata.
+   *
+   *  `more` = how many FURTHER values this field held beyond the one shown. A
+   *  multi-valued field (three document titles, say) renders as "first title
+   *  +2 more", never as a comma-joined dump — joining two long titles was what
+   *  turned the card grid into a wall of prose. */
+  fields?: { label: string; value: string; more?: number }[];
   /** Adapter-supplied keyword facet values (e.g. CEJIL "descriptores"/violations). */
   descriptors?: string[];
   /** Adapter-supplied INHERITED relationship-property values, keyed by propId
