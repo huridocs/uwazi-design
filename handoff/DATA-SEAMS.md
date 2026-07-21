@@ -197,11 +197,29 @@ every "replace with ES" row below is a deletion, not a rewrite.
 
 ```ts
 EntitySnippets {
-  count: number;                       // metadata groups + fullText hits
-  metadata: { field, texts[] }[];      // per-field excerpts, term marked
-  fullText: { page, text, hits }[];    // per-page excerpts
+  count: number;                        // metadata groups + fullText hits
+  metadata: { field, fieldKey, texts[] }[];  // per-field excerpts
+  fullText: { page: number | null, text, hits }[];
 }
 ```
+
+Two fields carry decisions worth keeping.
+
+**`fieldKey`** is what makes a hit clickable back to its source. A snippet's
+display label is localized and therefore useless as an identity; the key is the
+template property id where one exists (mock profiles) and a slugged label where
+it doesn't (adapter fields). Porting to v2, this becomes the real property name
+from the template — the click target for "open this entity's metadata, focused
+on the field that matched".
+
+**`page: null` is deliberate, not missing data.** Our mock corpus shares one
+rendition across every doc-bearing entity, so a page number computed from it
+points at a page of a *different* document. Those snippets return `page: null`
+and render excerpt-only — no tag, no jump. Only the CEJIL corpus, which carries
+genuine per-page text, claims a page. In production ES returns real page
+offsets, so this collapses to "always a page" — but keep the null branch: an
+entity whose file has no extracted text must degrade to excerpt-only rather than
+print a tag pointing nowhere.
 
 **One tokenizer, three consumers** (`utils/queryTokens.ts`): the filter
 predicate, the snippet builder, and the `<mark>` highlighter all tokenize the
@@ -223,6 +241,30 @@ sibling to Filters (auto-switches with the query), hits group under
 **Properties** (click → the entity's metadata, field focused) and **Document**
 (click → the doc at that page), and the match mark is layout-neutral
 (`px-0.5 -mx-0.5`, weight inherited) so highlighting never re-wraps a line.
+
+### Two surfaces, one engine
+
+The same snippet engine feeds **both** search surfaces, which is the part worth
+preserving:
+
+| Surface | Prototype | v2 counterpart |
+|---|---|---|
+| Library — where did this term hit across the corpus? | Results drawer tab (`components/library/ResultsSnippets/`) | library search + `/api/search` snippets |
+| Entity — where does this term appear in *this* document? | drawer Search tab (`components/search/DocumentSearchBody.tsx`) | `V2/Routes/Entity/Components/search/*` |
+
+Both render the same row treatment and page spine, differing only in scope, so
+in the real repo they should call the same snippet component with a different
+query scope — not grow two implementations. Note v2's `scopeResultsToDocument`
+filters snippets by filename: an entity with several files searches across all
+of them and narrows to the open one. Our entities also carry multiple files, so
+that scoping decision has to be made explicitly rather than inherited by
+accident.
+
+**Still open here** (don't assume it works): jumping to a page does not yet
+paint the matched term in the PDF. The viewer renders react-pdf's text layer, so
+`customTextRenderer` is the intended route — mark hits inside the text layer
+using the same `highlightTerms` tokens the snippet rows used, so page marks and
+row marks can't disagree.
 
 ## 9. Porting checklist
 
