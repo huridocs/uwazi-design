@@ -7,6 +7,7 @@ import { buildSnippetsFor } from "../../../utils/librarySnippets";
 import { useAtom } from "jotai";
 import { matchTypeFiltersAtom, type MatchTypeFilters } from "../../../atoms/library";
 import { ListInfoRow } from "../../shared/ListInfoRow";
+import { ActiveSearchChip } from "../ActiveSearchChip";
 import { ToggleChip } from "../../shared/ToggleChip";
 import { CollapseControls } from "../../relationships/FiltersRow";
 import { EntityResultCard } from "./EntityResultCard";
@@ -193,13 +194,19 @@ export function ResultsBody({
 
   // When the chips narrow the set, say so: "1 of 16 results".
   const narrowed = entities.length !== totalMatches;
+  // The query rides the row as a CHIP rather than as quoted text, so the sentence
+  // that reports the results is also the place you end the search. It replaces
+  // the quoted string rather than joining it: printing the terms twice in one row
+  // to hang an × off the second copy is noise.
   const countLabel = (
-    <span dir="ltr">
-      {narrowed
-        ? `${entities.length.toLocaleString()} of ${totalMatches.toLocaleString()}`
-        : entities.length.toLocaleString()}{" "}
-      {totalMatches === 1 ? "result" : "results"} for{" "}
-      <span className="font-medium text-ink">“{trimmed}”</span>
+    <span dir="ltr" className="inline-flex items-center gap-1.5">
+      <span>
+        {narrowed
+          ? `${entities.length.toLocaleString()} of ${totalMatches.toLocaleString()}`
+          : entities.length.toLocaleString()}{" "}
+        {totalMatches === 1 ? "result" : "results"} for
+      </span>
+      <ActiveSearchChip />
     </span>
   );
 

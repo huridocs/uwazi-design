@@ -6,7 +6,7 @@ import { languageAtom } from "../../atoms/language";
 import {
   librarySelectedClusterAtom,
   librarySelectedEntityIdAtom,
-  libraryActiveFilterCountAtom,
+  libraryHasNarrowingAtom,
   clearLibraryFiltersAtom,
 } from "../../atoms/library";
 import { MapPinOff } from "lucide-react";
@@ -56,7 +56,9 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
   const language = useAtomValue(languageAtom);
   const [selectedCluster, setSelectedCluster] = useAtom(librarySelectedClusterAtom);
   const setSelectedId = useSetAtom(librarySelectedEntityIdAtom);
-  const activeFilterCount = useAtomValue(libraryActiveFilterCountAtom);
+  // Facets OR the search — this button clears both, and the empty screen it
+  // rescues you from is most often a search that matched nothing.
+  const hasNarrowing = useAtomValue(libraryHasNarrowingAtom);
   const clearFilters = useSetAtom(clearLibraryFiltersAtom);
   const [zoom, setZoom] = useState(START_ZOOM);
 
@@ -242,7 +244,7 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
                   ? `None of these ${entities.length.toLocaleString()} results carry a geolocation. Only entities with coordinates of their own are plotted.`
                   : "No entities match your filters."}
               </p>
-              {activeFilterCount > 0 && (
+              {hasNarrowing && (
                 <button
                   onClick={() => clearFilters()}
                   className="mt-2.5 px-2.5 h-6 text-[11px] font-medium rounded-md bg-warm text-ink-secondary hover:bg-parchment hover:text-ink transition-colors cursor-pointer"

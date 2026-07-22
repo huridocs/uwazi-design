@@ -3,7 +3,7 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   libraryDateFromAtom,
   libraryDateToAtom,
-  libraryActiveFilterCountAtom,
+  libraryHasNarrowingAtom,
   clearLibraryFiltersAtom,
 } from "../../atoms/library";
 import {
@@ -44,7 +44,9 @@ interface DragState {
 export function TimeBrush({ entities }: { entities: Entity[] }) {
   const [dateFrom, setDateFrom] = useAtom(libraryDateFromAtom);
   const [dateTo, setDateTo] = useAtom(libraryDateToAtom);
-  const activeFilterCount = useAtomValue(libraryActiveFilterCountAtom);
+  // Facets OR the search — this button clears both, and the empty screen it
+  // rescues you from is most often a search that matched nothing.
+  const hasNarrowing = useAtomValue(libraryHasNarrowingAtom);
   const isMobile = useAtomValue(breakpointAtom) === "mobile";
   const clearFilters = useSetAtom(clearLibraryFiltersAtom);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -185,7 +187,7 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
               : "No results to plot"}
           </span>
           <div className="flex-1" />
-          {activeFilterCount > 0 && (
+          {hasNarrowing && (
             <button
               onClick={() => clearFilters()}
               className="px-2 h-5 text-[11px] font-medium rounded-md bg-warm text-ink-tertiary hover:bg-parchment hover:text-ink transition-colors cursor-pointer"

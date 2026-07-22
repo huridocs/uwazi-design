@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useSetAtom } from "jotai";
 import { X, SlidersHorizontal } from "lucide-react";
 import {
-  libraryActiveFilterCountAtom,
   clearLibraryFiltersAtom,
   librarySelectedEntityIdAtom,
   librarySelectedClusterAtom,
@@ -26,11 +25,15 @@ export function ActiveFiltersButton() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  const count = useAtomValue(libraryActiveFilterCountAtom);
   const clearAll = useSetAtom(clearLibraryFiltersAtom);
   const setSelectedId = useSetAtom(librarySelectedEntityIdAtom);
   const setSelectedCluster = useSetAtom(librarySelectedClusterAtom);
   const items = useActiveFilters();
+  // The readout counts what the popover LISTS — facets plus the search. The
+  // facet count excludes the search by design, and this button is the only
+  // place a running search is reachable while the drawer shows an entity, so
+  // hiding it on a search-only state would hide the search itself.
+  const count = items.length;
 
   useEffect(() => {
     if (!open) return;

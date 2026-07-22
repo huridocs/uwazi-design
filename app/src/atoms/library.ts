@@ -1,3 +1,4 @@
+import { startTransition } from "react";
 import { atom } from "jotai";
 import { atomWithStorage, createJSONStorage } from "jotai/utils";
 import { dataSourceAtom, type DataSource } from "./dataSource";
@@ -21,8 +22,15 @@ const searchDraftStateAtom = atom("");
 export const librarySearchDraftAtom = atom(
   (get) => get(searchDraftStateAtom),
   (_get, set, next: string) => {
+    // The DRAFT is urgent: it is the text in the box, and a character that
+    // appears a frame after you typed it is the one thing search must never do.
     set(searchDraftStateAtom, next);
-    if (next.trim()) set(libraryQueryAtom, next);
+    // The COMMIT is not. Committing drives filter → rank → count → snippets over
+    // the whole corpus, and running that synchronously inside the keystroke is
+    // what put 2.6s tasks on the main thread. As a transition React can abandon
+    // it when the next keystroke arrives, and keeps showing the previous results
+    // until the new ones are ready — see `useDeferredValue` in `LibraryView`.
+    if (next.trim()) startTransition(() => set(libraryQueryAtom, next));
   },
 );
 
@@ -32,6 +40,20 @@ export const clearLibrarySearchAtom = atom(null, (_get, set) => {
   set(searchDraftStateAtom, "");
   set(libraryQueryAtom, "");
 });
+
+/** The running search, or `null` — the search as its OWN state, deliberately not
+ *  folded into the filter count.
+ *
+ *  A search is not a facet. You run it from the search box at the top of the
+ *  results, not from the Filters panel, and counting it there made the Filters
+ *  tab claim custody of something it doesn't hold: type a query having ticked
+ *  nothing, and the tab wore a "1" and an attention dot over a panel with every
+ *  box unticked. The dot means "something you set is still on BACK HERE", and
+ *  the search was never back there. This is what the Results page's
+ *  active-search element reads instead. */
+export const libraryActiveSearchAtom = atom(
+  (get) => get(libraryQueryAtom).trim() || null,
+);
 
 /** Recent searches — the queries you actually ran, newest first.
  *
@@ -307,10 +329,17 @@ export const clearLibraryFiltersAtom = atom(null, (_get, set) => {
   set(libraryChainFiltersAtom, {});
 });
 
-/** Count of active filters (search + each selected type + has-doc + countries). */
+/** Count of active FACETS — types, has-doc, status, countries, descriptors,
+ *  dates, inherited and chain values. The search is NOT one of them: see
+ *  `libraryActiveSearchAtom`. This is what the Filters tab's count and dot read,
+ *  so both describe the panel's own state and nothing else.
+ *
+ *  Surfaces that LIST the filters (the Active-filters sheet and the action-bar
+ *  popover) show the search alongside the facets, so they size themselves off
+ *  `useActiveFilters().length` — the real length of what they render — rather
+ *  than this. Counting from the list is how they stay honest either way. */
 export const libraryActiveFilterCountAtom = atom((get) => {
-  let n = get(libraryQueryAtom).trim() ? 1 : 0;
-  n += Object.values(get(libraryTypeFiltersAtom)).filter(Boolean).length;
+  let n = Object.values(get(libraryTypeFiltersAtom)).filter(Boolean).length;
   if (get(libraryHasDocAtom)) n += 1;
   n += Object.values(get(libraryStatusFiltersAtom)).filter(Boolean).length;
   n += Object.values(get(libraryCountryFiltersAtom)).filter(Boolean).length;
@@ -322,3 +351,13 @@ export const libraryActiveFilterCountAtom = atom((get) => {
     n += Object.values(vals).filter(Boolean).length;
   return n;
 });
+
+/** Is ANYTHING narrowing the results — a facet or the search?
+ *
+ *  What the "nothing matched" escape hatches gate on (the map's and the time
+ *  brush's Clear buttons), because those clear both. Gating them on the facet
+ *  count alone would strand the one case they exist for: a search that matches
+ *  nothing, with no facets ticked, offering no way out of an empty screen. */
+export const libraryHasNarrowingAtom = atom(
+  (get) => get(libraryActiveFilterCountAtom) > 0 || get(libraryActiveSearchAtom) !== null,
+);

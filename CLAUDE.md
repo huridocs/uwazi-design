@@ -419,6 +419,14 @@ Match-type chips (Title / Properties / Document) are `ToggleChip`
   clipped; end tabs round themselves logically instead. The Library drawer's
   Filters/Results tabs use dots, NOT counts — the count mounted on first tick and
   shoved the next tab sideways.
+- **Ending a search** — `clearLibrarySearchAtom` is THE dismiss, and every entry
+  point routes through it: the active-filters sheet + action-bar popover (via
+  `useActiveFilters`), the no-matches blank state, and now
+  `components/library/ActiveSearchChip.tsx` — one component, owning the wiring,
+  rendered by BOTH Results surfaces in their count row ("N results for
+  [“query” ×]"). The chip REPLACES the quoted query in that sentence rather than
+  sitting beside it. Don't add a second clear: two `clearAll`s over this state
+  already drifted once (PATTERNS §4.3).
 - **Recent searches** (`atoms/library.ts` → `librarySearchHistoryAtom`,
   `recordSearchAtom`; `components/library/RecentSearches.tsx`): committed queries
   recorded on SETTLE (1.2s debounce, plus Enter/blur), deduped case-insensitively,
