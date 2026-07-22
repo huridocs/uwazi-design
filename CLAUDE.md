@@ -408,6 +408,25 @@ Match-type chips (Title / Properties / Document) are `ToggleChip`
 `aria-pressed` instead of an X — and ride the count row via `ListInfoRow`'s
 `inlineSlot`, in both the drawer tab and the main view.
 
+## Tab signals & recent searches
+
+- **`count` vs `dot`** (`components/layout/DrawerTabs.tsx`, `MainTabs.tsx`): count =
+  inventory, always present, in the flow (Relationships 10, Files 2). Dot = live
+  user-set state behind an UNSELECTED tab, absolutely positioned so it can toggle
+  without moving the strip. Wired to exactly two states — `activeFilterCountAtom`
+  (every Relationships tab, all strips) and `docSearchQueryAtom` (the entity
+  drawer's Search tab). Both strips dropped `overflow-hidden` so the dot isn't
+  clipped; end tabs round themselves logically instead. The Library drawer's
+  Filters/Results tabs use dots, NOT counts — the count mounted on first tick and
+  shoved the next tab sideways.
+- **Recent searches** (`atoms/library.ts` → `librarySearchHistoryAtom`,
+  `recordSearchAtom`; `components/library/RecentSearches.tsx`): committed queries
+  recorded on SETTLE (1.2s debounce, plus Enter/blur), deduped case-insensitively,
+  newest-first, capped at 8, in **sessionStorage** per `atoms/navigation.ts`'s
+  reasoning. The panel follows FOCUS while `SearchTipsPopover` follows a CLICK on
+  its chip — clicking the chip blurs the input, so the two can't both be open and
+  need no shared state. Both portal to `body` and position from the box's rect.
+
 ## Component catalog
 Logo click toggles in/out of `ComponentCatalog`. Sidebar groups: Style Guide, Elements, Entity View — Layout / Document / References / Metadata / Files / Drawer / Relationships, Import CSV — Layout / Components, **Filters & Lists**, Shared. Add new shared/connections components here as a `CatalogEntry` with a live `Isolated…` demo. Note: the Entity View → References + Relationships groups now both showcase `ConnectionRow` (reference and aggregate variants) and `ConnectionGroupedCard`.
 

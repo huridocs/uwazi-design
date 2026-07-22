@@ -477,6 +477,41 @@ A count badge is the *inline* counterpart: it sits in the button's flow (not
 absolutely positioned), `bg-ink text-paper`, ~14px, `tabular-nums` — see
 `FiltersButton`. Inline because a number needs room and must not overlap a glyph.
 
+### On a tab strip: `count` is inventory, `dot` is live state
+
+Tabs carry two signals that answer different questions, and mixing them up
+produces exactly the shift the previous rule forbids.
+
+| | `count` | `dot` |
+|---|---|---|
+| answers | "how much is in there?" | "is something I set still on?" |
+| source | the data | the user |
+| when | always, for tabs that have one | only while that tab is **unselected** |
+| where | in the flow, beside the label | absolute, outside the corner |
+| may appear later? | **no** — it would resize its tab | yes — it costs no width |
+
+A count that can be ABSENT is not a count. The Library's Filters tab carried
+`activeFilterCount || undefined`: it mounted the moment you ticked your first
+facet, widened its own tab, and shoved the Results tab sideways under the
+pointer. The quantity was never the point — "something you set is still on back
+there" is one bit, and the dot says it for free.
+
+The dot is drawn only on non-active tabs: on the tab you're looking at, the state
+IS visible, and a marker restating it is the duplication the dot rule warns about.
+Same mark as the Display menu's (6px, carbon, `-top-0.5 -end-0.5` on a `relative`
+trigger, logical `-end-` for RTL), because it says the same thing.
+
+**Both strips had to drop `overflow-hidden`** to stop clipping a dot that sits
+just outside a tab's corner; the end tabs round themselves instead
+(`rounded-s-md` / `rounded-e-md`, logical, so the frame survives RTL).
+
+Keep dots rare or they stop meaning anything. In this app exactly two states earn
+one: **active relationship facets** (one `activeFilterCountAtom` behind every
+Relationships tab in every strip) and **a live document query** (`docSearchQueryAtom`,
+which keeps marking the page from a box two tabs away). Files, Metadata, ToC and
+Template got none — their only "state" is local and dies on tab switch, so there
+is nothing still in effect to point at.
+
 ### Never shift layout on state change
 
 A row that appears only when it has something to say — an "N active / Clear all"
@@ -648,6 +683,7 @@ Before merging a component onto the 2026 language:
 - [ ] Self-updating regions have `aria-live` / `role="status"` / `role="log"`
 - [ ] Every new animation appears in a `prefers-reduced-motion` block
 - [ ] Sticky-state control carries a dot (illegible state) or a count (countable) — never both, never a marker that mounts on activation
+- [ ] Tab strips: `count` only for always-present inventory, `dot` only for live user-set state on non-active tabs
 - [ ] Nothing mounts on state change inside a scrollable column — signal moved onto an existing control, or space reserved
 - [ ] Highlight marks don't change text metrics (padding cancelled by equal negative margin, weight inherited)
 - [ ] No page tag, count or jump target the data can't back — absent beats invented
