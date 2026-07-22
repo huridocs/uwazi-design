@@ -51,6 +51,7 @@ body {
   color: var(--text-primary);          /* ink */
   -webkit-font-smoothing: antialiased; /* part of the look — Inter unsmoothed */
   -moz-osx-font-smoothing: grayscale;  /*   reads heavier and warmer */
+  text-rendering: optimizeLegibility;  /* kerning + ligatures on */
   transition: background-color 0.2s ease, color 0.2s ease;  /* theme flip */
 }
 ```

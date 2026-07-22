@@ -64,6 +64,7 @@ body {
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;  /* kerning + ligatures on */
 }
 ```
 
