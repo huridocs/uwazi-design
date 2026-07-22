@@ -1,3 +1,5 @@
+import { handoffDocs } from "./handoffDocs";
+
 export interface SidebarGroup {
   label: string;
   items: { id: string; label: string }[];
@@ -7,6 +9,11 @@ export interface SidebarGroup {
  *  anchors in the catalog body (`ComponentCatalog.tsx`) — otherwise the
  *  active-section highlight jumps non-sequentially as the user scrolls. */
 export const sidebarGroups: SidebarGroup[] = [
+  {
+    // Derived from the files in `handoff/` — see `handoffDocs.ts`.
+    label: "Handoff",
+    items: handoffDocs.map((doc) => ({ id: doc.id, label: doc.label })),
+  },
   {
     label: "Style Guide",
     items: [
@@ -97,6 +104,7 @@ export const sidebarGroups: SidebarGroup[] = [
       { id: "fl-filters-drawer", label: "FiltersDrawer" },
       { id: "fl-facet-section", label: "FacetSection" },
       { id: "fl-active-filter-chip", label: "ActiveFilterChip" },
+      { id: "fl-toggle-chip", label: "ToggleChip" },
       { id: "fl-view-mode-controls", label: "ViewModeControls" },
       { id: "fl-collapse-controls", label: "CollapseControls" },
       { id: "fl-list-info-row", label: "ListInfoRow" },
@@ -125,6 +133,7 @@ export const sidebarGroups: SidebarGroup[] = [
   {
     label: "Shared",
     items: [
+      { id: "sh-highlighted-text", label: "HighlightedText" },
       { id: "sh-confirm-dialog", label: "ConfirmDialog" },
       { id: "sh-toast", label: "Toast" },
       { id: "sh-uwazi-loader", label: "UwaziLoader" },

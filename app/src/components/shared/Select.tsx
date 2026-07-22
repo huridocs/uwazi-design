@@ -4,6 +4,10 @@ import { ChevronDown } from "lucide-react";
 export interface SelectOption {
   value: string;
   label: string;
+  /** Listed but not choosable — e.g. a language this entity has no translation
+   *  for. Shown greyed rather than hidden: which languages EXIST is part of what
+   *  the control tells you. */
+  disabled?: boolean;
 }
 
 /** A calm, borderless dropdown matching the app's action style: bg-warm trigger
@@ -72,12 +76,18 @@ export function Select({
               type="button"
               role="option"
               aria-selected={o.value === value}
+              disabled={o.disabled}
               onClick={() => {
+                if (o.disabled) return;
                 onChange(o.value);
                 setOpen(false);
               }}
-              className={`flex items-center w-full px-3 py-1.5 text-xs text-start transition-colors cursor-pointer ${
-                o.value === value ? "bg-vellum text-ink font-semibold" : "text-ink-secondary hover:bg-warm"
+              className={`flex items-center w-full px-3 py-1.5 text-xs text-start transition-colors ${
+                o.disabled
+                  ? "text-ink-muted/50 cursor-not-allowed"
+                  : o.value === value
+                    ? "bg-vellum text-ink font-semibold cursor-pointer"
+                    : "text-ink-secondary hover:bg-warm cursor-pointer"
               }`}
             >
               {o.label}

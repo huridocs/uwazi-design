@@ -1,12 +1,22 @@
-import { useState, useRef, useEffect } from "react";
 import { useAtom } from "jotai";
-import { ArrowLeft, ChevronDown, Sparkles } from "lucide-react";
+import { ArrowLeft, Sparkles } from "lucide-react";
 import { breakpointAtom } from "../../atoms/viewport";
+import { Select } from "../shared/Select";
 
 interface MainTab {
   id: string;
   label: string;
+  /** **Inventory** — how many things live behind this tab (Relationships 10,
+   *  Files 2). Rides in the flow, so it must be a number the tab always has;
+   *  hidden on mobile, where its width pushes later tabs off-screen. */
   count?: number;
+  /** **Live state, out of view** — something the USER set is still in effect
+   *  behind this tab (an active filter, a running query). Only drawn while the
+   *  tab is NOT active: on the active tab you can see the state itself.
+   *  Absolutely positioned, so it costs no flow width and can toggle without
+   *  moving the strip — the same 6px carbon mark, in the same place, that
+   *  `DrawerTabs` and the Display menu use. Keep it rare. */
+  dot?: boolean;
   /** Show a tiny Sparkles icon next to the count — signals pending AI
    *  suggestions on the Relationships tab. */
   sparkle?: boolean;
@@ -28,23 +38,11 @@ interface MainTabsProps {
 export function MainTabs({ tabs, activeId, onChange, languages = [], availableLanguages, activeLanguage, onLanguageChange, onBack }: MainTabsProps) {
   const [breakpoint] = useAtom(breakpointAtom);
   const isMobile = breakpoint === "mobile";
-  const [langOpen, setLangOpen] = useState(false);
-  const langRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!langOpen) return;
-    const onClick = (e: MouseEvent) => {
-      if (!langRef.current?.contains(e.target as Node)) setLangOpen(false);
-    };
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
-  }, [langOpen]);
-
   const currentLang = activeLanguage ?? languages[0];
 
   return (
     <div
-      className="flex items-center justify-between gap-3 px-3 py-2 md:py-2.5 shrink-0"
+      className="flex items-center justify-between gap-3 px-3 pt-2 pb-1 md:pt-2.5 shrink-0"
     >
       {/* Left: Back + Tabs */}
       <div className="flex items-center gap-3 md:gap-4 min-w-0 overflow-x-auto">
@@ -57,8 +55,11 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
             <ArrowLeft size={20} />
           </button>
         )}
+        {/* No `overflow-hidden`: it would clip the dots just outside a tab's
+            corner. The end tabs round themselves instead, logically, so the
+            strip still reads as one frame under RTL. */}
         <div
-          className="flex items-center rounded-md overflow-hidden shrink-0"
+          className="flex items-center rounded-md shrink-0"
           role="tablist"
           style={{
             border: "1px solid var(--border-primary)",
@@ -72,7 +73,9 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
                 role="tab"
                 aria-selected={activeId === tab.id}
                 onClick={() => onChange(tab.id)}
-                className={`flex items-center justify-center gap-1 px-2.5 md:px-3 py-1.5 text-[13px] font-medium transition-colors ${
+                className={`relative flex items-center justify-center gap-1 px-2.5 md:px-3 py-1.5 text-[13px] font-medium transition-colors ${
+                  i === 0 ? "rounded-s-md" : ""
+                } ${i === tabs.length - 1 ? "rounded-e-md" : ""} ${
                   activeId === tab.id
                     ? "bg-vellum text-ink"
                     : "bg-paper text-ink-tertiary hover:text-ink-secondary"
@@ -90,88 +93,42 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
                 {tab.sparkle && (
                   <Sparkles size={11} className="text-carbon" aria-label="AI suggestions pending" />
                 )}
+                {/* Decorative — the state it points at is announced by the panel
+                    that owns it. Survives on mobile (unlike the count): it costs
+                    no width, and it is exactly there that the other panel is
+                    furthest out of sight. */}
+                {tab.dot && activeId !== tab.id && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute -top-0.5 -end-0.5 w-1.5 h-1.5 rounded-full"
+                    style={{ backgroundColor: "var(--accent-blue)" }}
+                  />
+                )}
               </button>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Right: Language picker */}
+      {/* Right: language — the SAME control the Library uses (shared `Select`,
+          codes not names), not a row of four pills. One language switcher, one
+          shape, wherever you meet it; and it no longer widens the tab strip by a
+          pill for every language the collection adds. Unavailable renditions stay
+          listed but disabled. */}
       {languages.length > 0 && (
-        isMobile ? (
-          <div ref={langRef} className="relative shrink-0">
-            <button
-              onClick={() => setLangOpen((o) => !o)}
-              aria-label="Language"
-              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md bg-warm text-ink-secondary hover:bg-parchment transition-colors"
-            >
-              {currentLang}
-              <ChevronDown size={10} className="text-ink-tertiary" />
-            </button>
-            {langOpen && (
-              <div
-                className="absolute top-full mt-1 right-0 bg-paper rounded-md overflow-hidden"
-                style={{
-                  border: "1px solid var(--border-primary)",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
-                  zIndex: 30,
-                  minWidth: 80,
-                }}
-              >
-                {languages.map((lang) => {
-                  const isActive = lang === currentLang;
-                  const isAvailable = !availableLanguages || availableLanguages.includes(lang);
-                  return (
-                    <button
-                      key={lang}
-                      onClick={() => {
-                        if (isAvailable) {
-                          onLanguageChange?.(lang);
-                          setLangOpen(false);
-                        }
-                      }}
-                      disabled={!isAvailable}
-                      className={`block w-full px-3 py-2 text-xs font-medium text-left transition-colors ${
-                        isActive
-                          ? "bg-vellum text-ink"
-                          : isAvailable
-                            ? "text-ink-secondary hover:bg-warm"
-                            : "text-ink-muted/40"
-                      }`}
-                    >
-                      {lang}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="flex items-center gap-1 shrink-0" role="group" aria-label="Language selection">
-            {languages.map((lang) => {
-              const isActive = lang === currentLang;
-              const isAvailable = !availableLanguages || availableLanguages.includes(lang);
-              return (
-                <button
-                  key={lang}
-                  onClick={() => isAvailable && onLanguageChange?.(lang)}
-                  disabled={!isAvailable}
-                  aria-label={`Language: ${lang}`}
-                  aria-pressed={isActive}
-                  className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
-                    isActive
-                      ? "bg-vellum text-ink"
-                      : isAvailable
-                      ? "bg-warm text-ink-tertiary hover:text-ink-secondary"
-                      : "bg-warm/50 text-ink-muted/40 cursor-not-allowed"
-                  }`}
-                >
-                  {lang}
-                </button>
-              );
-            })}
-          </div>
-        )
+        <div className="shrink-0">
+          <Select
+            value={currentLang}
+            onChange={(v) => onLanguageChange?.(v)}
+            ariaLabel="Language"
+            align="end"
+            options={languages.map((lang) => ({
+              value: lang,
+              label: lang,
+              disabled: !!availableLanguages && !availableLanguages.includes(lang),
+            }))}
+          />
+        </div>
       )}
     </div>
   );

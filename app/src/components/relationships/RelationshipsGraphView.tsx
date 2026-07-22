@@ -5,7 +5,10 @@ import {
   overlayEntityIdAtom,
   activeRefIdAtom,
 } from "../../atoms/references";
-import { groupByAtom } from "../../atoms/filters";
+import { groupByAtom, searchQueryAtom } from "../../atoms/filters";
+import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
+import { HighlightedText } from "../shared/HighlightedText";
+import { fold, highlightTerms } from "../../utils/queryTokens";
 import { useFilteredReferences } from "./useFilteredReferences";
 import { getEntity, getEntityType } from "../../data/entities";
 import { Direction } from "../../data/references";
@@ -46,15 +49,31 @@ const VIEW_H = 900;
 const CX = VIEW_W / 2;
 const CY = VIEW_H / 2;
 const SOURCE_R = 26;
-const LABEL_DIST = 88;
-const FIRST_RING_R = 170;
+const LABEL_DIST = 122;
+const FIRST_RING_R = 200;
 const RING_GAP = 40;
 const ARC_GAP = 30;
 /** Max relationships plotted — beyond this the radial graph is slow + unreadable. */
 const GRAPH_CAP = 150;
 
+/** Does `text` contain any query term? The graph's labels live in SVG `<text>`,
+ *  which cannot host a `<mark>` — so where the list and tree mark the matched
+ *  RUN, the graph can only say "this one matched" at the whole-label level. That
+ *  is a deliberately weaker claim, made with a tint rather than a fake mark:
+ *  drawing a rect behind a guessed glyph range would assert a precision the
+ *  renderer can't actually measure (PATTERNS 4.2). Terms come from the shared
+ *  tokenizer, so what tints here is what marks elsewhere. */
+function matchesQuery(text: string, terms: string[]): boolean {
+  if (terms.length === 0) return false;
+  const folded = fold(text); // same fold the marks match under — no second dialect
+  return terms.some((t) => folded.includes(t));
+}
+
 export function RelationshipsGraphView() {
   const [groupBy] = useAtom(groupByAtom);
+  const query = useAtomValue(searchQueryAtom);
+  const terms = useMemo(() => highlightTerms(query), [query]);
+  const focusedId = useAtomValue(focusedEntityIdAtom);
   const [overlayEntityId, setOverlayEntityId] = useAtom(overlayEntityIdAtom);
   const activeRefId = useAtomValue(activeRefIdAtom);
 
@@ -64,6 +83,14 @@ export function RelationshipsGraphView() {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [hover, setHover] = useState<{ node: GraphNode; x: number; y: number } | null>(null);
   const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
+  // WHICH node you clicked. Selection is stored per ENTITY (overlayEntityIdAtom),
+  // but a node is a relationship AGGREGATE — target × type × direction — so one
+  // entity can own several nodes ("Cites", "Refers To", "Relates To"… all to the
+  // same case). Keying the highlight off the entity alone lit every one of them
+  // and there was no way to tell which you'd picked. They ARE all that entity, so
+  // dimming them would be a lie: the clicked node goes primary, its siblings keep
+  // a quiet ring that says "same entity, different relation".
+  const [clickedNodeId, setClickedNodeId] = useState<string | null>(null);
   const dragRef = useRef<{
     active: boolean;
     startX: number;
@@ -182,7 +209,26 @@ export function RelationshipsGraphView() {
     return { spokes: spokesArr, nodes, truncated };
   }, [filteredRefs, collapsed, groupBy, activeRefId, overlayEntityId]);
 
-  const sourceType = getEntityType(currentDocument.entityTypeId);
+  // The root is THIS entity — the one whose relationships these are. It was
+  // `currentDocument`, the hardcoded sample document, so every graph claimed a
+  // "Court Case" at its centre no matter whose page you were on: a Sentencia's
+  // own connections radiated from someone else's node.
+  const sourceEntity = getEntity(focusedId);
+  const sourceType = getEntityType(sourceEntity?.typeId ?? currentDocument.entityTypeId);
+  const sourceTitle = sourceEntity?.title ?? currentDocument.title;
+  const sourceLabel = truncate(sourceTitle, 26);
+  // SVG text can't be measured before layout, so the pill is sized from the glyph
+  // count — 5.6 units per char at fontSize 10 is a safe average for this face.
+  const sourceLabelW = Math.max(
+    72,
+    Math.max(sourceLabel.length, (sourceType?.name ?? "").length) * 5.6 + 18,
+  );
+
+  // Did the open entity get opened FROM the graph? If it was selected elsewhere
+  // (a list row, the overlay), no single node owns the click — so every node of
+  // that entity reads as primary, the old behaviour, rather than all of them
+  // going faint with nothing to anchor them.
+  const pickedInGraph = nodes.some((n) => n.selected && n.id === clickedNodeId);
 
   useEffect(() => {
     const el = svgRef.current;
@@ -225,7 +271,65 @@ export function RelationshipsGraphView() {
     dragRef.current.active = false;
   };
 
-  const resetView = () => setTransform({ tx: 0, ty: 0, scale: 1 });
+  // FIT the drawing to the pane instead of opening at a flat 100%. The layout is
+  // laid out in a fixed 1200×900 viewBox sized for a big fan, so an entity with
+  // five connections drew a speck in the middle of the canvas while a País with
+  // a hundred overflowed it. The scale that matters is the one that makes the
+  // content fill the space it has.
+  //
+  // The group is `translate(tx ty) scale(s)` about the origin (CX,CY), so a point
+  // p lands at O + t + s·(p − O). Putting the content's centre c at the viewport
+  // centre gives t = s·(O − c).
+  const fitTransform = useMemo(() => {
+    if (nodes.length === 0) return { tx: 0, ty: 0, scale: 1 };
+
+    // Start from the source node — it's always drawn, and its label hangs below.
+    // The source's own label is wider than its circle and hangs below it — bound
+    // the LABEL, or a fit crops the name of the entity the graph is about.
+    let minX = CX - sourceLabelW / 2;
+    let maxX = CX + sourceLabelW / 2;
+    let minY = CY - SOURCE_R;
+    let maxY = CY + SOURCE_R + 36;
+
+    for (const n of nodes) {
+      minX = Math.min(minX, n.x - n.r);
+      maxX = Math.max(maxX, n.x + n.r);
+      minY = Math.min(minY, n.y - n.r);
+      maxY = Math.max(maxY, n.y + n.r);
+    }
+    // Spoke labels are pills around their anchor — bound them generously, since a
+    // clipped label is exactly the thing a "fit" is supposed to prevent.
+    for (const s of spokes) {
+      minX = Math.min(minX, s.labelX - 60);
+      maxX = Math.max(maxX, s.labelX + 60);
+      minY = Math.min(minY, s.labelY - 14);
+      maxY = Math.max(maxY, s.labelY + 14);
+    }
+
+    const PAD = 40;
+    const scale = Math.max(
+      0.4,
+      Math.min(
+        2.5,
+        Math.min((VIEW_W - PAD * 2) / (maxX - minX), (VIEW_H - PAD * 2) / (maxY - minY)),
+      ),
+    );
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    return { scale, tx: scale * (CX - cx), ty: scale * (CY - cy) };
+  }, [nodes, spokes, sourceLabelW]);
+
+  // Re-fit when the DRAWING changes (filters, grouping, collapse) — not on every
+  // render, or panning and zooming would snap back under your cursor.
+  const fitKey = `${nodes.map((n) => n.id).join("|")}::${spokes.map((s) => s.key).join("|")}`;
+  const lastFitKey = useRef<string | null>(null);
+  useEffect(() => {
+    if (lastFitKey.current === fitKey) return;
+    lastFitKey.current = fitKey;
+    setTransform(fitTransform);
+  }, [fitKey, fitTransform]);
+
+  const resetView = () => setTransform(fitTransform);
 
   if (nodes.length === 0) {
     return (
@@ -331,6 +435,7 @@ export function RelationshipsGraphView() {
               meaningful label to apply. */}
           {groupBy !== "none" && spokes.map((s) => {
             const isCollapsed = !!collapsed[s.key];
+            const hit = matchesQuery(s.label, terms);
             return (
               <g
                 key={`label-${s.key}`}
@@ -361,7 +466,10 @@ export function RelationshipsGraphView() {
                   width={110}
                   height={22}
                   rx={4}
-                  fill="var(--bg-surface)"
+                  // Matched branches take the highlight tint — the SVG stand-in
+                  // for the <mark> the list and tree put on this same label.
+                  fill={hit ? "var(--highlight-yellow-active)" : "var(--bg-surface)"}
+                  fillOpacity={hit ? 0.7 : 1}
                   stroke={
                     focusedNodeId === `label-${s.key}`
                       ? "var(--accent-blue)"
@@ -393,15 +501,40 @@ export function RelationshipsGraphView() {
               stroke="var(--text-primary)"
               strokeWidth={1.5}
             />
+            {/* The name sits in a PILL, like the branch labels — opaque, so an
+                edge or a node passing behind it doesn't run through the text — and
+                it's truncated hard: a full CEJIL title ("Bedoya Lima y otra.
+                Resolución de …") is wider than the whole first ring, and it was
+                sprawling straight across the branch labels. Full title on hover. */}
+            <title>{sourceTitle}</title>
+            <rect
+              x={CX - sourceLabelW / 2}
+              y={CY + SOURCE_R + 6}
+              width={sourceLabelW}
+              height={30}
+              rx={4}
+              fill="var(--bg-surface)"
+              stroke="var(--border-primary)"
+              strokeWidth={1}
+            />
             <text
               x={CX}
-              y={CY + SOURCE_R + 14}
+              y={CY + SOURCE_R + 18}
               textAnchor="middle"
-              fontSize={11}
+              fontSize={10}
               fontWeight={600}
               fill="var(--text-primary)"
             >
-              {sourceType?.name ?? "Source"}
+              {sourceLabel}
+            </text>
+            <text
+              x={CX}
+              y={CY + SOURCE_R + 30}
+              textAnchor="middle"
+              fontSize={8}
+              fill="var(--text-tertiary)"
+            >
+              {sourceType?.name ?? "Entity"}
             </text>
           </g>
 
@@ -409,7 +542,14 @@ export function RelationshipsGraphView() {
               button (Enter/Space opens the entity overlay, same as click).
               Focus shows a carbon halo + the tooltip, so keyboard users get
               the same identification hover users do. */}
-          {nodes.map((n) => (
+          {nodes.map((n) => {
+            // `n.selected` = this node's entity is the one open. `primary` = this
+            // is the node you actually clicked. When one entity owns several
+            // nodes (one per relation type), the siblings stay marked — they ARE
+            // that entity — but only the clicked one gets the solid ring.
+            const primary = n.selected && (pickedInGraph ? clickedNodeId === n.id : true);
+            const sibling = n.selected && !primary;
+            return (
             <g key={n.id}>
               {n.selected && (
                 <circle
@@ -418,8 +558,9 @@ export function RelationshipsGraphView() {
                   r={n.r + 5}
                   fill="none"
                   stroke="var(--text-primary)"
-                  strokeWidth={1.5}
-                  opacity={0.55}
+                  strokeWidth={primary ? 1.5 : 1}
+                  strokeDasharray={sibling ? "2 2" : undefined}
+                  opacity={primary ? 0.55 : 0.3}
                 />
               )}
               {focusedNodeId === n.id && !n.selected && (
@@ -439,9 +580,9 @@ export function RelationshipsGraphView() {
                 r={n.r}
                 fill={n.color}
                 stroke={
-                  n.selected ? "var(--text-primary)" : "var(--bg-surface)"
+                  primary ? "var(--text-primary)" : "var(--bg-surface)"
                 }
-                strokeWidth={n.selected ? 2.5 : 1.5}
+                strokeWidth={primary ? 2.5 : 1.5}
                 tabIndex={0}
                 role="button"
                 aria-label={`${n.title} — ${n.typeName}, ${n.evidenceCount} evidence`}
@@ -478,18 +619,21 @@ export function RelationshipsGraphView() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
+                    setClickedNodeId(n.id);
                     setOverlayEntityId(n.id.split("::")[0]);
                   }
                 }}
                 onClick={(e) => {
                   e.stopPropagation();
                   if (dragRef.current.moved) return;
+                  setClickedNodeId(n.id);
                   setOverlayEntityId(n.id.split("::")[0]);
                 }}
                 style={{ cursor: "pointer", outline: "none" }}
               />
             </g>
-          ))}
+            );
+          })}
 
         </g>
       </svg>
@@ -506,7 +650,11 @@ export function RelationshipsGraphView() {
             className="absolute z-10 pointer-events-none px-2.5 py-1.5 rounded-md bg-ink text-paper shadow-md max-w-60"
             style={{ left, top, opacity: 0.94 }}
           >
-            <div className="text-[11px] font-semibold truncate">{hover.node.title}</div>
+            {/* The tooltip is HTML, not SVG — the one place in the graph where a
+                target's title can carry a real mark. */}
+            <div className="text-[11px] font-semibold truncate">
+              <HighlightedText text={hover.node.title} query={query} />
+            </div>
             <div className="text-[10px] opacity-80 truncate">
               {hover.node.typeName} · {hover.node.evidenceCount} evidence
             </div>
@@ -542,4 +690,10 @@ export function RelationshipsGraphView() {
       </div>
     </div>
   );
+}
+
+/** Node labels are drawn, not laid out — SVG text doesn't wrap or ellipsize, so a
+ *  long entity name would run straight across the canvas. */
+function truncate(s: string, max: number): string {
+  return s.length > max ? `${s.slice(0, max - 1).trimEnd()}…` : s;
 }

@@ -188,3 +188,13 @@ export function formatDay(ms: number): string {
   const d = new Date(ms);
   return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 }
+
+/** "8 months", "3 years" — the size of a stretch of nothing, for the break
+ *  markers a proportional axis draws where it elides one. Shared by both spines
+ *  (the timeline's and the Results view's) so an elision reads the same in each. */
+export function elapsed(ms: number): string {
+  const days = ms / 86_400_000;
+  if (days >= 730) return `${Math.round(days / 365.2425)} years`;
+  if (days >= 55) return `${Math.round(days / 30.44)} months`;
+  return `${Math.max(1, Math.round(days))} days`;
+}

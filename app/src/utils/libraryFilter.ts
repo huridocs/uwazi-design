@@ -2,6 +2,9 @@ import type { Entity } from "../data/entities";
 import type { Language } from "../atoms/language";
 import { typeHasDocument } from "../data/entityProfiles";
 import { chains, valueAt, type ChainGraph, type ChainSegment } from "./chainTraversal";
+import { entityFullTextBlob, matchCategories, type MatchCategories } from "./librarySnippets";
+import { getEntityProfile } from "../data/entityProfiles";
+import { fold } from "./queryTokens";
 import {
   entityCountries,
   matchesCountries,
@@ -59,6 +62,15 @@ export interface LibraryFilterState {
   chains: ActiveChain[];
   q: string;
   searchIndex: Map<string, string>;
+  /** Lowercased highlight terms of `q` (quoted phrases as units, bare words
+   *  separately, operators dropped) — shared with snippets + marks via
+   *  `utils/queryTokens.ts`. A term must hit metadata OR full text; all must hit
+   *  (AND). */
+  searchTerms: string[];
+  /** Whether to scan document bodies (gated on `q.length ≥ 3` for corpus perf). */
+  fullTextSearch: boolean;
+  /** Which KINDS of match to keep (Results-tab chips). All-true = no narrowing. */
+  matchTypes: { title: boolean; properties: boolean; document: boolean };
 }
 
 /** One independent filter dimension. A facet's own key is excluded when
@@ -72,7 +84,8 @@ export type FacetKey =
   | "descriptor"
   | "date"
   | "inherited"
-  | "search";
+  | "search"
+  | "matchType";
 
 export function entityIsDoc(e: Entity, source: DataSource): boolean {
   return source === "cejil" ? e.preview === "document" : typeHasDocument(e.typeId);
@@ -81,7 +94,7 @@ export function entityIsDoc(e: Entity, source: DataSource): boolean {
 /** Per-entity searchable text (title + country + field values + descriptors),
  *  lowercased. Built once and shared by the result filter and the facet
  *  aggregations so search narrows both identically. */
-export function buildSearchIndex(entities: Entity[]): Map<string, string> {
+export function buildSearchIndex(entities: Entity[], language: Language): Map<string, string> {
   const m = new Map<string, string>();
   for (const e of entities) {
     const parts = [
@@ -90,9 +103,87 @@ export function buildSearchIndex(entities: Entity[]): Map<string, string> {
       ...(e.fields?.map((f) => f.value) ?? []),
       ...(e.descriptors ?? []),
     ];
-    m.set(e.id, parts.join(" ").toLowerCase());
+    // Mock entities carry their scalar metadata in the PROFILE, not `fields`, so
+    // fold it in — otherwise the search reaches only titles. CEJIL entities have
+    // `fields`, so they skip this (and its per-entity profile build).
+    if (!e.fields?.length) {
+      for (const f of getEntityProfile(e.id).metadata[language] ?? []) {
+        if (f.type !== "relationship" && f.value) parts.push(f.value);
+      }
+    }
+    m.set(e.id, fold(parts.join(" ")));
   }
   return m;
+}
+
+/** Inert defaults for every filter dimension — each value means "don't narrow". */
+const EMPTY_SEARCH_INDEX: Map<string, string> = new Map();
+const ALL_MATCH_TYPES = { title: true, properties: true, document: true };
+const DEFAULT_FILTER_STATE: LibraryFilterState = {
+  source: "mock",
+  language: "EN",
+  typeIds: [],
+  hasDocOnly: false,
+  wantPublished: false,
+  wantRestricted: false,
+  countries: [],
+  countryMode: "OR",
+  descriptors: [],
+  descriptorMode: "OR",
+  fromMs: null,
+  toMs: null,
+  inherited: [],
+  chains: [],
+  q: "",
+  searchIndex: EMPTY_SEARCH_INDEX,
+  searchTerms: [],
+  fullTextSearch: false,
+  matchTypes: ALL_MATCH_TYPES,
+};
+
+/** Fill in any dimension the caller didn't supply.
+ *
+ *  EVERY entry point normalises through this, so a filter state that predates a
+ *  dimension — a call-site not yet updated, or a half-swapped module during an
+ *  HMR reload — degrades to "no narrowing" instead of throwing inside a
+ *  predicate and unmounting the entire Library. That failure mode blanked the
+ *  view twice while these dimensions were being added; defaulting centrally
+ *  means adding the NEXT dimension can't repeat it, and no predicate has to
+ *  defend itself.
+ *
+ *  Cached by state identity: `matchesAll` runs per entity per facet aggregation,
+ *  so normalising on every call would allocate thousands of objects per render.
+ *  The state is rebuilt each render, so the WeakMap turns over on its own; the
+ *  result is also mapped to itself, making normalisation idempotent. */
+const normalizedStates = new WeakMap<LibraryFilterState, LibraryFilterState>();
+function withDefaults(s: LibraryFilterState | null | undefined): LibraryFilterState {
+  if (!s) return DEFAULT_FILTER_STATE;
+  const hit = normalizedStates.get(s);
+  if (hit) return hit;
+  const out: LibraryFilterState = {
+    source: s.source ?? DEFAULT_FILTER_STATE.source,
+    language: s.language ?? DEFAULT_FILTER_STATE.language,
+    typeIds: s.typeIds ?? [],
+    hasDocOnly: s.hasDocOnly ?? false,
+    wantPublished: s.wantPublished ?? false,
+    wantRestricted: s.wantRestricted ?? false,
+    countries: s.countries ?? [],
+    countryMode: s.countryMode ?? "OR",
+    descriptors: s.descriptors ?? [],
+    descriptorMode: s.descriptorMode ?? "OR",
+    fromMs: s.fromMs ?? null,
+    toMs: s.toMs ?? null,
+    inherited: s.inherited ?? [],
+    chains: s.chains ?? [],
+    q: s.q ?? "",
+    searchIndex: s.searchIndex ?? EMPTY_SEARCH_INDEX,
+    searchTerms: s.searchTerms ?? [],
+    fullTextSearch: s.fullTextSearch ?? false,
+    matchTypes: s.matchTypes ?? ALL_MATCH_TYPES,
+  };
+  normalizedStates.set(s, out);
+  normalizedStates.set(out, out);
+  return out;
 }
 
 const PREDICATES: Record<
@@ -125,8 +216,57 @@ const PREDICATES: Record<
         f.values.has(v),
       ),
     ),
-  search: (e, s) => !s.q || (s.searchIndex.get(e.id) ?? "").includes(s.q),
+  // Match every query token (AND) somewhere in the entity's metadata index OR —
+  // when the query is long enough to be worth the corpus scan — its document
+  // body. Quoted phrases are single contiguous tokens. Sharing `searchTerms`
+  // with the snippet builder + highlighter keeps filter, snippets, and marks in
+  // one semantics (so "torture cruel" matches an entity carrying both words in
+  // different fields/pages, and both get marked).
+  search: (e, s) => matchesSearch(e, s),
+  // Where the query matched (title / properties / document). All-on is the
+  // common case and short-circuits BEFORE categorising, so the (blob-scanning)
+  // categorisation is only paid when the user has actually narrowed.
+  matchType: (e, s) =>
+    passesMatchTypes(s.matchTypes, s.q, () =>
+      matchCategories(e, s.q, s.language, s.source),
+    ),
 };
+
+/** The match-type chip gate, as ONE definition.
+ *
+ *  `LibraryView` applies the same gate directly — it derives the chip-narrowed
+ *  list from the pre-chip list rather than running a second full-corpus pass —
+ *  and it holds categories it has already computed. So the rule lives here and
+ *  takes the categories LAZILY: the all-on case (much the commonest) returns
+ *  before the thunk is ever called, which is what keeps the blob scan off the
+ *  path until the user has actually narrowed. */
+export function passesMatchTypes(
+  matchTypes: { title: boolean; properties: boolean; document: boolean },
+  q: string,
+  categories: () => MatchCategories,
+): boolean {
+  const { title, properties, document } = matchTypes;
+  if (title && properties && document) return true;
+  if (!q) return true;
+  const c = categories();
+  return (title && c.title) || (properties && c.properties) || (document && c.document);
+}
+
+/** The search predicate on its own (facets excepted) — every query token must
+ *  hit the entity's metadata index OR its document body. Exported so callers can
+ *  count "entities matching the search regardless of facets" (e.g. the Results
+ *  tab's hidden-by-filters line). */
+export function matchesSearch(e: Entity, state: LibraryFilterState): boolean {
+  const s = withDefaults(state);
+  if (!s.q) return true;
+  if (s.searchTerms.length === 0) return true;
+  const meta = s.searchIndex.get(e.id) ?? "";
+  return s.searchTerms.every(
+    (t) =>
+      meta.includes(t) ||
+      (s.fullTextSearch && entityFullTextBlob(e, s.language, s.source).includes(t)),
+  );
+}
 
 const ALL_KEYS = Object.keys(PREDICATES) as FacetKey[];
 
@@ -159,9 +299,10 @@ function chainMatches(e: Entity, s: LibraryFilterState, except?: string): boolea
  *  `except` is a static FacetKey or a chain-segment facetKey (`chainId:segIdx`). */
 export function matchesAll(
   e: Entity,
-  s: LibraryFilterState,
+  state: LibraryFilterState,
   except?: FacetKey | string,
 ): boolean {
+  const s = withDefaults(state);
   for (const key of ALL_KEYS) {
     if (key === except) continue;
     if (!PREDICATES[key](e, s)) return false;
@@ -176,7 +317,7 @@ export function matchesAll(
  *  registry so counts work even before the chain has any selection. */
 export function chainFacetCounts(
   entities: Entity[],
-  s: LibraryFilterState,
+  state: LibraryFilterState,
   def: {
     key: string;
     chainId: string;
@@ -188,6 +329,7 @@ export function chainFacetCounts(
   },
   graph: ChainGraph,
 ): Map<string, number> {
+  const s = withDefaults(state);
   const m = new Map<string, number>();
   const ac = s.chains.find((c) => c.chainId === def.chainId);
   const others = ac

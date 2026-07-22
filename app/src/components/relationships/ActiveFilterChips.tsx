@@ -13,7 +13,16 @@ import { getEntityType } from "../../data/entities";
 import { relationTypes } from "../../data/references";
 import { ActiveFilterChip } from "../shared/ActiveFilterChip";
 
-export function ActiveFilterChips() {
+interface ActiveFilterChipsProps {
+  /** Drop the search chip. Set when these chips render INSIDE the search input
+   *  (`SearchBar`'s `inlineSlot`): the input is already showing the query
+   *  verbatim, one gap away, with its own × to clear it — so the chip was the
+   *  same state drawn twice in the same box, offering two ways to undo one
+   *  thing. Facet chips stay: those have no other representation there. */
+  omitSearch?: boolean;
+}
+
+export function ActiveFilterChips({ omitSearch = false }: ActiveFilterChipsProps = {}) {
   const [search, setSearch] = useAtom(searchQueryAtom);
   const [sort, setSort] = useAtom(sortOrderAtom);
   const [relTypeFilters, setRelTypeFilters] = useAtom(relTypeFiltersAtom);
@@ -37,9 +46,17 @@ export function ActiveFilterChips() {
     return next;
   };
 
+  // Only an EXPLICIT alphabetical sort is a chip. This read `sort !== "none"`
+  // with a label of `sort === "asc" ? "A → Z" : "Z → A"`, so the DEFAULT
+  // ("appearance") fell into the else branch and every panel opened advertising
+  // a Z → A sort it wasn't doing.
+  const sorted = sort === "asc" || sort === "desc";
+
+  const showSearch = !omitSearch && !!search.trim();
+
   const hasAny =
-    !!search.trim() ||
-    sort !== "none" ||
+    showSearch ||
+    sorted ||
     activeRelTypes.length > 0 ||
     activeEntityTypes.length > 0 ||
     activeCountries.length > 0 ||
@@ -51,16 +68,16 @@ export function ActiveFilterChips() {
 
   return (
     <>
-      {search.trim() && (
+      {showSearch && (
         <ActiveFilterChip
           label={`"${search}"`}
           onRemove={() => setSearch("")}
         />
       )}
-      {sort !== "none" && (
+      {sorted && (
         <ActiveFilterChip
           label={sort === "asc" ? "A → Z" : "Z → A"}
-          onRemove={() => setSort("none")}
+          onRemove={() => setSort("appearance")}
         />
       )}
       {activeRelTypes.map((id) => (

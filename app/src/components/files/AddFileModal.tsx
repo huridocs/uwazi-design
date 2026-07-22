@@ -8,6 +8,7 @@ import {
 } from "../../atoms/files";
 import { languageAtom } from "../../atoms/language";
 import { FileEntry, FileKind, DocumentGroup } from "../../data/files";
+import { asset } from "../../utils/asset";
 
 interface PendingFile {
   id: string;
@@ -215,7 +216,7 @@ export function AddFileModal() {
         modified: today,
         url:
           entry.kind === "pdf"
-            ? "/docs/Velasquez-Rodriguez_v_Honduras_Judgment_1988_EN.pdf"
+            ? asset("/docs/Velasquez-Rodriguez_v_Honduras_Judgment_1988_EN.pdf")
             : undefined,
       });
     }

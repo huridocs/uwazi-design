@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { scopedReferencesAtom } from "../atoms/references";
 import { filesAtom } from "../atoms/files";
+import { activeFilterCountAtom } from "../atoms/filters";
 import { languageAtom, type Language } from "../atoms/language";
 import { focusedEntityIdAtom, goBackAtom } from "../atoms/focusedEntity";
 import { getEntityProfile } from "../data/entityProfiles";
@@ -39,11 +40,16 @@ export function EntityView() {
     setActiveTab(profile.hasDocument ? "document" : "metadata");
   }, [focusedId, profile.hasDocument]);
 
+  const relFilterCount = useAtomValue(activeFilterCountAtom);
   const relCount = references.length;
   const filesCount = files.length;
 
+  // Count = inventory (how many relationships exist). Dot = the facets the user
+  // ticked, still narrowing that panel while they read the Document tab — the
+  // reason a panel can say "3" when the tab says 10.
   const tabs = tabsForType(profile.typeId, profile.hasDocument).map((tab) => {
-    if (tab.id === "relationships") return { ...tab, count: relCount };
+    if (tab.id === "relationships")
+      return { ...tab, count: relCount, dot: relFilterCount > 0 };
     if (tab.id === "files") return { ...tab, count: filesCount };
     return tab;
   });
@@ -97,7 +103,6 @@ export function EntityView() {
         right={<ReferencePanel />}
         defaultRightWidth={560}
         minRightWidth={460}
-        maxRightWidth={720}
         mobileSections={[
           {
             id: "connections",

@@ -1,9 +1,14 @@
 import { getEntityType } from "../../data/entities";
+import { HighlightedText } from "./HighlightedText";
 
 interface EntityPillProps {
   typeId: string;
   label?: string;
   size?: "sm" | "md";
+  /** Search query whose hits get marked in the label. Opt-in: surfaces that
+   *  filter on a query pass theirs so the pill SHOWS why it matched. Empty or
+   *  omitted renders the label untouched. */
+  highlight?: string;
 }
 
 /** Perceived luminance (0–1) of a #RRGGBB colour. Pale colours (lime, yellow,
@@ -17,7 +22,7 @@ function luminance(hex: string): number {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-export function EntityPill({ typeId, label, size = "sm" }: EntityPillProps) {
+export function EntityPill({ typeId, label, size = "sm", highlight = "" }: EntityPillProps) {
   const type = getEntityType(typeId);
   const color = type?.color ?? "#6B7280";
   const resolved = label ?? type?.name ?? typeId;
@@ -55,7 +60,12 @@ export function EntityPill({ typeId, label, size = "sm" }: EntityPillProps) {
           height: size === "sm" ? 6 : 8,
         }}
       />
-      <span className="truncate">{name}</span>
+      {/* The mark sets its own `text-ink`, overriding the tinted label colour
+          above for the matched run only — which is the point, and `text-ink` is
+          the contrast-safe colour the pale-colour branch already falls back to. */}
+      <span className="truncate">
+        <HighlightedText text={name} query={highlight} />
+      </span>
     </span>
   );
 }

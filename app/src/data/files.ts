@@ -1,3 +1,5 @@
+import { asset } from "../utils/asset";
+
 export type FileKind = "pdf" | "document" | "audio" | "video" | "image" | "link";
 
 export interface FileEntry {
@@ -56,15 +58,15 @@ export const documentGroups: DocumentGroup[] = [
 // the live site blocks direct downloads. Bundled locally so react-pdf renders
 // them without CORS hits, and the document viewer shows distinct authentic
 // content per row — handy when iterating on the Connections / minimap UI.
-export const DOC_VELASQUEZ_EN = "/docs/Velasquez-Rodriguez_v_Honduras_Judgment_1988_EN.pdf";
-export const DOC_VELASQUEZ_ES = "/docs/Velasquez-Rodriguez_c_Honduras_Sentencia_1988_ES.pdf";
-export const DOC_GELMAN_EN    = "/docs/Gelman_v_Uruguay_Judgment_2011_EN.pdf";
-export const DOC_GELMAN_ES    = "/docs/Gelman_c_Uruguay_Sentencia_2011_ES.pdf";
+export const DOC_VELASQUEZ_EN = asset("/docs/Velasquez-Rodriguez_v_Honduras_Judgment_1988_EN.pdf");
+export const DOC_VELASQUEZ_ES = asset("/docs/Velasquez-Rodriguez_c_Honduras_Sentencia_1988_ES.pdf");
+export const DOC_GELMAN_EN    = asset("/docs/Gelman_v_Uruguay_Judgment_2011_EN.pdf");
+export const DOC_GELMAN_ES    = asset("/docs/Gelman_c_Uruguay_Sentencia_2011_ES.pdf");
 
 /** Neutral placeholder PDF shown wherever an entity has no bundled document —
  *  the real CEJIL PDFs aren't all shipped in this sample. One file, used
  *  everywhere an empty document pane would otherwise appear. */
-export const MOCK_DOCUMENT_PDF = "/cejil-docs/sample-document.pdf";
+export const MOCK_DOCUMENT_PDF = asset("/cejil-docs/sample-document.pdf");
 export const MOCK_DOCUMENT_FILE: FileEntry = {
   id: "mock-document",
   groupId: "mock-document",
@@ -220,3 +222,22 @@ export function entityDocument(
   };
 }
 
+
+/** The document the viewer would open for this entity: the active primary group's
+ *  file in the current language, falling back to any file in that group.
+ *
+ *  Shared, because three places were each resolving it: the viewer, the thumbnail,
+ *  and the metadata Document block. If they disagree, a card shows one document's
+ *  page above another document's filename. */
+export function resolvePrimaryFile(
+  files: FileEntry[],
+  groups: DocumentGroup[],
+  activeGroupId: string | null,
+  language: string,
+): FileEntry | null {
+  const primary = groups.filter((g) => g.isPrimary).sort((a, b) => a.order - b.order);
+  const id = activeGroupId ?? primary[0]?.id ?? null;
+  if (!id) return null;
+  const inGroup = files.filter((f) => f.groupId === id);
+  return inGroup.find((f) => f.language === language) ?? inGroup[0] ?? null;
+}

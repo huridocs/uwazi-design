@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { X, ArrowRight } from "lucide-react";
 import { referencesAtom } from "../../atoms/references";
-import { librarySelectedEntityIdAtom } from "../../atoms/library";
+import { activeFilterCountAtom } from "../../atoms/filters";
+import { librarySelectedEntityIdAtom, focusMetadataFieldAtom } from "../../atoms/library";
 import { openEntityAtom, focusEntityForPreviewAtom } from "../../atoms/focusedEntity";
 import { getEntity } from "../../data/entities";
 import { EntityIdentity } from "../shared/EntityIdentity";
@@ -46,8 +47,10 @@ export function EntityDrawerPreview({ entityId }: { entityId: string }) {
   );
   const filesCount = profile.files?.length ?? 0;
 
+  const relFilterCount = useAtomValue(activeFilterCountAtom);
   const tabs = tabsForType(profile.typeId, profile.hasDocument).map((tab) => {
-    if (tab.id === "relationships") return { ...tab, count: connectionCount };
+    if (tab.id === "relationships")
+      return { ...tab, count: connectionCount, dot: relFilterCount > 0 };
     if (tab.id === "files") return { ...tab, count: filesCount };
     return tab;
   });
@@ -56,6 +59,16 @@ export function EntityDrawerPreview({ entityId }: { entityId: string }) {
   useEffect(() => {
     setActiveTab(profile.hasDocument ? "document" : "metadata");
   }, [entityId, profile.hasDocument]);
+
+  // A Results-tab Properties click deep-focuses a metadata field: force the
+  // Metadata tab so `MetadataRecord` can scroll + flash it. Runs AFTER the
+  // default-tab effect (both fire on entity change), so it wins; clearing the
+  // atom later re-runs this with a falsy condition — a no-op, so it won't yank
+  // the tab back.
+  const focusField = useAtomValue(focusMetadataFieldAtom);
+  useEffect(() => {
+    if (focusField?.entityId === entityId) setActiveTab("metadata");
+  }, [focusField, entityId]);
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-paper">
@@ -79,8 +92,12 @@ export function EntityDrawerPreview({ entityId }: { entityId: string }) {
       {/* Main-tab navigation beneath the identity header. */}
       <MainTabs tabs={tabs} activeId={activeTab} onChange={setActiveTab} />
 
-      {/* Tab content — drawer-flavoured bodies, scoped to the focused entity. */}
-      <div className="flex-1 min-h-0 relative overflow-hidden">
+      {/* Tab content — drawer-flavoured bodies, scoped to the focused entity.
+          flex COLUMN: the bodies are toolbar + flex-1 pane (the graph canvas, the
+          scrolling list). As a plain block this box gave `flex-1` nothing to grow
+          against, so the graph collapsed to the SVG's intrinsic height and sat in
+          the top half of an empty pane. */}
+      <div className="flex-1 min-h-0 relative overflow-hidden flex flex-col">
         {activeTab === "document" ? (
           <DocumentViewer showMinimap={false} hideActionBar />
         ) : activeTab === "relationships" ? (

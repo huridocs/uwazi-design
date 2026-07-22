@@ -2,6 +2,9 @@ import { useState } from "react";
 import { HelpCircle, Pencil, Share2, Trash2 } from "lucide-react";
 import { useNotify } from "../../hooks/useNotify";
 import { ShareEntityModal } from "../share/ShareEntityModal";
+import { SearchTipsPopover } from "../library/SearchTipsPopover";
+import { docSearchQueryAtom } from "../../atoms/references";
+import { useSetAtom } from "jotai";
 
 interface DrawerActionBarProps {
   activeTab: string;
@@ -43,6 +46,7 @@ function ActionPill({
 }
 
 export function DrawerActionBar({ activeTab }: DrawerActionBarProps) {
+  const setDocSearchQuery = useSetAtom(docSearchQueryAtom);
   const notify = useNotify();
   const [shareOpen, setShareOpen] = useState(false);
 
@@ -96,10 +100,10 @@ export function DrawerActionBar({ activeTab }: DrawerActionBarProps) {
 
       {activeTab === "search" && (
         <>
-          <span className="text-[11px] text-ink-tertiary">Search tips</span>
-          <button type="button" onClick={() => notify("Opening search tips")} aria-label="Search tips">
-            <HelpCircle size={18} className="text-carbon" />
-          </button>
+          <div />
+          {/* The real tips popover — clicking an example drops it into THIS
+              tab's query, not the Library's. */}
+          <SearchTipsPopover onInsert={setDocSearchQuery} />
         </>
       )}
     </div>

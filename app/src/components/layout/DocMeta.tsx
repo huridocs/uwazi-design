@@ -11,7 +11,7 @@ import { documentsByLanguage } from "../../data/document";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { getEntity } from "../../data/entities";
 import { MAIN_ENTITY_ID } from "../../data/entityProfiles";
-import { EntityPill } from "../shared/EntityPill";
+import { EntityIdentity } from "../shared/EntityIdentity";
 
 interface DocMetaProps {
   /** Show the format picker (PDF / Plain text / HTML). Only the Document tab
@@ -66,14 +66,13 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
 
   return (
     <div
-      className="flex items-center gap-2 h-10 px-3 shrink-0"
+      className="flex items-center gap-2 min-h-11 pt-1 pb-2 px-3 shrink-0"
       style={{ borderBottom: "1px solid var(--border-primary)" }}
     >
-      <EntityPill typeId={typeId} />
-
-      <span className="text-xs font-semibold text-ink truncate flex-1">
-        {title}
-      </span>
+      {/* Stacked, like the drawer: tag over title. Side by side, a long template
+          name ("Resolución de Presidencia de la CorteIDH") ran halfway across the
+          strip and squeezed the entity's own name — squeezing the wrong thing. */}
+      <EntityIdentity typeId={typeId} title={title} />
 
       {showPdfSelector && (
         <div ref={pickerRef} className="relative shrink-0">

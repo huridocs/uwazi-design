@@ -5,7 +5,7 @@ design language. Companion file: [`uwazi-semantic-tokens.css`](./uwazi-semantic-
 — the PR-ready additive token layer.
 
 > **Validated 2026-07-06 against a fresh `production` clone**: installed the file,
-> added the `@import`, ran their build (`npx @tailwindcss/cli`, Tailwind v4.3.2) —
+> added the `@import`, ran their CSS build (`npm run tailwind`, Tailwind v4.3.2) —
 > compiles clean; the compiled `globals.css` diff is **purely additive (0 lines
 > removed, +471)**. Bonus: the V2 **Dataviz** components (`DatavizEditor`,
 > `DatavizChartView`, embeds, …) already reference `bg-parchment`/`text-ink` —
@@ -71,8 +71,8 @@ every swap is also a hue shift toward the warm palette).
 
 | Role | Real var | Utility | Light | Dark | Nearest today |
 |---|---|---|---|---|---|
-| Default | `--border-primary` | `border-border` | `#E0D9C8` | `#3D3D3D` | `gray-200` |
-| Soft/dashed | `--border-soft` | `border-border-soft` | `#D4CDB8` | `#4A4A4A` | `gray-300` |
+| Default | `--border-primary` | `border-border` | `#EDE7DB` | `#343434` | `gray-200` |
+| Soft/dashed | `--border-soft` | `border-border-soft` | `#E2DBC9` | `#3E3E3E` | `gray-300` |
 
 ### Accents & status
 

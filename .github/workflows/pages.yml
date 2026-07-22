@@ -1,0 +1,71 @@
+name: Deploy prototype to GitHub Pages
+
+# The prototype is a static Vite build with no backend — it can just be a URL.
+# Builds every push to main; also runnable by hand for a branch preview build
+# (the artifact is downloadable from the run even when it isn't deployed).
+on:
+  push:
+    # `main` is the live site. The feature branch is here so the prototype can be
+    # looked at before it merges — a push-triggered run uses the workflow file
+    # from the branch it was pushed to, which workflow_dispatch cannot do.
+    branches: [main, feature/library-timeline]
+  workflow_dispatch:
+
+# Pages needs these; the token is scoped per-run, nothing long-lived is stored.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time. Don't cancel a running one — a half-finished deploy is
+# worse than a slightly stale site.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install
+        working-directory: app
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: app
+        run: npx tsc --noEmit
+
+      - name: Build
+        working-directory: app
+        # The project site lives at /<repo>/ — vite.config.ts reads VITE_BASE,
+        # and utils/asset.ts resolves every public/ asset against it.
+        env:
+          VITE_BASE: /${{ github.event.repository.name }}/
+        run: npm run build
+
+      - name: SPA fallback
+        # No router today, but a 404.html that mirrors index.html means a deep
+        # link or a refresh lands on the app instead of GitHub's 404 page.
+        run: cp app/dist/index.html app/dist/404.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: app/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

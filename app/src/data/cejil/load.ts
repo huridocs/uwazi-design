@@ -8,6 +8,7 @@
 // getters below. UI that can reach CEJIL records (the Library, and anything
 // downstream of it) gates on `cejilLoaded()` so those getters are only consulted
 // once the corpus is present.
+import { asset } from "../../utils/asset";
 import type { CejilEntity, CejilRelationship, CejilFile } from "./types";
 
 export interface CejilCorpus {
@@ -30,9 +31,8 @@ let promise: Promise<CejilCorpus> | null = null;
 export function loadCejilData(): Promise<CejilCorpus> {
   if (corpus) return Promise.resolve(corpus);
   if (!promise) {
-    const base = import.meta.env.BASE_URL || "/";
     const j = (n: string) =>
-      fetch(`${base}cejil-data/${n}`).then((r) => {
+      fetch(asset(`/cejil-data/${n}`)).then((r) => {
         if (!r.ok) throw new Error(`CEJIL: failed to load ${n} (${r.status})`);
         return r.json();
       });
@@ -57,6 +57,13 @@ export function loadCejilData(): Promise<CejilCorpus> {
         }
       }
       for (const f of files) {
+        // files.json stores ROOT-relative urls ("/cejil-docs/3911.pdf"). Served
+        // from a subpath (GitHub Pages: /uwazi-design/) those resolve against the
+        // domain root and 404 — every PDF in the deployed build came up "not
+        // found" while dev, based at "/", was fine. Normalise here, at the one
+        // point the corpus enters the app, rather than at each consumer: a rule
+        // that has to be remembered at the call site is a rule that gets missed.
+        if (f.url) f.url = asset(f.url);
         const arr = filesBySid.get(f.entity);
         if (arr) arr.push(f);
         else filesBySid.set(f.entity, [f]);

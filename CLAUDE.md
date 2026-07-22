@@ -59,6 +59,11 @@ Keep it in sync when tokens.css or the style rules change.
 - **No thick left-border accents** on cards or sidebar items. Use a small dot, an icon colour, or a bg tint.
 - **Selected card state = `bg-parchment`** (#F5F0E8). Don't reach for inline `color-mix`, `bg-warm`, or `bg-vellum`.
 - **Badges are `w-fit`** so they don't stretch in flex/grid.
+- **Never shift layout on state change.** A row that appears only when it has
+  something to say (an "N active / Clear all" summary, a count line, a chip row)
+  must stay MOUNTED at a fixed height with only its contents toggling — a
+  conditional mount inside a scrollable column shoves everything below it the
+  moment a user ticks a box. Reserve the space; don't grow into it.
 - **Active sidebar items**: `bg-warm text-ink` with the *same* icon colour as inactive. Background change alone signals state.
 
 ## CSS tokens — use real names
@@ -90,17 +95,17 @@ The Tailwind aliases (`--color-ink`, `--color-paper`, `--color-vellum`, `--color
 
 Uwazi v2's data model is a single `Relationship { from, to, type }` where each pointer may optionally carry a text anchor `{file, selections[], text}`. A row is "text-anchored" iff either endpoint has selections. There is no separate "References" collection — text references and entity-to-entity edges are the same record, viewed differently.
 
-The prototype keeps a simpler shape: every row in `data/references.ts` is a `Reference` with a required `sourceSelection` (text anchor) plus `sourceEntityId` (always the current doc), `targetEntityId`, `relationType`, and `direction`. What we call a `Relationship` (`utils/relationships.ts`) is **runtime aggregation** — `deriveRelationships(refs)` collapses by `(targetEntityId, relationType, direction)` and exposes `evidenceCount` + `refIds[]`. It is not stored.
+The prototype keeps a simpler shape: every row in `data/references.ts` is a `Reference` with an **optional** `sourceSelection` (text anchor — absent = pure entity link) plus `sourceEntityId` (always the current doc), `targetEntityId`, `relationType`, `direction`, and optional `hubId`. What we call a `Relationship` (`utils/relationships.ts`) is **runtime aggregation** — `deriveRelationships(refs)` collapses by `(targetEntityId, relationType)` (direction is NOT in the key: incoming+outgoing to the same target/type merge into one bidirectional row via `directions[]`) and exposes `evidenceCount` + `refIds[]`. It is not stored. Full dev-facing writeup: `handoff/DATA-SEAMS.md`.
 
 **Property cheat sheet:**
 
 | Property | `Reference` (per evidence) | `Relationship` (aggregate) |
 |---|---|---|
-| `id` | per ref | composite `target::type::direction` |
+| `id` | per ref | composite `target::type` |
 | `targetEntityId` | required | required |
 | `relationType` | required | required |
-| `direction` | optional, default `outgoing` | propagated |
-| `sourceSelection` (text+page+box) | required — the text anchor | — |
+| `direction` | optional, default `outgoing` | first seen; `directions[]` holds all (len 2 = bidirectional) |
+| `sourceSelection` (text+page+box) | optional — the text anchor | — |
 | `targetSelection` | optional (never populated today) | — |
 | `evidenceCount` | — | `refIds.length` |
 | `firstPage` | — | `min(ref.page)` |
@@ -122,7 +127,7 @@ The prototype keeps a simpler shape: every row in `data/references.ts` is a `Ref
   grouping/filtering by target-side text.
 - No inverse relation labels — Uwazi v2 stores a single `type` per relationship; the "source rel type vs target rel type" pair from the mockup has no backing data.
 - No `createdBy`, `sourceKind` (manual / IX-suggested), or confidence on refs. If we add filters by source/author/confidence, the data layer has to grow first.
-- No no-anchor relationships in seed data — every relationship has at least one underlying reference. A manual entity link with no quote is representable (`Reference` requires `sourceSelection` so… not actually representable without loosening the type). Future expansion if we model it.
+- No-anchor relationships ARE representable now (`sourceSelection` is optional; `firstPage` stays undefined when no backing ref is anchored) — seed data just has few of them.
 
 ## Connections panel — refs and rels are one surface
 
@@ -322,8 +327,8 @@ Several fields sharing a `connectionKey` = **one connection, many inherited colu
   `getEntityProp` — native props ONLY now). **Consumers that read `.value` must filter
   relationship fields out** (`(f): f is MetadataField => f.type !== "relationship"`) —
   done in `MetadataView` read+edit bodies and `MetadataDrawerContent`.
-- **Resolve (ONE path resolver)**: `utils/inheritance.ts` — `resolveInherited(entity,
-  spec, lang, getProp)` returns `{ value, steps }`: single-hop reads the native prop;
+- **Resolve (ONE path resolver)**: `utils/inheritance.ts` —
+  `resolveInherited(connectedEntityId, spec, lang, getProp)` returns `{ value, steps }`: single-hop reads the native prop;
   multi-hop walks `chains()` (`utils/chainTraversal.ts`) and projects the leaf.
   `resolveInheritedValue` is the string-only wrapper. The backing graph is **injected**
   via `registerInheritanceGraph(provider)` (dependency inversion — inheritance.ts never
@@ -365,6 +370,70 @@ The 5 sample rows in `data/imports.ts` are seeded to match `images/screens/impor
 `ImportEntry` carries optional detail-view fields (`totalRows`, `createdBy`, `time`, `sourceKind`, `sourceSizeKb`, `thesauriTouched`, `relationshipsCreated`, `filesExtracted`, `thesauriObserved`, `thesauriCreated`). Progress label uses `totalRows` when present (gives the "412/634" style).
 
 `ToolsActionBar` has `mode: "list" | "detail"`. Detail mode = "Back to list" + "Delete Import" with its own confirm dialog. List-mode "New Import" is a solid `bg-ink` button.
+
+## Library search — where the evidence lives
+
+Search matches can hide in a property or a document body. Three surfaces answer
+"why is this row here?", all off ONE data path (`buildSnippetsFor` /
+`matchCategories` in `utils/librarySnippets.ts`, tokenized by `utils/queryTokens.ts`):
+
+- **`MatchOrigin`** (`components/library/MatchOrigin.tsx`) — the row-level mark for
+  layouts with no room for a snippet: the **List table** (a 3.5rem "Match" column,
+  mounted only while a query is active) and the **timeline Spine** (a fixed
+  2.25rem slot at the row's end). Renders ONLY where the evidence is off-row —
+  `hiddenMatchOrigin` takes the field keys the row already marks, **per row**
+  (a Country column showing an em-dash proves nothing). Carbon `Tag` = property,
+  `FileText` = document body; hover/focus builds that one entity's excerpt into a
+  portalled popover, click routes to the field or the page. No page tag or jump
+  where `page` is null.
+- **Results view** — the drawer's evidence list promoted to the main pane as a 5th
+  `libraryViewModeAtom` mode (`"results"`, always in the switcher; it renders its
+  own no-query state rather than appearing when you type). Body:
+  `components/library/ResultsSnippets/ResultsMainView.tsx`, layout picked in the
+  Display menu via `libraryResultsLayoutAtom` — **grouped** (wide card, properties
+  beside passages) / **tree** (entity → field → snippets) / **passages** (flat
+  ranked passage list, entity secondary) / **spine** (best passage on a time axis).
+  Every layout drops the TITLE snippet — each already prints the title marked.
+  With the main pane in Results, a query no longer auto-opens the drawer's Results
+  tab (two copies of one list).
+- **`TimeSpine`** (`components/library/TimeSpine.tsx`) — ONE proportional
+  chronology, rendered by both `LibraryTimelineView`'s Spine layout and the
+  Results spine. It owns `useTrackGeom` (the axis inset the Rail and Density
+  tracks share), the adaptive scale, year/month marks, elided-silence breaks,
+  collision push, leader lines and `SpineDate`. Callers pass rows + `rowHeight` +
+  `renderRow` and nothing else — **don't re-derive spine geometry anywhere.**
+
+Match-type chips (Title / Properties / Document) are `ToggleChip`
+(`components/shared/ToggleChip.tsx`) — `ActiveFilterChip`'s visual twin with
+`aria-pressed` instead of an X — and ride the count row via `ListInfoRow`'s
+`inlineSlot`, in both the drawer tab and the main view.
+
+## Tab signals & recent searches
+
+- **`count` vs `dot`** (`components/layout/DrawerTabs.tsx`, `MainTabs.tsx`): count =
+  inventory, always present, in the flow (Relationships 10, Files 2). Dot = live
+  user-set state behind an UNSELECTED tab, absolutely positioned so it can toggle
+  without moving the strip. Wired to exactly two states — `activeFilterCountAtom`
+  (every Relationships tab, all strips) and `docSearchQueryAtom` (the entity
+  drawer's Search tab). Both strips dropped `overflow-hidden` so the dot isn't
+  clipped; end tabs round themselves logically instead. The Library drawer's
+  Filters/Results tabs use dots, NOT counts — the count mounted on first tick and
+  shoved the next tab sideways.
+- **Ending a search** — `clearLibrarySearchAtom` is THE dismiss, and every entry
+  point routes through it: the active-filters sheet + action-bar popover (via
+  `useActiveFilters`), the no-matches blank state, and now
+  `components/library/ActiveSearchChip.tsx` — one component, owning the wiring,
+  rendered by BOTH Results surfaces in their count row ("N results for
+  [“query” ×]"). The chip REPLACES the quoted query in that sentence rather than
+  sitting beside it. Don't add a second clear: two `clearAll`s over this state
+  already drifted once (PATTERNS §4.3).
+- **Recent searches** (`atoms/library.ts` → `librarySearchHistoryAtom`,
+  `recordSearchAtom`; `components/library/RecentSearches.tsx`): committed queries
+  recorded on SETTLE (1.2s debounce, plus Enter/blur), deduped case-insensitively,
+  newest-first, capped at 8, in **sessionStorage** per `atoms/navigation.ts`'s
+  reasoning. The panel follows FOCUS while `SearchTipsPopover` follows a CLICK on
+  its chip — clicking the chip blurs the input, so the two can't both be open and
+  need no shared state. Both portal to `body` and position from the box's rect.
 
 ## Component catalog
 Logo click toggles in/out of `ComponentCatalog`. Sidebar groups: Style Guide, Elements, Entity View — Layout / Document / References / Metadata / Files / Drawer / Relationships, Import CSV — Layout / Components, **Filters & Lists**, Shared. Add new shared/connections components here as a `CatalogEntry` with a live `Isolated…` demo. Note: the Entity View → References + Relationships groups now both showcase `ConnectionRow` (reference and aggregate variants) and `ConnectionGroupedCard`.

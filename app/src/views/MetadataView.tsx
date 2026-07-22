@@ -1,12 +1,11 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue } from "jotai";
-import { Download, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { DocMeta } from "../components/layout/DocMeta";
-import { MetadataCard, Property, PropertyRow } from "../components/metadata/MetadataCard";
-import { spanClass, fieldSpan } from "../components/metadata/cardSpan";
+import { MetadataRecord } from "../components/metadata/MetadataRecord";
 import { ConnectionGroupCard } from "../components/metadata/ConnectionGroupCard";
 import { RelationshipFieldCard } from "../components/metadata/RelationshipFieldCard";
 import { RelationshipCards } from "../components/metadata/RelationshipCards";
@@ -22,10 +21,10 @@ import { focusedEntityIdAtom } from "../atoms/focusedEntity";
 import { getEntity } from "../data/entities";
 import { getEntityProfile } from "../data/entityProfiles";
 import { filesAtom } from "../atoms/files";
+import { activeFilterCountAtom } from "../atoms/filters";
 import { languageAtom, type Language } from "../atoms/language";
 import { entityMetadataAtom, makeEntityPropReader } from "../atoms/entityMetadata";
 import { DrawerFilesBody } from "../components/files/DrawerFilesBody";
-import { ViewButton } from "../components/shared/ViewButton";
 import { EditInput } from "../components/metadata/EditInput";
 import { scopedReferencesAtom } from "../atoms/references";
 import { RelationshipsDrawerSection } from "../components/relationships/RelationshipsDrawerSection";
@@ -76,7 +75,6 @@ export function MetadataView({ tabs, activeTab, onTabChange, onBack }: MetadataV
       right={<MetadataDrawer />}
       defaultRightWidth={560}
       minRightWidth={460}
-      maxRightWidth={720}
       mobileSections={[
         { id: "details", label: "Details", content: <MetadataDrawer /> },
       ]}
@@ -91,7 +89,6 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
   const profile = getEntityProfile(useAtomValue(focusedEntityIdAtom));
   const allFields = profile.metadata[language];
   const fields = allFields.filter((f): f is MetadataField => f.type !== "relationship");
-  const pdf = profile.pdfMetadata?.[language];
   const notify = useNotify();
   const [shareOpen, setShareOpen] = useState(false);
 
@@ -100,72 +97,17 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
       <DocMeta showPdfSelector={false} />
       <ShareEntityModal open={shareOpen} onClose={() => setShareOpen(false)} />
 
-      {/* Scrollable metadata body — responsive grid */}
-      <div className="flex-1 overflow-auto px-4 py-2 pb-8">
-        <div className="grid gap-3 items-start grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-          {profile.hasDocument && (
-            <MetadataCard title="Document" className="hidden md:block md:col-span-2 xl:col-span-1 md:row-span-2">
-              <div className="flex items-center justify-center bg-warm rounded-md overflow-hidden h-50">
-                <div className="bg-paper rounded shadow-sm w-[45%] h-[11.25rem] flex items-center justify-center">
-                  <span className="text-xs text-ink-muted">PDF Preview</span>
-                </div>
-              </div>
-            </MetadataCard>
-          )}
-
-          {pdf && (
-            <MetadataCard title="PDF Metadata" className="md:col-span-2 xl:col-span-2 xl:row-span-2">
-              <Property label="Name" value={pdf.name} ltr />
-              <PropertyRow>
-                <div className="flex-1"><Property label="Type" value={pdf.type} /></div>
-                <div className="flex-1"><Property label="Size" value={pdf.size} ltr /></div>
-                <div className="flex-1"><Property label="Last Edited" value={pdf.lastEdited} ltr /></div>
-                <div className="flex-1"><Property label="Added" value={pdf.added} ltr /></div>
-              </PropertyRow>
-              <div className="flex items-center justify-between pt-2 mt-auto">
-                <ViewButton size="md" />
-                <button
-                  onClick={() => notify("Download started", "success")}
-                  className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer flex items-center gap-1.5"
-                >
-                  <Download size={12} className="text-ink-tertiary" /> Download
-                </button>
-              </div>
-            </MetadataCard>
-          )}
-
-          {fields.map((field) => {
-            return (
-              <MetadataCard key={field.id} title={field.label} className={spanClass(fieldSpan(field))}>
-                {field.type === "multiline" ? (
-                  <p className="text-sm font-medium text-ink leading-relaxed">{field.value}</p>
-                ) : field.type === "country" ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-[22px] leading-none">{field.flag}</span>
-                    <span className="text-sm font-medium text-ink">{field.value}</span>
-                  </div>
-                ) : field.type === "link" ? (
-                  <Property value={field.value} linked />
-                ) : field.type === "file-list" ? (
-                  <div className="space-y-2">
-                    {field.items?.map((item, i) => (
-                      <Property key={i} label={item.label} value={item.value} linked />
-                    ))}
-                  </div>
-                ) : (
-                  <Property value={field.value} />
-                )}
-              </MetadataCard>
-            );
-          })}
-
-          {/* Relationship / inherited fields — shared with the drawers via
-              RelationshipCards so they can't drift. Shared connections render as
-              a grouped table; standalone relationship fields get their own card. */}
-          <RelationshipCards profile={profile} language={language} />
+      <div className="flex-1 overflow-auto px-4 py-3 pb-8">
+        {/* Full width — no 56rem cap. The label|value table sizes its label column
+            to the labels and lets values run in one column, so a wide pane just
+            gives the values more room rather than stretching a line of prose. */}
+        <div className="w-full space-y-3">
+          {/* The record itself — the SAME component the drawer renders. */}
+          <MetadataRecord profile={profile} language={language} />
         </div>
       </div>
 
+      
       {/* Action bar */}
       <div
         className="flex items-center gap-3 h-12 px-4 bg-paper shrink-0"
@@ -574,9 +516,15 @@ function MetadataDrawer() {
   // The Document tab only exists for document-bearing entities — otherwise the
   // viewer would fall back to the bundled sample PDF and show a phantom doc on
   // entities that have none (e.g. an Audiencia with Files 0).
+  const relFilterCount = useAtomValue(activeFilterCountAtom);
   const drawerTabs = [
     ...(profile.hasDocument ? [{ id: "document", label: "Document" }] : []),
-    { id: "connections", label: "Relationships", count: references.length },
+    {
+      id: "connections",
+      label: "Relationships",
+      count: references.length,
+      dot: relFilterCount > 0,
+    },
     { id: "files", label: "Files", count: files.length },
     { id: "template", label: "Template" },
   ];

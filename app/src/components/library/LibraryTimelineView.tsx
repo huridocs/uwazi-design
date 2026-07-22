@@ -7,6 +7,7 @@ import {
   libraryDateFromAtom,
   libraryDateToAtom,
   libraryTypeFiltersAtom,
+  libraryQueryAtom,
   type TimelineLayout,
   type TimelineScope,
 } from "../../atoms/library";
@@ -15,6 +16,7 @@ import {
   bucketOf,
   colorSpread,
   dominantColor,
+  elapsed,
   entityTime,
   formatDay,
   groupByBucket,
@@ -25,8 +27,12 @@ import {
   typeOrder,
   type TimeBucket,
 } from "../../utils/timeline";
+import { breakpointAtom } from "../../atoms/viewport";
 import { BucketBreakdown, ChartTip } from "./BucketBreakdown";
 import { EntityCard } from "./EntityCard";
+import { HighlightedText } from "../shared/HighlightedText";
+import { MatchOrigin } from "./MatchOrigin";
+import { TimeSpine, SpineDate, useTrackGeom } from "./TimeSpine";
 
 /** How many entities the proportional spine plots before it stops — the corpus
  *  runs to thousands and a row each would be a 200k-pixel column. Narrow the
@@ -130,20 +136,6 @@ function useRange() {
  *                    FILTERS the Library to that period.
  * ------------------------------------------------------------------ */
 
-/* ONE track geometry, shared by Rail, Density and Spine. The axis lands at the
- * same x in every layout, so switching between them doesn't slide the timeline
- * across the pane. All three measure from the pane's inline-end edge:
- *
- *   |<-- TRACK_BAR -->|<- TRACK_AXIS ->|
- *   [ bars / leaders ]|                | axis line
- *                     |     marks      | TRACK_LABEL
- *
- * TRACK_AXIS has to clear TRACK_LABEL by more than a counted ring's radius —
- * the cluster nodes straddle the axis, the density bars only grow inward. */
-const TRACK_LABEL = 26;
-const TRACK_AXIS = 44;
-const TRACK_BAR = 42;
-const TRACK_W = TRACK_AXIS + TRACK_BAR + 4;
 /** A period quiet enough to read as a single dot; busier ones become a
  *  counted ring. */
 const DOT_CAP = 12;
@@ -349,6 +341,7 @@ function TrackedList({
 function TrackFrame({
   width,
   axisEnd,
+  labelW,
   label,
   scope,
   setScope,
@@ -363,6 +356,7 @@ function TrackFrame({
    *  centres its nodes ON the axis, so it needs room on both sides; the density
    *  track only grows inward, so its axis can hug the year marks. */
   axisEnd: number;
+  labelW: number;
   label: string;
   scope: TimelineScope;
   setScope: (s: TimelineScope) => void;
@@ -416,7 +410,7 @@ function TrackFrame({
           <span
             key={`l-${m.label}`}
             className="absolute text-[9px] tabular-nums text-ink-muted -translate-y-1/2 pointer-events-none text-start"
-            style={{ top: `${m.yPct}%`, insetInlineEnd: 0, width: TRACK_LABEL }}
+            style={{ top: `${m.yPct}%`, insetInlineEnd: 0, width: labelW }}
           >
             {m.label}
           </span>
@@ -454,13 +448,15 @@ function EdgeCount({ dir, n, axisEnd }: { dir: "up" | "down"; n: number; axisEnd
  *  cramped 40px gutter, one of them unclickable-adjacent to the other. */
 function ClusterTrack(props: TrackProps) {
   const { buckets, extent, pos, activeKey, hovered, setHovered } = props;
+  const geom = useTrackGeom();
   const range = useRange();
   const maxCount = Math.max(1, ...buckets.map((b) => b.entities.length));
 
   return (
     <TrackFrame
-      width={TRACK_W}
-      axisEnd={TRACK_AXIS}
+      width={geom.W}
+      axisEnd={geom.AXIS}
+      labelW={geom.LABEL}
       label="Timeline — periods"
       scope={props.scope}
       setScope={props.setScope}
@@ -481,13 +477,15 @@ function ClusterTrack(props: TrackProps) {
         return (
           <div
             key={b.key}
-            // Anchored so the node's centre lands ON the axis line.
+            // Anchored so the node's centre lands ON the axis line. The out-of-range
+            // DIMMING goes on the dot, not this wrapper: opacity < 1 makes a stacking
+            // context, which both faded the hover tooltip to 28% AND trapped its
+            // z-index so a list card painted over it. The wrapper stays opaque; the
+            // tooltip is its child (a sibling of the dot), so it clears everything.
             className="absolute -translate-y-1/2 translate-x-1/2"
             style={{
               top: `${pos(Math.max(b.start, extent.min))}%`,
-              insetInlineEnd: TRACK_AXIS,
-              // Out-of-range periods recede but stay: the way back is the track.
-              opacity: inRange ? 1 : 0.28,
+              insetInlineEnd: geom.AXIS,
             }}
           >
             <button
@@ -504,7 +502,7 @@ function ClusterTrack(props: TrackProps) {
                       width: size,
                       height: size,
                       backgroundColor: color,
-                      opacity: lit ? 1 : 0.75,
+                      opacity: inRange ? (lit ? 1 : 0.75) : 0.28,
                       boxShadow: lit ? `0 0 0 3px ${color}33` : "none",
                     }
                   : {
@@ -512,6 +510,7 @@ function ClusterTrack(props: TrackProps) {
                       height: size,
                       border: `1.5px solid ${lit ? "var(--text-secondary)" : "var(--border-soft)"}`,
                       backgroundColor: lit ? "var(--bg-muted)" : "var(--bg-surface)",
+                      opacity: inRange ? 1 : 0.28,
                     }
               }
             >
@@ -523,12 +522,12 @@ function ClusterTrack(props: TrackProps) {
                   {n > 99 ? "99+" : n}
                 </span>
               )}
-              {hovered === b.key && (
-                <ChartTip>
-                  {b.label} · {n.toLocaleString()}
-                </ChartTip>
-              )}
             </button>
+            {hovered === b.key && (
+              <ChartTip>
+                {b.label} · {n.toLocaleString()}
+              </ChartTip>
+            )}
           </div>
         );
       })}
@@ -544,6 +543,7 @@ function ClusterTrack(props: TrackProps) {
  *  Clicking a period filters the Library to it (click again to clear). */
 function DensityTrack(props: TrackProps) {
   const { buckets, extent, pos, activeKey, hovered, setHovered, scrollToTime } = props;
+  const geom = useTrackGeom();
   const range = useRange();
   const maxCount = Math.max(1, ...buckets.map((b) => b.entities.length));
   // ONE segment order for the whole track, or the stacks wouldn't be comparable.
@@ -551,8 +551,9 @@ function DensityTrack(props: TrackProps) {
 
   return (
     <TrackFrame
-      width={TRACK_W}
-      axisEnd={TRACK_AXIS}
+      width={geom.W}
+      axisEnd={geom.AXIS}
+      labelW={geom.LABEL}
       label="Timeline — volume by period"
       scope={props.scope}
       setScope={props.setScope}
@@ -566,7 +567,7 @@ function DensityTrack(props: TrackProps) {
         const lit = range.overlaps(b);
         const picked = !range.isAll && range.covers(b);
         const isHov = hovered === b.key;
-        const w = 4 + Math.sqrt(n / maxCount) * (TRACK_BAR - 4);
+        const w = 4 + Math.sqrt(n / maxCount) * (geom.BAR - 4);
         // Bars are as tall as their period is long — a period that is 1/40th of
         // the corpus occupies 1/40th of the rail. Gaps in time stay gaps.
         const top = pos(Math.max(b.start, extent.min));
@@ -589,12 +590,15 @@ function DensityTrack(props: TrackProps) {
             className="absolute cursor-pointer transition-[width,opacity] duration-150
               focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
             style={{
-              insetInlineEnd: TRACK_AXIS + 1,
+              insetInlineEnd: geom.AXIS + 1,
               top: `${top}%`,
               height: `calc(${h}% - 1px)`,
               minHeight: 3,
-              width: isHov || picked ? Math.min(TRACK_BAR, w + 4) : w,
-              opacity: lit ? (isHov || picked || activeKey === b.key ? 1 : 0.65) : 0.16,
+              width: isHov || picked ? Math.min(geom.BAR, w + 4) : w,
+              // Hover wins over the out-of-range fade (0.16): the bar you're pointing
+              // at goes fully opaque, so its tooltip — a child of the bar — is fully
+              // readable instead of ghosted at 16%.
+              opacity: isHov ? 1 : lit ? (picked || activeKey === b.key ? 1 : 0.65) : 0.16,
             }}
           >
             {/* Reversed so the biggest slice hugs the axis — the axis is the
@@ -643,227 +647,87 @@ function PeriodHeader({ bucket, active }: { bucket: TimeBucket; active: boolean 
  *     a leader line points back to the real instant.
  * ------------------------------------------------------------------ */
 
-const PX_PER_YEAR = 190;
-/** One event = one line. The spine is a chronology, NOT a second results list —
- *  cards here just recreate the List view with extra whitespace. */
-const EVENT_H = 22;
-/** The axis lives on the right, like the rail and the document's ref minimap.
- *  This is the gutter kept for its year marks. */
-/** The spine's axis sits at the SAME inset as the Rail/Density track, so the
- *  timeline doesn't slide across the pane when you switch layout. */
-const AXIS_GUTTER = TRACK_AXIS;
-const LEADER_W = 22;
-/** The longest stretch of nothing the axis will draw at true scale before it
- *  elides — see the break markers. */
-const MAX_GAP = 88;
+/** The spine line marks the title and nothing else, so every other hit is
+ *  off-row evidence for `MatchOrigin`. */
+const SPINE_MARKED_FIELDS = ["title"] as const;
 
-/** "8 months", "3 years" — the size of an elided silence. */
-function elapsed(ms: number): string {
-  const days = ms / 86_400_000;
-  if (days >= 730) return `${Math.round(days / 365.2425)} years`;
-  if (days >= 55) return `${Math.round(days / 30.44)} months`;
-  return `${Math.max(1, Math.round(days))} days`;
-}
-
+/** The chronology body. Geometry — axis inset, adaptive scale, year marks,
+ *  elided silences, collision push, leader lines, date gutter — all lives in the
+ *  shared `TimeSpine`, which the Library's Results view renders too. This file
+ *  only says what a row SAYS. */
 function SpineLayout({ dated, selectedId, onSelect }: LayoutProps) {
+  const query = useAtomValue(libraryQueryAtom);
+  const hasQuery = query.trim().length > 0;
   const plotted = dated.slice(0, SPINE_CAP);
-  const extent = useMemo(() => timeExtent(plotted)!, [plotted]);
-
-  const { rows, height, years, gaps } = useMemo(() => {
-    const yearMs = 365.2425 * 86_400_000;
-    // The scale ADAPTS to the density of what's on screen. A fixed px-per-year
-    // makes a single busy year collide into an undifferentiated list (the exact
-    // thing this layout exists to avoid) and a 40-year sweep into a void. Give
-    // every event roughly its own row's worth of axis, and the proportions read.
-    const spanYears = Math.max((extent.max - extent.min) / yearMs, 1 / 365);
-    const scale = Math.min(
-      Math.max((plotted.length * EVENT_H * 1.35) / spanYears, PX_PER_YEAR),
-      40_000,
-    );
-    const raw = (t: number) => 6 + ((t - extent.min) / yearMs) * scale;
-
-    // A long silence is information, but 700px of white is not. Anything longer
-    // than MAX_GAP collapses to MAX_GAP and gets a labelled break, so the axis
-    // stays proportional WHERE THE EVENTS ARE and elides where they aren't.
-    const cuts: { atRaw: number; cut: number }[] = [];
-    const gaps: { y: number; ms: number }[] = [];
-    let accum = 0;
-    let prevRaw = raw(extent.min);
-    let prevT = extent.min;
-    let cursor = 0;
-    const rows = plotted.map((e) => {
-      const t = entityTime(e)!;
-      const r = raw(t);
-      const delta = r - prevRaw;
-      let broke = 0;
-      if (delta > MAX_GAP) {
-        const cut = delta - MAX_GAP;
-        cuts.push({ atRaw: r, cut });
-        accum += cut;
-        broke = t - prevT;
-      }
-      prevRaw = r;
-      prevT = t;
-      const ideal = r - accum;
-      const y = Math.max(ideal, cursor);
-      // The break marker goes between the LAID-OUT rows, not at the ideal
-      // position — collision-pushed neighbours would sit on top of it.
-      if (broke) gaps.push({ y: (cursor + y) / 2, ms: broke });
-      cursor = y + EVENT_H;
-      return { e, t, y, ideal };
-    });
-    const at = (t: number) => {
-      const r = raw(t);
-      let a = 0;
-      for (const c of cuts) if (c.atRaw <= r) a += c.cut;
-      return r - a;
-    };
-    const height = cursor + 24;
-
-    // Marks: years across a long sweep, months once the range is short enough
-    // that "2009" alone would be the only label on the whole axis.
-    const years: { label: string; y: number }[] = [];
-    const d0 = new Date(extent.min);
-    const d1 = new Date(extent.max);
-    if (spanYears < 2.5) {
-      const step = spanYears < 0.6 ? 1 : 3;
-      for (
-        let m = new Date(Date.UTC(d0.getUTCFullYear(), d0.getUTCMonth(), 1));
-        m.getTime() <= extent.max;
-        m = new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth() + step, 1))
-      ) {
-        const pos = at(m.getTime());
-        // Compact: "Jan 2009" doesn't fit the shared 26px label column. January
-        // carries the year, every other month is just its name.
-        const full = bucketOf(m.getTime(), "month").label;
-        const label = m.getUTCMonth() === 0 ? String(m.getUTCFullYear()) : full.slice(0, 3);
-        if (pos >= 0) years.push({ label, y: pos });
-      }
-    } else {
-      const y0 = d0.getUTCFullYear();
-      const y1 = d1.getUTCFullYear();
-      const step = y1 - y0 > 40 ? 5 : y1 - y0 > 12 ? 2 : 1;
-      for (let y = y0; y <= y1; y += step) {
-        const pos = at(Date.UTC(y, 0, 1));
-        if (pos >= 0) years.push({ label: String(y), y: pos });
-      }
-    }
-    // The first mark is often clipped (a range starting 17 Jan has no 1 Jan
-    // tick above it) — anchor the top of the axis explicitly.
-    if (!years.length || years[0].y > 14) {
-      const anchor = bucketOf(extent.min, spanYears < 2.5 ? "month" : "year").label;
-      years.unshift({ label: spanYears < 2.5 ? anchor.slice(0, 3) : anchor, y: 6 });
-    }
-    return { rows, height, years, gaps };
-  }, [plotted, extent]);
+  const rows = useMemo(
+    () => plotted.map((e) => ({ key: e.id, t: entityTime(e)!, item: e })),
+    [plotted],
+  );
 
   return (
     <div className="h-full overflow-auto no-scrollbar">
-      <div className="relative" style={{ height }}>
-        {/* Axis — right rail */}
-        <div
-          className="absolute top-0 bottom-0"
-          style={{
-            insetInlineEnd: AXIS_GUTTER,
-            width: 1,
-            backgroundColor: "var(--border-primary)",
-          }}
-        />
-        {years.map((y) => (
-          <div
-            key={y.label}
-            className="absolute flex items-center gap-1 -translate-y-1/2"
-            style={{ top: y.y, insetInlineEnd: 0 }}
-          >
-            <span className="w-1.5 h-px" style={{ backgroundColor: "var(--border-primary)" }} />
-            <span
-              className="text-[9px] tabular-nums text-ink-muted whitespace-nowrap"
-              style={{ width: TRACK_LABEL }}
-            >
-              {y.label}
-            </span>
-          </div>
-        ))}
-
-        {/* Elided silences */}
-        {gaps.map((g) => (
-          <div
-            key={`gap-${g.y}`}
-            className="absolute flex items-center gap-2 pointer-events-none -translate-y-1/2"
-            style={{ top: g.y, insetInlineStart: 0, insetInlineEnd: AXIS_GUTTER - 4 }}
-          >
-            <span className="flex-1 h-px" style={{ backgroundColor: "transparent" }} />
-            <span className="text-[10px] italic text-ink-muted">{elapsed(g.ms)} later</span>
-            <span
-              className="w-8 h-px"
-              style={{
-                backgroundImage:
-                  "repeating-linear-gradient(to right, var(--border-primary) 0 3px, transparent 3px 6px)",
-              }}
-            />
-          </div>
-        ))}
-
-        {rows.map(({ e, t, y, ideal }) => {
-          const color = getEntityType(e.typeId)?.color ?? "#6B7280";
-          const drop = Math.max(1, y - ideal);
+      <TimeSpine
+        rows={rows}
+        dotColor={(e) => getEntityType(e.typeId)?.color ?? "#6B7280"}
+        dotActive={(e) => selectedId === e.id}
+        renderRow={(e, { t }) => {
           const sel = selectedId === e.id;
+          const color = getEntityType(e.typeId)?.color ?? "#6B7280";
           return (
-            <div key={e.id}>
-              {/* Leader from the true instant on the axis to the pushed row */}
-              <svg
-                className="absolute pointer-events-none"
-                style={{
-                  insetInlineEnd: AXIS_GUTTER - 4,
-                  top: ideal,
-                  width: LEADER_W,
-                  height: drop + 1,
-                  overflow: "visible",
-                }}
-                aria-hidden
-              >
-                <path
-                  d={`M ${LEADER_W - 4} 0 C ${LEADER_W - 13} 0, ${LEADER_W - 9} ${drop}, 0 ${drop}`}
-                  fill="none"
-                  stroke="var(--border-primary)"
-                  strokeWidth={1}
-                />
-                <circle cx={LEADER_W - 4} cy={0} r={2.5} fill={color} opacity={sel ? 1 : 0.7} />
-              </svg>
-
+            // The line hosts the match marker, so it's the stretched-button
+            // shell, not a `<button>` — a control inside a button is invalid for
+            // AT (and invalid HTML). Same keyboard behaviour, one level down.
+            <div
+              onClick={() => onSelect(e.id)}
+              className={`relative flex items-center h-[22px] px-2 rounded-md cursor-pointer
+                transition-colors ${sel ? "bg-parchment" : "hover:bg-parchment"}`}
+            >
               <button
-                onClick={() => onSelect(e.id)}
+                type="button"
                 aria-pressed={sel}
-                className={`absolute flex items-center gap-2 h-[22px] px-2 rounded-md text-start cursor-pointer
-                  transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30 ${
-                    sel ? "bg-parchment" : "hover:bg-parchment"
-                  }`}
-                style={{
-                  top: y - EVENT_H / 2 + 1,
-                  insetInlineStart: 0,
-                  insetInlineEnd: AXIS_GUTTER + LEADER_W,
+                aria-label={`Select ${e.title}`}
+                onClick={(ev) => {
+                  ev.stopPropagation();
+                  onSelect(e.id);
                 }}
-              >
+                className="absolute inset-0 w-full rounded-md cursor-pointer focus:outline-none
+                  focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-carbon/30"
+              />
+              <span className="relative flex-1 min-w-0 flex items-center gap-2">
                 <span
                   className="shrink-0 w-1.5 h-1.5 rounded-[2px]"
                   style={{ backgroundColor: color }}
                 />
-                <span className="shrink-0 w-[5.5rem] text-[10px] tabular-nums text-ink-tertiary">
-                  {formatDay(t)}
-                </span>
+                <SpineDate t={t} />
                 <span
                   className={`flex-1 min-w-0 truncate text-xs ${sel ? "text-ink font-medium" : "text-ink-secondary"}`}
                 >
-                  {e.title}
+                  <HighlightedText text={e.title} query={query} />
                 </span>
                 <span className="shrink-0 text-[10px] text-ink-muted hidden md:block">
                   {getEntityType(e.typeId)?.name ?? e.typeId}
                 </span>
-              </button>
+                {/* Reserved while a query is active — a fixed box the per-row
+                    marks toggle inside, so refining the query never nudges a
+                    title. It rides at the row's END, not beside the type name:
+                    the type label is variable-width, and hanging the marks off it
+                    left them scattered across a diagonal instead of reading as
+                    one column. The spine marks only the title, so ANY other hit
+                    (country included) is off-row evidence. */}
+                {hasQuery && (
+                  <span className="shrink-0 w-[2.25rem] flex items-center justify-end">
+                    <MatchOrigin
+                      entity={e}
+                      visibleFieldKeys={SPINE_MARKED_FIELDS}
+                      onSelect={onSelect}
+                    />
+                  </span>
+                )}
+              </span>
             </div>
           );
-        })}
-      </div>
+        }}
+      />
       {dated.length > SPINE_CAP && (
         <div className="py-3 text-center text-[11px] text-ink-muted">
           Plotting the first {SPINE_CAP} of {dated.length.toLocaleString()} — narrow the range to see

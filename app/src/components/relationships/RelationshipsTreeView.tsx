@@ -9,6 +9,7 @@ import {
 import {
   activeFilterCountAtom,
   groupByAtom,
+  searchQueryAtom,
   subGroupByAtom,
 } from "../../atoms/filters";
 import { useFilteredReferences } from "./useFilteredReferences";
@@ -36,6 +37,9 @@ export function RelationshipsTreeView() {
   const [activeFilterCount] = useAtom(activeFilterCountAtom);
   const [groupBy] = useAtom(groupByAtom);
   const [subGroupBy] = useAtom(subGroupByAtom);
+  // Group headers carry the match when the leaves suppress that label (a
+  // relation-type group hides `relLabel` on every row beneath it).
+  const [query] = useAtom(searchQueryAtom);
   const [, setOverlayEntityId] = useAtom(overlayEntityIdAtom);
   const [, setActiveRefId] = useAtom(activeRefIdAtom);
   const setExpandSignal = useSetAtom(expandAllSignalAtom);
@@ -109,6 +113,7 @@ export function RelationshipsTreeView() {
               <TreeBranch
                 key={`p:${key}`}
                 title={getGroupLabel(key, groupBy)}
+                highlight={query}
                 color={getGroupColor(key, groupBy)}
                 count={deriveRelationships(refs).length + deriveHubs(refs).length}
                 refIdsToWatch={refs.map((r) => r.id)}
@@ -124,6 +129,7 @@ export function RelationshipsTreeView() {
                       <TreeBranch
                         key={`s:${key}::${subKey}`}
                         title={getGroupLabel(subKey, subGroupBy)}
+                        highlight={query}
                         color={getGroupColor(subKey, subGroupBy)}
                         count={deriveRelationships(subRefs).length + deriveHubs(subRefs).length}
                         refIdsToWatch={subRefs.map((r) => r.id)}
@@ -217,6 +223,11 @@ function HubNode({
   hideRelLabel?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
+  // A node expands into its EVIDENCE — the underlying text-anchored references.
+  // A relationship with no anchored refs (all of CEJIL: entity-to-entity links
+  // with no quoted passage) has nothing to reveal, and offering a chevron that
+  // opens an empty box is a promise the row can't keep.
+  const evidence = refs.filter((ref) => !!ref.sourceSelection);
   const [expandForRef, setExpandForRef] = useAtom(expandGroupForRefAtom);
 
   useEffect(() => {
@@ -233,13 +244,12 @@ function HubNode({
         kind="hub"
         hub={hub}
         expanded={expanded}
-        onToggleExpand={() => setExpanded((e) => !e)}
+        onToggleExpand={evidence.length > 0 ? () => setExpanded((e) => !e) : undefined}
         hideRelLabel={hideRelLabel}
       />
       {expanded && (
         <div className="ml-[14px]">
-          {refs
-            .filter((ref) => !!ref.sourceSelection)
+          {evidence
             .map((ref) => (
               <TreeNode key={ref.id}>
                 <RelationshipRow kind="reference" reference={ref} nested />
@@ -266,6 +276,7 @@ function AggregateNode({
 }) {
   const [expanded, setExpanded] = useState(false);
   const [expandForRef, setExpandForRef] = useAtom(expandGroupForRefAtom);
+  const evidence = refs.filter((ref) => !!ref.sourceSelection);
 
   // Minimap dot click sets expandGroupForRef to the ref id. The chain of
   // TreeBranches above us auto-expand; we (the leaf containing the actual
@@ -284,15 +295,14 @@ function AggregateNode({
         kind="aggregate"
         rel={rel}
         expanded={expanded}
-        onToggleExpand={() => setExpanded((e) => !e)}
+        onToggleExpand={evidence.length > 0 ? () => setExpanded((e) => !e) : undefined}
         hidePill={hidePill}
         hideRelLabel={hideRelLabel}
         hideTypePill={hideTypePill}
       />
       {expanded && (
         <div className="ml-[14px]">
-          {refs
-            .filter((ref) => !!ref.sourceSelection)
+          {evidence
             .map((ref) => (
               <TreeNode key={ref.id}>
                 <RelationshipRow kind="reference" reference={ref} nested />

@@ -20,6 +20,11 @@ export function MobileActionMenu({ items }: MobileActionMenuProps) {
   // Which edge of the trigger the menu hangs from. Picked on open so the menu
   // grows into the viewport instead of off whichever edge the kebab sits near.
   const [align, setAlign] = useState<"left" | "right">("left");
+  // …and which SIDE. This used to be hardcoded upward, which was right when the
+  // kebab only ever sat on the bottom action bar. In the Library toolbar it sits
+  // at the TOP, so the menu opened straight up behind the chrome and was
+  // invisible. Same rule as the edge: grow into the viewport, not out of it.
+  const [side, setSide] = useState<"top" | "bottom">("top");
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -39,6 +44,10 @@ export function MobileActionMenu({ items }: MobileActionMenuProps) {
         const rect = containerRef.current.getBoundingClientRect();
         // Anchor left (grow right) only if there's room; otherwise hang right.
         setAlign(rect.left + MENU_MIN_WIDTH <= window.innerWidth ? "left" : "right");
+        // Drop DOWN when the space below the trigger can hold the menu; only fly
+        // up when it can't. Rough height is enough — a row is ~36px.
+        const needed = items.length * 36 + 8;
+        setSide(window.innerHeight - rect.bottom >= needed ? "bottom" : "top");
       }
       return !o;
     });
@@ -61,7 +70,7 @@ export function MobileActionMenu({ items }: MobileActionMenuProps) {
           role="menu"
           className="absolute bg-paper rounded-md overflow-hidden"
           style={{
-            bottom: "calc(100% + 6px)",
+            [side === "bottom" ? "top" : "bottom"]: "calc(100% + 6px)",
             [align]: 0,
             minWidth: MENU_MIN_WIDTH,
             border: "1px solid var(--border-primary)",

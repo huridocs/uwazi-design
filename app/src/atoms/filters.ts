@@ -23,11 +23,16 @@ export type GroupBy =
   | "relation-type"
   | "direction"
   | "source-page";
-export const groupByAtom = atom<GroupBy>("none");
+/** The axis people actually read connections by — NOT "none". Exported so the
+ *  Display menu can test "is this off its default?" against the real default;
+ *  hard-coding `!== "none"` there lit its modified-dot on every fresh panel. */
+export const DEFAULT_GROUP_BY: GroupBy = "relation-type";
+export const groupByAtom = atom<GroupBy>(DEFAULT_GROUP_BY);
 
 /** Secondary grouping axis ("Then by"). Mirrors Uwazi's relation-type → template
  *  two-level facet pattern; the prototype lets you pick any pair. */
-export const subGroupByAtom = atom<GroupBy>("none");
+export const DEFAULT_SUB_GROUP_BY: GroupBy = "none";
+export const subGroupByAtom = atom<GroupBy>(DEFAULT_SUB_GROUP_BY);
 
 export const searchQueryAtom = atom("");
 
@@ -43,7 +48,8 @@ export const collapseAllSignalAtom = atom(0);
 
 /** Sort order for references */
 export type SortOrder = "none" | "appearance" | "asc" | "desc";
-export const sortOrderAtom = atom<SortOrder>("appearance");
+export const DEFAULT_SORT_ORDER: SortOrder = "appearance";
+export const sortOrderAtom = atom<SortOrder>(DEFAULT_SORT_ORDER);
 
 /** Track expanded group count for greying out collapse/expand buttons */
 export const expandedGroupCountAtom = atom(0);
@@ -108,7 +114,8 @@ export const editModeAtom = atom(false);
 
 /** Relationships main-view zoom tier. Applies to grouped + tree modes. */
 export type Zoom = "detail" | "compact" | "overview";
-export const zoomAtom = atom<Zoom>("detail");
+export const DEFAULT_ZOOM: Zoom = "detail";
+export const zoomAtom = atom<Zoom>(DEFAULT_ZOOM);
 
 /** Relationships main-view mode: tree (layered groups) vs graph (radial SVG). */
 export type RelationshipsViewMode = "tree" | "graph";
@@ -119,7 +126,10 @@ export const relationshipsViewModeAtom = atom<RelationshipsViewMode>("tree");
 export const activeFilterCountAtom = atom((get) => {
   let n = 0;
   if (get(searchQueryAtom).trim()) n++;
-  if (get(sortOrderAtom) !== "none") n++;
+  // Sort is NOT a filter — it changes the order, not what's in the set — and it
+  // lives in the Display menu now. Counting it (as `!== "none"`, which the
+  // default "appearance" satisfies) put a permanent "1" on the Filters badge of
+  // a panel with nothing filtered.
   n += Object.values(get(relTypeFiltersAtom)).filter(Boolean).length;
   n += Object.values(get(entityTypeFiltersAtom)).filter(Boolean).length;
   n += Object.values(get(relTargetCountryFiltersAtom)).filter(Boolean).length;

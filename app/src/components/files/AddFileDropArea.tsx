@@ -8,6 +8,7 @@ import {
 } from "../../atoms/files";
 import { languageAtom } from "../../atoms/language";
 import { FileKind } from "../../data/files";
+import { asset } from "../../utils/asset";
 
 interface AddFileDropAreaProps {
   /** "large" for empty-state hero zone; "compact" for the bottom-of-list
@@ -67,7 +68,7 @@ export function AddFileDropArea({
           modified: new Date().toISOString().slice(0, 10),
           url:
             kind === "pdf"
-              ? "/docs/Velasquez-Rodriguez_v_Honduras_Judgment_1988_EN.pdf"
+              ? asset("/docs/Velasquez-Rodriguez_v_Honduras_Judgment_1988_EN.pdf")
               : undefined,
         },
       ]);

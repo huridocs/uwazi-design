@@ -8,6 +8,7 @@ import {
   expandAllSignalAtom,
   collapseAllSignalAtom,
   activeFilterCountAtom,
+  searchQueryAtom,
 } from "../../atoms/filters";
 import { useFilteredReferences } from "./useFilteredReferences";
 import { deriveHubs, deriveRelationships } from "../../utils/relationships";
@@ -37,6 +38,9 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
   const [groupBy] = useAtom(groupByAtom);
   const [subGroupBy] = useAtom(subGroupByAtom);
   const [activeFilterCount] = useAtom(activeFilterCountAtom);
+  // Marked on the group headers — where a relation-type match shows once the
+  // rows beneath stop repeating that label.
+  const [query] = useAtom(searchQueryAtom);
   const setExpandSignal = useSetAtom(expandAllSignalAtom);
   const setCollapseSignal = useSetAtom(collapseAllSignalAtom);
 
@@ -111,6 +115,7 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
           <RelationshipGroupedCard
             key={`p:${key}`}
             title={getGroupLabel(key, groupBy)}
+            highlight={query}
             color={getGroupColor(key, groupBy)}
             count={refs.length}
             refIdsToWatch={refs.map((r) => r.id)}
@@ -130,6 +135,7 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
                     <RelationshipGroupedCard
                       key={`s:${key}::${subKey}`}
                       title={getGroupLabel(subKey, subGroupBy)}
+                      highlight={query}
                       color={getGroupColor(subKey, subGroupBy)}
                       count={subRefs.length}
                       refIdsToWatch={subRefs.map((r) => r.id)}

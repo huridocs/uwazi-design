@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { CatalogEntry } from "../components/catalog/CatalogEntry";
+import { HighlightedText } from "../components/shared/HighlightedText";
 import { StyleGuide } from "../components/catalog/StyleGuide";
 
 // Components rendered directly inside the catalog body (not wrapped in an
@@ -53,6 +54,7 @@ import {
   IsolatedRefMinimap,
   FiltersDrawerDemo,
   FacetSectionDemo,
+  ToggleChipDemo,
   IsolatedViewModeControls,
   IsolatedCollapseControls,
   IsolatedListInfoRow,
@@ -78,6 +80,9 @@ import {
 } from "./catalog/demos";
 
 import { sidebarGroups, allItemIds } from "./catalog/sidebarGroups";
+import { handoffDocs, resolveHandoffAnchor } from "./catalog/handoffDocs";
+import { Markdown } from "./catalog/Markdown";
+import { asset } from "../utils/asset";
 
 interface Props {
   /** Called when the user clicks the "Return to app" button in the catalog
@@ -187,7 +192,7 @@ export function ComponentCatalog({ onReturn }: Props) {
         className="sticky top-0 z-30 h-13 bg-paper flex items-center justify-between px-5"
         style={{ borderBottom: "1px solid var(--border-primary)" }}
       >
-        <img src="/nu-logo.svg" alt="Uwazi" style={{ height: 14.7 }} className="logo-img" />
+        <img src={asset("/nu-logo.svg")} alt="Uwazi" style={{ height: 14.7 }} className="logo-img" />
         <button
           onClick={onReturn}
           className="flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium text-ink-secondary rounded-md bg-warm border border-border-soft/60 hover:bg-parchment transition-colors cursor-pointer"
@@ -230,6 +235,30 @@ export function ComponentCatalog({ onReturn }: Props) {
       {/* Content */}
       <div className="px-8 pt-6 pb-12 scroll-pt-[4.25rem]">
         <div className="max-w-3xl mx-auto flex flex-col gap-10">
+
+          {/* ==================== HANDOFF ==================== */}
+          <section>
+            <h2 className="text-lg font-bold text-ink mb-6">Handoff</h2>
+            <div className="flex flex-col gap-10">
+              {handoffDocs.map((doc) => (
+                <section
+                  key={doc.id}
+                  id={doc.id}
+                  ref={reg(doc.id)}
+                  className="max-w-[44rem] rounded-md bg-paper px-6 py-5 border border-border-soft"
+                >
+                  <p className="mb-4 font-mono text-[0.6875rem] text-ink-muted">
+                    {doc.file}
+                  </p>
+                  <Markdown
+                    source={doc.source}
+                    resolveLink={resolveHandoffAnchor}
+                    onNavigate={scrollTo}
+                  />
+                </section>
+              ))}
+            </div>
+          </section>
 
           {/* ==================== STYLE GUIDE ==================== */}
           <div ref={(el) => {
@@ -994,6 +1023,16 @@ export function ComponentCatalog({ onReturn }: Props) {
                 </CatalogEntry>
               </div>
 
+              <div id="fl-toggle-chip" ref={reg("fl-toggle-chip")}>
+                <CatalogEntry
+                  name="ToggleChip"
+                  description="ActiveFilterChip's toggleable sibling — same chip, aria-pressed instead of an X. Off drops the fill."
+                  code={`<ToggleChip label="Document" count={658} active={on} onToggle={...} />`}
+                >
+                  <ToggleChipDemo />
+                </CatalogEntry>
+              </div>
+
               <div id="fl-view-mode-controls" ref={reg("fl-view-mode-controls")}>
                 <CatalogEntry
                   name="ViewModeControls"
@@ -1252,6 +1291,29 @@ export function ComponentCatalog({ onReturn }: Props) {
           <section>
             <h2 className="text-lg font-bold text-ink mb-6">Shared</h2>
             <div className="flex flex-col gap-6">
+              <div id="sh-highlighted-text" ref={reg("sh-highlighted-text")}>
+                <CatalogEntry
+                  name="HighlightedText"
+                  description="Wraps case-insensitive query matches in the shared search-highlight mark. Used across the Library query surfaces (cards, table, timeline) and the Results-tab snippets — one visual family with document highlights. Paints without shifting layout (px-0.5 cancelled by -mx-0.5, no weight change) so wrapping is identical to plain text; RTL-safe."
+                  code={`<HighlightedText text={entity.title} query={q} />
+
+{/* Empty query → text unchanged (drop-in for {text}). */}
+{/* Mark: rounded-[2px] px-0.5 -mx-0.5 bg-highlight/60 text-ink */}`}
+                >
+                  <div className="flex flex-col gap-3 w-full max-w-md text-sm text-ink leading-relaxed">
+                    <p>
+                      <HighlightedText text="Case 12.045 (Velásquez Rodríguez)" query="Velásquez" />
+                    </p>
+                    <p className="text-ink-secondary">
+                      <HighlightedText
+                        text="…the Court found the State responsible in this case, and in every case since."
+                        query="case"
+                      />
+                    </p>
+                  </div>
+                </CatalogEntry>
+              </div>
+
               <div id="sh-confirm-dialog" ref={reg("sh-confirm-dialog")}>
                 <CatalogEntry
                   name="ConfirmDialog"

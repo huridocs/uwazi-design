@@ -17,35 +17,47 @@ const propsByTemplate = new Map(
 
 const SKIP_TYPES = new Set(["preview", "geolocation", "image", "link", "media", "nested", "generatedtoc"]);
 
-function formatVals(type: string, vals: { value?: unknown; label?: unknown }[]): string {
-  if (SKIP_TYPES.has(type)) return "";
+/** A card-displayable value: the FIRST value, plus how many more the field held.
+ *
+ *  Multi-valued fields used to be joined (`labels.slice(0,2).join(", ")`), which
+ *  on a field like "Documentos de la CorteIDH" printed two full document titles
+ *  into one cell and made every card run several lines deep. The card renders
+ *  `more` as a quiet "+N more" instead. */
+function formatVals(
+  type: string,
+  vals: { value?: unknown; label?: unknown }[],
+): { value: string; more: number } {
+  const none = { value: "", more: 0 };
+  if (SKIP_TYPES.has(type)) return none;
   if (type === "date") {
     const v = vals[0]?.value;
-    return typeof v === "number" && v > 0 ? String(new Date(v * 1000).getUTCFullYear()) : "";
+    return typeof v === "number" && v > 0
+      ? { value: String(new Date(v * 1000).getUTCFullYear()), more: 0 }
+      : none;
   }
   const labels = vals.map((v) => v?.label).filter((l): l is string => typeof l === "string" && !!l);
-  if (labels.length) return labels.slice(0, 2).join(", ");
+  if (labels.length) return { value: labels[0], more: labels.length - 1 };
   const v = vals[0]?.value;
   if (typeof v === "string" && v.trim()) {
     const s = v.replace(/\s+/g, " ").trim();
     // Skip raw URLs / JSON blobs (media, embed configs) — not card-displayable.
-    if (/^https?:\/\//.test(s) || s.startsWith("{") || s.startsWith("[")) return "";
-    return s.length > 90 ? s.slice(0, 90) + "…" : s;
+    if (/^https?:\/\//.test(s) || s.startsWith("{") || s.startsWith("[")) return none;
+    return { value: s.length > 90 ? s.slice(0, 90) + "…" : s, more: 0 };
   }
-  return "";
+  return none;
 }
 
 /** First few non-empty metadata fields (label + display value), in template order. */
 function fieldsOf(e: { template: string; metadata?: Record<string, { value?: unknown; label?: unknown }[]> }) {
   const props = propsByTemplate.get(e.template) || [];
-  const out: { label: string; value: string }[] = [];
+  const out: { label: string; value: string; more?: number }[] = [];
   for (const p of props) {
     if (p.name === "title") continue;
     const vals = e.metadata?.[p.name];
     if (!vals || !vals.length) continue;
-    const value = formatVals(p.type, vals);
+    const { value, more } = formatVals(p.type, vals);
     if (!value) continue;
-    out.push({ label: p.label, value });
+    out.push(more > 0 ? { label: p.label, value, more } : { label: p.label, value });
     if (out.length >= 3) break;
   }
   return out.length ? out : undefined;

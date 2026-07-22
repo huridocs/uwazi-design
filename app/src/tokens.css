@@ -13,11 +13,13 @@
   --text-tertiary: #555555;
   --text-muted: #777777;
 
-  /* Borders */
-  --border-primary: #E0D9C8;
-  --border-soft: #D4CDB8;
-  --border-primary-64: #E0D9C8A3;
-  --border-soft-64: #D4CDB8A3;
+  /* Borders — the layout chrome (pane dividers, header/footer rules, tab strip)
+     is structure, not content: it should be felt, not read. These were heavy
+     enough that every pane read as a boxed-in compartment. */
+  --border-primary: #EDE7DB;
+  --border-soft: #E2DBC9;
+  --border-primary-64: #EDE7DBA3;
+  --border-soft-64: #E2DBC9A3;
 
   /* Accents */
   --accent-blue: #00B4F0;
@@ -69,10 +71,10 @@
   --text-tertiary: #9A9A9A;
   --text-muted: #6B6B6B;
 
-  --border-primary: #3D3D3D;
-  --border-soft: #4A4A4A;
-  --border-primary-64: #3D3D3DA3;
-  --border-soft-64: #4A4A4AA3;
+  --border-primary: #343434;
+  --border-soft: #3E3E3E;
+  --border-primary-64: #343434A3;
+  --border-soft-64: #3E3E3EA3;
 
   --accent-primary: #F5F0E8;
   --accent-blue-tint: #0C3A4D;

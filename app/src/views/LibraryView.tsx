@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   Search,
@@ -10,6 +10,7 @@ import {
   Plus,
   Upload,
   FileSpreadsheet,
+  TextSearch,
 } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, cejilReadyAtom } from "../atoms/dataSource";
 import { loadCejilData, cejilRelsByEntity } from "../data/cejil/load";
@@ -18,9 +19,13 @@ import { languageAtom, type Language } from "../atoms/language";
 import { appViewAtom } from "../atoms/navigation";
 import { breakpointAtom } from "../atoms/viewport";
 import { openEntityAtom, focusEntityForPreviewAtom } from "../atoms/focusedEntity";
+import { scrollToPageAtom } from "../atoms/selection";
 import { useNotify } from "../hooks/useNotify";
 import {
   libraryQueryAtom,
+  librarySearchDraftAtom,
+  clearLibrarySearchAtom,
+  recordSearchAtom,
   libraryTypeFiltersAtom,
   libraryHasDocAtom,
   libraryStatusFiltersAtom,
@@ -35,18 +40,27 @@ import {
   libraryActiveFilterCountAtom,
   libraryViewModeAtom,
   libraryInfoAtom,
+  libraryTimeHubAtom,
   librarySortAtom,
   librarySortDirAtom,
   defaultSortDir,
   librarySelectedEntityIdAtom,
   librarySelectedClusterAtom,
+  resultsActivePageAtom,
+  focusMetadataFieldAtom,
+  clearLibraryFacetsAtom,
+  matchTypeFiltersAtom,
+  ALL_MATCH_TYPES,
 } from "../atoms/library";
 import { getEntityType, type Entity } from "../data/entities";
 import { libraryInheritedDefs } from "../utils/libraryFacets";
 import { buildActiveChains, cejilChainGraph } from "../data/cejil/chainFacets";
-import { matchesAll, buildSearchIndex, type LibraryFilterState } from "../utils/libraryFilter";
+import { matchesAll, matchesSearch, passesMatchTypes, buildSearchIndex, type LibraryFilterState } from "../utils/libraryFilter";
+import { highlightTerms, fold } from "../utils/queryTokens";
+import { matchCategoriesWithTerms, type MatchCategories } from "../utils/librarySnippets";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { EntityCard } from "../components/library/EntityCard";
+import { MatchOrigin } from "../components/library/MatchOrigin";
 // Lazy: react-simple-maps + the world atlas are the heaviest static chunk in
 // the bundle and only the map view needs them — split so the default Library
 // (and everything else) never downloads them.
@@ -58,17 +72,43 @@ import { TimeBrush } from "../components/library/TimeBrush";
 import { LibraryFilters } from "../components/library/LibraryFilters";
 import { LibraryClusterDrawer } from "../components/library/LibraryClusterDrawer";
 import { EntityDrawerPreview } from "../components/library/EntityDrawerPreview";
+import { DrawerTabs } from "../components/layout/DrawerTabs";
+import { ResultsBody } from "../components/library/ResultsSnippets/ResultsBody";
+import { ResultsMainView } from "../components/library/ResultsSnippets/ResultsMainView";
+import { SearchTipsPopover } from "../components/library/SearchTipsPopover";
+import { RecentSearches } from "../components/library/RecentSearches";
 import { DisplayMenu } from "../components/library/DisplayMenu";
 import { ActiveFiltersButton } from "../components/library/ActiveFiltersButton";
 import { DataTable, type Column } from "../components/shared/DataTable";
 import { EntityTypeChip } from "../components/shared/EntityTypeChip";
+import { HighlightedText } from "../components/shared/HighlightedText";
 import { Select } from "../components/shared/Select";
 import { SegmentedControl } from "../components/shared/SegmentedControl";
 
 const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
 
+/** Sort keys — shared by the toolbar Select and (on mobile, where the Select
+ *  steps aside for the view switcher) the Display popover. */
+export const SORTS = [
+  { value: "recent", label: "Date added" },
+  { value: "title", label: "Title" },
+  { value: "connections", label: "Connections" },
+  { value: "type", label: "Type" },
+  { value: "country", label: "Country" },
+];
+
+/** How long the search box must sit still before the query counts as a search
+ *  worth remembering. Long enough to cover typing and a pause to read, short
+ *  enough that a query you meant is logged before you move on. */
+const SETTLE_MS = 1200;
+
 /** How many cards to reveal per page in the Library grid/list. */
 const DISPLAY_STEP = 120;
+
+/** Stable identities for the "what does this row already mark?" sets — a fresh
+ *  literal per row would re-run every marker's match scan on every render. */
+const TITLE_ONLY = ["title"] as const;
+const TITLE_AND_COUNTRY = ["title", "country"] as const;
 
 export function LibraryView() {
   const entities = useAtomValue(libraryEntitiesAtom);
@@ -94,7 +134,28 @@ export function LibraryView() {
   }, [dataSource, cejilReady, setCejilReady, cejilRetry]);
   const cejilLoading = dataSource === "cejil" && !cejilReady;
   const references = useAtomValue(referencesAtom);
-  const [query, setQuery] = useAtom(libraryQueryAtom);
+  // `query` is the COMMITTED search — everything below (filtering, ranking,
+  // match categories, highlighting) reads it. Only the input binds to the draft.
+  const committedQuery = useAtomValue(libraryQueryAtom);
+  // EVERYTHING heavy below reads `query`, and `query` is the DEFERRED committed
+  // search. Typing updates the draft (the input) urgently and commits in a
+  // transition; this is the other half — while the new query's cascade is being
+  // computed, React keeps rendering this component with the PREVIOUS value, so
+  // the last result set stays on screen and interactive instead of the pane
+  // going blank or the keystroke waiting for 4,398 entities to be re-ranked.
+  const query = useDeferredValue(committedQuery);
+  // The results on screen are for `query` while the user has already asked for
+  // `committedQuery` — say so, rather than pretending they're current.
+  const searchPending = query !== committedQuery;
+  const [searchDraft, setSearchDraft] = useAtom(librarySearchDraftAtom);
+  const clearSearch = useSetAtom(clearLibrarySearchAtom);
+  const recordSearch = useSetAtom(recordSearchAtom);
+  const searchBoxRef = useRef<HTMLDivElement>(null);
+  const [searchFocused, setSearchFocused] = useState(false);
+  // Filters / Results drawer tabs. Results auto-activates while the search box
+  // carries a query and falls back to Filters when it's cleared; between those
+  // transitions the tab can still be switched by hand.
+  const [drawerTab, setDrawerTab] = useState<"filters" | "results">("filters");
   const [typeFilters, setTypeFilters] = useAtom(libraryTypeFiltersAtom);
   const [hasDocOnly, setHasDocOnly] = useAtom(libraryHasDocAtom);
   const [statusFilters, setStatusFilters] = useAtom(libraryStatusFiltersAtom);
@@ -109,6 +170,7 @@ export function LibraryView() {
   const activeFilterCount = useAtomValue(libraryActiveFilterCountAtom);
   const [viewMode, setViewMode] = useAtom(libraryViewModeAtom);
   const info = useAtomValue(libraryInfoAtom);
+  const timeHub = useAtomValue(libraryTimeHubAtom);
   const [sort, setSort] = useAtom(librarySortAtom);
   const [sortDir, setSortDir] = useAtom(librarySortDirAtom);
   const setSortKey = useCallback(
@@ -129,6 +191,11 @@ export function LibraryView() {
   const selectedCluster = useAtomValue(librarySelectedClusterAtom);
   const openEntity = useSetAtom(openEntityAtom);
   const focusForPreview = useSetAtom(focusEntityForPreviewAtom);
+  const setScrollToPage = useSetAtom(scrollToPageAtom);
+  const setResultsActivePage = useSetAtom(resultsActivePageAtom);
+  const setFocusMetadataField = useSetAtom(focusMetadataFieldAtom);
+  const clearFacets = useSetAtom(clearLibraryFacetsAtom);
+  const [matchTypes, setMatchTypes] = useAtom(matchTypeFiltersAtom);
   const setAppView = useSetAtom(appViewAtom);
   const notify = useNotify();
 
@@ -152,7 +219,7 @@ export function LibraryView() {
   // Precomputed lowercase searchable text per entity (title + country + the
   // displayed metadata field values + descriptors), so search matches real
   // metadata — not just titles — without scanning the corpus on each keystroke.
-  const searchIndex = useMemo(() => buildSearchIndex(entities), [entities]);
+  const searchIndex = useMemo(() => buildSearchIndex(entities, language), [entities, language]);
 
   const activeTypeIds = Object.entries(typeFilters)
     .filter(([, on]) => on)
@@ -167,6 +234,43 @@ export function LibraryView() {
   const wantRestricted = !!statusFilters.restricted;
   const statusActive = wantPublished || wantRestricted;
   const q = query.trim().toLowerCase();
+  const hasQuery = q.length > 0;
+  // The drawer's Results tab exists because cards / list / map / timeline can't
+  // show a snippet. When the MAIN pane is the Results view, the tab is a 24rem
+  // copy of what's already on screen at full width — so it isn't rendered at all,
+  // and the drawer is simply the filter panel. Suppressing only its
+  // auto-activation left the duplicate one click away and made the effect below
+  // read like a special case; this makes it a consequence.
+  //
+  // Nothing shifts when it goes: Filters sits to its INLINE-START, so the strip
+  // shrinks from the end, and the change is bound to an explicit view switch —
+  // never to typing.
+  // Record the search once it SETTLES. Typing "velásquez" commits nine times on
+  // its way there; logging each would leave a history of "v", "ve", "vel" and
+  // bury the entry anyone wanted. The debounce is the commit boundary — the
+  // query has to stop changing before it counts as a search you ran. Enter and
+  // blur record immediately, because both are the user saying "that's the one".
+  useEffect(() => {
+    // `committedQuery`, not the deferred one: the log records the search the user
+    // RAN, and shouldn't wait on the render that displays it.
+    const t = committedQuery.trim();
+    if (!t) return;
+    const id = window.setTimeout(() => recordSearch(t), SETTLE_MS);
+    return () => window.clearTimeout(id);
+  }, [committedQuery, recordSearch]);
+
+  const showResultsTab = viewMode !== "results";
+  useEffect(() => {
+    setDrawerTab(hasQuery && showResultsTab ? "results" : "filters");
+  }, [hasQuery, showResultsTab]);
+  // Query tokens for the search predicate (shared with snippets + marks). Derived
+  // from the raw `query` so uppercase AND/OR/NOT are recognised before lowering.
+  // Full-text body scanning is gated on `q.length ≥ 3` for CEJIL-corpus perf.
+  const searchTerms = useMemo(
+    () => highlightTerms(query), // already folded
+    [query],
+  );
+  const fullTextSearch = q.length >= 3;
   const fromMs = dateFrom ? Date.parse(dateFrom) : null;
   // Inclusive of the whole "to" day.
   const toMs = dateTo ? Date.parse(dateTo) + 86_400_000 - 1 : null;
@@ -209,10 +313,48 @@ export function LibraryView() {
     chains: activeChains,
     q,
     searchIndex,
+    searchTerms,
+    fullTextSearch,
+    matchTypes,
   };
 
+  // WHERE each entity matched, computed at most ONCE per entity per query.
+  //
+  // Three consumers need the same answer — the relevance ranking below, the
+  // match-type chip gate, and the chip counts — and each used to call
+  // `matchCategories` itself, so a 4,000-match query categorised the corpus
+  // several times over per keystroke. Lazy rather than eager: the all-chips-on
+  // case never asks, and the ranking only asks for entities whose title didn't
+  // already settle it.
+  const categoriesOf = useMemo(() => {
+    const cache = new Map<string, MatchCategories>();
+    return (e: Entity): MatchCategories => {
+      let c = cache.get(e.id);
+      if (!c) {
+        c = matchCategoriesWithTerms(e, searchTerms, language, dataSource);
+        cache.set(e.id, c);
+      }
+      return c;
+    };
+    // `cejilReady`: blobs go empty→real when the corpus lands, so cached
+    // "document: false" answers from before that must not survive it.
+  }, [searchTerms, language, dataSource, cejilReady]);
+
+  // ONE full-corpus pass. `matchTypeBase` is every entity passing the facets and
+  // the search but NOT the chips; the chip-narrowed list is a subset of it, so
+  // running `matchesAll` again over all 4,398 entities to get it was scanning the
+  // corpus twice for two nested answers. Filter the subset from the superset.
+  const matchTypeBase = useMemo(
+    () => (q ? entities.filter((e) => matchesAll(e, filterState, "matchType")) : []),
+    [entities, filterState, q],
+  );
+
   const filtered = useMemo(() => {
-    const list = entities.filter((e) => matchesAll(e, filterState));
+    const list = q
+      ? matchTypeBase.filter((e) =>
+          passesMatchTypes(matchTypes, q, () => categoriesOf(e)),
+        )
+      : entities.filter((e) => matchesAll(e, filterState));
     const typeName = (e: Entity) => getEntityType(e.typeId)?.name ?? e.typeId;
     const cmp = (a: Entity, b: Entity) => {
       let r = 0;
@@ -239,21 +381,65 @@ export function LibraryView() {
     // "Date added" sort buries the entity literally named what you typed
     // under documents that merely mention it.
     if (q) {
-      const rank = (e: Entity) => {
-        const t = e.title.toLowerCase();
-        if (t === q) return 0;
-        if (t.startsWith(q)) return 1;
-        if (t.includes(q)) return 2;
-        return 3;
-      };
-      return [...list].sort((a, b) => rank(a) - rank(b) || cmp(a, b));
+      // Relevance tiers: exact title → title prefix → title contains → a title
+      // TOKEN hit → a property hit → document-only. Folded, so an unaccented
+      // query ranks accented titles correctly. Precomputed per entity (O(n)):
+      // calling `matchCategories` inside the comparator would re-scan blobs
+      // O(n log n) times.
+      const qf = fold(q);
+      const rankOf = new Map<string, number>();
+      for (const e of list) {
+        const t = fold(e.title);
+        let r: number;
+        if (t === qf) r = 0;
+        else if (t.startsWith(qf)) r = 1;
+        else if (t.includes(qf)) r = 2;
+        else {
+          const c = categoriesOf(e);
+          r = c.title ? 3 : c.properties ? 4 : 5;
+        }
+        rankOf.set(e.id, r);
+      }
+      return [...list].sort(
+        (a, b) => (rankOf.get(a.id) ?? 9) - (rankOf.get(b.id) ?? 9) || cmp(a, b),
+      );
     }
     return [...list].sort(cmp);
-  }, [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, chainKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex]);
+    // `cejilReady`: once the corpus loads, full-text blobs go empty→real, so the
+    // filtered set must recompute to surface document-body-only matches.
+  }, [entities, matchTypeBase, categoriesOf, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, chainKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex, cejilReady, matchTypes]);
 
-  // The time brush rides under the two spatial/temporal views — map + timeline —
-  // the Bellingcat pairing: a canvas above, the range you're looking at below.
-  const showBrush = (viewMode === "map" || viewMode === "timeline") && !cejilLoading;
+  // How many entities the query matches with the FACETS widened — so the Results
+  // tab can offer to reveal the ones the current facets are hiding.
+  const searchMatchCount = useMemo(
+    () => (q ? entities.reduce((n, e) => n + (matchesSearch(e, filterState) ? 1 : 0), 0) : 0),
+    [entities, filterState, q],
+  );
+
+  // Chip counts over the pre-chip set, reading the SAME categories the ranking
+  // and the gate used — no third scan.
+  const matchTypeCounts = useMemo(() => {
+    const c = { title: 0, properties: 0, document: 0 };
+    for (const e of matchTypeBase) {
+      const m = categoriesOf(e);
+      if (m.title) c.title++;
+      if (m.properties) c.properties++;
+      if (m.document) c.document++;
+    }
+    return c;
+  }, [matchTypeBase, categoriesOf]);
+
+  // The chips are query-relative — a new query starts from "all kinds" so they
+  // never linger as an invisible filter.
+  useEffect(() => {
+    setMatchTypes(ALL_MATCH_TYPES);
+  }, [q, setMatchTypes]);
+
+  // The time strip rides under EVERY layout, not just the map and the timeline it
+  // started under — it filters by date and charts the whole result set, so cards
+  // and the table want it just as much. A display option (Display → Time strip),
+  // on by default.
+  const showBrush = timeHub && !cejilLoading;
 
   // The brush's histogram is the results with EVERY facet applied except the
   // date one — so the bars keep showing what widening the window would give back
@@ -295,19 +481,83 @@ export function LibraryView() {
     [isMobile, openEntity, focusForPreview, setSelectedId],
   );
 
+  // Results-tab full-text snippet: select the entity, then jump the preview's
+  // document to the hit page (DocumentViewer consumes scrollToPageAtom). On
+  // mobile handleSelect opens the full view; the page jump still applies.
+  const handleSnippetSelect = useCallback(
+    (id: string, page: number) => {
+      handleSelect(id);
+      setScrollToPage(page);
+      setResultsActivePage({ entityId: id, page });
+    },
+    [handleSelect, setScrollToPage, setResultsActivePage],
+  );
+
+  // Results-tab Properties hit: open the entity preview and deep-focus the field
+  // (the drawer switches to its Metadata tab and flashes the field by key).
+  const handleFocusProperty = useCallback(
+    (id: string, fieldKey: string) => {
+      handleSelect(id);
+      setFocusMetadataField({ entityId: id, fieldKey });
+    },
+    [handleSelect, setFocusMetadataField],
+  );
+
+  // Retry the CEJIL load — mirrors the left pane's Retry (re-runs the effect).
+  const handleCejilRetry = useCallback(() => {
+    setCejilError(false);
+    setCejilRetry((n) => n + 1);
+  }, []);
+
+  // What the TABLE row already marks in place — everything else the query hit is
+  // off-row evidence (see `MatchOrigin`). Country counts only when the column is
+  // ON *and this row has a value in it*: a profile field labelled "Country" can
+  // match on an entity whose `country` is empty, and that cell renders an
+  // em-dash — suppressing the marker there hides the only evidence there was.
+  const rowMarkedFields = useCallback(
+    (e: Entity) => (info.country !== false && e.country ? TITLE_AND_COUNTRY : TITLE_ONLY),
+    [info.country],
+  );
+
   const tableColumns: Column<Entity>[] = [
     {
-      id: "type",
-      header: "Type",
-      width: "3.5rem",
-      sortKey: "type",
-      cell: (e: Entity) => <EntityTypeChip typeId={e.typeId} />,
-    },
-    {
+      // The type rides WITH the title, not in a column of its own.
+      //
+      // A column can't work here: the chip is 1.5rem but the "TYPE" header needs
+      // room for its label and its sort arrow, so the track is always ~2rem wider
+      // than what's in it. Left-aligned, that gap sits between the chip and the
+      // title; right-aligned, it sits between the row edge and the chip. The
+      // space has to go somewhere — unless the column goes.
+      //
+      // Sorting by type is still there, in the toolbar's Sort control.
       id: "title",
       header: "Title",
       sortKey: "title",
-      cell: (e: Entity) => <span className="font-medium text-ink truncate">{e.title}</span>,
+      cell: (e: Entity) => (
+        <span className="flex items-center gap-2 min-w-0">
+          <EntityTypeChip typeId={e.typeId} />
+          <span className="font-medium text-ink truncate">
+            <HighlightedText text={e.title} query={query} />
+          </span>
+        </span>
+      ),
+    },
+    // WHERE it matched, when the row can't show it.
+    //
+    // Title and Country are marked in place — that mark is the evidence. A hit in
+    // any other property, or in the document body, leaves the row looking
+    // unmatched, which in a few thousand results is the difference between a
+    // result list and a list. The column is 3.5rem of reserved track: contents
+    // come and go per row as the query is refined, the track never moves. It
+    // mounts only while a query is active — the one transition (no query → query)
+    // that replaces every row anyway.
+    hasQuery && {
+      id: "match",
+      header: "Match",
+      width: "3.5rem",
+      cell: (e: Entity) => (
+        <MatchOrigin entity={e} visibleFieldKeys={rowMarkedFields(e)} onSelect={handleSelect} />
+      ),
     },
     info.country !== false && {
       id: "country",
@@ -315,7 +565,9 @@ export function LibraryView() {
       width: "9rem",
       sortKey: "country",
       cell: (e: Entity) => (
-        <span className="text-ink-secondary truncate">{e.country ?? "—"}</span>
+        <span className="text-ink-secondary truncate">
+          {e.country ? <HighlightedText text={e.country} query={query} /> : "—"}
+        </span>
       ),
     },
     info.date !== false && {
@@ -351,64 +603,98 @@ export function LibraryView() {
         style={{ borderBottom: "1px solid var(--border-primary)" }}
       >
         <div
+          ref={searchBoxRef}
           className="relative flex-1 min-w-0 flex items-center gap-1.5 h-8 py-1 pl-2 pr-2 bg-warm border border-border rounded-md
             focus-within:ring-2 focus-within:ring-carbon/20 focus-within:border-carbon/40 transition-all"
         >
           <Search size={14} className="text-ink-muted shrink-0" />
           <input
             type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            value={searchDraft}
+            onChange={(e) => setSearchDraft(e.target.value)}
+            onFocus={() => setSearchFocused(true)}
+            // Enter and Escape close the panel without moving focus, so a later
+            // click on an ALREADY-FOCUSED box fires no focus event and the panel
+            // would never come back. Clicking the box is its own request to see
+            // the list again.
+            onClick={() => setSearchFocused(true)}
+            onBlur={() => {
+              setSearchFocused(false);
+              recordSearch(searchDraft);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                recordSearch(searchDraft);
+                setSearchFocused(false);
+              }
+            }}
             placeholder="Search title & metadata"
             aria-label="Search entities"
             className="flex-1 min-w-[60px] bg-transparent text-xs font-medium placeholder:text-ink-muted focus:outline-none"
           />
-          {query && (
+          {searchDraft && (
             <button
-              onClick={() => setQuery("")}
-              aria-label="Clear search"
+              // Empties the BOX, not the search: the committed query survives so
+              // the results stay usable while you retype. Dropping the search
+              // itself is the chip in Active filters, or Clear all.
+              onClick={() => setSearchDraft("")}
+              aria-label="Clear search text"
               className="shrink-0 p-0.5 rounded-full hover:bg-parchment text-ink-muted hover:text-ink cursor-pointer transition-colors"
             >
               <X size={12} />
             </button>
           )}
-        </div>
-        <Select
-          value={sort}
-          onChange={(v) => {
-            const key = v as typeof sort;
-            setSort(key);
-            setSortDir(defaultSortDir(key));
-          }}
-          ariaLabel="Sort"
-          options={[
-            { value: "recent", label: "Date added" },
-            { value: "title", label: "Title" },
-            { value: "connections", label: "Connections" },
-            { value: "type", label: "Type" },
-            { value: "country", label: "Country" },
-          ]}
-        />
-        <div className="hidden sm:block">
-          <SegmentedControl
-            ariaLabel="View"
-            value={viewMode}
-            onChange={(v) => setViewMode(v as typeof viewMode)}
-            options={[
-              { id: "cards", label: "Cards", icon: LayoutGrid },
-              { id: "list", label: "List", icon: List },
-              { id: "map", label: "Map", icon: MapIcon },
-              { id: "timeline", label: "Timeline", icon: CalendarRange },
-            ]}
+          <SearchTipsPopover />
+          {/* Follows FOCUS; the tips popover follows a click on its chip — which
+              blurs the input, so the two can never be open at once without any
+              shared state to arbitrate. */}
+          <RecentSearches
+            anchorRef={searchBoxRef}
+            open={searchFocused}
+            onPick={(q) => {
+              setSearchDraft(q);
+              recordSearch(q);
+              setSearchFocused(false);
+            }}
+            onClose={() => setSearchFocused(false)}
           />
         </div>
+        {/* Sort steps aside on a phone — it moves into the Display popover, where
+            it costs no width. The VIEW switcher does not: cards / list / map /
+            timeline are the point of the Library, and they were unreachable on
+            mobile because this whole cluster was `hidden sm:block`. */}
+        <div className="hidden sm:block">
+          <Select
+            value={sort}
+            onChange={(v) => {
+              const key = v as typeof sort;
+              setSort(key);
+              setSortDir(defaultSortDir(key));
+            }}
+            ariaLabel="Sort"
+            options={SORTS}
+          />
+        </div>
+        <SegmentedControl
+          ariaLabel="View"
+          value={viewMode}
+          onChange={(v) => setViewMode(v as typeof viewMode)}
+          options={[
+            { id: "cards", label: "Cards", icon: LayoutGrid },
+            { id: "list", label: "List", icon: List },
+            { id: "map", label: "Map", icon: MapIcon },
+            { id: "timeline", label: "Timeline", icon: CalendarRange },
+            // Always mounted, query or not. A segment that appears when you type
+            // would resize the switcher and shove every control beside it — the
+            // view renders its own "search to see where terms match" state.
+            { id: "results", label: "Results", icon: TextSearch },
+          ]}
+        />
         {/* Display is icon-only and ALWAYS mounted; the view-specific modifiers
             (timeline layout) live inside its popover. Anything that appears and
             disappears from this row shoves every other control sideways when you
             change view — which is exactly what it used to do. */}
-        <div className="hidden sm:block">
-          <DisplayMenu />
-        </div>
+        <DisplayMenu />
         {/* Languages: one dropdown of fixed width (codes, not names — a "Français"
             label would resize the trigger and shift the row again). */}
         <div className="hidden md:block">
@@ -425,8 +711,11 @@ export function LibraryView() {
 
       {/* Results */}
       <div
-        className={`flex-1 min-h-0 px-3 py-3 bg-warm ${
-          viewMode === "map" || viewMode === "timeline"
+        // Results brings its own gutters — its header is a `ListInfoRow`, which
+        // carries the app's standard `px-3`. Doubling up would indent the whole
+        // view past every other layout.
+        className={`flex-1 min-h-0 py-3 bg-warm ${viewMode === "results" ? "" : "px-3"} ${
+          viewMode === "map" || viewMode === "timeline" || viewMode === "results"
             ? "flex flex-col overflow-hidden"
             : "overflow-auto"
         }`}
@@ -472,6 +761,30 @@ export function LibraryView() {
               countByEntity={countByEntity}
             />
           </div>
+        ) : viewMode === "results" ? (
+          // The evidence view at full width. It owns its own scroll, paging and
+          // blank states (including "no query yet"), so it sits above the shared
+          // empty-state branch below.
+          <div className="flex-1 min-h-0">
+            <ResultsMainView
+              query={query}
+              entities={filtered}
+              source={dataSource}
+              language={language}
+              cejilLoading={cejilLoading}
+              cejilError={cejilError}
+              onRetry={handleCejilRetry}
+              onFocusProperty={handleFocusProperty}
+              onSelectSnippet={handleSnippetSelect}
+              onSelect={handleSelect}
+              selectedId={selectedId}
+              onClearSearch={() => clearSearch()}
+              hiddenByFilters={Math.max(0, searchMatchCount - matchTypeBase.length)}
+              onClearFilters={() => clearFacets()}
+              matchTypeCounts={matchTypeCounts}
+              totalMatches={matchTypeBase.length}
+            />
+          </div>
         ) : filtered.length === 0 ? (
           <div className="flex items-center justify-center h-40 text-sm text-ink-muted">
             No entities match your filters.
@@ -504,7 +817,7 @@ export function LibraryView() {
           />
         )}
 
-        {!cejilLoading && viewMode !== "map" && viewMode !== "timeline" && shown.length < filtered.length && (
+        {!cejilLoading && viewMode !== "map" && viewMode !== "timeline" && viewMode !== "results" && shown.length < filtered.length && (
           <div className="flex justify-center pt-4">
             <button
               onClick={() => setVisibleCount((n) => n + DISPLAY_STEP)}
@@ -543,12 +856,74 @@ export function LibraryView() {
             changes — so the results above it never move. This is also the only
             place the active-filter count survives while the drawer is showing an
             entity instead of the Filters panel; clicking it puts the panel back. */}
-        <span className="ms-2 text-[11px] text-ink-tertiary">
+        {/* The counts describe the set ON SCREEN, which during a transition is
+            the PREVIOUS query's. Rather than freeze the number or blank it, mark
+            it stale: `aria-busy` for AT, a quiet "updating…" for everyone else.
+            Fixed slot, so nothing reflows when it appears (PATTERNS §3). */}
+        <span className="ms-2 text-[11px] text-ink-tertiary" aria-busy={searchPending}>
           Showing{" "}
           <span className="font-semibold text-ink-secondary">{shown.length.toLocaleString()}</span> of{" "}
           {filtered.length.toLocaleString()}
         </span>
+        <span
+          aria-hidden={!searchPending}
+          className={`text-[11px] text-ink-muted italic transition-opacity ${
+            searchPending ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          updating…
+        </span>
         <ActiveFiltersButton />
+      </div>
+    </div>
+  );
+
+  // Results tab body — the per-entity evidence view (where each term hit).
+  const resultsBody = (
+    <ResultsBody
+      query={query}
+      entities={filtered}
+      source={dataSource}
+      language={language}
+      cejilLoading={cejilLoading}
+      cejilError={cejilError}
+      onRetry={handleCejilRetry}
+      onFocusProperty={handleFocusProperty}
+      onSelectSnippet={handleSnippetSelect}
+      onClearSearch={() => clearSearch()}
+      hiddenByFilters={Math.max(0, searchMatchCount - matchTypeBase.length)}
+      onClearFilters={() => clearFacets()}
+      matchTypeCounts={matchTypeCounts}
+      totalMatches={matchTypeBase.length}
+    />
+  );
+
+  const filtersDrawer = (
+    <div className="flex flex-col h-full min-h-0 bg-warm">
+      <DrawerTabs
+        tabs={[
+          // DOTS, not counts. Both signals here are user-set state that is still
+          // in effect while you're looking at the other panel — filters you
+          // ticked, a query you typed — which is exactly what the dot is for.
+          //
+          // A count was the wrong instrument twice over: it can be ABSENT (no
+          // filters, no query), so it mounted on first use and widened its own
+          // tab, shoving Results sideways the moment you ticked a box; and the
+          // number itself was never the point. "Something you set is still on
+          // back there" is one bit, and the dot costs no width to say it.
+          // `count` stays for inventory — see `DrawerTabs`.
+          { id: "filters", label: "Filters", dot: activeFilterCount > 0 },
+          // A query that found nothing gets no dot: the tab would be pointing at
+          // an empty panel. Dot means "there is something here", not "you typed".
+          ...(showResultsTab
+            ? [{ id: "results", label: "Results", dot: hasQuery && filtered.length > 0 }]
+            : []),
+        ]}
+        activeId={drawerTab}
+        onChange={(id) => setDrawerTab(id as "filters" | "results")}
+      />
+      <div className="flex-1 min-h-0 overflow-hidden">
+        {drawerTab === "results" && showResultsTab ? resultsBody : <LibraryFilters />}
       </div>
     </div>
   );
@@ -558,7 +933,7 @@ export function LibraryView() {
   ) : selectedCluster && viewMode === "map" ? (
     <LibraryClusterDrawer />
   ) : (
-    <LibraryFilters />
+    filtersDrawer
   );
 
   return (
@@ -568,8 +943,26 @@ export function LibraryView() {
       right={drawer}
       defaultRightWidth={460}
       minRightWidth={360}
-      maxRightWidth={680}
-      mobileSections={[{ id: "filters", label: "Filters", content: <LibraryFilters /> }]}
+      mobileSections={[
+        {
+          id: "filters",
+          label: "Filters",
+          count: activeFilterCount || undefined,
+          content: <LibraryFilters />,
+        },
+        // Same rule on a phone: the Results section is a second copy of the
+        // main pane when that pane is already the Results view.
+        ...(showResultsTab
+          ? [
+              {
+                id: "results",
+                label: "Results",
+                count: hasQuery ? filtered.length : undefined,
+                content: resultsBody,
+              },
+            ]
+          : []),
+      ]}
     />
   );
 }

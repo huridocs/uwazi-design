@@ -16,6 +16,7 @@ import { RadioGroup } from "../../components/shared/RadioGroup";
 import { DataTable } from "../../components/shared/DataTable";
 import { FadeTruncate } from "../../components/shared/FadeTruncate";
 import { ListInfoRow } from "../../components/shared/ListInfoRow";
+import { ToggleChip } from "../../components/shared/ToggleChip";
 import { Checkbox } from "../../components/shared/Checkbox";
 import { ZoomControl } from "../../components/relationships/ZoomControl";
 import { RelationshipRow } from "../../components/relationships/RelationshipRow";
@@ -451,6 +452,34 @@ export function FiltersDrawerDemo() {
           />
         </FiltersDrawer>
       </div>
+    </div>
+  );
+}
+
+/** The match-type chips as they ride the Library's Results header — one on, one
+ *  off, so both states of the shared toggle chip are visible at once. */
+export function ToggleChipDemo() {
+  const [on, setOn] = useState<Record<string, boolean>>({
+    title: true,
+    properties: true,
+    document: false,
+  });
+  const chips: [string, string, number][] = [
+    ["title", "Title", 3],
+    ["properties", "Properties", 63],
+    ["document", "Document", 658],
+  ];
+  return (
+    <div className="flex flex-wrap items-center gap-1">
+      {chips.map(([key, label, count]) => (
+        <ToggleChip
+          key={key}
+          label={label}
+          count={count}
+          active={on[key]}
+          onToggle={() => setOn((s) => ({ ...s, [key]: !s[key] }))}
+        />
+      ))}
     </div>
   );
 }

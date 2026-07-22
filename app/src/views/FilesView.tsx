@@ -226,7 +226,6 @@ export function FilesView({ tabs, activeTab, onTabChange, onBack }: FilesViewPro
         }
         defaultRightWidth={560}
         minRightWidth={460}
-        maxRightWidth={720}
       />
 
       <AddFileModal />
