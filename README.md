@@ -1,5 +1,7 @@
 # Uwazi 2026
 
+**Live prototype: [huridocs.github.io/uwazi-design](https://huridocs.github.io/uwazi-design/)** — built from `main` on every push.
+
 Design system, screens, and interactive prototype for the Uwazi settings/admin UI redesign.
 
 ## Figma
