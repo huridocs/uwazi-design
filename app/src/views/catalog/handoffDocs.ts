@@ -15,6 +15,8 @@ const files = import.meta.glob("../../../../handoff/*.md", {
 /** Known docs, in reading order. Unlisted files append after these. */
 const MANIFEST: { file: string; label: string }[] = [
   { file: "TOKENS-MAPPING.md", label: "Tokens mapping" },
+  { file: "TYPOGRAPHY.md", label: "Typography" },
+  { file: "GLOBAL-STYLES.md", label: "Global styles" },
   { file: "DATA-SEAMS.md", label: "Data seams" },
   { file: "PATTERNS.md", label: "Patterns" },
   { file: "COMPONENT-INVENTORY.md", label: "Component inventory" },
