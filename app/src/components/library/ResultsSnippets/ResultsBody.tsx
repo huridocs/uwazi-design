@@ -207,7 +207,7 @@ export function ResultsBody({
     <Shell>
       <div className="shrink-0" style={{ borderBottom: "1px solid var(--border-primary)" }}>
         {/* Count, match-type chips and the collapse controls on ONE row —
-            count + inlineSlot + rightSlot, the shared list-header shape. The
+            leadingSlot + count + rightSlot, the shared list-header shape. The
             chips used to sit in a strip of their own below, which is height this
             row was already paying for. */}
         <ListInfoRow

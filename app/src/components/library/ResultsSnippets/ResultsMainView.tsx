@@ -122,11 +122,17 @@ export function ResultsMainView({
   const layout = useAtomValue(libraryResultsLayoutAtom);
   const [activeTypes, setActiveTypes] = useAtom(matchTypeFiltersAtom);
   const [visible, setVisible] = useState(STEP);
+  // Per-entity "show every page-snippet", owned here so the capped `results`
+  // memo stays cheap and only the expanded cards pay for the extra windowing.
+  const [showAll, setShowAll] = useState<Record<string, boolean>>({});
   const trimmed = query.trim();
 
-  useEffect(() => setVisible(STEP), [entities, trimmed, language, source, layout]);
+  useEffect(() => {
+    setVisible(STEP);
+    setShowAll({});
+  }, [entities, trimmed, language, source, layout]);
 
-  const results = useMemo<Result[]>(
+  const cappedResults = useMemo<Result[]>(
     () =>
       entities
         .slice(0, visible)
@@ -138,6 +144,24 @@ export function ResultsMainView({
         }))
         .filter((r) => r.snippets.count > 0),
     [entities, visible, trimmed, language, source, layout],
+  );
+
+  // Only the cards the user expanded are re-derived uncapped — the windowing
+  // pass is the cost, so the common case shouldn't pay it. Kept as its own memo
+  // so expanding one card doesn't rebuild the rest.
+  const results = useMemo<Result[]>(
+    () =>
+      cappedResults.map((r) =>
+        showAll[r.entity.id]
+          ? {
+              entity: r.entity,
+              snippets: buildSnippetsFor(r.entity, trimmed, language, source, {
+                maxFullText: Infinity,
+              }),
+            }
+          : r,
+      ),
+    [cappedResults, showAll, trimmed, language, source],
   );
 
   if (source === "cejil" && cejilLoading) {
@@ -190,7 +214,7 @@ export function ResultsMainView({
     <div className="flex flex-col h-full min-h-0">
       {/* Header strip — always mounted; only its contents change. Count,
           match-type chips and the cap note ride the shared list-header shape
-          (count + inlineSlot + rightSlot) so this surface and the drawer's
+          (leadingSlot + count + rightSlot) so this surface and the drawer's
           Results tab read as one component at two widths. */}
       <div className="shrink-0">
         <ListInfoRow
@@ -263,6 +287,10 @@ export function ResultsMainView({
             onSelect={onSelect}
             onFocusProperty={onFocusProperty}
             onSelectSnippet={onSelectSnippet}
+            showAll={showAll}
+            onToggleShowAll={(id) =>
+              setShowAll((m2) => ({ ...m2, [id]: !m2[id] }))
+            }
           />
         ) : layout === "tree" ? (
           <TreeBody
@@ -319,6 +347,8 @@ function GroupedBody({
   onSelect,
   onFocusProperty,
   onSelectSnippet,
+  showAll,
+  onToggleShowAll,
 }: {
   results: Result[];
   query: string;
@@ -326,6 +356,9 @@ function GroupedBody({
   onSelect: (id: string) => void;
   onFocusProperty: (id: string, fieldKey: string) => void;
   onSelectSnippet: (id: string, page: number) => void;
+  /** Entities currently showing every page-snippet rather than the capped few. */
+  showAll: Record<string, boolean>;
+  onToggleShowAll: (id: string) => void;
 }) {
   return (
     <div className="flex flex-col gap-2.5 pb-2">
@@ -335,6 +368,7 @@ function GroupedBody({
         const props = properties(snippets);
         const hasMeta = props.length > 0;
         const hasText = snippets.fullText.length > 0;
+        const expanded = !!showAll[entity.id];
         return (
           <article
             key={entity.id}
@@ -422,6 +456,26 @@ function GroupedBody({
                         />
                       ))}
                     </div>
+                    {/* The card already PRINTS the honest total beside the
+                        section label; without this it stated a number it gave
+                        you no way to reach. Same contract as the drawer's
+                        card: stays mounted once expanded (`shown === total`
+                        then), so the control can't vanish under the click. */}
+                    {(snippets.fullTextTotal > snippets.fullText.length ||
+                      expanded) && (
+                      <button
+                        type="button"
+                        onClick={() => onToggleShowAll(entity.id)}
+                        aria-expanded={expanded}
+                        className="mt-1 self-start px-1 text-[11px] font-medium text-carbon
+                          hover:underline cursor-pointer focus-visible:outline-none
+                          focus-visible:ring-1 focus-visible:ring-carbon/40 rounded-sm"
+                      >
+                        {expanded
+                          ? "Show fewer"
+                          : `Show all ${snippets.fullTextTotal.toLocaleString()}`}
+                      </button>
+                    )}
                   </section>
                 )}
               </div>
@@ -666,9 +720,25 @@ function PassagesBody({
                   <HighlightedText text={row.text} query={query} />
                 </p>
               </button>
-              <div className="mt-1.5 lg:mt-0 flex items-start gap-2 lg:justify-end">
-                <span className="flex flex-col items-start lg:items-end gap-0.5 min-w-0">
-                  <span className="flex items-center gap-1.5 min-w-0">
+              {/* `min-w-0` is load-bearing, not decoration. A grid item defaults
+                  to `min-width: auto`, so it refuses to shrink below its content's
+                  min-content width — the inner `truncate` never fires, and a long
+                  entity name ("Olivares Muñoz y otros / Cárcel de Villa Hermosa")
+                  spills out of this 15rem track. It spills LEFT, because the
+                  column is `justify-end`, straight across the passage beside it.
+                  Measured before the fix: name left edge 35px outside its track,
+                  overlapping the passage by 15px. */}
+              <div className="min-w-0 mt-1.5 lg:mt-0 flex items-start gap-2 lg:justify-end">
+                {/* `w-full`, not just `min-w-0`. These stack in a COLUMN flex,
+                    so their width is the CROSS axis, where the used size is
+                    `fit-content` — and `fit-content` floors at min-content. The
+                    name carries `truncate` (`white-space: nowrap`), so its
+                    min-content IS the whole untruncated string: 275px inside a
+                    240px track. `min-width: 0` doesn't help, because nothing is
+                    shrinking it; only a DEFINITE width gives `truncate`
+                    something to truncate against. */}
+                <span className="w-full flex flex-col items-start lg:items-end gap-0.5 min-w-0">
+                  <span className="w-full flex items-center gap-1.5 min-w-0 lg:justify-end">
                     <span
                       className="w-1.5 h-1.5 rounded-[2px] shrink-0"
                       style={{ backgroundColor: color }}
