@@ -24,6 +24,7 @@ import { TimeSpine, SpineDate } from "../TimeSpine";
 import { HighlightedText } from "../../shared/HighlightedText";
 import { EntityTypeChip } from "../../shared/EntityTypeChip";
 import { ListInfoRow } from "../../shared/ListInfoRow";
+import { ActiveSearchChip } from "../ActiveSearchChip";
 import { ToggleChip } from "../../shared/ToggleChip";
 import { CountBadge } from "../../shared/CountBadge";
 
@@ -218,15 +219,23 @@ export function ResultsMainView({
           Results tab read as one component at two widths. */}
       <div className="shrink-0">
         <ListInfoRow
+          // The query rides the row as a CHIP, so the line reporting the results
+          // is also where the search ends — until now it could only be dropped
+          // from the Filters panel, i.e. from anywhere except the page showing
+          // what it returned. The chip REPLACES the quoted string rather than
+          // sitting beside it: the terms twice in one row, once to read and once
+          // to close, is noise.
           count={
-            <span dir="ltr" className="text-xs text-ink-secondary">
-              <span className="font-semibold text-ink tabular-nums">
-                {narrowed
-                  ? `${entities.length.toLocaleString()} of ${totalMatches.toLocaleString()}`
-                  : entities.length.toLocaleString()}
-              </span>{" "}
-              {totalMatches === 1 ? "result" : "results"} for{" "}
-              <span className="font-medium text-ink">“{trimmed}”</span>
+            <span dir="ltr" className="inline-flex items-center gap-1.5 text-xs text-ink-secondary">
+              <span>
+                <span className="font-semibold text-ink tabular-nums">
+                  {narrowed
+                    ? `${entities.length.toLocaleString()} of ${totalMatches.toLocaleString()}`
+                    : entities.length.toLocaleString()}
+                </span>{" "}
+                {totalMatches === 1 ? "result" : "results"} for
+              </span>
+              <ActiveSearchChip />
             </span>
           }
           activeFilterCount={0}
@@ -657,6 +666,17 @@ function PassagesBody({
   onFocusProperty: (id: string, fieldKey: string) => void;
   onSelectSnippet: (id: string, page: number) => void;
 }) {
+  // Same signal the grouped/tree passage rows read, so a page opened from any
+  // layout — or from a `MatchOrigin` popover — stays lit in this one
+  // (`handleSnippetSelect` writes it).
+  const activePage = useAtomValue(resultsActivePageAtom);
+  // …but that atom can only name a row the corpus gives a PAGE. A passage with
+  // no page (Sample full text, every property hit) is identified by its content
+  // alone, so the row the user actually opened is remembered here. Falling back
+  // to `selectedId` instead would light every row of that entity at once — a
+  // band of "selected" scattered down a ranked list, which is not what selected
+  // means anywhere else in the app.
+  const [activeKey, setActiveKey] = useState<string | null>(null);
   const { rows, notShown, titleOnly } = useMemo(() => {
     const rows: FlatPassage[] = [];
     let notShown = 0;
@@ -692,62 +712,79 @@ function PassagesBody({
 
   return (
     <div className="pb-2">
-      <div className="flex flex-col gap-1">
+      {/* ONE paper sheet of hairline-separated rows, not a stack of bordered
+          boxes. A card per passage is a box the passage never fills: the excerpt
+          is a sentence, so at pane width every card was mostly empty and the
+          list read as 120 half-filled containers. The sheet turns that leftover
+          into the margin of a page, which is what it actually is. */}
+      <div className="rounded-md border border-border/60 bg-paper overflow-hidden">
         {rows.map((row, i) => {
           const color = getEntityType(row.entity.typeId)?.color ?? "#6B7280";
           const isDoc = row.field === null;
+          // Keyed by CONTENT, not by index: "Show more" splices new rows into a
+          // list ranked by hit density, so an index would quietly slide the lit
+          // state onto whatever passage inherited the slot.
+          const rowKey = `${row.entity.id}|${row.fieldKey ?? "doc"}|${row.page ?? "-"}|${row.text}`;
+          const selected =
+            activeKey === rowKey ||
+            (row.page !== null &&
+              activePage?.entityId === row.entity.id &&
+              activePage.page === row.page);
           return (
-            <article
+            <button
               key={`${row.entity.id}-${i}`}
-              className="group grid gap-x-5 rounded-md px-3 py-2.5 bg-paper border border-border/50
-                hover:border-border transition-colors lg:grid-cols-[1fr_15rem]"
+              type="button"
+              aria-pressed={selected}
+              onClick={() => {
+                setActiveKey(rowKey);
+                if (isDoc && row.page !== null) onSelectSnippet(row.entity.id, row.page);
+                else if (isDoc) onSelect(row.entity.id);
+                else onFocusProperty(row.entity.id, row.fieldKey!);
+              }}
+              // The WHOLE entry is the target — passage and attribution were two
+              // halves of one thought, and only one of them used to be clickable.
+              className={`w-full text-start px-3 py-2.5 border-b border-border/50 last:border-b-0
+                transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1
+                focus-visible:ring-inset focus-visible:ring-ink/20 ${
+                  selected ? "bg-parchment" : "hover:bg-warm"
+                }`}
             >
-              <button
-                type="button"
-                onClick={() =>
-                  isDoc && row.page !== null
-                    ? onSelectSnippet(row.entity.id, row.page)
-                    : isDoc
-                      ? onSelect(row.entity.id)
-                      : onFocusProperty(row.entity.id, row.fieldKey!)
-                }
-                className="min-w-0 text-start cursor-pointer focus-visible:outline-none
-                  focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20 rounded-sm"
-              >
-                {/* The passage is the row. Wider measure than the drawer allowed,
-                    capped at a readable line length rather than the pane width. */}
-                <p className="max-w-[62ch] text-sm leading-relaxed text-ink">
+              {/* Passage and attribution share ONE measure, so they read as a
+                  single block wherever the pane ends. They used to sit in a
+                  stretched `1fr_15rem` grid: the passage stopped at its 62ch cap
+                  and the meta stayed pinned to the far edge, leaving a hand's
+                  width of nothing between a sentence and the name of the thing
+                  it came from. `text-sm` here so `ch` is measured in the
+                  passage's own type size, not the inherited one. */}
+              <span className="block max-w-[74ch] text-sm">
+                <span className="block leading-relaxed text-ink">
                   <HighlightedText text={row.text} query={query} />
-                </p>
-              </button>
-              {/* `min-w-0` is load-bearing, not decoration. A grid item defaults
-                  to `min-width: auto`, so it refuses to shrink below its content's
-                  min-content width — the inner `truncate` never fires, and a long
-                  entity name ("Olivares Muñoz y otros / Cárcel de Villa Hermosa")
-                  spills out of this 15rem track. It spills LEFT, because the
-                  column is `justify-end`, straight across the passage beside it.
-                  Measured before the fix: name left edge 35px outside its track,
-                  overlapping the passage by 15px. */}
-              <div className="min-w-0 mt-1.5 lg:mt-0 flex items-start gap-2 lg:justify-end">
-                {/* `w-full`, not just `min-w-0`. These stack in a COLUMN flex,
-                    so their width is the CROSS axis, where the used size is
-                    `fit-content` — and `fit-content` floors at min-content. The
-                    name carries `truncate` (`white-space: nowrap`), so its
-                    min-content IS the whole untruncated string: 275px inside a
-                    240px track. `min-width: 0` doesn't help, because nothing is
-                    shrinking it; only a DEFINITE width gives `truncate`
-                    something to truncate against. */}
-                <span className="w-full flex flex-col items-start lg:items-end gap-0.5 min-w-0">
-                  <span className="w-full flex items-center gap-1.5 min-w-0 lg:justify-end">
-                    <span
-                      className="w-1.5 h-1.5 rounded-[2px] shrink-0"
-                      style={{ backgroundColor: color }}
-                    />
-                    <span className="text-xs text-ink-secondary truncate">
-                      <HighlightedText text={row.entity.title} query={query} />
-                    </span>
+                </span>
+                {/* The attribution, under the quote it belongs to. Small and
+                    quiet: this layout ranks passages, so the entity stays
+                    secondary — but it now has the row's width to be legible in
+                    rather than a 15rem track that truncated most case names. */}
+                <span className="mt-1 flex items-center gap-1.5 min-w-0 text-[11px]">
+                  <span
+                    className="w-1.5 h-1.5 rounded-[2px] shrink-0"
+                    style={{ backgroundColor: color }}
+                  />
+                  <span className="truncate text-ink-secondary">
+                    <HighlightedText text={row.entity.title} query={query} />
                   </span>
-                  <span dir="ltr" className="text-[10px] uppercase tracking-wide text-ink-tertiary">
+                  <span className="shrink-0 text-ink-muted" aria-hidden="true">
+                    ·
+                  </span>
+                  {/* `<bdi dir="ltr">` keeps the ASSEMBLED "Document · p.15 ·
+                      2×" in order under RTL without flipping the line's
+                      alignment. A field name is the field's OWN translation
+                      ("الصك المصدر"), so it takes `auto` and reads in its own
+                      direction — forcing ltr on it is how a translated label
+                      ends up mis-ordered. */}
+                  <bdi
+                    dir={isDoc ? "ltr" : "auto"}
+                    className="shrink-0 text-[10px] uppercase tracking-wide text-ink-tertiary"
+                  >
                     {isDoc ? (
                       <>
                         Document
@@ -769,10 +806,10 @@ function PassagesBody({
                     ) : (
                       row.field
                     )}
-                  </span>
+                  </bdi>
                 </span>
-              </div>
-            </article>
+              </span>
+            </button>
           );
         })}
       </div>
