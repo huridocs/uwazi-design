@@ -37,6 +37,10 @@ npm i @fontsource-variable/inter @fontsource/jetbrains-mono
 ```ts
 // entry point, before any CSS that sets font-family
 import "@fontsource-variable/inter";        // one variable file covers 400–700
+import "@fontsource-variable/inter/wght-italic.css"; // real italics — the app
+                                            // italicises quotes in 17 places,
+                                            // and without this file browsers
+                                            // fake-slant the upright face
 import "@fontsource/jetbrains-mono/400.css";
 ```
 
