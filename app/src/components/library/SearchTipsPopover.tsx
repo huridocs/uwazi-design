@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useSetAtom } from "jotai";
 import { Lightbulb } from "lucide-react";
-import { libraryQueryAtom } from "../../atoms/library";
+import { librarySearchDraftAtom } from "../../atoms/library";
 
 const PANEL_ID = "library-search-tips";
 /** Rough panel height (header + 5 fixed rows) — only used to decide flip. */
@@ -68,7 +68,10 @@ export function SearchTipsPopover({
   const chipRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
-  const setQuery = useSetAtom(libraryQueryAtom);
+  // The DRAFT, not the committed query: a non-empty draft commits itself, so
+  // the example both runs and shows up in the box. Writing the committed atom
+  // alone would search for something the empty-looking box never mentions.
+  const setQuery = useSetAtom(librarySearchDraftAtom);
 
   useLayoutEffect(() => {
     if (!open) return;

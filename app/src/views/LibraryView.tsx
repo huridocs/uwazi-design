@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   Search,
@@ -23,6 +23,9 @@ import { scrollToPageAtom } from "../atoms/selection";
 import { useNotify } from "../hooks/useNotify";
 import {
   libraryQueryAtom,
+  librarySearchDraftAtom,
+  clearLibrarySearchAtom,
+  recordSearchAtom,
   libraryTypeFiltersAtom,
   libraryHasDocAtom,
   libraryStatusFiltersAtom,
@@ -73,6 +76,7 @@ import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { ResultsBody } from "../components/library/ResultsSnippets/ResultsBody";
 import { ResultsMainView } from "../components/library/ResultsSnippets/ResultsMainView";
 import { SearchTipsPopover } from "../components/library/SearchTipsPopover";
+import { RecentSearches } from "../components/library/RecentSearches";
 import { DisplayMenu } from "../components/library/DisplayMenu";
 import { ActiveFiltersButton } from "../components/library/ActiveFiltersButton";
 import { DataTable, type Column } from "../components/shared/DataTable";
@@ -92,6 +96,11 @@ export const SORTS = [
   { value: "type", label: "Type" },
   { value: "country", label: "Country" },
 ];
+
+/** How long the search box must sit still before the query counts as a search
+ *  worth remembering. Long enough to cover typing and a pause to read, short
+ *  enough that a query you meant is logged before you move on. */
+const SETTLE_MS = 1200;
 
 /** How many cards to reveal per page in the Library grid/list. */
 const DISPLAY_STEP = 120;
@@ -125,7 +134,14 @@ export function LibraryView() {
   }, [dataSource, cejilReady, setCejilReady, cejilRetry]);
   const cejilLoading = dataSource === "cejil" && !cejilReady;
   const references = useAtomValue(referencesAtom);
-  const [query, setQuery] = useAtom(libraryQueryAtom);
+  // `query` is the COMMITTED search — everything below (filtering, ranking,
+  // match categories, highlighting) reads it. Only the input binds to the draft.
+  const query = useAtomValue(libraryQueryAtom);
+  const [searchDraft, setSearchDraft] = useAtom(librarySearchDraftAtom);
+  const clearSearch = useSetAtom(clearLibrarySearchAtom);
+  const recordSearch = useSetAtom(recordSearchAtom);
+  const searchBoxRef = useRef<HTMLDivElement>(null);
+  const [searchFocused, setSearchFocused] = useState(false);
   // Filters / Results drawer tabs. Results auto-activates while the search box
   // carries a query and falls back to Filters when it's cleared; between those
   // transitions the tab can still be switched by hand.
@@ -209,12 +225,32 @@ export function LibraryView() {
   const statusActive = wantPublished || wantRestricted;
   const q = query.trim().toLowerCase();
   const hasQuery = q.length > 0;
+  // The drawer's Results tab exists because cards / list / map / timeline can't
+  // show a snippet. When the MAIN pane is the Results view, the tab is a 24rem
+  // copy of what's already on screen at full width — so it isn't rendered at all,
+  // and the drawer is simply the filter panel. Suppressing only its
+  // auto-activation left the duplicate one click away and made the effect below
+  // read like a special case; this makes it a consequence.
+  //
+  // Nothing shifts when it goes: Filters sits to its INLINE-START, so the strip
+  // shrinks from the end, and the change is bound to an explicit view switch —
+  // never to typing.
+  // Record the search once it SETTLES. Typing "velásquez" commits nine times on
+  // its way there; logging each would leave a history of "v", "ve", "vel" and
+  // bury the entry anyone wanted. The debounce is the commit boundary — the
+  // query has to stop changing before it counts as a search you ran. Enter and
+  // blur record immediately, because both are the user saying "that's the one".
   useEffect(() => {
-    // …but not when the MAIN pane is already the Results view: two copies of the
-    // same evidence list side by side is one too many. The tab stays reachable;
-    // it just isn't what a query auto-opens there.
-    setDrawerTab(hasQuery && viewMode !== "results" ? "results" : "filters");
-  }, [hasQuery, viewMode]);
+    const t = query.trim();
+    if (!t) return;
+    const id = window.setTimeout(() => recordSearch(t), SETTLE_MS);
+    return () => window.clearTimeout(id);
+  }, [query, recordSearch]);
+
+  const showResultsTab = viewMode !== "results";
+  useEffect(() => {
+    setDrawerTab(hasQuery && showResultsTab ? "results" : "filters");
+  }, [hasQuery, showResultsTab]);
   // Query tokens for the search predicate (shared with snippets + marks). Derived
   // from the raw `query` so uppercase AND/OR/NOT are recognised before lowering.
   // Full-text body scanning is gated on `q.length ≥ 3` for CEJIL-corpus perf.
@@ -525,28 +561,61 @@ export function LibraryView() {
         style={{ borderBottom: "1px solid var(--border-primary)" }}
       >
         <div
+          ref={searchBoxRef}
           className="relative flex-1 min-w-0 flex items-center gap-1.5 h-8 py-1 pl-2 pr-2 bg-warm border border-border rounded-md
             focus-within:ring-2 focus-within:ring-carbon/20 focus-within:border-carbon/40 transition-all"
         >
           <Search size={14} className="text-ink-muted shrink-0" />
           <input
             type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            value={searchDraft}
+            onChange={(e) => setSearchDraft(e.target.value)}
+            onFocus={() => setSearchFocused(true)}
+            // Enter and Escape close the panel without moving focus, so a later
+            // click on an ALREADY-FOCUSED box fires no focus event and the panel
+            // would never come back. Clicking the box is its own request to see
+            // the list again.
+            onClick={() => setSearchFocused(true)}
+            onBlur={() => {
+              setSearchFocused(false);
+              recordSearch(searchDraft);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                recordSearch(searchDraft);
+                setSearchFocused(false);
+              }
+            }}
             placeholder="Search title & metadata"
             aria-label="Search entities"
             className="flex-1 min-w-[60px] bg-transparent text-xs font-medium placeholder:text-ink-muted focus:outline-none"
           />
-          {query && (
+          {searchDraft && (
             <button
-              onClick={() => setQuery("")}
-              aria-label="Clear search"
+              // Empties the BOX, not the search: the committed query survives so
+              // the results stay usable while you retype. Dropping the search
+              // itself is the chip in Active filters, or Clear all.
+              onClick={() => setSearchDraft("")}
+              aria-label="Clear search text"
               className="shrink-0 p-0.5 rounded-full hover:bg-parchment text-ink-muted hover:text-ink cursor-pointer transition-colors"
             >
               <X size={12} />
             </button>
           )}
           <SearchTipsPopover />
+          {/* Follows FOCUS; the tips popover follows a click on its chip — which
+              blurs the input, so the two can never be open at once without any
+              shared state to arbitrate. */}
+          <RecentSearches
+            anchorRef={searchBoxRef}
+            open={searchFocused}
+            onPick={(q) => {
+              setSearchDraft(q);
+              recordSearch(q);
+              setSearchFocused(false);
+            }}
+            onClose={() => setSearchFocused(false)}
+          />
         </div>
         {/* Sort steps aside on a phone — it moves into the Display popover, where
             it costs no width. The VIEW switcher does not: cards / list / map /
@@ -667,7 +736,7 @@ export function LibraryView() {
               onSelectSnippet={handleSnippetSelect}
               onSelect={handleSelect}
               selectedId={selectedId}
-              onClearSearch={() => setQuery("")}
+              onClearSearch={() => clearSearch()}
               hiddenByFilters={Math.max(0, searchMatchCount - matchTypeBase.length)}
               onClearFilters={() => clearFacets()}
               matchTypeCounts={matchTypeCounts}
@@ -767,7 +836,7 @@ export function LibraryView() {
       onRetry={handleCejilRetry}
       onFocusProperty={handleFocusProperty}
       onSelectSnippet={handleSnippetSelect}
-      onClearSearch={() => setQuery("")}
+      onClearSearch={() => clearSearch()}
       hiddenByFilters={Math.max(0, searchMatchCount - matchTypeBase.length)}
       onClearFilters={() => clearFacets()}
       matchTypeCounts={matchTypeCounts}
@@ -779,16 +848,28 @@ export function LibraryView() {
     <div className="flex flex-col h-full min-h-0 bg-warm">
       <DrawerTabs
         tabs={[
-          // Count rides as a badge here rather than as a row inside the panel —
-          // a row that mounts on first tick shifted every facet card.
-          { id: "filters", label: "Filters", count: activeFilterCount || undefined },
-          { id: "results", label: "Results" },
+          // DOTS, not counts. Both signals here are user-set state that is still
+          // in effect while you're looking at the other panel — filters you
+          // ticked, a query you typed — which is exactly what the dot is for.
+          //
+          // A count was the wrong instrument twice over: it can be ABSENT (no
+          // filters, no query), so it mounted on first use and widened its own
+          // tab, shoving Results sideways the moment you ticked a box; and the
+          // number itself was never the point. "Something you set is still on
+          // back there" is one bit, and the dot costs no width to say it.
+          // `count` stays for inventory — see `DrawerTabs`.
+          { id: "filters", label: "Filters", dot: activeFilterCount > 0 },
+          // A query that found nothing gets no dot: the tab would be pointing at
+          // an empty panel. Dot means "there is something here", not "you typed".
+          ...(showResultsTab
+            ? [{ id: "results", label: "Results", dot: hasQuery && filtered.length > 0 }]
+            : []),
         ]}
         activeId={drawerTab}
         onChange={(id) => setDrawerTab(id as "filters" | "results")}
       />
       <div className="flex-1 min-h-0 overflow-hidden">
-        {drawerTab === "filters" ? <LibraryFilters /> : resultsBody}
+        {drawerTab === "results" && showResultsTab ? resultsBody : <LibraryFilters />}
       </div>
     </div>
   );
@@ -815,7 +896,18 @@ export function LibraryView() {
           count: activeFilterCount || undefined,
           content: <LibraryFilters />,
         },
-        { id: "results", label: "Results", content: resultsBody },
+        // Same rule on a phone: the Results section is a second copy of the
+        // main pane when that pane is already the Results view.
+        ...(showResultsTab
+          ? [
+              {
+                id: "results",
+                label: "Results",
+                count: hasQuery ? filtered.length : undefined,
+                content: resultsBody,
+              },
+            ]
+          : []),
       ]}
     />
   );

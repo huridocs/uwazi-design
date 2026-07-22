@@ -1,8 +1,83 @@
 import { atom } from "jotai";
+import { atomWithStorage, createJSONStorage } from "jotai/utils";
 import { dataSourceAtom, type DataSource } from "./dataSource";
 
-/** Library search box. */
+/** The COMMITTED library search — what every consumer filters, ranks, marks and
+ *  counts by. Read this one everywhere; only the search input itself binds to
+ *  the draft below. */
 export const libraryQueryAtom = atom("");
+
+/** What is currently TYPED in the search box, which is not the same thing as
+ *  what you are searching for.
+ *
+ *  Emptying the box used to empty the results with it: you cleared the text to
+ *  type something else, or just to see the row underneath, and the entire result
+ *  set — with its facets, its counts and its snippets — evaporated mid-read. So
+ *  the two are split. Every non-empty draft commits immediately, so live search
+ *  is unchanged; an EMPTY draft commits nothing, leaving the last real search
+ *  standing. The committed query is dismissed deliberately, by its chip in
+ *  ACTIVE FILTERS or by Clear all — never as a side effect of an empty box. */
+const searchDraftStateAtom = atom("");
+export const librarySearchDraftAtom = atom(
+  (get) => get(searchDraftStateAtom),
+  (_get, set, next: string) => {
+    set(searchDraftStateAtom, next);
+    if (next.trim()) set(libraryQueryAtom, next);
+  },
+);
+
+/** Drop the search for real: empties the box AND the committed query. The only
+ *  route back to "no search" — the box's own X clears just the text. */
+export const clearLibrarySearchAtom = atom(null, (_get, set) => {
+  set(searchDraftStateAtom, "");
+  set(libraryQueryAtom, "");
+});
+
+/** Recent searches — the queries you actually ran, newest first.
+ *
+ *  SESSION storage, following `appViewAtom`'s reasoning exactly: a reload should
+ *  keep your place, but a visit should start clean. In localStorage this list
+ *  would hand every later visitor of a shared prototype the last person's
+ *  research questions, which is a different feature (and a worse one).
+ *
+ *  What gets recorded is a COMMITTED, SETTLED query — see `recordSearchAtom`.
+ *  Recording per keystroke would fill the log with "v", "ve", "vel" and bury the
+ *  one entry anybody wanted. */
+const searchHistoryJSON = createJSONStorage<string[]>(() => sessionStorage);
+export const librarySearchHistoryAtom = atomWithStorage<string[]>(
+  "uwazi:searchHistory",
+  [],
+  searchHistoryJSON,
+  { getOnInit: true },
+);
+
+/** How many searches the log keeps. Small on purpose: it is a way back to what
+ *  you just did, not an archive — past ~8 you scan it slower than you retype. */
+export const SEARCH_HISTORY_CAP = 8;
+/** Below this, a query isn't worth remembering (and is faster to retype). */
+export const MIN_LOGGED_QUERY = 2;
+
+/** Record a search. Deduped case-insensitively — re-running an old query moves
+ *  it back to the top rather than listing it twice — and capped. */
+export const recordSearchAtom = atom(null, (get, set, raw: string) => {
+  const q = raw.trim();
+  if (q.length < MIN_LOGGED_QUERY) return;
+  const rest = get(librarySearchHistoryAtom).filter(
+    (h) => h.toLowerCase() !== q.toLowerCase(),
+  );
+  set(librarySearchHistoryAtom, [q, ...rest].slice(0, SEARCH_HISTORY_CAP));
+});
+
+/** Forget one entry (its × ) or the lot (Clear all). */
+export const forgetSearchAtom = atom(null, (get, set, q: string) => {
+  set(
+    librarySearchHistoryAtom,
+    get(librarySearchHistoryAtom).filter((h) => h !== q),
+  );
+});
+export const clearSearchHistoryAtom = atom(null, (_get, set) => {
+  set(librarySearchHistoryAtom, []);
+});
 
 /** Selected entity-type facets (typeId → on). Empty = all types. */
 export const libraryTypeFiltersAtom = atom<Record<string, boolean>>({});
@@ -119,7 +194,11 @@ export const libraryViewModeAtom = atom<LibraryViewMode>("cards");
  *  - `spine`     passages on a proportional time axis, each entity carrying its
  *                strongest one */
 export type ResultsLayout = "grouped" | "tree" | "passages" | "spine";
-export const libraryResultsLayoutAtom = atom<ResultsLayout>("grouped");
+/** Display-menu defaults are exported so `DisplayMenu` can ask "is this off its
+ *  default?" against the real value. Both Display menus (Library and
+ *  Relationships) light their dot on exactly that question. */
+export const DEFAULT_RESULTS_LAYOUT: ResultsLayout = "grouped";
+export const libraryResultsLayoutAtom = atom<ResultsLayout>(DEFAULT_RESULTS_LAYOUT);
 
 /** Timeline body flavour — four ways to read the same chronology:
  *  - `rail`     the text-references minimap on a vertical time track: dots and
@@ -130,7 +209,8 @@ export const libraryResultsLayoutAtom = atom<ResultsLayout>("grouped");
  *  - `spine`    a proportional chronology — every entity at its exact instant
  *  - `lanes`    a template × period grid */
 export type TimelineLayout = "rail" | "density" | "spine" | "lanes";
-export const libraryTimelineLayoutAtom = atom<TimelineLayout>("rail");
+export const DEFAULT_TIMELINE_LAYOUT: TimelineLayout = "rail";
+export const libraryTimelineLayoutAtom = atom<TimelineLayout>(DEFAULT_TIMELINE_LAYOUT);
 
 /** Track scope, mirroring the document minimap's whole-document / this-page
  *  toggle: `all` plots the entire corpus span, `year` zooms the track to the
@@ -153,7 +233,8 @@ export const libraryInfoAtom = atom<Partial<Record<LibraryInfoKey, boolean>>>({}
 /** The time strip under the results. It filters by date and reads the whole
  *  result set, so it is useful under EVERY layout — not just the map and the
  *  timeline it started under. A display option, on by default. */
-export const libraryTimeHubAtom = atom(true);
+export const DEFAULT_TIME_HUB = true;
+export const libraryTimeHubAtom = atom(DEFAULT_TIME_HUB);
 
 /** Sort order. */
 export type LibrarySort =
@@ -162,7 +243,8 @@ export type LibrarySort =
   | "connections"
   | "type"
   | "country";
-export const librarySortAtom = atom<LibrarySort>("recent");
+export const DEFAULT_LIBRARY_SORT: LibrarySort = "recent";
+export const librarySortAtom = atom<LibrarySort>(DEFAULT_LIBRARY_SORT);
 export type LibrarySortDir = "asc" | "desc";
 export const librarySortDirAtom = atom<LibrarySortDir>("desc");
 /** Natural direction for a freshly-picked sort key: text → A→Z, value → high→low. */
@@ -208,7 +290,10 @@ export const clearLibraryFacetsAtom = atom(null, (_get, set) => {
 });
 
 export const clearLibraryFiltersAtom = atom(null, (_get, set) => {
-  set(libraryQueryAtom, "");
+  // BOTH halves of the search: clearing only the committed query would leave the
+  // box still holding text that no longer filters anything, and the next
+  // keystroke would silently re-commit the old string.
+  set(clearLibrarySearchAtom);
   set(libraryTypeFiltersAtom, {});
   set(libraryHasDocAtom, false);
   set(libraryStatusFiltersAtom, {});

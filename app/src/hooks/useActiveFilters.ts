@@ -1,7 +1,8 @@
 import { useMemo } from "react";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   libraryQueryAtom,
+  clearLibrarySearchAtom,
   libraryTypeFiltersAtom,
   libraryHasDocAtom,
   libraryStatusFiltersAtom,
@@ -37,7 +38,9 @@ export interface ActiveFilter {
 export function useActiveFilters(): ActiveFilter[] {
   const dataSource = useAtomValue(dataSourceAtom);
   const language = useAtomValue(languageAtom);
-  const [query, setQuery] = useAtom(libraryQueryAtom);
+  // The chip shows — and drops — the COMMITTED query, not the box's text.
+  const query = useAtomValue(libraryQueryAtom);
+  const clearSearch = useSetAtom(clearLibrarySearchAtom);
   const [typeFilters, setTypeFilters] = useAtom(libraryTypeFiltersAtom);
   const [hasDocOnly, setHasDocOnly] = useAtom(libraryHasDocAtom);
   const [statusFilters, setStatusFilters] = useAtom(libraryStatusFiltersAtom);
@@ -58,7 +61,13 @@ export function useActiveFilters(): ActiveFilter[] {
       });
 
     if (query.trim())
-      out.push({ id: "q", group: "Search", label: `“${query.trim()}”`, remove: () => setQuery("") });
+      out.push({
+        id: "q",
+        group: "Search",
+        label: `“${query.trim()}”`,
+        // Dismissing the chip is the deliberate act, so it drops the text too.
+        remove: () => clearSearch(),
+      });
 
     for (const [id, on] of Object.entries(typeFilters))
       if (on)
@@ -156,7 +165,7 @@ export function useActiveFilters(): ActiveFilter[] {
     chainFilters,
     dataSource,
     language,
-    setQuery,
+    clearSearch,
     setTypeFilters,
     setHasDocOnly,
     setStatusFilters,
