@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { X, ArrowRight } from "lucide-react";
 import { referencesAtom } from "../../atoms/references";
+import { activeFilterCountAtom } from "../../atoms/filters";
 import { librarySelectedEntityIdAtom, focusMetadataFieldAtom } from "../../atoms/library";
 import { openEntityAtom, focusEntityForPreviewAtom } from "../../atoms/focusedEntity";
 import { getEntity } from "../../data/entities";
@@ -46,8 +47,10 @@ export function EntityDrawerPreview({ entityId }: { entityId: string }) {
   );
   const filesCount = profile.files?.length ?? 0;
 
+  const relFilterCount = useAtomValue(activeFilterCountAtom);
   const tabs = tabsForType(profile.typeId, profile.hasDocument).map((tab) => {
-    if (tab.id === "relationships") return { ...tab, count: connectionCount };
+    if (tab.id === "relationships")
+      return { ...tab, count: connectionCount, dot: relFilterCount > 0 };
     if (tab.id === "files") return { ...tab, count: filesCount };
     return tab;
   });

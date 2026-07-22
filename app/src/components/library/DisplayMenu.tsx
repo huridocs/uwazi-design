@@ -10,6 +10,10 @@ import {
   librarySortAtom,
   librarySortDirAtom,
   defaultSortDir,
+  DEFAULT_TIME_HUB,
+  DEFAULT_LIBRARY_SORT,
+  DEFAULT_RESULTS_LAYOUT,
+  DEFAULT_TIMELINE_LAYOUT,
   type LibraryInfoKey,
   type TimelineLayout,
   type ResultsLayout,
@@ -57,12 +61,28 @@ export function DisplayMenu() {
   const isMobile = useAtomValue(breakpointAtom) === "mobile";
   const [open, setOpen] = useState(false);
 
-  const hiddenCount = ITEMS.filter((i) => info[i.key] === false).length + (timeHub ? 0 : 1);
   // The map draws no cards or rows, so the info toggles have nothing to act on —
   // and neither does Results, whose rows are snippets, not metadata summaries.
   const showInfo = viewMode !== "map" && viewMode !== "results";
   const showLayouts = viewMode === "timeline";
   const showResultsLayouts = viewMode === "results";
+
+  // The dot means ONE thing in both Display menus (this and the Relationships
+  // one): some control THE MENU IS SHOWING sits off its default.
+  //  - every term is gated by the same condition that renders its section, so
+  //    the badge can never point at a control this view mode hides (hiding
+  //    Thumbnail in Cards then switching to Results used to leave it lit over a
+  //    menu with no "Show information" in it, and no way to clear it);
+  //  - and every rendered control counts, not just the hidden-info ones, so a
+  //    non-default layout is advertised exactly like a hidden field is.
+  // Defaults come from the atoms themselves — comparing against a hard-coded
+  // guess is what lit the Relationships dot on every fresh panel.
+  const modified =
+    timeHub !== DEFAULT_TIME_HUB ||
+    (isMobile && sort !== DEFAULT_LIBRARY_SORT) ||
+    (showResultsLayouts && resultsLayout !== DEFAULT_RESULTS_LAYOUT) ||
+    (showLayouts && layout !== DEFAULT_TIMELINE_LAYOUT) ||
+    (showInfo && ITEMS.some((i) => info[i.key] === false));
   const toggle = (key: LibraryInfoKey) => setInfo((s) => ({ ...s, [key]: s[key] === false }));
 
   return (
@@ -73,13 +93,13 @@ export function DisplayMenu() {
         aria-haspopup="menu"
         aria-expanded={open}
         className={`relative inline-flex items-center justify-center w-8 h-8 rounded-md transition-colors cursor-pointer ${
-          open || hiddenCount > 0
+          open || modified
             ? "bg-vellum text-ink"
             : "bg-warm text-ink-secondary hover:bg-parchment hover:text-ink"
         }`}
       >
         <SlidersHorizontal size={14} />
-        {hiddenCount > 0 && (
+        {modified && (
           <span
             className="absolute -top-0.5 -end-0.5 w-1.5 h-1.5 rounded-full"
             style={{ backgroundColor: "var(--accent-blue)" }}

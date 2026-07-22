@@ -6,7 +6,17 @@ import { Select } from "../shared/Select";
 interface MainTab {
   id: string;
   label: string;
+  /** **Inventory** — how many things live behind this tab (Relationships 10,
+   *  Files 2). Rides in the flow, so it must be a number the tab always has;
+   *  hidden on mobile, where its width pushes later tabs off-screen. */
   count?: number;
+  /** **Live state, out of view** — something the USER set is still in effect
+   *  behind this tab (an active filter, a running query). Only drawn while the
+   *  tab is NOT active: on the active tab you can see the state itself.
+   *  Absolutely positioned, so it costs no flow width and can toggle without
+   *  moving the strip — the same 6px carbon mark, in the same place, that
+   *  `DrawerTabs` and the Display menu use. Keep it rare. */
+  dot?: boolean;
   /** Show a tiny Sparkles icon next to the count — signals pending AI
    *  suggestions on the Relationships tab. */
   sparkle?: boolean;
@@ -45,8 +55,11 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
             <ArrowLeft size={20} />
           </button>
         )}
+        {/* No `overflow-hidden`: it would clip the dots just outside a tab's
+            corner. The end tabs round themselves instead, logically, so the
+            strip still reads as one frame under RTL. */}
         <div
-          className="flex items-center rounded-md overflow-hidden shrink-0"
+          className="flex items-center rounded-md shrink-0"
           role="tablist"
           style={{
             border: "1px solid var(--border-primary)",
@@ -60,7 +73,9 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
                 role="tab"
                 aria-selected={activeId === tab.id}
                 onClick={() => onChange(tab.id)}
-                className={`flex items-center justify-center gap-1 px-2.5 md:px-3 py-1.5 text-[13px] font-medium transition-colors ${
+                className={`relative flex items-center justify-center gap-1 px-2.5 md:px-3 py-1.5 text-[13px] font-medium transition-colors ${
+                  i === 0 ? "rounded-s-md" : ""
+                } ${i === tabs.length - 1 ? "rounded-e-md" : ""} ${
                   activeId === tab.id
                     ? "bg-vellum text-ink"
                     : "bg-paper text-ink-tertiary hover:text-ink-secondary"
@@ -77,6 +92,17 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
                 )}
                 {tab.sparkle && (
                   <Sparkles size={11} className="text-carbon" aria-label="AI suggestions pending" />
+                )}
+                {/* Decorative — the state it points at is announced by the panel
+                    that owns it. Survives on mobile (unlike the count): it costs
+                    no width, and it is exactly there that the other panel is
+                    furthest out of sight. */}
+                {tab.dot && activeId !== tab.id && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute -top-0.5 -end-0.5 w-1.5 h-1.5 rounded-full"
+                    style={{ backgroundColor: "var(--accent-blue)" }}
+                  />
                 )}
               </button>
             </div>

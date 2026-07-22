@@ -7,6 +7,10 @@ import {
   subGroupByAtom,
   sortOrderAtom,
   zoomAtom,
+  DEFAULT_GROUP_BY,
+  DEFAULT_SUB_GROUP_BY,
+  DEFAULT_SORT_ORDER,
+  DEFAULT_ZOOM,
   type GroupBy,
   type SortOrder,
 } from "../../atoms/filters";
@@ -57,11 +61,17 @@ export function DisplayMenu({ size = "md" }: { size?: "sm" | "md" }) {
   const showThenBy = grouped && !isGraph;
   const showDensity = !isGraph;
 
+  // "Off its DEFAULT", not "off some notional zero". `groupBy` starts at
+  // `relation-type`, so testing `grouped` (i.e. `!== "none"`) lit the dot on
+  // every fresh panel — advertising a change the menu couldn't show, because
+  // opening it revealed nothing but the defaults. Each term is also gated by
+  // the same condition that RENDERS its row, so the dot never points at a
+  // control this view mode hides.
   const modified =
-    grouped ||
-    (showThenBy && subGroupBy !== "none") ||
-    sortOrder !== "appearance" ||
-    (showDensity && zoom !== "detail");
+    groupBy !== DEFAULT_GROUP_BY ||
+    (showThenBy && subGroupBy !== DEFAULT_SUB_GROUP_BY) ||
+    sortOrder !== DEFAULT_SORT_ORDER ||
+    (showDensity && zoom !== DEFAULT_ZOOM);
 
   const box = size === "sm" ? "w-6 h-6" : "w-8 h-8";
 

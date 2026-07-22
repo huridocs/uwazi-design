@@ -21,6 +21,7 @@ import { focusedEntityIdAtom } from "../atoms/focusedEntity";
 import { getEntity } from "../data/entities";
 import { getEntityProfile } from "../data/entityProfiles";
 import { filesAtom } from "../atoms/files";
+import { activeFilterCountAtom } from "../atoms/filters";
 import { languageAtom, type Language } from "../atoms/language";
 import { entityMetadataAtom, makeEntityPropReader } from "../atoms/entityMetadata";
 import { DrawerFilesBody } from "../components/files/DrawerFilesBody";
@@ -512,9 +513,15 @@ function MetadataDrawer() {
   // The Document tab only exists for document-bearing entities — otherwise the
   // viewer would fall back to the bundled sample PDF and show a phantom doc on
   // entities that have none (e.g. an Audiencia with Files 0).
+  const relFilterCount = useAtomValue(activeFilterCountAtom);
   const drawerTabs = [
     ...(profile.hasDocument ? [{ id: "document", label: "Document" }] : []),
-    { id: "connections", label: "Relationships", count: references.length },
+    {
+      id: "connections",
+      label: "Relationships",
+      count: references.length,
+      dot: relFilterCount > 0,
+    },
     { id: "files", label: "Files", count: files.length },
     { id: "template", label: "Template" },
   ];
