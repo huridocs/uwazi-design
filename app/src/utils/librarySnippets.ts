@@ -118,6 +118,41 @@ function entityFields(
   return out;
 }
 
+interface FoldedField {
+  field: string;
+  fieldKey: string;
+  /** Original text — what excerpts are cut from (accents and case intact). */
+  text: string;
+  /** `fold(text)`, computed once per entity+language for the life of the object. */
+  folded: string;
+}
+
+/** `entityFields`, with every value pre-folded and MEMOISED per entity.
+ *
+ *  Folding is `normalize("NFD")` + a regex strip + `toLowerCase()` over every
+ *  field of every entity — and it was being redone on every call of
+ *  `matchCategories`, which the Library invokes thousands of times per keystroke
+ *  for a single query. The text doesn't change between those calls; only the
+ *  query does. So fold once per corpus and reuse.
+ *
+ *  Keyed by the ENTITY OBJECT (a WeakMap), not by id: an edited entity is a new
+ *  object, so its cache entry is simply never found again — no staleness to
+ *  invalidate, and no retention of entities the corpus has dropped. */
+const foldedFieldsCache = new WeakMap<Entity, Map<Language, FoldedField[]>>();
+function foldedFields(e: Entity, language: Language): FoldedField[] {
+  let byLang = foldedFieldsCache.get(e);
+  if (!byLang) {
+    byLang = new Map();
+    foldedFieldsCache.set(e, byLang);
+  }
+  let cached = byLang.get(language);
+  if (!cached) {
+    cached = entityFields(e, language).map((f) => ({ ...f, folded: fold(f.text) }));
+    byLang.set(language, cached);
+  }
+  return cached;
+}
+
 /** How many times `needle` (already lowercased) occurs in `lowerText`. */
 function countOccurrences(lowerText: string, needle: string): number {
   let n = 0;
@@ -275,9 +310,11 @@ export function buildSnippetsFor(
   const fullText: FullTextSnippet[] = [];
   if (terms.length === 0) return { count: 0, metadata, fullText, fullTextTotal: 0 };
 
-  for (const { field, fieldKey, text } of entityFields(entity, language)) {
-    const lower = fold(text);
-    if (!terms.some((t) => lower.includes(t))) continue;
+  // `foldedFields`, not `entityFields`: the same per-entity fold the categoriser
+  // uses, so a card that is both ranked and excerpted folds its fields once, not
+  // twice — and not again on the next keystroke.
+  for (const { field, fieldKey, text, folded } of foldedFields(entity, language)) {
+    if (!terms.some((t) => folded.includes(t))) continue;
     const excerpt = excerptAroundTerms(text, terms);
     if (excerpt) metadata.push({ field, fieldKey, texts: [excerpt] });
   }
@@ -310,33 +347,47 @@ export interface MatchCategories {
   document: boolean;
 }
 
+const NO_MATCH: MatchCategories = { title: false, properties: false, document: false };
+
+/** Where a query matched an entity, given ALREADY-TOKENIZED terms.
+ *
+ *  The terms are a property of the QUERY, not of the entity, so tokenizing them
+ *  per entity was pure repetition — one `highlightTerms` parse per call, times
+ *  thousands of calls, for one query. Callers that categorise a corpus hoist the
+ *  parse and pass it in; `matchCategories` below keeps the one-shot signature. */
+export function matchCategoriesWithTerms(
+  entity: Entity,
+  terms: string[],
+  language: Language,
+  source: DataSource,
+): MatchCategories {
+  if (terms.length === 0) return NO_MATCH;
+
+  let title = false;
+  let properties = false;
+  for (const f of foldedFields(entity, language)) {
+    if (!terms.some((t) => f.folded.includes(t))) continue;
+    if (f.fieldKey === "title") title = true;
+    else properties = true;
+    // Both flags set — no later field can change the answer.
+    if (title && properties) break;
+  }
+  const blob = entityFullTextBlob(entity, language, source);
+  const document = terms.some((t) => blob.includes(t));
+
+  return { title, properties, document };
+}
+
 /** Where a query matched an entity — for the Results tab's match-type chips.
  *  Uses the SAME sources as the filter/snippets so the categories agree with
- *  what surfaces. */
+ *  what surfaces. Prefer `matchCategoriesWithTerms` in a loop over the corpus. */
 export function matchCategories(
   entity: Entity,
   q: string,
   language: Language,
   source: DataSource,
 ): MatchCategories {
-  const terms = highlightTerms(q); // already folded (lowercase + de-accented)
-  if (terms.length === 0) return { title: false, properties: false, document: false };
-  const hit = (text: string) => {
-    const lower = fold(text);
-    return terms.some((t) => lower.includes(t));
-  };
-
-  let title = false;
-  let properties = false;
-  for (const f of entityFields(entity, language)) {
-    if (!hit(f.text)) continue;
-    if (f.fieldKey === "title") title = true;
-    else properties = true;
-  }
-  const blob = entityFullTextBlob(entity, language, source);
-  const document = terms.some((t) => blob.includes(t));
-
-  return { title, properties, document };
+  return matchCategoriesWithTerms(entity, highlightTerms(q), language, source);
 }
 
 /** Where a query matched an entity that THE ROW ITSELF cannot show.

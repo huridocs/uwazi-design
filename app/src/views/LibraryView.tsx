@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   Search,
@@ -55,9 +55,9 @@ import {
 import { getEntityType, type Entity } from "../data/entities";
 import { libraryInheritedDefs } from "../utils/libraryFacets";
 import { buildActiveChains, cejilChainGraph } from "../data/cejil/chainFacets";
-import { matchesAll, matchesSearch, buildSearchIndex, type LibraryFilterState } from "../utils/libraryFilter";
+import { matchesAll, matchesSearch, passesMatchTypes, buildSearchIndex, type LibraryFilterState } from "../utils/libraryFilter";
 import { highlightTerms, fold } from "../utils/queryTokens";
-import { matchCategories } from "../utils/librarySnippets";
+import { matchCategoriesWithTerms, type MatchCategories } from "../utils/librarySnippets";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { EntityCard } from "../components/library/EntityCard";
 import { MatchOrigin } from "../components/library/MatchOrigin";
@@ -136,7 +136,17 @@ export function LibraryView() {
   const references = useAtomValue(referencesAtom);
   // `query` is the COMMITTED search — everything below (filtering, ranking,
   // match categories, highlighting) reads it. Only the input binds to the draft.
-  const query = useAtomValue(libraryQueryAtom);
+  const committedQuery = useAtomValue(libraryQueryAtom);
+  // EVERYTHING heavy below reads `query`, and `query` is the DEFERRED committed
+  // search. Typing updates the draft (the input) urgently and commits in a
+  // transition; this is the other half — while the new query's cascade is being
+  // computed, React keeps rendering this component with the PREVIOUS value, so
+  // the last result set stays on screen and interactive instead of the pane
+  // going blank or the keystroke waiting for 4,398 entities to be re-ranked.
+  const query = useDeferredValue(committedQuery);
+  // The results on screen are for `query` while the user has already asked for
+  // `committedQuery` — say so, rather than pretending they're current.
+  const searchPending = query !== committedQuery;
   const [searchDraft, setSearchDraft] = useAtom(librarySearchDraftAtom);
   const clearSearch = useSetAtom(clearLibrarySearchAtom);
   const recordSearch = useSetAtom(recordSearchAtom);
@@ -241,11 +251,13 @@ export function LibraryView() {
   // query has to stop changing before it counts as a search you ran. Enter and
   // blur record immediately, because both are the user saying "that's the one".
   useEffect(() => {
-    const t = query.trim();
+    // `committedQuery`, not the deferred one: the log records the search the user
+    // RAN, and shouldn't wait on the render that displays it.
+    const t = committedQuery.trim();
     if (!t) return;
     const id = window.setTimeout(() => recordSearch(t), SETTLE_MS);
     return () => window.clearTimeout(id);
-  }, [query, recordSearch]);
+  }, [committedQuery, recordSearch]);
 
   const showResultsTab = viewMode !== "results";
   useEffect(() => {
@@ -306,8 +318,43 @@ export function LibraryView() {
     matchTypes,
   };
 
+  // WHERE each entity matched, computed at most ONCE per entity per query.
+  //
+  // Three consumers need the same answer — the relevance ranking below, the
+  // match-type chip gate, and the chip counts — and each used to call
+  // `matchCategories` itself, so a 4,000-match query categorised the corpus
+  // several times over per keystroke. Lazy rather than eager: the all-chips-on
+  // case never asks, and the ranking only asks for entities whose title didn't
+  // already settle it.
+  const categoriesOf = useMemo(() => {
+    const cache = new Map<string, MatchCategories>();
+    return (e: Entity): MatchCategories => {
+      let c = cache.get(e.id);
+      if (!c) {
+        c = matchCategoriesWithTerms(e, searchTerms, language, dataSource);
+        cache.set(e.id, c);
+      }
+      return c;
+    };
+    // `cejilReady`: blobs go empty→real when the corpus lands, so cached
+    // "document: false" answers from before that must not survive it.
+  }, [searchTerms, language, dataSource, cejilReady]);
+
+  // ONE full-corpus pass. `matchTypeBase` is every entity passing the facets and
+  // the search but NOT the chips; the chip-narrowed list is a subset of it, so
+  // running `matchesAll` again over all 4,398 entities to get it was scanning the
+  // corpus twice for two nested answers. Filter the subset from the superset.
+  const matchTypeBase = useMemo(
+    () => (q ? entities.filter((e) => matchesAll(e, filterState, "matchType")) : []),
+    [entities, filterState, q],
+  );
+
   const filtered = useMemo(() => {
-    const list = entities.filter((e) => matchesAll(e, filterState));
+    const list = q
+      ? matchTypeBase.filter((e) =>
+          passesMatchTypes(matchTypes, q, () => categoriesOf(e)),
+        )
+      : entities.filter((e) => matchesAll(e, filterState));
     const typeName = (e: Entity) => getEntityType(e.typeId)?.name ?? e.typeId;
     const cmp = (a: Entity, b: Entity) => {
       let r = 0;
@@ -348,7 +395,7 @@ export function LibraryView() {
         else if (t.startsWith(qf)) r = 1;
         else if (t.includes(qf)) r = 2;
         else {
-          const c = matchCategories(e, query, language, dataSource);
+          const c = categoriesOf(e);
           r = c.title ? 3 : c.properties ? 4 : 5;
         }
         rankOf.set(e.id, r);
@@ -360,7 +407,7 @@ export function LibraryView() {
     return [...list].sort(cmp);
     // `cejilReady`: once the corpus loads, full-text blobs go empty→real, so the
     // filtered set must recompute to surface document-body-only matches.
-  }, [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, chainKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex, cejilReady, matchTypes]);
+  }, [entities, matchTypeBase, categoriesOf, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, chainKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex, cejilReady, matchTypes]);
 
   // How many entities the query matches with the FACETS widened — so the Results
   // tab can offer to reveal the ones the current facets are hiding.
@@ -369,23 +416,18 @@ export function LibraryView() {
     [entities, filterState, q],
   );
 
-  // Chip counts + the pre-chip total: entities passing every filter EXCEPT the
-  // match-type chips (the same faceted-aggregation pattern the facets use), then
-  // categorised by where they matched.
-  const matchTypeBase = useMemo(
-    () => (q ? entities.filter((e) => matchesAll(e, filterState, "matchType")) : []),
-    [entities, filterState, q],
-  );
+  // Chip counts over the pre-chip set, reading the SAME categories the ranking
+  // and the gate used — no third scan.
   const matchTypeCounts = useMemo(() => {
     const c = { title: 0, properties: 0, document: 0 };
     for (const e of matchTypeBase) {
-      const m = matchCategories(e, query, language, dataSource);
+      const m = categoriesOf(e);
       if (m.title) c.title++;
       if (m.properties) c.properties++;
       if (m.document) c.document++;
     }
     return c;
-  }, [matchTypeBase, query, language, dataSource]);
+  }, [matchTypeBase, categoriesOf]);
 
   // The chips are query-relative — a new query starts from "all kinds" so they
   // never linger as an invisible filter.
@@ -814,10 +856,22 @@ export function LibraryView() {
             changes — so the results above it never move. This is also the only
             place the active-filter count survives while the drawer is showing an
             entity instead of the Filters panel; clicking it puts the panel back. */}
-        <span className="ms-2 text-[11px] text-ink-tertiary">
+        {/* The counts describe the set ON SCREEN, which during a transition is
+            the PREVIOUS query's. Rather than freeze the number or blank it, mark
+            it stale: `aria-busy` for AT, a quiet "updating…" for everyone else.
+            Fixed slot, so nothing reflows when it appears (PATTERNS §3). */}
+        <span className="ms-2 text-[11px] text-ink-tertiary" aria-busy={searchPending}>
           Showing{" "}
           <span className="font-semibold text-ink-secondary">{shown.length.toLocaleString()}</span> of{" "}
           {filtered.length.toLocaleString()}
+        </span>
+        <span
+          aria-hidden={!searchPending}
+          className={`text-[11px] text-ink-muted italic transition-opacity ${
+            searchPending ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          updating…
         </span>
         <ActiveFiltersButton />
       </div>

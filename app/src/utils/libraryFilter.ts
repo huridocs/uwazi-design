@@ -2,7 +2,7 @@ import type { Entity } from "../data/entities";
 import type { Language } from "../atoms/language";
 import { typeHasDocument } from "../data/entityProfiles";
 import { chains, valueAt, type ChainGraph, type ChainSegment } from "./chainTraversal";
-import { entityFullTextBlob, matchCategories } from "./librarySnippets";
+import { entityFullTextBlob, matchCategories, type MatchCategories } from "./librarySnippets";
 import { getEntityProfile } from "../data/entityProfiles";
 import { fold } from "./queryTokens";
 import {
@@ -226,14 +226,31 @@ const PREDICATES: Record<
   // Where the query matched (title / properties / document). All-on is the
   // common case and short-circuits BEFORE categorising, so the (blob-scanning)
   // categorisation is only paid when the user has actually narrowed.
-  matchType: (e, s) => {
-    const { title, properties, document } = s.matchTypes;
-    if (title && properties && document) return true;
-    if (!s.q) return true;
-    const c = matchCategories(e, s.q, s.language, s.source);
-    return (title && c.title) || (properties && c.properties) || (document && c.document);
-  },
+  matchType: (e, s) =>
+    passesMatchTypes(s.matchTypes, s.q, () =>
+      matchCategories(e, s.q, s.language, s.source),
+    ),
 };
+
+/** The match-type chip gate, as ONE definition.
+ *
+ *  `LibraryView` applies the same gate directly — it derives the chip-narrowed
+ *  list from the pre-chip list rather than running a second full-corpus pass —
+ *  and it holds categories it has already computed. So the rule lives here and
+ *  takes the categories LAZILY: the all-on case (much the commonest) returns
+ *  before the thunk is ever called, which is what keeps the blob scan off the
+ *  path until the user has actually narrowed. */
+export function passesMatchTypes(
+  matchTypes: { title: boolean; properties: boolean; document: boolean },
+  q: string,
+  categories: () => MatchCategories,
+): boolean {
+  const { title, properties, document } = matchTypes;
+  if (title && properties && document) return true;
+  if (!q) return true;
+  const c = categories();
+  return (title && c.title) || (properties && c.properties) || (document && c.document);
+}
 
 /** The search predicate on its own (facets excepted) — every query token must
  *  hit the entity's metadata index OR its document body. Exported so callers can
