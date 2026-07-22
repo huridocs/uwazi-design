@@ -59,10 +59,12 @@ All components are bound to variables — switching a frame to Dark mode updates
 │   │   │   │                      # UwaziLoader, StatusBadge, ProgressBar, StatsCard, Stepper, AlertBanner)
 │   │   │   └── catalog/           # CatalogEntry, StyleGuide
 │   │   │   ├── library/           # The Library view: EntityCard, EntityThumbnail, LibraryFilters,
-│   │   │   │                      # ActiveFiltersSheet/Button, DisplayMenu, TimeBrush, BucketBreakdown,
-│   │   │   │                      # LibraryTimelineView, LibraryMapView, LibraryClusterDrawer,
-│   │   │   │                      # EntityDrawerPreview, SearchTipsPopover, ResultsSnippets/ (the
-│   │   │   │                      # Results panel: ResultsBody, EntityResultCard)
+│   │   │   │                      # ActiveFiltersSheet/Button, ActiveSearchChip, DisplayMenu, TimeBrush,
+│   │   │   │                      # BucketBreakdown, LibraryTimelineView, LibraryMapView, TimeSpine
+│   │   │   │                      # (the one shared chronology), MatchOrigin, RecentSearches,
+│   │   │   │                      # LibraryClusterDrawer, EntityDrawerPreview, SearchTipsPopover,
+│   │   │   │                      # ResultsSnippets/ (ResultsBody, ResultsMainView, EntityResultCard)
+│   │   │   ├── share/             # ShareEntityModal
 │   │   │   ├── search/            # Document search: DocumentSearchBody, PageSpine
 │   │   │   ├── settings/          # Settings clone: SettingsContent/Nav/Table/Button/Field/RowActions,
 │   │   │   │                      # StatusPill, pages/ (18 pages incl. TemplateEditor, ThesaurusEditor)
@@ -118,13 +120,17 @@ The collection switcher in the navbar toggles between two corpora:
 
 ### Navigation
 
-- **Library** (default) — the collection: entities as **cards, list, table, map, or timeline**, with a
-  faceted filter drawer (type, status, country, descriptors, dates, inherited and chained properties)
-  and a time brush. The search box matches metadata *and* document text — quoted phrases, `*` / `?`
-  wildcards, `AND`/`OR`/`NOT`, diacritic-insensitive ("velasquez" finds "Velásquez") — with a **tips**
-  chip explaining the syntax. The drawer's **Results** tab shows *where* each term hit: passages grouped
-  under **Properties** (click → that entity's metadata, field focused) and **Document** (click → the
-  document at that page), with matches marked in place. Opening an entity leads to:
+- **Library** (default) — the collection: entities as **cards, list, table, map, timeline, or results**,
+  with a faceted filter drawer (type, status, country, descriptors, dates, inherited and chained
+  properties) and a time brush. The search box matches metadata *and* document text — quoted phrases,
+  `*` / `?` wildcards, `AND`/`OR`/`NOT`, diacritic-insensitive ("velasquez" finds "Velásquez") — with a
+  **tips** chip explaining the syntax and a **recent searches** panel on focus. The search is sticky:
+  emptying the box keeps the results; the query lives on as a removable chip in the count row
+  ("N results for [“query” ×]"). The **Results** view shows *where* each term hit, in four layouts —
+  **grouped** (per-entity card, properties beside passages), **tree** (entity → field → snippets),
+  **passages** (one flat ranked sheet), and **spine** (best passage on the shared chronology) — with
+  hits marked in place, in the PDF itself (with an n/total match stepper), and via **MatchOrigin**
+  marks on layouts with no room for a snippet. Opening an entity leads to:
 - **Entity view** — four main tabs (**Document · Metadata · Relationships · Files**):
   - **Document** — PDF viewer with highlights, floating menu, and `RefMinimap` scroll track
   - **Metadata** — Metadata cards + drawer (Document preview, Relationships, Files, Template). Includes **relationship & inherited properties**: fields whose values come from connected entities (single + multi-inheritance), shown with provenance (source entity + relation + inherited property) and a carbon "inherited" marker. Inherited values are read-only — you edit the **connection** (entity picker, syncs sibling fields) or jump to the **source entity** to change the native value.
@@ -167,6 +173,8 @@ Tailwind v4 + Storybook), readable on disk or in-app under the catalog's **Hando
 |---|---|
 | `uwazi-semantic-tokens.css` | The PR-ready additive token layer, scoped to their `.tw-content` |
 | `TOKENS-MAPPING.md` | Token-by-token map, the two-layer var rule, phase plan |
+| `TYPOGRAPHY.md` | The fonts (incl. how to actually load them), rendering setup, and the type scale as used |
+| `GLOBAL-STYLES.md` | The global layer: radii ramp, app shell, scrollbars, dark-mode wiring, RTL, motion |
 | `DATA-SEAMS.md` | How prototype shapes relate to the v2 data model — references vs relationships, inheritance, the search/snippets seam |
 | `PATTERNS.md` | The a11y, motion, and style rules to preserve, plus a review checklist |
 | `COMPONENT-INVENTORY.md` | Prototype ↔ uwazi component pairings, difficulty-rated, with a migration order |
