@@ -16,18 +16,36 @@ export const fold = (s: string): string =>
 /** `fold`, but keeping a map from each folded char back to its index in the
  *  ORIGINAL string — needed by the highlighter, which matches on folded text but
  *  must mark the original (accents and case intact). NFD can expand one char
- *  into several, so a plain fold loses index alignment; this doesn't. */
+ *  into several, so a plain fold loses index alignment; this doesn't.
+ *
+ *  **`folded` is guaranteed identical to `fold(s)`** — the two are compared
+ *  against each other all over the search path (`buildSnippetsFor` counts hits
+ *  with `fold` and cuts the excerpt with this), so any divergence shows up as a
+ *  page counted with no passage to show for it and no marks painted.
+ *
+ *  That forces the shape below. Lowercasing is **context-sensitive**: Greek Σ
+ *  lowercases to final ς at the end of a word and medial σ elsewhere, so folding
+ *  character by character turned "ΟΔΟΣ" into "οδοσ" while `fold` produced
+ *  "οδος" — the same text, two spellings, no match. So the NFD + diacritic strip
+ *  runs per character (that is what yields the index map) and `toLowerCase` runs
+ *  ONCE over the whole result, where it can see the word boundaries.
+ *
+ *  Splitting the pass that way is only safe because lowercasing can't change the
+ *  length here, which would slide `map` out of alignment with `folded`. Verified
+ *  by brute force over every code point in Unicode (0…0x10FFFF): after NFD and
+ *  the diacritic strip, zero of them lowercase to a different length. (The one
+ *  expanding mapping, İ → i + U+0307, is a diacritic and is already gone.) */
 export function foldWithMap(s: string): { folded: string; map: number[] } {
-  let folded = "";
+  let stripped = "";
   const map: number[] = [];
   for (let i = 0; i < s.length; i++) {
-    const f = fold(s[i]);
-    for (const c of f) {
-      folded += c;
+    const d = s[i].normalize("NFD").replace(/\p{Diacritic}/gu, "");
+    for (const c of d) {
+      stripped += c;
       map.push(i);
     }
   }
-  return { folded, map };
+  return { folded: stripped.toLowerCase(), map };
 }
 
 export interface QueryToken {
