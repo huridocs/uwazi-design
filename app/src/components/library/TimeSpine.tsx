@@ -44,6 +44,11 @@ export const EVENT_H = 22;
 export const LEADER_W = 22;
 /** The longest stretch of nothing the axis draws at true scale before it elides. */
 export const MAX_GAP = 88;
+/** The "N later" break label's own box on the axis. It sits in the SAME columns as
+ *  a row body (both run from the pane's inline-start to the axis), so it has to
+ *  reserve height against rows the way a row does — otherwise a collision-pushed
+ *  stack catches up with the break and the label prints on top of a row label. */
+export const GAP_H = 16;
 
 export interface SpineRow<T> {
   key: string;
@@ -138,6 +143,7 @@ export function TimeSpine<T>({
     let prevRaw = raw(min);
     let prevT = min;
     let cursor = 0;
+    let prevY = 0;
     const rows = sorted.map((row) => {
       const r = raw(row.t);
       const delta = r - prevRaw;
@@ -151,10 +157,20 @@ export function TimeSpine<T>({
       prevRaw = r;
       prevT = row.t;
       const ideal = r - accum;
-      const y = Math.max(ideal, cursor);
+      // A break's label competes for the same columns as a row body, so it joins
+      // the collision push as a box of its own: the row after a break may not
+      // come closer than one label's height past where the previous row already
+      // pushed to. Without it, a stack pushed far enough to reach the break puts
+      // the row at `cursor` and the label at `(cursor + y) / 2` — the same y, one
+      // printed over the other. In the uncrowded case `ideal` is a whole MAX_GAP
+      // clear of `cursor`, so this floor never binds and nothing moves.
+      const y = Math.max(ideal, broke ? cursor + GAP_H : cursor);
       // The break marker goes between the LAID-OUT rows, not at the ideal
-      // position — collision-pushed neighbours would sit on top of it.
-      if (broke) gaps.push({ y: (cursor + y) / 2, ms: broke });
+      // position — collision-pushed neighbours would sit on top of it. Centre it
+      // between the two rows' centres, which is also the midpoint of the empty
+      // band between their facing edges.
+      if (broke) gaps.push({ y: (prevY + y) / 2, ms: broke });
+      prevY = y;
       cursor = y + rowHeight;
       return { row, y, ideal };
     });
@@ -251,8 +267,11 @@ export function TimeSpine<T>({
           <span className="flex-1 h-px" style={{ backgroundColor: "transparent" }} />
           {/* `dir="ltr"`: the phrase leads with a number, so an RTL pane
               otherwise renders "months later 4". Isolating the digit alone isn't
-              enough — the whole phrase has to keep its order. */}
-          <span dir="ltr" className="text-[10px] italic text-ink-muted">
+              enough — the whole phrase has to keep its order.
+              `leading-4` pins the line box to GAP_H — the height the layout
+              reserved for it. Inheriting the line-height instead would let the
+              label outgrow its reserve on a caller with roomier leading. */}
+          <span dir="ltr" className="text-[10px] leading-4 italic text-ink-muted">
             {elapsed(g.ms)} later
           </span>
           <span
