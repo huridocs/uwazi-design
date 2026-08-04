@@ -12,8 +12,11 @@ import { EntityTypeTag } from "./EntityTypeTag";
  *  Shared by the Library drawer preview, EntityOverlay and the entity view's own
  *  header (`inline`, for a single-row strip) so the surfaces can't drift apart.
  *
- *  `typeId`/`title` override the entity — the Document tab's header names the
- *  primary DOCUMENT, which isn't always the entity's own title. */
+ *  `typeId`/`title` override the entity for callers that have the parts but not
+ *  an `Entity`. They are NOT a way to caption an entity with something else's
+ *  name: the Document tab used to pass its primary document's title here, so a
+ *  case borrowing a connected judgment's PDF was labelled with that judgment's
+ *  name. This block always identifies the entity; name the document beside it. */
 export function EntityIdentity({
   entity,
   typeId,
