@@ -69,12 +69,11 @@ export function RecentSearches({ anchorRef, open, onPick, onClose }: Props) {
       // mousedown blurs the box, `open` flips false, and the panel unmounts
       // before the click can land on anything.
       onMouseDown={(e) => e.preventDefault()}
-      className="fixed z-40 rounded-md bg-paper shadow-lg py-1"
+      className="fixed z-40 rounded-md bg-paper border border-border shadow-lg py-1"
       style={{
         left: pos.left,
         top: pos.top,
         width: pos.width,
-        border: "1px solid var(--border-primary)",
       }}
     >
       <p className="flex items-center gap-1.5 px-2.5 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">

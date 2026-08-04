@@ -94,8 +94,7 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
           {pickerOpen && (
             <div
               role="menu"
-              className="absolute right-0 top-full mt-1 z-30 min-w-40 rounded-md bg-paper shadow-xl py-1 animate-fade-in-up"
-              style={{ border: "1px solid var(--border-primary)" }}
+              className="absolute right-0 top-full mt-1 z-30 min-w-40 rounded-md bg-paper border border-border shadow-xl py-1 animate-fade-in-up"
             >
               {FORMATS.map((f) => {
                 const Icon = f.icon;
