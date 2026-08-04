@@ -4,7 +4,7 @@ import type { DataSource } from "./libraryFacets";
 import { typeHasDocument, getEntityProfile } from "../data/entityProfiles";
 import { renditionsByLanguage } from "../data/documentRenditions";
 import { documentsByLanguage } from "../data/document";
-import { cejilLoaded } from "../data/cejil/load";
+import { cejilLoaded, cejilFullText } from "../data/cejil/load";
 import { cejilDocPagesFor } from "../data/cejil/profile";
 import { highlightTerms, fold, foldWithMap } from "./queryTokens";
 
@@ -192,7 +192,9 @@ function windowAround(text: string, idx: number, len: number, ctx: number): stri
 /** Map a folded-text match span back to the ORIGINAL string's indices, so the
  *  window is cut from the accented/cased source even though matching was folded. */
 function originalSpan(
-  map: number[],
+  /** `ArrayLike`, not `number[]`: the worker ships its maps as `Int32Array`
+   *  (transferable, and half the memory), and they're read exactly the same. */
+  map: ArrayLike<number>,
   textLength: number,
   from: number,
   to: number,
@@ -223,8 +225,12 @@ function excerptAroundTerms(
   text: string,
   terms: string[],
   ctx: number = CONTEXT_WORDS,
+  /** A cached `foldWithMap(text)` when the caller has one (document pages do —
+   *  see `pageFoldWithMap`). Must be the fold OF `text`, or the window is cut at
+   *  indices belonging to another string. */
+  pre?: { folded: string; map: ArrayLike<number> },
 ): string | null {
-  const { folded, map } = foldWithMap(text);
+  const { folded, map } = pre ?? foldWithMap(text);
   let best = -1;
   let bestEnd = 0;
   for (const t of terms) {
@@ -248,19 +254,145 @@ function excerptAroundTerms(
  *     We still chunk it so excerpts come from across the document, but those
  *     chunks are NOT pages, so they carry no page number and no jump.
  */
-function documentPages(
-  e: Entity,
-  language: Language,
-  source: DataSource,
-): { pages: string[]; paged: boolean } {
+interface DocPages {
+  pages: string[];
+  paged: boolean;
+}
+
+/** No document. ONE instance, so the page-keyed caches below don't accumulate a
+ *  distinct entry per document-less entity (and `[] !== []` doesn't defeat them). */
+const NO_PAGES: DocPages = { pages: [], paged: false };
+
+/** `paginate` is deterministic in (rendition, pageCount), so the mock corpus's
+ *  chunking is done once per language rather than per entity per keystroke —
+ *  and, more importantly, every mock entity then shares ONE page array, which is
+ *  the identity the fold caches below key on. */
+const mockPagesCache = new Map<Language, DocPages>();
+
+/** `documentPages`, memoised per entity. The lookup itself is not free on CEJIL:
+ *  `cejilDocPagesFor` resolves the entity's own PDF or borrows one from a
+ *  connected Sentencia, which walks that entity's relationships — and a País hub
+ *  has thousands. That walk was being redone on every call, i.e. per entity per
+ *  keystroke, to arrive at the same array every time. */
+const docPagesCache = new Map<string, DocPages>();
+
+function documentPages(e: Entity, language: Language, source: DataSource): DocPages {
   if (source === "cejil") {
-    // The pages of the file the VIEWER renders — see `cejilDocPagesFor`.
-    return { pages: cejilDocPagesFor(e.id), paged: true };
+    // Before the corpus lands every entity has no pages; caching that would
+    // outlive the load and permanently blind full-text search (same rule as
+    // `entityFullTextBlob`'s).
+    if (!cejilLoaded()) return NO_PAGES;
+    const key = `cejil:${e.id}`;
+    let hit = docPagesCache.get(key);
+    if (!hit) {
+      // The pages of the file the VIEWER renders — see `cejilDocPagesFor`.
+      const pages = cejilDocPagesFor(e.id);
+      // Entities that borrow the SAME file get the same array instance back, so
+      // the per-document fold cache below is shared across all of them.
+      hit = pages.length ? { pages, paged: true } : NO_PAGES;
+      docPagesCache.set(key, hit);
+    }
+    return hit;
   }
-  if (!typeHasDocument(e.typeId)) return { pages: [], paged: false };
-  const rendition = renditionsByLanguage[language] ?? renditionsByLanguage.EN;
-  const pageCount = (documentsByLanguage[language] ?? documentsByLanguage.EN).pages;
-  return { pages: paginate(rendition.plainText, pageCount), paged: false };
+  if (!typeHasDocument(e.typeId)) return NO_PAGES;
+  let hit = mockPagesCache.get(language);
+  if (!hit) {
+    const rendition = renditionsByLanguage[language] ?? renditionsByLanguage.EN;
+    const pageCount = (documentsByLanguage[language] ?? documentsByLanguage.EN).pages;
+    hit = { pages: paginate(rendition.plainText, pageCount), paged: false };
+    mockPagesCache.set(language, hit);
+  }
+  return hit;
+}
+
+/** Every page of a document, FOLDED — keyed by the PAGE ARRAY ITSELF, not by the
+ *  entity that asked for it.
+ *
+ *  This is where the search was spending its time. `fold` is an NFD normalise, a
+ *  `\p{Diacritic}` regex strip and a lowercase over the whole text, and the
+ *  corpus has ~4,400 entities sharing ~80 documents: an entity with no PDF of its
+ *  own borrows a connected Sentencia's, so the SAME judgment was folded once per
+ *  entity that pointed at it — thousands of times — and then again on the next
+ *  keystroke, because nothing kept the result. Keyed by document, each one folds
+ *  once for the life of the corpus.
+ *
+ *  A WeakMap on the array (the same idiom as `foldedFieldsCache`): a reloaded
+ *  corpus hands out new arrays, so stale entries are simply never found again and
+ *  nothing has to be invalidated. */
+const foldedPagesCache = new WeakMap<string[], string[]>();
+function foldedPages(pages: string[]): string[] {
+  let folded = foldedPagesCache.get(pages);
+  if (!folded) {
+    folded = pages.map(fold);
+    foldedPagesCache.set(pages, folded);
+  }
+  return folded;
+}
+
+/** `foldWithMap` for a document page, computed lazily per page and kept.
+ *
+ *  The excerpt cutter matches on folded text but must slice the ORIGINAL, so it
+ *  needs the folded→original index map — the most expensive fold we do (a
+ *  per-character loop building an array as long as the page). It was being redone
+ *  for every excerpt on every keystroke; once `foldedPages` landed it was ALL the
+ *  remaining scan time. Same key as the fold above, so a document pays for its
+ *  map once.
+ *
+ *  Sparse on purpose: only pages that actually get excerpted (`maxFullText` of
+ *  them per entity) ever build a map, so a long document doesn't pay for pages
+ *  nobody reads. */
+const pageFoldMapCache = new WeakMap<string[], ({ folded: string; map: ArrayLike<number> } | undefined)[]>();
+function pageFoldWithMap(pages: string[], i: number): { folded: string; map: ArrayLike<number> } {
+  let byPage = pageFoldMapCache.get(pages);
+  if (!byPage) {
+    byPage = new Array(pages.length);
+    pageFoldMapCache.set(pages, byPage);
+  }
+  let hit = byPage[i];
+  if (!hit) {
+    hit = foldWithMap(pages[i]);
+    byPage[i] = hit;
+  }
+  return hit;
+}
+
+/** One document's folds, as computed off the main thread. `folded[i]` is
+ *  `fold(pages[i])` and `maps[i]` is its folded→original index map. */
+export interface DocumentFolds {
+  folded: string[];
+  maps: ArrayLike<number>[];
+}
+
+/** Install pre-computed folds for the CEJIL documents, keyed by filename.
+ *
+ *  This is the ONLY way scan work gets off the main thread here: the caches above
+ *  are the whole cost of a search, so a worker that fills them (see
+ *  `searchScan.worker.ts`) leaves the query path itself synchronous — every
+ *  Results layout, `MatchOrigin` and the document search stay on the one
+ *  `buildSnippetsFor` data path, with no async plumbed through six render trees
+ *  to buy what is, by then, a cache hit.
+ *
+ *  Keying is by FILENAME on the wire and by PAGE-ARRAY IDENTITY in the caches;
+ *  `cejilFullText()` is the map between them, and it hands back the same array
+ *  instances `documentPages` resolves to. Called before the corpus lands, or with
+ *  a filename it doesn't know, this is a no-op — priming is an optimisation, and
+ *  a miss just means the main thread folds that document lazily, as it always
+ *  did. Idempotent: re-priming overwrites with identical values. */
+export function primeDocumentFolds(byFilename: Record<string, DocumentFolds>): void {
+  if (!cejilLoaded()) return;
+  const byName = cejilFullText();
+  for (const [filename, { folded, maps }] of Object.entries(byFilename)) {
+    const pages = byName[filename];
+    // A document whose page count doesn't match what we folded is a corpus that
+    // changed under the worker — drop it rather than pair page i with map j.
+    if (!pages || pages.length !== folded.length) continue;
+    foldedPagesCache.set(pages, folded);
+    pageFoldMapCache.set(
+      pages,
+      folded.map((f, i) => ({ folded: f, map: maps[i] })),
+    );
+    blobByPages.set(pages, folded.join("\n"));
+  }
 }
 
 /** Evenly bucket a text's paragraphs into `pageCount` pages by cumulative
@@ -325,13 +457,15 @@ export function buildSnippetsFor(
   // already does for this entity (`entityFullTextBlob` folds the whole doc), so
   // the honest count costs the windowing pass, not a second scan.
   let fullTextTotal = 0;
+  // Folded ONCE per document (see `foldedPages`), not per entity per keystroke.
+  const lowerPages = foldedPages(pages);
   for (let i = 0; i < pages.length; i++) {
-    const lower = fold(pages[i]);
+    const lower = lowerPages[i];
     const hits = terms.reduce((n, t) => n + countOccurrences(lower, t), 0);
     if (hits === 0) continue;
     fullTextTotal++; // counted whether or not it gets excerpted below
     if (fullText.length >= maxFullText) continue;
-    const excerpt = excerptAroundTerms(pages[i], terms);
+    const excerpt = excerptAroundTerms(pages[i], terms, CONTEXT_WORDS, pageFoldWithMap(pages, i));
     if (excerpt) fullText.push({ page: paged ? i + 1 : null, text: excerpt, hits });
   }
 
@@ -432,10 +566,12 @@ export function hiddenMatchOrigin(
   const visible = new Set(visibleFieldKeys);
   let property: HiddenMatchOrigin["property"] = null;
   let moreProperties = 0;
-  for (const f of entityFields(entity, language)) {
+  // `foldedFields`, not `entityFields` + `fold`: this runs per RENDERED ROW per
+  // keystroke (every row of the list and the spine carries a match marker), and
+  // it was re-folding each row's fields from scratch every time.
+  for (const f of foldedFields(entity, language)) {
     if (visible.has(f.fieldKey)) continue;
-    const lower = fold(f.text);
-    if (!terms.some((t) => lower.includes(t))) continue;
+    if (!terms.some((t) => f.folded.includes(t))) continue;
     if (property) moreProperties++;
     else property = { field: f.field, fieldKey: f.fieldKey };
   }
@@ -450,25 +586,34 @@ export function hiddenMatchOrigin(
   return { property, moreProperties, document };
 }
 
-/** Per-entity lowercase full-text blob (all its document pages joined), for the
- *  library search predicate to scan alongside the metadata index. Lazily built
- *  and MEMOIZED so the CEJIL corpus is walked once on the first full-text search,
- *  not per keystroke. A CEJIL entity queried before its corpus loads returns an
- *  empty blob that is NOT cached, so the real text is picked up once `cejilReady`
- *  flips. Keyed by source+language+entity because the mock rendition is
- *  language-specific. */
-const fullTextBlobCache = new Map<string, string>();
+/** Lowercase full-text blob (all of a document's pages joined), for the library
+ *  search predicate to scan alongside the metadata index.
+ *
+ *  Keyed by the DOCUMENT, not the entity. It used to be `source:language:id`,
+ *  which meant the corpus's ~80 judgments were folded — and then stored — once
+ *  per entity that reads them, and thousands of entities read a borrowed one. The
+ *  fold is shared with `buildSnippetsFor` through `foldedPages`, so a document
+ *  that has been excerpted is already folded for the filter, and vice versa.
+ *
+ *  A CEJIL entity queried before its corpus loads has no pages, so it returns ""
+ *  WITHOUT caching and picks up the real text once `cejilReady` flips.
+ *
+ *  Joining the folded pages is the same string as folding the joined pages:
+ *  `fold` is per-character apart from `toLowerCase`, whose one context-sensitive
+ *  case (Greek final sigma) turns on adjacent letters — and the "\n" separator is
+ *  a word boundary either way. Asserted over the real corpus, not assumed. */
+const blobByPages = new WeakMap<string[], string>();
 export function entityFullTextBlob(
   entity: Entity,
   language: Language,
   source: DataSource,
 ): string {
-  const key = `${source}:${language}:${entity.id}`;
-  const cached = fullTextBlobCache.get(key);
-  if (cached !== undefined) return cached;
-
-  const blob = fold(documentPages(entity, language, source).pages.join("\n"));
-  if (source === "cejil" && !cejilLoaded()) return blob; // "" — don't wedge the cache
-  fullTextBlobCache.set(key, blob);
+  const { pages } = documentPages(entity, language, source);
+  if (pages.length === 0) return "";
+  let blob = blobByPages.get(pages);
+  if (blob === undefined) {
+    blob = foldedPages(pages).join("\n");
+    blobByPages.set(pages, blob);
+  }
   return blob;
 }

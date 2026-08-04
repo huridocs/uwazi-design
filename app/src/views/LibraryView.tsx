@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, cejilReadyAtom } from "../atoms/dataSource";
 import { loadCejilData, cejilRelsByEntity } from "../data/cejil/load";
+import { warmSearchScan } from "../utils/warmSearchScan";
 import { referencesAtom } from "../atoms/references";
 import { languageAtom, type Language } from "../atoms/language";
 import { appViewAtom } from "../atoms/navigation";
@@ -124,7 +125,16 @@ export function LibraryView() {
       let alive = true;
       setCejilError(false);
       loadCejilData().then(
-        () => alive && setCejilReady(true),
+        () => {
+          if (!alive) return;
+          setCejilReady(true);
+          // Fold the corpus's documents off the main thread while the user is
+          // still reading the list. Not awaited and nothing gates on it: it only
+          // fills the caches the search path already consults, so the keystroke
+          // that turns full-text search on finds them warm instead of paying for
+          // the whole scan inline. See `utils/warmSearchScan.ts`.
+          warmSearchScan();
+        },
         () => alive && setCejilError(true),
       );
       return () => {
