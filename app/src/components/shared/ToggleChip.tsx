@@ -23,7 +23,15 @@ interface ToggleChipProps {
  *  Off is the muted state: the fill drops away and the label goes tertiary, so an
  *  excluded slice is legible as excluded without a second colour entering the
  *  vocabulary. (Used by the Library's match-type chips — Title / Properties /
- *  Document — in both the drawer's Results tab and the main Results view.) */
+ *  Document — in both the drawer's Results tab and the main Results view.)
+ *
+ *  Focus is the **carbon halo** — the graph's `stroke: var(--accent-blue)` drawn
+ *  at `r + 5`, translated to DOM: solid carbon, OUTSIDE the box, with a gap.
+ *  Drawn as an `outline` rather than a `ring` on purpose — the offset gap is
+ *  transparent, so it reads on paper, warm and vellum alike and needs no
+ *  `ring-offset-color` per surface. Neither outline nor offset takes layout, so
+ *  `h-6` holds and the row doesn't twitch on Tab. The old inset `ring-ink/20`
+ *  landed on top of the chip's own 8–14% ink border and vanished into it. */
 export function ToggleChip({
   label,
   count,
@@ -41,8 +49,8 @@ export function ToggleChip({
         ariaLabel ?? (count === undefined ? label : `${label}, ${count.toLocaleString()} results`)
       }
       className={`inline-flex items-center gap-1 h-6 ps-1.5 pe-1.5 rounded text-[11px] font-medium
-        transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1
-        focus-visible:ring-inset focus-visible:ring-ink/20 ${
+        transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-1
+        focus-visible:outline-carbon ${
           active ? "text-ink-secondary" : "text-ink-tertiary hover:text-ink-secondary"
         }`}
       style={{
