@@ -197,13 +197,12 @@ export function MatchOrigin({ entity, visibleFieldKeys, onSelect }: Props) {
           <div
             id={tipId}
             role="tooltip"
-            className="fixed z-50 rounded-md bg-paper px-2.5 py-2 shadow-lg"
+            className="fixed z-50 rounded-md bg-paper border border-border px-2.5 py-2 shadow-lg"
             style={{
               left: pos.left,
               top: pos.top,
               bottom: pos.bottom,
               width: Math.min(POPOVER_W, window.innerWidth - EDGE * 2),
-              border: "1px solid var(--border-primary)",
             }}
           >
             {open === "property" ? (
