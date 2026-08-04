@@ -497,9 +497,22 @@ export function LibraryFilters() {
 
 /* ── Cards & rows ── */
 
-/** Soft-lifted card (no hard border) — bg-paper on the warm rail, defined by a
- *  subtle shadow like the app's other cards. */
-const FACET_CARD = "bg-paper rounded-lg p-1.5 shadow-sm";
+/** A content card, so it's drawn the way this app draws content cards: `bg-paper`
+ *  inside a hairline border, on the warm rail.
+ *
+ *  It used to be `shadow-sm` with no border, on the claim that it matched "the
+ *  app's other cards". It didn't — every other `shadow-sm` here is a floating or
+ *  media surface (the SegmentedTabs thumb, DocPlaceholder, EntityTypeChip, the
+ *  file thumbnails and modal media), while the real content cards are all border-
+ *  defined. It also barely read in dark, where `--shadow-sm` is one 20%-black
+ *  pixel over a near-black rail.
+ *
+ *  The border can't double against the pane's own edge: this panel is never inside
+ *  the `FiltersDrawer` slide-over (that's the Relationships surfaces) — it mounts
+ *  in `SplitView`'s right pane, whose `border-l border-border` is held 0.875rem
+ *  away by the rail's `px-3.5`. Same on mobile, where it's a bottom-sheet section
+ *  with no side edge at all. */
+const FACET_CARD = "bg-paper border border-border rounded-lg p-1.5";
 
 /** `title` gives the card the same bold header the keyword cards (Countries,
  *  Descriptores) carry, so every filter block reads as one titled system. */
