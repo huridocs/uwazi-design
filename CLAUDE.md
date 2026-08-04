@@ -408,6 +408,21 @@ Match-type chips (Title / Properties / Document) are `ToggleChip`
 `aria-pressed` instead of an X — and ride the count row via `ListInfoRow`'s
 `inlineSlot`, in both the drawer tab and the main view.
 
+**Borrowed documents are named, not hidden.** A CEJIL entity with no PDF of its
+own reads a connected one's (`cejilRenderedDoc` → `docFilesFor`'s Sentencia
+fallback), so identical passages surface under a dozen case names.
+`EntitySnippets.borrowedFrom` carries that source through the one snippet path,
+and `components/library/BorrowedDocLine.tsx` prints it as `↳ from <document>` on
+all four Results layouts, the drawer's result card and the `MatchOrigin` popover.
+It rides an ALREADY-MOUNTED line (a section label, a row's attribution, the
+spine's fixed trailing slot) — never a line of its own that appears and
+disappears. Both it and metadata's `ProvenanceTrail` (`↳ via …`) render through
+`components/shared/ProvenanceLine.tsx`, so the app has ONE provenance idiom.
+Residual: the corpus's 5,245 url'd PDF records point at **6** real files, so an
+entity that owns its file still shows another judgment's text — there is no
+connected document to name there, and no per-file text to key to, so it carries
+no attribution.
+
 ## Tab signals & recent searches
 
 - **`count` vs `dot`** (`components/layout/DrawerTabs.tsx`, `MainTabs.tsx`): count =

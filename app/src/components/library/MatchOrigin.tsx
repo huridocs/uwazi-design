@@ -11,8 +11,13 @@ import {
   resultsActivePageAtom,
 } from "../../atoms/library";
 import { scrollToPageAtom } from "../../atoms/selection";
-import { buildSnippetsFor, hiddenMatchOrigin } from "../../utils/librarySnippets";
+import {
+  buildSnippetsFor,
+  hiddenMatchOrigin,
+  type BorrowedDoc,
+} from "../../utils/librarySnippets";
 import { HighlightedText } from "../shared/HighlightedText";
+import { BorrowedDocLine } from "./BorrowedDocLine";
 
 /** The row's answer to "why is this here?" in the two layouts that have no room
  *  for a snippet — the Library table and the timeline Spine.
@@ -303,7 +308,11 @@ function DocumentTip({
   snippets,
   query,
 }: {
-  snippets: { fullText: { page: number | null; text: string }[]; fullTextTotal: number };
+  snippets: {
+    fullText: { page: number | null; text: string }[];
+    fullTextTotal: number;
+    borrowedFrom: BorrowedDoc | null;
+  };
   query: string;
 }) {
   const first = snippets.fullText[0];
@@ -324,6 +333,12 @@ function DocumentTip({
         <span className="mt-0.5 block text-xs leading-relaxed text-ink">
           <HighlightedText text={first.text} query={query} />
         </span>
+      )}
+      {/* Which document — the row's glyph says "the body matched", and for an
+          entity reading a connected Sentencia that body isn't its own. Without
+          this, the same passage under a dozen case names looks like a bug. */}
+      {snippets.borrowedFrom && (
+        <BorrowedDocLine from={snippets.borrowedFrom} className="mt-1 max-w-full" />
       )}
       <TipHint>{paged ? `Click to jump to p.${first!.page}` : "Click to open the document"}</TipHint>
     </>

@@ -1,8 +1,9 @@
 import { Fragment } from "react";
 import { useSetAtom } from "jotai";
-import { CornerDownRight, Link2, Sigma } from "lucide-react";
+import { Link2, Sigma } from "lucide-react";
 import { overlayEntityIdAtom } from "../../atoms/references";
 import { EntityPill } from "../shared/EntityPill";
+import { ProvenanceLine } from "../shared/ProvenanceLine";
 import { countryFlag } from "../../utils/countryFlag";
 import type { InheritedValue, ProvenanceStep } from "../../utils/inheritance";
 
@@ -66,9 +67,9 @@ export function ProvenanceTrail({ steps, sharedLabel }: { steps: ProvenanceStep[
   const setOverlay = useSetAtom(overlayEntityIdAtom);
   if (!steps.length) return null;
   return (
-    <span className="flex items-center gap-1 min-w-0 text-[11px] text-ink-tertiary">
-      <CornerDownRight size={10} className="shrink-0 text-ink-muted" aria-hidden />
-      <span className="shrink-0">{sharedLabel ? `${sharedLabel} via` : "via"}</span>
+    // The shared `↳ …` line — the library's borrowed-document attribution rides
+    // the same one, so the two provenance statements can't drift apart.
+    <ProvenanceLine label={sharedLabel ? `${sharedLabel} via` : "via"}>
       {steps.map((s, i) => (
         <Fragment key={s.entityId}>
           {i > 0 && <span className="shrink-0 text-ink-muted" aria-hidden>→</span>}
@@ -81,7 +82,7 @@ export function ProvenanceTrail({ steps, sharedLabel }: { steps: ProvenanceStep[
           </button>
         </Fragment>
       ))}
-    </span>
+    </ProvenanceLine>
   );
 }
 

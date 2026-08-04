@@ -5,6 +5,7 @@ import type { EntitySnippets } from "../../../utils/librarySnippets";
 import { RelationshipGroupedCard } from "../../relationships/RelationshipGroupedCard";
 import { HighlightedText } from "../../shared/HighlightedText";
 import { PageSpine } from "../../search/PageSpine";
+import { BorrowedDocLine } from "../BorrowedDocLine";
 
 interface Props {
   entity: Entity;
@@ -29,7 +30,7 @@ interface Props {
  *  headers vs "Document contents"). */
 function SectionLabel({ children }: { children: ReactNode }) {
   return (
-    <span className="px-1 text-[10px] font-semibold uppercase tracking-wide text-ink-muted">
+    <span className="flex items-center gap-2 min-w-0 px-1 text-[10px] font-semibold uppercase tracking-wide text-ink-muted">
       {children}
     </span>
   );
@@ -101,7 +102,13 @@ export function EntityResultCard({
 
         {hasFullText && (
           <div className="flex flex-col gap-1.5">
-            <SectionLabel>Document</SectionLabel>
+            {/* The label is mounted whether or not the document is borrowed, so
+                the attribution rides it rather than taking a line the spine
+                below would have to move for. */}
+            <SectionLabel>
+              Document
+              <BorrowedDocLine from={snippets.borrowedFrom} className="min-w-0" />
+            </SectionLabel>
             <PageSpine
               entityId={entity.id}
               fullText={snippets.fullText}

@@ -127,19 +127,48 @@ function buildRendition(title: string, pages: string[]): DocRendition {
   return { plainText: paras.join("\n\n"), html: blocks };
 }
 
+/** The connected document an entity's rendered PDF was borrowed FROM — the
+ *  entity that owns it, named. Absent when the entity renders its own file. */
+export interface BorrowedDoc {
+  entityId: string;
+  title: string;
+}
+
 /** Url'd PDF files for an entity, else borrow from a connected document entity
  *  (a Causa → its Sentencia), so opening a case shows its primary judgment. */
-/** The per-page text of the PDF the viewer ACTUALLY renders for this entity.
+/** The document the viewer ACTUALLY renders for this entity: its per-page text,
+ *  plus — when the file came from a CONNECTED entity — which one.
  *
  *  Goes through `docFilesFor`, the same selection the profile/viewer uses — which
  *  falls back to a RELATED entity's PDF (a Causa shows its Sentencia). Reading
  *  the entity's own files instead gave two wrong answers: no pages at all for a
  *  Causa, and — when a differently-languaged file happened to carry fullText —
  *  page numbers belonging to a file that wasn't on screen (the "p.9 lands on 15"
- *  report). Page numbers must refer to the document being displayed. */
-export function cejilDocPagesFor(sharedId: string): string[] {
-  const primary = docFilesFor(sharedId).files[0];
-  return primary ? cejilFullText()[primary.filename] ?? [] : [];
+ *  report). Page numbers must refer to the document being displayed.
+ *
+ *  `borrowedFrom` is that same fallback, said out loud. The corpus ships 6 real
+ *  PDFs standing in for 5,191 distinct originalnames, so ~900 entities resolve
+ *  onto ONE judgment and their "matching passages" are literally the same
+ *  sentences — a result list that reads as an implausible coincidence. Keying the
+ *  text more finely can't fix it (file id and url are 1-of-6 too, and there is no
+ *  per-file text to key to); naming the shared source can. `titleSid !== sharedId`
+ *  is exactly the borrow, and it's what `buildCejilProfile` already titles the
+ *  document group with.
+ *
+ *  Both answers come off ONE `docFilesFor` walk on purpose: the fallback scans the
+ *  entity's relationships, and a País hub has thousands of edges — asking twice is
+ *  not free. */
+export function cejilRenderedDoc(sharedId: string): { pages: string[]; borrowedFrom: BorrowedDoc | null } {
+  const { files, titleSid } = docFilesFor(sharedId);
+  const primary = files[0];
+  if (!primary) return { pages: [], borrowedFrom: null };
+  return {
+    pages: cejilFullText()[primary.filename] ?? [],
+    borrowedFrom:
+      titleSid === sharedId
+        ? null
+        : { entityId: titleSid, title: cejilBySidLang().get(`${titleSid}::es`)?.title || titleSid },
+  };
 }
 
 function docFilesFor(sharedId: string): { files: CejilFile[]; titleSid: string } {

@@ -8,6 +8,7 @@ import type { DataSource } from "../../../utils/libraryFacets";
 import {
   buildSnippetsFor,
   MAX_FULLTEXT,
+  type BorrowedDoc,
   type EntitySnippets,
   type FullTextSnippet,
   type MetadataSnippet,
@@ -25,6 +26,7 @@ import { HighlightedText } from "../../shared/HighlightedText";
 import { EntityTypeChip } from "../../shared/EntityTypeChip";
 import { ListInfoRow } from "../../shared/ListInfoRow";
 import { ActiveSearchChip } from "../ActiveSearchChip";
+import { BorrowedDocLine } from "../BorrowedDocLine";
 import { ToggleChip } from "../../shared/ToggleChip";
 import { CountBadge } from "../../shared/CountBadge";
 
@@ -453,6 +455,14 @@ function GroupedBody({
                     <SectionLabel icon={<FileText size={11} />}>
                       Document
                       <PageCount shown={snippets.fullText.length} total={snippets.fullTextTotal} />
+                      {/* Rides the section label rather than taking a line of
+                          its own — the label is mounted whether or not the
+                          document is borrowed, so the passages under it never
+                          move (CLAUDE.md). Trailing the page count, not pushed
+                          to the far edge: across a card that can be a metre wide
+                          an `ms-auto` attribution parks nowhere near the thing
+                          it attributes. */}
+                      <BorrowedDocLine from={snippets.borrowedFrom} className="min-w-0" />
                     </SectionLabel>
                     <div className="mt-1.5 flex flex-col gap-1">
                       {snippets.fullText.map((s, i) => (
@@ -568,6 +578,10 @@ function TreeBody({
                       ? `${snippets.fullText.length} of ${snippets.fullTextTotal.toLocaleString()} shown`
                       : undefined
                   }
+                  // On the branch header, not above the passages: the header is
+                  // there whether or not the document is borrowed, so nothing
+                  // below it moves.
+                  trailing={<BorrowedDocLine from={snippets.borrowedFrom} />}
                 >
                   {snippets.fullText.map((s, i) => (
                     <PassageRow
@@ -595,12 +609,16 @@ function TreeBranch({
   count,
   icon,
   note,
+  trailing,
   children,
 }: {
   label: string;
   count: number;
   icon: ReactNode;
   note?: string;
+  /** Rides the header row after the note — where the Document branch names the
+   *  connected document its passages were quoted from. */
+  trailing?: ReactNode;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(true);
@@ -610,8 +628,9 @@ function TreeBranch({
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="flex items-center gap-1.5 rounded-md px-1 py-0.5 hover:bg-warm transition-colors
-          cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink/20"
+        className="flex items-center gap-1.5 max-w-full rounded-md px-1 py-0.5 hover:bg-warm
+          transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1
+          focus-visible:ring-ink/20"
       >
         <ChevronDown
           size={12}
@@ -623,6 +642,7 @@ function TreeBranch({
         </span>
         <span className="text-[10px] tabular-nums text-ink-muted">{count.toLocaleString()}</span>
         {note && <span className="text-[10px] text-ink-muted">· {note}</span>}
+        {trailing}
       </button>
       {open && (
         <div
@@ -651,6 +671,10 @@ interface FlatPassage {
   field: string | null;
   fieldKey: string | null;
   text: string;
+  /** For document rows: the connected document the passage was quoted from. The
+   *  flattening loses the entity's snippets, and this list is exactly where the
+   *  same judgment shows up under a dozen different case names. */
+  from: BorrowedDoc | null;
 }
 
 function PassagesBody({
@@ -696,11 +720,20 @@ function PassagesBody({
             field: m.field,
             fieldKey: m.fieldKey,
             text: t,
+            from: null,
           });
         }
       }
       for (const s of snippets.fullText) {
-        rows.push({ entity, page: s.page, hits: s.hits, field: null, fieldKey: null, text: s.text });
+        rows.push({
+          entity,
+          page: s.page,
+          hits: s.hits,
+          field: null,
+          fieldKey: null,
+          text: s.text,
+          from: snippets.borrowedFrom,
+        });
       }
       // Pages counted but not excerpted — said out loud rather than dropped.
       notShown += Math.max(0, snippets.fullTextTotal - snippets.fullText.length);
@@ -807,6 +840,11 @@ function PassagesBody({
                       row.field
                     )}
                   </bdi>
+                  {/* The attribution line is mounted for every row, so naming the
+                      source document here costs no height and moves nothing. It
+                      is what turns a run of identical passages under a dozen
+                      case names into a dozen cases citing one judgment. */}
+                  <BorrowedDocLine from={row.from} className="min-w-0" />
                 </span>
               </span>
             </button>
@@ -925,11 +963,20 @@ function SpineBody({
                 </span>
               )}
               {/* The trailing slot the timeline spends on a type name — spent
-                  here on where the passage came from. `<bdi>` keeps "Document ·
-                  p.5" in order under RTL without flipping the box's alignment. */}
+                  here on where the passage came from: the page tag, and the
+                  connected document it was quoted from. `<bdi>` keeps "Document ·
+                  p.5" in order under RTL without flipping the box's alignment.
+                  A FIXED width, not `max-w`: this is the reserved space for the
+                  attribution, so a borrowed document appearing on one row can't
+                  pull that row's passage shorter than its neighbours'. */}
               {best && (
-                <span className="shrink-0 max-w-[10rem] truncate text-[10px] text-ink-muted hidden md:block">
-                  <bdi dir="ltr">{best.label}</bdi>
+                <span className="hidden md:flex shrink-0 w-[14rem] items-center justify-end gap-1.5 overflow-hidden text-[10px] text-ink-muted">
+                  <bdi dir="ltr" className="shrink-0">
+                    {best.label}
+                  </bdi>
+                  {best.isDocument && (
+                    <BorrowedDocLine from={snippets.borrowedFrom} className="min-w-0" />
+                  )}
                 </span>
               )}
             </button>
@@ -950,7 +997,7 @@ function SpineBody({
  *  the first matched property. Its label never claims a page the data can't back. */
 function bestPassage(
   s: EntitySnippets,
-): { text: string; page: number | null; label: string } | null {
+): { text: string; page: number | null; label: string; isDocument: boolean } | null {
   const top = s.fullText.reduce<FullTextSnippet | null>(
     (best, cur) => (!best || cur.hits > best.hits ? cur : best),
     null,
@@ -959,11 +1006,13 @@ function bestPassage(
     const parts = ["Document"];
     if (top.page !== null) parts.push(`p.${top.page}`);
     if (top.hits > 1) parts.push(`${top.hits}×`);
-    return { text: top.text, page: top.page, label: parts.join(" · ") };
+    return { text: top.text, page: top.page, label: parts.join(" · "), isDocument: true };
   }
   // Never the title: the row above already prints it, marked.
   const m = properties(s)[0];
-  if (m?.texts[0]) return { text: m.texts[0], page: null, label: m.field };
+  // `isDocument` gates the borrowed-document attribution: a property hit came
+  // from the entity itself, however its document was resolved.
+  if (m?.texts[0]) return { text: m.texts[0], page: null, label: m.field, isDocument: false };
   return null;
 }
 
