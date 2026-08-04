@@ -55,8 +55,14 @@ export function Select({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={ariaLabel}
-        className="inline-flex items-center gap-1.5 h-8 ps-2.5 pe-2 text-xs font-medium text-ink-secondary bg-warm
-          hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer
+        // The transparent border is load-bearing: the menu below has a real 1px
+        // one, so without a matching edge here the option labels sit a pixel
+        // inboard of the trigger's. Same border + same px-3 on both = one text
+        // column. `gap-1` because a 14px chevron carries ~3.5px of its own
+        // slack — 6px of gap read as 9.5 and detached the caret from the label.
+        className="inline-flex items-center gap-1 h-8 ps-3 pe-2 text-xs font-medium text-ink-secondary
+          bg-warm border border-transparent hover:bg-parchment hover:text-ink rounded-md
+          transition-colors cursor-pointer
           focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"
       >
         <span className="truncate">{current?.label}</span>
@@ -65,10 +71,9 @@ export function Select({
       {open && (
         <div
           role="listbox"
-          className={`absolute z-30 top-full mt-1 min-w-[10rem] rounded-md bg-paper py-1 animate-fade-in-up ${
-            align === "end" ? "end-0" : "start-0"
-          }`}
-          style={{ border: "1px solid var(--border-primary)", boxShadow: "0 6px 18px rgba(0,0,0,0.12)" }}
+          className={`absolute z-30 top-full mt-1 min-w-[10rem] rounded-md bg-paper border border-border
+            py-1 animate-fade-in-up ${align === "end" ? "end-0" : "start-0"}`}
+          style={{ boxShadow: "0 6px 18px rgba(0,0,0,0.12)" }}
         >
           {options.map((o) => (
             <button

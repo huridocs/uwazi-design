@@ -1018,22 +1018,34 @@ function PassageRow({
   onSelectSnippet: (id: string, page: number) => void;
 }) {
   const active = useAtomValue(resultsActivePageAtom);
+  const tag = [
+    snippet.page !== null ? `p.${snippet.page}` : null,
+    snippet.hits > 1 ? `${snippet.hits}×` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  // The tag trails the passage's last word instead of right-aligning on its own
+  // line: `text-end` in a card that can be a metre wide parked "p.15" a hand's
+  // width from the sentence it annotates, next to whichever passage happened to
+  // end nearest. Inline, it is a citation — it costs no line of its own, so a
+  // page-less passage sits at exactly the same height as a tagged one. The
+  // measure cap keeps the prose readable at any pane width (same 74ch as the
+  // passages layout). `bdi dir="ltr"` holds "p.15 · 2×" in order under RTL
+  // without forcing the passage's own direction.
   const body = (
-    <>
-      <p className="text-sm text-ink leading-relaxed">
-        <HighlightedText text={snippet.text} query={query} />
-      </p>
-      {(snippet.page !== null || snippet.hits > 1) && (
-        <span
+    // A block <span>, not <p>: this body is also the content of a <button>,
+    // where a paragraph isn't phrasing content.
+    <span className="block max-w-[74ch] text-sm text-ink leading-relaxed">
+      <HighlightedText text={snippet.text} query={query} />
+      {tag && (
+        <bdi
           dir="ltr"
-          className="mt-0.5 block text-end text-[11px] font-semibold text-ink-tertiary tabular-nums"
+          className="ms-1.5 whitespace-nowrap text-[11px] font-semibold text-ink-tertiary tabular-nums"
         >
-          {snippet.page !== null && `p.${snippet.page}`}
-          {snippet.page !== null && snippet.hits > 1 && " · "}
-          {snippet.hits > 1 && `${snippet.hits}×`}
-        </span>
+          {tag}
+        </bdi>
       )}
-    </>
+    </span>
   );
 
   if (snippet.page === null) {
