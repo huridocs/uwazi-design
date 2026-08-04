@@ -44,11 +44,30 @@ export const EVENT_H = 22;
 export const LEADER_W = 22;
 /** The longest stretch of nothing the axis draws at true scale before it elides. */
 export const MAX_GAP = 88;
-/** The "N later" break label's own box on the axis. It sits in the SAME columns as
- *  a row body (both run from the pane's inline-start to the axis), so it has to
- *  reserve height against rows the way a row does — otherwise a collision-pushed
- *  stack catches up with the break and the label prints on top of a row label. */
-export const GAP_H = 16;
+/** The "N later" break label's line box — `leading-4` on the label pins it to
+ *  exactly this, so the reserve below is a real measurement and not a guess. */
+const GAP_LABEL_H = 16;
+/** Clearance above and below the label inside its reserve. Without it the label
+ *  is mathematically correct and visually wrong: a reserve equal to the line box
+ *  leaves the phrase touching the rows on both sides, which reads as a collision
+ *  even though it technically isn't one. */
+const GAP_CLEAR = 8;
+
+/** The "N later" break label's own box on the axis. It sits in the SAME columns
+ *  as a row body (both run from the pane's inline-start to the axis), so it has
+ *  to reserve height against rows the way a row does — otherwise a
+ *  collision-pushed stack catches up with the break and the label prints on top
+ *  of a row label.
+ *
+ *  INVARIANT: `GAP_H + rowHeight ≤ MAX_GAP`. A break's row lands a whole
+ *  `MAX_GAP` below the previous row's ideal position, so as long as the reserve
+ *  still fits once that row's own height is taken out, an UNCROWDED break never
+ *  binds the floor and the spine lays out identically to one with no reserve at
+ *  all. That bound is `rowHeight ≤ 56` at this reserve: both spines run at
+ *  `EVENT_H` (22), which leaves 34px of slack, and a denser 44 still leaves 12.
+ *  Past 56 an unclustered break would start being pushed down — and past
+ *  `MAX_GAP` itself nothing elides at all (see `rowHeight` on Props). */
+export const GAP_H = GAP_LABEL_H + 2 * GAP_CLEAR;
 
 export interface SpineRow<T> {
   key: string;
@@ -169,7 +188,13 @@ export function TimeSpine<T>({
       // position — collision-pushed neighbours would sit on top of it. Centre it
       // between the two rows' centres, which is also the midpoint of the empty
       // band between their facing edges.
-      if (broke) gaps.push({ y: (prevY + y) / 2, ms: broke });
+      //
+      // `+ 1` matches the row body's own `top: y - rowHeight / 2 + 1`: the rows
+      // are DRAWN a pixel below the centres they're laid out on, so a label
+      // centred on the bare midpoint sits a pixel proud of the band it was given
+      // — 7px of air above and 9 below instead of 8 and 8. Measured, not
+      // guessed; keep the two offsets in step.
+      if (broke) gaps.push({ y: (prevY + y) / 2 + 1, ms: broke });
       prevY = y;
       cursor = y + rowHeight;
       return { row, y, ideal };
