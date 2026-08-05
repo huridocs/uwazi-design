@@ -2,6 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { pdfThumb } from "../../utils/pdfThumb";
 import { DocPlaceholder } from "./DocPlaceholder";
 
+/** How much larger than fit-to-width page one is rendered before the sheet crops
+ *  it. Chosen against the real pixel budget (a card's sheet is ~189×97 CSS px):
+ *  fitted whole, a judgment's body text lands about 3px tall and its masthead is
+ *  barely there; at 1.8 the court, the case and the date all read. It stops at
+ *  1.8 because a centred heading — "CORTE INTERAMERICANA DE DERECHOS HUMANOS" —
+ *  already spans nearly the full crop there, and past it the title clips. */
+const ZOOM = 1.8;
+
 /** A document preview: the real first page, inside the cropped-sheet frame.
  *
  *  The page is rasterised only once the thumb is ON SCREEN — a library grid holds
@@ -50,18 +58,23 @@ export function PdfPageThumb({
 
   useEffect(() => {
     if (!visible || !url) return;
-    // Rasterise at the SHEET's real width — guessing renders the page blurry (too
-    // small) or burns worker time (too big).
+    // Rasterise against the SHEET's real box — guessing renders the page blurry
+    // (too small) or burns worker time (too big). The height matters as much as
+    // the width now: it's the crop window the page is framed into.
     const w = Math.round(sheetRef.current?.clientWidth ?? 0);
-    if (!w) return;
+    const h = Math.round(sheetRef.current?.clientHeight ?? 0);
+    if (!w || !h) return;
     let live = true;
-    pdfThumb(url, w).then((data) => {
+    // At `sm` the sheet is ~24px across. Nothing is legible there at any zoom,
+    // and a whole page at least reads as a page — so the crop is for the sizes
+    // that can carry it.
+    pdfThumb(url, w, size === "sm" ? undefined : { aspect: w / h, zoom: ZOOM }).then((data) => {
       if (live) setSrc(data);
     });
     return () => {
       live = false;
     };
-  }, [visible, url]);
+  }, [visible, url, size]);
 
   return (
     <div className={className} style={style}>
@@ -69,7 +82,23 @@ export function PdfPageThumb({
         {/* The ref is on the SHEET, not the frame: its width is what the page gets
             rendered at, and it's what has to come on screen. */}
         <div ref={sheetRef} className="w-full h-full">
-          {src && <img src={src} alt="" aria-hidden className="w-full block" />}
+          {src &&
+            (size === "sm" ? (
+              // Whole page, fitted to the sheet's width and running off its
+              // bottom the way it always did.
+              <img src={src} alt="" aria-hidden className="w-full block" />
+            ) : (
+              // The bitmap IS the sheet's box, so it fills it exactly.
+              // `object-cover`/`object-top` only guard the sub-pixel rounding
+              // between the CSS box and the integer canvas — the geometry is
+              // the placeholder's either way, so nothing moves when it lands.
+              <img
+                src={src}
+                alt=""
+                aria-hidden
+                className="w-full h-full block object-cover object-top"
+              />
+            ))}
         </div>
       </DocPlaceholder>
     </div>
