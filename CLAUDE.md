@@ -47,9 +47,13 @@ Keep it in sync when tokens.css or the style rules change.
 - **SVG interactive elements** (graph nodes/labels) get `tabIndex`, `role`,
   `aria-label`, Enter/Space, and a drawn focus ring (carbon halo) — never rely on
   default outlines inside the zoom transform.
-- **EntityPill labels never use the raw type colour** — pale → ink, saturated →
-  `color-mix(… 70%, var(--text-primary))` so small text clears WCAG on the tint
-  in both themes. The dot keeps the true colour.
+- **Type labels never use the raw type colour** — pale → ink, saturated →
+  `color-mix(… 65%, var(--text-primary))` so small text clears WCAG on the tint
+  in both themes. The dot keeps the true colour. ONE implementation:
+  `utils/typeColor.ts` (`typeLabelColor`), used by EntityPill AND EntityTypeChip
+  — the chip shipped the raw colour precisely because it carried its own copy.
+  65, not the original 70: at 70 the blue "Right" (#2563EB) sat at 4.34:1 on its
+  own tint in dark, the one combination that number never covered.
 - Live updates (streams, toasts, task progress) get `aria-live="polite"` /
   `role="status"`/`role="log"` — see Beacon/AgentModal/ToastContainer.
 - The Storybook a11y addon checks every story; keep new primitives violation-free.

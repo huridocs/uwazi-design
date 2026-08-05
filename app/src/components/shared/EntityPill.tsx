@@ -1,4 +1,5 @@
 import { getEntityType } from "../../data/entities";
+import { typeLabelColor } from "../../utils/typeColor";
 import { HighlightedText } from "./HighlightedText";
 
 interface EntityPillProps {
@@ -11,16 +12,6 @@ interface EntityPillProps {
   highlight?: string;
 }
 
-/** Perceived luminance (0–1) of a #RRGGBB colour. Pale colours (lime, yellow,
- *  pastels) score high and are unreadable as text on a light tint. */
-function luminance(hex: string): number {
-  const h = hex.replace("#", "");
-  if (h.length < 6) return 0.5;
-  const r = parseInt(h.slice(0, 2), 16) / 255;
-  const g = parseInt(h.slice(2, 4), 16) / 255;
-  const b = parseInt(h.slice(4, 6), 16) / 255;
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
 
 export function EntityPill({ typeId, label, size = "sm", highlight = "" }: EntityPillProps) {
   const type = getEntityType(typeId);
@@ -35,10 +26,7 @@ export function EntityPill({ typeId, label, size = "sm", highlight = "" }: Entit
   // under 4.5:1). Mixing with var(--text-primary) is theme-aware — it darkens
   // labels in light mode and lightens them in dark. The dot keeps the true
   // colour, so the type hue stays recognisable.
-  const isPale = luminance(color) > 0.6;
-  const textColor = isPale
-    ? "var(--text-primary)"
-    : `color-mix(in srgb, ${color} 70%, var(--text-primary))`;
+  const textColor = typeLabelColor(color);
 
   return (
     <span
