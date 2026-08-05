@@ -84,9 +84,9 @@ import { DataTable, type Column } from "../components/shared/DataTable";
 import { EntityTypeChip } from "../components/shared/EntityTypeChip";
 import { HighlightedText } from "../components/shared/HighlightedText";
 import { Select } from "../components/shared/Select";
-import { ViewSwitcher, type ViewOption } from "../components/library/ViewSwitcher";
+import { SegmentedControl, type Segment } from "../components/shared/SegmentedControl";
 
-const VIEW_OPTIONS: ViewOption[] = [
+const VIEW_OPTIONS: Segment[] = [
   { id: "cards", label: "Cards", icon: LayoutGrid },
   { id: "list", label: "List", icon: List },
   { id: "map", label: "Map", icon: MapIcon },
@@ -696,7 +696,14 @@ export function LibraryView() {
             options={SORTS}
           />
         </div>
-        <ViewSwitcher
+        {/* Icons alone, and no label cell: this row is Sort · View · Display ·
+            Language, and the switcher is the widest thing on it that ISN'T
+            content. A permanent label cell reserved for "Timeline" made the
+            control 55px wider than the bare rail it replaced — the wrong
+            direction for a toolbar. The active view names itself in the footer
+            count row instead, which costs no width here, and every segment
+            keeps its `title`/`aria-label`. */}
+        <SegmentedControl
           ariaLabel="View"
           value={viewMode}
           onChange={(v) => setViewMode(v as typeof viewMode)}
@@ -876,6 +883,28 @@ export function LibraryView() {
           Showing{" "}
           <span className="font-semibold text-ink-secondary">{shown.length.toLocaleString()}</span> of{" "}
           {filtered.length.toLocaleString()}
+        </span>
+        {/* The switcher's icons don't say which view won — this does, on a row
+            that already exists and has room to spare. All five names ride ONE
+            grid cell with only the active one visible, so switching view can't
+            shove the filter button beside it sideways. `aria-hidden`: the
+            switcher already announces the same state through `aria-pressed`,
+            and this is its visual echo, not a second source of truth. */}
+        <span aria-hidden className="-ms-1 flex items-center gap-1 text-[11px] text-ink-tertiary">
+          {/* The middot is doing real work: "Showing 53 of 53 Cards" reads as
+              fifty-three CARDS — the view name looked like the count's unit.
+              Separated, it's the app's usual "· " between two facts. */}
+          <span className="text-ink-muted">·</span>
+          <span className="grid">
+            {VIEW_OPTIONS.map((o) => (
+              <span
+                key={o.id}
+                className={`col-start-1 row-start-1 ${o.id === viewMode ? "" : "invisible"}`}
+              >
+                {o.label}
+              </span>
+            ))}
+          </span>
         </span>
         <span
           aria-hidden={!searchPending}
