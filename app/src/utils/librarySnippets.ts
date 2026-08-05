@@ -374,11 +374,20 @@ function pageFoldWithMap(pages: string[], i: number): { folded: string; map: Arr
   return hit;
 }
 
-/** One document's folds, as computed off the main thread. `folded[i]` is
- *  `fold(pages[i])` and `maps[i]` is its folded→original index map. */
+/** One document's folded pages, as computed off the main thread. `folded[i]` is
+ *  `fold(pages[i])`.
+ *
+ *  Folds ONLY — no folded→original index maps. The maps are what the excerpt
+ *  cutter needs, and it needs them for the handful of pages it actually cuts
+ *  (`maxFullText` per entity, memoised in `pageFoldMapCache`), whereas the folded
+ *  text is read for EVERY page on every scan. Priming maps eagerly meant
+ *  computing and retaining an `Int32Array` per character of the corpus for pages
+ *  nobody reads: measured at 20.4MB of live buffers for the 26 recovered
+ *  documents (5.36M chars), on top of a transient `number[]` several times that
+ *  inside the worker. `pageFoldWithMap` builds them lazily instead — which is
+ *  what it already did for every document the prime didn't reach. */
 export interface DocumentFolds {
   folded: string[];
-  maps: ArrayLike<number>[];
 }
 
 /** Install pre-computed folds for the CEJIL documents, by document key.
@@ -401,16 +410,15 @@ export interface DocumentFolds {
 export function primeDocumentFolds(byDocKey: Record<string, DocumentFolds>): void {
   if (!cejilLoaded()) return;
   const byKey = cejilFullText();
-  for (const [key, { folded, maps }] of Object.entries(byDocKey)) {
+  for (const [key, { folded }] of Object.entries(byDocKey)) {
     const pages = byKey[key];
     // A document whose page count doesn't match what we folded is a corpus that
-    // changed under the worker — drop it rather than pair page i with map j.
+    // changed under the worker — drop it rather than pair page i with fold j.
     if (!pages || pages.length !== folded.length) continue;
     foldedPagesCache.set(pages, folded);
-    pageFoldMapCache.set(
-      pages,
-      folded.map((f, i) => ({ folded: f, map: maps[i] })),
-    );
+    // NOT `pageFoldMapCache` — see `DocumentFolds`. The maps are per-excerpt and
+    // built on demand; priming them cost 20MB of live Int32Array for pages no
+    // excerpt ever cuts.
     blobByPages.set(pages, folded.join("\n"));
   }
 }

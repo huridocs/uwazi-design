@@ -441,6 +441,18 @@ bound anything.
 budget buys ~100 documents; that is why the corpus shipped with 6. **Committed:
 26 documents across 16 entities, 19.9MB** — the rest of the pilot was discarded.
 
+**What the 30× `fullText.json` did NOT cost: the search scan.** 3,752 of 4,398
+entities already shared the 6 stand-in blobs, so bytes scanned per keystroke went
+103.9MB → 111.4MB (+7%) and a full-corpus `matchCategoriesWithTerms` pass 4.1ms →
+4.9ms. All the per-keystroke search JS sums to ~30-40ms (index 8.5 memoised,
+matchesSearch 4.4, categories ~5, title folds 4.6, 24× buildSnippets 14.6)
+against ~200-280ms of measured per-keystroke cost — the rest is React re-rendering
+the library, and a query matching NOTHING is slower than one matching 3,750. Don't
+optimise the scan; it isn't the cost. What the growth did cost was memory, and the
+**worker no longer primes folded→original index maps** — those are per-excerpt,
+`pageFoldWithMap` builds them lazily, and priming them held 20.4MB of live
+`Int32Array` for pages no excerpt cuts (heap after prime 434.8MB → 326.2MB).
+
 ## Tab signals & recent searches
 
 - **`count` vs `dot`** (`components/layout/DrawerTabs.tsx`, `MainTabs.tsx`): count =
