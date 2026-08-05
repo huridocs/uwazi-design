@@ -16,6 +16,20 @@ export default defineConfig({
   // same value back out of import.meta.env.BASE_URL.
   base: process.env.VITE_BASE ?? "/",
   plugins: [react(), tailwindcss()],
+  resolve: {
+    // ONE React, whoever is resolving. Both the app and Storybook have hit the
+    // same failure — a null hook dispatcher ("Cannot read properties of null
+    // (reading 'useState'/'useMemo')") thrown from inside a dependency, because
+    // two pre-bundles of React existed and the component got the one the
+    // renderer wasn't driving. `dedupe` makes a bare `react` import resolve to a
+    // single copy no matter which config or cache asked for it.
+    //
+    // It is insurance, not a cure: it prevents a second copy being RESOLVED, and
+    // cannot stop a page that is already loaded from holding `?v=` URLs minted
+    // before a re-optimization. What prevents that is a complete FIRST optimize
+    // pass — see `optimizeDeps.include` below.
+    dedupe: ["react", "react-dom"],
+  },
   optimizeDeps: {
     // Pre-bundle these EXPLICITLY rather than leaving them to the dep scanner.
     //
@@ -36,7 +50,24 @@ export default defineConfig({
     // out into their own chunks, which is the opposite of what this fixes.
     // `world-atlas/countries-110m.json` never appears — it's a JSON asset, not
     // a dep.
-    include: ["react-pdf", "react-simple-maps"]
+    //
+    // The React core is listed EXPLICITLY even though the scanner finds it
+    // anyway. This config is also what Storybook builds with (see
+    // `.storybook/main.ts`), and Storybook keeps its own dep cache under
+    // node_modules/.cache/storybook. Two caches discovering React independently
+    // is how one of them ends up holding an instance that predates a new story
+    // file: adding the file triggers a re-optimize, the already-loaded iframe
+    // keeps the old `?v=` URLs, and hooks run against a dispatcher belonging to
+    // the copy that isn't rendering. Pinning the core into the first pass on
+    // both sides removes the discovery step that makes the two drift.
+    include: [
+      "react",
+      "react-dom",
+      "react-dom/client",
+      "react/jsx-runtime",
+      "react-pdf",
+      "react-simple-maps"
+    ]
   },
   test: {
     projects: [{
