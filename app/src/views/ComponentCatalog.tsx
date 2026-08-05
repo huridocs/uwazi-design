@@ -9,6 +9,9 @@ import { StyleGuide } from "../components/catalog/StyleGuide";
 import { EntityPill } from "../components/shared/EntityPill";
 import { PageTag } from "../components/shared/PageTag";
 import { CountBadge } from "../components/shared/CountBadge";
+import { CopyPreviewSection } from "../components/metadata/CopyPreviewSection";
+import { CopyFieldRow } from "../components/metadata/CopyFieldRow";
+import type { CopyPlan } from "../utils/copyFrom";
 import { MetadataCard, Property, PropertyRow } from "../components/metadata/MetadataCard";
 import { HighlightCard } from "../components/relationships/HighlightCard";
 import { RelatedDocCard } from "../components/relationships/RelatedDocCard";
@@ -83,6 +86,51 @@ import { sidebarGroups, allItemIds } from "./catalog/sidebarGroups";
 import { handoffDocs, resolveHandoffAnchor } from "./catalog/handoffDocs";
 import { Markdown } from "./catalog/Markdown";
 import { asset } from "../utils/asset";
+
+/** Demo data for the Copy From entry — a plan with matches AND refusals, so the
+ *  half that explains itself is visible in the catalog too. */
+const CATALOG_COPY_PLAN: CopyPlan = {
+  matches: [
+    {
+      id: "region",
+      label: "Region",
+      type: "text",
+      copies: "value",
+      sourceValue: "South America",
+      targetValue: "North America",
+      emptyOnSource: false,
+      unchanged: false,
+    },
+    {
+      id: "ratified",
+      label: "Ratified ACHR",
+      type: "text",
+      copies: "value",
+      sourceValue: "1984",
+      targetValue: "1981",
+      emptyOnSource: false,
+      unchanged: false,
+    },
+  ],
+  skipped: [
+    {
+      id: "category",
+      label: "Category",
+      reason: "different-thesaurus",
+      detail: "Both define Category, but they point at different vocabularies.",
+      side: "both",
+    },
+    {
+      id: "files",
+      label: "Attachments",
+      reason: "excluded-type",
+      detail: "Files belong to the entity that holds them.",
+      side: "both",
+    },
+  ],
+  matchCount: 2,
+};
+
 
 interface Props {
   /** Called when the user clicks the "Return to app" button in the catalog
@@ -678,6 +726,26 @@ export function ComponentCatalog({ onReturn }: Props) {
                       </PropertyRow>
                       <Property label="Mechanism" value="Corte IDH" linked />
                     </MetadataCard>
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="ev-copy-from" ref={reg("ev-copy-from")}>
+                <CatalogEntry
+                  name="CopyFrom · preview + field rows"
+                  description="Stages metadata off another entity into an open edit form — never saves. The preview lists what would copy AND what would not, with the reason for each refusal (Uwazi's shows only the matches, so a field that silently failed to match leaves nothing to read). Each staged field is deselectable and shows incoming beside current, so an overwrite is never silent; committing stamps every copied field with `↳ copied from`."
+                  code={`const plan = planCopyFrom(target, source, language);
+<CopyPreviewSection plan={plan} onUse={stage} onBack={reopenPicker} />
+<CopyFieldRow match={plan.matches[0]} checked={checked} onChange={setChecked} />`}
+                >
+                  <div className="w-full max-w-md space-y-3">
+                    <CopyPreviewSection plan={CATALOG_COPY_PLAN} onUse={() => {}} onBack={() => {}} />
+                    <CopyFieldRow match={CATALOG_COPY_PLAN.matches[0]} checked onChange={() => {}} />
+                    <CopyFieldRow
+                      match={CATALOG_COPY_PLAN.matches[1]}
+                      checked={false}
+                      onChange={() => {}}
+                    />
                   </div>
                 </CatalogEntry>
               </div>

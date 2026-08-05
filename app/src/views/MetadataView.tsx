@@ -1,6 +1,6 @@
-import { useEffect, useState, type ReactNode } from "react";
-import { useAtom, useAtomValue } from "jotai";
-import { Search } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { Search, ClipboardCopy } from "lucide-react";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
@@ -10,6 +10,13 @@ import { ConnectionGroupCard } from "../components/metadata/ConnectionGroupCard"
 import { RelationshipFieldCard } from "../components/metadata/RelationshipFieldCard";
 import { RelationshipCards } from "../components/metadata/RelationshipCards";
 import { RelationshipFieldEditor } from "../components/metadata/RelationshipFieldEditor";
+import { CopyFromPicker } from "../components/metadata/CopyFromPicker";
+import { CopyFieldRow } from "../components/metadata/CopyFieldRow";
+import { ProvenanceLine } from "../components/shared/ProvenanceLine";
+import { EntityPill } from "../components/shared/EntityPill";
+import { copyPreviewAtom } from "../atoms/copyFrom";
+import { overlayEntityIdAtom } from "../atoms/references";
+import { planCopyFrom, type CopyMatch } from "../utils/copyFrom";
 import { TemplateStructure } from "../components/relationships/TemplateStructure";
 import { EntityOverlay } from "../components/relationships/EntityOverlay";
 import { groupConnections, relationLabel, specInherits } from "../utils/inheritance";
@@ -18,7 +25,7 @@ import {
   type RelationshipMetadataField,
 } from "../data/metadata";
 import { focusedEntityIdAtom } from "../atoms/focusedEntity";
-import { getEntity } from "../data/entities";
+import { getEntity, type Entity } from "../data/entities";
 import { getEntityProfile } from "../data/entityProfiles";
 import { filesAtom } from "../atoms/files";
 import { activeFilterCountAtom } from "../atoms/filters";
@@ -205,8 +212,106 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
     Object.fromEntries(connectionDefs.map((d) => [d.key, d.entityIds])),
   );
 
+  /* ── Copy From ────────────────────────────────────────────────────────────
+     Staged in two steps, and NEITHER writes the entity: picking a source opens
+     a preview, staging fills this form's local state, and the user still presses
+     Save. Cancelling the edit throws all of it away with everything else, which
+     is why none of it lives in an atom except the preview the overlay reads. */
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const setPreview = useSetAtom(copyPreviewAtom);
+  const setOverlayEntity = useSetAtom(overlayEntityIdAtom);
+  /** The staged set: what would copy, and which of it the user still wants. */
+  const [stage, setStage] = useState<{
+    source: Entity;
+    matches: CopyMatch[];
+    checked: Record<string, boolean>;
+  } | null>(null);
+  /** fieldId → the entity it was copied from. Survives until the edit ends. */
+  const [copiedFrom, setCopiedFrom] = useState<Record<string, string>>({});
+  const target = getEntity(focusedId);
+
+  const preview = (source: Entity) => {
+    if (!target) return;
+    const plan = planCopyFrom(target, source, language);
+    setPickerOpen(false);
+    setPreview({
+      sourceId: source.id,
+      plan,
+      onUse: () => {
+        setStage({
+          source,
+          matches: plan.matches,
+          // Defaulted to the matched set, as asked — except the ones that would
+          // CLEAR a value, which is a destructive default nobody expects from a
+          // button labelled "copy".
+          checked: Object.fromEntries(plan.matches.map((m) => [m.id, !m.emptyOnSource])),
+        });
+        setPreview(null);
+        setOverlayEntity(null);
+      },
+      onBack: () => {
+        setPreview(null);
+        setOverlayEntity(null);
+        setPickerOpen(true);
+      },
+    });
+    setOverlayEntity(source.id);
+  };
+
+  /** Commit: write ONLY the checked fields into this form's state, and remember
+   *  where each came from. Still nothing saved. */
+  const commitCopy = () => {
+    if (!stage) return;
+    const taking = stage.matches.filter((m) => stage.checked[m.id]);
+    setFields((prev) =>
+      prev.map((f) => {
+        const m = taking.find((x) => x.id === f.id && x.copies === "value");
+        return m ? { ...f, value: m.sourceValue ?? "" } : f;
+      }),
+    );
+    setConnections((prev) => {
+      const next = { ...prev };
+      for (const m of taking) {
+        if (m.copies !== "connection") continue;
+        // Singles are keyed by field id; grouped connections by their shared
+        // key, so find whichever def actually owns this field.
+        const def =
+          connectionDefs.find((d) => d.key === m.id) ??
+          connectionDefs.find((d) => d.columns.some((c) => c.fieldId === m.id));
+        if (def) next[def.key] = m.sourceConnectedEntityIds ?? [];
+      }
+      return next;
+    });
+    setCopiedFrom((prev) => ({
+      ...prev,
+      ...Object.fromEntries(taking.map((m) => [m.id, stage.source.id])),
+    }));
+    setStage(null);
+  };
+
+  const cancelCopy = () => {
+    setStage(null);
+    setPreview(null);
+    setOverlayEntity(null);
+    setPickerOpen(false);
+  };
+
+  const stagedById = useMemo(
+    () => new Map((stage?.matches ?? []).map((m) => [m.id, m])),
+    [stage],
+  );
+  const checkedCount = stage
+    ? stage.matches.filter((m) => stage.checked[m.id]).length
+    : 0;
+  /* Once a copy is in play, EVERY field reserves its provenance slot, so the
+     line landing on commit cannot shove the fields below it (PATTERNS §3). */
+  const copyActive = stage !== null || Object.keys(copiedFrom).length > 0;
+
   return (
     <>
+      {pickerOpen && target && (
+        <CopyFromPicker target={target} onPreview={preview} onClose={() => setPickerOpen(false)} />
+      )}
       <div className="flex-1 overflow-auto px-4 py-3 pb-8 space-y-3">
         {/* Title */}
         <EditSection label="Title*">
@@ -331,6 +436,18 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
                     focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40"
                 />
               )}
+              {stagedById.get(field.id) && stage && (
+                <CopyFieldRow
+                  match={stagedById.get(field.id)!}
+                  checked={!!stage.checked[field.id]}
+                  onChange={(v) =>
+                    setStage((prev) =>
+                      prev ? { ...prev, checked: { ...prev.checked, [field.id]: v } } : prev,
+                    )
+                  }
+                />
+              )}
+              <CopyProvenanceSlot active={copyActive} sourceId={copiedFrom[field.id]} />
             </EditSection>
           ))}
 
@@ -400,6 +517,45 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
         className="flex items-center justify-end gap-3 h-12 px-4 bg-paper shrink-0"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
+        {/* EDIT MODE ONLY — this whole bar exists only while editing, which is
+            the same rule Uwazi's `.copy-from-btn` follows. */}
+        {stage ? (
+          <>
+            <span className="me-auto text-[11px] text-ink-tertiary">
+              {checkedCount} of {stage.matches.length} staged from
+              <span className="ms-1 align-middle">
+                <EntityPill typeId={stage.source.typeId} label={stage.source.title} />
+              </span>
+            </span>
+            <button
+              onClick={cancelCopy}
+              className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+            >
+              Discard copy
+            </button>
+            <button
+              onClick={commitCopy}
+              disabled={checkedCount === 0}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                checkedCount === 0
+                  ? "bg-vellum text-ink-muted cursor-not-allowed"
+                  : "bg-ink text-paper hover:bg-ink/90 cursor-pointer"
+              }`}
+            >
+              Copy {checkedCount} {checkedCount === 1 ? "field" : "fields"}
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={() => setPickerOpen(true)}
+            className="me-auto inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary
+              bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"
+          >
+            <ClipboardCopy size={13} className="text-ink-tertiary" />
+            Copy from…
+          </button>
+        )}
         <button
           onClick={onCancel}
           className="px-4 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
@@ -563,3 +719,25 @@ function MetadataDrawer() {
   );
 }
 
+/** The "↳ copied from …" stamp, in a slot that is reserved the moment a copy is
+ *  in play rather than created when the line lands — otherwise committing a copy
+ *  would push every field below it down (PATTERNS §3).
+ *
+ *  This is the undo-adjacent affordance Uwazi has no answer for (research
+ *  weakness #4): their copy is irreversible except by discarding the entire edit
+ *  session, because after the values land nothing records which fields moved or
+ *  where they came from. Naming the source per field means a user can put one
+ *  back by hand, and knows what to put back. */
+function CopyProvenanceSlot({ active, sourceId }: { active: boolean; sourceId?: string }) {
+  if (!active) return null;
+  const source = sourceId ? getEntity(sourceId) : undefined;
+  return (
+    <div className="h-5 flex items-center">
+      {source && (
+        <ProvenanceLine label="copied from">
+          <EntityPill typeId={source.typeId} label={source.title} />
+        </ProvenanceLine>
+      )}
+    </div>
+  );
+}
