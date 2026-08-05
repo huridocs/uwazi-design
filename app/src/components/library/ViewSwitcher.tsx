@@ -38,7 +38,6 @@ export function ViewSwitcher({
       options={VIEWS}
       onChange={onChange}
       ariaLabel="View"
-      triggerPrefix="View:"
       steady
     />
   );
