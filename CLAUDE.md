@@ -448,7 +448,21 @@ entities already shared the 6 stand-in blobs, so bytes scanned per keystroke wen
 matchesSearch 4.4, categories ~5, title folds 4.6, 24× buildSnippets 14.6)
 against ~200-280ms of measured per-keystroke cost — the rest is React re-rendering
 the library, and a query matching NOTHING is slower than one matching 3,750. Don't
-optimise the scan; it isn't the cost. What the growth did cost was memory, and the
+optimise the scan; it isn't the cost.
+
+**`filterState` in `LibraryView` MUST stay memoised.** Four memos depend on it and
+between them they are every full-corpus pass the Library makes. As a plain object
+literal it got a new identity per render, so all four recomputed on the urgent
+render each keystroke fires while `useDeferredValue` is still serving the previous
+query — the deferral worked and the memos discarded it. Key it on CONTENT
+(`activeTypeIds.join(",")`, `inheritedKey`, …), never on the rebuilt arrays. Same
+trap, second instance: `ResultsBody` re-snippets its whole visible page on every
+render, so it is `memo`'d AND its callbacks are `useCallback`'d at the call site —
+an inline `() => clearSearch()` there silently undoes the memo. Together: settle
+5,379ms → ~2,990ms, long-task total 3,473ms → ~1,200ms, commits per query 43 → 22.
+Still open: `EntityCard` subscribes to the RAW `libraryQueryAtom`, so all ~120
+cards re-render per keystroke (2,594 renders per query) — pass the deferred query
+down instead. What the growth did cost was memory, and the
 **worker no longer primes folded→original index maps** — those are per-excerpt,
 `pageFoldWithMap` builds them lazily, and priming them held 20.4MB of live
 `Int32Array` for pages no excerpt cuts (heap after prime 434.8MB → 326.2MB).

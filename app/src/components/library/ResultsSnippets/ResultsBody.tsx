@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { memo, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Search } from "lucide-react";
 import type { Entity } from "../../../data/entities";
 import type { Language } from "../../../atoms/language";
@@ -50,8 +50,14 @@ interface Props {
  *  from shared primitives (§11): `ListInfoRow` header, `RelationshipGroupedCard`
  *  per entity, and the full-text page spine. The left pane already lists the
  *  entity set; this shows the snippets the grid can't. Blank-state order: error →
- *  loading → no-search → no-results → list. */
-export function ResultsBody({
+ *  loading → no-search → no-results → list.
+ *
+ *  MEMOISED. Every render of this rebuilds `buildSnippetsFor` for its whole
+ *  visible page — a windowing pass per entity — and LibraryView re-renders on
+ *  every keystroke whether or not the deferred query moved. Without the memo (and
+ *  the stable callbacks at the call site) that was ~40 entities re-snippeted per
+ *  character typed, for a list showing the SAME query's results. */
+export const ResultsBody = memo(function ResultsBody({
   query,
   entities,
   source,
@@ -314,7 +320,7 @@ export function ResultsBody({
       </div>
     </Shell>
   );
-}
+});
 
 function Shell({ children }: { children: ReactNode }) {
   return <div className="flex flex-col h-full min-h-0 bg-warm">{children}</div>;

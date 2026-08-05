@@ -301,27 +301,69 @@ export function LibraryView() {
   );
   const chainKey = JSON.stringify(chainFilters);
 
-  const filterState: LibraryFilterState = {
-    source: dataSource,
-    language,
-    typeIds: activeTypeIds,
-    hasDocOnly,
-    wantPublished,
-    wantRestricted,
-    countries: activeCountries,
-    countryMode,
-    descriptors: activeDescriptors,
-    descriptorMode,
-    fromMs,
-    toMs,
-    inherited: activeInherited,
-    chains: activeChains,
-    q,
-    searchIndex,
-    searchTerms,
-    fullTextSearch,
-    matchTypes,
-  };
+  // MEMOISED, and that is the whole point of it.
+  //
+  // Four memos below take this as a dependency, and between them they are every
+  // full-corpus pass the Library makes — `matchTypeBase`, `searchMatchCount` and
+  // the two brush passes, each a filter over 4,398 entities. As a plain object
+  // literal this was a NEW IDENTITY ON EVERY RENDER, so all four recomputed every
+  // time anything re-rendered this component, including the urgent render each
+  // keystroke produces while `useDeferredValue` is still handing out the previous
+  // query. The deferral was doing its job and the memos were throwing the result
+  // away: measured at ~2 full-corpus passes per keystroke where the query hadn't
+  // even changed yet.
+  //
+  // Keyed on CONTENT, not identity — `activeTypeIds`/`activeCountries`/
+  // `activeDescriptors` are rebuilt per render from the facet atoms and
+  // `activeInherited` from `inheritedFilters`, so their joined keys (and
+  // `inheritedKey`) stand in for them, the same way the brush memo below already
+  // keys itself. `activeChains`, `searchIndex` and `searchTerms` are memos and
+  // can be depended on directly.
+  const filterState: LibraryFilterState = useMemo(
+    () => ({
+      source: dataSource,
+      language,
+      typeIds: activeTypeIds,
+      hasDocOnly,
+      wantPublished,
+      wantRestricted,
+      countries: activeCountries,
+      countryMode,
+      descriptors: activeDescriptors,
+      descriptorMode,
+      fromMs,
+      toMs,
+      inherited: activeInherited,
+      chains: activeChains,
+      q,
+      searchIndex,
+      searchTerms,
+      fullTextSearch,
+      matchTypes,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- content keys, see above
+    [
+      dataSource,
+      language,
+      activeTypeIds.join(","),
+      hasDocOnly,
+      wantPublished,
+      wantRestricted,
+      activeCountries.join(","),
+      countryMode,
+      activeDescriptors.join(","),
+      descriptorMode,
+      fromMs,
+      toMs,
+      inheritedKey,
+      activeChains,
+      q,
+      searchIndex,
+      searchTerms,
+      fullTextSearch,
+      matchTypes,
+    ],
+  );
 
   // WHERE each entity matched, computed at most ONCE per entity per query.
   //
@@ -509,6 +551,11 @@ export function LibraryView() {
   );
 
   // Retry the CEJIL load — mirrors the left pane's Retry (re-runs the effect).
+  // Wrapped so the memoized drawer bodies see one identity for the life of the
+  // view; both setters are `useSetAtom` results, which are already stable.
+  const handleClearSearch = useCallback(() => clearSearch(), [clearSearch]);
+  const handleClearFacets = useCallback(() => clearFacets(), [clearFacets]);
+
   const handleCejilRetry = useCallback(() => {
     setCejilError(false);
     setCejilRetry((n) => n + 1);
@@ -896,9 +943,12 @@ export function LibraryView() {
       onRetry={handleCejilRetry}
       onFocusProperty={handleFocusProperty}
       onSelectSnippet={handleSnippetSelect}
-      onClearSearch={() => clearSearch()}
+      // Stable identities, or the memo on ResultsBody is decorative: a fresh
+      // arrow per render is a changed prop, and this list re-snippets its whole
+      // visible page when it re-renders.
+      onClearSearch={handleClearSearch}
       hiddenByFilters={Math.max(0, searchMatchCount - matchTypeBase.length)}
-      onClearFilters={() => clearFacets()}
+      onClearFilters={handleClearFacets}
       matchTypeCounts={matchTypeCounts}
       totalMatches={matchTypeBase.length}
     />
