@@ -651,13 +651,13 @@ export function LibraryView() {
     <div className="flex flex-col h-full min-h-0 bg-paper">
       {/* Toolbar */}
       <div
-        className="shrink-0 flex items-center gap-2 px-3 py-2"
+        className="shrink-0 flex items-center gap-2 px-3 py-2 bg-parchment"
         style={{ borderBottom: "1px solid var(--border-primary)" }}
       >
         <div
           ref={searchBoxRef}
-          className="relative flex-1 min-w-0 flex items-center gap-1.5 h-8 py-1 pl-2 pr-2 bg-warm border border-border rounded-md
-            focus-within:ring-2 focus-within:ring-carbon/20 focus-within:border-carbon/40 transition-all"
+          className="relative flex-1 min-w-0 flex items-center gap-1.5 h-8 py-1 pl-2 pr-2 bg-paper border border-border rounded-md
+            focus-within:ring-2 focus-within:ring-ink/25 focus-within:border-ink/30 transition-all"
         >
           <Search size={14} className="text-ink-tertiary shrink-0" />
           <input

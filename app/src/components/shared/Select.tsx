@@ -85,9 +85,9 @@ export function Select({
         // column. `gap-1` because a 14px chevron carries ~3.5px of its own
         // slack — 6px of gap read as 9.5 and detached the caret from the label.
         className="inline-flex items-center gap-1 h-8 ps-3 pe-2 text-xs font-medium text-ink-secondary
-          bg-warm border border-transparent hover:bg-parchment hover:text-ink rounded-md
-          transition-colors cursor-pointer
-          focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"
+          bg-paper border border-border hover:border-ink/25 hover:text-ink hover:shadow-sm
+          rounded-md transition-all cursor-pointer
+          focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35"
       >
         {/* Prefix and value are ONE run. As two loose spans they are two inline
             boxes, so an RTL page lays them end-to-start and "View: Cards"

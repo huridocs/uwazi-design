@@ -23,10 +23,10 @@ export function FiltersButton({
     <button
       onClick={onClick}
       aria-pressed={active}
-      className={`relative inline-flex items-center gap-1.5 ${h} ${px} ${textSize} font-medium rounded-md transition-colors cursor-pointer ${
+      className={`relative inline-flex items-center gap-1.5 ${h} ${px} ${textSize} font-medium rounded-md transition-all cursor-pointer ${
         active
-          ? "bg-vellum text-ink border border-border"
-          : "bg-warm border border-border text-ink-secondary hover:bg-parchment hover:text-ink"
+          ? "bg-paper text-ink border border-ink/40 shadow-sm"
+          : "bg-paper border border-border text-ink-secondary hover:border-ink/25 hover:text-ink hover:shadow-sm"
       }`}
     >
       <Filter size={iconSize} className={active ? "text-ink" : "text-ink-secondary"} />

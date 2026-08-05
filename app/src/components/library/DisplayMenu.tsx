@@ -92,10 +92,10 @@ export function DisplayMenu() {
         aria-label="Display options"
         aria-haspopup="menu"
         aria-expanded={open}
-        className={`relative inline-flex items-center justify-center w-8 h-8 rounded-md transition-colors cursor-pointer ${
+        className={`relative inline-flex items-center justify-center w-8 h-8 rounded-md border transition-all cursor-pointer ${
           open || modified
-            ? "bg-vellum text-ink"
-            : "bg-warm text-ink-secondary hover:bg-parchment hover:text-ink"
+            ? "bg-paper text-ink border-ink/40 shadow-sm"
+            : "bg-paper text-ink-secondary border-border hover:border-ink/25 hover:text-ink hover:shadow-sm"
         }`}
       >
         <SlidersHorizontal size={14} />
