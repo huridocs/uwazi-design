@@ -1,14 +1,5 @@
 import { getEntityType } from "../../data/entities";
-
-/** Perceived luminance — pale colours fall back to ink text (see EntityPill). */
-function luminance(hex: string): number {
-  const h = hex.replace("#", "");
-  if (h.length < 6) return 0.5;
-  const r = parseInt(h.slice(0, 2), 16) / 255;
-  const g = parseInt(h.slice(2, 4), 16) / 255;
-  const b = parseInt(h.slice(4, 6), 16) / 255;
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
+import { typeLabelColor } from "../../utils/typeColor";
 
 /** Compact entity-type indicator for dense rows: just the colour dot, expanding
  *  to the full tinted pill (dot + name) when you hover the chip — like the navbar
@@ -18,7 +9,10 @@ export function EntityTypeChip({ typeId }: { typeId: string }) {
   const type = getEntityType(typeId);
   const color = type?.color ?? "#6B7280";
   const name = type?.name ?? typeId;
-  const textColor = luminance(color) > 0.6 ? "var(--text-primary)" : color;
+  // The shared rule, not a second one: a label never takes the raw type colour.
+  // This chip was drawing it straight — 3.64:1 light, 3.21:1 dark, under AA for
+  // 12px text. The dot keeps the true colour.
+  const textColor = typeLabelColor(color);
 
   const dot = (
     <span

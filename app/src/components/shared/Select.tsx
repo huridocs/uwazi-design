@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 
 export interface SelectOption {
@@ -44,6 +44,7 @@ export function Select({
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const listId = useId();
 
   useEffect(() => {
     if (!open) return;
@@ -70,7 +71,14 @@ export function Select({
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label={ariaLabel}
+        aria-controls={open ? listId : undefined}
+        // The name has to carry the VALUE, not just the axis. `aria-label`
+        // overrides the button's content, so "View" alone is all a screen reader
+        // ever got — the current view was announced by nothing, while the
+        // segmented control it replaced put `aria-pressed` on every segment.
+        // "View: Cards" restores it, and Sort and Language gain the same thing
+        // ("Sort: Date added", "Language: EN") — they had the identical hole.
+        aria-label={ariaLabel && current ? `${ariaLabel}: ${current.label}` : ariaLabel}
         // The transparent border is load-bearing: the menu below has a real 1px
         // one, so without a matching edge here the option labels sit a pixel
         // inboard of the trigger's. Same border + same px-3 on both = one text
@@ -119,6 +127,10 @@ export function Select({
       {open && (
         <div
           role="listbox"
+          id={listId}
+          // The panel is named too — landing in an unnamed listbox tells you
+          // nothing about what you are choosing.
+          aria-label={ariaLabel}
           // No blanket 10rem floor: it was three times the Language trigger, so
           // that panel hung far past its control and stranded EN/ES/FR/AR at the
           // start of a box nothing lined up with. The options size it now, which
