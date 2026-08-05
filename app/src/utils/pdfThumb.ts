@@ -70,7 +70,14 @@ async function render(url: string, width: number, frame?: ThumbFrame): Promise<s
 
     if (!frame) {
       const viewport = page.getViewport({ scale: (width / base.width) * ratio });
-      return paint(page, viewport, Math.ceil(viewport.width), Math.ceil(viewport.height));
+      // `return await`, NOT `return`: the `finally` below destroys the document,
+      // and a bare `return promise` runs it the moment this frame returns —
+      // while the render is still in flight. pdf.js answers that by cancelling
+      // the render, so EVERY thumbnail resolved null and every card sat on its
+      // blank placeholder. The await is what keeps the document alive until the
+      // pixels exist. `no-return-await` would call this redundant; it is the
+      // opposite of redundant inside try/finally.
+      return await paint(page, viewport, Math.ceil(viewport.width), Math.ceil(viewport.height));
     }
 
     const scale = (width / base.width) * frame.zoom * ratio;
@@ -90,7 +97,8 @@ async function render(url: string, width: number, frame?: ThumbFrame): Promise<s
     // and the crop is narrower than the page at any zoom above 1.
     const offsetX = -Math.max(0, (full.width - cropW) / 2);
 
-    return paint(page, page.getViewport({ scale, offsetX, offsetY }), cropW, cropH);
+    // `return await` for the same reason as the whole-page branch above.
+    return await paint(page, page.getViewport({ scale, offsetX, offsetY }), cropW, cropH);
   } finally {
     // Free the worker's copy of the document; we only ever wanted one page.
     doc.destroy();

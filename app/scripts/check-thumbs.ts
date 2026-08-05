@@ -1,0 +1,128 @@
+/* Card-thumbnail regression check — every real PDF, no visible tab required.
+ *
+ *  Why it exists: a blank card is invisible to every check we had. pdf.js won't
+ *  resolve a render while `document.hidden` is true, which is permanently the
+ *  case in an automation tab, so "open the Library and look" cannot catch this
+ *  class of bug — and the failure (white sheet) is pixel-identical to the
+ *  placeholder shown when nothing rendered at all. The only way to tell "we drew
+ *  a page" from "we drew nothing" is to count the ink.
+ *
+ *  It drives the SHIPPED `pdfThumb()` — imported from the dev server, not
+ *  reimplemented — inside headless Chromium, where `document.hidden` is false
+ *  and rAF fires. Node + node-canvas was tried first and rejected: pdf.js drops
+ *  glyphs there without a DOM (`getPathGenerator … isn't resolved yet`), which
+ *  reported 18 of 39 documents blank that render perfectly well in a browser. A
+ *  check that lies is worse than no check.
+ *
+ *    npm run check:thumbs                 # the shipped path
+ *    node scripts/check-thumbs.ts --whole # fit-whole-page, for comparison
+ *    node scripts/check-thumbs.ts --zoom 1.4
+ *    node scripts/check-thumbs.ts --url http://localhost:5173
+ *    node scripts/check-thumbs.ts --dump  # write the bitmaps out and look at them
+ *
+ *  Needs the dev server up. Exits non-zero if any document lands under MIN_INK. */
+
+import { readdirSync, writeFileSync, mkdirSync } from "node:fs";
+import { join, dirname, basename } from "node:path";
+import { tmpdir } from "node:os";
+import { fileURLToPath } from "node:url";
+import { chromium } from "playwright";
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const APP = join(HERE, "..");
+
+/** The card grid's real sheet box, measured in the running Library: a 281×94
+ *  frame insets to a 189.3×96.7 sheet. Checking any other size would be checking
+ *  something we don't ship. */
+const WIDTH = 189;
+const HEIGHT = 96;
+
+const args = process.argv.slice(2);
+const whole = args.includes("--whole");
+const zoom = Number(args[args.indexOf("--zoom") + 1]) || 1.8;
+const url = args.includes("--url") ? args[args.indexOf("--url") + 1] : "http://localhost:1431";
+// Bitmaps go to a temp dir, never into the repo — this is a look-at-it aid.
+const dump = args.includes("--dump");
+const dumpDir = join(tmpdir(), "uwazi-thumbcheck");
+
+const dirs = [
+  ["public/cejil-docs", "/cejil-docs"],
+  ["public/docs", "/docs"],
+] as const;
+const files = dirs.flatMap(([dir, base]) =>
+  readdirSync(join(APP, dir))
+    .filter((f) => f.toLowerCase().endsWith(".pdf"))
+    .map((f) => `${base}/${encodeURIComponent(f)}`),
+);
+
+const browser = await chromium.launch();
+// Retina, like the machines this ships to — `pdfThumb` reads devicePixelRatio.
+const page = await browser.newPage({ deviceScaleFactor: 2 });
+const res = await page.goto(url, { waitUntil: "domcontentloaded" }).catch(() => null);
+if (!res?.ok()) {
+  console.error(`No dev server at ${url} — start it (npm run dev) or pass --url.`);
+  await browser.close();
+  process.exit(2);
+}
+
+console.log(
+  `${whole ? "fit-whole-page" : `framed crop, zoom ${zoom}`} · ${files.length} documents · ${url}\n`,
+);
+
+const results = await page.evaluate(
+  async ({ files, WIDTH, HEIGHT, zoom, whole, dump }) => {
+    const { pdfThumb } = await import("/src/utils/pdfThumb.ts");
+    const { inkCoverage } = await import("/src/utils/thumbFrame.ts");
+    const out: { file: string; ink: number; err?: string; data?: string }[] = [];
+    for (const f of files) {
+      try {
+        const data = await pdfThumb(f, WIDTH, whole ? undefined : { aspect: WIDTH / HEIGHT, zoom });
+        if (!data) {
+          out.push({ file: f, ink: 0, err: "render returned null" });
+          continue;
+        }
+        const img = new Image();
+        img.src = data;
+        await img.decode();
+        const c = document.createElement("canvas");
+        c.width = img.naturalWidth;
+        c.height = img.naturalHeight;
+        const ctx = c.getContext("2d", { willReadFrequently: true })!;
+        ctx.drawImage(img, 0, 0);
+        const px = ctx.getImageData(0, 0, c.width, c.height).data;
+        out.push({ file: f, ink: inkCoverage(px, c.width, c.height), data: dump ? data : undefined });
+      } catch (e) {
+        out.push({ file: f, ink: 0, err: String((e as Error).message).slice(0, 70) });
+      }
+    }
+    return out;
+  },
+  { files, WIDTH, HEIGHT, zoom, whole, dump },
+);
+
+if (dump) {
+  mkdirSync(dumpDir, { recursive: true });
+  for (const r of results) {
+    if (!r.data) continue;
+    writeFileSync(
+      join(dumpDir, decodeURIComponent(basename(r.file)).replace(/\.pdf$/i, ".jpg")),
+      Buffer.from(r.data.split(",")[1], "base64"),
+    );
+  }
+  console.log(`bitmaps → ${dumpDir}\n`);
+}
+
+const { MIN_INK } = await import("../src/utils/thumbFrame.ts");
+const blank = results.filter((r) => r.ink < MIN_INK);
+for (const r of results) {
+  const bad = r.ink < MIN_INK;
+  console.log(
+    `${bad ? "BLANK" : "  ok "}  ${decodeURIComponent(basename(r.file)).padEnd(52)}` +
+      `ink=${(r.ink * 100).toFixed(2)}%${r.err ? `  (${r.err})` : ""}`,
+  );
+}
+console.log(`\n${blank.length} of ${results.length} below ${(MIN_INK * 100).toFixed(1)}% ink`);
+if (blank.length) console.log(blank.map((b) => decodeURIComponent(basename(b.file))).join(", "));
+
+await browser.close();
+process.exit(blank.length ? 1 : 0);
