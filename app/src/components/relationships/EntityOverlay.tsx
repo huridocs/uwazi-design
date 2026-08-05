@@ -1,6 +1,8 @@
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useState } from "react";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
+import { copyPreviewAtom } from "../../atoms/copyFrom";
+import { CopyPreviewSection } from "../metadata/CopyPreviewSection";
 import { activeAggregateIdAtom, overlayEntityIdAtom, referencesAtom } from "../../atoms/references";
 import { languageAtom } from "../../atoms/language";
 import { entityMetadataAtom, setEntityPropAtom } from "../../atoms/entityMetadata";
@@ -31,6 +33,7 @@ function formatCreated(iso: string | undefined): string {
 
 export function EntityOverlay() {
   const [entityId, setEntityId] = useAtom(overlayEntityIdAtom);
+  const copyPreview = useAtomValue(copyPreviewAtom);
   const [references] = useAtom(referencesAtom);
   const setActiveAggregateId = useSetAtom(activeAggregateIdAtom);
   const lang = useAtom(languageAtom)[0];
@@ -203,6 +206,16 @@ export function EntityOverlay() {
               <MetaRow icon={Link2} label="References" value={`${entityRefs.length} in this document`} />
             </div>
           </section>
+
+          {/* Copy From preview — only when THIS entity is the staged source, so
+              opening the same entity from anywhere else is unaffected. */}
+          {copyPreview && copyPreview.sourceId === entityId && (
+            <CopyPreviewSection
+              plan={copyPreview.plan}
+              onUse={() => copyPreview.onUse()}
+              onBack={() => copyPreview.onBack()}
+            />
+          )}
 
           {/* Native properties — the values other entities inherit from this
               one. Read-only on open (preview); "Edit" reveals inputs, and each
