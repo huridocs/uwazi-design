@@ -12,6 +12,9 @@ const config: StorybookConfig = {
     "@storybook/addon-docs",
     "@storybook/addon-mcp"
   ],
+  // The app's public assets, so stories that render real documents (PdfPageThumb)
+  // get the same files the app does rather than a permanent blank sheet.
+  "staticDirs": ["../public"],
   "framework": "@storybook/react-vite"
 };
 export default config;

@@ -43,6 +43,9 @@ import { InheritedValueChip, RelationCaption } from "../../components/metadata/I
 import { RelationshipFieldEditor } from "../../components/metadata/RelationshipFieldEditor";
 import { groupConnections, resolveRelationshipField } from "../../utils/inheritance";
 import { relationshipFieldsByLanguage } from "../../data/metadata";
+import { ViewSwitcher } from "../../components/library/ViewSwitcher";
+import { CopyFromPicker } from "../../components/metadata/CopyFromPicker";
+import { entities } from "../../data/entities";
 
 // Re-export so the catalog can use it directly without re-importing.
 export { FadeTruncate };
@@ -963,5 +966,27 @@ export function IsolatedDataTable() {
         { id: "count", header: "Entities", width: "6rem", align: "right", cell: (r) => <span className="text-xs text-ink-tertiary tabular-nums">{r.count}</span> },
       ]}
     />
+  );
+}
+
+/** The Library view switcher, holding its own value — the catalog's copy is
+ *  live, so the constant-width claim is checkable by switching views in it. */
+export function IsolatedViewSwitcher() {
+  const [view, setView] = useState("cards");
+  return <ViewSwitcher value={view} onChange={setView} />;
+}
+
+/** The Copy From source picker, in a bounded box (it fills its positioned
+ *  parent — in the app, the metadata pane). Live: the type/any toggle and the
+ *  match-count badges are computed from real entities. */
+export function IsolatedCopyFromPicker() {
+  return (
+    <div className="relative h-[24rem] w-full overflow-hidden rounded-lg bg-vellum">
+      <CopyFromPicker
+        target={entities.find((e) => e.typeId === "country") ?? entities[0]}
+        onPreview={() => {}}
+        onClose={() => {}}
+      />
+    </div>
   );
 }

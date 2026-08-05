@@ -49,13 +49,13 @@ export function CopyPreviewSection({
                 {m.copies === "connection" && (
                   <span className="text-ink-tertiary"> · copies the connection</span>
                 )}
-                {m.emptyOnSource && <span className="text-warning"> · empty here</span>}
+                {m.emptyOnSource && <span className="text-ink-secondary"> · empty here</span>}
               </span>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-[11px] text-ink-muted">
+        <p className="text-[11px] text-ink-tertiary">
           Nothing on this entity lines up with the one you are editing.
         </p>
       )}
@@ -72,8 +72,8 @@ export function CopyPreviewSection({
                 <Ban size={12} className="shrink-0 mt-px text-ink-muted" aria-hidden />
                 <span className="min-w-0 flex-1">
                   <span className="font-medium">{s.label}</span>
-                  <span className="text-ink-muted"> — {reasonLabel(s.reason)}</span>
-                  <span className="mt-0.5 block text-ink-muted">{s.detail}</span>
+                  <span className="text-ink-tertiary"> — {reasonLabel(s.reason)}</span>
+                  <span className="mt-0.5 block text-ink-tertiary">{s.detail}</span>
                 </span>
               </li>
             ))}
@@ -88,7 +88,7 @@ export function CopyPreviewSection({
           disabled={plan.matchCount === 0}
           className={`px-3 py-1.5 text-[11px] font-medium rounded-md transition-colors ${
             plan.matchCount === 0
-              ? "bg-vellum text-ink-muted cursor-not-allowed"
+              ? "bg-vellum text-ink-tertiary cursor-not-allowed"
               : "bg-ink text-paper hover:bg-ink/90 cursor-pointer"
           } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30`}
         >

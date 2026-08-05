@@ -76,7 +76,7 @@ export function ProvenanceTrail({ steps, sharedLabel }: { steps: ProvenanceStep[
           <button
             onClick={() => setOverlay(s.entityId)}
             title={`${s.relationLabel ? `${s.relationLabel}: ` : ""}${s.title} — open`}
-            className="min-w-0 truncate text-carbon hover:underline cursor-pointer"
+            className="min-w-0 truncate text-ink-secondary underline decoration-carbon decoration-2 underline-offset-2 hover:text-ink cursor-pointer"
           >
             {s.title}
           </button>

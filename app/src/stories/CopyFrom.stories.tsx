@@ -1,6 +1,8 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { CopyFieldRow } from "../components/metadata/CopyFieldRow";
+import { CopyFromPicker } from "../components/metadata/CopyFromPicker";
+import { entities } from "../data/entities";
 import { CopyPreviewSection } from "../components/metadata/CopyPreviewSection";
 import type { CopyMatch, CopyPlan } from "../utils/copyFrom";
 
@@ -114,6 +116,30 @@ export const Empty: Story = {
         plan={plan({ matches: [], matchCount: 0 })}
         onUse={() => {}}
         onBack={() => {}}
+      />
+    </div>
+  ),
+};
+
+/** The source picker.
+ *
+ *  Two things here answer Uwazi's version directly. It defaults to the target's
+ *  OWN type — theirs searches the whole library by title with no filter, so
+ *  editors routinely pick a source sharing zero properties and only find out
+ *  after selecting it — with "Any type" beside it, because copying across types
+ *  is a real thing to want. And every candidate is badged with how many fields
+ *  it would actually bring across, before it is chosen; a source with nothing to
+ *  give says so in the list rather than after two clicks and an empty preview.
+ *
+ *  Rendered here in a bounded box because it fills its positioned parent (in the
+ *  app, the metadata pane). */
+export const Picker: Story = {
+  render: () => (
+    <div className="relative h-[26rem] w-full max-w-2xl overflow-hidden rounded-lg bg-vellum">
+      <CopyFromPicker
+        target={entities.find((e) => e.typeId === "country") ?? entities[0]}
+        onPreview={() => {}}
+        onClose={() => {}}
       />
     </div>
   ),

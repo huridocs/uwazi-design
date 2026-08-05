@@ -7,6 +7,12 @@ import { StyleGuide } from "../components/catalog/StyleGuide";
 // Isolated* demo helper). Everything that needs scoped atom state or stateful
 // interaction lives in `./catalog/demos.tsx` and is imported lower down.
 import { EntityPill } from "../components/shared/EntityPill";
+import { ProvenanceLine } from "../components/shared/ProvenanceLine";
+import { BorrowedDocLine } from "../components/library/BorrowedDocLine";
+import { PdfPageThumb } from "../components/shared/PdfPageThumb";
+import { EntityTypeChip } from "../components/shared/EntityTypeChip";
+import { ViewSwitcher } from "../components/library/ViewSwitcher";
+import { entityTypes } from "../data/entities";
 import { PageTag } from "../components/shared/PageTag";
 import { CountBadge } from "../components/shared/CountBadge";
 import { CopyPreviewSection } from "../components/metadata/CopyPreviewSection";
@@ -48,6 +54,8 @@ import {
   DrawerTabsDemo,
   MainTabsDemo,
   IsolatedBeacon,
+  IsolatedViewSwitcher,
+  IsolatedCopyFromPicker,
   FileTableDemo,
   IsolatedSearchBar,
   IsolatedFiltersRow,
@@ -89,6 +97,9 @@ import { asset } from "../utils/asset";
 
 /** Demo data for the Copy From entry — a plan with matches AND refusals, so the
  *  half that explains itself is visible in the catalog too. */
+/** A real judgment, so the thumb entry renders the page it actually would. */
+const CATALOG_PDF = "/docs/Velasquez-Rodriguez_v_Honduras_Judgment_1988_EN.pdf";
+
 const CATALOG_COPY_PLAN: CopyPlan = {
   matches: [
     {
@@ -730,6 +741,18 @@ export function ComponentCatalog({ onReturn }: Props) {
                 </CatalogEntry>
               </div>
 
+              <div id="ev-copy-from-picker" ref={reg("ev-copy-from-picker")}>
+                <CatalogEntry
+                  name="CopyFromPicker"
+                  description="Picks the entity to copy metadata FROM. Defaults to the target's OWN type with 'Any type' beside it — Uwazi searches the whole library title-only with no filter, so editors pick sources sharing zero properties and find out afterwards. Every candidate is badged with how many fields it would actually bring across, before it is chosen; a source with nothing to give says so in the list rather than after two clicks and an empty preview. Traps focus, closes on Escape."
+                  code={`<CopyFromPicker target={entity} onPreview={openPreview} onClose={close} />
+
+{/* Badge = countCopyMatchesFor(index, candidate, language) */}`}
+                >
+                  <IsolatedCopyFromPicker />
+                </CatalogEntry>
+              </div>
+
               <div id="ev-copy-from" ref={reg("ev-copy-from")}>
                 <CatalogEntry
                   name="CopyFrom · preview + field rows"
@@ -1359,6 +1382,106 @@ export function ComponentCatalog({ onReturn }: Props) {
           <section>
             <h2 className="text-lg font-bold text-ink mb-6">Shared</h2>
             <div className="flex flex-col gap-6">
+              <div id="sh-view-switcher" ref={reg("sh-view-switcher")}>
+                <CatalogEntry
+                  name="ViewSwitcher"
+                  description="The Library's view switcher: the same dropdown Sort and Language use, so the toolbar reads as three of one control rather than two dropdowns flanking a segmented widget. 124.55px against the bare icon rail's 156px, constant across all five views because Select's `steady` reserves the widest option — this row is Sort · View · Display · Language, and a trigger that resized with its value would shove every control beside it. The cost is a menu: one click became two."
+                  code={`<ViewSwitcher value={viewMode} onChange={setViewMode} />
+
+{/* Width held by Select's steady prop — reserves the widest label. */}`}
+                >
+                  <IsolatedViewSwitcher />
+                </CatalogEntry>
+              </div>
+
+              <div id="sh-provenance-line" ref={reg("sh-provenance-line")}>
+                <CatalogEntry
+                  name="ProvenanceLine"
+                  description="The app's SINGLE provenance idiom — one ↳ mark for every 'this did not originate here' statement. The library attributes a passage to the document it was quoted from (↳ from), metadata names the hops an inherited value was reached through (↳ via, clickable), and Copy From names the entity a staged value came off (↳ copied from). Same glyph, same quiet 11px tertiary type, so the mark is learned once. `inline` rides an existing line rather than occupying one — a line that appears and disappears would shift the rows under the reader."
+                  code={`<ProvenanceLine label="from">Caso Gelman vs. Uruguay</ProvenanceLine>
+<ProvenanceLine label="via">{hops.map(...)}</ProvenanceLine>
+<ProvenanceLine label="copied from"><EntityPill typeId="country" label="Argentina" /></ProvenanceLine>`}
+                >
+                  <div className="w-full max-w-md space-y-3">
+                    <ProvenanceLine label="from">Bámaca-Velásquez v. Guatemala</ProvenanceLine>
+                    <ProvenanceLine label="via">
+                      <button className="min-w-0 truncate text-carbon hover:underline cursor-pointer">
+                        Sentencia de 25 de noviembre de 2000
+                      </button>
+                    </ProvenanceLine>
+                    <ProvenanceLine label="copied from">
+                      <EntityPill typeId="country" label="Argentina" />
+                    </ProvenanceLine>
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="sh-borrowed-doc-line" ref={reg("sh-borrowed-doc-line")}>
+                <CatalogEntry
+                  name="BorrowedDocLine"
+                  description="↳ from <document> — the passages beside it were quoted from a document the result doesn't own. A case with no PDF of its own reads a connected judgment's, so hundreds of results can quote the same page of the same file; unattributed that reads as duplicates or a bug. Renders NOTHING for an entity's own document, so it must ride a line that is mounted either way."
+                  code={`<BorrowedDocLine from={snippets.borrowedFrom} />
+
+{/* null → renders nothing; host line stays put. */}`}
+                >
+                  <div className="w-full max-w-md space-y-2">
+                    <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+                      Document
+                      <BorrowedDocLine from={{ entityId: "e-1", title: "Velásquez-Rodríguez v. Honduras" }} />
+                    </p>
+                    <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+                      Document
+                      <BorrowedDocLine from={null} />
+                    </p>
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="sh-pdf-page-thumb" ref={reg("sh-pdf-page-thumb")}>
+                <CatalogEntry
+                  name="PdfPageThumb"
+                  description="Page one of the real PDF in the cropped-sheet frame — the WHOLE page fitted to width. A 1.8× masthead crop was tried and rejected on sight: legible, but it read as a fragment jammed against the top edge rather than a document. Rasterised only once on screen and cached per (url, width); the blank sheet is both the placeholder and what a failed render looks like, which is why `npm run check:thumbs` exists."
+                  code={`<PdfPageThumb url={file.url} ext="pdf" />
+<PdfPageThumb url={file.url} size="sm" />   {/* 36px list thumb */}`}
+                >
+                  <div className="flex items-end gap-4">
+                    <div className="w-9 h-9 rounded overflow-hidden">
+                      <PdfPageThumb url={CATALOG_PDF} size="sm" />
+                    </div>
+                    <div className="w-[17.5rem] h-24 rounded overflow-hidden border border-border/60">
+                      <PdfPageThumb url={CATALOG_PDF} ext="pdf" />
+                    </div>
+                    <div className="w-[17.5rem] h-24 rounded overflow-hidden border border-border/60">
+                      <PdfPageThumb ext="pdf" />
+                    </div>
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="sh-entity-type-chip" ref={reg("sh-entity-type-chip")}>
+                <CatalogEntry
+                  name="EntityTypeChip"
+                  description="The dot-only type indicator for dense rows, expanding to the tinted pill on hover. Its LABEL never uses the raw type colour — that measured 3.64:1 light / 3.21:1 dark, under AA for 12px text. utils/typeColor.ts owns the rule for every surface that turns a type colour into text: pale → ink, saturated → 65% toward ink (5.63:1 / 5.46:1), dot keeps the true colour. EntityPill shows the same treatment permanently."
+                  code={`<EntityTypeChip typeId={entity.typeId} />
+
+{/* The shared rule, one implementation: */}
+const textColor = typeLabelColor(type.color);`}
+                >
+                  <div className="w-full max-w-md space-y-3">
+                    <div className="flex flex-wrap items-center gap-3">
+                      {entityTypes.map((t) => (
+                        <EntityTypeChip key={t.id} typeId={t.id} />
+                      ))}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {entityTypes.map((t) => (
+                        <EntityPill key={t.id} typeId={t.id} />
+                      ))}
+                    </div>
+                  </div>
+                </CatalogEntry>
+              </div>
+
               <div id="sh-highlighted-text" ref={reg("sh-highlighted-text")}>
                 <CatalogEntry
                   name="HighlightedText"

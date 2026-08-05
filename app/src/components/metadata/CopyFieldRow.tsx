@@ -49,12 +49,12 @@ export function CopyFieldRow({
             strings: a copy that would CLEAR the field (defaulted off), and one
             that would change nothing. */}
         {match.emptyOnSource && (
-          <span className="mt-0.5 block text-[11px] text-warning">
+          <span className="mt-0.5 block text-[11px] font-medium text-ink-secondary">
             The source leaves this empty — copying clears what is here.
           </span>
         )}
         {match.unchanged && !match.emptyOnSource && (
-          <span className="mt-0.5 block text-[11px] text-ink-muted">Already the same value.</span>
+          <span className="mt-0.5 block text-[11px] text-ink-tertiary">Already the same value.</span>
         )}
       </span>
     </div>
