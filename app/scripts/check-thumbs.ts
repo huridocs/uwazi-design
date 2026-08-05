@@ -31,13 +31,17 @@ import { chromium } from "playwright";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const APP = join(HERE, "..");
 
+const args = process.argv.slice(2);
+
 /** The card grid's real sheet box, measured in the running Library: a 281×94
  *  frame insets to a 189.3×96.7 sheet. Checking any other size would be checking
  *  something we don't ship. */
 const WIDTH = 189;
-const HEIGHT = 96;
+// The sheet's height. Overridable because the card's preview slot is a design
+// lever too: a taller slot shows more of a fitted page, which is a different
+// treatment rather than a different number.
+const HEIGHT = args.includes("--height") ? Number(args[args.indexOf("--height") + 1]) : 96;
 
-const args = process.argv.slice(2);
 // Whole-page is what SHIPS, so it is what a bare run checks. `--zoom` renders a
 // framed candidate instead — treatments live in the check, not in the app, until
 // one is picked.
