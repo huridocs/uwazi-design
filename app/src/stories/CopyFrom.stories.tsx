@@ -44,15 +44,44 @@ export const Default: Story = {
   ),
 };
 
-/** Every row state at once — an overwrite, a copy that would CLEAR the field
- *  (defaulted off), one that changes nothing, a connection rather than a value,
- *  and an unchecked row. */
+/** Every row state at once, which is the only way to see the thing that matters:
+ *  the columns line up down the whole set. Label, current, arrow and incoming
+ *  each sit at the same x in every row, so the set reads as a comparison rather
+ *  than as five sentences.
+ *
+ *  Covers an ordinary overwrite, a value long enough to truncate, a copy that
+ *  would CLEAR the field (defaulted off), one that changes nothing, a connection
+ *  rather than a value, and an unchecked row. The note lines apply to some rows
+ *  only — every row reserves the space either way, so nothing below them moves.
+ */
 export const AllStates: Story = {
   render: () => (
-    <div className="max-w-md space-y-1">
+    <div className="max-w-lg rounded-md bg-paper p-2">
+      {/* On bg-paper, like the edit pane: the checked tint is bg-parchment,
+          which would be invisible against the preview's own parchment. */}
       <Row match={match()} />
-      <Row match={match({ id: "b", label: "Ratified", sourceValue: "", emptyOnSource: true })} initial={false} />
-      <Row match={match({ id: "c", label: "Accepts jurisdiction", sourceValue: "Yes", targetValue: "Yes", unchanged: true })} />
+      <Row
+        match={match({
+          id: "long",
+          label: "Source instrument",
+          targetValue: "American Convention on Human Rights",
+          sourceValue:
+            "Protocol of San Salvador — Additional Protocol to the American Convention on Human Rights in the Area of Economic, Social and Cultural Rights",
+        })}
+      />
+      <Row
+        match={match({ id: "b", label: "Ratified ACHR", sourceValue: "", emptyOnSource: true })}
+        initial={false}
+      />
+      <Row
+        match={match({
+          id: "c",
+          label: "Accepts jurisdiction",
+          sourceValue: "Yes",
+          targetValue: "Yes",
+          unchanged: true,
+        })}
+      />
       <Row
         match={match({
           id: "d",
@@ -63,7 +92,10 @@ export const AllStates: Story = {
           targetConnectedEntityIds: ["a"],
         })}
       />
-      <Row match={match({ id: "e", label: "Category", sourceValue: "Civil and political" })} initial={false} />
+      <Row
+        match={match({ id: "e", label: "Category", sourceValue: "Civil and political" })}
+        initial={false}
+      />
     </div>
   ),
 };
