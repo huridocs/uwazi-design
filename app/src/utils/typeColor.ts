@@ -22,13 +22,27 @@ export function luminance(hex: string): number {
 
 /** How much of the type colour survives in a label, the rest being ink.
  *
- *  65, not the 70 this rule was written with: at 70 the blue "Right" (#2563EB)
- *  lands at 4.34:1 on its own tint in dark — under AA for small text — and it
- *  was the one combination the original number didn't cover. 65 clears every
- *  type in both themes at 4.72:1 or better, and 68 would only just scrape 4.50,
- *  which is too close to the line to survive a token being nudged. The hue is
- *  still plainly the type's. */
-const LABEL_MIX = 65;
+ *  55, and DARK MODE is what sets it. This number went 70 → 65 → 55, each step
+ *  because the set it was measured against grew:
+ *
+ *  - 70 was tuned on the eight base types and missed the blue "Right" (#2563EB),
+ *    4.34:1 on its own tint in dark.
+ *  - 65 fixed that, but was still measured on those eight. CEJIL types don't use
+ *    them — `data/cejil/typesAdapter.ts` assigns from a 22-colour PALETTE, and
+ *    four of those still failed AA in dark at 65: #BE123C 3.98, #1D4ED8 4.22,
+ *    #0369A1 4.45 (the live "Instrumento" chip), #7C3AED 4.47.
+ *
+ *  Light was never the binding case — every colour clears 7:1 there, because
+ *  mixing toward #1A1A1A darkens a saturated hue against a white-ish tint. Dark
+ *  is the hard direction: the mix lightens toward #F5F0E8, and 65% of an already
+ *  dark blue or crimson is still dark on a dark tint. Measured worst-case over
+ *  all 22 at each step: 65 → 3.98, 60 → 4.38, 55 → 4.82, 50 → 5.31. 55 is the
+ *  first that clears AA for every colour in the palette with room to spare; 60
+ *  still fails #BE123C.
+ *
+ *  Check new type colours against BOTH themes, and against the CEJIL palette —
+ *  not the eight. That assumption is what this constant keeps being wrong about. */
+const LABEL_MIX = 55;
 
 /** The colour a type's NAME is drawn in, over that type's own tint.
  *

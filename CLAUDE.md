@@ -48,12 +48,17 @@ Keep it in sync when tokens.css or the style rules change.
   `aria-label`, Enter/Space, and a drawn focus ring (carbon halo) — never rely on
   default outlines inside the zoom transform.
 - **Type labels never use the raw type colour** — pale → ink, saturated →
-  `color-mix(… 65%, var(--text-primary))` so small text clears WCAG on the tint
+  `color-mix(… 55%, var(--text-primary))` so small text clears WCAG on the tint
   in both themes. The dot keeps the true colour. ONE implementation:
   `utils/typeColor.ts` (`typeLabelColor`), used by EntityPill AND EntityTypeChip
   — the chip shipped the raw colour precisely because it carried its own copy.
-  65, not the original 70: at 70 the blue "Right" (#2563EB) sat at 4.34:1 on its
-  own tint in dark, the one combination that number never covered.
+  **Measure new type colours against the 22-colour PALETTE in
+  `data/cejil/typesAdapter.ts`, not the eight base types, and in DARK** — dark is
+  the binding case (light clears 7:1 throughout). That assumption is why this
+  number moved 70 → 65 → 55: 70 missed #2563EB (4.34:1), and 65 was still tuned
+  on the eight, leaving four CEJIL colours under AA in dark (#BE123C 3.98,
+  #1D4ED8 4.22, #0369A1 4.45, #7C3AED 4.47). Worst case over all 22: 65 → 3.98,
+  60 → 4.38, 55 → 4.82.
 - Live updates (streams, toasts, task progress) get `aria-live="polite"` /
   `role="status"`/`role="log"` — see Beacon/AgentModal/ToastContainer.
 - The Storybook a11y addon checks every story; keep new primitives violation-free.
