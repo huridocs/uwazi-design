@@ -14,9 +14,9 @@
  *  reported 18 of 39 documents blank that render perfectly well in a browser. A
  *  check that lies is worse than no check.
  *
- *    npm run check:thumbs                 # the shipped path
- *    node scripts/check-thumbs.ts --whole # fit-whole-page, for comparison
- *    node scripts/check-thumbs.ts --zoom 1.4
+ *    npm run check:thumbs                    # the shipped path (whole page)
+ *    node scripts/check-thumbs.ts --zoom 1.4 # a framed candidate
+ *    node scripts/check-thumbs.ts --zoom 1.4 --pad 0.2
  *    node scripts/check-thumbs.ts --url http://localhost:5173
  *    node scripts/check-thumbs.ts --dump  # write the bitmaps out and look at them
  *
@@ -38,12 +38,18 @@ const WIDTH = 189;
 const HEIGHT = 96;
 
 const args = process.argv.slice(2);
-const whole = args.includes("--whole");
-const zoom = Number(args[args.indexOf("--zoom") + 1]) || 1.8;
+// Whole-page is what SHIPS, so it is what a bare run checks. `--zoom` renders a
+// framed candidate instead — treatments live in the check, not in the app, until
+// one is picked.
+const zoom = args.includes("--zoom") ? Number(args[args.indexOf("--zoom") + 1]) : 0;
+const pad = args.includes("--pad") ? Number(args[args.indexOf("--pad") + 1]) : undefined;
+const whole = !zoom;
 const url = args.includes("--url") ? args[args.indexOf("--url") + 1] : "http://localhost:1431";
 // Bitmaps go to a temp dir, never into the repo — this is a look-at-it aid.
-const dump = args.includes("--dump");
-const dumpDir = join(tmpdir(), "uwazi-thumbcheck");
+const dump = args.includes("--dump") || args.includes("--dump-to");
+const dumpDir = args.includes("--dump-to")
+  ? args[args.indexOf("--dump-to") + 1]
+  : join(tmpdir(), "uwazi-thumbcheck");
 
 const dirs = [
   ["public/cejil-docs", "/cejil-docs"],
@@ -66,11 +72,12 @@ if (!res?.ok()) {
 }
 
 console.log(
-  `${whole ? "fit-whole-page" : `framed crop, zoom ${zoom}`} · ${files.length} documents · ${url}\n`,
+  `${whole ? "fit-whole-page (shipped)" : `framed crop, zoom ${zoom}${pad !== undefined ? ` pad ${pad}` : ""}`}` +
+    ` · ${files.length} documents · ${url}\n`,
 );
 
 const results = await page.evaluate(
-  async ({ files, WIDTH, HEIGHT, zoom, whole, dump }) => {
+  async ({ files, WIDTH, HEIGHT, zoom, pad, whole, dump }) => {
     const { pdfThumb } = await import("/src/utils/pdfThumb.ts");
     const { inkCoverage } = await import("/src/utils/thumbFrame.ts");
     /** Blank rows above the first ink in the FINAL bitmap, as a fraction of its
@@ -86,7 +93,11 @@ const results = await page.evaluate(
     const out: { file: string; ink: number; air?: number; err?: string; data?: string }[] = [];
     for (const f of files) {
       try {
-        const data = await pdfThumb(f, WIDTH, whole ? undefined : { aspect: WIDTH / HEIGHT, zoom });
+        const data = await pdfThumb(
+          f,
+          WIDTH,
+          whole ? undefined : { aspect: WIDTH / HEIGHT, zoom, pad },
+        );
         if (!data) {
           out.push({ file: f, ink: 0, err: "render returned null" });
           continue;
@@ -112,7 +123,7 @@ const results = await page.evaluate(
     }
     return out;
   },
-  { files, WIDTH, HEIGHT, zoom, whole, dump },
+  { files, WIDTH, HEIGHT, zoom, pad, whole, dump },
 );
 
 if (dump) {

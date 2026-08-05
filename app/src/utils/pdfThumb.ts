@@ -31,8 +31,11 @@ export function pdfThumb(url: string, width: number, frame?: ThumbFrame): Promis
   // width) alone; a frame that rendered at a different scale or crop under the
   // same key would hand every later caller the first caller's picture — and the
   // fifty cards sharing two judgments are exactly the case this cache exists for.
+  // `pad` included for the same reason as zoom and aspect: it moves the crop, so
+  // it changes the picture. Left out, a run comparing two paddings would score
+  // the first one twice.
   const key = frame
-    ? `${url}@${width}@z${frame.zoom}@a${frame.aspect.toFixed(2)}`
+    ? `${url}@${width}@z${frame.zoom}@a${frame.aspect.toFixed(2)}@p${frame.pad ?? "d"}`
     : `${url}@${width}`;
   const hit = cache.get(key);
   if (hit) return hit;

@@ -13,6 +13,10 @@ export interface ThumbFrame {
   aspect: number;
   /** How much larger than fit-to-width to render the page. */
   zoom: number;
+  /** Air above the masthead, as a fraction of the crop's height. Defaults to
+   *  `TOP_AIR`; `check-thumbs --pad` sets it so treatments can be compared
+   *  without editing the constant. */
+  pad?: number;
 }
 
 /** Anything darker than this counts as ink. Well above the JPEG noise floor,
@@ -91,7 +95,7 @@ export function thumbGeometry(opts: {
   const fullH = pageH * scale;
   const cropW = Math.round(width * dpr);
   const cropH = Math.round((width / frame.aspect) * dpr);
-  const padY = cropH * TOP_AIR;
+  const padY = cropH * (frame.pad ?? TOP_AIR);
   const offsetY = -clamp(ink * fullH - padY, 0, Math.max(0, fullH - cropH));
   const offsetX = -Math.max(0, (fullW - cropW) / 2);
   return { scale, cropW, cropH, offsetX, offsetY };
