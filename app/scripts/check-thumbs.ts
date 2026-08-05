@@ -73,7 +73,17 @@ const results = await page.evaluate(
   async ({ files, WIDTH, HEIGHT, zoom, whole, dump }) => {
     const { pdfThumb } = await import("/src/utils/pdfThumb.ts");
     const { inkCoverage } = await import("/src/utils/thumbFrame.ts");
-    const out: { file: string; ink: number; err?: string; data?: string }[] = [];
+    /** Blank rows above the first ink in the FINAL bitmap, as a fraction of its
+     *  height — the air over the masthead, which is the thing being judged. */
+    const topAir = (px: Uint8ClampedArray, w: number, h: number) => {
+      for (let y = 0; y < h; y++) {
+        for (let x = Math.floor(w * 0.2); x < Math.ceil(w * 0.8); x++) {
+          if (px[(y * w + x) * 4] < 160) return y / h;
+        }
+      }
+      return 1;
+    };
+    const out: { file: string; ink: number; air?: number; err?: string; data?: string }[] = [];
     for (const f of files) {
       try {
         const data = await pdfThumb(f, WIDTH, whole ? undefined : { aspect: WIDTH / HEIGHT, zoom });
@@ -90,7 +100,12 @@ const results = await page.evaluate(
         const ctx = c.getContext("2d", { willReadFrequently: true })!;
         ctx.drawImage(img, 0, 0);
         const px = ctx.getImageData(0, 0, c.width, c.height).data;
-        out.push({ file: f, ink: inkCoverage(px, c.width, c.height), data: dump ? data : undefined });
+        out.push({
+          file: f,
+          ink: inkCoverage(px, c.width, c.height),
+          air: topAir(px, c.width, c.height),
+          data: dump ? data : undefined,
+        });
       } catch (e) {
         out.push({ file: f, ink: 0, err: String((e as Error).message).slice(0, 70) });
       }
@@ -118,10 +133,18 @@ for (const r of results) {
   const bad = r.ink < MIN_INK;
   console.log(
     `${bad ? "BLANK" : "  ok "}  ${decodeURIComponent(basename(r.file)).padEnd(52)}` +
-      `ink=${(r.ink * 100).toFixed(2)}%${r.err ? `  (${r.err})` : ""}`,
+      `ink=${(r.ink * 100).toFixed(2)}%  air=${r.air === undefined ? "  —" : (r.air * 100).toFixed(1).padStart(4)}%` +
+      `${r.err ? `  (${r.err})` : ""}`,
   );
 }
-console.log(`\n${blank.length} of ${results.length} below ${(MIN_INK * 100).toFixed(1)}% ink`);
+const airs = results.map((r) => r.air).filter((a): a is number => a !== undefined && a < 1).sort((a, b) => a - b);
+if (airs.length) {
+  const pct = (n: number) => (n * 100).toFixed(1) + "%";
+  console.log(
+    `\nair above the masthead — min ${pct(airs[0])} · median ${pct(airs[airs.length >> 1])} · max ${pct(airs[airs.length - 1])}`,
+  );
+}
+console.log(`${blank.length} of ${results.length} below ${(MIN_INK * 100).toFixed(1)}% ink`);
 if (blank.length) console.log(blank.map((b) => decodeURIComponent(basename(b.file))).join(", "));
 
 await browser.close();

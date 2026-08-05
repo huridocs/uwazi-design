@@ -1,24 +1,14 @@
 import { pdfjs } from "react-pdf";
 import type { PDFPageProxy, PageViewport } from "pdfjs-dist";
+import { inkStart, thumbGeometry, type ThumbFrame } from "./thumbFrame";
 import "./pdfWorker";
 
-/** How the page is FRAMED inside the thumbnail.
- *
- *  Without one, the whole page is fitted to `width` — the honest picture of a
- *  document, and at a 36px list thumb that is all it can ever be.
- *
- *  With one, the thumbnail stops being a picture of a whole page and becomes a
- *  READABLE FRAGMENT of it: the page is rendered `zoom`× larger than fit-to-
- *  width and cropped to a window of `aspect`, centred horizontally and pinned to
- *  where the page's ink actually starts. A card's sheet gets ~189×97 CSS px; a
- *  full A4 squeezed into that renders body text about 3px tall, which no amount
- *  of resolution rescues. */
-export interface ThumbFrame {
-  /** The crop window's aspect (w/h), in CSS px — the sheet box it has to fill. */
-  aspect: number;
-  /** How much larger than fit-to-width to render the page. */
-  zoom: number;
-}
+// One home for the framing. This file owns pdf.js and the canvases; `thumbFrame`
+// owns where the crop lands and how much air sits above the masthead. They were
+// two copies of the same arithmetic — same `padY`, same clamp — which is a
+// silent-drift bug waiting to happen and did happen: the app ran its copy while
+// the regression check imported the other.
+export type { ThumbFrame };
 
 /** Page one of a PDF, rasterised once and cached as an image.
  *
@@ -80,25 +70,27 @@ async function render(url: string, width: number, frame?: ThumbFrame): Promise<s
       return await paint(page, viewport, Math.ceil(viewport.width), Math.ceil(viewport.height));
     }
 
-    const scale = (width / base.width) * frame.zoom * ratio;
-    const full = page.getViewport({ scale });
-    const cropW = Math.round(width * ratio);
-    const cropH = Math.round((width / frame.aspect) * ratio);
-
-    // Where the page's own text begins. A judgment opens on 12% of blank top
-    // margin, another on 19% — pinning the crop to the sheet's top edge at any
-    // zoom worth having would frame that margin and little else, which is worse
-    // than the whole page it replaced. Measured, not guessed, because the number
-    // is different per document.
-    const ink = await inkStart(page, base);
-    const padY = cropH * 0.07;
-    const offsetY = -clamp(ink * full.height - padY, 0, Math.max(0, full.height - cropH));
-    // Centred, not left-aligned: a judgment's masthead is centred on the page,
-    // and the crop is narrower than the page at any zoom above 1.
-    const offsetX = -Math.max(0, (full.width - cropW) / 2);
+    // Where the page's own text begins — measured, not guessed, because the
+    // number is different per document (these judgments open on anywhere from
+    // 8% to 28% of blank margin). `thumbGeometry` turns it into the crop; this
+    // file owns the canvases, that one owns where the crop lands.
+    const ink = await probeInk(page, base);
+    const g = thumbGeometry({
+      pageW: base.width,
+      pageH: base.height,
+      width,
+      dpr: ratio,
+      frame,
+      ink,
+    });
 
     // `return await` for the same reason as the whole-page branch above.
-    return await paint(page, page.getViewport({ scale, offsetX, offsetY }), cropW, cropH);
+    return await paint(
+      page,
+      page.getViewport({ scale: g.scale, offsetX: g.offsetX, offsetY: g.offsetY }),
+      g.cropW,
+      g.cropH,
+    );
   } finally {
     // Free the worker's copy of the document; we only ever wanted one page.
     doc.destroy();
@@ -125,11 +117,10 @@ async function paint(
   return canvas.toDataURL("image/jpeg", 0.9);
 }
 
-/** The fraction of the page height above its first ink, found on a ~96px probe
- *  render — a few thousand pixels to scan, next to nothing beside the real one.
- *  Only the middle of the column band is read: a page number or a marginal rule
- *  at the very top isn't the masthead, and shouldn't drag the crop up to it. */
-async function inkStart(page: PDFPageProxy, base: { width: number }): Promise<number> {
+/** Renders a ~96px probe of page one and hands the pixels to `inkStart` — a few
+ *  thousand pixels to scan, next to nothing beside the real render. The scan
+ *  itself lives in `thumbFrame` so the crop's rules are all in one place. */
+async function probeInk(page: PDFPageProxy, base: { width: number }): Promise<number> {
   const viewport = page.getViewport({ scale: 96 / base.width });
   const canvas = document.createElement("canvas");
   canvas.width = Math.ceil(viewport.width);
@@ -139,19 +130,6 @@ async function inkStart(page: PDFPageProxy, base: { width: number }): Promise<nu
   ctx.fillStyle = "#fff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   await page.render({ canvasContext: ctx, viewport }).promise;
-
-  // Past 60% down there's no masthead to find — a page that empty reads better
-  // from its top edge than from wherever its one stray mark happens to be.
-  const depth = Math.ceil(canvas.height * 0.6);
-  const { data } = ctx.getImageData(0, 0, canvas.width, depth);
-  const x0 = Math.floor(canvas.width * 0.2);
-  const x1 = Math.ceil(canvas.width * 0.8);
-  for (let y = 0; y < depth; y++) {
-    for (let x = x0; x < x1; x++) {
-      if (data[(y * canvas.width + x) * 4] < 160) return y / canvas.height;
-    }
-  }
-  return 0;
+  const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  return inkStart(data, canvas.width, canvas.height);
 }
-
-const clamp = (n: number, lo: number, hi: number) => Math.min(Math.max(n, lo), hi);

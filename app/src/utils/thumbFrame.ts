@@ -41,6 +41,24 @@ export function inkStart(pixels: Uint8ClampedArray, w: number, h: number): numbe
   return 0;
 }
 
+/** Air above the masthead, as a fraction of the crop's height.
+ *
+ *  This is a framing judgment, not a tolerance. At 0.07 the first line of type
+ *  sat almost on the crop's top edge and the thumbnail read as a scan clipped at
+ *  the letterhead — the page looked cut, not composed. A title block wants a
+ *  margin above it the way it has one on paper, so the eye reads "the top of a
+ *  document" rather than "a document with its top missing".
+ *
+ *  Chosen against every PDF in `public/cejil-docs`, not one. They open on
+ *  anywhere from 8.8% to 35.2% of blank margin (median 12.5%, n=39), which is
+ *  why this rides on TOP of the measured ink position instead of replacing it:
+ *  a fixed offset would be right for the median document and wrong for both
+ *  ends. Swept at 0.07 / 0.12 / 0.16 / 0.22 over the whole set — 0.12 still
+ *  reads tight on the denser mastheads, and by 0.22 the crop is pushing the
+ *  judgment date off the bottom of the tighter-set ones, which costs more than
+ *  the air buys. `npm run check:thumbs` reports the air it produces. */
+const TOP_AIR = 0.16;
+
 export interface Geometry {
   scale: number;
   cropW: number;
@@ -52,8 +70,9 @@ export interface Geometry {
 /** Where the framed crop sits on the page.
  *
  *  The crop is pinned just above the page's first ink rather than to the sheet's
- *  top edge: judgments open on 12–19% of blank margin, so a zoomed top crop
- *  frames white paper. It is centred horizontally because a masthead is centred.
+ *  top edge — judgments open on 8.8–35.2% of blank margin, so a zoomed top crop
+ *  frames white paper — and then `TOP_AIR` puts a deliberate margin back above
+ *  it. It is centred horizontally because a masthead is centred.
  *
  *  `ink` is clamped so the window always lands on a real slab of page: pinning
  *  to ink that starts near the BOTTOM of a page (a cover sheet with one line
@@ -72,7 +91,7 @@ export function thumbGeometry(opts: {
   const fullH = pageH * scale;
   const cropW = Math.round(width * dpr);
   const cropH = Math.round((width / frame.aspect) * dpr);
-  const padY = cropH * 0.07;
+  const padY = cropH * TOP_AIR;
   const offsetY = -clamp(ink * fullH - padY, 0, Math.max(0, fullH - cropH));
   const offsetX = -Math.max(0, (fullW - cropW) / 2);
   return { scale, cropW, cropH, offsetX, offsetY };
