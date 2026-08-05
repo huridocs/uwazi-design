@@ -3,14 +3,9 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   Search,
   X,
-  LayoutGrid,
-  List,
-  Map as MapIcon,
-  CalendarRange,
   Plus,
   Upload,
   FileSpreadsheet,
-  TextSearch,
 } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, cejilReadyAtom } from "../atoms/dataSource";
 import { loadCejilData, cejilRelsByEntity } from "../data/cejil/load";
@@ -84,18 +79,7 @@ import { DataTable, type Column } from "../components/shared/DataTable";
 import { EntityTypeChip } from "../components/shared/EntityTypeChip";
 import { HighlightedText } from "../components/shared/HighlightedText";
 import { Select } from "../components/shared/Select";
-import { SegmentedControl, type Segment } from "../components/shared/SegmentedControl";
-
-const VIEW_OPTIONS: Segment[] = [
-  { id: "cards", label: "Cards", icon: LayoutGrid },
-  { id: "list", label: "List", icon: List },
-  { id: "map", label: "Map", icon: MapIcon },
-  { id: "timeline", label: "Timeline", icon: CalendarRange },
-  // Always mounted, query or not. A segment that appears when you type would
-  // resize the switcher and shove every control beside it — the view renders
-  // its own "search to see where terms match" state.
-  { id: "results", label: "Results", icon: TextSearch },
-];
+import { ViewSwitcher } from "../components/library/ViewSwitcher";
 
 const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -694,21 +678,21 @@ export function LibraryView() {
             }}
             ariaLabel="Sort"
             options={SORTS}
+            // Same row, same reason as the switcher: this trigger swung 47px
+            // between "Title" and "Connections", shoving View, Display and
+            // Language sideways on every sort change.
+            steady
           />
         </div>
-        {/* Icons alone, and no label cell: this row is Sort · View · Display ·
-            Language, and the switcher is the widest thing on it that ISN'T
-            content. A permanent label cell reserved for "Timeline" made the
-            control 55px wider than the bare rail it replaced — the wrong
-            direction for a toolbar. The active view names itself in the footer
-            count row instead, which costs no width here, and every segment
-            keeps its `title`/`aria-label`. */}
-        <SegmentedControl
-          ariaLabel="View"
-          value={viewMode}
-          onChange={(v) => setViewMode(v as typeof viewMode)}
-          options={VIEW_OPTIONS}
-        />
+        {/* The switcher is a dropdown, like Sort and Language either side of it,
+            so this row reads as three of one control rather than two dropdowns
+            and a segmented widget. It is also the narrowest the switcher has
+            been: five segments cost a fixed 156px whatever they show, while one
+            trigger costs the widest label once. `steady` is what makes that
+            safe — see Select. The trade is real and deliberate: every view is
+            still reachable, but at two clicks rather than one, and the trigger
+            names the active view where five icons couldn't. */}
+        <ViewSwitcher value={viewMode} onChange={(v) => setViewMode(v as typeof viewMode)} />
         {/* Display is icon-only and ALWAYS mounted; the view-specific modifiers
             (timeline layout) live inside its popover. Anything that appears and
             disappears from this row shoves every other control sideways when you
@@ -884,28 +868,9 @@ export function LibraryView() {
           <span className="font-semibold text-ink-secondary">{shown.length.toLocaleString()}</span> of{" "}
           {filtered.length.toLocaleString()}
         </span>
-        {/* The switcher's icons don't say which view won — this does, on a row
-            that already exists and has room to spare. All five names ride ONE
-            grid cell with only the active one visible, so switching view can't
-            shove the filter button beside it sideways. `aria-hidden`: the
-            switcher already announces the same state through `aria-pressed`,
-            and this is its visual echo, not a second source of truth. */}
-        <span aria-hidden className="-ms-1 flex items-center gap-1 text-[11px] text-ink-tertiary">
-          {/* The middot is doing real work: "Showing 53 of 53 Cards" reads as
-              fifty-three CARDS — the view name looked like the count's unit.
-              Separated, it's the app's usual "· " between two facts. */}
-          <span className="text-ink-muted">·</span>
-          <span className="grid">
-            {VIEW_OPTIONS.map((o) => (
-              <span
-                key={o.id}
-                className={`col-start-1 row-start-1 ${o.id === viewMode ? "" : "invisible"}`}
-              >
-                {o.label}
-              </span>
-            ))}
-          </span>
-        </span>
+        {/* The view name used to be echoed here, because five bare icons never
+            said which one had won. The trigger says it now ("View: Cards"), so
+            the echo would be the same fact twice on one screen. */}
         <span
           aria-hidden={!searchPending}
           className={`text-[11px] text-ink-muted italic transition-opacity ${
