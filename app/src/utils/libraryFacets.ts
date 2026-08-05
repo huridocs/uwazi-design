@@ -4,7 +4,7 @@ import type { Entity } from "../data/entities";
 import { inheritedFilterProps } from "../data/metadata";
 import { cejilInheritedDefs } from "../data/cejil/adapt";
 
-export type DataSource = "mock" | "cejil";
+export type DataSource = "mock" | "cejil" | "artworks";
 
 export interface LibraryInheritedDef {
   propId: string;

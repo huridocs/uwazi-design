@@ -94,6 +94,9 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
   const COLLECTIONS: { id: DataSource; label: string; detail: string }[] = [
     { id: "mock", label: "Sample", detail: "Curated demo entities" },
     { id: "cejil", label: "CEJIL", detail: "Published corpus · 4,398" },
+    // The dataset's own name, not its slug — "artworks" tells a reader nothing,
+    // and this is the row that has to be recognisable at a glance.
+    { id: "artworks", label: "Best Artworks", detail: "60 paintings · 22 artists" },
   ];
   const collection = COLLECTIONS.find((c) => c.id === dataSource) ?? COLLECTIONS[0];
 

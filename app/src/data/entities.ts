@@ -2,6 +2,8 @@ import { getEntityProp } from "./entityMetadata";
 import { countryCoords, type LatLng } from "./geo";
 import { cejilTypeById } from "./cejil/typesAdapter";
 import { cejilLibraryEntities } from "./cejil/adapt";
+import { artworkEntityById } from "./artworks/adapt";
+import { artworkTypeById } from "./artworks/typesAdapter";
 
 export interface EntityType {
   id: string;
@@ -34,6 +36,9 @@ export interface Entity {
   /** Optional preview thumbnail kind shown on the Library card. Document-bearing
    *  entities get a page preview; a few others get image/video/audio. */
   preview?: PreviewKind;
+  /** The actual asset behind `preview: "image"`. Adapter-supplied, like `geo`
+   *  and `fields` — see {@link EntityImage}. */
+  image?: EntityImage;
   /** Optional geolocation (from the entity's country) for the Library map view. */
   geo?: LatLng;
   /** Optional country name (for the Countries facet) — set by adapters whose
@@ -57,6 +62,34 @@ export interface Entity {
 }
 
 export type PreviewKind = "document" | "image" | "video" | "audio";
+
+/** A real image asset for a card whose `preview` is `"image"`.
+ *
+ *  Until the artworks corpus there was nothing behind that preview kind —
+ *  `EntityThumbnail`'s image branch drew a glyph, because no dataset had a
+ *  picture. This is the shape that branch reads.
+ *
+ *  `width`/`height` are the JPEG's OWN pixels, parsed from its SOF marker at
+ *  sample time (`scripts/sample-artworks.cjs`), not a guess and not a rendered
+ *  size. They are here so a card can reserve the correct box BEFORE the image
+ *  loads — paintings run 0.55 to 1.60 in ratio, so a square placeholder is wrong
+ *  for most of them and reflows when the real thing arrives.
+ *
+ *  `url` is already resolved through `utils/asset` by the adapter, the same way
+ *  `data/files.ts` resolves its own — a consumer renders it as-is. */
+export interface EntityImage {
+  url: string;
+  /** Intrinsic pixel width of the asset. */
+  width: number;
+  /** Intrinsic pixel height of the asset. */
+  height: number;
+  /** Precomputed from the real dimensions, so a card can branch without
+   *  dividing. `square` is within ±5% of 1:1. */
+  aspect: "portrait" | "landscape" | "square";
+  /** Human-readable description for `alt` — the asset's original filename is
+   *  not one. */
+  alt: string;
+}
 
 const baseEntities: Omit<Entity, "createdAt">[] = [
   // Persons
@@ -170,7 +203,7 @@ export const entities: Entity[] = baseEntities.map((e) => ({
 }));
 
 export function getEntityType(typeId: string): EntityType | undefined {
-  return entityTypes.find((t) => t.id === typeId) ?? cejilTypeById.get(typeId);
+  return entityTypes.find((t) => t.id === typeId) ?? cejilTypeById.get(typeId) ?? artworkTypeById.get(typeId);
 }
 
 // Lazy CEJIL lookup — the corpus loads on demand, and cejilLibraryEntities()
@@ -187,5 +220,5 @@ function cejilEntityById(): Map<string, Entity> {
 }
 
 export function getEntity(id: string): Entity | undefined {
-  return entities.find((e) => e.id === id) ?? cejilEntityById().get(id);
+  return entities.find((e) => e.id === id) ?? cejilEntityById().get(id) ?? artworkEntityById().get(id);
 }
