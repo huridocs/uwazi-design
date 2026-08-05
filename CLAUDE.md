@@ -418,10 +418,28 @@ It rides an ALREADY-MOUNTED line (a section label, a row's attribution, the
 spine's fixed trailing slot) — never a line of its own that appears and
 disappears. Both it and metadata's `ProvenanceTrail` (`↳ via …`) render through
 `components/shared/ProvenanceLine.tsx`, so the app has ONE provenance idiom.
-Residual: the corpus's 5,245 url'd PDF records point at **6** real files, so an
-entity that owns its file still shows another judgment's text — there is no
-connected document to name there, and no per-file text to key to, so it carries
-no attribution.
+**Documents are addressed by file `_id`, not filename.** `files.json` was
+rewritten after the import: 5,245 records, 6 distinct filenames, 6 urls — so an
+entity that owns its file still showed another judgment's text. The `_id`s
+survived (5,245 distinct) and are the public instance's own ids, so
+`scripts/recover-cejil-docs.cjs` can ask `summa.cejil.org/api/entities?sharedId=`
+for the real filename/totalPages/toc, fetch the PDF, extract per-page text with
+pdfjs, and key `fullText` by `_id`. `docPagesOf` (profile.ts) reads `_id` first
+and falls back to the legacy filename for records the recovery hasn't reached —
+drop that fallback and full-text search collapses to the recovered set.
+
+**The recovery script is CAPPED and hits a third party's production server.**
+Serial, delayed, entity-capped (`CEJIL_RECOVER_LIMIT`, default 50) AND
+byte-capped (`CEJIL_RECOVER_BUDGET_MB`, default 20), aborts on 429/5xx. Do not
+parallelise it or lift the caps to "just do the corpus". The byte cap is the one
+that matters: document size varies 40× (28KB–1.3MB), so an entity count doesn't
+bound anything.
+
+**Measured over a 50-entity / 102-document pilot: 733KB mean PDF (median 614KB),
+283KB mean text (median 219KB) — ~1MB per document, 101MB in total.** The full
+5,245 records project to ~3.8GB of PDF + ~1.4GB of text ≈ 5.2GB. The ~100MB
+budget buys ~100 documents; that is why the corpus shipped with 6. **Committed:
+26 documents across 16 entities, 19.9MB** — the rest of the pilot was discarded.
 
 ## Tab signals & recent searches
 

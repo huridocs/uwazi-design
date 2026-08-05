@@ -44,7 +44,9 @@ ctx.onmessage = async (e: MessageEvent<ScanRequest>) => {
     // a second full serialisation of the corpus.
     const transfer: ArrayBuffer[] = [];
 
-    for (const [filename, pages] of Object.entries(corpus)) {
+    // Keys are opaque here — a file `_id` or a legacy filename, whichever
+    // `fullText.json` uses for that document — and are echoed back untouched.
+    for (const [docKey, pages] of Object.entries(corpus)) {
       const folded: string[] = [];
       const maps: ArrayLike<number>[] = [];
       for (const page of pages) {
@@ -57,7 +59,7 @@ ctx.onmessage = async (e: MessageEvent<ScanRequest>) => {
         maps.push(typed);
         transfer.push(typed.buffer);
       }
-      docs[filename] = { folded, maps };
+      docs[docKey] = { folded, maps };
     }
 
     const msg: ScanResponse = { ok: true, docs, ms: performance.now() - started };

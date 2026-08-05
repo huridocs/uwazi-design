@@ -12,7 +12,7 @@ import { tokenizeQuery } from "./queryTokens";
  *  fragments across metadata + fullText.
  *
  *  The module is PURE: it imports only the `Entity` type and takes the CEJIL
- *  full-text (`Record<filename→pages>` resolved to per-entity pages by the
+ *  full-text (a document→pages record resolved to per-entity pages by the
  *  caller) as an argument, never reaching into the `data/cejil/load.ts`
  *  singletons. That keeps it unit-testable without the corpus loaded. */
 
@@ -38,9 +38,9 @@ export interface EntitySnippets {
 }
 
 /** Per-entity page text, keyed by `entity.id`. The Library resolves each CEJIL
- *  entity's primary filename → `cejilFullText()[filename]` and keys the result
- *  by entity id before handing it here — so this stays decoupled from the
- *  filename indirection. Accepts either a Map or a plain record. */
+ *  entity's primary file → its pages (`docPagesOf`, by file `_id`) and keys the
+ *  result by entity id before handing it here — so this stays decoupled from how
+ *  documents are addressed. Accepts either a Map or a plain record. */
 export type FullTextByEntity =
   | ReadonlyMap<string, readonly string[]>
   | Readonly<Record<string, readonly string[]>>;
@@ -336,7 +336,7 @@ function readPages(
  *  highlight). An empty/termless query returns an empty Map.
  *
  *  `fullText` is optional (metadata-only when absent) and keyed by entity id;
- *  the caller resolves CEJIL filenames → pages before calling. */
+ *  the caller resolves CEJIL documents → pages before calling. */
 export function searchSnippets(
   query: string,
   entities: Entity[],

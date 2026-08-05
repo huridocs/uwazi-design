@@ -146,13 +146,8 @@ export interface BorrowedDoc {
  *  page numbers belonging to a file that wasn't on screen (the "p.9 lands on 15"
  *  report). Page numbers must refer to the document being displayed.
  *
- *  `borrowedFrom` is that same fallback, said out loud. The corpus ships 6 real
- *  PDFs standing in for 5,191 distinct originalnames, so ~900 entities resolve
- *  onto ONE judgment and their "matching passages" are literally the same
- *  sentences — a result list that reads as an implausible coincidence. Keying the
- *  text more finely can't fix it (file id and url are 1-of-6 too, and there is no
- *  per-file text to key to); naming the shared source can. `titleSid !== sharedId`
- *  is exactly the borrow, and it's what `buildCejilProfile` already titles the
+ *  `borrowedFrom` is that same fallback, said out loud: `titleSid !== sharedId` is
+ *  exactly the borrow, and it's what `buildCejilProfile` already titles the
  *  document group with.
  *
  *  Both answers come off ONE `docFilesFor` walk on purpose: the fallback scans the
@@ -163,12 +158,31 @@ export function cejilRenderedDoc(sharedId: string): { pages: string[]; borrowedF
   const primary = files[0];
   if (!primary) return { pages: [], borrowedFrom: null };
   return {
-    pages: cejilFullText()[primary.filename] ?? [],
+    pages: docPagesOf(primary),
     borrowedFrom:
       titleSid === sharedId
         ? null
         : { entityId: titleSid, title: cejilBySidLang().get(`${titleSid}::es`)?.title || titleSid },
   };
+}
+
+/** A file's per-page text — BY FILE `_id` first.
+ *
+ *  `filename` cannot address a document here: `files.json` was rewritten after the
+ *  import so 5,245 records carry 6 distinct filenames (and 6 urls), which is why
+ *  hundreds of unrelated cases quote the same page of the same judgment. `_id`
+ *  survived that rewrite intact — 5,245 distinct — and it is the public
+ *  instance's own id, so `scripts/recover-cejil-docs.cjs` can fetch the real
+ *  document for one and key its text by `_id`.
+ *
+ *  The filename fallback is for every record that pilot hasn't reached: they
+ *  still point at the 6 stand-ins, and dropping them would take the whole
+ *  corpus's full-text search down to the recovered handful. A record resolving
+ *  through the fallback is showing another document's text — that is what
+ *  `BorrowedDocLine` warns about, and it goes away as records are recovered. */
+function docPagesOf(file: CejilFile): string[] {
+  const byKey = cejilFullText();
+  return byKey[file._id] ?? byKey[file.filename] ?? [];
 }
 
 function docFilesFor(sharedId: string): { files: CejilFile[]; titleSid: string } {
@@ -369,7 +383,7 @@ export function buildCejilProfile(sharedId: string): EntityProfile {
   const group: DocumentGroup = { id: groupId, title: docTitle, isPrimary: true, order: 0 };
 
   const primary = urlFiles[0];
-  const pages = cejilFullText()[primary.filename] || [];
+  const pages = docPagesOf(primary);
   const rendition = buildRendition(docTitle, pages);
   const docMeta: DocumentMeta = {
     id: `doc-${sharedId}`,

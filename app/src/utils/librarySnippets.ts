@@ -381,7 +381,7 @@ export interface DocumentFolds {
   maps: ArrayLike<number>[];
 }
 
-/** Install pre-computed folds for the CEJIL documents, keyed by filename.
+/** Install pre-computed folds for the CEJIL documents, by document key.
  *
  *  This is the ONLY way scan work gets off the main thread here: the caches above
  *  are the whole cost of a search, so a worker that fills them (see
@@ -390,17 +390,19 @@ export interface DocumentFolds {
  *  `buildSnippetsFor` data path, with no async plumbed through six render trees
  *  to buy what is, by then, a cache hit.
  *
- *  Keying is by FILENAME on the wire and by PAGE-ARRAY IDENTITY in the caches;
- *  `cejilFullText()` is the map between them, and it hands back the same array
- *  instances `documentPages` resolves to. Called before the corpus lands, or with
- *  a filename it doesn't know, this is a no-op — priming is an optimisation, and
- *  a miss just means the main thread folds that document lazily, as it always
- *  did. Idempotent: re-priming overwrites with identical values. */
-export function primeDocumentFolds(byFilename: Record<string, DocumentFolds>): void {
+ *  Keying on the wire is whatever `cejilFullText()` keys by — a file `_id` for a
+ *  recovered document, the legacy filename for one still pointing at a stand-in
+ *  (see `docPagesOf`) — and by PAGE-ARRAY IDENTITY in the caches. The worker only
+ *  echoes back the keys it was handed, so it never has to know which is which.
+ *  Called before the corpus lands, or with a key it doesn't know, this is a no-op
+ *  — priming is an optimisation, and a miss just means the main thread folds that
+ *  document lazily, as it always did. Idempotent: re-priming overwrites with
+ *  identical values. */
+export function primeDocumentFolds(byDocKey: Record<string, DocumentFolds>): void {
   if (!cejilLoaded()) return;
-  const byName = cejilFullText();
-  for (const [filename, { folded, maps }] of Object.entries(byFilename)) {
-    const pages = byName[filename];
+  const byKey = cejilFullText();
+  for (const [key, { folded, maps }] of Object.entries(byDocKey)) {
+    const pages = byKey[key];
     // A document whose page count doesn't match what we folded is a corpus that
     // changed under the worker — drop it rather than pair page i with map j.
     if (!pages || pages.length !== folded.length) continue;
