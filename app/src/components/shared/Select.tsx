@@ -95,7 +95,7 @@ export function Select({
             first strong character, so a Latin pair stays Latin-ordered inside an
             RTL toolbar and a translated pair orders itself correctly too. */}
         <bdi className="flex items-center gap-1 min-w-0">
-          {triggerPrefix && <span className="shrink-0 text-ink-tertiary">{triggerPrefix}</span>}
+          {triggerPrefix && <span className="shrink-0 text-ink-secondary">{triggerPrefix}</span>}
           {steady ? (
             // Every label laid out in ONE grid cell, only the current one
             // visible: the cell is as wide as the widest label RENDERS. A
@@ -122,7 +122,7 @@ export function Select({
             <span className="truncate">{current?.label}</span>
           )}
         </bdi>
-        <ChevronDown size={14} className={`text-ink-tertiary shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown size={14} className={`text-ink-secondary shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
         <div

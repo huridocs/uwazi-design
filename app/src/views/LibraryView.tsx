@@ -659,7 +659,7 @@ export function LibraryView() {
           className="relative flex-1 min-w-0 flex items-center gap-1.5 h-8 py-1 pl-2 pr-2 bg-warm border border-border rounded-md
             focus-within:ring-2 focus-within:ring-carbon/20 focus-within:border-carbon/40 transition-all"
         >
-          <Search size={14} className="text-ink-muted shrink-0" />
+          <Search size={14} className="text-ink-tertiary shrink-0" />
           <input
             type="text"
             value={searchDraft}
@@ -682,7 +682,7 @@ export function LibraryView() {
             }}
             placeholder="Search title & metadata"
             aria-label="Search entities"
-            className="flex-1 min-w-[60px] bg-transparent text-xs font-medium placeholder:text-ink-muted focus:outline-none"
+            className="flex-1 min-w-[60px] bg-transparent text-xs font-medium placeholder:text-ink-tertiary focus:outline-none"
           />
           {searchDraft && (
             <button
@@ -691,7 +691,7 @@ export function LibraryView() {
               // itself is the chip in Active filters, or Clear all.
               onClick={() => setSearchDraft("")}
               aria-label="Clear search text"
-              className="shrink-0 p-0.5 rounded-full hover:bg-parchment text-ink-muted hover:text-ink cursor-pointer transition-colors"
+              className="shrink-0 p-0.5 rounded-full hover:bg-parchment text-ink-tertiary hover:text-ink cursor-pointer transition-colors"
             >
               <X size={12} />
             </button>

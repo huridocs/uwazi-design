@@ -29,7 +29,7 @@ export function FiltersButton({
           : "bg-warm border border-border text-ink-secondary hover:bg-parchment hover:text-ink"
       }`}
     >
-      <Filter size={iconSize} className={active ? "text-ink" : "text-ink-tertiary"} />
+      <Filter size={iconSize} className={active ? "text-ink" : "text-ink-secondary"} />
       <span>{label}</span>
       {active && (
         <span
