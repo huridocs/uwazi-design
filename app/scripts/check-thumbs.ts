@@ -14,8 +14,9 @@
  *  reported 18 of 39 documents blank that render perfectly well in a browser. A
  *  check that lies is worse than no check.
  *
- *    npm run check:thumbs                    # the shipped path (whole page)
- *    node scripts/check-thumbs.ts --zoom 1.4 # a framed candidate
+ *    npm run check:thumbs                    # the shipped framing (B)
+ *    node scripts/check-thumbs.ts --whole    # fit-whole-page, for comparison
+ *    node scripts/check-thumbs.ts --zoom 1.8 # another treatment
  *    node scripts/check-thumbs.ts --zoom 1.4 --pad 0.2
  *    node scripts/check-thumbs.ts --url http://localhost:5173
  *    node scripts/check-thumbs.ts --dump  # write the bitmaps out and look at them
@@ -42,12 +43,15 @@ const WIDTH = 189;
 // treatment rather than a different number.
 const HEIGHT = args.includes("--height") ? Number(args[args.indexOf("--height") + 1]) : 96;
 
-// Whole-page is what SHIPS, so it is what a bare run checks. `--zoom` renders a
-// framed candidate instead — treatments live in the check, not in the app, until
-// one is picked.
-const zoom = args.includes("--zoom") ? Number(args[args.indexOf("--zoom") + 1]) : 0;
-const pad = args.includes("--pad") ? Number(args[args.indexOf("--pad") + 1]) : undefined;
-const whole = !zoom;
+// A bare run checks WHAT SHIPS. Treatment B (zoom 1.35, 0.20 of air above the
+// page's own ink) is the shipped framing — keep these in step with
+// PdfPageThumb's constants, or this check stops describing the app. `--whole`
+// and `--zoom`/`--pad` still render alternatives for comparison.
+const SHIPPED_ZOOM = 1.35;
+const SHIPPED_PAD = 0.2;
+const whole = args.includes("--whole");
+const zoom = args.includes("--zoom") ? Number(args[args.indexOf("--zoom") + 1]) : SHIPPED_ZOOM;
+const pad = args.includes("--pad") ? Number(args[args.indexOf("--pad") + 1]) : SHIPPED_PAD;
 const url = args.includes("--url") ? args[args.indexOf("--url") + 1] : "http://localhost:1431";
 // Bitmaps go to a temp dir, never into the repo — this is a look-at-it aid.
 const dump = args.includes("--dump") || args.includes("--dump-to");
@@ -76,7 +80,7 @@ if (!res?.ok()) {
 }
 
 console.log(
-  `${whole ? "fit-whole-page (shipped)" : `framed crop, zoom ${zoom}${pad !== undefined ? ` pad ${pad}` : ""}`}` +
+  `${whole ? "fit-whole-page" : `framed crop, zoom ${zoom} pad ${pad}${zoom === SHIPPED_ZOOM && pad === SHIPPED_PAD ? " (shipped)" : ""}`}` +
     ` · ${files.length} documents · ${url}\n`,
 );
 
