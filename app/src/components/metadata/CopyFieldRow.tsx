@@ -37,22 +37,29 @@ export function CopyFieldRow({
 }) {
   const incoming = describe(match, "incoming");
   const current = describe(match, "current");
+  // The row is always two 1rem tracks tall. When there is no note, the first
+  // line spans BOTH of them and centres — the reservation is kept (every row is
+  // the same height, the columns still read down) but the content sits in the
+  // middle of the box instead of pinned to the top of it with a hole beneath.
+  // Distribution, not removal: a note appearing or disappearing changes where
+  // the first line sits, never how tall the row is, so nothing reflows.
   const note = match.emptyOnSource
     ? "The source leaves this empty — copying clears what is here."
     : match.unchanged
       ? "Already the same value."
       : "";
+  const line = note ? "" : "row-span-2";
 
   return (
     <div
       className={`mt-1.5 grid grid-cols-[1.25rem_7rem_minmax(0,1fr)_0.75rem_minmax(0,1fr)]
-        items-center gap-x-2 rounded-md px-2 py-1.5 transition-colors ${
+        grid-rows-[1rem_1rem] items-center gap-x-2 rounded-md px-2 py-1.5 transition-colors ${
           checked ? "bg-parchment" : "bg-warm"
         }`}
     >
       {/* Every first-row cell shares a 1rem line box, so the checkbox centres on
           the values it belongs to instead of being nudged onto them. */}
-      <span className="h-4 flex items-center justify-center">
+      <span className={`row-start-1 ${line} h-4 flex items-center justify-center`}>
         <Checkbox
           checked={checked}
           onChange={(e) => onChange(e.target.checked)}
@@ -65,7 +72,7 @@ export function CopyFieldRow({
           with no idea which field was being overwritten, and got strictly less
           than a screen-reader user did. */}
       <span
-        className="h-4 leading-4 truncate text-[11px] font-medium text-ink-secondary"
+        className={`row-start-1 ${line} h-4 leading-4 truncate text-[11px] font-medium text-ink-secondary`}
         title={match.label}
       >
         {match.label}
@@ -82,27 +89,30 @@ export function CopyFieldRow({
           text below", which in a one-line comparison cell is a lie. The ellipsis
           cuts at the column edge and the whole value is on the title. */}
       <span
-        className="h-4 leading-4 truncate text-[11px] text-ink-tertiary
-          line-through decoration-ink-muted/60"
+        className={`row-start-1 ${line} h-4 leading-4 truncate text-[11px] text-ink-tertiary
+          line-through decoration-ink-muted/60`}
         title={current}
       >
         {current}
       </span>
-      <ArrowRight size={10} className="text-ink-muted" aria-hidden />
+      <ArrowRight size={10} className={`row-start-1 ${line} text-ink-muted`} aria-hidden />
       <span
-        className="h-4 leading-4 truncate text-[11px] font-medium text-ink"
+        className={`row-start-1 ${line} h-4 leading-4 truncate text-[11px] font-medium text-ink`}
         title={incoming}
       >
         {incoming}
       </span>
 
-      {/* Reserved: the same 1rem whether or not this row has something to say. */}
-      <span
-        className="col-start-2 col-span-4 h-4 leading-4 truncate text-[11px] text-ink-tertiary"
-        title={note || undefined}
-      >
-        {note}
-      </span>
+      {/* The second track is reserved by the row template, not by this element,
+          so it holds its 1rem whether or not a note is rendered into it. */}
+      {note && (
+        <span
+          className="row-start-2 col-start-2 col-span-4 h-4 leading-4 truncate text-[11px] text-ink-tertiary"
+          title={note}
+        >
+          {note}
+        </span>
+      )}
     </div>
   );
 }
