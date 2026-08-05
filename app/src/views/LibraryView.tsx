@@ -84,7 +84,18 @@ import { DataTable, type Column } from "../components/shared/DataTable";
 import { EntityTypeChip } from "../components/shared/EntityTypeChip";
 import { HighlightedText } from "../components/shared/HighlightedText";
 import { Select } from "../components/shared/Select";
-import { SegmentedControl } from "../components/shared/SegmentedControl";
+import { ViewSwitcher, type ViewOption } from "../components/library/ViewSwitcher";
+
+const VIEW_OPTIONS: ViewOption[] = [
+  { id: "cards", label: "Cards", icon: LayoutGrid },
+  { id: "list", label: "List", icon: List },
+  { id: "map", label: "Map", icon: MapIcon },
+  { id: "timeline", label: "Timeline", icon: CalendarRange },
+  // Always mounted, query or not. A segment that appears when you type would
+  // resize the switcher and shove every control beside it — the view renders
+  // its own "search to see where terms match" state.
+  { id: "results", label: "Results", icon: TextSearch },
+];
 
 const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -685,20 +696,11 @@ export function LibraryView() {
             options={SORTS}
           />
         </div>
-        <SegmentedControl
+        <ViewSwitcher
           ariaLabel="View"
           value={viewMode}
           onChange={(v) => setViewMode(v as typeof viewMode)}
-          options={[
-            { id: "cards", label: "Cards", icon: LayoutGrid },
-            { id: "list", label: "List", icon: List },
-            { id: "map", label: "Map", icon: MapIcon },
-            { id: "timeline", label: "Timeline", icon: CalendarRange },
-            // Always mounted, query or not. A segment that appears when you type
-            // would resize the switcher and shove every control beside it — the
-            // view renders its own "search to see where terms match" state.
-            { id: "results", label: "Results", icon: TextSearch },
-          ]}
+          options={VIEW_OPTIONS}
         />
         {/* Display is icon-only and ALWAYS mounted; the view-specific modifiers
             (timeline layout) live inside its popover. Anything that appears and
