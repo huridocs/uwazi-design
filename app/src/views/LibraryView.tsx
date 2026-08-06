@@ -711,6 +711,42 @@ export function LibraryView() {
             onClose={() => setSearchFocused(false)}
           />
         </div>
+        {/* The count, beside the query that produced it. It reports on the
+            search and the filters, so it belongs where they are rather than at
+            the far edge of the screen.
+
+            FIXED SLOT, right-aligned: the number swings from "82" on artworks
+            to "4,398" on CEJIL, and every keystroke and facet rewrites it. Any
+            growth runs leftward into the reserve, so Sort · View · Display ·
+            Language never move. Reserved for the widest realistic string
+            ("Showing 4,398 of 4,398"), which is why it is sized rather than
+            hugging its content.
+
+            ALWAYS MOUNTED. While a collection is still loading there is no
+            honest number to print, so the slot holds and its contents are
+            empty — it never appears or disappears under the controls beside
+            it. Hidden below `md` is a viewport rule, not a state one: the row
+            has no room there, the same reason Sort and Language step aside.
+
+            `aria-busy` + a dim carry staleness instead of the footer's
+            "updating…" word: the counts describe the set ON SCREEN, which
+            during a transition is the previous query's, and a second string
+            appearing beside this one would need a reserve of its own. */}
+        <span
+          aria-busy={searchPending}
+          className={`hidden md:block shrink-0 w-[8.5rem] text-end text-[11px] tabular-nums
+            text-ink-tertiary transition-opacity ${searchPending ? "opacity-60" : "opacity-100"}`}
+        >
+          {!cejilLoading && (
+            <>
+              Showing{" "}
+              <span className="font-semibold text-ink-secondary">
+                {shown.length.toLocaleString()}
+              </span>{" "}
+              of {filtered.length.toLocaleString()}
+            </>
+          )}
+        </span>
         {/* Sort steps aside on a phone — it moves into the Display popover, where
             it costs no width. The VIEW switcher does not: cards / list / map /
             timeline are the point of the Library, and they were unreachable on
@@ -902,30 +938,12 @@ export function LibraryView() {
           label="Import / Export CSV"
           onClick={() => setAppView("import-csv")}
         />
-        {/* Result status. Nothing is mounted or unmounted here — only the text
-            changes — so the results above it never move. This is also the only
-            place the active-filter count survives while the drawer is showing an
-            entity instead of the Filters panel; clicking it puts the panel back. */}
-        {/* The counts describe the set ON SCREEN, which during a transition is
-            the PREVIOUS query's. Rather than freeze the number or blank it, mark
-            it stale: `aria-busy` for AT, a quiet "updating…" for everyone else.
-            Fixed slot, so nothing reflows when it appears (PATTERNS §3). */}
-        <span className="ms-2 text-[11px] text-ink-tertiary" aria-busy={searchPending}>
-          Showing{" "}
-          <span className="font-semibold text-ink-secondary">{shown.length.toLocaleString()}</span> of{" "}
-          {filtered.length.toLocaleString()}
-        </span>
-        {/* The view name used to be echoed here, because five bare icons never
-            said which one had won. The trigger says it now ("View: Cards"), so
-            the echo would be the same fact twice on one screen. */}
-        <span
-          aria-hidden={!searchPending}
-          className={`text-[11px] text-ink-muted italic transition-opacity ${
-            searchPending ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          updating…
-        </span>
+        {/* The result count used to sit here, at the far edge of the screen from
+            the search that produced it. It now rides the toolbar beside the
+            query. What stays is the active-filter affordance: this is the only
+            place that count survives while the drawer shows an entity instead
+            of the Filters panel, and clicking it puts the panel back. */}
+        <span className="ms-2" />
         <ActiveFiltersButton />
       </div>
     </div>
