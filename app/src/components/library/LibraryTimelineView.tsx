@@ -414,7 +414,9 @@ function TrackFrame({
         {marks.map((m) => (
           <span
             key={`l-${m.label}`}
-            className="absolute text-[9px] tabular-nums text-ink-muted -translate-y-1/2 pointer-events-none text-start"
+            // ink-TERTIARY: at 9px this is small text, and muted misses AA on
+            // both themes. Same step the spine's marks take — one label column.
+            className="absolute text-[9px] tabular-nums text-ink-tertiary -translate-y-1/2 pointer-events-none text-start"
             style={{ top: `${m.yPct}%`, insetInlineEnd: 0, width: labelW }}
           >
             {m.label}
@@ -798,7 +800,7 @@ function LanesLayout({ laneChart }: LayoutProps) {
           {cols.map((c, i) => (
             <div key={c.key} className="shrink-0 text-center" style={{ width: colW }}>
               {i % Math.ceil(cols.length / 16 || 1) === 0 && (
-                <span className="block text-[9px] tabular-nums text-ink-muted -rotate-45 origin-center whitespace-nowrap">
+                <span className="block text-[9px] tabular-nums text-ink-tertiary -rotate-45 origin-center whitespace-nowrap">
                   {c.label}
                 </span>
               )}

@@ -406,6 +406,27 @@ Search matches can hide in a property or a document body. Three surfaces answer
   tracks share), the adaptive scale, year/month marks, elided-silence breaks,
   collision push, leader lines and `SpineDate`. Callers pass rows + `rowHeight` +
   `renderRow` and nothing else — **don't re-derive spine geometry anywhere.**
+  Three things it settled in 2026-08 that dense data breaks, so don't undo them:
+  - **Marks are nodes ON the axis, not dots behind it** — `MARK_R` 3.5 with a
+    `--bg-surface` ring painted under the fill (`paintOrder: "stroke"`), at full
+    colour. The old 2.5px/0.7-opacity dot was cut in half by the axis hairline.
+  - **Clusters get ONE mark and ONE brace.** Rows whose marks would touch
+    (`CLUSTER_EPS`, measured on the mark's drawn footprint — so a compressed
+    fortnight clusters exactly like thirteen same-day filings) share a capsule
+    spanning their instants plus a curve/stem/tick brace, instead of a bead of
+    fused dots and a fan of identical curves. The capsule takes the members'
+    colour where they agree and `--text-tertiary` where they don't; a selected
+    member surfaces from it in its own colour. **No count badge** — the brace
+    enumerates, and the rows are right there.
+  - **The "N later" elision label reads at the row columns' START**, rule running
+    toward the axis and stopping at the row bodies' edge. Against the axis it sat
+    in the trailing type-name column (an italic phrase among thirteen
+    "Document"s) AND in the leader gutter, where a post-break row's leader
+    crosses it. Marks inside an elided band compress WITH the band (`at()`), or
+    the axis prints Jan, Jul, Apr.
+  Empty `rows` renders `null`, not an axis anchored to the epoch. Stories:
+  `stories/TimeSpine.stories.tsx` (Default / Clustered / ClusteredMixed /
+  ClusteredSelected / Elided / Minimal / Empty).
 
 Match-type chips (Title / Properties / Document) are `ToggleChip`
 (`components/shared/ToggleChip.tsx`) — `ActiveFilterChip`'s visual twin with

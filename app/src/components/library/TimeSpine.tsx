@@ -1,6 +1,7 @@
 import { useMemo, type ReactNode } from "react";
 import { useAtomValue } from "jotai";
 import { breakpointAtom } from "../../atoms/viewport";
+import { languageAtom } from "../../atoms/language";
 import { bucketOf, elapsed, formatDay } from "../../utils/timeline";
 
 /* ONE track geometry, shared by Rail, Density and BOTH spines. The axis lands at
@@ -42,6 +43,25 @@ export const PX_PER_YEAR = 190;
 export const EVENT_H = 22;
 /** The gutter kept for the leader line between the axis and the pushed row. */
 export const LEADER_W = 22;
+/** The instant mark's radius. It was 2.5, and at that size the axis hairline ran
+ *  straight THROUGH the dot: the mark read as a speck of ink behind the line
+ *  rather than a node on it. The ring below is the other half of the fix. */
+const MARK_R = 3.5;
+/** A paper ring, painted UNDER the fill (`paintOrder: "stroke"`, so the fill
+ *  covers the inner half and the stroke reads as an outer ring — half this
+ *  number wide). It stops the axis at the mark's edge and keeps two
+ *  near-touching marks countable. */
+const MARK_RING = 3;
+/** Marks closer together than their own drawn width can't be told apart — they
+ *  fuse into one bead and their leaders into a hair-bundle. Rows this close
+ *  share ONE cluster mark: a capsule spanning the instants, and one brace down
+ *  to their rows. Measured on the mark's full footprint, ring included, so the
+ *  test is exactly "would these two touch". */
+const CLUSTER_EPS = 2 * (MARK_R + MARK_RING / 2) + 1;
+/** Where the brace's stem stands inside the leader gutter (0 = the row's edge,
+ *  `LEADER_W - 4` = the axis). Far enough from the axis that the capsule reads
+ *  on its own, close enough that the ticks into the rows stay short. */
+const STEM_X = 7;
 /** The longest stretch of nothing the axis draws at true scale before it elides. */
 export const MAX_GAP = 88;
 /** The "N later" break label's line box — `leading-4` on the label pins it to
@@ -124,8 +144,9 @@ export function TimeSpine<T>({
 }: Props<T>) {
   const geom = useTrackGeom();
   const AXIS_GUTTER = geom.AXIS;
+  const rtl = useAtomValue(languageAtom) === "AR";
 
-  const { rows, height, years, gaps } = useMemo(() => {
+  const { rows, clusters, height, years, gaps } = useMemo(() => {
     // Half a row of reserve at each end of the canvas. Rows are CENTRED on their
     // instant (`top: y - rowHeight/2 + 1`) and the earliest y is 6, so the first
     // row reaches `rowHeight/2 - 7` ABOVE the origin — already 4px at the default
@@ -156,7 +177,7 @@ export function TimeSpine<T>({
     // A long silence is information, but 700px of white is not. Anything longer
     // than MAX_GAP collapses to MAX_GAP and gets a labelled break, so the axis
     // stays proportional WHERE THE EVENTS ARE and elides where they aren't.
-    const cuts: { atRaw: number; cut: number }[] = [];
+    const cuts: { fromRaw: number; atRaw: number; cut: number }[] = [];
     const gaps: { y: number; ms: number }[] = [];
     let accum = 0;
     let prevRaw = raw(min);
@@ -169,7 +190,7 @@ export function TimeSpine<T>({
       let broke = 0;
       if (delta > MAX_GAP) {
         const cut = delta - MAX_GAP;
-        cuts.push({ atRaw: r, cut });
+        cuts.push({ fromRaw: prevRaw, atRaw: r, cut });
         accum += cut;
         broke = row.t - prevT;
       }
@@ -199,10 +220,22 @@ export function TimeSpine<T>({
       cursor = y + rowHeight;
       return { row, y, ideal };
     });
+    // Where a mark lands once the elisions are taken out. A mark INSIDE an
+    // elided band is the case that bites: it has no cut of its own to subtract,
+    // so it kept its uncompressed position and printed BELOW marks it precedes —
+    // a spine running Jan, then Jul, then Apr. Inside a band it compresses with
+    // the band, which keeps the sequence monotonic and says the true thing: that
+    // stretch of the axis is squeezed.
     const at = (t: number) => {
       const r = raw(t);
       let a = 0;
-      for (const c of cuts) if (c.atRaw <= r) a += c.cut;
+      for (const c of cuts) {
+        if (c.atRaw <= r) a += c.cut;
+        else if (c.fromRaw < r) {
+          const span = c.atRaw - c.fromRaw;
+          return c.fromRaw - a + ((r - c.fromRaw) / span) * (span - c.cut);
+        }
+      }
       return r - a;
     };
     // `+ PAD` pays for the top reserve the shift below consumes. The BOTTOM
@@ -246,13 +279,40 @@ export function TimeSpine<T>({
       years.unshift({ label: spanYears < 2.5 ? anchor.slice(0, 3) : anchor, y: 6 });
     }
     // The single shift into the reserve — see PAD above.
+    const laid = rows.map((r) => ({ ...r, y: r.y + PAD, ideal: r.ideal + PAD }));
+
+    // Marks that would fuse become ONE cluster. The test is the DRAWN distance
+    // between instants, not equal timestamps: at a compressed scale a fortnight
+    // of filings overlaps exactly as badly as thirteen documents dated the same
+    // day, and both want the same treatment. Chaining is deliberate — a run of
+    // rows each within a mark's width of the last IS one continuous band of
+    // activity, and drawing it as one capsule is what it looks like.
+    const clusters: { members: typeof laid; top: number; bottom: number }[] = [];
+    for (const r of laid) {
+      const open = clusters[clusters.length - 1];
+      if (open && r.ideal - open.bottom <= CLUSTER_EPS) {
+        open.members.push(r);
+        open.bottom = r.ideal;
+      } else {
+        clusters.push({ members: [r], top: r.ideal, bottom: r.ideal });
+      }
+    }
+
     return {
-      rows: rows.map((r) => ({ ...r, y: r.y + PAD, ideal: r.ideal + PAD })),
+      rows: laid,
+      clusters,
       height,
       years: years.map((y) => ({ ...y, y: y.y + PAD })),
       gaps: gaps.map((g) => ({ ...g, y: g.y + PAD })),
     };
   }, [input, rowHeight]);
+
+  // Nothing to plot draws NOTHING — not an axis. With no rows the extent
+  // collapses to the epoch and the anchor mark below would print a lone "1970"
+  // against an empty rail, which reads as a corpus dated 1970 rather than as no
+  // corpus at all. Both callers already say so in words; this is the primitive
+  // refusing to contradict them.
+  if (!rows.length) return null;
 
   return (
     <div className="relative" style={{ height }}>
@@ -273,8 +333,14 @@ export function TimeSpine<T>({
           style={{ top: y.y, insetInlineEnd: 0 }}
         >
           <span className="w-1.5 h-px" style={{ backgroundColor: "var(--border-primary)" }} />
+          {/* ink-TERTIARY, not muted. At 9px these are small text by WCAG's
+              measure and muted (#777 on parchment) lands at 3.94:1 — under AA in
+              light, and worse in dark, where muted is the DARKER of the two.
+              Tertiary is the design system's quiet-but-readable step and clears
+              it in both. The Rail and Density tracks' marks moved with it; the
+              three axes are one label column and can't drift. */}
           <span
-            className="text-[9px] tabular-nums text-ink-muted whitespace-nowrap"
+            className="text-[9px] tabular-nums text-ink-tertiary whitespace-nowrap"
             style={{ width: geom.LABEL }}
           >
             {y.label}
@@ -282,25 +348,37 @@ export function TimeSpine<T>({
         </div>
       ))}
 
-      {/* Elided silences */}
-      {gaps.map((g) => (
+      {/* Elided silences.
+          The phrase reads at the START of the row columns, with the dashed rule
+          running from it toward the axis — NOT the other way round, which is
+          where it used to sit. Hard against the axis it landed in two occupied
+          places at once: the column every row ends with (a run of thirteen
+          documents all labelled "Document", and an italic "2 months later"
+          mixed in among them, reading as a fourteenth), and the leader gutter,
+          where the rule crossed the very curves a break exists to explain. The
+          band it sits in is empty by construction (GAP_H is reserved for it), so
+          at the start it has the whole width to itself.
+
+          It STOPS at the row bodies' own inline-end edge and leaves the gutter
+          clear, because the row after a break is the one most likely to be
+          pushed — its leader runs down through exactly this band. */}
+      {gaps.map((g, i) => (
         <div
-          key={`gap-${g.y}`}
-          className="absolute flex items-center gap-2 pointer-events-none -translate-y-1/2"
-          style={{ top: g.y, insetInlineStart: 0, insetInlineEnd: AXIS_GUTTER - 4 }}
+          key={`gap-${i}-${g.y}`}
+          className="absolute flex items-center gap-2 ps-2 pointer-events-none -translate-y-1/2"
+          style={{ top: g.y, insetInlineStart: 0, insetInlineEnd: AXIS_GUTTER + LEADER_W }}
         >
-          <span className="flex-1 h-px" style={{ backgroundColor: "transparent" }} />
           {/* `dir="ltr"`: the phrase leads with a number, so an RTL pane
               otherwise renders "months later 4". Isolating the digit alone isn't
               enough — the whole phrase has to keep its order.
               `leading-4` pins the line box to GAP_H — the height the layout
               reserved for it. Inheriting the line-height instead would let the
               label outgrow its reserve on a caller with roomier leading. */}
-          <span dir="ltr" className="text-[10px] leading-4 italic text-ink-muted">
+          <span dir="ltr" className="shrink-0 text-[10px] leading-4 italic text-ink-tertiary">
             {elapsed(g.ms)} later
           </span>
           <span
-            className="w-8 h-px"
+            className="flex-1 h-px"
             style={{
               backgroundImage:
                 "repeating-linear-gradient(to right, var(--border-primary) 0 3px, transparent 3px 6px)",
@@ -309,51 +387,173 @@ export function TimeSpine<T>({
         </div>
       ))}
 
-      {rows.map(({ row, y, ideal }) => {
-        const drop = Math.max(1, y - ideal);
-        return (
-          <div key={row.key}>
-            {/* Leader from the true instant on the axis to the pushed row */}
-            <svg
-              className="absolute pointer-events-none"
-              style={{
-                insetInlineEnd: AXIS_GUTTER - 4,
-                top: ideal,
-                width: LEADER_W,
-                height: drop + 1,
-                overflow: "visible",
-              }}
-              aria-hidden
-            >
-              <path
-                d={`M ${LEADER_W - 4} 0 C ${LEADER_W - 13} 0, ${LEADER_W - 9} ${drop}, 0 ${drop}`}
-                fill="none"
-                stroke="var(--border-primary)"
-                strokeWidth={1}
-              />
-              <circle
-                cx={LEADER_W - 4}
-                cy={0}
-                r={2.5}
-                fill={dotColor(row.item)}
-                opacity={dotActive?.(row.item) ? 1 : 0.7}
-              />
-            </svg>
+      {/* Instants and leaders — ONE drawing per cluster, not per row. */}
+      {clusters.map((c) => (
+        <ClusterLeader
+          key={c.members[0].row.key}
+          members={c.members}
+          top={c.top}
+          bottom={c.bottom}
+          axisGutter={AXIS_GUTTER}
+          rtl={rtl}
+          dotColor={dotColor}
+          dotActive={dotActive}
+        />
+      ))}
 
-            <div
-              className="absolute"
-              style={{
-                top: y - rowHeight / 2 + 1,
-                insetInlineStart: 0,
-                insetInlineEnd: AXIS_GUTTER + LEADER_W,
-              }}
-            >
-              {renderRow(row.item, { t: row.t })}
-            </div>
-          </div>
-        );
-      })}
+      {rows.map(({ row, y }) => (
+        <div
+          key={row.key}
+          className="absolute"
+          style={{
+            top: y - rowHeight / 2 + 1,
+            insetInlineStart: 0,
+            insetInlineEnd: AXIS_GUTTER + LEADER_W,
+          }}
+        >
+          {renderRow(row.item, { t: row.t })}
+        </div>
+      ))}
     </div>
+  );
+}
+
+interface LaidRow<T> {
+  row: SpineRow<T>;
+  /** Where the row is DRAWN, after the collision push. */
+  y: number;
+  /** Where its instant truly is on the axis. */
+  ideal: number;
+}
+
+/** One instant, or a stack of them, and the leader(s) back to the rows.
+ *
+ *  A single row draws what it always drew: a mark on the axis and one curve down
+ *  to the row. A cluster — rows whose marks would fuse — draws a CAPSULE instead:
+ *  one rounded stroke spanning the instants, then one brace (a curve, a stem and
+ *  a tick per row) rather than a fan of near-identical curves out of a single
+ *  bead. The capsule is measured, not decorative: it starts at the first instant
+ *  and ends at the last, so thirteen documents filed on one day read as a dot and
+ *  thirteen filed over a fortnight read as a stroke that long.
+ *
+ *  Colour: the members' colour where they agree, ink-tertiary where they don't —
+ *  the same honesty the Rail's counted node keeps by going neutral once a period
+ *  is too busy to speak for one type. Every row still carries its own colour on
+ *  its own line; the axis is not where a mixed group gets to pick a winner.
+ *
+ *  The whole drawing mirrors under RTL. The box already flips (`insetInlineEnd`),
+ *  but SVG coordinates don't, so without this the curves would leave the axis
+ *  going the wrong way and land on top of the year marks. */
+function ClusterLeader<T>({
+  members,
+  top,
+  bottom,
+  axisGutter,
+  rtl,
+  dotColor,
+  dotActive,
+}: {
+  members: LaidRow<T>[];
+  top: number;
+  bottom: number;
+  axisGutter: number;
+  rtl: boolean;
+  dotColor: (item: T) => string;
+  dotActive?: (item: T) => boolean;
+}) {
+  const AXIS_X = LEADER_W - 4;
+  /** Half a mark of headroom above the first instant, so the ring isn't clipped. */
+  const oy = top - MARK_R - MARK_RING;
+  const rel = (v: number) => v - oy;
+  const firstY = members[0].y;
+  const lastY = members[members.length - 1].y;
+  const many = members.length > 1;
+
+  const colors = members.map((m) => dotColor(m.row.item));
+  const fill = colors.every((c) => c === colors[0]) ? colors[0] : "var(--text-tertiary)";
+  const active = members.find((m) => dotActive?.(m.row.item));
+
+  /** Where the brace leaves the capsule: the end nearest the stem, so it never
+   *  runs back up alongside the capsule it just left. */
+  const leave = Math.min(Math.max(firstY, top), bottom);
+  const curve = (from: number, to: number, x: number) =>
+    `M ${AXIS_X} ${rel(from)} C ${AXIS_X - 9} ${rel(from)}, ${AXIS_X - 13} ${rel(to)}, ${x} ${rel(to)}`;
+
+  return (
+    <svg
+      className="absolute pointer-events-none"
+      style={{
+        insetInlineEnd: axisGutter - 4,
+        top: oy,
+        width: LEADER_W,
+        height: Math.max(lastY, bottom) - oy + MARK_R + MARK_RING,
+        overflow: "visible",
+        transform: rtl ? "scaleX(-1)" : undefined,
+      }}
+      aria-hidden
+    >
+      {many ? (
+        <>
+          {/* Brace: one curve out of the capsule, one stem, one short tick per
+              row. Thirteen rows cost thirteen 7px ticks instead of thirteen
+              full curves leaving the same point. */}
+          <path d={curve(leave, firstY, STEM_X)} fill="none" stroke="var(--border-primary)" strokeWidth={1} />
+          <path
+            d={`M ${STEM_X} ${rel(firstY)} V ${rel(lastY)}`}
+            fill="none"
+            stroke="var(--border-primary)"
+            strokeWidth={1}
+          />
+          {members.map((m) => (
+            <path
+              key={m.row.key}
+              d={`M ${STEM_X} ${rel(m.y)} H 0`}
+              fill="none"
+              stroke="var(--border-primary)"
+              strokeWidth={1}
+            />
+          ))}
+        </>
+      ) : (
+        <path
+          d={curve(top, Math.max(members[0].y, top + 1), 0)}
+          fill="none"
+          stroke="var(--border-primary)"
+          strokeWidth={1}
+        />
+      )}
+
+      {/* The mark itself: a capsule across the cluster's instants, a circle for a
+          lone one (a zero-height capsule IS that circle, so it is drawn once). */}
+      <rect
+        x={AXIS_X - MARK_R}
+        y={rel(top) - MARK_R}
+        width={MARK_R * 2}
+        height={bottom - top + MARK_R * 2}
+        rx={MARK_R}
+        fill={fill}
+        stroke="var(--bg-surface)"
+        strokeWidth={MARK_RING}
+        style={{ paintOrder: "stroke" }}
+      />
+
+      {/* The selected member surfaces from the group in its own colour — the one
+          thing a neutral capsule would otherwise swallow. */}
+      {active && (
+        <>
+          <circle cx={AXIS_X} cy={rel(active.ideal)} r={MARK_R + 3} fill={dotColor(active.row.item)} opacity={0.2} />
+          <circle
+            cx={AXIS_X}
+            cy={rel(active.ideal)}
+            r={MARK_R}
+            fill={dotColor(active.row.item)}
+            stroke="var(--bg-surface)"
+            strokeWidth={MARK_RING}
+            style={{ paintOrder: "stroke" }}
+          />
+        </>
+      )}
+    </svg>
   );
 }
 
