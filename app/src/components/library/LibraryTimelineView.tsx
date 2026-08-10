@@ -7,7 +7,6 @@ import {
   libraryDateFromAtom,
   libraryDateToAtom,
   libraryTypeFiltersAtom,
-  libraryQueryAtom,
   type TimelineLayout,
   type TimelineScope,
 } from "../../atoms/library";
@@ -51,6 +50,10 @@ interface Props {
   /** As `chart`, minus the template facet too — the Lanes grid keeps all its
    *  lanes after a drill-in, instead of shrinking to the one you clicked. */
   laneChart: Entity[];
+  /** The committed-and-DEFERRED search, for the rows' marks — the same value
+   *  `LibraryView` filtered with, passed down rather than read from
+   *  `libraryQueryAtom` per row (see `EntityCard`). */
+  query: string;
   selectedId: string | null;
   onSelect: (id: string) => void;
   onView: (id: string) => void;
@@ -161,6 +164,7 @@ interface TrackProps {
 function TrackedList({
   dated,
   chart,
+  query,
   selectedId,
   onSelect,
   onView,
@@ -308,6 +312,7 @@ function TrackedList({
                     key={e.id}
                     entity={e}
                     layout="list"
+                    query={query}
                     selected={selectedId === e.id}
                     connections={countByEntity.get(e.id) ?? 0}
                     onSelect={onSelect}
@@ -655,8 +660,7 @@ const SPINE_MARKED_FIELDS = ["title"] as const;
  *  elided silences, collision push, leader lines, date gutter — all lives in the
  *  shared `TimeSpine`, which the Library's Results view renders too. This file
  *  only says what a row SAYS. */
-function SpineLayout({ dated, selectedId, onSelect }: LayoutProps) {
-  const query = useAtomValue(libraryQueryAtom);
+function SpineLayout({ dated, query, selectedId, onSelect }: LayoutProps) {
   const hasQuery = query.trim().length > 0;
   const plotted = dated.slice(0, SPINE_CAP);
   const rows = useMemo(

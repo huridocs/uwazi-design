@@ -805,6 +805,7 @@ export function LibraryView() {
               entities={filtered}
               chart={timeChart}
               laneChart={laneChart}
+              query={query}
               selectedId={selectedId}
               onSelect={handleSelect}
               onView={openEntity}
@@ -846,6 +847,7 @@ export function LibraryView() {
                 key={e.id}
                 entity={e}
                 layout="cards"
+                query={query}
                 selected={selectedId === e.id}
                 connections={countByEntity.get(e.id) ?? 0}
                 onSelect={handleSelect}

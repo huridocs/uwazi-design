@@ -46,7 +46,7 @@ export interface MetadataSnippet {
   /** Stable field key (NOT the localized label) for deep-focus: matched against
    *  the drawer's `MetadataField.id`. Natural keys for the pseudo-fields
    *  (`title`/`country`/`descriptors`); adapter fields fall back to a label slug
-   *  (see `entityFields`). */
+   *  (see `entitySearchFields`). */
   fieldKey: string;
   /** One windowed excerpt per matched field (around the first hit). */
   texts: string[];
@@ -99,18 +99,30 @@ export const MAX_FULLTEXT = 5;
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
 /** The searchable + snippet-able metadata fields of an entity, each with a stable
- *  key for deep-focus. Adapter entities (CEJIL) carry their scalars in `fields`
- *  (label/value, no id — slug the label); mock entities carry theirs in the
- *  PROFILE, whose fields have real ids matching the drawer's `MetadataField.id`,
- *  so `country`/`definition`/etc. deep-focus cleanly and localization-safely. */
-function entityFields(
+ *  key for deep-focus. Adapter entities (CEJIL) carry their scalars in
+ *  `searchFields`/`fields` (label/value, no id — slug the label); mock entities
+ *  carry theirs in the PROFILE, whose fields have real ids matching the drawer's
+ *  `MetadataField.id`, so `country`/`definition`/etc. deep-focus cleanly and
+ *  localization-safely.
+ *
+ *  THE one definition of "what text does this entity carry": the filter's
+ *  `buildSearchIndex` concatenates exactly this, so an entity can't pass the
+ *  filter without a snippet to show for it, or carry a snippet the filter never
+ *  saw. */
+export function entitySearchFields(
   e: Entity,
   language: Language,
 ): { field: string; fieldKey: string; text: string }[] {
   const out = [{ field: "Title", fieldKey: "title", text: e.title }];
   if (e.country) out.push({ field: "Country", fieldKey: "country", text: e.country });
-  if (e.fields?.length) {
-    for (const f of e.fields) {
+  // `searchFields` (the adapter's FULL projection) before `fields` (its card
+  // summary — three fields, first value, 90 characters): a hit in a 4th
+  // property, a 2nd value or a truncated tail has to be reachable, and reading
+  // the summary meant ~93% of the CEJIL corpus carried metadata no query could
+  // touch. Both slug the same labels, so deep-focus lands on the same field.
+  const adapterFields = e.searchFields ?? e.fields;
+  if (adapterFields?.length) {
+    for (const f of adapterFields) {
       if (f.value) out.push({ field: f.label, fieldKey: slug(f.label), text: f.value });
     }
   } else {
@@ -135,7 +147,7 @@ interface FoldedField {
   folded: string;
 }
 
-/** `entityFields`, with every value pre-folded and MEMOISED per entity.
+/** `entitySearchFields`, with every value pre-folded and MEMOISED per entity.
  *
  *  Folding is `normalize("NFD")` + a regex strip + `toLowerCase()` over every
  *  field of every entity — and it was being redone on every call of
@@ -155,7 +167,7 @@ function foldedFields(e: Entity, language: Language): FoldedField[] {
   }
   let cached = byLang.get(language);
   if (!cached) {
-    cached = entityFields(e, language).map((f) => ({ ...f, folded: fold(f.text) }));
+    cached = entitySearchFields(e, language).map((f) => ({ ...f, folded: fold(f.text) }));
     byLang.set(language, cached);
   }
   return cached;
@@ -472,7 +484,7 @@ export function buildSnippetsFor(
     return { count: 0, metadata, fullText, fullTextTotal: 0, borrowedFrom: null };
   }
 
-  // `foldedFields`, not `entityFields`: the same per-entity fold the categoriser
+  // `foldedFields`, not `entitySearchFields`: the same per-entity fold the categoriser
   // uses, so a card that is both ranked and excerpted folds its fields once, not
   // twice — and not again on the next keystroke.
   for (const { field, fieldKey, text, folded } of foldedFields(entity, language)) {
@@ -596,7 +608,7 @@ export function hiddenMatchOrigin(
   const visible = new Set(visibleFieldKeys);
   let property: HiddenMatchOrigin["property"] = null;
   let moreProperties = 0;
-  // `foldedFields`, not `entityFields` + `fold`: this runs per RENDERED ROW per
+  // `foldedFields`, not `entitySearchFields` + `fold`: this runs per RENDERED ROW per
   // keystroke (every row of the list and the spine carries a match marker), and
   // it was re-folding each row's fields from scratch every time.
   for (const f of foldedFields(entity, language)) {

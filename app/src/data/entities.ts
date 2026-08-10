@@ -52,6 +52,20 @@ export interface Entity {
    *  +2 more", never as a comma-joined dump — joining two long titles was what
    *  turned the card grid into a wall of prose. */
   fields?: { label: string; value: string; more?: number }[];
+  /** Adapter-supplied FULL metadata projection, for SEARCH — every non-empty
+   *  property, every value, untruncated.
+   *
+   *  `fields` above is a CARD summariser: three fields, the first value of each,
+   *  cut at 90 characters. The search index and the snippet builder were reading
+   *  it, so on a corpus that summarises (CEJIL: ~3.9 non-empty properties per
+   *  entity, a third of them multi-valued, `resumen` running to paragraphs) a
+   *  term in a 4th property, in a 2nd value, or past the 90th character matched
+   *  nothing at all — the card's ellipsis was also the end of the index.
+   *
+   *  Adapters that summarise supply this too. Where it's absent, `fields` IS the
+   *  whole record (the mock and artwork corpora hold a handful of short values)
+   *  and search reads that, as before. */
+  searchFields?: { label: string; value: string }[];
   /** Adapter-supplied keyword facet values (e.g. CEJIL "descriptores"/violations). */
   descriptors?: string[];
   /** Adapter-supplied INHERITED relationship-property values, keyed by propId

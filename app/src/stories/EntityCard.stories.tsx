@@ -18,6 +18,7 @@ function CardsDemo() {
           key={e.id}
           entity={e}
           layout="cards"
+          query=""
           selected={selectedId === e.id}
           connections={3 + i * 5}
           onSelect={setSelectedId}
@@ -37,6 +38,7 @@ function ListDemo() {
           key={e.id}
           entity={e}
           layout="list"
+          query=""
           selected={selectedId === e.id}
           connections={2 + i}
           onSelect={setSelectedId}
@@ -60,6 +62,7 @@ export const CardsGrid: Story = {
   args: {
     entity: entities[1],
     layout: "cards",
+    query: "",
     selected: false,
     onSelect: () => {},
     onView: () => {},
@@ -71,6 +74,7 @@ export const ListRows: Story = {
   args: {
     entity: entities[1],
     layout: "list",
+    query: "",
     selected: false,
     onSelect: () => {},
     onView: () => {},

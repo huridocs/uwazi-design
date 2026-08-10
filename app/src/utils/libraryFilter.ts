@@ -2,8 +2,12 @@ import type { Entity } from "../data/entities";
 import type { Language } from "../atoms/language";
 import { typeHasDocument } from "../data/entityProfiles";
 import { chains, valueAt, type ChainGraph, type ChainSegment } from "./chainTraversal";
-import { entityFullTextBlob, matchCategories, type MatchCategories } from "./librarySnippets";
-import { getEntityProfile } from "../data/entityProfiles";
+import {
+  entityFullTextBlob,
+  entitySearchFields,
+  matchCategories,
+  type MatchCategories,
+} from "./librarySnippets";
 import { fold } from "./queryTokens";
 import {
   entityCountries,
@@ -91,27 +95,21 @@ export function entityIsDoc(e: Entity, source: DataSource): boolean {
   return source === "cejil" ? e.preview === "document" : typeHasDocument(e.typeId);
 }
 
-/** Per-entity searchable text (title + country + field values + descriptors),
- *  lowercased. Built once and shared by the result filter and the facet
- *  aggregations so search narrows both identically. */
+/** Per-entity searchable text (title + country + metadata field values +
+ *  descriptors), lowercased. Built once and shared by the result filter and the
+ *  facet aggregations so search narrows both identically.
+ *
+ *  The parts come from `entitySearchFields` — the SAME per-field list the snippet
+ *  builder excerpts and the categoriser reads — rather than a second
+ *  concatenation of its own. It used to assemble `e.fields` here, which on an
+ *  adapter that summarises for the card is three fields, first value only, cut at
+ *  90 characters: the index inherited the card's ellipsis, so most of the CEJIL
+ *  corpus's metadata was unmatchable, and a term that DID reach the snippet
+ *  builder (mock profile fields) could disagree with what the filter had seen. */
 export function buildSearchIndex(entities: Entity[], language: Language): Map<string, string> {
   const m = new Map<string, string>();
   for (const e of entities) {
-    const parts = [
-      e.title,
-      e.country ?? "",
-      ...(e.fields?.map((f) => f.value) ?? []),
-      ...(e.descriptors ?? []),
-    ];
-    // Mock entities carry their scalar metadata in the PROFILE, not `fields`, so
-    // fold it in — otherwise the search reaches only titles. CEJIL entities have
-    // `fields`, so they skip this (and its per-entity profile build).
-    if (!e.fields?.length) {
-      for (const f of getEntityProfile(e.id).metadata[language] ?? []) {
-        if (f.type !== "relationship" && f.value) parts.push(f.value);
-      }
-    }
-    m.set(e.id, fold(parts.join(" ")));
+    m.set(e.id, fold(entitySearchFields(e, language).map((f) => f.text).join(" ")));
   }
   return m;
 }

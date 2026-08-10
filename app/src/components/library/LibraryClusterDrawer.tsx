@@ -1,6 +1,10 @@
 import { useAtomValue, useSetAtom } from "jotai";
 import { X, MapPin } from "lucide-react";
-import { librarySelectedClusterAtom, librarySelectedEntityIdAtom } from "../../atoms/library";
+import {
+  libraryQueryAtom,
+  librarySelectedClusterAtom,
+  librarySelectedEntityIdAtom,
+} from "../../atoms/library";
 import { openEntityAtom } from "../../atoms/focusedEntity";
 import { getEntity, type Entity } from "../../data/entities";
 import { EntityCard } from "./EntityCard";
@@ -10,6 +14,10 @@ import { EntityCard } from "./EntityCard";
  *  drawer to Filters; selecting a row opens its preview on top. */
 export function LibraryClusterDrawer() {
   const cluster = useAtomValue(librarySelectedClusterAtom);
+  // Read here and passed down: the cards don't subscribe (see `EntityCard`).
+  // This list is a clicked cluster — tens of rows, not the corpus — so the raw
+  // committed query is fine; it isn't on the keystroke path.
+  const query = useAtomValue(libraryQueryAtom);
   const setCluster = useSetAtom(librarySelectedClusterAtom);
   const setSelectedId = useSetAtom(librarySelectedEntityIdAtom);
   const openEntity = useSetAtom(openEntityAtom);
@@ -43,6 +51,7 @@ export function LibraryClusterDrawer() {
             key={e.id}
             entity={e}
             layout="list"
+            query={query}
             selected={false}
             onSelect={() => setSelectedId(e.id)}
             onView={() => openEntity(e.id)}

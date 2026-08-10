@@ -308,7 +308,9 @@ function extractFragments(
 function entityFieldTexts(e: Entity): { field: string; text: string }[] {
   const out: { field: string; text: string }[] = [{ field: "title", text: e.title }];
   if (e.country) out.push({ field: "country", text: e.country });
-  for (const f of e.fields ?? []) {
+  // The adapter's FULL projection before its card summary — see
+  // `entitySearchFields` (utils/librarySnippets.ts).
+  for (const f of e.searchFields ?? e.fields ?? []) {
     if (f.value) out.push({ field: f.label, text: f.value });
   }
   if (e.descriptors?.length) {

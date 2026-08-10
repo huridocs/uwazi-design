@@ -9,7 +9,7 @@ import { getEntityProfile } from "../../data/entityProfiles";
 import { getEntityType } from "../../data/entities";
 import type { MetadataField } from "../../data/metadata";
 import type { Entity } from "../../data/entities";
-import { libraryInfoAtom, libraryQueryAtom, type LibraryViewMode } from "../../atoms/library";
+import { libraryInfoAtom, type LibraryViewMode } from "../../atoms/library";
 
 /** A Library result for one standalone entity. Mirrors the Uwazi card IA:
  *  title → metadata field label/value pairs → footer (template pill · View).
@@ -18,6 +18,7 @@ import { libraryInfoAtom, libraryQueryAtom, type LibraryViewMode } from "../../a
 export const EntityCard = memo(function EntityCard({
   entity,
   layout,
+  query,
   selected,
   connections = 0,
   onSelect,
@@ -25,13 +26,19 @@ export const EntityCard = memo(function EntityCard({
 }: {
   entity: Entity;
   layout: LibraryViewMode;
+  /** The query to MARK — passed in, never read from `libraryQueryAtom` here.
+   *  Subscribing to the raw atom made every mounted card re-render on every
+   *  keystroke (~2,594 renders per query over a 120-card grid), which is exactly
+   *  the work `LibraryView`'s `useDeferredValue` exists to defer: the cards were
+   *  re-rendering for a query whose results hadn't been computed yet. The owner
+   *  passes the DEFERRED query, so a card re-renders once per settled query. */
+  query: string;
   selected: boolean;
   connections?: number;
   onSelect: (id: string) => void;
   onView: (id: string) => void;
 }) {
   const language = useAtomValue(languageAtom);
-  const query = useAtomValue(libraryQueryAtom);
   const info = useAtomValue(libraryInfoAtom);
   const showPreview = info.preview !== false;
   const showMetadata = info.metadata !== false;

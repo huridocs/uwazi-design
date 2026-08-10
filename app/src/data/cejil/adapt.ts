@@ -63,6 +63,66 @@ function fieldsOf(e: { template: string; metadata?: Record<string, { value?: unk
   return out.length ? out : undefined;
 }
 
+/** Metadata keys the `Entity` already hoists to a field of its own — `pa_s` →
+ *  `country` (never multi-valued in this corpus) and `descriptores` →
+ *  `descriptors` (all values). `entitySearchFields` indexes those hoisted fields
+ *  under their own stable keys, so projecting them again would double every hit
+ *  and print the same excerpt twice under two labels. */
+const HOISTED_KEYS = new Set(["pa_s", "descriptores"]);
+
+/** All of a property's values as searchable text — every value, full length.
+ *
+ *  The search counterpart of `formatVals`: a card has a width, so it takes the
+ *  first value and 90 characters; an index has neither and shouldn't inherit
+ *  those limits. Non-textual types stay skipped (`SKIP_TYPES`) — a geolocation,
+ *  a media config or a `nested` row of CADH article numbers carries nothing to
+ *  match on. */
+function searchVals(type: string, vals: { value?: unknown; label?: unknown }[]): string {
+  if (SKIP_TYPES.has(type)) return "";
+  if (type === "date") {
+    return vals
+      .map((v) =>
+        typeof v.value === "number" && v.value > 0
+          ? String(new Date(v.value * 1000).getUTCFullYear())
+          : "",
+      )
+      .filter(Boolean)
+      .join(", ");
+  }
+  const texts: string[] = [];
+  for (const v of vals) {
+    if (typeof v.label === "string" && v.label.trim()) {
+      texts.push(v.label.trim());
+      continue;
+    }
+    if (typeof v.value !== "string") continue;
+    const s = v.value.trim();
+    // Raw URLs / JSON blobs are addresses and configs, not prose — the same rule
+    // the card applies, and for the same reason.
+    if (!s || /^https?:\/\//.test(s) || s.startsWith("{") || s.startsWith("[")) continue;
+    // NOT whitespace-collapsed: a single value is pushed through by reference,
+    // so the index costs no copy of the corpus's long `resumen` texts, and the
+    // excerpt cutter collapses whitespace in the window it builds anyway.
+    texts.push(s);
+  }
+  return texts.join(", ");
+}
+
+/** EVERY non-empty metadata field (label + full text), in template order —
+ *  `Entity.searchFields`. `fieldsOf` above is what the CARD shows. */
+function searchFieldsOf(e: { template: string; metadata?: Record<string, { value?: unknown; label?: unknown }[]> }) {
+  const props = propsByTemplate.get(e.template) || [];
+  const out: { label: string; value: string }[] = [];
+  for (const p of props) {
+    if (p.name === "title" || HOISTED_KEYS.has(p.name)) continue;
+    const vals = e.metadata?.[p.name];
+    if (!vals || !vals.length) continue;
+    const value = searchVals(p.type, vals);
+    if (value) out.push({ label: p.label, value });
+  }
+  return out.length ? out : undefined;
+}
+
 /** First country label found on the entity (relationship `pa_s` value or, for a
  *  País entity, its own title). Used for the Countries facet + map geo. */
 function countryOf(e: CejilEntity): string | undefined {
@@ -195,6 +255,7 @@ export function cejilLibraryEntities(): Entity[] {
         geo,
         createdAt: createdOf(e, geo, causaDateBySid),
         fields: fieldsOf(e),
+        searchFields: searchFieldsOf(e),
         descriptors: (e.metadata?.descriptores || [])
           .map((v) => (typeof v.label === "string" ? v.label : ""))
           .filter(Boolean),
