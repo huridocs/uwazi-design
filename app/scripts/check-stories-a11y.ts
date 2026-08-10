@@ -34,6 +34,16 @@ const STORIES = [
   "metadata-copyfrom--preview",
   "metadata-copyfrom--empty",
   "metadata-copyfrom--picker",
+  "library-timespine--default",
+  "library-timespine--clustered",
+  "library-timespine--clustered-mixed",
+  "library-timespine--clustered-selected",
+  "library-timespine--elided",
+  "library-timespine--minimal",
+  "library-timespine--empty",
+  "library-entitythumbnail--card-slot",
+  "library-entitythumbnail--list-chip",
+  "library-entitythumbnail--no-asset",
 ];
 
 const url = process.argv.includes("--url")
