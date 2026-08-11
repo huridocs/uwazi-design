@@ -21,7 +21,7 @@ import { useActiveFilters } from "../../hooks/useActiveFilters";
  *
  *  The list itself comes from `useActiveFilters` — shared with the sheet at the
  *  bottom of the Filters panel, so the two can't disagree about what's on. */
-export function ActiveFiltersButton() {
+export function ActiveFiltersButton({ className = "" }: { className?: string } = {}) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -55,8 +55,8 @@ export function ActiveFiltersButton() {
     // `flex`, not a bare block: as a block, the inline-flex button below sits in
     // a LINE BOX and gets baseline-aligned, leaving room for descenders under it.
     // The wrapper measured 25px tall around a 20px button, so the button rode
-    // 2.5px low and the count fell out of line with "Showing N of M" beside it.
-    <div ref={ref} className="relative flex items-center">
+    // 2.5px low and sat out of line with the rest of the footer row.
+    <div ref={ref} className={`relative flex items-center ${className}`}>
       <button
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="dialog"

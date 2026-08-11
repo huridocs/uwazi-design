@@ -58,6 +58,9 @@ const MARK_RING = 3;
  *  to their rows. Measured on the mark's full footprint, ring included, so the
  *  test is exactly "would these two touch". */
 const CLUSTER_EPS = 2 * (MARK_R + MARK_RING / 2) + 1;
+/** The UTC day an instant falls on — the same day `formatDay` prints in the date
+ *  gutter, so two rows share a value here exactly when they show one date. */
+const dayOf = (t: number) => Math.floor(t / 86_400_000);
 /** Where the brace's stem stands inside the leader gutter (0 = the row's edge,
  *  `LEADER_W - 4` = the axis). Far enough from the axis that the capsule reads
  *  on its own, close enough that the ticks into the rows stay short. */
@@ -281,16 +284,36 @@ export function TimeSpine<T>({
     // The single shift into the reserve — see PAD above.
     const laid = rows.map((r) => ({ ...r, y: r.y + PAD, ideal: r.ideal + PAD }));
 
-    // Marks that would fuse become ONE cluster. The test is the DRAWN distance
-    // between instants, not equal timestamps: at a compressed scale a fortnight
-    // of filings overlaps exactly as badly as thirteen documents dated the same
-    // day, and both want the same treatment. Chaining is deliberate — a run of
-    // rows each within a mark's width of the last IS one continuous band of
-    // activity, and drawing it as one capsule is what it looks like.
+    // Marks that would fuse become ONE cluster, on EITHER of two tests.
+    //
+    // The first is the DRAWN distance between instants, not equal timestamps: at
+    // a compressed scale a fortnight of filings overlaps exactly as badly as
+    // thirteen documents dated the same day, and both want the same treatment.
+    //
+    // The second is the DATE THE ROWS PRINT. Distance alone leaves one case
+    // incoherent: rows carrying intraday timestamps read "24 Apr 1986" in the
+    // gutter whatever the hour, so once the scale is open enough for a few hours
+    // to exceed a mark's width (it runs to 40,000px/year), one date on screen
+    // grows a second mark — and a reader has no way to tell that from two dates.
+    // Every spine prints `SpineDate`, so "one mark per date shown" is the
+    // primitive's invariant to keep, and `dayOf` reads the same UTC day
+    // `formatDay` does.
+    //
+    // A UNION, not a replacement: the day test can only ever merge more, so the
+    // compressed-fortnight behaviour above survives intact. It changes nothing
+    // in the corpora as they stand (CEJIL dates are unix days at midnight UTC,
+    // the sample's are date-only), which is the point — it closes the case
+    // before a corpus with real timestamps opens it.
+    //
+    // Chaining is deliberate — a run of rows each within a mark's width of the
+    // last IS one continuous band of activity, and drawing it as one capsule is
+    // what it looks like.
     const clusters: { members: typeof laid; top: number; bottom: number }[] = [];
     for (const r of laid) {
       const open = clusters[clusters.length - 1];
-      if (open && r.ideal - open.bottom <= CLUSTER_EPS) {
+      const last = open?.members[open.members.length - 1];
+      const sameDay = last ? dayOf(last.row.t) === dayOf(r.row.t) : false;
+      if (open && (sameDay || r.ideal - open.bottom <= CLUSTER_EPS)) {
         open.members.push(r);
         open.bottom = r.ideal;
       } else {

@@ -157,7 +157,19 @@ export function LibraryView() {
   // computed, React keeps rendering this component with the PREVIOUS value, so
   // the last result set stays on screen and interactive instead of the pane
   // going blank or the keystroke waiting for 4,398 entities to be re-ranked.
-  const query = useDeferredValue(committedQuery);
+  const deferredQuery = useDeferredValue(committedQuery);
+  // …except when the committed query is GONE. Deferral is right for typing —
+  // there is a next result set coming and the previous one is the best thing to
+  // show until it lands — and wrong for dismissal, where there is no incoming
+  // set to wait for and the previous one is precisely what the user just asked
+  // to be rid of. Deferred, clearing tore in half: `clearLibrarySearchAtom`
+  // empties the box and `libraryActiveSearchAtom` urgently (so the chip vanishes
+  // instantly) while everything reading this value — the "N results for"
+  // sentence, the filtered cards, the highlights — stayed on the old query for a
+  // pass or more, leaving the masthead reading "807 results for" with nothing
+  // after it. Clearing is one state change and has to land in one pass, so it
+  // skips the deferral: an empty committed query is empty HERE immediately.
+  const query = committedQuery ? deferredQuery : "";
   // The results on screen are for `query` while the user has already asked for
   // `committedQuery` — say so, rather than pretending they're current.
   const searchPending = query !== committedQuery;
@@ -1007,31 +1019,20 @@ export function LibraryView() {
           label="Import / Export CSV"
           onClick={() => guard(() => setAppView("import-csv"))}
         />
-        {/* Result status. Nothing is mounted or unmounted here — only the text
-            changes — so the results above it never move. This is also the only
-            place the active-filter count survives while the drawer is showing an
-            entity instead of the Filters panel; clicking it puts the panel back. */}
-        {/* The counts describe the set ON SCREEN, which during a transition is
-            the PREVIOUS query's. Rather than freeze the number or blank it, mark
-            it stale: `aria-busy` for AT, a quiet "updating…" for everyone else.
-            Fixed slot, so nothing reflows when it appears (PATTERNS §3). */}
-        <span className="ms-2 text-[11px] text-ink-tertiary" aria-busy={searchPending}>
-          Showing{" "}
-          <span className="font-semibold text-ink-secondary">{shown.length.toLocaleString()}</span> of{" "}
-          {filtered.length.toLocaleString()}
-        </span>
-        {/* The view name used to be echoed here, because five bare icons never
-            said which one had won. The trigger says it now ("View: Cards"), so
-            the echo would be the same fact twice on one screen. */}
-        <span
-          aria-hidden={!searchPending}
-          className={`text-[11px] text-ink-muted italic transition-opacity ${
-            searchPending ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          updating…
-        </span>
-        <ActiveFiltersButton />
+        {/* The count used to be printed here too ("Showing N of M", with an
+            "updating…" beside it while the query settled). It is the masthead
+            readout's number — same set, same two figures — and the toolbar slot
+            is where it belongs, beside the search box that changes it. Two
+            copies of one number on one screen is the thing every other row on
+            this surface already gave up (the Results headers, the info rows,
+            the Relationships toolbar); the footer was the last holdout.
+            Staleness went with it: the masthead carries `aria-busy` and dims,
+            so the word had nothing left to say. What survives here is the
+            active-filter readout, which is NOT a duplicate — it is the only
+            place the filters are reachable while the drawer shows an entity
+            instead of the Filters panel. `ms-2` keeps it out of the run of
+            footer actions, so a readout doesn't read as a fourth button. */}
+        <ActiveFiltersButton className="ms-2" />
       </div>
     </div>
   );

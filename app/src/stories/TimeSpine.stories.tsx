@@ -134,6 +134,22 @@ export const ClusteredSelected: Story = {
     ),
 };
 
+/** Rows carrying a TIME, on a range short enough that the adaptive scale opens
+ *  to ~40px a day. Seven hours is then wider than a mark, so on drawn distance
+ *  alone these three would take two marks — while the gutter beside them prints
+ *  one date three times, which no reader can tell from two dates. Rows showing
+ *  the same day share a mark whatever the hour; the capsule still spans the true
+ *  instants, so the hours are not lost, only the false split. */
+export const ClusteredSameDay: Story = {
+  render: () =>
+    frame([
+      row("2019-05-24T02:00:00Z", "Buzos Miskitos. Informe de Fondo", "Report", OLIVE),
+      row("2019-05-24T09:00:00Z", "Buzos Miskitos. Nota de envío", "Document", CARBON),
+      row("2019-05-24T21:00:00Z", "Buzos Miskitos. Audiencia", "Hearing", CARMINE),
+      row("2019-05-26T11:00:00Z", "Deras García. Informe Nº 158/19", "Report", OLIVE),
+    ]),
+};
+
 /** Long silences between dense bursts. Anything longer than the axis will spend
  *  on emptiness collapses to a labelled break — the phrase at the start of the
  *  row columns, the rule running toward the axis and stopping short of the
