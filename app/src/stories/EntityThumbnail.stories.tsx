@@ -2,15 +2,17 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { EntityThumbnail } from "../components/library/EntityThumbnail";
 import { artworkLibraryEntities } from "../data/artworks/adapt";
 import type { Entity } from "../data/entities";
+import type { ThumbFrame } from "../atoms/library";
 
 /** A Library card's preview slot.
  *
  *  The interesting branch is `image`: the asset is drawn at its REAL ratio, and
- *  the fit is chosen from that ratio rather than from a house style. The card's
- *  slot is wide and short, so a landscape work covers it and a portrait or
- *  square one is matted — cropping a standing figure to a 3:1 band leaves a
- *  sliver that could be any painting. The list layout's chip is a small square,
- *  where a mat would be almost all mat, so it covers whatever the ratio.
+ *  the fit is chosen from that ratio against the FRAME's rather than from a
+ *  house style. An image whose orientation matches the frame covers it; anything
+ *  else is matted, because cropping a standing figure to a 3:1 band leaves a
+ *  sliver that could be any painting. A square matches neither frame, so it mats
+ *  in both. The list layout's chip stays a small square whatever the grid's
+ *  frame is, and a mat inside 2.25rem is almost all mat, so it covers.
  *
  *  The glyph is still here, and still honest: it is what an image entity with no
  *  asset gets, and what a broken asset falls back to. */
@@ -73,59 +75,95 @@ export const ListChip: Story = {
   ),
 };
 
-/** The Display menu's size presets — the slot the card reserves at each. The
- *  same class drives the document sheet next door, so a mixed grid keeps one
- *  row height whatever the preset. */
+/** The frame the card draws, at each size preset. Landscape is a full-width band;
+ *  portrait is a 3:4 frame sized from its height — the same tables `EntityCard`
+ *  keeps, so these stories move when the grid does. */
+const FRAME_H: Record<ThumbFrame, { size: string; h: string }[]> = {
+  landscape: [
+    { size: "small", h: "h-16" },
+    { size: "medium", h: "h-24" },
+    { size: "large", h: "h-36" },
+  ],
+  portrait: [
+    { size: "small", h: "h-24" },
+    { size: "medium", h: "h-36" },
+    { size: "large", h: "h-52" },
+  ],
+};
+const FRAMES: ThumbFrame[] = ["landscape", "portrait"];
+const shape = (frame: ThumbFrame) => (frame === "portrait" ? "aspect-[3/4]" : "w-full");
+
+/** The Display menu's size presets, in BOTH frames. A portrait frame at a given
+ *  size stands as tall as a landscape one a step up — which is what makes Size
+ *  read as one control across the two shapes. The row band is full width at both,
+ *  so the portrait pictures hang centred and the grid rows still line up. */
 export const Sizes: Story = {
   render: () => (
-    <div className="space-y-4 max-w-4xl">
-      {(
-        [
-          { label: "small", h: "h-16" },
-          { label: "medium", h: "h-24" },
-          { label: "large", h: "h-36" },
-        ] as const
-      ).map(({ label, h }) => (
-        <div key={label} className="space-y-1.5">
-          <div className="grid grid-cols-3 gap-3">
-            {SAMPLES.map(({ label: aspect, entity }) => (
-              <EntityThumbnail
-                key={aspect}
-                kind="image"
-                image={entity.image}
-                className={`${h} w-full rounded overflow-hidden border border-border/60`}
-              />
-            ))}
-          </div>
-          <p className="text-[10px] text-ink-tertiary">{label}</p>
+    <div className="space-y-6 max-w-4xl">
+      {FRAMES.map((frame) => (
+        <div key={frame} className="space-y-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-tertiary">
+            {frame}
+          </p>
+          {FRAME_H[frame].map(({ size, h }) => (
+            <div key={size} className="space-y-1.5">
+              <div className="grid grid-cols-3 gap-3">
+                {SAMPLES.map(({ label: aspect, entity }) => (
+                  <span key={aspect} className={`${h} w-full flex justify-center`}>
+                    <EntityThumbnail
+                      kind="image"
+                      image={entity.image}
+                      frame={frame}
+                      className={`h-full ${shape(frame)} rounded overflow-hidden border border-border/60`}
+                    />
+                  </span>
+                ))}
+              </div>
+              <p className="text-[10px] text-ink-tertiary">{size}</p>
+            </div>
+          ))}
         </div>
       ))}
     </div>
   ),
 };
 
-/** The Display menu's fit override, against all three real ratios. `auto` is
- *  the shipped rule (ratio decides); `cover` fills and crops every ratio;
- *  `contain` mats every ratio on vellum. Documents ignore the prop. */
+/** The Display menu's fit override, against all three real ratios in BOTH frames.
+ *  `auto` covers only what runs the same way as the frame — so the portrait
+ *  column fills the portrait frame and mats in the landscape one, and the
+ *  landscape column does the reverse. `cover` fills and crops everywhere;
+ *  `contain` mats everywhere. Documents ignore the prop. */
 export const FitModes: Story = {
   render: () => (
-    <div className="space-y-4 max-w-4xl">
-      {(["auto", "cover", "contain"] as const).map((fit) => (
-        <div key={fit} className="space-y-1.5">
-          <div className="grid grid-cols-3 gap-3">
-            {SAMPLES.map(({ label: aspect, entity }) => (
-              <EntityThumbnail
-                key={aspect}
-                kind="image"
-                image={entity.image}
-                fit={fit}
-                className="h-24 w-full rounded overflow-hidden border border-border/60"
-              />
-            ))}
-          </div>
-          <p className="text-[10px] text-ink-tertiary">
-            fit: {fit} · portrait / landscape / square
+    <div className="space-y-6 max-w-4xl">
+      {FRAMES.map((frame) => (
+        <div key={frame} className="space-y-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-tertiary">
+            {frame}
           </p>
+          {(["auto", "cover", "contain"] as const).map((fit) => (
+            <div key={fit} className="space-y-1.5">
+              <div className="grid grid-cols-3 gap-3">
+                {SAMPLES.map(({ label: aspect, entity }) => (
+                  <span
+                    key={aspect}
+                    className={`${frame === "portrait" ? "h-36" : "h-24"} w-full flex justify-center`}
+                  >
+                    <EntityThumbnail
+                      kind="image"
+                      image={entity.image}
+                      fit={fit}
+                      frame={frame}
+                      className={`h-full ${shape(frame)} rounded overflow-hidden border border-border/60`}
+                    />
+                  </span>
+                ))}
+              </div>
+              <p className="text-[10px] text-ink-tertiary">
+                fit: {fit} · portrait / landscape / square
+              </p>
+            </div>
+          ))}
         </div>
       ))}
     </div>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Image as ImageIcon, Play, AudioLines } from "lucide-react";
 import type { EntityImage, PreviewKind } from "../../data/entities";
-import type { ThumbFit } from "../../atoms/library";
+import type { ThumbFit, ThumbFrame } from "../../atoms/library";
 import { getEntityProfile } from "../../data/entityProfiles";
 import { resolvePrimaryFile } from "../../data/files";
 import { PdfPageThumb } from "../shared/PdfPageThumb";
@@ -26,6 +26,7 @@ export function EntityThumbnail({
   image,
   size = "md",
   fit = "auto",
+  frame = "landscape",
   className = "",
 }: {
   kind: PreviewKind;
@@ -36,6 +37,10 @@ export function EntityThumbnail({
   /** Image fit only — the Display menu's override. `auto` keeps the
    *  ratio-decides rule below; documents ignore it entirely. */
   fit?: ThumbFit;
+  /** The SHAPE of the box the caller has drawn. It does not size anything here —
+   *  the caller owns the box — but `auto` has to know which way the frame runs
+   *  to decide whether an image fits it or has to be matted in it. */
+  frame?: ThumbFrame;
   className?: string;
 }) {
   if (kind === "document") {
@@ -45,7 +50,7 @@ export function EntityThumbnail({
     );
   }
   if (kind === "image") {
-    return <ImageThumb image={image} size={size} fit={fit} className={className} />;
+    return <ImageThumb image={image} size={size} fit={fit} frame={frame} className={className} />;
   }
   if (kind === "video") {
     return (
@@ -69,17 +74,21 @@ export function EntityThumbnail({
 
 /** The image preview — the real asset, or the glyph if there isn't one.
  *
- *  **Fit is decided from the asset's real ratio, not a house style.** The card's
- *  slot is wide and short (`h-24 w-full` ≈ 3:1) and the sampled paintings run
- *  0.55 to 1.60, so one rule can't serve both ends:
- *   - a LANDSCAPE work in a wide slot crops to a band that still reads as the
- *     painting, and `cover` fills the card;
- *   - a PORTRAIT or SQUARE work under `cover` would show a sliver across the
- *     middle — 10% of a standing figure, unrecognisable and identical from card
- *     to card — so it is `contain`, matted on vellum. A gallery mats what
- *     doesn't fit the wall; it doesn't crop to the frame.
- *   - the list layout's chip is a 2.25rem SQUARE, where a mat would be almost
- *     all mat, so it covers whatever the ratio.
+ *  **Fit is decided from the asset's real ratio against the FRAME's, not a house
+ *  style.** One rule, read both ways round: an image whose orientation MATCHES
+ *  the frame covers it; anything else is matted on vellum.
+ *   - a landscape work in the wide frame, or a portrait work in the 3:4 frame,
+ *     crops to something that still reads as the painting, and fills the card;
+ *   - the mismatch under `cover` would show a sliver — 10% of a standing figure
+ *     across a 3:1 band, unrecognisable and identical from card to card — so it
+ *     is `contain` instead. A gallery mats what doesn't fit the wall; it doesn't
+ *     crop to the frame.
+ *   - a SQUARE matches neither, so it mats in both. At 0.75 the portrait frame
+ *     would take a quarter of its width off, and a square composition is the one
+ *     that has nothing to spare at the edges.
+ *   - the list layout's chip is a small SQUARE whatever the grid's frame is —
+ *     a 3:4 chip would outgrow the two lines of text it sits beside — and a mat
+ *     inside 2.25rem is almost all mat, so it covers at any ratio.
  *
  *  `width`/`height` are the JPEG's own pixels, so the ratio is known before a
  *  byte arrives. Both current callers fix the slot themselves, so nothing can
@@ -99,11 +108,13 @@ function ImageThumb({
   image,
   size,
   fit,
+  frame,
   className,
 }: {
   image?: EntityImage;
   size: "sm" | "md" | "lg";
   fit: ThumbFit;
+  frame: ThumbFrame;
   className: string;
 }) {
   const [failed, setFailed] = useState(false);
@@ -115,9 +126,10 @@ function ImageThumb({
     );
   }
   // An explicit fit wins for every ratio — a user who asked for whole images
-  // gets whole images, mat and all. `auto` keeps the ratio-decides rule above.
+  // gets whole images, mat and all. `auto` keeps the rule above: cover only what
+  // runs the same way as the frame.
   const matted =
-    fit === "contain" || (fit === "auto" && size !== "sm" && image.aspect !== "landscape");
+    fit === "contain" || (fit === "auto" && size !== "sm" && image.aspect !== frame);
   return (
     <div className={`flex items-center justify-center ${matted ? "bg-vellum" : ""} ${className}`}>
       <img

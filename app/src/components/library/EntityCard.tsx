@@ -14,20 +14,40 @@ import {
   libraryInfoAtom,
   libraryThumbSizeAtom,
   libraryThumbFitAtom,
+  libraryThumbFrameAtom,
   type LibraryViewMode,
+  type ThumbFrame,
   type ThumbSize,
 } from "../../atoms/library";
 
-/** The preview slot at each Display-menu size. All three tables move together:
- *  the grid cover, its no-preview vellum twin (same class), the card's height
- *  floor (which exists to absorb 1–3 metadata fields — it grows with the cover
- *  so a one-field card still meets its neighbours), and the list chip. */
-const COVER_H: Record<ThumbSize, string> = { s: "h-16", m: "h-24", l: "h-36" };
-const CARD_FLOOR: Record<ThumbSize, string> = {
-  s: "min-h-[13.5rem]",
-  m: "min-h-[15.5rem]",
-  l: "min-h-[18.5rem]",
+/** The preview slot at each Display-menu size AND frame. All of these move
+ *  together: the grid cover, its no-preview vellum twin (same class), the card's
+ *  height floor (which exists to absorb 1–3 metadata fields — it grows with the
+ *  cover so a one-field card still meets its neighbours), and the list chip.
+ *
+ *  **Landscape** is a band: full card width, fixed height, so its ratio is
+ *  whatever the column happens to be (~3:1 at three columns).
+ *  **Portrait** is a true frame: 3:4, sized from its HEIGHT and centred in the card,
+ *  because a slot that filled the card's width would be 400px tall and the card
+ *  would be a poster. Each portrait step is the next landscape step's height —
+ *  a portrait frame at Medium stands as tall as a landscape one at Large — which
+ *  is what makes Size read as one control across both shapes rather than two
+ *  unrelated ramps.
+ *
+ *  Both are DEFINITE boxes before an image loads, which is the whole no-shift
+ *  contract: `aspect-[3/4]` resolves against the fixed height, so the portrait
+ *  frame has its width before a byte arrives. */
+const COVER_H: Record<ThumbFrame, Record<ThumbSize, string>> = {
+  landscape: { s: "h-16", m: "h-24", l: "h-36" },
+  portrait: { s: "h-24", m: "h-36", l: "h-52" },
 };
+const CARD_FLOOR: Record<ThumbFrame, Record<ThumbSize, string>> = {
+  landscape: { s: "min-h-[13.5rem]", m: "min-h-[15.5rem]", l: "min-h-[18.5rem]" },
+  // The portrait frame is 2/3/4rem taller than the landscape one at the same
+  // size, and the floor carries exactly that much more.
+  portrait: { s: "min-h-[15.5rem]", m: "min-h-[18.5rem]", l: "min-h-[22.5rem]" },
+};
+/** The list row's chip is square at every frame — see EntityThumbnail. */
 const CHIP_BOX: Record<ThumbSize, string> = { s: "w-7 h-7", m: "w-9 h-9", l: "w-12 h-12" };
 
 /** A Library result for one standalone entity. Mirrors the Uwazi card IA:
@@ -61,6 +81,7 @@ export const EntityCard = memo(function EntityCard({
   const info = useAtomValue(libraryInfoAtom);
   const thumbSize = useAtomValue(libraryThumbSizeAtom);
   const thumbFit = useAtomValue(libraryThumbFitAtom);
+  const thumbFrame = useAtomValue(libraryThumbFrameAtom);
   const showPreview = info.preview !== false;
   const showMetadata = info.metadata !== false;
   const showConnections = info.connections !== false;
@@ -188,7 +209,7 @@ export const EntityCard = memo(function EntityCard({
   // it a one-field card sits visibly short of a three-field neighbour. Only
   // applies when the preview slot is in play — with previews off the card is a
   // compact text block and the floor would just add dead space.
-  const minHeight = showPreview ? CARD_FLOOR[thumbSize] : "";
+  const minHeight = showPreview ? CARD_FLOOR[thumbFrame][thumbSize] : "";
 
   return (
     <div onClick={() => onSelect(entity.id)} className={`${base} ${surface} ${minHeight}`}>
@@ -199,25 +220,33 @@ export const EntityCard = memo(function EntityCard({
           same idiom the list layout uses). Rendering the thumbnail only when one
           exists made every row as tall as its tallest card and left the grid
           ragged — reserving the slot is what lets rows line up. */}
-      {showPreview &&
-        (entity.preview ? (
-          <EntityThumbnail
-            kind={entity.preview}
-            entityId={entity.id}
-            image={entity.image}
-            fit={thumbFit}
-            className={`${COVER_H[thumbSize]} w-full shrink-0 rounded overflow-hidden border border-border/60`}
-          />
-        ) : (
-          <span
-            className={`${COVER_H[thumbSize]} w-full shrink-0 rounded border border-border/60 bg-vellum flex items-center justify-center`}
-          >
-            <span
-              className="w-2.5 h-2.5 rounded-[2px]"
-              style={{ backgroundColor: getEntityType(entity.typeId)?.color ?? "#6B7280" }}
+      {/* The row is what has to line up, so the SLOT is a full-width shrink-0
+          band at every frame and the portrait picture hangs centred inside it.
+          Centring the thumbnail itself instead would leave the no-preview well
+          and the picture agreeing on height but not on where they sit. */}
+      {showPreview && (
+        <span className={`shrink-0 w-full flex justify-center ${COVER_H[thumbFrame][thumbSize]}`}>
+          {entity.preview ? (
+            <EntityThumbnail
+              kind={entity.preview}
+              entityId={entity.id}
+              image={entity.image}
+              fit={thumbFit}
+              frame={thumbFrame}
+              className={`h-full ${thumbFrame === "portrait" ? "aspect-[3/4]" : "w-full"} rounded overflow-hidden border border-border/60`}
             />
-          </span>
-        ))}
+          ) : (
+            <span
+              className={`h-full ${thumbFrame === "portrait" ? "aspect-[3/4]" : "w-full"} rounded border border-border/60 bg-vellum flex items-center justify-center`}
+            >
+              <span
+                className="w-2.5 h-2.5 rounded-[2px]"
+                style={{ backgroundColor: getEntityType(entity.typeId)?.color ?? "#6B7280" }}
+              />
+            </span>
+          )}
+        </span>
+      )}
       {/* Two lines are RESERVED, not just permitted: a one-line title would
           otherwise pull its whole card ~1.2rem shorter than its neighbours and
           stagger the row. */}

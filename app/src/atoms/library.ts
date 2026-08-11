@@ -261,10 +261,22 @@ export type ThumbSize = "s" | "m" | "l";
 export const DEFAULT_THUMB_SIZE: ThumbSize = "m";
 export const libraryThumbSizeAtom = atom<ThumbSize>(DEFAULT_THUMB_SIZE);
 
+/** The SHAPE of the slot, for the whole grid at once — never per card, or rows
+ *  stop lining up and the grid ragged-edges the way it did before the slot was
+ *  reserved at all. `landscape` is the wide band the cards have always had;
+ *  `portrait` is a 3:4 frame, centred in the card, for a corpus that is mostly
+ *  standing figures (the artworks sample runs 30 portrait to 22 landscape).
+ *  Size scales BOTH: a portrait frame at size N is as tall as a landscape one at
+ *  N+1, which is what keeps the two orientations feeling like one control. */
+export type ThumbFrame = "landscape" | "portrait";
+export const DEFAULT_THUMB_FRAME: ThumbFrame = "landscape";
+export const libraryThumbFrameAtom = atom<ThumbFrame>(DEFAULT_THUMB_FRAME);
+
 /** How an IMAGE sits in its slot — documents keep their cropped-sheet framing
- *  whatever this says. `auto` is the shipped ratio-decides rule (landscape
- *  covers the wide slot, portrait/square are matted); `cover`/`contain` force
- *  one treatment for every ratio. */
+ *  whatever this says. `auto` is the ratio-decides rule, now read against the
+ *  FRAME: an image whose orientation matches the frame covers it, anything else
+ *  is matted (a square never matches, so it mats in both). `cover`/`contain`
+ *  force one treatment for every ratio. */
 export type ThumbFit = "auto" | "cover" | "contain";
 export const DEFAULT_THUMB_FIT: ThumbFit = "auto";
 export const libraryThumbFitAtom = atom<ThumbFit>(DEFAULT_THUMB_FIT);

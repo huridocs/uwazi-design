@@ -524,6 +524,37 @@ down instead. What the growth did cost was memory, and the
 `pageFoldWithMap` builds them lazily, and priming them held 20.4MB of live
 `Int32Array` for pages no excerpt cuts (heap after prime 434.8MB → 326.2MB).
 
+## Library card thumbnails — size × frame × fit
+
+Three Display-menu controls over one slot, and they compose in that order: how
+big, what shape, how the picture sits in it.
+
+- **Size** (`libraryThumbSizeAtom`, S/M/L) scales BOTH frames. The tables live in
+  `EntityCard.tsx` (`COVER_H`, `CARD_FLOOR`, `CHIP_BOX`) and move together — the
+  card's height floor exists to absorb 1–3 metadata fields and has to grow with
+  the cover, or a one-field card stops meeting its neighbours.
+- **Frame** (`libraryThumbFrameAtom`, `landscape | portrait`) is **one choice for
+  the whole grid, never per card** — per-card orientation ragged-edges the rows
+  the reserved slot exists to keep level. Landscape is a full-width band (h-16 /
+  h-24 / h-36); portrait is a **3:4** frame sized from its HEIGHT (h-24 / h-36 /
+  h-52) and centred in a full-width band, because a 3:4 slot filling the card's
+  width would be 400px tall. **A portrait frame at size N is as tall as a
+  landscape one at N+1** — that relationship is what makes Size read as one
+  control across both shapes. Floors carry the extra 2/3/4rem.
+- **Fit** (`libraryThumbFitAtom`, `auto | cover | contain`) — `auto` is ONE rule
+  read against the frame: **an image whose orientation matches the frame covers
+  it, anything else is matted on vellum.** A square matches neither, so it mats
+  in both (0.75 would take a quarter off its width, and a square composition has
+  nothing to spare at the edges). `cover`/`contain` force one treatment.
+- The **list row's chip stays square at every frame** — a 3:4 chip would outgrow
+  the two lines of text beside it, and a mat inside 2.25rem is almost all mat.
+- **No-shift holds by construction**: every box is definite before an image
+  loads (`aspect-[3/4]` resolves against the fixed height), and the no-preview
+  vellum well uses the same box, so rows line up whatever a card is carrying.
+- Verified against the artworks corpus's real spread — 30 portrait / 22
+  landscape / 8 square. Stories: `Sizes` and `FitModes` render the full matrix
+  (3 ratios × 3 sizes/fits × both frames).
+
 ## Tab signals & recent searches
 
 - **`count` vs `dot`** (`components/layout/DrawerTabs.tsx`, `MainTabs.tsx`): count =

@@ -11,6 +11,7 @@ import {
   librarySortDirAtom,
   libraryThumbSizeAtom,
   libraryThumbFitAtom,
+  libraryThumbFrameAtom,
   defaultSortDir,
   DEFAULT_TIME_HUB,
   DEFAULT_LIBRARY_SORT,
@@ -18,11 +19,13 @@ import {
   DEFAULT_TIMELINE_LAYOUT,
   DEFAULT_THUMB_SIZE,
   DEFAULT_THUMB_FIT,
+  DEFAULT_THUMB_FRAME,
   type LibraryInfoKey,
   type TimelineLayout,
   type ResultsLayout,
   type ThumbSize,
   type ThumbFit,
+  type ThumbFrame,
 } from "../../atoms/library";
 import { breakpointAtom } from "../../atoms/viewport";
 import { t } from "../../utils/i18n";
@@ -47,6 +50,11 @@ const THUMB_SIZES: { id: ThumbSize; label: string }[] = [
   { id: "s", label: "Small" },
   { id: "m", label: "Medium" },
   { id: "l", label: "Large" },
+];
+
+const THUMB_FRAMES: { id: ThumbFrame; label: string; detail: string }[] = [
+  { id: "landscape", label: "Landscape", detail: "A wide band across the card" },
+  { id: "portrait", label: "Portrait", detail: "A 3:4 frame, centred — for standing pictures" },
 ];
 
 const THUMB_FITS: { id: ThumbFit; label: string; detail: string }[] = [
@@ -76,6 +84,7 @@ export function DisplayMenu() {
   const [timeHub, setTimeHub] = useAtom(libraryTimeHubAtom);
   const [thumbSize, setThumbSize] = useAtom(libraryThumbSizeAtom);
   const [thumbFit, setThumbFit] = useAtom(libraryThumbFitAtom);
+  const [thumbFrame, setThumbFrame] = useAtom(libraryThumbFrameAtom);
   const [sort, setSort] = useAtom(librarySortAtom);
   const setSortDir = useSetAtom(librarySortDirAtom);
   const viewMode = useAtomValue(libraryViewModeAtom);
@@ -107,7 +116,10 @@ export function DisplayMenu() {
     (showResultsLayouts && resultsLayout !== DEFAULT_RESULTS_LAYOUT) ||
     (showLayouts && layout !== DEFAULT_TIMELINE_LAYOUT) ||
     (showInfo && ITEMS.some((i) => info[i.key] === false)) ||
-    (showThumbs && (thumbSize !== DEFAULT_THUMB_SIZE || thumbFit !== DEFAULT_THUMB_FIT));
+    (showThumbs &&
+      (thumbSize !== DEFAULT_THUMB_SIZE ||
+        thumbFit !== DEFAULT_THUMB_FIT ||
+        thumbFrame !== DEFAULT_THUMB_FRAME));
   const toggle = (key: LibraryInfoKey) => setInfo((s) => ({ ...s, [key]: s[key] === false }));
 
   return (
@@ -305,6 +317,39 @@ export function DisplayMenu() {
                       </span>
                       <span className={`text-xs ${on ? "text-ink font-semibold" : "text-ink-secondary"}`}>
                         {s.label}
+                      </span>
+                    </button>
+                  );
+                })}
+                {/* Frame sits between size and fit because that is the order
+                    the questions come in: how big, what shape, how the picture
+                    sits in it. It is one choice for the WHOLE grid — per-card
+                    orientation would ragged the rows the reserved slot exists to
+                    keep level. */}
+                <p className="px-2 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+                  Thumbnail frame
+                </p>
+                {THUMB_FRAMES.map((f) => {
+                  const on = thumbFrame === f.id;
+                  return (
+                    <button
+                      key={f.id}
+                      onClick={() => setThumbFrame(f.id)}
+                      aria-pressed={on}
+                      className="w-full flex items-start gap-2 px-2 py-1.5 rounded hover:bg-warm transition-colors cursor-pointer text-start"
+                    >
+                      <span className="w-4 shrink-0 pt-0.5 flex justify-center text-carbon">
+                        {on && <Check size={13} />}
+                      </span>
+                      <span className="min-w-0">
+                        <span
+                          className={`block text-xs ${on ? "text-ink font-semibold" : "text-ink-secondary"}`}
+                        >
+                          {f.label}
+                        </span>
+                        <span className="block text-[10px] text-ink-tertiary leading-tight">
+                          {f.detail}
+                        </span>
                       </span>
                     </button>
                   );
