@@ -25,7 +25,6 @@ import { TimeSpine, SpineDate } from "../TimeSpine";
 import { HighlightedText } from "../../shared/HighlightedText";
 import { EntityTypeChip } from "../../shared/EntityTypeChip";
 import { ListInfoRow } from "../../shared/ListInfoRow";
-import { ActiveSearchChip } from "../ActiveSearchChip";
 import { BorrowedDocLine } from "../BorrowedDocLine";
 import { ToggleChip } from "../../shared/ToggleChip";
 import { CountBadge } from "../../shared/CountBadge";
@@ -48,9 +47,10 @@ import { CountBadge } from "../../shared/CountBadge";
  *  matched page), never the number of excerpts built — and where this view caps
  *  what it renders, it says so rather than passing the cap off as the whole set.
  *
- *  Layout stability: the header strip (count, chips, cap note) is mounted at all
- *  times with only its CONTENTS toggling, so ticking a match-type chip can't
- *  shove the results out from under the pointer. */
+ *  Layout stability: the header strip (chips, cap note) is mounted at all times
+ *  with only its CONTENTS toggling, so ticking a match-type chip can't shove
+ *  the results out from under the pointer. The COUNT is not here at all — the
+ *  toolbar masthead is the one place this surface's number lives. */
 
 type MatchType = keyof MatchTypeFilters;
 const MATCH_TYPES: { key: MatchType; label: string }[] = [
@@ -210,44 +210,25 @@ export function ResultsMainView({
     );
   }
 
-  const narrowed = entities.length !== totalMatches;
   const capped = entities.length > results.length + (entities.length - visible);
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* Header strip — always mounted; only its contents change. Count,
-          match-type chips and the cap note ride the shared list-header shape
-          (leadingSlot + count + rightSlot) so this surface and the drawer's
-          Results tab read as one component at two widths. */}
+      {/* Header strip — always mounted; only its contents change. Match-type
+          chips and the cap note ride the shared list-header shape so this
+          surface and the drawer's Results tab read as one component at two
+          widths. NO count here: "N results for [chip]" lives in the toolbar
+          masthead — the one place this surface's number is printed — and a
+          second copy a line below it was the scatter this row used to be. */}
       <div className="shrink-0">
         <ListInfoRow
-          // The query rides the row as a CHIP, so the line reporting the results
-          // is also where the search ends — until now it could only be dropped
-          // from the Filters panel, i.e. from anywhere except the page showing
-          // what it returned. The chip REPLACES the quoted string rather than
-          // sitting beside it: the terms twice in one row, once to read and once
-          // to close, is noise.
-          count={
-            <span dir="ltr" className="inline-flex items-center gap-1.5 text-xs text-ink-secondary">
-              <span>
-                <span className="font-semibold text-ink tabular-nums">
-                  {narrowed
-                    ? `${entities.length.toLocaleString()} of ${totalMatches.toLocaleString()}`
-                    : entities.length.toLocaleString()}
-                </span>{" "}
-                {totalMatches === 1 ? "result" : "results"} for
-              </span>
-              <ActiveSearchChip />
-            </span>
-          }
+          count={null}
           activeFilterCount={0}
           showFilterChips={false}
-          // Chips lead, total trails. The chips are the thing being clicked and
-          // their widths never change (`matchTypeCounts` comes from
-          // `matchTypeBase`, which the toggles don't narrow); the total is the
-          // thing that reflows, rewriting "3,996" as "1,626 of 3,996". Put the
-          // total first and every chip shifts right under the pointer on the
-          // click that changed it.
+          // The chips' widths never change (`matchTypeCounts` comes from
+          // `matchTypeBase`, which the toggles don't narrow), so this row keeps
+          // a fixed height with fixed contents — toggling a chip rewrites the
+          // masthead's number, not anything on this line.
           leadingSlot={
             <span className="flex items-center gap-1">
               {MATCH_TYPES.map(({ key, label }) => (

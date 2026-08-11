@@ -7,7 +7,6 @@ import { buildSnippetsFor } from "../../../utils/librarySnippets";
 import { useAtom } from "jotai";
 import { matchTypeFiltersAtom, type MatchTypeFilters } from "../../../atoms/library";
 import { ListInfoRow } from "../../shared/ListInfoRow";
-import { ActiveSearchChip } from "../ActiveSearchChip";
 import { ToggleChip } from "../../shared/ToggleChip";
 import { CollapseControls } from "../../relationships/FiltersRow";
 import { EntityResultCard } from "./EntityResultCard";
@@ -198,38 +197,19 @@ export const ResultsBody = memo(function ResultsBody({
     );
   }
 
-  // When the chips narrow the set, say so: "1 of 16 results".
-  const narrowed = entities.length !== totalMatches;
-  // The query rides the row as a CHIP rather than as quoted text, so the sentence
-  // that reports the results is also the place you end the search. It replaces
-  // the quoted string rather than joining it: printing the terms twice in one row
-  // to hang an × off the second copy is noise.
-  const countLabel = (
-    <span dir="ltr" className="inline-flex items-center gap-1.5">
-      <span>
-        {narrowed
-          ? `${entities.length.toLocaleString()} of ${totalMatches.toLocaleString()}`
-          : entities.length.toLocaleString()}{" "}
-        {totalMatches === 1 ? "result" : "results"} for
-      </span>
-      <ActiveSearchChip />
-    </span>
-  );
-
   return (
     <Shell>
       <div className="shrink-0" style={{ borderBottom: "1px solid var(--border-primary)" }}>
-        {/* Count, match-type chips and the collapse controls on ONE row —
-            leadingSlot + count + rightSlot, the shared list-header shape. The
-            chips used to sit in a strip of their own below, which is height this
-            row was already paying for. */}
+        {/* Match-type chips and the collapse controls on ONE row — the shared
+            list-header shape. NO count and no search chip here: this drawer sits
+            beside the toolbar masthead that already prints "N results for
+            [chip]", and on a phone the Results sheet's section label carries the
+            number — a second copy in the panel was the duplication this row
+            used to be. */}
         <ListInfoRow
-          count={countLabel}
+          count={null}
           activeFilterCount={0}
           showFilterChips={false}
-          // Ahead of the count for the same reason as the main view: the chips
-          // are stable-width and clickable, the count rewrites itself to
-          // "N of M" the moment one is toggled. Trailing chips would slide.
           leadingSlot={
             <span className="flex items-center gap-1">
               {MATCH_TYPES.map(({ key, label }) => (

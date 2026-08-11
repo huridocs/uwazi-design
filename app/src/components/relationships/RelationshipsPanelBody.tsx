@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { Link2 } from "lucide-react";
 import {
@@ -11,7 +11,6 @@ import {
   searchQueryAtom,
 } from "../../atoms/filters";
 import { useFilteredReferences } from "./useFilteredReferences";
-import { deriveHubs, deriveRelationships } from "../../utils/relationships";
 import {
   getGroupColor,
   getGroupLabel,
@@ -53,11 +52,6 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
   const [listLimit, setListLimit] = useState(LIST_CAP);
   useEffect(() => setListLimit(LIST_CAP), [filtered]);
 
-  const entityCount = new Set(filtered.map((r) => r.targetEntityId)).size;
-  const aggregateCount = useMemo(
-    () => deriveRelationships(filtered).length + deriveHubs(filtered).length,
-    [filtered],
-  );
   const showCollapse = view === "list" && groupBy !== "none";
 
   if (view === "tree") {
@@ -160,23 +154,11 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
 
   return (
     <>
+      {/* No count here — the header counter rides the toolbar (`CountReadout`)
+          in both flavours. The row stays mounted at its height for the collapse
+          controls, so switching views or filtering never shifts the list. */}
       <ListInfoRow
-        count={
-          <>
-            <span className="font-semibold text-ink-secondary tabular-nums">
-              {aggregateCount}
-            </span>{" "}
-            relationships,{" "}
-            <span className="font-semibold text-ink-secondary tabular-nums">
-              {entityCount}
-            </span>{" "}
-            entities,{" "}
-            <span className="font-semibold text-ink-secondary tabular-nums">
-              {filtered.length}
-            </span>{" "}
-            references
-          </>
-        }
+        count={null}
         activeFilterCount={activeFilterCount}
         showFilterChips={false}
         rightSlot={

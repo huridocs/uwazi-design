@@ -7,12 +7,16 @@ interface ActiveFilterChipProps {
   /** Accessible name for the × when "Remove filter: …" is the wrong sentence —
    *  the search chip drops a search, not a facet. */
   removeLabel?: string;
+  /** Extra classes on the chip itself — the masthead readout passes `min-w-0`
+   *  so the chip yields width (its label already truncates) inside a slot that
+   *  is fixed so the controls beside it never move. */
+  className?: string;
 }
 
-export function ActiveFilterChip({ label, color, onRemove, removeLabel }: ActiveFilterChipProps) {
+export function ActiveFilterChip({ label, color, onRemove, removeLabel, className }: ActiveFilterChipProps) {
   return (
     <span
-      className="inline-flex items-center gap-1 h-6 ps-1.5 pe-1 rounded text-[11px] font-medium text-ink-secondary"
+      className={`inline-flex items-center gap-1 h-6 ps-1.5 pe-1 rounded text-[11px] font-medium text-ink-secondary ${className ?? ""}`}
       style={{
         backgroundColor: "color-mix(in srgb, var(--text-primary) 6%, var(--bg-surface))",
         border: "1px solid color-mix(in srgb, var(--text-primary) 14%, var(--bg-surface))",

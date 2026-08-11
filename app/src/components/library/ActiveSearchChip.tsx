@@ -11,14 +11,14 @@ import { ActiveFilterChip } from "../shared/ActiveFilterChip";
  *  box doesn't do it either (deliberately: the draft and the committed query are
  *  split so clearing the text to retype doesn't evaporate the results).
  *
- *  **One dismiss, not one dismiss per surface.** Both Results surfaces render
- *  THIS component, which owns the wiring to `clearLibrarySearchAtom` — the same
- *  write the active-filters sheet and the action-bar popover use via
- *  `useActiveFilters`. Passing an `onRemove` down to each surface would have been
- *  two call sites over one piece of state, which is precisely how the two
- *  `clearAll`s on this state drifted apart before (PATTERNS §4.3): one forgot the
- *  search box, the other forgot the AND/OR modes. There is nothing here to keep
- *  in sync, because there is only one of it.
+ *  **One dismiss, not one dismiss per surface.** The Library masthead's result
+ *  readout renders THIS component, which owns the wiring to
+ *  `clearLibrarySearchAtom` — the same write the active-filters sheet and the
+ *  action-bar popover use via `useActiveFilters`. Passing an `onRemove` down
+ *  would have been two call sites over one piece of state, which is precisely
+ *  how the two `clearAll`s on this state drifted apart before (PATTERNS §4.3):
+ *  one forgot the search box, the other forgot the AND/OR modes. There is
+ *  nothing here to keep in sync, because there is only one of it.
  *
  *  Visually it IS `ActiveFilterChip`, though the search is NOT counted as a facet
  *  (the Filters tab's count and dot describe that panel's own state — see
@@ -26,7 +26,7 @@ import { ActiveFilterChip } from "../shared/ActiveFilterChip";
  *  "something narrowing this, with the affordance that ends it"; a chip that
  *  dropped a search while looking unlike every other droppable thing would be a
  *  second vocabulary for one idea. */
-export function ActiveSearchChip() {
+export function ActiveSearchChip({ className }: { className?: string } = {}) {
   // `libraryActiveSearchAtom` — the search as its own state, already trimmed and
   // already null when there is none. Reading the raw query and trimming here
   // would be a second definition of "is a search running", leaving this element
@@ -34,9 +34,9 @@ export function ActiveSearchChip() {
   const q = useAtomValue(libraryActiveSearchAtom);
   const clearSearch = useSetAtom(clearLibrarySearchAtom);
 
-  // Both call sites sit inside a count row that only exists while a query does,
-  // so this never renders empty in practice — but it stays defensive rather than
-  // assuming its host's blank-state ordering never changes.
+  // The masthead only asks for this while a query exists, so this never renders
+  // empty in practice — but it stays defensive rather than assuming its host's
+  // blank-state ordering never changes.
   if (!q) return null;
 
   return (
@@ -44,6 +44,7 @@ export function ActiveSearchChip() {
       label={`“${q}”`}
       onRemove={() => clearSearch()}
       removeLabel={`Clear search: ${q}`}
+      className={className}
     />
   );
 }

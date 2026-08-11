@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { Link2 } from "lucide-react";
 import {
@@ -49,12 +49,6 @@ export function RelationshipsTreeView() {
   // descriptor, inherited included), so mode switches can't un-filter rows.
   const filtered = useFilteredReferences();
 
-  const entityCount = new Set(filtered.map((r) => r.targetEntityId)).size;
-  const aggregateCount = useMemo(
-    () => deriveRelationships(filtered).length + deriveHubs(filtered).length,
-    [filtered],
-  );
-
   // Clear the row selection whenever the filtered set changes — the selected
   // ref/entity may no longer be visible.
   useEffect(() => {
@@ -66,23 +60,11 @@ export function RelationshipsTreeView() {
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
+      {/* No count here — the header counter rides the toolbar (`CountReadout`)
+          in both flavours, so tree and list can't print different numbers. The
+          row stays mounted at its height for the collapse controls. */}
       <ListInfoRow
-        count={
-          <>
-            <span className="font-semibold text-ink-secondary tabular-nums">
-              {aggregateCount}
-            </span>{" "}
-            relationships,{" "}
-            <span className="font-semibold text-ink-secondary tabular-nums">
-              {entityCount}
-            </span>{" "}
-            entities,{" "}
-            <span className="font-semibold text-ink-secondary tabular-nums">
-              {filtered.length}
-            </span>{" "}
-            references
-          </>
-        }
+        count={null}
         activeFilterCount={activeFilterCount}
         showFilterChips={false}
         rightSlot={

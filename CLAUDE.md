@@ -119,7 +119,7 @@ The prototype keeps a simpler shape: every row in `data/references.ts` is a `Ref
 - List view rows = `Reference[]` (one per evidence, snippet + page tag).
 - Tree view leaves = `Relationship[]` (deduped aggregates) with inline-expand into their underlying refs.
 - Graph nodes = `Relationship[]`.
-- Header counter always shows the **aggregate** count (`deriveRelationships(filtered).length`) so list and tree numbers agree.
+- Header counter always shows the **aggregate** count (`deriveRelationships(filtered).length` + hubs) so list and tree numbers agree — it lives on the TOOLBAR (`CountReadout`, rendered by both the main view and the drawer section), not in the info rows, which pass `count={null}` and keep only the collapse controls.
 - The aggregate row's "evidence count" badge is `relationship.evidenceCount`.
 
 **Known gaps vs Uwazi v2 (intentional, don't paper over):**
@@ -149,6 +149,7 @@ src/components/relationships/
   GroupByControl.tsx             // grouping axis (+ subGroupBy "Then by")
   DirectionGlyph.tsx             // shared arrow badge
   SearchBar.tsx                  // has rightSlot AND inlineSlot
+  CountReadout.tsx               // THE header counter (aggregate count) — toolbar slot, both flavours
   FiltersRow.tsx                 // exports CollapseControls
   ZoomControl.tsx                // detail / compact / overview
   RelationshipsTreeView.tsx      // tree body — target cards use RelationshipRow kind="aggregate"
@@ -430,8 +431,10 @@ Search matches can hide in a property or a document body. Three surfaces answer
 
 Match-type chips (Title / Properties / Document) are `ToggleChip`
 (`components/shared/ToggleChip.tsx`) — `ActiveFilterChip`'s visual twin with
-`aria-pressed` instead of an X — and ride the count row via `ListInfoRow`'s
-`inlineSlot`, in both the drawer tab and the main view.
+`aria-pressed` instead of an X — and ride the header `ListInfoRow` (its
+`leadingSlot`), in both the drawer tab and the main view. That row no longer
+carries a count: both Results surfaces pass `count={null}` — the number lives in
+the toolbar masthead readout (see "Ending a search").
 
 **Borrowed documents are named, not hidden.** A CEJIL entity with no PDF of its
 own reads a connected one's (`cejilRenderedDoc` → `docFilesFor`'s Sentencia
@@ -505,12 +508,15 @@ down instead. What the growth did cost was memory, and the
   shoved the next tab sideways.
 - **Ending a search** — `clearLibrarySearchAtom` is THE dismiss, and every entry
   point routes through it: the active-filters sheet + action-bar popover (via
-  `useActiveFilters`), the no-matches blank state, and now
+  `useActiveFilters`), the no-matches blank state, and
   `components/library/ActiveSearchChip.tsx` — one component, owning the wiring,
-  rendered by BOTH Results surfaces in their count row ("N results for
-  [“query” ×]"). The chip REPLACES the quoted query in that sentence rather than
-  sitting beside it. Don't add a second clear: two `clearAll`s over this state
-  already drifted once (PATTERNS §4.3).
+  rendered by the Library TOOLBAR MASTHEAD readout (the fixed slot beside the
+  search box, which toggles between "N entities" and "N results for
+  [“query” ×]"; the sentence is `shrink-0`, the chip yields via `min-w-0`). The
+  chip REPLACES the quoted query in that sentence rather than sitting beside it.
+  The Results surfaces' own header rows dropped their counts — the masthead is
+  the one place the number (and the chip) lives. Don't add a second clear: two
+  `clearAll`s over this state already drifted once (PATTERNS §4.3).
 - **Recent searches** (`atoms/library.ts` → `librarySearchHistoryAtom`,
   `recordSearchAtom`; `components/library/RecentSearches.tsx`): committed queries
   recorded on SETTLE (1.2s debounce, plus Enter/blur), deduped case-insensitively,

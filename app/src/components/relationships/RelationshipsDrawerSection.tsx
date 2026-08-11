@@ -15,6 +15,7 @@ import {
   relInheritedFiltersAtom,
 } from "../../atoms/filters";
 import { SearchBar } from "./SearchBar";
+import { CountReadout } from "./CountReadout";
 import { DisplayMenu } from "./DisplayMenu";
 import { ActiveFilterChips } from "./ActiveFilterChips";
 import { RelationshipsFilterDrawer } from "./RelationshipsFilterDrawer";
@@ -86,16 +87,22 @@ export function RelationshipsDrawerSection({
       <SearchBar
         inlineSlot={<ActiveFilterChips omitSearch />}
         rightSlot={
-          // ONE flex child, so the controls wrap as a CLUSTER rather than one at
-          // a time — a narrow pane was stranding Filters on its own line.
-          <div className="flex items-center gap-2 shrink-0">
-            <ViewControls />
-            <DisplayMenu />
-            <FiltersButton
-              activeCount={activeFilterCount}
-              onClick={() => setFiltersOpen(true)}
-            />
-          </div>
+          <>
+            {/* Same header counter as the main surface — the drawer's number
+                lives on its toolbar too, so the two flavours agree on where
+                (and what) the count is. */}
+            <CountReadout />
+            {/* ONE flex child, so the controls wrap as a CLUSTER rather than one
+                at a time — a narrow pane was stranding Filters on its own line. */}
+            <div className="flex items-center gap-2 shrink-0">
+              <ViewControls />
+              <DisplayMenu />
+              <FiltersButton
+                activeCount={activeFilterCount}
+                onClick={() => setFiltersOpen(true)}
+              />
+            </div>
+          </>
         }
       />
       <RelationshipsPanelBody onDelete={handleDelete} />

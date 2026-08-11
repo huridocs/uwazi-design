@@ -77,6 +77,7 @@ import { ResultsMainView } from "../components/library/ResultsSnippets/ResultsMa
 import { SearchTipsPopover } from "../components/library/SearchTipsPopover";
 import { RecentSearches } from "../components/library/RecentSearches";
 import { DisplayMenu } from "../components/library/DisplayMenu";
+import { ActiveSearchChip } from "../components/library/ActiveSearchChip";
 import { ActiveFiltersButton } from "../components/library/ActiveFiltersButton";
 import { DataTable, type Column } from "../components/shared/DataTable";
 import { EntityTypeChip } from "../components/shared/EntityTypeChip";
@@ -718,6 +719,66 @@ export function LibraryView() {
             onClose={() => setSearchFocused(false)}
           />
         </div>
+        {/* THE number for this surface — every other row below dropped its
+            count so this masthead slot is the one place it lives. Contents
+            toggle between the total ("4,398 entities", "120 of 4,398 entities"
+            when facets narrow) and the search form ("312 results for [“q” ×]").
+            The chip is `ActiveSearchChip` — the ONE dismiss for a committed
+            search — so the readout that reports the results is also where the
+            search ends.
+
+            FIXED SLOT, right-aligned: the number swings from "82" on artworks
+            to "4,398" on CEJIL, and every keystroke and facet rewrites it. Any
+            growth runs leftward into the reserve, so Sort · View · Display ·
+            Language never move. The sentence is `shrink-0`; the CHIP is what
+            yields (`min-w-0`, its label truncates), so a long query can never
+            push the controls.
+
+            ALWAYS MOUNTED. While a collection is still loading there is no
+            honest number to print, so the slot holds and its contents are
+            empty — it never appears or disappears under the controls beside
+            it. Hidden below `md` is a viewport rule, not a state one: the row
+            has no room there, the same reason Sort and Language step aside
+            (on a phone the Results sheet's section label still carries the
+            count).
+
+            `aria-busy` + a dim carry staleness instead of the footer's
+            "updating…" word: the counts describe the set ON SCREEN, which
+            during a transition is the previous query's, and a second string
+            appearing beside this one would need a reserve of its own. */}
+        <span
+          aria-busy={searchPending}
+          className={`hidden md:flex items-center justify-end gap-1.5 shrink-0 w-[15rem]
+            text-[11px] tabular-nums text-ink-tertiary transition-opacity ${
+              searchPending ? "opacity-60" : "opacity-100"
+            }`}
+        >
+          {!cejilLoading &&
+            (hasQuery ? (
+              <>
+                <span dir="ltr" className="shrink-0 whitespace-nowrap">
+                  <span className="font-semibold text-ink-secondary">
+                    {filtered.length.toLocaleString()}
+                  </span>
+                  {filtered.length !== matchTypeBase.length && (
+                    <> of {matchTypeBase.length.toLocaleString()}</>
+                  )}{" "}
+                  {matchTypeBase.length === 1 ? "result" : "results"} for
+                </span>
+                <ActiveSearchChip className="min-w-0" />
+              </>
+            ) : (
+              <span dir="ltr" className="truncate">
+                <span className="font-semibold text-ink-secondary">
+                  {filtered.length.toLocaleString()}
+                </span>
+                {filtered.length !== entities.length && (
+                  <> of {entities.length.toLocaleString()}</>
+                )}{" "}
+                {entities.length === 1 ? "entity" : "entities"}
+              </span>
+            ))}
+        </span>
         {/* Sort steps aside on a phone — it moves into the Display popover, where
             it costs no width. The VIEW switcher does not: cards / list / map /
             timeline are the point of the Library, and they were unreachable on

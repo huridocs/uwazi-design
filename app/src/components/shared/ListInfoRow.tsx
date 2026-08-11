@@ -2,6 +2,8 @@ import { ReactNode } from "react";
 import { ActiveFilterChips } from "../relationships/ActiveFilterChips";
 
 interface ListInfoRowProps {
+  /** `null` when the surface's number lives in its masthead instead — the row
+   *  keeps its height and its slots, it just doesn't repeat the count. */
   count: ReactNode;
   activeFilterCount: number;
   showFilterChips?: boolean;
@@ -31,7 +33,7 @@ export function ListInfoRow({
     <div className="px-3 pt-1 pb-2 flex items-center justify-between gap-2 flex-wrap text-[11px] text-ink-tertiary shrink-0">
       <div className="flex items-center gap-2 flex-wrap">
         {leadingSlot}
-        <span className="shrink-0">{count}</span>
+        {count != null && <span className="shrink-0">{count}</span>}
         {inlineSlot}
         {showFilterChips && activeFilterCount > 0 && (
           <>
