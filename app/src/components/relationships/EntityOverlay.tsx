@@ -33,7 +33,7 @@ function formatCreated(iso: string | undefined): string {
 
 export function EntityOverlay() {
   const [entityId, setEntityId] = useAtom(overlayEntityIdAtom);
-  const copyPreview = useAtomValue(copyPreviewAtom);
+  const [copyPreview, setCopyPreview] = useAtom(copyPreviewAtom);
   const [references] = useAtom(referencesAtom);
   const setActiveAggregateId = useSetAtom(activeAggregateIdAtom);
   const lang = useAtom(languageAtom)[0];
@@ -55,6 +55,15 @@ export function EntityOverlay() {
   useEffect(() => {
     if (entityId === null) setActiveAggregateId(null);
   }, [entityId, setActiveAggregateId]);
+
+  // And the Copy From preview with it. This panel is the ONLY thing that renders
+  // a preview, so closing it — by any of the four exits, not just the two
+  // buttons inside the block — ends that preview. Left set, it reappeared the
+  // next time this entity was opened from anywhere, wired to an edit form that
+  // had since been cancelled (see `copyPreviewAtom`).
+  useEffect(() => {
+    if (entityId === null) setCopyPreview(null);
+  }, [entityId, setCopyPreview]);
 
   // Reset to read-only whenever a different entity is opened.
   useEffect(() => {

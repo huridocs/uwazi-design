@@ -2,6 +2,13 @@ import { ArrowRight } from "lucide-react";
 import type { CopyMatch } from "../../utils/copyFrom";
 import { Checkbox } from "../shared/Checkbox";
 
+/** The vertical space one row occupies, as the caller must reserve it: the two
+ *  1rem tracks below, plus `py-1.5` either side, plus the `mt-1.5` above. Lives
+ *  here, next to the classes it is derived from, so the two are read together —
+ *  a taller row and a slot that didn't grow with it is exactly the reflow the
+ *  reservation exists to prevent. */
+export const COPY_ROW_SLOT = "3.125rem";
+
 /** The staged incoming value for ONE field, beside what the field holds now.
  *
  *  Uwazi copies the whole computed set in one go and shows you the source's
@@ -19,8 +26,11 @@ import { Checkbox } from "../shared/Checkbox";
  *  could not be scanned as a comparison at all.
  *
  *  Layout constraints this holds:
- *  · Every field's row is mounted the moment a copy is staged, not just the
- *    matched ones, so ticking one never reflows the ones below it.
+ *  · A row is mounted for every MATCH — and the box it sits in stays reserved
+ *    (`COPY_ROW_SLOT`, held by the caller's slot) for the rest of the edit, so
+ *    committing swaps the row for its provenance line inside a box of unchanged
+ *    height. Unmounting every row at once, which is what committing used to do,
+ *    collapsed the form upward by one row per copied field.
  *  · The note line is RESERVED on every row, whether or not that row has one.
  *    It applies to some rows only, and letting it appear would push everything
  *    under it down — the same reason the provenance slot is reserved in the edit
@@ -28,10 +38,15 @@ import { Checkbox } from "../shared/Checkbox";
  *    lets the columns be read as columns. */
 export function CopyFieldRow({
   match,
+  label = match.label,
   checked,
   onChange,
 }: {
   match: CopyMatch;
+  /** What the row is overwriting, when that isn't the match's own label: a
+   *  grouped connection is staged as ONE unit over several inherited columns, so
+   *  it names the connection rather than whichever sibling came first. */
+  label?: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
 }) {
@@ -63,7 +78,7 @@ export function CopyFieldRow({
         <Checkbox
           checked={checked}
           onChange={(e) => onChange(e.target.checked)}
-          ariaLabel={`Copy ${match.label}`}
+          ariaLabel={`Copy ${label}`}
         />
       </span>
 
@@ -73,9 +88,9 @@ export function CopyFieldRow({
           than a screen-reader user did. */}
       <span
         className={`row-start-1 ${line} h-4 leading-4 truncate text-[11px] font-medium text-ink-secondary`}
-        title={match.label}
+        title={label}
       >
-        {match.label}
+        {label}
       </span>
 
       {/* `leading-4` in a `h-4` box, not `flex items-center`: on a flex

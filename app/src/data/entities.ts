@@ -251,3 +251,21 @@ function cejilEntityById(): Map<string, Entity> {
 export function getEntity(id: string): Entity | undefined {
   return entities.find((e) => e.id === id) ?? cejilEntityById().get(id) ?? artworkEntityById().get(id);
 }
+
+/** Which corpus an entity BELONGS to — resolved from the id, in the same order
+ *  `getEntity` resolves it, so the two can't disagree.
+ *
+ *  Not to be confused with `dataSourceAtom`, which is what the LIBRARY is
+ *  currently showing. Anything that offers one entity beside others (Copy From's
+ *  candidate list) needs this one: an entity's peers are the corpus it came
+ *  from, whatever the Library happens to be displaying. Ids are disjoint across
+ *  the three corpora (asserted when the artworks seed landed), so this is a
+ *  lookup, not a guess. */
+export function entityCorpusOf(id: string): "mock" | "cejil" | "artworks" {
+  if (entities.some((e) => e.id === id)) return "mock";
+  if (cejilEntityById().has(id)) return "cejil";
+  if (artworkEntityById().has(id)) return "artworks";
+  // Unknown ids (a runtime-created entity not yet in the seed, a stale
+  // persisted id) belong to the seed, which is the only corpus this app writes.
+  return "mock";
+}

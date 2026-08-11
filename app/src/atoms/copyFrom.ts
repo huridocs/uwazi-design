@@ -33,5 +33,18 @@ export interface CopyPreview {
 
 /** Set while a source is being previewed in `EntityOverlay`; null otherwise.
  *  The overlay renders its Copy From section only when this names the entity it
- *  is showing, so opening the same entity from anywhere else is unaffected. */
+ *  is showing, so opening the same entity from anywhere else is unaffected.
+ *
+ *  WHO CLEARS IT. An atom outlives every component, and this one holds closures
+ *  owned by the edit form — a strictly shorter life. So both ends clear it, not
+ *  just the happy path:
+ *   - `EntityOverlay` clears it whenever it closes (X / Escape / scrim / Close),
+ *     because a preview nothing is rendering is not a preview;
+ *   - `MetadataEditBody` clears it on unmount (Cancel, Save), because its
+ *     callbacks stage into state that no longer exists.
+ *  Left to `onUse`/`onBack` alone, either exit stranded a populated atom: the
+ *  next time that entity was opened from ANYWHERE — a read-mode relationship
+ *  pill — the overlay rendered a full Copy From block over a form that had gone,
+ *  and "Stage N fields" called setState on an unmounted component and did
+ *  nothing. */
 export const copyPreviewAtom = atom<CopyPreview | null>(null);

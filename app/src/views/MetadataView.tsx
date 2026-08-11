@@ -11,7 +11,7 @@ import { RelationshipFieldCard } from "../components/metadata/RelationshipFieldC
 import { RelationshipCards } from "../components/metadata/RelationshipCards";
 import { RelationshipFieldEditor } from "../components/metadata/RelationshipFieldEditor";
 import { CopyFromPicker } from "../components/metadata/CopyFromPicker";
-import { CopyFieldRow } from "../components/metadata/CopyFieldRow";
+import { CopyFieldRow, COPY_ROW_SLOT } from "../components/metadata/CopyFieldRow";
 import { ProvenanceLine } from "../components/shared/ProvenanceLine";
 import { EntityPill } from "../components/shared/EntityPill";
 import { FieldMessage, issueBorderClass } from "../components/shared/FieldMessage";
@@ -156,6 +156,24 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
 }
 
 /* ── Edit Mode ── */
+
+/** One thing a staged copy can actually do to THIS form: a scalar the form has a
+ *  controlled editor for, or a whole connection. Built by `stagedUnits`, which
+ *  is where the rule lives. */
+interface StagedUnit {
+  /** The field id for a value; the connection def key for a connection — so
+   *  multi-inheritance siblings collapse into a single decision. */
+  key: string;
+  kind: "value" | "connection";
+  /** The form's label for the thing being overwritten (a connection's title,
+   *  not one of its inherited columns). */
+  label: string;
+  /** The match the row compares — for a grouped connection, the first sibling;
+   *  they all carry the same `connectedEntityIds`, which is what copies. */
+  row: CopyMatch;
+  /** Every match folded into this unit. */
+  matches: CopyMatch[];
+}
 
 function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void; onSave: () => void; menuSlot?: ReactNode }) {
   const language = useAtom(languageAtom)[0];
@@ -305,12 +323,82 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
   /** The staged set: what would copy, and which of it the user still wants. */
   const [stage, setStage] = useState<{
     source: Entity;
-    matches: CopyMatch[];
+    units: StagedUnit[];
+    /** Matches this FORM can't apply — see `stagedUnits`. Carried so the footer
+     *  can say they exist rather than the count quietly disagreeing with the
+     *  preview the user just read. */
+    unstageable: CopyMatch[];
     checked: Record<string, boolean>;
   } | null>(null);
-  /** fieldId → the entity it was copied from. Survives until the edit ends. */
+  /** unit key → the entity it was copied from. Survives until the edit ends. */
   const [copiedFrom, setCopiedFrom] = useState<Record<string, string>>({});
+  /** Every unit key that has had a row during this edit. Only grows: the slot a
+   *  row occupied stays reserved after commit, so swapping the row for its
+   *  provenance line doesn't shorten the form (PATTERNS §3). */
+  const [rowReserved, setRowReserved] = useState<ReadonlySet<string>>(new Set());
   const target = getEntity(focusedId);
+
+  /** The plan's matches, resolved into what THIS FORM can stage and show.
+   *
+   *  `plan.matches` is a schema-level answer — these two entities define the
+   *  same property, so it would copy. Whether the form can APPLY it is a
+   *  different question, and seeding the checkbox set from the plan wholesale
+   *  answered the wrong one: a connection match had no row anywhere, so "Copy 3
+   *  fields" replaced the entity's connection set with no comparison ever shown
+   *  — the precise overwrite-without-warning `CopyFieldRow` exists to prevent —
+   *  and a `country` match was written into state that `CountryPicker` doesn't
+   *  read, counted in the footer and visible nowhere.
+   *
+   *  So a unit is what the form can both apply and render:
+   *   · a scalar with a controlled editor (everything but `country`, whose
+   *     picker isn't bound to this state, and `file-list`, whose item inputs are
+   *     uncontrolled);
+   *   · a CONNECTION, keyed by its def — which is also the multi-inheritance
+   *     fix: sibling columns over one `connectionKey` are ONE connection, and
+   *     counting them separately made "1 of 3" out of a single copy.
+   *  Anything left over is `unstageable` and says so. */
+  const stagedUnits = (matches: CopyMatch[]) => {
+    const units: StagedUnit[] = [];
+    const byKey = new Map<string, StagedUnit>();
+    const unstageable: CopyMatch[] = [];
+    for (const m of matches) {
+      if (m.copies === "connection") {
+        // Singles are keyed by field id; grouped connections by their shared
+        // key, so find whichever def actually owns this field.
+        const def =
+          connectionDefs.find((d) => d.key === m.id) ??
+          connectionDefs.find((d) => d.columns.some((c) => c.fieldId === m.id));
+        if (!def) {
+          unstageable.push(m);
+          continue;
+        }
+        const open = byKey.get(def.key);
+        if (open) {
+          open.matches.push(m);
+          continue;
+        }
+        const unit: StagedUnit = {
+          key: def.key,
+          kind: "connection",
+          label: def.title,
+          row: m,
+          matches: [m],
+        };
+        byKey.set(def.key, unit);
+        units.push(unit);
+        continue;
+      }
+      const field = fields.find((f) => f.id === m.id);
+      if (!field || field.id === "country" || field.type === "file-list") {
+        unstageable.push(m);
+        continue;
+      }
+      const unit: StagedUnit = { key: m.id, kind: "value", label: m.label, row: m, matches: [m] };
+      byKey.set(m.id, unit);
+      units.push(unit);
+    }
+    return { units, unstageable };
+  };
 
   const preview = (source: Entity) => {
     if (!target) return;
@@ -320,14 +408,17 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
       sourceId: source.id,
       plan,
       onUse: () => {
+        const { units, unstageable } = stagedUnits(plan.matches);
         setStage({
           source,
-          matches: plan.matches,
+          units,
+          unstageable,
           // Defaulted to the matched set, as asked — except the ones that would
           // CLEAR a value, which is a destructive default nobody expects from a
           // button labelled "copy".
-          checked: Object.fromEntries(plan.matches.map((m) => [m.id, !m.emptyOnSource])),
+          checked: Object.fromEntries(units.map((u) => [u.key, !u.row.emptyOnSource])),
         });
+        setRowReserved((prev) => new Set([...prev, ...units.map((u) => u.key)]));
         setPreview(null);
         setOverlayEntity(null);
       },
@@ -340,33 +431,27 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
     setOverlayEntity(source.id);
   };
 
-  /** Commit: write ONLY the checked fields into this form's state, and remember
+  /** Commit: write ONLY the checked units into this form's state, and remember
    *  where each came from. Still nothing saved. */
   const commitCopy = () => {
     if (!stage) return;
-    const taking = stage.matches.filter((m) => stage.checked[m.id]);
+    const taking = stage.units.filter((u) => stage.checked[u.key]);
     setFields((prev) =>
       prev.map((f) => {
-        const m = taking.find((x) => x.id === f.id && x.copies === "value");
-        return m ? { ...f, value: m.sourceValue ?? "" } : f;
+        const u = taking.find((x) => x.kind === "value" && x.key === f.id);
+        return u ? { ...f, value: u.row.sourceValue ?? "" } : f;
       }),
     );
     setConnections((prev) => {
       const next = { ...prev };
-      for (const m of taking) {
-        if (m.copies !== "connection") continue;
-        // Singles are keyed by field id; grouped connections by their shared
-        // key, so find whichever def actually owns this field.
-        const def =
-          connectionDefs.find((d) => d.key === m.id) ??
-          connectionDefs.find((d) => d.columns.some((c) => c.fieldId === m.id));
-        if (def) next[def.key] = m.sourceConnectedEntityIds ?? [];
+      for (const u of taking) {
+        if (u.kind === "connection") next[u.key] = u.row.sourceConnectedEntityIds ?? [];
       }
       return next;
     });
     setCopiedFrom((prev) => ({
       ...prev,
-      ...Object.fromEntries(taking.map((m) => [m.id, stage.source.id])),
+      ...Object.fromEntries(taking.map((u) => [u.key, stage.source.id])),
     }));
     setStage(null);
   };
@@ -378,13 +463,23 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
     setPickerOpen(false);
   };
 
-  const stagedById = useMemo(
-    () => new Map((stage?.matches ?? []).map((m) => [m.id, m])),
+  /* The preview atom outlives this form — Cancel and Save both unmount it — and
+     what it holds are THIS form's closures. Clearing it here is the other half
+     of the rule `copyPreviewAtom` documents; without it the overlay went on
+     offering "Stage N fields" against a form that no longer existed. */
+  useEffect(() => () => setPreview(null), [setPreview]);
+
+  const stagedByKey = useMemo(
+    () => new Map((stage?.units ?? []).map((u) => [u.key, u])),
     [stage],
   );
   const checkedCount = stage
-    ? stage.matches.filter((m) => stage.checked[m.id]).length
+    ? stage.units.filter((u) => stage.checked[u.key]).length
     : 0;
+  /** Tick one unit. Grouped connection siblings share a key, so this is one
+   *  decision per connection, not per inherited column. */
+  const setChecked = (key: string, v: boolean) =>
+    setStage((prev) => (prev ? { ...prev, checked: { ...prev.checked, [key]: v } } : prev));
   /* Once a copy is in play, EVERY field reserves its provenance slot, so the
      line landing on commit cannot shove the fields below it (PATTERNS §3). */
   const copyActive = stage !== null || Object.keys(copiedFrom).length > 0;
@@ -491,6 +586,17 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
               focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 resize-y`}
           />
           <FieldMessage id={msgId("description")} issue={issues.description} reserve />
+          {/* Rendered here too: the description is a controlled editor like any
+              other scalar, so a copy into it is applyable — it was simply the
+              one field the staged-row loop below never reached. */}
+          <CopyFieldSlot
+            active={copyActive}
+            reserved={rowReserved.has("description")}
+            unit={stagedByKey.get("description")}
+            checked={!!stage?.checked["description"]}
+            onChange={(v) => setChecked("description", v)}
+            sourceId={copiedFrom["description"]}
+          />
         </EditSection>
 
         {/* Geolocation */}
@@ -550,18 +656,14 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
                 />
               )}
               <FieldMessage id={msgId(field.id)} issue={issues[field.id]} reserve />
-              {stagedById.get(field.id) && stage && (
-                <CopyFieldRow
-                  match={stagedById.get(field.id)!}
-                  checked={!!stage.checked[field.id]}
-                  onChange={(v) =>
-                    setStage((prev) =>
-                      prev ? { ...prev, checked: { ...prev.checked, [field.id]: v } } : prev,
-                    )
-                  }
-                />
-              )}
-              <CopyProvenanceSlot active={copyActive} sourceId={copiedFrom[field.id]} />
+              <CopyFieldSlot
+                active={copyActive}
+                reserved={rowReserved.has(field.id)}
+                unit={stagedByKey.get(field.id)}
+                checked={!!stage?.checked[field.id]}
+                onChange={(v) => setChecked(field.id, v)}
+                sourceId={copiedFrom[field.id]}
+              />
             </EditSection>
           ))}
 
@@ -596,15 +698,27 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
           </h3>
         )}
         {connectionDefs.map((d) => (
-          <RelationshipFieldEditor
-            key={d.key}
-            title={d.title}
-            relationLabel={d.relationLabel}
-            targetTypeId={d.targetTypeId}
-            columns={d.columns}
-            entityIds={connections[d.key] ?? d.entityIds}
-            onChange={(ids) => setConnections((prev) => ({ ...prev, [d.key]: ids }))}
-          />
+          <div key={d.key} className="space-y-1.5">
+            <RelationshipFieldEditor
+              title={d.title}
+              relationLabel={d.relationLabel}
+              targetTypeId={d.targetTypeId}
+              columns={d.columns}
+              entityIds={connections[d.key] ?? d.entityIds}
+              onChange={(ids) => setConnections((prev) => ({ ...prev, [d.key]: ids }))}
+            />
+            {/* A connection copies too — and REPLACES the set above it, which is
+                exactly the kind of overwrite that has to be read before it
+                happens. One row per connection, not per inherited column. */}
+            <CopyFieldSlot
+              active={copyActive}
+              reserved={rowReserved.has(d.key)}
+              unit={stagedByKey.get(d.key)}
+              checked={!!stage?.checked[d.key]}
+              onChange={(v) => setChecked(d.key, v)}
+              sourceId={copiedFrom[d.key]}
+            />
+          </div>
         ))}
 
         {/* Derived / chain-traversed relationships — shown read-only here; they
@@ -656,10 +770,22 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
         {stage ? (
           <>
             <span className="me-auto text-[11px] text-ink-tertiary">
-              {checkedCount} of {stage.matches.length} staged from
+              {checkedCount} of {stage.units.length} staged from
               <span className="ms-1 align-middle">
                 <EntityPill typeId={stage.source.typeId} label={stage.source.title} />
               </span>
+              {/* The plan can match a property this form has no editor for
+                  (`country`'s picker isn't bound to the field state). Those used
+                  to be counted here and applied invisibly; now they're named
+                  here and applied nowhere. */}
+              {stage.unstageable.length > 0 && (
+                <span
+                  className="ms-1"
+                  title={stage.unstageable.map((m) => m.label).join(", ")}
+                >
+                  · {stage.unstageable.length} not editable here
+                </span>
+              )}
             </span>
             <button
               onClick={cancelCopy}
@@ -891,15 +1017,50 @@ function MetadataDrawer() {
  *  session, because after the values land nothing records which fields moved or
  *  where they came from. Naming the source per field means a user can put one
  *  back by hand, and knows what to put back. */
-function CopyProvenanceSlot({ active, sourceId }: { active: boolean; sourceId?: string }) {
+/** The one slot under a field that a copy ever writes into: the staged
+ *  comparison row while a copy is in play, its "copied from" line afterwards.
+ *
+ *  ONE box, because they are the same space. Mounted for every field the moment
+ *  any copy starts (`active`), so the provenance line can't shove the fields
+ *  below it when it lands; and once a field has carried a row, the box keeps the
+ *  row's full height for the rest of the edit (`reserved`) — otherwise
+ *  committing unmounted every row at once and the form jumped upward by a row
+ *  per copied field, which is the same rule read the other way round. */
+function CopyFieldSlot({
+  active,
+  reserved,
+  unit,
+  checked,
+  onChange,
+  sourceId,
+}: {
+  active: boolean;
+  reserved: boolean;
+  unit?: StagedUnit;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  sourceId?: string;
+}) {
   if (!active) return null;
   const source = sourceId ? getEntity(sourceId) : undefined;
   return (
-    <div className="h-5 flex items-center">
-      {source && (
-        <ProvenanceLine label="copied from">
-          <EntityPill typeId={source.typeId} label={source.title} />
-        </ProvenanceLine>
+    <div
+      className={reserved ? "flex flex-col justify-center" : "h-5 flex items-center"}
+      style={reserved ? { minHeight: COPY_ROW_SLOT } : undefined}
+    >
+      {unit ? (
+        <CopyFieldRow
+          match={unit.row}
+          label={unit.label}
+          checked={checked}
+          onChange={onChange}
+        />
+      ) : (
+        source && (
+          <ProvenanceLine label="copied from">
+            <EntityPill typeId={source.typeId} label={source.title} />
+          </ProvenanceLine>
+        )
       )}
     </div>
   );

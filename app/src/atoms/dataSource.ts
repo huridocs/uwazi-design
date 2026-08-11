@@ -1,7 +1,7 @@
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { entitiesAtom, entityTypesAtom } from "./entities";
-import { entityTypes, type Entity, type EntityType } from "../data/entities";
+import { entityCorpusOf, entityTypes, type Entity, type EntityType } from "../data/entities";
 import { cejilEntityTypes } from "../data/cejil/typesAdapter";
 import { cejilLibraryEntities } from "../data/cejil/adapt";
 import { artworkEntityTypes } from "../data/artworks/typesAdapter";
@@ -44,6 +44,32 @@ export const libraryEntitiesAtom = atom<Entity[]>((get) => {
     }
   }
 });
+
+/** Every entity of ONE entity's own corpus — the pool a feature draws from when
+ *  it offers peers of a given entity rather than "whatever the Library is
+ *  showing" (`libraryEntitiesAtom`, a Library setting).
+ *
+ *  Copy From read the Library's list, so editing a mock entity while the Library
+ *  sat on artworks offered paintings as sources for a court case. Same seam, one
+ *  step further: the CEJIL corpus loads lazily, so an empty list there means
+ *  "not here yet", not "nothing to copy" — `loading` says which, and a caller
+ *  that renders one sentence for both is telling the user something false.
+ *
+ *  Takes the mock list as an argument rather than reading `entitiesAtom` itself,
+ *  so it stays a plain function; React callers pass `useAtomValue(entitiesAtom)`
+ *  and subscribe to `cejilReadyAtom` for the load. */
+export function entityCorpusPool(
+  entityId: string,
+  mock: Entity[],
+): { corpus: DataSource; entities: Entity[]; loading: boolean } {
+  const corpus = entityCorpusOf(entityId);
+  if (corpus === "artworks") return { corpus, entities: artworkLibraryEntities(), loading: false };
+  if (corpus === "cejil") {
+    const entities = cejilLibraryEntities();
+    return { corpus, entities, loading: entities.length === 0 };
+  }
+  return { corpus, entities: mock, loading: false };
+}
 
 /** The entity types present for the active source (drives facet lists + colours). */
 export const libraryTypesAtom = atom<EntityType[]>((get) => {
