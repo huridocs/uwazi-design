@@ -14,6 +14,14 @@ import { CopyFromPicker } from "../components/metadata/CopyFromPicker";
 import { CopyFieldRow } from "../components/metadata/CopyFieldRow";
 import { ProvenanceLine } from "../components/shared/ProvenanceLine";
 import { EntityPill } from "../components/shared/EntityPill";
+import { FieldMessage, issueBorderClass } from "../components/shared/FieldMessage";
+import {
+  validateValue,
+  countBySeverity,
+  blockingSummary,
+  type ValidationIssue,
+  type ValueKind,
+} from "../utils/validation";
 import { copyPreviewAtom } from "../atoms/copyFrom";
 import { overlayEntityIdAtom } from "../atoms/references";
 import { planCopyFrom, type CopyMatch } from "../utils/copyFrom";
@@ -169,8 +177,62 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
   const [extractMeta, setExtractMeta] = useState(true);
   const notify = useNotify();
 
+  /* ── Validation ──────────────────────────────────────────────────────────
+     Errors block save (required missing, unparseable date, malformed link);
+     warnings surface but allow it (utils/validation.ts is the rule set).
+     Relationship / derived fields are exempt by construction — `fields` is
+     already the scalar subset (`type !== "relationship"`). Evaluated on blur
+     and on save attempt; a field that has flagged once re-checks live so
+     fixing it clears the message without another blur. */
+  const kindOf = (t: MetadataField["type"]): ValueKind =>
+    t === "date" ? "date" : t === "link" ? "link" : t === "multiline" ? "multiline" : "text";
+  const scalarEditable = fields.filter(
+    (f) => !["description", "country"].includes(f.id) && f.type !== "file-list",
+  );
+  const issueFor = (id: string, value: string): ValidationIssue | null => {
+    if (id === "title") return validateValue("text", value, { required: true, label: "Title" });
+    if (id === "description")
+      return validateValue("multiline", value, { required: true, label: "Description" });
+    const f = fields.find((x) => x.id === id);
+    return f ? validateValue(kindOf(f.type), value, { label: f.label }) : null;
+  };
+  const [issues, setIssues] = useState<Record<string, ValidationIssue | null>>({});
+  const [saveAttempted, setSaveAttempted] = useState(false);
+  const flag = (id: string, value: string) =>
+    setIssues((prev) => ({ ...prev, [id]: issueFor(id, value) }));
+  /** Live re-check, but only for fields already carrying a message. */
+  const reflag = (id: string, value: string) =>
+    setIssues((prev) => (prev[id] ? { ...prev, [id]: issueFor(id, value) } : prev));
+  const { errors: errorCount, warnings: warningCount } = countBySeverity(Object.values(issues));
+  const inputId = (id: string) => `edit-field-${id}`;
+  const msgId = (id: string) => `edit-field-${id}-msg`;
+  const fieldAria = (id: string) => ({
+    "aria-invalid": issues[id]?.severity === "error" || undefined,
+    "aria-describedby": issues[id] ? msgId(id) : undefined,
+  });
+
+  const handleSave = () => {
+    const next: Record<string, ValidationIssue | null> = {
+      title: issueFor("title", title),
+      description: issueFor("description", fields.find((f) => f.id === "description")?.value ?? ""),
+    };
+    for (const f of scalarEditable) next[f.id] = issueFor(f.id, f.value);
+    setIssues(next);
+    const firstError = ["title", "description", ...scalarEditable.map((f) => f.id)].find(
+      (id) => next[id]?.severity === "error",
+    );
+    if (firstError) {
+      setSaveAttempted(true);
+      document.getElementById(inputId(firstError))?.focus();
+      return;
+    }
+    onSave();
+  };
+  const saveBlocked = saveAttempted && errorCount > 0;
+
   const updateField = (id: string, value: string) => {
     setFields((prev) => prev.map((f) => (f.id === id ? { ...f, value } : f)));
+    reflag(id, value);
   };
 
   // Relationship fields → one editor per connection. The connection (entity
@@ -332,12 +394,19 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
         {/* Title */}
         <EditSection label="Title*">
           <textarea
+            id={inputId("title")}
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              reflag("title", e.target.value);
+            }}
+            onBlur={(e) => flag("title", e.currentTarget.value)}
+            {...fieldAria("title")}
             rows={2}
-            className="w-full px-3 py-2 text-sm text-ink bg-paper border border-border rounded-md
-              focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 resize-none"
+            className={`w-full px-3 py-2 text-sm text-ink bg-paper border ${issueBorderClass(issues.title)} rounded-md
+              focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 resize-none`}
           />
+          <FieldMessage id={msgId("title")} issue={issues.title} reserve />
         </EditSection>
 
         {/* Select icon */}
@@ -393,12 +462,16 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
         {/* Description */}
         <EditSection label="Description*">
           <textarea
+            id={inputId("description")}
             value={fields.find((f) => f.id === "description")?.value ?? ""}
             onChange={(e) => updateField("description", e.target.value)}
+            onBlur={(e) => flag("description", e.currentTarget.value)}
+            {...fieldAria("description")}
             rows={6}
-            className="w-full px-3 py-2 text-sm text-ink bg-paper border border-border rounded-md
-              focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 resize-y"
+            className={`w-full px-3 py-2 text-sm text-ink bg-paper border ${issueBorderClass(issues.description)} rounded-md
+              focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 resize-y`}
           />
+          <FieldMessage id={msgId("description")} issue={issues.description} reserve />
         </EditSection>
 
         {/* Geolocation */}
@@ -420,38 +493,44 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
         {/* Editable scalar fields (date / link / text / multiline). file-list
             fields render below as item editors; description/country handled
             above with their own controls. */}
-        {fields
-          .filter(
-            (f) =>
-              !["description", "country"].includes(f.id) && f.type !== "file-list",
-          )
+        {scalarEditable
           .map((field) => (
             <EditSection key={field.id} label={field.label}>
               {field.type === "date" ? (
                 <input
                   type="date"
+                  id={inputId(field.id)}
                   value={field.value}
                   onChange={(e) => updateField(field.id, e.target.value)}
-                  className="w-full px-3 py-2 text-sm text-ink bg-paper border border-border rounded-md
-                    focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40"
+                  onBlur={(e) => flag(field.id, e.currentTarget.value)}
+                  {...fieldAria(field.id)}
+                  className={`w-full px-3 py-2 text-sm text-ink bg-paper border ${issueBorderClass(issues[field.id])} rounded-md
+                    focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40`}
                 />
               ) : field.type === "multiline" ? (
                 <textarea
+                  id={inputId(field.id)}
                   value={field.value}
                   onChange={(e) => updateField(field.id, e.target.value)}
+                  onBlur={(e) => flag(field.id, e.currentTarget.value)}
+                  {...fieldAria(field.id)}
                   rows={4}
-                  className="w-full px-3 py-2 text-sm text-ink bg-paper border border-border rounded-md
-                    focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 resize-y"
+                  className={`w-full px-3 py-2 text-sm text-ink bg-paper border ${issueBorderClass(issues[field.id])} rounded-md
+                    focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 resize-y`}
                 />
               ) : (
                 <input
                   type="text"
+                  id={inputId(field.id)}
                   value={field.value}
                   onChange={(e) => updateField(field.id, e.target.value)}
-                  className="w-full px-3 py-2 text-sm text-ink bg-paper border border-border rounded-md
-                    focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40"
+                  onBlur={(e) => flag(field.id, e.currentTarget.value)}
+                  {...fieldAria(field.id)}
+                  className={`w-full px-3 py-2 text-sm text-ink bg-paper border ${issueBorderClass(issues[field.id])} rounded-md
+                    focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40`}
                 />
               )}
+              <FieldMessage id={msgId(field.id)} issue={issues[field.id]} reserve />
               {stagedById.get(field.id) && stage && (
                 <CopyFieldRow
                   match={stagedById.get(field.id)!}
@@ -528,6 +607,22 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
         )}
       </div>
 
+      {/* Save-attempt summary — a RESERVED line above the action bar, mounted
+          at a fixed height with only its contents toggling, so a failed save
+          cannot shove the footer (never-shift rule). role="alert" fires only
+          on the save attempt, never per keystroke. */}
+      <div className="flex items-center justify-end h-6 px-4 bg-paper shrink-0">
+        {saveBlocked ? (
+          <span role="alert" className="text-[11px] font-medium text-seal">
+            {blockingSummary(errorCount, warningCount)} — fix the highlighted fields.
+          </span>
+        ) : warningCount > 0 ? (
+          <span className="text-[11px] text-warning">
+            {warningCount} warning{warningCount === 1 ? "" : "s"} — saving is still allowed.
+          </span>
+        ) : null}
+      </div>
+
       {/* Edit action bar */}
       <div
         className="flex items-center justify-end gap-3 h-12 px-4 bg-paper shrink-0"
@@ -578,9 +673,15 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
         >
           Cancel
         </button>
+        {/* NOT `disabled`: a blocked save stays clickable so it can explain
+            itself — re-validate, alert via the summary line, focus the first
+            invalid field. aria-disabled + the alert carry the state. */}
         <button
-          onClick={onSave}
-          className="px-4 py-1.5 text-xs font-medium text-white bg-success rounded-md hover:bg-success/90 transition-colors cursor-pointer"
+          onClick={handleSave}
+          aria-disabled={saveBlocked || undefined}
+          className={`px-4 py-1.5 text-xs font-medium text-white rounded-md transition-colors cursor-pointer ${
+            saveBlocked ? "bg-success/50" : "bg-success hover:bg-success/90"
+          }`}
         >
           Save
         </button>

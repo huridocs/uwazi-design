@@ -22,6 +22,7 @@ import {
 } from "../../../data/settings";
 import { cejilTemplateProperties } from "../../../data/cejil/settingsAdapt";
 import { toastsAtom } from "../../../atoms/references";
+import { validateValue, blockingSummary, type ValidationIssue } from "../../../utils/validation";
 
 /** A distinct, calm palette (no duplicates) + a custom picker. */
 const PALETTE = [
@@ -79,6 +80,14 @@ export function TemplateEditor({
   const [editing, setEditing] = useState<TemplateProperty | "new" | null>(null);
   const { dragIdx, rowProps, gripProps } = useReorder(setProps);
 
+  /* ── Validation — same rules + message idiom as the entity metadata form.
+     Name is required (error, blocks save); a very short name only warns. */
+  const [nameIssue, setNameIssue] = useState<ValidationIssue | null>(null);
+  const [saveAttempted, setSaveAttempted] = useState(false);
+  const checkName = (v: string) =>
+    validateValue("text", v, { required: true, label: "Template name" });
+  const saveBlocked = saveAttempted && nameIssue?.severity === "error";
+
   const initialColor = base?.color ?? PALETTE[0];
   const initialProps = isNew
     ? defaultTemplateProperties
@@ -114,6 +123,19 @@ export function TemplateEditor({
     setEditing(null);
   };
 
+  /** Save attempt: an error on the name blocks it, alerts, and refocuses the
+   *  field; warnings let it through. */
+  const trySave = () => {
+    const issue = checkName(name);
+    setNameIssue(issue);
+    if (issue?.severity === "error") {
+      setSaveAttempted(true);
+      document.getElementById("template-name-input")?.focus();
+      return;
+    }
+    save();
+  };
+
   const save = () => {
     onSave?.({ name: name.trim() || base?.name || "Untitled template", color });
     setToasts((p) => [
@@ -132,8 +154,18 @@ export function TemplateEditor({
         <div className="flex flex-col lg:flex-row gap-6">
         <div className="flex flex-col gap-6 flex-1 min-w-0">
           <section className="grid sm:grid-cols-2 gap-3">
-            <Field label="Template name">
-              <TextInput value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Court Case" />
+            <Field label="Template name" issue={nameIssue}>
+              <TextInput
+                id="template-name-input"
+                value={name}
+                issue={nameIssue}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (nameIssue) setNameIssue(checkName(e.target.value));
+                }}
+                onBlur={(e) => setNameIssue(checkName(e.currentTarget.value))}
+                placeholder="e.g. Court Case"
+              />
             </Field>
             <Field label="Colour">
               <div className="flex items-center gap-1.5 flex-wrap pt-1">
@@ -244,10 +276,24 @@ export function TemplateEditor({
         <Button variant="secondary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
           Add property
         </Button>
+        {/* Save-attempt summary — alert only on the attempt, not per keystroke.
+            The footer keeps its fixed height; this rides the existing row. */}
+        {saveBlocked && (
+          <span role="alert" className="text-[11px] font-medium text-seal">
+            {blockingSummary(1, 0)}
+          </span>
+        )}
         <Button variant="ghost" size="sm" onClick={onClose}>
           Cancel
         </Button>
-        <Button variant="success" size="sm" disabled={!dirty} onClick={save}>
+        <Button
+          variant="success"
+          size="sm"
+          disabled={!dirty}
+          aria-disabled={saveBlocked || undefined}
+          className={saveBlocked ? "opacity-60" : undefined}
+          onClick={trySave}
+        >
           {isNew ? "Create template" : "Save"}
         </Button>
       </SettingsContent.Footer>
@@ -285,6 +331,8 @@ function PropertyDialog({
   const [content, setContent] = useState(config?.content ?? THESAURUS_OPTIONS[0]?.value ?? "");
   const [targetTemplate, setTargetTemplate] = useState(config?.targetTemplate ?? TEMPLATE_OPTIONS[0]?.value ?? "");
   const [relationType, setRelationType] = useState(config?.relationType ?? RELATION_OPTIONS[0]?.value ?? "");
+  const [labelIssue, setLabelIssue] = useState<ValidationIssue | null>(null);
+  const checkLabel = (v: string) => validateValue("text", v, { required: true, label: "Label" });
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onCancel();
@@ -317,8 +365,18 @@ function PropertyDialog({
         </div>
 
         <div className="flex flex-col gap-3 p-4">
-          <Field label="Label">
-            <TextInput value={label} onChange={(e) => setLabel(e.target.value)} placeholder="e.g. Date filed" autoFocus />
+          <Field label="Label" issue={labelIssue}>
+            <TextInput
+              value={label}
+              issue={labelIssue}
+              onChange={(e) => {
+                setLabel(e.target.value);
+                if (labelIssue) setLabelIssue(checkLabel(e.target.value));
+              }}
+              onBlur={(e) => setLabelIssue(checkLabel(e.currentTarget.value))}
+              placeholder="e.g. Date filed"
+              autoFocus
+            />
           </Field>
           <Field label="Type">
             <Select value={type} options={TYPE_OPTIONS} onChange={(v) => setType(v as TemplateProperty["type"])} ariaLabel="Property type" />

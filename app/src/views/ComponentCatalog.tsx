@@ -9,6 +9,7 @@ import { StyleGuide } from "../components/catalog/StyleGuide";
 import { EntityPill } from "../components/shared/EntityPill";
 import { ProvenanceLine } from "../components/shared/ProvenanceLine";
 import { ThesaurusValueLabel } from "../components/shared/ThesaurusValueLabel";
+import { FieldMessage, issueBorderClass } from "../components/shared/FieldMessage";
 import { BorrowedDocLine } from "../components/library/BorrowedDocLine";
 import { PdfPageThumb } from "../components/shared/PdfPageThumb";
 import { EntityTypeChip } from "../components/shared/EntityTypeChip";
@@ -1413,6 +1414,39 @@ export function ComponentCatalog({ onReturn }: Props) {
                     <ProvenanceLine label="copied from">
                       <EntityPill typeId="country" label="Argentina" />
                     </ProvenanceLine>
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="sh-field-message" ref={reg("sh-field-message")}>
+                <CatalogEntry
+                  name="FieldMessage"
+                  description="The ONE per-field validation line — the entity metadata edit form and the settings forms both render it, so an error reads the same everywhere. Seal message + seal-tinted input border = error (blocks save); amber pair = warning (saving allowed). `reserve` keeps the line mounted at its height while empty so a message landing on blur never shoves the fields below it. Inputs link it via aria-describedby (+ aria-invalid on errors); role='alert' is reserved for the save-attempt summary."
+                  code={`<FieldMessage issue={issues[field.id]} reserve />
+
+{/* input border tinted to match: */}
+className={\`… border \${issueBorderClass(issues[field.id])} …\`}`}
+                >
+                  <div className="w-full max-w-sm space-y-3">
+                    {(
+                      [
+                        { label: "Title", value: "", issue: { severity: "error", message: "Title is required." } },
+                        { label: "Date filed", value: "2031-01-01", issue: { severity: "warning", message: "Date filed is more than a year in the future." } },
+                        { label: "Country", value: "Honduras", issue: null },
+                      ] as const
+                    ).map(({ label, value, issue }) => (
+                      <div key={label} className="space-y-1.5">
+                        <span className="text-sm font-bold text-ink">{label}</span>
+                        <input
+                          type="text"
+                          readOnly
+                          value={value}
+                          aria-invalid={issue?.severity === "error" || undefined}
+                          className={`w-full px-3 py-2 text-sm text-ink bg-paper border ${issueBorderClass(issue)} rounded-md focus:outline-none focus:ring-2 focus:ring-carbon/20`}
+                        />
+                        <FieldMessage issue={issue} reserve />
+                      </div>
+                    ))}
                   </div>
                 </CatalogEntry>
               </div>
