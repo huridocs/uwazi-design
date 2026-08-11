@@ -137,6 +137,7 @@ export const sidebarGroups: SidebarGroup[] = [
       { id: "sh-confirm-dialog", label: "ConfirmDialog" },
       { id: "sh-toast", label: "Toast" },
       { id: "sh-uwazi-loader", label: "UwaziLoader" },
+      { id: "sh-thesaurus-value-label", label: "ThesaurusValueLabel" },
     ],
   },
   {

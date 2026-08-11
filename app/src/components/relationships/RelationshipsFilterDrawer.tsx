@@ -13,6 +13,7 @@ import { languageAtom } from "../../atoms/language";
 import { getEntity, getEntityType } from "../../data/entities";
 import { getEntityProp } from "../../data/entityMetadata";
 import { inheritedFilterProps } from "../../data/metadata";
+import { thesaurusParentOf } from "../../utils/thesauri";
 import { relationTypes } from "../../data/references";
 import { entityCountries } from "../../utils/libraryFacets";
 import { FacetSection } from "../shared/FacetSection";
@@ -267,6 +268,9 @@ export function RelationshipsFilterDrawer() {
               setInheritedFilters((s) => ({ ...s, [propId]: {} }))
             }
             label={(value) => value}
+            // Inherited values come from thesauri (e.g. Region) — nested child
+            // values gather under their group as a non-selectable label.
+            groupOf={thesaurusParentOf}
             searchable
             defaultExpanded={false}
           />

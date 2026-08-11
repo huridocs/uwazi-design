@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { EntityCard } from "../library/EntityCard";
 import { registerPreviewType, type Entity } from "../../data/entities";
-import { seedThesauri, seedThesaurusItems, type TemplateProperty } from "../../data/settings";
+import { seedThesauri, seedThesaurusValues, type TemplateProperty } from "../../data/settings";
 
 /** Fixed id for the ephemeral preview type — never collides with a real
  *  template id (see registerPreviewType's lookup order). */
@@ -22,7 +22,9 @@ const DATE_SAMPLES = ["12 May 2024", "3 Feb 2023", "28 Nov 2021"];
 
 function firstThesaurusValue(name?: string): string | undefined {
   const thesaurus = seedThesauri.find((t) => t.name === name) ?? seedThesauri[0];
-  return thesaurus ? seedThesaurusItems[thesaurus.id]?.[0] : undefined;
+  // First LEAF value — a group's own label is a heading, not a pickable value.
+  const first = thesaurus ? seedThesaurusValues[thesaurus.id]?.[0] : undefined;
+  return first?.values?.length ? first.values[0].label : first?.label;
 }
 
 function demoValueFor(prop: TemplateProperty, cfg: PreviewPropConfig | undefined, index: number): string | null {

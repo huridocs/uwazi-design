@@ -146,26 +146,81 @@ export const seedThesauri: SettingsThesaurus[] = [
   { id: "t5", name: "Regions", itemCount: 8 },
 ];
 
-/** Representative items per thesaurus, for the thesaurus detail editor.
- *  (Prototype sample — not the full `itemCount` set.) */
-export const seedThesaurusItems: Record<string, string[]> = {
+/** A thesaurus value, in Uwazi's exact shape: `{ id, label, values? }`. A value
+ *  carrying `values` is a GROUP — its children are the selectable values, one
+ *  level deep (Uwazi nests no further). */
+export interface ThesaurusValue {
+  id: string;
+  label: string;
+  values?: { id: string; label: string }[];
+}
+
+/** Representative values per thesaurus, for the thesaurus detail editor.
+ *  (Prototype sample — not the full `itemCount` set.) Violation types and
+ *  Regions carry nested groups; the Regions children are the same strings the
+ *  mock entities use for their `region` property, so child values surface with
+ *  parent context on cards, metadata views and facets. */
+export const seedThesaurusValues: Record<string, ThesaurusValue[]> = {
   t1: [
-    "Arbitrary detention",
-    "Enforced disappearance",
-    "Extrajudicial execution",
-    "Torture",
-    "Forced displacement",
-    "Denial of fair trial",
+    {
+      id: "t1-g1",
+      label: "Life and personal integrity",
+      values: [
+        { id: "t1-1", label: "Enforced disappearance" },
+        { id: "t1-2", label: "Extrajudicial execution" },
+        { id: "t1-3", label: "Torture" },
+      ],
+    },
+    {
+      id: "t1-g2",
+      label: "Liberty and due process",
+      values: [
+        { id: "t1-4", label: "Arbitrary detention" },
+        { id: "t1-5", label: "Denial of fair trial" },
+      ],
+    },
+    { id: "t1-6", label: "Forced displacement" },
   ],
   t2: [
-    "American Convention on Human Rights",
-    "Convention against Torture",
-    "Geneva Conventions",
-    "ICCPR",
+    { id: "t2-1", label: "American Convention on Human Rights" },
+    { id: "t2-2", label: "Convention against Torture" },
+    { id: "t2-3", label: "Geneva Conventions" },
+    { id: "t2-4", label: "ICCPR" },
   ],
-  t3: ["Open", "Under review", "Admissible", "Decided", "Archived"],
-  t4: ["Judgment", "Petition", "Amicus brief", "Witness statement", "Press release"],
-  t5: ["Americas", "Andean region", "Central America", "Caribbean", "Southern Cone"],
+  t3: [
+    { id: "t3-1", label: "Open" },
+    { id: "t3-2", label: "Under review" },
+    { id: "t3-3", label: "Admissible" },
+    { id: "t3-4", label: "Decided" },
+    { id: "t3-5", label: "Archived" },
+  ],
+  t4: [
+    { id: "t4-1", label: "Judgment" },
+    { id: "t4-2", label: "Petition" },
+    { id: "t4-3", label: "Amicus brief" },
+    { id: "t4-4", label: "Witness statement" },
+    { id: "t4-5", label: "Press release" },
+  ],
+  t5: [
+    {
+      id: "t5-g1",
+      label: "Americas",
+      values: [
+        { id: "t5-1", label: "North America" },
+        { id: "t5-2", label: "Central America" },
+        { id: "t5-3", label: "Caribbean" },
+        { id: "t5-4", label: "South America" },
+      ],
+    },
+    {
+      id: "t5-g2",
+      label: "Europe",
+      values: [
+        { id: "t5-5", label: "Western Europe" },
+        { id: "t5-6", label: "Southern Europe" },
+      ],
+    },
+  ],
 };
 
 // ── Relationship types ──────────────────────────────────────────────────────

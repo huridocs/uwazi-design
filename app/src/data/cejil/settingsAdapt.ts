@@ -7,6 +7,7 @@ import type {
   TemplateProperty,
   PropertyType,
   SettingsThesaurus,
+  ThesaurusValue,
   SettingsRelationType,
   SettingsLanguage,
   SettingsMenuLink,
@@ -68,11 +69,21 @@ export const cejilTemplateProperties: Record<string, TemplateProperty[]> = Objec
 export const cejilSettingsThesauri: SettingsThesaurus[] = cejilThesauri.map((d) => ({
   id: d._id,
   name: d.name,
-  itemCount: (d.values || []).length,
+  // Groups count as items alongside their children (the editor counts the same way).
+  itemCount: (d.values || []).reduce((n, v) => n + 1 + (v.values?.length ?? 0), 0),
 }));
 
-export const cejilThesaurusItems: Record<string, string[]> = Object.fromEntries(
-  cejilThesauri.map((d) => [d._id, (d.values || []).map((v) => v.label)]),
+/** CEJIL thesaurus values in the prototype's nested shape. Nesting survives the
+ *  adapt: a dump value carrying `values` stays a group (one level, as Uwazi). */
+export const cejilThesaurusValues: Record<string, ThesaurusValue[]> = Object.fromEntries(
+  cejilThesauri.map((d) => [
+    d._id,
+    (d.values || []).map((v) => ({
+      id: v.id,
+      label: v.label,
+      ...(v.values ? { values: v.values.map((c) => ({ id: c.id, label: c.label })) } : {}),
+    })),
+  ]),
 );
 
 export const cejilSettingsRelationTypes: SettingsRelationType[] = cejilRelationTypes.map((r) => ({

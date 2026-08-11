@@ -4,6 +4,7 @@ import { Link2, Sigma } from "lucide-react";
 import { overlayEntityIdAtom } from "../../atoms/references";
 import { EntityPill } from "../shared/EntityPill";
 import { ProvenanceLine } from "../shared/ProvenanceLine";
+import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
 import { countryFlag } from "../../utils/countryFlag";
 import type { InheritedValue, ProvenanceStep } from "../../utils/inheritance";
 
@@ -37,7 +38,11 @@ export function InheritedValueTag({
           {flag}
         </span>
       )}
-      <span className="truncate">{value}</span>
+      {/* Nested thesaurus values keep their group context in the inherited
+          cell too ("Americas › Central America"); other values are unchanged. */}
+      <span className="truncate min-w-0">
+        <ThesaurusValueLabel value={value} />
+      </span>
     </span>
   );
 }

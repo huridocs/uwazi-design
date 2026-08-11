@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { Fragment, useMemo, useState, type ReactNode } from "react";
 import { ChevronDown, Search, X } from "lucide-react";
 import { Checkbox } from "./Checkbox";
 
@@ -34,6 +34,11 @@ interface FacetSectionProps {
   /** Reset just this facet (clears its selections). Shown as a header "Clear"
    *  affordance whenever the facet has an active selection. */
   onClear?: () => void;
+  /** For thesaurus-backed facets whose values nest one level: maps an entry id
+   *  to its GROUP label (undefined = top-level). Entries sharing a group gather
+   *  under a non-selectable group label, slightly indented; ungrouped entries
+   *  keep their order ahead of the groups. */
+  groupOf?: (id: string) => string | undefined;
 }
 
 export function FacetSection({
@@ -53,6 +58,7 @@ export function FacetSection({
   mode,
   onModeChange,
   onClear,
+  groupOf,
 }: FacetSectionProps) {
   const [open, setOpen] = useState(defaultExpanded);
   const [query, setQuery] = useState("");
@@ -80,10 +86,31 @@ export function FacetSection({
     [allRegular, q, label],
   );
 
+  // Group-aware ordering: children gather under their group (first-seen group
+  // order), ungrouped entries keep their position ahead of the groups. Without
+  // `groupOf` every row is ungrouped and the order is untouched.
+  const ordered = useMemo(() => {
+    if (!groupOf)
+      return matched.map((entry) => ({ entry, group: undefined as string | undefined }));
+    const ungrouped: [string, number][] = [];
+    const groups = new Map<string, [string, number][]>();
+    for (const entry of matched) {
+      const g = groupOf(entry[0]);
+      if (!g) ungrouped.push(entry);
+      else {
+        if (!groups.has(g)) groups.set(g, []);
+        groups.get(g)!.push(entry);
+      }
+    }
+    const out: { entry: [string, number]; group?: string }[] = ungrouped.map((entry) => ({ entry }));
+    for (const [group, list] of groups) for (const entry of list) out.push({ entry, group });
+    return out;
+  }, [matched, groupOf]);
+
   // Searching reveals everything that matches; otherwise cap to collapsedCount.
   const cap = q || showAll ? Infinity : collapsedCount;
-  const regularEntries = matched.slice(0, cap);
-  const hiddenCount = matched.length - regularEntries.length;
+  const regularRows = ordered.slice(0, cap);
+  const hiddenCount = ordered.length - regularRows.length;
 
   return (
     <div style={{ borderBottom: "1px solid var(--border-soft)" }}>
@@ -179,32 +206,42 @@ export function FacetSection({
           {matched.length === 0 && (
             <p className="px-4 py-1.5 text-xs text-ink-muted">No matches.</p>
           )}
-          {regularEntries.map(([id, count]) => {
+          {regularRows.map((row, idx) => {
+            const [id, count] = row.entry;
             const checked = !!selected[id];
+            // A NON-SELECTABLE group label opens each run of grouped children —
+            // the thesaurus group is context, not a filter value of its own.
+            const showGroupHeader = !!row.group && row.group !== regularRows[idx - 1]?.group;
             return (
-              <label
-                key={id}
-                className={`flex items-center gap-2 px-4 py-1.5 cursor-pointer transition-colors ${
-                  checked ? "bg-carbon/[0.04] hover:bg-carbon/[0.07]" : "hover:bg-warm"
-                }`}
-              >
-                <Checkbox
-                  checked={checked}
-                  onChange={() => onToggle(id)}
-                  ariaLabel={label(id)}
-                />
-                {renderMarker?.(id)}
-                <span
-                  className={`text-xs truncate flex-1 ${
-                    checked ? "text-ink font-medium" : "text-ink-secondary"
-                  }`}
+              <Fragment key={id}>
+                {showGroupHeader && (
+                  <div className="px-4 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink-muted truncate">
+                    {row.group}
+                  </div>
+                )}
+                <label
+                  className={`flex items-center gap-2 py-1.5 cursor-pointer transition-colors ${
+                    row.group ? "ps-7 pe-4" : "px-4"
+                  } ${checked ? "bg-carbon/[0.04] hover:bg-carbon/[0.07]" : "hover:bg-warm"}`}
                 >
-                  {label(id)}
-                </span>
-                <span className="text-[11px] text-ink-tertiary tabular-nums shrink-0">
-                  {count}
-                </span>
-              </label>
+                  <Checkbox
+                    checked={checked}
+                    onChange={() => onToggle(id)}
+                    ariaLabel={row.group ? `${label(id)} (${row.group})` : label(id)}
+                  />
+                  {renderMarker?.(id)}
+                  <span
+                    className={`text-xs truncate flex-1 ${
+                      checked ? "text-ink font-medium" : "text-ink-secondary"
+                    }`}
+                  >
+                    {label(id)}
+                  </span>
+                  <span className="text-[11px] text-ink-tertiary tabular-nums shrink-0">
+                    {count}
+                  </span>
+                </label>
+              </Fragment>
             );
           })}
           {hiddenCount > 0 && (

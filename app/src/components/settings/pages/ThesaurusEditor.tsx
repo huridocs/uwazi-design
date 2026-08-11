@@ -7,8 +7,8 @@ import { RowActions } from "../RowActions";
 import { DragGrip } from "../DragGrip";
 import { useReorder } from "../../../hooks/useReorder";
 import { Field, TextInput } from "../Field";
-import { seedThesaurusItems, type SettingsThesaurus } from "../../../data/settings";
-import { cejilThesaurusItems } from "../../../data/cejil/settingsAdapt";
+import { seedThesaurusValues, type SettingsThesaurus } from "../../../data/settings";
+import { cejilThesaurusValues } from "../../../data/cejil/settingsAdapt";
 import { toastsAtom } from "../../../atoms/references";
 
 interface Item {
@@ -48,8 +48,16 @@ export function ThesaurusEditor({
   const isNew = thesaurus === "new";
   const base = isNew ? undefined : thesaurus;
 
-  const seedLabels = isNew ? [] : cejilThesaurusItems[base!.id] ?? seedThesaurusItems[base!.id] ?? [];
-  const seedItems = (): Item[] => seedLabels.map((label, i) => ({ id: `i${i}`, label }));
+  // Nested seed values (Uwazi's { id, label, values? } shape) map straight onto
+  // the editor's Item/group model: a value carrying `values` becomes a group
+  // whose children render indented beneath it.
+  const seedVals = isNew ? [] : cejilThesaurusValues[base!.id] ?? seedThesaurusValues[base!.id] ?? [];
+  const seedItems = (): Item[] =>
+    seedVals.map((v, i) => ({
+      id: `i${i}`,
+      label: v.label,
+      ...(v.values ? { children: v.values.map((c, ci) => ({ id: `i${i}c${ci}`, label: c.label })) } : {}),
+    }));
 
   const [name, setName] = useState(base?.name ?? "");
   const [items, setItems] = useState<Item[]>(seedItems);

@@ -5,6 +5,7 @@ import { languageAtom } from "../../atoms/language";
 import { entityMetadataAtom, makeEntityPropReader } from "../../atoms/entityMetadata";
 import { overlayEntityIdAtom } from "../../atoms/references";
 import { EntityPill } from "../shared/EntityPill";
+import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
 import { resolveRelationshipField } from "../../utils/inheritance";
 import type { MetadataField, RelationshipMetadataField } from "../../data/metadata";
 
@@ -46,7 +47,11 @@ export function fieldItem(f: MetadataField): MetadataItem {
       ) : long ? (
         <p className="text-sm text-ink leading-relaxed">{f.value}</p>
       ) : (
-        <span className="font-medium leading-snug">{f.value}</span>
+        // Thesaurus-backed child values carry their group as quiet context
+        // ("Americas › Central America"); plain values render unchanged.
+        <span className="font-medium leading-snug">
+          <ThesaurusValueLabel value={f.value} />
+        </span>
       ),
   };
 }

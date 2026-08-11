@@ -4,6 +4,7 @@ import { useAtomValue } from "jotai";
 import { languageAtom } from "../../atoms/language";
 import { EntityTypeTag } from "../shared/EntityTypeTag";
 import { HighlightedText } from "../shared/HighlightedText";
+import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
 import { EntityThumbnail } from "./EntityThumbnail";
 import { getEntityProfile } from "../../data/entityProfiles";
 import { getEntityType } from "../../data/entities";
@@ -166,7 +167,9 @@ export const EntityCard = memo(function EntityCard({
                   <Fragment key={f.id}>
                     <span className="shrink-0 text-ink-muted">·</span>
                     <span className="truncate">
-                      <HighlightedText text={f.value} query={query} />
+                      <ThesaurusValueLabel value={f.value}>
+                        <HighlightedText text={f.value} query={query} />
+                      </ThesaurusValueLabel>
                     </span>
                   </Fragment>
                 ))}
@@ -235,7 +238,9 @@ export const EntityCard = memo(function EntityCard({
                   instead of being cut off inside it. */}
               <span className="flex items-baseline gap-1 min-w-0 text-xs text-ink leading-snug">
                 <span className="truncate" title={f.value}>
-                  <HighlightedText text={f.value} query={query} />
+                  <ThesaurusValueLabel value={f.value}>
+                    <HighlightedText text={f.value} query={query} />
+                  </ThesaurusValueLabel>
                 </span>
                 {!!f.more && (
                   <span className="shrink-0 text-[10px] text-ink-tertiary">+{f.more} more</span>

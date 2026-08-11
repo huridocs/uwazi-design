@@ -8,6 +8,7 @@ import { StyleGuide } from "../components/catalog/StyleGuide";
 // interaction lives in `./catalog/demos.tsx` and is imported lower down.
 import { EntityPill } from "../components/shared/EntityPill";
 import { ProvenanceLine } from "../components/shared/ProvenanceLine";
+import { ThesaurusValueLabel } from "../components/shared/ThesaurusValueLabel";
 import { BorrowedDocLine } from "../components/library/BorrowedDocLine";
 import { PdfPageThumb } from "../components/shared/PdfPageThumb";
 import { EntityTypeChip } from "../components/shared/EntityTypeChip";
@@ -1668,6 +1669,29 @@ const textColor = typeLabelColor(type.color);`}
                         </div>
                       </div>
                     </div>
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="sh-thesaurus-value-label" ref={reg("sh-thesaurus-value-label")}>
+                <CatalogEntry
+                  name="ThesaurusValueLabel"
+                  description="A thesaurus-backed value with its group as QUIET context — Americas › Central America: group in tertiary ink, muted ›, child in the host row's own style. Uwazi thesauri nest exactly one level; the group resolves by label against every known thesaurus, so this wraps ANY value cell — top-level values and free text pass through untouched. One implementation shared by entity cards, the metadata record and inherited-value tags."
+                  code={`<ThesaurusValueLabel value="Central America" />
+{/* resolves the group itself → Americas › Central America */}
+
+<ThesaurusValueLabel value="Honduras" parent="Americas" />
+{/* explicit parent skips the lookup */}
+
+<ThesaurusValueLabel value={f.value}>
+  <HighlightedText text={f.value} query={query} />
+</ThesaurusValueLabel>
+{/* children render the child label with the host's treatment */}`}
+                >
+                  <div className="flex flex-col gap-2 text-sm font-medium text-ink">
+                    <ThesaurusValueLabel value="Central America" />
+                    <ThesaurusValueLabel value="Torture" />
+                    <ThesaurusValueLabel value="Forced displacement" />
                   </div>
                 </CatalogEntry>
               </div>
