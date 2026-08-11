@@ -12,6 +12,7 @@ import {
   User,
   Server,
   Languages,
+  Globe,
   Menu,
   Sparkles,
   ChevronDown,
@@ -379,31 +380,68 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
             >
               <Settings size={14} /> {t("System", "Settings")}
             </button>
+            {/* No `dir="ltr"` on the panel: this menu is chrome like every
+                other, so it mirrors under RTL. The left/right anchoring below
+                already flips — pinning the CONTENT to LTR was what left this
+                one surface reading against the page. */}
             {settingsOpen && (
               <div
-                dir="ltr"
-                className="absolute top-full mt-1.5 w-52 bg-paper border border-border rounded-lg shadow-lg overflow-hidden z-50"
+                // w-72, not the old w-52: the language row carries a control in
+                // its trailing slot, so the label has far less room than the
+                // plain rows. Sized against the LONGEST of the three UI
+                // languages ("Idioma de la interfaz"), not English — at w-64
+                // that one wrapped and made its row taller than the others,
+                // which is the whole thing this menu was being tidied to avoid.
+                className="absolute top-full mt-1.5 w-72 bg-paper border border-border rounded-lg shadow-lg overflow-hidden z-50"
                 style={{ right: rtl ? undefined : 0, left: rtl ? 0 : undefined }}
               >
+                {/* Icon LEADS, as in the Tools dropdown, DocumentationLink,
+                    ToolsSidebar and SettingsNav. The trailing slot is reserved
+                    for something that carries meaning — the RTL pill here, an
+                    ExternalLink for "leaves the app", a chevron for "goes
+                    deeper" — so an icon parked there reads as a promise the row
+                    doesn't keep. */}
                 <div className="py-1">
                   <button
                     onClick={() => { onToggleRtl?.(); setSettingsOpen(false); }}
-                    className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors"
+                    className="flex items-center justify-between gap-2 w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
                   >
-                    <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-2">
+                      <Languages size={14} className="text-ink-tertiary" />
                       {t("System", "Test RTL layout")}
-                      <span
-                        className={`px-1.5 py-0.5 text-[10px] font-semibold rounded ${
-                          rtl
-                            ? "bg-success-light text-success"
-                            : "bg-warm text-ink-muted"
-                        }`}
-                      >
-                        {rtl ? "ON" : "OFF"}
-                      </span>
-                    </div>
-                    <Languages size={14} className="text-ink-tertiary" />
+                    </span>
+                    <span
+                      className={`px-1.5 py-0.5 text-[10px] font-semibold rounded ${
+                        rtl
+                          ? "bg-success-light text-success"
+                          : "bg-warm text-ink-muted"
+                      }`}
+                    >
+                      {rtl ? "ON" : "OFF"}
+                    </span>
                   </button>
+                  {/* Interface language — the chrome's language, NOT the
+                      document's reading language (that one lives in the tab
+                      strips / Library toolbar), and nothing to do with System ›
+                      Languages. It sits with the RTL toggle because both are
+                      switches you flip and watch, not places you navigate to:
+                      choosing writes `uiLanguageAtom` immediately and closes
+                      the menu. Same leading-icon shape as the rows around it,
+                      with the control in the trailing slot. */}
+                  <div className="flex items-center justify-between gap-2 px-3 py-2">
+                    <span className="flex items-center gap-2 text-xs font-medium text-ink-secondary">
+                      <Globe size={14} className="text-ink-tertiary" />
+                      {t("System", "Interface language")}
+                    </span>
+                    <Select
+                      value={uiLang}
+                      onChange={(v) => { setUiLang(v as UiLanguage); setSettingsOpen(false); }}
+                      ariaLabel={t("System", "Interface language")}
+                      align="end"
+                      options={UI_LANGUAGES}
+                      steady
+                    />
+                  </div>
                   {/* Two doors, two destinations. Both used to dump you on the
                       same page with the same twenty-item rail — the distinction
                       was a label, not a place. */}
@@ -412,20 +450,20 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                       openSettings(settingsEntryOf("user"));
                       setSettingsOpen(false);
                     }}
-                    className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
+                    className="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
                   >
-                    {t("System", "User settings")}
                     <User size={14} className="text-ink-tertiary" />
+                    {t("System", "User settings")}
                   </button>
                   <button
                     onClick={() => {
                       openSettings(settingsEntryOf("system"));
                       setSettingsOpen(false);
                     }}
-                    className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
+                    className="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
                   >
-                    {t("System", "System settings")}
                     <Server size={14} className="text-ink-tertiary" />
+                    {t("System", "System settings")}
                   </button>
                   <DocumentationLink onDone={() => setSettingsOpen(false)} />
                 </div>
@@ -433,20 +471,6 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
             )}
           </div>
         ) : null}
-        {/* UI language — the chrome's language, NOT the document's reading
-            language (that one lives in the tab strips / Library toolbar). Shows
-            each language in its own name; `steady` so switching to a longer
-            name can't shove the theme toggle. */}
-        {!showingCatalog && !isMobile && (
-          <Select
-            value={uiLang}
-            onChange={(v) => setUiLang(v as UiLanguage)}
-            ariaLabel={t("System", "Interface language")}
-            align="end"
-            options={UI_LANGUAGES}
-            steady
-          />
-        )}
         {!isMobile && (
           <button
             onClick={onToggleTheme}
@@ -564,6 +588,24 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                 {rtl ? "ON" : "OFF"}
               </span>
             </button>
+            {/* Same control as the desktop Settings dropdown, same section —
+                the chrome's language, not the document's. Choosing leaves the
+                sheet open: it's a switch you watch take effect, and the strings
+                around it are the demonstration. */}
+            <div className="flex items-center justify-between gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary">
+              <div className="flex items-center gap-3">
+                <Globe size={16} className="text-ink-tertiary" />
+                {t("System", "Interface language")}
+              </div>
+              <Select
+                value={uiLang}
+                onChange={(v) => setUiLang(v as UiLanguage)}
+                ariaLabel={t("System", "Interface language")}
+                align="end"
+                options={UI_LANGUAGES}
+                steady
+              />
+            </div>
             <button
               onClick={() => { onNavigate?.("settings"); setMobileMenuOpen(false); }}
               className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
