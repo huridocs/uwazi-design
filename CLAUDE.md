@@ -124,7 +124,7 @@ The prototype keeps a simpler shape: every row in `data/references.ts` is a `Ref
 - List view rows = `Reference[]` (one per evidence, snippet + page tag).
 - Tree view leaves = `Relationship[]` (deduped aggregates) with inline-expand into their underlying refs.
 - Graph nodes = `Relationship[]`.
-- Header counter always shows the **aggregate** count (`deriveRelationships(filtered).length` + hubs) so list and tree numbers agree — it lives on the TOOLBAR (`CountReadout`, rendered by both the main view and the drawer section), not in the info rows, which pass `count={null}` and keep only the collapse controls.
+- **The tab strip is the only place this surface prints a number** — the Relationships tab's `count` (`references.length`, `EntityView.tsx`). Neither toolbar carries a readout and the info rows pass `count={null}`, keeping only the collapse controls. (A toolbar `CountReadout` showing the **aggregate** count — `deriveRelationships(filtered).length` + hubs — existed until 2026-08-11; it was removed as a second number for the same surface. Don't add a count back to the toolbar or the info rows.)
 - The aggregate row's "evidence count" badge is `relationship.evidenceCount`.
 
 **Known gaps vs Uwazi v2 (intentional, don't paper over):**
@@ -154,7 +154,6 @@ src/components/relationships/
   GroupByControl.tsx             // grouping axis (+ subGroupBy "Then by")
   DirectionGlyph.tsx             // shared arrow badge
   SearchBar.tsx                  // has rightSlot AND inlineSlot
-  CountReadout.tsx               // THE header counter (aggregate count) — toolbar slot, both flavours
   FiltersRow.tsx                 // exports CollapseControls
   ZoomControl.tsx                // detail / compact / overview
   RelationshipsTreeView.tsx      // tree body — target cards use RelationshipRow kind="aggregate"

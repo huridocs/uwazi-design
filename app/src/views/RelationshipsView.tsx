@@ -25,7 +25,6 @@ import { MainTabs } from "../components/layout/MainTabs";
 import { DocMeta } from "../components/layout/DocMeta";
 import { DocumentViewer } from "../components/viewer/DocumentViewer";
 import { SearchBar } from "../components/relationships/SearchBar";
-import { CountReadout } from "../components/relationships/CountReadout";
 import { DisplayMenu } from "../components/relationships/DisplayMenu";
 import { ActiveFilterChips } from "../components/relationships/ActiveFilterChips";
 import { RelationshipsFilterDrawer } from "../components/relationships/RelationshipsFilterDrawer";
@@ -120,23 +119,17 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
           <SearchBar
             inlineSlot={<ActiveFilterChips omitSearch />}
             rightSlot={
-              <>
-                {/* The header counter — the aggregate count, in the strip that
-                    filters it, not repeated in the info row below. Its own flex
-                    child so it wraps apart from the controls cluster. */}
-                <CountReadout />
-                {/* ONE flex child, so the controls wrap as a CLUSTER. As three
-                    siblings they wrapped one at a time, and a phone got Filters
-                    stranded on a line of its own. */}
-                <div className="flex items-center gap-2 shrink-0">
-                  <ViewControls />
-                  <DisplayMenu />
-                  <FiltersButton
-                    activeCount={activeFilterCount}
-                    onClick={() => setFiltersOpen(true)}
-                  />
-                </div>
-              </>
+              /* ONE flex child, so the controls wrap as a CLUSTER. As three
+                 siblings they wrapped one at a time, and a phone got Filters
+                 stranded on a line of its own. */
+              <div className="flex items-center gap-2 shrink-0">
+                <ViewControls />
+                <DisplayMenu />
+                <FiltersButton
+                  activeCount={activeFilterCount}
+                  onClick={() => setFiltersOpen(true)}
+                />
+              </div>
             }
           />
 

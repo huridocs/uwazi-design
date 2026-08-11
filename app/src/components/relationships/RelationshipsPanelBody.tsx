@@ -154,9 +154,9 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
 
   return (
     <>
-      {/* No count here — the header counter rides the toolbar (`CountReadout`)
-          in both flavours. The row stays mounted at its height for the collapse
-          controls, so switching views or filtering never shifts the list. */}
+      {/* No count here — the tab strip already carries the number. The row
+          stays mounted at its height for the collapse controls, so switching
+          views or filtering never shifts the list. */}
       <ListInfoRow
         count={null}
         activeFilterCount={activeFilterCount}

@@ -60,9 +60,9 @@ export function RelationshipsTreeView() {
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      {/* No count here — the header counter rides the toolbar (`CountReadout`)
-          in both flavours, so tree and list can't print different numbers. The
-          row stays mounted at its height for the collapse controls. */}
+      {/* No count here — the tab strip already carries the number, so tree and
+          list can't print different ones. The row stays mounted at its height
+          for the collapse controls. */}
       <ListInfoRow
         count={null}
         activeFilterCount={activeFilterCount}
