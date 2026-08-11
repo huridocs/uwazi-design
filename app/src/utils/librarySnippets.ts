@@ -306,33 +306,45 @@ const mockPagesCache = new Map<Language, DocPages>();
 const docPagesCache = new Map<string, DocPages>();
 
 function documentPages(e: Entity, language: Language, source: DataSource): DocPages {
-  if (source === "cejil") {
-    // Before the corpus lands every entity has no pages; caching that would
-    // outlive the load and permanently blind full-text search (same rule as
-    // `entityFullTextBlob`'s).
-    if (!cejilLoaded()) return NO_PAGES;
-    const key = `cejil:${e.id}`;
-    let hit = docPagesCache.get(key);
-    if (!hit) {
-      // The file the VIEWER renders, and whether it came from a connected
-      // document — one resolver, one relationship walk (see `cejilRenderedDoc`).
-      const { pages, borrowedFrom } = cejilRenderedDoc(e.id);
-      // Entities that borrow the SAME file get the same array instance back, so
-      // the per-document fold cache below is shared across all of them.
-      hit = pages.length ? { pages, paged: true, borrowedFrom } : NO_PAGES;
-      docPagesCache.set(key, hit);
+  switch (source) {
+    case "cejil": {
+      // Before the corpus lands every entity has no pages; caching that would
+      // outlive the load and permanently blind full-text search (same rule as
+      // `entityFullTextBlob`'s).
+      if (!cejilLoaded()) return NO_PAGES;
+      const key = `cejil:${e.id}`;
+      let hit = docPagesCache.get(key);
+      if (!hit) {
+        // The file the VIEWER renders, and whether it came from a connected
+        // document — one resolver, one relationship walk (see `cejilRenderedDoc`).
+        const { pages, borrowedFrom } = cejilRenderedDoc(e.id);
+        // Entities that borrow the SAME file get the same array instance back, so
+        // the per-document fold cache below is shared across all of them.
+        hit = pages.length ? { pages, paged: true, borrowedFrom } : NO_PAGES;
+        docPagesCache.set(key, hit);
+      }
+      return hit;
     }
-    return hit;
+    case "artworks":
+      // Images, no document bodies — nothing for full-text search to scan.
+      return NO_PAGES;
+    case "mock": {
+      if (!typeHasDocument(e.typeId)) return NO_PAGES;
+      let hit = mockPagesCache.get(language);
+      if (!hit) {
+        const rendition = renditionsByLanguage[language] ?? renditionsByLanguage.EN;
+        const pageCount = (documentsByLanguage[language] ?? documentsByLanguage.EN).pages;
+        hit = { pages: paginate(rendition.plainText, pageCount), paged: false, borrowedFrom: null };
+        mockPagesCache.set(language, hit);
+      }
+      return hit;
+    }
+    default: {
+      const _exhaustive: never = source;
+      void _exhaustive;
+      return NO_PAGES;
+    }
   }
-  if (!typeHasDocument(e.typeId)) return NO_PAGES;
-  let hit = mockPagesCache.get(language);
-  if (!hit) {
-    const rendition = renditionsByLanguage[language] ?? renditionsByLanguage.EN;
-    const pageCount = (documentsByLanguage[language] ?? documentsByLanguage.EN).pages;
-    hit = { pages: paginate(rendition.plainText, pageCount), paged: false, borrowedFrom: null };
-    mockPagesCache.set(language, hit);
-  }
-  return hit;
 }
 
 /** Every page of a document, FOLDED — keyed by the PAGE ARRAY ITSELF, not by the

@@ -92,7 +92,22 @@ export type FacetKey =
   | "matchType";
 
 export function entityIsDoc(e: Entity, source: DataSource): boolean {
-  return source === "cejil" ? e.preview === "document" : typeHasDocument(e.typeId);
+  switch (source) {
+    case "cejil":
+      return e.preview === "document";
+    case "artworks":
+      // An image corpus: nothing carries a document. Previously this fell
+      // through to the mock branch and was right only because "artwork" and
+      // "artist" happen to miss the mock's DOC_TYPES set.
+      return false;
+    case "mock":
+      return typeHasDocument(e.typeId);
+    default: {
+      const _exhaustive: never = source;
+      void _exhaustive;
+      return false;
+    }
+  }
 }
 
 /** Per-entity searchable text (title + country + metadata field values +

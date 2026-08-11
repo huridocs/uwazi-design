@@ -24,18 +24,43 @@ export const cejilReadyAtom = atom(false);
  *  this is [] until `cejilReadyAtom` flips (the Library shows a loading state). */
 export const libraryEntitiesAtom = atom<Entity[]>((get) => {
   const source = get(dataSourceAtom);
-  // Bundled TS — present the moment the app is, so no ready gate (see
-  // `artworkLibraryEntities`). Checked before cejil so the lazy path stays the
-  // exception rather than the default.
-  if (source === "artworks") return artworkLibraryEntities();
-  if (source !== "cejil") return get(entitiesAtom);
-  get(cejilReadyAtom); // subscribe: recompute once the corpus is present
-  return cejilLibraryEntities();
+  switch (source) {
+    case "artworks":
+      // Bundled TS — present the moment the app is, so no ready gate (see
+      // `artworkLibraryEntities`).
+      return artworkLibraryEntities();
+    case "mock":
+      return get(entitiesAtom);
+    case "cejil":
+      get(cejilReadyAtom); // subscribe: recompute once the corpus is present
+      return cejilLibraryEntities();
+    default: {
+      // Compile-time: widening DataSource without answering here is a type
+      // error. Runtime: `dataSourceAtom` is storage-backed, so a stale
+      // persisted value degrades to the mock seed instead of crashing.
+      const _exhaustive: never = source;
+      void _exhaustive;
+      return get(entitiesAtom);
+    }
+  }
 });
 
 /** The entity types present for the active source (drives facet lists + colours). */
 export const libraryTypesAtom = atom<EntityType[]>((get) => {
   const source = get(dataSourceAtom);
-  if (source === "artworks") return artworkEntityTypes;
-  return source === "cejil" ? cejilEntityTypes : (get(entityTypesAtom) ?? entityTypes);
+  switch (source) {
+    case "artworks":
+      return artworkEntityTypes;
+    case "cejil":
+      return cejilEntityTypes;
+    case "mock":
+      return get(entityTypesAtom) ?? entityTypes;
+    default: {
+      // Same shape as libraryEntitiesAtom: type error on widening, mock
+      // fallback for a stale persisted value.
+      const _exhaustive: never = source;
+      void _exhaustive;
+      return get(entityTypesAtom) ?? entityTypes;
+    }
+  }
 });
