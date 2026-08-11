@@ -781,7 +781,19 @@ export function LibraryView() {
             `aria-busy` + a dim carry staleness instead of the footer's
             "updating…" word: the counts describe the set ON SCREEN, which
             during a transition is the previous query's, and a second string
-            appearing beside this one would need a reserve of its own. */}
+            appearing beside this one would need a reserve of its own.
+
+            ONE TREATMENT, whole sentence, both states: `text-[11px]
+            tabular-nums text-ink-tertiary` off this element and nothing
+            overriding it. The figure used to be lifted to `font-medium
+            text-ink-secondary` against a tertiary unit, on the theory that it
+            was the loudest thing inside the readout without outranking the row.
+            At one size, weight and colour ARE the size — a heavier, darker
+            numeral among lighter words reads as larger type, so the readout
+            printed a number that looked like a different step of the scale from
+            the words attached to it. It is one sentence and now looks like one;
+            `tabular-nums` stays, because what the figure actually needs is to
+            not reflow while it changes, and that was never the weight's job. */}
         <span
           aria-busy={searchPending}
           // `pe-3` is INSIDE the fixed slot: it guarantees a gap before Sort in
@@ -797,15 +809,7 @@ export function LibraryView() {
             (hasQuery ? (
               <>
                 <span dir="ltr" className="shrink-0 whitespace-nowrap">
-                  {/* `font-medium`, not semibold: measured, the figure rendered
-                      at weight 600 in ink-secondary while Sort and View render
-                      at 500 in the same colour one pixel larger. A caption that
-                      is HEAVIER than the controls beside it is why this read as
-                      a stray control. 500 keeps the figure the loudest thing
-                      inside the readout without outranking the row. */}
-                  <span className="font-medium text-ink-secondary">
-                    {filtered.length.toLocaleString()}
-                  </span>
+                  {filtered.length.toLocaleString()}
                   {filtered.length !== matchTypeBase.length && (
                     <> of {matchTypeBase.length.toLocaleString()}</>
                   )}{" "}
@@ -815,9 +819,7 @@ export function LibraryView() {
               </>
             ) : (
               <span dir="ltr" className="truncate">
-                <span className="font-medium text-ink-secondary">
-                  {filtered.length.toLocaleString()}
-                </span>
+                {filtered.length.toLocaleString()}
                 {filtered.length !== entities.length && (
                   <> of {entities.length.toLocaleString()}</>
                 )}{" "}

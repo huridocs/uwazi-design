@@ -84,9 +84,20 @@ export function Select({
         // inboard of the trigger's. Same border + same px-3 on both = one text
         // column. `gap-1` because a 14px chevron carries ~3.5px of its own
         // slack — 6px of gap read as 9.5 and detached the caret from the label.
+        // Hover is a BACKGROUND TINT and nothing else. It used to darken the
+        // border and raise a shadow too — a lift, on a flat toolbar, on a control
+        // that doesn't move when you press it.
+        //
+        // `bg-parchment`, which is what a paper surface hovers to everywhere else
+        // here (EntityCard, the popover rows, the footer buttons) — NOT `bg-warm`:
+        // measured, warm is #FCFAF8 against this pill's #FFFFFF, a step of three
+        // on one channel that simply does not render. The pill meets the toolbar's
+        // own parchment on hover and keeps its border, so it settles INTO the bar
+        // rather than rising off it, which is the direction that was wanted.
+        // `transition-colors`, not `transition-all`: colour is all that changes now.
         className="inline-flex items-center gap-1 h-8 ps-3 pe-2 text-xs font-medium text-ink-secondary
-          bg-paper border border-border hover:border-ink/25 hover:text-ink hover:shadow-sm
-          rounded-md transition-all cursor-pointer
+          bg-paper border border-border hover:bg-parchment hover:text-ink
+          rounded-md transition-colors cursor-pointer
           focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35"
       >
         {/* Prefix and value are ONE run. As two loose spans they are two inline

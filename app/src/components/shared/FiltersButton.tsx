@@ -23,10 +23,16 @@ export function FiltersButton({
     <button
       onClick={onClick}
       aria-pressed={active}
-      className={`relative inline-flex items-center gap-1.5 ${h} ${px} ${textSize} font-medium rounded-md transition-all cursor-pointer ${
+      // Resting hover is a background tint only — no border darkening, no
+      // shadow. The lift read as the button rising off a flat toolbar, and it
+      // also blurred the line with ACTIVE, which is what the shadow means here:
+      // hovering an inactive Filters button looked a lot like the state that
+      // says filters are on. Active keeps its shadow and its ink border; only
+      // hover gave them up, so the two states now differ at a glance.
+      className={`relative inline-flex items-center gap-1.5 ${h} ${px} ${textSize} font-medium rounded-md transition-colors cursor-pointer ${
         active
           ? "bg-paper text-ink border border-ink/40 shadow-sm"
-          : "bg-paper border border-border text-ink-secondary hover:border-ink/25 hover:text-ink hover:shadow-sm"
+          : "bg-paper border border-border text-ink-secondary hover:bg-parchment hover:text-ink"
       }`}
     >
       <Filter size={iconSize} className={active ? "text-ink" : "text-ink-secondary"} />

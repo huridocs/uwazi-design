@@ -129,10 +129,13 @@ export function DisplayMenu() {
         aria-label={t("System", "Display options")}
         aria-haspopup="menu"
         aria-expanded={open}
-        className={`relative inline-flex items-center justify-center w-8 h-8 rounded-md border transition-all cursor-pointer ${
+        // Background tint on hover, nothing raised. Open/modified keeps the
+        // shadow and the ink border — the same split as FiltersButton beside it,
+        // so a hovered trigger can't be mistaken for an open one.
+        className={`relative inline-flex items-center justify-center w-8 h-8 rounded-md border transition-colors cursor-pointer ${
           open || modified
             ? "bg-paper text-ink border-ink/40 shadow-sm"
-            : "bg-paper text-ink-secondary border-border hover:border-ink/25 hover:text-ink hover:shadow-sm"
+            : "bg-paper text-ink-secondary border-border hover:bg-parchment hover:text-ink"
         }`}
       >
         <SlidersHorizontal size={14} />
