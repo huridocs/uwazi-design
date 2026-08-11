@@ -244,7 +244,14 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
   const [saveState, setSaveState] = useState<"idle" | "saving" | "failed">("idle");
   const saving = saveState === "saving";
   const aliveRef = useRef(true);
-  useEffect(() => () => { aliveRef.current = false; }, []);
+  // RE-ARM on mount, don't just disarm on unmount: StrictMode mounts, runs the
+  // cleanup, and mounts again, so a cleanup-only guard latches false before the
+  // first render the user sees — and every save then returned early below and
+  // sat on "Saving…" forever.
+  useEffect(() => {
+    aliveRef.current = true;
+    return () => { aliveRef.current = false; };
+  }, []);
 
   const handleSave = () => {
     if (saving) return; // aria-disabled — the working state explains the held click
