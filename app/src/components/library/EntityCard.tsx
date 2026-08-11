@@ -20,41 +20,24 @@ import {
   type ThumbSize,
 } from "../../atoms/library";
 
-/** The preview slot at each Display-menu size AND frame. All of these move
- *  together: the grid cover, its no-preview vellum twin (same class), the card's
- *  height floor (which exists to absorb 1–3 metadata fields — it grows with the
- *  cover so a one-field card still meets its neighbours), and the list chip.
+/** The preview slot at each Display-menu size AND frame.
  *
- *  **Landscape** is a band: full card width, fixed height, so its ratio is
- *  whatever the column happens to be (~3:1 at three columns).
- *  **Portrait** is a true frame: 3:4, sized from its HEIGHT and centred in the card,
- *  because a slot that filled the card's width would be 400px tall and the card
- *  would be a poster. Each portrait step is the next landscape step's height —
- *  a portrait frame at Medium stands as tall as a landscape one at Large — which
- *  is what makes Size read as one control across both shapes rather than two
- *  unrelated ramps.
+ *  **Landscape** is a band: full card width, fixed height per size, so its
+ *  ratio is whatever the column happens to be (~3:1 at three columns).
+ *  **Portrait** is the card's full width at 3:4 — the SLOT is portrait-shaped,
+ *  not a portrait picture centred in a wide band (that read as landscape, twice).
+ *  What keeps it from becoming a poster is the GRID, not the slot: LibraryView
+ *  re-hangs portrait cards in narrower columns, and Size steps the column count
+ *  there instead of a height table here. A gallery wall gets taller pictures by
+ *  hanging more of them, smaller.
  *
- *  Both are DEFINITE boxes before an image loads, which is the whole no-shift
- *  contract: `aspect-[3/4]` resolves against the fixed height, so the portrait
- *  frame has its width before a byte arrives. */
-/** Slot keys: the two frames, plus portrait-under-Cover, which is its own band.
- *  Cover drops the 3:4 frame and fills the card's full width, so the band is the
- *  only thing left deciding how much of a standing picture survives the crop —
- *  and at the framed heights a full-width band was still a letterbox. It gets a
- *  taller step of its own (+1/2/3rem), which is the whole point of choosing
- *  Portrait while asking for a fill. */
-type SlotKey = ThumbFrame | "portraitFill";
-const COVER_H: Record<SlotKey, Record<ThumbSize, string>> = {
-  landscape: { s: "h-16", m: "h-24", l: "h-36" },
-  portrait: { s: "h-24", m: "h-36", l: "h-52" },
-  portraitFill: { s: "h-28", m: "h-44", l: "h-64" },
-};
-const CARD_FLOOR: Record<SlotKey, Record<ThumbSize, string>> = {
-  landscape: { s: "min-h-[13.5rem]", m: "min-h-[15.5rem]", l: "min-h-[18.5rem]" },
-  // The portrait frame is 2/3/4rem taller than the landscape one at the same
-  // size, and the floor carries exactly that much more.
-  portrait: { s: "min-h-[15.5rem]", m: "min-h-[18.5rem]", l: "min-h-[22.5rem]" },
-  portraitFill: { s: "min-h-[16.5rem]", m: "min-h-[20.5rem]", l: "min-h-[25.5rem]" },
+ *  Both are DEFINITE boxes before an image loads — fixed height, or aspect
+ *  resolved against the column width — which is the no-shift contract. */
+const COVER_H: Record<ThumbSize, string> = { s: "h-16", m: "h-24", l: "h-36" };
+const CARD_FLOOR: Record<ThumbSize, string> = {
+  s: "min-h-[13.5rem]",
+  m: "min-h-[15.5rem]",
+  l: "min-h-[18.5rem]",
 };
 /** The list row's chip is square at every frame — see EntityThumbnail. */
 const CHIP_BOX: Record<ThumbSize, string> = { s: "w-7 h-7", m: "w-9 h-9", l: "w-12 h-12" };
@@ -214,30 +197,21 @@ export const EntityCard = memo(function EntityCard({
     );
   }
 
-  // A floor, not a fixed height: entities carry 1–3 display fields, and without
-  // it a one-field card sits visibly short of a three-field neighbour. Only
-  // applies when the preview slot is in play — with previews off the card is a
-  // compact text block and the floor would just add dead space.
-  /** Which of the three slot bands this grid is drawing. */
-  const slot: SlotKey =
-    thumbFrame === "portrait" && thumbFit === "cover" ? "portraitFill" : thumbFrame;
-  const minHeight = showPreview ? CARD_FLOOR[slot][thumbSize] : "";
+  // A floor, not a fixed height — but only where heights actually vary: with
+  // metadata ON, entities carry 1–3 display fields and a one-field card would
+  // sit short of a three-field neighbour. With metadata OFF the card is
+  // slot + title + footer, already equal everywhere, and in PORTRAIT the aspect
+  // slot plus the grid row's own stretch keeps neighbours level — a rem floor
+  // sized for one column width is wrong at every other.
+  const minHeight =
+    showPreview && showMetadata && thumbFrame === "landscape"
+      ? CARD_FLOOR[thumbSize]
+      : "";
 
-  /** The shape the picture takes INSIDE the slot's band.
-   *
-   *  Explicit **Cover means fill**, in every frame — asking for cover and being
-   *  handed a 3:4 card with vellum down both sides is the setting refusing the
-   *  instruction. So cover goes full-bleed and the frame control keeps only what
-   *  it can still honestly claim under that instruction: how TALL the band is.
-   *  Portrait's band is the taller one, which is the one that crops least.
-   *
-   *  `auto` and `contain` keep the centred 3:4 frame, because both are asking to
-   *  see the picture whole-ish and the frame is what makes that readable.
-   *
-   *  The no-preview well takes the same shape — a row where the pictures are
-   *  full-bleed and the empty slots are 3:4 wells reads as two grids. */
-  const pictureShape =
-    thumbFrame === "portrait" && thumbFit !== "cover" ? "aspect-[3/4]" : "w-full";
+  /** Slot class: landscape = the fixed band; portrait = the card's width at
+   *  3:4. The picture fills the slot either way — Cover crops to fill it,
+   *  auto/contain mat within it (ImageThumb's object-fit owns that call). */
+  const slotShape = thumbFrame === "portrait" ? "aspect-[3/4]" : COVER_H[thumbSize];
 
   return (
     <div onClick={() => onSelect(entity.id)} className={`${base} ${surface} ${minHeight}`}>
@@ -249,11 +223,11 @@ export const EntityCard = memo(function EntityCard({
           exists made every row as tall as its tallest card and left the grid
           ragged — reserving the slot is what lets rows line up. */}
       {/* The row is what has to line up, so the SLOT is a full-width shrink-0
-          band at every frame and the portrait picture hangs centred inside it.
-          Centring the thumbnail itself instead would leave the no-preview well
-          and the picture agreeing on height but not on where they sit. */}
+          box at every frame — band in landscape, 3:4 in portrait — and the
+          picture fills it. The no-preview well takes the same box, so empty
+          slots and pictures agree on both height and position. */}
       {showPreview && (
-        <span className={`shrink-0 w-full flex justify-center ${COVER_H[slot][thumbSize]}`}>
+        <span className={`shrink-0 w-full ${slotShape}`}>
           {entity.preview ? (
             <EntityThumbnail
               kind={entity.preview}
@@ -261,11 +235,11 @@ export const EntityCard = memo(function EntityCard({
               image={entity.image}
               fit={thumbFit}
               frame={thumbFrame}
-              className={`h-full ${pictureShape} rounded overflow-hidden border border-border/60`}
+              className="h-full w-full rounded overflow-hidden border border-border/60"
             />
           ) : (
             <span
-              className={`h-full ${pictureShape} rounded border border-border/60 bg-vellum flex items-center justify-center`}
+              className="h-full w-full rounded border border-border/60 bg-vellum flex items-center justify-center"
             >
               <span
                 className="w-2.5 h-2.5 rounded-[2px]"

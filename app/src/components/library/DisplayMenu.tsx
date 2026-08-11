@@ -54,7 +54,7 @@ const THUMB_SIZES: { id: ThumbSize; label: string }[] = [
 
 const THUMB_FRAMES: { id: ThumbFrame; label: string; detail: string }[] = [
   { id: "landscape", label: "Landscape", detail: "A wide band across the card" },
-  { id: "portrait", label: "Portrait", detail: "A taller slot — a 3:4 frame, or a tall band under Cover" },
+  { id: "portrait", label: "Portrait", detail: "3:4 cards in narrower columns — a gallery hang" },
 ];
 
 const THUMB_FITS: { id: ThumbFit; label: string; detail: string }[] = [

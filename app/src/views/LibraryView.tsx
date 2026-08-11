@@ -39,6 +39,8 @@ import {
   libraryActiveFilterCountAtom,
   libraryViewModeAtom,
   libraryInfoAtom,
+  libraryThumbFrameAtom,
+  libraryThumbSizeAtom,
   libraryTimeHubAtom,
   librarySortAtom,
   librarySortDirAtom,
@@ -182,6 +184,21 @@ export function LibraryView() {
   const activeFilterCount = useAtomValue(libraryActiveFilterCountAtom);
   const [viewMode, setViewMode] = useAtom(libraryViewModeAtom);
   const info = useAtomValue(libraryInfoAtom);
+  const thumbFrame = useAtomValue(libraryThumbFrameAtom);
+  const thumbSize = useAtomValue(libraryThumbSizeAtom);
+  // Portrait cards are made portrait by the GRID: the 3:4 slot spans the card's
+  // width, so the column width is what sets the frame's height — Size steps the
+  // column count (S hangs five across, L three) instead of a slot-height table.
+  // Landscape keeps the classic three-column hang; previews off means the frame
+  // control isn't in play at all.
+  const cardGridCols =
+    thumbFrame === "portrait" && info.preview !== false
+      ? {
+          s: "grid-cols-2 sm:grid-cols-3 xl:grid-cols-5",
+          m: "grid-cols-2 sm:grid-cols-3 xl:grid-cols-4",
+          l: "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3",
+        }[thumbSize]
+      : "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3";
   const timeHub = useAtomValue(libraryTimeHubAtom);
   const [sort, setSort] = useAtom(librarySortAtom);
   const [sortDir, setSortDir] = useAtom(librarySortDirAtom);
@@ -910,7 +927,7 @@ export function LibraryView() {
             No entities match your filters.
           </div>
         ) : viewMode === "cards" ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+          <div className={`grid ${cardGridCols} gap-3`}>
             {shown.map((e) => (
               <EntityCard
                 key={e.id}

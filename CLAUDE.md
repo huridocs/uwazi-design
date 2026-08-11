@@ -529,38 +529,31 @@ down instead. What the growth did cost was memory, and the
 Three Display-menu controls over one slot, and they compose in that order: how
 big, what shape, how the picture sits in it.
 
-- **Size** (`libraryThumbSizeAtom`, S/M/L) scales BOTH frames. The tables live in
-  `EntityCard.tsx` (`COVER_H`, `CARD_FLOOR`, `CHIP_BOX`) and move together — the
-  card's height floor exists to absorb 1–3 metadata fields and has to grow with
-  the cover, or a one-field card stops meeting its neighbours.
 - **Frame** (`libraryThumbFrameAtom`, `landscape | portrait`) is **one choice for
   the whole grid, never per card** — per-card orientation ragged-edges the rows
   the reserved slot exists to keep level. Landscape is a full-width band (h-16 /
-  h-24 / h-36); portrait is a **3:4** frame sized from its HEIGHT (h-24 / h-36 /
-  h-52) and centred in a full-width band, because a 3:4 slot filling the card's
-  width would be 400px tall. **A portrait frame at size N is as tall as a
-  landscape one at N+1** — that relationship is what makes Size read as one
-  control across both shapes. Floors carry the extra 2/3/4rem.
+  h-24 / h-36 by Size). **Portrait is the card's full width at `aspect-[3/4]` —
+  the SLOT is portrait-shaped, and the GRID is what keeps it from becoming a
+  poster**: `LibraryView` re-hangs portrait cards in narrower columns
+  (`cardGridCols`), and **Size steps the column count** (S = five across at xl,
+  M = four, L = three) instead of a slot-height table. Two earlier treatments —
+  a 3:4 picture centred in a wide band, then a merely-taller band — both read
+  as landscape at real column widths; don't reintroduce them.
 - **Fit** (`libraryThumbFitAtom`, `auto | cover | contain`) — `auto` is ONE rule
   read against the frame: **an image whose orientation matches the frame covers
   it, anything else is matted on vellum.** A square matches neither, so it mats
-  in both (0.75 would take a quarter off its width, and a square composition has
-  nothing to spare at the edges).
-- **Explicit `cover` is FULL-BLEED in every frame** — it fills the slot edge to
-  edge, and the 3:4 frame is dropped (`pictureShape` in `EntityCard`). Cover
-  means fill; handing it a centred frame with vellum down both sides is the
-  setting refusing its own instruction. Under cover the frame control keeps only
-  what it can still honestly claim: **how TALL the band is** — and portrait's
-  taller band is the one that crops least. `contain` keeps the frame, because it
-  is asking to see the picture whole.
-- Portrait+cover is therefore its OWN slot band (`SlotKey = "portraitFill"`,
-  h-28 / h-44 / h-64, floors +1/2/3rem over the framed portrait ones): with the
-  frame gone the band is the only thing deciding how much of a standing picture
-  survives, and at the framed heights a full-width band was still a letterbox.
+  in both. **Explicit `cover` is FULL-BLEED** — it fills the slot edge to edge in
+  either frame; `contain` always mats. The call is `ImageThumb`'s object-fit
+  (`EntityThumbnail.tsx`), never a second box shape.
+- **Card floor** (`CARD_FLOOR`, landscape only, and only with metadata ON): it
+  absorbs the 1–3-field spread so a one-field card meets its neighbours. With
+  metadata off the card is slot + title + footer — already equal — and in
+  portrait the aspect slot plus the grid row's stretch keeps rows level; a rem
+  floor sized for one column width would be wrong at every other.
 - The **list row's chip stays square at every frame** — a 3:4 chip would outgrow
   the two lines of text beside it, and a mat inside 2.25rem is almost all mat.
 - **No-shift holds by construction**: every box is definite before an image
-  loads (`aspect-[3/4]` resolves against the fixed height), and the no-preview
+  loads (fixed height, or aspect against the column width), and the no-preview
   vellum well uses the same box, so rows line up whatever a card is carrying.
 - Verified against the artworks corpus's real spread — 30 portrait / 22
   landscape / 8 square. Stories: `Sizes` and `FitModes` render the full matrix
