@@ -78,6 +78,12 @@ export type AnyMetadataField = MetadataField | RelationshipMetadataField;
 // Merits Judgment of the Inter-American Court of Human Rights, July 29, 1988
 // (Series C No. 4). Field values are drawn from the actual judgment so the
 // drawer reflects the document.
+//
+// victim / petitioner / respondent / mechanism are `text`, not `link`: they
+// hold names ("State of Honduras"), and `link` means the value is a URL — the
+// editor validates it with `new URL()` and blocks save on failure. Typed
+// `link`, they made the DEFAULT entity's edit form unsaveable in all four
+// languages. Same rule as TYPE_FIELDS in entityProfiles.ts.
 export const metadataFields: MetadataField[] = [
   {
     id: "description",
@@ -88,7 +94,7 @@ export const metadataFields: MetadataField[] = [
   {
     id: "victim",
     label: "Victim",
-    type: "link",
+    type: "text",
     value: "Angel Manfredo Velásquez Rodríguez",
   },
   {
@@ -131,13 +137,13 @@ export const metadataFields: MetadataField[] = [
   {
     id: "petitioner",
     label: "Petitioner",
-    type: "link",
+    type: "text",
     value: "Inter-American Commission on Human Rights",
   },
   {
     id: "respondent",
     label: "Respondent",
-    type: "link",
+    type: "text",
     value: "State of Honduras",
   },
   {
@@ -150,7 +156,7 @@ export const metadataFields: MetadataField[] = [
   {
     id: "mechanism",
     label: "Issuing body",
-    type: "link",
+    type: "text",
     value: "Inter-American Court of Human Rights",
   },
   {
@@ -190,7 +196,7 @@ const scalarFieldsByLanguage: Record<Language, MetadataField[]> = {
       type: "multiline",
       value: `La Comisión Interamericana de Derechos Humanos sometió el presente caso a la Corte el 24 de abril de 1986. Tuvo su origen en una denuncia contra Honduras (No. 7920) que la Secretaría de la Comisión recibió el 7 de octubre de 1981. La Comisión alegó que Ángel Manfredo Velásquez Rodríguez, estudiante de la Universidad Nacional Autónoma de Honduras, fue detenido sin orden judicial el 12 de septiembre de 1981, por miembros de la Dirección Nacional de Investigación y un individuo no identificado, quienes presuntamente cumplían funciones en nombre y bajo la protección de las Fuerzas Armadas de Honduras.`,
     },
-    { id: "victim", label: "Víctima", type: "link", value: "Ángel Manfredo Velásquez Rodríguez" },
+    { id: "victim", label: "Víctima", type: "text", value: "Ángel Manfredo Velásquez Rodríguez" },
     { id: "country", label: "País", type: "country", value: "Honduras", flag: "🇭🇳" },
     { id: "place-incident", label: "Lugar del hecho", type: "text", value: "Tegucigalpa, Honduras" },
     { id: "date-incident", label: "Fecha del hecho", type: "date", value: "12 de septiembre de 1981" },
@@ -200,10 +206,10 @@ const scalarFieldsByLanguage: Record<Language, MetadataField[]> = {
     {
       id: "petitioner",
       label: "Peticionario",
-      type: "link",
+      type: "text",
       value: "Comisión Interamericana de Derechos Humanos",
     },
-    { id: "respondent", label: "Estado demandado", type: "link", value: "Estado de Honduras" },
+    { id: "respondent", label: "Estado demandado", type: "text", value: "Estado de Honduras" },
     {
       id: "articles-invoked",
       label: "Artículos invocados",
@@ -214,7 +220,7 @@ const scalarFieldsByLanguage: Record<Language, MetadataField[]> = {
     {
       id: "mechanism",
       label: "Órgano emisor",
-      type: "link",
+      type: "text",
       value: "Corte Interamericana de Derechos Humanos",
     },
     {
@@ -251,7 +257,7 @@ const scalarFieldsByLanguage: Record<Language, MetadataField[]> = {
       type: "multiline",
       value: `La Commission interaméricaine des droits de l'homme a soumis la présente affaire à la Cour le 24 avril 1986. Elle tire son origine d'une plainte contre le Honduras (n° 7920) que le Secrétariat de la Commission a reçue le 7 octobre 1981. La Commission a allégué qu'Ángel Manfredo Velásquez Rodríguez, étudiant à l'Université nationale autonome du Honduras, a été arrêté sans mandat le 12 septembre 1981, par des membres de la Direction nationale d'enquête et un individu non identifié, qui auraient exercé leurs fonctions au nom et sous la protection des Forces armées du Honduras.`,
     },
-    { id: "victim", label: "Victime", type: "link", value: "Ángel Manfredo Velásquez Rodríguez" },
+    { id: "victim", label: "Victime", type: "text", value: "Ángel Manfredo Velásquez Rodríguez" },
     { id: "country", label: "Pays", type: "country", value: "Honduras", flag: "🇭🇳" },
     { id: "place-incident", label: "Lieu des faits", type: "text", value: "Tegucigalpa, Honduras" },
     { id: "date-incident", label: "Date des faits", type: "date", value: "12 septembre 1981" },
@@ -261,10 +267,10 @@ const scalarFieldsByLanguage: Record<Language, MetadataField[]> = {
     {
       id: "petitioner",
       label: "Requérante",
-      type: "link",
+      type: "text",
       value: "Commission interaméricaine des droits de l'homme",
     },
-    { id: "respondent", label: "État défendeur", type: "link", value: "État du Honduras" },
+    { id: "respondent", label: "État défendeur", type: "text", value: "État du Honduras" },
     {
       id: "articles-invoked",
       label: "Articles invoqués",
@@ -275,7 +281,7 @@ const scalarFieldsByLanguage: Record<Language, MetadataField[]> = {
     {
       id: "mechanism",
       label: "Organe émetteur",
-      type: "link",
+      type: "text",
       value: "Cour interaméricaine des droits de l'homme",
     },
     {
@@ -312,7 +318,7 @@ const scalarFieldsByLanguage: Record<Language, MetadataField[]> = {
       type: "multiline",
       value: `قدمت لجنة البلدان الأمريكية لحقوق الإنسان هذه القضية إلى المحكمة في 24 أبريل 1986. نشأت القضية من شكوى ضد هندوراس (رقم 7920) تلقتها أمانة اللجنة في 7 أكتوبر 1981. ادعت اللجنة أن أنخيل مانفريدو فيلاسكيز رودريغيز، طالب في الجامعة الوطنية المستقلة في هندوراس، احتُجز دون أمر قضائي في 12 سبتمبر 1981، من قبل أعضاء مكتب التحقيقات الوطني وفرد مجهول الهوية، كانوا يؤدون واجباتهم باسم القوات المسلحة الهندوراسية وتحت حمايتها.`,
     },
-    { id: "victim", label: "الضحية", type: "link", value: "أنخيل مانفريدو فيلاسكيز رودريغيز" },
+    { id: "victim", label: "الضحية", type: "text", value: "أنخيل مانفريدو فيلاسكيز رودريغيز" },
     { id: "country", label: "البلد", type: "country", value: "هندوراس", flag: "🇭🇳" },
     { id: "place-incident", label: "مكان الحادثة", type: "text", value: "تيغوسيغالبا، هندوراس" },
     { id: "date-incident", label: "تاريخ الحادثة", type: "date", value: "12 سبتمبر 1981" },
@@ -322,10 +328,10 @@ const scalarFieldsByLanguage: Record<Language, MetadataField[]> = {
     {
       id: "petitioner",
       label: "المُدّعي",
-      type: "link",
+      type: "text",
       value: "لجنة البلدان الأمريكية لحقوق الإنسان",
     },
-    { id: "respondent", label: "الدولة المُدّعى عليها", type: "link", value: "دولة هندوراس" },
+    { id: "respondent", label: "الدولة المُدّعى عليها", type: "text", value: "دولة هندوراس" },
     {
       id: "articles-invoked",
       label: "المواد المُحتجّ بها",
@@ -336,7 +342,7 @@ const scalarFieldsByLanguage: Record<Language, MetadataField[]> = {
     {
       id: "mechanism",
       label: "الجهة المُصدِرة",
-      type: "link",
+      type: "text",
       value: "محكمة البلدان الأمريكية لحقوق الإنسان",
     },
     {

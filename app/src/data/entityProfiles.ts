@@ -132,7 +132,15 @@ function field(id: string, labelKey: string, type: MetadataField["type"], value:
   return { id, label: lbl(labelKey, lang), type, value };
 }
 
-/** Per-type property order + field type for the Library/Metadata display. */
+/** Per-type property order + field type for the Library/Metadata display.
+ *
+ *  `type: "link"` means the VALUE IS A URL — the read view anchors it and the
+ *  editor validates it with `new URL()`, an ERROR that blocks save. Four props
+ *  here were typed `link` while every seeded value is a proper noun
+ *  ("El Salvador", "Inter-American Court"), so the edit form on a court_case,
+ *  right, judgment or violation opened already invalid and could never be
+ *  saved — the only way out was Cancel or Discard. They are names; they are
+ *  `text`. Type a prop `link` only when its values really are addresses. */
 const TYPE_FIELDS: Record<string, { prop: string; type: MetadataField["type"] }[]> = {
   person: [
     { prop: "country", type: "text" },
@@ -148,18 +156,18 @@ const TYPE_FIELDS: Record<string, { prop: string; type: MetadataField["type"] }[
   court_case: [
     { prop: "caseNumber", type: "text" },
     { prop: "dateFiled", type: "text" },
-    { prop: "respondent", type: "link" },
+    { prop: "respondent", type: "text" },
     { prop: "status", type: "text" },
     { prop: "region", type: "text" },
   ],
   right: [
-    { prop: "instrument", type: "link" },
+    { prop: "instrument", type: "text" },
     { prop: "article", type: "text" },
     { prop: "category", type: "text" },
   ],
   judgment: [
     { prop: "date", type: "text" },
-    { prop: "court", type: "link" },
+    { prop: "court", type: "text" },
     { prop: "series", type: "text" },
     { prop: "outcome", type: "text" },
   ],
@@ -170,7 +178,7 @@ const TYPE_FIELDS: Record<string, { prop: string; type: MetadataField["type"] }[
   ],
   violation: [
     { prop: "category", type: "text" },
-    { prop: "relatedRight", type: "link" },
+    { prop: "relatedRight", type: "text" },
     { prop: "definition", type: "multiline" },
   ],
   document: [
