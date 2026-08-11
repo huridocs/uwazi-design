@@ -9,6 +9,7 @@ import { getEntity } from "../../data/entities";
 import { EntityIdentity } from "../shared/EntityIdentity";
 import { getEntityProfile } from "../../data/entityProfiles";
 import { isCejilEntity, cejilReferencesFor } from "../../data/cejil/profile";
+import { uiLanguageAtom } from "../../atoms/uiLanguage";
 import { tabsForType } from "../../utils/entityTabs";
 import { MainTabs } from "../layout/MainTabs";
 import { DocumentViewer } from "../viewer/DocumentViewer";
@@ -48,6 +49,8 @@ export function EntityDrawerPreview({ entityId }: { entityId: string }) {
   const filesCount = profile.files?.length ?? 0;
 
   const relFilterCount = useAtomValue(activeFilterCountAtom);
+  // Chrome language: re-render the t()-built tab labels when it changes.
+  useAtomValue(uiLanguageAtom);
   const tabs = tabsForType(profile.typeId, profile.hasDocument).map((tab) => {
     if (tab.id === "relationships")
       return { ...tab, count: connectionCount, dot: relFilterCount > 0 };

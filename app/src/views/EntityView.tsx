@@ -4,6 +4,7 @@ import { scopedReferencesAtom } from "../atoms/references";
 import { filesAtom } from "../atoms/files";
 import { activeFilterCountAtom } from "../atoms/filters";
 import { languageAtom, type Language } from "../atoms/language";
+import { uiLanguageAtom } from "../atoms/uiLanguage";
 import { focusedEntityIdAtom, goBackAtom } from "../atoms/focusedEntity";
 import { getEntityProfile } from "../data/entityProfiles";
 import { tabsForType } from "../utils/entityTabs";
@@ -32,6 +33,9 @@ export function EntityView() {
   const [files] = useAtom(filesAtom);
   const [language, setLanguage] = useAtom(languageAtom);
   const goBack = useSetAtom(goBackAtom);
+  // Chrome language, not the document's: subscribing re-renders the t() strings
+  // (tab labels, mobile section labels) when the navbar switcher changes it.
+  useAtomValue(uiLanguageAtom);
 
   const [activeTab, setActiveTab] = useState(profile.hasDocument ? "document" : "metadata");
 

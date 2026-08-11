@@ -12,6 +12,8 @@ import { loadCejilData, cejilRelsByEntity } from "../data/cejil/load";
 import { warmSearchScan } from "../utils/warmSearchScan";
 import { referencesAtom } from "../atoms/references";
 import { languageAtom, type Language } from "../atoms/language";
+import { uiLanguageAtom } from "../atoms/uiLanguage";
+import { t } from "../utils/i18n";
 import { appViewAtom } from "../atoms/navigation";
 import { breakpointAtom } from "../atoms/viewport";
 import { openEntityAtom, focusEntityForPreviewAtom } from "../atoms/focusedEntity";
@@ -109,6 +111,9 @@ const TITLE_AND_COUNTRY = ["title", "country"] as const;
 export function LibraryView() {
   const entities = useAtomValue(libraryEntitiesAtom);
   const dataSource = useAtomValue(dataSourceAtom);
+  // Chrome language (not `languageAtom`, the content language below): the
+  // masthead's t() labels re-render when the navbar switcher changes it.
+  useAtomValue(uiLanguageAtom);
   const [cejilReady, setCejilReady] = useAtom(cejilReadyAtom);
   // Fetch the full CEJIL corpus on demand the first time the source is selected.
   // `cejilRetry` bumps to re-run the effect after a failed load (the loader
@@ -723,8 +728,9 @@ export function LibraryView() {
               setSort(key);
               setSortDir(defaultSortDir(key));
             }}
-            ariaLabel="Sort"
-            options={SORTS}
+            ariaLabel={t("System", "Sort")}
+            // Same rows, chrome-language labels; values stay the sort keys.
+            options={SORTS.map((s) => ({ ...s, label: t("System", s.label) }))}
             // Same row, same reason as the switcher: this trigger swung 47px
             // between "Title" and "Connections", shoving View, Display and
             // Language sideways on every sort change.
@@ -970,11 +976,11 @@ export function LibraryView() {
           // number itself was never the point. "Something you set is still on
           // back there" is one bit, and the dot costs no width to say it.
           // `count` stays for inventory — see `DrawerTabs`.
-          { id: "filters", label: "Filters", dot: activeFilterCount > 0 },
+          { id: "filters", label: t("System", "Filters"), dot: activeFilterCount > 0 },
           // A query that found nothing gets no dot: the tab would be pointing at
           // an empty panel. Dot means "there is something here", not "you typed".
           ...(showResultsTab
-            ? [{ id: "results", label: "Results", dot: hasQuery && filtered.length > 0 }]
+            ? [{ id: "results", label: t("System", "Results"), dot: hasQuery && filtered.length > 0 }]
             : []),
         ]}
         activeId={drawerTab}

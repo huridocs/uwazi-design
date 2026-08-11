@@ -25,6 +25,7 @@ import {
   type ThumbFit,
 } from "../../atoms/library";
 import { breakpointAtom } from "../../atoms/viewport";
+import { t } from "../../utils/i18n";
 import { SORTS } from "../../views/LibraryView";
 
 const ITEMS: { key: LibraryInfoKey; label: string }[] = [
@@ -113,7 +114,7 @@ export function DisplayMenu() {
     <div className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        aria-label="Display options"
+        aria-label={t("System", "Display options")}
         aria-haspopup="menu"
         aria-expanded={open}
         className={`relative inline-flex items-center justify-center w-8 h-8 rounded-md border transition-all cursor-pointer ${

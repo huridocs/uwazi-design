@@ -33,8 +33,11 @@ import {
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { getEntity } from "../../data/entities";
 import { agentOpenAtom, shortcutLabel } from "../../atoms/agent";
+import { uiLanguageAtom } from "../../atoms/uiLanguage";
+import { t, UI_LANGUAGES, type UiLanguage } from "../../utils/i18n";
 import { MobileBottomSheet } from "./MobileBottomSheet";
 import { Beacon } from "./Beacon";
+import { Select } from "../shared/Select";
 import { asset } from "../../utils/asset";
 
 interface NavbarProps {
@@ -64,9 +67,12 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
   const openAgent = useSetAtom(agentOpenAtom);
   const focusedId = useAtomValue(focusedEntityIdAtom);
   const focalTitle = getEntity(focusedId)?.title ?? "Entity";
+  // UI (chrome) language — subscribing here is also what re-renders the navbar's
+  // t() strings when the switcher below changes it.
+  const [uiLang, setUiLang] = useAtom(uiLanguageAtom);
 
   const ThemeIcon = theme === "dark" ? Moon : theme === "auto" ? Monitor : Sun;
-  const themeLabel = theme === "dark" ? "Dark" : theme === "auto" ? "Auto" : "Light";
+  const themeLabel = t("System", theme === "dark" ? "Dark" : theme === "auto" ? "Auto" : "Light");
 
   useEffect(() => {
     if (!settingsOpen && !toolsOpen && !collectionOpen) return;
@@ -149,7 +155,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                   onClick={() => onNavigate?.("library")}
                   className="flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium rounded-md transition-colors text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
                 >
-                  <BookOpen size={14} /> Library
+                  <BookOpen size={14} /> {t("System", "Library")}
                 </button>
                 <ChevronRight size={14} className="text-ink-tertiary shrink-0" />
                 <span
@@ -172,7 +178,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                       : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
                   }`}
                 >
-                  <BookOpen size={14} /> Library
+                  <BookOpen size={14} /> {t("System", "Library")}
                 </button>
                 <button
                   onClick={() => {
@@ -248,7 +254,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                     : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
                 }`}
               >
-                <Wrench size={14} /> Tools
+                <Wrench size={14} /> {t("System", "Tools")}
               </button>
               {toolsOpen && (
                 <div
@@ -342,10 +348,10 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
           <button
             onClick={() => openAgent(true)}
             className="flex items-center gap-1.5 px-2.5 h-7 text-[13px] font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors"
-            title={`Ask Bert (${shortcutLabel})`}
+            title={`${t("System", "Ask Bert")} (${shortcutLabel})`}
           >
             <Sparkles size={14} className="text-carbon" />
-            {!isMobile && "Ask Bert"}
+            {!isMobile && t("System", "Ask Bert")}
           </button>
         )}
         {showingCatalog ? (
@@ -365,7 +371,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                   : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
               }`}
             >
-              <Settings size={14} /> Settings
+              <Settings size={14} /> {t("System", "Settings")}
             </button>
             {settingsOpen && (
               <div
@@ -379,7 +385,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                     className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors"
                   >
                     <div className="flex items-center gap-2">
-                      Test RTL layout
+                      {t("System", "Test RTL layout")}
                       <span
                         className={`px-1.5 py-0.5 text-[10px] font-semibold rounded ${
                           rtl
@@ -402,7 +408,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                     }}
                     className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
                   >
-                    User settings
+                    {t("System", "User settings")}
                     <User size={14} className="text-ink-tertiary" />
                   </button>
                   <button
@@ -412,7 +418,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                     }}
                     className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
                   >
-                    System settings
+                    {t("System", "System settings")}
                     <Server size={14} className="text-ink-tertiary" />
                   </button>
                   <DocumentationLink onDone={() => setSettingsOpen(false)} />
@@ -421,12 +427,26 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
             )}
           </div>
         ) : null}
+        {/* UI language — the chrome's language, NOT the document's reading
+            language (that one lives in the tab strips / Library toolbar). Shows
+            each language in its own name; `steady` so switching to a longer
+            name can't shove the theme toggle. */}
+        {!showingCatalog && !isMobile && (
+          <Select
+            value={uiLang}
+            onChange={(v) => setUiLang(v as UiLanguage)}
+            ariaLabel={t("System", "Interface language")}
+            align="end"
+            options={UI_LANGUAGES}
+            steady
+          />
+        )}
         {!isMobile && (
           <button
             onClick={onToggleTheme}
             className="p-1.5 text-ink-tertiary hover:text-ink-secondary hover:bg-warm rounded-md transition-colors"
-            aria-label={`Theme: ${themeLabel}`}
-            title={`Theme: ${themeLabel}`}
+            aria-label={`${t("System", "Theme")}: ${themeLabel}`}
+            title={`${t("System", "Theme")}: ${themeLabel}`}
           >
             <ThemeIcon size={16} />
           </button>
@@ -449,12 +469,12 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
               }`}
             >
               <BookOpen size={16} className="text-ink-tertiary" />
-              Library
+              {t("System", "Library")}
             </button>
 
             {/* Tools section */}
             <div className="px-4 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-ink-tertiary">
-              Tools
+              {t("System", "Tools")}
             </div>
             {toolsItems.map((item, i) => {
               const Icon = item.icon;
@@ -508,7 +528,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
             })}
             {/* Settings section */}
             <div className="px-4 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-ink-tertiary">
-              Settings
+              {t("System", "Settings")}
             </div>
             <button
               onClick={() => { onToggleTheme?.(); }}
@@ -516,7 +536,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
             >
               <div className="flex items-center gap-3">
                 <ThemeIcon size={16} className="text-ink-tertiary" />
-                Theme
+                {t("System", "Theme")}
               </div>
               <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded bg-warm text-ink-muted">
                 {themeLabel}
@@ -528,7 +548,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
             >
               <div className="flex items-center gap-3">
                 <Languages size={16} className="text-ink-tertiary" />
-                Test RTL layout
+                {t("System", "Test RTL layout")}
               </div>
               <span
                 className={`px-1.5 py-0.5 text-[10px] font-semibold rounded ${
@@ -543,14 +563,14 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
               className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
             >
               <User size={16} className="text-ink-tertiary" />
-              User settings
+              {t("System", "User settings")}
             </button>
             <button
               onClick={() => { onNavigate?.("settings"); setMobileMenuOpen(false); }}
               className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
             >
               <Server size={16} className="text-ink-tertiary" />
-              System settings
+              {t("System", "System settings")}
             </button>
           </div>
         </MobileBottomSheet>
