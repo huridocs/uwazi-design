@@ -50,6 +50,7 @@ import { DocumentViewer } from "../components/viewer/DocumentViewer";
 import { useNotify } from "../hooks/useNotify";
 import { useRegisterDirtyForm } from "../hooks/useDirtyGuard";
 import { ShareEntityModal } from "../components/share/ShareEntityModal";
+import { fromDateInputValue, toDateInputValue } from "../utils/dateValue";
 
 interface MetadataViewProps {
   tabs: { id: string; label: string; count?: number }[];
@@ -736,12 +737,20 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
                 // A date input takes `yyyy-mm-dd` and nothing else, so it is not
                 // armed: a passage of prose is not a date, and quietly dropping
                 // the fill would be worse than never offering it.
+                //
+                // …and for the same reason the stored value is CONVERTED on the
+                // way in and back out (utils/dateValue): the seed writes
+                // `dd/mm/yyyy` (CEJIL) or prose (the curated entity), and bound
+                // straight to `value` the browser blanked the control, leaving a
+                // seeded date looking empty and saving as empty.
                 <input
                   id={inputId(field.id)}
                   type="date"
-                  value={field.value}
-                  onChange={(e) => updateField(field.id, e.target.value)}
-                  onBlur={(e) => flag(field.id, e.currentTarget.value)}
+                  value={toDateInputValue(field.value)}
+                  onChange={(e) =>
+                    updateField(field.id, fromDateInputValue(e.target.value, field.value))
+                  }
+                  onBlur={() => flag(field.id, field.value)}
                   {...fieldAria(field.id)}
                   className={fieldClass(field.id)}
                 />

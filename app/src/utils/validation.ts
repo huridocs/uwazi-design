@@ -13,6 +13,8 @@
  * `FieldMessage` line (components/shared/FieldMessage.tsx).
  */
 
+import { parseDateValue } from "./dateValue";
+
 export type ValidationSeverity = "error" | "warning";
 
 export interface ValidationIssue {
@@ -61,9 +63,13 @@ export function validateValue(
       return null;
     }
     case "date": {
-      const parsed = Date.parse(value);
-      if (Number.isNaN(parsed)) return error(`${label} is not a valid date.`);
-      if (parsed > Date.now() + FAR_FUTURE_MS)
+      // `parseDateValue`, not `Date.parse` — stored dates are `dd/mm/yyyy` in
+      // the CEJIL corpus, which Date.parse reads month-first: "13/05/2021" came
+      // back NaN and flagged a perfectly good date as invalid, while
+      // "05/06/2021" quietly passed as June 5th.
+      const d = parseDateValue(value);
+      if (!d) return error(`${label} is not a valid date.`);
+      if (d.getTime() > Date.now() + FAR_FUTURE_MS)
         return warning(`${label} is more than a year in the future.`);
       return null;
     }
