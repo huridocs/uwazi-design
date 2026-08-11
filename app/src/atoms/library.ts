@@ -252,6 +252,23 @@ export type LibraryInfoKey =
   | "connections";
 export const libraryInfoAtom = atom<Partial<Record<LibraryInfoKey, boolean>>>({});
 
+/** Thumbnail rendering — how tall the preview slot is drawn and how an image
+ *  sits inside it. Session state like `libraryInfoAtom` beside it (the Display
+ *  menu's dot already advertises anything off its default, so a reload starting
+ *  clean is the same contract the info toggles keep). Defaults exported for the
+ *  dot's "is this off its default?" question. */
+export type ThumbSize = "s" | "m" | "l";
+export const DEFAULT_THUMB_SIZE: ThumbSize = "m";
+export const libraryThumbSizeAtom = atom<ThumbSize>(DEFAULT_THUMB_SIZE);
+
+/** How an IMAGE sits in its slot — documents keep their cropped-sheet framing
+ *  whatever this says. `auto` is the shipped ratio-decides rule (landscape
+ *  covers the wide slot, portrait/square are matted); `cover`/`contain` force
+ *  one treatment for every ratio. */
+export type ThumbFit = "auto" | "cover" | "contain";
+export const DEFAULT_THUMB_FIT: ThumbFit = "auto";
+export const libraryThumbFitAtom = atom<ThumbFit>(DEFAULT_THUMB_FIT);
+
 /** The time strip under the results. It filters by date and reads the whole
  *  result set, so it is useful under EVERY layout — not just the map and the
  *  timeline it started under. A display option, on by default. */

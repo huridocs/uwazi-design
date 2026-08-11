@@ -9,7 +9,25 @@ import { getEntityProfile } from "../../data/entityProfiles";
 import { getEntityType } from "../../data/entities";
 import type { MetadataField } from "../../data/metadata";
 import type { Entity } from "../../data/entities";
-import { libraryInfoAtom, type LibraryViewMode } from "../../atoms/library";
+import {
+  libraryInfoAtom,
+  libraryThumbSizeAtom,
+  libraryThumbFitAtom,
+  type LibraryViewMode,
+  type ThumbSize,
+} from "../../atoms/library";
+
+/** The preview slot at each Display-menu size. All three tables move together:
+ *  the grid cover, its no-preview vellum twin (same class), the card's height
+ *  floor (which exists to absorb 1–3 metadata fields — it grows with the cover
+ *  so a one-field card still meets its neighbours), and the list chip. */
+const COVER_H: Record<ThumbSize, string> = { s: "h-16", m: "h-24", l: "h-36" };
+const CARD_FLOOR: Record<ThumbSize, string> = {
+  s: "min-h-[13.5rem]",
+  m: "min-h-[15.5rem]",
+  l: "min-h-[18.5rem]",
+};
+const CHIP_BOX: Record<ThumbSize, string> = { s: "w-7 h-7", m: "w-9 h-9", l: "w-12 h-12" };
 
 /** A Library result for one standalone entity. Mirrors the Uwazi card IA:
  *  title → metadata field label/value pairs → footer (template pill · View).
@@ -40,6 +58,8 @@ export const EntityCard = memo(function EntityCard({
 }) {
   const language = useAtomValue(languageAtom);
   const info = useAtomValue(libraryInfoAtom);
+  const thumbSize = useAtomValue(libraryThumbSizeAtom);
+  const thumbFit = useAtomValue(libraryThumbFitAtom);
   const showPreview = info.preview !== false;
   const showMetadata = info.metadata !== false;
   const showConnections = info.connections !== false;
@@ -116,10 +136,13 @@ export const EntityCard = memo(function EntityCard({
                 entityId={entity.id}
                 image={entity.image}
                 size="sm"
-                className="w-9 h-9 rounded shrink-0 overflow-hidden"
+                fit={thumbFit}
+                className={`${CHIP_BOX[thumbSize]} rounded shrink-0 overflow-hidden`}
               />
             ) : (
-              <span className="w-9 h-9 rounded bg-vellum flex items-center justify-center shrink-0">
+              <span
+                className={`${CHIP_BOX[thumbSize]} rounded bg-vellum flex items-center justify-center shrink-0`}
+              >
                 <span
                   className="w-2 h-2 rounded-[2px]"
                   style={{ backgroundColor: type?.color ?? "#6B7280" }}
@@ -162,7 +185,7 @@ export const EntityCard = memo(function EntityCard({
   // it a one-field card sits visibly short of a three-field neighbour. Only
   // applies when the preview slot is in play — with previews off the card is a
   // compact text block and the floor would just add dead space.
-  const minHeight = showPreview ? "min-h-[15.5rem]" : "";
+  const minHeight = showPreview ? CARD_FLOOR[thumbSize] : "";
 
   return (
     <div onClick={() => onSelect(entity.id)} className={`${base} ${surface} ${minHeight}`}>
@@ -179,10 +202,13 @@ export const EntityCard = memo(function EntityCard({
             kind={entity.preview}
             entityId={entity.id}
             image={entity.image}
-            className="h-24 w-full shrink-0 rounded overflow-hidden border border-border/60"
+            fit={thumbFit}
+            className={`${COVER_H[thumbSize]} w-full shrink-0 rounded overflow-hidden border border-border/60`}
           />
         ) : (
-          <span className="h-24 w-full shrink-0 rounded border border-border/60 bg-vellum flex items-center justify-center">
+          <span
+            className={`${COVER_H[thumbSize]} w-full shrink-0 rounded border border-border/60 bg-vellum flex items-center justify-center`}
+          >
             <span
               className="w-2.5 h-2.5 rounded-[2px]"
               style={{ backgroundColor: getEntityType(entity.typeId)?.color ?? "#6B7280" }}

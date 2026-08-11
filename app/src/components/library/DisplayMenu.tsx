@@ -9,14 +9,20 @@ import {
   libraryTimeHubAtom,
   librarySortAtom,
   librarySortDirAtom,
+  libraryThumbSizeAtom,
+  libraryThumbFitAtom,
   defaultSortDir,
   DEFAULT_TIME_HUB,
   DEFAULT_LIBRARY_SORT,
   DEFAULT_RESULTS_LAYOUT,
   DEFAULT_TIMELINE_LAYOUT,
+  DEFAULT_THUMB_SIZE,
+  DEFAULT_THUMB_FIT,
   type LibraryInfoKey,
   type TimelineLayout,
   type ResultsLayout,
+  type ThumbSize,
+  type ThumbFit,
 } from "../../atoms/library";
 import { breakpointAtom } from "../../atoms/viewport";
 import { SORTS } from "../../views/LibraryView";
@@ -34,6 +40,18 @@ const LAYOUTS: { id: TimelineLayout; label: string; detail: string }[] = [
   { id: "density", label: "Density", detail: "Volume per period, click to filter" },
   { id: "spine", label: "Spine", detail: "Every entity at its exact date" },
   { id: "lanes", label: "Lanes", detail: "Template × period grid" },
+];
+
+const THUMB_SIZES: { id: ThumbSize; label: string }[] = [
+  { id: "s", label: "Small" },
+  { id: "m", label: "Medium" },
+  { id: "l", label: "Large" },
+];
+
+const THUMB_FITS: { id: ThumbFit; label: string; detail: string }[] = [
+  { id: "auto", label: "Auto", detail: "Ratio decides — wide fills, tall is matted" },
+  { id: "cover", label: "Cover", detail: "Fill the slot, crop the image" },
+  { id: "contain", label: "Contain", detail: "Whole image on a quiet mat" },
 ];
 
 const RESULTS_LAYOUTS: { id: ResultsLayout; label: string; detail: string }[] = [
@@ -55,6 +73,8 @@ export function DisplayMenu() {
   const [layout, setLayout] = useAtom(libraryTimelineLayoutAtom);
   const [resultsLayout, setResultsLayout] = useAtom(libraryResultsLayoutAtom);
   const [timeHub, setTimeHub] = useAtom(libraryTimeHubAtom);
+  const [thumbSize, setThumbSize] = useAtom(libraryThumbSizeAtom);
+  const [thumbFit, setThumbFit] = useAtom(libraryThumbFitAtom);
   const [sort, setSort] = useAtom(librarySortAtom);
   const setSortDir = useSetAtom(librarySortDirAtom);
   const viewMode = useAtomValue(libraryViewModeAtom);
@@ -66,6 +86,9 @@ export function DisplayMenu() {
   const showInfo = viewMode !== "map" && viewMode !== "results";
   const showLayouts = viewMode === "timeline";
   const showResultsLayouts = viewMode === "results";
+  // Thumbnail size/fit only act where thumbnails draw — the same surfaces the
+  // info toggles govern, and only while the Thumbnail toggle itself is on.
+  const showThumbs = showInfo && info.preview !== false;
 
   // The dot means ONE thing in both Display menus (this and the Relationships
   // one): some control THE MENU IS SHOWING sits off its default.
@@ -82,7 +105,8 @@ export function DisplayMenu() {
     (isMobile && sort !== DEFAULT_LIBRARY_SORT) ||
     (showResultsLayouts && resultsLayout !== DEFAULT_RESULTS_LAYOUT) ||
     (showLayouts && layout !== DEFAULT_TIMELINE_LAYOUT) ||
-    (showInfo && ITEMS.some((i) => info[i.key] === false));
+    (showInfo && ITEMS.some((i) => info[i.key] === false)) ||
+    (showThumbs && (thumbSize !== DEFAULT_THUMB_SIZE || thumbFit !== DEFAULT_THUMB_FIT));
   const toggle = (key: LibraryInfoKey) => setInfo((s) => ({ ...s, [key]: s[key] === false }));
 
   return (
@@ -253,6 +277,61 @@ export function DisplayMenu() {
                       </span>
                       <span className={`text-xs ${shown ? "text-ink" : "text-ink-tertiary"}`}>
                         {it.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </>
+            )}
+
+            {showThumbs && (
+              <>
+                <div className="my-1 h-px" style={{ backgroundColor: "var(--border-soft)" }} />
+                <p className="px-2 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+                  Thumbnail size
+                </p>
+                {THUMB_SIZES.map((s) => {
+                  const on = thumbSize === s.id;
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => setThumbSize(s.id)}
+                      aria-pressed={on}
+                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-warm transition-colors cursor-pointer text-start"
+                    >
+                      <span className="w-4 shrink-0 flex items-center justify-center text-carbon">
+                        {on && <Check size={13} />}
+                      </span>
+                      <span className={`text-xs ${on ? "text-ink font-semibold" : "text-ink-secondary"}`}>
+                        {s.label}
+                      </span>
+                    </button>
+                  );
+                })}
+                <p className="px-2 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+                  Image fit
+                </p>
+                {THUMB_FITS.map((f) => {
+                  const on = thumbFit === f.id;
+                  return (
+                    <button
+                      key={f.id}
+                      onClick={() => setThumbFit(f.id)}
+                      aria-pressed={on}
+                      className="w-full flex items-start gap-2 px-2 py-1.5 rounded hover:bg-warm transition-colors cursor-pointer text-start"
+                    >
+                      <span className="w-4 shrink-0 pt-0.5 flex justify-center text-carbon">
+                        {on && <Check size={13} />}
+                      </span>
+                      <span className="min-w-0">
+                        <span
+                          className={`block text-xs ${on ? "text-ink font-semibold" : "text-ink-secondary"}`}
+                        >
+                          {f.label}
+                        </span>
+                        <span className="block text-[10px] text-ink-tertiary leading-tight">
+                          {f.detail}
+                        </span>
                       </span>
                     </button>
                   );

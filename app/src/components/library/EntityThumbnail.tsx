@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Image as ImageIcon, Play, AudioLines } from "lucide-react";
 import type { EntityImage, PreviewKind } from "../../data/entities";
+import type { ThumbFit } from "../../atoms/library";
 import { getEntityProfile } from "../../data/entityProfiles";
 import { resolvePrimaryFile } from "../../data/files";
 import { PdfPageThumb } from "../shared/PdfPageThumb";
@@ -24,6 +25,7 @@ export function EntityThumbnail({
   entityId,
   image,
   size = "md",
+  fit = "auto",
   className = "",
 }: {
   kind: PreviewKind;
@@ -31,6 +33,9 @@ export function EntityThumbnail({
   /** The asset behind `kind === "image"`. Absent → the glyph. */
   image?: EntityImage;
   size?: "sm" | "md" | "lg";
+  /** Image fit only — the Display menu's override. `auto` keeps the
+   *  ratio-decides rule below; documents ignore it entirely. */
+  fit?: ThumbFit;
   className?: string;
 }) {
   if (kind === "document") {
@@ -40,7 +45,7 @@ export function EntityThumbnail({
     );
   }
   if (kind === "image") {
-    return <ImageThumb image={image} size={size} className={className} />;
+    return <ImageThumb image={image} size={size} fit={fit} className={className} />;
   }
   if (kind === "video") {
     return (
@@ -93,10 +98,12 @@ export function EntityThumbnail({
 function ImageThumb({
   image,
   size,
+  fit,
   className,
 }: {
   image?: EntityImage;
   size: "sm" | "md" | "lg";
+  fit: ThumbFit;
   className: string;
 }) {
   const [failed, setFailed] = useState(false);
@@ -107,7 +114,10 @@ function ImageThumb({
       </div>
     );
   }
-  const matted = size !== "sm" && image.aspect !== "landscape";
+  // An explicit fit wins for every ratio — a user who asked for whole images
+  // gets whole images, mat and all. `auto` keeps the ratio-decides rule above.
+  const matted =
+    fit === "contain" || (fit === "auto" && size !== "sm" && image.aspect !== "landscape");
   return (
     <div className={`flex items-center justify-center ${matted ? "bg-vellum" : ""} ${className}`}>
       <img

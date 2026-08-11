@@ -73,6 +73,65 @@ export const ListChip: Story = {
   ),
 };
 
+/** The Display menu's size presets — the slot the card reserves at each. The
+ *  same class drives the document sheet next door, so a mixed grid keeps one
+ *  row height whatever the preset. */
+export const Sizes: Story = {
+  render: () => (
+    <div className="space-y-4 max-w-4xl">
+      {(
+        [
+          { label: "small", h: "h-16" },
+          { label: "medium", h: "h-24" },
+          { label: "large", h: "h-36" },
+        ] as const
+      ).map(({ label, h }) => (
+        <div key={label} className="space-y-1.5">
+          <div className="grid grid-cols-3 gap-3">
+            {SAMPLES.map(({ label: aspect, entity }) => (
+              <EntityThumbnail
+                key={aspect}
+                kind="image"
+                image={entity.image}
+                className={`${h} w-full rounded overflow-hidden border border-border/60`}
+              />
+            ))}
+          </div>
+          <p className="text-[10px] text-ink-tertiary">{label}</p>
+        </div>
+      ))}
+    </div>
+  ),
+};
+
+/** The Display menu's fit override, against all three real ratios. `auto` is
+ *  the shipped rule (ratio decides); `cover` fills and crops every ratio;
+ *  `contain` mats every ratio on vellum. Documents ignore the prop. */
+export const FitModes: Story = {
+  render: () => (
+    <div className="space-y-4 max-w-4xl">
+      {(["auto", "cover", "contain"] as const).map((fit) => (
+        <div key={fit} className="space-y-1.5">
+          <div className="grid grid-cols-3 gap-3">
+            {SAMPLES.map(({ label: aspect, entity }) => (
+              <EntityThumbnail
+                key={aspect}
+                kind="image"
+                image={entity.image}
+                fit={fit}
+                className="h-24 w-full rounded overflow-hidden border border-border/60"
+              />
+            ))}
+          </div>
+          <p className="text-[10px] text-ink-tertiary">
+            fit: {fit} · portrait / landscape / square
+          </p>
+        </div>
+      ))}
+    </div>
+  ),
+};
+
 /** No asset. An image entity whose adapter supplied nothing keeps the glyph —
  *  it says "picture, not here" rather than pretending to be one. A broken URL
  *  lands in the same place, via the `<img>`'s error path. */
