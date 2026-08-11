@@ -553,6 +553,10 @@ big, what shape, how the picture sits in it.
   what it can still honestly claim: **how TALL the band is** — and portrait's
   taller band is the one that crops least. `contain` keeps the frame, because it
   is asking to see the picture whole.
+- Portrait+cover is therefore its OWN slot band (`SlotKey = "portraitFill"`,
+  h-28 / h-44 / h-64, floors +1/2/3rem over the framed portrait ones): with the
+  frame gone the band is the only thing deciding how much of a standing picture
+  survives, and at the framed heights a full-width band was still a letterbox.
 - The **list row's chip stays square at every frame** — a 3:4 chip would outgrow
   the two lines of text beside it, and a mat inside 2.25rem is almost all mat.
 - **No-shift holds by construction**: every box is definite before an image

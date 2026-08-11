@@ -37,15 +37,24 @@ import {
  *  Both are DEFINITE boxes before an image loads, which is the whole no-shift
  *  contract: `aspect-[3/4]` resolves against the fixed height, so the portrait
  *  frame has its width before a byte arrives. */
-const COVER_H: Record<ThumbFrame, Record<ThumbSize, string>> = {
+/** Slot keys: the two frames, plus portrait-under-Cover, which is its own band.
+ *  Cover drops the 3:4 frame and fills the card's full width, so the band is the
+ *  only thing left deciding how much of a standing picture survives the crop —
+ *  and at the framed heights a full-width band was still a letterbox. It gets a
+ *  taller step of its own (+1/2/3rem), which is the whole point of choosing
+ *  Portrait while asking for a fill. */
+type SlotKey = ThumbFrame | "portraitFill";
+const COVER_H: Record<SlotKey, Record<ThumbSize, string>> = {
   landscape: { s: "h-16", m: "h-24", l: "h-36" },
   portrait: { s: "h-24", m: "h-36", l: "h-52" },
+  portraitFill: { s: "h-28", m: "h-44", l: "h-64" },
 };
-const CARD_FLOOR: Record<ThumbFrame, Record<ThumbSize, string>> = {
+const CARD_FLOOR: Record<SlotKey, Record<ThumbSize, string>> = {
   landscape: { s: "min-h-[13.5rem]", m: "min-h-[15.5rem]", l: "min-h-[18.5rem]" },
   // The portrait frame is 2/3/4rem taller than the landscape one at the same
   // size, and the floor carries exactly that much more.
   portrait: { s: "min-h-[15.5rem]", m: "min-h-[18.5rem]", l: "min-h-[22.5rem]" },
+  portraitFill: { s: "min-h-[16.5rem]", m: "min-h-[20.5rem]", l: "min-h-[25.5rem]" },
 };
 /** The list row's chip is square at every frame — see EntityThumbnail. */
 const CHIP_BOX: Record<ThumbSize, string> = { s: "w-7 h-7", m: "w-9 h-9", l: "w-12 h-12" };
@@ -209,7 +218,10 @@ export const EntityCard = memo(function EntityCard({
   // it a one-field card sits visibly short of a three-field neighbour. Only
   // applies when the preview slot is in play — with previews off the card is a
   // compact text block and the floor would just add dead space.
-  const minHeight = showPreview ? CARD_FLOOR[thumbFrame][thumbSize] : "";
+  /** Which of the three slot bands this grid is drawing. */
+  const slot: SlotKey =
+    thumbFrame === "portrait" && thumbFit === "cover" ? "portraitFill" : thumbFrame;
+  const minHeight = showPreview ? CARD_FLOOR[slot][thumbSize] : "";
 
   /** The shape the picture takes INSIDE the slot's band.
    *
@@ -241,7 +253,7 @@ export const EntityCard = memo(function EntityCard({
           Centring the thumbnail itself instead would leave the no-preview well
           and the picture agreeing on height but not on where they sit. */}
       {showPreview && (
-        <span className={`shrink-0 w-full flex justify-center ${COVER_H[thumbFrame][thumbSize]}`}>
+        <span className={`shrink-0 w-full flex justify-center ${COVER_H[slot][thumbSize]}`}>
           {entity.preview ? (
             <EntityThumbnail
               kind={entity.preview}

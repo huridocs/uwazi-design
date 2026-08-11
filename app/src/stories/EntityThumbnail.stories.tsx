@@ -160,7 +160,11 @@ export const FitModes: Story = {
                 {SAMPLES.map(({ label: aspect, entity }) => (
                   <span
                     key={aspect}
-                    className={`${frame === "portrait" ? "h-36" : "h-24"} w-full flex justify-center`}
+                    // Portrait under cover gets its own taller band — the frame
+                    // is gone, so the band is all that decides the crop.
+                    className={`${
+                      frame === "portrait" ? (fit === "cover" ? "h-44" : "h-36") : "h-24"
+                    } w-full flex justify-center`}
                   >
                     <EntityThumbnail
                       kind="image"
