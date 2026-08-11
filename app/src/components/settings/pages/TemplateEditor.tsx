@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSetAtom } from "jotai";
 import { Plus, X } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
+import { TemplateCardPreview } from "../TemplateCardPreview";
 import { Button } from "../Button";
 import { RowActions } from "../RowActions";
 import { DragGrip } from "../DragGrip";
@@ -128,7 +129,8 @@ export function TemplateEditor({
     <SettingsContent>
       <SettingsContent.Header path={["Templates"]} title={isNew ? "New template" : base!.name} onBack={onClose} />
       <SettingsContent.Body>
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex flex-col gap-6 flex-1 min-w-0">
           <section className="grid sm:grid-cols-2 gap-3">
             <Field label="Template name">
               <TextInput value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Court Case" />
@@ -227,6 +229,15 @@ export function TemplateEditor({
               )}
             </div>
           </section>
+        </div>
+
+        {/* Live card preview — beside the field list on wide screens, stacked
+            below it on narrow ones so the property table keeps its width. */}
+        <aside className="lg:w-[17rem] shrink-0 pt-6 lg:pt-0 border-t border-border-soft lg:border-t-0">
+          <div className="lg:sticky lg:top-0">
+            <TemplateCardPreview name={name} color={color} properties={props} config={config} />
+          </div>
+        </aside>
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>

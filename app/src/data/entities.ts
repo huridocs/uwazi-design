@@ -216,8 +216,23 @@ export const entities: Entity[] = baseEntities.map((e) => ({
   geo: entityGeo(e.id, e.typeId, e.title),
 }));
 
+/** Ephemeral types for previews (the settings TemplateCardPreview): a template
+ *  being edited isn't in any registry yet, but the real EntityCard resolves its
+ *  pill/dot through getEntityType — so the preview registers its live
+ *  name/colour here (synchronously, before the card renders). Looked up LAST so
+ *  a preview id can never shadow a real type. */
+const previewTypes = new Map<string, EntityType>();
+export function registerPreviewType(type: EntityType) {
+  previewTypes.set(type.id, type);
+}
+
 export function getEntityType(typeId: string): EntityType | undefined {
-  return entityTypes.find((t) => t.id === typeId) ?? cejilTypeById.get(typeId) ?? artworkTypeById.get(typeId);
+  return (
+    entityTypes.find((t) => t.id === typeId) ??
+    cejilTypeById.get(typeId) ??
+    artworkTypeById.get(typeId) ??
+    previewTypes.get(typeId)
+  );
 }
 
 // Lazy CEJIL lookup — the corpus loads on demand, and cejilLibraryEntities()
