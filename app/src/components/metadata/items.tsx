@@ -40,8 +40,12 @@ export function fieldItem(f: MetadataField): MetadataItem {
           <span className="font-medium">{f.value}</span>
         </span>
       ) : f.type === "link" ? (
-        <span className="inline-flex items-center gap-1">
-          <span className="font-medium underline">{f.value}</span>
+        // `min-w-0` + `truncate`, for the same reason the pills next door carry
+        // them: the value column has a definite width, and a URL is the one
+        // value with no spaces to wrap at — a full Wikipedia link ran past the
+        // drawer's edge and took the external-link icon with it.
+        <span className="inline-flex items-center gap-1 max-w-full min-w-0" title={f.value}>
+          <span className="font-medium underline truncate">{f.value}</span>
           <ExternalLink size={10} className="text-ink-muted shrink-0" />
         </span>
       ) : long ? (

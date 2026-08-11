@@ -44,6 +44,13 @@ export function DocumentCard({
     ? resolvePrimaryFile(files, groups, activeGroupId, language)
     : resolvePrimaryFile(profile.files ?? [], profile.documentGroups ?? [], null, language);
 
+  // A picture is not a document. An image entity's primary file is its asset, and
+  // rendering it here would title a painting "Document" and hand its URL to
+  // `PdfPageThumb`, which would rasterise nothing and leave a blank sheet.
+  // `ImageCard` is the leading card for those, so this one steps aside — keyed on
+  // the FILE's kind, not on which corpus it came from.
+  if (file?.type === "image") return null;
+
   // A hand-authored profile carries a richer block (real Added/Last-Edited dates);
   // everything else derives from the file, which is where those facts actually
   // live.

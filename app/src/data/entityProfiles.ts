@@ -10,6 +10,8 @@ import { files, documentGroups, entityDocument } from "./files";
 import { getEntity, type Entity } from "./entities";
 import { getEntityProps } from "./entityMetadata";
 import { isCejilEntity, buildCejilProfile } from "./cejil/profile";
+import { isArtworkEntity, buildArtworkProfile } from "./artworks/profile";
+import type { EntityImage } from "./entities";
 
 const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -39,6 +41,11 @@ export interface EntityProfile {
   renditions?: Record<Language, DocRendition>;
   documentGroups?: DocumentGroup[];
   files?: FileEntry[];
+  /** The entity's own picture, when the entity IS one (an artwork). What
+   *  `document` is to a PDF-bearing entity: the thing the record is about, so
+   *  the record can lead with it instead of a document card that has no
+   *  document to draw. */
+  image?: EntityImage;
   metadata: Record<Language, AnyMetadataField[]>;
   pdfMetadata?: PdfMetaByLang;
   relationships: RelationshipSource;
@@ -269,11 +276,16 @@ export function getEntityProfile(id: string): EntityProfile {
   if (authored) return authored;
   const cached = lightweightCache.get(id);
   if (cached) return cached;
-  // Real CEJIL entities get a real profile (metadata / document / relationships);
-  // everything else gets the synthesized lightweight profile.
+  // A corpus with real records builds a real profile (metadata / files /
+  // relationships); everything else gets the synthesized lightweight one, whose
+  // `TYPE_FIELDS` table only knows the mock's types — which is why an adapter
+  // corpus that doesn't answer here renders as an entity with no metadata at
+  // all, however much the seed holds.
   const built = isCejilEntity(id)
     ? buildCejilProfile(id)
-    : buildLightweightProfile(getEntity(id) ?? { ...FALLBACK_ENTITY, id });
+    : isArtworkEntity(id)
+      ? buildArtworkProfile(id)
+      : buildLightweightProfile(getEntity(id) ?? { ...FALLBACK_ENTITY, id });
   lightweightCache.set(id, built);
   return built;
 }
