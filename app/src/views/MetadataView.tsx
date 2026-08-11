@@ -178,7 +178,37 @@ interface StagedUnit {
   matches: CopyMatch[];
 }
 
-function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void; onSave: () => void; menuSlot?: ReactNode }) {
+export interface MetadataEditBodyProps {
+  onCancel: () => void;
+  onSave: () => void;
+  menuSlot?: ReactNode;
+  /** Identifies this edit SESSION, and must be distinct per mounted instance.
+   *  Two are mountable at once — the full Metadata view and the Library drawer
+   *  preview — and both singleton pieces of shared state key off it: the
+   *  dirty-form registry (same id = the second registration overwrites the
+   *  first, and one unmount unregisters both) and click-to-fill (same entity,
+   *  so `fieldId` alone addresses a row in both forms). */
+  sessionId?: string;
+  /** What the discard-confirm calls these edits. Names the session the user is
+   *  actually being asked about when both are open. */
+  dirtyLabel?: string;
+  /** Drawer flavour: tighter gutters and no side-by-side field pairs. A
+   *  460px pane is one column wide. */
+  compact?: boolean;
+}
+
+/** The metadata edit form. Exported because the Library's entity drawer renders
+ *  THIS component rather than a drawer-sized copy of it — a second
+ *  implementation of a form carrying validation, click-to-fill, Copy From and
+ *  the dirty guard is how the type-label colour shipped wrong twice. */
+export function MetadataEditBody({
+  onCancel,
+  onSave,
+  menuSlot,
+  sessionId = "metadata-edit",
+  dirtyLabel = "Metadata edits",
+  compact = false,
+}: MetadataEditBodyProps) {
   const language = useAtom(languageAtom)[0];
   const focusedId = useAtomValue(focusedEntityIdAtom);
   const getProp = makeEntityPropReader(useAtomValue(entityMetadataAtom));
@@ -299,14 +329,22 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
      Focus arms a field; the arm is LATCHED (see atoms/fillTarget) because
      finding the value means leaving the field. The document viewer and the
      source-entity preview both write a request here, addressed by field id. */
-  const [fillTarget, setFillTarget] = useAtom(fillTargetAtom);
+  const [rawFillTarget, setFillTarget] = useAtom(fillTargetAtom);
   const [fillRequest, sendFill] = useAtom(fillRequestAtom);
   const bodyRef = useRef<HTMLDivElement>(null);
+  /** The arm, but only if THIS session owns it. Everything below reads this,
+   *  never the atom: the other mounted form is editing the same entity, so its
+   *  arm would light up an identically-named row over here. */
+  const fillTarget = rawFillTarget?.sessionId === sessionId ? rawFillTarget : null;
 
   // Disarm when the form goes away. Save and Cancel both unmount this body, and
   // an arm that outlives it would leave the next edit session listening for a
-  // field nobody focused — the Copy From leak, rebuilt.
-  useEffect(() => () => setFillTarget(null), [setFillTarget]);
+  // field nobody focused — the Copy From leak, rebuilt. Only OUR arm, though —
+  // closing the drawer must not disarm the field the main view is waiting on.
+  useEffect(
+    () => () => setFillTarget((prev) => (prev?.sessionId === sessionId ? null : prev)),
+    [setFillTarget, sessionId],
+  );
 
   // Escape disarms. On the WINDOW, because by the time a user gives up on a fill
   // the focus is in another pane — but NOT while focus sits inside a modal: the
@@ -330,7 +368,9 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
   // flashes: without that, a fill from the far pane is a silent write to
   // somewhere you can't see.
   useEffect(() => {
-    if (!fillRequest) return;
+    // Addressed to a SESSION, not just a field. Both mounted forms see this
+    // atom and both have a row with this id; only the one that armed it writes.
+    if (!fillRequest || fillRequest.sessionId !== sessionId) return;
     const { fieldId, value } = fillRequest;
     if (fieldId === "title") setTitle(value);
     else updateField(fieldId, value);
@@ -343,7 +383,7 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
     return () => clearTimeout(t);
     // `fillRequest.nonce` is the signal — filling one field twice with the same
     // text has to fire twice, so the object identity is what we watch.
-  }, [fillRequest, sendFill]);
+  }, [fillRequest, sendFill, sessionId]);
 
   /** The one input skin. An ARMED field keeps the focus treatment while blurred:
    *  you left it on purpose, to go and fetch the value, and a form that drops
@@ -360,7 +400,8 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
   /** Focus arms; nothing on blur. Bound to CLICK as well as focus: Escape
    *  disarms a field that still holds the caret, and without a click path the
    *  only way back into the mode would be to tab away and return. */
-  const arm = (fieldId: string, label: string) => () => setFillTarget({ fieldId, label });
+  const arm = (fieldId: string, label: string) => () =>
+    setFillTarget({ sessionId, fieldId, label });
   const armProps = (fieldId: string, label: string) => ({
     onFocus: arm(fieldId, label),
     onClick: arm(fieldId, label),
@@ -591,14 +632,17 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
       return ids !== undefined && ids.join("|") !== d.entityIds.join("|");
     }) ||
     copyActive;
-  useRegisterDirtyForm("metadata-edit", "Metadata edits", dirty);
+  useRegisterDirtyForm(sessionId, dirtyLabel, dirty);
 
   return (
     <>
       {pickerOpen && target && (
         <CopyFromPicker target={target} onPreview={preview} onClose={() => setPickerOpen(false)} />
       )}
-      <div ref={bodyRef} className="flex-1 overflow-auto px-4 py-3 pb-8 space-y-3">
+      <div
+        ref={bodyRef}
+        className={`flex-1 overflow-auto py-3 pb-8 space-y-3 ${compact ? "px-3" : "px-4"}`}
+      >
         {/* Title */}
         <EditSection
           label="Title*"
@@ -710,7 +754,10 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
           <div className="h-40 bg-warm rounded-md flex items-center justify-center overflow-hidden">
             <span className="text-xs text-ink-muted">Map Preview</span>
           </div>
-          <div className="flex items-center gap-2 mt-2">
+          {/* The only side-by-side pair in the form. In the drawer it stacks:
+              two number boxes across 460px leaves each of them narrower than
+              the value it holds. */}
+          <div className={`gap-2 mt-2 ${compact ? "flex flex-col" : "flex items-center"}`}>
             <EditInput label="Latitude" value="" placeholder="Value" />
             <EditInput label="Longitude" value="" placeholder="Value" />
           </div>
@@ -886,7 +933,9 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
 
       {/* Edit action bar */}
       <div
-        className="flex items-center justify-end gap-3 h-12 px-4 bg-paper shrink-0"
+        className={`flex items-center justify-end gap-3 h-12 bg-paper shrink-0 ${
+          compact ? "px-3 gap-2" : "px-4"
+        }`}
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
         {/* EDIT MODE ONLY — this whole bar exists only while editing, which is

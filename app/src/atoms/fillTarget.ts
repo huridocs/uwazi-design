@@ -13,6 +13,12 @@ import { atom } from "jotai";
  *  outliving the form that owns it — and left a dead Copy From panel rendering
  *  over a read-mode pane. Anything that arms this must clear it on unmount. */
 export interface FillTarget {
+  /** WHICH edit session armed it. Two `MetadataEditBody`s can be mounted at
+   *  once — the full Metadata view and the Library drawer preview — and they
+   *  edit the SAME entity, so a bare `fieldId` names a field in both. Without
+   *  this, one armed field meant two writes: the session nobody armed applied
+   *  the value too, and its copy of the row flashed as if the user had asked. */
+  sessionId: string;
   /** `MetadataField.id`, or `"title"` for the title box. */
   fieldId: string;
   /** What the field is called, for the "fill Description" wording on the
@@ -31,6 +37,9 @@ export const fillTargetAtom = atom<FillTarget | null>(null);
  *  shorter-lived than this atom, and an atom holding its closures is precisely
  *  how the Copy From panel came to call setState on an unmounted form. */
 export interface FillRequest {
+  /** Copied from the armed target, so the request is addressed to ONE session.
+   *  A form that didn't arm the field ignores it. */
+  sessionId: string;
   fieldId: string;
   value: string;
   nonce: number;
@@ -51,7 +60,12 @@ export const fillRequestAtom = atom(
     }
     const target = get(fillTargetAtom);
     if (!target) return;
-    set(fillRequestStateAtom, { fieldId: target.fieldId, value, nonce: ++fillNonce });
+    set(fillRequestStateAtom, {
+      sessionId: target.sessionId,
+      fieldId: target.fieldId,
+      value,
+      nonce: ++fillNonce,
+    });
     set(fillTargetAtom, null);
   },
 );
