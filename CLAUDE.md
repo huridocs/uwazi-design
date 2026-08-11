@@ -545,7 +545,14 @@ big, what shape, how the picture sits in it.
   read against the frame: **an image whose orientation matches the frame covers
   it, anything else is matted on vellum.** A square matches neither, so it mats
   in both (0.75 would take a quarter off its width, and a square composition has
-  nothing to spare at the edges). `cover`/`contain` force one treatment.
+  nothing to spare at the edges).
+- **Explicit `cover` is FULL-BLEED in every frame** — it fills the slot edge to
+  edge, and the 3:4 frame is dropped (`pictureShape` in `EntityCard`). Cover
+  means fill; handing it a centred frame with vellum down both sides is the
+  setting refusing its own instruction. Under cover the frame control keeps only
+  what it can still honestly claim: **how TALL the band is** — and portrait's
+  taller band is the one that crops least. `contain` keeps the frame, because it
+  is asking to see the picture whole.
 - The **list row's chip stays square at every frame** — a 3:4 chip would outgrow
   the two lines of text beside it, and a mat inside 2.25rem is almost all mat.
 - **No-shift holds by construction**: every box is definite before an image

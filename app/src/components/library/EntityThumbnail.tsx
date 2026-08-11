@@ -86,6 +86,9 @@ export function EntityThumbnail({
  *   - a SQUARE matches neither, so it mats in both. At 0.75 the portrait frame
  *     would take a quarter of its width off, and a square composition is the one
  *     that has nothing to spare at the edges.
+ *   - EXPLICIT `cover` is full-bleed, whatever the frame: the box it is handed
+ *     is the whole slot, so the frame control keeps only the part it can still
+ *     honestly claim under that instruction — how tall the band is.
  *   - the list layout's chip is a small SQUARE whatever the grid's frame is —
  *     a 3:4 chip would outgrow the two lines of text it sits beside — and a mat
  *     inside 2.25rem is almost all mat, so it covers at any ratio.
@@ -126,8 +129,10 @@ function ImageThumb({
     );
   }
   // An explicit fit wins for every ratio — a user who asked for whole images
-  // gets whole images, mat and all. `auto` keeps the rule above: cover only what
-  // runs the same way as the frame.
+  // gets whole images, mat and all, and one who asked for cover gets the slot
+  // FILLED (the caller hands cover a full-width box in every frame, so there is
+  // no 3:4 frame left to leave a mat inside). `auto` keeps the rule above: cover
+  // only what runs the same way as the frame.
   const matted =
     fit === "contain" || (fit === "auto" && size !== "sm" && image.aspect !== frame);
   return (

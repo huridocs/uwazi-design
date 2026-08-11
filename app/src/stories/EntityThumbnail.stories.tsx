@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { EntityThumbnail } from "../components/library/EntityThumbnail";
 import { artworkLibraryEntities } from "../data/artworks/adapt";
 import type { Entity } from "../data/entities";
-import type { ThumbFrame } from "../atoms/library";
+import type { ThumbFit, ThumbFrame } from "../atoms/library";
 
 /** A Library card's preview slot.
  *
@@ -91,7 +91,11 @@ const FRAME_H: Record<ThumbFrame, { size: string; h: string }[]> = {
   ],
 };
 const FRAMES: ThumbFrame[] = ["landscape", "portrait"];
-const shape = (frame: ThumbFrame) => (frame === "portrait" ? "aspect-[3/4]" : "w-full");
+/** The shape the picture takes inside the band — the same rule `EntityCard`
+ *  applies. Explicit `cover` is full-bleed in EVERY frame: cover means fill, and
+ *  a 3:4 frame with vellum down both sides is not filling. */
+const shape = (frame: ThumbFrame, fit: ThumbFit = "auto") =>
+  frame === "portrait" && fit !== "cover" ? "aspect-[3/4]" : "w-full";
 
 /** The Display menu's size presets, in BOTH frames. A portrait frame at a given
  *  size stands as tall as a landscape one a step up — which is what makes Size
@@ -129,10 +133,19 @@ export const Sizes: Story = {
 };
 
 /** The Display menu's fit override, against all three real ratios in BOTH frames.
+ *
  *  `auto` covers only what runs the same way as the frame — so the portrait
  *  column fills the portrait frame and mats in the landscape one, and the
- *  landscape column does the reverse. `cover` fills and crops everywhere;
- *  `contain` mats everywhere. Documents ignore the prop. */
+ *  landscape column does the reverse.
+ *
+ *  `cover` FILLS, and in the portrait frame that means edge to edge: the 3:4
+ *  frame is gone and the picture takes the whole band, because a setting called
+ *  cover that leaves vellum down both sides is refusing its own instruction.
+ *  What the frame still decides under cover is how TALL the band is — which is
+ *  why the portrait row here crops a landscape work far less than the landscape
+ *  row above it does a portrait one.
+ *
+ *  `contain` mats everywhere, in the frame. Documents ignore the prop. */
 export const FitModes: Story = {
   render: () => (
     <div className="space-y-6 max-w-4xl">
@@ -154,13 +167,14 @@ export const FitModes: Story = {
                       image={entity.image}
                       fit={fit}
                       frame={frame}
-                      className={`h-full ${shape(frame)} rounded overflow-hidden border border-border/60`}
+                      className={`h-full ${shape(frame, fit)} rounded overflow-hidden border border-border/60`}
                     />
                   </span>
                 ))}
               </div>
               <p className="text-[10px] text-ink-tertiary">
                 fit: {fit} · portrait / landscape / square
+                {frame === "portrait" && fit === "cover" && " · full-bleed, no frame"}
               </p>
             </div>
           ))}

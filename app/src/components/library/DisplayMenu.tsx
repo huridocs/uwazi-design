@@ -54,12 +54,12 @@ const THUMB_SIZES: { id: ThumbSize; label: string }[] = [
 
 const THUMB_FRAMES: { id: ThumbFrame; label: string; detail: string }[] = [
   { id: "landscape", label: "Landscape", detail: "A wide band across the card" },
-  { id: "portrait", label: "Portrait", detail: "A 3:4 frame, centred — for standing pictures" },
+  { id: "portrait", label: "Portrait", detail: "A taller slot — a 3:4 frame, or a tall band under Cover" },
 ];
 
 const THUMB_FITS: { id: ThumbFit; label: string; detail: string }[] = [
   { id: "auto", label: "Auto", detail: "Ratio decides — wide fills, tall is matted" },
-  { id: "cover", label: "Cover", detail: "Fill the slot, crop the image" },
+  { id: "cover", label: "Cover", detail: "Fill the whole slot edge to edge, crop the image" },
   { id: "contain", label: "Contain", detail: "Whole image on a quiet mat" },
 ];
 

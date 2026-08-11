@@ -211,6 +211,22 @@ export const EntityCard = memo(function EntityCard({
   // compact text block and the floor would just add dead space.
   const minHeight = showPreview ? CARD_FLOOR[thumbFrame][thumbSize] : "";
 
+  /** The shape the picture takes INSIDE the slot's band.
+   *
+   *  Explicit **Cover means fill**, in every frame — asking for cover and being
+   *  handed a 3:4 card with vellum down both sides is the setting refusing the
+   *  instruction. So cover goes full-bleed and the frame control keeps only what
+   *  it can still honestly claim under that instruction: how TALL the band is.
+   *  Portrait's band is the taller one, which is the one that crops least.
+   *
+   *  `auto` and `contain` keep the centred 3:4 frame, because both are asking to
+   *  see the picture whole-ish and the frame is what makes that readable.
+   *
+   *  The no-preview well takes the same shape — a row where the pictures are
+   *  full-bleed and the empty slots are 3:4 wells reads as two grids. */
+  const pictureShape =
+    thumbFrame === "portrait" && thumbFit !== "cover" ? "aspect-[3/4]" : "w-full";
+
   return (
     <div onClick={() => onSelect(entity.id)} className={`${base} ${surface} ${minHeight}`}>
       {primaryAction}
@@ -233,11 +249,11 @@ export const EntityCard = memo(function EntityCard({
               image={entity.image}
               fit={thumbFit}
               frame={thumbFrame}
-              className={`h-full ${thumbFrame === "portrait" ? "aspect-[3/4]" : "w-full"} rounded overflow-hidden border border-border/60`}
+              className={`h-full ${pictureShape} rounded overflow-hidden border border-border/60`}
             />
           ) : (
             <span
-              className={`h-full ${thumbFrame === "portrait" ? "aspect-[3/4]" : "w-full"} rounded border border-border/60 bg-vellum flex items-center justify-center`}
+              className={`h-full ${pictureShape} rounded border border-border/60 bg-vellum flex items-center justify-center`}
             >
               <span
                 className="w-2.5 h-2.5 rounded-[2px]"

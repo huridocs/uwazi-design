@@ -264,8 +264,10 @@ export const libraryThumbSizeAtom = atom<ThumbSize>(DEFAULT_THUMB_SIZE);
 /** The SHAPE of the slot, for the whole grid at once — never per card, or rows
  *  stop lining up and the grid ragged-edges the way it did before the slot was
  *  reserved at all. `landscape` is the wide band the cards have always had;
- *  `portrait` is a 3:4 frame, centred in the card, for a corpus that is mostly
- *  standing figures (the artworks sample runs 30 portrait to 22 landscape).
+ *  `portrait` is a taller slot for a corpus that is mostly standing figures (the
+ *  artworks sample runs 30 portrait to 22 landscape) — drawn as a centred 3:4
+ *  frame under `auto`/`contain`, and as a tall full-width band under an explicit
+ *  `cover`, where the instruction is to fill and a frame would only mat.
  *  Size scales BOTH: a portrait frame at size N is as tall as a landscape one at
  *  N+1, which is what keeps the two orientations feeling like one control. */
 export type ThumbFrame = "landscape" | "portrait";
