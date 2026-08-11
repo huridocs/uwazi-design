@@ -7,6 +7,7 @@ import {
   activePrimaryGroupIdAtom,
 } from "./files";
 import { resetRelFacetsAtom } from "./filters";
+import { guardNavigationAtom } from "./dirtyGuard";
 
 /** The entity currently open in EntityView. Defaults to the canonical main
  *  entity so the existing single-entity experience is the initial focal entity. */
@@ -52,26 +53,32 @@ export const focusEntityForPreviewAtom = atom(null, (get, set, entityId: string)
 });
 
 /** Write-only: focus an entity AND switch to the entity view ("navigate into").
- *  Pushes the current entity onto the history when hopping entity→entity. */
+ *  Pushes the current entity onto the history when hopping entity→entity.
+ *  Routed through the dirty-form guard — a focal hop swaps every entity-scoped
+ *  surface, so an open edit session gets to object first. */
 export const openEntityAtom = atom(null, (get, set, entityId: string) => {
-  if (get(appViewAtom) === "entity") {
-    set(focalHistoryAtom, [...get(focalHistoryAtom), get(focusedEntityIdAtom)]);
-  } else {
-    set(focalHistoryAtom, []);
-  }
-  focusEntity(entityId, get, set);
-  set(appViewAtom, "entity");
+  set(guardNavigationAtom, () => {
+    if (get(appViewAtom) === "entity") {
+      set(focalHistoryAtom, [...get(focalHistoryAtom), get(focusedEntityIdAtom)]);
+    } else {
+      set(focalHistoryAtom, []);
+    }
+    focusEntity(entityId, get, set);
+    set(appViewAtom, "entity");
+  });
 });
 
 /** Write-only: go back to the precedent screen — the previous focal entity if
- *  any, else the Library. */
+ *  any, else the Library. Guarded like {@link openEntityAtom}. */
 export const goBackAtom = atom(null, (get, set) => {
-  const history = get(focalHistoryAtom);
-  if (history.length > 0) {
-    const prev = history[history.length - 1];
-    focusEntity(prev, get, set);
-    set(focalHistoryAtom, history.slice(0, -1));
-  } else {
-    set(appViewAtom, "library");
-  }
+  set(guardNavigationAtom, () => {
+    const history = get(focalHistoryAtom);
+    if (history.length > 0) {
+      const prev = history[history.length - 1];
+      focusEntity(prev, get, set);
+      set(focalHistoryAtom, history.slice(0, -1));
+    } else {
+      set(appViewAtom, "library");
+    }
+  });
 });

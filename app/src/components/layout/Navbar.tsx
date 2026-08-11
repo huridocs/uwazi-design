@@ -35,6 +35,7 @@ import { getEntity } from "../../data/entities";
 import { agentOpenAtom, shortcutLabel } from "../../atoms/agent";
 import { uiLanguageAtom } from "../../atoms/uiLanguage";
 import { t, UI_LANGUAGES, type UiLanguage } from "../../utils/i18n";
+import { useDirtyGuard } from "../../hooks/useDirtyGuard";
 import { MobileBottomSheet } from "./MobileBottomSheet";
 import { Beacon } from "./Beacon";
 import { Select } from "../shared/Select";
@@ -70,6 +71,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
   // UI (chrome) language — subscribing here is also what re-renders the navbar's
   // t() strings when the switcher below changes it.
   const [uiLang, setUiLang] = useAtom(uiLanguageAtom);
+  const guard = useDirtyGuard();
 
   const ThemeIcon = theme === "dark" ? Moon : theme === "auto" ? Monitor : Sun;
   const themeLabel = t("System", theme === "dark" ? "Dark" : theme === "auto" ? "Auto" : "Light");
@@ -112,11 +114,15 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
   const toolsItems = settingsToolsItems();
 
   /** Open a settings destination. The rail scopes itself to the group the
-   *  section belongs to, so this is also what picks User vs System vs Tools. */
+   *  section belongs to, so this is also what picks User vs System vs Tools.
+   *  Guarded as a whole — the section write must not land when a dirty form
+   *  keeps the view switch itself from going through. */
   const openSettings = (sectionId: string) => {
-    setSettingsSection(sectionId);
-    setSettingsDrilled(true); // mobile: land on the page, not the rail
-    onNavigate?.("settings");
+    guard(() => {
+      setSettingsSection(sectionId);
+      setSettingsDrilled(true); // mobile: land on the page, not the rail
+      onNavigate?.("settings");
+    });
   };
 
   return (

@@ -21,6 +21,7 @@ import { FilesView } from "./FilesView";
 import { MetadataView } from "./MetadataView";
 import { RelationshipsView } from "./RelationshipsView";
 import { t } from "../utils/i18n";
+import { useDirtyGuard } from "../hooks/useDirtyGuard";
 
 export function EntityView() {
   const focusedId = useAtomValue(focusedEntityIdAtom);
@@ -38,11 +39,19 @@ export function EntityView() {
   useAtomValue(uiLanguageAtom);
 
   const [activeTab, setActiveTab] = useState(profile.hasDocument ? "document" : "metadata");
+  const guard = useDirtyGuard();
 
   // Reset to the type's default tab whenever the focal entity changes.
   useEffect(() => {
     setActiveTab(profile.hasDocument ? "document" : "metadata");
   }, [focusedId, profile.hasDocument]);
+
+  // The main-tab strip swaps whole page bodies, so it's a navigation choke
+  // point: leaving a tab with a dirty edit session gets a confirm first.
+  const handleTabChange = (id: string) => {
+    if (id === activeTab) return;
+    guard(() => setActiveTab(id));
+  };
 
   const relFilterCount = useAtomValue(activeFilterCountAtom);
   const relCount = references.length;
@@ -61,7 +70,7 @@ export function EntityView() {
   if (activeTab === "metadata") {
     return (
       <>
-        <MetadataView tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} onBack={goBack} />
+        <MetadataView tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} onBack={goBack} />
         <CreateRelationshipModal />
         <ManageRelationTypesModal />
       </>
@@ -69,13 +78,13 @@ export function EntityView() {
   }
 
   if (activeTab === "files") {
-    return <FilesView tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} onBack={goBack} />;
+    return <FilesView tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} onBack={goBack} />;
   }
 
   if (activeTab === "relationships") {
     return (
       <>
-        <RelationshipsView tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} onBack={goBack} />
+        <RelationshipsView tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} onBack={goBack} />
         <CreateRelationshipModal />
         <ManageRelationTypesModal />
       </>
@@ -87,7 +96,7 @@ export function EntityView() {
       <MainTabs
         tabs={tabs}
         activeId={activeTab}
-        onChange={setActiveTab}
+        onChange={handleTabChange}
         onBack={goBack}
         languages={["EN", "ES", "FR", "AR"]}
         availableLanguages={["EN", "ES", "FR", "AR"]}

@@ -8,14 +8,17 @@ import { ImportCSVView } from "./views/ImportCSVView";
 import { SettingsView } from "./views/SettingsView";
 import { ToastContainer } from "./views/ToastContainer";
 import { AgentModal } from "./components/agent/AgentModal";
+import { UnsavedChangesGuard } from "./components/shared/UnsavedChangesGuard";
 import { themeAtom, resolveTheme } from "./atoms/theme";
 import { languageAtom } from "./atoms/language";
 import { appViewAtom, type AppView } from "./atoms/navigation";
 import { useBreakpointSync } from "./hooks/useBreakpointSync";
+import { useDirtyGuard } from "./hooks/useDirtyGuard";
 
 export function App() {
   useBreakpointSync();
   const [appView, setAppView] = useAtom(appViewAtom);
+  const guard = useDirtyGuard();
   const [theme, setTheme] = useAtom(themeAtom);
   const [language, setLanguage] = useAtom(languageAtom);
   // Direction derives from the reading language — selecting AR anywhere
@@ -45,11 +48,14 @@ export function App() {
 
   const handleLogoClick = () => {
     // Logo toggles the component catalog; returning lands on the Library home.
-    setAppView(appView === "catalog" ? "library" : "catalog");
+    guard(() => setAppView(appView === "catalog" ? "library" : "catalog"));
   };
 
+  // The top-level view switch is a navigation choke point: a dirty form gets
+  // to object before the surface underneath it is swapped out.
   const handleNavigate = (view: AppView) => {
-    setAppView(view);
+    if (view === appView) return;
+    guard(() => setAppView(view));
   };
 
   // The catalog has its own self-contained layout (its own header, its own
@@ -63,6 +69,7 @@ export function App() {
         <ComponentCatalog onReturn={() => setAppView("library")} />
         <ToastContainer />
         <AgentModal />
+        <UnsavedChangesGuard />
       </>
     );
   }
@@ -90,6 +97,7 @@ export function App() {
         )}
       </div>
       <AgentModal />
+      <UnsavedChangesGuard />
     </div>
   );
 }

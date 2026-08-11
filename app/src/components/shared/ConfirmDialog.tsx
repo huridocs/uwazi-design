@@ -7,6 +7,9 @@ interface ConfirmDialogProps {
   title: string;
   message: string;
   confirmLabel?: string;
+  /** The safe way out. Defaults to "Cancel"; the dirty-form guard says
+   *  "Keep editing". */
+  cancelLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
   variant?: "danger" | "default";
@@ -17,6 +20,7 @@ export function ConfirmDialog({
   title,
   message,
   confirmLabel = "Confirm",
+  cancelLabel = "Cancel",
   onConfirm,
   onCancel,
   variant = "default",
@@ -60,7 +64,7 @@ export function ConfirmDialog({
             onClick={onCancel}
             className="px-3 py-1.5 text-xs font-medium rounded-md text-ink-secondary bg-warm hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
           >
-            Cancel
+            {cancelLabel}
           </button>
           <button
             onClick={onConfirm}

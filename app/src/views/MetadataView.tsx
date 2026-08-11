@@ -37,6 +37,7 @@ import { scopedReferencesAtom } from "../atoms/references";
 import { RelationshipsDrawerSection } from "../components/relationships/RelationshipsDrawerSection";
 import { DocumentViewer } from "../components/viewer/DocumentViewer";
 import { useNotify } from "../hooks/useNotify";
+import { useRegisterDirtyForm } from "../hooks/useDirtyGuard";
 import { ShareEntityModal } from "../components/share/ShareEntityModal";
 
 interface MetadataViewProps {
@@ -306,6 +307,21 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
   /* Once a copy is in play, EVERY field reserves its provenance slot, so the
      line landing on commit cannot shove the fields below it (PATTERNS §3). */
   const copyActive = stage !== null || Object.keys(copiedFrom).length > 0;
+
+  /* ── Dirty guard ── the edit session registers itself while mounted, so the
+     navigation choke points (view switch, tab strip, focal hops, settings)
+     hold a leave behind a confirm while anything below differs from what the
+     session opened with. Unregisters on unmount — Save and Cancel both close
+     the session, so neither needs explicit teardown. */
+  const dirty =
+    title !== docTitle ||
+    fields.some((f) => f.value !== initialFields.find((i) => i.id === f.id)?.value) ||
+    connectionDefs.some((d) => {
+      const ids = connections[d.key];
+      return ids !== undefined && ids.join("|") !== d.entityIds.join("|");
+    }) ||
+    copyActive;
+  useRegisterDirtyForm("metadata-edit", "Metadata edits", dirty);
 
   return (
     <>

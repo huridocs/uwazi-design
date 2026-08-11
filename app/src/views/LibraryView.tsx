@@ -19,6 +19,7 @@ import { breakpointAtom } from "../atoms/viewport";
 import { openEntityAtom, focusEntityForPreviewAtom } from "../atoms/focusedEntity";
 import { scrollToPageAtom } from "../atoms/selection";
 import { useNotify } from "../hooks/useNotify";
+import { useDirtyGuard } from "../hooks/useDirtyGuard";
 import {
   libraryQueryAtom,
   librarySearchDraftAtom,
@@ -208,6 +209,7 @@ export function LibraryView() {
   const [matchTypes, setMatchTypes] = useAtom(matchTypeFiltersAtom);
   const setAppView = useSetAtom(appViewAtom);
   const notify = useNotify();
+  const guard = useDirtyGuard();
 
   const isMobile = breakpoint === "mobile";
 
@@ -908,7 +910,7 @@ export function LibraryView() {
         <FooterButton
           icon={<FileSpreadsheet size={13} className="text-ink-tertiary" />}
           label="Import / Export CSV"
-          onClick={() => setAppView("import-csv")}
+          onClick={() => guard(() => setAppView("import-csv"))}
         />
         {/* Result status. Nothing is mounted or unmounted here — only the text
             changes — so the results above it never move. This is also the only

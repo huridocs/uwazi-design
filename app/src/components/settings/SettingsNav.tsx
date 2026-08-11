@@ -8,6 +8,7 @@ import {
   settingsDocumentation,
 } from "../../atoms/settings";
 import type { AppView } from "../../atoms/navigation";
+import { useDirtyGuard } from "../../hooks/useDirtyGuard";
 
 /** The settings rail — three grouped sections (User / System / Tools) matching
  *  Uwazi's V2 SettingsNavigation. Styled to the entity-view ToolsSidebar:
@@ -15,6 +16,7 @@ import type { AppView } from "../../atoms/navigation";
 export function SettingsNav({ onNavigate }: { onNavigate?: (view: AppView) => void }) {
   const [section, setSection] = useAtom(settingsSectionAtom);
   const setDrilled = useSetAtom(settingsMobileDrilledAtom);
+  const guard = useDirtyGuard();
 
   return (
     <nav
@@ -90,10 +92,16 @@ export function SettingsNav({ onNavigate }: { onNavigate?: (view: AppView) => vo
                 <button
                   className={cls}
                   onClick={() => {
+                    // navigateTo routes through App's handleNavigate, which is
+                    // already guarded; the section switch guards itself here.
                     if (item.navigateTo) onNavigate?.(item.navigateTo);
-                    else {
-                      setSection(item.id);
-                      setDrilled(true); // mobile: reveal the section (ignored on desktop)
+                    else if (item.id !== section) {
+                      guard(() => {
+                        setSection(item.id);
+                        setDrilled(true); // mobile: reveal the section (ignored on desktop)
+                      });
+                    } else {
+                      setDrilled(true);
                     }
                   }}
                 >
