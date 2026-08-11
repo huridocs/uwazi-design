@@ -24,6 +24,8 @@ import {
   type ValueKind,
 } from "../utils/validation";
 import { copyPreviewAtom } from "../atoms/copyFrom";
+import { fillTargetAtom, fillRequestAtom } from "../atoms/fillTarget";
+import { ListeningChip } from "../components/metadata/ListeningChip";
 import { overlayEntityIdAtom } from "../atoms/references";
 import { planCopyFrom, type CopyMatch } from "../utils/copyFrom";
 import { TemplateStructure } from "../components/relationships/TemplateStructure";
@@ -223,8 +225,10 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
   const reflag = (id: string, value: string) =>
     setIssues((prev) => (prev[id] ? { ...prev, [id]: issueFor(id, value) } : prev));
   const { errors: errorCount, warnings: warningCount } = countBySeverity(Object.values(issues));
-  const inputId = (id: string) => `edit-field-${id}`;
-  const msgId = (id: string) => `edit-field-${id}-msg`;
+  // `field-${id}` is ALSO what EditSection's htmlFor and the fill machinery's
+  // data-fill-id use — three consumers, one scheme, keep them aligned.
+  const inputId = (id: string) => `field-${id}`;
+  const msgId = (id: string) => `field-${id}-msg`;
   const fieldAria = (id: string) => ({
     "aria-invalid": issues[id]?.severity === "error" || undefined,
     "aria-describedby": issues[id] ? msgId(id) : undefined,
@@ -268,9 +272,91 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
   const saveBlocked = saveAttempted && errorCount > 0;
 
   const updateField = (id: string, value: string) => {
-    setFields((prev) => prev.map((f) => (f.id === id ? { ...f, value } : f)));
+    setFields((prev) =>
+      // Description and Country render from FIXED boxes above, whatever the
+      // template holds — so on an entity whose profile carries no `description`
+      // field there was nothing for this to map onto and every keystroke went
+      // into the void, textarea included. Click-to-fill made that visible rather
+      // than causing it: a button labelled "Fill Description" that silently does
+      // nothing is a promise broken in public. A missing field is created on
+      // first write instead.
+      prev.some((f) => f.id === id)
+        ? prev.map((f) => (f.id === id ? { ...f, value } : f))
+        : [...prev, { id, label: id === "description" ? "Description" : id, type: "multiline", value }],
+    );
     reflag(id, value);
   };
+
+  /* ── Click-to-fill ────────────────────────────────────────────────────────
+     Focus arms a field; the arm is LATCHED (see atoms/fillTarget) because
+     finding the value means leaving the field. The document viewer and the
+     source-entity preview both write a request here, addressed by field id. */
+  const [fillTarget, setFillTarget] = useAtom(fillTargetAtom);
+  const [fillRequest, sendFill] = useAtom(fillRequestAtom);
+  const bodyRef = useRef<HTMLDivElement>(null);
+
+  // Disarm when the form goes away. Save and Cancel both unmount this body, and
+  // an arm that outlives it would leave the next edit session listening for a
+  // field nobody focused — the Copy From leak, rebuilt.
+  useEffect(() => () => setFillTarget(null), [setFillTarget]);
+
+  // Escape disarms. On the WINDOW, because by the time a user gives up on a fill
+  // the focus is in another pane — but NOT while focus sits inside a modal: the
+  // source preview is itself opened and closed with Escape, and one keypress
+  // that both closes the preview and forgets which field you were filling costs
+  // the user the whole trip. Bound only while armed, so it is not competing for
+  // Escape the rest of the time.
+  useEffect(() => {
+    if (!fillTarget) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (document.activeElement?.closest('[role="dialog"]')) return;
+      setFillTarget(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [fillTarget, setFillTarget]);
+
+  // Apply a request, then spend it. The field is usually scrolled out of sight —
+  // the user has been reading the document — so it comes back into view and
+  // flashes: without that, a fill from the far pane is a silent write to
+  // somewhere you can't see.
+  useEffect(() => {
+    if (!fillRequest) return;
+    const { fieldId, value } = fillRequest;
+    if (fieldId === "title") setTitle(value);
+    else updateField(fieldId, value);
+    sendFill(null);
+    const el = bodyRef.current?.querySelector<HTMLElement>(`[data-fill-id="${CSS.escape(fieldId)}"]`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.classList.add("flash-highlight");
+    const t = setTimeout(() => el.classList.remove("flash-highlight"), 1100);
+    return () => clearTimeout(t);
+    // `fillRequest.nonce` is the signal — filling one field twice with the same
+    // text has to fire twice, so the object identity is what we watch.
+  }, [fillRequest, sendFill]);
+
+  /** The one input skin. An ARMED field keeps the focus treatment while blurred:
+   *  you left it on purpose, to go and fetch the value, and a form that drops
+   *  every trace of where you were is a form you have to re-find your place in.
+   *  It is the focus ring, latched — no second selected-state colour. */
+  const fieldClass = (fieldId: string, extra = "") =>
+    `w-full px-3 py-2 text-sm text-ink bg-paper rounded-md border transition-shadow
+     focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 ${
+       fillTarget?.fieldId === fieldId
+         ? "ring-2 ring-carbon/20 border-carbon/40"
+         : issueBorderClass(issues[fieldId])
+     } ${extra}`;
+
+  /** Focus arms; nothing on blur. Bound to CLICK as well as focus: Escape
+   *  disarms a field that still holds the caret, and without a click path the
+   *  only way back into the mode would be to tab away and return. */
+  const arm = (fieldId: string, label: string) => () => setFillTarget({ fieldId, label });
+  const armProps = (fieldId: string, label: string) => ({
+    onFocus: arm(fieldId, label),
+    onClick: arm(fieldId, label),
+  });
 
   // Relationship fields → one editor per connection. The connection (entity
   // set) is the source of truth, keyed so multi-inheritance siblings sync.
@@ -504,12 +590,19 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
       {pickerOpen && target && (
         <CopyFromPicker target={target} onPreview={preview} onClose={() => setPickerOpen(false)} />
       )}
-      <div className="flex-1 overflow-auto px-4 py-3 pb-8 space-y-3">
+      <div ref={bodyRef} className="flex-1 overflow-auto px-4 py-3 pb-8 space-y-3">
         {/* Title */}
-        <EditSection label="Title*">
+        <EditSection
+          label="Title*"
+          htmlFor="field-title"
+          listening={fillTarget?.fieldId === "title"}
+          onStopListening={() => setFillTarget(null)}
+        >
           <textarea
             id={inputId("title")}
+            data-fill-id="title"
             value={title}
+            {...armProps("title", "Title")}
             onChange={(e) => {
               setTitle(e.target.value);
               reflag("title", e.target.value);
@@ -517,8 +610,7 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
             onBlur={(e) => flag("title", e.currentTarget.value)}
             {...fieldAria("title")}
             rows={2}
-            className={`w-full px-3 py-2 text-sm text-ink bg-paper border ${issueBorderClass(issues.title)} rounded-md
-              focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 resize-none`}
+            className={fieldClass("title", "resize-none")}
           />
           <FieldMessage id={msgId("title")} issue={issues.title} reserve />
         </EditSection>
@@ -574,16 +666,22 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
         )}
 
         {/* Description */}
-        <EditSection label="Description*">
+        <EditSection
+          label="Description*"
+          htmlFor="field-description"
+          listening={fillTarget?.fieldId === "description"}
+          onStopListening={() => setFillTarget(null)}
+        >
           <textarea
             id={inputId("description")}
+            data-fill-id="description"
             value={fields.find((f) => f.id === "description")?.value ?? ""}
+            {...armProps("description", "Description")}
             onChange={(e) => updateField("description", e.target.value)}
             onBlur={(e) => flag("description", e.currentTarget.value)}
             {...fieldAria("description")}
             rows={6}
-            className={`w-full px-3 py-2 text-sm text-ink bg-paper border ${issueBorderClass(issues.description)} rounded-md
-              focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 resize-y`}
+            className={fieldClass("description", "resize-y")}
           />
           <FieldMessage id={msgId("description")} issue={issues.description} reserve />
           {/* Rendered here too: the description is a controlled editor like any
@@ -620,39 +718,49 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
             above with their own controls. */}
         {scalarEditable
           .map((field) => (
-            <EditSection key={field.id} label={field.label}>
+            <EditSection
+              key={field.id}
+              label={field.label}
+              htmlFor={`field-${field.id}`}
+              listening={fillTarget?.fieldId === field.id}
+              onStopListening={() => setFillTarget(null)}
+            >
               {field.type === "date" ? (
+                // A date input takes `yyyy-mm-dd` and nothing else, so it is not
+                // armed: a passage of prose is not a date, and quietly dropping
+                // the fill would be worse than never offering it.
                 <input
-                  type="date"
                   id={inputId(field.id)}
+                  type="date"
                   value={field.value}
                   onChange={(e) => updateField(field.id, e.target.value)}
                   onBlur={(e) => flag(field.id, e.currentTarget.value)}
                   {...fieldAria(field.id)}
-                  className={`w-full px-3 py-2 text-sm text-ink bg-paper border ${issueBorderClass(issues[field.id])} rounded-md
-                    focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40`}
+                  className={fieldClass(field.id)}
                 />
               ) : field.type === "multiline" ? (
                 <textarea
                   id={inputId(field.id)}
+                  data-fill-id={field.id}
                   value={field.value}
+                  {...armProps(field.id, field.label)}
                   onChange={(e) => updateField(field.id, e.target.value)}
                   onBlur={(e) => flag(field.id, e.currentTarget.value)}
                   {...fieldAria(field.id)}
                   rows={4}
-                  className={`w-full px-3 py-2 text-sm text-ink bg-paper border ${issueBorderClass(issues[field.id])} rounded-md
-                    focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 resize-y`}
+                  className={fieldClass(field.id, "resize-y")}
                 />
               ) : (
                 <input
-                  type="text"
                   id={inputId(field.id)}
+                  data-fill-id={field.id}
+                  type="text"
                   value={field.value}
+                  {...armProps(field.id, field.label)}
                   onChange={(e) => updateField(field.id, e.target.value)}
                   onBlur={(e) => flag(field.id, e.currentTarget.value)}
                   {...fieldAria(field.id)}
-                  className={`w-full px-3 py-2 text-sm text-ink bg-paper border ${issueBorderClass(issues[field.id])} rounded-md
-                    focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40`}
+                  className={fieldClass(field.id)}
                 />
               )}
               <FieldMessage id={msgId(field.id)} issue={issues[field.id]} reserve />
@@ -865,13 +973,40 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
 
 /* ── Edit helpers ── */
 
-function EditSection({ label, icon, children }: { label: string; icon?: React.ReactNode; children: React.ReactNode }) {
+function EditSection({
+  label,
+  icon,
+  children,
+  htmlFor,
+  listening,
+  onStopListening,
+}: {
+  label: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+  /** The id of the control this label names. Without it the label is a bare
+   *  `<label>` pointing at nothing: screen readers announce the input as
+   *  unlabelled, and clicking the word doesn't focus the field — which for a
+   *  form whose fields are ARMED by focus is a lost way in. */
+  htmlFor?: string;
+  /** This field is armed for click-to-fill. */
+  listening?: boolean;
+  onStopListening?: () => void;
+}) {
   return (
     <div className="space-y-1.5">
       {label && (
-        <div className="flex items-center gap-1.5">
+        // The listening chip rides THIS row. It is already mounted and its
+        // height is set by the 14px bold label, which the 1rem chip cannot
+        // exceed — so arming a field moves nothing below it.
+        <div className="flex items-center gap-2">
           {icon}
-          <label className="text-sm font-bold text-ink">{label}</label>
+          <label htmlFor={htmlFor} className="text-sm font-bold text-ink">
+            {label}
+          </label>
+          {listening && onStopListening && (
+            <ListeningChip label={label.replace(/\*$/, "")} onStop={onStopListening} />
+          )}
         </div>
       )}
       {children}

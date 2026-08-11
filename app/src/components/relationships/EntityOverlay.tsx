@@ -7,6 +7,7 @@ import { activeAggregateIdAtom, overlayEntityIdAtom, referencesAtom } from "../.
 import { languageAtom } from "../../atoms/language";
 import { entityMetadataAtom, setEntityPropAtom } from "../../atoms/entityMetadata";
 import { openEntityAtom } from "../../atoms/focusedEntity";
+import { fillTargetAtom, fillRequestAtom } from "../../atoms/fillTarget";
 import { getEntity } from "../../data/entities";
 import { relationshipFieldsByLanguage, type MetadataField } from "../../data/metadata";
 import { getEntityProfile } from "../../data/entityProfiles";
@@ -386,14 +387,45 @@ export function EntityOverlay() {
   );
 }
 
+/** A property of the previewed entity.
+ *
+ *  While a metadata field is armed for click-to-fill, the row becomes the OTHER
+ *  way to answer it: the values a user reaches for are as often already recorded
+ *  on a connected entity as they are buried in the document, and this preview is
+ *  where they read them. The whole row is the target — a 12px value is not a
+ *  click target, and the label is part of what you're pointing at.
+ *
+ *  Only when armed, and only with a value: outside the mode this is a read-only
+ *  preview row, and turning every property into a button that does nothing would
+ *  be a worse lie than not offering it. */
 function MetaRow({ icon: Icon, label, value }: { icon: typeof Tag; label: string; value: string }) {
-  return (
-    <div className="flex items-center gap-2.5">
+  const fillTarget = useAtomValue(fillTargetAtom);
+  const sendFill = useSetAtom(fillRequestAtom);
+  const body = (
+    <>
       <Icon size={14} className="text-ink-tertiary shrink-0" />
-      <div className="min-w-0">
+      <div className="min-w-0 text-start">
         <span className="text-[10px] text-ink-tertiary leading-tight block">{label}</span>
         <p className="text-xs text-ink-secondary leading-tight">{value}</p>
       </div>
-    </div>
+    </>
+  );
+
+  if (!fillTarget || !value || value === "—") {
+    return <div className="flex items-center gap-2.5">{body}</div>;
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => sendFill(value)}
+      title={`Fill ${fillTarget.label} with this value`}
+      // `-m-1 p-1` so the hover well reaches past the text without moving the
+      // row: the rows sit at the same y armed or not.
+      className="flex items-center gap-2.5 w-full -m-1 p-1 rounded-md text-start
+        hover:bg-parchment transition-colors cursor-pointer
+        focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
+    >
+      {body}
+    </button>
   );
 }

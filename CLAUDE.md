@@ -309,6 +309,35 @@ HURIDOCS tribute** — surface the name, keep the code identifiers (`agent*`).
 - Files tab maps over real `files[]` from `data/files.ts` — *not* hardcoded.
 - Connections tab inside the drawer renders `<ConnectionsDrawerSection />`; default panel mode is `tree`.
 
+### Click-to-fill (edit mode)
+A focused metadata input LISTENS for a value from elsewhere on screen — a passage
+in the document, a property on a connected entity's preview.
+- **Arming is latched, not focus** (`atoms/fillTarget.ts` → `fillTargetAtom`).
+  Finding the value means leaving the field, so the arm has to survive blur. The
+  input keeps its focus ring while blurred (the focus treatment, latched — NOT a
+  new selected-state colour) and its label row grows a `ListeningChip`
+  (carbon dot + "select text or a value" + ×). The row is already mounted, so
+  arming shifts nothing.
+- **Committing is a click, never the selection itself.** `FloatingMenu` gains a
+  leading **Fill <Field>** while armed; `EntityOverlay`'s `MetaRow` becomes a
+  `bg-parchment`-hover button. A bare drag is how people READ — having it
+  overwrite a field would make the mode frightening to leave on.
+- **The signal is a VALUE, not a callback** (`fillRequestAtom`, `{fieldId, value,
+  nonce}` — the `pageJumpAtom` idiom). An atom holding closures owned by the edit
+  form is exactly how `copyPreviewAtom` came to setState on an unmounted form.
+  `MetadataEditBody` clears `fillTargetAtom` **on unmount** for the same reason.
+- Ends on: fill (which disarms — the field asked for one value), Escape (skipped
+  while focus is inside a `[role="dialog"]`, so closing the source preview
+  doesn't also forget the field), the chip's ×, or Save/Cancel.
+- Date inputs are NOT armed — a passage of prose is not a `yyyy-mm-dd`.
+- Filling scrolls the field into view and flashes it (`flash-highlight`); the user
+  is looking at the other pane when the write lands.
+- Two adjacent defects fixed in passing: `updateField` now CREATES a missing field
+  (a template without `description` silently swallowed every keystroke in the
+  fixed Description box), and `EditSection` labels are `htmlFor`-associated with
+  their inputs (they named nothing, so clicking a label didn't focus — a lost way
+  into a mode that arms on focus).
+
 ### Relationship & inherited metadata
 Mirrors Uwazi's relationship properties: a field connects this entity to entities of
 a target template via a relation type and optionally **inherits** a value from each

@@ -19,6 +19,7 @@ import { PageTag } from "../components/shared/PageTag";
 import { CountBadge } from "../components/shared/CountBadge";
 import { CopyPreviewSection } from "../components/metadata/CopyPreviewSection";
 import { CopyFieldRow } from "../components/metadata/CopyFieldRow";
+import { ListeningChip } from "../components/metadata/ListeningChip";
 import type { CopyPlan } from "../utils/copyFrom";
 import { MetadataCard, Property, PropertyRow } from "../components/metadata/MetadataCard";
 import { HighlightCard } from "../components/relationships/HighlightCard";
@@ -752,6 +753,35 @@ export function ComponentCatalog({ onReturn }: Props) {
 {/* Badge = countCopyMatchesFor(index, candidate, language) */}`}
                 >
                   <IsolatedCopyFromPicker />
+                </CatalogEntry>
+              </div>
+
+              <div id="ev-click-to-fill" ref={reg("ev-click-to-fill")}>
+                <CatalogEntry
+                  name="Click-to-fill · listening field"
+                  description="A metadata input that is waiting for a value from somewhere else on screen — a passage in the document, a property on a connected entity. Focus arms it and the arm is LATCHED, because finding the value means leaving the field: the input keeps its focus ring while blurred so the form never looks like it forgot where you were. The chip rides the label row (already mounted, so nothing shifts) and says what to do rather than what state we are in. Filling, Escape, the chip's ×, or leaving the form all end it."
+                  code={`// atoms/fillTarget.ts — a VALUE signal, never a callback
+setFillTarget({ fieldId: field.id, label: field.label });   // on focus + click
+sendFill(selection.text);                                    // commits, then disarms
+
+<EditSection label={field.label} listening onStopListening={disarm}>`}
+                >
+                  <div className="w-full max-w-md space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <label htmlFor="catalog-fill-demo" className="text-sm font-bold text-ink">
+                        Description
+                      </label>
+                      <ListeningChip label="Description" onStop={() => {}} />
+                    </div>
+                    <textarea
+                      id="catalog-fill-demo"
+                      readOnly
+                      rows={3}
+                      placeholder="Select a passage in the document to fill this…"
+                      className="w-full px-3 py-2 text-sm text-ink bg-paper rounded-md border
+                        ring-2 ring-carbon/20 border-carbon/40 resize-none placeholder:text-ink-muted"
+                    />
+                  </div>
                 </CatalogEntry>
               </div>
 
