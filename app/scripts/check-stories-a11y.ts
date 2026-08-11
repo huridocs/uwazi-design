@@ -15,40 +15,26 @@ import { readFileSync } from "node:fs";
 import { chromium } from "playwright";
 
 const AXE = readFileSync("node_modules/axe-core/axe.min.js", "utf8");
-const STORIES = [
-  "shared-provenanceline--default",
-  "shared-provenanceline--all-states",
-  "shared-provenanceline--minimal",
-  "library-borroweddocline--default",
-  "library-borroweddocline--empty",
-  "library-viewswitcher--default",
-  "library-viewswitcher--all-states",
-  "shared-pdfpagethumb--default",
-  "shared-pdfpagethumb--empty",
-  "shared-pdfpagethumb--all-states",
-  "shared-entitytypechip--default",
-  "shared-entitytypechip--all-states",
-  "shared-entitytypechip--minimal",
-  "metadata-copyfrom--default",
-  "metadata-copyfrom--all-states",
-  "metadata-copyfrom--preview",
-  "metadata-copyfrom--empty",
-  "metadata-copyfrom--picker",
-  "library-timespine--default",
-  "library-timespine--clustered",
-  "library-timespine--clustered-mixed",
-  "library-timespine--clustered-selected",
-  "library-timespine--elided",
-  "library-timespine--minimal",
-  "library-timespine--empty",
-  "library-entitythumbnail--card-slot",
-  "library-entitythumbnail--list-chip",
-  "library-entitythumbnail--no-asset",
-];
 
 const url = process.argv.includes("--url")
   ? process.argv[process.argv.indexOf("--url") + 1]
-  : "http://localhost:6007";
+  : "http://localhost:6006";
+
+// The story list comes from Storybook's own index, not a hand-written array.
+// A hand list rots two ways at once: new stories never join it, and a renamed
+// id keeps "passing" because nobody deletes it — while the summary still says
+// clean as if coverage were total.
+const indexRes = await fetch(`${url}/index.json`).catch(() => null);
+if (!indexRes?.ok) {
+  console.error(`No Storybook index at ${url}/index.json — start it (npm run storybook) or pass --url.`);
+  process.exit(2);
+}
+const { entries } = (await indexRes.json()) as {
+  entries: Record<string, { id: string; type?: string }>;
+};
+const STORIES = Object.values(entries)
+  .filter((e) => e.type === "story")
+  .map((e) => e.id);
 
 const b = await chromium.launch();
 const page = await b.newPage({ viewport: { width: 1100, height: 800 }, deviceScaleFactor: 2 });
@@ -59,6 +45,17 @@ for (const id of STORIES) {
       waitUntil: "networkidle",
     });
     if (!res?.ok()) { console.log(`MISSING  ${id}`); bad++; continue; }
+    // Storybook serves iframe.html?id=<anything> as 200 — an unknown or broken
+    // id draws its error page in-document, so res.ok() proves nothing. A story
+    // counts as present only once the root actually holds rendered elements.
+    const rendered = await page
+      .waitForFunction(() => {
+        if (document.body.classList.contains("sb-show-errordisplay")) return "error";
+        const root = document.querySelector("#storybook-root");
+        return root && root.childElementCount > 0 ? "ok" : false;
+      }, undefined, { timeout: 5000 })
+      .then((h) => h.jsonValue(), () => "timeout");
+    if (rendered !== "ok") { console.log(`MISSING  ${id} [${theme}] (${rendered})`); bad++; continue; }
     await page.waitForTimeout(700);
     await page.addScriptTag({ content: AXE });
     const out = await page.evaluate(async () => {

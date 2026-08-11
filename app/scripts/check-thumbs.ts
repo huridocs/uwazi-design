@@ -45,7 +45,14 @@ const HEIGHT = args.includes("--height") ? Number(args[args.indexOf("--height") 
 // Whole-page is what SHIPS, so it is what a bare run checks. `--zoom` renders a
 // framed candidate instead — treatments live in the check, not in the app, until
 // one is picked.
-const zoom = args.includes("--zoom") ? Number(args[args.indexOf("--zoom") + 1]) : 0;
+const zoomIdx = args.indexOf("--zoom");
+const zoom = zoomIdx !== -1 ? Number(args[zoomIdx + 1]) : 0;
+// A bad --zoom must stop the run, not slide through as NaN — a frame spec with
+// a NaN zoom silently measures something other than what the banner claims.
+if (zoomIdx !== -1 && (!Number.isFinite(zoom) || zoom <= 0)) {
+  console.error(`--zoom needs a finite positive number, got "${args[zoomIdx + 1] ?? ""}".`);
+  process.exit(1);
+}
 const pad = args.includes("--pad") ? Number(args[args.indexOf("--pad") + 1]) : undefined;
 const whole = !zoom;
 const url = args.includes("--url") ? args[args.indexOf("--url") + 1] : "http://localhost:1431";
