@@ -14,7 +14,8 @@
  *  reported 18 of 39 documents blank that render perfectly well in a browser. A
  *  check that lies is worse than no check.
  *
- *    npm run check:thumbs                    # the shipped path (whole page)
+ *    npm run check:thumbs                    # the shipped path, landscape band
+ *    node scripts/check-thumbs.ts --portrait # the same path at the 3:4 slot
  *    node scripts/check-thumbs.ts --zoom 1.4 # a framed candidate
  *    node scripts/check-thumbs.ts --zoom 1.4 --pad 0.2
  *    node scripts/check-thumbs.ts --url http://localhost:5173
@@ -33,14 +34,26 @@ const APP = join(HERE, "..");
 
 const args = process.argv.slice(2);
 
-/** The card grid's real sheet box, measured in the running Library: a 281×94
- *  frame insets to a 189.3×96.7 sheet. Checking any other size would be checking
- *  something we don't ship. */
-const WIDTH = 189;
+/** The card grid's real sheet boxes, measured in the running Library. Checking
+ *  any other size would be checking something we don't ship.
+ *
+ *  LANDSCAPE — the wide band: a 281×94 frame insets to a 189.3×96.7 sheet.
+ *  PORTRAIT (`--portrait`) — the 3:4 slot, where the page FILLS the box instead
+ *  of sitting in the inset stack: a 269×359 slot asks `pdfThumb` for 288 CSS px,
+ *  because a filled page is scaled until its HEIGHT covers and so draws ~7%
+ *  wider than the box (`PdfPageThumb` raises the request to `height × 0.8`).
+ *  That is a half-again bigger raster per document, which is the number worth
+ *  regression-checking: it is where a slow or failing render would show up. */
+const portrait = args.includes("--portrait");
+const WIDTH = portrait ? 288 : 189;
 // The sheet's height. Overridable because the card's preview slot is a design
 // lever too: a taller slot shows more of a fitted page, which is a different
 // treatment rather than a different number.
-const HEIGHT = args.includes("--height") ? Number(args[args.indexOf("--height") + 1]) : 96;
+const HEIGHT = args.includes("--height")
+  ? Number(args[args.indexOf("--height") + 1])
+  : portrait
+    ? 384
+    : 96;
 
 // Whole-page is what SHIPS, so it is what a bare run checks. `--zoom` renders a
 // framed candidate instead — treatments live in the check, not in the app, until
@@ -84,6 +97,7 @@ if (!res?.ok()) {
 
 console.log(
   `${whole ? "fit-whole-page (shipped)" : `framed crop, zoom ${zoom}${pad !== undefined ? ` pad ${pad}` : ""}`}` +
+    ` · ${portrait ? "portrait slot" : "landscape band"} ${WIDTH}px` +
     ` · ${files.length} documents · ${url}\n`,
 );
 

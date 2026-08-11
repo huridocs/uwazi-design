@@ -27,6 +27,7 @@ export function EntityThumbnail({
   size = "md",
   fit = "auto",
   frame = "landscape",
+  tint,
   className = "",
 }: {
   kind: PreviewKind;
@@ -41,34 +42,89 @@ export function EntityThumbnail({
    *  the caller owns the box — but `auto` has to know which way the frame runs
    *  to decide whether an image fits it or has to be matted in it. */
   frame?: ThumbFrame;
+  /** The entity type's colour. The kinds with no asset of their own — audio, and
+   *  the empty well next door — carry it so a slot without a picture still says
+   *  WHICH KIND of thing is missing, instead of being an anonymous grey box. */
+  tint?: string;
   className?: string;
 }) {
   if (kind === "document") {
     const file = entityId ? primaryFile(entityId) : null;
+    // The portrait slot is 3:4 and a page is ~0.77 — near enough that the page
+    // fills it. The wide band keeps the inset stack frame, where a page can't
+    // fill the box and the framing is what stops the fit reading as a crop.
     return (
-      <PdfPageThumb url={file?.url} ext={file?.type} size={size} className={className} />
+      <PdfPageThumb
+        url={file?.url}
+        ext={file?.type}
+        size={size}
+        fill={frame === "portrait"}
+        className={className}
+      />
     );
   }
   if (kind === "image") {
     return <ImageThumb image={image} size={size} fit={fit} frame={frame} className={className} />;
   }
   if (kind === "video") {
+    // The idiom is unchanged — ink ground, paper puck, ink triangle — but every
+    // part of it is now a FRACTION of the slot. At a fixed 2rem the puck was a
+    // button on a poster in the portrait frame and nearly the whole box in the
+    // list chip; sized against the box it reads the same at both.
     return (
       <div
         className={`flex items-center justify-center ${className}`}
         style={{ backgroundColor: "var(--text-primary)" }}
       >
-        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-paper/90">
-          <Play size={14} className="text-ink ms-0.5" fill="currentColor" />
-        </div>
+        {/* Sized off the box's HEIGHT, not its width: the two slots differ by
+            ratio, not by scale, and a width fraction that reads right in a 3:4
+            box is half the height of the wide band. Height plus a cap holds one
+            apparent size across both. */}
+        <span className="flex items-center justify-center h-[40%] min-h-6 max-h-16 aspect-square rounded-full bg-paper/90">
+          <Play className="w-[38%] h-[38%] text-ink ms-[6%]" fill="currentColor" />
+        </span>
       </div>
     );
   }
-  // audio
+  // Audio: a warm ground and a waveform in the entity's own colour, both scaled
+  // to the slot. The old 24px glyph in `ink-tertiary` was a grey speck adrift in
+  // a portrait box, and said nothing about what the recording belonged to.
   return (
     <div className={`flex items-center justify-center bg-warm ${className}`}>
-      <AudioLines size={24} className="text-ink-tertiary" />
+      <span className="flex items-center justify-center h-[38%] min-h-4 max-h-16 aspect-square">
+        <AudioLines
+          className="w-full h-full"
+          style={{ color: tint ?? "var(--text-tertiary)" }}
+        />
+      </span>
     </div>
+  );
+}
+
+/** The preview slot for an entity that has NO preview at all.
+ *
+ *  It was a 10px dot, which is legible in a 2.25rem chip and lost in a portrait
+ *  slot ten times that. This is the same idea at the slot's own scale: the
+ *  entity's square dot, kept at its true colour, resting on a plaque of the same
+ *  colour at a sixth strength — a mark, not a speck, and quiet enough that a
+ *  grid of them still reads as empty slots rather than as content.
+ *
+ *  Vellum ground and the type colour, nothing new: `bg-parchment` stays
+ *  selection and no other colour enters the card. */
+export function QuietMark({ tint, className = "" }: { tint?: string; className?: string }) {
+  const color = tint ?? "#6B7280";
+  return (
+    <span className={`bg-vellum flex items-center justify-center ${className}`}>
+      <span
+        className="flex items-center justify-center h-[34%] min-h-5 max-h-12 aspect-square rounded-md"
+        style={{ backgroundColor: `color-mix(in srgb, ${color} 16%, transparent)` }}
+      >
+        <span
+          className="w-[38%] aspect-square rounded-[2px]"
+          style={{ backgroundColor: color }}
+        />
+      </span>
+    </span>
   );
 }
 

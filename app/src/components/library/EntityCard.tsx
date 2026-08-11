@@ -5,7 +5,7 @@ import { languageAtom } from "../../atoms/language";
 import { EntityTypeTag } from "../shared/EntityTypeTag";
 import { HighlightedText } from "../shared/HighlightedText";
 import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
-import { EntityThumbnail } from "./EntityThumbnail";
+import { EntityThumbnail, QuietMark } from "./EntityThumbnail";
 import { getEntityProfile } from "../../data/entityProfiles";
 import { getEntityType } from "../../data/entities";
 import type { MetadataField } from "../../data/metadata";
@@ -151,17 +151,13 @@ export const EntityCard = memo(function EntityCard({
                 image={entity.image}
                 size="sm"
                 fit={thumbFit}
+                tint={type?.color}
                 className={`${CHIP_BOX[thumbSize]} rounded shrink-0 overflow-hidden`}
               />
             ) : (
-              <span
-                className={`${CHIP_BOX[thumbSize]} rounded bg-vellum flex items-center justify-center shrink-0`}
-              >
-                <span
-                  className="w-2 h-2 rounded-[2px]"
-                  style={{ backgroundColor: type?.color ?? "#6B7280" }}
-                />
-              </span>
+              // The same mark the grid's empty slot draws, at chip scale — its
+              // parts are fractions of the box, so one component serves both.
+              <QuietMark tint={type?.color} className={`${CHIP_BOX[thumbSize]} rounded shrink-0`} />
             ))}
           <div className="flex-1 min-w-0">
             <div className="text-sm font-semibold text-ink truncate leading-snug">
@@ -235,17 +231,14 @@ export const EntityCard = memo(function EntityCard({
               image={entity.image}
               fit={thumbFit}
               frame={thumbFrame}
+              tint={getEntityType(entity.typeId)?.color}
               className="h-full w-full rounded overflow-hidden border border-border/60"
             />
           ) : (
-            <span
-              className="h-full w-full rounded border border-border/60 bg-vellum flex items-center justify-center"
-            >
-              <span
-                className="w-2.5 h-2.5 rounded-[2px]"
-                style={{ backgroundColor: getEntityType(entity.typeId)?.color ?? "#6B7280" }}
-              />
-            </span>
+            <QuietMark
+              tint={getEntityType(entity.typeId)?.color}
+              className="h-full w-full rounded border border-border/60"
+            />
           )}
         </span>
       )}

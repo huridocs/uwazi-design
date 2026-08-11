@@ -559,6 +559,36 @@ big, what shape, how the picture sits in it.
   landscape / 8 square. Stories: `Sizes` and `FitModes` render the full matrix
   (3 ratios × 3 sizes/fits × both frames).
 
+
+### What fills the slot, per kind
+- **Document** — the real first page. In the **band** it keeps the inset stack
+  frame (`DocPlaceholder`); in the **portrait slot** it FILLS (`fill` prop): the
+  box is 3:4 and a page is ~0.77, so a second smaller sheet inside it was a
+  document floating in vellum. A page that runs the other way (landscape scans)
+  is matted rather than butchered — the same match-the-frame rule the pictures
+  keep — and the fill is anchored to the TOP so the ~3% trim comes off the
+  footer, not the masthead. **The whole first page is still the treatment**
+  (f36c2ab); no crop.
+- `PdfPageThumb` rasterises at the box's **live** width (ResizeObserver,
+  quantised to 32px, monotonic) — switching frame or size re-hangs the grid under
+  a mounted card, and a mount-only measure left a 221px bitmap stretched across a
+  371px slot. Filling asks for `max(boxW, boxH × 0.8)`, since a covering page is
+  scaled until its HEIGHT covers and so draws ~7% wider than the box. The sheet
+  carries `data-thumb-w` = the width actually requested: "is this bitmap big
+  enough for its box" is the one question a screenshot cannot answer.
+- **Video / audio / no-preview** are sized as FRACTIONS OF THE BOX HEIGHT with
+  caps, not fixed rem: the two slots differ by ratio, not scale, and a width
+  fraction that reads right at 3:4 is half the height of the band. Video keeps
+  ink ground + paper puck; audio is a warm ground and a waveform in the entity's
+  own colour; a slot with no preview at all draws `QuietMark` — the type's square
+  dot on a plaque of the same colour at a sixth strength, which is the 10px dot
+  problem solved at the slot's scale.
+- `scripts/check-thumbs.ts --portrait` checks the fill geometry (288px request)
+  against every real PDF, beside the bare run's landscape 189px.
+- **PDF thumbnails do not render in a hidden tab** — pdf.js drives off rAF. A
+  blank sheet in an automation screenshot is the tab being backgrounded, not a
+  bug; that is what the headless checker is for.
+
 ## Tab signals & recent searches
 
 - **`count` vs `dot`** (`components/layout/DrawerTabs.tsx`, `MainTabs.tsx`): count =
