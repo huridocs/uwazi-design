@@ -35,7 +35,7 @@ export function EditInput({
   return (
     <div className="flex-1">
       {label && (
-        <label htmlFor={id} className="text-xs text-ink-tertiary">
+        <label htmlFor={id} className="text-xs font-medium text-ink-secondary">
           {label}
         </label>
       )}

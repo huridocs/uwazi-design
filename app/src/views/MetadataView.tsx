@@ -996,12 +996,21 @@ function EditSection({
   return (
     <div className="space-y-1.5">
       {label && (
-        // The listening chip rides THIS row. It is already mounted and its
-        // height is set by the 14px bold label, which the 1rem chip cannot
-        // exceed — so arming a field moves nothing below it.
-        <div className="flex items-center gap-2">
+        // `text-xs font-medium text-ink-secondary` — the form-label recipe, the
+        // one `settings/Field.tsx` already gives every Settings page and both
+        // modals. This row used to carry `text-sm font-bold text-ink`, which is
+        // the CARD-TITLE recipe: 14px/700 naming an input, two full steps above
+        // every other field label in the app, on the form a reader meets most.
+        //
+        // The listening chip rides THIS row and the row is always mounted, so
+        // arming a field must move nothing below it. The old label held the row
+        // open at its own 20px line box; a 12px label's is 16px, exactly the
+        // chip's `h-4` — true, and too tight to leave implied, so `min-h-4`
+        // states it. The chip can now grow the row only by growing itself, and
+        // it would have to say so here.
+        <div className="flex items-center gap-2 min-h-4">
           {icon}
-          <label htmlFor={htmlFor} className="text-sm font-bold text-ink">
+          <label htmlFor={htmlFor} className="text-xs font-medium text-ink-secondary">
             {label}
           </label>
           {listening && onStopListening && (

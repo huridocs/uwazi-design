@@ -133,6 +133,7 @@ export const sidebarGroups: SidebarGroup[] = [
   {
     label: "Shared",
     items: [
+      { id: "sh-section-label", label: "SectionLabel" },
       { id: "sh-highlighted-text", label: "HighlightedText" },
       { id: "sh-field-message", label: "FieldMessage" },
       { id: "sh-confirm-dialog", label: "ConfirmDialog" },

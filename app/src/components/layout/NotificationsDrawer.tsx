@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAtom } from "jotai";
 import {
   X,
@@ -22,7 +22,14 @@ import {
   type NotificationKind,
 } from "../../atoms/notifications";
 import { UwaziLoader } from "../shared/UwaziLoader";
+import { SectionLabel } from "../shared/SectionLabel";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
+
+/** The drawer's section headers stick to the top of the scroller as their group
+ *  passes under it, so they carry a ground of their own — the box, not the type,
+ *  which is why it rides `SectionLabel`'s `className` rather than the shared
+ *  primitive. */
+const STICKY = "sticky top-0 z-10 bg-warm px-4 pt-3 pb-1.5";
 
 const kindStyle: Record<
   NotificationKind,
@@ -187,7 +194,7 @@ export function NotificationsDrawer({ rtl = false }: { rtl?: boolean }) {
           {/* Tasks */}
           {activities.length > 0 && (
             <section>
-              <SectionLabel>Tasks · {activities.length}</SectionLabel>
+              <SectionLabel className={STICKY}>Tasks · {activities.length}</SectionLabel>
               <div className="px-3 pb-3 space-y-2">
                 {activities.map((a) => (
                   <TaskCard key={a.id} a={a} onCancel={() => setActivities((p) => p.filter((x) => x.id !== a.id))} />
@@ -203,7 +210,7 @@ export function NotificationsDrawer({ rtl = false }: { rtl?: boolean }) {
             orderedBuckets.map((b) =>
               groups[b].length === 0 ? null : (
                 <section key={b}>
-                  <SectionLabel>{bucketLabel[b]}</SectionLabel>
+                  <SectionLabel className={STICKY}>{bucketLabel[b]}</SectionLabel>
                   <div className="px-3 pb-3 space-y-2">
                     {groups[b].map((n) => (
                       <NotifCard
@@ -261,14 +268,6 @@ function FilterPill({
       {label}
       <span className={`text-[11px] tabular-nums ${active ? "text-ink-tertiary" : "text-ink-muted"}`}>{count}</span>
     </button>
-  );
-}
-
-function SectionLabel({ children }: { children: ReactNode }) {
-  return (
-    <div className="sticky top-0 z-10 bg-warm px-4 pt-3 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-ink-tertiary">
-      {children}
-    </div>
   );
 }
 

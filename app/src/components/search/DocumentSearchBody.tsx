@@ -10,17 +10,8 @@ import { resultsActivePageAtom, focusMetadataFieldAtom } from "../../atoms/libra
 import { getEntity } from "../../data/entities";
 import { buildSnippetsFor } from "../../utils/librarySnippets";
 import { HighlightedText } from "../shared/HighlightedText";
+import { SectionLabel } from "../shared/SectionLabel";
 import { PageSpine } from "./PageSpine";
-
-/** A quiet section label — the same two-section structure the Library Results
- *  cards use (Properties above Document), echoing Uwazi's SnippetList. */
-function SectionLabel({ children }: { children: ReactNode }) {
-  return (
-    <span className="px-1 text-[10px] font-semibold uppercase tracking-wide text-ink-muted">
-      {children}
-    </span>
-  );
-}
 
 function Centered({ children }: { children: ReactNode }) {
   return (
@@ -142,7 +133,7 @@ export function DocumentSearchBody() {
 
           {hasMeta && (
             <div className="flex flex-col gap-1.5">
-              <SectionLabel>Properties</SectionLabel>
+              <SectionLabel className="px-1">Properties</SectionLabel>
               {snippets.metadata.map((group) => (
                 <button
                   key={group.fieldKey}
@@ -167,7 +158,7 @@ export function DocumentSearchBody() {
 
           {hasFullText && (
             <div className="flex flex-col gap-1.5">
-              <SectionLabel>Document</SectionLabel>
+              <SectionLabel className="px-1">Document</SectionLabel>
               <PageSpine
                 entityId={focusedId}
                 fullText={snippets.fullText}

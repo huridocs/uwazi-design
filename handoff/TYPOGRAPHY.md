@@ -101,21 +101,47 @@ size, `text-sm` (14px) is "large" (content), and anything bigger is rare.
 |---|---|---|
 | `text-xs` (12px) | 383 | default UI: buttons, chips, meta, table cells |
 | `text-sm` (14px) | 229 | content: passages, field values, card titles |
-| `text-[10px]` | 180 | micro-labels (see combo below) |
-| `text-[11px]` | 157 | section headers, small meta |
+| `text-[10px]` | 180 | section labels (see combo below) |
+| `text-[11px]` | 157 | table headers, small meta |
 | `text-[13px]` | 29 | tabs |
 | `text-base` and up | ~45 total | view titles only — big type is scarce on purpose |
 
 ### Canonical combos (copy these, don't improvise)
 
 ```
-micro-label     text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary
-section header  text-[11px] font-semibold uppercase tracking-wider text-ink-tertiary
+section label   text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary
+table header    text-[11px] font-semibold uppercase tracking-wider text-ink-tertiary
 tab             text-[13px] font-medium
-card title      text-sm font-bold text-ink leading-tight
+card title      text-sm font-semibold text-ink leading-snug
+form label      text-xs font-medium text-ink-secondary
 field value     text-sm font-medium text-ink leading-relaxed
 prose/passage   text-sm leading-relaxed text-ink
 ```
+
+Three of those lines say something different from what earlier drafts of this
+file said, because the app was measured and the app won:
+
+- **`card title` was `font-bold … leading-tight`.** That recipe matched exactly
+  one component in the codebase. The most-rendered card title in the product —
+  the title on every card in the Library grid — is `font-semibold leading-snug`,
+  and so are the Relationships group headers and the entity-identity header that
+  arrived at it independently. `font-bold` at 14px also reads heavier than the
+  hierarchy this file describes two sections down, where weight steps run
+  between medium and semibold. Bold stays available for a true headline; it is
+  not what a card title is.
+- **`section header` is now `table header`**, and it kept its recipe. The
+  11px/`tracking-wider` string was never used for a free-standing section label
+  in this app — every occurrence was a table column header. Naming it after the
+  job it actually does is what stops the two from being confused again.
+  The free-floating group label ("Properties" over a card's field hits, "Tasks ·
+  3" over the notification drawer) is the 10px `section label` line above, and
+  it now has ONE implementation: `components/shared/SectionLabel.tsx`. Reach for
+  that rather than the class string — four hand-written components of that name
+  had already drifted apart on tracking and colour before it existed.
+- **`form label` is new**, and it is what `components/settings/Field.tsx` gives
+  every Settings page. It was worth writing down because the entity-edit form
+  had been using the card-title recipe for it — a 14px bold word naming an
+  input, two full steps above every other field label in the app.
 
 ### Rules that carry the feel
 

@@ -21,6 +21,7 @@ import {
 } from "../../../atoms/library";
 import { entityTime } from "../../../utils/timeline";
 import { RelationshipGroupedCard } from "../../relationships/RelationshipGroupedCard";
+import { SectionLabel } from "../../shared/SectionLabel";
 import { TimeSpine, SpineDate } from "../TimeSpine";
 import { HighlightedText } from "../../shared/HighlightedText";
 import { EntityTypeChip } from "../../shared/EntityTypeChip";
@@ -1107,15 +1108,6 @@ function PageCount({ shown, total }: { shown: number; total: number }) {
         {shown < total ? `${shown} of ${total.toLocaleString()}` : total.toLocaleString()}
       </span>{" "}
       {total === 1 ? "page" : "pages"}
-    </span>
-  );
-}
-
-function SectionLabel({ icon, children }: { icon: ReactNode; children: ReactNode }) {
-  return (
-    <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
-      <span className="text-ink-muted">{icon}</span>
-      {children}
     </span>
   );
 }

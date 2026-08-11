@@ -16,6 +16,7 @@ import { EntityTypeChip } from "../components/shared/EntityTypeChip";
 import { ViewSwitcher } from "../components/library/ViewSwitcher";
 import { entityTypes } from "../data/entities";
 import { PageTag } from "../components/shared/PageTag";
+import { SectionLabel } from "../components/shared/SectionLabel";
 import { CountBadge } from "../components/shared/CountBadge";
 import { CopyPreviewSection } from "../components/metadata/CopyPreviewSection";
 import { CopyFieldRow } from "../components/metadata/CopyFieldRow";
@@ -44,7 +45,7 @@ import { RowActions } from "../components/settings/RowActions";
 import { StatusPill } from "../components/settings/StatusPill";
 
 // Icons
-import { ArrowLeft, FileText, Pencil, Download, Trash2, Share2, Plus } from "lucide-react";
+import { ArrowLeft, FileText, Pencil, Download, Trash2, Share2, Plus, Tag } from "lucide-react";
 
 // Data
 import { references } from "../data/references";
@@ -767,8 +768,14 @@ sendFill(selection.text);                                    // commits, then di
 <EditSection label={field.label} listening onStopListening={disarm}>`}
                 >
                   <div className="w-full max-w-md space-y-1.5">
-                    <div className="flex items-center gap-2">
-                      <label htmlFor="catalog-fill-demo" className="text-sm font-bold text-ink">
+                    {/* Mirrors `EditSection`'s real row, form-label recipe and
+                        `min-h-4` included — a catalog demo that drifts from the
+                        thing it documents is worse than no demo. */}
+                    <div className="flex items-center gap-2 min-h-4">
+                      <label
+                        htmlFor="catalog-fill-demo"
+                        className="text-xs font-medium text-ink-secondary"
+                      >
                         Description
                       </label>
                       <ListeningChip label="Description" onStop={() => {}} />
@@ -1542,6 +1549,38 @@ const textColor = typeLabelColor(type.color);`}
                       {entityTypes.map((t) => (
                         <EntityPill key={t.id} typeId={t.id} />
                       ))}
+                    </div>
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="sh-section-label" ref={reg("sh-section-label")}>
+                <CatalogEntry
+                  name="SectionLabel"
+                  description="The small uppercase label introducing a group of content — 'Properties' over a card's field hits, 'Document' over its page hits, 'Tasks · 3' over the notification drawer's running work. Replaced four separately-written components of the same name that agreed on size and weight and nothing else (three tracking-wide against one -wider, two ink-tertiary against two ink-muted). Typography is fixed; className takes the BOX only — padding, a sticky ground — so where a label sits stays the caller's while what it looks like can't vary. ink-tertiary, not -muted: at 10px this is small text by WCAG's measure and muted lands under AA."
+                  code={`<SectionLabel>Properties</SectionLabel>
+<SectionLabel icon={<Tag size={11} />}>Properties</SectionLabel>
+
+{/* The box is the caller's — a sticky group header: */}
+<SectionLabel className="sticky top-0 z-10 bg-warm px-4 pt-3 pb-1.5">
+  Tasks · 3
+</SectionLabel>`}
+                >
+                  <div className="flex flex-col gap-3 w-full max-w-md">
+                    <SectionLabel>Properties</SectionLabel>
+                    <SectionLabel icon={<Tag size={11} />}>Properties</SectionLabel>
+                    <SectionLabel icon={<FileText size={11} />}>Document</SectionLabel>
+                    <div className="h-24 overflow-auto bg-warm rounded-md">
+                      <SectionLabel className="sticky top-0 z-10 bg-warm px-4 pt-3 pb-1.5">
+                        Tasks · 3
+                      </SectionLabel>
+                      <ul className="px-4 pb-3 space-y-2">
+                        {Array.from({ length: 6 }, (_, i) => (
+                          <li key={i} className="text-xs text-ink-secondary">
+                            Reprocessing document {i + 1}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   </div>
                 </CatalogEntry>

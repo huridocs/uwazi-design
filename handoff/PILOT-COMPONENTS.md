@@ -155,6 +155,13 @@ PropertyRow({ children })  // horizontal group, gap-6, items-start
 | Shell | `bg-paper border border-border/40 rounded-md overflow-hidden` | surface + soft border |
 | Header pad | `px-4 py-3`, `flex flex-col gap-2` | |
 | Title | `text-sm font-bold text-ink leading-tight` | primary text |
+
+> The Title row records what `MetadataCard` renders today, and it is the app's
+> only instance of that recipe — `TYPOGRAPHY.md`'s card title is `font-semibold
+> … leading-snug`, which is what the Library grid and the Relationships group
+> headers use. Reskin to the canonical pair unless this card is deliberately
+> louder than every other card in the product.
+
 | Field label | `text-xs text-ink-tertiary leading-relaxed` | tertiary |
 | Field value | `text-sm font-medium text-ink leading-relaxed` | primary |
 | Linked value | `underline decoration-solid` | link affordance is the underline, **not** colour |
