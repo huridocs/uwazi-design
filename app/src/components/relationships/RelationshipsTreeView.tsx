@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom } from "jotai";
 import { Link2 } from "lucide-react";
 import {
   overlayEntityIdAtom,
@@ -7,7 +7,6 @@ import {
   expandGroupForRefAtom,
 } from "../../atoms/references";
 import {
-  activeFilterCountAtom,
   groupByAtom,
   searchQueryAtom,
   subGroupByAtom,
@@ -21,20 +20,13 @@ import {
   getGroupLabel,
   groupRefs,
 } from "../../utils/connectionGrouping";
-import { ListInfoRow } from "../shared/ListInfoRow";
 import { RelationshipRow } from "./RelationshipRow";
 import { TreeBranch, TreeNode } from "./TreeBranch";
-import { CollapseControls } from "./FiltersRow";
-import {
-  expandAllSignalAtom,
-  collapseAllSignalAtom,
-} from "../../atoms/filters";
 
 /** Tree view of the merged Relationships panel. Same grouping pipeline as the
  *  list view, but the leaves are aggregate `RelationshipRow kind="aggregate"`
  *  cards with inline-expand into their underlying refs. */
 export function RelationshipsTreeView() {
-  const [activeFilterCount] = useAtom(activeFilterCountAtom);
   const [groupBy] = useAtom(groupByAtom);
   const [subGroupBy] = useAtom(subGroupByAtom);
   // Group headers carry the match when the leaves suppress that label (a
@@ -42,8 +34,6 @@ export function RelationshipsTreeView() {
   const [query] = useAtom(searchQueryAtom);
   const [, setOverlayEntityId] = useAtom(overlayEntityIdAtom);
   const [, setActiveRefId] = useAtom(activeRefIdAtom);
-  const setExpandSignal = useSetAtom(expandAllSignalAtom);
-  const setCollapseSignal = useSetAtom(collapseAllSignalAtom);
 
   // Shared pipeline — applies every facet the list view applies (country,
   // descriptor, inherited included), so mode switches can't un-filter rows.
@@ -56,26 +46,12 @@ export function RelationshipsTreeView() {
     setOverlayEntityId(null);
   }, [filtered, setActiveRefId, setOverlayEntityId]);
 
-  const showCollapse = groupBy !== "none";
-
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      {/* No count here — the tab strip already carries the number, so tree and
-          list can't print different ones. The row stays mounted at its height
-          for the collapse controls. */}
-      <ListInfoRow
-        count={null}
-        activeFilterCount={activeFilterCount}
-        showFilterChips={false}
-        rightSlot={
-          <CollapseControls
-            disabled={!showCollapse}
-            onExpandAll={() => setExpandSignal((s) => s + 1)}
-            onCollapseAll={() => setCollapseSignal((s) => s + 1)}
-          />
-        }
-      />
-
+      {/* No info row — the count is the tab strip's and the collapse pair is the
+          footer action bar's, which is mounted whatever the view. Keeping this
+          row would have given tree a second collapse pair over the same two
+          signal atoms. */}
       <div className="flex-1 overflow-auto bg-warm">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">

@@ -1,13 +1,10 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom } from "jotai";
 import { Link2 } from "lucide-react";
 import {
   viewAtom,
   groupByAtom,
   subGroupByAtom,
-  expandAllSignalAtom,
-  collapseAllSignalAtom,
-  activeFilterCountAtom,
   searchQueryAtom,
 } from "../../atoms/filters";
 import { useFilteredReferences } from "./useFilteredReferences";
@@ -16,8 +13,6 @@ import {
   getGroupLabel,
   groupRefs,
 } from "../../utils/connectionGrouping";
-import { ListInfoRow } from "../shared/ListInfoRow";
-import { CollapseControls } from "./FiltersRow";
 import { RelationshipsTreeView } from "./RelationshipsTreeView";
 import { RelationshipsGraphView } from "./RelationshipsGraphView";
 import { RelationshipRow } from "./RelationshipRow";
@@ -36,12 +31,9 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
   const [view] = useAtom(viewAtom);
   const [groupBy] = useAtom(groupByAtom);
   const [subGroupBy] = useAtom(subGroupByAtom);
-  const [activeFilterCount] = useAtom(activeFilterCountAtom);
   // Marked on the group headers — where a relation-type match shows once the
   // rows beneath stop repeating that label.
   const [query] = useAtom(searchQueryAtom);
-  const setExpandSignal = useSetAtom(expandAllSignalAtom);
-  const setCollapseSignal = useSetAtom(collapseAllSignalAtom);
 
   // The one shared pipeline (cluster → facets → search → sort) — List, Tree,
   // and Graph all filter through it. See useFilteredReferences.
@@ -51,8 +43,6 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
   // cap the flat list render and reveal more on demand so it never paints them all.
   const [listLimit, setListLimit] = useState(LIST_CAP);
   useEffect(() => setListLimit(LIST_CAP), [filtered]);
-
-  const showCollapse = view === "list" && groupBy !== "none";
 
   if (view === "tree") {
     return <RelationshipsTreeView />;
@@ -152,26 +142,14 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
     );
   }
 
+  // No info row. Once the count moved to the tab strip its only remaining job
+  // was hosting the collapse pair, and that has moved to the footer action bar —
+  // which is mounted in every view, so the controls no longer come and go with
+  // the body. What is left is the list itself, starting directly under the
+  // toolbar: an empty reserved row would have been holding space for nothing.
   return (
-    <>
-      {/* No count here — the tab strip already carries the number. The row
-          stays mounted at its height for the collapse controls, so switching
-          views or filtering never shifts the list. */}
-      <ListInfoRow
-        count={null}
-        activeFilterCount={activeFilterCount}
-        showFilterChips={false}
-        rightSlot={
-          <CollapseControls
-            disabled={!showCollapse}
-            onExpandAll={() => setExpandSignal((s) => s + 1)}
-            onCollapseAll={() => setCollapseSignal((s) => s + 1)}
-          />
-        }
-      />
-      <div className={`flex-1 overflow-auto pb-8 relative ${scrollBgClass ?? ""}`}>
-        {body}
-      </div>
-    </>
+    <div className={`flex-1 overflow-auto pb-8 relative ${scrollBgClass ?? ""}`}>
+      {body}
+    </div>
   );
 }

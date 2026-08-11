@@ -1,7 +1,18 @@
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
-import { viewModeAtom, ViewMode, sortOrderAtom, SortOrder, expandedGroupCountAtom, totalGroupCountAtom } from "../../atoms/filters";
+import {
+  viewModeAtom,
+  ViewMode,
+  sortOrderAtom,
+  SortOrder,
+  expandedGroupCountAtom,
+  totalGroupCountAtom,
+  viewAtom,
+  groupByAtom,
+  expandAllSignalAtom,
+  collapseAllSignalAtom,
+} from "../../atoms/filters";
 
 const toggleOptions: { id: ViewMode; label: string }[] = [
   { id: "all", label: "All" },
@@ -160,6 +171,37 @@ export function CollapseControls({
         Expand all
       </button>
     </div>
+  );
+}
+
+/** `CollapseControls` wired to the Relationships panel — the version every host
+ *  on that surface should render.
+ *
+ *  The pair used to be wired twice, in two `ListInfoRow`s that had nothing else
+ *  left to carry: the list body's and the tree's, each computing its own
+ *  `showCollapse` from a different expression (`view === "list" && groupBy !==
+ *  "none"` against a bare `groupBy !== "none"`) for what is one question. Both
+ *  rows are gone and the controls moved to the footer, so the rule lives here
+ *  once — and the answer is the same in every view because it is the same code
+ *  answering.
+ *
+ *  Graph is the view with no groups to collapse, and it now says so with a
+ *  DISABLED pair rather than by not being there: the body used to return early
+ *  before the row, so the controls vanished in graph and reappeared in list,
+ *  which reads as the bar losing a control rather than the view not having
+ *  groups. */
+export function RelationshipsCollapseControls() {
+  const view = useAtomValue(viewAtom);
+  const groupBy = useAtomValue(groupByAtom);
+  const setExpandSignal = useSetAtom(expandAllSignalAtom);
+  const setCollapseSignal = useSetAtom(collapseAllSignalAtom);
+
+  return (
+    <CollapseControls
+      disabled={view === "graph" || groupBy === "none"}
+      onExpandAll={() => setExpandSignal((s) => s + 1)}
+      onCollapseAll={() => setCollapseSignal((s) => s + 1)}
+    />
   );
 }
 

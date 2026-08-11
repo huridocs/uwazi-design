@@ -14,6 +14,7 @@ import { tabsForType } from "../../utils/entityTabs";
 import { MainTabs } from "../layout/MainTabs";
 import { DocumentViewer } from "../viewer/DocumentViewer";
 import { RelationshipsDrawerSection } from "../relationships/RelationshipsDrawerSection";
+import { RelationshipsCollapseControls } from "../relationships/FiltersRow";
 import { DrawerFilesBody } from "../files/DrawerFilesBody";
 import { EntityMetadataSummary } from "../metadata/EntityMetadataSummary";
 
@@ -118,6 +119,23 @@ export function EntityDrawerPreview({ entityId }: { entityId: string }) {
         className="shrink-0 flex items-center justify-end gap-2 h-12 px-3 bg-paper"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
+        {/* The collapse pair lives in the Relationships action bar, and this
+            preview passes `hideActionBar` to keep from stacking two bars — so
+            without this the one host that suppresses that bar would be the one
+            host with no way to collapse. It is adopted into THIS bar rather than
+            given a slim bar of its own, which would have been the double footer
+            the flag exists to prevent.
+
+            `me-auto` at the start of a `justify-end` row: it fills the empty
+            left side and Close / View entity don't move when it mounts, so
+            switching tabs doesn't shift the two buttons under the cursor. The
+            wiring is `RelationshipsCollapseControls`' — this is a second HOST,
+            not a second implementation. */}
+        {activeTab === "relationships" && (
+          <div className="me-auto">
+            <RelationshipsCollapseControls />
+          </div>
+        )}
         <button
           onClick={() => setSelected(null)}
           className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"

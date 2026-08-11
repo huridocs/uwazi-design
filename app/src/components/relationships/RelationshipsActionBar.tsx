@@ -10,6 +10,7 @@ import {
 import { editModeAtom, selectedRefIdsAtom } from "../../atoms/filters";
 import { ConfirmDialog } from "../shared/ConfirmDialog";
 import { SelectControls } from "../shared/SelectControls";
+import { RelationshipsCollapseControls } from "./FiltersRow";
 
 interface RelationshipsActionBarProps {
   /** Compact (drawer) flavour. Drops Create relationship + Manage types +
@@ -126,6 +127,17 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
         </div>
 
         <div className="flex items-center gap-3">
+          {/* The collapse pair, FIRST in the right cluster and present in every
+              view and both variants.
+
+              It sits here rather than in the actions cluster opposite because it
+              is not an action on the relationships — it is a control on how they
+              are drawn, and the left cluster is where this bar keeps the things
+              that CHANGE data (Edit, Create, Manage types, Select all). Right
+              also balances the bar in the state it is in most of the time: not
+              editing, when the left holds "Edit" alone and the right would
+              otherwise be empty in both the full and the compact flavour. */}
+          <RelationshipsCollapseControls />
           {editMode && (
             <>
               {hasSelection && (
