@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Search, ClipboardCopy } from "lucide-react";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
@@ -15,6 +15,7 @@ import { CopyFieldRow } from "../components/metadata/CopyFieldRow";
 import { ProvenanceLine } from "../components/shared/ProvenanceLine";
 import { EntityPill } from "../components/shared/EntityPill";
 import { FieldMessage, issueBorderClass } from "../components/shared/FieldMessage";
+import { UwaziLoader } from "../components/shared/UwaziLoader";
 import {
   validateValue,
   countBySeverity,
@@ -211,7 +212,20 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
     "aria-describedby": issues[id] ? msgId(id) : undefined,
   });
 
+  /* ── Save lifecycle ── idle → saving → failed → retry. The save itself is
+     mocked (~800ms). MOCK FAILURE TRIGGER: a title containing "[fail]" always
+     fails, so the failed state is demonstrable on demand. Success closes the
+     edit via onSave() — the session unmounts and the dirty-form registration
+     tears down with it, so the dirty guard never sees the programmatic close.
+     Failure keeps the session mounted and puts the state ON the button;
+     clicking again retries (re-validates first, like any save). */
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "failed">("idle");
+  const saving = saveState === "saving";
+  const aliveRef = useRef(true);
+  useEffect(() => () => { aliveRef.current = false; }, []);
+
   const handleSave = () => {
+    if (saving) return; // aria-disabled — the working state explains the held click
     const next: Record<string, ValidationIssue | null> = {
       title: issueFor("title", title),
       description: issueFor("description", fields.find((f) => f.id === "description")?.value ?? ""),
@@ -226,7 +240,12 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
       document.getElementById(inputId(firstError))?.focus();
       return;
     }
-    onSave();
+    setSaveState("saving");
+    window.setTimeout(() => {
+      if (!aliveRef.current) return;
+      if (title.includes("[fail]")) setSaveState("failed");
+      else onSave();
+    }, 800);
   };
   const saveBlocked = saveAttempted && errorCount > 0;
 
@@ -612,7 +631,11 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
           cannot shove the footer (never-shift rule). role="alert" fires only
           on the save attempt, never per keystroke. */}
       <div className="flex items-center justify-end h-6 px-4 bg-paper shrink-0">
-        {saveBlocked ? (
+        {saveState === "failed" ? (
+          <span role="alert" className="text-[11px] font-medium text-seal">
+            Save failed: the server rejected the update.
+          </span>
+        ) : saveBlocked ? (
           <span role="alert" className="text-[11px] font-medium text-seal">
             {blockingSummary(errorCount, warningCount)} — fix the highlighted fields.
           </span>
@@ -668,22 +691,45 @@ function MetadataEditBody({ onCancel, onSave, menuSlot }: { onCancel: () => void
           </button>
         )}
         <button
-          onClick={onCancel}
-          className="px-4 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+          onClick={() => {
+            if (!saving) onCancel();
+          }}
+          aria-disabled={saving || undefined}
+          className={`px-4 py-1.5 text-xs font-medium text-ink-secondary bg-warm rounded-md transition-colors ${
+            saving
+              ? "opacity-50 cursor-not-allowed"
+              : "hover:bg-parchment hover:text-ink cursor-pointer"
+          }`}
         >
           Cancel
         </button>
         {/* NOT `disabled`: a blocked save stays clickable so it can explain
             itself — re-validate, alert via the summary line, focus the first
-            invalid field. aria-disabled + the alert carry the state. */}
+            invalid field. aria-disabled + the alert carry the state. While
+            saving, the label goes transparent under a centred loader so the
+            button keeps its width (never-shift rule); the border is always
+            painted (transparent until failure) for the same reason. Failure
+            is danger-family, so it wears seal — border/text on tint, not a
+            new red. */}
         <button
           onClick={handleSave}
-          aria-disabled={saveBlocked || undefined}
-          className={`px-4 py-1.5 text-xs font-medium text-white rounded-md transition-colors cursor-pointer ${
-            saveBlocked ? "bg-success/50" : "bg-success hover:bg-success/90"
+          aria-disabled={saving || saveBlocked || undefined}
+          className={`relative px-4 py-1.5 text-xs font-medium rounded-md border transition-colors cursor-pointer ${
+            saveState === "failed"
+              ? "bg-seal-tint text-seal border-seal/40 hover:bg-seal-tint/70"
+              : saveBlocked
+                ? "bg-success/50 text-white border-transparent"
+                : "bg-success hover:bg-success/90 text-white border-transparent"
           }`}
         >
-          Save
+          <span className={saving ? "opacity-0" : undefined}>
+            {saveState === "failed" ? "Save failed — retry" : "Save"}
+          </span>
+          {saving && (
+            <span className="absolute inset-0 flex items-center justify-center">
+              <UwaziLoader size="xs" color="white" />
+            </span>
+          )}
         </button>
         {menuSlot}
       </div>
