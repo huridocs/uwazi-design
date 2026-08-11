@@ -744,12 +744,19 @@ export function LibraryView() {
             search — so the readout that reports the results is also where the
             search ends.
 
-            FIXED SLOT, right-aligned: the number swings from "82" on artworks
-            to "4,398" on CEJIL, and every keystroke and facet rewrites it. Any
-            growth runs leftward into the reserve, so Sort · View · Display ·
-            Language never move. The sentence is `shrink-0`; the CHIP is what
-            yields (`min-w-0`, its label truncates), so a long query can never
-            push the controls.
+            FIXED SLOT, aligned to the SEARCH BOX it reports on. It used to be
+            right-aligned, which parked it 8px from "Date added" with the whole
+            240px reserve between it and the query — attached, by proximity, to
+            the one thing it says nothing about. Now the reserve sits on the
+            control side: the readout reads as the search box's caption and the
+            gap is what separates it from the controls.
+
+            The slot stays FIXED at 15rem, because the number swings from "82"
+            on artworks to "4,398" on CEJIL and every keystroke and facet
+            rewrites it. Growth runs rightward into the reserve, so Sort · View ·
+            Display · Language never move. The sentence is `shrink-0`; the CHIP
+            is what yields (`min-w-0`, its label truncates), so a long query can
+            never push the controls.
 
             ALWAYS MOUNTED. While a collection is still loading there is no
             honest number to print, so the slot holds and its contents are
@@ -765,7 +772,11 @@ export function LibraryView() {
             appearing beside this one would need a reserve of its own. */}
         <span
           aria-busy={searchPending}
-          className={`hidden md:flex items-center justify-end gap-1.5 shrink-0 w-[15rem]
+          // `pe-3` is INSIDE the fixed slot: it guarantees a gap before Sort in
+          // the long state too, where the chip otherwise truncates flush to the
+          // slot's edge and reads as a second control pill beside "Date added".
+          // The slot's outer width is untouched, so the controls still never move.
+          className={`hidden md:flex items-center justify-start gap-1.5 shrink-0 w-[15rem] pe-3
             text-[11px] tabular-nums text-ink-tertiary transition-opacity ${
               searchPending ? "opacity-60" : "opacity-100"
             }`}
@@ -774,7 +785,13 @@ export function LibraryView() {
             (hasQuery ? (
               <>
                 <span dir="ltr" className="shrink-0 whitespace-nowrap">
-                  <span className="font-semibold text-ink-secondary">
+                  {/* `font-medium`, not semibold: measured, the figure rendered
+                      at weight 600 in ink-secondary while Sort and View render
+                      at 500 in the same colour one pixel larger. A caption that
+                      is HEAVIER than the controls beside it is why this read as
+                      a stray control. 500 keeps the figure the loudest thing
+                      inside the readout without outranking the row. */}
+                  <span className="font-medium text-ink-secondary">
                     {filtered.length.toLocaleString()}
                   </span>
                   {filtered.length !== matchTypeBase.length && (
@@ -786,7 +803,7 @@ export function LibraryView() {
               </>
             ) : (
               <span dir="ltr" className="truncate">
-                <span className="font-semibold text-ink-secondary">
+                <span className="font-medium text-ink-secondary">
                   {filtered.length.toLocaleString()}
                 </span>
                 {filtered.length !== entities.length && (
