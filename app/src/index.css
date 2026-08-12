@@ -14,6 +14,11 @@
   --color-border-soft: var(--border-soft);
   --color-carbon: var(--accent-blue);
   --color-seal: var(--accent-seal);
+  /* `text-seal-label` for seal AS TEXT (it clears AA, raw seal does not) and
+     `bg-seal-fill` for the solid danger button. `seal` itself stays the raw
+     accent, for dots, borders and swatches. See tokens.css. */
+  --color-seal-label: var(--accent-seal-label);
+  --color-seal-fill: var(--accent-seal-fill);
   --color-carbon-tint: var(--accent-blue-tint);
   --color-seal-tint: var(--accent-seal-tint);
   --color-success: var(--success);

@@ -17,7 +17,7 @@ import {
 const methodStyle: Record<LogMethod, string> = {
   CREATE: "bg-success-light text-success",
   UPDATE: "bg-carbon-tint text-carbon",
-  DELETE: "bg-seal-tint text-seal",
+  DELETE: "bg-seal-tint text-seal-label",
   MIGRATE: "bg-warning-light text-warning",
 };
 

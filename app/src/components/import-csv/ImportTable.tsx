@@ -90,7 +90,7 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
                   <div className="flex items-center gap-3 text-[11px] text-ink-tertiary">
                     <span><span className="tabular-nums">{entry.entities.toLocaleString()}</span> entities</span>
                     {entry.failed > 0 && (
-                      <span className="text-seal font-medium">
+                      <span className="text-seal-label font-medium">
                         <span className="tabular-nums">{entry.failed}</span> failed
                       </span>
                     )}
@@ -180,7 +180,7 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
                 {entry.status === "pending" ? "—" : entry.entities.toLocaleString()}
               </span>
               <span
-                className={`text-xs tabular-nums ${entry.failed > 0 ? "text-seal font-medium" : "text-ink-tertiary"}`}
+                className={`text-xs tabular-nums ${entry.failed > 0 ? "text-seal-label font-medium" : "text-ink-tertiary"}`}
               >
                 {entry.status === "pending" ? "—" : entry.failed}
               </span>

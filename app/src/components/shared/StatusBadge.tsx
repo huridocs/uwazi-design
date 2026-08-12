@@ -3,11 +3,11 @@ import type { ImportStatus } from "../../data/imports";
 const config: Record<ImportStatus, { label: string; bg: string; text: string }> = {
   completed: { label: "Completed", bg: "bg-success-light", text: "text-success" },
   completed_warnings: { label: "Warnings", bg: "bg-warning-light", text: "text-warning" },
-  completed_errors: { label: "Errors", bg: "bg-seal-tint", text: "text-seal" },
+  completed_errors: { label: "Errors", bg: "bg-seal-tint", text: "text-seal-label" },
   processing: { label: "Processing", bg: "bg-carbon-tint", text: "text-carbon" },
   uploading: { label: "Uploading", bg: "bg-carbon-tint", text: "text-carbon" },
   pending: { label: "Pending", bg: "bg-warm", text: "text-ink-tertiary" },
-  failed: { label: "Failed", bg: "bg-seal-tint", text: "text-seal" },
+  failed: { label: "Failed", bg: "bg-seal-tint", text: "text-seal-label" },
 };
 
 interface StatusBadgeProps {

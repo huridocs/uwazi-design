@@ -147,7 +147,7 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
                   </span>
                   <button
                     onClick={() => setConfirmDelete(true)}
-                    className="px-3 py-1.5 text-xs font-medium text-white bg-seal rounded-md hover:bg-seal/90 transition-colors cursor-pointer"
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-seal-fill rounded-md hover:bg-seal-fill/90 transition-colors cursor-pointer"
                   >
                     Delete
                   </button>

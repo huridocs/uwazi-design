@@ -33,7 +33,7 @@ export function FieldMessage({
   const tone = !issue
     ? "text-ink-tertiary"
     : issue.severity === "error"
-      ? "text-seal"
+      ? "text-seal-label"
       : "text-warning";
   return (
     <div

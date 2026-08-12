@@ -279,7 +279,7 @@ export function TemplateEditor({
         {/* Save-attempt summary — alert only on the attempt, not per keystroke.
             The footer keeps its fixed height; this rides the existing row. */}
         {saveBlocked && (
-          <span role="alert" className="text-[11px] font-medium text-seal">
+          <span role="alert" className="text-[11px] font-medium text-seal-label">
             {blockingSummary(1, 0)}
           </span>
         )}

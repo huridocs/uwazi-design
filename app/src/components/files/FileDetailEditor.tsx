@@ -329,7 +329,7 @@ export function FileDetailEditor({
         <button
           type="button"
           onClick={() => onRequestDelete(file.id)}
-          className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-seal rounded hover:bg-seal-tint transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-seal-label rounded hover:bg-seal-tint transition-colors cursor-pointer"
         >
           <Trash2 size={12} /> Delete file
         </button>

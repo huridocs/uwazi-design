@@ -269,7 +269,7 @@ export function ShareEntityModal({ open, onClose }: ShareEntityModalProps) {
                   }`}
                 />
                 {lookupError ? (
-                  <p className="mt-1 text-[11px] text-seal">{lookupError}</p>
+                  <p className="mt-1 text-[11px] text-seal-label">{lookupError}</p>
                 ) : null}
               </div>
               <button
@@ -450,7 +450,7 @@ function IconAction({
   children: ReactNode;
 }) {
   const className = danger
-    ? "inline-flex h-8 w-8 items-center justify-center rounded-md text-ink-tertiary hover:bg-seal-tint hover:text-seal cursor-pointer transition-colors"
+    ? "inline-flex h-8 w-8 items-center justify-center rounded-md text-ink-tertiary hover:bg-seal-tint hover:text-seal-label cursor-pointer transition-colors"
     : active
       ? "inline-flex h-8 w-8 items-center justify-center rounded-md bg-vellum text-ink cursor-pointer transition-colors"
       : "inline-flex h-8 w-8 items-center justify-center rounded-md text-ink-tertiary hover:bg-warm hover:text-ink-secondary cursor-pointer transition-colors";

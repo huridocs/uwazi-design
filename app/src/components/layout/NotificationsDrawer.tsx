@@ -38,7 +38,7 @@ const kindStyle: Record<
   success: { Icon: CheckCircle2, color: "text-success", card: "bg-success-light border-success/20" },
   info: { Icon: Info, color: "text-carbon", card: "bg-carbon-tint border-carbon/20" },
   warning: { Icon: AlertTriangle, color: "text-warning", card: "bg-warning-light border-warning/25" },
-  error: { Icon: XCircle, color: "text-seal", card: "bg-seal-tint border-seal/20" },
+  error: { Icon: XCircle, color: "text-seal-label", card: "bg-seal-tint border-seal/20" },
 };
 
 function fmtTime(t: number, now: number): string {

@@ -220,7 +220,7 @@ export function FileDrawer({
                   </div>
                   <button
                     onClick={() => onRequestDelete?.([selectedFiles[0].id])}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-seal bg-seal-tint/40 hover:bg-seal-tint rounded-md transition-colors cursor-pointer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-seal-label bg-seal-tint/40 hover:bg-seal-tint rounded-md transition-colors cursor-pointer"
                   >
                     <Trash2 size={12} /> Delete
                   </button>
@@ -241,7 +241,7 @@ export function FileDrawer({
               </button>
               <button
                 onClick={() => onRequestDelete?.(selectedFiles.map((f) => f.id))}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-seal bg-seal-tint/40 hover:bg-seal-tint rounded-md transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-seal-label bg-seal-tint/40 hover:bg-seal-tint rounded-md transition-colors cursor-pointer"
               >
                 <Trash2 size={12} /> Delete {selectedFiles.length}
               </button>
@@ -345,7 +345,7 @@ function TranslationCard({
           onDelete();
         }}
         aria-label={`Delete ${file.name}`}
-        className="p-1 rounded hover:bg-seal-tint text-ink-muted hover:text-seal transition-colors"
+        className="p-1 rounded hover:bg-seal-tint text-ink-muted hover:text-seal-label transition-colors"
       >
         <Trash2 size={14} />
       </button>

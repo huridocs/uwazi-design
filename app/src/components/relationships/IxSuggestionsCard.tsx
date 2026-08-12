@@ -110,7 +110,7 @@ export function IxSuggestionsCard() {
                       type="button"
                       onClick={() => reject(s)}
                       aria-label={t("System", "Reject suggestion")}
-                      className="p-1 rounded hover:bg-seal-tint text-ink-muted hover:text-seal transition-colors cursor-pointer"
+                      className="p-1 rounded hover:bg-seal-tint text-ink-muted hover:text-seal-label transition-colors cursor-pointer"
                     >
                       <X size={12} />
                     </button>

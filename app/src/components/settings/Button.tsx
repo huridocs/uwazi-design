@@ -16,7 +16,7 @@ const variants: Record<Variant, string> = {
   // action-bar action. Seal stays for danger only.
   primary: "bg-warm text-ink-secondary hover:bg-parchment hover:text-ink",
   secondary: "bg-warm text-ink-secondary hover:bg-parchment hover:text-ink",
-  danger: "bg-seal text-white hover:bg-seal/90",
+  danger: "bg-seal-fill text-white hover:bg-seal-fill/90",
   ghost: "text-ink-secondary hover:bg-warm hover:text-ink",
   // Active save affordance — green only once there's an unsaved change.
   success: "bg-success text-white hover:bg-success/90",

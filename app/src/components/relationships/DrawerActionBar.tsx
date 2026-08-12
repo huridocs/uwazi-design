@@ -26,7 +26,7 @@ function ActionPill({
 }) {
   const tone =
     variant === "danger"
-      ? "text-seal bg-seal-tint/40 hover:bg-seal-tint"
+      ? "text-seal-label bg-seal-tint/40 hover:bg-seal-tint"
       : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink";
   return (
     <button

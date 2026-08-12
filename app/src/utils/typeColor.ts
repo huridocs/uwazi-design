@@ -41,8 +41,12 @@ export function luminance(hex: string): number {
  *  still fails #BE123C.
  *
  *  Check new type colours against BOTH themes, and against the CEJIL palette —
- *  not the eight. That assumption is what this constant keeps being wrong about. */
-const LABEL_MIX = 55;
+ *  not the eight. That assumption is what this constant keeps being wrong about.
+ *
+ *  The VALUE lives in tokens.css as `--label-mix`: seal's label token needs the
+ *  same number, and a second copy of a contrast constant is precisely what this
+ *  file exists to prevent. The reasoning stays here. */
+const LABEL_MIX = "var(--label-mix)";
 
 /** The colour a type's NAME is drawn in, over that type's own tint.
  *
@@ -52,5 +56,5 @@ const LABEL_MIX = 55;
 export function typeLabelColor(color: string): string {
   return luminance(color) > 0.6
     ? "var(--text-primary)"
-    : `color-mix(in srgb, ${color} ${LABEL_MIX}%, var(--text-primary))`;
+    : `color-mix(in srgb, ${color} ${LABEL_MIX}, var(--text-primary))`;
 }

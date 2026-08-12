@@ -110,7 +110,7 @@ function Stat({
       : tone === "success"
         ? "text-success"
         : tone === "seal"
-          ? "text-seal"
+          ? "text-seal-label"
           : tone === "muted"
             ? "text-ink-muted"
             : "text-ink";

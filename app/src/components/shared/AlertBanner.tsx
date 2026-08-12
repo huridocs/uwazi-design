@@ -14,7 +14,7 @@ export function AlertBanner({ variant, children }: AlertBannerProps) {
       className={`flex items-start gap-3 px-4 py-3 rounded-lg text-sm ${
         isWarning
           ? "bg-warning-light text-warning"
-          : "bg-seal-tint text-seal"
+          : "bg-seal-tint text-seal-label"
       }`}
       role="alert"
     >

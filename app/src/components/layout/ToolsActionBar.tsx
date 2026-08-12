@@ -35,7 +35,7 @@ export function ToolsActionBar({
         </button>
         <button
           onClick={onDeleteCurrent}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-paper bg-seal rounded-md hover:bg-seal/90 transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-seal-fill rounded-md hover:bg-seal-fill/90 transition-colors cursor-pointer"
         >
           <Trash2 size={14} /> Delete Import
         </button>
@@ -66,7 +66,7 @@ export function ToolsActionBar({
           </span>
           <button
             onClick={onDeleteSelected}
-            className="px-3 py-1.5 text-xs font-medium text-white bg-seal rounded-md hover:bg-seal/90 transition-colors cursor-pointer"
+            className="px-3 py-1.5 text-xs font-medium text-white bg-seal-fill rounded-md hover:bg-seal-fill/90 transition-colors cursor-pointer"
           >
             Delete
           </button>

@@ -183,7 +183,7 @@ export function LanguagesPage() {
           <button
             onClick={() => setConfirm({ kind: "uninstall", lang: l })}
             aria-label={`Uninstall ${l.label}`}
-            className="p-1.5 rounded-md text-ink-tertiary hover:bg-seal-tint hover:text-seal transition-colors cursor-pointer"
+            className="p-1.5 rounded-md text-ink-tertiary hover:bg-seal-tint hover:text-seal-label transition-colors cursor-pointer"
           >
             <Trash2 size={14} />
           </button>

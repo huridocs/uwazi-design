@@ -412,7 +412,7 @@ export function ComponentCatalog({ onReturn }: Props) {
 </button>
 
 {/* Danger */}
-<button className="px-4 py-2 text-sm font-medium rounded-md bg-seal text-white hover:bg-seal/90">
+<button className="px-4 py-2 text-sm font-medium rounded-md bg-seal-fill text-white hover:bg-seal-fill/90">
   Delete
 </button>
 
@@ -432,7 +432,7 @@ export function ComponentCatalog({ onReturn }: Props) {
 </button>
 
 {/* Icon + label (danger) */}
-<button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-seal rounded-md hover:bg-seal/90">
+<button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-seal-fill rounded-md hover:bg-seal-fill/90">
   <Trash2 size={12} /> Delete
 </button>
 
@@ -445,7 +445,7 @@ export function ComponentCatalog({ onReturn }: Props) {
                     <div className="flex flex-wrap items-center gap-3">
                       <button className="px-4 py-2 text-sm font-medium rounded-md bg-ink text-parchment hover:bg-ink/90 transition-colors">Primary</button>
                       <button className="px-4 py-2 text-sm font-medium rounded-md border border-border text-ink-secondary hover:bg-parchment transition-colors">Secondary</button>
-                      <button className="px-4 py-2 text-sm font-medium rounded-md bg-seal text-white hover:bg-seal/90 transition-colors">Delete</button>
+                      <button className="px-4 py-2 text-sm font-medium rounded-md bg-seal-fill text-white hover:bg-seal-fill/90 transition-colors">Delete</button>
                       <button className="px-3 py-1.5 text-xs font-medium text-ink-tertiary hover:text-ink-secondary hover:bg-warm rounded-md transition-colors">Ghost</button>
                     </div>
                     <div className="flex flex-wrap items-center gap-3">
@@ -461,7 +461,7 @@ export function ComponentCatalog({ onReturn }: Props) {
                       <button className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors">
                         <Plus size={12} /> Add file
                       </button>
-                      <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-seal rounded-md hover:bg-seal/90 transition-colors">
+                      <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-seal-fill rounded-md hover:bg-seal-fill/90 transition-colors">
                         <Trash2 size={12} /> Delete
                       </button>
                     </div>
@@ -1629,7 +1629,7 @@ const textColor = typeLabelColor(type.color);`}
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-2">
                             <div className="w-8 h-8 rounded-full bg-seal-tint flex items-center justify-center">
-                              <span className="text-seal text-sm">!</span>
+                              <span className="text-seal-label text-sm">!</span>
                             </div>
                             <h3 className="text-sm font-semibold text-ink">Delete reference?</h3>
                           </div>
@@ -1637,7 +1637,7 @@ const textColor = typeLabelColor(type.color);`}
                         <p className="text-xs text-ink-secondary mb-4">This action cannot be undone. The reference will be permanently removed.</p>
                         <div className="flex justify-end gap-2">
                           <button className="px-3 py-1.5 text-xs font-medium rounded-md border border-border text-ink-secondary hover:bg-parchment transition-colors">Cancel</button>
-                          <button className="px-3 py-1.5 text-xs font-medium rounded-md bg-seal text-white hover:bg-seal/90 transition-colors">Delete</button>
+                          <button className="px-3 py-1.5 text-xs font-medium rounded-md bg-seal-fill text-white hover:bg-seal-fill/90 transition-colors">Delete</button>
                         </div>
                       </div>
                     </div>
@@ -1662,7 +1662,7 @@ const textColor = typeLabelColor(type.color);`}
                       <span className="text-sm text-ink">Reference created successfully</span>
                     </div>
                     <div className="flex items-center gap-2 px-4 py-2.5 bg-paper border border-border rounded-md shadow-lg">
-                      <span className="text-seal">&#10007;</span>
+                      <span className="text-seal-label">&#10007;</span>
                       <span className="text-sm text-ink">Failed to save changes</span>
                     </div>
                     <div className="flex items-center gap-2 px-4 py-2.5 bg-paper border border-border rounded-md shadow-lg">
@@ -1728,7 +1728,7 @@ const textColor = typeLabelColor(type.color);`}
                         <button className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md border border-border text-ink-secondary cursor-default">
                           <UwaziLoader size="sm" /> Processing
                         </button>
-                        <button className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md bg-seal text-white cursor-default">
+                        <button className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md bg-seal-fill text-white cursor-default">
                           <UwaziLoader size="sm" color="white" /> Deleting
                         </button>
                       </div>
