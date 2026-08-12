@@ -11,6 +11,7 @@ import { getEntity } from "../../data/entities";
 import { buildSnippetsFor } from "../../utils/librarySnippets";
 import { HighlightedText } from "../shared/HighlightedText";
 import { SectionLabel } from "../shared/SectionLabel";
+import { BorrowedDocLine } from "../library/BorrowedDocLine";
 import { PageSpine } from "./PageSpine";
 
 function Centered({ children }: { children: ReactNode }) {
@@ -158,7 +159,18 @@ export function DocumentSearchBody() {
 
           {hasFullText && (
             <div className="flex flex-col gap-1.5">
-              <SectionLabel className="px-1">Document</SectionLabel>
+              {/* An entity with no PDF of its own reads a connected one's, so
+                  these passages can come from another case's judgment — and
+                  this tab was the one surface that never said so, while the
+                  Document tab and the Library results both did. Rides the
+                  label, which is mounted either way, so nothing moves when it
+                  appears; and it draws NOTHING for an entity's own document,
+                  because `borrowedFrom` is null there. Same call as
+                  `EntityResultCard`. */}
+              <SectionLabel className="px-1">
+                Document
+                <BorrowedDocLine from={snippets.borrowedFrom} className="min-w-0" />
+              </SectionLabel>
               <PageSpine
                 entityId={focusedId}
                 fullText={snippets.fullText}
