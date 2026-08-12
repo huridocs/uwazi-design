@@ -45,7 +45,7 @@ export function ConfirmDialog({
           <div className="flex items-center gap-3">
             {variant === "danger" && (
               <div className="w-10 h-10 rounded-md bg-seal-tint flex items-center justify-center">
-                <AlertTriangle size={20} className="text-seal" />
+                <AlertTriangle size={20} className="text-seal-label" />
               </div>
             )}
             <h3 id="confirm-dialog-title" className="text-lg font-semibold text-ink">{title}</h3>
@@ -70,7 +70,7 @@ export function ConfirmDialog({
             onClick={onConfirm}
             className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
               variant === "danger"
-                ? "bg-seal text-white hover:bg-seal/90"
+                ? "bg-seal-fill text-white hover:bg-seal-fill/90"
                 : "bg-ink text-parchment hover:bg-ink/90"
             }`}
           >

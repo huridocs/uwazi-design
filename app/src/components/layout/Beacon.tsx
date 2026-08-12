@@ -21,7 +21,7 @@ const kindIcon: Record<NotificationKind, typeof CheckCircle2> = {
 };
 const kindColor: Record<NotificationKind, string> = {
   success: "text-success",
-  error: "text-seal",
+  error: "text-seal-label",
   warning: "text-warning",
   info: "text-carbon",
 };

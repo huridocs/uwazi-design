@@ -198,7 +198,7 @@ export function ExtractorEditor({
           <button
             onClick={() => reject(r.id)}
             aria-label={`Reject suggestion for ${r.entity}`}
-            className="p-1 rounded text-ink-tertiary hover:bg-seal-tint hover:text-seal transition-colors cursor-pointer"
+            className="p-1 rounded text-ink-tertiary hover:bg-seal-tint hover:text-seal-label transition-colors cursor-pointer"
           >
             <X size={14} />
           </button>

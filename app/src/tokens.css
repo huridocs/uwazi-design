@@ -28,6 +28,34 @@
   --accent-blue-tint: #DDF3FD;
   --accent-seal-tint: #FEE2E2;
 
+  /* How far a saturated accent travels toward the text colour before it is
+     allowed to BE text. The one number behind both `--accent-seal-label` below
+     and `typeLabelColor` (utils/typeColor.ts), which reads this var rather than
+     carrying its own copy — the second copy is how EntityTypeChip shipped the
+     raw colour. utils/typeColor.ts holds the reasoning for the value. */
+  --label-mix: 55%;
+
+  /* Seal AS TEXT. `--accent-seal` is one red for both themes and clears 4.5:1
+     against nothing it is drawn on — 3.99:1 on paper in light, 3.89:1 in dark,
+     3.26:1 on its own tint. No single hex fixes that: light surfaces want seal
+     darker, dark surfaces want it lighter, so darkening improves one theme and
+     ruins the other. Mixing toward `--text-primary` is self-correcting, because
+     that token is itself theme-flipped — the same trick type labels use. At 55%
+     every surface seal text lands on clears AA in both themes (6.19–8.20:1),
+     and the hue moves under 1°, so it still reads as seal.
+
+     FOREGROUND ONLY. The solid danger BUTTON is the opposite problem — seal is
+     the fill under fixed white text — and mixing toward ink would lighten it in
+     dark mode and wreck the white. That one has its own darker fill; see
+     `--accent-seal-fill`. Raw `--accent-seal` stays untouched: dots, borders and
+     swatches still mean "seal". */
+  --accent-seal-label: color-mix(in srgb, var(--accent-seal) var(--label-mix), var(--text-primary));
+
+  /* Seal as a solid FILL behind white text. 8% toward black: 4.62:1 with white,
+     identically in both themes, because both the fill and the white are
+     theme-invariant. Same hue, one shade deeper. */
+  --accent-seal-fill: #D53E27;
+
   /* Semantic */
   --success: #059669;
   --success-light: #D1FAE5;

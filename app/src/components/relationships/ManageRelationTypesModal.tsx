@@ -169,7 +169,7 @@ export function ManageRelationTypesModal() {
                   <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => handleDelete(tdef.id)}
-                      className="px-2 py-1 text-[11px] font-medium text-white bg-seal rounded-md hover:bg-seal/90 transition-colors cursor-pointer"
+                      className="px-2 py-1 text-[11px] font-medium text-white bg-seal-fill rounded-md hover:bg-seal-fill/90 transition-colors cursor-pointer"
                     >
                       {usage > 0
                         ? t("System", "Delete & reassign")
@@ -186,7 +186,7 @@ export function ManageRelationTypesModal() {
                   <button
                     onClick={() => setPendingDelete(tdef.id)}
                     aria-label={`Delete ${tdef.label}`}
-                    className="p-1 rounded text-ink-tertiary hover:bg-seal-tint hover:text-seal transition-colors cursor-pointer shrink-0"
+                    className="p-1 rounded text-ink-tertiary hover:bg-seal-tint hover:text-seal-label transition-colors cursor-pointer shrink-0"
                   >
                     <Trash2 size={13} />
                   </button>

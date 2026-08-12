@@ -436,7 +436,7 @@ function RowKebab({ items }: { items: KebabItem[] }) {
                 }}
                 className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs text-left transition-colors cursor-pointer ${
                   item.danger
-                    ? "text-seal hover:bg-seal-tint"
+                    ? "text-seal-label hover:bg-seal-tint"
                     : "text-ink-secondary hover:bg-warm"
                 }`}
               >

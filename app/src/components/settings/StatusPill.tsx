@@ -4,7 +4,7 @@ const styles: Record<ExtractorStatus, { cls: string; label: string }> = {
   ready: { cls: "bg-success-light text-success", label: "Ready" },
   training: { cls: "bg-carbon-tint text-carbon", label: "Training" },
   processing: { cls: "bg-warning-light text-warning", label: "Processing" },
-  error: { cls: "bg-seal-tint text-seal", label: "Error" },
+  error: { cls: "bg-seal-tint text-seal-label", label: "Error" },
 };
 
 /** Status badge for extraction / processing jobs, on our semantic tints. */

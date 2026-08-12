@@ -218,7 +218,7 @@ function StatBox({
   tone?: "seal" | "success";
 }) {
   const valueClass =
-    tone === "seal" ? "text-seal" : tone === "success" ? "text-success" : "text-ink";
+    tone === "seal" ? "text-seal-label" : tone === "success" ? "text-success" : "text-ink";
   return (
     <div
       className="rounded-md bg-paper px-4 py-3"

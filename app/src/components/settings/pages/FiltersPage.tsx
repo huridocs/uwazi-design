@@ -179,7 +179,7 @@ export function FiltersPage() {
                 <button
                   onClick={() => removeGroup(g.id)}
                   aria-label={`Remove ${g.name}`}
-                  className="p-0.5 rounded text-ink-tertiary hover:bg-seal-tint hover:text-seal transition-colors cursor-pointer shrink-0"
+                  className="p-0.5 rounded text-ink-tertiary hover:bg-seal-tint hover:text-seal-label transition-colors cursor-pointer shrink-0"
                 >
                   <Trash2 size={12} />
                 </button>

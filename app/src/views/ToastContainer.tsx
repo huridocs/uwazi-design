@@ -33,7 +33,7 @@ export function ToastContainer() {
             <CheckCircle2 size={16} className="text-success shrink-0" />
           )}
           {toast.type === "error" && (
-            <XCircle size={16} className="text-seal shrink-0" />
+            <XCircle size={16} className="text-seal-label shrink-0" />
           )}
           {toast.type === "info" && (
             <Info size={16} className="text-carbon shrink-0" />

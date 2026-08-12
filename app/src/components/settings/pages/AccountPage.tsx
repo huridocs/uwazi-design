@@ -127,7 +127,7 @@ export function AccountPage() {
               revokeKey(row.id);
             }}
             aria-label="Revoke key"
-            className="px-2 py-1 rounded-md text-xs text-ink-tertiary hover:bg-seal-tint hover:text-seal transition-colors cursor-pointer"
+            className="px-2 py-1 rounded-md text-xs text-ink-tertiary hover:bg-seal-tint hover:text-seal-label transition-colors cursor-pointer"
           >
             Revoke
           </button>

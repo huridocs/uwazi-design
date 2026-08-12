@@ -18,7 +18,7 @@ import {
 import { toastsAtom } from "../../../atoms/references";
 
 const roleStyle: Record<UserRole, string> = {
-  admin: "bg-seal-tint text-seal",
+  admin: "bg-seal-tint text-seal-label",
   editor: "bg-carbon-tint text-carbon",
   collaborator: "bg-warm text-ink-secondary",
 };
@@ -110,7 +110,7 @@ export function UsersPage() {
           <button
             onClick={(e) => { e.stopPropagation(); setConfirmUser(u); }}
             aria-label={`Delete ${u.username}`}
-            className="p-1.5 rounded-md text-ink-tertiary hover:bg-seal-tint hover:text-seal transition-colors cursor-pointer"
+            className="p-1.5 rounded-md text-ink-tertiary hover:bg-seal-tint hover:text-seal-label transition-colors cursor-pointer"
           >
             <Trash2 size={14} />
           </button>
@@ -144,7 +144,7 @@ export function UsersPage() {
           <button
             onClick={(e) => { e.stopPropagation(); setConfirmGroup(g); }}
             aria-label={`Delete ${g.name}`}
-            className="p-1.5 rounded-md text-ink-tertiary hover:bg-seal-tint hover:text-seal transition-colors cursor-pointer"
+            className="p-1.5 rounded-md text-ink-tertiary hover:bg-seal-tint hover:text-seal-label transition-colors cursor-pointer"
           >
             <Trash2 size={14} />
           </button>

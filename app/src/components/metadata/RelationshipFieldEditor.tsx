@@ -135,7 +135,7 @@ export function RelationshipFieldEditor({
                           <button
                             onClick={() => remove(id)}
                             title="Remove from connection"
-                            className="flex items-center justify-center w-6 h-6 rounded text-ink-muted hover:bg-warm hover:text-seal transition-colors cursor-pointer"
+                            className="flex items-center justify-center w-6 h-6 rounded text-ink-muted hover:bg-warm hover:text-seal-label transition-colors cursor-pointer"
                           >
                             <X size={13} />
                           </button>

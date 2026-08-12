@@ -49,7 +49,7 @@ export function IssuesTable({ issues }: IssuesTableProps) {
               className={`inline-flex w-fit px-2 py-0.5 text-[11px] font-semibold rounded-md ${
                 issue.type === "warning"
                   ? "bg-warning-light text-warning"
-                  : "bg-seal-tint text-seal"
+                  : "bg-seal-tint text-seal-label"
               }`}
             >
               {issue.type === "warning" ? "Warning" : "Error"}

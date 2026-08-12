@@ -148,7 +148,7 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
         <div className="flex-1" />
         <button
           onClick={() => notify("Entity deleted", "success")}
-          className="px-3 py-1.5 text-xs font-medium text-seal bg-seal-tint/40 hover:bg-seal-tint rounded-md transition-colors cursor-pointer"
+          className="px-3 py-1.5 text-xs font-medium text-seal-label bg-seal-tint/40 hover:bg-seal-tint rounded-md transition-colors cursor-pointer"
         >
           Delete
         </button>
@@ -695,7 +695,7 @@ export function MetadataEditBody({
               </div>
               <button
                 onClick={() => notify("File removed")}
-                className="px-3 py-1.5 text-xs font-medium text-seal rounded-md hover:bg-seal-tint transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-xs font-medium text-seal-label rounded-md hover:bg-seal-tint transition-colors cursor-pointer"
               >
                 Remove file
               </button>
@@ -917,11 +917,11 @@ export function MetadataEditBody({
           on the save attempt, never per keystroke. */}
       <div className="flex items-center justify-end h-6 px-4 bg-paper shrink-0">
         {saveState === "failed" ? (
-          <span role="alert" className="text-[11px] font-medium text-seal">
+          <span role="alert" className="text-[11px] font-medium text-seal-label">
             Save failed: the server rejected the update.
           </span>
         ) : saveBlocked ? (
-          <span role="alert" className="text-[11px] font-medium text-seal">
+          <span role="alert" className="text-[11px] font-medium text-seal-label">
             {blockingSummary(errorCount, warningCount)} — fix the highlighted fields.
           </span>
         ) : warningCount > 0 ? (
@@ -1015,7 +1015,7 @@ export function MetadataEditBody({
           aria-disabled={saving || saveBlocked || undefined}
           className={`relative px-4 py-1.5 text-xs font-medium rounded-md border transition-colors cursor-pointer ${
             saveState === "failed"
-              ? "bg-seal-tint text-seal border-seal/40 hover:bg-seal-tint/70"
+              ? "bg-seal-tint text-seal-label border-seal/40 hover:bg-seal-tint/70"
               : saveBlocked
                 ? "bg-success/50 text-white border-transparent"
                 : "bg-success hover:bg-success/90 text-white border-transparent"
