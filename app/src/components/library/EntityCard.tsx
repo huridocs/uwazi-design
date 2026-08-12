@@ -42,6 +42,19 @@ const CARD_FLOOR: Record<ThumbSize, string> = {
 /** The list row's chip is square at every frame — see EntityThumbnail. */
 const CHIP_BOX: Record<ThumbSize, string> = { s: "w-7 h-7", m: "w-9 h-9", l: "w-12 h-12" };
 
+/** How many of the parent grid's row tracks one card claims — one per row it
+ *  draws (slot? · title · metadata? · footer).
+ *
+ *  Static strings because Tailwind reads class names, not expressions. The count
+ *  is the same for every card on screen (both toggles are global Display
+ *  settings), which is the condition subgrid needs: cards in a visual row must
+ *  claim the same tracks or they stop sharing them. */
+const ROW_SPAN: Record<number, string> = {
+  2: "row-span-2",
+  3: "row-span-3",
+  4: "row-span-4",
+};
+
 /** A Library result for one standalone entity. Mirrors the Uwazi card IA:
  *  title → metadata field label/value pairs → footer (template pill · View).
  *  Clicking the surface opens the entity in the drawer; "View" navigates in.
@@ -204,15 +217,34 @@ export const EntityCard = memo(function EntityCard({
       ? CARD_FLOOR[thumbSize]
       : "";
 
+  /** One track per row this card draws. Both toggles are global, so every card
+   *  on screen agrees — see ROW_SPAN. */
+  const rowCount = 2 + (showPreview ? 1 : 0) + (showMetadata ? 1 : 0);
+
   /** Slot class: landscape = the fixed band; portrait = the card's width at
    *  3:4. The picture fills the slot either way — Cover crops to fill it,
    *  auto/contain mat within it (ImageThumb's object-fit owns that call). */
   const slotShape = thumbFrame === "portrait" ? "aspect-[3/4]" : COVER_H[thumbSize];
 
   return (
-    <div onClick={() => onSelect(entity.id)} className={`${base} ${surface} ${minHeight}`}>
+    // A SUBGRID, not a flex column. The card's rows — slot, title, metadata,
+    // footer — are the parent grid's row tracks, so every card in a visual row
+    // shares them: a title that wraps to two lines grows THAT ROW's title track
+    // and every sibling's metadata starts on the same line as a result. The card
+    // no longer has to guess at alignment, which is what the reserved second
+    // title line was doing.
+    //
+    // The rows are direct children, so the old inner wrapper is gone and each
+    // row carries its own `relative`. That is load-bearing, not tidying: the
+    // stretched primary-action button is `absolute inset-0` and paints in the
+    // positioned layer, so a STATIC sibling would paint underneath it and the
+    // nested View button would stop taking clicks. Positioned siblings at
+    // `z-index: auto` paint in DOM order, and the rows come after.
+    <div
+      onClick={() => onSelect(entity.id)}
+      className={`${base} ${surface} ${minHeight} grid grid-rows-subgrid ${ROW_SPAN[rowCount]} gap-y-2.5 p-3`}
+    >
       {primaryAction}
-      <div className="relative h-full p-3 flex flex-col gap-2.5">
       {/* The preview slot is ALWAYS filled when previews are on: an entity with
           no thumbnail gets a quiet vellum well carrying its type colour (the
           same idiom the list layout uses). Rendering the thumbnail only when one
@@ -223,7 +255,7 @@ export const EntityCard = memo(function EntityCard({
           picture fills it. The no-preview well takes the same box, so empty
           slots and pictures agree on both height and position. */}
       {showPreview && (
-        <span className={`shrink-0 w-full ${slotShape}`}>
+        <span className={`relative min-w-0 shrink-0 w-full ${slotShape}`}>
           {entity.preview ? (
             <EntityThumbnail
               kind={entity.preview}
@@ -242,15 +274,25 @@ export const EntityCard = memo(function EntityCard({
           )}
         </span>
       )}
-      {/* Two lines are RESERVED, not just permitted: a one-line title would
-          otherwise pull its whole card ~1.2rem shorter than its neighbours and
-          stagger the row. */}
-      <span className="text-sm font-semibold text-ink leading-snug line-clamp-2 min-h-[2.375rem]">
+      {/* Two lines are PERMITTED (`line-clamp-2`), no longer reserved. The floor
+          used to be `min-h-[2.375rem]` unconditionally, which bought alignment
+          by making every card pay for a second title line whether or not any
+          title in the grid used one — on the artworks collection, where not one
+          of 82 titles wraps, it was 38px of nothing between every title and its
+          first metadata row. The row track buys the same alignment and only
+          charges the rows that need it.
+          `not-supports-…` keeps the old floor for engines without subgrid, where
+          each card is back to sizing itself and a reserved line is the only
+          thing holding a row level. */}
+      <span
+        className="relative min-w-0 text-sm font-semibold text-ink leading-snug line-clamp-2
+          not-supports-[grid-template-rows:subgrid]:min-h-[2.375rem]"
+      >
         <HighlightedText text={entity.title} query={query} />
       </span>
 
       {showMetadata && (
-        <div className="flex-1 space-y-1.5">
+        <div className="relative min-w-0 space-y-1.5">
           {fields.map((f) => (
             <div key={f.id} className="min-w-0">
               <span className="block text-[10px] text-ink-tertiary leading-tight">{f.label}</span>
@@ -275,15 +317,16 @@ export const EntityCard = memo(function EntityCard({
         </div>
       )}
 
-      {/* mt-auto pins the footer to the card's bottom edge even when metadata
-          is hidden/empty, so footers align across a stretched grid row. */}
-      <div className="mt-auto flex items-center justify-between gap-2 pt-1">
+      {/* The footer is its own row track, so it lands on one line across the
+          whole grid row without `mt-auto` pushing it there — and `self-end`
+          keeps it on the track's bottom edge in the fallback, where the track
+          may be taller than the footer. */}
+      <div className="relative min-w-0 self-end flex items-center justify-between gap-2 pt-1">
         <EntityTypeTag typeId={entity.typeId} />
         <div className="flex items-center gap-2">
           {connectionBadge}
           {viewButton}
         </div>
-      </div>
       </div>
     </div>
   );
