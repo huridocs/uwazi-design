@@ -11,12 +11,28 @@ import type { AppView } from "../../atoms/navigation";
 import { useDirtyGuard } from "../../hooks/useDirtyGuard";
 
 /** The settings rail — three grouped sections (User / System / Tools) matching
- *  Uwazi's V2 SettingsNavigation. Styled to the entity-view ToolsSidebar:
- *  full-width items, px-5 py-2, active = bg-warm text-ink (no rounded inset). */
-export function SettingsNav({ onNavigate }: { onNavigate?: (view: AppView) => void }) {
+ *  Uwazi's V2 SettingsNavigation: full-width items, px-5 py-2, active =
+ *  vellum + semibold (no rounded inset, no left-border accent).
+ *
+ *  Also the IMPORT CSV rail. That view used to mount `ToolsSidebar`, a second
+ *  hand-maintained copy of these lists whose items only raised a toast — a rail
+ *  that looked like navigation and was scenery. Its arrays had already drifted
+ *  from this one (no Paragraph Extraction, no "ML tools" shelf). Pass `activeId`
+ *  and the rail serves a destination that ISN'T a settings section. */
+export function SettingsNav({
+  onNavigate,
+  activeId,
+}: {
+  onNavigate?: (view: AppView) => void;
+  /** The item that is "here" when here isn't a settings section — the Import
+   *  CSV view passes `"import-csv"`. Also picks the group to show. */
+  activeId?: string;
+}) {
   const [section, setSection] = useAtom(settingsSectionAtom);
   const setDrilled = useSetAtom(settingsMobileDrilledAtom);
   const guard = useDirtyGuard();
+  /** Where we are, whether that's a settings section or another view. */
+  const current = activeId ?? section;
 
   return (
     <nav
@@ -31,7 +47,7 @@ export function SettingsNav({ onNavigate }: { onNavigate?: (view: AppView) => vo
           Settings ▸ System settings and the Tools dropdown are three separate
           doors; the rail behind each shows that door's destinations rather than
           all twenty under every one. */}
-      {[settingsGroupOf(section)].map((group) => (
+      {[settingsGroupOf(current)].map((group) => (
         <div key={group.id} className="mb-2">
           {group.label && (
             <h3 className="px-5 py-2 text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
@@ -40,7 +56,11 @@ export function SettingsNav({ onNavigate }: { onNavigate?: (view: AppView) => vo
           )}
           {group.items.map((item, i) => {
             const Icon = item.icon;
-            const active = section === item.id && !item.navigateTo && !item.external;
+            // An item that jumps to another VIEW is never the current settings
+            // section — but it is the current place when that view is the one on
+            // screen, which is how Import CSV lights up in its own rail.
+            const active =
+              current === item.id && !item.external && (!!activeId || !item.navigateTo);
             // A subsection starts wherever the subgroup changes.
             const startsSub = !!item.subgroup && item.subgroup !== group.items[i - 1]?.subgroup;
 
@@ -94,15 +114,23 @@ export function SettingsNav({ onNavigate }: { onNavigate?: (view: AppView) => vo
                   onClick={() => {
                     // navigateTo routes through App's handleNavigate, which is
                     // already guarded; the section switch guards itself here.
-                    if (item.navigateTo) onNavigate?.(item.navigateTo);
-                    else if (item.id !== section) {
-                      guard(() => {
-                        setSection(item.id);
-                        setDrilled(true); // mobile: reveal the section (ignored on desktop)
-                      });
-                    } else {
-                      setDrilled(true);
+                    if (item.navigateTo) {
+                      onNavigate?.(item.navigateTo);
+                      return;
                     }
+                    // Setting the section is enough INSIDE settings. From the
+                    // Import CSV rail it isn't: it would change a page you
+                    // can't see, so the view has to move too. Harmless in
+                    // settings — handleNavigate returns early on the same view.
+                    if (item.id === section && !activeId) {
+                      setDrilled(true);
+                      return;
+                    }
+                    guard(() => {
+                      setSection(item.id);
+                      setDrilled(true); // mobile: reveal the section (ignored on desktop)
+                      onNavigate?.("settings");
+                    });
                   }}
                 >
                   {inner}

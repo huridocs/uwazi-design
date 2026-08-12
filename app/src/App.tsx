@@ -87,7 +87,7 @@ export function App() {
       />
       <div className="flex-1 min-h-0 flex flex-col">
         {appView === "import-csv" ? (
-          <ImportCSVView />
+          <ImportCSVView onNavigate={handleNavigate} />
         ) : appView === "settings" ? (
           <SettingsView onNavigate={handleNavigate} />
         ) : appView === "library" ? (

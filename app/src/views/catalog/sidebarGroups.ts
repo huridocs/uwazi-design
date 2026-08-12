@@ -83,7 +83,7 @@ export const sidebarGroups: SidebarGroup[] = [
   {
     label: "Import CSV — Layout",
     items: [
-      { id: "csv-sidebar", label: "ToolsSidebar" },
+      { id: "csv-sidebar", label: "SettingsNav rail" },
       { id: "csv-breadcrumb", label: "Breadcrumb" },
     ],
   },

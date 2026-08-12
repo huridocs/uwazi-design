@@ -36,7 +36,7 @@ import { StatsCard } from "../components/shared/StatsCard";
 import { Stepper } from "../components/shared/Stepper";
 import { AlertBanner } from "../components/shared/AlertBanner";
 import { Breadcrumb } from "../components/layout/Breadcrumb";
-import { ToolsSidebar } from "../components/layout/ToolsSidebar";
+import { SettingsNav } from "../components/settings/SettingsNav";
 
 // Settings primitives (static demos)
 import { Button as SettingsButton } from "../components/settings/Button";
@@ -917,12 +917,12 @@ sendFill(selection.text);                                    // commits, then di
             <div className="flex flex-col gap-6">
               <div id="csv-sidebar" ref={reg("csv-sidebar")}>
                 <CatalogEntry
-                  name="ToolsSidebar"
-                  description="Fixed-width sidebar with Metadata and Tools sections, active item highlight"
-                  code={`<ToolsSidebar activeItem="import-csv" />`}
+                  name="SettingsNav · Import CSV rail"
+                  description="The Tools rail, driven by settingsGroups — the same component and the same list the Settings rail uses, with Import CSV as the active destination. There is no separate ToolsSidebar: it was a hand-kept copy of these items whose rows only raised a toast, and its arrays had already drifted from the real ones."
+                  code={`<SettingsNav onNavigate={handleNavigate} activeId="import-csv" />`}
                 >
-                  <div className="w-full h-64 border border-border/40 rounded-md overflow-hidden">
-                    <ToolsSidebar activeItem="import-csv" />
+                  <div className="w-full h-96 border border-border/40 rounded-md overflow-hidden">
+                    <SettingsNav activeId="import-csv" />
                   </div>
                 </CatalogEntry>
               </div>

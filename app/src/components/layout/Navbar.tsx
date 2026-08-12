@@ -396,7 +396,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                 style={{ right: rtl ? undefined : 0, left: rtl ? 0 : undefined }}
               >
                 {/* Icon LEADS, as in the Tools dropdown, DocumentationLink,
-                    ToolsSidebar and SettingsNav. The trailing slot is reserved
+                    SettingsNav and the Settings rail. The trailing slot is reserved
                     for something that carries meaning — the RTL pill here, an
                     ExternalLink for "leaves the app", a chevron for "goes
                     deeper" — so an icon parked there reads as a promise the row

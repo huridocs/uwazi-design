@@ -6,10 +6,11 @@ import { NewImportModal } from "../components/import-csv/NewImportModal";
 import { ToolsActionBar } from "../components/layout/ToolsActionBar";
 import { ConfirmDialog } from "../components/shared/ConfirmDialog";
 import { defaultImports, type ImportEntry } from "../data/imports";
+import type { AppView } from "../atoms/navigation";
 
 type Screen = "list" | "detail";
 
-export function ImportCSVView() {
+export function ImportCSVView({ onNavigate }: { onNavigate?: (view: AppView) => void }) {
   const [screen, setScreen] = useState<Screen>("list");
   const [imports, setImports] = useState<ImportEntry[]>(defaultImports);
   const [activeImportId, setActiveImportId] = useState<string | null>(null);
@@ -133,6 +134,7 @@ export function ImportCSVView() {
 
   return (
     <ImportCSVLayout
+      onNavigate={onNavigate}
       actionBar={
         screen === "detail" && activeEntry ? (
           <ToolsActionBar
