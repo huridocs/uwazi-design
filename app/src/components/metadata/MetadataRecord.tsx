@@ -39,7 +39,7 @@ export function MetadataItemsTable({ items }: { items: MetadataItem[] }) {
                   label reads level with the pill's label, not its box). */}
               <th
                 scope="row"
-                className="w-0 py-1.5 pr-6 text-start align-baseline font-medium text-[11px] uppercase tracking-wide text-ink-tertiary whitespace-nowrap"
+                className="w-0 py-1.5 pr-6 text-start align-baseline font-semibold text-[11px] uppercase tracking-wider text-ink-tertiary whitespace-nowrap"
               >
                 {item.label}
               </th>
@@ -51,7 +51,7 @@ export function MetadataItemsTable({ items }: { items: MetadataItem[] }) {
                   With a definite basis, multi-pill values wrap (ConnectionPills
                   is `flex flex-wrap`) and a single over-long pill ellipsises
                   inside itself, keeping its full text in the `title` tooltip. */}
-              <td className="w-full max-w-0 py-1.5 align-baseline text-ink">{item.content}</td>
+              <td className="w-full max-w-0 py-1.5 align-baseline font-medium leading-relaxed text-ink">{item.content}</td>
             </tr>
           ))}
         </tbody>

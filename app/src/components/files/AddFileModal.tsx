@@ -286,7 +286,7 @@ export function AddFileModal() {
               <span className="text-xs font-medium text-ink-secondary">
                 Add another file
               </span>
-              <span className="text-[11px] text-ink-muted">
+              <span className="text-xs text-ink-muted">
                 or drag &amp; drop
               </span>
             </button>

@@ -13,7 +13,7 @@ export function ImportEmptyState({ onNewImport: _onNewImport }: ImportEmptyState
       >
         <FileSpreadsheet size={26} className="text-ink-tertiary/70" />
       </div>
-      <h3 className="text-sm font-semibold text-ink mb-1.5">No CSVs yet</h3>
+      <h3 className="text-sm font-medium text-ink-secondary mb-1.5">No CSVs yet</h3>
       <p className="text-xs text-ink-tertiary leading-relaxed max-w-[22rem]">
         Import CSV or ZIP files to create entities in bulk.
         <br />

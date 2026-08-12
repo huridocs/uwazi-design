@@ -48,7 +48,7 @@ export function ConfirmDialog({
                 <AlertTriangle size={20} className="text-seal" />
               </div>
             )}
-            <h3 id="confirm-dialog-title" className="text-lg font-semibold text-ink">{title}</h3>
+            <h3 id="confirm-dialog-title" className="text-base font-semibold text-ink">{title}</h3>
           </div>
           <button
             onClick={onCancel}
