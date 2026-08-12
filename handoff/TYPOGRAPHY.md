@@ -105,6 +105,20 @@ size, `text-sm` (14px) is "large" (content), and anything bigger is rare.
 | `text-[11px]` | 157 | table headers, small meta |
 | `text-[13px]` | 29 | tabs |
 | `text-base` and up | ~45 total | view titles only — big type is scarce on purpose |
+| `text-[9px]` / `text-[8px]` | 14 | chart and track labels only — see below |
+
+**Below 10px is a real tier, and it is charts.** Timeline tick labels, the
+spine's year marks, the reference minimap's track text, a file-extension tag on
+a postage-stamp-sized doc icon: 14 sites where 10px genuinely does not fit the
+box the label has to live in. Nothing else may use them — if a label has room to
+be 10px it has to be 10px, and a `text-[9px]` outside a chart is drift, not an
+exception. Named here because a reader following this file alone would otherwise
+meet these in the code and have no way to tell an intentional floor from a slip.
+
+`font-bold` is scarcer than the weights table suggests it is: about a third of
+its uses are `ComponentCatalog`'s own page headings (`text-lg font-bold`), which
+is a dev-tool tier that does not appear in the product and is not a recipe to
+copy.
 
 ### Canonical combos (copy these, don't improvise)
 
@@ -116,7 +130,32 @@ card title      text-sm font-semibold text-ink leading-snug
 form label      text-xs font-medium text-ink-secondary
 field value     text-sm font-medium text-ink leading-relaxed
 prose/passage   text-sm leading-relaxed text-ink
+button          text-xs font-medium
+badge / chip    text-[11px] font-medium          (count/entity pills: text-xs font-medium)
+dialog heading  text-base font-semibold text-ink
+empty title     text-sm font-medium text-ink-secondary
+caption         text-xs text-ink-muted           (field messages: FieldMessage, text-[11px] leading-4)
 ```
+
+The bottom five were added after an audit measured them: each was a real,
+near-unanimous convention in the app that this file simply never named, which is
+how each of them acquired one or two outliers nobody could argue with. They are
+descriptions, not new inventions — `button` was already `text-xs font-medium` on
+every `px-3 py-1.5` button in the product bar one, `dialog heading` was already
+`text-base font-semibold` across six modals bar two.
+
+Two of them deserve their reasoning written down:
+
+- **`empty title` is `-secondary`, not `-ink`.** An empty state announces an
+  absence, so a full-strength headline overstates it — but it is also usually the
+  only text on screen, so tertiary-with-no-weight fails to register as a heading
+  at all. The three sites had drifted to exactly those two extremes and the
+  middle; this is the middle.
+- **`badge / chip` splits by size on purpose.** The 11px family is the filter and
+  status chips; the 12px family is `CountBadge`, `EntityPill`, `EntityTypeChip` —
+  things that carry an entity's identity rather than a piece of UI state, and
+  that sit inline with 12px body text. Both are `font-medium`; the weight is what
+  holds them together.
 
 Three of those lines say something different from what earlier drafts of this
 file said, because the app was measured and the app won:

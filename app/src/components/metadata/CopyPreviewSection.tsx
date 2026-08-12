@@ -86,7 +86,7 @@ export function CopyPreviewSection({
           type="button"
           onClick={onUse}
           disabled={plan.matchCount === 0}
-          className={`px-3 py-1.5 text-[11px] font-medium rounded-md transition-colors ${
+          className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
             plan.matchCount === 0
               ? "bg-vellum text-ink-tertiary cursor-not-allowed"
               : "bg-ink text-paper hover:bg-ink/90 cursor-pointer"
@@ -97,7 +97,7 @@ export function CopyPreviewSection({
         <button
           type="button"
           onClick={onBack}
-          className="px-3 py-1.5 text-[11px] font-medium text-ink-secondary bg-warm hover:bg-parchment
+          className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment
             hover:text-ink rounded-md transition-colors cursor-pointer
             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"
         >

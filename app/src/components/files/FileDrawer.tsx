@@ -126,7 +126,7 @@ export function FileDrawer({
               <div className="flex flex-col items-center justify-center h-full text-center gap-3">
                 <MousePointerClick size={32} className="text-ink-muted/40" />
                 <div>
-                  <p className="text-sm font-medium text-ink-muted">No file selected</p>
+                  <p className="text-sm font-medium text-ink-secondary">No file selected</p>
                   <p className="text-xs text-ink-muted mt-1">
                     Click a file in the table to see its details
                   </p>

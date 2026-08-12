@@ -71,10 +71,10 @@ export function RelationshipFieldEditor({
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>
-              <tr className="text-[11px] uppercase tracking-wide text-ink-tertiary">
-                <th className="py-1.5 px-3 text-start font-medium">{entityHeader}</th>
+              <tr className="text-[11px] font-semibold uppercase tracking-wider text-ink-tertiary">
+                <th className="py-1.5 px-3 text-start">{entityHeader}</th>
                 {columns.map((c) => (
-                  <th key={c.fieldId} className="py-1.5 px-3 text-start font-medium whitespace-nowrap">
+                  <th key={c.fieldId} className="py-1.5 px-3 text-start whitespace-nowrap">
                     <span className="inline-flex items-center gap-1">
                       <Link2 size={10} className="text-carbon" />
                       {c.label}

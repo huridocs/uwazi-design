@@ -157,7 +157,7 @@ export function NotificationsDrawer({ rtl = false }: { rtl?: boolean }) {
         {/* Header */}
         <div className="shrink-0 border-b border-border">
           <div className="flex items-center gap-2 px-4 h-14">
-            <h2 className="text-base font-bold text-ink">Notifications</h2>
+            <h2 className="text-base font-semibold text-ink">Notifications</h2>
             {unread > 0 && (
               <span className="min-w-[18px] h-[18px] px-1.5 flex items-center justify-center rounded-full bg-carbon text-paper text-[11px] font-bold tabular-nums">
                 {unread}
@@ -308,10 +308,10 @@ function EmptyState({ filter }: { filter: "all" | "unread" }) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 py-16 px-6 text-center">
       <Inbox size={28} className="text-ink-muted" strokeWidth={1.5} />
-      <p className="text-[13px] font-medium text-ink-secondary">
+      <p className="text-sm font-medium text-ink-secondary">
         {filter === "unread" ? "No unread notifications" : "You're all caught up"}
       </p>
-      <p className="text-[11px] text-ink-muted">
+      <p className="text-xs text-ink-muted">
         {filter === "unread" ? "Everything here has been read." : "New activity will show up here."}
       </p>
     </div>

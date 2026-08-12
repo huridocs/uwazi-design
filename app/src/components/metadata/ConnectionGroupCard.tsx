@@ -36,9 +36,9 @@ export function ConnectionGroupCard({ group, span = "full" }: { group: Connectio
       <div className="overflow-x-auto -mx-1">
         <table className="w-full text-sm border-collapse">
           <thead>
-            <tr className="text-[11px] uppercase tracking-wide text-ink-tertiary">
+            <tr className="text-[11px] font-semibold uppercase tracking-wider text-ink-tertiary">
               {group.columns.map((c, i) => (
-                <th key={c.fieldId} className="py-1.5 px-3 text-start font-medium whitespace-nowrap align-top">
+                <th key={c.fieldId} className="py-1.5 px-3 text-start whitespace-nowrap align-top">
                   <span className="flex flex-col items-start gap-1">
                     <span className="inline-flex items-center gap-1">
                       <Link2 size={10} className="text-carbon" />
@@ -48,7 +48,7 @@ export function ConnectionGroupCard({ group, span = "full" }: { group: Connectio
                   </span>
                 </th>
               ))}
-              <th className="py-1.5 px-1 text-start font-medium">{entityHeader}</th>
+              <th className="py-1.5 px-1 text-start">{entityHeader}</th>
             </tr>
           </thead>
           <tbody>

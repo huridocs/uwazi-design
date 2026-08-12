@@ -65,9 +65,9 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
         <div className="overflow-x-auto -mx-1 mt-1.5">
           <table className="w-full text-sm border-collapse">
             <thead>
-              <tr className="text-[11px] uppercase tracking-wide text-ink-tertiary">
-                <th className="py-1.5 px-1 text-start font-medium">{entityHeader}</th>
-                <th className="py-1.5 px-3 text-start font-medium align-top">
+              <tr className="text-[11px] font-semibold uppercase tracking-wider text-ink-tertiary">
+                <th className="py-1.5 px-1 text-start">{entityHeader}</th>
+                <th className="py-1.5 px-3 text-start align-top">
                   <span className="flex flex-col items-start gap-1">
                     <span className="inline-flex items-center gap-1">
                       <Link2 size={10} className="text-carbon" />
