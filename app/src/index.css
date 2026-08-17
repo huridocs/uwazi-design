@@ -32,6 +32,13 @@
   --color-selected: var(--bg-selected);
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  /* The two sizes below Tailwind's `sm` that this UI actually uses: `meta` for
+   * timestamps/counters/file paths, `tab` for tab strips and dense controls.
+   * Deliberately NO `--text-*--line-height` pair — these replace bracket sizes
+   * (`text-[0.6875rem]`, `text-[0.8125rem]`), which carry no line-height, so
+   * attaching one would silently reflow every site that inherits its leading. */
+  --text-meta: 0.6875rem;
+  --text-tab: 0.8125rem;
 }
 
 /* Brand radii — softer than Tailwind defaults but not pillowy. The earlier

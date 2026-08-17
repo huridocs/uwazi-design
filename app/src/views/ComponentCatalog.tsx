@@ -310,7 +310,7 @@ export function ComponentCatalog({ onReturn }: Props) {
                   ref={reg(doc.id)}
                   className="max-w-[44rem] rounded-md bg-paper px-6 py-5 border border-border-soft"
                 >
-                  <p className="mb-4 font-mono text-[0.6875rem] text-ink-muted">
+                  <p className="mb-4 font-mono text-meta text-ink-muted">
                     {doc.file}
                   </p>
                   <Markdown

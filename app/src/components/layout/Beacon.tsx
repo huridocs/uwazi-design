@@ -220,7 +220,7 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
                   return (
                     <div key="flash" className="flex items-center gap-2 w-full animate-beacon-rail">
                       <FlashIcon size={14} className={`${kindColor[flash.type]} shrink-0`} />
-                      <span className="text-[12px] font-medium text-ink truncate">{flash.message}</span>
+                      <span className="text-xs leading-normal font-medium text-ink truncate">{flash.message}</span>
                     </div>
                   );
                 })()
@@ -230,7 +230,7 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
                   <span className="shrink-0 flex items-center">
                     <UwaziLoader size="xs" color="carbon" animate />
                   </span>
-                  <span className="text-[12px] font-medium text-ink truncate">{activityLabel}</span>
+                  <span className="text-xs leading-normal font-medium text-ink truncate">{activityLabel}</span>
                   <span className="ml-auto text-[11px] font-semibold text-ink-tertiary tabular-nums shrink-0">
                     {pct}%
                   </span>
@@ -239,7 +239,7 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
                 // Idle-but-unread — surface the most pressing item on hover.
                 <div key="summary" className="flex items-center gap-2 w-full animate-beacon-rail">
                   <LeadIcon size={14} className={`${kindColor[topUnread.kind]} shrink-0`} />
-                  <span className="text-[12px] font-medium text-ink truncate">{topUnread.title}</span>
+                  <span className="text-xs leading-normal font-medium text-ink truncate">{topUnread.title}</span>
                   {moreCount > 0 && (
                     <span className="ml-auto text-[11px] font-semibold text-ink-tertiary tabular-nums shrink-0">
                       +{moreCount}

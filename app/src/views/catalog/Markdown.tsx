@@ -303,12 +303,12 @@ function renderInline(
 }
 
 const HEADING_CLASS: Record<number, string> = {
-  1: "text-[1.5rem] leading-snug font-bold text-ink mt-0 mb-3",
-  2: "text-[1.125rem] font-bold text-ink mt-8 mb-3 pb-1.5 border-b border-border-soft",
+  1: "text-2xl leading-snug font-bold text-ink mt-0 mb-3",
+  2: "text-lg leading-normal font-bold text-ink mt-8 mb-3 pb-1.5 border-b border-border-soft",
   3: "text-[0.9375rem] font-semibold text-ink mt-6 mb-2",
-  4: "text-[0.875rem] font-semibold text-ink-secondary mt-5 mb-2",
-  5: "text-[0.8125rem] font-semibold text-ink-secondary mt-4 mb-1.5",
-  6: "text-[0.8125rem] font-semibold text-ink-tertiary mt-4 mb-1.5",
+  4: "text-sm leading-normal font-semibold text-ink-secondary mt-5 mb-2",
+  5: "text-tab font-semibold text-ink-secondary mt-4 mb-1.5",
+  6: "text-tab font-semibold text-ink-tertiary mt-4 mb-1.5",
 };
 
 /** Non-interactive state glyph for a `- [ ]` / `- [x]` item — these checklists
@@ -351,7 +351,7 @@ function renderBlocks(
         return (
           <p
             key={key}
-            className="my-3 text-[0.8125rem] leading-relaxed text-ink-secondary"
+            className="my-3 text-tab leading-relaxed text-ink-secondary"
           >
             {renderInline(block.text, key, ctx)}
           </p>
@@ -361,7 +361,7 @@ function renderBlocks(
         return (
           <pre
             key={key}
-            className="my-4 overflow-x-auto rounded-md bg-vellum p-3 text-[0.75rem] leading-relaxed"
+            className="my-4 overflow-x-auto rounded-md bg-vellum p-3 text-xs leading-relaxed"
           >
             <code className="font-mono text-ink">{block.code}</code>
           </pre>
@@ -388,7 +388,7 @@ function renderBlocks(
         return (
           <Tag
             key={key}
-            className={`my-3 flex flex-col gap-1.5 text-[0.8125rem] leading-relaxed text-ink-secondary ${
+            className={`my-3 flex flex-col gap-1.5 text-tab leading-relaxed text-ink-secondary ${
               allTasks
                 ? "list-none ps-0"
                 : `ps-5 ${block.ordered ? "list-decimal" : "list-disc"}`
@@ -421,7 +421,7 @@ function renderBlocks(
             key={key}
             className="my-4 overflow-x-auto rounded-md border border-border-soft"
           >
-            <table className="w-full border-collapse text-[0.75rem]">
+            <table className="w-full border-collapse text-xs leading-normal">
               <thead>
                 <tr className="bg-warm">
                   {block.header.map((cell, n) => (

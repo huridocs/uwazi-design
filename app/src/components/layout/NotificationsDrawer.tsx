@@ -167,7 +167,7 @@ export function NotificationsDrawer({ rtl = false }: { rtl?: boolean }) {
               {unread > 0 && (
                 <button
                   onClick={markAllRead}
-                  className="flex items-center gap-1 px-2 h-7 text-[12px] font-medium text-ink-secondary rounded-md hover:bg-warm transition-colors"
+                  className="flex items-center gap-1 px-2 h-7 text-xs leading-normal font-medium text-ink-secondary rounded-md hover:bg-warm transition-colors"
                 >
                   <CheckCheck size={14} /> Mark all read
                 </button>
@@ -261,7 +261,7 @@ function FilterPill({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-1.5 px-2.5 h-7 text-[12px] font-medium rounded-md transition-colors ${
+      className={`flex items-center gap-1.5 px-2.5 h-7 text-xs leading-normal font-medium rounded-md transition-colors ${
         active ? "bg-vellum text-ink" : "text-ink-secondary hover:bg-warm"
       }`}
     >
@@ -363,7 +363,7 @@ function NotifCard({
             {!n.read && <span className="w-1.5 h-1.5 rounded-full bg-carbon shrink-0" />}
             <span className="text-[13px] font-medium text-ink">{n.title}</span>
           </div>
-          {n.detail && <div className="text-[12px] text-ink-secondary mt-0.5">{n.detail}</div>}
+          {n.detail && <div className="text-xs leading-normal text-ink-secondary mt-0.5">{n.detail}</div>}
 
           {n.details && (
             <>
