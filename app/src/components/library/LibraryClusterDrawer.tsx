@@ -33,7 +33,7 @@ export function LibraryClusterDrawer() {
       >
         <MapPin size={15} className="text-ink-tertiary shrink-0" />
         <span className="text-sm font-semibold text-ink truncate">{cluster.label}</span>
-        <span className="text-[11px] text-ink-tertiary">
+        <span className="text-meta text-ink-tertiary">
           {ents.length} {ents.length === 1 ? "entity" : "entities"}
         </span>
         <button

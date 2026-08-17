@@ -239,7 +239,7 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
               <p className="mt-2 text-xs font-semibold text-ink">
                 {entities.length ? "Nothing to place on the map" : "No results"}
               </p>
-              <p className="mt-1 text-[11px] text-ink-tertiary leading-snug">
+              <p className="mt-1 text-meta text-ink-tertiary leading-snug">
                 {entities.length
                   ? `None of these ${entities.length.toLocaleString()} results carry a geolocation. Only entities with coordinates of their own are plotted.`
                   : "No entities match your filters."}
@@ -247,7 +247,7 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
               {hasNarrowing && (
                 <button
                   onClick={() => clearFilters()}
-                  className="mt-2.5 px-2.5 h-6 text-[11px] font-medium rounded-md bg-warm text-ink-secondary hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
+                  className="mt-2.5 px-2.5 h-6 text-meta font-medium rounded-md bg-warm text-ink-secondary hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
                 >
                   Clear filters
                 </button>
@@ -259,7 +259,7 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
         {/* Caption — states what ISN'T here. Only entities with a real
             geolocation property are plotted, and in a corpus like CEJIL that is
             a small minority; without this the map reads as the whole library. */}
-        <div className="absolute bottom-2 left-2 text-[11px] text-ink-tertiary bg-paper/70 backdrop-blur-sm rounded px-2 py-0.5">
+        <div className="absolute bottom-2 left-2 text-meta text-ink-tertiary bg-paper/70 backdrop-blur-sm rounded px-2 py-0.5">
           {located.toLocaleString()} located {located === 1 ? "entity" : "entities"} ·{" "}
           {clusters.length.toLocaleString()} {clusters.length === 1 ? "pin" : "pins"}
           {unlocated > 0 && (

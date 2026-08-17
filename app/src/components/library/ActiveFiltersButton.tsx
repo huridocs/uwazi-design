@@ -61,7 +61,7 @@ export function ActiveFiltersButton({ className = "" }: { className?: string } =
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        className={`inline-flex items-center gap-1.5 px-1.5 h-5 text-[11px] font-medium rounded-md
+        className={`inline-flex items-center gap-1.5 px-1.5 h-5 text-meta font-medium rounded-md
           transition-colors cursor-pointer ${
             open ? "bg-warm text-ink" : "text-ink-secondary hover:bg-warm hover:text-ink"
           }`}
@@ -93,7 +93,7 @@ export function ActiveFiltersButton({ className = "" }: { className?: string } =
                 clearAll();
                 setOpen(false);
               }}
-              className="ms-auto px-1.5 h-5 text-[11px] font-medium rounded text-ink-tertiary hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
+              className="ms-auto px-1.5 h-5 text-meta font-medium rounded text-ink-tertiary hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
             >
               Clear all
             </button>
@@ -142,7 +142,7 @@ export function ActiveFiltersButton({ className = "" }: { className?: string } =
               setSelectedCluster(null);
               setOpen(false);
             }}
-            className="w-full flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium text-ink-secondary
+            className="w-full flex items-center gap-1.5 px-3 py-2 text-meta font-medium text-ink-secondary
               hover:bg-warm hover:text-ink transition-colors cursor-pointer"
             style={{ borderTop: "1px solid var(--border-soft)" }}
           >

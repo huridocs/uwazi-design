@@ -120,7 +120,7 @@ export function FileViewerBody({ file, url }: { file: FileEntry; url?: string })
           <div className="w-0 h-0 border-t-[10px] border-t-transparent border-b-[10px] border-b-transparent border-l-[16px] border-l-ink ml-1" />
         </div>
         <audio controls src={url} className="w-full" />
-        <p className="text-[11px] text-ink-tertiary truncate w-full text-center">
+        <p className="text-meta text-ink-tertiary truncate w-full text-center">
           {file.name}
         </p>
       </div>

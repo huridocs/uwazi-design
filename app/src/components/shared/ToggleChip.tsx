@@ -48,7 +48,7 @@ export function ToggleChip({
       aria-label={
         ariaLabel ?? (count === undefined ? label : `${label}, ${count.toLocaleString()} results`)
       }
-      className={`inline-flex items-center gap-1 h-6 ps-1.5 pe-1.5 rounded text-[11px] font-medium
+      className={`inline-flex items-center gap-1 h-6 ps-1.5 pe-1.5 rounded text-meta font-medium
         transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-1
         focus-visible:outline-carbon ${
           active ? "text-ink-secondary" : "text-ink-tertiary hover:text-ink-secondary"

@@ -83,7 +83,7 @@ export function DataTable<T>({
         {/* Header */}
         <div
           role="row"
-          className="grid items-center gap-3 px-4 h-10 text-[11px] font-semibold text-ink-tertiary uppercase tracking-wider"
+          className="grid items-center gap-3 px-4 h-10 text-meta font-semibold text-ink-tertiary uppercase tracking-wider"
           style={{
             gridTemplateColumns,
             backgroundColor: "var(--bg-warm)",

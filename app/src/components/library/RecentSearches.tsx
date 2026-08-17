@@ -115,7 +115,7 @@ export function RecentSearches({ anchorRef, open, onPick, onClose }: Props) {
             clearAll();
             onClose();
           }}
-          className="text-[11px] font-medium text-ink-tertiary hover:text-ink transition-colors
+          className="text-meta font-medium text-ink-tertiary hover:text-ink transition-colors
             cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-ink/20 rounded-sm"
         >
           Clear all

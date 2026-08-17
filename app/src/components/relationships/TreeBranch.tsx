@@ -116,7 +116,7 @@ export function TreeBranch({
         <span className="text-sm font-medium text-ink truncate">
           <HighlightedText text={title} query={highlight} />
         </span>
-        <span className="ml-auto text-[11px] text-ink-tertiary tabular-nums shrink-0">
+        <span className="ml-auto text-meta text-ink-tertiary tabular-nums shrink-0">
           {count}
         </span>
       </button>

@@ -72,7 +72,7 @@ export function ActionBar({ numPages, onScrollToPage, leftSlot, rightSlot, showP
             <span
               role="status"
               dir="ltr"
-              className="min-w-[3.25rem] text-center text-[13px] font-semibold text-ink tabular-nums"
+              className="min-w-[3.25rem] text-center text-tab font-semibold text-ink tabular-nums"
             >
               {matchNav.index} / {matchNav.count}
             </span>
@@ -93,17 +93,17 @@ export function ActionBar({ numPages, onScrollToPage, leftSlot, rightSlot, showP
             <button
               onClick={() => goTo(Math.max(1, currentPage - 1))}
               disabled={currentPage <= 1}
-              className="text-[13px] font-medium text-ink-secondary disabled:opacity-30 disabled:cursor-not-allowed hover:text-ink hover:underline transition-colors"
+              className="text-tab font-medium text-ink-secondary disabled:opacity-30 disabled:cursor-not-allowed hover:text-ink hover:underline transition-colors"
             >
               Previous
             </button>
-            <span dir="ltr" className="text-[13px] font-semibold text-ink tabular-nums">
+            <span dir="ltr" className="text-tab font-semibold text-ink tabular-nums">
               {currentPage} / {numPages || "..."}
             </span>
             <button
               onClick={() => goTo(Math.min(numPages, currentPage + 1))}
               disabled={currentPage >= numPages}
-              className="text-[13px] font-medium text-ink-secondary disabled:opacity-30 disabled:cursor-not-allowed hover:text-ink hover:underline transition-colors"
+              className="text-tab font-medium text-ink-secondary disabled:opacity-30 disabled:cursor-not-allowed hover:text-ink hover:underline transition-colors"
             >
               Next
             </button>

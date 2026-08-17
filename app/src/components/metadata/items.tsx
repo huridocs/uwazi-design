@@ -80,7 +80,7 @@ function ConnectionPills({ field }: { field: RelationshipMetadataField }) {
         </button>
       ))}
       {field.totalConnected != null && field.totalConnected > resolved.values.length && (
-        <span className="text-[11px] text-ink-tertiary">
+        <span className="text-meta text-ink-tertiary">
           +{field.totalConnected - resolved.values.length} more
         </span>
       )}

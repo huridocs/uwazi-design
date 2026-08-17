@@ -181,7 +181,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
               activeFilterCount > 0 ? (
                 <button
                   onClick={clearAllFilters}
-                  className="text-[11px] font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
+                  className="text-meta font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
                 >
                   Clear all filters
                 </button>

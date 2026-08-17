@@ -181,7 +181,7 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
         <div className="flex items-center gap-2 h-6">
-          <span className="text-[11px] text-ink-tertiary">
+          <span className="text-meta text-ink-tertiary">
             {entities.length
               ? `None of these ${entities.length.toLocaleString()} results carry a date`
               : "No results to plot"}
@@ -190,7 +190,7 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
           {hasNarrowing && (
             <button
               onClick={() => clearFilters()}
-              className="px-2 h-5 text-[11px] font-medium rounded-md bg-warm text-ink-tertiary hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
+              className="px-2 h-5 text-meta font-medium rounded-md bg-warm text-ink-tertiary hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
             >
               Clear filters
             </button>
@@ -201,7 +201,7 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
             className="absolute left-0 right-0 bottom-0"
             style={{ height: 1, backgroundColor: "var(--border-primary)" }}
           />
-          <span className="absolute inset-0 flex items-center justify-center text-[11px] text-ink-muted">
+          <span className="absolute inset-0 flex items-center justify-center text-meta text-ink-muted">
             {entities.length ? "Nothing to plot on the timeline" : "Widen your filters to see the timeline"}
           </span>
         </div>
@@ -282,7 +282,7 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
           and the zoom presets step aside — five of them plus "All" ran straight
           off a 414px screen. "All" stays: it's the way back. */}
       <div className="flex items-center gap-2 h-6">
-        <span className="text-[11px] text-ink-tertiary tabular-nums whitespace-nowrap">
+        <span className="text-meta text-ink-tertiary tabular-nums whitespace-nowrap">
           <span className="font-semibold text-ink-secondary">{inRange.toLocaleString()}</span>
           {" dated · "}
           <span className="text-ink-secondary">
@@ -295,7 +295,7 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
         </span>
         <div className="flex-1" />
         {hovered && !isMobile && (
-          <span className="text-[11px] text-ink-tertiary tabular-nums whitespace-nowrap">
+          <span className="text-meta text-ink-tertiary tabular-nums whitespace-nowrap">
             {hovered.label} · {hovered.entities.length.toLocaleString()}
           </span>
         )}
@@ -304,7 +304,7 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
             <button
               key={p.label}
               onClick={() => commit(axis.max - p.ms, axis.max, false)}
-              className="px-2 h-5 text-[11px] font-medium rounded-md bg-warm text-ink-tertiary hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
+              className="px-2 h-5 text-meta font-medium rounded-md bg-warm text-ink-tertiary hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
             >
               {p.label}
             </button>
@@ -312,7 +312,7 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
         <button
           onClick={() => commit(axis.min, axis.max, true)}
           disabled={isFull}
-          className={`px-2 h-5 text-[11px] font-medium rounded-md transition-colors ${
+          className={`px-2 h-5 text-meta font-medium rounded-md transition-colors ${
             isFull
               ? "text-ink-muted"
               : "bg-warm text-ink-tertiary hover:bg-parchment hover:text-ink cursor-pointer"

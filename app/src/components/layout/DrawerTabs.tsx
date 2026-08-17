@@ -67,7 +67,7 @@ export function DrawerTabs({ tabs, activeId, onChange, className = "px-3 py-2" }
                 role="tab"
                 aria-selected={active}
                 onClick={() => onChange(tab.id)}
-                className={`relative flex items-center justify-center gap-1 w-full px-3 py-1.5 text-[13px] font-medium transition-colors ${
+                className={`relative flex items-center justify-center gap-1 w-full px-3 py-1.5 text-tab font-medium transition-colors ${
                   i === 0 ? "rounded-s-md" : ""
                 } ${i === tabs.length - 1 ? "rounded-e-md" : ""} ${
                   active ? "bg-vellum text-ink" : "bg-paper text-ink-tertiary hover:text-ink-secondary"

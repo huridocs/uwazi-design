@@ -141,7 +141,7 @@ export function FileDetailEditor({
           <button
             type="button"
             onClick={() => setEditing((e) => !e)}
-            className={`flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded transition-colors cursor-pointer ${
+            className={`flex items-center gap-1 px-2 py-0.5 text-meta font-medium rounded transition-colors cursor-pointer ${
               editing
                 ? "bg-ink text-parchment hover:bg-ink/90"
                 : "text-ink-secondary hover:bg-paper hover:text-ink"
@@ -291,7 +291,7 @@ export function FileDetailEditor({
             <button
               type="button"
               onClick={promoteOrDemote}
-              className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-ink-secondary bg-paper hover:bg-parchment hover:text-ink rounded transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1 text-meta font-medium text-ink-secondary bg-paper hover:bg-parchment hover:text-ink rounded transition-colors cursor-pointer"
             >
               {group.isPrimary ? (
                 <>
@@ -307,7 +307,7 @@ export function FileDetailEditor({
               <button
                 type="button"
                 onClick={setAsActive}
-                className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-ink-secondary bg-paper hover:bg-parchment hover:text-ink rounded transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-2.5 py-1 text-meta font-medium text-ink-secondary bg-paper hover:bg-parchment hover:text-ink rounded transition-colors cursor-pointer"
               >
                 <Eye size={12} /> Set as active
               </button>
@@ -316,7 +316,7 @@ export function FileDetailEditor({
               <button
                 type="button"
                 onClick={() => onAddTranslation?.(group.id)}
-                className="ml-auto text-[11px] font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
+                className="ml-auto text-meta font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
               >
                 + Add translation
               </button>
@@ -329,7 +329,7 @@ export function FileDetailEditor({
         <button
           type="button"
           onClick={() => onRequestDelete(file.id)}
-          className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-seal-label rounded hover:bg-seal-tint transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-2.5 py-1 text-meta font-medium text-seal-label rounded hover:bg-seal-tint transition-colors cursor-pointer"
         >
           <Trash2 size={12} /> Delete file
         </button>

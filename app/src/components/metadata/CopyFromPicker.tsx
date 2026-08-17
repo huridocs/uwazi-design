@@ -108,7 +108,7 @@ export function CopyFromPicker({
       >
         <header className="shrink-0 flex items-center gap-2 h-11 px-3 border-b border-border">
           <span className="text-xs font-semibold text-ink">Copy from</span>
-          <span className="text-[11px] text-ink-tertiary">
+          <span className="text-meta text-ink-tertiary">
             values are staged, not saved
           </span>
           <button
@@ -179,7 +179,7 @@ export function CopyFromPicker({
                   </span>
                 </span>
                 {/* The number Uwazi makes you click to find out. */}
-                <span className="shrink-0 flex items-center gap-1.5 text-[11px] text-ink-tertiary">
+                <span className="shrink-0 flex items-center gap-1.5 text-meta text-ink-tertiary">
                   {matches === 0 ? (
                     <span>no shared fields</span>
                   ) : (
@@ -197,7 +197,7 @@ export function CopyFromPicker({
         {/* Always mounted, contents toggling — the list is capped, and a footer
             that only appears once the cap bites would move the list under the
             user's cursor the moment they typed. */}
-        <footer className="shrink-0 h-7 flex items-center px-3 border-t border-border text-[11px] text-ink-tertiary">
+        <footer className="shrink-0 h-7 flex items-center px-3 border-t border-border text-meta text-ink-tertiary">
           {total > LIMIT
             ? `Showing the first ${LIMIT} of ${total.toLocaleString()} — search by title to reach the rest.`
             : total > 0

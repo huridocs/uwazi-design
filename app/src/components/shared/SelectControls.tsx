@@ -23,7 +23,7 @@ export function SelectControls({
       <button
         onClick={onSelectAll}
         disabled={selectDisabled}
-        className={`text-[11px] font-medium transition-colors px-1 ${
+        className={`text-meta font-medium transition-colors px-1 ${
           selectDisabled
             ? "text-ink-muted cursor-default"
             : "text-ink hover:text-ink-secondary cursor-pointer"
@@ -34,7 +34,7 @@ export function SelectControls({
       <button
         onClick={onDeselectAll}
         disabled={deselectDisabled}
-        className={`text-[11px] font-medium transition-colors px-1 ${
+        className={`text-meta font-medium transition-colors px-1 ${
           deselectDisabled
             ? "text-ink-muted cursor-default"
             : "text-ink hover:text-ink-secondary cursor-pointer"

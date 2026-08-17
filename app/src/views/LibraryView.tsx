@@ -783,7 +783,7 @@ export function LibraryView() {
             during a transition is the previous query's, and a second string
             appearing beside this one would need a reserve of its own.
 
-            ONE TREATMENT, whole sentence, both states: `text-[11px]
+            ONE TREATMENT, whole sentence, both states: `text-meta
             tabular-nums text-ink-tertiary` off this element and nothing
             overriding it. The figure used to be lifted to `font-medium
             text-ink-secondary` against a tertiary unit, on the theory that it
@@ -801,7 +801,7 @@ export function LibraryView() {
           // slot's edge and reads as a second control pill beside "Date added".
           // The slot's outer width is untouched, so the controls still never move.
           className={`hidden md:flex items-center justify-start gap-1.5 shrink-0 w-[15rem] pe-3
-            text-[11px] tabular-nums text-ink-tertiary transition-opacity ${
+            text-meta tabular-nums text-ink-tertiary transition-opacity ${
               searchPending ? "opacity-60" : "opacity-100"
             }`}
         >

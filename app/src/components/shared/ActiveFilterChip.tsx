@@ -16,7 +16,7 @@ interface ActiveFilterChipProps {
 export function ActiveFilterChip({ label, color, onRemove, removeLabel, className }: ActiveFilterChipProps) {
   return (
     <span
-      className={`inline-flex items-center gap-1 h-6 ps-1.5 pe-1 rounded text-[11px] font-medium text-ink-secondary ${className ?? ""}`}
+      className={`inline-flex items-center gap-1 h-6 ps-1.5 pe-1 rounded text-meta font-medium text-ink-secondary ${className ?? ""}`}
       style={{
         backgroundColor: "color-mix(in srgb, var(--text-primary) 6%, var(--bg-surface))",
         border: "1px solid color-mix(in srgb, var(--text-primary) 14%, var(--bg-surface))",

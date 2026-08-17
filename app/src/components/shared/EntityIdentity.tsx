@@ -61,7 +61,7 @@ export function EntityIdentity({
       <h2
         title={label}
         className={`mt-0.5 font-semibold text-ink leading-snug line-clamp-2 ${
-          size === "sm" ? "text-[13px]" : "text-sm"
+          size === "sm" ? "text-tab" : "text-sm"
         }`}
       >
         {label}

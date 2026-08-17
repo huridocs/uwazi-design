@@ -50,7 +50,7 @@ export function DocumentGroupCard({
             Active
           </span>
         )}
-        <span className="text-[11px] text-ink-tertiary tabular-nums shrink-0">
+        <span className="text-meta text-ink-tertiary tabular-nums shrink-0">
           {translationCount} {translationCount === 1 ? "translation" : "translations"}
         </span>
       </header>

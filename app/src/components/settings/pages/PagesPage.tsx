@@ -40,11 +40,11 @@ export function PagesPage() {
       width: "8rem",
       cell: (p) =>
         p.published ? (
-          <span className="text-[11px] font-semibold text-success bg-success-light px-2 py-0.5 rounded-md w-fit">
+          <span className="text-meta font-semibold text-success bg-success-light px-2 py-0.5 rounded-md w-fit">
             Published
           </span>
         ) : (
-          <span className="text-[11px] font-semibold text-ink-secondary bg-warm px-2 py-0.5 rounded-md w-fit">
+          <span className="text-meta font-semibold text-ink-secondary bg-warm px-2 py-0.5 rounded-md w-fit">
             Draft
           </span>
         ),

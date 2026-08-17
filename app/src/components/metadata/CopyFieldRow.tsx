@@ -87,7 +87,7 @@ export function CopyFieldRow({
           with no idea which field was being overwritten, and got strictly less
           than a screen-reader user did. */}
       <span
-        className={`row-start-1 ${line} h-4 leading-4 truncate text-[11px] font-medium text-ink-secondary`}
+        className={`row-start-1 ${line} h-4 leading-4 truncate text-meta font-medium text-ink-secondary`}
         title={label}
       >
         {label}
@@ -104,7 +104,7 @@ export function CopyFieldRow({
           text below", which in a one-line comparison cell is a lie. The ellipsis
           cuts at the column edge and the whole value is on the title. */}
       <span
-        className={`row-start-1 ${line} h-4 leading-4 truncate text-[11px] text-ink-tertiary
+        className={`row-start-1 ${line} h-4 leading-4 truncate text-meta text-ink-tertiary
           line-through decoration-ink-muted/60`}
         title={current}
       >
@@ -112,7 +112,7 @@ export function CopyFieldRow({
       </span>
       <ArrowRight size={10} className={`row-start-1 ${line} text-ink-muted`} aria-hidden />
       <span
-        className={`row-start-1 ${line} h-4 leading-4 truncate text-[11px] font-medium text-ink`}
+        className={`row-start-1 ${line} h-4 leading-4 truncate text-meta font-medium text-ink`}
         title={incoming}
       >
         {incoming}
@@ -122,7 +122,7 @@ export function CopyFieldRow({
           so it holds its 1rem whether or not a note is rendered into it. */}
       {note && (
         <span
-          className="row-start-2 col-start-2 col-span-4 h-4 leading-4 truncate text-[11px] text-ink-tertiary"
+          className="row-start-2 col-start-2 col-span-4 h-4 leading-4 truncate text-meta text-ink-tertiary"
           title={note}
         >
           {note}

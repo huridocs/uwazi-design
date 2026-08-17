@@ -101,7 +101,7 @@ export function FileDrawer({
               {i > 0 && <div className="w-px self-stretch bg-border" />}
               <button
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center justify-center gap-1 px-3 py-1.5 text-[13px] font-medium transition-colors ${
+                className={`flex items-center justify-center gap-1 px-3 py-1.5 text-tab font-medium transition-colors ${
                   activeTab === tab.id
                     ? "bg-vellum text-ink"
                     : "bg-paper text-ink-tertiary hover:text-ink-secondary"

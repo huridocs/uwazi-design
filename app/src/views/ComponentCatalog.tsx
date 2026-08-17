@@ -258,7 +258,7 @@ export function ComponentCatalog({ onReturn }: Props) {
         <img src={asset("/nu-logo.svg")} alt="Uwazi" style={{ height: 14.7 }} className="logo-img" />
         <button
           onClick={onReturn}
-          className="flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium text-ink-secondary rounded-md bg-warm border border-border-soft/60 hover:bg-parchment transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1 text-tab font-medium text-ink-secondary rounded-md bg-warm border border-border-soft/60 hover:bg-parchment transition-colors cursor-pointer"
         >
           <ArrowLeft size={14} /> Return to app
         </button>
@@ -422,7 +422,7 @@ export function ComponentCatalog({ onReturn }: Props) {
 </button>
 
 {/* Compact (navbar) */}
-<button className="flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium text-ink-secondary rounded-md bg-warm border border-border-soft/60 hover:bg-parchment">
+<button className="flex items-center gap-1.5 px-3 py-1 text-tab font-medium text-ink-secondary rounded-md bg-warm border border-border-soft/60 hover:bg-parchment">
   <BookOpen size={14} /> Compact
 </button>
 
@@ -967,7 +967,7 @@ sendFill(selection.text);                                    // commits, then di
 <StatusBadge status="completed_warnings" />
 <StatusBadge status="completed_errors" />
 <StatusBadge status="uploading" />`}
-                  tailwind="inline-flex w-fit px-2 py-0.5 text-[11px] font-semibold rounded-full"
+                  tailwind="inline-flex w-fit px-2 py-0.5 text-meta font-semibold rounded-full"
                 >
                   <div className="flex flex-wrap items-center gap-2">
                     <StatusBadge status="completed" />

@@ -19,7 +19,7 @@ export function IssuesTable({ issues }: IssuesTableProps) {
     >
       {/* Header */}
       <div
-        className="grid items-center gap-3 px-4 h-10 shrink-0 text-[11px] font-semibold text-ink-tertiary uppercase tracking-wider"
+        className="grid items-center gap-3 px-4 h-10 shrink-0 text-meta font-semibold text-ink-tertiary uppercase tracking-wider"
         style={{
           gridTemplateColumns: cols,
           backgroundColor: "var(--bg-warm)",
@@ -46,7 +46,7 @@ export function IssuesTable({ issues }: IssuesTableProps) {
             <span className="text-xs font-medium text-ink font-mono truncate">{issue.field}</span>
             <span className="text-xs text-ink-secondary truncate">{issue.issue}</span>
             <span
-              className={`inline-flex w-fit px-2 py-0.5 text-[11px] font-semibold rounded-md ${
+              className={`inline-flex w-fit px-2 py-0.5 text-meta font-semibold rounded-md ${
                 issue.type === "warning"
                   ? "bg-warning-light text-warning"
                   : "bg-seal-tint text-seal-label"

@@ -78,7 +78,7 @@ export const AllStates: Story = {
 export const Minimal: Story = {
   args: { label: "from", children: null },
   render: () => (
-    <p className="max-w-md text-[11px] text-ink-tertiary">
+    <p className="max-w-md text-meta text-ink-tertiary">
       <span className="text-ink">3 of 41 pages</span>{" "}
       <ProvenanceLine inline label="from">
         Caso Gelman vs. Uruguay

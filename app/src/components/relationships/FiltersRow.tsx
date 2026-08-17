@@ -61,7 +61,7 @@ export function ViewModeControls({
             <button
               key={opt.id}
               onClick={() => setViewMode(opt.id)}
-              className={`px-2 ${h} text-[11px] font-medium transition-colors cursor-pointer ${
+              className={`px-2 ${h} text-meta font-medium transition-colors cursor-pointer ${
                 isActive
                   ? "bg-vellum text-ink"
                   : "text-ink-tertiary hover:text-ink-secondary"
@@ -81,7 +81,7 @@ export function ViewModeControls({
           onClick={() => setDropdownOpen(!dropdownOpen)}
           aria-expanded={dropdownOpen}
           aria-haspopup="listbox"
-          className={`flex items-center gap-1 ${h} px-2 text-[11px] font-medium text-ink-secondary
+          className={`flex items-center gap-1 ${h} px-2 text-meta font-medium text-ink-secondary
             bg-warm border border-border rounded-md hover:bg-parchment hover:text-ink transition-colors cursor-pointer`}
         >
           {sortOrder === "none" ? "Sort" : activeSort?.label}
@@ -151,7 +151,7 @@ export function CollapseControls({
       <button
         onClick={onCollapseAll}
         disabled={collapseDisabled}
-        className={`text-[11px] font-medium transition-colors px-1 ${
+        className={`text-meta font-medium transition-colors px-1 ${
           collapseDisabled
             ? "text-ink-muted cursor-default"
             : "text-ink hover:text-ink-secondary cursor-pointer"
@@ -162,7 +162,7 @@ export function CollapseControls({
       <button
         onClick={onExpandAll}
         disabled={expandDisabled}
-        className={`text-[11px] font-medium transition-colors px-1 ${
+        className={`text-meta font-medium transition-colors px-1 ${
           expandDisabled
             ? "text-ink-muted cursor-default"
             : "text-ink hover:text-ink-secondary cursor-pointer"

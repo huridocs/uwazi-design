@@ -59,7 +59,7 @@ export function RelationshipFieldEditor({
             14px bold label made one field in the metadata form shout while its
             neighbours spoke. */}
         <label className="text-xs font-medium text-ink-secondary">{title}</label>
-        <span className="text-[11px] text-ink-tertiary">
+        <span className="text-meta text-ink-tertiary">
           via <span className="text-carbon font-medium">{relationLabel}</span>
         </span>
       </div>
@@ -71,7 +71,7 @@ export function RelationshipFieldEditor({
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>
-              <tr className="text-[11px] font-semibold uppercase tracking-wider text-ink-tertiary">
+              <tr className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
                 <th className="py-1.5 px-3 text-start">{entityHeader}</th>
                 {columns.map((c) => (
                   <th key={c.fieldId} className="py-1.5 px-3 text-start whitespace-nowrap">
@@ -128,7 +128,7 @@ export function RelationshipFieldEditor({
                           <button
                             onClick={() => setOverlay(id)}
                             title="Edit at source"
-                            className="flex items-center gap-1 px-1.5 h-6 text-[11px] font-medium text-ink-secondary rounded hover:bg-warm transition-colors cursor-pointer"
+                            className="flex items-center gap-1 px-1.5 h-6 text-meta font-medium text-ink-secondary rounded hover:bg-warm transition-colors cursor-pointer"
                           >
                             <PenLine size={12} /> Source
                           </button>
@@ -191,7 +191,7 @@ export function RelationshipFieldEditor({
       )}
 
       {columns.length > 0 && (
-        <p className="flex items-start gap-1.5 text-[11px] text-ink-tertiary">
+        <p className="flex items-start gap-1.5 text-meta text-ink-tertiary">
           <Info size={12} className="text-carbon shrink-0 mt-px" />
           Inherited values are read-only. Change the connection above, or edit the source entity.
         </p>

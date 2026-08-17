@@ -160,14 +160,14 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
               <div className="flex items-center gap-1 min-w-0">
                 <button
                   onClick={() => onNavigate?.("library")}
-                  className="flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium rounded-md transition-colors text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
+                  className="flex items-center gap-1.5 px-3 py-1 text-tab font-medium rounded-md transition-colors text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
                 >
                   <BookOpen size={14} /> {t("System", "Library")}
                 </button>
                 <ChevronRight size={14} className="text-ink-tertiary shrink-0" />
                 <span
                   title={focalTitle}
-                  className="px-2.5 py-1 text-[13px] font-medium text-ink bg-vellum rounded-md truncate max-w-[16rem]"
+                  className="px-2.5 py-1 text-tab font-medium text-ink bg-vellum rounded-md truncate max-w-[16rem]"
                 >
                   {focalTitle}
                 </span>
@@ -179,7 +179,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
               <div ref={collectionRef} className="relative flex items-center">
                 <button
                   onClick={() => onNavigate?.("library")}
-                  className={`flex items-center gap-1.5 ps-3 pe-2 py-1 text-[13px] font-medium rounded-s-md transition-colors ${
+                  className={`flex items-center gap-1.5 ps-3 pe-2 py-1 text-tab font-medium rounded-s-md transition-colors ${
                     appView === "library"
                       ? "text-ink bg-vellum"
                       : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
@@ -197,7 +197,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                   aria-expanded={collectionOpen}
                   aria-label={`Collection: ${collection.label}`}
                   title={`Collection: ${collection.label}`}
-                  className={`flex items-center gap-1 ps-1.5 pe-2 py-1 text-[13px] font-medium rounded-e-md transition-colors ${
+                  className={`flex items-center gap-1 ps-1.5 pe-2 py-1 text-tab font-medium rounded-e-md transition-colors ${
                     collectionOpen || appView === "library"
                       ? "text-ink bg-vellum"
                       : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
@@ -255,7 +255,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
             <div className="relative" ref={toolsRef}>
               <button
                 onClick={() => { setToolsOpen((o) => !o); setSettingsOpen(false); }}
-                className={`flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium rounded-md transition-colors ${
+                className={`flex items-center gap-1.5 px-3 py-1 text-tab font-medium rounded-md transition-colors ${
                   toolsOpen || appView === "import-csv"
                     ? "text-ink bg-vellum"
                     : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
@@ -354,7 +354,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
         {!showingCatalog && (
           <button
             onClick={() => openAgent(true)}
-            className="flex items-center gap-1.5 px-2.5 h-7 text-[13px] font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors"
+            className="flex items-center gap-1.5 px-2.5 h-7 text-tab font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors"
             title={`${t("System", "Ask Bert")} (${shortcutLabel})`}
           >
             <Sparkles size={14} className="text-carbon" />
@@ -364,7 +364,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
         {showingCatalog ? (
           <button
             onClick={onLogoClick}
-            className="flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium text-ink-secondary rounded-md bg-warm hover:bg-parchment hover:text-ink transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1 text-tab font-medium text-ink-secondary rounded-md bg-warm hover:bg-parchment hover:text-ink transition-colors"
           >
             <ArrowLeft size={14} /> Return to app
           </button>
@@ -372,7 +372,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
           <div className="relative" ref={settingsRef}>
             <button
               onClick={() => { setSettingsOpen((o) => !o); setToolsOpen(false); }}
-              className={`flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium rounded-md transition-colors ${
+              className={`flex items-center gap-1.5 px-3 py-1 text-tab font-medium rounded-md transition-colors ${
                 settingsOpen
                   ? "text-ink bg-vellum"
                   : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"

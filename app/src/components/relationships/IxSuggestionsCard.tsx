@@ -68,7 +68,7 @@ export function IxSuggestionsCard() {
         <span className="text-[10px] tabular-nums text-ink-tertiary bg-warm px-1.5 rounded">
           {pending.length}
         </span>
-        <span className="ml-auto text-[11px] text-ink-tertiary">
+        <span className="ml-auto text-meta text-ink-tertiary">
           {expanded ? t("System", "Hide") : t("System", "Review")}
         </span>
         <ChevronDown
@@ -118,7 +118,7 @@ export function IxSuggestionsCard() {
                       type="button"
                       onClick={() => accept(s)}
                       aria-label={t("System", "Accept suggestion")}
-                      className="flex items-center gap-1 px-2 h-6 rounded text-[11px] font-medium bg-ink text-parchment hover:bg-ink/90 transition-colors cursor-pointer"
+                      className="flex items-center gap-1 px-2 h-6 rounded text-meta font-medium bg-ink text-parchment hover:bg-ink/90 transition-colors cursor-pointer"
                     >
                       <Check size={11} />
                       {t("System", "Accept")}

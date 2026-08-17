@@ -159,7 +159,7 @@ export function NotificationsDrawer({ rtl = false }: { rtl?: boolean }) {
           <div className="flex items-center gap-2 px-4 h-14">
             <h2 className="text-base font-semibold text-ink">Notifications</h2>
             {unread > 0 && (
-              <span className="min-w-[18px] h-[18px] px-1.5 flex items-center justify-center rounded-full bg-carbon text-paper text-[11px] font-bold tabular-nums">
+              <span className="min-w-[18px] h-[18px] px-1.5 flex items-center justify-center rounded-full bg-carbon text-paper text-meta font-bold tabular-nums">
                 {unread}
               </span>
             )}
@@ -236,7 +236,7 @@ export function NotificationsDrawer({ rtl = false }: { rtl?: boolean }) {
           <button
             onClick={() => setNotifications([])}
             disabled={notifications.length === 0}
-            className="w-full h-9 text-[13px] font-medium text-ink-secondary bg-paper border border-border rounded-md
+            className="w-full h-9 text-tab font-medium text-ink-secondary bg-paper border border-border rounded-md
               hover:bg-warm transition-colors disabled:opacity-40 disabled:cursor-default"
           >
             Clear all
@@ -266,7 +266,7 @@ function FilterPill({
       }`}
     >
       {label}
-      <span className={`text-[11px] tabular-nums ${active ? "text-ink-tertiary" : "text-ink-muted"}`}>{count}</span>
+      <span className={`text-meta tabular-nums ${active ? "text-ink-tertiary" : "text-ink-muted"}`}>{count}</span>
     </button>
   );
 }
@@ -280,8 +280,8 @@ function TaskCard({ a, onCancel }: { a: Activity; onCancel: () => void }) {
         <span className="shrink-0 flex items-center">
           <UwaziLoader size="xs" color="carbon" animate={!done} />
         </span>
-        <span className="text-[13px] font-medium text-ink truncate flex-1">{a.label}…</span>
-        <span className="text-[11px] font-medium text-carbon shrink-0">{done ? "Finishing" : "Running"}</span>
+        <span className="text-tab font-medium text-ink truncate flex-1">{a.label}…</span>
+        <span className="text-meta font-medium text-carbon shrink-0">{done ? "Finishing" : "Running"}</span>
         <button
           onClick={onCancel}
           className="shrink-0 flex items-center justify-center w-5 h-5 rounded text-ink-muted hover:bg-warm transition-colors"
@@ -290,7 +290,7 @@ function TaskCard({ a, onCancel }: { a: Activity; onCancel: () => void }) {
           <X size={13} />
         </button>
       </div>
-      {a.detail && <div className="mt-0.5 ml-[1.375rem] text-[11px] text-ink-muted truncate">{a.detail}</div>}
+      {a.detail && <div className="mt-0.5 ml-[1.375rem] text-meta text-ink-muted truncate">{a.detail}</div>}
       <div className="mt-2 flex items-center gap-2">
         <div className="flex-1 h-1.5 rounded-full bg-vellum overflow-hidden">
           <div
@@ -298,7 +298,7 @@ function TaskCard({ a, onCancel }: { a: Activity; onCancel: () => void }) {
             style={{ width: `${pct}%`, transitionProperty: "width", transitionDuration: "0.5s" }}
           />
         </div>
-        <span className="text-[11px] font-semibold text-ink-tertiary tabular-nums shrink-0">{pct}%</span>
+        <span className="text-meta font-semibold text-ink-tertiary tabular-nums shrink-0">{pct}%</span>
       </div>
     </div>
   );
@@ -361,7 +361,7 @@ function NotifCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             {!n.read && <span className="w-1.5 h-1.5 rounded-full bg-carbon shrink-0" />}
-            <span className="text-[13px] font-medium text-ink">{n.title}</span>
+            <span className="text-tab font-medium text-ink">{n.title}</span>
           </div>
           {n.detail && <div className="text-xs leading-normal text-ink-secondary mt-0.5">{n.detail}</div>}
 
@@ -372,13 +372,13 @@ function NotifCard({
                   e.stopPropagation();
                   setExpanded((v) => !v);
                 }}
-                className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-ink-tertiary hover:text-ink-secondary transition-colors"
+                className="mt-1 inline-flex items-center gap-1 text-meta font-medium text-ink-tertiary hover:text-ink-secondary transition-colors"
               >
                 <ChevronDown size={12} className={`transition-transform ${expanded ? "rotate-180" : ""}`} />
                 {expanded ? "Hide details" : "Show details"}
               </button>
               {expanded && (
-                <pre className="mt-1.5 rounded-md bg-ink/[0.04] border border-border-soft px-2.5 py-2 text-[11px] leading-relaxed font-mono text-ink-secondary whitespace-pre-wrap break-words">
+                <pre className="mt-1.5 rounded-md bg-ink/[0.04] border border-border-soft px-2.5 py-2 text-meta leading-relaxed font-mono text-ink-secondary whitespace-pre-wrap break-words">
                   {n.details}
                 </pre>
               )}
@@ -387,7 +387,7 @@ function NotifCard({
 
           {/* Footer: actions + timestamp */}
           <div className="mt-1.5 flex items-center gap-2">
-            <span className="text-[11px] text-ink-tertiary">{fmtTime(n.time, now)}</span>
+            <span className="text-meta text-ink-tertiary">{fmtTime(n.time, now)}</span>
             <div className="ml-auto flex items-center gap-1">
               {n.kind === "error" && (
                 <button
@@ -395,7 +395,7 @@ function NotifCard({
                     e.stopPropagation();
                     onRetry();
                   }}
-                  className="flex items-center gap-1 px-2 h-6 text-[11px] font-medium text-ink-secondary bg-paper/70 border border-border-soft rounded-md hover:bg-paper transition-colors"
+                  className="flex items-center gap-1 px-2 h-6 text-meta font-medium text-ink-secondary bg-paper/70 border border-border-soft rounded-md hover:bg-paper transition-colors"
                 >
                   <RotateCw size={11} /> Retry
                 </button>

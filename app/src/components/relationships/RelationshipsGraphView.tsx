@@ -344,7 +344,7 @@ export function RelationshipsGraphView() {
     <div ref={containerRef} className="relative flex-1 overflow-hidden bg-warm">
       {truncated > 0 && (
         <div
-          className="absolute top-2 left-1/2 -translate-x-1/2 z-10 px-3 py-1 rounded-md bg-paper/90 text-[11px] text-ink-tertiary shadow-sm"
+          className="absolute top-2 left-1/2 -translate-x-1/2 z-10 px-3 py-1 rounded-md bg-paper/90 text-meta text-ink-tertiary shadow-sm"
           style={{ border: "1px solid var(--border-soft)" }}
         >
           Showing the top {GRAPH_CAP} of {(GRAPH_CAP + truncated).toLocaleString()} relationships
@@ -652,7 +652,7 @@ export function RelationshipsGraphView() {
           >
             {/* The tooltip is HTML, not SVG — the one place in the graph where a
                 target's title can carry a real mark. */}
-            <div className="text-[11px] font-semibold truncate">
+            <div className="text-meta font-semibold truncate">
               <HighlightedText text={hover.node.title} query={query} />
             </div>
             <div className="text-[10px] opacity-80 truncate">
@@ -682,7 +682,7 @@ export function RelationshipsGraphView() {
         </button>
         <button
           onClick={resetView}
-          className="h-6 px-2 text-[11px] text-ink-secondary hover:text-ink cursor-pointer"
+          className="h-6 px-2 text-meta text-ink-secondary hover:text-ink cursor-pointer"
           aria-label="Reset view"
         >
           Reset

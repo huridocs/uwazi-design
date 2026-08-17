@@ -17,7 +17,7 @@ export function StatsCard({ label, value, accent }: StatsCardProps) {
       className="flex flex-col gap-1 px-4 py-3 rounded-lg bg-paper"
       style={{ border: "1px solid var(--border-primary)" }}
     >
-      <span className="flex items-center gap-1.5 text-[11px] font-medium text-ink-tertiary uppercase tracking-wider">
+      <span className="flex items-center gap-1.5 text-meta font-medium text-ink-tertiary uppercase tracking-wider">
         {accent && (
           <span
             className="w-1.5 h-1.5 rounded-[1px] shrink-0"

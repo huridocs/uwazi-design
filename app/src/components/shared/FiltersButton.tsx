@@ -17,7 +17,7 @@ export function FiltersButton({
   const h = size === "sm" ? "h-6" : "h-8";
   const px = size === "sm" ? "px-2" : "px-2.5";
   const iconSize = size === "sm" ? 11 : 12;
-  const textSize = size === "sm" ? "text-[11px]" : "text-xs";
+  const textSize = size === "sm" ? "text-meta" : "text-xs";
 
   return (
     <button

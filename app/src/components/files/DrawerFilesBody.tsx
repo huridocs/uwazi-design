@@ -150,7 +150,7 @@ export function DrawerFilesBody({
                 onClick={() =>
                   setAddFileTarget({ mode: "translation", groupId: group.id })
                 }
-                className="text-[11px] font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer mt-2 pl-1"
+                className="text-meta font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer mt-2 pl-1"
               >
                 + Add translation
               </button>

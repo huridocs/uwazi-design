@@ -269,7 +269,7 @@ export function ShareEntityModal({ open, onClose }: ShareEntityModalProps) {
                   }`}
                 />
                 {lookupError ? (
-                  <p className="mt-1 text-[11px] text-seal-label">{lookupError}</p>
+                  <p className="mt-1 text-meta text-seal-label">{lookupError}</p>
                 ) : null}
               </div>
               <button
@@ -281,7 +281,7 @@ export function ShareEntityModal({ open, onClose }: ShareEntityModalProps) {
               </button>
             </form>
             {showLookupHint ? (
-              <p className="text-[11px] text-ink-tertiary">
+              <p className="text-meta text-ink-tertiary">
                 {t(
                   "System",
                   "Lookup hint",

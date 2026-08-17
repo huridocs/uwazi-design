@@ -73,7 +73,7 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
                 role="tab"
                 aria-selected={activeId === tab.id}
                 onClick={() => onChange(tab.id)}
-                className={`relative flex items-center justify-center gap-1 px-2.5 md:px-3 py-1.5 text-[13px] font-medium transition-colors ${
+                className={`relative flex items-center justify-center gap-1 px-2.5 md:px-3 py-1.5 text-tab font-medium transition-colors ${
                   i === 0 ? "rounded-s-md" : ""
                 } ${i === tabs.length - 1 ? "rounded-e-md" : ""} ${
                   activeId === tab.id

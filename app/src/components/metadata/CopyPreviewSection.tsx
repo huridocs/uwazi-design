@@ -34,7 +34,7 @@ export function CopyPreviewSection({
         <h4 className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider">
           Copy from this entity
         </h4>
-        <span className="text-[11px] text-ink-tertiary">
+        <span className="text-meta text-ink-tertiary">
           {plan.matchCount} {plan.matchCount === 1 ? "field matches" : "fields match"}
         </span>
       </div>
@@ -42,7 +42,7 @@ export function CopyPreviewSection({
       {plan.matches.length > 0 ? (
         <ul className="space-y-1.5">
           {plan.matches.map((m) => (
-            <li key={m.id} className="flex items-start gap-1.5 text-[11px]">
+            <li key={m.id} className="flex items-start gap-1.5 text-meta">
               <Check size={12} className="shrink-0 mt-px text-success" aria-hidden />
               <span className="min-w-0 flex-1">
                 <span className="text-ink font-medium">{m.label}</span>
@@ -55,7 +55,7 @@ export function CopyPreviewSection({
           ))}
         </ul>
       ) : (
-        <p className="text-[11px] text-ink-tertiary">
+        <p className="text-meta text-ink-tertiary">
           Nothing on this entity lines up with the one you are editing.
         </p>
       )}
@@ -68,7 +68,7 @@ export function CopyPreviewSection({
           <ul className="space-y-1.5">
             {nearMisses.map((s) => (
               // Greyed, not hidden: a field that vanishes teaches nothing.
-              <li key={s.id} className="flex items-start gap-1.5 text-[11px] text-ink-tertiary">
+              <li key={s.id} className="flex items-start gap-1.5 text-meta text-ink-tertiary">
                 <Ban size={12} className="shrink-0 mt-px text-ink-muted" aria-hidden />
                 <span className="min-w-0 flex-1">
                   <span className="font-medium">{s.label}</span>

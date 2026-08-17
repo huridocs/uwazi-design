@@ -217,7 +217,7 @@ export function FileTable({
                   <span className="text-sm font-medium text-ink truncate">{file.name}</span>
                   {renderBadge(file)}
                 </div>
-                <div className="flex items-center gap-3 text-[11px] text-ink-tertiary">
+                <div className="flex items-center gap-3 text-meta text-ink-tertiary">
                   <span>{typeLabels[file.type]}</span>
                   <span>•</span>
                   <span dir="ltr">{file.size}</span>

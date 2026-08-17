@@ -92,7 +92,7 @@ export const EntityCard = memo(function EntityCard({
   const showConnections = info.connections !== false;
 
   const connectionBadge = showConnections && connections > 0 && (
-    <span className="inline-flex items-center gap-1 text-[11px] text-ink-tertiary tabular-nums" title={`${connections} connections`}>
+    <span className="inline-flex items-center gap-1 text-meta text-ink-tertiary tabular-nums" title={`${connections} connections`}>
       <Link2 size={11} className="text-ink-muted" />
       {connections.toLocaleString()}
     </span>
@@ -117,7 +117,7 @@ export const EntityCard = memo(function EntityCard({
         e.stopPropagation();
         onView(entity.id);
       }}
-      className="shrink-0 inline-flex items-center px-2.5 h-6 text-[11px] font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+      className="shrink-0 inline-flex items-center px-2.5 h-6 text-meta font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
     >
       View
     </button>
@@ -176,7 +176,7 @@ export const EntityCard = memo(function EntityCard({
             <div className="text-sm font-semibold text-ink truncate leading-snug">
               <HighlightedText text={entity.title} query={query} />
             </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-ink-tertiary min-w-0">
+            <div className="flex items-center gap-1.5 text-meta text-ink-tertiary min-w-0">
               {!showPreview && (
                 <span
                   className="w-1.5 h-1.5 rounded-[2px] shrink-0"

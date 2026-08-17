@@ -38,7 +38,7 @@ export function FieldMessage({
   return (
     <div
       id={id}
-      className={`flex items-center gap-1 text-[11px] leading-4 ${reserve ? "min-h-4" : ""} ${tone}`}
+      className={`flex items-center gap-1 text-meta leading-4 ${reserve ? "min-h-4" : ""} ${tone}`}
     >
       {issue &&
         (issue.severity === "error" ? (

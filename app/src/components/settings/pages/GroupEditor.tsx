@@ -62,7 +62,7 @@ export function GroupEditor({
                   className="flex items-center gap-3 rounded-lg border border-border bg-paper px-3 py-2.5 cursor-pointer hover:bg-warm transition-colors"
                 >
                   <Checkbox checked={members.includes(u.id)} onChange={() => toggle(u.id)} ariaLabel={u.username} />
-                  <span className="flex items-center justify-center w-7 h-7 rounded-md bg-vellum text-[11px] font-semibold text-ink-secondary uppercase shrink-0">
+                  <span className="flex items-center justify-center w-7 h-7 rounded-md bg-vellum text-meta font-semibold text-ink-secondary uppercase shrink-0">
                     {u.username.slice(0, 2)}
                   </span>
                   <span className="min-w-0 flex-1">

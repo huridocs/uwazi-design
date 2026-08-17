@@ -22,7 +22,7 @@ export function EntitiesTable({ entities }: EntitiesTableProps) {
     >
       {/* Header */}
       <div
-        className="grid items-center gap-3 px-4 h-10 shrink-0 text-[11px] font-semibold text-ink-tertiary uppercase tracking-wider"
+        className="grid items-center gap-3 px-4 h-10 shrink-0 text-meta font-semibold text-ink-tertiary uppercase tracking-wider"
         style={{
           gridTemplateColumns: cols,
           backgroundColor: "var(--bg-warm)",

@@ -32,7 +32,7 @@ export function ProgressBar({ value, color = "green", showLabel = false, size = 
         />
       </div>
       {showLabel && (
-        <span className="text-[11px] font-medium text-ink-tertiary tabular-nums shrink-0 w-8 text-right">
+        <span className="text-meta font-medium text-ink-tertiary tabular-nums shrink-0 w-8 text-right">
           {Math.round(clamped)}%
         </span>
       )}

@@ -422,7 +422,7 @@ export function LibraryFilters() {
               <span className="block text-sm font-bold text-ink">
                 {chainDefs[0].groupLabel}
               </span>
-              <p className="text-[11px] text-ink-tertiary leading-snug">
+              <p className="text-meta text-ink-tertiary leading-snug">
                 {chainDefs[0].groupDescription}
               </p>
               <ChainPathHelper defs={chainDefs} />
@@ -544,7 +544,7 @@ function ChainPathHelper({ defs }: { defs: ChainFacetDef[] }) {
         <span key={i} className="inline-flex items-center">
           {i > 0 && <ChevronRight size={10} className="text-ink-muted shrink-0" />}
           <span
-            className={`text-[11px] ${
+            className={`text-meta ${
               facetIdx.has(i) ? "font-semibold text-carbon" : "text-ink-tertiary"
             }`}
           >
@@ -718,7 +718,7 @@ function KeywordFacetCard({
           {selectedCount > 0 && (
             <button
               onClick={onClear}
-              className="inline-flex items-center gap-0.5 text-[11px] text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
+              className="inline-flex items-center gap-0.5 text-meta text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
             >
               <X size={11} />
               Clear
@@ -845,7 +845,7 @@ function DateRangeCard({
         {active && (
           <button
             onClick={onClear}
-            className="inline-flex items-center gap-0.5 text-[11px] text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
+            className="inline-flex items-center gap-0.5 text-meta text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
           >
             <X size={11} />
             Clear

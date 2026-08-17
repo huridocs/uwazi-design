@@ -30,7 +30,7 @@ export function ListInfoRow({
   rightSlot,
 }: ListInfoRowProps) {
   return (
-    <div className="px-3 pt-1 pb-2 flex items-center justify-between gap-2 flex-wrap text-[11px] text-ink-tertiary shrink-0">
+    <div className="px-3 pt-1 pb-2 flex items-center justify-between gap-2 flex-wrap text-meta text-ink-tertiary shrink-0">
       <div className="flex items-center gap-2 flex-wrap">
         {leadingSlot}
         {count != null && <span className="shrink-0">{count}</span>}

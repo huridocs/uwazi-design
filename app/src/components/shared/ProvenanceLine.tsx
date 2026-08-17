@@ -30,7 +30,7 @@ export function ProvenanceLine({
   return (
     <span
       className={`${inline ? "inline-flex" : "flex"} items-center gap-1 min-w-0
-        text-[11px] font-normal normal-case tracking-normal text-ink-tertiary ${className}`}
+        text-meta font-normal normal-case tracking-normal text-ink-tertiary ${className}`}
     >
       <CornerDownRight size={10} className="shrink-0 text-ink-muted" aria-hidden />
       <span className="shrink-0">{label}</span>

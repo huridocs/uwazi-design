@@ -106,7 +106,7 @@ export const Sizes: Story = {
     <div className="space-y-6 max-w-4xl">
       {FRAMES.map((frame) => (
         <div key={frame} className="space-y-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-tertiary">
+          <p className="text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
             {frame}
           </p>
           {FRAME_H[frame].map(({ size, h }) => (
@@ -151,7 +151,7 @@ export const FitModes: Story = {
     <div className="space-y-6 max-w-4xl">
       {FRAMES.map((frame) => (
         <div key={frame} className="space-y-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-tertiary">
+          <p className="text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
             {frame}
           </p>
           {(["auto", "cover", "contain"] as const).map((fit) => (

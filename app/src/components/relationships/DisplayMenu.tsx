@@ -28,7 +28,7 @@ const SORTS: { id: SortOrder; label: string }[] = [
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-3 px-1.5 py-1">
-      <span className="text-[11px] font-medium text-ink-secondary shrink-0">{label}</span>
+      <span className="text-meta font-medium text-ink-secondary shrink-0">{label}</span>
       {children}
     </div>
   );

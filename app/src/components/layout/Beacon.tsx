@@ -231,7 +231,7 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
                     <UwaziLoader size="xs" color="carbon" animate />
                   </span>
                   <span className="text-xs leading-normal font-medium text-ink truncate">{activityLabel}</span>
-                  <span className="ml-auto text-[11px] font-semibold text-ink-tertiary tabular-nums shrink-0">
+                  <span className="ml-auto text-meta font-semibold text-ink-tertiary tabular-nums shrink-0">
                     {pct}%
                   </span>
                 </div>
@@ -241,7 +241,7 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
                   <LeadIcon size={14} className={`${kindColor[topUnread.kind]} shrink-0`} />
                   <span className="text-xs leading-normal font-medium text-ink truncate">{topUnread.title}</span>
                   {moreCount > 0 && (
-                    <span className="ml-auto text-[11px] font-semibold text-ink-tertiary tabular-nums shrink-0">
+                    <span className="ml-auto text-meta font-semibold text-ink-tertiary tabular-nums shrink-0">
                       +{moreCount}
                     </span>
                   )}

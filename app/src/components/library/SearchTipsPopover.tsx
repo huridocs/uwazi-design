@@ -46,8 +46,8 @@ const BOOLEAN_TIP = {
 const ROW_CLASS =
   "w-full rounded-md px-2 py-2 text-left hover:bg-parchment transition-colors cursor-pointer " +
   "focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20";
-const EXAMPLE_CLASS = "whitespace-nowrap font-mono text-[11px] leading-snug text-ink";
-const PROSE_CLASS = "min-w-0 text-[11px] leading-snug text-ink-secondary";
+const EXAMPLE_CLASS = "whitespace-nowrap font-mono text-meta leading-snug text-ink";
+const PROSE_CLASS = "min-w-0 text-meta leading-snug text-ink-secondary";
 
 /** A small tag-style "tips" chip that sits inside the Library search box (after
  *  the clear button). Clicking opens the operator tips as a popover anchored

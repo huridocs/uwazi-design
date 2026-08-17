@@ -152,7 +152,7 @@ export function ManageRelationTypesModal() {
                 <span className="text-sm text-ink flex-1 truncate">
                   {tdef.label}
                 </span>
-                <span className="text-[11px] text-ink-tertiary tabular-nums shrink-0">
+                <span className="text-meta text-ink-tertiary tabular-nums shrink-0">
                   {usage} {usage === 1 ? "ref" : "refs"}
                 </span>
                 {isNoLabel ? (
@@ -169,7 +169,7 @@ export function ManageRelationTypesModal() {
                   <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => handleDelete(tdef.id)}
-                      className="px-2 py-1 text-[11px] font-medium text-white bg-seal-fill rounded-md hover:bg-seal-fill/90 transition-colors cursor-pointer"
+                      className="px-2 py-1 text-meta font-medium text-white bg-seal-fill rounded-md hover:bg-seal-fill/90 transition-colors cursor-pointer"
                     >
                       {usage > 0
                         ? t("System", "Delete & reassign")
@@ -177,7 +177,7 @@ export function ManageRelationTypesModal() {
                     </button>
                     <button
                       onClick={() => setPendingDelete(null)}
-                      className="px-2 py-1 text-[11px] font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
+                      className="px-2 py-1 text-meta font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
                     >
                       {t("System", "Cancel")}
                     </button>

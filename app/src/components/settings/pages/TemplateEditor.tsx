@@ -210,7 +210,7 @@ export function TemplateEditor({
             <div className="flex flex-col rounded-md overflow-hidden" style={{ border: "1px solid var(--border-soft)" }}>
               {/* Header row */}
               <div
-                className="grid items-center gap-3 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-ink-tertiary bg-warm"
+                className="grid items-center gap-3 px-3 py-2 text-meta font-semibold uppercase tracking-wide text-ink-tertiary bg-warm"
                 style={{ gridTemplateColumns: "1fr 9rem 6rem 5rem 4rem" }}
               >
                 <span>Property</span>
@@ -245,7 +245,7 @@ export function TemplateEditor({
                           <span className="truncate text-xs text-ink-tertiary shrink-0">· {detail}</span>
                         )}
                       </div>
-                      <span className="text-[11px] font-semibold text-ink-secondary bg-vellum px-2 py-0.5 rounded-md w-fit">
+                      <span className="text-meta font-semibold text-ink-secondary bg-vellum px-2 py-0.5 rounded-md w-fit">
                         {propertyTypeLabels[p.type]}
                       </span>
                       <div className="flex justify-center">
@@ -279,7 +279,7 @@ export function TemplateEditor({
         {/* Save-attempt summary — alert only on the attempt, not per keystroke.
             The footer keeps its fixed height; this rides the existing row. */}
         {saveBlocked && (
-          <span role="alert" className="text-[11px] font-medium text-seal-label">
+          <span role="alert" className="text-meta font-medium text-seal-label">
             {blockingSummary(1, 0)}
           </span>
         )}

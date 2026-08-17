@@ -43,7 +43,7 @@ export function ActiveFiltersSheet() {
         <button
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
-          className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide
+          className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-wide
             text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
         >
           <ChevronDown
@@ -60,7 +60,7 @@ export function ActiveFiltersSheet() {
         </button>
         <button
           onClick={() => clearAll()}
-          className="ms-auto px-2 h-6 text-[11px] font-medium rounded-md text-ink-tertiary
+          className="ms-auto px-2 h-6 text-meta font-medium rounded-md text-ink-tertiary
             hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
         >
           Clear all

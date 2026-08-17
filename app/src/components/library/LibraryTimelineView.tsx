@@ -90,7 +90,7 @@ export function LibraryTimelineView(props: Props) {
     <div className="flex flex-col h-full min-h-0">
       <div className="flex-1 min-h-0">{body}</div>
       {undated > 0 && (
-        <div className="shrink-0 pt-2 text-[11px] text-ink-muted">
+        <div className="shrink-0 pt-2 text-meta text-ink-muted">
           {undated.toLocaleString()} undated {undated === 1 ? "entity" : "entities"} not plotted.
         </div>
       )}
@@ -323,7 +323,7 @@ function TrackedList({
               {g.entities.length > GROUP_CAP && (
                 <button
                   onClick={() => setOpenGroups((s) => ({ ...s, [g.key]: !s[g.key] }))}
-                  className="mt-1.5 px-2 py-1 text-[11px] font-medium text-ink-tertiary hover:text-ink bg-warm hover:bg-parchment rounded-md transition-colors cursor-pointer"
+                  className="mt-1.5 px-2 py-1 text-meta font-medium text-ink-tertiary hover:text-ink bg-warm hover:bg-parchment rounded-md transition-colors cursor-pointer"
                 >
                   {open
                     ? "Show less"
@@ -635,7 +635,7 @@ function PeriodHeader({ bucket, active }: { bucket: TimeBucket; active: boolean 
       >
         {bucket.label}
       </span>
-      <span className="text-[11px] text-ink-tertiary tabular-nums">
+      <span className="text-meta text-ink-tertiary tabular-nums">
         {bucket.entities.length.toLocaleString()}
       </span>
       <span className="flex-1 h-px" style={{ backgroundColor: "var(--border-soft)" }} />
@@ -735,7 +735,7 @@ function SpineLayout({ dated, query, selectedId, onSelect }: LayoutProps) {
         }}
       />
       {dated.length > SPINE_CAP && (
-        <div className="py-3 text-center text-[11px] text-ink-muted">
+        <div className="py-3 text-center text-meta text-ink-muted">
           Plotting the first {SPINE_CAP} of {dated.length.toLocaleString()} — narrow the range to see
           the rest.
         </div>
@@ -818,7 +818,7 @@ function LanesLayout({ laneChart }: LayoutProps) {
                   style={{ backgroundColor: lane.color, opacity: laneOn ? 1 : 0.35 }}
                 />
                 <span
-                  className={`text-[11px] font-medium truncate ${laneOn ? "text-ink-secondary" : "text-ink-muted"}`}
+                  className={`text-meta font-medium truncate ${laneOn ? "text-ink-secondary" : "text-ink-muted"}`}
                 >
                   {lane.name}
                 </span>
@@ -880,7 +880,7 @@ function LanesLayout({ laneChart }: LayoutProps) {
           );
         })}
 
-        <p className="pt-3 text-[11px] text-ink-muted">
+        <p className="pt-3 text-meta text-ink-muted">
           A dot is one period of one template, sized by how many entities landed in it. Click one to
           filter the Library to that slice; click it again to clear.
         </p>

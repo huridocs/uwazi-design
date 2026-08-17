@@ -16,7 +16,7 @@ export function ViewButton({
   ariaLabel,
   size = "sm",
 }: ViewButtonProps) {
-  const dims = size === "md" ? "px-3 py-1.5 text-xs gap-1.5" : "px-2.5 py-1 text-[11px] gap-1";
+  const dims = size === "md" ? "px-3 py-1.5 text-xs gap-1.5" : "px-2.5 py-1 text-meta gap-1";
   const icon = size === "md" ? 13 : 11;
   return (
     <button

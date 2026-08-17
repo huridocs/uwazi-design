@@ -419,7 +419,7 @@ export function FiltersDrawerDemo() {
                 setRelSel({});
                 setDescSel({});
               }}
-              className="text-[11px] font-medium text-ink-secondary hover:text-ink cursor-pointer"
+              className="text-meta font-medium text-ink-secondary hover:text-ink cursor-pointer"
             >
               Clear all filters
             </button>
@@ -854,7 +854,7 @@ function GroupByPicker({
   );
   const active = visible.find((o) => o.id === value) ?? visible[0];
   return (
-    <label className="flex items-center gap-1 h-8 px-2 text-[11px] font-medium bg-warm border border-border rounded-md text-ink-secondary cursor-pointer">
+    <label className="flex items-center gap-1 h-8 px-2 text-meta font-medium bg-warm border border-border rounded-md text-ink-secondary cursor-pointer">
       <span className="text-ink-tertiary">{label}:</span>
       <select
         value={value}

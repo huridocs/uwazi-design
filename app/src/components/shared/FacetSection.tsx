@@ -141,13 +141,13 @@ export function FacetSection({
         {selectedCount > 0 && onClear ? (
           <button
             onClick={onClear}
-            className="shrink-0 inline-flex items-center gap-0.5 text-[11px] text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
+            className="shrink-0 inline-flex items-center gap-0.5 text-meta text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
           >
             <X size={11} />
             Clear
           </button>
         ) : (
-          <span className="shrink-0 text-[11px] text-ink-tertiary tabular-nums">
+          <span className="shrink-0 text-meta text-ink-tertiary tabular-nums">
             {total}
           </span>
         )}
@@ -237,7 +237,7 @@ export function FacetSection({
                   >
                     {label(id)}
                   </span>
-                  <span className="text-[11px] text-ink-tertiary tabular-nums shrink-0">
+                  <span className="text-meta text-ink-tertiary tabular-nums shrink-0">
                     {count}
                   </span>
                 </label>
@@ -270,7 +270,7 @@ export function FacetSection({
               <span className="text-xs italic text-ink-tertiary truncate flex-1">
                 {noLabelText}
               </span>
-              <span className="text-[11px] text-ink-tertiary tabular-nums shrink-0">
+              <span className="text-meta text-ink-tertiary tabular-nums shrink-0">
                 {noLabelEntry[1]}
               </span>
             </label>

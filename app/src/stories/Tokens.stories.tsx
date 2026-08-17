@@ -14,8 +14,8 @@ function Swatch({ label, varName, utility, border }: { label: string; varName: s
       />
       <div className="min-w-0 leading-tight">
         <span className="block text-sm font-medium text-ink">{label}</span>
-        <code className="block text-[11px] text-ink-tertiary">{varName}</code>
-        <code className="block text-[11px] text-carbon">{utility}</code>
+        <code className="block text-meta text-ink-tertiary">{varName}</code>
+        <code className="block text-meta text-carbon">{utility}</code>
       </div>
     </div>
   );
@@ -24,7 +24,7 @@ function Swatch({ label, varName, utility, border }: { label: string; varName: s
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="space-y-3">
-      <h3 className="text-[11px] font-semibold uppercase tracking-wider text-ink-tertiary">{title}</h3>
+      <h3 className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary">{title}</h3>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-4">{children}</div>
     </section>
   );

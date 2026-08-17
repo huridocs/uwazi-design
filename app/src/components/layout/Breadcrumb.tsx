@@ -7,7 +7,7 @@ interface BreadcrumbProps {
 export function Breadcrumb({ segments }: BreadcrumbProps) {
   const onlyOne = segments.length === 1;
   return (
-    <nav className="flex items-center gap-1.5 text-[13px]" aria-label="Breadcrumb">
+    <nav className="flex items-center gap-1.5 text-tab" aria-label="Breadcrumb">
       {segments.map((seg, i) => {
         const isLast = i === segments.length - 1;
         // Parent segments: carbon link. Sole segment acts as a page title (also carbon).

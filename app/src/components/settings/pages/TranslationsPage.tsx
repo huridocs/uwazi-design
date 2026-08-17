@@ -31,7 +31,7 @@ export function TranslationsPage() {
       header: "Type",
       width: "9rem",
       cell: (c) => (
-        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md w-fit ${typeStyle[c.type]}`}>
+        <span className={`text-meta font-semibold px-2 py-0.5 rounded-md w-fit ${typeStyle[c.type]}`}>
           {c.type}
         </span>
       ),

@@ -45,7 +45,7 @@ export function UsersPage() {
       header: "User",
       cell: (u) => (
         <div className="flex items-center gap-2.5">
-          <span className="flex items-center justify-center w-7 h-7 rounded-md bg-vellum text-[11px] font-semibold text-ink-secondary uppercase shrink-0">
+          <span className="flex items-center justify-center w-7 h-7 rounded-md bg-vellum text-meta font-semibold text-ink-secondary uppercase shrink-0">
             {u.username.slice(0, 2)}
           </span>
           <div className="min-w-0">
@@ -60,7 +60,7 @@ export function UsersPage() {
       header: "Role",
       width: "8rem",
       cell: (u) => (
-        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md w-fit capitalize ${roleStyle[u.role]}`}>
+        <span className={`text-meta font-semibold px-2 py-0.5 rounded-md w-fit capitalize ${roleStyle[u.role]}`}>
           {u.role}
         </span>
       ),
@@ -74,7 +74,7 @@ export function UsersPage() {
         ) : (
           <div className="flex flex-wrap gap-1">
             {u.groups.map((g) => (
-              <span key={g} className="text-[11px] text-ink-secondary bg-warm px-1.5 py-0.5 rounded w-fit">
+              <span key={g} className="text-meta text-ink-secondary bg-warm px-1.5 py-0.5 rounded w-fit">
                 {g}
               </span>
             ))}

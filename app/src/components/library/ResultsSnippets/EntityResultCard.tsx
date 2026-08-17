@@ -109,7 +109,7 @@ export function EntityResultCard({
                 (`fullTextTotal`), so the card never passes its cap off as the
                 whole document. Indented to the spine's text column. */}
             {canShowAll && (
-              <p dir="ltr" className="ps-4 px-2 text-[11px] text-ink-tertiary">
+              <p dir="ltr" className="ps-4 px-2 text-meta text-ink-tertiary">
                 <span className="tabular-nums">
                   {shown.toLocaleString()} of {total.toLocaleString()}
                 </span>{" "}

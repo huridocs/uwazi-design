@@ -48,7 +48,7 @@ export function DocumentRendition({ format }: { format: DocumentFormat }) {
               return (
                 <h2
                   key={i}
-                  className="text-[13px] font-semibold uppercase tracking-wider text-ink-secondary text-center mt-7 mb-4"
+                  className="text-tab font-semibold uppercase tracking-wider text-ink-secondary text-center mt-7 mb-4"
                 >
                   {block.text}
                 </h2>

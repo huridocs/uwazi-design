@@ -18,7 +18,7 @@ const STATUSES: { label: string; varName: string; tintVar: string }[] = [
 function Badge({ label, varName, tintVar, mixed }: { label: string; varName: string; tintVar: string; mixed: boolean }) {
   return (
     <span
-      className="inline-flex w-fit px-2 py-0.5 text-[11px] font-semibold rounded-md"
+      className="inline-flex w-fit px-2 py-0.5 text-meta font-semibold rounded-md"
       style={{
         backgroundColor: `var(${tintVar})`,
         color: mixed
@@ -37,10 +37,10 @@ function ComparisonSheet() {
       <div className="space-y-3 text-sm">
         <div className="flex items-center gap-4">
           <span className="w-24 shrink-0" />
-          <span className="flex-1 text-[11px] font-semibold uppercase tracking-wider text-ink-tertiary">
+          <span className="flex-1 text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
             Current (locked)
           </span>
-          <span className="flex-1 text-[11px] font-semibold uppercase tracking-wider text-ink-tertiary">
+          <span className="flex-1 text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
             Proposed (65% + ink)
           </span>
         </div>
@@ -57,7 +57,7 @@ function ComparisonSheet() {
         ))}
       </div>
       <div className="space-y-1.5 border-t border-border/60 pt-4">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-ink-tertiary block">
+        <span className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary block">
           Inline status text (e.g. "3 failed" in tables)
         </span>
         <p className="text-xs">

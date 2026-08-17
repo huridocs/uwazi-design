@@ -330,7 +330,7 @@ export function AgentModal() {
           <div className="flex items-center gap-1.5 flex-wrap px-5 pb-2.5">
             <Dropdown
               trigger={
-                <span className="inline-flex items-center gap-1 h-6 px-1.5 text-[11px] font-medium text-ink-secondary rounded-md hover:bg-warm transition-colors">
+                <span className="inline-flex items-center gap-1 h-6 px-1.5 text-meta font-medium text-ink-secondary rounded-md hover:bg-warm transition-colors">
                   <span className="text-ink-tertiary">Context</span>
                   <span className="text-ink font-semibold">{scopeText}</span>
                   <ChevronDown size={11} className="text-ink-muted" />
@@ -367,7 +367,7 @@ export function AgentModal() {
                 {i > 0 && <ChevronRight size={12} className="text-ink-muted shrink-0" />}
                 <span
                   title={`${chip.label}: ${chip.value}`}
-                  className={`inline-flex items-center gap-1 h-6 ps-2 text-[11px] rounded-md bg-carbon-tint/50 ${
+                  className={`inline-flex items-center gap-1 h-6 ps-2 text-meta rounded-md bg-carbon-tint/50 ${
                     chip.uid ? "pe-0.5" : "pe-2"
                   }`}
                 >
@@ -389,7 +389,7 @@ export function AgentModal() {
             {/* Dynamic chaining: append a deeper scope step, a facet, or an item. */}
             <Dropdown
               trigger={
-                <span className="inline-flex items-center gap-0.5 h-6 px-1.5 text-[11px] font-medium text-ink-tertiary rounded-md hover:bg-warm hover:text-ink-secondary transition-colors">
+                <span className="inline-flex items-center gap-0.5 h-6 px-1.5 text-meta font-medium text-ink-tertiary rounded-md hover:bg-warm hover:text-ink-secondary transition-colors">
                   <Plus size={12} /> Add
                 </span>
               }
@@ -430,7 +430,7 @@ export function AgentModal() {
                   <button
                     key={s}
                     onClick={() => send(s)}
-                    className="px-3 py-2 text-[13px] text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-lg transition-colors text-start"
+                    className="px-3 py-2 text-tab text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-lg transition-colors text-start"
                   >
                     {s}
                   </button>
@@ -572,7 +572,7 @@ function AddMenu({
         </div>
         <button
           onClick={() => { setMode("root"); setQ(""); }}
-          className="w-full px-3 py-1.5 text-[11px] text-ink-tertiary hover:bg-warm border-t border-border-soft text-start"
+          className="w-full px-3 py-1.5 text-meta text-ink-tertiary hover:bg-warm border-t border-border-soft text-start"
         >
           ← Back
         </button>

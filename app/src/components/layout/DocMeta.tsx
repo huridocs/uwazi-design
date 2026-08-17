@@ -104,7 +104,7 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
         // nothing else; the Files tab names the document there.
         <span
           title={docName}
-          className="hidden md:block shrink max-w-[18rem] truncate text-[11px] text-ink-tertiary"
+          className="hidden md:block shrink max-w-[18rem] truncate text-meta text-ink-tertiary"
         >
           {docName}
         </span>

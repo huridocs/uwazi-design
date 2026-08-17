@@ -82,7 +82,7 @@ export function SearchBar({ rightSlot, inlineSlot }: SearchBarProps = {}) {
             <div
               role="dialog"
               aria-label="Search tips"
-              className="absolute right-0 top-full mt-1 w-64 rounded-md bg-paper p-3 text-[11px] leading-snug"
+              className="absolute right-0 top-full mt-1 w-64 rounded-md bg-paper p-3 text-meta leading-snug"
               style={{
                 border: "1px solid var(--border-primary)",
                 boxShadow: "0 6px 18px rgba(0,0,0,0.12)",

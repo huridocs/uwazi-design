@@ -249,7 +249,7 @@ export function ResultsMainView({
             below are being read. */}
         <p
           aria-hidden={hiddenByFilters === 0}
-          className={`px-3 pb-2 text-[11px] text-ink-tertiary ${
+          className={`px-3 pb-2 text-meta text-ink-tertiary ${
             hiddenByFilters === 0 ? "invisible" : ""
           }`}
         >
@@ -318,7 +318,7 @@ export function ResultsMainView({
           </div>
         )}
         {capped && visible >= entities.length && (
-          <p className="py-4 text-center text-[11px] text-ink-muted">
+          <p className="py-4 text-center text-meta text-ink-muted">
             Showing every result for this query.
           </p>
         )}
@@ -386,7 +386,7 @@ function GroupedBody({
                 <HighlightedText text={entity.title} query={query} />
               </button>
               <CountBadge count={snippets.count} />
-              <span className="ms-auto shrink-0 flex items-center gap-2 text-[11px] text-ink-tertiary">
+              <span className="ms-auto shrink-0 flex items-center gap-2 text-meta text-ink-tertiary">
                 {type && <span>{type.name}</span>}
                 {entity.country && (
                   <>
@@ -468,7 +468,7 @@ function GroupedBody({
                         type="button"
                         onClick={() => onToggleShowAll(entity.id)}
                         aria-expanded={expanded}
-                        className="mt-1 self-start px-1 text-[11px] font-medium text-carbon
+                        className="mt-1 self-start px-1 text-meta font-medium text-carbon
                           hover:underline cursor-pointer focus-visible:outline-none
                           focus-visible:ring-1 focus-visible:ring-carbon/40 rounded-sm"
                       >
@@ -779,7 +779,7 @@ function PassagesBody({
                     quiet: this layout ranks passages, so the entity stays
                     secondary — but it now has the row's width to be legible in
                     rather than a 15rem track that truncated most case names. */}
-                <span className="mt-1 flex items-center gap-1.5 min-w-0 text-[11px]">
+                <span className="mt-1 flex items-center gap-1.5 min-w-0 text-meta">
                   <span
                     className="w-1.5 h-1.5 rounded-[2px] shrink-0"
                     style={{ backgroundColor: color }}
@@ -834,7 +834,7 @@ function PassagesBody({
         })}
       </div>
       {(notShown > 0 || titleOnly > 0) && (
-        <p className="pt-3 text-center text-[11px] text-ink-muted">
+        <p className="pt-3 text-center text-meta text-ink-muted">
           {notShown > 0 && (
             <>
               {notShown.toLocaleString()} further matching {notShown === 1 ? "page" : "pages"}{" "}
@@ -966,7 +966,7 @@ function SpineBody({
         }}
       />
       {undated > 0 && (
-        <p className="pt-3 text-center text-[11px] text-ink-muted">
+        <p className="pt-3 text-center text-meta text-ink-muted">
           {undated.toLocaleString()} matching {undated === 1 ? "result carries" : "results carry"} no
           date and {undated === 1 ? "is" : "are"} not plotted.
         </p>
@@ -1071,7 +1071,7 @@ function PassageRow({
       {tag && (
         <bdi
           dir="ltr"
-          className="ms-1.5 whitespace-nowrap text-[11px] font-semibold text-ink-tertiary tabular-nums"
+          className="ms-1.5 whitespace-nowrap text-meta font-semibold text-ink-tertiary tabular-nums"
         >
           {tag}
         </bdi>

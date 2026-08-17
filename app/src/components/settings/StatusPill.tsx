@@ -11,6 +11,6 @@ const styles: Record<ExtractorStatus, { cls: string; label: string }> = {
 export function StatusPill({ status }: { status: ExtractorStatus }) {
   const { cls, label } = styles[status];
   return (
-    <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md w-fit ${cls}`}>{label}</span>
+    <span className={`text-meta font-semibold px-2 py-0.5 rounded-md w-fit ${cls}`}>{label}</span>
   );
 }

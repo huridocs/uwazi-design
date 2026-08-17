@@ -55,7 +55,7 @@ export function RollupChip({ summary }: { summary: { text: string; title: string
   return (
     <span
       title={summary.title}
-      className="inline-flex w-fit items-center gap-1 rounded-md bg-carbon-tint px-1.5 py-0.5 text-[11px] font-medium text-carbon"
+      className="inline-flex w-fit items-center gap-1 rounded-md bg-carbon-tint px-1.5 py-0.5 text-meta font-medium text-carbon"
     >
       <Sigma size={10} className="shrink-0" aria-hidden />
       {summary.text}
@@ -121,7 +121,7 @@ export function RelationCaption({
   inheritLabels?: string[];
 }) {
   return (
-    <p className="text-[11px] text-ink-tertiary -mt-1">
+    <p className="text-meta text-ink-tertiary -mt-1">
       via <span className="text-carbon font-medium">{relationLabel}</span>
       {inheritLabels && inheritLabels.length > 0 ? (
         <> · inherits {inheritLabels.join(", ")}</>

@@ -69,11 +69,11 @@ export function DrawerActionBar({ activeTab }: DrawerActionBarProps) {
       {activeTab === "references" && (
         <>
           <div className="flex items-center gap-1">
-            <span className="text-[11px] text-ink-tertiary">To add references check this</span>
+            <span className="text-meta text-ink-tertiary">To add references check this</span>
             <button
               type="button"
               onClick={() => notify("Opening references guide")}
-              className="text-[11px] font-medium text-carbon cursor-pointer hover:underline"
+              className="text-meta font-medium text-carbon cursor-pointer hover:underline"
             >
               guide here.
             </button>

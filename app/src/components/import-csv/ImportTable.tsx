@@ -82,12 +82,12 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
                     <span className="text-sm font-medium text-ink truncate">{entry.filename}</span>
                     <StatusBadge status={entry.status} />
                   </div>
-                  <div className="text-[11px] text-ink-tertiary truncate mb-1.5">{entry.template}</div>
+                  <div className="text-meta text-ink-tertiary truncate mb-1.5">{entry.template}</div>
                   <div className="flex items-center gap-2 mb-1.5">
                     <div className="flex-1"><ProgressBar value={entry.progress} color={progressColor(entry.status)} /></div>
-                    <span dir="ltr" className="text-[11px] text-ink-tertiary tabular-nums">{progressLabel(entry)}</span>
+                    <span dir="ltr" className="text-meta text-ink-tertiary tabular-nums">{progressLabel(entry)}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-[11px] text-ink-tertiary">
+                  <div className="flex items-center gap-3 text-meta text-ink-tertiary">
                     <span><span className="tabular-nums">{entry.entities.toLocaleString()}</span> entities</span>
                     {entry.failed > 0 && (
                       <span className="text-seal-label font-medium">
@@ -99,7 +99,7 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
                 </div>
                 <button
                   onClick={(e) => { e.stopPropagation(); onView(entry.id); }}
-                  className="relative px-2.5 py-1 text-[11px] font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors shrink-0"
+                  className="relative px-2.5 py-1 text-meta font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors shrink-0"
                 >
                   View
                 </button>
@@ -116,7 +116,7 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
     <>
       {/* Header */}
       <div
-        className="grid items-center gap-3 px-4 h-10 shrink-0 text-[11px] font-semibold text-ink-tertiary uppercase tracking-wider bg-warm"
+        className="grid items-center gap-3 px-4 h-10 shrink-0 text-meta font-semibold text-ink-tertiary uppercase tracking-wider bg-warm"
         style={{
           gridTemplateColumns: cols,
           borderBottom: "1px solid var(--border-primary)",
@@ -173,7 +173,7 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
                 <div className="flex-1 min-w-0">
                   <ProgressBar value={entry.progress} color={progressColor(entry.status)} />
                 </div>
-                <span dir="ltr" className="text-[11px] text-ink-tertiary tabular-nums shrink-0">{progressLabel(entry)}</span>
+                <span dir="ltr" className="text-meta text-ink-tertiary tabular-nums shrink-0">{progressLabel(entry)}</span>
               </div>
 
               <span className="text-xs text-ink-tertiary tabular-nums">
@@ -193,7 +193,7 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
                     if (entry.status !== "pending") onView(entry.id);
                   }}
                   disabled={entry.status === "pending"}
-                  className="px-2.5 py-1 text-[11px] font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors disabled:text-ink-muted disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                  className="px-2.5 py-1 text-meta font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors disabled:text-ink-muted disabled:hover:bg-transparent disabled:cursor-not-allowed"
                 >
                   View
                 </button>

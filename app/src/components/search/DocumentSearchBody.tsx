@@ -127,7 +127,7 @@ export function DocumentSearchBody() {
         </Centered>
       ) : (
         <div className="flex-1 overflow-auto px-3 py-3 flex flex-col gap-3">
-          <span dir="ltr" className="px-1 text-[11px] text-ink-tertiary">
+          <span dir="ltr" className="px-1 text-meta text-ink-tertiary">
             {snippets.count.toLocaleString()} {snippets.count === 1 ? "match" : "matches"} for{" "}
             <span className="font-medium text-ink">“{trimmed}”</span>
           </span>

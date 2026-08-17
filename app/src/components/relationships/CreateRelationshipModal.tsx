@@ -231,7 +231,7 @@ export function CreateRelationshipModal() {
                 const type = getEntityType(typeId);
                 return (
                   <div key={typeId}>
-                    <h4 className="text-[11px] font-medium text-ink-muted uppercase tracking-wider mb-2">
+                    <h4 className="text-meta font-medium text-ink-muted uppercase tracking-wider mb-2">
                       {type?.name}
                     </h4>
                     <div className="space-y-1">
@@ -284,7 +284,7 @@ export function CreateRelationshipModal() {
                     focus:outline-none focus:ring-2 focus:ring-carbon/20"
                   autoFocus
                 />
-                <p className="text-[11px] text-ink-tertiary mt-1">
+                <p className="text-meta text-ink-tertiary mt-1">
                   {t("System", "Pre-filled from your selection. Edit as needed.")}
                 </p>
               </div>

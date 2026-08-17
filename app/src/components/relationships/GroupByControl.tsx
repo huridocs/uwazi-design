@@ -47,7 +47,7 @@ export function GroupByControl({
         aria-expanded={open}
         aria-haspopup="listbox"
         disabled={disabled}
-        className={`flex items-center gap-1 ${h} px-2 text-[11px] font-medium bg-warm border border-border rounded-md transition-colors ${
+        className={`flex items-center gap-1 ${h} px-2 text-meta font-medium bg-warm border border-border rounded-md transition-colors ${
           disabled
             ? "text-ink-muted opacity-60 cursor-not-allowed"
             : "text-ink-secondary hover:bg-parchment hover:text-ink cursor-pointer"

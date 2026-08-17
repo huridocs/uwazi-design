@@ -917,15 +917,15 @@ export function MetadataEditBody({
           on the save attempt, never per keystroke. */}
       <div className="flex items-center justify-end h-6 px-4 bg-paper shrink-0">
         {saveState === "failed" ? (
-          <span role="alert" className="text-[11px] font-medium text-seal-label">
+          <span role="alert" className="text-meta font-medium text-seal-label">
             Save failed: the server rejected the update.
           </span>
         ) : saveBlocked ? (
-          <span role="alert" className="text-[11px] font-medium text-seal-label">
+          <span role="alert" className="text-meta font-medium text-seal-label">
             {blockingSummary(errorCount, warningCount)} — fix the highlighted fields.
           </span>
         ) : warningCount > 0 ? (
-          <span className="text-[11px] text-warning">
+          <span className="text-meta text-warning">
             {warningCount} warning{warningCount === 1 ? "" : "s"} — saving is still allowed.
           </span>
         ) : null}
@@ -942,7 +942,7 @@ export function MetadataEditBody({
             the same rule Uwazi's `.copy-from-btn` follows. */}
         {stage ? (
           <>
-            <span className="me-auto text-[11px] text-ink-tertiary">
+            <span className="me-auto text-meta text-ink-tertiary">
               {checkedCount} of {stage.units.length} staged from
               <span className="ms-1 align-middle">
                 <EntityPill typeId={stage.source.typeId} label={stage.source.title} />

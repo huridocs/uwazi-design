@@ -67,7 +67,7 @@ function ColorSwatch({ hex, name, cssVar, tw }: { hex: string; name: string; css
         title={`Click to copy ${hex}`}
       />
       <CopyText text={tw}>
-        <span className="text-[11px] font-medium text-ink hover:text-carbon transition-colors">{name}</span>
+        <span className="text-meta font-medium text-ink hover:text-carbon transition-colors">{name}</span>
       </CopyText>
       <CopyText text={`var(${cssVar})`}>
         <span className="text-[10px] font-mono text-ink-muted hover:text-carbon transition-colors">{cssVar}</span>
@@ -122,7 +122,7 @@ function DarkSwatch({ hex, name, cssVar, tw }: { hex: string; name: string; cssV
         title={`Click to copy ${hex}`}
       />
       <CopyText text={tw}>
-        <span className="text-[11px] font-medium hover:opacity-70 transition-colors" style={{ color: "#D4CDB8" }}>{name}</span>
+        <span className="text-meta font-medium hover:opacity-70 transition-colors" style={{ color: "#D4CDB8" }}>{name}</span>
       </CopyText>
       <CopyText text={`var(${cssVar})`}>
         <span className="text-[10px] font-mono transition-colors" style={{ color: "#6B6B6B" }}>{cssVar}</span>

@@ -80,7 +80,7 @@ export function SettingsNav({
             // It steps up to vellum + semibold: a real state, not a hover echo.
             // (Still no left-border accent, and the icon keeps its colour — the
             // background carries the state.)
-            const cls = `flex items-center gap-2.5 w-full px-5 py-2 text-[13px] text-left transition-colors ${
+            const cls = `flex items-center gap-2.5 w-full px-5 py-2 text-tab text-left transition-colors ${
               active
                 ? "bg-vellum text-ink font-semibold"
                 : "font-medium text-ink-secondary hover:bg-warm hover:text-ink"
@@ -150,7 +150,7 @@ export function SettingsNav({
         href={settingsDocumentation.external}
         target="_blank"
         rel="noopener noreferrer"
-        className="shrink-0 flex items-center gap-2.5 w-full px-5 h-12 text-[13px] font-medium text-left text-ink-secondary hover:bg-warm hover:text-ink transition-colors"
+        className="shrink-0 flex items-center gap-2.5 w-full px-5 h-12 text-tab font-medium text-left text-ink-secondary hover:bg-warm hover:text-ink transition-colors"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
         <settingsDocumentation.icon size={15} className="text-ink-tertiary shrink-0" />

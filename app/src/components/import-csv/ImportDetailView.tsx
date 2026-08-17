@@ -224,7 +224,7 @@ function StatBox({
       className="rounded-md bg-paper px-4 py-3"
       style={{ border: "1px solid var(--border-primary)" }}
     >
-      <div className="text-[11px] text-ink-tertiary mb-1">{label}</div>
+      <div className="text-meta text-ink-tertiary mb-1">{label}</div>
       <div className={`text-2xl font-bold tabular-nums ${valueClass}`}>
         {value.toLocaleString()}
       </div>

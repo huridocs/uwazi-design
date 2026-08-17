@@ -37,7 +37,7 @@ export function MetadataItemsTable({ items }: { items: MetadataItem[] }) {
                   label reads level with the pill's label, not its box). */}
               <th
                 scope="row"
-                className="w-0 py-1.5 pr-6 text-start align-baseline font-semibold text-[11px] uppercase tracking-wider text-ink-tertiary whitespace-nowrap"
+                className="w-0 py-1.5 pr-6 text-start align-baseline font-semibold text-meta uppercase tracking-wider text-ink-tertiary whitespace-nowrap"
               >
                 {item.label}
               </th>

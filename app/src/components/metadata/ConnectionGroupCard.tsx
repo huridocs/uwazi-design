@@ -36,7 +36,7 @@ export function ConnectionGroupCard({ group, span = "full" }: { group: Connectio
       <div className="overflow-x-auto -mx-1">
         <table className="w-full text-sm border-collapse">
           <thead>
-            <tr className="text-[11px] font-semibold uppercase tracking-wider text-ink-tertiary">
+            <tr className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
               {group.columns.map((c, i) => (
                 <th key={c.fieldId} className="py-1.5 px-3 text-start whitespace-nowrap align-top">
                   <span className="flex flex-col items-start gap-1">

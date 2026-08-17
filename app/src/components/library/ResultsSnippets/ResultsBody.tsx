@@ -239,7 +239,7 @@ export const ResultsBody = memo(function ResultsBody({
             The height is reserved; only the contents toggle. */}
         <div
           aria-hidden={hiddenByFilters === 0}
-          className={`px-3 pb-2 text-[11px] text-ink-tertiary ${
+          className={`px-3 pb-2 text-meta text-ink-tertiary ${
             hiddenByFilters === 0 ? "invisible" : ""
           }`}
         >

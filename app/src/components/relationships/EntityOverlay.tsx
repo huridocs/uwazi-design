@@ -241,7 +241,7 @@ export function EntityOverlay() {
                 {editableProps.length > 0 && (
                   <button
                     onClick={() => setEditingProps((v) => !v)}
-                    className="text-[11px] font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
+                    className="text-meta font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
                   >
                     {editingProps ? "Done" : "Edit"}
                   </button>
@@ -262,7 +262,7 @@ export function EntityOverlay() {
                       </div>
                     ))}
                   </div>
-                  <p className="flex items-start gap-1.5 text-[11px] text-ink-tertiary">
+                  <p className="flex items-start gap-1.5 text-meta text-ink-tertiary">
                     <Info size={12} className="text-carbon shrink-0 mt-px" />
                     Editing the source updates inherited values.
                   </p>

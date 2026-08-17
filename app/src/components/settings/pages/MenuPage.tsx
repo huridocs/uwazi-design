@@ -45,7 +45,7 @@ export function MenuPage() {
         m.url ? (
           <span dir="ltr" className="text-xs text-ink-tertiary truncate">{m.url}</span>
         ) : (
-          <span className="text-[11px] font-semibold text-ink-secondary bg-warm px-2 py-0.5 rounded-md w-fit">Group</span>
+          <span className="text-meta font-semibold text-ink-secondary bg-warm px-2 py-0.5 rounded-md w-fit">Group</span>
         ),
     },
     {

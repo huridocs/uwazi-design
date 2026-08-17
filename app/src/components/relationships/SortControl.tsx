@@ -24,7 +24,7 @@ export function SortControl({ size = "md" }: { size?: "sm" | "md" }) {
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-haspopup="listbox"
-        className={`flex items-center gap-1 ${h} px-2 text-[11px] font-medium text-ink-secondary bg-warm border border-border rounded-md hover:bg-parchment hover:text-ink transition-colors cursor-pointer`}
+        className={`flex items-center gap-1 ${h} px-2 text-meta font-medium text-ink-secondary bg-warm border border-border rounded-md hover:bg-parchment hover:text-ink transition-colors cursor-pointer`}
       >
         <span className="text-ink-tertiary">Sort:</span>
         <span>{active?.label}</span>
