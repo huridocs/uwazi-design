@@ -7,8 +7,6 @@ import { focusMetadataFieldAtom } from "../../atoms/library";
 import type { MetadataField, RelationshipMetadataField } from "../../data/metadata";
 import { specInherits } from "../../utils/inheritance";
 import { MetadataCard } from "./MetadataCard";
-import { DocumentCard } from "./DocumentCard";
-import { ImageCard } from "./ImageCard";
 import { RelationshipCards } from "./RelationshipCards";
 import { fieldItem, connectionItem, isLongField, type MetadataItem } from "./items";
 
@@ -118,11 +116,13 @@ export function MetadataRecord({
 
   const hasRelCards = relFields.some((f) => specInherits(f) || !!f.connectionKey);
 
-  // Don't say "no metadata" when there's a document or a picture to show: the
-  // cards below ARE metadata, and an entity that is a PDF — or a painting — and
-  // little else isn't empty.
+  // The document and the picture left this view — metadata is metadata, and
+  // Files owns the renditions — so a file- or image-bearing entity no longer has
+  // anything of its own down here. Emptiness is now decided by the fields alone;
+  // the old carve-out for `profile.files` / `profile.image` would just leave a
+  // PDF-and-little-else entity staring at a blank pane.
   const empty = longItems.length === 0 && shortItems.length === 0 && !hasRelCards;
-  if (empty && !(profile.files ?? []).length && !profile.image) {
+  if (empty) {
     return (
       <div className="flex items-center justify-center py-10 text-center">
         <p className="text-xs text-ink-muted">No metadata for this entity yet.</p>
@@ -132,11 +132,6 @@ export function MetadataRecord({
 
   return (
     <div ref={rootRef} className="space-y-3">
-      {/* The subject leads: it's the thing the record is about. Exactly one of
-          these draws — a PDF-bearing entity has no `image`, and an image entity's
-          file is a picture, which `DocumentCard` declines. */}
-      <ImageCard profile={profile} />
-      <DocumentCard profile={profile} language={language} />
       {longItems.map((item) => (
         <div key={item.id} data-field-key={item.id}>
           <MetadataCard title={item.label}>{item.content}</MetadataCard>
