@@ -305,7 +305,7 @@ function renderInline(
 const HEADING_CLASS: Record<number, string> = {
   1: "text-2xl leading-snug font-bold text-ink mt-0 mb-3",
   2: "text-lg leading-normal font-bold text-ink mt-8 mb-3 pb-1.5 border-b border-border-soft",
-  3: "text-[0.9375rem] font-semibold text-ink mt-6 mb-2",
+  3: "text-base font-semibold text-ink mt-6 mb-2",
   4: "text-sm leading-normal font-semibold text-ink-secondary mt-5 mb-2",
   5: "text-tab font-semibold text-ink-secondary mt-4 mb-1.5",
   6: "text-tab font-semibold text-ink-tertiary mt-4 mb-1.5",

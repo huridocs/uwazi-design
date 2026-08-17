@@ -314,7 +314,7 @@ export function AgentModal() {
               <span className="flex items-center">
                 <BertMark px={6} gap={2} entrance />
               </span>
-              <span className="text-[15px] font-semibold text-ink tracking-tight leading-none">Bert</span>
+              <span className="text-base font-semibold text-ink leading-none">Bert</span>
             </span>
             <kbd className="px-1.5 py-0.5 text-[10px] font-medium text-ink-muted bg-warm rounded leading-none">{shortcutLabel}</kbd>
             <button

@@ -18,7 +18,7 @@ export function DocumentRendition({ format }: { format: DocumentFormat }) {
       <div className="absolute inset-0 overflow-auto bg-paper">
         <pre
           dir={rtl ? "rtl" : "ltr"}
-          className="mx-auto max-w-[44rem] whitespace-pre-wrap font-mono text-[12.5px] leading-relaxed text-ink-secondary px-6 py-8"
+          className="mx-auto max-w-[44rem] whitespace-pre-wrap font-mono text-sm leading-relaxed text-ink-secondary px-6 py-8"
         >
           {rendition.plainText}
         </pre>
