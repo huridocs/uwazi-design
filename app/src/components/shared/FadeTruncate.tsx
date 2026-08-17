@@ -50,7 +50,7 @@ export function FadeTruncate({
       {expandable && isTruncated && (
         <button
           onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
-          className="text-[10px] font-medium text-ink-tertiary hover:text-ink-secondary mt-0.5 transition-colors"
+          className="text-meta font-medium text-ink-tertiary hover:text-ink-secondary mt-0.5 transition-colors"
         >
           {expanded ? "Show less" : "Show more"}
         </button>

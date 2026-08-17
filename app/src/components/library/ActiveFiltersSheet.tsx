@@ -52,7 +52,7 @@ export function ActiveFiltersSheet() {
           />
           Active filters
           <span
-            className="inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full text-[10px] tabular-nums"
+            className="inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full text-meta tabular-nums"
             style={{ backgroundColor: "var(--bg-muted)", color: "var(--text-secondary)" }}
           >
             {count}

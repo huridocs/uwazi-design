@@ -314,17 +314,17 @@ function TranslationCard({
       }}
       className="flex items-center gap-2 px-3 py-2 rounded-md bg-paper border border-border/50 hover:bg-warm transition-colors cursor-pointer"
     >
-      <span className="text-[10px] font-semibold text-ink-secondary bg-vellum px-1.5 py-0.5 rounded shrink-0">
+      <span className="text-meta font-semibold text-ink-secondary bg-vellum px-1.5 py-0.5 rounded shrink-0">
         {file.language}
       </span>
       <Icon size={14} className="text-ink-muted shrink-0" />
       <div className="flex-1 min-w-0">
         <p className="text-xs font-medium text-ink truncate">{file.name}</p>
         <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-[10px] text-ink-muted">
+          <span className="text-meta text-ink-muted">
             {file.type.toUpperCase()}
           </span>
-          <span className="text-[10px] text-ink-muted">{file.size}</span>
+          <span className="text-meta text-ink-muted">{file.size}</span>
         </div>
       </div>
       <button
@@ -361,11 +361,11 @@ function FileCompactCard({ file }: { file: FileEntry }) {
       <div className="flex-1 min-w-0">
         <p className="text-xs font-medium text-ink truncate">{file.name}</p>
         <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-[10px] text-ink-muted">
+          <span className="text-meta text-ink-muted">
             {file.type.toUpperCase()}
           </span>
-          <span className="text-[10px] text-ink-muted">{file.size}</span>
-          <span className="text-[10px] text-ink-muted">{file.language}</span>
+          <span className="text-meta text-ink-muted">{file.size}</span>
+          <span className="text-meta text-ink-muted">{file.language}</span>
         </div>
       </div>
     </div>

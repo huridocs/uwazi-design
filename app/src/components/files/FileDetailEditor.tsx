@@ -240,7 +240,7 @@ export function FileDetailEditor({
               Document
             </h4>
             <span
-              className={`px-1.5 py-0.5 text-[10px] font-medium rounded ${
+              className={`px-1.5 py-0.5 text-meta font-medium rounded ${
                 group.isPrimary
                   ? isActiveGroup
                     ? "bg-ink text-parchment"
@@ -256,7 +256,7 @@ export function FileDetailEditor({
 
           {translations.length > 1 && (
             <div className="space-y-1.5">
-              <p className="text-[10px] font-medium text-ink-muted uppercase tracking-wide">
+              <p className="text-meta font-medium text-ink-muted uppercase tracking-wide">
                 Translations
               </p>
               <div className="flex flex-wrap gap-1.5">
@@ -274,7 +274,7 @@ export function FileDetailEditor({
                           : "bg-paper border-border hover:bg-parchment cursor-pointer"
                       }`}
                     >
-                      <span className="text-[10px] font-semibold text-ink-secondary bg-vellum px-1 rounded">
+                      <span className="text-meta font-semibold text-ink-secondary bg-vellum px-1 rounded">
                         {t.language}
                       </span>
                       <span className="text-xs text-ink truncate max-w-[180px]">
@@ -347,7 +347,7 @@ function Field({
 }) {
   return (
     <div className="space-y-1">
-      <span className="text-[10px] font-medium text-ink-muted uppercase tracking-wide">
+      <span className="text-meta font-medium text-ink-muted uppercase tracking-wide">
         {label}
       </span>
       <div>{children}</div>

@@ -133,7 +133,7 @@ export function SearchTipsPopover({
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls={PANEL_ID}
-        className="shrink-0 inline-flex items-center gap-1 h-5 px-1.5 rounded text-[10px] font-medium
+        className="shrink-0 inline-flex items-center gap-1 h-5 px-1.5 rounded text-meta font-medium
           text-ink-tertiary bg-warm hover:bg-parchment hover:text-ink-secondary transition-colors
           cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20"
       >
@@ -155,7 +155,7 @@ export function SearchTipsPopover({
             {/* Header — frames the list and names the intent. */}
             <div className="flex items-center gap-1.5 px-2 pt-1 pb-2 mb-1 border-b border-border-soft">
               <Lightbulb size={12} className="text-ink-tertiary" aria-hidden="true" />
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+              <span className="text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
                 Narrow your search
               </span>
             </div>

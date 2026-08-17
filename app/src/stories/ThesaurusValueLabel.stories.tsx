@@ -53,7 +53,7 @@ export const AllStates: Story = {
   render: () => (
     <div className="flex flex-col gap-4 max-w-xs">
       <div className="min-w-0">
-        <span className="block text-[10px] text-ink-tertiary leading-tight">Region</span>
+        <span className="block text-meta text-ink-tertiary leading-tight">Region</span>
         <span className="flex items-baseline gap-1 min-w-0 text-xs text-ink leading-snug">
           <span className="truncate">
             <ThesaurusValueLabel value="Central America" />
@@ -61,7 +61,7 @@ export const AllStates: Story = {
         </span>
       </div>
       <div className="min-w-0 w-40">
-        <span className="block text-[10px] text-ink-tertiary leading-tight">Truncation</span>
+        <span className="block text-meta text-ink-tertiary leading-tight">Truncation</span>
         <span className="block truncate text-xs text-ink leading-snug">
           <ThesaurusValueLabel value="South America" />
         </span>

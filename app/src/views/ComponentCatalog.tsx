@@ -267,12 +267,12 @@ export function ComponentCatalog({ onReturn }: Props) {
       {/* Sidebar — sticky to top:52 (below the header). Self-scrolls if its
           own item list exceeds viewport height. */}
       <nav className="sticky top-13 z-20 self-start bg-paper border-r border-border/60 py-4 px-3 overflow-y-auto overscroll-y-none" style={{ height: "calc(100vh - 3.25rem)" }}>
-        <h2 className="text-[10px] font-bold text-ink-muted uppercase tracking-widest px-2 mb-3">
+        <h2 className="text-meta font-bold text-ink-muted uppercase tracking-widest px-2 mb-3">
           Component Catalog
         </h2>
         {sidebarGroups.map((group) => (
           <div key={group.label} className="mb-3">
-            <span className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider px-2">
+            <span className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider px-2">
               {group.label}
             </span>
             <div className="flex flex-col mt-1">
@@ -593,7 +593,7 @@ export function ComponentCatalog({ onReturn }: Props) {
                     <div className="bg-paper border border-border rounded-md shadow-lg px-3 py-2.5 max-w-xs">
                       <div className="flex items-center gap-2 mb-1.5">
                         <EntityPill typeId="person" label="Juan Carlos Abella" size="sm" />
-                        <span className="text-[10px] text-ink-muted capitalize">mentions</span>
+                        <span className="text-meta text-ink-muted capitalize">mentions</span>
                       </div>
                       <p className="text-xs text-ink-secondary leading-relaxed line-clamp-3">
                         "Juan Carlos Abella and other persons were detained on January 23, 1989..."
@@ -990,19 +990,19 @@ sendFill(selection.text);                                    // commits, then di
                 >
                   <div className="flex flex-col gap-4 w-full max-w-sm">
                     <div>
-                      <span className="text-[10px] text-ink-muted mb-1 block">Green (completed)</span>
+                      <span className="text-meta text-ink-muted mb-1 block">Green (completed)</span>
                       <ProgressBar value={100} color="green" showLabel />
                     </div>
                     <div>
-                      <span className="text-[10px] text-ink-muted mb-1 block">Blue (processing) — md</span>
+                      <span className="text-meta text-ink-muted mb-1 block">Blue (processing) — md</span>
                       <ProgressBar value={64} color="blue" showLabel size="md" />
                     </div>
                     <div>
-                      <span className="text-[10px] text-ink-muted mb-1 block">Red (failed)</span>
+                      <span className="text-meta text-ink-muted mb-1 block">Red (failed)</span>
                       <ProgressBar value={37} color="red" showLabel />
                     </div>
                     <div>
-                      <span className="text-[10px] text-ink-muted mb-1 block">No label</span>
+                      <span className="text-meta text-ink-muted mb-1 block">No label</span>
                       <ProgressBar value={50} color="blue" />
                     </div>
                   </div>
@@ -1497,11 +1497,11 @@ className={\`… border \${issueBorderClass(issues[field.id])} …\`}`}
 {/* null → renders nothing; host line stays put. */}`}
                 >
                   <div className="w-full max-w-md space-y-2">
-                    <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+                    <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
                       Document
                       <BorrowedDocLine from={{ entityId: "e-1", title: "Velásquez-Rodríguez v. Honduras" }} />
                     </p>
-                    <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+                    <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
                       Document
                       <BorrowedDocLine from={null} />
                     </p>
@@ -1697,30 +1697,30 @@ const textColor = typeLabelColor(type.color);`}
                   <div className="flex flex-col gap-6 w-full">
                     {/* Sizes */}
                     <div className="flex flex-col gap-3">
-                      <span className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider">Sizes</span>
+                      <span className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider">Sizes</span>
                       <div className="flex items-center gap-8">
                         <div className="flex flex-col items-center gap-2">
                           <UwaziLoader size="xs" />
-                          <span className="text-[10px] text-ink-muted">xs</span>
+                          <span className="text-meta text-ink-muted">xs</span>
                         </div>
                         <div className="flex flex-col items-center gap-2">
                           <UwaziLoader size="sm" />
-                          <span className="text-[10px] text-ink-muted">sm</span>
+                          <span className="text-meta text-ink-muted">sm</span>
                         </div>
                         <div className="flex flex-col items-center gap-2">
                           <UwaziLoader size="md" />
-                          <span className="text-[10px] text-ink-muted">md</span>
+                          <span className="text-meta text-ink-muted">md</span>
                         </div>
                         <div className="flex flex-col items-center gap-2">
                           <UwaziLoader size="lg" />
-                          <span className="text-[10px] text-ink-muted">lg</span>
+                          <span className="text-meta text-ink-muted">lg</span>
                         </div>
                       </div>
                     </div>
 
                     {/* In buttons */}
                     <div className="flex flex-col gap-3">
-                      <span className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider">Buttons</span>
+                      <span className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider">Buttons</span>
                       <div className="flex flex-wrap items-center gap-3">
                         <button className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md bg-ink text-parchment cursor-default">
                           <UwaziLoader size="sm" color="white" /> Saving
@@ -1736,7 +1736,7 @@ const textColor = typeLabelColor(type.color);`}
 
                     {/* In toasts */}
                     <div className="flex flex-col gap-3">
-                      <span className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider">Toasts</span>
+                      <span className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider">Toasts</span>
                       <div className="flex flex-col gap-2 max-w-sm">
                         <div className="flex items-center gap-2.5 px-4 py-2.5 bg-paper border border-border rounded-md shadow-lg">
                           <UwaziLoader size="sm" />
@@ -1751,7 +1751,7 @@ const textColor = typeLabelColor(type.color);`}
 
                     {/* Inline */}
                     <div className="flex flex-col gap-3">
-                      <span className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider">Inline</span>
+                      <span className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider">Inline</span>
                       <div className="text-sm text-ink-secondary flex items-center gap-1.5">
                         <UwaziLoader size="xs" /> Extracting information
                       </div>
@@ -1759,7 +1759,7 @@ const textColor = typeLabelColor(type.color);`}
 
                     {/* In card */}
                     <div className="flex flex-col gap-3">
-                      <span className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider">Card</span>
+                      <span className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider">Card</span>
                       <div className="max-w-xs bg-paper border border-border/40 rounded-md px-3 py-3">
                         <div className="flex items-center gap-2.5">
                           <div className="w-8 h-8 rounded bg-warm flex items-center justify-center shrink-0">
@@ -1767,7 +1767,7 @@ const textColor = typeLabelColor(type.color);`}
                           </div>
                           <div>
                             <p className="text-xs font-semibold text-ink">Processing document</p>
-                            <p className="text-[10px] text-ink-muted">Extracting text from PDF</p>
+                            <p className="text-meta text-ink-muted">Extracting text from PDF</p>
                           </div>
                         </div>
                       </div>

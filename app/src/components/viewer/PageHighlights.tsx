@@ -187,7 +187,7 @@ export function PageHighlights({ page }: PageHighlightsProps) {
               {/* Entity name tag on first line rect */}
               {isFirst && showTag && entity && (
                 <span
-                  className="absolute whitespace-nowrap px-1.5 py-[3px] rounded text-[10px] font-medium leading-none pointer-events-none"
+                  className="absolute whitespace-nowrap px-1.5 py-[3px] rounded text-meta font-medium leading-none pointer-events-none"
                   style={{
                     left: 0,
                     ...(tagAbove

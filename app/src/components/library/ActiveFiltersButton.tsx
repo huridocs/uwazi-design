@@ -85,7 +85,7 @@ export function ActiveFiltersButton({ className = "" }: { className?: string } =
             className="flex items-center gap-2 px-3 py-2"
             style={{ borderBottom: "1px solid var(--border-soft)" }}
           >
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+            <span className="text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
               Active filters
             </span>
             <button
@@ -115,7 +115,7 @@ export function ActiveFiltersButton({ className = "" }: { className?: string } =
                     <span className="w-1.5 shrink-0" />
                   )}
                   <span className="min-w-0 flex-1">
-                    <span className="block text-[10px] text-ink-tertiary leading-tight">
+                    <span className="block text-meta text-ink-tertiary leading-tight">
                       {it.group}
                     </span>
                     <span className="block text-xs text-ink truncate">{it.label}</span>

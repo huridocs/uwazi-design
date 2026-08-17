@@ -157,7 +157,7 @@ export function ManageRelationTypesModal() {
                 </span>
                 {isNoLabel ? (
                   <span
-                    className="text-[10px] uppercase tracking-wide text-ink-tertiary px-1.5 py-0.5 bg-vellum rounded shrink-0"
+                    className="text-meta uppercase tracking-wide text-ink-tertiary px-1.5 py-0.5 bg-vellum rounded shrink-0"
                     title={t(
                       "System",
                       "Fallback type — orphaned references land here",

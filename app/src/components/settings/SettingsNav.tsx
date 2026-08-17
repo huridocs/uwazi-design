@@ -50,7 +50,7 @@ export function SettingsNav({
       {[settingsGroupOf(current)].map((group) => (
         <div key={group.id} className="mb-2">
           {group.label && (
-            <h3 className="px-5 py-2 text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
+            <h3 className="px-5 py-2 text-meta font-semibold uppercase tracking-wider text-ink-muted">
               {group.label}
             </h3>
           )}
@@ -69,7 +69,7 @@ export function SettingsNav({
                 <Icon size={15} className="text-ink-tertiary shrink-0" />
                 <span className="truncate flex-1">{item.label}</span>
                 {item.badge && (
-                  <span className="text-[10px] font-semibold text-carbon">{item.badge}</span>
+                  <span className="text-meta font-semibold text-carbon">{item.badge}</span>
                 )}
                 {item.external && <ExternalLink size={12} className="text-ink-muted shrink-0" />}
               </>
@@ -89,7 +89,7 @@ export function SettingsNav({
             const sub = startsSub && (
               <h4
                 key={`sub-${item.subgroup}`}
-                className="px-5 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-ink-muted"
+                className="px-5 pt-3 pb-1 text-meta font-semibold uppercase tracking-wider text-ink-muted"
               >
                 {item.subgroup}
               </h4>

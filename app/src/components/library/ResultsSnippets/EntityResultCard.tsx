@@ -77,7 +77,7 @@ export function EntityResultCard({
                   transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1
                   focus-visible:ring-inset focus-visible:ring-ink/20"
               >
-                <span className="block text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+                <span className="block text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
                   {group.field}
                 </span>
                 {group.texts.map((t, i) => (

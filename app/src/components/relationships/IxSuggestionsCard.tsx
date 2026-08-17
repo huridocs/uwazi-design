@@ -65,7 +65,7 @@ export function IxSuggestionsCard() {
         <span className="text-xs font-semibold text-ink">
           {t("System", "AI suggestions")}
         </span>
-        <span className="text-[10px] tabular-nums text-ink-tertiary bg-warm px-1.5 rounded">
+        <span className="text-meta tabular-nums text-ink-tertiary bg-warm px-1.5 rounded">
           {pending.length}
         </span>
         <span className="ml-auto text-meta text-ink-tertiary">
@@ -89,7 +89,7 @@ export function IxSuggestionsCard() {
                 <div className="flex items-start justify-between gap-2 mb-1.5">
                   <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <span className="text-[10px] text-ink-tertiary tabular-nums">
+                    <span className="text-meta text-ink-tertiary tabular-nums">
                       {Math.round(s.confidence * 100)}%
                     </span>
                     <PageTag page={s.sourceSelection.page} />
@@ -102,7 +102,7 @@ export function IxSuggestionsCard() {
                   className="text-xs text-ink-secondary leading-relaxed"
                 />
                 <div className="flex items-center justify-between mt-1.5">
-                  <span className="text-[10px] text-ink-tertiary capitalize">
+                  <span className="text-meta text-ink-tertiary capitalize">
                     {relLabel}
                   </span>
                   <div className="flex items-center gap-1">

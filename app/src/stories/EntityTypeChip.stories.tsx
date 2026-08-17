@@ -59,7 +59,7 @@ export const Minimal: Story = {
   render: () => (
     <table className="text-xs">
       <thead>
-        <tr className="text-[10px] uppercase tracking-wide text-ink-tertiary">
+        <tr className="text-meta uppercase tracking-wide text-ink-tertiary">
           <th className="pe-4 pb-2 text-start font-semibold">Type</th>
           <th className="pe-4 pb-2 text-start font-semibold">Dot</th>
           <th className="pb-2 text-start font-semibold">Label on its own tint</th>

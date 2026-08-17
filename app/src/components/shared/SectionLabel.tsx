@@ -41,7 +41,7 @@ export function SectionLabel({
     // `flex`, so this is block-level and a caller's `sticky` + background paints
     // the full width — the notification drawer's section headers depend on it.
     <span
-      className={`flex items-center gap-1.5 min-w-0 text-[10px] font-semibold uppercase
+      className={`flex items-center gap-1.5 min-w-0 text-meta font-semibold uppercase
         tracking-wide text-ink-tertiary ${className}`}
     >
       {icon && (

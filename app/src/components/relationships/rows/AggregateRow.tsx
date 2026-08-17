@@ -98,7 +98,7 @@ export function AggregateRow({
       title={
         onToggleExpand ? "Toggle evidence" : "View evidence in References"
       }
-      className={`flex items-center gap-1 px-1.5 h-5 rounded text-[10px] font-medium tabular-nums transition-colors cursor-pointer ${
+      className={`flex items-center gap-1 px-1.5 h-5 rounded text-meta font-medium tabular-nums transition-colors cursor-pointer ${
         expanded
           ? "bg-vellum text-ink-secondary"
           : "bg-warm text-ink-tertiary hover:bg-parchment hover:text-ink-secondary"
@@ -193,7 +193,7 @@ export function AggregateRow({
                   <HighlightedText text={entity?.title ?? ""} query={query} />
                 </span>
                 {!hideRelLabel && (
-                  <span className="text-[10px] text-ink-tertiary truncate capitalize shrink-0">
+                  <span className="text-meta text-ink-tertiary truncate capitalize shrink-0">
                     <HighlightedText text={relLabel} query={query} />
                   </span>
                 )}
@@ -252,7 +252,7 @@ export function AggregateRow({
             <div className="flex items-center gap-1.5 shrink-0">{countBadge}</div>
           </div>
           {!hidePill && (
-            <div className="flex items-center gap-1 mt-1 text-[10px] text-ink-tertiary">
+            <div className="flex items-center gap-1 mt-1 text-meta text-ink-tertiary">
               <DirectionGlyph direction={glyphDirection} />
               {!hideRelLabel && (
                 <span className="capitalize">

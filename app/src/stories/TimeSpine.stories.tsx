@@ -57,7 +57,7 @@ const renderRow = (item: Item, { t }: { t: number }) => (
     <span className="shrink-0 w-1.5 h-1.5 rounded-[2px]" style={{ backgroundColor: item.color }} />
     <SpineDate t={t} />
     <span className="flex-1 min-w-0 truncate text-xs text-ink-secondary">{item.title}</span>
-    <span className="shrink-0 text-[10px] text-ink-tertiary">{item.kind}</span>
+    <span className="shrink-0 text-meta text-ink-tertiary">{item.kind}</span>
   </div>
 );
 

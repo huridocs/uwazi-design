@@ -34,7 +34,7 @@ function PropertyItem({ prop }: { prop: TemplateProperty }) {
           <span className="text-xs font-medium text-ink-muted ml-1.5">*Required</span>
         )}
       </span>
-      <span className="text-[10px] text-ink-muted shrink-0 capitalize">{prop.type}</span>
+      <span className="text-meta text-ink-muted shrink-0 capitalize">{prop.type}</span>
       <button
         onClick={() =>
           prop.inherited

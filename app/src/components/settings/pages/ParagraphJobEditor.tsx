@@ -140,7 +140,7 @@ export function ParagraphJobEditor({
       header: "State",
       width: "6rem",
       cell: (r) => (
-        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md w-fit ${STATE_META[r.state].cls}`}>
+        <span className={`text-meta font-semibold px-1.5 py-0.5 rounded-md w-fit ${STATE_META[r.state].cls}`}>
           {STATE_META[r.state].label}
         </span>
       ),

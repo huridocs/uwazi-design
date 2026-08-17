@@ -204,7 +204,7 @@ export function EntityOverlay() {
               so this shows only the non-redundant facts: real creation date and
               how many references in this document point at the entity. */}
           <section className="rounded-lg p-3 space-y-3" style={{ backgroundColor: "var(--bg-warm)" }}>
-            <h4 className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider">
+            <h4 className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider">
               Metadata
             </h4>
             <div className="space-y-2.5">
@@ -235,7 +235,7 @@ export function EntityOverlay() {
           {entityId && (editableProps.length > 0 || readOnlyProps.length > 0) && (
             <section className="rounded-lg p-3 space-y-3" style={{ backgroundColor: "var(--bg-warm)" }}>
               <div className="flex items-center justify-between">
-                <h4 className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider">
+                <h4 className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider">
                   Properties
                 </h4>
                 {editableProps.length > 0 && (
@@ -252,7 +252,7 @@ export function EntityOverlay() {
                   <div className="space-y-2.5">
                     {editableProps.map(({ propId, label, value }) => (
                       <div key={propId} className="space-y-1">
-                        <span className="text-[10px] text-ink-tertiary leading-tight block">{label}</span>
+                        <span className="text-meta text-ink-tertiary leading-tight block">{label}</span>
                         <EditInput
                           value={value}
                           ariaLabel={label}
@@ -282,7 +282,7 @@ export function EntityOverlay() {
           {/* References to this entity */}
           {entityRefs.length > 0 && (
             <section className="space-y-2">
-              <h4 className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider">
+              <h4 className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider">
                 References in document
               </h4>
               <div>
@@ -314,7 +314,7 @@ export function EntityOverlay() {
                                 fadeTo="var(--bg-warm)"
                               />
                               <span className="shrink-0 flex items-center gap-1">
-                                <span className="text-[10px] text-ink-tertiary">here</span>
+                                <span className="text-meta text-ink-tertiary">here</span>
                                 <PageTag page={ref.targetSelection.page} />
                               </span>
                             </div>
@@ -326,7 +326,7 @@ export function EntityOverlay() {
                         // who created this connection without leaning on an
                         // "Entity-level" placeholder label.
                         <div className="flex items-center gap-1.5 mb-1">
-                          <span className="text-[10px] text-ink-tertiary">From</span>
+                          <span className="text-meta text-ink-tertiary">From</span>
                           <EntityPill
                             typeId={sourceEntity?.typeId ?? ""}
                             label={sourceEntity?.title}
@@ -335,7 +335,7 @@ export function EntityOverlay() {
                         </div>
                       )}
                       <div className="flex items-center mt-1">
-                        <span className="text-[10px] text-ink-tertiary capitalize">
+                        <span className="text-meta text-ink-tertiary capitalize">
                           {ref.relationType.replace("_", " ")}
                         </span>
                       </div>
@@ -348,7 +348,7 @@ export function EntityOverlay() {
 
           {/* Placeholder sections */}
           <section className="space-y-2">
-            <h4 className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider">
+            <h4 className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider">
               Connections
             </h4>
             <div
@@ -405,7 +405,7 @@ function MetaRow({ icon: Icon, label, value }: { icon: typeof Tag; label: string
     <>
       <Icon size={14} className="text-ink-tertiary shrink-0" />
       <div className="min-w-0 text-start">
-        <span className="text-[10px] text-ink-tertiary leading-tight block">{label}</span>
+        <span className="text-meta text-ink-tertiary leading-tight block">{label}</span>
         <p className="text-xs text-ink-secondary leading-tight">{value}</p>
       </div>
     </>

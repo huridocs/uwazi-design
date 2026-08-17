@@ -316,7 +316,7 @@ export function AgentModal() {
               </span>
               <span className="text-base font-semibold text-ink leading-none">Bert</span>
             </span>
-            <kbd className="px-1.5 py-0.5 text-[10px] font-medium text-ink-muted bg-warm rounded leading-none">{shortcutLabel}</kbd>
+            <kbd className="px-1.5 py-0.5 text-meta font-medium text-ink-muted bg-warm rounded leading-none">{shortcutLabel}</kbd>
             <button
               onClick={() => setOpen(false)}
               className="ml-auto flex items-center justify-center w-7 h-7 rounded-md text-ink-muted hover:bg-warm hover:text-ink-secondary transition-colors"
@@ -499,7 +499,7 @@ export function AgentModal() {
               )}
             </button>
           </div>
-          <p className="mt-1.5 px-1 flex items-center gap-1 text-[10px] text-ink-tertiary">
+          <p className="mt-1.5 px-1 flex items-center gap-1 text-meta text-ink-tertiary">
             <Bell size={10} /> Long-running tasks keep running in notifications after you close this.
           </p>
         </div>
@@ -589,7 +589,7 @@ function AddMenu({
     </button>
   );
   const groupLabel = (t: string) => (
-    <div className="px-3 pt-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-ink-tertiary">{t}</div>
+    <div className="px-3 pt-1.5 pb-1 text-meta font-semibold uppercase tracking-wider text-ink-tertiary">{t}</div>
   );
 
   return (

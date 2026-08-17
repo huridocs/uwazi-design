@@ -48,7 +48,7 @@ export function ChartTip({
 }) {
   return (
     <span
-      className="absolute z-50 pointer-events-none text-[10px] font-medium whitespace-nowrap rounded-md"
+      className="absolute z-50 pointer-events-none text-meta font-medium whitespace-nowrap rounded-md"
       style={{
         ...(anchor === "start"
           ? { right: "calc(100% + 6px)", top: "50%", transform: "translateY(-50%)" }

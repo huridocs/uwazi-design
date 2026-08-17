@@ -50,11 +50,11 @@ export function FileViewerModal() {
           <div className="min-w-0">
             <p className="text-sm font-semibold text-ink truncate">{file.name}</p>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-[10px] font-semibold text-ink-secondary bg-vellum px-1.5 py-px rounded">
+              <span className="text-meta font-semibold text-ink-secondary bg-vellum px-1.5 py-px rounded">
                 {file.language}
               </span>
-              <span className="text-[10px] text-ink-tertiary uppercase">{file.type}</span>
-              <span className="text-[10px] text-ink-tertiary">{file.size}</span>
+              <span className="text-meta text-ink-tertiary uppercase">{file.type}</span>
+              <span className="text-meta text-ink-tertiary">{file.size}</span>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">

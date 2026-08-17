@@ -244,7 +244,7 @@ function ZoomedRowDemo({
   store.set(zoomAtom, zoom);
   return (
     <div>
-      <p className="text-[10px] text-ink-muted uppercase tracking-wide mb-1.5">
+      <p className="text-meta text-ink-muted uppercase tracking-wide mb-1.5">
         {label}
       </p>
       <Provider store={store}>
@@ -358,7 +358,7 @@ export function IsolatedRefMinimap() {
   return (
     <Provider store={store}>
       <div className="relative w-full h-[22.5rem] rounded-md border border-border/40 bg-paper overflow-hidden">
-        <div className="absolute inset-0 right-[80px] px-6 py-4 text-[10px] text-ink-tertiary leading-relaxed">
+        <div className="absolute inset-0 right-[80px] px-6 py-4 text-meta text-ink-tertiary leading-relaxed">
           <p>
             (Document column — the minimap on the right shows a dot per text
             anchor in <code>referencesAtom</code>. Dots cluster by vertical
@@ -369,7 +369,7 @@ export function IsolatedRefMinimap() {
         </div>
         <RefMinimap numPages={14} />
       </div>
-      <p className="text-[10px] text-ink-muted mt-2">
+      <p className="text-meta text-ink-muted mt-2">
         Driven by <code>referencesAtom</code>, <code>activeRefIdAtom</code>,
         and <code>currentPageAtom</code>. Entity-level refs (no page anchor)
         are filtered out of the track.
@@ -546,7 +546,7 @@ export function IsolatedCollapseControls() {
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-6">
         <CollapseControls onCollapseAll={() => {}} onExpandAll={() => {}} />
-        <span className="text-[10px] text-ink-muted">default (atom-driven)</span>
+        <span className="text-meta text-ink-muted">default (atom-driven)</span>
       </div>
       <div className="flex items-center gap-6">
         <CollapseControls
@@ -554,7 +554,7 @@ export function IsolatedCollapseControls() {
           onExpandAll={() => {}}
           disabled
         />
-        <span className="text-[10px] text-ink-muted">disabled (e.g. viewMode === "all")</span>
+        <span className="text-meta text-ink-muted">disabled (e.g. viewMode === "all")</span>
       </div>
     </div>
   );
@@ -667,19 +667,19 @@ export function IsolatedRowCheckbox() {
   return (
     <div className="flex flex-col gap-3">
       <div>
-        <p className="text-[10px] text-ink-muted uppercase tracking-wide mb-1.5">
+        <p className="text-meta text-ink-muted uppercase tracking-wide mb-1.5">
           Edit mode off — checkbox hidden, row layout unchanged
         </p>
         <RowCheckboxDemo editMode={false} preselectedRefIds={[]} />
       </div>
       <div>
-        <p className="text-[10px] text-ink-muted uppercase tracking-wide mb-1.5">
+        <p className="text-meta text-ink-muted uppercase tracking-wide mb-1.5">
           Edit mode on — checkbox visible, none selected
         </p>
         <RowCheckboxDemo editMode preselectedRefIds={[]} />
       </div>
       <div>
-        <p className="text-[10px] text-ink-muted uppercase tracking-wide mb-1.5">
+        <p className="text-meta text-ink-muted uppercase tracking-wide mb-1.5">
           Edit mode on — aggregate row's checkbox covers every backing ref; toggles them as a set
         </p>
         <RowCheckboxDemo editMode preselectedRefIds={someRefIds} />
@@ -714,7 +714,7 @@ export function IsolatedRelationshipsActionBar() {
       <div className="w-full border border-border/40 rounded-md overflow-hidden">
         <RelationshipsActionBar />
       </div>
-      <p className="text-[10px] text-ink-muted mt-2">
+      <p className="text-meta text-ink-muted mt-2">
         Click <span className="font-semibold">Edit</span> to reveal Create
         relationship / Manage types / Select all / Delete / Cancel / Save.
       </p>
@@ -736,7 +736,7 @@ function ManageRelationTypesModalDemo() {
     <div className="flex flex-col gap-2">
       <ManageModalOpenButton />
       <ManageRelationTypesModal />
-      <p className="text-[10px] text-ink-muted">
+      <p className="text-meta text-ink-muted">
         Add via slugified id; delete reassigns orphans to the "No label"
         fallback. The fallback type is non-deletable.
       </p>
@@ -799,7 +799,7 @@ function SelectControlsRow({
 }) {
   return (
     <div>
-      <p className="text-[10px] text-ink-muted uppercase tracking-wide mb-1.5">
+      <p className="text-meta text-ink-muted uppercase tracking-wide mb-1.5">
         {label}
       </p>
       {children}
@@ -815,7 +815,7 @@ export function IsolatedGroupByControlMutex() {
   }, [primary, secondary]);
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-[10px] text-ink-muted">
+      <p className="text-meta text-ink-muted">
         Picking the same axis on both is a degenerate state — primary and
         secondary mutex out each other's selection. Switch primary to a value
         currently in secondary and secondary resets to "None".
@@ -918,13 +918,13 @@ export function IsolatedDirectionGlyph() {
         <DirectionGlyph direction="outgoing" />
         <DirectionGlyph direction="incoming" />
         <DirectionGlyph direction="both" />
-        <span className="text-[10px] text-ink-muted">sm</span>
+        <span className="text-meta text-ink-muted">sm</span>
       </div>
       <div className="flex items-center gap-3">
         <DirectionGlyph direction="outgoing" size="md" />
         <DirectionGlyph direction="incoming" size="md" />
         <DirectionGlyph direction="both" size="md" />
-        <span className="text-[10px] text-ink-muted">md</span>
+        <span className="text-meta text-ink-muted">md</span>
       </div>
     </div>
   );

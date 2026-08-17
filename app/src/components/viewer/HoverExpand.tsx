@@ -19,7 +19,7 @@ export function HoverExpand({ reference, x, y }: HoverExpandProps) {
       <div className="bg-paper border border-border rounded-md shadow-lg px-3 py-2.5 max-w-xs">
         <div className="flex items-center gap-2 mb-1.5">
           <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} size="sm" />
-          <span className="text-[10px] text-ink-muted capitalize">
+          <span className="text-meta text-ink-muted capitalize">
             {reference.relationType.replace("_", " ")}
           </span>
         </div>

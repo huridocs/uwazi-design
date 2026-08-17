@@ -42,11 +42,11 @@ export function DocumentGroupCard({
             single source of "which one the viewer's rendering". Same
             shape, different fill so they read as a continuum, not two
             unrelated states. */}
-        <span className="px-1.5 py-0.5 text-[10px] font-medium rounded shrink-0 bg-warning-light text-warning">
+        <span className="px-1.5 py-0.5 text-meta font-medium rounded shrink-0 bg-warning-light text-warning">
           Primary
         </span>
         {active && (
-          <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-ink text-parchment shrink-0">
+          <span className="px-1.5 py-0.5 text-meta font-medium rounded bg-ink text-parchment shrink-0">
             Active
           </span>
         )}

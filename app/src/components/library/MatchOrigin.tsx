@@ -265,14 +265,14 @@ function Mark({
 
 function TipLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="block text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+    <span className="block text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
       {children}
     </span>
   );
 }
 
 function TipHint({ children }: { children: React.ReactNode }) {
-  return <span className="mt-1 block text-[10px] text-ink-muted">{children}</span>;
+  return <span className="mt-1 block text-meta text-ink-muted">{children}</span>;
 }
 
 function PropertyTip({

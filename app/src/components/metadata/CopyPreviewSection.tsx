@@ -31,7 +31,7 @@ export function CopyPreviewSection({
       aria-label="Copy From preview"
     >
       <div className="flex items-center justify-between gap-2">
-        <h4 className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider">
+        <h4 className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider">
           Copy from this entity
         </h4>
         <span className="text-meta text-ink-tertiary">
@@ -62,7 +62,7 @@ export function CopyPreviewSection({
 
       {nearMisses.length > 0 && (
         <div className="space-y-1.5 pt-1" style={{ borderTop: "1px solid var(--border-soft)" }}>
-          <h5 className="pt-2 text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider">
+          <h5 className="pt-2 text-meta font-semibold text-ink-tertiary uppercase tracking-wider">
             Not copied
           </h5>
           <ul className="space-y-1.5">

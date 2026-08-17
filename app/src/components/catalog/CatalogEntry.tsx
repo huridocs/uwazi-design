@@ -45,10 +45,10 @@ function CodeBlock({ label, content, name }: { label: string; content: string; n
   return (
     <div className="relative border-t border-border/40">
       <div className="flex items-center justify-between px-4 py-1.5" style={{ backgroundColor: "#1A1A1A" }}>
-        <span className="text-[10px] font-medium uppercase tracking-wider" style={{ color: "#9A9A9A" }}>{label}</span>
+        <span className="text-meta font-medium uppercase tracking-wider" style={{ color: "#9A9A9A" }}>{label}</span>
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium hover:bg-white/10 transition-colors"
+          className="flex items-center gap-1 px-1.5 py-0.5 rounded text-meta font-medium hover:bg-white/10 transition-colors"
           style={{ color: "#9A9A9A" }}
         >
           <Copy size={10} /> Copy

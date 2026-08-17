@@ -109,12 +109,12 @@ export function LanguagesPage() {
           <span className="font-medium text-ink">{l.label}</span>
           <span className="text-ink-tertiary">{l.localizedLabel}</span>
           {!l.ltr && (
-            <span className="text-[10px] font-semibold text-ink-tertiary bg-vellum px-1.5 py-px rounded w-fit">
+            <span className="text-meta font-semibold text-ink-tertiary bg-vellum px-1.5 py-px rounded w-fit">
               RTL
             </span>
           )}
           {l.default && (
-            <span className="text-[10px] font-semibold text-carbon bg-carbon-tint px-1.5 py-px rounded w-fit">
+            <span className="text-meta font-semibold text-carbon bg-carbon-tint px-1.5 py-px rounded w-fit">
               Default
             </span>
           )}
@@ -277,7 +277,7 @@ export function LanguagesPage() {
                         <span className="font-medium text-ink">{c.localizedLabel}</span>
                         <span className="truncate text-ink-tertiary">{c.label}</span>
                         {!c.ltr && (
-                          <span className="text-[10px] font-semibold text-ink-tertiary bg-vellum px-1.5 py-px rounded w-fit">
+                          <span className="text-meta font-semibold text-ink-tertiary bg-vellum px-1.5 py-px rounded w-fit">
                             RTL
                           </span>
                         )}

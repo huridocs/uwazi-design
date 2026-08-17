@@ -76,7 +76,7 @@ export function RecentSearches({ anchorRef, open, onPick, onClose }: Props) {
         width: pos.width,
       }}
     >
-      <p className="flex items-center gap-1.5 px-2.5 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+      <p className="flex items-center gap-1.5 px-2.5 pt-1 pb-1.5 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
         <Clock size={11} className="text-ink-muted" aria-hidden="true" />
         Recent searches
       </p>

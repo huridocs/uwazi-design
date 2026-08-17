@@ -224,7 +224,7 @@ export function FileTable({
                   <span>•</span>
                   <span>{file.language}</span>
                 </div>
-                <div className="text-[10px] text-ink-muted mt-0.5">
+                <div className="text-meta text-ink-muted mt-0.5">
                   {formatFileDate(file.modified)}
                 </div>
               </div>

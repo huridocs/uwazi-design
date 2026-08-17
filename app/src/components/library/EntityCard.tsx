@@ -295,7 +295,7 @@ export const EntityCard = memo(function EntityCard({
         <div className="relative min-w-0 space-y-1.5">
           {fields.map((f) => (
             <div key={f.id} className="min-w-0">
-              <span className="block text-[10px] text-ink-tertiary leading-tight">{f.label}</span>
+              <span className="block text-meta text-ink-tertiary leading-tight">{f.label}</span>
               {/* Exactly ONE line per field, always. `truncate` rather than
                   `line-clamp-1` because the old `block line-clamp-1` pair fought
                   over `display` (block won) and the clamp silently never
@@ -309,7 +309,7 @@ export const EntityCard = memo(function EntityCard({
                   </ThesaurusValueLabel>
                 </span>
                 {!!f.more && (
-                  <span className="shrink-0 text-[10px] text-ink-tertiary">+{f.more} more</span>
+                  <span className="shrink-0 text-meta text-ink-tertiary">+{f.more} more</span>
                 )}
               </span>
             </div>

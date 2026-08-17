@@ -126,7 +126,7 @@ export function ActivityLogPage() {
                       size={14}
                       className={`shrink-0 text-ink-tertiary transition-transform ${open ? "rotate-90" : ""}`}
                     />
-                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md w-fit shrink-0 ${methodStyle[e.method]}`}>
+                    <span className={`text-meta font-semibold px-1.5 py-0.5 rounded-md w-fit shrink-0 ${methodStyle[e.method]}`}>
                       {e.method}
                     </span>
                     <span className="text-ink text-sm truncate grow">{e.summary}</span>
@@ -140,7 +140,7 @@ export function ActivityLogPage() {
                       <dl className="grid grid-cols-[5rem_1fr] gap-x-3 gap-y-1.5 text-sm mb-3">
                         <dt className="text-ink-tertiary">Action</dt>
                         <dd>
-                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md w-fit inline-block ${methodStyle[e.method]}`}>
+                          <span className={`text-meta font-semibold px-1.5 py-0.5 rounded-md w-fit inline-block ${methodStyle[e.method]}`}>
                             {e.method}
                           </span>
                         </dd>
@@ -151,7 +151,7 @@ export function ActivityLogPage() {
                         <dt className="text-ink-tertiary">Time</dt>
                         <dd dir="ltr" className="text-ink-secondary tabular-nums">{e.time}</dd>
                       </dl>
-                      <div className="text-[10px] font-medium uppercase tracking-wider text-ink-tertiary mb-1">
+                      <div className="text-meta font-medium uppercase tracking-wider text-ink-tertiary mb-1">
                         Request
                       </div>
                       <pre className="bg-vellum rounded-md px-3 py-2 text-xs font-mono text-ink-secondary whitespace-pre-wrap break-words">

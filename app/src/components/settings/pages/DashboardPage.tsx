@@ -32,7 +32,7 @@ export function DashboardPage() {
       header: "Action",
       width: "7rem",
       cell: (e) => (
-        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md w-fit ${methodStyle[e.method]}`}>
+        <span className={`text-meta font-semibold px-1.5 py-0.5 rounded-md w-fit ${methodStyle[e.method]}`}>
           {e.method}
         </span>
       ),

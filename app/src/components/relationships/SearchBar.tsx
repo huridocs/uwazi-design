@@ -92,22 +92,22 @@ export function SearchBar({ rightSlot, inlineSlot }: SearchBarProps = {}) {
               <div className="font-semibold text-ink mb-1.5 text-xs">Search tips</div>
               <ul className="space-y-1 text-ink-secondary">
                 <li>
-                  <code className="font-mono text-[10px] text-ink">AND OR NOT</code> — boolean
+                  <code className="font-mono text-meta text-ink">AND OR NOT</code> — boolean
                 </li>
                 <li>
-                  <code className="font-mono text-[10px] text-ink">"exact phrase"</code> — match verbatim
+                  <code className="font-mono text-meta text-ink">"exact phrase"</code> — match verbatim
                 </li>
                 <li>
-                  <code className="font-mono text-[10px] text-ink">stat*</code> — wildcard (many chars)
+                  <code className="font-mono text-meta text-ink">stat*</code> — wildcard (many chars)
                 </li>
                 <li>
-                  <code className="font-mono text-[10px] text-ink">wom?n</code> — wildcard (one char)
+                  <code className="font-mono text-meta text-ink">wom?n</code> — wildcard (one char)
                 </li>
                 <li>
-                  <code className="font-mono text-[10px] text-ink">( ... )</code> — group expressions
+                  <code className="font-mono text-meta text-ink">( ... )</code> — group expressions
                 </li>
               </ul>
-              <div className="mt-2 pt-2 text-[10px] text-ink-tertiary" style={{ borderTop: "1px solid var(--border-soft)" }}>
+              <div className="mt-2 pt-2 text-meta text-ink-tertiary" style={{ borderTop: "1px solid var(--border-soft)" }}>
                 e.g. <code className="font-mono text-ink-secondary">status AND women NOT Nicaragua</code>
               </div>
             </div>

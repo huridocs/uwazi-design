@@ -215,7 +215,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                     role="listbox"
                     className="absolute top-full mt-1.5 end-0 w-52 bg-paper border border-border rounded-lg shadow-lg overflow-hidden z-50 py-1"
                   >
-                    <p className="px-3 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+                    <p className="px-3 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
                       Collection
                     </p>
                     {COLLECTIONS.map((c) => {
@@ -243,7 +243,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                             >
                               {c.label}
                             </span>
-                            <span className="block text-[10px] text-ink-tertiary">{c.detail}</span>
+                            <span className="block text-meta text-ink-tertiary">{c.detail}</span>
                           </span>
                         </button>
                       );
@@ -297,7 +297,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
 
                       const sub = startsSub && (
                         <div
-                          className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wide text-ink-muted"
+                          className="px-3 pt-2 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-muted"
                           style={{ borderTop: "1px solid var(--border-soft)" }}
                         >
                           {item.subgroup}
@@ -411,7 +411,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                       {t("System", "Test RTL layout")}
                     </span>
                     <span
-                      className={`px-1.5 py-0.5 text-[10px] font-semibold rounded ${
+                      className={`px-1.5 py-0.5 text-meta font-semibold rounded ${
                         rtl
                           ? "bg-success-light text-success"
                           : "bg-warm text-ink-muted"
@@ -503,7 +503,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
             </button>
 
             {/* Tools section */}
-            <div className="px-4 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-ink-tertiary">
+            <div className="px-4 pt-4 pb-1 text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
               {t("System", "Tools")}
             </div>
             {toolsItems.map((item, i) => {
@@ -516,7 +516,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
               }`;
               // Same "ML tools" shelf as the rail and the desktop dropdown.
               const sub = !!item.subgroup && item.subgroup !== toolsItems[i - 1]?.subgroup && (
-                <div className="px-4 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-ink-tertiary">
+                <div className="px-4 pt-3 pb-1 text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
                   {item.subgroup}
                 </div>
               );
@@ -557,7 +557,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
               );
             })}
             {/* Settings section */}
-            <div className="px-4 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-ink-tertiary">
+            <div className="px-4 pt-4 pb-1 text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
               {t("System", "Settings")}
             </div>
             <button
@@ -568,7 +568,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                 <ThemeIcon size={16} className="text-ink-tertiary" />
                 {t("System", "Theme")}
               </div>
-              <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded bg-warm text-ink-muted">
+              <span className="px-1.5 py-0.5 text-meta font-semibold rounded bg-warm text-ink-muted">
                 {themeLabel}
               </span>
             </button>
@@ -581,7 +581,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                 {t("System", "Test RTL layout")}
               </div>
               <span
-                className={`px-1.5 py-0.5 text-[10px] font-semibold rounded ${
+                className={`px-1.5 py-0.5 text-meta font-semibold rounded ${
                   rtl ? "bg-success-light text-success" : "bg-warm text-ink-muted"
                 }`}
               >

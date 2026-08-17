@@ -113,7 +113,7 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
             <RowCheckbox refIds={[reference.id]} />
             <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} highlight={query} />
             <DirectionGlyph direction={direction} />
-            <span className="text-[10px] text-ink-tertiary truncate capitalize">
+            <span className="text-meta text-ink-tertiary truncate capitalize">
               <HighlightedText text={relLabel} query={query} />
             </span>
           </div>
@@ -146,7 +146,7 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
             <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} highlight={query} />
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-[10px] text-ink-tertiary">{type?.name ?? ""}</span>
+            <span className="text-meta text-ink-tertiary">{type?.name ?? ""}</span>
             {selection && (
               <PageTag page={selection.page} onClick={handleClick} />
             )}
@@ -196,12 +196,12 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
             fadeTo={isActive ? "var(--bg-primary)" : "var(--bg-warm)"}
           />
           <span className="shrink-0 flex items-center gap-1">
-            <span className="text-[10px] text-ink-tertiary">target</span>
+            <span className="text-meta text-ink-tertiary">target</span>
             <PageTag page={reference.targetSelection.page} />
           </span>
         </div>
       )}
-      <div className="flex items-center justify-between mt-1 text-[10px] text-ink-tertiary">
+      <div className="flex items-center justify-between mt-1 text-meta text-ink-tertiary">
         {nested ? (
           <span />
         ) : (

@@ -21,7 +21,7 @@ export function ListeningChip({ label, onStop }: { label: string; onStop: () => 
       <span className="w-1.5 h-1.5 rounded-full bg-carbon shrink-0" aria-hidden />
       {/* `aria-live`: arming happens on FOCUS, so a keyboard user who tabbed
           into the field never sees the chip appear — it has to be spoken. */}
-      <span className="text-[10px] leading-none text-ink-tertiary" aria-live="polite">
+      <span className="text-meta leading-none text-ink-tertiary" aria-live="polite">
         select text or a value
       </span>
       <button

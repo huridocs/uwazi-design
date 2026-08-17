@@ -47,7 +47,7 @@ export const CardSlot: Story = {
             image={entity.image}
             className="h-24 w-full rounded overflow-hidden border border-border/60"
           />
-          <p className="text-[10px] text-ink-tertiary">
+          <p className="text-meta text-ink-tertiary">
             {label} · {entity.image!.width}×{entity.image!.height}
           </p>
         </div>
@@ -68,7 +68,7 @@ export const ListChip: Story = {
             size="sm"
             className="w-9 h-9 rounded shrink-0 overflow-hidden"
           />
-          <span className="text-[10px] text-ink-tertiary">{label}</span>
+          <span className="text-meta text-ink-tertiary">{label}</span>
         </div>
       ))}
     </div>
@@ -123,7 +123,7 @@ export const Sizes: Story = {
                   </span>
                 ))}
               </div>
-              <p className="text-[10px] text-ink-tertiary">{size}</p>
+              <p className="text-meta text-ink-tertiary">{size}</p>
             </div>
           ))}
         </div>
@@ -176,7 +176,7 @@ export const FitModes: Story = {
                   </span>
                 ))}
               </div>
-              <p className="text-[10px] text-ink-tertiary">
+              <p className="text-meta text-ink-tertiary">
                 fit: {fit} · portrait / landscape / square
                 {frame === "portrait" && fit === "cover" && " · full-bleed, no frame"}
               </p>
@@ -199,7 +199,7 @@ export const NoAsset: Story = {
           kind="image"
           className="h-24 w-full rounded overflow-hidden border border-border/60"
         />
-        <p className="text-[10px] text-ink-tertiary">image · no asset</p>
+        <p className="text-meta text-ink-tertiary">image · no asset</p>
       </div>
       <div className="space-y-1.5">
         <EntityThumbnail
@@ -207,14 +207,14 @@ export const NoAsset: Story = {
           image={{ ...SAMPLES[0].entity.image!, url: "/artwork-images/does-not-exist.jpg" }}
           className="h-24 w-full rounded overflow-hidden border border-border/60"
         />
-        <p className="text-[10px] text-ink-tertiary">image · broken url</p>
+        <p className="text-meta text-ink-tertiary">image · broken url</p>
       </div>
       <div className="space-y-1.5">
         <EntityThumbnail
           kind="video"
           className="h-24 w-full rounded overflow-hidden border border-border/60"
         />
-        <p className="text-[10px] text-ink-tertiary">video · unchanged</p>
+        <p className="text-meta text-ink-tertiary">video · unchanged</p>
       </div>
     </div>
   ),

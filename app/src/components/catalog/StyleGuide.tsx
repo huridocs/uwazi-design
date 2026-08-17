@@ -70,7 +70,7 @@ function ColorSwatch({ hex, name, cssVar, tw }: { hex: string; name: string; css
         <span className="text-meta font-medium text-ink hover:text-carbon transition-colors">{name}</span>
       </CopyText>
       <CopyText text={`var(${cssVar})`}>
-        <span className="text-[10px] font-mono text-ink-muted hover:text-carbon transition-colors">{cssVar}</span>
+        <span className="text-meta font-mono text-ink-muted hover:text-carbon transition-colors">{cssVar}</span>
       </CopyText>
       <CopyText text={hex}>
         <span className="text-[9px] font-mono text-ink-muted hover:text-carbon transition-colors">{hex}</span>
@@ -86,7 +86,7 @@ function ColorGroup({ title, colors }: { title: string; colors: ColorDef[] }) {
       <div className="grid grid-cols-2 gap-4">
         {/* Light column */}
         <div className="rounded-lg border border-border/40 p-3" style={{ backgroundColor: "#F5F0E8" }}>
-          <span className="text-[10px] font-semibold uppercase tracking-wider mb-2 block" style={{ color: "#6B6B6B" }}>
+          <span className="text-meta font-semibold uppercase tracking-wider mb-2 block" style={{ color: "#6B6B6B" }}>
             Light
           </span>
           <div className="grid grid-cols-2 gap-2">
@@ -97,7 +97,7 @@ function ColorGroup({ title, colors }: { title: string; colors: ColorDef[] }) {
         </div>
         {/* Dark column */}
         <div className="rounded-lg border border-border/40 p-3" style={{ backgroundColor: "#1A1A1A" }}>
-          <span className="text-[10px] font-semibold uppercase tracking-wider mb-2 block" style={{ color: "#9A9A9A" }}>
+          <span className="text-meta font-semibold uppercase tracking-wider mb-2 block" style={{ color: "#9A9A9A" }}>
             Dark
           </span>
           <div className="grid grid-cols-2 gap-2">
@@ -125,7 +125,7 @@ function DarkSwatch({ hex, name, cssVar, tw }: { hex: string; name: string; cssV
         <span className="text-meta font-medium hover:opacity-70 transition-colors" style={{ color: "#D4CDB8" }}>{name}</span>
       </CopyText>
       <CopyText text={`var(${cssVar})`}>
-        <span className="text-[10px] font-mono transition-colors" style={{ color: "#6B6B6B" }}>{cssVar}</span>
+        <span className="text-meta font-mono transition-colors" style={{ color: "#6B6B6B" }}>{cssVar}</span>
       </CopyText>
       <CopyText text={hex}>
         <span className="text-[9px] font-mono transition-colors" style={{ color: "#6B6B6B" }}>{hex}</span>
@@ -196,7 +196,7 @@ export function StyleGuide() {
           {typeSamples.map((s) => (
             <div key={s.label} className="flex items-baseline gap-4">
               <CopyText text={s.label}>
-                <code className="text-[10px] font-mono text-ink-muted w-28 shrink-0 hover:text-carbon transition-colors">{s.label}</code>
+                <code className="text-meta font-mono text-ink-muted w-28 shrink-0 hover:text-carbon transition-colors">{s.label}</code>
               </CopyText>
               <span className={`${s.className} text-ink`}>{s.text}</span>
             </div>
@@ -215,7 +215,7 @@ export function StyleGuide() {
                 style={{ boxShadow: s.value }}
               />
               <CopyText text={s.tw}>
-                <code className="text-[10px] font-mono text-ink-muted hover:text-carbon transition-colors">shadow-{s.name}</code>
+                <code className="text-meta font-mono text-ink-muted hover:text-carbon transition-colors">shadow-{s.name}</code>
               </CopyText>
             </div>
           ))}
@@ -233,7 +233,7 @@ export function StyleGuide() {
                 style={{ borderRadius: r.value }}
               />
               <CopyText text={r.tw}>
-                <code className="text-[10px] font-mono text-ink-muted hover:text-carbon transition-colors">{r.name}</code>
+                <code className="text-meta font-mono text-ink-muted hover:text-carbon transition-colors">{r.name}</code>
               </CopyText>
             </div>
           ))}
@@ -247,12 +247,12 @@ export function StyleGuide() {
           {spacingValues.map((s) => (
             <CopyText key={s.name} text={s.tw}>
               <div className="flex items-center gap-3 hover:bg-warm rounded px-1 -mx-1 transition-colors">
-                <code className="text-[10px] font-mono text-ink-muted w-12 text-right shrink-0">{s.name}</code>
+                <code className="text-meta font-mono text-ink-muted w-12 text-right shrink-0">{s.name}</code>
                 <div
                   className="h-3 bg-carbon/70 rounded-sm"
                   style={{ width: s.px * 2.5 }}
                 />
-                <span className="text-[10px] text-ink-muted">{s.px}px</span>
+                <span className="text-meta text-ink-muted">{s.px}px</span>
               </div>
             </CopyText>
           ))}

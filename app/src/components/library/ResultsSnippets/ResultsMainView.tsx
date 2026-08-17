@@ -619,11 +619,11 @@ function TreeBranch({
           className={`text-ink-muted transition-transform ${open ? "" : "-rotate-90"}`}
         />
         {icon}
-        <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+        <span className="text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
           {label}
         </span>
-        <span className="text-[10px] tabular-nums text-ink-muted">{count.toLocaleString()}</span>
-        {note && <span className="text-[10px] text-ink-muted">· {note}</span>}
+        <span className="text-meta tabular-nums text-ink-muted">{count.toLocaleString()}</span>
+        {note && <span className="text-meta text-ink-muted">· {note}</span>}
         {trailing}
       </button>
       {open && (
@@ -798,7 +798,7 @@ function PassagesBody({
                       ends up mis-ordered. */}
                   <bdi
                     dir={isDoc ? "ltr" : "auto"}
-                    className="shrink-0 text-[10px] uppercase tracking-wide text-ink-tertiary"
+                    className="shrink-0 text-meta uppercase tracking-wide text-ink-tertiary"
                   >
                     {isDoc ? (
                       <>
@@ -952,7 +952,7 @@ function SpineBody({
                   attribution, so a borrowed document appearing on one row can't
                   pull that row's passage shorter than its neighbours'. */}
               {best && (
-                <span className="hidden md:flex shrink-0 w-[14rem] items-center justify-end gap-1.5 overflow-hidden text-[10px] text-ink-muted">
+                <span className="hidden md:flex shrink-0 w-[14rem] items-center justify-end gap-1.5 overflow-hidden text-meta text-ink-muted">
                   <bdi dir="ltr" className="shrink-0">
                     {best.label}
                   </bdi>
@@ -1023,7 +1023,7 @@ function PropertyRow({
         transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1
         focus-visible:ring-inset focus-visible:ring-ink/20"
     >
-      <span className="block text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+      <span className="block text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
         {group.field}
       </span>
       {group.texts.map((t, i) => (

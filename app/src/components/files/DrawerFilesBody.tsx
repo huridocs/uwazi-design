@@ -126,7 +126,7 @@ export function DrawerFilesBody({
                 <h4 className="text-sm font-semibold text-ink truncate">
                   {group.title}
                 </h4>
-                <span className="text-[10px] text-ink-tertiary tabular-nums shrink-0">
+                <span className="text-meta text-ink-tertiary tabular-nums shrink-0">
                   {groupFiles.length} {groupFiles.length === 1 ? "file" : "files"}
                 </span>
               </div>
@@ -204,7 +204,7 @@ export function DrawerFilesBody({
 
 function SectionHeader({ label }: { label: string }) {
   return (
-    <h3 className="text-[10px] font-semibold text-ink-tertiary uppercase tracking-wider px-1 mb-3">
+    <h3 className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider px-1 mb-3">
       {label}
     </h3>
   );
@@ -325,7 +325,7 @@ function DrawerFileRow({
               <select
                 value={draftLang}
                 onChange={(e) => setDraftLang(e.target.value)}
-                className="appearance-none bg-transparent pl-2 pr-5 py-0.5 text-[10px] font-semibold text-ink-secondary focus:outline-none cursor-pointer"
+                className="appearance-none bg-transparent pl-2 pr-5 py-0.5 text-meta font-semibold text-ink-secondary focus:outline-none cursor-pointer"
                 aria-label="File language"
               >
                 {languageOptions.map((lang) => (
@@ -339,8 +339,8 @@ function DrawerFileRow({
                 className="absolute right-1 text-ink-tertiary pointer-events-none"
               />
             </div>
-            <span className="text-[10px] text-ink-tertiary">{file.type.toUpperCase()}</span>
-            <span className="text-[10px] text-ink-tertiary">{file.size}</span>
+            <span className="text-meta text-ink-tertiary">{file.type.toUpperCase()}</span>
+            <span className="text-meta text-ink-tertiary">{file.size}</span>
           </div>
         </div>
       ) : (
@@ -352,8 +352,8 @@ function DrawerFileRow({
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-[10px] text-ink-tertiary">{file.type.toUpperCase()}</span>
-            <span className="text-[10px] text-ink-tertiary">{file.size}</span>
+            <span className="text-meta text-ink-tertiary">{file.type.toUpperCase()}</span>
+            <span className="text-meta text-ink-tertiary">{file.size}</span>
           </div>
         </div>
       )}

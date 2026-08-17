@@ -153,7 +153,7 @@ export function DisplayMenu() {
             {/* The time strip belongs to EVERY layout — it filters by date and
                 charts the whole result set, so cards and the table want it as
                 much as the map and the timeline it started under. */}
-            <p className="px-2 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+            <p className="px-2 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
               Chart
             </p>
             <button
@@ -175,7 +175,7 @@ export function DisplayMenu() {
                 view switcher, which matters more than a sort key you set once. */}
             {isMobile && (
               <>
-                <p className="px-2 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+                <p className="px-2 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
                   Sort by
                 </p>
                 {SORTS.map((s) => {
@@ -207,7 +207,7 @@ export function DisplayMenu() {
 
             {showResultsLayouts && (
               <>
-                <p className="px-2 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+                <p className="px-2 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
                   Results layout
                 </p>
                 {RESULTS_LAYOUTS.map((l) => {
@@ -228,7 +228,7 @@ export function DisplayMenu() {
                         >
                           {l.label}
                         </span>
-                        <span className="block text-[10px] text-ink-tertiary leading-tight">
+                        <span className="block text-meta text-ink-tertiary leading-tight">
                           {l.detail}
                         </span>
                       </span>
@@ -240,7 +240,7 @@ export function DisplayMenu() {
 
             {showLayouts && (
               <>
-                <p className="px-2 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+                <p className="px-2 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
                   Timeline layout
                 </p>
                 {LAYOUTS.map((l) => {
@@ -261,7 +261,7 @@ export function DisplayMenu() {
                         >
                           {l.label}
                         </span>
-                        <span className="block text-[10px] text-ink-tertiary leading-tight">
+                        <span className="block text-meta text-ink-tertiary leading-tight">
                           {l.detail}
                         </span>
                       </span>
@@ -276,7 +276,7 @@ export function DisplayMenu() {
                 {showLayouts && (
                   <div className="my-1 h-px" style={{ backgroundColor: "var(--border-soft)" }} />
                 )}
-                <p className="px-2 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+                <p className="px-2 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
                   Show information
                 </p>
                 {ITEMS.map((it) => {
@@ -303,7 +303,7 @@ export function DisplayMenu() {
             {showThumbs && (
               <>
                 <div className="my-1 h-px" style={{ backgroundColor: "var(--border-soft)" }} />
-                <p className="px-2 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+                <p className="px-2 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
                   Thumbnail size
                 </p>
                 {THUMB_SIZES.map((s) => {
@@ -329,7 +329,7 @@ export function DisplayMenu() {
                     sits in it. It is one choice for the WHOLE grid — per-card
                     orientation would ragged the rows the reserved slot exists to
                     keep level. */}
-                <p className="px-2 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+                <p className="px-2 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
                   Thumbnail frame
                 </p>
                 {THUMB_FRAMES.map((f) => {
@@ -350,14 +350,14 @@ export function DisplayMenu() {
                         >
                           {f.label}
                         </span>
-                        <span className="block text-[10px] text-ink-tertiary leading-tight">
+                        <span className="block text-meta text-ink-tertiary leading-tight">
                           {f.detail}
                         </span>
                       </span>
                     </button>
                   );
                 })}
-                <p className="px-2 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+                <p className="px-2 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
                   Image fit
                 </p>
                 {THUMB_FITS.map((f) => {
@@ -378,7 +378,7 @@ export function DisplayMenu() {
                         >
                           {f.label}
                         </span>
-                        <span className="block text-[10px] text-ink-tertiary leading-tight">
+                        <span className="block text-meta text-ink-tertiary leading-tight">
                           {f.detail}
                         </span>
                       </span>

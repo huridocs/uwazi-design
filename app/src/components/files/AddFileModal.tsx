@@ -322,7 +322,7 @@ export function AddFileModal() {
 
                     <div className="grid grid-cols-2 gap-3">
                       <label className="space-y-1">
-                        <span className="text-[10px] font-medium text-ink-muted uppercase tracking-wide">
+                        <span className="text-meta font-medium text-ink-muted uppercase tracking-wide">
                           Language
                         </span>
                         <div className="relative">
@@ -348,7 +348,7 @@ export function AddFileModal() {
                       </label>
 
                       <label className="space-y-1">
-                        <span className="text-[10px] font-medium text-ink-muted uppercase tracking-wide">
+                        <span className="text-meta font-medium text-ink-muted uppercase tracking-wide">
                           Add as
                         </span>
                         <div className="relative">
@@ -401,11 +401,11 @@ export function AddFileModal() {
                         />
                       </div>
                       {entry.progress >= 1 ? (
-                        <span className="flex items-center gap-1 text-[10px] font-medium text-success">
+                        <span className="flex items-center gap-1 text-meta font-medium text-success">
                           <Check size={11} /> Ready
                         </span>
                       ) : (
-                        <span className="text-[10px] text-ink-tertiary tabular-nums">
+                        <span className="text-meta text-ink-tertiary tabular-nums">
                           {Math.round(entry.progress * 100)}%
                         </span>
                       )}

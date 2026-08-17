@@ -33,11 +33,11 @@ export const Empty: Story = {
   args: { from: null },
   render: () => (
     <div className="space-y-3 max-w-md">
-      <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+      <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
         Document
         <BorrowedDocLine from={null} />
       </p>
-      <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-ink-tertiary">
+      <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
         Document
         <BorrowedDocLine from={{ entityId: "e-2", title: "Velásquez-Rodríguez v. Honduras" }} />
       </p>

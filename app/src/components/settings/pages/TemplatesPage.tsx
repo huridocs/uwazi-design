@@ -56,7 +56,7 @@ export function TemplatesPage() {
           <span className="w-2.5 h-2.5 rounded-[2px] border border-ink/20 shrink-0" style={{ backgroundColor: t.color }} />
           <span className="font-medium text-ink truncate">{t.name}</span>
           {t.isDefault && (
-            <span className="text-[10px] font-semibold text-carbon bg-carbon-tint px-1.5 py-px rounded w-fit">
+            <span className="text-meta font-semibold text-carbon bg-carbon-tint px-1.5 py-px rounded w-fit">
               Default
             </span>
           )}

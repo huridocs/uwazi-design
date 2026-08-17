@@ -37,10 +37,10 @@ const INITIAL_MEMBERS: Member[] = seedUsers.slice(0, 1).map((user) => ({
 }));
 
 const noticeClass =
-  "flex items-center gap-1 text-[10px] leading-tight text-ink-secondary";
+  "flex items-center gap-1 text-meta leading-tight text-ink-secondary";
 
 const hintClass =
-  "rounded-md border border-border bg-paper px-2.5 py-1.5 text-[10px] font-medium leading-snug text-ink shadow-sm";
+  "rounded-md border border-border bg-paper px-2.5 py-1.5 text-meta font-medium leading-snug text-ink shadow-sm";
 
 const findCollaborator = (term: string, assignedIds: Set<string>): Member | undefined => {
   const normalized = term.trim().toLowerCase();

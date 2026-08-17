@@ -38,7 +38,7 @@ export function EntityTypeTag({
         style={{ backgroundColor: color }}
         aria-hidden
       />
-      <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-tertiary truncate">
+      <span className="text-meta font-semibold uppercase tracking-[0.08em] text-ink-tertiary truncate">
         {name}
       </span>
     </span>

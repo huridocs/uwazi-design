@@ -93,7 +93,7 @@ export function MobileActionMenu({ items }: MobileActionMenuProps) {
                 {item.label}
               </div>
               {item.count !== undefined && (
-                <span className="text-[10px] font-semibold text-ink-tertiary">
+                <span className="text-meta font-semibold text-ink-tertiary">
                   {item.count}
                 </span>
               )}
