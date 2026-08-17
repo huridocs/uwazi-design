@@ -133,7 +133,7 @@ export function FacetSection({
             {title}
           </span>
           {selectedCount > 0 && (
-            <span className="shrink-0 inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-carbon/10 text-[10px] font-semibold text-carbon tabular-nums">
+            <span className="shrink-0 inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-carbon/10 text-meta font-semibold text-carbon tabular-nums">
               {selectedCount}
             </span>
           )}
@@ -158,7 +158,7 @@ export function FacetSection({
             <div className="px-4 pt-0.5 pb-2 space-y-2">
               {mode && onModeChange && (
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] uppercase tracking-wide text-ink-muted">
+                  <span className="text-meta uppercase tracking-wide text-ink-muted">
                     Match
                   </span>
                   <div className="inline-flex items-center gap-0.5 bg-warm rounded-md p-0.5">
@@ -166,7 +166,7 @@ export function FacetSection({
                       <button
                         key={m}
                         onClick={() => onModeChange(m)}
-                        className={`px-2 h-5 rounded text-[10px] font-bold tracking-wide transition-colors cursor-pointer ${
+                        className={`px-2 h-5 rounded text-meta font-bold tracking-wide transition-colors cursor-pointer ${
                           mode === m
                             ? "bg-vellum text-ink"
                             : "text-ink-tertiary hover:text-ink-secondary"
@@ -215,7 +215,7 @@ export function FacetSection({
             return (
               <Fragment key={id}>
                 {showGroupHeader && (
-                  <div className="px-4 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink-muted truncate">
+                  <div className="px-4 pt-2 pb-0.5 text-meta font-semibold uppercase tracking-wide text-ink-muted truncate">
                     {row.group}
                   </div>
                 )}

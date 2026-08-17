@@ -261,7 +261,7 @@ export function LibraryFilters() {
           dead space. The facet cards sit flush under the tabs at all times. */}
       {/* Facet cards — top padding matches the main content (py-3) so the first
           block lines up with the first library card. */}
-      <div className="flex-1 overflow-auto px-3.5 pt-3 pb-3 space-y-2">
+      <div className="flex-1 overflow-auto px-3.5 pt-3 pb-3 space-y-1.5">
         <FacetCard title="Status">
           <FacetRow
             checked={!!statusFilters.restricted}
@@ -414,12 +414,12 @@ export function LibraryFilters() {
         ))}
 
         {chainHasAny && (
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {/* Chain-filter group: a relationship path the facets traverse. The
                 breadcrumb shows the full path; the segments these facets filter
                 are emphasised. Selections combine path-coupled. */}
             <div className="px-1.5 pt-1 space-y-1">
-              <span className="block text-sm font-bold text-ink">
+              <span className="block text-xs font-bold text-ink">
                 {chainDefs[0].groupLabel}
               </span>
               <p className="text-meta text-ink-tertiary leading-snug">
@@ -517,7 +517,7 @@ function FacetCard({ title, children }: { title?: string; children: ReactNode })
     <div className={FACET_CARD}>
       {title && (
         <div className="px-2 pt-1 pb-0.5">
-          <span className="text-sm font-bold text-ink">{title}</span>
+          <span className="text-xs font-bold text-ink">{title}</span>
         </div>
       )}
       {children}
@@ -608,9 +608,13 @@ function FacetRow({
   reserveGutter?: boolean;
 }) {
   const Icon = icon;
+  // The desktop rail tightens to py-1 now the type sits a step smaller, but a
+  // row is a CHECKBOX, so the floor below `md` is the repo's touch target
+  // (min-h-11 — the same utility DocMeta and DataTable rows use) rather than
+  // whatever the padding happens to add up to.
   return (
     <label
-      className={`flex items-center rounded-md py-1.5 pe-2 cursor-pointer hover:bg-warm transition-colors ${
+      className={`flex items-center rounded-md min-h-11 md:min-h-0 py-1 pe-2 cursor-pointer hover:bg-warm transition-colors ${
         child ? "ps-0" : expandable || reserveGutter ? "ps-0" : "ps-2"
       }`}
     >
@@ -642,9 +646,9 @@ function FacetRow({
       <Checkbox checked={checked} onChange={onToggle} ariaLabel={label} />
       <span className="flex-1 min-w-0 flex items-center gap-1.5 ms-2.5">
         {Icon && <Icon size={13} className="text-ink-tertiary shrink-0" />}
-        <span className={`truncate text-sm ${bold ? "text-ink" : "text-ink-secondary"}`}>{label}</span>
+        <span className={`truncate text-xs ${bold ? "text-ink" : "text-ink-secondary"}`}>{label}</span>
       </span>
-      <span className={`shrink-0 text-sm tabular-nums ${bold ? "font-bold text-ink" : "font-semibold text-ink-secondary"}`}>
+      <span className={`shrink-0 text-xs tabular-nums ${bold ? "font-bold text-ink" : "font-semibold text-ink-secondary"}`}>
         {count}
       </span>
     </label>
@@ -707,9 +711,9 @@ function KeywordFacetCard({
     <div className={`${FACET_CARD} space-y-1.5`}>
       <div className="flex items-center justify-between gap-2 px-2 pt-1">
         <span className="flex items-center gap-1.5 min-w-0">
-          <span className="text-sm font-bold text-ink truncate">{title}</span>
+          <span className="text-xs font-bold text-ink truncate">{title}</span>
           {selectedCount > 0 && (
-            <span className="shrink-0 inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-carbon/10 text-[10px] font-semibold text-carbon tabular-nums">
+            <span className="shrink-0 inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-carbon/10 text-meta font-semibold text-carbon tabular-nums">
               {selectedCount}
             </span>
           )}
@@ -730,7 +734,7 @@ function KeywordFacetCard({
                 <button
                   key={m}
                   onClick={() => onModeChange(m)}
-                  className={`px-2 h-5 rounded text-[10px] font-bold tracking-wide transition-colors cursor-pointer ${
+                  className={`px-2 h-5 rounded text-meta font-bold tracking-wide transition-colors cursor-pointer ${
                     mode === m ? "bg-vellum text-ink" : "text-ink-tertiary hover:text-ink-secondary"
                   }`}
                 >
@@ -780,10 +784,10 @@ function KeywordFacetCard({
                 }`}
               >
                 <Checkbox checked={checked} onChange={() => onToggle(c)} ariaLabel={c} />
-                <span className={`flex-1 truncate text-sm ${checked ? "text-ink font-medium" : "text-ink-secondary"}`}>
+                <span className={`flex-1 truncate text-xs ${checked ? "text-ink font-medium" : "text-ink-secondary"}`}>
                   {c}
                 </span>
-                <span className="shrink-0 text-sm font-semibold tabular-nums text-ink-secondary">
+                <span className="shrink-0 text-xs font-semibold tabular-nums text-ink-secondary">
                   {counts.get(c) ?? 0}
                 </span>
               </label>
@@ -841,7 +845,7 @@ function DateRangeCard({
   return (
     <div className={`${FACET_CARD} space-y-1.5`}>
       <div className="flex items-center justify-between gap-2 px-2 pt-1">
-        <span className="text-sm font-bold text-ink">Date</span>
+        <span className="text-xs font-bold text-ink">Date</span>
         {active && (
           <button
             onClick={onClear}
@@ -860,12 +864,12 @@ function DateRangeCard({
               <button
                 key={p.label}
                 onClick={() => (isActive ? onClear() : onSetRange(p.from, p.to))}
-                className={`flex items-center justify-between gap-2 px-1.5 py-1 rounded-sm text-sm transition-colors cursor-pointer ${
+                className={`flex items-center justify-between gap-2 px-1.5 py-1 rounded-sm text-xs transition-colors cursor-pointer ${
                   isActive ? "bg-carbon/[0.06] text-ink font-medium" : "text-ink-secondary hover:bg-warm"
                 }`}
               >
                 <span className="truncate">{p.label}</span>
-                <span className="shrink-0 text-sm font-semibold tabular-nums text-ink-tertiary">
+                <span className="shrink-0 text-xs font-semibold tabular-nums text-ink-tertiary">
                   {p.count.toLocaleString()}
                 </span>
               </button>
