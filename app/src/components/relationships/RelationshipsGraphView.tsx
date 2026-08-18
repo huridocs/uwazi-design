@@ -481,7 +481,7 @@ export function RelationshipsGraphView() {
                   x={s.labelX}
                   y={s.labelY + 4}
                   textAnchor="middle"
-                  fontSize={10}
+                  fontSize={11}
                   fontWeight={500}
                   fill="var(--text-secondary)"
                 >
@@ -521,7 +521,7 @@ export function RelationshipsGraphView() {
               x={CX}
               y={CY + SOURCE_R + 18}
               textAnchor="middle"
-              fontSize={10}
+              fontSize={11}
               fontWeight={600}
               fill="var(--text-primary)"
             >
@@ -531,7 +531,7 @@ export function RelationshipsGraphView() {
               x={CX}
               y={CY + SOURCE_R + 30}
               textAnchor="middle"
-              fontSize={8}
+              fontSize={11}
               fill="var(--text-tertiary)"
             >
               {sourceType?.name ?? "Entity"}
@@ -655,7 +655,7 @@ export function RelationshipsGraphView() {
             <div className="text-meta font-semibold truncate">
               <HighlightedText text={hover.node.title} query={query} />
             </div>
-            <div className="text-[10px] opacity-80 truncate">
+            <div className="text-meta opacity-80 truncate">
               {hover.node.typeName} · {hover.node.evidenceCount} evidence
             </div>
           </div>
@@ -670,7 +670,7 @@ export function RelationshipsGraphView() {
         >
           −
         </button>
-        <span className="text-[10px] tabular-nums text-ink-tertiary w-9 text-center">
+        <span className="text-meta tabular-nums text-ink-tertiary w-9 text-center">
           {Math.round(transform.scale * 100)}%
         </span>
         <button

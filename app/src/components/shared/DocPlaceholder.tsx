@@ -63,7 +63,7 @@ export function DocPlaceholder({
       />
 
       {ext && size !== "sm" && (
-        <span className="absolute bottom-1 end-1 px-1 py-px rounded-[2px] bg-ink/70 text-paper text-[8px] font-semibold uppercase tracking-wider leading-none">
+        <span className="absolute bottom-1 end-1 px-1 py-px rounded-[2px] bg-ink/70 text-paper text-meta font-semibold uppercase tracking-wider leading-none">
           {ext}
         </span>
       )}

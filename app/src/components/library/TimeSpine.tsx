@@ -14,7 +14,8 @@ import { bucketOf, elapsed, formatDay } from "../../utils/timeline";
  *
  * TRACK_AXIS has to clear TRACK_LABEL by more than a counted ring's radius —
  * the cluster nodes straddle the axis, the density bars only grow inward. */
-const TRACK_LABEL = 26;
+// Sized for the 11px floor: at 9px this column was 26 and a date just fitted.
+const TRACK_LABEL = 32;
 const TRACK_AXIS = 44;
 const TRACK_BAR = 42;
 const TRACK_W = TRACK_AXIS + TRACK_BAR + 4;
@@ -363,7 +364,7 @@ export function TimeSpine<T>({
               it in both. The Rail and Density tracks' marks moved with it; the
               three axes are one label column and can't drift. */}
           <span
-            className="text-[9px] tabular-nums text-ink-tertiary whitespace-nowrap"
+            className="text-meta leading-none tabular-nums text-ink-tertiary whitespace-nowrap"
             style={{ width: geom.LABEL }}
           >
             {y.label}
@@ -397,7 +398,7 @@ export function TimeSpine<T>({
               `leading-4` pins the line box to GAP_H — the height the layout
               reserved for it. Inheriting the line-height instead would let the
               label outgrow its reserve on a caller with roomier leading. */}
-          <span dir="ltr" className="shrink-0 text-[10px] leading-4 italic text-ink-tertiary">
+          <span dir="ltr" className="shrink-0 text-meta leading-4 italic text-ink-tertiary">
             {elapsed(g.ms)} later
           </span>
           <span
@@ -590,7 +591,7 @@ function ClusterLeader<T>({
  *  the dot it belongs to. */
 export function SpineDate({ t }: { t: number }) {
   return (
-    <span className="shrink-0 w-[5.5rem] text-[10px] tabular-nums text-ink-tertiary">
+    <span className="shrink-0 w-[5.5rem] text-meta tabular-nums text-ink-tertiary">
       <bdi dir="ltr">{formatDay(t)}</bdi>
     </span>
   );

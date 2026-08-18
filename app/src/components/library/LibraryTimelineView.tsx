@@ -414,9 +414,9 @@ function TrackFrame({
         {marks.map((m) => (
           <span
             key={`l-${m.label}`}
-            // ink-TERTIARY: at 9px this is small text, and muted misses AA on
+            // ink-TERTIARY: at 11px this is still small text, and muted misses AA on
             // both themes. Same step the spine's marks take — one label column.
-            className="absolute text-[9px] tabular-nums text-ink-tertiary -translate-y-1/2 pointer-events-none text-start"
+            className="absolute text-meta leading-none tabular-nums text-ink-tertiary -translate-y-1/2 pointer-events-none text-start"
             style={{ top: `${m.yPct}%`, insetInlineEnd: 0, width: labelW }}
           >
             {m.label}
@@ -430,7 +430,7 @@ function TrackFrame({
 function EdgeCount({ dir, n, axisEnd }: { dir: "up" | "down"; n: number; axisEnd: number }) {
   return (
     <span
-      className="absolute text-[10px] font-medium tabular-nums leading-none translate-x-1/2 rounded-[3px] px-1 py-0.5 pointer-events-none whitespace-nowrap"
+      className="absolute text-meta font-medium tabular-nums leading-none translate-x-1/2 rounded-[3px] px-1 py-0.5 pointer-events-none whitespace-nowrap"
       style={{
         insetInlineEnd: axisEnd,
         [dir === "up" ? "top" : "bottom"]: 0,
@@ -523,7 +523,7 @@ function ClusterTrack(props: TrackProps) {
             >
               {!small && (
                 <span
-                  className="text-[9px] font-bold leading-none tabular-nums"
+                  className="text-meta font-bold leading-none tabular-nums"
                   style={{ color: lit ? "var(--text-primary)" : "var(--text-tertiary)" }}
                 >
                   {n > 99 ? "99+" : n}
@@ -710,7 +710,7 @@ function SpineLayout({ dated, query, selectedId, onSelect }: LayoutProps) {
                 >
                   <HighlightedText text={e.title} query={query} />
                 </span>
-                <span className="shrink-0 text-[10px] text-ink-muted hidden md:block">
+                <span className="shrink-0 text-meta text-ink-muted hidden md:block">
                   {getEntityType(e.typeId)?.name ?? e.typeId}
                 </span>
                 {/* Reserved while a query is active — a fixed box the per-row
@@ -799,8 +799,8 @@ function LanesLayout({ laneChart }: LayoutProps) {
           <div className="shrink-0 w-40" />
           {cols.map((c, i) => (
             <div key={c.key} className="shrink-0 text-center" style={{ width: colW }}>
-              {i % Math.ceil(cols.length / 16 || 1) === 0 && (
-                <span className="block text-[9px] tabular-nums text-ink-tertiary -rotate-45 origin-center whitespace-nowrap">
+              {i % Math.ceil(cols.length / 11 || 1) === 0 && (
+                <span className="block text-meta leading-none tabular-nums text-ink-tertiary -rotate-45 origin-center whitespace-nowrap">
                   {c.label}
                 </span>
               )}
@@ -822,7 +822,7 @@ function LanesLayout({ laneChart }: LayoutProps) {
                 >
                   {lane.name}
                 </span>
-                <span className="ms-auto text-[10px] tabular-nums text-ink-muted">
+                <span className="ms-auto text-meta tabular-nums text-ink-muted">
                   {lane.total.toLocaleString()}
                 </span>
               </div>
@@ -862,7 +862,7 @@ function LanesLayout({ laneChart }: LayoutProps) {
                     )}
                     {hover === id && (
                       <span
-                        className="absolute z-50 bottom-full mb-1 pointer-events-none text-[10px] font-medium whitespace-nowrap rounded-md"
+                        className="absolute z-50 bottom-full mb-1 pointer-events-none text-meta font-medium whitespace-nowrap rounded-md"
                         style={{
                           padding: "3px 7px",
                           backgroundColor: "var(--text-primary)",

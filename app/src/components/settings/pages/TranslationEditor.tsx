@@ -67,7 +67,7 @@ export function TranslationEditor({
         <span className="flex items-center gap-1.5">
           {lang.label}
           {lang.default && (
-            <span className="text-[9px] font-semibold text-carbon bg-carbon-tint px-1 py-px rounded normal-case">
+            <span className="text-meta font-semibold text-carbon bg-carbon-tint px-1 py-px rounded normal-case">
               Source
             </span>
           )}

@@ -73,7 +73,7 @@ function ColorSwatch({ hex, name, cssVar, tw }: { hex: string; name: string; css
         <span className="text-meta font-mono text-ink-muted hover:text-carbon transition-colors">{cssVar}</span>
       </CopyText>
       <CopyText text={hex}>
-        <span className="text-[9px] font-mono text-ink-muted hover:text-carbon transition-colors">{hex}</span>
+        <span className="text-meta font-mono text-ink-muted hover:text-carbon transition-colors">{hex}</span>
       </CopyText>
     </div>
   );
@@ -128,7 +128,7 @@ function DarkSwatch({ hex, name, cssVar, tw }: { hex: string; name: string; cssV
         <span className="text-meta font-mono transition-colors" style={{ color: "#6B6B6B" }}>{cssVar}</span>
       </CopyText>
       <CopyText text={hex}>
-        <span className="text-[9px] font-mono transition-colors" style={{ color: "#6B6B6B" }}>{hex}</span>
+        <span className="text-meta font-mono transition-colors" style={{ color: "#6B6B6B" }}>{hex}</span>
       </CopyText>
     </div>
   );

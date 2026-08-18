@@ -227,7 +227,7 @@ function FileThumbnail({ type }: { type: FileEntry["type"] }) {
   if (type === "link") {
     return (
       <div className={`${wrap} bg-seal`}>
-        <span className="text-[9px] font-bold text-white">YouTube</span>
+        <span className="text-meta font-bold text-white">YouTube</span>
       </div>
     );
   }
@@ -252,7 +252,7 @@ function FileThumbnail({ type }: { type: FileEntry["type"] }) {
         className="bg-paper rounded shadow-sm flex items-center justify-center"
         style={{ width: "2.25rem", height: "2.75rem" }}
       >
-        <span className="text-[8px] text-ink-muted">{label}</span>
+        <span className="text-meta text-ink-muted">{label}</span>
       </div>
     </div>
   );
@@ -347,7 +347,7 @@ function DrawerFileRow({
         <div className="flex-1 min-w-0 px-3 py-2 flex flex-col justify-center gap-0.5">
           <div className="flex items-center gap-1.5">
             <p className="text-xs font-medium text-ink truncate">{file.name}</p>
-            <span className="text-[9px] font-semibold text-ink-secondary bg-vellum px-1 py-px rounded shrink-0">
+            <span className="text-meta font-semibold text-ink-secondary bg-vellum px-1 py-px rounded shrink-0">
               {file.language}
             </span>
           </div>

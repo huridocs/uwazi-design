@@ -250,7 +250,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
                 ))}
               </div>
               <span
-                className="text-[10px] font-medium tabular-nums leading-none"
+                className="text-meta font-medium tabular-nums leading-none"
                 style={{ color: "var(--text-tertiary)" }}
               >
                 ↑ {beforeCount}
@@ -273,7 +273,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
               }}
             >
               <span
-                className="text-[10px] font-medium tabular-nums leading-none"
+                className="text-meta font-medium tabular-nums leading-none"
                 style={{ color: "var(--text-tertiary)" }}
               >
                 ↓ {afterCount}
@@ -307,7 +307,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
           >
             <div style={{ width: 14, height: 1, backgroundColor: "var(--border-soft)" }} />
             <span
-              className="text-[9px] font-medium tabular-nums whitespace-nowrap"
+              className="text-meta leading-none font-medium tabular-nums whitespace-nowrap"
               style={{
                 color: "var(--text-tertiary)",
                 backgroundColor: "var(--bg-warm)",
@@ -369,7 +369,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
               {/* Tooltip — slides in from the right of the dot */}
               {isHov && (
                 <div
-                  className="absolute pointer-events-none text-[10px] font-medium whitespace-nowrap rounded-md"
+                  className="absolute pointer-events-none text-meta font-medium whitespace-nowrap rounded-md"
                   style={{
                     right: "calc(100% + 6px)",
                     top: "50%",
@@ -423,7 +423,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
                 }}
               >
                 <span
-                  className="text-[9px] font-bold leading-none"
+                  className="text-meta font-bold leading-none"
                   style={{ color: isExpanded || hasActiveRef ? "var(--text-primary)" : "var(--text-tertiary)" }}
                 >
                   {count}
@@ -539,7 +539,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
                     return (
                       <div
                         key={`tip-${ref.id}`}
-                        className="absolute pointer-events-none text-[10px] font-medium whitespace-nowrap rounded-md"
+                        className="absolute pointer-events-none text-meta font-medium whitespace-nowrap rounded-md"
                         style={{
                           top: topOffset + cy,
                           right: `calc(50% + ${outerSize / 2 + svgW + 12}px)`,

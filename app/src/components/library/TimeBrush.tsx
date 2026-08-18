@@ -246,7 +246,9 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
   ).filter((p) => p.ms < span);
 
   // Axis ticks — every Nth bucket boundary, thinned to fit.
-  const tickEvery = Math.max(1, Math.ceil(buckets.length / 12));
+  // 11px labels are ~22% wider than the 9px ones this axis was tuned for,
+  // so the axis carries fewer of them rather than a smaller size (11px floor).
+  const tickEvery = Math.max(1, Math.ceil(buckets.length / 7));
   const ticks = buckets.filter((_, i) => i % tickEvery === 0);
 
   const startDrag = (mode: DragState["mode"]) => (ev: React.PointerEvent) => {
@@ -493,7 +495,7 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
       </div>
 
       {/* Axis */}
-      <div className="relative h-3.5">
+      <div className="relative h-4">
         {ticks.map((b) => {
           // Clamp the end ticks so they don't hang off the strip.
           const p = pct(b.start);
@@ -501,7 +503,7 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
           return (
             <span
               key={b.key}
-              className="absolute top-0 text-[9px] tabular-nums whitespace-nowrap"
+              className="absolute top-0 text-meta leading-none tabular-nums whitespace-nowrap"
               style={{ left: `${p}%`, transform: shift, color: "var(--text-muted)" }}
             >
               {b.label}
