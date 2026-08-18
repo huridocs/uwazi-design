@@ -166,7 +166,7 @@ export function FacetSection({
                       <button
                         key={m}
                         onClick={() => onModeChange(m)}
-                        className={`px-2 h-5 rounded text-meta font-bold tracking-wide transition-colors cursor-pointer ${
+                        className={`px-2 h-6 rounded text-tab font-bold tracking-wide transition-colors cursor-pointer ${
                           mode === m
                             ? "bg-vellum text-ink"
                             : "text-ink-tertiary hover:text-ink-secondary"
