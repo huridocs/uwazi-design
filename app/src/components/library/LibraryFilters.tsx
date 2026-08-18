@@ -419,7 +419,7 @@ export function LibraryFilters() {
                 breadcrumb shows the full path; the segments these facets filter
                 are emphasised. Selections combine path-coupled. */}
             <div className="px-1.5 pt-1 space-y-1">
-              <span className="block text-meta font-bold text-ink">
+              <span className="block text-tab font-bold text-ink">
                 {chainDefs[0].groupLabel}
               </span>
               <p className="text-meta text-ink-tertiary leading-snug">
@@ -517,7 +517,7 @@ function FacetCard({ title, children }: { title?: string; children: ReactNode })
     <div className={FACET_CARD}>
       {title && (
         <div className="px-2 pt-1 pb-0.5">
-          <span className="text-meta font-bold text-ink">{title}</span>
+          <span className="text-tab font-bold text-ink">{title}</span>
         </div>
       )}
       {children}
@@ -646,9 +646,9 @@ function FacetRow({
       <Checkbox checked={checked} onChange={onToggle} ariaLabel={label} />
       <span className="flex-1 min-w-0 flex items-center gap-1.5 ms-2.5">
         {Icon && <Icon size={13} className="text-ink-tertiary shrink-0" />}
-        <span className={`truncate text-meta ${bold ? "text-ink" : "text-ink-secondary"}`}>{label}</span>
+        <span className={`truncate text-tab ${bold ? "text-ink" : "text-ink-secondary"}`}>{label}</span>
       </span>
-      <span className={`shrink-0 text-meta tabular-nums ${bold ? "font-bold text-ink" : "font-semibold text-ink-secondary"}`}>
+      <span className={`shrink-0 text-tab tabular-nums ${bold ? "font-bold text-ink" : "font-semibold text-ink-secondary"}`}>
         {count}
       </span>
     </label>
@@ -711,7 +711,7 @@ function KeywordFacetCard({
     <div className={`${FACET_CARD} space-y-1.5`}>
       <div className="flex items-center justify-between gap-2 px-2 pt-1">
         <span className="flex items-center gap-1.5 min-w-0">
-          <span className="text-meta font-bold text-ink truncate">{title}</span>
+          <span className="text-tab font-bold text-ink truncate">{title}</span>
           {selectedCount > 0 && (
             <span className="shrink-0 inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-carbon/10 text-meta font-semibold text-carbon tabular-nums">
               {selectedCount}
@@ -784,10 +784,10 @@ function KeywordFacetCard({
                 }`}
               >
                 <Checkbox checked={checked} onChange={() => onToggle(c)} ariaLabel={c} />
-                <span className={`flex-1 truncate text-meta ${checked ? "text-ink font-medium" : "text-ink-secondary"}`}>
+                <span className={`flex-1 truncate text-tab ${checked ? "text-ink font-medium" : "text-ink-secondary"}`}>
                   {c}
                 </span>
-                <span className="shrink-0 text-meta font-semibold tabular-nums text-ink-secondary">
+                <span className="shrink-0 text-tab font-semibold tabular-nums text-ink-secondary">
                   {counts.get(c) ?? 0}
                 </span>
               </label>
@@ -845,7 +845,7 @@ function DateRangeCard({
   return (
     <div className={`${FACET_CARD} space-y-1.5`}>
       <div className="flex items-center justify-between gap-2 px-2 pt-1">
-        <span className="text-meta font-bold text-ink">Date</span>
+        <span className="text-tab font-bold text-ink">Date</span>
         {active && (
           <button
             onClick={onClear}
@@ -864,12 +864,12 @@ function DateRangeCard({
               <button
                 key={p.label}
                 onClick={() => (isActive ? onClear() : onSetRange(p.from, p.to))}
-                className={`flex items-center justify-between gap-2 px-1.5 py-1 rounded-sm text-meta transition-colors cursor-pointer ${
+                className={`flex items-center justify-between gap-2 px-1.5 py-1 rounded-sm text-tab transition-colors cursor-pointer ${
                   isActive ? "bg-carbon/[0.06] text-ink font-medium" : "text-ink-secondary hover:bg-warm"
                 }`}
               >
                 <span className="truncate">{p.label}</span>
-                <span className="shrink-0 text-meta font-semibold tabular-nums text-ink-tertiary">
+                <span className="shrink-0 text-tab font-semibold tabular-nums text-ink-tertiary">
                   {p.count.toLocaleString()}
                 </span>
               </button>

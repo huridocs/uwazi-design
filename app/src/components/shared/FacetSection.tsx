@@ -129,7 +129,7 @@ export function FacetSection({
               open ? "" : "-rotate-90"
             }`}
           />
-          <span className="text-meta font-semibold text-ink-secondary truncate">
+          <span className="text-tab font-semibold text-ink-secondary truncate">
             {title}
           </span>
           {selectedCount > 0 && (
@@ -231,7 +231,7 @@ export function FacetSection({
                   />
                   {renderMarker?.(id)}
                   <span
-                    className={`text-meta truncate flex-1 ${
+                    className={`text-tab truncate flex-1 ${
                       checked ? "text-ink font-medium" : "text-ink-secondary"
                     }`}
                   >
