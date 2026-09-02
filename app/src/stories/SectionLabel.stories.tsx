@@ -78,3 +78,18 @@ export const Overflow: Story = {
     </div>
   ),
 };
+
+/** Where the label genuinely heads a section, `as` keeps it in the document
+ *  outline. It is the ONLY thing besides the box that a caller owns — the type
+ *  is fixed whatever element carries it, so these three are indistinguishable
+ *  on screen and quite different to a screen reader. */
+export const AsHeading: Story = {
+  args: { children: "Properties" },
+  render: () => (
+    <div className="w-[22rem] space-y-2">
+      <SectionLabel as="h3">Files</SectionLabel>
+      <SectionLabel as="h4">Supporting documents</SectionLabel>
+      <SectionLabel as="p">Not a heading — just a caption</SectionLabel>
+    </div>
+  ),
+};

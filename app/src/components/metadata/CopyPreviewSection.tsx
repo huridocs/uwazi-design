@@ -1,5 +1,6 @@
 import { Check, Ban } from "lucide-react";
 import type { CopyPlan, CopySkipReason } from "../../utils/copyFrom";
+import { SectionLabel } from "../shared/SectionLabel";
 
 /** What this source would and would NOT bring across, shown before anything is
  *  staged.
@@ -31,9 +32,7 @@ export function CopyPreviewSection({
       aria-label="Copy From preview"
     >
       <div className="flex items-center justify-between gap-2">
-        <h4 className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider">
-          Copy from this entity
-        </h4>
+        <SectionLabel as="h4">Copy from this entity</SectionLabel>
         <span className="text-meta text-ink-tertiary">
           {plan.matchCount} {plan.matchCount === 1 ? "field matches" : "fields match"}
         </span>
@@ -62,9 +61,9 @@ export function CopyPreviewSection({
 
       {nearMisses.length > 0 && (
         <div className="space-y-1.5 pt-1" style={{ borderTop: "1px solid var(--border-soft)" }}>
-          <h5 className="pt-2 text-meta font-semibold text-ink-tertiary uppercase tracking-wider">
+          <SectionLabel as="h5" className="pt-2">
             Not copied
-          </h5>
+          </SectionLabel>
           <ul className="space-y-1.5">
             {nearMisses.map((s) => (
               // Greyed, not hidden: a field that vanishes teaches nothing.

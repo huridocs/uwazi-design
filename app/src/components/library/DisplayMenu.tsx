@@ -1,126 +1,149 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { SlidersHorizontal, Check } from "lucide-react";
+import { SlidersHorizontal, Check, RotateCcw } from "lucide-react";
+import { SectionLabel } from "../shared/SectionLabel";
 import {
-  libraryInfoAtom,
+  libraryDisplayAtom,
+  libraryDisplayContextAtom,
+  libraryDisplayModifiedAtom,
+  resetLibraryDisplayAtom,
   libraryViewModeAtom,
-  libraryTimelineLayoutAtom,
-  libraryResultsLayoutAtom,
-  libraryTimeHubAtom,
   librarySortAtom,
   librarySortDirAtom,
-  libraryThumbSizeAtom,
-  libraryThumbFitAtom,
-  libraryThumbFrameAtom,
   defaultSortDir,
-  DEFAULT_TIME_HUB,
-  DEFAULT_LIBRARY_SORT,
-  DEFAULT_RESULTS_LAYOUT,
-  DEFAULT_TIMELINE_LAYOUT,
-  DEFAULT_THUMB_SIZE,
-  DEFAULT_THUMB_FIT,
-  DEFAULT_THUMB_FRAME,
-  type LibraryInfoKey,
-  type TimelineLayout,
-  type ResultsLayout,
-  type ThumbSize,
-  type ThumbFit,
-  type ThumbFrame,
+  type LibraryDisplayState,
 } from "../../atoms/library";
-import { breakpointAtom } from "../../atoms/viewport";
+import {
+  sectionsFor,
+  sectionOptions,
+  type DisplaySection,
+  type DisplayValue,
+  type DisplayValues,
+} from "../../data/libraryDisplay";
 import { t } from "../../utils/i18n";
-import { SORTS } from "../../views/LibraryView";
 
-const ITEMS: { key: LibraryInfoKey; label: string }[] = [
-  { key: "preview", label: "Thumbnail" },
-  { key: "metadata", label: "Metadata" },
-  { key: "country", label: "Country" },
-  { key: "date", label: "Date" },
-  { key: "connections", label: "Connections" },
-];
-
-const LAYOUTS: { id: TimelineLayout; label: string; detail: string }[] = [
-  { id: "rail", label: "Rail", detail: "Periods on a track, click to filter" },
-  { id: "density", label: "Density", detail: "Volume per period, click to filter" },
-  { id: "spine", label: "Spine", detail: "Every entity at its exact date" },
-  { id: "lanes", label: "Lanes", detail: "Template × period grid" },
-];
-
-const THUMB_SIZES: { id: ThumbSize; label: string }[] = [
-  { id: "s", label: "Small" },
-  { id: "m", label: "Medium" },
-  { id: "l", label: "Large" },
-];
-
-const THUMB_FRAMES: { id: ThumbFrame; label: string; detail: string }[] = [
-  { id: "landscape", label: "Landscape", detail: "A wide band across the card" },
-  { id: "portrait", label: "Portrait", detail: "3:4 cards in narrower columns — a gallery hang" },
-];
-
-const THUMB_FITS: { id: ThumbFit; label: string; detail: string }[] = [
-  { id: "auto", label: "Auto", detail: "Ratio decides — wide fills, tall is matted" },
-  { id: "cover", label: "Cover", detail: "Fill the whole slot edge to edge, crop the image" },
-  { id: "contain", label: "Contain", detail: "Whole image on a quiet mat" },
-];
-
-const RESULTS_LAYOUTS: { id: ResultsLayout; label: string; detail: string }[] = [
-  { id: "grouped", label: "Grouped", detail: "One card per entity, fields beside pages" },
-  { id: "tree", label: "Tree", detail: "Entity → field → snippets, collapsible" },
-  { id: "passages", label: "Passages", detail: "Every passage, ranked; entity secondary" },
-  { id: "spine", label: "Spine", detail: "Best passage at its date on a time axis" },
-];
-
-/** Header control for how the results are drawn: which info pieces the cards and
- *  rows carry, plus the view-specific modifiers.
+/** Header control for how the results are drawn.
  *
- *  Icon-only trigger at a fixed 2rem square, and the timeline's layout picker
- *  lives INSIDE the popover — a control that only exists in one view is a control
- *  that shoves every other control sideways when you switch views. The toolbar
- *  row is now the same width whatever is selected. */
+ *  It renders `data/libraryDisplay` and nothing else. There are no
+ *  `viewMode === "timeline"` branches in here any more: which sections exist,
+ *  in what order, under what conditions and with what defaults is a fact about
+ *  the registry, and this file is the thing that draws whatever the registry
+ *  says. The dot folds over the same list, so it can no longer point at a
+ *  control the current mode isn't showing.
+ *
+ *  Icon-only trigger at a fixed 2rem square, and every view-specific control
+ *  lives INSIDE the popover — a control that only exists in one view is a
+ *  control that shoves every other control sideways when you switch views. The
+ *  toolbar row is the same width whatever is selected. */
 export function DisplayMenu() {
-  const [info, setInfo] = useAtom(libraryInfoAtom);
-  const [layout, setLayout] = useAtom(libraryTimelineLayoutAtom);
-  const [resultsLayout, setResultsLayout] = useAtom(libraryResultsLayoutAtom);
-  const [timeHub, setTimeHub] = useAtom(libraryTimeHubAtom);
-  const [thumbSize, setThumbSize] = useAtom(libraryThumbSizeAtom);
-  const [thumbFit, setThumbFit] = useAtom(libraryThumbFitAtom);
-  const [thumbFrame, setThumbFrame] = useAtom(libraryThumbFrameAtom);
+  const [state, setState] = useAtom(libraryDisplayAtom);
+  const mode = useAtomValue(libraryViewModeAtom);
+  const ctx = useAtomValue(libraryDisplayContextAtom);
+  const modified = useAtomValue(libraryDisplayModifiedAtom);
+  const reset = useSetAtom(resetLibraryDisplayAtom);
   const [sort, setSort] = useAtom(librarySortAtom);
   const setSortDir = useSetAtom(librarySortDirAtom);
-  const viewMode = useAtomValue(libraryViewModeAtom);
-  const isMobile = useAtomValue(breakpointAtom) === "mobile";
   const [open, setOpen] = useState(false);
 
-  // The map draws no cards or rows, so the info toggles have nothing to act on —
-  // and neither does Results, whose rows are snippets, not metadata summaries.
-  const showInfo = viewMode !== "map" && viewMode !== "results";
-  const showLayouts = viewMode === "timeline";
-  const showResultsLayouts = viewMode === "results";
-  // Thumbnail size/fit only act where thumbnails draw — the same surfaces the
-  // info toggles govern, and only while the Thumbnail toggle itself is on.
-  const showThumbs = showInfo && info.preview !== false;
+  // Escape closes it, like every other overlay in the app. The scrim was the
+  // only way out, which is a mouse-only exit from a keyboard-operable menu.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
 
-  // The dot means ONE thing in both Display menus (this and the Relationships
-  // one): some control THE MENU IS SHOWING sits off its default.
-  //  - every term is gated by the same condition that renders its section, so
-  //    the badge can never point at a control this view mode hides (hiding
-  //    Thumbnail in Cards then switching to Results used to leave it lit over a
-  //    menu with no "Show information" in it, and no way to clear it);
-  //  - and every rendered control counts, not just the hidden-info ones, so a
-  //    non-default layout is advertised exactly like a hidden field is.
-  // Defaults come from the atoms themselves — comparing against a hard-coded
-  // guess is what lit the Relationships dot on every fresh panel.
-  const modified =
-    timeHub !== DEFAULT_TIME_HUB ||
-    (isMobile && sort !== DEFAULT_LIBRARY_SORT) ||
-    (showResultsLayouts && resultsLayout !== DEFAULT_RESULTS_LAYOUT) ||
-    (showLayouts && layout !== DEFAULT_TIMELINE_LAYOUT) ||
-    (showInfo && ITEMS.some((i) => info[i.key] === false)) ||
-    (showThumbs &&
-      (thumbSize !== DEFAULT_THUMB_SIZE ||
-        thumbFit !== DEFAULT_THUMB_FIT ||
-        thumbFrame !== DEFAULT_THUMB_FRAME));
-  const toggle = (key: LibraryInfoKey) => setInfo((s) => ({ ...s, [key]: s[key] === false }));
+  const sections = sectionsFor(mode, ctx);
+
+  // The merged view of this mode's answers — what `enabled` predicates read, and
+  // what a control compares itself against. Sparse underneath: an absent key is
+  // "still on its default", never a written-out copy of one.
+  const values: DisplayValues = { ...state.shared, ...(state.modes[mode] ?? {}) };
+
+  const valueOf = (id: string, scope: string, fallback: DisplayValue): DisplayValue => {
+    const bag = scope === "shared" ? state.shared : state.modes[mode];
+    return bag?.[id] ?? fallback;
+  };
+
+  const write = (id: string, scope: string, value: DisplayValue) =>
+    setState((s: LibraryDisplayState) =>
+      scope === "shared"
+        ? { ...s, shared: { ...s.shared, [id]: value } }
+        : { ...s, modes: { ...s.modes, [mode]: { ...s.modes[mode], [id]: value } } },
+    );
+
+  // Sort is the registry's one `external` option: the toolbar Select and the
+  // table's own column headers write it too, and a repeat pick flips the
+  // direction rather than re-picking the key. That behaviour belongs with the
+  // control, not in a data file — so the registry declares the section and this
+  // map binds it.
+  const external: Record<string, { value: string; set: (v: string) => void }> = {
+    sort: {
+      value: sort,
+      set: (v) => {
+        setSort(v as typeof sort);
+        setSortDir(defaultSortDir(v as typeof sort));
+      },
+    },
+  };
+
+  const renderSection = (section: DisplaySection) => {
+    // Values-only, and it DIMS rather than unmounts: turning Thumbnail off must
+    // not make three sections vanish from under a pointer already travelling
+    // toward them.
+    const live = section.enabled?.(values) ?? true;
+    const body =
+      section.kind === "choice"
+        ? renderChoice(section, live)
+        : sectionOptions(section, ctx).map((o) => {
+            const scope = o.scope ?? "mode";
+            const on = valueOf(o.id, scope, o.default) !== false;
+            return (
+              <OptionRow
+                key={o.id}
+                label={o.label}
+                detail={o.detail}
+                on={on}
+                disabled={!live}
+                onClick={() => write(o.id, scope, !on)}
+              />
+            );
+          });
+
+    return (
+      <div key={section.id}>
+        {section.separator && (
+          <div className="my-1 h-px" style={{ backgroundColor: "var(--border-soft)" }} />
+        )}
+        <SectionLabel as="p" className={`px-2 pt-1 pb-1 ${live ? "" : "opacity-40"}`}>
+          {section.label}
+        </SectionLabel>
+        {body}
+      </div>
+    );
+  };
+
+  const renderChoice = (
+    section: Extract<DisplaySection, { kind: "choice" }>,
+    live: boolean,
+  ) => {
+    const { option } = section;
+    const scope = option.scope ?? "mode";
+    const bound = scope === "external" ? external[option.id] : undefined;
+    const current = bound ? bound.value : (valueOf(option.id, scope, option.default) as string);
+    return option.choices.map((c) => (
+      <OptionRow
+        key={c.id}
+        label={c.label}
+        detail={c.detail}
+        on={current === c.id}
+        strong
+        disabled={!live}
+        onClick={() => (bound ? bound.set(c.id) : write(option.id, scope, c.id))}
+      />
+    ));
+  };
 
   return (
     <div className="relative">
@@ -149,248 +172,92 @@ export function DisplayMenu() {
       {open && (
         <>
           <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} aria-hidden />
-          <div className="absolute end-0 mt-1 z-40 w-52 bg-paper border border-border rounded-md shadow-lg p-1">
-            {/* The time strip belongs to EVERY layout — it filters by date and
-                charts the whole result set, so cards and the table want it as
-                much as the map and the timeline it started under. */}
-            <p className="px-2 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
-              Chart
-            </p>
-            <button
-              onClick={() => setTimeHub((v) => !v)}
-              aria-pressed={timeHub}
-              className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-warm transition-colors cursor-pointer text-start"
-            >
-              <span className="w-4 shrink-0 flex items-center justify-center text-carbon">
-                {timeHub && <Check size={13} />}
-              </span>
-              <span className={`text-xs ${timeHub ? "text-ink" : "text-ink-tertiary"}`}>
-                Time strip
-              </span>
-            </button>
-
+          {/* The list's column list can run long on a corpus with a dozen
+              properties, so the panel scrolls at a fixed ceiling rather than
+              growing past the viewport. Every mode's menu is the same width. */}
+          <div
+            className="absolute end-0 mt-1 z-40 w-52 max-h-[70vh] overflow-y-auto bg-paper
+              border border-border rounded-md shadow-lg p-1"
+            role="menu"
+          >
+            {sections.map(renderSection)}
+            {/* The dot says something is off its default; this is the way back.
+                It is ALWAYS mounted and merely goes quiet when there is nothing
+                to reset — a row that appeared with the dot would shove the whole
+                panel the moment you ticked anything. Shared options (the time
+                strip) are not this mode's to clear, so it resets the mode. */}
             <div className="my-1 h-px" style={{ backgroundColor: "var(--border-soft)" }} />
-
-            {/* Sort lives here on a phone — the toolbar gives its width to the
-                view switcher, which matters more than a sort key you set once. */}
-            {isMobile && (
-              <>
-                <p className="px-2 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
-                  Sort by
-                </p>
-                {SORTS.map((s) => {
-                  const on = sort === s.value;
-                  return (
-                    <button
-                      key={s.value}
-                      onClick={() => {
-                        setSort(s.value as typeof sort);
-                        setSortDir(defaultSortDir(s.value as typeof sort));
-                      }}
-                      aria-pressed={on}
-                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-warm transition-colors cursor-pointer text-start"
-                    >
-                      <span className="w-4 shrink-0 flex items-center justify-center text-carbon">
-                        {on && <Check size={13} />}
-                      </span>
-                      <span className={`text-xs ${on ? "text-ink font-semibold" : "text-ink-secondary"}`}>
-                        {s.label}
-                      </span>
-                    </button>
-                  );
-                })}
-                {(showLayouts || showResultsLayouts || showInfo) && (
-                  <div className="my-1 h-px" style={{ backgroundColor: "var(--border-soft)" }} />
-                )}
-              </>
-            )}
-
-            {showResultsLayouts && (
-              <>
-                <p className="px-2 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
-                  Results layout
-                </p>
-                {RESULTS_LAYOUTS.map((l) => {
-                  const on = resultsLayout === l.id;
-                  return (
-                    <button
-                      key={l.id}
-                      onClick={() => setResultsLayout(l.id)}
-                      aria-pressed={on}
-                      className="w-full flex items-start gap-2 px-2 py-1.5 rounded hover:bg-warm transition-colors cursor-pointer text-start"
-                    >
-                      <span className="w-4 shrink-0 pt-0.5 flex justify-center text-carbon">
-                        {on && <Check size={13} />}
-                      </span>
-                      <span className="min-w-0">
-                        <span
-                          className={`block text-xs ${on ? "text-ink font-semibold" : "text-ink-secondary"}`}
-                        >
-                          {l.label}
-                        </span>
-                        <span className="block text-meta text-ink-tertiary leading-tight">
-                          {l.detail}
-                        </span>
-                      </span>
-                    </button>
-                  );
-                })}
-              </>
-            )}
-
-            {showLayouts && (
-              <>
-                <p className="px-2 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
-                  Timeline layout
-                </p>
-                {LAYOUTS.map((l) => {
-                  const on = layout === l.id;
-                  return (
-                    <button
-                      key={l.id}
-                      onClick={() => setLayout(l.id)}
-                      aria-pressed={on}
-                      className="w-full flex items-start gap-2 px-2 py-1.5 rounded hover:bg-warm transition-colors cursor-pointer text-start"
-                    >
-                      <span className="w-4 shrink-0 pt-0.5 flex justify-center text-carbon">
-                        {on && <Check size={13} />}
-                      </span>
-                      <span className="min-w-0">
-                        <span
-                          className={`block text-xs ${on ? "text-ink font-semibold" : "text-ink-secondary"}`}
-                        >
-                          {l.label}
-                        </span>
-                        <span className="block text-meta text-ink-tertiary leading-tight">
-                          {l.detail}
-                        </span>
-                      </span>
-                    </button>
-                  );
-                })}
-              </>
-            )}
-
-            {showInfo && (
-              <>
-                {showLayouts && (
-                  <div className="my-1 h-px" style={{ backgroundColor: "var(--border-soft)" }} />
-                )}
-                <p className="px-2 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
-                  Show information
-                </p>
-                {ITEMS.map((it) => {
-                  const shown = info[it.key] !== false;
-                  return (
-                    <button
-                      key={it.key}
-                      onClick={() => toggle(it.key)}
-                      aria-pressed={shown}
-                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-warm transition-colors cursor-pointer text-start"
-                    >
-                      <span className="w-4 shrink-0 flex items-center justify-center text-carbon">
-                        {shown && <Check size={13} />}
-                      </span>
-                      <span className={`text-xs ${shown ? "text-ink" : "text-ink-tertiary"}`}>
-                        {it.label}
-                      </span>
-                    </button>
-                  );
-                })}
-              </>
-            )}
-
-            {showThumbs && (
-              <>
-                <div className="my-1 h-px" style={{ backgroundColor: "var(--border-soft)" }} />
-                <p className="px-2 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
-                  Thumbnail size
-                </p>
-                {THUMB_SIZES.map((s) => {
-                  const on = thumbSize === s.id;
-                  return (
-                    <button
-                      key={s.id}
-                      onClick={() => setThumbSize(s.id)}
-                      aria-pressed={on}
-                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-warm transition-colors cursor-pointer text-start"
-                    >
-                      <span className="w-4 shrink-0 flex items-center justify-center text-carbon">
-                        {on && <Check size={13} />}
-                      </span>
-                      <span className={`text-xs ${on ? "text-ink font-semibold" : "text-ink-secondary"}`}>
-                        {s.label}
-                      </span>
-                    </button>
-                  );
-                })}
-                {/* Frame sits between size and fit because that is the order
-                    the questions come in: how big, what shape, how the picture
-                    sits in it. It is one choice for the WHOLE grid — per-card
-                    orientation would ragged the rows the reserved slot exists to
-                    keep level. */}
-                <p className="px-2 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
-                  Thumbnail frame
-                </p>
-                {THUMB_FRAMES.map((f) => {
-                  const on = thumbFrame === f.id;
-                  return (
-                    <button
-                      key={f.id}
-                      onClick={() => setThumbFrame(f.id)}
-                      aria-pressed={on}
-                      className="w-full flex items-start gap-2 px-2 py-1.5 rounded hover:bg-warm transition-colors cursor-pointer text-start"
-                    >
-                      <span className="w-4 shrink-0 pt-0.5 flex justify-center text-carbon">
-                        {on && <Check size={13} />}
-                      </span>
-                      <span className="min-w-0">
-                        <span
-                          className={`block text-xs ${on ? "text-ink font-semibold" : "text-ink-secondary"}`}
-                        >
-                          {f.label}
-                        </span>
-                        <span className="block text-meta text-ink-tertiary leading-tight">
-                          {f.detail}
-                        </span>
-                      </span>
-                    </button>
-                  );
-                })}
-                <p className="px-2 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
-                  Image fit
-                </p>
-                {THUMB_FITS.map((f) => {
-                  const on = thumbFit === f.id;
-                  return (
-                    <button
-                      key={f.id}
-                      onClick={() => setThumbFit(f.id)}
-                      aria-pressed={on}
-                      className="w-full flex items-start gap-2 px-2 py-1.5 rounded hover:bg-warm transition-colors cursor-pointer text-start"
-                    >
-                      <span className="w-4 shrink-0 pt-0.5 flex justify-center text-carbon">
-                        {on && <Check size={13} />}
-                      </span>
-                      <span className="min-w-0">
-                        <span
-                          className={`block text-xs ${on ? "text-ink font-semibold" : "text-ink-secondary"}`}
-                        >
-                          {f.label}
-                        </span>
-                        <span className="block text-meta text-ink-tertiary leading-tight">
-                          {f.detail}
-                        </span>
-                      </span>
-                    </button>
-                  );
-                })}
-              </>
-            )}
-
+            <button
+              onClick={() => reset()}
+              disabled={!modified}
+              className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-start text-xs transition-colors ${
+                modified
+                  ? "text-ink-secondary hover:bg-warm hover:text-ink cursor-pointer"
+                  : "text-ink-muted cursor-not-allowed"
+              }`}
+            >
+              <span className="w-4 shrink-0 flex items-center justify-center">
+                <RotateCcw size={12} />
+              </span>
+              Reset this view
+            </button>
           </div>
         </>
       )}
     </div>
+  );
+}
+
+/** One row of the menu — a check gutter, a label, and an optional second line.
+ *
+ *  `strong` is the difference between "this is showing" (a toggle) and "this is
+ *  the one" (a choice): a picked choice bolds, a shown toggle doesn't, which is
+ *  how the two kinds read apart at a glance without a second control shape.
+ *
+ *  A disabled row keeps its box and its check — it dims. The check gutter is
+ *  reserved at every state, so nothing in the panel moves when a row's mark
+ *  comes or goes. */
+function OptionRow({
+  label,
+  detail,
+  on,
+  strong = false,
+  disabled = false,
+  onClick,
+}: {
+  label: string;
+  detail?: string;
+  on: boolean;
+  strong?: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      aria-pressed={on}
+      role="menuitemcheckbox"
+      aria-checked={on}
+      className={`w-full flex items-start gap-2 px-2 py-1.5 rounded transition-colors text-start ${
+        disabled ? "opacity-40 cursor-not-allowed" : "hover:bg-warm cursor-pointer"
+      }`}
+    >
+      <span className="w-4 shrink-0 pt-0.5 flex justify-center text-carbon">
+        {on && <Check size={13} />}
+      </span>
+      <span className="min-w-0">
+        <span
+          className={`block text-xs ${
+            on ? `text-ink ${strong ? "font-semibold" : ""}` : "text-ink-tertiary"
+          }`}
+        >
+          {label}
+        </span>
+        {detail && (
+          <span className="block text-meta text-ink-tertiary leading-tight">{detail}</span>
+        )}
+      </span>
+    </button>
   );
 }

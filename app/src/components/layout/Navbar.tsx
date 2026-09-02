@@ -40,6 +40,7 @@ import { useDirtyGuard } from "../../hooks/useDirtyGuard";
 import { MobileBottomSheet } from "./MobileBottomSheet";
 import { Beacon } from "./Beacon";
 import { Select } from "../shared/Select";
+import { SectionLabel } from "../shared/SectionLabel";
 import { asset } from "../../utils/asset";
 
 interface NavbarProps {
@@ -215,9 +216,9 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                     role="listbox"
                     className="absolute top-full mt-1.5 end-0 w-52 bg-paper border border-border rounded-lg shadow-lg overflow-hidden z-50 py-1"
                   >
-                    <p className="px-3 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
+                    <SectionLabel as="p" className="px-3 pt-1 pb-1">
                       Collection
-                    </p>
+                    </SectionLabel>
                     {COLLECTIONS.map((c) => {
                       const on = c.id === dataSource;
                       return (
@@ -296,12 +297,9 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
                       );
 
                       const sub = startsSub && (
-                        <div
-                          className="px-3 pt-2 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-muted"
-                          style={{ borderTop: "1px solid var(--border-soft)" }}
-                        >
+                        <SectionLabel className="px-3 pt-2 pb-1 border-t border-border-soft">
                           {item.subgroup}
-                        </div>
+                        </SectionLabel>
                       );
 
                       if (item.external) {
@@ -503,9 +501,9 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
             </button>
 
             {/* Tools section */}
-            <div className="px-4 pt-4 pb-1 text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
+            <SectionLabel className="px-4 pt-4 pb-1">
               {t("System", "Tools")}
-            </div>
+            </SectionLabel>
             {toolsItems.map((item, i) => {
               const Icon = item.icon;
               const active =
@@ -516,9 +514,9 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
               }`;
               // Same "ML tools" shelf as the rail and the desktop dropdown.
               const sub = !!item.subgroup && item.subgroup !== toolsItems[i - 1]?.subgroup && (
-                <div className="px-4 pt-3 pb-1 text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
+                <SectionLabel className="px-4 pt-3 pb-1">
                   {item.subgroup}
-                </div>
+                </SectionLabel>
               );
 
               if (item.external) {
@@ -557,9 +555,9 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
               );
             })}
             {/* Settings section */}
-            <div className="px-4 pt-4 pb-1 text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
+            <SectionLabel className="px-4 pt-4 pb-1">
               {t("System", "Settings")}
-            </div>
+            </SectionLabel>
             <button
               onClick={() => { onToggleTheme?.(); }}
               className="flex items-center justify-between gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"

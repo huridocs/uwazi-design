@@ -10,6 +10,7 @@ import {
   viewerFileIdAtom,
 } from "../../atoms/files";
 import { languageAtom } from "../../atoms/language";
+import { SectionLabel } from "../shared/SectionLabel";
 import { AddFileModal } from "./AddFileModal";
 import { FileViewerBody, resolveFileUrl } from "./FileViewerModal";
 import { DocumentViewer } from "../viewer/DocumentViewer";
@@ -204,9 +205,9 @@ export function DrawerFilesBody({
 
 function SectionHeader({ label }: { label: string }) {
   return (
-    <h3 className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider px-1 mb-3">
+    <SectionLabel as="h3" className="px-1 mb-3">
       {label}
-    </h3>
+    </SectionLabel>
   );
 }
 

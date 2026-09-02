@@ -17,6 +17,7 @@ import { ViewSwitcher } from "../components/library/ViewSwitcher";
 import { entityTypes } from "../data/entities";
 import { PageTag } from "../components/shared/PageTag";
 import { SectionLabel } from "../components/shared/SectionLabel";
+import { MatchModeToggle, type MatchMode } from "../components/shared/MatchModeToggle";
 import { CountBadge } from "../components/shared/CountBadge";
 import { CopyPreviewSection } from "../components/metadata/CopyPreviewSection";
 import { CopyFieldRow } from "../components/metadata/CopyFieldRow";
@@ -189,6 +190,9 @@ export function ComponentCatalog({ onReturn }: Props) {
 
   const sidebarBtnRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
   const [blinkId, setBlinkId] = useState<string | null>(null);
+  // Live demo state for the MatchModeToggle entry — the control is a segmented
+  // choice, so a static one shows only half of what it does.
+  const [matchMode, setMatchMode] = useState<MatchMode>("OR");
 
   const scrollTo = (id: string) => {
     const container = contentRef.current;
@@ -272,9 +276,7 @@ export function ComponentCatalog({ onReturn }: Props) {
         </h2>
         {sidebarGroups.map((group) => (
           <div key={group.label} className="mb-3">
-            <span className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider px-2">
-              {group.label}
-            </span>
+            <SectionLabel className="px-2">{group.label}</SectionLabel>
             <div className="flex flex-col mt-1">
               {group.items.map((item) => (
                 <button
@@ -1497,14 +1499,14 @@ className={\`… border \${issueBorderClass(issues[field.id])} …\`}`}
 {/* null → renders nothing; host line stays put. */}`}
                 >
                   <div className="w-full max-w-md space-y-2">
-                    <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
+                    <SectionLabel as="p">
                       Document
                       <BorrowedDocLine from={{ entityId: "e-1", title: "Velásquez-Rodríguez v. Honduras" }} />
-                    </p>
-                    <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
+                    </SectionLabel>
+                    <SectionLabel as="p">
                       Document
                       <BorrowedDocLine from={null} />
-                    </p>
+                    </SectionLabel>
                   </div>
                 </CatalogEntry>
               </div>
@@ -1557,7 +1559,7 @@ const textColor = typeLabelColor(type.color);`}
               <div id="sh-section-label" ref={reg("sh-section-label")}>
                 <CatalogEntry
                   name="SectionLabel"
-                  description="The small uppercase label introducing a group of content — 'Properties' over a card's field hits, 'Document' over its page hits, 'Tasks · 3' over the notification drawer's running work. Replaced four separately-written components of the same name that agreed on size and weight and nothing else (three tracking-wide against one -wider, two ink-tertiary against two ink-muted). Typography is fixed; className takes the BOX only — padding, a sticky ground — so where a label sits stays the caller's while what it looks like can't vary. ink-tertiary, not -muted: at 10px this is small text by WCAG's measure and muted lands under AA."
+                  description="The small uppercase label introducing a group of content — 'Properties' over a card's field hits, 'Document' over its page hits, 'Tasks · 3' over the notification drawer's running work. Replaced four separately-written components of the same name that agreed on size and weight and nothing else (three tracking-wide against one -wider, two ink-tertiary against two ink-muted). Typography is fixed; className takes the BOX only — padding, a sticky ground — so where a label sits stays the caller's while what it looks like can't vary. ink-tertiary, not -muted: at 10px this is small text by WCAG's measure and muted lands under AA. `as` is the one other thing a caller owns, and only because several of the labels it replaced were real h3/h4 headings — rendering those as a span would have quietly deleted them from the document outline."
                   code={`<SectionLabel>Properties</SectionLabel>
 <SectionLabel icon={<Tag size={11} />}>Properties</SectionLabel>
 
@@ -1582,6 +1584,28 @@ const textColor = typeLabelColor(type.color);`}
                         ))}
                       </ul>
                     </div>
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="sh-match-mode-toggle" ref={reg("sh-match-mode-toggle")}>
+                <CatalogEntry
+                  name="MatchModeToggle"
+                  description="The AND/OR segmented control that says how a facet's ticked values combine — every one of them, or any one of them. Replaced two separately-written copies (FacetSection's drawer flavour after a 'Match' caption, and the Library keyword card's bare one in a header row) that had drifted into the same pixels by coincidence rather than by reference. Neither named itself: two buttons reading AND and OR with nothing saying what they switch, and the current mode carried by a background tint alone. This one puts a named role='group' on the pair and aria-pressed on the segments, so the mode is announced rather than merely tinted."
+                  code={`{/* Drawer flavour — the caption is the only difference. */}
+<MatchModeToggle mode={mode} onChange={setMode} label="Match" />
+
+{/* Header flavour — the card title already names the facet, so the
+    group takes its accessible name instead of a visible caption. */}
+<MatchModeToggle mode={mode} onChange={setMode} groupLabel="Match mode for Countries" />`}
+                >
+                  <div className="flex flex-col gap-3 w-full max-w-md">
+                    <MatchModeToggle mode={matchMode} onChange={setMatchMode} label="Match" />
+                    <MatchModeToggle
+                      mode={matchMode}
+                      onChange={setMatchMode}
+                      groupLabel="Match mode for Countries"
+                    />
                   </div>
                 </CatalogEntry>
               </div>
@@ -1697,7 +1721,7 @@ const textColor = typeLabelColor(type.color);`}
                   <div className="flex flex-col gap-6 w-full">
                     {/* Sizes */}
                     <div className="flex flex-col gap-3">
-                      <span className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider">Sizes</span>
+                      <SectionLabel>Sizes</SectionLabel>
                       <div className="flex items-center gap-8">
                         <div className="flex flex-col items-center gap-2">
                           <UwaziLoader size="xs" />
@@ -1720,7 +1744,7 @@ const textColor = typeLabelColor(type.color);`}
 
                     {/* In buttons */}
                     <div className="flex flex-col gap-3">
-                      <span className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider">Buttons</span>
+                      <SectionLabel>Buttons</SectionLabel>
                       <div className="flex flex-wrap items-center gap-3">
                         <button className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md bg-ink text-parchment cursor-default">
                           <UwaziLoader size="sm" color="white" /> Saving
@@ -1736,7 +1760,7 @@ const textColor = typeLabelColor(type.color);`}
 
                     {/* In toasts */}
                     <div className="flex flex-col gap-3">
-                      <span className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider">Toasts</span>
+                      <SectionLabel>Toasts</SectionLabel>
                       <div className="flex flex-col gap-2 max-w-sm">
                         <div className="flex items-center gap-2.5 px-4 py-2.5 bg-paper border border-border rounded-md shadow-lg">
                           <UwaziLoader size="sm" />
@@ -1751,7 +1775,7 @@ const textColor = typeLabelColor(type.color);`}
 
                     {/* Inline */}
                     <div className="flex flex-col gap-3">
-                      <span className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider">Inline</span>
+                      <SectionLabel>Inline</SectionLabel>
                       <div className="text-sm text-ink-secondary flex items-center gap-1.5">
                         <UwaziLoader size="xs" /> Extracting information
                       </div>
@@ -1759,7 +1783,7 @@ const textColor = typeLabelColor(type.color);`}
 
                     {/* In card */}
                     <div className="flex flex-col gap-3">
-                      <span className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider">Card</span>
+                      <SectionLabel>Card</SectionLabel>
                       <div className="max-w-xs bg-paper border border-border/40 rounded-md px-3 py-3">
                         <div className="flex items-center gap-2.5">
                           <div className="w-8 h-8 rounded bg-warm flex items-center justify-center shrink-0">
@@ -1809,7 +1833,7 @@ const textColor = typeLabelColor(type.color);`}
               <div id="set-data-table" ref={reg("set-data-table")}>
                 <CatalogEntry
                   name="DataTable"
-                  description="The canonical data table (entity-view Files style), generic via a declarative column API. Backs FileTable and every Settings list."
+                  description="The canonical data table (entity-view Files style), generic via a declarative column API. Backs FileTable, every Settings list and the Library's list view. `density` takes height out of the ROW and never out of the type — text-sm rows and an 11px header at both settings — so compact buys rows per screen without spending legibility."
                   code={`<DataTable
   data={rows}
   getRowId={(r) => r.id}
@@ -1820,7 +1844,10 @@ const textColor = typeLabelColor(type.color);`}
     { id: "name", header: "Template", cell: (r) => r.name },
     { id: "count", header: "Entities", width: "6rem", align: "right", cell: (r) => r.count },
   ]}
-/>`}
+/>
+
+{/* Compact: shorter rows, identical type. */}
+<DataTable density="compact" … />`}
                 >
                   <div className="w-full max-w-md">
                     <IsolatedDataTable />

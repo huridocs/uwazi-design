@@ -1,7 +1,18 @@
 import { startTransition } from "react";
 import { atom } from "jotai";
 import { atomWithStorage, createJSONStorage } from "jotai/utils";
-import { dataSourceAtom, type DataSource } from "./dataSource";
+import { dataSourceAtom, libraryEntitiesAtom, type DataSource } from "./dataSource";
+import { languageAtom } from "./language";
+import { breakpointAtom } from "./viewport";
+import { distinctFieldLabels } from "../utils/entityFields";
+import { listColumnOptions } from "../components/library/listColumns";
+import {
+  optionsFor,
+  type DisplayContext,
+  type DisplayValue,
+  type DisplayValues,
+  type LibraryViewMode,
+} from "../data/libraryDisplay";
 
 /** The COMMITTED library search — what every consumer filters, ranks, marks and
  *  counts by. Read this one everywhere; only the search input itself binds to
@@ -203,8 +214,12 @@ export const libraryChainFiltersAtom = atom<
  *  reads the same `buildSnippetsFor` output the Results tab does, at full width.
  *  It stays selectable with no query (the switcher may not gain and lose a
  *  segment as you type — that shifts every control beside it); the view renders
- *  its own "search to see where terms match" state instead. */
-export type LibraryViewMode = "cards" | "list" | "map" | "timeline" | "results";
+ *  its own "search to see where terms match" state instead.
+ *
+ *  The mode list itself lives in `data/libraryDisplay` — it keys the option
+ *  registry, so the registry is where a new mode has to be declared or it would
+ *  be a mode with no options and no way to notice. */
+export type { LibraryViewMode };
 export const libraryViewModeAtom = atom<LibraryViewMode>("cards");
 
 /** Results body flavour — four readings of the same snippets:
@@ -216,11 +231,6 @@ export const libraryViewModeAtom = atom<LibraryViewMode>("cards");
  *  - `spine`     passages on a proportional time axis, each entity carrying its
  *                strongest one */
 export type ResultsLayout = "grouped" | "tree" | "passages" | "spine";
-/** Display-menu defaults are exported so `DisplayMenu` can ask "is this off its
- *  default?" against the real value. Both Display menus (Library and
- *  Relationships) light their dot on exactly that question. */
-export const DEFAULT_RESULTS_LAYOUT: ResultsLayout = "grouped";
-export const libraryResultsLayoutAtom = atom<ResultsLayout>(DEFAULT_RESULTS_LAYOUT);
 
 /** Timeline body flavour — four ways to read the same chronology:
  *  - `rail`     the text-references minimap on a vertical time track: dots and
@@ -231,35 +241,10 @@ export const libraryResultsLayoutAtom = atom<ResultsLayout>(DEFAULT_RESULTS_LAYO
  *  - `spine`    a proportional chronology — every entity at its exact instant
  *  - `lanes`    a template × period grid */
 export type TimelineLayout = "rail" | "density" | "spine" | "lanes";
-export const DEFAULT_TIMELINE_LAYOUT: TimelineLayout = "rail";
-export const libraryTimelineLayoutAtom = atom<TimelineLayout>(DEFAULT_TIMELINE_LAYOUT);
-
-/** Track scope, mirroring the document minimap's whole-document / this-page
- *  toggle: `all` plots the entire corpus span, `year` zooms the track to the
- *  year you're currently reading (months, with ↑/↓ counts for the rest). */
-export type TimelineScope = "all" | "year";
-export const libraryTimelineScopeAtom = atom<TimelineScope>("all");
-
-/** Which information pieces the results show — a key is visible unless explicitly
- *  false, so the default (`{}`) shows everything. Driven by the header "Display"
- *  menu; applies to cards (thumbnail/metadata/connections) and the list table
- *  (country/date/connections columns). */
-export type LibraryInfoKey =
-  | "preview"
-  | "metadata"
-  | "country"
-  | "date"
-  | "connections";
-export const libraryInfoAtom = atom<Partial<Record<LibraryInfoKey, boolean>>>({});
 
 /** Thumbnail rendering — how tall the preview slot is drawn and how an image
- *  sits inside it. Session state like `libraryInfoAtom` beside it (the Display
- *  menu's dot already advertises anything off its default, so a reload starting
- *  clean is the same contract the info toggles keep). Defaults exported for the
- *  dot's "is this off its default?" question. */
+ *  sits inside it. */
 export type ThumbSize = "s" | "m" | "l";
-export const DEFAULT_THUMB_SIZE: ThumbSize = "m";
-export const libraryThumbSizeAtom = atom<ThumbSize>(DEFAULT_THUMB_SIZE);
 
 /** The SHAPE of the slot, for the whole grid at once — never per card, or rows
  *  stop lining up and the grid ragged-edges the way it did before the slot was
@@ -271,8 +256,6 @@ export const libraryThumbSizeAtom = atom<ThumbSize>(DEFAULT_THUMB_SIZE);
  *  Size scales BOTH: a portrait frame at size N is as tall as a landscape one at
  *  N+1, which is what keeps the two orientations feeling like one control. */
 export type ThumbFrame = "landscape" | "portrait";
-export const DEFAULT_THUMB_FRAME: ThumbFrame = "landscape";
-export const libraryThumbFrameAtom = atom<ThumbFrame>(DEFAULT_THUMB_FRAME);
 
 /** How an IMAGE sits in its slot — documents keep their cropped-sheet framing
  *  whatever this says. `auto` is the ratio-decides rule, now read against the
@@ -280,14 +263,200 @@ export const libraryThumbFrameAtom = atom<ThumbFrame>(DEFAULT_THUMB_FRAME);
  *  is matted (a square never matches, so it mats in both). `cover`/`contain`
  *  force one treatment for every ratio. */
 export type ThumbFit = "auto" | "cover" | "contain";
-export const DEFAULT_THUMB_FIT: ThumbFit = "auto";
-export const libraryThumbFitAtom = atom<ThumbFit>(DEFAULT_THUMB_FIT);
 
-/** The time strip under the results. It filters by date and reads the whole
- *  result set, so it is useful under EVERY layout — not just the map and the
- *  timeline it started under. A display option, on by default. */
+/** How much air a list row gets. Height and padding ONLY — the type never
+ *  shrinks, so compact stays on the 11px floor the rest of the app keeps. */
+export type ListDensity = "comfortable" | "compact";
+
+/** Track scope, mirroring the document minimap's whole-document / this-page
+ *  toggle: `all` plots the entire corpus span, `year` zooms the track to the
+ *  year you're currently reading (months, with ↑/↓ counts for the rest). */
+export type TimelineScope = "all" | "year";
+export const libraryTimelineScopeAtom = atom<TimelineScope>("all");
+
+// ── Display options ──────────────────────────────────────────────────────────
+
+/** EVERY Display-menu value, in one store, shaped the way the registry is.
+ *
+ *  It used to be six atoms plus a five-key `libraryInfoAtom` that cards and the
+ *  list table SHARED — so "Country" was one switch over a card's subtitle and a
+ *  table column that have nothing to do with each other, and the table could
+ *  only ever offer the three columns that record happened to have keys for.
+ *
+ *  Now: `modes` holds each view's own answers, `shared` holds the handful that
+ *  are genuinely global. Both are SPARSE — an absent key means "still on its
+ *  registry default", which is what lets a default change without migrating
+ *  anybody's session, and what makes "is this off its default?" a real question
+ *  rather than a comparison against a hard-coded guess.
+ *
+ *  Session state, deliberately: the menu's dot already advertises anything off
+ *  its default, so a reload starting clean is the contract the info toggles
+ *  always kept. */
+export interface LibraryDisplayState {
+  modes: Partial<Record<LibraryViewMode, DisplayValues>>;
+  shared: DisplayValues;
+}
+export const libraryDisplayAtom = atom<LibraryDisplayState>({ modes: {}, shared: {} });
+
+/** The property labels the current corpus carries, for the list's optional
+ *  metadata columns. Derived, so it recomputes only when the source's entity
+ *  array or the language changes — never per keystroke — and capped, because
+ *  this is a MENU and menus must be stable and cheap. */
+export const libraryFieldLabelsAtom = atom((get) =>
+  distinctFieldLabels(get(libraryEntitiesAtom), get(languageAtom)),
+);
+
+/** What the registry needs to know that it can't: the viewport, whether a query
+ *  is running, and the columns this corpus can offer. One atom, so the menu, the
+ *  dot and the table all resolve the same option list. */
+export const libraryDisplayContextAtom = atom<DisplayContext>((get) => {
+  const hasQuery = get(libraryQueryAtom).trim().length > 0;
+  return {
+    isMobile: get(breakpointAtom) === "mobile",
+    hasQuery,
+    listColumns: listColumnOptions({ hasQuery, fieldLabels: get(libraryFieldLabelsAtom) }),
+  };
+});
+
+/** Read one option for one mode, falling back to its registry default. */
+function readOption(
+  state: LibraryDisplayState,
+  mode: LibraryViewMode,
+  id: string,
+  scope: "mode" | "shared",
+  fallback: DisplayValue,
+): DisplayValue {
+  const bag = scope === "shared" ? state.shared : state.modes[mode];
+  return bag?.[id] ?? fallback;
+}
+
+/** A read/write atom over one option of the CURRENT view mode.
+ *
+ *  Resolving against `libraryViewModeAtom` rather than taking a mode argument is
+ *  what keeps the split invisible to consumers: a card is only ever mounted
+ *  inside the view whose options govern it, so "the current mode" and "my mode"
+ *  are the same mode. The menu writes the view you are looking at; the view
+ *  reads the view it is. */
+function displayOption<T extends DisplayValue>(
+  id: string,
+  scope: "mode" | "shared",
+  fallback: T,
+) {
+  return atom(
+    (get) => readOption(get(libraryDisplayAtom), get(libraryViewModeAtom), id, scope, fallback) as T,
+    (get, set, next: T | ((prev: T) => T)) => {
+      const mode = get(libraryViewModeAtom);
+      const state = get(libraryDisplayAtom);
+      const prev = readOption(state, mode, id, scope, fallback) as T;
+      const value = typeof next === "function" ? (next as (p: T) => T)(prev) : next;
+      set(
+        libraryDisplayAtom,
+        scope === "shared"
+          ? { ...state, shared: { ...state.shared, [id]: value } }
+          : {
+              ...state,
+              modes: { ...state.modes, [mode]: { ...state.modes[mode], [id]: value } },
+            },
+      );
+    },
+  );
+}
+
+export const DEFAULT_RESULTS_LAYOUT: ResultsLayout = "grouped";
+export const DEFAULT_TIMELINE_LAYOUT: TimelineLayout = "rail";
+export const DEFAULT_THUMB_SIZE: ThumbSize = "m";
+export const DEFAULT_THUMB_FRAME: ThumbFrame = "landscape";
+export const DEFAULT_THUMB_FIT: ThumbFit = "auto";
+export const DEFAULT_LIST_DENSITY: ListDensity = "comfortable";
 export const DEFAULT_TIME_HUB = true;
-export const libraryTimeHubAtom = atom(DEFAULT_TIME_HUB);
+
+export const libraryResultsLayoutAtom = displayOption<ResultsLayout>(
+  "resultsLayout",
+  "mode",
+  DEFAULT_RESULTS_LAYOUT,
+);
+export const libraryTimelineLayoutAtom = displayOption<TimelineLayout>(
+  "timelineLayout",
+  "mode",
+  DEFAULT_TIMELINE_LAYOUT,
+);
+export const libraryThumbSizeAtom = displayOption<ThumbSize>("thumbSize", "mode", DEFAULT_THUMB_SIZE);
+export const libraryThumbFrameAtom = displayOption<ThumbFrame>(
+  "thumbFrame",
+  "mode",
+  DEFAULT_THUMB_FRAME,
+);
+export const libraryThumbFitAtom = displayOption<ThumbFit>("thumbFit", "mode", DEFAULT_THUMB_FIT);
+export const libraryListDensityAtom = displayOption<ListDensity>(
+  "density",
+  "mode",
+  DEFAULT_LIST_DENSITY,
+);
+/** The time strip charts the whole result set, so it is one switch for every
+ *  mode — the only `shared` toggle in the registry. */
+export const libraryTimeHubAtom = displayOption<boolean>("timeStrip", "shared", DEFAULT_TIME_HUB);
+
+/** What a CARD carries, for whichever mode is drawing cards. Replaces the old
+ *  `libraryInfoAtom`, which the list table also read. */
+export const libraryCardInfoAtom = atom((get) => {
+  const state = get(libraryDisplayAtom);
+  const mode = get(libraryViewModeAtom);
+  const read = (id: string) => readOption(state, mode, id, "mode", true) !== false;
+  return {
+    preview: read("preview"),
+    metadata: read("metadata"),
+    country: read("country"),
+    date: read("date"),
+    connections: read("connections"),
+  };
+});
+
+/** Is a given list column drawn? Columns default from their own spec, so a
+ *  column added to `LIST_COLUMNS` arrives switched on (or off) without anyone
+ *  editing this. */
+export const libraryListColumnsAtom = atom((get) => {
+  const bag = get(libraryDisplayAtom).modes.list;
+  const defaults = new Map(
+    get(libraryDisplayContextAtom).listColumns.map((o) => [o.id, o.default]),
+  );
+  return (id: string) => (bag?.[id] as boolean | undefined) ?? defaults.get(id) ?? false;
+});
+
+/** Does any control THE MENU IS SHOWING sit off its default?
+ *
+ *  One fold over the registry, which is the point: every term is gated by the
+ *  same data that renders its section, so the dot can never point at a control
+ *  this mode hides. Hiding Thumbnail in Cards then switching to Results used to
+ *  leave it lit over a menu with no "Show information" in it, and no way to
+ *  clear it.
+ *
+ *  `external` options are excluded, which is a deliberate change: the old
+ *  expression lit the dot for a non-default SORT on mobile. The dot is for state
+ *  HIDDEN behind the trigger, and sort is not hidden — it has its own control,
+ *  with its own visible checkmark, inside the very menu the dot is pointing at
+ *  (and its own labelled Select in the toolbar everywhere else). Counting it
+ *  would also make "Reset this view" a lie, since sort is shared across every
+ *  mode and resetting one view's display has no business changing it. */
+export const libraryDisplayModifiedAtom = atom((get) => {
+  const state = get(libraryDisplayAtom);
+  const mode = get(libraryViewModeAtom);
+  const ctx = get(libraryDisplayContextAtom);
+  return optionsFor(mode, ctx).some(
+    (o) =>
+      o.scope !== "external" &&
+      readOption(state, mode, o.id, o.scope, o.fallback) !== o.fallback,
+  );
+});
+
+/** Put this mode back to the registry's answers, leaving every other mode
+ *  alone. Shared options are left alone too — they aren't this mode's to reset. */
+export const resetLibraryDisplayAtom = atom(null, (get, set) => {
+  const mode = get(libraryViewModeAtom);
+  const state = get(libraryDisplayAtom);
+  const modes = { ...state.modes };
+  delete modes[mode];
+  set(libraryDisplayAtom, { ...state, modes });
+});
 
 /** Sort order. */
 export type LibrarySort =

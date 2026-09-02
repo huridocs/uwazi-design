@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { copyPreviewAtom } from "../../atoms/copyFrom";
 import { CopyPreviewSection } from "../metadata/CopyPreviewSection";
+import { SectionLabel } from "../shared/SectionLabel";
 import { activeAggregateIdAtom, overlayEntityIdAtom, referencesAtom } from "../../atoms/references";
 import { languageAtom } from "../../atoms/language";
 import { entityMetadataAtom, setEntityPropAtom } from "../../atoms/entityMetadata";
@@ -204,9 +205,9 @@ export function EntityOverlay() {
               so this shows only the non-redundant facts: real creation date and
               how many references in this document point at the entity. */}
           <section className="rounded-lg p-3 space-y-3" style={{ backgroundColor: "var(--bg-warm)" }}>
-            <h4 className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider">
+            <SectionLabel as="h4">
               Metadata
-            </h4>
+            </SectionLabel>
             <div className="space-y-2.5">
               {/* Only when we actually have a date — a bare em-dash row reads as a
                   rendering gap (CEJIL entities carry no createdAt). */}
@@ -235,9 +236,9 @@ export function EntityOverlay() {
           {entityId && (editableProps.length > 0 || readOnlyProps.length > 0) && (
             <section className="rounded-lg p-3 space-y-3" style={{ backgroundColor: "var(--bg-warm)" }}>
               <div className="flex items-center justify-between">
-                <h4 className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider">
+                <SectionLabel as="h4">
                   Properties
-                </h4>
+                </SectionLabel>
                 {editableProps.length > 0 && (
                   <button
                     onClick={() => setEditingProps((v) => !v)}
@@ -282,9 +283,9 @@ export function EntityOverlay() {
           {/* References to this entity */}
           {entityRefs.length > 0 && (
             <section className="space-y-2">
-              <h4 className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider">
+              <SectionLabel as="h4">
                 References in document
-              </h4>
+              </SectionLabel>
               <div>
                 {entityRefs.map((ref) => {
                   const sourceEntity = getEntity(ref.sourceEntityId);
@@ -348,9 +349,9 @@ export function EntityOverlay() {
 
           {/* Placeholder sections */}
           <section className="space-y-2">
-            <h4 className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider">
+            <SectionLabel as="h4">
               Connections
-            </h4>
+            </SectionLabel>
             <div
               className="flex items-center justify-center py-6 rounded-md text-xs text-ink-tertiary"
               style={{ border: "1.5px dashed var(--border-soft)" }}

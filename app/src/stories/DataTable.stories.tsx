@@ -110,3 +110,29 @@ export const Empty: Story = {
     </div>
   ),
 };
+
+/** The two densities, side by side. Compact takes height out of the ROW —
+ *  never out of the type: the text is `text-sm` and the header 11px meta in
+ *  both, because the reason to want more rows on screen is never "I would like
+ *  to read them less well". The Library's list view drives this from its
+ *  Display menu. */
+export const Densities: Story = {
+  args: { columns: [], data: [], getRowId: () => "" },
+  render: () => (
+    <div className="space-y-6 max-w-2xl">
+      {(["comfortable", "compact"] as const).map((density) => (
+        <div key={density} className="space-y-2">
+          <p className="text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
+            {density}
+          </p>
+          <DataTable
+            columns={columns as Column<DemoRow>[]}
+            data={DATA}
+            getRowId={(r) => r.id}
+            density={density}
+          />
+        </div>
+      ))}
+    </div>
+  ),
+};

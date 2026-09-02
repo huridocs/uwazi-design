@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { SectionLabel } from "../components/shared/SectionLabel";
 import { BorrowedDocLine } from "../components/library/BorrowedDocLine";
 
 /** `↳ from <document>` — the passages beside this line were quoted from a
@@ -33,14 +34,14 @@ export const Empty: Story = {
   args: { from: null },
   render: () => (
     <div className="space-y-3 max-w-md">
-      <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
+      <SectionLabel as="p">
         Document
         <BorrowedDocLine from={null} />
-      </p>
-      <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
+      </SectionLabel>
+      <SectionLabel as="p">
         Document
         <BorrowedDocLine from={{ entityId: "e-2", title: "Velásquez-Rodríguez v. Honduras" }} />
-      </p>
+      </SectionLabel>
     </div>
   ),
 };

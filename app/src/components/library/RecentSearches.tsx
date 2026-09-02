@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { useAtomValue, useSetAtom } from "jotai";
 import { Clock, X } from "lucide-react";
+import { SectionLabel } from "../shared/SectionLabel";
 import {
   librarySearchHistoryAtom,
   forgetSearchAtom,
@@ -76,10 +77,13 @@ export function RecentSearches({ anchorRef, open, onPick, onClose }: Props) {
         width: pos.width,
       }}
     >
-      <p className="flex items-center gap-1.5 px-2.5 pt-1 pb-1.5 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
-        <Clock size={11} className="text-ink-muted" aria-hidden="true" />
+      <SectionLabel
+        as="p"
+        className="px-2.5 pt-1 pb-1.5"
+        icon={<Clock size={11} />}
+      >
         Recent searches
-      </p>
+      </SectionLabel>
       <ul className="flex flex-col">
         {history.map((q) => (
           <li key={q} className="group relative flex items-stretch">
