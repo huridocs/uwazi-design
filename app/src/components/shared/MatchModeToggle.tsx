@@ -54,7 +54,18 @@ export function MatchModeToggle({
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-meta uppercase tracking-wide text-ink-muted">
+      {/* `-tertiary`, not `-muted`. At 11px this is small text by WCAG's measure
+          and muted has never cleared AA on any ground in this palette: on the
+          drawer's own `bg-paper` it measured 4.48:1 light and 2.91:1 DARK,
+          which is the binding case (see CLAUDE.md — light clears throughout, so
+          a colour tuned in light ships broken). Tertiary is the design system's
+          quiet-but-readable step: 7.46:1 light, 5.52:1 dark. Same finding, and
+          the same resolution, as `SectionLabel` — a caption is the one thing in
+          a control that is always small, so it can't afford the quietest ink.
+          One caveat for whoever moves this: tertiary clears on paper, warm and
+          parchment in both themes, but lands at 4.49:1 on VELLUM in dark. Don't
+          set this control on a vellum ground without re-measuring. */}
+      <span className="text-meta uppercase tracking-wide text-ink-tertiary">
         {label}
       </span>
       {control}
