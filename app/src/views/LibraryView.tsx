@@ -38,7 +38,10 @@ import {
   libraryChainFiltersAtom,
   libraryActiveFilterCountAtom,
   libraryViewModeAtom,
-  libraryInfoAtom,
+  libraryCardInfoAtom,
+  libraryListColumnsAtom,
+  libraryListDensityAtom,
+  libraryFieldLabelsAtom,
   libraryThumbFrameAtom,
   libraryThumbSizeAtom,
   libraryTimeHubAtom,
@@ -62,6 +65,8 @@ import { matchCategoriesWithTerms, type MatchCategories } from "../utils/library
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { EntityCard } from "../components/library/EntityCard";
 import { MatchOrigin } from "../components/library/MatchOrigin";
+import { listColumnSpecs, buildListColumns } from "../components/library/listColumns";
+import { LIBRARY_SORTS } from "../data/libraryDisplay";
 // Lazy: react-simple-maps + the world atlas are the heaviest static chunk in
 // the bundle and only the map view needs them — split so the default Library
 // (and everything else) never downloads them.
@@ -91,13 +96,7 @@ const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
 
 /** Sort keys — shared by the toolbar Select and (on mobile, where the Select
  *  steps aside for the view switcher) the Display popover. */
-export const SORTS = [
-  { value: "recent", label: "Date added" },
-  { value: "title", label: "Title" },
-  { value: "connections", label: "Connections" },
-  { value: "type", label: "Type" },
-  { value: "country", label: "Country" },
-];
+export const SORTS = LIBRARY_SORTS.map((c) => ({ value: c.id, label: c.label }));
 
 /** How long the search box must sit still before the query counts as a search
  *  worth remembering. Long enough to cover typing and a pause to read, short
@@ -195,7 +194,10 @@ export function LibraryView() {
   const [chainFilters, setChainFilters] = useAtom(libraryChainFiltersAtom);
   const activeFilterCount = useAtomValue(libraryActiveFilterCountAtom);
   const [viewMode, setViewMode] = useAtom(libraryViewModeAtom);
-  const info = useAtomValue(libraryInfoAtom);
+  const cardInfo = useAtomValue(libraryCardInfoAtom);
+  const listColumnOn = useAtomValue(libraryListColumnsAtom);
+  const listDensity = useAtomValue(libraryListDensityAtom);
+  const fieldLabels = useAtomValue(libraryFieldLabelsAtom);
   const thumbFrame = useAtomValue(libraryThumbFrameAtom);
   const thumbSize = useAtomValue(libraryThumbSizeAtom);
   // Portrait cards are made portrait by the GRID: the 3:4 slot spans the card's
@@ -204,7 +206,7 @@ export function LibraryView() {
   // Landscape keeps the classic three-column hang; previews off means the frame
   // control isn't in play at all.
   const cardGridCols =
-    thumbFrame === "portrait" && info.preview !== false
+    thumbFrame === "portrait" && cardInfo.preview
       ? {
           s: "grid-cols-2 sm:grid-cols-3 xl:grid-cols-5",
           m: "grid-cols-2 sm:grid-cols-3 xl:grid-cols-4",
@@ -603,86 +605,29 @@ export function LibraryView() {
   // ON *and this row has a value in it*: a profile field labelled "Country" can
   // match on an entity whose `country` is empty, and that cell renders an
   // em-dash — suppressing the marker there hides the only evidence there was.
+  const countryColumn = listColumnOn("country");
   const rowMarkedFields = useCallback(
-    (e: Entity) => (info.country !== false && e.country ? TITLE_AND_COUNTRY : TITLE_ONLY),
-    [info.country],
+    (e: Entity) => (countryColumn && e.country ? TITLE_AND_COUNTRY : TITLE_ONLY),
+    [countryColumn],
   );
 
-  const tableColumns: Column<Entity>[] = [
-    {
-      // The type rides WITH the title, not in a column of its own.
-      //
-      // A column can't work here: the chip is 1.5rem but the "TYPE" header needs
-      // room for its label and its sort arrow, so the track is always ~2rem wider
-      // than what's in it. Left-aligned, that gap sits between the chip and the
-      // title; right-aligned, it sits between the row edge and the chip. The
-      // space has to go somewhere — unless the column goes.
-      //
-      // Sorting by type is still there, in the toolbar's Sort control.
-      id: "title",
-      header: "Title",
-      sortKey: "title",
-      cell: (e: Entity) => (
-        <span className="flex items-center gap-2 min-w-0">
-          <EntityTypeChip typeId={e.typeId} />
-          <span className="font-medium text-ink truncate">
-            <HighlightedText text={e.title} query={query} />
-          </span>
-        </span>
-      ),
-    },
-    // WHERE it matched, when the row can't show it.
-    //
-    // Title and Country are marked in place — that mark is the evidence. A hit in
-    // any other property, or in the document body, leaves the row looking
-    // unmatched, which in a few thousand results is the difference between a
-    // result list and a list. The column is 3.5rem of reserved track: contents
-    // come and go per row as the query is refined, the track never moves. It
-    // mounts only while a query is active — the one transition (no query → query)
-    // that replaces every row anyway.
-    hasQuery && {
-      id: "match",
-      header: "Match",
-      width: "3.5rem",
-      cell: (e: Entity) => (
-        <MatchOrigin entity={e} visibleFieldKeys={rowMarkedFields(e)} onSelect={handleSelect} />
-      ),
-    },
-    info.country !== false && {
-      id: "country",
-      header: "Country",
-      width: "9rem",
-      sortKey: "country",
-      cell: (e: Entity) => (
-        <span className="text-ink-secondary truncate">
-          {e.country ? <HighlightedText text={e.country} query={query} /> : "—"}
-        </span>
-      ),
-    },
-    info.date !== false && {
-      id: "date",
-      header: "Date",
-      width: "5rem",
-      sortKey: "recent",
-      cell: (e: Entity) => (
-        <span className="text-ink-tertiary tabular-nums">
-          {e.createdAt ? new Date(e.createdAt).getUTCFullYear() : "—"}
-        </span>
-      ),
-    },
-    info.connections !== false && {
-      id: "connections",
-      header: "Connections",
-      width: "8rem",
-      align: "right" as const,
-      sortKey: "connections",
-      cell: (e: Entity) => (
-        <span className="text-ink-secondary tabular-nums">
-          {(countByEntity.get(e.id) ?? 0).toLocaleString()}
-        </span>
-      ),
-    },
-  ].filter(Boolean) as Column<Entity>[];
+  // The table's tracks come from `listColumns` — one entry per column, read here
+  // AND by the Display menu's toggles, so a column can never be drawable but
+  // unlistable (or listed but undrawable, which is what three separate edits per
+  // column used to risk). The Match cell is handed in rather than imported by
+  // that module: see `ListCellContext.renderMatch`.
+  const listSpecs = useMemo(
+    () => listColumnSpecs({ hasQuery, fieldLabels }),
+    [hasQuery, fieldLabels],
+  );
+  const tableColumns = buildListColumns(listSpecs, listColumnOn, {
+    query,
+    language,
+    connectionsOf: (e) => countByEntity.get(e.id) ?? 0,
+    renderMatch: (e) => (
+      <MatchOrigin entity={e} visibleFieldKeys={rowMarkedFields(e)} onSelect={handleSelect} />
+    ),
+  });
 
   const renderLeft = (menuTrigger?: ReactNode) => (
     <div className="flex flex-col h-full min-h-0 bg-paper">
@@ -972,6 +917,13 @@ export function LibraryView() {
               />
             ))}
           </div>
+        ) : tableColumns.length === 0 ? (
+          // Every column can be switched off, so "none of them" is a state the
+          // table can be in — and an empty grid is not a thing to render. It
+          // says so, and names the way out.
+          <div className="flex items-center justify-center h-40 text-sm text-ink-muted">
+            No columns shown — pick one in Display.
+          </div>
         ) : (
           <DataTable
             columns={tableColumns}
@@ -983,10 +935,14 @@ export function LibraryView() {
             sort={{ key: sort, dir: sortDir }}
             onSort={(key) => setSortKey(key as typeof sort)}
             minWidthRem={34}
+            density={listDensity}
           />
         )}
 
-        {!cejilLoading && viewMode !== "map" && viewMode !== "timeline" && viewMode !== "results" && shown.length < filtered.length && (
+        {/* Not while the table has no columns to draw them in — "show more" of
+            nothing is an offer to widen an empty screen. */}
+        {!cejilLoading && viewMode !== "map" && viewMode !== "timeline" && viewMode !== "results" &&
+          !(viewMode === "list" && tableColumns.length === 0) && shown.length < filtered.length && (
           <div className="flex justify-center pt-4">
             <button
               onClick={() => setVisibleCount((n) => n + DISPLAY_STEP)}

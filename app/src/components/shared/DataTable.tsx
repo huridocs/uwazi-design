@@ -15,6 +15,19 @@ export interface Column<T> {
 
 export type SortDir = "asc" | "desc";
 
+/** How much air a row gets.
+ *
+ *  Height and padding ONLY. Compact does NOT shrink the type — the row stays
+ *  `text-sm` and the header stays at the 11px meta size, because the reason to
+ *  want more rows on screen is never "I would like to read them less well".
+ *  That also keeps the whole table on the app's type floor at both settings. */
+export type TableDensity = "comfortable" | "compact";
+
+const DENSITY: Record<TableDensity, { header: string; row: string }> = {
+  comfortable: { header: "h-10", row: "min-h-11 py-2" },
+  compact: { header: "h-8", row: "min-h-8 py-1" },
+};
+
 interface DataTableProps<T> {
   columns: Column<T>[];
   data: T[];
@@ -38,6 +51,8 @@ interface DataTableProps<T> {
   /** Accessible name for a clickable row's primary action (the invisible
    *  stretched button). Defaults to "Open row". */
   rowAriaLabel?: (row: T) => string;
+  /** Row height and padding. Defaults to `comfortable` — today's table. */
+  density?: TableDensity;
 }
 
 const alignClass = {
@@ -66,8 +81,10 @@ export function DataTable<T>({
   sort,
   onSort,
   rowAriaLabel,
+  density = "comfortable",
 }: DataTableProps<T>) {
   const gridTemplateColumns = columns.map((c) => c.width ?? "1fr").join(" ");
+  const box = DENSITY[density];
   const scrolls = minWidthRem !== undefined;
 
   return (
@@ -83,7 +100,7 @@ export function DataTable<T>({
         {/* Header */}
         <div
           role="row"
-          className="grid items-center gap-3 px-4 h-10 text-meta font-semibold text-ink-tertiary uppercase tracking-wider"
+          className={`grid items-center gap-3 px-4 ${box.header} text-meta font-semibold text-ink-tertiary uppercase tracking-wider`}
           style={{
             gridTemplateColumns,
             backgroundColor: "var(--bg-warm)",
@@ -150,7 +167,7 @@ export function DataTable<T>({
                 {...extra}
                 role="row"
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
-                className={`group relative grid items-center gap-3 px-4 min-h-11 py-2 text-sm transition-colors ${
+                className={`group relative grid items-center gap-3 px-4 ${box.row} text-sm transition-colors ${
                   clickable ? "cursor-pointer" : ""
                 } ${selected ? "bg-parchment" : "hover:bg-warm"} ${extraClass ?? ""}`}
                 style={{ gridTemplateColumns, borderBottom: "1px solid var(--border-primary)", ...extraStyle }}

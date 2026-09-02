@@ -1833,7 +1833,7 @@ const textColor = typeLabelColor(type.color);`}
               <div id="set-data-table" ref={reg("set-data-table")}>
                 <CatalogEntry
                   name="DataTable"
-                  description="The canonical data table (entity-view Files style), generic via a declarative column API. Backs FileTable and every Settings list."
+                  description="The canonical data table (entity-view Files style), generic via a declarative column API. Backs FileTable, every Settings list and the Library's list view. `density` takes height out of the ROW and never out of the type — text-sm rows and an 11px header at both settings — so compact buys rows per screen without spending legibility."
                   code={`<DataTable
   data={rows}
   getRowId={(r) => r.id}
@@ -1844,7 +1844,10 @@ const textColor = typeLabelColor(type.color);`}
     { id: "name", header: "Template", cell: (r) => r.name },
     { id: "count", header: "Entities", width: "6rem", align: "right", cell: (r) => r.count },
   ]}
-/>`}
+/>
+
+{/* Compact: shorter rows, identical type. */}
+<DataTable density="compact" … />`}
                 >
                   <div className="w-full max-w-md">
                     <IsolatedDataTable />

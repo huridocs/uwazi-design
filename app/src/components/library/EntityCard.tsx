@@ -6,12 +6,11 @@ import { EntityTypeTag } from "../shared/EntityTypeTag";
 import { HighlightedText } from "../shared/HighlightedText";
 import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
 import { EntityThumbnail, QuietMark } from "./EntityThumbnail";
-import { getEntityProfile } from "../../data/entityProfiles";
 import { getEntityType } from "../../data/entities";
-import type { MetadataField } from "../../data/metadata";
+import { entityScalarFields } from "../../utils/entityFields";
 import type { Entity } from "../../data/entities";
 import {
-  libraryInfoAtom,
+  libraryCardInfoAtom,
   libraryThumbSizeAtom,
   libraryThumbFitAtom,
   libraryThumbFrameAtom,
@@ -83,13 +82,13 @@ export const EntityCard = memo(function EntityCard({
   onView: (id: string) => void;
 }) {
   const language = useAtomValue(languageAtom);
-  const info = useAtomValue(libraryInfoAtom);
+  const info = useAtomValue(libraryCardInfoAtom);
   const thumbSize = useAtomValue(libraryThumbSizeAtom);
   const thumbFit = useAtomValue(libraryThumbFitAtom);
   const thumbFrame = useAtomValue(libraryThumbFrameAtom);
-  const showPreview = info.preview !== false;
-  const showMetadata = info.metadata !== false;
-  const showConnections = info.connections !== false;
+  const showPreview = info.preview;
+  const showMetadata = info.metadata;
+  const showConnections = info.connections;
 
   const connectionBadge = showConnections && connections > 0 && (
     <span className="inline-flex items-center gap-1 text-meta text-ink-tertiary tabular-nums" title={`${connections} connections`}>
@@ -99,12 +98,9 @@ export const EntityCard = memo(function EntityCard({
   );
 
   // Adapter-supplied real fields (e.g. CEJIL) win; otherwise derive from the mock
-  // entityMetadata profile. Only fields that resolved to a value.
-  const scalarFields: { id: string; label: string; value: string; more?: number }[] = entity.fields
-    ? entity.fields.map((f, i) => ({ id: `${f.label}-${i}`, label: f.label, value: f.value, more: f.more }))
-    : (getEntityProfile(entity.id).metadata[language] ?? [])
-        .filter((f): f is MetadataField => f.type !== "relationship" && !!(f as MetadataField).value && (f as MetadataField).value !== "—")
-        .map((f) => ({ id: f.id, label: f.label, value: String(f.value) }));
+  // entityMetadata profile. Only fields that resolved to a value. Shared with
+  // the list table's metadata columns, which ask the identical question.
+  const scalarFields = entityScalarFields(entity, language);
   // At most THREE fields, and no appended "Language" row: the card is a
   // scan-target, not a record. Language repeats the toolbar's own selector on
   // every card, and beyond three rows the grid stops reading as cards and starts
