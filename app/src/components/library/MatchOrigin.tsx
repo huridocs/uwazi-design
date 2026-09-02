@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { FileText, Tag } from "lucide-react";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -6,7 +6,6 @@ import type { Entity } from "../../data/entities";
 import { languageAtom } from "../../atoms/language";
 import { dataSourceAtom } from "../../atoms/dataSource";
 import {
-  libraryQueryAtom,
   focusMetadataFieldAtom,
   resultsActivePageAtom,
 } from "../../atoms/library";
@@ -47,6 +46,14 @@ import { BorrowedDocLine } from "./BorrowedDocLine";
 
 interface Props {
   entity: Entity;
+  /** The query to answer FOR — the committed-and-DEFERRED search the surface
+   *  filtered with, passed down rather than read from `libraryQueryAtom` here.
+   *  Subscribing to the raw atom re-ran `hiddenMatchOrigin` — a per-entity scan
+   *  of the whole record — for all ~120 mounted rows on every keystroke, ahead
+   *  of the results those rows were about to be replaced by. Same reasoning as
+   *  `EntityCard`; the two surfaces that render this both already hold the
+   *  deferred value. */
+  query: string;
   /** Field keys this row already renders with marks — a hit there is its own
    *  evidence and gets no marker. */
   visibleFieldKeys: readonly string[];
@@ -65,8 +72,12 @@ const EDGE = 12;
  *  build a snippet for every row the pointer crosses. */
 const HOVER_DELAY = 140;
 
-export function MatchOrigin({ entity, visibleFieldKeys, onSelect }: Props) {
-  const query = useAtomValue(libraryQueryAtom);
+export const MatchOrigin = memo(function MatchOrigin({
+  entity,
+  query,
+  visibleFieldKeys,
+  onSelect,
+}: Props) {
   const language = useAtomValue(languageAtom);
   const source = useAtomValue(dataSourceAtom);
   const setFocusField = useSetAtom(focusMetadataFieldAtom);
@@ -220,7 +231,7 @@ export function MatchOrigin({ entity, visibleFieldKeys, onSelect }: Props) {
         )}
     </span>
   );
-}
+});
 
 /** One glyph. Focus opens the excerpt immediately (a keyboard user gets what a
  *  hover gives); Enter/Space come free from the native button. */

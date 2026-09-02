@@ -645,7 +645,12 @@ export function LibraryView() {
       header: "Match",
       width: "3.5rem",
       cell: (e: Entity) => (
-        <MatchOrigin entity={e} visibleFieldKeys={rowMarkedFields(e)} onSelect={handleSelect} />
+        <MatchOrigin
+          entity={e}
+          query={query}
+          visibleFieldKeys={rowMarkedFields(e)}
+          onSelect={handleSelect}
+        />
       ),
     },
     info.country !== false && {
