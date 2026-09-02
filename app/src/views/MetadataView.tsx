@@ -46,7 +46,6 @@ import { DrawerFilesBody } from "../components/files/DrawerFilesBody";
 import { EditInput } from "../components/metadata/EditInput";
 import { scopedReferencesAtom } from "../atoms/references";
 import { RelationshipsDrawerSection } from "../components/relationships/RelationshipsDrawerSection";
-import { DocumentViewer } from "../components/viewer/DocumentViewer";
 import { useNotify } from "../hooks/useNotify";
 import { useRegisterDirtyForm } from "../hooks/useDirtyGuard";
 import { ShareEntityModal } from "../components/share/ShareEntityModal";
@@ -219,14 +218,9 @@ export function MetadataEditBody({
   const initialFields = profile.metadata[language].filter(
     (f): f is MetadataField => f.type !== "relationship",
   );
-  const pdf = profile.pdfMetadata?.[language];
   const [title, setTitle] = useState(docTitle);
   const [fields, setFields] = useState<MetadataField[]>(initialFields);
-  const [showPreview, setShowPreview] = useState(true);
-  const [showFileSize, setShowFileSize] = useState(true);
-  const [showLastEdit, setShowLastEdit] = useState(true);
   const [showIcon, setShowIcon] = useState(true);
-  const [extractMeta, setExtractMeta] = useState(true);
   const notify = useNotify();
 
   /* ── Validation ──────────────────────────────────────────────────────────
@@ -686,37 +680,6 @@ export function MetadataEditBody({
           </div>
         </EditSection>
 
-        {/* Document — only for document-bearing entities. */}
-        {profile.hasDocument && pdf && (
-          <EditSection label="Document*">
-            <div className="flex items-center gap-2">
-              <div className="flex-1 px-3 py-2 text-sm text-ink bg-paper border border-border rounded-md truncate">
-                Choose file &nbsp; {pdf.name}
-              </div>
-              <button
-                onClick={() => notify("File removed")}
-                className="px-3 py-1.5 text-xs font-medium text-seal-label rounded-md hover:bg-seal-tint transition-colors cursor-pointer"
-              >
-                Remove file
-              </button>
-            </div>
-            <div className="flex items-center gap-4 mt-2">
-              <Checkbox checked={showPreview} onChange={setShowPreview} label="Show preview" />
-              <Checkbox checked={extractMeta} onChange={setExtractMeta} label="Extract file metadata" />
-            </div>
-
-            {/* Inline PDF metadata */}
-            <div className="mt-3 space-y-2">
-              <EditInput label="Name" value={pdf.name} />
-              <EditInput label="Type" value={pdf.type} />
-              <div className="flex items-center gap-4 mt-2">
-                <Checkbox checked={showFileSize} onChange={setShowFileSize} label="Show file size" />
-                <Checkbox checked={showLastEdit} onChange={setShowLastEdit} label="Show last edit" />
-              </div>
-            </div>
-          </EditSection>
-        )}
-
         {/* Description */}
         <EditSection
           label="Description*"
@@ -1162,17 +1125,11 @@ function CountryPicker() {
 /* ── Drawer ── */
 
 function MetadataDrawer() {
-  const focusedId = useAtomValue(focusedEntityIdAtom);
-  const profile = getEntityProfile(focusedId);
   const [references] = useAtom(scopedReferencesAtom);
   const [files] = useAtom(filesAtom);
 
-  // The Document tab only exists for document-bearing entities — otherwise the
-  // viewer would fall back to the bundled sample PDF and show a phantom doc on
-  // entities that have none (e.g. an Audiencia with Files 0).
   const relFilterCount = useAtomValue(activeFilterCountAtom);
   const drawerTabs = [
-    ...(profile.hasDocument ? [{ id: "document", label: "Document" }] : []),
     {
       id: "connections",
       label: "Relationships",
@@ -1183,15 +1140,8 @@ function MetadataDrawer() {
     { id: "template", label: "Template" },
   ];
 
-  const [activeDrawerTab, setActiveDrawerTab] = useState(
-    profile.hasDocument ? "document" : "connections",
-  );
-  // Re-pick the default tab when the focal entity changes (the drawer stays
-  // mounted across navigation), so a no-document entity never lands on a
-  // phantom Document tab carried over from the previous one.
-  useEffect(() => {
-    setActiveDrawerTab(profile.hasDocument ? "document" : "connections");
-  }, [focusedId, profile.hasDocument]);
+  // Documents live in Files now; the drawer opens on the connections either way.
+  const [activeDrawerTab, setActiveDrawerTab] = useState("connections");
 
   return (
     <div className="relative flex flex-col h-full overflow-hidden">
@@ -1200,9 +1150,7 @@ function MetadataDrawer() {
       <EntityOverlay />
       <DrawerTabs tabs={drawerTabs} activeId={activeDrawerTab} onChange={setActiveDrawerTab} />
 
-      {activeDrawerTab === "document" && profile.hasDocument ? (
-        <DocumentViewer showMinimap={false} />
-      ) : activeDrawerTab === "template" ? (
+      {activeDrawerTab === "template" ? (
         <TemplateStructure />
       ) : activeDrawerTab === "files" ? (
         <DrawerFilesBody />
