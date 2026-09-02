@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useSetAtom } from "jotai";
 import { Lightbulb } from "lucide-react";
+import { SectionLabel } from "../shared/SectionLabel";
 import { librarySearchDraftAtom } from "../../atoms/library";
 
 const PANEL_ID = "library-search-tips";
@@ -155,9 +156,7 @@ export function SearchTipsPopover({
             {/* Header — frames the list and names the intent. */}
             <div className="flex items-center gap-1.5 px-2 pt-1 pb-2 mb-1 border-b border-border-soft">
               <Lightbulb size={12} className="text-ink-tertiary" aria-hidden="true" />
-              <span className="text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
-                Narrow your search
-              </span>
+              <SectionLabel>Narrow your search</SectionLabel>
             </div>
 
             <ul className="flex flex-col">

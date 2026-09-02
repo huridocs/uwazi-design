@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { SlidersHorizontal, Check } from "lucide-react";
+import { SectionLabel } from "../shared/SectionLabel";
 import {
   libraryInfoAtom,
   libraryViewModeAtom,
@@ -153,9 +154,9 @@ export function DisplayMenu() {
             {/* The time strip belongs to EVERY layout — it filters by date and
                 charts the whole result set, so cards and the table want it as
                 much as the map and the timeline it started under. */}
-            <p className="px-2 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
+            <SectionLabel as="p" className="px-2 pt-1 pb-1">
               Chart
-            </p>
+            </SectionLabel>
             <button
               onClick={() => setTimeHub((v) => !v)}
               aria-pressed={timeHub}
@@ -175,9 +176,9 @@ export function DisplayMenu() {
                 view switcher, which matters more than a sort key you set once. */}
             {isMobile && (
               <>
-                <p className="px-2 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
+                <SectionLabel as="p" className="px-2 pt-1 pb-1">
                   Sort by
-                </p>
+                </SectionLabel>
                 {SORTS.map((s) => {
                   const on = sort === s.value;
                   return (
@@ -207,9 +208,9 @@ export function DisplayMenu() {
 
             {showResultsLayouts && (
               <>
-                <p className="px-2 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
+                <SectionLabel as="p" className="px-2 pt-1 pb-1">
                   Results layout
-                </p>
+                </SectionLabel>
                 {RESULTS_LAYOUTS.map((l) => {
                   const on = resultsLayout === l.id;
                   return (
@@ -240,9 +241,9 @@ export function DisplayMenu() {
 
             {showLayouts && (
               <>
-                <p className="px-2 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
+                <SectionLabel as="p" className="px-2 pt-1 pb-1">
                   Timeline layout
-                </p>
+                </SectionLabel>
                 {LAYOUTS.map((l) => {
                   const on = layout === l.id;
                   return (
@@ -276,9 +277,9 @@ export function DisplayMenu() {
                 {showLayouts && (
                   <div className="my-1 h-px" style={{ backgroundColor: "var(--border-soft)" }} />
                 )}
-                <p className="px-2 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
+                <SectionLabel as="p" className="px-2 pt-1 pb-1">
                   Show information
-                </p>
+                </SectionLabel>
                 {ITEMS.map((it) => {
                   const shown = info[it.key] !== false;
                   return (
@@ -303,9 +304,9 @@ export function DisplayMenu() {
             {showThumbs && (
               <>
                 <div className="my-1 h-px" style={{ backgroundColor: "var(--border-soft)" }} />
-                <p className="px-2 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
+                <SectionLabel as="p" className="px-2 pt-1 pb-1">
                   Thumbnail size
-                </p>
+                </SectionLabel>
                 {THUMB_SIZES.map((s) => {
                   const on = thumbSize === s.id;
                   return (
@@ -329,9 +330,9 @@ export function DisplayMenu() {
                     sits in it. It is one choice for the WHOLE grid — per-card
                     orientation would ragged the rows the reserved slot exists to
                     keep level. */}
-                <p className="px-2 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
+                <SectionLabel as="p" className="px-2 pt-1 pb-1">
                   Thumbnail frame
-                </p>
+                </SectionLabel>
                 {THUMB_FRAMES.map((f) => {
                   const on = thumbFrame === f.id;
                   return (
@@ -357,9 +358,9 @@ export function DisplayMenu() {
                     </button>
                   );
                 })}
-                <p className="px-2 pt-1 pb-1 text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
+                <SectionLabel as="p" className="px-2 pt-1 pb-1">
                   Image fit
-                </p>
+                </SectionLabel>
                 {THUMB_FITS.map((f) => {
                   const on = thumbFit === f.id;
                   return (

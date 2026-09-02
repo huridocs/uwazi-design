@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { FileText, Tag } from "lucide-react";
+import { SectionLabel } from "../shared/SectionLabel";
 import { useAtomValue, useSetAtom } from "jotai";
 import type { Entity } from "../../data/entities";
 import { languageAtom } from "../../atoms/language";
@@ -265,9 +266,7 @@ function Mark({
 
 function TipLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="block text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
-      {children}
-    </span>
+    <SectionLabel>{children}</SectionLabel>
   );
 }
 

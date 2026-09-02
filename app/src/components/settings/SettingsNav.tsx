@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { ExternalLink } from "lucide-react";
+import { SectionLabel } from "../shared/SectionLabel";
 import {
   settingsGroupOf,
   settingsSectionAtom,
@@ -50,9 +51,9 @@ export function SettingsNav({
       {[settingsGroupOf(current)].map((group) => (
         <div key={group.id} className="mb-2">
           {group.label && (
-            <h3 className="px-5 py-2 text-meta font-semibold uppercase tracking-wider text-ink-muted">
+            <SectionLabel as="h3" className="px-5 py-2">
               {group.label}
-            </h3>
+            </SectionLabel>
           )}
           {group.items.map((item, i) => {
             const Icon = item.icon;
@@ -87,12 +88,13 @@ export function SettingsNav({
             }`;
 
             const sub = startsSub && (
-              <h4
+              <SectionLabel
+                as="h4"
                 key={`sub-${item.subgroup}`}
-                className="px-5 pt-3 pb-1 text-meta font-semibold uppercase tracking-wider text-ink-muted"
+                className="px-5 pt-3 pb-1"
               >
                 {item.subgroup}
-              </h4>
+              </SectionLabel>
             );
 
             if (item.external) {

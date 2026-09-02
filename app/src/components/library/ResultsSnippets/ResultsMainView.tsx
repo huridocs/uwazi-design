@@ -619,9 +619,7 @@ function TreeBranch({
           className={`text-ink-muted transition-transform ${open ? "" : "-rotate-90"}`}
         />
         {icon}
-        <span className="text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
-          {label}
-        </span>
+        <SectionLabel>{label}</SectionLabel>
         <span className="text-meta tabular-nums text-ink-muted">{count.toLocaleString()}</span>
         {note && <span className="text-meta text-ink-muted">· {note}</span>}
         {trailing}
@@ -1023,9 +1021,7 @@ function PropertyRow({
         transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1
         focus-visible:ring-inset focus-visible:ring-ink/20"
     >
-      <span className="block text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
-        {group.field}
-      </span>
+      <SectionLabel>{group.field}</SectionLabel>
       {group.texts.map((t, i) => (
         <span key={i} className="block text-sm text-ink leading-relaxed">
           <HighlightedText text={t} query={query} />

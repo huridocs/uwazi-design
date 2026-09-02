@@ -1,6 +1,8 @@
 import { Fragment, useMemo, useState, type ReactNode } from "react";
 import { ChevronDown, Search, X } from "lucide-react";
 import { Checkbox } from "./Checkbox";
+import { MatchModeToggle } from "./MatchModeToggle";
+import { SectionLabel } from "./SectionLabel";
 
 export type FacetMode = "AND" | "OR";
 
@@ -157,26 +159,7 @@ export function FacetSection({
           {(showSearch || mode) && (
             <div className="px-4 pt-0.5 pb-2 space-y-2">
               {mode && onModeChange && (
-                <div className="flex items-center gap-2">
-                  <span className="text-meta uppercase tracking-wide text-ink-muted">
-                    Match
-                  </span>
-                  <div className="inline-flex items-center gap-0.5 bg-warm rounded-md p-0.5">
-                    {(["AND", "OR"] as const).map((m) => (
-                      <button
-                        key={m}
-                        onClick={() => onModeChange(m)}
-                        className={`px-2 h-5 rounded text-meta font-bold tracking-wide transition-colors cursor-pointer ${
-                          mode === m
-                            ? "bg-vellum text-ink"
-                            : "text-ink-tertiary hover:text-ink-secondary"
-                        }`}
-                      >
-                        {m}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <MatchModeToggle mode={mode} onChange={onModeChange} label="Match" />
               )}
               {showSearch && (
                 <div className="relative flex items-center gap-1.5 h-7 px-2 bg-warm border border-border rounded-md focus-within:ring-2 focus-within:ring-carbon/20 focus-within:border-carbon/40 transition-all">
@@ -215,9 +198,9 @@ export function FacetSection({
             return (
               <Fragment key={id}>
                 {showGroupHeader && (
-                  <div className="px-4 pt-2 pb-0.5 text-meta font-semibold uppercase tracking-wide text-ink-muted truncate">
-                    {row.group}
-                  </div>
+                  <SectionLabel className="px-4 pt-2 pb-0.5">
+                    <span className="truncate">{row.group}</span>
+                  </SectionLabel>
                 )}
                 <label
                   className={`flex items-center gap-2 py-1.5 cursor-pointer transition-colors ${

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { SectionLabel } from "../components/shared/SectionLabel";
 
 /** PROPOSAL — not shipped. The one remaining axe flag anywhere is small
  *  semantic-status text on its own tint (amber `text-warning` on
@@ -37,12 +38,12 @@ function ComparisonSheet() {
       <div className="space-y-3 text-sm">
         <div className="flex items-center gap-4">
           <span className="w-24 shrink-0" />
-          <span className="flex-1 text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
+          <SectionLabel className="flex-1">
             Current (locked)
-          </span>
-          <span className="flex-1 text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
+          </SectionLabel>
+          <SectionLabel className="flex-1">
             Proposed (65% + ink)
-          </span>
+          </SectionLabel>
         </div>
         {STATUSES.map((s) => (
           <div key={s.label} className="flex items-center gap-4">
@@ -57,9 +58,9 @@ function ComparisonSheet() {
         ))}
       </div>
       <div className="space-y-1.5 border-t border-border/60 pt-4">
-        <span className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary block">
+        <SectionLabel>
           Inline status text (e.g. "3 failed" in tables)
-        </span>
+        </SectionLabel>
         <p className="text-xs">
           <span style={{ color: "var(--accent-seal)" }} className="font-medium">12 failed</span>
           <span className="text-ink-tertiary"> — current · </span>

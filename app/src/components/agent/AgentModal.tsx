@@ -4,6 +4,7 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { X, ChevronDown, ChevronRight, Plus, Search, Bell, ArrowUp } from "lucide-react";
 import { UwaziLoader } from "../shared/UwaziLoader";
 import { EntityPill } from "../shared/EntityPill";
+import { SectionLabel } from "../shared/SectionLabel";
 import {
   agentOpenAtom,
   agentScopeAtom,
@@ -589,7 +590,7 @@ function AddMenu({
     </button>
   );
   const groupLabel = (t: string) => (
-    <div className="px-3 pt-1.5 pb-1 text-meta font-semibold uppercase tracking-wider text-ink-tertiary">{t}</div>
+    <SectionLabel className="px-3 pt-1.5 pb-1">{t}</SectionLabel>
   );
 
   return (

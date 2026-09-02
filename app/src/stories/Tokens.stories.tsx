@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { SectionLabel } from "../components/shared/SectionLabel";
 
 /** The semantic token sheet — the migration contract for huridocs/uwazi.
  *  Every swatch reads the REAL var (never a bridge alias, never a hex), so
@@ -24,7 +25,7 @@ function Swatch({ label, varName, utility, border }: { label: string; varName: s
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="space-y-3">
-      <h3 className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary">{title}</h3>
+      <SectionLabel as="h3">{title}</SectionLabel>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-4">{children}</div>
     </section>
   );

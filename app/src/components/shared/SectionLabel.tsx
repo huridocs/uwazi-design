@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ElementType, ReactNode } from "react";
 
 /** The small uppercase label that introduces a group of content — "Properties"
  *  above a card's field hits, "Document" above its page hits, "Tasks · 3" above
@@ -25,12 +25,22 @@ import type { ReactNode } from "react";
  *  about its container, while what it looks like is the thing that must not
  *  vary. Nothing in the class list a caller passes can reach the size, weight,
  *  tracking or colour, which is what stopped this from being one component in
- *  the first place. */
+ *  the first place.
+ *
+ *  **`as` is the one other thing the caller owns**, and only because several of
+ *  the labels this replaced were real headings (`h3`/`h4`) rather than
+ *  decoration. Rendering those as a `span` would have quietly deleted them from
+ *  the document outline, which is a bigger loss than a hand-rolled class list —
+ *  so the ELEMENT is the caller's, while everything painted on it still isn't. */
 export function SectionLabel({
+  as: Tag = "span",
   icon,
   className = "",
   children,
 }: {
+  /** The element to render. `span` by default; pass `h2`…`h5` where the label
+   *  genuinely heads a section, so it keeps its place in the outline. */
+  as?: ElementType;
   /** Optional leading glyph (the Results view's Tag / FileText marks). Drawn a
    *  step quieter than the words, so it reads as punctuation, not as content. */
   icon?: ReactNode;
@@ -40,7 +50,7 @@ export function SectionLabel({
   return (
     // `flex`, so this is block-level and a caller's `sticky` + background paints
     // the full width — the notification drawer's section headers depend on it.
-    <span
+    <Tag
       className={`flex items-center gap-1.5 min-w-0 text-meta font-semibold uppercase
         tracking-wide text-ink-tertiary ${className}`}
     >
@@ -50,6 +60,6 @@ export function SectionLabel({
         </span>
       )}
       {children}
-    </span>
+    </Tag>
   );
 }

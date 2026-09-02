@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSetAtom } from "jotai";
 import { X, SlidersHorizontal } from "lucide-react";
+import { SectionLabel } from "../shared/SectionLabel";
 import {
   clearLibraryFiltersAtom,
   librarySelectedEntityIdAtom,
@@ -85,9 +86,7 @@ export function ActiveFiltersButton({ className = "" }: { className?: string } =
             className="flex items-center gap-2 px-3 py-2"
             style={{ borderBottom: "1px solid var(--border-soft)" }}
           >
-            <span className="text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
-              Active filters
-            </span>
+            <SectionLabel>Active filters</SectionLabel>
             <button
               onClick={() => {
                 clearAll();

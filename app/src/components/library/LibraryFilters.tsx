@@ -23,6 +23,7 @@ import {
   matchTypeFiltersAtom,
   type FacetMode,
 } from "../../atoms/library";
+import { MatchModeToggle } from "../shared/MatchModeToggle";
 import { typeHasDocument } from "../../data/entityProfiles";
 import { cejilSettings } from "../../data/cejil/settings";
 import {
@@ -729,19 +730,11 @@ function KeywordFacetCard({
             </button>
           )}
           {mode && onModeChange && (
-            <div className="inline-flex items-center gap-0.5 bg-warm rounded-md p-0.5">
-              {(["AND", "OR"] as const).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => onModeChange(m)}
-                  className={`px-2 h-5 rounded text-meta font-bold tracking-wide transition-colors cursor-pointer ${
-                    mode === m ? "bg-vellum text-ink" : "text-ink-tertiary hover:text-ink-secondary"
-                  }`}
-                >
-                  {m}
-                </button>
-              ))}
-            </div>
+            <MatchModeToggle
+              mode={mode}
+              onChange={onModeChange}
+              groupLabel={`Match mode for ${title}`}
+            />
           )}
         </span>
       </div>

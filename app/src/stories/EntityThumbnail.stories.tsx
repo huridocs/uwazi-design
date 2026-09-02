@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { SectionLabel } from "../components/shared/SectionLabel";
 import { EntityThumbnail } from "../components/library/EntityThumbnail";
 import { artworkLibraryEntities } from "../data/artworks/adapt";
 import type { Entity } from "../data/entities";
@@ -106,9 +107,9 @@ export const Sizes: Story = {
     <div className="space-y-6 max-w-4xl">
       {FRAMES.map((frame) => (
         <div key={frame} className="space-y-3">
-          <p className="text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
+          <SectionLabel as="p">
             {frame}
-          </p>
+          </SectionLabel>
           {FRAME_H[frame].map(({ size, h }) => (
             <div key={size} className="space-y-1.5">
               <div className="grid grid-cols-3 gap-3">
@@ -151,9 +152,9 @@ export const FitModes: Story = {
     <div className="space-y-6 max-w-4xl">
       {FRAMES.map((frame) => (
         <div key={frame} className="space-y-3">
-          <p className="text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
+          <SectionLabel as="p">
             {frame}
-          </p>
+          </SectionLabel>
           {(["auto", "cover", "contain"] as const).map((fit) => (
             <div key={fit} className="space-y-1.5">
               <div className="grid grid-cols-3 gap-3">
