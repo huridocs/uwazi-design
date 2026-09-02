@@ -55,6 +55,13 @@ const RING_GAP = 40;
 const ARC_GAP = 30;
 /** Max relationships plotted — beyond this the radial graph is slow + unreadable. */
 const GRAPH_CAP = 150;
+/** Label type size, in user units AND the rendered floor it must never fall under.
+ *  The 11px floor is a CSS-px rule, and SVG text inside the zoom group is not
+ *  measured in CSS px: it passes through TWO scales — the viewBox fit
+ *  (pane ÷ 1200×900, ~0.6 on a normal pane) and `transform.scale` (0.4…2.5). At
+ *  the bottom of both, an 11-unit glyph painted 2.6px. `labelScale` below undoes
+ *  exactly as much of that as the floor needs. */
+const LABEL_PX = 11;
 
 /** Does `text` contain any query term? The graph's labels live in SVG `<text>`,
  *  which cannot host a `<mark>` — so where the list and tree mark the matched
@@ -244,6 +251,31 @@ export function RelationshipsGraphView() {
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
   }, []);
+
+  // The pane's size, because the viewBox fit is half of what a glyph's rendered
+  // size actually is. `preserveAspectRatio="xMidYMid meet"` makes that fit
+  // min(w/VIEW_W, h/VIEW_H) — measure it, don't assume 1.
+  const [pane, setPane] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      setPane((p) => (p.w === width && p.h === height ? p : { w: width, h: height }));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Rendered px per user unit = viewBox fit × zoom. Counter-scale the LABEL
+  // GROUPS (pill and text together, so the pill never has to hold type it has
+  // outgrown) by just enough to hold the floor — and by nothing at all once the
+  // graph is zoomed past it, where labels should grow with everything else.
+  const unitPx =
+    pane.w > 0 && pane.h > 0
+      ? Math.min(pane.w / VIEW_W, pane.h / VIEW_H) * transform.scale
+      : transform.scale;
+  const labelScale = Math.max(1, 1 / unitPx);
 
   const onPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
     if ((e.target as SVGElement).dataset.node) return;
@@ -460,33 +492,37 @@ export function RelationshipsGraphView() {
                 onBlur={() => setFocusedNodeId(null)}
                 style={{ cursor: "pointer", outline: "none" }}
               >
-                <rect
-                  x={s.labelX - 55}
-                  y={s.labelY - 11}
-                  width={110}
-                  height={22}
-                  rx={4}
-                  // Matched branches take the highlight tint — the SVG stand-in
-                  // for the <mark> the list and tree put on this same label.
-                  fill={hit ? "var(--highlight-yellow-active)" : "var(--bg-surface)"}
-                  fillOpacity={hit ? 0.7 : 1}
-                  stroke={
-                    focusedNodeId === `label-${s.key}`
-                      ? "var(--accent-blue)"
-                      : s.color ?? "var(--border-primary)"
-                  }
-                  strokeWidth={focusedNodeId === `label-${s.key}` ? 1.5 : 1}
-                />
-                <text
-                  x={s.labelX}
-                  y={s.labelY + 4}
-                  textAnchor="middle"
-                  fontSize={11}
-                  fontWeight={500}
-                  fill="var(--text-secondary)"
+                <g
+                  transform={`translate(${s.labelX} ${s.labelY}) scale(${labelScale}) translate(${-s.labelX} ${-s.labelY})`}
                 >
-                  {isCollapsed ? `${s.label} (${s.targets.length})` : s.label}
-                </text>
+                  <rect
+                    x={s.labelX - 55}
+                    y={s.labelY - 11}
+                    width={110}
+                    height={22}
+                    rx={4}
+                    // Matched branches take the highlight tint — the SVG stand-in
+                    // for the <mark> the list and tree put on this same label.
+                    fill={hit ? "var(--highlight-yellow-active)" : "var(--bg-surface)"}
+                    fillOpacity={hit ? 0.7 : 1}
+                    stroke={
+                      focusedNodeId === `label-${s.key}`
+                        ? "var(--accent-blue)"
+                        : s.color ?? "var(--border-primary)"
+                    }
+                    strokeWidth={focusedNodeId === `label-${s.key}` ? 1.5 : 1}
+                  />
+                  <text
+                    x={s.labelX}
+                    y={s.labelY + 4}
+                    textAnchor="middle"
+                    fontSize={LABEL_PX}
+                    fontWeight={500}
+                    fill="var(--text-secondary)"
+                  >
+                    {isCollapsed ? `${s.label} (${s.targets.length})` : s.label}
+                  </text>
+                </g>
               </g>
             );
           })}
@@ -507,35 +543,39 @@ export function RelationshipsGraphView() {
                 Resolución de …") is wider than the whole first ring, and it was
                 sprawling straight across the branch labels. Full title on hover. */}
             <title>{sourceTitle}</title>
-            <rect
-              x={CX - sourceLabelW / 2}
-              y={CY + SOURCE_R + 6}
-              width={sourceLabelW}
-              height={30}
-              rx={4}
-              fill="var(--bg-surface)"
-              stroke="var(--border-primary)"
-              strokeWidth={1}
-            />
-            <text
-              x={CX}
-              y={CY + SOURCE_R + 18}
-              textAnchor="middle"
-              fontSize={11}
-              fontWeight={600}
-              fill="var(--text-primary)"
+            <g
+              transform={`translate(${CX} ${CY + SOURCE_R}) scale(${labelScale}) translate(${-CX} ${-(CY + SOURCE_R)})`}
             >
-              {sourceLabel}
-            </text>
-            <text
-              x={CX}
-              y={CY + SOURCE_R + 30}
-              textAnchor="middle"
-              fontSize={11}
-              fill="var(--text-tertiary)"
-            >
-              {sourceType?.name ?? "Entity"}
-            </text>
+              <rect
+                x={CX - sourceLabelW / 2}
+                y={CY + SOURCE_R + 6}
+                width={sourceLabelW}
+                height={30}
+                rx={4}
+                fill="var(--bg-surface)"
+                stroke="var(--border-primary)"
+                strokeWidth={1}
+              />
+              <text
+                x={CX}
+                y={CY + SOURCE_R + 18}
+                textAnchor="middle"
+                fontSize={LABEL_PX}
+                fontWeight={600}
+                fill="var(--text-primary)"
+              >
+                {sourceLabel}
+              </text>
+              <text
+                x={CX}
+                y={CY + SOURCE_R + 30}
+                textAnchor="middle"
+                fontSize={LABEL_PX}
+                fill="var(--text-tertiary)"
+              >
+                {sourceType?.name ?? "Entity"}
+              </text>
+            </g>
           </g>
 
           {/* Target nodes — keyboard-operable: each circle is a focusable
