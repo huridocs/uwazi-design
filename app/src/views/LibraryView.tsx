@@ -625,7 +625,7 @@ export function LibraryView() {
     language,
     connectionsOf: (e) => countByEntity.get(e.id) ?? 0,
     renderMatch: (e) => (
-      <MatchOrigin entity={e} visibleFieldKeys={rowMarkedFields(e)} onSelect={handleSelect} />
+      <MatchOrigin entity={e} query={query} visibleFieldKeys={rowMarkedFields(e)} onSelect={handleSelect} />
     ),
   });
 

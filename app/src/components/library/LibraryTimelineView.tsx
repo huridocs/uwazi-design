@@ -724,6 +724,7 @@ function SpineLayout({ dated, query, selectedId, onSelect }: LayoutProps) {
                   <span className="shrink-0 w-[2.25rem] flex items-center justify-end">
                     <MatchOrigin
                       entity={e}
+                      query={query}
                       visibleFieldKeys={SPINE_MARKED_FIELDS}
                       onSelect={onSelect}
                     />
