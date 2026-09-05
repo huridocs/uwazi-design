@@ -1,0 +1,895 @@
+{
+  "about": "Every user-operable control in the prototype: what it selects, its default, the state that backs it, and where that state is declared. Built for the main/playground split, so a cut can be decided per control rather than per directory. Internal state (active ids, scroll signals, hover) is not a control and is excluded.",
+  "commit": "59e3dc6",
+  "generated": "2026-09-04",
+  "kinds": {
+    "choice": "picks one value from a fixed set",
+    "toggle": "boolean",
+    "input": "free text or a date the user types",
+    "facet": "multi-select over values the corpus supplies, so the option list is data-dependent",
+    "action": "fires an effect, holds no value"
+  },
+  "controlCount": 76,
+  "surfaces": [
+    {
+      "id": "shell",
+      "name": "App shell",
+      "path": "app/src/atoms",
+      "controls": [
+        {
+          "id": "shell.appView",
+          "label": "Section",
+          "kind": "choice",
+          "values": [
+            "entity",
+            "library",
+            "catalog",
+            "import-csv",
+            "settings"
+          ],
+          "default": "library",
+          "state": "appViewAtom",
+          "source": "app/src/atoms/navigation.ts:15",
+          "note": "Persisted in sessionStorage. The catalog is reached by clicking the logo."
+        },
+        {
+          "id": "shell.theme",
+          "label": "Theme",
+          "kind": "choice",
+          "values": [
+            "light",
+            "dark",
+            "auto"
+          ],
+          "default": "auto",
+          "state": "themeAtom",
+          "source": "app/src/atoms/theme.ts:12",
+          "note": "The navbar toggle moves between light and dark only; auto is the initial resolved value."
+        },
+        {
+          "id": "shell.dataSource",
+          "label": "Collection",
+          "kind": "choice",
+          "values": [
+            "mock",
+            "cejil",
+            "artworks"
+          ],
+          "default": "mock",
+          "state": "dataSourceAtom",
+          "source": "app/src/atoms/dataSource.ts:16",
+          "note": "cejil and artworks load their corpus on demand."
+        },
+        {
+          "id": "shell.language",
+          "label": "Content language",
+          "kind": "choice",
+          "values": [
+            "EN",
+            "ES",
+            "FR",
+            "AR"
+          ],
+          "default": "EN",
+          "state": "languageAtom",
+          "source": "app/src/atoms/language.ts:5",
+          "note": "Reading language of the same document. AR renders RTL."
+        }
+      ]
+    },
+    {
+      "id": "library",
+      "name": "Library",
+      "path": "app/src/components/library",
+      "registry": "app/src/data/libraryDisplay.ts",
+      "controls": [
+        {
+          "id": "library.viewMode",
+          "label": "View",
+          "kind": "choice",
+          "values": [
+            "cards",
+            "list",
+            "map",
+            "timeline",
+            "results"
+          ],
+          "default": "cards",
+          "state": "libraryViewModeAtom",
+          "source": "app/src/atoms/library.ts:223"
+        },
+        {
+          "id": "library.sort",
+          "label": "Sort by",
+          "kind": "choice",
+          "values": [
+            "recent",
+            "title",
+            "connections",
+            "type",
+            "country"
+          ],
+          "default": "recent",
+          "state": "librarySortAtom",
+          "source": "app/src/data/libraryDisplay.ts:115",
+          "scope": "external",
+          "note": "Written by the toolbar Select, the table column headers, and the Display menu on mobile. A repeat pick flips direction."
+        },
+        {
+          "id": "library.sortDir",
+          "label": "Sort direction",
+          "kind": "choice",
+          "values": [
+            "asc",
+            "desc"
+          ],
+          "default": "desc",
+          "state": "librarySortDirAtom",
+          "source": "app/src/atoms/library.ts:471"
+        },
+        {
+          "id": "library.search",
+          "label": "Search",
+          "kind": "input",
+          "default": "",
+          "state": "librarySearchDraftAtom -> libraryQueryAtom",
+          "source": "app/src/atoms/library.ts:20",
+          "note": "Matches metadata and document text. Quoted phrases, * and ? wildcards, AND/OR/NOT, diacritic-insensitive."
+        },
+        {
+          "id": "library.searchHistory",
+          "label": "Recent searches",
+          "kind": "action",
+          "state": "librarySearchHistoryAtom",
+          "source": "app/src/atoms/library.ts:80",
+          "note": "Recorded on settle, capped at 8, sessionStorage. Individual forget and clear-all."
+        },
+        {
+          "id": "library.matchTypes",
+          "label": "Match type",
+          "kind": "facet",
+          "values": [
+            "title",
+            "properties",
+            "document"
+          ],
+          "default": "all on",
+          "state": "matchTypeFiltersAtom",
+          "source": "app/src/atoms/library.ts:163"
+        },
+        {
+          "id": "library.timeStrip",
+          "label": "Time strip",
+          "kind": "toggle",
+          "default": true,
+          "scope": "shared",
+          "source": "app/src/data/libraryDisplay.ts:110",
+          "note": "Offered under every view mode."
+        },
+        {
+          "id": "library.info.preview",
+          "label": "Thumbnail",
+          "kind": "toggle",
+          "default": true,
+          "scope": "mode",
+          "modes": [
+            "cards",
+            "timeline"
+          ],
+          "source": "app/src/data/libraryDisplay.ts:150"
+        },
+        {
+          "id": "library.info.metadata",
+          "label": "Metadata",
+          "kind": "toggle",
+          "default": true,
+          "scope": "mode",
+          "modes": [
+            "cards",
+            "timeline"
+          ],
+          "source": "app/src/data/libraryDisplay.ts:151"
+        },
+        {
+          "id": "library.info.connections",
+          "label": "Connections",
+          "kind": "toggle",
+          "default": true,
+          "scope": "mode",
+          "modes": [
+            "cards",
+            "timeline"
+          ],
+          "source": "app/src/data/libraryDisplay.ts:152"
+        },
+        {
+          "id": "library.thumbSize",
+          "label": "Thumbnail size",
+          "kind": "choice",
+          "values": [
+            "s",
+            "m",
+            "l"
+          ],
+          "default": "m",
+          "scope": "mode",
+          "modes": [
+            "cards",
+            "timeline"
+          ],
+          "source": "app/src/data/libraryDisplay.ts:163",
+          "note": "Dimmed, not hidden, while Thumbnail is off."
+        },
+        {
+          "id": "library.thumbFrame",
+          "label": "Thumbnail frame",
+          "kind": "choice",
+          "values": [
+            "landscape",
+            "portrait"
+          ],
+          "default": "landscape",
+          "scope": "mode",
+          "modes": [
+            "cards",
+            "timeline"
+          ],
+          "source": "app/src/data/libraryDisplay.ts:179",
+          "note": "One choice for the whole grid. Portrait re-hangs cards in narrower columns."
+        },
+        {
+          "id": "library.thumbFit",
+          "label": "Image fit",
+          "kind": "choice",
+          "values": [
+            "auto",
+            "cover",
+            "contain"
+          ],
+          "default": "auto",
+          "scope": "mode",
+          "modes": [
+            "cards",
+            "timeline"
+          ],
+          "source": "app/src/data/libraryDisplay.ts:197"
+        },
+        {
+          "id": "library.columns",
+          "label": "Columns",
+          "kind": "facet",
+          "default": "built-ins on",
+          "scope": "mode",
+          "modes": [
+            "list"
+          ],
+          "state": "libraryListColumnsAtom",
+          "source": "app/src/data/libraryDisplay.ts:228",
+          "dynamic": true,
+          "builtIns": [
+            "title",
+            "type",
+            "match",
+            "country",
+            "date",
+            "connections"
+          ],
+          "note": "Six built-ins plus one toggle per metadata property the corpus carries, so the count varies by collection. Match mounts only while a query is active."
+        },
+        {
+          "id": "library.density",
+          "label": "Density",
+          "kind": "choice",
+          "values": [
+            "comfortable",
+            "compact"
+          ],
+          "default": "comfortable",
+          "scope": "mode",
+          "modes": [
+            "list"
+          ],
+          "source": "app/src/data/libraryDisplay.ts:235"
+        },
+        {
+          "id": "library.timelineLayout",
+          "label": "Timeline layout",
+          "kind": "choice",
+          "values": [
+            "rail",
+            "density",
+            "spine",
+            "lanes"
+          ],
+          "default": "rail",
+          "scope": "mode",
+          "modes": [
+            "timeline"
+          ],
+          "source": "app/src/data/libraryDisplay.ts:254"
+        },
+        {
+          "id": "library.resultsLayout",
+          "label": "Results layout",
+          "kind": "choice",
+          "values": [
+            "grouped",
+            "tree",
+            "passages",
+            "spine"
+          ],
+          "default": "grouped",
+          "scope": "mode",
+          "modes": [
+            "results"
+          ],
+          "source": "app/src/data/libraryDisplay.ts:277"
+        },
+        {
+          "id": "library.filter.type",
+          "label": "Type",
+          "kind": "facet",
+          "state": "libraryTypeFiltersAtom",
+          "source": "app/src/atoms/library.ts:116"
+        },
+        {
+          "id": "library.filter.status",
+          "label": "Status",
+          "kind": "facet",
+          "values": [
+            "restricted",
+            "published"
+          ],
+          "state": "libraryStatusFiltersAtom",
+          "source": "app/src/atoms/library.ts:122"
+        },
+        {
+          "id": "library.filter.hasDoc",
+          "label": "Has document",
+          "kind": "toggle",
+          "default": false,
+          "state": "libraryHasDocAtom",
+          "source": "app/src/atoms/library.ts:119"
+        },
+        {
+          "id": "library.filter.country",
+          "label": "Country",
+          "kind": "facet",
+          "state": "libraryCountryFiltersAtom",
+          "source": "app/src/atoms/library.ts:183"
+        },
+        {
+          "id": "library.filter.countryMode",
+          "label": "Country AND/OR",
+          "kind": "choice",
+          "values": [
+            "AND",
+            "OR"
+          ],
+          "default": "OR",
+          "state": "libraryCountryModeAtom",
+          "source": "app/src/atoms/library.ts:185"
+        },
+        {
+          "id": "library.filter.descriptor",
+          "label": "Descriptors",
+          "kind": "facet",
+          "state": "libraryDescriptorFiltersAtom",
+          "source": "app/src/atoms/library.ts:190"
+        },
+        {
+          "id": "library.filter.descriptorMode",
+          "label": "Descriptors AND/OR",
+          "kind": "choice",
+          "values": [
+            "AND",
+            "OR"
+          ],
+          "default": "OR",
+          "state": "libraryDescriptorModeAtom",
+          "source": "app/src/atoms/library.ts:191"
+        },
+        {
+          "id": "library.filter.dateFrom",
+          "label": "Date from",
+          "kind": "input",
+          "default": "",
+          "state": "libraryDateFromAtom",
+          "source": "app/src/atoms/library.ts:196"
+        },
+        {
+          "id": "library.filter.dateTo",
+          "label": "Date to",
+          "kind": "input",
+          "default": "",
+          "state": "libraryDateToAtom",
+          "source": "app/src/atoms/library.ts:197"
+        },
+        {
+          "id": "library.filter.inherited",
+          "label": "Inherited properties",
+          "kind": "facet",
+          "state": "libraryInheritedFiltersAtom",
+          "source": "app/src/atoms/library.ts:202",
+          "dependsOn": "cejil.code"
+        },
+        {
+          "id": "library.filter.chain",
+          "label": "Chain filters",
+          "kind": "facet",
+          "state": "libraryChainFiltersAtom",
+          "source": "app/src/atoms/library.ts:209",
+          "dependsOn": "cejil.code",
+          "note": "Multi-hop facets; walks the injected chain graph."
+        },
+        {
+          "id": "library.timelineScope",
+          "label": "Timeline scope",
+          "kind": "choice",
+          "values": [
+            "all",
+            "filtered"
+          ],
+          "default": "all",
+          "state": "libraryTimelineScopeAtom",
+          "source": "app/src/atoms/library.ts:275"
+        },
+        {
+          "id": "library.resetDisplay",
+          "label": "Reset display options",
+          "kind": "action",
+          "state": "resetLibraryDisplayAtom",
+          "source": "app/src/atoms/library.ts:453"
+        },
+        {
+          "id": "library.clearSearch",
+          "label": "Clear search",
+          "kind": "action",
+          "state": "clearLibrarySearchAtom",
+          "source": "app/src/atoms/library.ts:50",
+          "note": "The single dismiss path; the masthead chip, the blank state and the filter sheet all route through it."
+        },
+        {
+          "id": "library.clearFacets",
+          "label": "Clear filters",
+          "kind": "action",
+          "state": "clearLibraryFacetsAtom",
+          "source": "app/src/atoms/library.ts:500"
+        }
+      ]
+    },
+    {
+      "id": "relationships",
+      "name": "Relationships",
+      "path": "app/src/components/relationships",
+      "controls": [
+        {
+          "id": "rel.view",
+          "label": "View",
+          "kind": "choice",
+          "values": [
+            "list",
+            "tree",
+            "graph"
+          ],
+          "default": "list",
+          "state": "viewAtom",
+          "source": "app/src/atoms/filters.ts:13"
+        },
+        {
+          "id": "rel.groupBy",
+          "label": "Group by",
+          "kind": "choice",
+          "values": [
+            "none",
+            "target-template",
+            "target-entity",
+            "source-template",
+            "source-entity",
+            "relation-type",
+            "direction",
+            "source-page"
+          ],
+          "default": "relation-type",
+          "state": "groupByAtom",
+          "source": "app/src/atoms/filters.ts:29"
+        },
+        {
+          "id": "rel.subGroupBy",
+          "label": "Then by",
+          "kind": "choice",
+          "values": [
+            "none",
+            "target-template",
+            "target-entity",
+            "source-template",
+            "source-entity",
+            "relation-type",
+            "direction",
+            "source-page"
+          ],
+          "default": "none",
+          "state": "subGroupByAtom",
+          "source": "app/src/atoms/filters.ts:34"
+        },
+        {
+          "id": "rel.zoom",
+          "label": "Zoom",
+          "kind": "choice",
+          "values": [
+            "detail",
+            "compact",
+            "overview"
+          ],
+          "default": "detail",
+          "state": "zoomAtom",
+          "source": "app/src/atoms/filters.ts:117",
+          "note": "Applies to grouped and tree; hidden in list and graph."
+        },
+        {
+          "id": "rel.sortOrder",
+          "label": "Sort",
+          "kind": "choice",
+          "values": [
+            "none",
+            "appearance",
+            "asc",
+            "desc"
+          ],
+          "default": "appearance",
+          "state": "sortOrderAtom",
+          "source": "app/src/atoms/filters.ts:51"
+        },
+        {
+          "id": "rel.search",
+          "label": "Search",
+          "kind": "input",
+          "default": "",
+          "state": "searchQueryAtom",
+          "source": "app/src/atoms/filters.ts:37",
+          "note": "Boolean: AND/OR/NOT, quoted exact, trailing wildcard."
+        },
+        {
+          "id": "rel.filter.relType",
+          "label": "Relation type",
+          "kind": "facet",
+          "state": "relTypeFiltersAtom",
+          "source": "app/src/atoms/filters.ts:62"
+        },
+        {
+          "id": "rel.filter.entityType",
+          "label": "Entity type",
+          "kind": "facet",
+          "state": "entityTypeFiltersAtom",
+          "source": "app/src/atoms/filters.ts:65"
+        },
+        {
+          "id": "rel.filter.targetCountry",
+          "label": "Target country",
+          "kind": "facet",
+          "state": "relTargetCountryFiltersAtom",
+          "source": "app/src/atoms/filters.ts:70"
+        },
+        {
+          "id": "rel.filter.targetDescriptor",
+          "label": "Target descriptors",
+          "kind": "facet",
+          "state": "relTargetDescriptorFiltersAtom",
+          "source": "app/src/atoms/filters.ts:74"
+        },
+        {
+          "id": "rel.filter.targetDescriptorMode",
+          "label": "Target descriptors AND/OR",
+          "kind": "choice",
+          "values": [
+            "AND",
+            "OR"
+          ],
+          "default": "OR",
+          "state": "relTargetDescriptorModeAtom",
+          "source": "app/src/atoms/filters.ts:79"
+        },
+        {
+          "id": "rel.filter.inherited",
+          "label": "Inherited properties",
+          "kind": "facet",
+          "state": "relInheritedFiltersAtom",
+          "source": "app/src/atoms/filters.ts:85",
+          "dependsOn": "cejil.code"
+        },
+        {
+          "id": "rel.expandAll",
+          "label": "Expand all",
+          "kind": "action",
+          "state": "expandAllSignalAtom",
+          "source": "app/src/atoms/filters.ts:46"
+        },
+        {
+          "id": "rel.collapseAll",
+          "label": "Collapse all",
+          "kind": "action",
+          "state": "collapseAllSignalAtom",
+          "source": "app/src/atoms/filters.ts:47"
+        },
+        {
+          "id": "rel.editMode",
+          "label": "Edit mode",
+          "kind": "toggle",
+          "default": false,
+          "state": "editModeAtom",
+          "source": "app/src/atoms/filters.ts:113"
+        },
+        {
+          "id": "rel.select",
+          "label": "Row selection",
+          "kind": "facet",
+          "state": "selectedRefIdsAtom",
+          "source": "app/src/atoms/filters.ts:108"
+        },
+        {
+          "id": "rel.filtersDrawer",
+          "label": "Filters drawer",
+          "kind": "toggle",
+          "default": false,
+          "state": "filtersDrawerOpenAtom",
+          "source": "app/src/atoms/filters.ts:103"
+        },
+        {
+          "id": "rel.resetFacets",
+          "label": "Clear filters",
+          "kind": "action",
+          "state": "resetRelFacetsAtom",
+          "source": "app/src/atoms/filters.ts:93"
+        },
+        {
+          "id": "rel.manageTypes",
+          "label": "Manage relation types",
+          "kind": "action",
+          "state": "manageRelationTypesOpenAtom",
+          "source": "app/src/atoms/references.ts:100"
+        }
+      ]
+    },
+    {
+      "id": "entity",
+      "name": "Entity view",
+      "path": "app/src/views + app/src/components/layout",
+      "controls": [
+        {
+          "id": "entity.mainTabs",
+          "label": "Main tabs",
+          "kind": "choice",
+          "values": [
+            "document",
+            "metadata",
+            "connections",
+            "files"
+          ],
+          "default": "document",
+          "source": "app/src/views/EntityView.tsx:96",
+          "note": "Tab order is Document, Metadata, Relationships, Files."
+        },
+        {
+          "id": "entity.drawerTabs",
+          "label": "Metadata drawer tabs",
+          "kind": "choice",
+          "values": [
+            "connections",
+            "files",
+            "template"
+          ],
+          "default": "connections",
+          "source": "app/src/views/MetadataView.tsx:1132",
+          "note": "The Document tab was removed in af531c5; documents live in Files."
+        },
+        {
+          "id": "entity.rendition",
+          "label": "Document rendition",
+          "kind": "choice",
+          "values": [
+            "pdf",
+            "text",
+            "html"
+          ],
+          "default": "pdf",
+          "state": "documentFormatAtom",
+          "source": "app/src/atoms/selection.ts:36",
+          "note": "Switches the rendition of the one primary document, not between documents. The PDF stays mounted and hidden."
+        },
+        {
+          "id": "entity.docSearch",
+          "label": "Document search",
+          "kind": "input",
+          "default": "",
+          "state": "docSearchQueryAtom",
+          "source": "app/src/atoms/references.ts:115"
+        },
+        {
+          "id": "entity.drawerTab",
+          "label": "Entity drawer tab",
+          "kind": "choice",
+          "values": [
+            "metadata",
+            "toc",
+            "search"
+          ],
+          "default": "metadata",
+          "state": "activeDrawerTabAtom",
+          "source": "app/src/atoms/references.ts:111"
+        }
+      ]
+    },
+    {
+      "id": "files",
+      "name": "Files",
+      "path": "app/src/components/files",
+      "controls": [
+        {
+          "id": "files.primaryGroup",
+          "label": "Primary document",
+          "kind": "choice",
+          "state": "activePrimaryGroupIdAtom",
+          "source": "app/src/atoms/files.ts:15",
+          "dynamic": true,
+          "note": "One value per document group the entity carries."
+        },
+        {
+          "id": "files.viewerModal",
+          "label": "File viewer",
+          "kind": "action",
+          "state": "viewerFileIdAtom",
+          "source": "app/src/atoms/files.ts:48"
+        },
+        {
+          "id": "files.editFocus",
+          "label": "Inline edit",
+          "kind": "action",
+          "state": "drawerEditFocusAtom",
+          "source": "app/src/atoms/files.ts:43"
+        },
+        {
+          "id": "files.addFile",
+          "label": "Add file",
+          "kind": "action",
+          "state": "addFileTargetAtom",
+          "source": "app/src/atoms/files.ts:60"
+        }
+      ]
+    },
+    {
+      "id": "importcsv",
+      "name": "Import CSV",
+      "path": "app/src/components/import-csv",
+      "controls": [
+        {
+          "id": "import.mode",
+          "label": "Action bar mode",
+          "kind": "choice",
+          "values": [
+            "list",
+            "detail"
+          ],
+          "default": "list",
+          "source": "app/src/components/layout/ToolsActionBar.tsx",
+          "note": "Detail mode swaps in Back to list and Delete import."
+        },
+        {
+          "id": "import.new",
+          "label": "New import",
+          "kind": "action",
+          "source": "app/src/components/import-csv/NewImportModal.tsx"
+        },
+        {
+          "id": "import.delete",
+          "label": "Delete import",
+          "kind": "action",
+          "source": "app/src/components/import-csv/ImportDetailView.tsx",
+          "note": "Behind a confirm dialog."
+        }
+      ]
+    },
+    {
+      "id": "agent",
+      "name": "Bert",
+      "path": "app/src/components/agent",
+      "controls": [
+        {
+          "id": "agent.open",
+          "label": "Open Bert",
+          "kind": "action",
+          "source": "app/src/atoms/agent.ts",
+          "note": "Navbar button or Cmd/Ctrl K."
+        },
+        {
+          "id": "agent.scope",
+          "label": "Context scope",
+          "kind": "choice",
+          "values": [
+            "auto",
+            "document",
+            "view",
+            "library",
+            "none"
+          ],
+          "default": "auto",
+          "state": "agentScopeAtom",
+          "source": "app/src/atoms/agent.ts:52"
+        },
+        {
+          "id": "agent.chain",
+          "label": "Context chain",
+          "kind": "facet",
+          "state": "agentChainAtom",
+          "source": "app/src/atoms/agent.ts",
+          "note": "Appended nodes: deepen (page, selection), facets (template, connections, files), attach (entity, file)."
+        }
+      ]
+    },
+    {
+      "id": "beacon",
+      "name": "Beacon and notifications",
+      "path": "app/src/components/layout",
+      "controls": [
+        {
+          "id": "beacon.open",
+          "label": "Open drawer",
+          "kind": "toggle",
+          "default": false,
+          "state": "beaconOpenAtom",
+          "source": "app/src/atoms/notifications.ts"
+        },
+        {
+          "id": "beacon.filter",
+          "label": "All / Unread",
+          "kind": "choice",
+          "values": [
+            "all",
+            "unread"
+          ],
+          "default": "all",
+          "source": "app/src/components/layout/NotificationsDrawer.tsx:72"
+        },
+        {
+          "id": "beacon.markAllRead",
+          "label": "Mark all read",
+          "kind": "action",
+          "source": "app/src/components/layout/NotificationsDrawer.tsx"
+        },
+        {
+          "id": "beacon.clearAll",
+          "label": "Clear all",
+          "kind": "action",
+          "source": "app/src/components/layout/NotificationsDrawer.tsx"
+        },
+        {
+          "id": "beacon.perCard",
+          "label": "Per notification",
+          "kind": "action",
+          "source": "app/src/components/layout/NotificationsDrawer.tsx",
+          "note": "Retry on errors, mark read, dismiss, show details."
+        }
+      ]
+    },
+    {
+      "id": "settings",
+      "name": "Settings",
+      "path": "app/src/components/settings",
+      "controls": [
+        {
+          "id": "settings.rail",
+          "label": "Settings rail",
+          "kind": "choice",
+          "values": [
+            "User",
+            "System",
+            "Tools"
+          ],
+          "default": "User",
+          "source": "app/src/components/settings/SettingsNav.tsx",
+          "dynamic": true,
+          "note": "Three groups over 18 pages. Import CSV also renders this rail via activeId."
+        }
+      ]
+    }
+  ]
+}
