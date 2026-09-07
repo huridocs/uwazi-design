@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useAtom } from "jotai";
 import { Link2 } from "lucide-react";
 import { overlayEntityIdAtom, activeRefIdAtom } from "../../atoms/references";
@@ -36,6 +36,23 @@ export function RelationshipsTreeView() {
   // descriptor, inherited included), so mode switches can't un-filter rows.
   const filtered = useFilteredReferences();
 
+  /* The buckets, built once per (filter, grouping) rather than per render.
+     Two things depend on that stability. The obvious one: `groupRefs` walks the
+     whole filtered set, twice over when a sub-grouping is on. The other is that
+     `deriveRelationships`/`deriveHubs` cache on the bucket's array IDENTITY —
+     a fresh array every render is a cache that never hits, and this view asks
+     for each bucket's derivation twice (the branch header's count, then the rows
+     themselves) at every level of the grouping. */
+  const groups = useMemo(
+    () =>
+      groupRefs(filtered, groupBy).map(([key, refs]) => ({
+        key,
+        refs,
+        subGroups: subGroupBy === "none" ? null : groupRefs(refs, subGroupBy),
+      })),
+    [filtered, groupBy, subGroupBy],
+  );
+
   // Clear the row selection whenever the filtered set changes — the selected
   // ref/entity may no longer be visible.
   useEffect(() => {
@@ -64,7 +81,7 @@ export function RelationshipsTreeView() {
           </div>
         ) : (
           <div className="px-3 py-3">
-            {groupRefs(filtered, groupBy).map(([key, refs]) => (
+            {groups.map(({ key, refs, subGroups }) => (
               <TreeBranch
                 key={`p:${key}`}
                 title={getGroupLabel(key, groupBy)}
@@ -74,13 +91,13 @@ export function RelationshipsTreeView() {
                 refIdsToWatch={refs.map((r) => r.id)}
                 defaultExpanded
               >
-                {subGroupBy === "none"
+                {subGroups === null
                   ? renderAggregates(refs, {
                       hidePill: groupBy === "target-entity",
                       hideRelLabel: groupBy === "relation-type",
                       hideTypePill: groupBy === "target-template",
                     })
-                  : groupRefs(refs, subGroupBy).map(([subKey, subRefs]) => (
+                  : subGroups.map(([subKey, subRefs]) => (
                       <TreeBranch
                         key={`s:${key}::${subKey}`}
                         title={getGroupLabel(subKey, subGroupBy)}
