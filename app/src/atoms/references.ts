@@ -9,6 +9,7 @@ import { focusedEntityIdAtom } from "./focusedEntity";
 import { MAIN_ENTITY_ID } from "../data/entityProfiles";
 import { isCejilEntity, cejilReferencesFor } from "../data/cejil/profile";
 import { libraryQueryAtom } from "./library";
+import { filtersDrawerBase, overlayEntityBase } from "./rightPane";
 
 export const referencesAtom = atom<Reference[]>(initialRefs);
 
@@ -136,7 +137,17 @@ export const docHighlightQueryAtom = atom((get) =>
 export const expandGroupForRefAtom = atom<string | null>(null);
 
 /** Entity overlay — shows target entity preview when "View" is clicked on a ref */
-export const overlayEntityIdAtom = atom<string | null>(null);
+export const overlayEntityIdAtom = atom(
+  (get) => get(overlayEntityBase),
+  (_get, set, id: string | null) => {
+    set(overlayEntityBase, id);
+    // Opening the overlay closes Filters: they dock into the same region, and
+    // side by side neither one is usable. Closing it (id === null) leaves
+    // Filters alone — a reader who dismisses a preview has not asked for a
+    // filter panel. See atoms/rightPane.
+    if (id !== null) set(filtersDrawerBase, false);
+  },
+);
 
 /** The specific aggregate-row id the user just clicked. Tracked separately
  *  from `overlayEntityIdAtom` because multiple aggregates can target the
