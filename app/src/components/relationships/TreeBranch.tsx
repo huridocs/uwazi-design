@@ -1,14 +1,8 @@
-import { Children, ReactNode, useEffect, useState } from "react";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { Children, ReactNode } from "react";
+import { useAtomValue } from "jotai";
 import { ChevronRight } from "lucide-react";
-import {
-  expandAllSignalAtom,
-  collapseAllSignalAtom,
-  expandedGroupCountAtom,
-  totalGroupCountAtom,
-  zoomAtom,
-} from "../../atoms/filters";
-import { expandGroupForRefAtom } from "../../atoms/references";
+import { zoomAtom } from "../../atoms/filters";
+import { useGroupExpansion } from "../../hooks/useGroupExpansion";
 import { HighlightedText } from "../shared/HighlightedText";
 
 interface Props {
@@ -40,56 +34,13 @@ export function TreeBranch({
   refIdsToWatch,
   children,
 }: Props) {
-  const [expanded, setExpanded] = useState(defaultExpanded);
-  const [expandSignal] = useAtom(expandAllSignalAtom);
-  const [collapseSignal] = useAtom(collapseAllSignalAtom);
-  const setExpandedCount = useSetAtom(expandedGroupCountAtom);
-  const setTotalCount = useSetAtom(totalGroupCountAtom);
-  const [expandForRef] = useAtom(expandGroupForRefAtom);
-
-  useEffect(() => {
-    setTotalCount((c) => c + 1);
-    if (defaultExpanded) setExpandedCount((c) => c + 1);
-    return () => {
-      setTotalCount((c) => c - 1);
-      if (expanded) setExpandedCount((c) => c - 1);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (expandSignal > 0 && !expanded) {
-      setExpanded(true);
-      setExpandedCount((c) => c + 1);
-    }
-  }, [expandSignal]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (collapseSignal > 0 && expanded) {
-      setExpanded(false);
-      setExpandedCount((c) => c - 1);
-    }
-  }, [collapseSignal]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Minimap dot click → activeRefId + collapseAllSignal + expandGroupForRef.
-  // If the highlighted ref lives inside this branch, re-open. We don't clear
-  // the signal here — leaf AggregateNodes also listen for it.
-  useEffect(() => {
-    if (!expandForRef || !refIdsToWatch || refIdsToWatch.length === 0) return;
-    if (refIdsToWatch.includes(expandForRef)) {
-      setExpanded((prev) => {
-        if (!prev) setExpandedCount((c) => c + 1);
-        return true;
-      });
-    }
-  }, [expandForRef]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const toggle = () => {
-    setExpanded((prev) => {
-      setExpandedCount((c) => (prev ? c - 1 : c + 1));
-      return !prev;
-    });
-  };
+  // The shared group state machine — counters, expand-all, collapse-all, jump.
+  // A BRANCH doesn't clear the jump signal: the leaf that actually holds the
+  // ref does, and it is below us.
+  const { expanded, toggle } = useGroupExpansion({
+    defaultExpanded,
+    refIdsToWatch,
+  });
 
   const items = Children.toArray(children);
 

@@ -29,7 +29,7 @@ export interface Relationship {
  *  (hubId set) are skipped — see {@link deriveHubs}. Pass
  *  `{ includeHubMembers: true }` when the consumer renders one node per
  *  member (e.g. the graph view, which doesn't have a "hub container" node). */
-export function deriveRelationships(
+function computeRelationships(
   refs: Reference[],
   opts: { includeHubMembers?: boolean } = {},
 ): Relationship[] {
@@ -68,6 +68,44 @@ export function deriveRelationships(
   return Array.from(map.values());
 }
 
+
+/* ── Derivation cache ─────────────────────────────────────────────────────────
+   Both derivations are pure functions of the ref array, and the tree asks for
+   the same bucket more than once in a single render: `count` on the branch
+   header, then again inside `renderAggregates` for the rows — per group AND per
+   sub-group, so a two-level grouping walks the corpus four times over to draw
+   what it already knew.
+
+   The cache is keyed on the ARRAY IDENTITY, which is the honest key for a pure
+   function of that array and asks nothing of callers except that they not mutate
+   a bucket they have already handed in (nobody does — `groupRefs` builds fresh
+   arrays and the views only read them). A `WeakMap` means a bucket's entry dies
+   with the bucket: no eviction policy, no staleness, nothing to remember to
+   clear when the corpus changes. Callers that memoise their buckets across
+   renders (see `RelationshipsTreeView`) get the saving across renders too;
+   callers that don't still pay for one derivation per bucket per render instead
+   of two or four. */
+const relCache = new WeakMap<Reference[], Map<boolean, Relationship[]>>();
+const hubCache = new WeakMap<Reference[], Hub[]>();
+
+/** Cached {@link computeRelationships} — see the derivation-cache note above. */
+export function deriveRelationships(
+  refs: Reference[],
+  opts: { includeHubMembers?: boolean } = {},
+): Relationship[] {
+  const includeHubMembers = !!opts.includeHubMembers;
+  let byOpt = relCache.get(refs);
+  if (!byOpt) {
+    byOpt = new Map();
+    relCache.set(refs, byOpt);
+  }
+  const hit = byOpt.get(includeHubMembers);
+  if (hit) return hit;
+  const value = computeRelationships(refs, opts);
+  byOpt.set(includeHubMembers, value);
+  return value;
+}
+
 export interface Hub {
   id: string;
   relationType: RelationType;
@@ -84,7 +122,7 @@ export interface Hub {
  *  relationships — a single container with 2+ entity members. The relType is
  *  taken from the first ref of the group; in real Uwazi each member can have
  *  its own role, but the prototype uses a single shared label. */
-export function deriveHubs(refs: Reference[]): Hub[] {
+function computeHubs(refs: Reference[]): Hub[] {
   const map = new Map<string, Hub>();
   for (const ref of refs) {
     if (!ref.hubId) continue;
@@ -115,4 +153,13 @@ export function deriveHubs(refs: Reference[]): Hub[] {
     }
   }
   return Array.from(map.values());
+}
+
+/** Cached {@link computeHubs} — see the derivation-cache note above. */
+export function deriveHubs(refs: Reference[]): Hub[] {
+  const hit = hubCache.get(refs);
+  if (hit) return hit;
+  const value = computeHubs(refs);
+  hubCache.set(refs, value);
+  return value;
 }

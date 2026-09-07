@@ -1,17 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useAtom } from "jotai";
 import { Link2 } from "lucide-react";
-import {
-  overlayEntityIdAtom,
-  activeRefIdAtom,
-  expandGroupForRefAtom,
-} from "../../atoms/references";
+import { overlayEntityIdAtom, activeRefIdAtom } from "../../atoms/references";
 import {
   groupByAtom,
   searchQueryAtom,
   subGroupByAtom,
 } from "../../atoms/filters";
 import { useFilteredReferences } from "./useFilteredReferences";
+import { useAutoExpandOnRefJump } from "../../hooks/useGroupExpansion";
 import { getEntity } from "../../data/entities";
 import { Reference } from "../../data/references";
 import { Hub, Relationship, deriveHubs, deriveRelationships } from "../../utils/relationships";
@@ -38,6 +35,23 @@ export function RelationshipsTreeView() {
   // Shared pipeline — applies every facet the list view applies (country,
   // descriptor, inherited included), so mode switches can't un-filter rows.
   const filtered = useFilteredReferences();
+
+  /* The buckets, built once per (filter, grouping) rather than per render.
+     Two things depend on that stability. The obvious one: `groupRefs` walks the
+     whole filtered set, twice over when a sub-grouping is on. The other is that
+     `deriveRelationships`/`deriveHubs` cache on the bucket's array IDENTITY —
+     a fresh array every render is a cache that never hits, and this view asks
+     for each bucket's derivation twice (the branch header's count, then the rows
+     themselves) at every level of the grouping. */
+  const groups = useMemo(
+    () =>
+      groupRefs(filtered, groupBy).map(([key, refs]) => ({
+        key,
+        refs,
+        subGroups: subGroupBy === "none" ? null : groupRefs(refs, subGroupBy),
+      })),
+    [filtered, groupBy, subGroupBy],
+  );
 
   // Clear the row selection whenever the filtered set changes — the selected
   // ref/entity may no longer be visible.
@@ -67,7 +81,7 @@ export function RelationshipsTreeView() {
           </div>
         ) : (
           <div className="px-3 py-3">
-            {groupRefs(filtered, groupBy).map(([key, refs]) => (
+            {groups.map(({ key, refs, subGroups }) => (
               <TreeBranch
                 key={`p:${key}`}
                 title={getGroupLabel(key, groupBy)}
@@ -77,13 +91,13 @@ export function RelationshipsTreeView() {
                 refIdsToWatch={refs.map((r) => r.id)}
                 defaultExpanded
               >
-                {subGroupBy === "none"
+                {subGroups === null
                   ? renderAggregates(refs, {
                       hidePill: groupBy === "target-entity",
                       hideRelLabel: groupBy === "relation-type",
                       hideTypePill: groupBy === "target-template",
                     })
-                  : groupRefs(refs, subGroupBy).map(([subKey, subRefs]) => (
+                  : subGroups.map(([subKey, subRefs]) => (
                       <TreeBranch
                         key={`s:${key}::${subKey}`}
                         title={getGroupLabel(subKey, subGroupBy)}
@@ -180,21 +194,12 @@ function HubNode({
   refs: Reference[];
   hideRelLabel?: boolean;
 }) {
-  const [expanded, setExpanded] = useState(false);
   // A node expands into its EVIDENCE — the underlying text-anchored references.
   // A relationship with no anchored refs (all of CEJIL: entity-to-entity links
   // with no quoted passage) has nothing to reveal, and offering a chevron that
   // opens an empty box is a promise the row can't keep.
   const evidence = refs.filter((ref) => !!ref.sourceSelection);
-  const [expandForRef, setExpandForRef] = useAtom(expandGroupForRefAtom);
-
-  useEffect(() => {
-    if (!expandForRef) return;
-    if (hub.refIds.includes(expandForRef)) {
-      if (!expanded) setExpanded(true);
-      setExpandForRef(null);
-    }
-  }, [expandForRef]); // eslint-disable-line react-hooks/exhaustive-deps
+  const { expanded, toggle } = useAutoExpandOnRefJump(hub.refIds);
 
   return (
     <div>
@@ -202,7 +207,7 @@ function HubNode({
         kind="hub"
         hub={hub}
         expanded={expanded}
-        onToggleExpand={evidence.length > 0 ? () => setExpanded((e) => !e) : undefined}
+        onToggleExpand={evidence.length > 0 ? toggle : undefined}
         hideRelLabel={hideRelLabel}
       />
       {expanded && (
@@ -232,20 +237,11 @@ function AggregateNode({
   hideRelLabel?: boolean;
   hideTypePill?: boolean;
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const [expandForRef, setExpandForRef] = useAtom(expandGroupForRefAtom);
   const evidence = refs.filter((ref) => !!ref.sourceSelection);
-
   // Minimap dot click sets expandGroupForRef to the ref id. The chain of
-  // TreeBranches above us auto-expand; we (the leaf containing the actual
-  // ref) auto-expand too, then clear the signal.
-  useEffect(() => {
-    if (!expandForRef) return;
-    if (rel.refIds.includes(expandForRef)) {
-      if (!expanded) setExpanded(true);
-      setExpandForRef(null);
-    }
-  }, [expandForRef]); // eslint-disable-line react-hooks/exhaustive-deps
+  // TreeBranches above us auto-expand; we — the leaf holding the actual ref —
+  // auto-expand too and clear the signal (see `useAutoExpandOnRefJump`).
+  const { expanded, toggle } = useAutoExpandOnRefJump(rel.refIds);
 
   return (
     <div>
@@ -253,7 +249,7 @@ function AggregateNode({
         kind="aggregate"
         rel={rel}
         expanded={expanded}
-        onToggleExpand={evidence.length > 0 ? () => setExpanded((e) => !e) : undefined}
+        onToggleExpand={evidence.length > 0 ? toggle : undefined}
         hidePill={hidePill}
         hideRelLabel={hideRelLabel}
         hideTypePill={hideTypePill}
