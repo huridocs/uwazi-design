@@ -87,9 +87,35 @@ export function FiltersDrawer({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`absolute top-0 bottom-0 z-40 bg-paper shadow-lg flex flex-col transition-transform duration-200 ease-out ${
-          rtl ? "left-0" : "right-0"
-        } ${open ? "translate-x-0" : rtl ? "-translate-x-full" : "translate-x-full"}`}
+        // A closed drawer is hidden by TWO things, and it needs both.
+        //
+        // The slide is the animation, and it was also the only thing keeping a
+        // closed drawer off screen — `translate-x-full` parking it one width
+        // past its pane. That is a bet on the transform landing, and it does not
+        // always: measured here, a closed drawer reported `translate: 100%` in
+        // its computed style and a bounding rect with NO displacement, so it sat
+        // fully visible at its `right-0` position. It only LOOKED hidden while
+        // its pane happened to extend past the viewport — and the moment the
+        // connection overlay changed the pane's geometry, a drawer nobody had
+        // opened appeared beside it, over a blank overlay body. That is the
+        // "opening a relationship triggers the filters" report: nothing opened
+        // it; it had been on screen all along, waiting for the layout to reveal
+        // it.
+        //
+        // So opacity carries the hiding and the transform carries the motion.
+        // They share a duration, so an open drawer still slides and a closed one
+        // still slides away; if the translate is dropped the drawer is merely
+        // motionless, never visible. `pointer-events-none` matches `inert`
+        // below, which was already right and was the only reason a drawer
+        // sitting in plain sight could not also be clicked.
+        className={`absolute top-0 bottom-0 z-40 bg-paper shadow-lg flex flex-col
+          transition-[transform,opacity] duration-200 ease-out ${
+            rtl ? "left-0" : "right-0"
+          } ${
+            open
+              ? "translate-x-0 opacity-100"
+              : `opacity-0 pointer-events-none ${rtl ? "-translate-x-full" : "translate-x-full"}`
+          }`}
         style={{
           width: `min(100%, ${width / 16}rem)`,
           borderInlineStart: "1px solid var(--border-primary)",

@@ -1,5 +1,5 @@
-import { createContext, useContext, useMemo, type ReactNode } from "react";
-import { useAtomValue, useSetAtom } from "jotai";
+import { createContext, useCallback, useContext, useMemo, type ReactNode } from "react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   referencesAtom,
   referencesFor,
@@ -7,6 +7,7 @@ import {
   writeReferencesFor,
 } from "../atoms/references";
 import { focusedEntityIdAtom } from "../atoms/focusedEntity";
+import { filtersDrawerOpenAtom, scopedFiltersOpenAtom } from "../atoms/filters";
 import type { Reference } from "../data/references";
 
 /** The entity a subtree's connection surfaces belong to, when that is NOT the
@@ -74,4 +75,30 @@ export function useSetScopedReferences() {
       },
     [override, setScoped, setAll],
   );
+}
+
+/** Whether THIS surface's Filters slide-over is open.
+ *
+ *  The same reasoning as `useScopedReferences`, applied to a boolean. There is
+ *  one Filters flag, and two surfaces can render a Relationships panel at once:
+ *  the host, and the connection overlay laid on top of it. Sharing the flag
+ *  meant one Filters button opened two drawers — the overlay's, and the host's
+ *  behind it, which is the bug this hook exists for.
+ *
+ *  No scope override means the host, and the host keeps the global atom: the
+ *  un-overridden surfaces are never on screen together, and that atom is also
+ *  the one the overlay/Filters exclusion writes (atoms/rightPane), which is
+ *  right — opening an overlay should close the panel BEHIND it, and nothing
+ *  else. A scoped surface gets its own entry and no coupling at all, so opening
+ *  Filters inside the overlay cannot close the overlay it is inside. */
+export function useFiltersDrawerOpen(): [boolean, (open: boolean) => void] {
+  const override = useContext(EntityScopeContext);
+  const [hostOpen, setHostOpen] = useAtom(filtersDrawerOpenAtom);
+  const [scoped, setScoped] = useAtom(scopedFiltersOpenAtom);
+  const setScopedOpen = useCallback(
+    (open: boolean) => setScoped((prev) => ({ ...prev, [override as string]: open })),
+    [override, setScoped],
+  );
+  if (!override) return [hostOpen, setHostOpen];
+  return [!!scoped[override], setScopedOpen];
 }
