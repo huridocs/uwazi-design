@@ -7,43 +7,32 @@ import { fillTargetAtom, fillRequestAtom } from "../../atoms/fillTarget";
 import { focusMetadataFieldAtom } from "../../atoms/library";
 import type { MetadataField, RelationshipMetadataField } from "../../data/metadata";
 import { specInherits } from "../../utils/inheritance";
+import { MetadataCard } from "./MetadataCard";
 import { RelationshipCards } from "./RelationshipCards";
 import { fieldItem, connectionItem, isLongField, type MetadataItem } from "./items";
 
-/** One field of the record, as its own block.
+/** One field of the record, as its own card.
  *
  *  Every item gets this — a paragraph, a date, a link, a connection's pills —
- *  so the record reads as one stack of like things rather than a few titled
- *  cards above a ruled table of everything else.
+ *  so the record is one stack of like things rather than a few titled cards
+ *  above a ruled table of everything else.
  *
- *  A LIGHT block, not the bordered `MetadataCard` the long fields used to get,
- *  and this is the whole design decision. Giving each field a card was tried
- *  first and is what the drawer cannot carry: at 390px a twelve-field entity
- *  became twelve boxes whose content is one short line each, mostly border and
- *  padding, under a 14px bold heading shouting over the value it names. That is
- *  the same failure `connectionItem` records from the other direction — "an
- *  entity with two dates and four links rendered as four near-empty boxes".
- *  A label, its value, and a hairline to the next one is a block at every
- *  width, and it stays a block when there are twelve of them.
+ *  The bordered `MetadataCard`, uniformly, in every host. A lighter
+ *  label-value-hairline block shipped here first and was replaced on the user's
+ *  call: the cost it avoids is real and worth naming, because it is what the
+ *  drawer shows at 390px — a twelve-field entity is twelve boxes whose content
+ *  is one short line each, and the card head is a 14px bold heading over the
+ *  value it names. That is accepted. If it is ever revisited, the alternative
+ *  is in the history (0aa1372), not a new idea to have.
  *
- *  The bordered card is still what a CONNECTION that carries a table gets
- *  (RelationshipCards, below the stack). That contrast now means something:
- *  a card holds a structure, a block holds a value.
- *
- *  `data-field-key` is on the block — what deep-focus from Results scrolls to
- *  and flashes, so the flash paints one field's label and value together. */
+ *  `data-field-key` is on the card — what deep-focus from Results scrolls to
+ *  and flashes, so the flash paints one field's title and value together. */
 export function MetadataFieldBlock({ item }: { item: MetadataItem }) {
   return (
-    <div
-      data-field-key={item.id}
-      className="py-2.5 first:pt-0 last:pb-0 space-y-1 hover:bg-warm/30 transition-colors"
-    >
-      <div className="font-semibold text-meta uppercase tracking-wider text-ink-tertiary">
-        {item.label}
-      </div>
-      <div className="text-sm font-medium leading-relaxed text-ink">
+    <div data-field-key={item.id}>
+      <MetadataCard title={item.label}>
         <FillableValue item={item} />
-      </div>
+      </MetadataCard>
     </div>
   );
 }
@@ -145,19 +134,9 @@ export function MetadataRecord({
 
   return (
     <div ref={rootRef} className="space-y-3">
-      {items.length > 0 && (
-        // `divide-y` rather than a border per block: one hairline BETWEEN
-        // neighbours, none above the first or below the last, so the stack has
-        // no edge of its own to read as a box. At full `--border-soft` rather
-        // than the table's old `/40` — that was a rule inside a bordered card,
-        // where the card's own edge did the containing; out here, at 40% on
-        // paper, it did not render at all and the blocks ran together.
-        <div className="divide-y divide-border-soft">
-          {items.map((item) => (
-            <MetadataFieldBlock key={item.id} item={item} />
-          ))}
-        </div>
-      )}
+      {items.map((item) => (
+        <MetadataFieldBlock key={item.id} item={item} />
+      ))}
       <RelationshipCards profile={profile} language={language} span="full" inheritingOnly />
     </div>
   );
