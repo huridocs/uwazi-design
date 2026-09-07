@@ -64,15 +64,38 @@ every swap is also a hue shift toward the warm palette).
 |---|---|---|---|---|---|
 | Primary | `--text-primary` | `text-ink` | `#1A1A1A` | `#F5F0E8` | `gray-900` |
 | Secondary | `--text-secondary` | `text-ink-secondary` | `#333333` | `#D4CDB8` | `gray-700` |
-| Tertiary (labels) | `--text-tertiary` | `text-ink-tertiary` | `#555555` | `#9A9A9A` | `gray-600` |
-| Muted (hints, icons) | `--text-muted` | `text-ink-muted` | `#777777` | `#6B6B6B` | `gray-500` / `gray-400` |
+| Tertiary (labels) | `--text-tertiary` | `text-ink-tertiary` | `#555555` | `#ADA79E` | `gray-600` |
+| Muted (hints, icons) | `--text-muted` | `text-ink-muted` | `#777777` | `#8A857C` | `gray-500` / `gray-400` |
 
 ### Borders
 
 | Role | Real var | Utility | Light | Dark | Nearest today |
 |---|---|---|---|---|---|
-| Default | `--border-primary` | `border-border` | `#EDE7DB` | `#343434` | `gray-200` |
-| Soft/dashed | `--border-soft` | `border-border-soft` | `#E2DBC9` | `#3E3E3E` | `gray-300` |
+| Default | `--border-primary` | `border-border` | `#EDE7DB` | `#666158` | `gray-200` |
+| Soft/dashed | `--border-soft` | `border-border-soft` | `#E2DBC9` | `#706B62` | `gray-300` |
+
+**Dark values are measured against the LIGHTEST dark surface, not the darkest.**
+`--bg-muted` and `--bg-selected` are both `#333333`, so a token tuned on the
+`#1A1A1A` background fails on every vellum panel and every selected row. The
+dark text and border tokens moved in 2026-09 for exactly that reason; measured
+worst case over all five dark surfaces (`--bg-primary`, `--bg-surface`,
+`--bg-warm`, `--bg-muted`, `--bg-selected`):
+
+| Token | Was | Worst | After | Worst | Floor |
+|---|---|---|---|---|---|
+| `--text-secondary` | `#D4CDB8` | 7.96:1 | unchanged | 7.96:1 | 4.5:1 |
+| `--text-tertiary` | `#9A9A9A` | 4.49:1 ✗ | `#ADA79E` | 5.29:1 | 4.5:1 |
+| `--text-muted` | `#6B6B6B` | 2.37:1 ✗ | `#8A857C` | 3.45:1 | 3:1 |
+| `--border-primary` | `#343434` | 1.01:1 ✗ | `#666158` | 2.06:1 | 2:1 |
+| `--border-soft` | `#3E3E3E` | 1.18:1 ✗ | `#706B62` | 2.39:1 | 1.5:1 |
+
+Two things to keep if these move again. Borders and the lower text tokens are
+**warm** greys, matching the `--text-primary` `#F5F0E8` / `--text-secondary`
+`#D4CDB8` ladder rather than reverting to neutral grey. And `--border-soft` is
+the STRONGER of the two borders in both themes (light: `#E2DBC9` over
+`#EDE7DB`) — the names read backwards, the roles do not.
+
+Light values are unchanged; they already clear their floors.
 
 ### Accents & status
 

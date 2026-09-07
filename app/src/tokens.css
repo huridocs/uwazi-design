@@ -96,13 +96,37 @@
 
   --text-primary: #F5F0E8;
   --text-secondary: #D4CDB8;
-  --text-tertiary: #9A9A9A;
-  --text-muted: #6B6B6B;
+  /* Tertiary and muted are WARM greys, not neutral ones, and they are set by
+     the LIGHTEST dark surface, not the darkest. Measured against all five
+     (`--bg-primary` #1A1A1A → `--bg-muted`/`--bg-selected` #333333), the old
+     neutral pair only ever cleared on the base background: #9A9A9A read 6.19:1
+     on #1A1A1A but 4.49:1 on #333333 — under AA on every vellum panel and every
+     selected row — and #6B6B6B fell to 2.37:1, under the 3:1 floor a muted
+     token needs to stay legible at all. The new values clear 4.5:1 (tertiary)
+     and 3:1 (muted) on ALL FIVE surfaces with headroom: 5.29:1 and 3.45:1 worst
+     case. Pick any replacement against #333333; #1A1A1A flatters everything. */
+  --text-tertiary: #ADA79E;
+  --text-muted: #8A857C;
 
-  --border-primary: #343434;
-  --border-soft: #3E3E3E;
-  --border-primary-64: #343434A3;
-  --border-soft-64: #3E3E3EA3;
+  /* Borders — same story, worse. At #343434 the primary rule was 1.01:1 on a
+     vellum or selected ground: not a faint line, NO line. It only ever showed
+     against the darkest background (1.40:1), which is why panels looked bounded
+     in the Library and dissolved in the drawers. These clear 2:1 (primary) and
+     2.4:1 (soft) on every surface, still hairlines rather than rules — the
+     light theme's "felt, not read" intent holds, it just now gets felt on more
+     than one background. Warm-tinted to match the text ladder above.
+
+     Soft is the STRONGER of the two in both themes (light: #E2DBC9 over
+     #EDE7DB) — the names read backwards but the roles are consistent, so keep
+     soft above primary if these move again. */
+  --border-primary: #666158;
+  --border-soft: #706B62;
+  /* 64% variants of the two above (`A3` = 163/255). Unused in the app today;
+     kept for the handoff layer. They sit at 1.58:1 / 1.75:1 worst case — a
+     deliberately quieter line, above the 1.5:1 visibility floor but below the
+     2:1 the solid primary holds. */
+  --border-primary-64: #666158A3;
+  --border-soft-64: #706B62A3;
 
   --accent-primary: #F5F0E8;
   --accent-blue-tint: #0C3A4D;

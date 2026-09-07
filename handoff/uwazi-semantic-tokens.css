@@ -86,13 +86,22 @@
 
   --text-primary: #F5F0E8;
   --text-secondary: #D4CDB8;
-  --text-tertiary: #9A9A9A;
-  --text-muted: #6B6B6B;
+  /* Warm greys, set against the LIGHTEST dark surface (#333333 — bg-muted and
+     bg-selected), not the darkest. The previous neutral pair (#9A9A9A /
+     #6B6B6B) cleared only on #1A1A1A and fell to 4.49:1 / 2.37:1 on a vellum
+     panel or a selected row. These hold 5.29:1 (tertiary, AA) and 3.45:1
+     (muted, the 3:1 large/non-text floor) on all five dark surfaces. */
+  --text-tertiary: #ADA79E;
+  --text-muted: #8A857C;
 
-  --border-primary: #343434;
-  --border-soft: #3E3E3E;
-  --border-primary-64: #343434A3;
-  --border-soft-64: #3E3E3EA3;
+  /* Borders. #343434 measured 1.01:1 against bg-muted — no line at all. These
+     clear 2:1 (primary) and 2.4:1 (soft) on every dark surface and stay
+     hairlines. Soft is the STRONGER of the two in both themes; keep that order.
+     The 64% variants sit at 1.58:1 / 1.75:1 — a deliberately quieter line. */
+  --border-primary: #666158;
+  --border-soft: #706B62;
+  --border-primary-64: #666158A3;
+  --border-soft-64: #706B62A3;
 
   --accent-primary: #F5F0E8;
   --accent-blue-tint: #0C3A4D;
