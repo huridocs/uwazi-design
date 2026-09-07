@@ -460,8 +460,16 @@ Search matches can hide in a property or a document body. Three surfaces answer
   portalled popover, click routes to the field or the page. No page tag or jump
   where `page` is null.
 - **Results view** — the drawer's evidence list promoted to the main pane as a 5th
-  `libraryViewModeAtom` mode (`"results"`, always in the switcher; it renders its
-  own no-query state rather than appearing when you type). Body:
+  `libraryViewModeAtom` mode (`"results"`, always in the switcher — the segment
+  never appears and disappears as you type; with nothing typed it renders its own
+  no-query state). **A search opens it**: the first character to COMMIT switches
+  the library to Results and remembers the mode it displaced, and
+  `clearLibrarySearchAtom` puts that mode back. Leaving Results while a query
+  runs overrules both for the rest of that query — you are not steered again, and
+  not returned to a view you already walked away from. All of it lives in
+  `atoms/library.ts` (`libraryViewModeAtom` is a writable derived atom over
+  `viewModeStateAtom`, beside `preSearchViewModeAtom` / the override flag), not in
+  a component effect watching the query. Body:
   `components/library/ResultsSnippets/ResultsMainView.tsx`, layout picked in the
   Display menu via `libraryResultsLayoutAtom` — **grouped** (wide card, properties
   beside passages) / **tree** (entity → field → snippets) / **passages** (flat
