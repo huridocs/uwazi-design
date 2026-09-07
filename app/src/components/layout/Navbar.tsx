@@ -6,9 +6,6 @@ import {
   ChevronRight,
   Wrench,
   Settings,
-  Sun,
-  Moon,
-  Monitor,
   User,
   Server,
   Languages,
@@ -19,7 +16,7 @@ import {
   Check,
   ExternalLink,
 } from "lucide-react";
-import type { Theme } from "../../atoms/theme";
+import { ThemeToggle } from "./ThemeToggle";
 import type { AppView } from "../../atoms/navigation";
 import { breakpointAtom } from "../../atoms/viewport";
 import { dataSourceAtom, type DataSource } from "../../atoms/dataSource";
@@ -47,13 +44,11 @@ interface NavbarProps {
   onLogoClick?: () => void;
   appView?: AppView;
   onNavigate?: (view: AppView) => void;
-  theme?: Theme;
-  onToggleTheme?: () => void;
   rtl?: boolean;
   onToggleRtl?: () => void;
 }
 
-export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onToggleTheme, rtl, onToggleRtl }: NavbarProps) {
+export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onToggleRtl }: NavbarProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [collectionOpen, setCollectionOpen] = useState(false);
@@ -75,8 +70,6 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
   const [uiLang, setUiLang] = useAtom(uiLanguageAtom);
   const guard = useDirtyGuard();
 
-  const ThemeIcon = theme === "dark" ? Moon : theme === "auto" ? Monitor : Sun;
-  const themeLabel = t("System", theme === "dark" ? "Dark" : theme === "auto" ? "Auto" : "Light");
 
   useEffect(() => {
     if (!settingsOpen && !toolsOpen && !collectionOpen) return;
@@ -469,16 +462,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
             )}
           </div>
         ) : null}
-        {!isMobile && (
-          <button
-            onClick={onToggleTheme}
-            className="p-1.5 text-ink-tertiary hover:text-ink-secondary hover:bg-warm rounded-md transition-colors"
-            aria-label={`${t("System", "Theme")}: ${themeLabel}`}
-            title={`${t("System", "Theme")}: ${themeLabel}`}
-          >
-            <ThemeIcon size={16} />
-          </button>
-        )}
+        {!isMobile && <ThemeToggle />}
       </div>
 
       {/* Mobile menu sheet */}
@@ -558,18 +542,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, theme, onT
             <SectionLabel className="px-4 pt-4 pb-1">
               {t("System", "Settings")}
             </SectionLabel>
-            <button
-              onClick={() => { onToggleTheme?.(); }}
-              className="flex items-center justify-between gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <ThemeIcon size={16} className="text-ink-tertiary" />
-                {t("System", "Theme")}
-              </div>
-              <span className="px-1.5 py-0.5 text-meta font-semibold rounded bg-warm text-ink-muted">
-                {themeLabel}
-              </span>
-            </button>
+            <ThemeToggle variant="row" />
             <button
               onClick={() => { onToggleRtl?.(); }}
               className="flex items-center justify-between gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
