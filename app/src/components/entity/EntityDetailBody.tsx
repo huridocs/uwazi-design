@@ -14,6 +14,7 @@ import { EntityIdentity } from "../shared/EntityIdentity";
 import { MainTabs } from "../layout/MainTabs";
 import { DocumentViewer } from "../viewer/DocumentViewer";
 import { RelationshipsDrawerSection } from "../relationships/RelationshipsDrawerSection";
+import { FiltersHostProvider } from "../shared/FiltersDrawer";
 import { RelationshipsCollapseControls } from "../relationships/FiltersRow";
 import { DrawerFilesBody } from "../files/DrawerFilesBody";
 import { EntityMetadataSummary } from "../metadata/EntityMetadataSummary";
@@ -136,9 +137,21 @@ export function EntityDetailBody({
     if (activeTab !== "metadata") setEditing(false);
   }, [activeTab]);
 
+  /* The Filters slide-over covers THE PANEL, header to footer — the geometry
+     the entity view's pane gives it for free, because there the positioned box
+     and the pane are the same element. Here the tab content is its own
+     `relative overflow-hidden` box (the graph canvas needs it), so the drawer
+     was scoped to the tab area: it began under the tab strip and stopped above
+     the footer. Making the root positioned is not enough on its own — the tab
+     wrapper's `overflow-hidden` clips the drawer wherever it is positioned
+     from — so the root names itself the drawer's host and the drawer portals
+     out to it. See FiltersHostProvider. */
+  const [panelEl, setPanelEl] = useState<HTMLDivElement | null>(null);
+
   return (
     <EntityScopeProvider entityId={entityId}>
-      <div className="flex flex-col h-full min-h-0 bg-paper">
+      <FiltersHostProvider host={panelEl}>
+      <div ref={setPanelEl} className="relative flex flex-col h-full min-h-0 bg-paper overflow-hidden">
         {/* Identity header on top — the entity title + close, acting as the
             panel header. Tabs sit beneath it (flipped from the entity view so the
             panel reads title-first). */}
@@ -238,6 +251,7 @@ export function EntityDetailBody({
           </div>
         )}
       </div>
+      </FiltersHostProvider>
     </EntityScopeProvider>
   );
 }
