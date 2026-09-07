@@ -68,7 +68,7 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
   return (
     <MetadataCard
       title={field.label}
-      icon={<Link2 size={14} className="text-carbon" />}
+      icon={<Link2 size={11} className="text-carbon" />}
       className={spanClass(span)}
     >
       <RelationCaption relationLabel={resolved.relationLabel} inheritLabel={field.inheritLabel} />
@@ -84,9 +84,9 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
         <div className={TABLE_MIN.tableOnly}>
           <table className="w-full text-sm border-collapse">
             <thead>
-              <tr className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
-                <th className="py-1.5 px-1 text-start">{entityHeader}</th>
-                <th className="py-1.5 px-3 text-start align-top">
+              <tr className="text-meta uppercase tracking-wider text-ink-tertiary">
+                <th className="font-semibold py-1.5 px-1 text-start">{entityHeader}</th>
+                <th className="font-semibold py-1.5 px-3 text-start align-top">
                   <span className="flex flex-col items-start gap-1">
                     <span className="inline-flex items-center gap-1">
                       <Link2 size={10} className="text-carbon" />

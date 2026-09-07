@@ -41,7 +41,7 @@ export function ConnectionGroupCard({ group, span = "full" }: { group: Connectio
   return (
     <MetadataCard
       title={group.label}
-      icon={<Link2 size={14} className="text-carbon" />}
+      icon={<Link2 size={11} className="text-carbon" />}
       className={spanClass(span)}
     >
       <RelationCaption
@@ -57,9 +57,15 @@ export function ConnectionGroupCard({ group, span = "full" }: { group: Connectio
       <div className={TABLE_MIN.tableOnly}>
         <table className="w-full text-sm border-collapse">
           <thead>
-            <tr className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
+            {/* `font-semibold` on the ROW is inherited, and a `<th>` carries the
+                UA's own `font-weight: bold` — a declaration on the element
+                itself, which beats an inherited one. So every column header
+                rendered at 700 while the card head above it was 600: the label
+                inside the card was heavier than the label naming it. Stated on
+                each `th` instead. */}
+            <tr className="text-meta uppercase tracking-wider text-ink-tertiary">
               {group.columns.map((c, i) => (
-                <th key={c.fieldId} className="py-1.5 px-3 text-start whitespace-nowrap align-top">
+                <th key={c.fieldId} className="font-semibold py-1.5 px-3 text-start whitespace-nowrap align-top">
                   <span className="flex flex-col items-start gap-1">
                     <span className="inline-flex items-center gap-1">
                       <Link2 size={10} className="text-carbon" />
@@ -69,7 +75,7 @@ export function ConnectionGroupCard({ group, span = "full" }: { group: Connectio
                   </span>
                 </th>
               ))}
-              <th className="py-1.5 px-1 text-start">{entityHeader}</th>
+              <th className="font-semibold py-1.5 px-1 text-start">{entityHeader}</th>
             </tr>
           </thead>
           <tbody>
