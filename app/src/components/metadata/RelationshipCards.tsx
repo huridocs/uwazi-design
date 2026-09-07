@@ -1,4 +1,5 @@
 import { useAtomValue } from "jotai";
+import { SectionLabel } from "../shared/SectionLabel";
 import type { Language } from "../../atoms/language";
 import { entityMetadataAtom, makeEntityPropReader } from "../../atoms/entityMetadata";
 import type { EntityProfile } from "../../data/entityProfiles";
@@ -51,9 +52,9 @@ export function RelationshipCards({
     <>
       <MasonryItem full>
         <div className={`${spanClass("full")} mt-2 flex items-center`}>
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-tertiary">
+          <SectionLabel as="h3" level="section">
             Relationships
-          </h3>
+          </SectionLabel>
         </div>
       </MasonryItem>
       {groups.map((group) => (

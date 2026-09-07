@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { SectionLabel } from "../shared/SectionLabel";
 import {
   FileText,
   Music,
@@ -135,9 +136,9 @@ export function FileDetailEditor({
     <>
       <div className="rounded-md bg-warm p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-ink-tertiary uppercase tracking-wider">
+          <SectionLabel as="h4" level="section">
             File details
-          </h4>
+          </SectionLabel>
           <button
             type="button"
             onClick={() => setEditing((e) => !e)}
@@ -236,9 +237,9 @@ export function FileDetailEditor({
       {group && (
         <div className="rounded-md bg-warm p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-semibold text-ink-tertiary uppercase tracking-wider">
+            <SectionLabel as="h4" level="section">
               Document
-            </h4>
+            </SectionLabel>
             <span
               className={`px-1.5 py-0.5 text-meta font-medium rounded ${
                 group.isPrimary
