@@ -236,11 +236,25 @@ export function MetadataEditBody({
       LANGUAGES.map((l) => [l, profile.document?.[l]?.title ?? fallback]),
     ) as Record<Language, string>;
   }, [profile, focusedId]);
-  // Scalar fields edit inline here; relationship fields are edited via the
-  // connection editor.
-  const initialFields = profile.metadata[language].filter(
-    (f): f is MetadataField => f.type !== "relationship",
+  /* Scalar fields edit inline here; relationship fields go through the
+     connection editor. Like the title above, they are held PER LANGUAGE —
+     Uwazi stores every text and markdown value per language, and this form held
+     one language's array, seeded once from whichever language it opened in. So
+     switching the header picker mid-edit relabelled the form without changing a
+     single value, and Save then wrote English prose into the Spanish record.
+     `fields` is the current language's slice; `setFields` still takes the same
+     updater, so `updateField` and Copy From's commit did not change. */
+  const initialFieldsByLang = useMemo(
+    () =>
+      Object.fromEntries(
+        LANGUAGES.map((l) => [
+          l,
+          profile.metadata[l].filter((f): f is MetadataField => f.type !== "relationship"),
+        ]),
+      ) as Record<Language, MetadataField[]>,
+    [profile],
   );
+  const initialFields = initialFieldsByLang[language];
   const [titles, setTitles] = useState<Record<Language, string>>(initialTitles);
   /** Languages holding a machine-written value no human has touched yet. */
   const [machineTitles, setMachineTitles] = useState<Partial<Record<Language, boolean>>>({});
@@ -250,7 +264,15 @@ export function MetadataEditBody({
     setTitles((prev) => ({ ...prev, [lang]: v }));
     setMachineTitles((prev) => (prev[lang] === machine ? prev : { ...prev, [lang]: machine }));
   };
-  const [fields, setFields] = useState<MetadataField[]>(initialFields);
+  const [fieldsByLang, setFieldsByLang] =
+    useState<Record<Language, MetadataField[]>>(initialFieldsByLang);
+  const fields = fieldsByLang[language];
+  const setFields = (updater: (prev: MetadataField[]) => MetadataField[]) =>
+    setFieldsByLang((prev) => ({ ...prev, [language]: updater(prev[language]) }));
+  /** Machine-written values, by field id then language. Cleared per cell the
+   *  moment a person types in it. */
+  const [machineFields, setMachineFields] =
+    useState<Record<string, Partial<Record<Language, boolean>>>>({});
   const [showIcon, setShowIcon] = useState(true);
   const notify = useNotify();
 
@@ -356,6 +378,41 @@ export function MetadataEditBody({
     );
     reflag(id, value);
   };
+
+  /** Write one field in ONE named language — the per-field translation rows.
+   *  Same create-if-missing rule as `updateField`: a language whose seed never
+   *  carried the field still has to be able to hold a translation of it. */
+  const updateFieldFor = (id: string, lang: Language, value: string, machine = false) => {
+    setFieldsByLang((prev) => {
+      const list = prev[lang];
+      const label = fields.find((f) => f.id === id)?.label ?? id;
+      const type = fields.find((f) => f.id === id)?.type ?? "text";
+      return {
+        ...prev,
+        [lang]: list.some((f) => f.id === id)
+          ? list.map((f) => (f.id === id ? { ...f, value } : f))
+          : [...list, { id, label, type, value }],
+      };
+    });
+    setMachineFields((prev) =>
+      prev[id]?.[lang] === machine ? prev : { ...prev, [id]: { ...prev[id], [lang]: machine } },
+    );
+    if (lang === language) reflag(id, value);
+  };
+  /** Every language's value for one field — what the translation rows show. */
+  const valuesFor = (id: string) =>
+    Object.fromEntries(
+      LANGUAGES.map((l) => [l, fieldsByLang[l].find((f) => f.id === id)?.value ?? ""]),
+    ) as Record<Language, string>;
+  /** The SEED's per-language values, so a mocked translation can return the
+   *  real one where the corpus has it rather than a stand-in. Deliberately not
+   *  `valuesFor` — that already holds whatever the user just typed. */
+  const authoredFor = (id: string) =>
+    Object.fromEntries(
+      LANGUAGES.map((l) => [l, initialFieldsByLang[l].find((f) => f.id === id)?.value]).filter(
+        ([, v]) => v,
+      ),
+    ) as Partial<Record<Language, string>>;
 
   /* ── Click-to-fill ────────────────────────────────────────────────────────
      Focus arms a field; the arm is LATCHED (see atoms/fillTarget) because
@@ -658,7 +715,11 @@ export function MetadataEditBody({
      the session, so neither needs explicit teardown. */
   const dirty =
     LANGUAGES.some((l) => titles[l] !== initialTitles[l]) ||
-    fields.some((f) => f.value !== initialFields.find((i) => i.id === f.id)?.value) ||
+    LANGUAGES.some((l) =>
+      fieldsByLang[l].some(
+        (f) => f.value !== initialFieldsByLang[l].find((i) => i.id === f.id)?.value,
+      ),
+    ) ||
     connectionDefs.some((d) => {
       const ids = connections[d.key];
       return ids !== undefined && ids.join("|") !== d.entityIds.join("|");
@@ -750,6 +811,17 @@ export function MetadataEditBody({
             className={fieldClass("description", "resize-y")}
           />
           <FieldMessage id={msgId("description")} issue={issues.description} reserve />
+          <MultiLanguageField
+            label="Description"
+            idPrefix={inputId("description")}
+            languages={LANGUAGES}
+            current={language}
+            values={valuesFor("description")}
+            machine={machineFields["description"] ?? {}}
+            onChange={(lang, value, machine) => updateFieldFor("description", lang, value, machine)}
+            authored={authoredFor("description")}
+            multiline
+          />
           {/* Rendered here too: the description is a controlled editor like any
               other scalar, so a copy into it is applyable — it was simply the
               one field the staged-row loop below never reached. */}
@@ -841,6 +913,21 @@ export function MetadataEditBody({
                 />
               )}
               <FieldMessage id={msgId(field.id)} issue={issues[field.id]} reserve />
+              {/* Only prose is translated. A date, a link and a file list are the
+                  same string in every language, and a control offering to render
+                  them in French would be a promise nothing behind it can keep. */}
+              {(field.type === "text" || field.type === "multiline") && (
+                <MultiLanguageField
+                  label={field.label}
+                  idPrefix={inputId(field.id)}
+                  languages={LANGUAGES}
+                  current={language}
+                  values={valuesFor(field.id)}
+                  machine={machineFields[field.id] ?? {}}
+                  onChange={(lang, value, machine) => updateFieldFor(field.id, lang, value, machine)}
+                  authored={authoredFor(field.id)}
+                />
+              )}
               <CopyFieldSlot
                 active={copyActive}
                 reserved={rowReserved.has(field.id)}

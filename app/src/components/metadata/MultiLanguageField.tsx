@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { ChevronRight, Languages, RotateCw, Sparkles } from "lucide-react";
 import type { Language } from "../../atoms/language";
 import { UwaziLoader } from "../shared/UwaziLoader";
@@ -42,10 +42,15 @@ export interface MultiLanguageFieldProps {
   onChange: (lang: Language, value: string, machine?: boolean) => void;
   /** Authored translations, when the data has real ones. See mockTranslate. */
   authored?: Partial<Record<Language, string>>;
+  /** The field above is a textarea, so these rows are too. A paragraph in a
+   *  one-line box is not a translation anyone will proofread. The language code
+   *  and the status slot stay anchored to the first line either way. */
+  multiline?: boolean;
 }
 
 export function MultiLanguageField({
   label, idPrefix, languages, current, values, machine, onChange, authored,
+  multiline = false,
 }: MultiLanguageFieldProps) {
   const [open, setOpen] = useState(false);
   const [working, setWorking] = useState<Language[]>([]);
@@ -155,19 +160,26 @@ export function MultiLanguageField({
                 >
                   {lang}
                 </label>
-                <input
-                  id={`${idPrefix}-lang-${lang.toLowerCase()}`}
-                  type="text"
-                  dir={languageDir(lang)}
-                  value={value}
-                  onChange={(e) => onChange(lang, e.target.value)}
-                  placeholder={`No ${LANGUAGE_NAMES[lang]} ${label.toLowerCase()} yet`}
-                  aria-label={`${LANGUAGE_NAMES[lang]} ${label.toLowerCase()}`}
-                  className={`flex-1 min-w-0 px-3 py-2 text-sm text-ink bg-paper rounded-md
-                    border transition-shadow placeholder:text-ink-muted
-                    focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40
-                    ${isMachine ? "border-carbon/30" : "border-border"}`}
-                />
+                {(() => {
+                  const shared = {
+                    id: `${idPrefix}-lang-${lang.toLowerCase()}`,
+                    dir: languageDir(lang),
+                    value,
+                    onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+                      onChange(lang, e.target.value),
+                    placeholder: `No ${LANGUAGE_NAMES[lang]} ${label.toLowerCase()} yet`,
+                    "aria-label": `${LANGUAGE_NAMES[lang]} ${label.toLowerCase()}`,
+                    className: `flex-1 min-w-0 px-3 py-2 text-sm text-ink bg-paper rounded-md
+                      border transition-shadow placeholder:text-ink-muted
+                      focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40
+                      ${isMachine ? "border-carbon/30" : "border-border"}`,
+                  };
+                  return multiline ? (
+                    <textarea {...shared} rows={3} className={`${shared.className} resize-y`} />
+                  ) : (
+                    <input {...shared} type="text" />
+                  );
+                })()}
                 {/* Reserved status slot — the loader, the marker and the button
                     all live at this one width so the input never resizes. */}
                 <div className="w-[5.5rem] shrink-0 flex items-center justify-end gap-1 h-9">
