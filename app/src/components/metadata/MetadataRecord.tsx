@@ -8,6 +8,7 @@ import { focusMetadataFieldAtom } from "../../atoms/library";
 import type { MetadataField, RelationshipMetadataField } from "../../data/metadata";
 import { specInherits } from "../../utils/inheritance";
 import { MetadataCard } from "./MetadataCard";
+import { MasonryGrid, MasonryItem } from "./MasonryGrid";
 import { RelationshipCards } from "./RelationshipCards";
 import { fieldItem, connectionItem, isLongField, type MetadataItem } from "./items";
 
@@ -133,11 +134,16 @@ export function MetadataRecord({
   }
 
   return (
-    <div ref={rootRef} className="space-y-3">
+    /* The children stay in FIELD ORDER — the masonry packs them, it does not
+       reorder them, so `data-field-key` deep-focus, the Tab order and a screen
+       reader all still walk the record the way the template defines it. */
+    <MasonryGrid containerRef={rootRef}>
       {items.map((item) => (
-        <MetadataFieldBlock key={item.id} item={item} />
+        <MasonryItem key={item.id}>
+          <MetadataFieldBlock item={item} />
+        </MasonryItem>
       ))}
       <RelationshipCards profile={profile} language={language} span="full" inheritingOnly />
-    </div>
+    </MasonryGrid>
   );
 }
