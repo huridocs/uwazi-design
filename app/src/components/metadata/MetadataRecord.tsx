@@ -9,6 +9,7 @@ import type { MetadataField, RelationshipMetadataField } from "../../data/metada
 import { specInherits } from "../../utils/inheritance";
 import { MetadataCard } from "./MetadataCard";
 import { MasonryGrid, MasonryItem } from "./MasonryGrid";
+import { DetailsGrid } from "./DetailsGrid";
 import { RelationshipCards } from "./RelationshipCards";
 import { fieldItem, connectionItem, isLongField, type MetadataItem } from "./items";
 
@@ -45,7 +46,7 @@ export function MetadataFieldBlock({ item }: { item: MetadataItem }) {
  *  button that does nothing would be a worse lie than not offering it. The
  *  `-m-1 p-1` keeps the hover well from moving the row: values sit at the same
  *  y armed or not. */
-function FillableValue({ item }: { item: MetadataItem }) {
+export function FillableValue({ item }: { item: MetadataItem }) {
   const fillTarget = useAtomValue(fillTargetAtom);
   const sendFill = useSetAtom(fillRequestAtom);
   if (!fillTarget || !item.fillValue) return <>{item.content}</>;
@@ -111,11 +112,19 @@ export function MetadataRecord({
   const linkOnly = relFields.filter((f) => !specInherits(f) && !f.connectionKey);
   const filled = scalar.filter((f) => !!f.value?.trim());
 
-  /* ONE ordered stack. Long fields used to be hoisted above a "Details" card
-     holding everything else, so a record was read in two passes — the
-     paragraphs, then a table of the rest. The template's own order is the order
-     the record should read in. */
   const items: MetadataItem[] = [...filled.map(fieldItem), ...linkOnly.map(connectionItem)];
+
+  /* THREE BANDS, by field KIND — not by height, which is what made the masonry
+     read as scrambled. Within each band the template's order is untouched, so
+     the DOM still walks the record the way the template defines it.
+
+     The bands are ordered by how much of the reader's attention each value
+     wants: the facts you scan (dates, a country, a case number) collect into one
+     dense grid at the top, the prose you actually read follows, and the sets of
+     chips — which are a list, not a sentence — come last. */
+  const details = items.filter((i) => i.kind === "scalar");
+  const longs = items.filter((i) => i.kind === "long");
+  const chips = items.filter((i) => i.kind === "chips");
 
   const hasRelCards = relFields.some((f) => specInherits(f) || !!f.connectionKey);
 
@@ -134,11 +143,21 @@ export function MetadataRecord({
   }
 
   return (
-    /* The children stay in FIELD ORDER — the masonry packs them, it does not
-       reorder them, so `data-field-key` deep-focus, the Tab order and a screen
-       reader all still walk the record the way the template defines it. */
     <MasonryGrid containerRef={rootRef}>
-      {items.map((item) => (
+      {/* One card, full width, its own 1–3 column grid inside. */}
+      {details.length > 0 && (
+        <MasonryItem full>
+          <DetailsGrid items={details} />
+        </MasonryItem>
+      )}
+      {/* Prose: two columns of three, one of two — see MasonryItem's `wide`. */}
+      {longs.map((item) => (
+        <MasonryItem key={item.id} wide>
+          <MetadataFieldBlock item={item} />
+        </MasonryItem>
+      ))}
+      {/* Chips: one column, because they wrap to fill whatever they are given. */}
+      {chips.map((item) => (
         <MasonryItem key={item.id}>
           <MetadataFieldBlock item={item} />
         </MasonryItem>

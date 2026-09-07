@@ -83,12 +83,17 @@ export function MasonryGrid({
 export function MasonryItem({
   children,
   full = false,
+  wide = false,
 }: {
   children: ReactNode;
   /** Span every column. For a card whose content has its own minimum width — a
-   *  connection TABLE — so it keeps its table while the record has room, rather
-   *  than folding to per-entity cards because a masonry column is narrow. */
+   *  connection TABLE, the details grid — so it keeps its shape while the record
+   *  has room, rather than folding because a masonry column is narrow. */
   full?: boolean;
+  /** Span TWO columns where there are three, one where there are two. For prose:
+   *  a paragraph set in a third of a wide pane is a column of six-word lines,
+   *  and at two columns there is no third to borrow. */
+  wide?: boolean;
 }) {
   const ctx = useContext(Ctx);
   const ref = useRef<HTMLDivElement>(null);
@@ -112,7 +117,9 @@ export function MasonryItem({
   return (
     <div
       ref={ref}
-      className={full ? "col-span-full" : undefined}
+      className={
+        full ? "col-span-full" : wide ? "@[66rem]:col-span-2" : undefined
+      }
       style={{
         paddingBottom: `${ctx.gutter}px`,
         gridRowEnd: span ? `span ${span}` : undefined,

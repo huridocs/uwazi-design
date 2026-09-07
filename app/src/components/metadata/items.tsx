@@ -19,6 +19,9 @@ export interface MetadataItem {
   id: string;
   label: string;
   content: ReactNode;
+  /** What SHAPE this value is, which is what decides where it goes — not how
+   *  tall it happens to render. See `fieldKind`. */
+  kind: FieldKind;
   /** A paragraph: it gets its own titled card, not a value cell. */
   long: boolean;
   /** The value as plain text, when there is one a metadata field could be
@@ -29,15 +32,52 @@ export interface MetadataItem {
   fillValue?: string;
 }
 
+/** The three shapes a record's values come in, and the whole basis of the
+ *  layout. The masonry packed by HEIGHT, which is why the record read as
+ *  scrambled: a twelve-line Description landed beside eight one-line cards and
+ *  the eye had nothing to follow. Height is an accident of the value; kind is a
+ *  fact about the field.
+ *
+ *  - `scalar` — a date, a number, a country, a short line of text. One of these
+ *    alone is not worth a card: a bordered box, a heading and 40px of padding to
+ *    carry the word "1988". They collect into ONE details card, as a dense
+ *    label-over-value grid.
+ *  - `long` — a paragraph. Its own card, and wide, because prose set in a third
+ *    of a pane is a column of six-word lines.
+ *  - `chips` — several values at once: a thesaurus multiselect, the entities a
+ *    link-only connection points at. Its own card and ONE column, because chips
+ *    wrap to fill whatever width they are given and a wide card of them is a
+ *    paragraph of pills. */
+export type FieldKind = "scalar" | "long" | "chips";
+
+/** Where a short line stops being a line and becomes prose.
+ *
+ *  60, not the 100 this file used to carry. That number was chosen when the
+ *  question was "does this deserve its own card" and the answer only had to be
+ *  roughly right; now it decides whether a value goes in a grid CELL, and a
+ *  70-character sentence in a cell sized for "Honduras" wraps to three lines and
+ *  drags the whole row down with it. Measured against the corpora: the longest
+ *  real scalar that still reads as one line is "Inter-American Commission on
+ *  Human Rights" at 41. */
+const LONG_CHARS = 60;
+
+export function fieldKind(f: MetadataField): FieldKind {
+  if (f.type === "multiline") return "long";
+  if (f.items && f.items.length > 0) return "chips";
+  return (f.value?.length ?? 0) > LONG_CHARS ? "long" : "scalar";
+}
+
 export function isLongField(f: MetadataField): boolean {
-  return f.type === "multiline" || (f.value?.length ?? 0) > 100;
+  return fieldKind(f) === "long";
 }
 
 export function fieldItem(f: MetadataField): MetadataItem {
-  const long = isLongField(f);
+  const kind = fieldKind(f);
+  const long = kind === "long";
   return {
     id: f.id,
     label: f.label,
+    kind,
     long,
     // Only short, plain values: a paragraph or a pill is not what a one-line
     // field is asking for.
@@ -121,6 +161,9 @@ export function connectionItem(field: RelationshipMetadataField): MetadataItem {
   return {
     id: field.id,
     label: field.label,
+    // A pill list is chips whatever its length: one connection or nine, the
+    // value is a set of entities, and it wraps.
+    kind: "chips",
     long: false,
     content: <ConnectionPills field={field} />,
   };
