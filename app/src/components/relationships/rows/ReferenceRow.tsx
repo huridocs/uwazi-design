@@ -7,17 +7,17 @@ import {
   scrollToHighlightAtom,
   scrollToRefAtom,
 } from "../../../atoms/references";
-import { searchQueryAtom, zoomAtom } from "../../../atoms/filters";
+import { searchQueryAtom } from "../../../atoms/filters";
 import { currentPageAtom } from "../../../atoms/selection";
 import { getEntity, getEntityType } from "../../../data/entities";
 import { Reference, relationTypes } from "../../../data/references";
 import { EntityPill } from "../../shared/EntityPill";
 import { FadeTruncate } from "../../shared/FadeTruncate";
 import { HighlightedText } from "../../shared/HighlightedText";
-import { ListCardRow } from "../../shared/ListCardRow";
 import { PageTag } from "../../shared/PageTag";
 import { DirectionGlyph } from "../DirectionGlyph";
 import { RowCheckbox } from "./RowCheckbox";
+import { RowShell } from "./RowShell";
 
 export interface ReferenceRowProps {
   reference: Reference;
@@ -33,7 +33,6 @@ export interface ReferenceRowProps {
 export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps) {
   const entity = getEntity(reference.targetEntityId);
   const type = entity ? getEntityType(entity.typeId) : undefined;
-  const zoom = useAtomValue(zoomAtom);
   // The row marks the SAME query that filtered it in (`useFilteredReferences`
   // matches snippet text + target title + relation type), so the user can see
   // WHY a row is here instead of re-reading it to find the term.
@@ -71,74 +70,43 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
     }
   };
 
+  const ariaLabel = `Reference to ${entity?.title ?? "unknown entity"}${
+    selection ? `, page ${selection.page}` : ""
+  }`;
+
   // Overview: single-line, entity pill + page tag only.
-  if (zoom === "overview") {
-    return (
-      <ListCardRow
-        ref={rowRef as unknown as React.Ref<HTMLElement>}
-        selected={isActive}
-        ariaLabel={`Reference to ${entity?.title ?? "unknown entity"}${
-          selection ? `, page ${selection.page}` : ""
-        }`}
-        onClick={handleClick}
-        className="!py-1.5"
-      >
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <RowCheckbox refIds={[reference.id]} />
-            <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} highlight={query} />
-          </div>
-          {selection && (
-            <PageTag page={selection.page} onClick={handleClick} />
-          )}
-        </div>
-      </ListCardRow>
-    );
-  }
+  const overview = (
+    <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center gap-1.5 min-w-0">
+        <RowCheckbox refIds={[reference.id]} />
+        <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} highlight={query} />
+      </div>
+      {selection && <PageTag page={selection.page} onClick={handleClick} />}
+    </div>
+  );
 
   // Compact: single-line, pill + direction + rel label + page tag, no snippet.
-  if (zoom === "compact") {
-    return (
-      <ListCardRow
-        ref={rowRef as unknown as React.Ref<HTMLElement>}
-        selected={isActive}
-        ariaLabel={`Reference to ${entity?.title ?? "unknown entity"}${
-          selection ? `, page ${selection.page}` : ""
-        }`}
-        onClick={handleClick}
-        className="!py-2"
-      >
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <RowCheckbox refIds={[reference.id]} />
-            <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} highlight={query} />
-            <DirectionGlyph direction={direction} />
-            <span className="text-meta text-ink-tertiary truncate capitalize">
-              <HighlightedText text={relLabel} query={query} />
-            </span>
-          </div>
-          {selection && (
-            <PageTag page={selection.page} onClick={handleClick} />
-          )}
-        </div>
-      </ListCardRow>
-    );
-  }
+  const compact = (
+    <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center gap-1.5 min-w-0">
+        <RowCheckbox refIds={[reference.id]} />
+        <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} highlight={query} />
+        <DirectionGlyph direction={direction} />
+        <span className="text-meta text-ink-tertiary truncate capitalize">
+          <HighlightedText text={relLabel} query={query} />
+        </span>
+      </div>
+      {selection && <PageTag page={selection.page} onClick={handleClick} />}
+    </div>
+  );
 
   // Detail (default): full layout — header, snippet, footer with actions.
   // In nested mode (inside an aggregate's inline-expand), the header pill +
   // typeName and the footer direction + relation label are dropped because
   // the aggregate above already established them. Page tag, snippet, and
   // hover actions stay — those are what actually varies between refs.
-  return (
-    <ListCardRow
-      ref={rowRef as unknown as React.Ref<HTMLElement>}
-      selected={isActive}
-      ariaLabel={`Reference to ${entity?.title ?? "unknown entity"}${
-        selection ? `, page ${selection.page}` : ""
-      }`}
-      onClick={handleClick}
-    >
+  const detail = (
+    <>
       {!nested && (
         <div className="flex items-start justify-between gap-2 mb-1.5">
           <div className="flex items-center gap-1.5 min-w-0">
@@ -237,6 +205,18 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
           )}
         </div>
       </div>
-    </ListCardRow>
+    </>
+  );
+
+  return (
+    <RowShell
+      rowRef={rowRef as unknown as React.Ref<HTMLElement>}
+      selected={isActive}
+      ariaLabel={ariaLabel}
+      onClick={handleClick}
+      overview={overview}
+      compact={compact}
+      detail={detail}
+    />
   );
 }

@@ -5,16 +5,16 @@ import {
   activeDrawerTabAtom,
   overlayEntityIdAtom,
 } from "../../../atoms/references";
-import { activeClusterRefIdsAtom, searchQueryAtom, zoomAtom } from "../../../atoms/filters";
+import { activeClusterRefIdsAtom, searchQueryAtom } from "../../../atoms/filters";
 import { getEntity, getEntityType } from "../../../data/entities";
 import { relationTypes } from "../../../data/references";
 import { Relationship } from "../../../utils/relationships";
 import { EntityPill } from "../../shared/EntityPill";
 import { EntityTypeTag } from "../../shared/EntityTypeTag";
 import { HighlightedText } from "../../shared/HighlightedText";
-import { ListCardRow } from "../../shared/ListCardRow";
 import { DirectionGlyph } from "../DirectionGlyph";
 import { RowCheckbox } from "./RowCheckbox";
+import { RowShell } from "./RowShell";
 import { EvidenceBadge, RowChevron } from "./RowControls";
 
 export interface AggregateRowProps {
@@ -51,7 +51,6 @@ export function AggregateRow({
 }: AggregateRowProps) {
   const entity = getEntity(rel.targetEntityId);
   const type = entity ? getEntityType(entity.typeId) : undefined;
-  const zoom = useAtomValue(zoomAtom);
   // Mark the query that filtered this row in — same query, same tokenizer as
   // the snippet/PDF marks (`utils/queryTokens.ts`, PATTERNS 4.3).
   const query = useAtomValue(searchQueryAtom);
@@ -106,59 +105,87 @@ export function AggregateRow({
     <RowChevron expanded={expanded} onToggle={onToggleExpand} subject="evidence" />
   ) : null;
 
+  const openEntity = () => {
+    setActiveAggregateId(rel.id);
+    setOverlayEntityId(rel.targetEntityId);
+  };
+
   // Overview: pill + count only. When pill is suppressed, surface the
   // relation label so the row still says something useful.
-  if (zoom === "overview") {
-    return (
-      <ListCardRow
-        selected={selected}
-        ariaLabel={`${entity?.title ?? "Unknown entity"} — ${relLabel}`}
-        onClick={() => {
-          setActiveAggregateId(rel.id);
-          setOverlayEntityId(rel.targetEntityId);
-        }}
-        className="!py-1.5 !border-b-0"
-      >
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1 min-w-0">
-            <RowCheckbox refIds={rel.refIds} />
-            {chevron}
-            {hidePill ? (
-              <span className="flex items-center gap-1.5 text-xs text-ink-secondary capitalize">
-                <DirectionGlyph direction={glyphDirection} />
-                <HighlightedText text={relLabel} query={query} />
-              </span>
-            ) : (
-              <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} highlight={query} />
-            )}
-          </div>
-          {countBadge}
-        </div>
-      </ListCardRow>
-    );
-  }
+  const overview = (
+    <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center gap-1 min-w-0">
+        <RowCheckbox refIds={rel.refIds} />
+        {chevron}
+        {hidePill ? (
+          <span className="flex items-center gap-1.5 text-xs text-ink-secondary capitalize">
+            <DirectionGlyph direction={glyphDirection} />
+            <HighlightedText text={relLabel} query={query} />
+          </span>
+        ) : (
+          <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} highlight={query} />
+        )}
+      </div>
+      {countBadge}
+    </div>
+  );
 
   // Compact: single-line, pill + direction + rel label + count.
-  if (zoom === "compact") {
-    return (
-      <ListCardRow
-        selected={selected}
-        ariaLabel={`${entity?.title ?? "Unknown entity"} — ${relLabel}`}
-        onClick={() => {
-          setActiveAggregateId(rel.id);
-          setOverlayEntityId(rel.targetEntityId);
-        }}
-        className="!py-2"
-      >
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <RowCheckbox refIds={rel.refIds} />
-            {chevron}
-            <DirectionGlyph direction={glyphDirection} />
-            {hidePill ? (
-              <span className="text-xs text-ink-secondary capitalize truncate">
+  const compact = (
+    <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center gap-1.5 min-w-0">
+        <RowCheckbox refIds={rel.refIds} />
+        {chevron}
+        <DirectionGlyph direction={glyphDirection} />
+        {hidePill ? (
+          <span className="text-xs text-ink-secondary capitalize truncate">
+            <HighlightedText text={relLabel} query={query} />
+          </span>
+        ) : (
+          <>
+            {!hideTypePill && (
+              <EntityTypeTag typeId={entity?.typeId ?? ""} label={type?.name} />
+            )}
+            <span
+              title={entity?.title}
+              className="text-xs font-medium text-ink truncate min-w-0"
+            >
+              <HighlightedText text={entity?.title ?? ""} query={query} />
+            </span>
+            {!hideRelLabel && (
+              <span className="text-meta text-ink-tertiary truncate capitalize shrink-0">
                 <HighlightedText text={relLabel} query={query} />
               </span>
+            )}
+          </>
+        )}
+      </div>
+      {countBadge}
+    </div>
+  );
+
+  // Detail: full layout — header, footer. With hidePill, the relation label
+  // becomes the row's title (capitalized text in the header slot).
+  //
+  // Checkbox + chevron are a gutter; title and caption share ONE column beside
+  // it. The caption used to start at the row's left edge while the title started
+  // after the controls, so the two lines of the same row began at different x.
+  const detail = (
+    <div className="flex items-start gap-1.5">
+      <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
+        <RowCheckbox refIds={rel.refIds} />
+        {chevron}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-1.5 min-w-0">
+            {hidePill ? (
+              <>
+                <DirectionGlyph direction={glyphDirection} />
+                <span className="text-sm font-medium text-ink capitalize truncate">
+                  <HighlightedText text={relLabel} query={query} />
+                </span>
+              </>
             ) : (
               <>
                 {!hideTypePill && (
@@ -166,81 +193,38 @@ export function AggregateRow({
                 )}
                 <span
                   title={entity?.title}
-                  className="text-xs font-medium text-ink truncate min-w-0"
+                  className="text-sm font-medium text-ink truncate min-w-0"
                 >
                   <HighlightedText text={entity?.title ?? ""} query={query} />
                 </span>
-                {!hideRelLabel && (
-                  <span className="text-meta text-ink-tertiary truncate capitalize shrink-0">
-                    <HighlightedText text={relLabel} query={query} />
-                  </span>
-                )}
               </>
             )}
           </div>
-          {countBadge}
+          <div className="flex items-center gap-1.5 shrink-0">{countBadge}</div>
         </div>
-      </ListCardRow>
-    );
-  }
-
-  // Detail: full layout — header, footer. With hidePill, the relation label
-  // becomes the row's title (capitalized text in the header slot).
-  return (
-    <ListCardRow
-      selected={selected}
-      onClick={() => {
-          setActiveAggregateId(rel.id);
-          setOverlayEntityId(rel.targetEntityId);
-        }}
-    >
-      {/* Checkbox + chevron are a gutter; title and caption share ONE column
-          beside it. The caption used to start at the row's left edge while the
-          title started after the controls, so the two lines of the same row began
-          at different x. */}
-      <div className="flex items-start gap-1.5">
-        <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
-          <RowCheckbox refIds={rel.refIds} />
-          {chevron}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center gap-1.5 min-w-0">
-              {hidePill ? (
-                <>
-                  <DirectionGlyph direction={glyphDirection} />
-                  <span className="text-sm font-medium text-ink capitalize truncate">
-                    <HighlightedText text={relLabel} query={query} />
-                  </span>
-                </>
-              ) : (
-                <>
-                  {!hideTypePill && (
-                    <EntityTypeTag typeId={entity?.typeId ?? ""} label={type?.name} />
-                  )}
-                  <span
-                    title={entity?.title}
-                    className="text-sm font-medium text-ink truncate min-w-0"
-                  >
-                    <HighlightedText text={entity?.title ?? ""} query={query} />
-                  </span>
-                </>
-              )}
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0">{countBadge}</div>
+        {!hidePill && (
+          <div className="flex items-center gap-1 mt-1 text-meta text-ink-tertiary">
+            <DirectionGlyph direction={glyphDirection} />
+            {!hideRelLabel && (
+              <span className="capitalize">
+                <HighlightedText text={relLabel} query={query} />
+              </span>
+            )}
           </div>
-          {!hidePill && (
-            <div className="flex items-center gap-1 mt-1 text-meta text-ink-tertiary">
-              <DirectionGlyph direction={glyphDirection} />
-              {!hideRelLabel && (
-                <span className="capitalize">
-                  <HighlightedText text={relLabel} query={query} />
-                </span>
-              )}
-            </div>
-          )}
-        </div>
+        )}
       </div>
-    </ListCardRow>
+    </div>
+  );
+
+  return (
+    <RowShell
+      selected={selected}
+      ariaLabel={`${entity?.title ?? "Unknown entity"} — ${relLabel}`}
+      onClick={openEntity}
+      overviewBorderless
+      overview={overview}
+      compact={compact}
+      detail={detail}
+    />
   );
 }
