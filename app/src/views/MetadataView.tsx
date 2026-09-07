@@ -26,6 +26,7 @@ import {
 import { copyPreviewAtom } from "../atoms/copyFrom";
 import { fillTargetAtom, fillRequestAtom } from "../atoms/fillTarget";
 import { ListeningChip } from "../components/metadata/ListeningChip";
+import { MultiLanguageField } from "../components/metadata/MultiLanguageField";
 import { overlayEntityIdAtom } from "../atoms/references";
 import { planCopyFrom, type CopyMatch } from "../utils/copyFrom";
 import { TemplateStructure } from "../components/relationships/TemplateStructure";
@@ -40,7 +41,7 @@ import { getEntity, type Entity } from "../data/entities";
 import { getEntityProfile } from "../data/entityProfiles";
 import { filesAtom } from "../atoms/files";
 import { activeFilterCountAtom } from "../atoms/filters";
-import { languageAtom, type Language } from "../atoms/language";
+import { LANGUAGES, languageAtom, type Language } from "../atoms/language";
 import { entityMetadataAtom, makeEntityPropReader } from "../atoms/entityMetadata";
 import { DrawerFilesBody } from "../components/files/DrawerFilesBody";
 import { EditInput } from "../components/metadata/EditInput";
@@ -69,8 +70,8 @@ export function MetadataView({ tabs, activeTab, onTabChange, onBack }: MetadataV
         activeId={activeTab}
         onChange={onTabChange}
         onBack={onBack}
-        languages={["EN", "ES", "FR", "AR"]}
-        availableLanguages={["EN", "ES", "FR", "AR"]}
+        languages={LANGUAGES}
+        availableLanguages={LANGUAGES}
         activeLanguage={language}
         onLanguageChange={(lang) => setLanguage(lang as Language)}
       />
@@ -212,13 +213,43 @@ export function MetadataEditBody({
   const focusedId = useAtomValue(focusedEntityIdAtom);
   const getProp = makeEntityPropReader(useAtomValue(entityMetadataAtom));
   const profile = getEntityProfile(focusedId);
-  const docTitle = profile.document?.[language]?.title ?? getEntity(focusedId)?.title ?? "";
+  /* ── Title, per language ─────────────────────────────────────────────────
+     Uwazi stores a title per language, and this form only ever held the one
+     the header picker pointed at — so switching language mid-edit swapped the
+     LABEL under an unchanged value, and the other three languages were
+     unreachable without leaving the form. The seed carries real EN/ES/FR/AR
+     titles for the document-bearing entity; everything else repeats its one
+     title, which is exactly the case the empty-state row is for.
+
+     `titles` is the whole record; `title` is the current language's slice, so
+     every consumer below (validation, click-to-fill, the dirty guard, the
+     save-failure trigger) keeps addressing one string and did not change. */
+  const authoredTitles = useMemo<Partial<Record<Language, string>>>(
+    () => Object.fromEntries(
+      LANGUAGES.map((l) => [l, profile.document?.[l]?.title]).filter(([, v]) => v),
+    ),
+    [profile],
+  );
+  const initialTitles = useMemo(() => {
+    const fallback = getEntity(focusedId)?.title ?? "";
+    return Object.fromEntries(
+      LANGUAGES.map((l) => [l, profile.document?.[l]?.title ?? fallback]),
+    ) as Record<Language, string>;
+  }, [profile, focusedId]);
   // Scalar fields edit inline here; relationship fields are edited via the
   // connection editor.
   const initialFields = profile.metadata[language].filter(
     (f): f is MetadataField => f.type !== "relationship",
   );
-  const [title, setTitle] = useState(docTitle);
+  const [titles, setTitles] = useState<Record<Language, string>>(initialTitles);
+  /** Languages holding a machine-written value no human has touched yet. */
+  const [machineTitles, setMachineTitles] = useState<Partial<Record<Language, boolean>>>({});
+  const title = titles[language];
+  const setTitle = (v: string) => setTitleFor(language, v);
+  const setTitleFor = (lang: Language, v: string, machine = false) => {
+    setTitles((prev) => ({ ...prev, [lang]: v }));
+    setMachineTitles((prev) => (prev[lang] === machine ? prev : { ...prev, [lang]: machine }));
+  };
   const [fields, setFields] = useState<MetadataField[]>(initialFields);
   const [showIcon, setShowIcon] = useState(true);
   const notify = useNotify();
@@ -244,6 +275,13 @@ export function MetadataEditBody({
   };
   const [issues, setIssues] = useState<Record<string, ValidationIssue | null>>({});
   const [saveAttempted, setSaveAttempted] = useState(false);
+  /* Switching the header language swaps which string the Title box holds, so a
+     "Title is required" left over from the language before it is a message
+     about a value no longer on screen. Clear it and let the field re-flag on
+     its own blur or on save. */
+  useEffect(() => {
+    setIssues((prev) => (prev.title ? { ...prev, title: null } : prev));
+  }, [language]);
   const flag = (id: string, value: string) =>
     setIssues((prev) => ({ ...prev, [id]: issueFor(id, value) }));
   /** Live re-check, but only for fields already carrying a message. */
@@ -619,7 +657,7 @@ export function MetadataEditBody({
      session opened with. Unregisters on unmount — Save and Cancel both close
      the session, so neither needs explicit teardown. */
   const dirty =
-    title !== docTitle ||
+    LANGUAGES.some((l) => titles[l] !== initialTitles[l]) ||
     fields.some((f) => f.value !== initialFields.find((i) => i.id === f.id)?.value) ||
     connectionDefs.some((d) => {
       const ids = connections[d.key];
@@ -659,6 +697,19 @@ export function MetadataEditBody({
             className={fieldClass("title", "resize-none")}
           />
           <FieldMessage id={msgId("title")} issue={issues.title} reserve />
+          {/* The other languages, in place. The big box above stays the current
+              one; this row is always mounted, so opening it is the only thing
+              that ever moves the Icon section below. */}
+          <MultiLanguageField
+            label="Title"
+            idPrefix={inputId("title")}
+            languages={LANGUAGES}
+            current={language}
+            values={titles}
+            machine={machineTitles}
+            onChange={setTitleFor}
+            authored={authoredTitles}
+          />
         </EditSection>
 
         {/* Select icon */}
