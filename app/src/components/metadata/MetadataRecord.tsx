@@ -7,56 +7,43 @@ import { fillTargetAtom, fillRequestAtom } from "../../atoms/fillTarget";
 import { focusMetadataFieldAtom } from "../../atoms/library";
 import type { MetadataField, RelationshipMetadataField } from "../../data/metadata";
 import { specInherits } from "../../utils/inheritance";
-import { MetadataCard } from "./MetadataCard";
 import { RelationshipCards } from "./RelationshipCards";
 import { fieldItem, connectionItem, isLongField, type MetadataItem } from "./items";
 
-/** Scalar rows as a ruled label|value table — the drawer's treatment, which is
- *  the one we keep: the label column is as narrow as its longest label, values
- *  line up in a single column, hairlines tie the rows together. */
-export function MetadataItemsTable({ items }: { items: MetadataItem[] }) {
-  if (items.length === 0) return null;
+/** One field of the record, as its own block.
+ *
+ *  Every item gets this — a paragraph, a date, a link, a connection's pills —
+ *  so the record reads as one stack of like things rather than a few titled
+ *  cards above a ruled table of everything else.
+ *
+ *  A LIGHT block, not the bordered `MetadataCard` the long fields used to get,
+ *  and this is the whole design decision. Giving each field a card was tried
+ *  first and is what the drawer cannot carry: at 390px a twelve-field entity
+ *  became twelve boxes whose content is one short line each, mostly border and
+ *  padding, under a 14px bold heading shouting over the value it names. That is
+ *  the same failure `connectionItem` records from the other direction — "an
+ *  entity with two dates and four links rendered as four near-empty boxes".
+ *  A label, its value, and a hairline to the next one is a block at every
+ *  width, and it stays a block when there are twelve of them.
+ *
+ *  The bordered card is still what a CONNECTION that carries a table gets
+ *  (RelationshipCards, below the stack). That contrast now means something:
+ *  a card holds a structure, a block holds a value.
+ *
+ *  `data-field-key` is on the block — what deep-focus from Results scrolls to
+ *  and flashes, so the flash paints one field's label and value together. */
+export function MetadataFieldBlock({ item }: { item: MetadataItem }) {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm border-collapse">
-        <tbody>
-          {items.map((item) => (
-            <tr
-              key={item.id}
-              data-field-key={item.id}
-              className="border-t border-border/40 first:border-t-0 hover:bg-warm/30 transition-colors"
-            >
-              {/* Label and value sit on a SHARED BASELINE, not a shared top
-                  edge. They're different sizes (11px caps vs 14px body), so
-                  `align-top` lined up their line-BOXES and left the glyphs on
-                  visibly different levels — obvious once a deep-focus flash
-                  paints the row box. Baseline alignment survives the two cases
-                  `align-top` + a compensating padding can't: a value that WRAPS
-                  (a cell's baseline is its FIRST line box, so the label stays
-                  level with line one) and a value that's a PILL rather than
-                  text (an inline-flex pill's baseline is its inner text, so the
-                  label reads level with the pill's label, not its box). */}
-              <th
-                scope="row"
-                className="w-0 py-1.5 pr-6 text-start align-baseline font-semibold text-meta uppercase tracking-wider text-ink-tertiary whitespace-nowrap"
-              >
-                {item.label}
-              </th>
-              {/* `w-full max-w-0` gives the value column a DEFINITE width to
-                  resolve against. Without it the cell is auto-sized from its
-                  content, so a pill's `max-w-full` had no basis to clamp to: the
-                  pill took its natural width and long connection titles ran off
-                  the drawer's edge, clipped mid-pill instead of truncating.
-                  With a definite basis, multi-pill values wrap (ConnectionPills
-                  is `flex flex-wrap`) and a single over-long pill ellipsises
-                  inside itself, keeping its full text in the `title` tooltip. */}
-              <td className="w-full max-w-0 py-1.5 align-baseline font-medium leading-relaxed text-ink">
-                <FillableValue item={item} />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div
+      data-field-key={item.id}
+      className="py-2.5 first:pt-0 last:pb-0 space-y-1 hover:bg-warm/30 transition-colors"
+    >
+      <div className="font-semibold text-meta uppercase tracking-wider text-ink-tertiary">
+        {item.label}
+      </div>
+      <div className="text-sm font-medium leading-relaxed text-ink">
+        <FillableValue item={item} />
+      </div>
     </div>
   );
 }
@@ -85,9 +72,8 @@ function FillableValue({ item }: { item: MetadataItem }) {
   );
 }
 
-/** An entity's record: long-form fields as titled cards, every short field AND
- *  link-only connection in one ruled Details card, then the connections that
- *  actually carry a table.
+/** An entity's record: every field its own titled block, in template order,
+ *  then the connections that carry a table of their own.
  *
  *  ONE component behind the drawer and the main Metadata view. They had drifted
  *  into three different treatments of the same data (a masonry of per-field cards,
@@ -135,11 +121,11 @@ export function MetadataRecord({
   const linkOnly = relFields.filter((f) => !specInherits(f) && !f.connectionKey);
   const filled = scalar.filter((f) => !!f.value?.trim());
 
-  const longItems: MetadataItem[] = filled.filter(isLongField).map(fieldItem);
-  const shortItems: MetadataItem[] = [
-    ...filled.filter((f) => !isLongField(f)).map(fieldItem),
-    ...linkOnly.map(connectionItem),
-  ];
+  /* ONE ordered stack. Long fields used to be hoisted above a "Details" card
+     holding everything else, so a record was read in two passes — the
+     paragraphs, then a table of the rest. The template's own order is the order
+     the record should read in. */
+  const items: MetadataItem[] = [...filled.map(fieldItem), ...linkOnly.map(connectionItem)];
 
   const hasRelCards = relFields.some((f) => specInherits(f) || !!f.connectionKey);
 
@@ -148,7 +134,7 @@ export function MetadataRecord({
   // anything of its own down here. Emptiness is now decided by the fields alone;
   // the old carve-out for `profile.files` / `profile.image` would just leave a
   // PDF-and-little-else entity staring at a blank pane.
-  const empty = longItems.length === 0 && shortItems.length === 0 && !hasRelCards;
+  const empty = items.length === 0 && !hasRelCards;
   if (empty) {
     return (
       <div className="flex items-center justify-center py-10 text-center">
@@ -159,15 +145,18 @@ export function MetadataRecord({
 
   return (
     <div ref={rootRef} className="space-y-3">
-      {longItems.map((item) => (
-        <div key={item.id} data-field-key={item.id}>
-          <MetadataCard title={item.label}>{item.content}</MetadataCard>
+      {items.length > 0 && (
+        // `divide-y` rather than a border per block: one hairline BETWEEN
+        // neighbours, none above the first or below the last, so the stack has
+        // no edge of its own to read as a box. At full `--border-soft` rather
+        // than the table's old `/40` — that was a rule inside a bordered card,
+        // where the card's own edge did the containing; out here, at 40% on
+        // paper, it did not render at all and the blocks ran together.
+        <div className="divide-y divide-border-soft">
+          {items.map((item) => (
+            <MetadataFieldBlock key={item.id} item={item} />
+          ))}
         </div>
-      ))}
-      {shortItems.length > 0 && (
-        <MetadataCard title="Details">
-          <MetadataItemsTable items={shortItems} />
-        </MetadataCard>
       )}
       <RelationshipCards profile={profile} language={language} span="full" inheritingOnly />
     </div>
