@@ -757,11 +757,14 @@ export function MetadataEditBody({
             rows={2}
             className={fieldClass("title", "resize-none")}
           />
-          <FieldMessage id={msgId("title")} issue={issues.title} reserve />
           {/* The other languages, in place. The big box above stays the current
               one; this row is always mounted, so opening it is the only thing
-              that ever moves the Icon section below. */}
+              that ever moves the Icon section below. It also CARRIES the field's
+              validation line — see `messageSlot`; a translatable field should
+              not pay for two always-mounted 11px lines when one will hold
+              both. */}
           <MultiLanguageField
+            messageSlot={<FieldMessage id={msgId("title")} issue={issues.title} />}
             label="Title"
             idPrefix={inputId("title")}
             languages={LANGUAGES}
@@ -810,8 +813,8 @@ export function MetadataEditBody({
             rows={6}
             className={fieldClass("description", "resize-y")}
           />
-          <FieldMessage id={msgId("description")} issue={issues.description} reserve />
           <MultiLanguageField
+            messageSlot={<FieldMessage id={msgId("description")} issue={issues.description} />}
             label="Description"
             idPrefix={inputId("description")}
             languages={LANGUAGES}
@@ -912,12 +915,17 @@ export function MetadataEditBody({
                   className={fieldClass(field.id)}
                 />
               )}
-              <FieldMessage id={msgId(field.id)} issue={issues[field.id]} reserve />
               {/* Only prose is translated. A date, a link and a file list are the
                   same string in every language, and a control offering to render
-                  them in French would be a promise nothing behind it can keep. */}
+                  them in French would be a promise nothing behind it can keep —
+                  and those keep their own reserved message line, because they
+                  have no languages row to fold it into. */}
+              {field.type !== "text" && field.type !== "multiline" && (
+                <FieldMessage id={msgId(field.id)} issue={issues[field.id]} reserve />
+              )}
               {(field.type === "text" || field.type === "multiline") && (
                 <MultiLanguageField
+                  messageSlot={<FieldMessage id={msgId(field.id)} issue={issues[field.id]} />}
                   label={field.label}
                   idPrefix={inputId(field.id)}
                   languages={LANGUAGES}
