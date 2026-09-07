@@ -1,4 +1,5 @@
 import { atom } from "jotai";
+import { filtersDrawerBase, overlayEntityBase } from "./rightPane";
 
 /** Presentation mode in the merged Relationships panel: how the connections
  *  are shown. Orthogonal to {@link groupByAtom}, which only matters in list. */
@@ -103,8 +104,19 @@ export const clearRelFiltersAtom = atom(null, (_get, set) => {
   set(sortOrderAtom, DEFAULT_SORT_ORDER);
 });
 
-/** Whether the toggleable filters slide-over is open (single shared flag). */
-export const filtersDrawerOpenAtom = atom(false);
+/** Whether the toggleable filters slide-over is open (single shared flag).
+ *
+ *  Opening it closes the connection overlay, for the reason in atoms/rightPane:
+ *  one right-hand region, two occupants. Takes `SetStateAction` so it is a
+ *  drop-in for the primitive atom it replaced. */
+export const filtersDrawerOpenAtom = atom(
+  (get) => get(filtersDrawerBase),
+  (get, set, next: boolean | ((prev: boolean) => boolean)) => {
+    const open = typeof next === "function" ? next(get(filtersDrawerBase)) : next;
+    set(filtersDrawerBase, open);
+    if (open) set(overlayEntityBase, null);
+  },
+);
 
 /** IDs of relationship rows the user has checkbox-selected for bulk actions
  *  (delete, etc.). Aggregate rows expand to all backing refIds; hub rows to

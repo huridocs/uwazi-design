@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { SectionLabel } from "../components/shared/SectionLabel";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Search, ClipboardCopy, ChevronDown } from "lucide-react";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
@@ -1022,9 +1023,9 @@ export function MetadataEditBody({
             read-only. One editor per connection (siblings sync). The band
             mirrors the read-mode "Relationships" separator. */}
         {connectionDefs.length > 0 && (
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-tertiary pt-2">
+          <SectionLabel as="h3" level="section" className="pt-2">
             Relationships
-          </h3>
+          </SectionLabel>
         )}
         {connectionDefs.map((d) => (
           <div key={d.key} className="space-y-1.5">
@@ -1054,9 +1055,9 @@ export function MetadataEditBody({
             aren't edited inline (managed via the relationship graph). */}
         {(readOnlyRel.groups.length > 0 || readOnlyRel.singles.length > 0) && (
           <>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-tertiary pt-2">
+            <SectionLabel as="h3" level="section" className="pt-2">
               Derived relationships · read-only
-            </h3>
+            </SectionLabel>
             <div className="grid gap-3 grid-cols-1">
               {readOnlyRel.groups.map((group) => (
                 <ConnectionGroupCard key={group.connectionKey} group={group} />

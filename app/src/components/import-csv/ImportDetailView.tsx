@@ -1,4 +1,5 @@
 import { Breadcrumb } from "../layout/Breadcrumb";
+import { SectionLabel } from "../shared/SectionLabel";
 import { ProgressBar } from "../shared/ProgressBar";
 import { StatusBadge } from "../shared/StatusBadge";
 import { Stepper } from "../shared/Stepper";
@@ -179,19 +180,19 @@ export function ImportDetailView({ entry, onBack }: ImportDetailViewProps) {
 
       {/* Section header for table */}
       {entry.issues.length > 0 && (
-        <h3 className="text-xs font-semibold text-ink-tertiary uppercase tracking-wider px-1">
+        <SectionLabel as="h3" level="section" className="px-1">
           Issues ({entry.issues.length})
-        </h3>
+        </SectionLabel>
       )}
       {entry.issues.length === 0 && isCompleted && entry.entities > 0 && (
-        <h3 className="text-xs font-semibold text-ink-tertiary uppercase tracking-wider px-1">
+        <SectionLabel as="h3" level="section" className="px-1">
           Created entities{" "}
           {entry.entities > 20 && (
             <span className="normal-case font-normal">
               ({entry.entities.toLocaleString()} total — showing first 20)
             </span>
           )}
-        </h3>
+        </SectionLabel>
       )}
 
       {/* Table */}

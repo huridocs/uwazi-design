@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { SectionLabel } from "../components/shared/SectionLabel";
 import { useAtom, useSetAtom } from "jotai";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { MainTabs } from "../components/layout/MainTabs";
@@ -120,9 +121,9 @@ export function FilesView({ tabs, activeTab, onTabChange, onBack }: FilesViewPro
       />
       <DocMeta showPdfSelector={false} />
       <div className="flex-1 overflow-auto p-4 pb-8 bg-warm">
-        <h3 className="text-xs font-semibold text-ink-tertiary uppercase tracking-wider mb-2 px-1">
+        <SectionLabel as="h3" level="section" className="mb-2 px-1">
           Primary documents
-        </h3>
+        </SectionLabel>
         {primaryGroups.length === 0 ? (
           <p className="text-xs italic text-ink-tertiary px-1 mb-5">
             No primary documents yet. Promote a supporting file or add a new one.
@@ -157,9 +158,9 @@ export function FilesView({ tabs, activeTab, onTabChange, onBack }: FilesViewPro
           })
         )}
 
-        <h3 className="text-xs font-semibold text-ink-tertiary uppercase tracking-wider mb-2 mt-5 px-1">
+        <SectionLabel as="h3" level="section" className="mb-2 mt-5 px-1">
           Supporting files
-        </h3>
+        </SectionLabel>
         {supportingFiles.length === 0 ? (
           <p className="text-xs italic text-ink-tertiary px-1">
             No supporting files yet. Add a file to get started.

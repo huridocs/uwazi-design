@@ -1,4 +1,5 @@
 import { useCopyToast } from "./useCopyToast";
+import { SectionLabel } from "../shared/SectionLabel";
 
 function CopyText({ text, children }: { text: string; children: React.ReactNode }) {
   const copyToast = useCopyToast();
@@ -82,7 +83,7 @@ function ColorSwatch({ hex, name, cssVar, tw }: { hex: string; name: string; css
 function ColorGroup({ title, colors }: { title: string; colors: ColorDef[] }) {
   return (
     <div>
-      <h4 className="text-xs font-semibold text-ink-tertiary uppercase tracking-wider mb-3">{title}</h4>
+      <SectionLabel as="h4" level="section" className="mb-3">{title}</SectionLabel>
       <div className="grid grid-cols-2 gap-4">
         {/* Light column */}
         <div className="rounded-lg border border-border/40 p-3" style={{ backgroundColor: "#F5F0E8" }}>
