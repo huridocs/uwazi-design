@@ -60,30 +60,38 @@ export function referencesFor(id: string, all: Reference[]): Reference[] {
   return all.filter((r) => involvesEntity(r, id)).map((r) => fromPerspective(r, id));
 }
 
+/** Pure counterpart of `referencesFor` for WRITES: fold an update expressed in
+ *  one entity's scope back into the full corpus. Shared with
+ *  `useScopedReferences`, which applies it for an entity the app hasn't focused
+ *  (the entity preview panel). Returns the corpus unchanged for read-only
+ *  (CEJIL) scopes. */
+export function writeReferencesFor(
+  id: string,
+  all: Reference[],
+  update: Reference[] | ((prev: Reference[]) => Reference[]),
+): Reference[] {
+  // CEJIL relationships are read-only in the prototype — never write them back
+  // into the mock corpus.
+  if (isCejilEntity(id)) return all;
+  if (id === MAIN_ENTITY_ID) return typeof update === "function" ? update(all) : update;
+  const origInScope = all.filter((r) => involvesEntity(r, id));
+  const outOfScope = all.filter((r) => !involvesEntity(r, id));
+  const prevScoped = origInScope.map((r) => fromPerspective(r, id));
+  const nextScoped = typeof update === "function" ? update(prevScoped) : update;
+  // Reconcile by id: surviving originals stay un-normalized; ids not already
+  // in scope are brand-new refs (e.g. a freshly created relationship) kept
+  // verbatim. This makes deletes precise and never writes the flipped view back.
+  const nextIds = new Set(nextScoped.map((r) => r.id));
+  const origIds = new Set(origInScope.map((r) => r.id));
+  const survivors = origInScope.filter((r) => nextIds.has(r.id));
+  const created = nextScoped.filter((r) => !origIds.has(r.id));
+  return [...outOfScope, ...survivors, ...created];
+}
+
 export const scopedReferencesAtom = atom(
   (get): Reference[] => referencesFor(get(focusedEntityIdAtom), get(referencesAtom)),
   (get, set, update: Reference[] | ((prev: Reference[]) => Reference[])) => {
-    const all = get(referencesAtom);
-    const id = get(focusedEntityIdAtom);
-    // CEJIL relationships are read-only in the prototype — never write them back
-    // into the mock corpus.
-    if (isCejilEntity(id)) return;
-    if (id === MAIN_ENTITY_ID) {
-      set(referencesAtom, typeof update === "function" ? update(all) : update);
-      return;
-    }
-    const origInScope = all.filter((r) => involvesEntity(r, id));
-    const outOfScope = all.filter((r) => !involvesEntity(r, id));
-    const prevScoped = origInScope.map((r) => fromPerspective(r, id));
-    const nextScoped = typeof update === "function" ? update(prevScoped) : update;
-    // Reconcile by id: surviving originals stay un-normalized; ids not already
-    // in scope are brand-new refs (e.g. a freshly created relationship) kept
-    // verbatim. This makes deletes precise and never writes the flipped view back.
-    const nextIds = new Set(nextScoped.map((r) => r.id));
-    const origIds = new Set(origInScope.map((r) => r.id));
-    const survivors = origInScope.filter((r) => nextIds.has(r.id));
-    const created = nextScoped.filter((r) => !origIds.has(r.id));
-    set(referencesAtom, [...outOfScope, ...survivors, ...created]);
+    set(referencesAtom, writeReferencesFor(get(focusedEntityIdAtom), get(referencesAtom), update));
   },
 );
 

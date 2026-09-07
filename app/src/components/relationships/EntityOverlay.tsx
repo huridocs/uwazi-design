@@ -1,47 +1,31 @@
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { useEffect, useState } from "react";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { copyPreviewAtom } from "../../atoms/copyFrom";
 import { CopyPreviewSection } from "../metadata/CopyPreviewSection";
-import { SectionLabel } from "../shared/SectionLabel";
-import { activeAggregateIdAtom, overlayEntityIdAtom, referencesAtom } from "../../atoms/references";
+import { activeAggregateIdAtom, overlayEntityIdAtom } from "../../atoms/references";
 import { languageAtom } from "../../atoms/language";
-import { entityMetadataAtom, setEntityPropAtom } from "../../atoms/entityMetadata";
 import { openEntityAtom } from "../../atoms/focusedEntity";
-import { fillTargetAtom, fillRequestAtom } from "../../atoms/fillTarget";
 import { getEntity } from "../../data/entities";
-import { relationshipFieldsByLanguage, type MetadataField } from "../../data/metadata";
-import { getEntityProfile } from "../../data/entityProfiles";
-import { EntityPill } from "../shared/EntityPill";
-import { EntityIdentity } from "../shared/EntityIdentity";
-import { PageTag } from "../shared/PageTag";
-import { FadeTruncate } from "../shared/FadeTruncate";
-import { EditInput } from "../metadata/EditInput";
-import { X, Link2, Calendar, Tag, Info } from "lucide-react";
+import { EntityDetailBody } from "../entity/EntityDetailBody";
 
-/** ISO date (YYYY-MM-DD) → "June 30, 2024". Renders in UTC so the seeded date
- *  doesn't drift a day across timezones. Falls back to em-dash when absent. */
-function formatCreated(iso: string | undefined): string {
-  if (!iso) return "—";
-  const d = new Date(`${iso}T00:00:00Z`);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    timeZone: "UTC",
-  });
-}
-
+/** The connected-entity preview: a slide-over inside whichever pane mounts it,
+ *  opened by any row, pill or graph node that points at another entity.
+ *
+ *  Its body is the SHARED {@link EntityDetailBody} — the same tabs, bodies and
+ *  footer the Library's drawer preview renders — so the app has one answer to
+ *  "show me this entity beside what I'm reading". The difference is scope: this
+ *  panel sits on top of a view focused on a DIFFERENT entity, so it must not
+ *  move that focus. It passes `focused={false}` and the body scopes its
+ *  connection surfaces by context instead (see `EntityScopeProvider`), which is
+ *  also why the Document and Files tabs — which read the globally seeded file
+ *  atoms — aren't offered here; "Open entity" is the route to those. */
 export function EntityOverlay() {
   const [entityId, setEntityId] = useAtom(overlayEntityIdAtom);
   const [copyPreview, setCopyPreview] = useAtom(copyPreviewAtom);
-  const [references] = useAtom(referencesAtom);
   const setActiveAggregateId = useSetAtom(activeAggregateIdAtom);
   const lang = useAtom(languageAtom)[0];
   const rtl = lang === "AR";
-  const entityMetadata = useAtomValue(entityMetadataAtom);
-  const setEntityProp = useSetAtom(setEntityPropAtom);
   const openEntity = useSetAtom(openEntityAtom);
   // One ref serves both the focus trap and the outside-click check.
   const panelRef = useFocusTrap<HTMLDivElement>(entityId !== null);
@@ -50,8 +34,6 @@ export function EntityOverlay() {
   useEffect(() => {
     panelRef.current?.toggleAttribute("inert", entityId === null);
   }, [entityId, panelRef]);
-  // Properties are read-only on open (this is a preview); editing is opt-in.
-  const [editingProps, setEditingProps] = useState(false);
 
   // Clear the per-aggregate selection highlight whenever the overlay closes.
   useEffect(() => {
@@ -67,59 +49,20 @@ export function EntityOverlay() {
     if (entityId === null) setCopyPreview(null);
   }, [entityId, setCopyPreview]);
 
-  // Reset to read-only whenever a different entity is opened.
+  /* The body is mounted only while there is an entity to show — it carries a
+     whole relationships surface, and four hosts mount this overlay. It lags the
+     close by the slide-out so the panel doesn't empty on its way off-pane. */
+  const [bodyId, setBodyId] = useState<string | null>(entityId);
   useEffect(() => {
-    setEditingProps(false);
+    if (entityId !== null) {
+      setBodyId(entityId);
+      return;
+    }
+    const t = window.setTimeout(() => setBodyId(null), 250);
+    return () => window.clearTimeout(t);
   }, [entityId]);
 
   const entity = entityId ? getEntity(entityId) : undefined;
-
-  // References that point to this entity
-  const entityRefs = entityId
-    ? references.filter((r) => r.targetEntityId === entityId)
-    : [];
-
-  // Editable native properties — the values other entities inherit from this
-  // one. The list is the union of (a) props this entity already has and (b)
-  // inheritable props any relationship field pulls from this entity's type, so a
-  // *missing* value (e.g. e19) still shows an empty, fillable row. Editing a row
-  // writes the atom and cascades into every inherited render.
-  const editableProps =
-    entityId && entity
-      ? (() => {
-          const live = entityMetadata[lang]?.[entityId] ?? {};
-          const labels = new Map<string, string>();
-          for (const f of relationshipFieldsByLanguage[lang]) {
-            if (f.targetTypeId === entity.typeId && f.inheritProperty) {
-              labels.set(f.inheritProperty, f.inheritLabel ?? f.inheritProperty);
-            }
-          }
-          for (const k of Object.keys(live)) {
-            if (!labels.has(k)) labels.set(k, k.charAt(0).toUpperCase() + k.slice(1));
-          }
-          return [...labels.entries()].map(([propId, label]) => ({
-            propId,
-            label,
-            value: live[propId] ?? "",
-          }));
-        })()
-      : [];
-
-  // Entities outside the Sample metadata atom (CEJIL) still have real native
-  // properties on their profile — surface them read-only so the overlay never
-  // silently drops the Properties section. (CEJIL "inherited" values like a
-  // judge's País are graph-derived, not scalar props, so there's nothing to
-  // edit here — display is the right scope.)
-  const readOnlyProps =
-    entityId && editableProps.length === 0
-      ? getEntityProfile(entityId)
-          .metadata[lang].filter(
-            (f): f is MetadataField => f.type !== "relationship"
-          )
-          .filter((f) => !!f.value?.trim())
-          .map((f) => ({ propId: f.id, label: f.label, value: f.value! }))
-      : [];
-
   const isOpen = entityId !== null && entity !== undefined;
 
   useEffect(() => {
@@ -182,251 +125,31 @@ export function EntityOverlay() {
             : "none",
         }}
       >
-        {/* Header */}
-        <div
-          className="flex items-start justify-between px-4 py-3 shrink-0"
-          style={{ borderBottom: "1px solid var(--border-primary)" }}
-        >
-          {/* Same identity block as the Library drawer — one component, so the
-              two panels can't drift apart. */}
-          <EntityIdentity entity={entity} size="sm" />
-          <button
-            onClick={() => setEntityId(null)}
-            aria-label="Close"
-            className="-mt-0.5 p-1.5 rounded-md hover:bg-warm text-ink-muted hover:text-ink transition-colors shrink-0"
-          >
-            <X size={16} />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-auto p-4 space-y-4">
-          {/* Metadata section — Type/Title live in the header + EntityPill above,
-              so this shows only the non-redundant facts: real creation date and
-              how many references in this document point at the entity. */}
-          <section className="rounded-lg p-3 space-y-3" style={{ backgroundColor: "var(--bg-warm)" }}>
-            <SectionLabel as="h4">
-              Metadata
-            </SectionLabel>
-            <div className="space-y-2.5">
-              {/* Only when we actually have a date — a bare em-dash row reads as a
-                  rendering gap (CEJIL entities carry no createdAt). */}
-              {entity?.createdAt && (
-                <MetaRow icon={Calendar} label="Created" value={formatCreated(entity.createdAt)} />
-              )}
-              <MetaRow icon={Link2} label="References" value={`${entityRefs.length} in this document`} />
-            </div>
-          </section>
-
-          {/* Copy From preview — only when THIS entity is the staged source, so
-              opening the same entity from anywhere else is unaffected. */}
-          {copyPreview && copyPreview.sourceId === entityId && (
-            <CopyPreviewSection
-              plan={copyPreview.plan}
-              onUse={() => copyPreview.onUse()}
-              onBack={() => copyPreview.onBack()}
-            />
-          )}
-
-          {/* Native properties — the values other entities inherit from this
-              one. Read-only on open (preview); "Edit" reveals inputs, and each
-              change cascades to every inherited render (all resolve through
-              entityMetadataAtom). Profile-only entities (CEJIL) show their
-              props read-only, no Edit toggle. */}
-          {entityId && (editableProps.length > 0 || readOnlyProps.length > 0) && (
-            <section className="rounded-lg p-3 space-y-3" style={{ backgroundColor: "var(--bg-warm)" }}>
-              <div className="flex items-center justify-between">
-                <SectionLabel as="h4">
-                  Properties
-                </SectionLabel>
-                {editableProps.length > 0 && (
-                  <button
-                    onClick={() => setEditingProps((v) => !v)}
-                    className="text-meta font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
-                  >
-                    {editingProps ? "Done" : "Edit"}
-                  </button>
-                )}
-              </div>
-              {editingProps && editableProps.length > 0 ? (
-                <>
-                  <div className="space-y-2.5">
-                    {editableProps.map(({ propId, label, value }) => (
-                      <div key={propId} className="space-y-1">
-                        <span className="text-meta text-ink-tertiary leading-tight block">{label}</span>
-                        <EditInput
-                          value={value}
-                          ariaLabel={label}
-                          placeholder="Add a value…"
-                          onChange={(v) => setEntityProp({ entityId, propId, lang, value: v })}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  <p className="flex items-start gap-1.5 text-meta text-ink-tertiary">
-                    <Info size={12} className="text-carbon shrink-0 mt-px" />
-                    Editing the source updates inherited values.
-                  </p>
-                </>
-              ) : (
-                <div className="space-y-2.5">
-                  {(editableProps.length > 0 ? editableProps : readOnlyProps).map(
-                    ({ propId, label, value }) => (
-                      <MetaRow key={propId} icon={Tag} label={label} value={value || "—"} />
-                    )
-                  )}
-                </div>
-              )}
-            </section>
-          )}
-
-          {/* References to this entity */}
-          {entityRefs.length > 0 && (
-            <section className="space-y-2">
-              <SectionLabel as="h4">
-                References in document
-              </SectionLabel>
-              <div>
-                {entityRefs.map((ref) => {
-                  const sourceEntity = getEntity(ref.sourceEntityId);
-                  return (
-                    <div
-                      key={ref.id}
-                      className="px-3 py-2.5 border-b border-border/50"
-                    >
-                      {ref.sourceSelection ? (
-                        <>
-                          <div className="flex items-start justify-end gap-2 mb-1.5">
-                            <PageTag page={ref.sourceSelection.page} />
-                          </div>
-                          <FadeTruncate
-                            text={ref.sourceSelection.text}
-                            maxLines={2}
-                            className="text-xs text-ink-secondary leading-relaxed"
-                          />
-                          {/* Text↔text: the anchor on THIS entity's own
-                              document — the local end of the relationship. */}
-                          {ref.targetSelection && (
-                            <div className="flex items-start justify-between gap-2 px-2 py-1.5 mt-1.5 bg-warm/50 rounded">
-                              <FadeTruncate
-                                text={ref.targetSelection.text}
-                                maxLines={2}
-                                className="text-xs text-ink-secondary leading-relaxed flex-1 min-w-0 italic"
-                                fadeTo="var(--bg-warm)"
-                              />
-                              <span className="shrink-0 flex items-center gap-1">
-                                <span className="text-meta text-ink-tertiary">here</span>
-                                <PageTag page={ref.targetSelection.page} />
-                              </span>
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        // Entity-level ref: no quote, so surface the source
-                        // entity instead of an empty body. Tells the user
-                        // who created this connection without leaning on an
-                        // "Entity-level" placeholder label.
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <span className="text-meta text-ink-tertiary">From</span>
-                          <EntityPill
-                            typeId={sourceEntity?.typeId ?? ""}
-                            label={sourceEntity?.title}
-                            size="sm"
-                          />
-                        </div>
-                      )}
-                      <div className="flex items-center mt-1">
-                        <span className="text-meta text-ink-tertiary capitalize">
-                          {ref.relationType.replace("_", " ")}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          )}
-
-          {/* Placeholder sections */}
-          <section className="space-y-2">
-            <SectionLabel as="h4">
-              Connections
-            </SectionLabel>
-            <div
-              className="flex items-center justify-center py-6 rounded-md text-xs text-ink-tertiary"
-              style={{ border: "1.5px dashed var(--border-soft)" }}
-            >
-              View all connections for this entity
-            </div>
-          </section>
-        </div>
-
-        {/* Footer */}
-        <div
-          className="flex items-center justify-between h-12 px-3 shrink-0"
-          style={{ borderTop: "1px solid var(--border-primary)" }}
-        >
-          <button
-            onClick={() => setEntityId(null)}
-            className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
-          >
-            Close
-          </button>
-          <button
-            onClick={() => {
-              if (entityId) openEntity(entityId);
+        {bodyId && (
+          <EntityDetailBody
+            entityId={bodyId}
+            identitySize="sm"
+            onClose={() => setEntityId(null)}
+            onOpen={() => {
+              openEntity(bodyId);
               setEntityId(null);
             }}
-            className="px-3 py-1.5 text-xs font-medium text-white rounded-md transition-colors cursor-pointer"
-            style={{ backgroundColor: "var(--text-primary)" }}
-          >
-            Open entity
-          </button>
-        </div>
+            openLabel="Open entity"
+            /* Copy From stages its source through this panel — the preview only
+               belongs to the entity that was actually staged, so opening the
+               same entity from anywhere else is unaffected. */
+            banner={
+              copyPreview && copyPreview.sourceId === bodyId ? (
+                <CopyPreviewSection
+                  plan={copyPreview.plan}
+                  onUse={() => copyPreview.onUse()}
+                  onBack={() => copyPreview.onBack()}
+                />
+              ) : undefined
+            }
+          />
+        )}
       </div>
     </>
-  );
-}
-
-/** A property of the previewed entity.
- *
- *  While a metadata field is armed for click-to-fill, the row becomes the OTHER
- *  way to answer it: the values a user reaches for are as often already recorded
- *  on a connected entity as they are buried in the document, and this preview is
- *  where they read them. The whole row is the target — a 12px value is not a
- *  click target, and the label is part of what you're pointing at.
- *
- *  Only when armed, and only with a value: outside the mode this is a read-only
- *  preview row, and turning every property into a button that does nothing would
- *  be a worse lie than not offering it. */
-function MetaRow({ icon: Icon, label, value }: { icon: typeof Tag; label: string; value: string }) {
-  const fillTarget = useAtomValue(fillTargetAtom);
-  const sendFill = useSetAtom(fillRequestAtom);
-  const body = (
-    <>
-      <Icon size={14} className="text-ink-tertiary shrink-0" />
-      <div className="min-w-0 text-start">
-        <span className="text-meta text-ink-tertiary leading-tight block">{label}</span>
-        <p className="text-xs text-ink-secondary leading-tight">{value}</p>
-      </div>
-    </>
-  );
-
-  if (!fillTarget || !value || value === "—") {
-    return <div className="flex items-center gap-2.5">{body}</div>;
-  }
-  return (
-    <button
-      type="button"
-      onClick={() => sendFill(value)}
-      title={`Fill ${fillTarget.label} with this value`}
-      // `-m-1 p-1` so the hover well reaches past the text without moving the
-      // row: the rows sit at the same y armed or not.
-      className="flex items-center gap-2.5 w-full -m-1 p-1 rounded-md text-start
-        hover:bg-parchment transition-colors cursor-pointer
-        focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
-    >
-      {body}
-    </button>
   );
 }

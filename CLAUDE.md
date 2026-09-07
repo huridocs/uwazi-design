@@ -200,6 +200,37 @@ Card-row pattern:
 
 In tree mode, target cards are aggregate rows with inline-expand revealing their underlying ref rows. Selected state is read internally from `overlayEntityIdAtom` (aggregate) or `activeRefIdAtom`+`overlayEntityIdAtom` (reference).
 
+## The entity preview panel — one body, two hosts
+
+Both panels that show an entity beside something else render ONE component,
+`components/entity/EntityDetailBody.tsx`: identity header, the entity view's own
+`MainTabs`, the drawer-flavoured body per tab, and a Close / open-entity footer.
+
+- Hosts: `components/library/EntityDrawerPreview.tsx` (the Library drawer) and
+  `components/relationships/EntityOverlay.tsx` (the connected-entity slide-over,
+  mounted by RelationshipsView, MetadataView, ReferencePanel and — while editing
+  — the drawer preview itself). The overlay owns only its chrome: backdrop,
+  slide-in, focus trap, `inert` while closed, Escape / outside-click, and the
+  Copy From banner.
+- **Scope is a context, not the app's focus.** Everything relationship-shaped
+  reads `scopedReferencesAtom`, keyed to `focusedEntityIdAtom`. The drawer
+  preview can focus its entity (`focusEntityForPreviewAtom`); the overlay CANNOT
+  — it sits on top of a view whose own entity must not change under the reader.
+  So the body wraps its content in `EntityScopeProvider`
+  (`hooks/useEntityScope.tsx`) and the relationships subtree reads through
+  `useScopedReferences` / `useSetScopedReferences` / `useEntityScopeId`
+  (useFilteredReferences, RelationshipsFilterDrawer, RelationshipsDrawerSection,
+  RelationshipsGraphView). With no override those hooks return the atom's own
+  value, so the un-overridden hosts still share one derivation.
+- **The overlay offers Metadata + Relationships only.** Document and Files read
+  the globally seeded file atoms (`filesAtom`, seeded by `focusEntity`), so they
+  can only tell the truth about the FOCUSED entity — as can `MetadataEditBody`,
+  which is why Edit is a focused-flavour affordance too. `focused` gates all
+  three; "Open entity" is the route to them.
+- The overlay mounts the body only while an entity is open, lagging the close by
+  the slide-out — it carries a whole relationships surface and four hosts mount
+  it.
+
 ## Document tab — format renditions & language
 - The DocMeta header picker (`showPdfSelector`, Document tab only) switches the
   **rendition** of the *one default primary document*, not between documents:
@@ -323,8 +354,10 @@ in the document, a property on a connected entity's preview.
   (carbon dot + "select text or a value" + ×). The row is already mounted, so
   arming shifts nothing.
 - **Committing is a click, never the selection itself.** `FloatingMenu` gains a
-  leading **Fill <Field>** while armed; `EntityOverlay`'s `MetaRow` becomes a
-  `bg-parchment`-hover button. A bare drag is how people READ — having it
+  leading **Fill <Field>** while armed; a value row in the metadata record
+  (`MetadataItemsTable`'s `FillableValue`, so every surface that renders the
+  record — the entity preview panel included) becomes a `bg-parchment`-hover
+  button. A bare drag is how people READ — having it
   overwrite a field would make the mode frightening to leave on.
 - **The signal is a VALUE, not a callback** (`fillRequestAtom`, `{fieldId, value,
   nonce}` — the `pageJumpAtom` idiom). An atom holding closures owned by the edit
@@ -395,8 +428,10 @@ Several fields sharing a `connectionKey` = **one connection, many inherited colu
   multi-inheritance siblings sync. Each row has **"Source"** → opens `EntityOverlay`
   (the "edit at source" route). The Metadata left pane is wrapped `relative
   overflow-hidden` with `<EntityOverlay />` mounted so the slide-in is contained.
-- `EntityOverlay` now renders a **Properties** section from `entityMetadata` (the
-  inheritable native values) — also visible from the Relationships view.
+- `EntityOverlay` renders the shared `EntityDetailBody` (see "The entity preview
+  panel"), so a source entity's properties are the metadata record itself. It no
+  longer carries its own Properties editor — editing a source's native props is
+  now reached through "Open entity".
 - `TemplateStructure` derives its Inherited group from the real relationship fields
   (no longer the hardcoded `mechanism`/`signatories` flags).
 - Simplification vs. real Uwazi: connections are explicit `connectedEntityIds` on the

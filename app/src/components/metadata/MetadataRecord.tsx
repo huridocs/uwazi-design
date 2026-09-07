@@ -3,6 +3,7 @@ import { useAtomValue, useSetAtom } from "jotai";
 import type { Language } from "../../atoms/language";
 import type { EntityProfile } from "../../data/entityProfiles";
 import { entityMetadataAtom } from "../../atoms/entityMetadata";
+import { fillTargetAtom, fillRequestAtom } from "../../atoms/fillTarget";
 import { focusMetadataFieldAtom } from "../../atoms/library";
 import type { MetadataField, RelationshipMetadataField } from "../../data/metadata";
 import { specInherits } from "../../utils/inheritance";
@@ -49,12 +50,38 @@ export function MetadataItemsTable({ items }: { items: MetadataItem[] }) {
                   With a definite basis, multi-pill values wrap (ConnectionPills
                   is `flex flex-wrap`) and a single over-long pill ellipsises
                   inside itself, keeping its full text in the `title` tooltip. */}
-              <td className="w-full max-w-0 py-1.5 align-baseline font-medium leading-relaxed text-ink">{item.content}</td>
+              <td className="w-full max-w-0 py-1.5 align-baseline font-medium leading-relaxed text-ink">
+                <FillableValue item={item} />
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
     </div>
+  );
+}
+
+/** A value cell, and — only while a metadata field is armed for click-to-fill,
+ *  and only for a value a field could take — the button that fills it.
+ *
+ *  Outside the mode this is a read-only row, and turning every value into a
+ *  button that does nothing would be a worse lie than not offering it. The
+ *  `-m-1 p-1` keeps the hover well from moving the row: values sit at the same
+ *  y armed or not. */
+function FillableValue({ item }: { item: MetadataItem }) {
+  const fillTarget = useAtomValue(fillTargetAtom);
+  const sendFill = useSetAtom(fillRequestAtom);
+  if (!fillTarget || !item.fillValue) return <>{item.content}</>;
+  return (
+    <button
+      type="button"
+      onClick={() => sendFill(item.fillValue!)}
+      title={`Fill ${fillTarget.label} with this value`}
+      className="w-full -m-1 p-1 rounded-md text-start hover:bg-parchment transition-colors
+        cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
+    >
+      {item.content}
+    </button>
   );
 }
 

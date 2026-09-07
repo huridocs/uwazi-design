@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useAtom } from "jotai";
-import { scopedReferencesAtom } from "../../atoms/references";
+import { useScopedReferences } from "../../hooks/useEntityScope";
 import {
   relTypeFiltersAtom,
   entityTypeFiltersAtom,
@@ -29,7 +29,7 @@ import { t } from "../../utils/i18n";
  * carries that data (e.g. the mock seed), so the mock surface is unchanged.
  */
 export function RelationshipsFilterDrawer() {
-  const [references] = useAtom(scopedReferencesAtom);
+  const references = useScopedReferences();
   const [language] = useAtom(languageAtom);
   const [relTypeFilters, setRelTypeFilters] = useAtom(relTypeFiltersAtom);
   const [entityTypeFilters, setEntityTypeFilters] = useAtom(

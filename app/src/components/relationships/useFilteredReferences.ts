@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useAtomValue } from "jotai";
-import { scopedReferencesAtom } from "../../atoms/references";
+import { useScopedReferences } from "../../hooks/useEntityScope";
 import {
   searchQueryAtom,
   sortOrderAtom,
@@ -26,7 +26,7 @@ import { buildMatcher } from "../../utils/searchQuery";
  *  a facet ticked in one mode can never silently un-apply in another (the
  *  Filters badge counts them all via `activeFilterCountAtom`). */
 export function useFilteredReferences({ sort = true }: { sort?: boolean } = {}): Reference[] {
-  const references = useAtomValue(scopedReferencesAtom);
+  const references = useScopedReferences();
   const searchQuery = useAtomValue(searchQueryAtom);
   const sortOrder = useAtomValue(sortOrderAtom);
   const activeClusterRefIds = useAtomValue(activeClusterRefIdsAtom);
