@@ -17,9 +17,11 @@ import { LANGUAGES, type Language } from "../atoms/language";
 function Harness({
   initial,
   machine = {},
+  multiline = false,
 }: {
   initial: Record<Language, string>;
   machine?: Partial<Record<Language, boolean>>;
+  multiline?: boolean;
 }) {
   const [values, setValues] = useState(initial);
   const [mt, setMt] = useState(machine);
@@ -30,7 +32,7 @@ function Harness({
       </label>
       <textarea
         id="story-title"
-        rows={2}
+        rows={multiline ? 5 : 2}
         value={values.EN}
         onChange={(e) => setValues((p) => ({ ...p, EN: e.target.value }))}
         className="w-full px-3 py-2 text-sm text-ink bg-paper rounded-md border border-border
@@ -48,6 +50,7 @@ function Harness({
           setMt((p) => ({ ...p, [lang]: machineWritten }));
         }}
         authored={TITLES}
+        multiline={multiline}
       />
       <div className="pt-2 text-meta text-ink-muted">
         Everything below this line stays put whether the panel is open or shut.
@@ -90,3 +93,11 @@ export const MachineTranslated: Story = {
 /** The empty case with nothing to translate FROM — the button explains itself
  *  through its title rather than vanishing. */
 export const Minimal: Story = { args: { initial: { EN: "", ES: "", FR: "", AR: "" } } };
+
+/** A multiline field — Description and every markdown property. The rows are
+ *  textareas too: a paragraph in a one-line box is not a translation anyone
+ *  will proofread. The language code and the status slot stay anchored to the
+ *  first line, so the row still lines up whatever the value's length. */
+export const Multiline: Story = {
+  args: { initial: { ...TITLES, AR: "" }, multiline: true },
+};
