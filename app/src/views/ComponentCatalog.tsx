@@ -63,7 +63,6 @@ import {
   IsolatedCopyFromPicker,
   FileTableDemo,
   IsolatedSearchBar,
-  IsolatedFiltersRow,
   IsolatedRelationshipGroupedCard,
   IsolatedRelationshipRowReference,
   IsolatedActionBar,
@@ -71,7 +70,6 @@ import {
   FiltersDrawerDemo,
   FacetSectionDemo,
   ToggleChipDemo,
-  IsolatedViewModeControls,
   IsolatedCollapseControls,
   IsolatedListInfoRow,
   IsolatedZoomControl,
@@ -82,10 +80,8 @@ import {
   IsolatedRelationshipsActionBar,
   IsolatedManageRelationTypesModal,
   IsolatedSelectControls,
-  IsolatedGroupByControlMutex,
   IsolatedRelationshipGroupedCardAggregate,
   IsolatedViewControls,
-  IsolatedSortControl,
   IsolatedDirectionGlyph,
   IsolatedConnectionGroupCard,
   IsolatedRelationshipFieldCard,
@@ -636,19 +632,6 @@ export function ComponentCatalog({ onReturn }: Props) {
                 </CatalogEntry>
               </div>
 
-              <div id="ev-filters-row" ref={reg("ev-filters-row")}>
-                <CatalogEntry
-                  name="FiltersRow"
-                  description="View mode toggle + sort dropdown + collapse/expand controls"
-                  code={`<FiltersRow
-  onCollapseAll={() => {}}
-  onExpandAll={() => {}}
-/>`}
-                >
-                  <IsolatedFiltersRow />
-                </CatalogEntry>
-              </div>
-
               <div id="ev-relationship-row-ref" ref={reg("ev-relationship-row-ref")}>
                 <CatalogEntry
                   name="RelationshipRow · reference"
@@ -1165,17 +1148,6 @@ sendFill(selection.text);                                    // commits, then di
                 </CatalogEntry>
               </div>
 
-              <div id="fl-view-mode-controls" ref={reg("fl-view-mode-controls")}>
-                <CatalogEntry
-                  name="ViewModeControls"
-                  description="Segmented view-mode toggle + sort dropdown (used in SearchBar rightSlot)"
-                  code={`<ViewModeControls />
-<ViewModeControls modes={["all", "by-entity-type", "by-relation-type"]} />`}
-                >
-                  <IsolatedViewModeControls />
-                </CatalogEntry>
-              </div>
-
               <div id="fl-collapse-controls" ref={reg("fl-collapse-controls")}>
                 <CatalogEntry
                   name="CollapseControls"
@@ -1345,30 +1317,6 @@ sendFill(selection.text);                                    // commits, then di
                   code={`<ViewControls />`}
                 >
                   <IsolatedViewControls />
-                </CatalogEntry>
-              </div>
-
-              <div id="group-by-control" ref={reg("group-by-control")}>
-                <CatalogEntry
-                  name="GroupByControl"
-                  description="Primary + secondary grouping dropdowns. The pair mutex out each other's selection via excludeOption — picking 'Relation type' on primary removes it from secondary's options."
-                  code={`<GroupByControl axis="primary" />
-<GroupByControl
-  axis="secondary"
-  excludeOption={groupBy}
-/>`}
-                >
-                  <IsolatedGroupByControlMutex />
-                </CatalogEntry>
-              </div>
-
-              <div id="sort-control" ref={reg("sort-control")}>
-                <CatalogEntry
-                  name="SortControl"
-                  description="Dropdown selecting the sort order (appearance / A → Z / Z → A)."
-                  code={`<SortControl />`}
-                >
-                  <IsolatedSortControl />
                 </CatalogEntry>
               </div>
 

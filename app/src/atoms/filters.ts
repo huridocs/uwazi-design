@@ -1,12 +1,5 @@
 import { atom } from "jotai";
 
-export type ViewMode =
-  | "all"
-  | "by-entity-type"
-  | "by-relation-type";
-
-export const viewModeAtom = atom<ViewMode>("all");
-
 /** Presentation mode in the merged Relationships panel: how the connections
  *  are shown. Orthogonal to {@link groupByAtom}, which only matters in list. */
 export type View = "list" | "tree" | "graph";
@@ -35,12 +28,6 @@ export const DEFAULT_SUB_GROUP_BY: GroupBy = "none";
 export const subGroupByAtom = atom<GroupBy>(DEFAULT_SUB_GROUP_BY);
 
 export const searchQueryAtom = atom("");
-
-/** Filter by entity type ID */
-export const entityTypeFilterAtom = atom<string | null>(null);
-
-/** Filter by relation type */
-export const relationTypeFilterAtom = atom<string | null>(null);
 
 /** Expand/collapse signal: increments to trigger all groups to expand or collapse */
 export const expandAllSignalAtom = atom(0);
