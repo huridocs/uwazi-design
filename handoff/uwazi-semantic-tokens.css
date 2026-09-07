@@ -94,14 +94,15 @@
   --text-tertiary: #ADA79E;
   --text-muted: #8A857C;
 
-  /* Borders. #343434 measured 1.01:1 against bg-muted — no line at all. These
-     clear 2:1 (primary) and 2.4:1 (soft) on every dark surface and stay
-     hairlines. Soft is the STRONGER of the two in both themes; keep that order.
-     The 64% variants sit at 1.58:1 / 1.75:1 — a deliberately quieter line. */
-  --border-primary: #666158;
-  --border-soft: #706B62;
-  --border-primary-64: #666158A3;
-  --border-soft-64: #706B62A3;
+  /* Borders. #343434 measured 1.01:1 against bg-muted — no line at all. The
+     band that works is narrow: below ~1.4:1 a line vanishes on #333333, above
+     ~2:1 it boxes the pane in. These sit at 1.52:1 (primary) and 1.84:1 (soft)
+     against #333333, 2.10:1 and 2.46:1 against #1A1A1A. Soft is the STRONGER of
+     the two in both themes; keep that order. */
+  --border-primary: #514E48;
+  --border-soft: #5E5A53;
+  --border-primary-64: #514E48A3;
+  --border-soft-64: #5E5A53A3;
 
   --accent-primary: #F5F0E8;
   --accent-blue-tint: #0C3A4D;

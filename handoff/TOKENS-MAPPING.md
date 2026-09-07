@@ -71,8 +71,8 @@ every swap is also a hue shift toward the warm palette).
 
 | Role | Real var | Utility | Light | Dark | Nearest today |
 |---|---|---|---|---|---|
-| Default | `--border-primary` | `border-border` | `#EDE7DB` | `#666158` | `gray-200` |
-| Soft/dashed | `--border-soft` | `border-border-soft` | `#E2DBC9` | `#706B62` | `gray-300` |
+| Default | `--border-primary` | `border-border` | `#EDE7DB` | `#514E48` | `gray-200` |
+| Soft/dashed | `--border-soft` | `border-border-soft` | `#E2DBC9` | `#5E5A53` | `gray-300` |
 
 **Dark values are measured against the LIGHTEST dark surface, not the darkest.**
 `--bg-muted` and `--bg-selected` are both `#333333`, so a token tuned on the
@@ -86,8 +86,12 @@ worst case over all five dark surfaces (`--bg-primary`, `--bg-surface`,
 | `--text-secondary` | `#D4CDB8` | 7.96:1 | unchanged | 7.96:1 | 4.5:1 |
 | `--text-tertiary` | `#9A9A9A` | 4.49:1 ✗ | `#ADA79E` | 5.29:1 | 4.5:1 |
 | `--text-muted` | `#6B6B6B` | 2.37:1 ✗ | `#8A857C` | 3.45:1 | 3:1 |
-| `--border-primary` | `#343434` | 1.01:1 ✗ | `#666158` | 2.06:1 | 2:1 |
-| `--border-soft` | `#3E3E3E` | 1.18:1 ✗ | `#706B62` | 2.39:1 | 1.5:1 |
+| `--border-primary` | `#343434` | 1.01:1 ✗ | `#514E48` | 1.52:1 | 1.5:1 |
+| `--border-soft` | `#3E3E3E` | 1.18:1 ✗ | `#5E5A53` | 1.84:1 | 1.8:1 |
+
+The border band is narrow, and both edges of it have been hit. Below ~1.4:1 a
+line vanishes on `#333333`; above ~2:1 it stops being a hairline and boxes the
+pane in — a first pass at 2.06:1 / 2.39:1 read as rules and was pulled back.
 
 Two things to keep if these move again. Borders and the lower text tokens are
 **warm** greys, matching the `--text-primary` `#F5F0E8` / `--text-secondary`

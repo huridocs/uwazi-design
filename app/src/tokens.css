@@ -111,22 +111,24 @@
   /* Borders — same story, worse. At #343434 the primary rule was 1.01:1 on a
      vellum or selected ground: not a faint line, NO line. It only ever showed
      against the darkest background (1.40:1), which is why panels looked bounded
-     in the Library and dissolved in the drawers. These clear 2:1 (primary) and
-     2.4:1 (soft) on every surface, still hairlines rather than rules — the
-     light theme's "felt, not read" intent holds, it just now gets felt on more
-     than one background. Warm-tinted to match the text ladder above.
+     in the Library and dissolved in the drawers.
+
+     These are the SECOND pass. The first fix took primary to 2.06:1 worst case
+     and soft to 2.39:1, which read as rules rather than hairlines — chrome you
+     notice instead of chrome you feel. The band that works is narrow: below
+     ~1.4:1 a line vanishes on #333333, above ~2:1 it boxes the pane in. These
+     sit at 1.52:1 (primary) and 1.84:1 (soft) against #333333, 2.10:1 and
+     2.46:1 against #1A1A1A. Warm-tinted to match the text ladder above.
 
      Soft is the STRONGER of the two in both themes (light: #E2DBC9 over
      #EDE7DB) — the names read backwards but the roles are consistent, so keep
      soft above primary if these move again. */
-  --border-primary: #666158;
-  --border-soft: #706B62;
+  --border-primary: #514E48;
+  --border-soft: #5E5A53;
   /* 64% variants of the two above (`A3` = 163/255). Unused in the app today;
-     kept for the handoff layer. They sit at 1.58:1 / 1.75:1 worst case — a
-     deliberately quieter line, above the 1.5:1 visibility floor but below the
-     2:1 the solid primary holds. */
-  --border-primary-64: #666158A3;
-  --border-soft-64: #706B62A3;
+     kept for the handoff layer. A deliberately quieter line still. */
+  --border-primary-64: #514E48A3;
+  --border-soft-64: #5E5A53A3;
 
   --accent-primary: #F5F0E8;
   --accent-blue-tint: #0C3A4D;
