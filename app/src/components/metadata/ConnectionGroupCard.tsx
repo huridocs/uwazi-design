@@ -7,6 +7,8 @@ import { RelationCaption, InheritedValueTag, MissingValue, RollupChip } from "./
 import { EntityPill } from "../shared/EntityPill";
 import { getEntityType } from "../../data/entities";
 import { mergeConnectionRows, reduceInherited, type ConnectionGroup } from "../../utils/inheritance";
+import { ConnectionCardStack, type StackEntity } from "./ConnectionCardStack";
+import { TABLE_MIN } from "./tableBreakpoint";
 
 /** Multi-inheritance, Section-2 "Option 1": several relationship fields sharing
  *  one connection rendered as a single table. Rows are sorted by the inherited
@@ -21,6 +23,20 @@ export function ConnectionGroupCard({ group, span = "full" }: { group: Connectio
   const summaries = group.columns.map((c, i) =>
     reduceInherited(group.rows.map((r) => r.cells[i]?.value), c.reduce),
   );
+  /* The narrow rendering reads `group.rows` — the UNMERGED ones. `rows` above
+     is the cell-spanned view, where a value lives on the first entity that has
+     it and the rest inherit it positionally; flattened into cards that would
+     leave every entity after the first with blank cells. */
+  const stackEntities: StackEntity[] = group.rows.map((r) => ({
+    entityId: r.entityId,
+    entityTypeId: r.entityTypeId,
+    entityTitle: r.entityTitle,
+    cells: group.columns.map((c, i) => ({
+      key: c.fieldId,
+      label: c.label,
+      value: r.cells[i]?.value,
+    })),
+  }));
 
   return (
     <MetadataCard
@@ -33,7 +49,12 @@ export function ConnectionGroupCard({ group, span = "full" }: { group: Connectio
         inheritLabels={group.columns.map((c) => c.label)}
       />
 
-      <div className="overflow-x-auto -mx-1">
+      {/* Container query, not a viewport breakpoint: this same card renders in
+          the main Metadata view, the Library drawer preview and the entity
+          overlay, so what decides the layout is how wide THE CARD is, not how
+          wide the window is. */}
+      <div className={`-mx-1 ${TABLE_MIN.container}`}>
+      <div className={TABLE_MIN.tableOnly}>
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
@@ -93,6 +114,16 @@ export function ConnectionGroupCard({ group, span = "full" }: { group: Connectio
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Below the threshold: one card per connected entity, merges expanded. */}
+      <div className={TABLE_MIN.stackOnly}>
+        <ConnectionCardStack
+          entities={stackEntities}
+          relationLabel={group.relationLabel}
+          rollups={group.columns.map((c, i) => ({ label: c.label, summary: summaries[i] ?? null }))}
+        />
+      </div>
       </div>
     </MetadataCard>
   );

@@ -10,6 +10,8 @@ import { EntityPill } from "../shared/EntityPill";
 import { getEntityType } from "../../data/entities";
 import { reduceInherited, resolveRelationshipField, specInherits } from "../../utils/inheritance";
 import type { RelationshipMetadataField } from "../../data/metadata";
+import { ConnectionCardStack, type StackEntity } from "./ConnectionCardStack";
+import { TABLE_MIN } from "./tableBreakpoint";
 
 /** A standalone relationship field (no shared connection). Two shapes:
  *  - inherits a value → a compact bordered table (entity · inherited value), same
@@ -37,6 +39,21 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
       ? resolved.values[0].provenance
       : undefined;
 
+  const stackEntities: StackEntity[] = resolved.values.map((v) => ({
+    entityId: v.entityId,
+    entityTypeId: v.entityTypeId,
+    entityTitle: v.entityTitle,
+    cells: [
+      {
+        key: "inherited",
+        label: field.inheritLabel ?? "Inherited",
+        value: v.inheritedValue,
+        propLabel: v.sourcePropLabel,
+        provenance: v.provenance,
+      },
+    ],
+  }));
+
   const entityCell = (v: (typeof resolved.values)[number]) => (
     <button
       key={v.entityId}
@@ -62,7 +79,9 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
       )}
 
       {inherits ? (
-        <div className="overflow-x-auto -mx-1 mt-1.5">
+        // Container query, not a viewport breakpoint — see ConnectionGroupCard.
+        <div className={`-mx-1 mt-1.5 ${TABLE_MIN.container}`}>
+        <div className={TABLE_MIN.tableOnly}>
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
@@ -103,6 +122,16 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
               ))}
             </tbody>
           </table>
+        </div>
+
+        <div className={TABLE_MIN.stackOnly}>
+          <ConnectionCardStack
+            entities={stackEntities}
+            relationLabel={resolved.relationLabel}
+            rollups={[{ label: field.inheritLabel ?? "Inherited", summary: rollup ?? null }]}
+            sharedProvenance={!!sharedProvenance}
+          />
+        </div>
         </div>
       ) : (
         <div className="flex flex-wrap gap-1.5 mt-1">{resolved.values.map((v) => entityCell(v))}</div>
