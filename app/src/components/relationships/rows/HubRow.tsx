@@ -1,5 +1,4 @@
 import { useAtomValue } from "jotai";
-import { ChevronRight, Link2 } from "lucide-react";
 import { searchQueryAtom, zoomAtom } from "../../../atoms/filters";
 import { getEntity } from "../../../data/entities";
 import { relationTypes } from "../../../data/references";
@@ -8,6 +7,7 @@ import { EntityPill } from "../../shared/EntityPill";
 import { HighlightedText } from "../../shared/HighlightedText";
 import { ListCardRow } from "../../shared/ListCardRow";
 import { RowCheckbox } from "./RowCheckbox";
+import { EvidenceBadge, RowChevron } from "./RowControls";
 
 export interface HubRowProps {
   hub: Hub;
@@ -42,52 +42,25 @@ export function HubRow({ hub, expanded, onToggleExpand, hideRelLabel }: HubRowPr
     );
   });
 
-  // With nothing to expand into (no text-anchored evidence — every CEJIL link),
-  // the badge is a FACT, not a control: a count you can't act on shouldn't hover,
-  // shouldn't take the cursor, and shouldn't claim aria-expanded.
-  const countBadge = onToggleExpand ? (
-    <button
-      type="button"
-      onClick={(e) => {
-        e.stopPropagation();
-        onToggleExpand();
-      }}
-      aria-label={`${hub.refIds.length} evidence references`}
-      aria-expanded={!!expanded}
-      className={`flex items-center gap-1 px-1.5 h-5 rounded text-meta font-medium tabular-nums transition-colors cursor-pointer ${
-        expanded
-          ? "bg-vellum text-ink-secondary"
-          : "bg-warm text-ink-tertiary hover:bg-parchment hover:text-ink-secondary"
-      }`}
-    >
-      <Link2 size={10} />
-      {hub.refIds.length}
-    </button>
-  ) : (
-    <span
-      aria-label={`${hub.refIds.length} references`}
-      className="flex items-center gap-1 px-1.5 h-5 rounded text-meta font-medium tabular-nums bg-warm text-ink-tertiary"
-    >
-      <Link2 size={10} />
-      {hub.refIds.length}
-    </span>
+  const countBadge = (
+    <EvidenceBadge
+      count={hub.refIds.length}
+      expanded={expanded}
+      onActivate={
+        onToggleExpand
+          ? (e) => {
+              e.stopPropagation();
+              onToggleExpand();
+            }
+          : undefined
+      }
+      ariaLabel={`${hub.refIds.length} ${onToggleExpand ? "evidence " : ""}references`}
+      ariaExpanded={onToggleExpand ? !!expanded : undefined}
+    />
   );
 
   const chevron = onToggleExpand ? (
-    <button
-      type="button"
-      onClick={(e) => {
-        e.stopPropagation();
-        onToggleExpand();
-      }}
-      aria-label={expanded ? "Collapse hub members" : "Expand hub members"}
-      className="shrink-0 p-0.5 -ml-0.5 text-ink-tertiary hover:text-ink cursor-pointer"
-    >
-      <ChevronRight
-        size={12}
-        className={`transition-transform ${expanded ? "rotate-90" : ""}`}
-      />
-    </button>
+    <RowChevron expanded={expanded} onToggle={onToggleExpand} subject="hub members" />
   ) : null;
 
   if (zoom === "overview") {

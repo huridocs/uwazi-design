@@ -1,5 +1,4 @@
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { ChevronRight, Link2 } from "lucide-react";
 import {
   activeAggregateIdAtom,
   activeRefIdAtom,
@@ -16,6 +15,7 @@ import { HighlightedText } from "../../shared/HighlightedText";
 import { ListCardRow } from "../../shared/ListCardRow";
 import { DirectionGlyph } from "../DirectionGlyph";
 import { RowCheckbox } from "./RowCheckbox";
+import { EvidenceBadge, RowChevron } from "./RowControls";
 
 export interface AggregateRowProps {
   rel: Relationship;
@@ -87,45 +87,23 @@ export function AggregateRow({
     setActiveDrawerTab("connections");
   };
 
-  // Chain-link icon signals "relationship between entities" — distinct from
-  // the page-tag pill that references use.
+  // Always a control here — without an inline expand it still routes to the
+  // evidence in References, which is why it takes a title either way.
   const countBadge = (
-    <button
-      type="button"
-      onClick={handleEvidenceClick}
-      aria-label={`${rel.evidenceCount} evidence references`}
-      aria-expanded={onToggleExpand ? !!expanded : undefined}
-      title={
-        onToggleExpand ? "Toggle evidence" : "View evidence in References"
-      }
-      className={`flex items-center gap-1 px-1.5 h-5 rounded text-meta font-medium tabular-nums transition-colors cursor-pointer ${
-        expanded
-          ? "bg-vellum text-ink-secondary"
-          : "bg-warm text-ink-tertiary hover:bg-parchment hover:text-ink-secondary"
-      }`}
-    >
-      <Link2 size={10} />
-      {rel.evidenceCount}
-    </button>
+    <EvidenceBadge
+      count={rel.evidenceCount}
+      expanded={expanded}
+      onActivate={handleEvidenceClick}
+      ariaLabel={`${rel.evidenceCount} evidence references`}
+      ariaExpanded={onToggleExpand ? !!expanded : undefined}
+      title={onToggleExpand ? "Toggle evidence" : "View evidence in References"}
+    />
   );
 
   // Chevron prefix: when the row is expandable (tree-view context), prepend a
   // small rotating chevron so the row reads as a drill-down node, not a leaf.
   const chevron = onToggleExpand ? (
-    <button
-      type="button"
-      onClick={(e) => {
-        e.stopPropagation();
-        onToggleExpand();
-      }}
-      aria-label={expanded ? "Collapse evidence" : "Expand evidence"}
-      className="shrink-0 p-0.5 -ml-0.5 text-ink-tertiary hover:text-ink cursor-pointer"
-    >
-      <ChevronRight
-        size={12}
-        className={`transition-transform ${expanded ? "rotate-90" : ""}`}
-      />
-    </button>
+    <RowChevron expanded={expanded} onToggle={onToggleExpand} subject="evidence" />
   ) : null;
 
   // Overview: pill + count only. When pill is suppressed, surface the
