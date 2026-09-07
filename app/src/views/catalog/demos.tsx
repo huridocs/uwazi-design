@@ -8,7 +8,7 @@ import { DrawerTabs } from "../../components/layout/DrawerTabs";
 import { MainTabs } from "../../components/layout/MainTabs";
 import { Beacon } from "../../components/layout/Beacon";
 import { FileTable } from "../../components/files/FileTable";
-import { FiltersRow, ViewModeControls, CollapseControls } from "../../components/relationships/FiltersRow";
+import { CollapseControls } from "../../components/relationships/FiltersRow";
 import { FiltersButton } from "../../components/shared/FiltersButton";
 import { FiltersDrawer } from "../../components/shared/FiltersDrawer";
 import { FacetSection } from "../../components/shared/FacetSection";
@@ -22,7 +22,6 @@ import { ZoomControl } from "../../components/relationships/ZoomControl";
 import { RelationshipRow } from "../../components/relationships/RelationshipRow";
 import { RelationshipGroupedCard } from "../../components/relationships/RelationshipGroupedCard";
 import { ViewControls } from "../../components/relationships/ViewControls";
-import { SortControl } from "../../components/relationships/SortControl";
 import { DirectionGlyph } from "../../components/relationships/DirectionGlyph";
 import { RelationshipsActionBar } from "../../components/relationships/RelationshipsActionBar";
 import { ManageRelationTypesModal } from "../../components/relationships/ManageRelationTypesModal";
@@ -151,17 +150,6 @@ export function IsolatedBeacon() {
     <Provider store={store}>
       <div className="relative h-13 w-full bg-paper border border-border-soft rounded-lg flex items-center justify-end px-4">
         <Beacon />
-      </div>
-    </Provider>
-  );
-}
-
-export function IsolatedFiltersRow() {
-  const store = createStore();
-  return (
-    <Provider store={store}>
-      <div className="w-full">
-        <FiltersRow onCollapseAll={() => {}} onExpandAll={() => {}} />
       </div>
     </Provider>
   );
@@ -529,18 +517,6 @@ export function FacetSectionDemo() {
   );
 }
 
-export function IsolatedViewModeControls() {
-  const store = createStore();
-  return (
-    <Provider store={store}>
-      <div className="flex flex-col gap-3">
-        <ViewModeControls />
-        <ViewModeControls modes={["all", "by-entity-type", "by-relation-type"]} />
-      </div>
-    </Provider>
-  );
-}
-
 export function IsolatedCollapseControls() {
   return (
     <div className="flex flex-col gap-3">
@@ -807,71 +783,6 @@ function SelectControlsRow({
   );
 }
 
-export function IsolatedGroupByControlMutex() {
-  const [primary, setPrimary] = useState<GroupBy>("relation-type");
-  const [secondary, setSecondary] = useState<GroupBy>("none");
-  useEffect(() => {
-    if (primary !== "none" && secondary === primary) setSecondary("none");
-  }, [primary, secondary]);
-  return (
-    <div className="flex flex-col gap-3">
-      <p className="text-meta text-ink-muted">
-        Picking the same axis on both is a degenerate state — primary and
-        secondary mutex out each other's selection. Switch primary to a value
-        currently in secondary and secondary resets to "None".
-      </p>
-      <div className="flex items-center gap-2">
-        <GroupByPicker
-          label="Group by"
-          value={primary}
-          onChange={setPrimary}
-          exclude={secondary === "none" ? undefined : secondary}
-        />
-        <GroupByPicker
-          label="Then by"
-          value={secondary}
-          onChange={setSecondary}
-          exclude={primary === "none" ? undefined : primary}
-        />
-      </div>
-    </div>
-  );
-}
-
-function GroupByPicker({
-  label,
-  value,
-  onChange,
-  exclude,
-}: {
-  label: string;
-  value: GroupBy;
-  onChange: (v: GroupBy) => void;
-  exclude?: GroupBy;
-}) {
-  const visible = groupingOptions.filter(
-    (o) => o.id === "none" || o.id !== exclude,
-  );
-  const active = visible.find((o) => o.id === value) ?? visible[0];
-  return (
-    <label className="flex items-center gap-1 h-8 px-2 text-meta font-medium bg-warm border border-border rounded-md text-ink-secondary cursor-pointer">
-      <span className="text-ink-tertiary">{label}:</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value as GroupBy)}
-        className="appearance-none bg-transparent pr-4 focus:outline-none cursor-pointer"
-      >
-        {visible.map((opt) => (
-          <option key={opt.id} value={opt.id}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-      <ChevronDown size={10} className="text-ink-muted -ml-3 pointer-events-none" />
-      <span className="sr-only">{active.label}</span>
-    </label>
-  );
-}
 
 export function IsolatedRelationshipGroupedCardAggregate() {
   const store = createStore();
@@ -898,15 +809,6 @@ export function IsolatedViewControls() {
   return (
     <Provider store={store}>
       <ViewControls />
-    </Provider>
-  );
-}
-
-export function IsolatedSortControl() {
-  const store = createStore();
-  return (
-    <Provider store={store}>
-      <SortControl />
     </Provider>
   );
 }

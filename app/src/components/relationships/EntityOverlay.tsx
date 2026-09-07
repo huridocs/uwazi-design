@@ -27,8 +27,24 @@ export function EntityOverlay() {
   const lang = useAtom(languageAtom)[0];
   const rtl = lang === "AR";
   const openEntity = useSetAtom(openEntityAtom);
-  // One ref serves both the focus trap and the outside-click check.
-  const panelRef = useFocusTrap<HTMLDivElement>(entityId !== null);
+  /* The body is mounted only while there is an entity to show — it carries a
+     whole relationships surface, and four hosts mount this overlay. It lags the
+     close by the slide-out so the panel doesn't empty on its way off-pane. */
+  const [bodyId, setBodyId] = useState<string | null>(entityId);
+  useEffect(() => {
+    if (entityId !== null) {
+      setBodyId(entityId);
+      return;
+    }
+    const t = window.setTimeout(() => setBodyId(null), 250);
+    return () => window.clearTimeout(t);
+  }, [entityId]);
+
+  // One ref serves both the focus trap and the outside-click check. The trap
+  // takes `bodyId` as its content key: the body mounts a tick after the panel
+  // opens, so on the opening tick there is nothing inside to focus, and initial
+  // focus has to run again once it lands.
+  const panelRef = useFocusTrap<HTMLDivElement>(entityId !== null, bodyId);
   // Inert while closed — the panel stays mounted off-pane and its controls
   // must not be tabbable (focusing one force-scrolls hidden overflow).
   useEffect(() => {
@@ -48,19 +64,6 @@ export function EntityOverlay() {
   useEffect(() => {
     if (entityId === null) setCopyPreview(null);
   }, [entityId, setCopyPreview]);
-
-  /* The body is mounted only while there is an entity to show — it carries a
-     whole relationships surface, and four hosts mount this overlay. It lags the
-     close by the slide-out so the panel doesn't empty on its way off-pane. */
-  const [bodyId, setBodyId] = useState<string | null>(entityId);
-  useEffect(() => {
-    if (entityId !== null) {
-      setBodyId(entityId);
-      return;
-    }
-    const t = window.setTimeout(() => setBodyId(null), 250);
-    return () => window.clearTimeout(t);
-  }, [entityId]);
 
   const entity = entityId ? getEntity(entityId) : undefined;
   const isOpen = entityId !== null && entity !== undefined;
@@ -106,6 +109,10 @@ export function EntityOverlay() {
       <div
         ref={panelRef}
         role="dialog"
+        // Focusable as a fallback target: the panel takes focus on the opening
+        // tick, before its body exists, and hands it to the first control once
+        // it does.
+        tabIndex={-1}
         aria-modal="true"
         aria-label={entity?.title ?? "Entity details"}
         className={`absolute top-0 bottom-0 flex flex-col bg-paper transition-transform duration-250 ease-out ${

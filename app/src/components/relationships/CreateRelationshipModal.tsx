@@ -8,6 +8,7 @@ import {
   toastsAtom,
 } from "../../atoms/references";
 import { entitiesAtom, entityTypesAtom } from "../../atoms/entities";
+import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { getEntityType, Entity, entities as seedEntities } from "../../data/entities";
 import { RelationType } from "../../data/references";
 import { EntityPill } from "../shared/EntityPill";
@@ -28,6 +29,7 @@ export function CreateRelationshipModal() {
   const relationTypes = useAtomValue(relationTypesAtom);
   const setReferences = useSetAtom(scopedReferencesAtom);
   const setToasts = useSetAtom(toastsAtom);
+  const focusedId = useAtomValue(focusedEntityIdAtom);
   const [search, setSearch] = useState("");
   const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);
   const [selectedRelation, setSelectedRelation] = useState<RelationType>("relates_to");
@@ -109,7 +111,12 @@ export function CreateRelationshipModal() {
     // selection, anchor to it.
     const newRef = {
       id: `ref-${Date.now()}`,
-      sourceEntityId: "e3",
+      // The FOCAL entity, not the corpus's original author. `e3` was hardcoded
+      // here, so a relationship created from any other entity was stored as one
+      // of e3's — half-hidden today because `scopedReferencesAtom` writes new
+      // rows verbatim and reconciles by id, and the reader flips perspective
+      // anyway; it stops being hidden the moment the store is edge-shaped.
+      sourceEntityId: focusedId,
       targetEntityId: selectedEntity.id,
       relationType: selectedRelation,
       ...(selection

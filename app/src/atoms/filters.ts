@@ -1,12 +1,5 @@
 import { atom } from "jotai";
 
-export type ViewMode =
-  | "all"
-  | "by-entity-type"
-  | "by-relation-type";
-
-export const viewModeAtom = atom<ViewMode>("all");
-
 /** Presentation mode in the merged Relationships panel: how the connections
  *  are shown. Orthogonal to {@link groupByAtom}, which only matters in list. */
 export type View = "list" | "tree" | "graph";
@@ -35,12 +28,6 @@ export const DEFAULT_SUB_GROUP_BY: GroupBy = "none";
 export const subGroupByAtom = atom<GroupBy>(DEFAULT_SUB_GROUP_BY);
 
 export const searchQueryAtom = atom("");
-
-/** Filter by entity type ID */
-export const entityTypeFilterAtom = atom<string | null>(null);
-
-/** Filter by relation type */
-export const relationTypeFilterAtom = atom<string | null>(null);
 
 /** Expand/collapse signal: increments to trigger all groups to expand or collapse */
 export const expandAllSignalAtom = atom(0);
@@ -95,8 +82,25 @@ export const resetRelFacetsAtom = atom(null, (_get, set) => {
   set(entityTypeFiltersAtom, {});
   set(relTargetCountryFiltersAtom, {});
   set(relTargetDescriptorFiltersAtom, {});
+  set(relTargetDescriptorModeAtom, "OR");
   set(relInheritedFiltersAtom, {});
   set(activeClusterRefIdsAtom, null);
+});
+
+/** "Clear all filters" — the facets above plus the two things the Filters badge
+ *  counts that aren't facets: the search box and (as a courtesy) the sort order
+ *  back to its default.
+ *
+ *  It delegates to {@link resetRelFacetsAtom} rather than restating the facet
+ *  list, because there were THREE copies of that list: this one, hand-rolled
+ *  identically in `RelationshipsView` and `RelationshipsDrawerSection`, and the
+ *  focal-change reset. They already disagreed — only the hand-rolled pair reset
+ *  the descriptor AND/OR mode — which is the drift the Library's two `clearAll`s
+ *  went through once already (PATTERNS §4.3). One list now. */
+export const clearRelFiltersAtom = atom(null, (_get, set) => {
+  set(resetRelFacetsAtom);
+  set(searchQueryAtom, "");
+  set(sortOrderAtom, DEFAULT_SORT_ORDER);
 });
 
 /** Whether the toggleable filters slide-over is open (single shared flag). */
