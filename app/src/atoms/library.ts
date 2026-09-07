@@ -32,7 +32,7 @@ export const libraryQueryAtom = atom("");
 const searchDraftStateAtom = atom("");
 export const librarySearchDraftAtom = atom(
   (get) => get(searchDraftStateAtom),
-  (_get, set, next: string) => {
+  (get, set, next: string) => {
     // The DRAFT is urgent: it is the text in the box, and a character that
     // appears a frame after you typed it is the one thing search must never do.
     set(searchDraftStateAtom, next);
@@ -41,15 +41,30 @@ export const librarySearchDraftAtom = atom(
     // what put 2.6s tasks on the main thread. As a transition React can abandon
     // it when the next keystroke arrives, and keeps showing the previous results
     // until the new ones are ready — see `useDeferredValue` in `LibraryView`.
-    if (next.trim()) startTransition(() => set(libraryQueryAtom, next));
+    if (next.trim())
+      startTransition(() => {
+        // Becoming active is the moment the FIRST character commits — from here
+        // on the query is only being refined, and a view that jumped on every
+        // keystroke would be a view you can't leave.
+        const becomingActive = !get(libraryQueryAtom).trim();
+        set(libraryQueryAtom, next);
+        if (becomingActive) set(enterSearchResultsAtom);
+      });
   },
 );
 
-/** Drop the search for real: empties the box AND the committed query. The only
- *  route back to "no search" — the box's own X clears just the text. */
-export const clearLibrarySearchAtom = atom(null, (_get, set) => {
+/** Drop the search for real: empties the box AND the committed query, and puts
+ *  the library back in the view the search took it out of. The only route back
+ *  to "no search" — the box's own X clears just the text. */
+export const clearLibrarySearchAtom = atom(null, (get, set) => {
   set(searchDraftStateAtom, "");
   set(libraryQueryAtom, "");
+  const prior = get(preSearchViewModeAtom);
+  // Only if the search is still where it put you: having walked to another view
+  // yourself, you are not returned from it.
+  if (prior && get(viewModeStateAtom) === "results") set(viewModeStateAtom, prior);
+  set(preSearchViewModeAtom, null);
+  set(searchModeOverriddenAtom, false);
 });
 
 /** The running search, or `null` — the search as its OWN state, deliberately not
@@ -220,7 +235,49 @@ export const libraryChainFiltersAtom = atom<
  *  registry, so the registry is where a new mode has to be declared or it would
  *  be a mode with no options and no way to notice. */
 export type { LibraryViewMode };
-export const libraryViewModeAtom = atom<LibraryViewMode>("cards");
+
+/** Where the library was before a search took it to Results, and whether the
+ *  reader has overruled that for the current query. Both are cleared when the
+ *  search is dismissed, so the next search starts the behaviour over. */
+const preSearchViewModeAtom = atom<LibraryViewMode | null>(null);
+const searchModeOverriddenAtom = atom(false);
+
+const viewModeStateAtom = atom<LibraryViewMode>("cards");
+
+/** The library's view mode.
+ *
+ *  Writing it is also how the reader overrules the search's own choice of view:
+ *  leaving Results while a query is running says "not for this search", so the
+ *  query stops steering AND stops restoring at the end of it — being returned to
+ *  a mode you had already walked away from is the same interruption in reverse.
+ *  A search that starts again after a dismissal steers again. */
+export const libraryViewModeAtom = atom(
+  (get) => get(viewModeStateAtom),
+  (get, set, next: LibraryViewMode) => {
+    if (next !== "results" && get(libraryQueryAtom).trim()) {
+      set(searchModeOverriddenAtom, true);
+      set(preSearchViewModeAtom, null);
+    }
+    set(viewModeStateAtom, next);
+  },
+);
+
+/** A query has become active: show the evidence.
+ *
+ *  Results answers "why is this row here?", which is the question a search just
+ *  asked — so a search opens it instead of leaving it as a mode you have to know
+ *  about. It remembers the mode it displaced, and `clearLibrarySearchAtom` puts
+ *  it back; the view keeps its own no-query state, because it stays selectable
+ *  with nothing typed. It lives here, in the atom that commits the query, rather
+ *  than in an effect watching the query from a component: the switch is part of
+ *  the search starting, not a consequence some mounted view happens to notice. */
+const enterSearchResultsAtom = atom(null, (get, set) => {
+  if (get(searchModeOverriddenAtom)) return;
+  const mode = get(viewModeStateAtom);
+  if (mode === "results") return;
+  set(preSearchViewModeAtom, mode);
+  set(viewModeStateAtom, "results");
+});
 
 /** Results body flavour — four readings of the same snippets:
  *  - `grouped`   one wide card per entity: its matched properties beside its

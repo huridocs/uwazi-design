@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Search, ClipboardCopy } from "lucide-react";
+import { Search, ClipboardCopy, ChevronDown } from "lucide-react";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
@@ -38,6 +38,8 @@ import {
 } from "../data/metadata";
 import { focusedEntityIdAtom } from "../atoms/focusedEntity";
 import { getEntity, type Entity } from "../data/entities";
+import { entityTypesAtom } from "../atoms/entities";
+import { typeLabelColor } from "../utils/typeColor";
 import { getEntityProfile } from "../data/entityProfiles";
 import { filesAtom } from "../atoms/files";
 import { activeFilterCountAtom } from "../atoms/filters";
@@ -281,6 +283,19 @@ export function MetadataEditBody({
   const [machineFields, setMachineFields] =
     useState<Record<string, Partial<Record<Language, boolean>>>>({});
   const [showIcon, setShowIcon] = useState(true);
+  /* The icon section is closed until asked for. Most entities never take one,
+     and it was the second thing on the form — a picker, a checkbox and a Clear,
+     ahead of Description — for a feature the prototype can't even fill. "Add
+     icon" in the Title row opens it; an entity that HAS an icon opens it
+     already, because a set value must never be hidden behind a disclosure. (No
+     seed entity carries one, so `icon` stays null here — the state is what says
+     which of the two rules is doing the work.) */
+  const [icon, setIcon] = useState<string | null>(null);
+  const [iconOpen, setIconOpen] = useState(false);
+  const iconShown = iconOpen || icon !== null;
+  /** The entity's template. Presentational: this prototype keys profiles off
+      the seeded type, so picking another does not re-shape the entity. */
+  const [templateId, setTemplateId] = useState(profile.typeId);
   const notify = useNotify();
 
   /* ── Validation ──────────────────────────────────────────────────────────
@@ -749,6 +764,16 @@ export function MetadataEditBody({
           htmlFor="field-title"
           listening={fillTarget?.fieldId === "title"}
           onStopListening={() => setFillTarget(null)}
+          action={
+            !iconShown && (
+              <button
+                onClick={() => setIconOpen(true)}
+                className="text-meta font-medium text-ink-tertiary hover:text-ink-secondary transition-colors cursor-pointer"
+              >
+                Add icon
+              </button>
+            )
+          }
         >
           <textarea
             id={inputId("title")}
@@ -783,23 +808,40 @@ export function MetadataEditBody({
           />
         </EditSection>
 
-        {/* Select icon */}
-        <EditSection label="Icon">
-          <button
-            onClick={() => notify("Icon picker isn't available in the prototype")}
-            className="w-full px-3 py-2 text-sm text-ink-muted bg-paper border border-border rounded-md text-left"
-          >
-            Select icon...
-          </button>
-          <div className="flex items-center justify-between mt-2">
-            <Checkbox checked={showIcon} onChange={setShowIcon} label="Show icon" />
+        {/* Select icon — on demand (see `iconShown`). Clear removes the icon AND
+            closes the section: an empty picker left open is the state the
+            disclosure exists to avoid. */}
+        {iconShown && (
+          <EditSection label="Icon">
             <button
-              onClick={() => setShowIcon(false)}
-              className="text-xs text-ink-muted hover:text-ink-secondary cursor-pointer"
+              onClick={() => notify("Icon picker isn't available in the prototype")}
+              className="w-full px-3 py-2 text-sm text-ink-muted bg-paper border border-border rounded-md text-left"
             >
-              Clear
+              {icon ?? "Select icon..."}
             </button>
-          </div>
+            <div className="flex items-center justify-between mt-2">
+              <Checkbox checked={showIcon} onChange={setShowIcon} label="Show icon" />
+              <button
+                onClick={() => {
+                  setIcon(null);
+                  setIconOpen(false);
+                }}
+                className="text-xs text-ink-muted hover:text-ink-secondary cursor-pointer"
+              >
+                Clear
+              </button>
+            </div>
+          </EditSection>
+        )}
+
+        {/* Template — the entity's own type, and the one field on this form that
+            IS a type. It reads with the type's own square dot and the label
+            colour every other type label uses, so the answer to "which template
+            is this?" looks the same here as it does on a card, a pill or a row.
+            (`typeLabelColor`, not the raw colour: small text on the tint has to
+            clear AA in dark — see `utils/typeColor`.) */}
+        <EditSection label="Template*">
+          <TemplatePicker value={templateId} onChange={setTemplateId} />
         </EditSection>
 
         {/* Description */}
@@ -1157,6 +1199,7 @@ export function MetadataEditBody({
 function EditSection({
   label,
   icon,
+  action,
   children,
   htmlFor,
   listening,
@@ -1164,6 +1207,10 @@ function EditSection({
 }: {
   label: string;
   icon?: React.ReactNode;
+  /** A quiet control at the end of the label row — the Title row's "Add icon".
+   *  The row is already mounted and already holds the listening chip, so an
+   *  action here costs no layout. */
+  action?: React.ReactNode;
   children: React.ReactNode;
   /** The id of the control this label names. Without it the label is a bare
    *  `<label>` pointing at nothing: screen readers announce the input as
@@ -1197,6 +1244,7 @@ function EditSection({
           {listening && onStopListening && (
             <ListeningChip label={label.replace(/\*$/, "")} onStop={onStopListening} />
           )}
+          {action && <span className="ms-auto">{action}</span>}
         </div>
       )}
       {children}
@@ -1232,6 +1280,84 @@ const countries = [
   { flag: "🇸🇷", name: "Suriname" },
   { flag: "🇻🇪", name: "Venezuela" },
 ];
+
+/** The template field's control: the current template, and the list of the
+ *  others, each carrying its own type dot.
+ *
+ *  Both halves get the SAME treatment as every other type label in the app —
+ *  the true colour in a `rounded-[2px]` square, the name in `typeLabelColor`
+ *  (never the raw colour: 12-14px text on the tint has to clear AA in dark).
+ *  Issue #42's note was "no template coloring?" — the field named the template
+ *  in plain ink, so the one place you SET the type was the one place it didn't
+ *  look like a type.
+ *
+ *  Presentational, like the icon picker beside it: the prototype keys an
+ *  entity's profile off its seeded type, so choosing another shows the choice
+ *  but doesn't re-shape the entity. */
+function TemplatePicker({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  const types = useAtomValue(entityTypesAtom);
+  const [open, setOpen] = useState(false);
+  const current = types.find((t) => t.id === value);
+
+  const row = (color: string, name: string) => (
+    <>
+      <span
+        className="rounded-[2px] shrink-0 ring-1 ring-inset ring-ink/20 w-[0.4375rem] h-[0.4375rem]"
+        style={{ backgroundColor: color }}
+      />
+      <span className="text-sm font-medium" style={{ color: typeLabelColor(color) }}>
+        {name}
+      </span>
+    </>
+  );
+
+  return (
+    <div className="space-y-2">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="w-full flex items-center gap-2 px-3 py-2 bg-paper border border-border rounded-md
+          text-left hover:bg-warm transition-colors cursor-pointer
+          focus:outline-none focus:ring-2 focus:ring-carbon/20"
+      >
+        {current ? (
+          row(current.color, current.name)
+        ) : (
+          <span className="text-sm text-ink-muted">Select template...</span>
+        )}
+        <ChevronDown
+          size={14}
+          className={`ms-auto text-ink-muted transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      {open && (
+        <div className="border border-border rounded-md max-h-60 overflow-auto">
+          {types.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => {
+                onChange(t.id);
+                setOpen(false);
+              }}
+              className={`w-full flex items-center gap-2 px-3 py-2 text-left transition-colors cursor-pointer
+                ${t.id === value ? "bg-carbon-tint" : "hover:bg-warm"}`}
+            >
+              {row(t.color, t.name)}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function CountryPicker() {
   const [query, setQuery] = useState("");
