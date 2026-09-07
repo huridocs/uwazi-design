@@ -85,8 +85,16 @@ export function MultiLanguageField({
 
   return (
     <div>
-      {/* Summary row — always mounted, fixed height, whatever the panel does. */}
-      <div className="flex items-center gap-2 h-6">
+      {/* Summary row — always mounted, fixed height, whatever the panel does.
+          The two controls are ONE left-aligned cluster. They were `justify-between`
+          across the form's full width, which on a wide pane put a foot of empty
+          paper between a disclosure and the button that acts on it and read as
+          two unrelated controls at opposite ends of the field. Nothing here
+          belongs at the right margin: this row is a footnote to the box above
+          it, so it starts where that box starts and ends where it runs out of
+          words. `-mt-1` pulls it up under the message slot's reserved line —
+          it is part of the Title field, not a band between Title and Icon. */}
+      <div className="flex items-center gap-2 h-6 -mt-1">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
@@ -107,7 +115,6 @@ export function MultiLanguageField({
           <span className="text-ink-muted">·</span>
           <span className="text-ink-muted">{summary}</span>
         </button>
-        <div className="flex-1" />
         <button
           type="button"
           onClick={translateEmpty}
