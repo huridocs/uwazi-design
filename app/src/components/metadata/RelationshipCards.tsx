@@ -7,6 +7,7 @@ import { groupConnections, specInherits } from "../../utils/inheritance";
 import { ConnectionGroupCard } from "./ConnectionGroupCard";
 import { RelationshipFieldCard } from "./RelationshipFieldCard";
 import { spanClass, type CardSpan } from "./cardSpan";
+import { MasonryItem } from "./MasonryGrid";
 
 /** The "Relationships" section of an entity's metadata: shared connections
  *  (multi-inheritance) as grouped tables + standalone relationship fields as
@@ -38,18 +39,32 @@ export function RelationshipCards({
   const singles = inheritingOnly ? allSingles.filter(specInherits) : allSingles;
   if (groups.length === 0 && singles.length === 0) return null;
 
+  /* Every one of these spans the record's full width, and it is the tables that
+     decide it: a connection table folds to one card per connected entity below
+     28.5rem of its own container (see tableBreakpoint.ts), and a masonry column
+     is ~345px. Left in a column they would ALL fold, permanently, on a record
+     with room for three columns — the responsive behaviour firing because of
+     the layout rather than because of the width available. Full width keeps the
+     table while the record can carry one, and the section reads as the band it
+     already was. */
   return (
     <>
-      <div className={`${spanClass("full")} mt-2 flex items-center`}>
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-tertiary">
-          Relationships
-        </h3>
-      </div>
+      <MasonryItem full>
+        <div className={`${spanClass("full")} mt-2 flex items-center`}>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-tertiary">
+            Relationships
+          </h3>
+        </div>
+      </MasonryItem>
       {groups.map((group) => (
-        <ConnectionGroupCard key={group.connectionKey} group={group} />
+        <MasonryItem key={group.connectionKey} full>
+          <ConnectionGroupCard group={group} />
+        </MasonryItem>
       ))}
       {singles.map((field) => (
-        <RelationshipFieldCard key={field.id} field={field} span={span} />
+        <MasonryItem key={field.id} full>
+          <RelationshipFieldCard field={field} span={span} />
+        </MasonryItem>
       ))}
     </>
   );
