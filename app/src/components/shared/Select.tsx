@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 
 export interface SelectOption {
@@ -20,6 +20,10 @@ export function Select({
   ariaLabel,
   align = "start",
   triggerPrefix,
+  triggerIcon,
+  tone = "default",
+  ariaSuffix,
+  triggerTitle,
   steady = false,
 }: {
   value: string;
@@ -31,6 +35,19 @@ export function Select({
    *  be ambiguous next to other dropdowns. Trigger only — the panel lists bare
    *  values, since an open panel already sits under its own trigger. */
   triggerPrefix?: string;
+  /** A glyph before the value, for a control whose MEANING has changed rather
+   *  than its value — see `tone`. Trigger only; the panel stays a bare list. */
+  triggerIcon?: ReactNode;
+  /** `carbon` marks the control as ACTIVE in the app's data accent: a select
+   *  that is currently writing rather than filtering. Colour alone would be a
+   *  weak signal and unavailable to anyone who can't see it, so a tone is meant
+   *  to arrive with `triggerIcon` and `ariaSuffix`, never on its own. */
+  tone?: "default" | "carbon";
+  /** Appended to the accessible name after the value — "Language: EN, editing
+   *  this language". The glyph says it visually; this says it out loud. */
+  ariaSuffix?: string;
+  /** Native tooltip on the trigger, for the same explanation on hover. */
+  triggerTitle?: string;
   /** Hold the width of the WIDEST option, so picking a shorter value can't
    *  shrink the control.
    *
@@ -78,7 +95,13 @@ export function Select({
         // segmented control it replaced put `aria-pressed` on every segment.
         // "View: Cards" restores it, and Sort and Language gain the same thing
         // ("Sort: Date added", "Language: EN") — they had the identical hole.
-        aria-label={ariaLabel && current ? `${ariaLabel}: ${current.label}` : ariaLabel}
+        aria-label={[
+          ariaLabel && current ? `${ariaLabel}: ${current.label}` : ariaLabel,
+          ariaSuffix,
+        ]
+          .filter(Boolean)
+          .join(", ")}
+        title={triggerTitle}
         // The transparent border is load-bearing: the menu below has a real 1px
         // one, so without a matching edge here the option labels sit a pixel
         // inboard of the trigger's. Same border + same px-3 on both = one text
@@ -95,11 +118,15 @@ export function Select({
         // own parchment on hover and keeps its border, so it settles INTO the bar
         // rather than rising off it, which is the direction that was wanted.
         // `transition-colors`, not `transition-all`: colour is all that changes now.
-        className="inline-flex items-center gap-1 h-8 ps-3 pe-2 text-xs font-medium text-ink-secondary
-          bg-paper border border-border hover:bg-parchment hover:text-ink
+        className={`inline-flex items-center gap-1 h-8 ps-3 pe-2 text-xs font-medium
           rounded-md transition-colors cursor-pointer
-          focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35"
+          focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35 ${
+            tone === "carbon"
+              ? "text-carbon bg-carbon-tint/40 border border-carbon/30 hover:bg-carbon-tint"
+              : "text-ink-secondary bg-paper border border-border hover:bg-parchment hover:text-ink"
+          }`}
       >
+        {triggerIcon && <span className="shrink-0 flex items-center">{triggerIcon}</span>}
         {/* Prefix and value are ONE run. As two loose spans they are two inline
             boxes, so an RTL page lays them end-to-start and "View: Cards"
             renders as "Cards :View". `<bdi>` resolves direction from its own

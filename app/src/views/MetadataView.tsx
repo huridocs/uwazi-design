@@ -74,6 +74,13 @@ export function MetadataView({ tabs, activeTab, onTabChange, onBack }: MetadataV
         availableLanguages={LANGUAGES}
         activeLanguage={language}
         onLanguageChange={(lang) => setLanguage(lang as Language)}
+        /* While the form is open this picker is not "which language am I
+           reading" but "which language am I writing into" — the same switch,
+           two different consequences. The value it points at is the slice every
+           field's editor holds, and every MultiLanguageField's `current`, so
+           moving it moves the whole form to that language at once. It has to
+           say so; see MainTabs. */
+        languageEditing={editing}
       />
 
       {editing ? (
