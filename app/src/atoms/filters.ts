@@ -109,6 +109,17 @@ export const clearRelFiltersAtom = atom(null, (_get, set) => {
  *  Opening it closes the connection overlay, for the reason in atoms/rightPane:
  *  one right-hand region, two occupants. Takes `SetStateAction` so it is a
  *  drop-in for the primitive atom it replaced. */
+/** Filters-open for a subtree that has declared its own entity scope — today,
+ *  the connection overlay's Relationships tab.
+ *
+ *  The flag above is ONE boolean, and two surfaces read it: the host's
+ *  Relationships panel and the overlay's. Opening Filters in the overlay
+ *  therefore opened the host's drawer too — two drawers from one click, one of
+ *  them beside a blank overlay body, which is what "opening a relationship
+ *  triggers the filters" looks like from the outside. Keyed by scope id, read
+ *  through `useFiltersDrawerOpen`, and reset whenever the overlay changes. */
+export const scopedFiltersOpenAtom = atom<Record<string, boolean>>({});
+
 export const filtersDrawerOpenAtom = atom(
   (get) => get(filtersDrawerBase),
   (get, set, next: boolean | ((prev: boolean) => boolean)) => {

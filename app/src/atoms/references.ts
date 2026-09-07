@@ -10,6 +10,7 @@ import { MAIN_ENTITY_ID } from "../data/entityProfiles";
 import { isCejilEntity, cejilReferencesFor } from "../data/cejil/profile";
 import { libraryQueryAtom } from "./library";
 import { filtersDrawerBase, overlayEntityBase } from "./rightPane";
+import { scopedFiltersOpenAtom } from "./filters";
 
 export const referencesAtom = atom<Reference[]>(initialRefs);
 
@@ -141,11 +142,15 @@ export const overlayEntityIdAtom = atom(
   (get) => get(overlayEntityBase),
   (_get, set, id: string | null) => {
     set(overlayEntityBase, id);
-    // Opening the overlay closes Filters: they dock into the same region, and
-    // side by side neither one is usable. Closing it (id === null) leaves
-    // Filters alone — a reader who dismisses a preview has not asked for a
-    // filter panel. See atoms/rightPane.
+    // Opening the overlay closes the HOST's Filters: they dock into the same
+    // region, and side by side neither one is usable. Closing it (id === null)
+    // leaves Filters alone — a reader who dismisses a preview has not asked for
+    // a filter panel. See atoms/rightPane.
     if (id !== null) set(filtersDrawerBase, false);
+    // The overlay's OWN filters state goes with the overlay, always: a drawer
+    // left open on the last previewed entity must not be waiting inside the
+    // next one.
+    set(scopedFiltersOpenAtom, {});
   },
 );
 

@@ -4,9 +4,8 @@ import { toastsAtom } from "../../atoms/references";
 import {
   activeFilterCountAtom,
   clearRelFiltersAtom,
-  filtersDrawerOpenAtom,
 } from "../../atoms/filters";
-import { useSetScopedReferences } from "../../hooks/useEntityScope";
+import { useFiltersDrawerOpen, useSetScopedReferences } from "../../hooks/useEntityScope";
 import { SearchBar } from "./SearchBar";
 import { DisplayMenu } from "./DisplayMenu";
 import { ActiveFilterChips } from "./ActiveFilterChips";
@@ -29,7 +28,7 @@ import { ConfirmDialog } from "../shared/ConfirmDialog";
  *  view. */
 export function RelationshipsToolbar() {
   const activeFilterCount = useAtomValue(activeFilterCountAtom);
-  const setFiltersOpen = useSetAtom(filtersDrawerOpenAtom);
+  const [, setFiltersOpen] = useFiltersDrawerOpen();
 
   return (
     <SearchBar
@@ -54,7 +53,7 @@ export function RelationshipsToolbar() {
 /** The facet slide-over and its "Clear all filters" footer. `width` is the
  *  main view's wider pane; the drawer flavour takes the default. */
 export function RelationshipsFiltersPanel({ width }: { width?: number }) {
-  const [filtersOpen, setFiltersOpen] = useAtom(filtersDrawerOpenAtom);
+  const [filtersOpen, setFiltersOpen] = useFiltersDrawerOpen();
   const activeFilterCount = useAtomValue(activeFilterCountAtom);
   const clearAllFilters = useSetAtom(clearRelFiltersAtom);
 
