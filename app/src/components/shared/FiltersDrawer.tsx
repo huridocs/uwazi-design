@@ -1,8 +1,37 @@
-import { useEffect, type ReactNode } from "react";
+import { createContext, useContext, useEffect, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useAtomValue } from "jotai";
 import { X } from "lucide-react";
 import { languageAtom } from "../../atoms/language";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
+
+/** The element a `FiltersDrawer` should render INTO, when it must escape the
+ *  box it is called from.
+ *
+ *  The drawer is `absolute inset-0` — it covers its nearest positioned ancestor
+ *  and is clipped by the nearest `overflow-hidden` one, which is what makes it
+ *  a pane-scoped slide-over rather than a page-wide modal. In the entity view
+ *  those two are the same element and the drawer covers the whole pane. In the
+ *  preview panel they are not: the tab content is its own `relative
+ *  overflow-hidden` box (the graph needs it), so the drawer covered the tab
+ *  area only, starting under the tab strip and stopping above the footer.
+ *
+ *  Positioning alone can't fix that — an `overflow-hidden` ancestor still clips
+ *  whatever the drawer is positioned against — so a host that needs the whole
+ *  panel names itself here and the drawer portals to it. No provider means the
+ *  old behaviour, unchanged: the entity view renders one inline and is
+ *  untouched. */
+const FiltersHostContext = createContext<HTMLElement | null>(null);
+
+export function FiltersHostProvider({
+  host,
+  children,
+}: {
+  host: HTMLElement | null;
+  children: ReactNode;
+}) {
+  return <FiltersHostContext.Provider value={host}>{children}</FiltersHostContext.Provider>;
+}
 
 interface FiltersDrawerProps {
   open: boolean;
@@ -41,7 +70,9 @@ export function FiltersDrawer({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  return (
+  const host = useContext(FiltersHostContext);
+
+  const content = (
     <>
       <div
         aria-hidden={!open}
@@ -91,4 +122,9 @@ export function FiltersDrawer({
       </aside>
     </>
   );
+
+  // The portal moves where this renders, not who owns it: the focus trap, the
+  // `inert` toggle and the Escape handler are all on the `aside` and travel
+  // with it, and React context still flows from the caller.
+  return host ? createPortal(content, host) : content;
 }
