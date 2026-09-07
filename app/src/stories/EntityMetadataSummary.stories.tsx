@@ -4,11 +4,11 @@ import { MAIN_ENTITY_ID } from "../data/entityProfiles";
 import { entities } from "../data/entities";
 import { artworks } from "../data/artworks/artworks";
 
-/** The condensed metadata body shared by every drawer/preview: long-form
- *  fields as titled cards, scalar rows in one "Details" card, then the
- *  relationship/inherited cards — all on the MetadataCard shell so the drawer
- *  reads as one card system. Reads the same entity profile the main Metadata
- *  view uses. */
+/** The condensed metadata body shared by every drawer/preview: every field its
+ *  own light block — label, value, a hairline to the next — in template order,
+ *  then the relationship/inherited cards. A card holds a structure, a block
+ *  holds a value, and that is the only weight difference in the record. Reads
+ *  the same entity profile the main Metadata view uses. */
 const meta = {
   title: "Metadata/EntityMetadataSummary",
   component: EntityMetadataSummary,
