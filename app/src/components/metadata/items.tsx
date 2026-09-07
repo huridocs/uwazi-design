@@ -44,7 +44,7 @@ export function fieldItem(f: MetadataField): MetadataItem {
     fillValue: !long && f.type !== "link" ? f.value?.trim() || undefined : undefined,
     content:
       f.type === "country" ? (
-        <span className="inline-flex items-center gap-1.5">
+        <span className="inline-flex items-center gap-1.5 text-sm text-ink leading-relaxed">
           <span className="leading-none">{f.flag}</span>
           <span className="font-medium">{f.value}</span>
         </span>
@@ -53,7 +53,10 @@ export function fieldItem(f: MetadataField): MetadataItem {
         // them: the value column has a definite width, and a URL is the one
         // value with no spaces to wrap at — a full Wikipedia link ran past the
         // drawer's edge and took the external-link icon with it.
-        <span className="inline-flex items-center gap-1 max-w-full min-w-0" title={f.value}>
+        <span
+          className="inline-flex items-center gap-1 max-w-full min-w-0 text-sm text-ink leading-relaxed"
+          title={f.value}
+        >
           <span className="font-medium underline truncate">{f.value}</span>
           <ExternalLink size={10} className="text-ink-muted shrink-0" />
         </span>
@@ -62,7 +65,16 @@ export function fieldItem(f: MetadataField): MetadataItem {
       ) : (
         // Thesaurus-backed child values carry their group as quiet context
         // ("Americas › Central America"); plain values render unchanged.
-        <span className="font-medium leading-snug">
+        //
+        // `text-sm` is stated, not inherited. It used to be: every short value
+        // rendered inside `<table className="w-full text-sm">`, so the cell
+        // carried the size. The record left that table for a stack of cards and
+        // the values kept no size of their own — they fell back to the document
+        // default and printed at 16px, which is `text-base`, which TYPOGRAPHY.md
+        // reserves for view titles. A field value is `text-sm font-medium
+        // text-ink leading-relaxed`; nothing here may depend on its container to
+        // say so.
+        <span className="text-sm font-medium text-ink leading-relaxed">
           <ThesaurusValueLabel value={f.value} />
         </span>
       ),
