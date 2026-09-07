@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import { ChevronRight, Languages, RotateCw, Sparkles } from "lucide-react";
 import type { Language } from "../../atoms/language";
 import { UwaziLoader } from "../shared/UwaziLoader";
@@ -46,11 +46,22 @@ export interface MultiLanguageFieldProps {
    *  one-line box is not a translation anyone will proofread. The language code
    *  and the status slot stay anchored to the first line either way. */
   multiline?: boolean;
+  /** The field's `FieldMessage`, rendered at the END of the summary row.
+   *
+   *  It used to sit on its own reserved line BETWEEN the input and this row —
+   *  and a reserved line is empty almost always, so every translatable field
+   *  paid a blank 16px band plus two gaps for a message that shows on blur.
+   *  Both are the same thing (an 11px footnote to the box above) and both are
+   *  always mounted, so they share one line. The height is the row's, not the
+   *  message's, so a message arriving still shifts nothing. Callers passing
+   *  this drop their own `reserve`. */
+  messageSlot?: ReactNode;
 }
 
 export function MultiLanguageField({
   label, idPrefix, languages, current, values, machine, onChange, authored,
   multiline = false,
+  messageSlot,
 }: MultiLanguageFieldProps) {
   const [open, setOpen] = useState(false);
   const [working, setWorking] = useState<Language[]>([]);
@@ -142,11 +153,15 @@ export function MultiLanguageField({
           <Sparkles size={11} aria-hidden />
           Auto-translate
         </button>
+        {/* `min-w-0` so a long message yields rather than pushing the cluster;
+            the input still points at it via `aria-describedby`, so the full
+            string reaches a screen reader whatever the pane's width. */}
+        {messageSlot && <div className="min-w-0 truncate">{messageSlot}</div>}
       </div>
 
       {/* The panel. Opened deliberately, so it may take its own height. */}
       {open && (
-        <div id={`${idPrefix}-langs`} className="mt-1.5 space-y-1.5">
+        <div id={`${idPrefix}-langs`} className="mt-1 space-y-1">
           {others.map((lang) => {
             const busy = working.includes(lang);
             const isMachine = !!machine[lang] && !busy;
@@ -155,7 +170,7 @@ export function MultiLanguageField({
               <div key={lang} className="flex items-start gap-2">
                 <label
                   htmlFor={`${idPrefix}-lang-${lang.toLowerCase()}`}
-                  className="w-8 shrink-0 h-9 flex items-center text-meta font-medium text-ink-tertiary uppercase"
+                  className="w-8 shrink-0 h-8 flex items-center text-meta font-medium text-ink-tertiary uppercase"
                   title={LANGUAGE_NAMES[lang]}
                 >
                   {lang}
@@ -169,20 +184,23 @@ export function MultiLanguageField({
                       onChange(lang, e.target.value),
                     placeholder: `No ${LANGUAGE_NAMES[lang]} ${label.toLowerCase()} yet`,
                     "aria-label": `${LANGUAGE_NAMES[lang]} ${label.toLowerCase()}`,
-                    className: `flex-1 min-w-0 px-3 py-2 text-sm text-ink bg-paper rounded-md
+                    // These rows are SECONDARY to the box above them and should
+                    // read that way: an h-8 line against the field's own h-9+,
+                    // stacked at `space-y-1`. Same type size, less air.
+                    className: `flex-1 min-w-0 px-3 text-sm text-ink bg-paper rounded-md
                       border transition-shadow placeholder:text-ink-muted
                       focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40
                       ${isMachine ? "border-carbon/30" : "border-border"}`,
                   };
                   return multiline ? (
-                    <textarea {...shared} rows={3} className={`${shared.className} resize-y`} />
+                    <textarea {...shared} rows={3} className={`${shared.className} py-1 resize-y`} />
                   ) : (
-                    <input {...shared} type="text" />
+                    <input {...shared} type="text" className={`${shared.className} h-8`} />
                   );
                 })()}
                 {/* Reserved status slot — the loader, the marker and the button
                     all live at this one width so the input never resizes. */}
-                <div className="w-[5.5rem] shrink-0 flex items-center justify-end gap-1 h-9">
+                <div className="w-[5.5rem] shrink-0 flex items-center justify-end gap-1 h-8">
                   {busy ? (
                     <span className="inline-flex items-center gap-1 text-meta text-ink-tertiary">
                       <UwaziLoader size="xs" color="carbon" animate />
