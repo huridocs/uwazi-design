@@ -1,5 +1,5 @@
 import { useAtom } from "jotai";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft, Pencil, Sparkles } from "lucide-react";
 import { breakpointAtom } from "../../atoms/viewport";
 import { Select } from "../shared/Select";
 
@@ -27,6 +27,12 @@ interface MainTabsProps {
   activeId: string;
   onChange: (id: string) => void;
   languages?: string[];
+  /** The language picker is the WRITE target, not a reading choice: an edit form
+   *  is open below and the value it points at is the language a keystroke lands
+   *  in. Same control, same slot — a pencil, the carbon accent and a spoken
+   *  suffix, because a control that means two different things must not look
+   *  identical in both. Read mode passes nothing and is untouched. */
+  languageEditing?: boolean;
   availableLanguages?: string[];
   activeLanguage?: string;
   onLanguageChange?: (lang: string) => void;
@@ -35,7 +41,7 @@ interface MainTabsProps {
   onBack?: () => void;
 }
 
-export function MainTabs({ tabs, activeId, onChange, languages = [], availableLanguages, activeLanguage, onLanguageChange, onBack }: MainTabsProps) {
+export function MainTabs({ tabs, activeId, onChange, languages = [], availableLanguages, activeLanguage, onLanguageChange, onBack, languageEditing = false }: MainTabsProps) {
   const [breakpoint] = useAtom(breakpointAtom);
   const isMobile = breakpoint === "mobile";
   const currentLang = activeLanguage ?? languages[0];
@@ -122,6 +128,14 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
             onChange={(v) => onLanguageChange?.(v)}
             ariaLabel="Language"
             align="end"
+            tone={languageEditing ? "carbon" : "default"}
+            triggerIcon={languageEditing ? <Pencil size={11} aria-hidden /> : undefined}
+            ariaSuffix={languageEditing ? "editing this language" : undefined}
+            triggerTitle={
+              languageEditing
+                ? "Editing this language — switching moves every field to its value in the language you pick"
+                : undefined
+            }
             options={languages.map((lang) => ({
               value: lang,
               label: lang,
