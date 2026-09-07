@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { useAtom } from "jotai";
-import { scopedReferencesAtom, toastsAtom } from "../../atoms/references";
+import { toastsAtom } from "../../atoms/references";
+import { useSetScopedReferences } from "../../hooks/useEntityScope";
 import {
   searchQueryAtom,
   sortOrderAtom,
@@ -35,7 +36,7 @@ export function RelationshipsDrawerSection({
 }: {
   hideActionBar?: boolean;
 } = {}) {
-  const [, setReferences] = useAtom(scopedReferencesAtom);
+  const setReferences = useSetScopedReferences();
   const [, setToasts] = useAtom(toastsAtom);
   const [, setSearchQuery] = useAtom(searchQueryAtom);
   const [, setSortOrder] = useAtom(sortOrderAtom);

@@ -21,6 +21,12 @@ export interface MetadataItem {
   content: ReactNode;
   /** A paragraph: it gets its own titled card, not a value cell. */
   long: boolean;
+  /** The value as plain text, when there is one a metadata field could be
+   *  filled with. While click-to-fill is armed the row's value becomes the
+   *  button that answers it — the value a user is looking for is as often
+   *  already recorded on a connected entity as it is buried in the document,
+   *  and this record is where they read it. */
+  fillValue?: string;
 }
 
 export function isLongField(f: MetadataField): boolean {
@@ -33,6 +39,9 @@ export function fieldItem(f: MetadataField): MetadataItem {
     id: f.id,
     label: f.label,
     long,
+    // Only short, plain values: a paragraph or a pill is not what a one-line
+    // field is asking for.
+    fillValue: !long && f.type !== "link" ? f.value?.trim() || undefined : undefined,
     content:
       f.type === "country" ? (
         <span className="inline-flex items-center gap-1.5">
