@@ -97,7 +97,20 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Theme swap: no transitions for the frame the class changes in.
+   `body` used to fade its background over 0.2s while its children swapped
+   instantly and every button faded on its own schedule, so a theme change read
+   as a wash of surfaces changing at different times. ThemeEffect adds this
+   class, flushes the swap under it and takes it off on the next frame — one
+   change, and hover/focus transitions are back before a pointer can reach
+   one. */
+:root.theme-switching,
+:root.theme-switching *,
+:root.theme-switching *::before,
+:root.theme-switching *::after {
+  transition: none !important;
 }
 
 /* Buttons should always show pointer cursor */
