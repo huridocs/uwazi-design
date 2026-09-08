@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import { ChevronRight, Languages, RotateCw, Sparkles } from "lucide-react";
-import type { Language } from "../../atoms/language";
+import { LANGUAGE_NAMES, languageDir, type Language } from "../../atoms/language";
 import { UwaziLoader } from "../shared/UwaziLoader";
-import { LANGUAGE_NAMES, languageDir, mockTranslate } from "../../utils/mockTranslate";
+import { mockTranslate } from "../../utils/mockTranslate";
 
 /** One field, every language — the in-place translation control.
  *
@@ -168,12 +168,17 @@ export function MultiLanguageField({
             const value = values[lang] ?? "";
             return (
               <div key={lang} className="flex items-start gap-2">
+                {/* The language's own name, not its code — and the column is
+                    sized for the widest of them (`w-[4.5rem]`, Français) so the
+                    inputs beside them stay in one line down the panel whatever
+                    languages the collection carries. Not `uppercase`: these are
+                    proper nouns, and ESPAÑOL shouts where the codes did not. */}
                 <label
                   htmlFor={`${idPrefix}-lang-${lang.toLowerCase()}`}
-                  className="w-8 shrink-0 h-8 flex items-center text-meta font-medium text-ink-tertiary uppercase"
-                  title={LANGUAGE_NAMES[lang]}
+                  dir={languageDir(lang)}
+                  className="w-[4.5rem] shrink-0 h-8 flex items-center text-meta font-medium text-ink-tertiary truncate"
                 >
-                  {lang}
+                  {LANGUAGE_NAMES[lang]}
                 </label>
                 {(() => {
                   const shared = {

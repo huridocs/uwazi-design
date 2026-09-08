@@ -14,7 +14,7 @@ import {
   activePrimaryGroupIdAtom,
   addFileTargetAtom,
 } from "../atoms/files";
-import { languageAtom, type Language } from "../atoms/language";
+import { LANGUAGES, languageAtom, type Language } from "../atoms/language";
 import { ConfirmDialog } from "../components/shared/ConfirmDialog";
 import { SelectControls } from "../components/shared/SelectControls";
 
@@ -114,8 +114,8 @@ export function FilesView({ tabs, activeTab, onTabChange, onBack }: FilesViewPro
         activeId={activeTab}
         onChange={onTabChange}
         onBack={onBack}
-        languages={["EN", "ES", "FR", "AR"]}
-        availableLanguages={["EN", "ES", "FR", "AR"]}
+        languages={LANGUAGES}
+        availableLanguages={LANGUAGES}
         activeLanguage={language}
         onLanguageChange={(lang) => setLanguage(lang as Language)}
       />

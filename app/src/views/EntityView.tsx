@@ -3,7 +3,7 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { scopedReferencesAtom } from "../atoms/references";
 import { filesAtom } from "../atoms/files";
 import { activeFilterCountAtom } from "../atoms/filters";
-import { languageAtom, type Language } from "../atoms/language";
+import { LANGUAGES, languageAtom, type Language } from "../atoms/language";
 import { uiLanguageAtom } from "../atoms/uiLanguage";
 import { focusedEntityIdAtom, goBackAtom } from "../atoms/focusedEntity";
 import { getEntityProfile } from "../data/entityProfiles";
@@ -98,8 +98,8 @@ export function EntityView() {
         activeId={activeTab}
         onChange={handleTabChange}
         onBack={goBack}
-        languages={["EN", "ES", "FR", "AR"]}
-        availableLanguages={["EN", "ES", "FR", "AR"]}
+        languages={LANGUAGES}
+        availableLanguages={LANGUAGES}
         activeLanguage={language}
         onLanguageChange={(lang) => setLanguage(lang as Language)}
       />

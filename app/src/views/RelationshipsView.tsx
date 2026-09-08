@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
 import { useAtom } from "jotai";
-import { languageAtom, type Language } from "../atoms/language";
+import { LANGUAGES, languageAtom, type Language } from "../atoms/language";
 import { focusedEntityIdAtom } from "../atoms/focusedEntity";
 import { getEntityProfile } from "../data/entityProfiles";
 import { MOCK_DOCUMENT_FILE } from "../data/files";
@@ -45,8 +45,8 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
             activeId={activeTab}
             onChange={onTabChange}
             onBack={onBack}
-            languages={["EN", "ES", "FR", "AR"]}
-            availableLanguages={["EN", "ES", "FR", "AR"]}
+            languages={LANGUAGES}
+            availableLanguages={LANGUAGES}
             activeLanguage={language}
             onLanguageChange={(lang) => setLanguage(lang as Language)}
           />
