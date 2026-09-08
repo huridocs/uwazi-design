@@ -30,7 +30,6 @@ import { ListeningChip } from "../components/metadata/ListeningChip";
 import { MultiLanguageField } from "../components/metadata/MultiLanguageField";
 import { overlayEntityIdAtom } from "../atoms/references";
 import { planCopyFrom, type CopyMatch } from "../utils/copyFrom";
-import { TemplateStructure } from "../components/relationships/TemplateStructure";
 import { EntityOverlay } from "../components/relationships/EntityOverlay";
 import { groupConnections, relationLabel, specInherits } from "../utils/inheritance";
 import {
@@ -1417,7 +1416,6 @@ function MetadataDrawer() {
       dot: relFilterCount > 0,
     },
     { id: "files", label: "Files", count: files.length },
-    { id: "template", label: "Template" },
   ];
 
   // Documents live in Files now; the drawer opens on the connections either way.
@@ -1430,9 +1428,7 @@ function MetadataDrawer() {
       <EntityOverlay />
       <DrawerTabs tabs={drawerTabs} activeId={activeDrawerTab} onChange={setActiveDrawerTab} />
 
-      {activeDrawerTab === "template" ? (
-        <TemplateStructure />
-      ) : activeDrawerTab === "files" ? (
+      {activeDrawerTab === "files" ? (
         <DrawerFilesBody />
       ) : activeDrawerTab === "connections" ? (
         <RelationshipsDrawerSection />

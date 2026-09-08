@@ -355,7 +355,11 @@ HURIDOCS tribute** — surface the name, keep the code identifiers (`agent*`).
 - Selected rows use `bg-parchment`. No inset blue accent.
 
 ## Metadata view
-- Drawer tabs: **Document → Connections → Files → Template** (Document is first by request).
+- Drawer tabs: **Relationships → Files**. (Document went to Files in `af531c5`;
+  the **Template** tab and its `TemplateStructure` left `main` with the Playground
+  Split, 2026-09-08, and are on `playground`. `getEntityProfile` and
+  `data/metadata.ts` stay — the template DATA is what the record reads; only the
+  tab that drew the template's shape is gone.)
 - Files tab maps over real `files[]` from `data/files.ts` — *not* hardcoded.
 - Connections tab inside the drawer renders `<ConnectionsDrawerSection />`; default panel mode is `tree`.
 
@@ -447,8 +451,6 @@ Several fields sharing a `connectionKey` = **one connection, many inherited colu
   panel"), so a source entity's properties are the metadata record itself. It no
   longer carries its own Properties editor — editing a source's native props is
   now reached through "Open entity".
-- `TemplateStructure` derives its Inherited group from the real relationship fields
-  (no longer the hardcoded `mechanism`/`signatories` flags).
 - Simplification vs. real Uwazi: connections are explicit `connectedEntityIds` on the
   field (not derived from `references[]`), so direction/inverse is sidestepped.
 
