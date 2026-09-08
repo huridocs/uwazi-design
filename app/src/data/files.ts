@@ -232,11 +232,10 @@ export function entityDocument(
 export function resolvePrimaryFile(
   files: FileEntry[],
   groups: DocumentGroup[],
-  activeGroupId: string | null,
   language: string,
 ): FileEntry | null {
   const primary = groups.filter((g) => g.isPrimary).sort((a, b) => a.order - b.order);
-  const id = activeGroupId ?? primary[0]?.id ?? null;
+  const id = primary[0]?.id ?? null;
   if (!id) return null;
   const inGroup = files.filter((f) => f.groupId === id);
   return inGroup.find((f) => f.language === language) ?? inGroup[0] ?? null;

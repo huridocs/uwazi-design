@@ -6,21 +6,16 @@ import {
   Video,
   Image,
   Link2,
-  ArrowUpCircle,
-  ArrowDownCircle,
   ChevronDown,
-  Eye,
   Pencil,
   Check,
   Trash2,
 } from "lucide-react";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { FileEntry, FileKind } from "../../data/files";
 import {
   filesAtom,
   documentGroupsAtom,
-  activePrimaryGroupIdAtom,
-  setActivePrimaryAtom,
   drawerEditFocusAtom,
 } from "../../atoms/files";
 import { languageAtom } from "../../atoms/language";
@@ -63,9 +58,7 @@ export function FileDetailEditor({
   onFocusSibling,
 }: FileDetailEditorProps) {
   const [files, setFiles] = useAtom(filesAtom);
-  const [groups, setGroups] = useAtom(documentGroupsAtom);
-  const activeGroupId = useAtomValue(activePrimaryGroupIdAtom);
-  const setActivePrimary = useSetAtom(setActivePrimaryAtom);
+  const groups = useAtomValue(documentGroupsAtom);
   const [editFocus, setEditFocus] = useAtom(drawerEditFocusAtom);
   const language = useAtomValue(languageAtom);
 
@@ -111,20 +104,6 @@ export function FileDetailEditor({
     );
   };
 
-  const promoteOrDemote = () => {
-    if (!group) return;
-    setGroups((all) =>
-      all.map((g) =>
-        g.id === group.id ? { ...g, isPrimary: !g.isPrimary } : g,
-      ),
-    );
-  };
-
-  const setAsActive = () => {
-    setActivePrimary(file.groupId);
-  };
-
-  const isActiveGroup = file.groupId === activeGroupId;
   const Icon = typeIcons[file.type];
 
   // Allow ad-hoc languages (anything seeded in the file goes into the picker).
@@ -243,13 +222,11 @@ export function FileDetailEditor({
             <span
               className={`px-1.5 py-0.5 text-meta font-medium rounded ${
                 group.isPrimary
-                  ? isActiveGroup
-                    ? "bg-ink text-parchment"
-                    : "bg-warning-light text-warning"
+                  ? "bg-warning-light text-warning"
                   : "bg-vellum text-ink-secondary"
               }`}
             >
-              {group.isPrimary ? (isActiveGroup ? "Active primary" : "Primary") : "Supporting"}
+              {group.isPrimary ? "Primary" : "Supporting"}
             </span>
           </div>
 
@@ -288,32 +265,11 @@ export function FileDetailEditor({
             </div>
           )}
 
-          <div className="flex items-center gap-2 pt-1">
-            <button
-              type="button"
-              onClick={promoteOrDemote}
-              className="flex items-center gap-1.5 px-2.5 py-1 text-meta font-medium text-ink-secondary bg-paper hover:bg-parchment hover:text-ink rounded transition-colors cursor-pointer"
-            >
-              {group.isPrimary ? (
-                <>
-                  <ArrowDownCircle size={12} /> Demote to supporting
-                </>
-              ) : (
-                <>
-                  <ArrowUpCircle size={12} /> Promote to primary
-                </>
-              )}
-            </button>
-            {group.isPrimary && !isActiveGroup && (
-              <button
-                type="button"
-                onClick={setAsActive}
-                className="flex items-center gap-1.5 px-2.5 py-1 text-meta font-medium text-ink-secondary bg-paper hover:bg-parchment hover:text-ink rounded transition-colors cursor-pointer"
-              >
-                <Eye size={12} /> Set as active
-              </button>
-            )}
-            {group.isPrimary && (
+          {/* A file's role is fixed at upload (see AddFileModal) — there is no
+              promote / demote / set-active here any more, so the only action
+              left on a document group is adding a language to it. */}
+          {group.isPrimary && (
+            <div className="flex items-center pt-1">
               <button
                 type="button"
                 onClick={() => onAddTranslation?.(group.id)}
@@ -321,8 +277,8 @@ export function FileDetailEditor({
               >
                 + Add translation
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
 

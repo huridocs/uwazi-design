@@ -1,8 +1,7 @@
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { scopedReferencesAtom, scrollToHighlightAtom, scrollToRefAtom, activeRefIdAtom, activeDrawerTabAtom, expandGroupForRefAtom } from "../../atoms/references";
 import { collapseAllSignalAtom, searchQueryAtom, activeClusterRefIdsAtom } from "../../atoms/filters";
 import { currentPageAtom } from "../../atoms/selection";
-import { activePrimaryGroupIdAtom } from "../../atoms/files";
 import { getEntity, getEntityType } from "../../data/entities";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Reference } from "../../data/references";
@@ -42,16 +41,18 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
   const setActiveClusterRefIds = useSetAtom(activeClusterRefIdsAtom);
   const minimapRef = useRef<HTMLDivElement>(null);
   // Reset transient minimap state (expanded cluster, hovered dot) whenever
-  // the cluster array is about to be recomputed — doc switch, search query,
-  // or global/page mode change all reshuffle cluster boundaries and order,
-  // so a stale index would expand an unrelated cluster and the captured
-  // "from selection" ref-ids would keep filtering by the pre-recompute set.
-  const activePrimaryGroupId = useAtomValue(activePrimaryGroupIdAtom);
+  // the cluster array is about to be recomputed — a new reference set (the
+  // focused entity changed), search query, or global/page mode change all
+  // reshuffle cluster boundaries and order, so a stale index would expand an
+  // unrelated cluster and the captured "from selection" ref-ids would keep
+  // filtering by the pre-recompute set. Keyed on `references` identity, which
+  // is what actually changes; it used to key on the active primary group,
+  // which no longer exists (a file's role is fixed at upload).
   useEffect(() => {
     setExpandedCluster(null);
     setHoveredDot(null);
     setActiveClusterRefIds(null);
-  }, [activePrimaryGroupId, searchQuery, mode, setActiveClusterRefIds]);
+  }, [references, searchQuery, mode, setActiveClusterRefIds]);
 
   const dotSize = DOT_SIZE;
 

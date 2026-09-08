@@ -8,20 +8,16 @@ interface DocumentGroupCardProps {
   group: DocumentGroup;
   /** Translation count for the section header. */
   translationCount: number;
-  /** Whether this group's first file is the active primary. Used to surface
-   *  an "Active" pill in the header. */
-  active?: boolean;
   children: ReactNode;
 }
 
 /** Shell rendered above each primary `DocumentGroup` in the Files tab.
- *  Shows the editable group title, translation count, and active state.
+ *  Shows the editable group title and translation count.
  *  Inline rename: click the pencil → input replaces the title; commit on
  *  blur or Enter. */
 export function DocumentGroupCard({
   group,
   translationCount,
-  active,
   children,
 }: DocumentGroupCardProps) {
   const setGroups = useSetAtom(documentGroupsAtom);
@@ -38,18 +34,11 @@ export function DocumentGroupCard({
     <section className="mb-4">
       <header className="flex items-center gap-2 flex-wrap mb-2 px-1">
         <GroupTitleField initial={group.title} onCommit={renameGroup} />
-        {/* Primary always shows on every primary group; Active is the
-            single source of "which one the viewer's rendering". Same
-            shape, different fill so they read as a continuum, not two
-            unrelated states. */}
+        {/* A file's role is fixed at upload, so this pill states how the
+            document came in — not a rank anything on screen can change. */}
         <span className="px-1.5 py-0.5 text-meta font-medium rounded shrink-0 bg-warning-light text-warning">
           Primary
         </span>
-        {active && (
-          <span className="px-1.5 py-0.5 text-meta font-medium rounded bg-ink text-parchment shrink-0">
-            Active
-          </span>
-        )}
         <span className="text-meta text-ink-tertiary tabular-nums shrink-0">
           {translationCount} {translationCount === 1 ? "translation" : "translations"}
         </span>

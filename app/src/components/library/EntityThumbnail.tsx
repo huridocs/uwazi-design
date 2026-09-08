@@ -216,5 +216,5 @@ function ImageThumb({
 function primaryFile(entityId: string) {
   const profile = getEntityProfile(entityId);
   if (!profile.hasDocument) return null;
-  return resolvePrimaryFile(profile.files ?? [], profile.documentGroups ?? [], null, "EN");
+  return resolvePrimaryFile(profile.files ?? [], profile.documentGroups ?? [], "EN");
 }

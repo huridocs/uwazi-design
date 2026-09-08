@@ -11,7 +11,6 @@ import { AddFileModal } from "../components/files/AddFileModal";
 import {
   filesAtom,
   documentGroupsAtom,
-  activePrimaryGroupIdAtom,
   addFileTargetAtom,
 } from "../atoms/files";
 import { languageAtom, type Language } from "../atoms/language";
@@ -29,8 +28,6 @@ export function FilesView({ tabs, activeTab, onTabChange, onBack }: FilesViewPro
   const [language, setLanguage] = useAtom(languageAtom);
   const [files, setFiles] = useAtom(filesAtom);
   const [groups, setGroups] = useAtom(documentGroupsAtom);
-  const [activeGroupId] = useAtom(activePrimaryGroupIdAtom);
-  const setActiveGroupId = useSetAtom(activePrimaryGroupIdAtom);
   const setAddFileTarget = useSetAtom(addFileTargetAtom);
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -44,19 +41,11 @@ export function FilesView({ tabs, activeTab, onTabChange, onBack }: FilesViewPro
   /** Pending deletion state: either a single id or a batch via the action bar. */
   const [pendingDelete, setPendingDelete] = useState<string[] | null>(null);
 
-  const primaryGroups = useMemo(() => {
-    // Active group floats to the top regardless of order; the rest sort
-    // by their stored order. Keeps the doc the user is currently reading
-    // at the head of the list every render.
-    const resolvedActive = activeGroupId;
-    return [...groups]
-      .filter((g) => g.isPrimary)
-      .sort((a, b) => {
-        if (a.id === resolvedActive) return -1;
-        if (b.id === resolvedActive) return 1;
-        return a.order - b.order;
-      });
-  }, [groups, activeGroupId]);
+  const primaryGroups = useMemo(
+    () =>
+      [...groups].filter((g) => g.isPrimary).sort((a, b) => a.order - b.order),
+    [groups],
+  );
   const supportingFiles = useMemo(() => {
     const supportingGroupIds = new Set(
       groups.filter((g) => !g.isPrimary).map((g) => g.id),
@@ -94,9 +83,6 @@ export function FilesView({ tabs, activeTab, onTabChange, onBack }: FilesViewPro
     const stillUsedGroupIds = new Set(remaining.map((f) => f.groupId));
     setFiles(remaining);
     setGroups((all) => all.filter((g) => stillUsedGroupIds.has(g.id)));
-    if (activeGroupId && !stillUsedGroupIds.has(activeGroupId)) {
-      setActiveGroupId(null);
-    }
     setSelectedIds((prev) => {
       const next = new Set(prev);
       ids.forEach((id) => next.delete(id));
@@ -126,19 +112,16 @@ export function FilesView({ tabs, activeTab, onTabChange, onBack }: FilesViewPro
         </SectionLabel>
         {primaryGroups.length === 0 ? (
           <p className="text-xs italic text-ink-tertiary px-1 mb-5">
-            No primary documents yet. Promote a supporting file or add a new one.
+            No primary documents yet. Add one to get started.
           </p>
         ) : (
           primaryGroups.map((group) => {
             const groupFiles = files.filter((f) => f.groupId === group.id);
-            const resolvedActiveId =
-              activeGroupId ?? primaryGroups[0]?.id ?? null;
             return (
               <DocumentGroupCard
                 key={group.id}
                 group={group}
                 translationCount={groupFiles.length}
-                active={group.id === resolvedActiveId}
               >
                 <FileTable
                   files={groupFiles}

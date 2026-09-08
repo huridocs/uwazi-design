@@ -353,6 +353,37 @@ HURIDOCS tribute** — surface the name, keep the code identifiers (`agent*`).
 - Default focus = `files.find(f => f.isDefault) ?? files[0]`.
 - Drawer shows focused file when no checkboxes are ticked.
 - Selected rows use `bg-parchment`. No inset blue accent.
+- **A file's role is set at UPLOAD and never again.** The whole user-operable
+  rank ladder left `main` with the Playground Split (2026-09-08) and is on
+  `playground`: Promote to primary, Demote to supporting, Set as active primary,
+  `promoteOrDemote` (both hosts), `setActivePrimaryAtom` /
+  `activePrimaryGroupIdAtom`, and the "Active" pill on `DocumentGroupCard` /
+  "Active primary" on `FileDetailEditor`. Uwazi doesn't support re-ranking a
+  file after the fact, so neither do we. The row kebab is now View / Rename /
+  Change language / (Add translation, primary groups only) / Delete.
+- **`isPrimary` on `DocumentGroup` is DATA and stays** — it is what
+  `AddFileModal` writes at upload, what the Primary documents / Supporting files
+  sections read, and what the Document tab resolves through. With no way to set
+  an active group, **the rendered primary document is simply the first primary
+  group by `order`** — `DocumentViewer`, `DocMeta`, `DrawerFilesBody`,
+  `FilesView` and `resolvePrimaryFile` all resolve it that way, and
+  `resolvePrimaryFile` lost its `activeGroupId` parameter accordingly. Don't
+  reintroduce an override atom: the fallback every caller already had IS the
+  rule now.
+- **`AddFileModal`'s "Add as" is a real radio group**, not a select: Primary
+  document / Supporting file (/ Translation, only where a primary group exists
+  to join). One tab stop, arrow keys, both options always visible, and a
+  readback line under it (`roleReadback`) naming the choice in words — because
+  it is the last moment the role can be changed. Per-kind default is unchanged
+  (a text document defaults to primary); a locked group (the "Add translation"
+  route) disables the fieldset as before.
+- **The drawer has no tab strip.** Its Translations tab left `main` with the
+  Playground Split (2026-09-08) and is on `playground`; with `File` the only tab
+  left, a one-tab strip is chrome for nothing, so the drawer opens straight onto
+  the focused file's detail. TRANSLATIONS THEMSELVES STAY — the primary groups'
+  nested translation rows in `DrawerFilesBody` / `FileTable`, "Add translation",
+  and `AddFileModal`'s translation target all work as before. What went is the
+  second place to read the same set.
 
 ## Metadata view
 - Drawer tabs: **Relationships → Files**. (Document went to Files in `af531c5`;
