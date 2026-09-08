@@ -14,7 +14,6 @@ import { languageAtom } from "../../atoms/language";
 import {
   filesAtom,
   documentGroupsAtom,
-  activePrimaryGroupIdAtom,
 } from "../../atoms/files";
 import { MOCK_DOCUMENT_PDF } from "../../data/files";
 import { PageHighlights } from "./PageHighlights";
@@ -87,12 +86,11 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
   const language = useAtomValue(languageAtom);
   const files = useAtomValue(filesAtom);
   const groups = useAtomValue(documentGroupsAtom);
-  const activeGroupId = useAtomValue(activePrimaryGroupIdAtom);
   const primaryGroups = useMemo(
     () => groups.filter((g) => g.isPrimary).sort((a, b) => a.order - b.order),
     [groups],
   );
-  const resolvedActiveId = activeGroupId ?? primaryGroups[0]?.id ?? null;
+  const resolvedActiveId = primaryGroups[0]?.id ?? null;
   const activeFile = useMemo(() => {
     if (fileOverride) return fileOverride;
     if (!resolvedActiveId) return null;

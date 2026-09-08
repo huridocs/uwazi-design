@@ -10,9 +10,6 @@ import {
   MoreVertical,
   Pencil,
   Languages,
-  ArrowUpCircle,
-  ArrowDownCircle,
-  Star,
   Plus,
   Trash2,
 } from "lucide-react";
@@ -21,8 +18,6 @@ import { FileEntry } from "../../data/files";
 import { breakpointAtom } from "../../atoms/viewport";
 import {
   documentGroupsAtom,
-  activePrimaryGroupIdAtom,
-  setActivePrimaryAtom,
   drawerEditFocusAtom,
   viewerFileIdAtom,
 } from "../../atoms/files";
@@ -80,31 +75,15 @@ export function FileTable({
   const [breakpoint] = useAtom(breakpointAtom);
   const isMobile = breakpoint === "mobile";
   const groups = useAtomValue(documentGroupsAtom);
-  const [activeGroupId] = useAtom(activePrimaryGroupIdAtom);
-  const setActivePrimary = useSetAtom(setActivePrimaryAtom);
-  const setGroups = useSetAtom(documentGroupsAtom);
   const setDrawerFocus = useSetAtom(drawerEditFocusAtom);
   const setViewerFileId = useSetAtom(viewerFileIdAtom);
 
-  /** Map of groupId → isPrimary, looked up per row to label badges. */
+  /** Map of groupId → isPrimary, looked up per row for the primary-only
+   *  "Add translation" item. */
   const isPrimaryByGroup = new Map(groups.map((g) => [g.id, g.isPrimary]));
-
-  const resolvedActiveGroupId =
-    activeGroupId ??
-    groups
-      .filter((g) => g.isPrimary)
-      .sort((a, b) => a.order - b.order)[0]?.id ??
-    null;
-
-  const promoteOrDemote = (groupId: string, makePrimary: boolean) => {
-    setGroups((all) =>
-      all.map((g) => (g.id === groupId ? { ...g, isPrimary: makePrimary } : g)),
-    );
-  };
 
   const renderMenu = (file: FileEntry) => {
     const isPrimary = isPrimaryByGroup.get(file.groupId) ?? false;
-    const isActiveGroup = file.groupId === resolvedActiveGroupId;
     return (
       <RowKebab
         items={[
@@ -137,27 +116,6 @@ export function FileTable({
           },
           isPrimary
             ? {
-                id: "demote",
-                label: "Demote to supporting",
-                icon: ArrowDownCircle,
-                onClick: () => promoteOrDemote(file.groupId, false),
-              }
-            : {
-                id: "promote",
-                label: "Promote to primary",
-                icon: ArrowUpCircle,
-                onClick: () => promoteOrDemote(file.groupId, true),
-              },
-          isPrimary && !isActiveGroup
-            ? {
-                id: "activate",
-                label: "Set as active primary",
-                icon: Star,
-                onClick: () => setActivePrimary(file.groupId),
-              }
-            : null,
-          isPrimary
-            ? {
                 id: "add-translation",
                 label: "Add translation",
                 icon: Plus,
@@ -178,8 +136,7 @@ export function FileTable({
   };
 
   // No per-row pill: the section header (Primary documents / Supporting files)
-  // and the DocumentGroupCard's own Active indicator already say everything
-  // a Primary/Active row could.
+  // already says everything a per-row Primary badge could.
   const renderBadge = (_file: FileEntry) => null;
 
   if (isMobile) {

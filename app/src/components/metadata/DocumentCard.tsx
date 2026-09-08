@@ -2,7 +2,7 @@ import { useAtomValue } from "jotai";
 import { Download } from "lucide-react";
 import type { Language } from "../../atoms/language";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
-import { filesAtom, documentGroupsAtom, activePrimaryGroupIdAtom } from "../../atoms/files";
+import { filesAtom, documentGroupsAtom } from "../../atoms/files";
 import { resolvePrimaryFile } from "../../data/files";
 import type { EntityProfile } from "../../data/entityProfiles";
 import { useNotify } from "../../hooks/useNotify";
@@ -33,16 +33,14 @@ export function DocumentCard({
   const focusedId = useAtomValue(focusedEntityIdAtom);
   const files = useAtomValue(filesAtom);
   const groups = useAtomValue(documentGroupsAtom);
-  const activeGroupId = useAtomValue(activePrimaryGroupIdAtom);
 
-  // For the entity you're ON, read the live atoms: they carry file edits and the
-  // primary document you picked in the Files tab. For any OTHER entity — the one
-  // previewed in the library drawer — read its own profile, since the atoms
-  // describe the focused entity, not this one.
+  // For the entity you're ON, read the live atoms: they carry file edits. For
+  // any OTHER entity — the one previewed in the library drawer — read its own
+  // profile, since the atoms describe the focused entity, not this one.
   const isFocused = profile.id === focusedId;
   const file = isFocused
-    ? resolvePrimaryFile(files, groups, activeGroupId, language)
-    : resolvePrimaryFile(profile.files ?? [], profile.documentGroups ?? [], null, language);
+    ? resolvePrimaryFile(files, groups, language)
+    : resolvePrimaryFile(profile.files ?? [], profile.documentGroups ?? [], language);
 
   // A picture is not a document. An image entity's primary file is its asset, and
   // rendering it here would title a painting "Document" and hand its URL to

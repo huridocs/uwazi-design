@@ -1,11 +1,7 @@
 import { atom, type Getter, type Setter } from "jotai";
 import { MAIN_ENTITY_ID, getEntityProfile } from "../data/entityProfiles";
 import { appViewAtom } from "./navigation";
-import {
-  filesAtom,
-  documentGroupsAtom,
-  activePrimaryGroupIdAtom,
-} from "./files";
+import { filesAtom, documentGroupsAtom } from "./files";
 import { resetRelFacetsAtom } from "./filters";
 import { guardNavigationAtom } from "./dirtyGuard";
 
@@ -18,13 +14,11 @@ export const focusedEntityIdAtom = atom<string>(MAIN_ENTITY_ID);
  *  safe and keeps every existing FilesView / viewer consumer unchanged — they
  *  read the same atoms, now holding the focused entity's files. (References are
  *  scoped differently, via `scopedReferencesAtom`, because the Library needs the
- *  full corpus.) Resets the active primary so the new entity's first primary
- *  document leads. */
+ *  full corpus.) */
 function seedFilesFor(entityId: string, set: Setter) {
   const profile = getEntityProfile(entityId);
   set(filesAtom, profile.files ?? []);
   set(documentGroupsAtom, profile.documentGroups ?? []);
-  set(activePrimaryGroupIdAtom, null);
 }
 
 /** Focus a different entity: clear the per-entity relationship facets first

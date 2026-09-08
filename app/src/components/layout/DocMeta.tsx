@@ -3,7 +3,6 @@ import { ChevronDown, FileText, FileType, Code2 } from "lucide-react";
 import { useAtom, useAtomValue } from "jotai";
 import {
   documentGroupsAtom,
-  activePrimaryGroupIdAtom,
 } from "../../atoms/files";
 import { documentFormatAtom, type DocumentFormat } from "../../atoms/selection";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
@@ -27,7 +26,6 @@ const FORMATS: { id: DocumentFormat; label: string; icon: typeof FileText }[] = 
  *  that document's renditions (PDF, plain text, HTML). */
 export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
   const groups = useAtomValue(documentGroupsAtom);
-  const activeGroupId = useAtomValue(activePrimaryGroupIdAtom);
   const [format, setFormat] = useAtom(documentFormatAtom);
   const focusedId = useAtomValue(focusedEntityIdAtom);
 
@@ -59,11 +57,9 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
   const primaryGroups = groups
     .filter((g) => g.isPrimary)
     .sort((a, b) => a.order - b.order);
-  // The document on screen: the active primary if a selection floated one up,
-  // else the first by order — the same resolution `DocumentViewer` uses, so
-  // this names what is actually rendered.
-  const defaultGroup =
-    primaryGroups.find((g) => g.id === activeGroupId) ?? primaryGroups[0];
+  // The document on screen: the first primary group by order — the same
+  // resolution `DocumentViewer` uses, so this names what is actually rendered.
+  const defaultGroup = primaryGroups[0];
   // Nothing else on the Document tab names the document — the viewer draws the
   // file and the picker only switches RENDITION (PDF / text / HTML). With more
   // than one primary document that title is the only way to tell which one you

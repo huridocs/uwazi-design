@@ -347,37 +347,66 @@ export function AddFileModal() {
                         </div>
                       </label>
 
-                      <label className="space-y-1">
-                        <span className="text-meta font-medium text-ink-muted uppercase tracking-wide">
-                          Add as
-                        </span>
-                        <div className="relative">
-                          <select
-                            value={
-                              entry.addAs.type === "translation"
-                                ? `t:${entry.addAs.groupId}`
-                                : entry.addAs.type
+                    </div>
+
+                    {/* A file's role is decided HERE and nowhere else — there
+                        is no promote / demote after upload — so both options
+                        stay visible rather than hiding behind a dropdown. A
+                        native radio group gives one tab stop and arrow keys. */}
+                    <fieldset disabled={!!lockedGroupId} className="space-y-1 disabled:opacity-70">
+                      <legend className="text-meta font-medium text-ink-muted uppercase tracking-wide">
+                        Add as
+                      </legend>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                        <RoleRadio
+                          name={`addas-${entry.id}`}
+                          label="Primary document"
+                          checked={entry.addAs.type === "primary"}
+                          onSelect={() =>
+                            updateEntry(entry.id, { addAs: { type: "primary" } })
+                          }
+                        />
+                        <RoleRadio
+                          name={`addas-${entry.id}`}
+                          label="Supporting file"
+                          checked={entry.addAs.type === "supporting"}
+                          onSelect={() =>
+                            updateEntry(entry.id, { addAs: { type: "supporting" } })
+                          }
+                        />
+                        {primaryGroups.length > 0 && (
+                          <RoleRadio
+                            name={`addas-${entry.id}`}
+                            label="Translation"
+                            checked={entry.addAs.type === "translation"}
+                            onSelect={() =>
+                              updateEntry(entry.id, {
+                                addAs: {
+                                  type: "translation",
+                                  groupId: lockedGroupId ?? primaryGroups[0].id,
+                                },
+                              })
                             }
-                            disabled={!!lockedGroupId}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              if (v === "primary") {
-                                updateEntry(entry.id, { addAs: { type: "primary" } });
-                              } else if (v === "supporting") {
-                                updateEntry(entry.id, { addAs: { type: "supporting" } });
-                              } else if (v.startsWith("t:")) {
-                                updateEntry(entry.id, {
-                                  addAs: { type: "translation", groupId: v.slice(2) },
-                                });
-                              }
-                            }}
-                            className="appearance-none w-full pl-2 pr-7 py-1 text-xs text-ink bg-paper border border-border rounded focus:outline-none focus:ring-1 focus:ring-ink/20 disabled:opacity-70 cursor-pointer truncate"
-                            aria-label="Add as"
+                          />
+                        )}
+                      </div>
+                      {/* A translation belongs TO something, so the target
+                          group is part of the choice — only when there is
+                          more than one document it could join. */}
+                      {entry.addAs.type === "translation" && primaryGroups.length > 1 && (
+                        <div className="relative pt-1">
+                          <select
+                            value={entry.addAs.groupId}
+                            onChange={(e) =>
+                              updateEntry(entry.id, {
+                                addAs: { type: "translation", groupId: e.target.value },
+                              })
+                            }
+                            className="appearance-none w-full pl-2 pr-7 py-1 text-xs text-ink bg-paper border border-border rounded focus:outline-none focus:ring-1 focus:ring-ink/20 cursor-pointer truncate"
+                            aria-label="Translation of"
                           >
-                            <option value="primary">New primary doc</option>
-                            <option value="supporting">Supporting file</option>
                             {primaryGroups.map((g) => (
-                              <option key={g.id} value={`t:${g.id}`}>
+                              <option key={g.id} value={g.id}>
                                 Translation of {g.title}
                               </option>
                             ))}
@@ -387,8 +416,14 @@ export function AddFileModal() {
                             className="absolute right-2 top-1/2 -translate-y-1/2 text-ink-tertiary pointer-events-none"
                           />
                         </div>
-                      </label>
-                    </div>
+                      )}
+                    </fieldset>
+
+                    {/* The role can't be changed after upload, so say it back
+                        in words before the user commits. */}
+                    <p className="text-meta text-ink-tertiary">
+                      {roleReadback(entry.addAs, primaryGroups)}
+                    </p>
 
                     {/* Progress */}
                     <div className="flex items-center gap-2">
@@ -467,4 +502,46 @@ function getExtensionFor(kind: FileKind, originalName: string): string {
     case "document": return ".docx";
     case "link": return "";
   }
+}
+
+/** One option in an entry's "Add as" group. A real `<input type="radio">` so
+ *  the group is one tab stop with arrow-key selection; the visible mark is the
+ *  native control, sized down rather than redrawn. */
+function RoleRadio({
+  name,
+  label,
+  checked,
+  onSelect,
+}: {
+  name: string;
+  label: string;
+  checked: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <label className="flex items-center gap-1.5 text-xs text-ink cursor-pointer">
+      <input
+        type="radio"
+        name={name}
+        checked={checked}
+        onChange={onSelect}
+        className="w-3 h-3 accent-ink cursor-pointer"
+      />
+      {label}
+    </label>
+  );
+}
+
+/** The chosen role, in words. Named separately because a translation reads
+ *  back its target group, which the radio label alone doesn't carry. */
+function roleReadback(
+  addAs: PendingFile["addAs"],
+  primaryGroups: DocumentGroup[],
+): string {
+  if (addAs.type === "primary") return "Adds as a primary document.";
+  if (addAs.type === "supporting") return "Adds as a supporting file.";
+  const group = primaryGroups.find((g) => g.id === addAs.groupId);
+  return group
+    ? `Adds as a translation of ${group.title}.`
+    : "Adds as a translation.";
 }
