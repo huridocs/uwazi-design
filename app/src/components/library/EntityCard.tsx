@@ -11,35 +11,30 @@ import { entityScalarFields } from "../../utils/entityFields";
 import type { Entity } from "../../data/entities";
 import {
   libraryCardInfoAtom,
-  libraryThumbSizeAtom,
-  libraryThumbFitAtom,
-  libraryThumbFrameAtom,
   type LibraryViewMode,
-  type ThumbFrame,
-  type ThumbSize,
 } from "../../atoms/library";
 
-/** The preview slot at each Display-menu size AND frame.
+/** The card's ONE preview treatment.
  *
- *  **Landscape** is a band: full card width, fixed height per size, so its
- *  ratio is whatever the column happens to be (~3:1 at three columns).
- *  **Portrait** is the card's full width at 3:4 — the SLOT is portrait-shaped,
- *  not a portrait picture centred in a wide band (that read as landscape, twice).
- *  What keeps it from becoming a poster is the GRID, not the slot: LibraryView
- *  re-hangs portrait cards in narrower columns, and Size steps the column count
- *  there instead of a height table here. A gallery wall gets taller pictures by
- *  hanging more of them, smaller.
- *
- *  Both are DEFINITE boxes before an image loads — fixed height, or aspect
- *  resolved against the column width — which is the no-shift contract. */
-const COVER_H: Record<ThumbSize, string> = { s: "h-16", m: "h-24", l: "h-36" };
-const CARD_FLOOR: Record<ThumbSize, string> = {
-  s: "min-h-[13.5rem]",
-  m: "min-h-[15.5rem]",
-  l: "min-h-[18.5rem]",
-};
-/** The list row's chip is square at every frame — see EntityThumbnail. */
-const CHIP_BOX: Record<ThumbSize, string> = { s: "w-7 h-7", m: "w-9 h-9", l: "w-12 h-12" };
+ *  A band: full card width, fixed height, so its ratio is whatever the column
+ *  happens to be (~3:1 at three columns). It is a DEFINITE box before an image
+ *  loads, which is the no-shift contract — the no-preview well takes the same
+ *  box, so empty slots and pictures agree on height and position. */
+/* The size / frame / fit controls left `main` with the Playground Split
+   (2026-09-08); they are on `playground`. What stayed is the treatment those
+   controls defaulted to — a landscape BAND at the medium height, with `auto`
+   fit — so the cards render exactly as they did before the controls went. The
+   numbers below are the M row of the tables that used to be here.
+
+   `auto` is still a real rule, not "do nothing": an image whose orientation
+   matches the frame covers it, anything else is matted on vellum. It lives in
+   `EntityThumbnail`, which keeps taking `fit` and `frame` — `PdfPageThumb`'s
+   geometry, `QuietMark` and the video / audio / no-preview treatments all read
+   the frame, and `scripts/check-thumbs.ts` measures against it. */
+const COVER_H = "h-24";
+const CARD_FLOOR = "min-h-[15.5rem]";
+/** The list row's chip is square — see EntityThumbnail. */
+const CHIP_BOX = "w-9 h-9";
 
 /** How many of the parent grid's row tracks one card claims — one per row it
  *  draws (slot? · title · metadata? · footer).
@@ -83,9 +78,6 @@ export const EntityCard = memo(function EntityCard({
 }) {
   const language = useAtomValue(languageAtom);
   const info = useAtomValue(libraryCardInfoAtom);
-  const thumbSize = useAtomValue(libraryThumbSizeAtom);
-  const thumbFit = useAtomValue(libraryThumbFitAtom);
-  const thumbFrame = useAtomValue(libraryThumbFrameAtom);
   const showPreview = info.preview;
   const showMetadata = info.metadata;
   const showConnections = info.connections;
@@ -159,14 +151,14 @@ export const EntityCard = memo(function EntityCard({
                 entityId={entity.id}
                 image={entity.image}
                 size="sm"
-                fit={thumbFit}
+                fit="auto"
                 tint={type?.color}
-                className={`${CHIP_BOX[thumbSize]} rounded shrink-0 overflow-hidden`}
+                className={`${CHIP_BOX} rounded shrink-0 overflow-hidden`}
               />
             ) : (
               // The same mark the grid's empty slot draws, at chip scale — its
               // parts are fractions of the box, so one component serves both.
-              <QuietMark tint={type?.color} className={`${CHIP_BOX[thumbSize]} rounded shrink-0`} />
+              <QuietMark tint={type?.color} className={`${CHIP_BOX} rounded shrink-0`} />
             ))}
           <div className="flex-1 min-w-0">
             <div className="text-sm font-semibold text-ink truncate leading-snug">
@@ -208,19 +200,15 @@ export const EntityCard = memo(function EntityCard({
   // slot + title + footer, already equal everywhere, and in PORTRAIT the aspect
   // slot plus the grid row's own stretch keeps neighbours level — a rem floor
   // sized for one column width is wrong at every other.
-  const minHeight =
-    showPreview && showMetadata && thumbFrame === "landscape"
-      ? CARD_FLOOR[thumbSize]
-      : "";
+  const minHeight = showPreview && showMetadata ? CARD_FLOOR : "";
 
   /** One track per row this card draws. Both toggles are global, so every card
    *  on screen agrees — see ROW_SPAN. */
   const rowCount = 2 + (showPreview ? 1 : 0) + (showMetadata ? 1 : 0);
 
-  /** Slot class: landscape = the fixed band; portrait = the card's width at
-   *  3:4. The picture fills the slot either way — Cover crops to fill it,
-   *  auto/contain mat within it (ImageThumb's object-fit owns that call). */
-  const slotShape = thumbFrame === "portrait" ? "aspect-[3/4]" : COVER_H[thumbSize];
+  /** Slot class: the landscape band. The picture fills it — a landscape image
+   *  covers, anything else mats (ImageThumb's object-fit owns that call). */
+  const slotShape = COVER_H;
 
   return (
     // A SUBGRID, not a flex column. The card's rows — slot, title, metadata,
@@ -257,8 +245,8 @@ export const EntityCard = memo(function EntityCard({
               kind={entity.preview}
               entityId={entity.id}
               image={entity.image}
-              fit={thumbFit}
-              frame={thumbFrame}
+              fit="auto"
+              frame="landscape"
               tint={getEntityType(entity.typeId)?.color}
               className="h-full w-full rounded overflow-hidden border border-border/60"
             />

@@ -578,41 +578,36 @@ memory, and the
 `pageFoldWithMap` builds them lazily, and priming them held 20.4MB of live
 `Int32Array` for pages no excerpt cuts (heap after prime 434.8MB → 326.2MB).
 
-## Library card thumbnails — size × frame × fit
+## Library card thumbnails — one treatment
 
-Three Display-menu controls over one slot, and they compose in that order: how
-big, what shape, how the picture sits in it.
+**The size / frame / fit controls left `main` with the Playground Split
+(2026-09-08)** and are on `playground` — `libraryThumbSizeAtom`,
+`libraryThumbFrameAtom`, `libraryThumbFitAtom`, their three Display-menu rows and
+the registry's `thumbSections()`. What `main` draws is the treatment they
+defaulted to, hardcoded in `EntityCard`: **a landscape band at the medium height
+(`h-24`), with `auto` fit**, in the classic three-column hang
+(`cardGridCols`, no longer re-hung per frame or size).
 
-- **Frame** (`libraryThumbFrameAtom`, `landscape | portrait`) is **one choice for
-  the whole grid, never per card** — per-card orientation ragged-edges the rows
-  the reserved slot exists to keep level. Landscape is a full-width band (h-16 /
-  h-24 / h-36 by Size). **Portrait is the card's full width at `aspect-[3/4]` —
-  the SLOT is portrait-shaped, and the GRID is what keeps it from becoming a
-  poster**: `LibraryView` re-hangs portrait cards in narrower columns
-  (`cardGridCols`), and **Size steps the column count** (S = five across at xl,
-  M = four, L = three) instead of a slot-height table. Two earlier treatments —
-  a 3:4 picture centred in a wide band, then a merely-taller band — both read
-  as landscape at real column widths; don't reintroduce them.
-- **Fit** (`libraryThumbFitAtom`, `auto | cover | contain`) — `auto` is ONE rule
-  read against the frame: **an image whose orientation matches the frame covers
-  it, anything else is matted on vellum.** A square matches neither, so it mats
-  in both. **Explicit `cover` is FULL-BLEED** — it fills the slot edge to edge in
-  either frame; `contain` always mats. The call is `ImageThumb`'s object-fit
+What survives the cut, because it is the drawing and not the choosing:
+
+- **`auto` is still a rule, not a shrug** — an image whose orientation matches
+  the frame covers it, anything else is matted on vellum; a square matches
+  neither, so it mats. The call is `ImageThumb`'s object-fit
   (`EntityThumbnail.tsx`), never a second box shape.
-- **Card floor** (`CARD_FLOOR`, landscape only, and only with metadata ON): it
+- **Card floor** (`CARD_FLOOR`, `min-h-[15.5rem]`, only with metadata ON): it
   absorbs the 1–3-field spread so a one-field card meets its neighbours. With
-  metadata off the card is slot + title + footer — already equal — and in
-  portrait the aspect slot plus the grid row's stretch keeps rows level; a rem
-  floor sized for one column width would be wrong at every other.
-- The **list row's chip stays square at every frame** — a 3:4 chip would outgrow
-  the two lines of text beside it, and a mat inside 2.25rem is almost all mat.
-- **No-shift holds by construction**: every box is definite before an image
-  loads (fixed height, or aspect against the column width), and the no-preview
-  vellum well uses the same box, so rows line up whatever a card is carrying.
-- Verified against the artworks corpus's real spread — 30 portrait / 22
-  landscape / 8 square. Stories: `Sizes` and `FitModes` render the full matrix
-  (3 ratios × 3 sizes/fits × both frames).
-
+  metadata off the card is slot + title + footer, already equal.
+- The **list row's chip stays square** (`w-9 h-9`) — a 3:4 chip would outgrow the
+  two lines of text beside it, and a mat inside 2.25rem is almost all mat.
+- **No-shift holds by construction**: the slot is a definite box before an image
+  loads, and the no-preview vellum well uses the same box, so rows line up
+  whatever a card is carrying.
+- `EntityThumbnail` KEEPS both frames and all three fits as props — the fit rule,
+  `PdfPageThumb`'s fill geometry, `QuietMark`, the video / audio / no-preview
+  treatments and `scripts/check-thumbs.ts --portrait` are all written against the
+  pair, and `playground` still drives them from the menu. Only `main`'s card
+  stops choosing. Stories: `Sizes` and `FitModes` still render the full matrix,
+  which is where the other shapes remain visible.
 
 ### What fills the slot, per kind
 - **Document** — the real first page. In the **band** it keeps the inset stack

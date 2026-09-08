@@ -289,6 +289,9 @@ export type ResultsLayout = "grouped" | "tree" | "passages";
 
 /** Thumbnail rendering — how tall the preview slot is drawn and how an image
  *  sits inside it. */
+/** Retained for the shapes `EntityThumbnail` still switches on — the CONTROLS
+ *  that let a reader choose between them left `main` with the Playground Split
+ *  and live on `playground`. The card hardcodes landscape / auto. */
 export type ThumbSize = "s" | "m" | "l";
 
 /** The SHAPE of the slot, for the whole grid at once — never per card, or rows
@@ -408,9 +411,6 @@ function displayOption<T extends DisplayValue>(
 }
 
 export const DEFAULT_RESULTS_LAYOUT: ResultsLayout = "grouped";
-export const DEFAULT_THUMB_SIZE: ThumbSize = "m";
-export const DEFAULT_THUMB_FRAME: ThumbFrame = "landscape";
-export const DEFAULT_THUMB_FIT: ThumbFit = "auto";
 export const DEFAULT_LIST_DENSITY: ListDensity = "comfortable";
 
 export const libraryResultsLayoutAtom = displayOption<ResultsLayout>(
@@ -418,13 +418,6 @@ export const libraryResultsLayoutAtom = displayOption<ResultsLayout>(
   "mode",
   DEFAULT_RESULTS_LAYOUT,
 );
-export const libraryThumbSizeAtom = displayOption<ThumbSize>("thumbSize", "mode", DEFAULT_THUMB_SIZE);
-export const libraryThumbFrameAtom = displayOption<ThumbFrame>(
-  "thumbFrame",
-  "mode",
-  DEFAULT_THUMB_FRAME,
-);
-export const libraryThumbFitAtom = displayOption<ThumbFit>("thumbFit", "mode", DEFAULT_THUMB_FIT);
 export const libraryListDensityAtom = displayOption<ListDensity>(
   "density",
   "mode",

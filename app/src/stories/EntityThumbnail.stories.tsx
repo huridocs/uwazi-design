@@ -76,9 +76,12 @@ export const ListChip: Story = {
   ),
 };
 
-/** The frame the card draws, at each size preset. Landscape is a full-width band;
- *  portrait is a 3:4 frame sized from its height — the same tables `EntityCard`
- *  keeps, so these stories move when the grid does. */
+/** The shapes the COMPONENT can draw. `main`'s card draws one of them — the
+ *  landscape band at medium — since the Playground Split took the size / frame /
+ *  fit controls to `playground`; the component keeps both frames because the fit
+ *  rule, `PdfPageThumb`'s geometry and `scripts/check-thumbs.ts --portrait` are
+ *  all written against the pair. These stories are where the other shapes are
+ *  still visible. */
 const FRAME_H: Record<ThumbFrame, { size: string; h: string }[]> = {
   landscape: [
     { size: "small", h: "h-16" },
@@ -98,7 +101,7 @@ const FRAMES: ThumbFrame[] = ["landscape", "portrait"];
 const shape = (frame: ThumbFrame, fit: ThumbFit = "auto") =>
   frame === "portrait" && fit !== "cover" ? "aspect-[3/4]" : "w-full";
 
-/** The Display menu's size presets, in BOTH frames. A portrait frame at a given
+/** Every size the component takes, in BOTH frames. A portrait frame at a given
  *  size stands as tall as a landscape one a step up — which is what makes Size
  *  read as one control across the two shapes. The row band is full width at both,
  *  so the portrait pictures hang centred and the grid rows still line up. */

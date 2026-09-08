@@ -42,8 +42,6 @@ import {
   libraryListColumnsAtom,
   libraryListDensityAtom,
   libraryFieldLabelsAtom,
-  libraryThumbFrameAtom,
-  libraryThumbSizeAtom,
   librarySortAtom,
   librarySortDirAtom,
   defaultSortDir,
@@ -195,21 +193,9 @@ export function LibraryView() {
   const listColumnOn = useAtomValue(libraryListColumnsAtom);
   const listDensity = useAtomValue(libraryListDensityAtom);
   const fieldLabels = useAtomValue(libraryFieldLabelsAtom);
-  const thumbFrame = useAtomValue(libraryThumbFrameAtom);
-  const thumbSize = useAtomValue(libraryThumbSizeAtom);
-  // Portrait cards are made portrait by the GRID: the 3:4 slot spans the card's
-  // width, so the column width is what sets the frame's height — Size steps the
-  // column count (S hangs five across, L three) instead of a slot-height table.
-  // Landscape keeps the classic three-column hang; previews off means the frame
-  // control isn't in play at all.
-  const cardGridCols =
-    thumbFrame === "portrait" && cardInfo.preview
-      ? {
-          s: "grid-cols-2 sm:grid-cols-3 xl:grid-cols-5",
-          m: "grid-cols-2 sm:grid-cols-3 xl:grid-cols-4",
-          l: "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3",
-        }[thumbSize]
-      : "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3";
+  // One hang: the classic three-column grid. The portrait frame and the sizes
+  // that re-hung it in narrower columns left `main` with the Playground Split.
+  const cardGridCols = "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3";
   const [sort, setSort] = useAtom(librarySortAtom);
   const [sortDir, setSortDir] = useAtom(librarySortDirAtom);
   const setSortKey = useCallback(

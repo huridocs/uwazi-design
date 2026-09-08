@@ -140,65 +140,11 @@ const CARD_INFO: DisplaySection = {
 /** Size, then frame, then fit — the order the questions come in: how big, what
  *  shape, how the picture sits in it. All three are dead while the Thumbnail
  *  toggle is off, and they say so by dimming rather than by leaving. */
-const thumbSections = (): DisplaySection[] => {
-  const enabled = (v: DisplayValues) => v.preview !== false;
-  return [
-    {
-      id: "thumbSize",
-      label: "Thumbnail size",
-      kind: "choice",
-      separator: true,
-      enabled,
-      option: {
-        id: "thumbSize",
-        default: "m",
-        choices: [
-          { id: "s", label: "Small" },
-          { id: "m", label: "Medium" },
-          { id: "l", label: "Large" },
-        ],
-      },
-    },
-    {
-      id: "thumbFrame",
-      label: "Thumbnail frame",
-      kind: "choice",
-      enabled,
-      option: {
-        id: "thumbFrame",
-        default: "landscape",
-        choices: [
-          { id: "landscape", label: "Landscape", detail: "A wide band across the card" },
-          {
-            id: "portrait",
-            label: "Portrait",
-            detail: "3:4 cards in narrower columns — a gallery hang",
-          },
-        ],
-      },
-    },
-    {
-      id: "thumbFit",
-      label: "Image fit",
-      kind: "choice",
-      enabled,
-      option: {
-        id: "thumbFit",
-        default: "auto",
-        choices: [
-          { id: "auto", label: "Auto", detail: "Ratio decides — wide fills, tall is matted" },
-          { id: "cover", label: "Cover", detail: "Fill the whole slot edge to edge, crop the image" },
-          { id: "contain", label: "Contain", detail: "Whole image on a quiet mat" },
-        ],
-      },
-    },
-  ];
-};
 
 // ── The registry ─────────────────────────────────────────────────────────────
 
 export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
-  cards: [SORT, CARD_INFO, ...thumbSections()],
+  cards: [SORT, CARD_INFO],
 
   /** The list's options are its COLUMNS, one per track the table can draw —
    *  including the corpus's own metadata properties, which no other view can
