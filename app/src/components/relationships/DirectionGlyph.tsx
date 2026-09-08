@@ -33,6 +33,11 @@ export function DirectionGlyph({ direction, size = "sm" }: DirectionGlyphProps) 
   const icon = size === "sm" ? 9 : 10;
   return (
     <span
+      // `role="img"` is what MAKES the label legible to AT: `aria-label` is
+      // PROHIBITED on a generic span, so a screen reader was dropping it —
+      // silently, since the glyph is the only thing saying which way the
+      // relationship runs. Named as an image, it announces "Outgoing".
+      role="img"
       aria-label={title}
       title={title}
       className={`inline-flex items-center justify-center ${box} rounded-[2px] bg-vellum text-ink-tertiary shrink-0`}
