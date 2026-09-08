@@ -9,7 +9,6 @@ import type { MetadataField, RelationshipMetadataField } from "../../data/metada
 import { specInherits } from "../../utils/inheritance";
 import { MetadataCard } from "./MetadataCard";
 import { MasonryGrid, MasonryItem } from "./MasonryGrid";
-import { DetailsGrid } from "./DetailsGrid";
 import { RelationshipCards } from "./RelationshipCards";
 import { fieldItem, connectionItem, isLongField, type MetadataItem } from "./items";
 
@@ -46,7 +45,7 @@ export function MetadataFieldBlock({ item }: { item: MetadataItem }) {
  *  button that does nothing would be a worse lie than not offering it. The
  *  `-m-1 p-1` keeps the hover well from moving the row: values sit at the same
  *  y armed or not. */
-export function FillableValue({ item }: { item: MetadataItem }) {
+function FillableValue({ item }: { item: MetadataItem }) {
   const fillTarget = useAtomValue(fillTargetAtom);
   const sendFill = useSetAtom(fillRequestAtom);
   if (!fillTarget || !item.fillValue) return <>{item.content}</>;
@@ -119,9 +118,16 @@ export function MetadataRecord({
      the DOM still walks the record the way the template defines it.
 
      The bands are ordered by how much of the reader's attention each value
-     wants: the facts you scan (dates, a country, a case number) collect into one
-     dense grid at the top, the prose you actually read follows, and the sets of
-     chips — which are a list, not a sentence — come last. */
+     wants: the facts you scan (dates, a country, a case number) come first and
+     tile, the prose you actually read follows, and the sets of chips — which are
+     a list, not a sentence — come last. Link-only connections are chips and fall
+     at the end of that last band on their own, because `items` is built scalars-
+     then-connections and the band keeps that order.
+
+     Every one of them is its OWN bordered card. Collecting the scalars into a
+     single "Details" grid was tried and is out: the record's rule is one field,
+     one card, and it has been settled twice. What the band ordering buys is the
+     part that was actually missing — uniform cards next to uniform cards. */
   const details = items.filter((i) => i.kind === "scalar");
   const longs = items.filter((i) => i.kind === "long");
   const chips = items.filter((i) => i.kind === "chips");
@@ -144,12 +150,15 @@ export function MetadataRecord({
 
   return (
     <MasonryGrid containerRef={rootRef}>
-      {/* One card, full width, its own 1–3 column grid inside. */}
-      {details.length > 0 && (
-        <MasonryItem full>
-          <DetailsGrid items={details} />
+      {/* Short scalars first, a card each. They are one line apiece, so at three
+          columns they tile three-across and the band reads as a block of facts
+          — which is what grouping them into a single grid was reaching for, and
+          the grouping is not wanted: every field is its own bordered card. */}
+      {details.map((item) => (
+        <MasonryItem key={item.id}>
+          <MetadataFieldBlock item={item} />
         </MasonryItem>
-      )}
+      ))}
       {/* Prose: two columns of three, one of two — see MasonryItem's `wide`. */}
       {longs.map((item) => (
         <MasonryItem key={item.id} wide>
