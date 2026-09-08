@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { languageName } from "../../atoms/language";
 import { createPortal } from "react-dom";
 import {
   FileText,
@@ -179,7 +180,7 @@ export function FileTable({
                   <span>•</span>
                   <span dir="ltr">{file.size}</span>
                   <span>•</span>
-                  <span>{file.language}</span>
+                  <span>{languageName(file.language)}</span>
                 </div>
                 <div className="text-meta text-ink-muted mt-0.5">
                   {formatFileDate(file.modified)}
@@ -239,7 +240,23 @@ export function FileTable({
     },
     { id: "type", header: "Type", width: "70px", cell: (file) => <span className="text-xs text-ink-tertiary">{typeLabels[file.type]}</span> },
     { id: "size", header: "Size", width: "70px", cell: (file) => <span dir="ltr" className="text-xs text-ink-tertiary">{file.size}</span> },
-    { id: "lang", header: "Lang", width: "50px", cell: (file) => <span className="text-xs text-ink-tertiary">{file.language}</span> },
+    {
+      id: "lang",
+      header: "Lang",
+      width: "50px",
+      // A 50px column cannot hold "Français", and widening it takes the room
+      // from the file NAME in an already dense grid. The code stays and carries
+      // the name for hover and for a screen reader.
+      cell: (file) => (
+        <span
+          className="text-xs text-ink-tertiary"
+          title={languageName(file.language)}
+          aria-label={languageName(file.language)}
+        >
+          {file.language}
+        </span>
+      ),
+    },
     { id: "modified", header: "Modified", width: "90px", cell: (file) => <span className="text-xs text-ink-tertiary">{formatFileDate(file.modified)}</span> },
     {
       id: "actions",

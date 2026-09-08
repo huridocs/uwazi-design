@@ -1,3 +1,4 @@
+import { languageName } from "../../atoms/language";
 import {
   FileText,
   Music,
@@ -198,7 +199,7 @@ function FileCompactCard({ file }: { file: FileEntry }) {
             {file.type.toUpperCase()}
           </span>
           <span className="text-meta text-ink-muted">{file.size}</span>
-          <span className="text-meta text-ink-muted">{file.language}</span>
+          <span className="text-meta text-ink-muted">{languageName(file.language)}</span>
         </div>
       </div>
     </div>

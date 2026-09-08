@@ -1,4 +1,5 @@
 import { X, Download, ExternalLink } from "lucide-react";
+import { languageName } from "../../atoms/language";
 import { useAtom, useAtomValue } from "jotai";
 import { filesAtom, viewerFileIdAtom } from "../../atoms/files";
 import { FileEntry, FileKind } from "../../data/files";
@@ -50,7 +51,11 @@ export function FileViewerModal() {
           <div className="min-w-0">
             <p className="text-sm font-semibold text-ink truncate">{file.name}</p>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-meta font-semibold text-ink-secondary bg-vellum px-1.5 py-px rounded">
+              <span
+                className="text-meta font-semibold text-ink-secondary bg-vellum px-1.5 py-px rounded"
+                title={languageName(file.language)}
+                aria-label={languageName(file.language)}
+              >
                 {file.language}
               </span>
               <span className="text-meta text-ink-tertiary uppercase">{file.type}</span>

@@ -1,4 +1,4 @@
-import type { Language } from "../atoms/language";
+import { languageName, type Language } from "../atoms/language";
 
 /** Machine translation, mocked.
  *
@@ -66,16 +66,3 @@ export function mockTranslate(
   const swapped = swap(source, to);
   return swapped.trim() || source;
 }
-
-/** Display names, in the UI's own language — the picker in the issue
- *  screenshot reads "Spanish", not "Español". */
-export const LANGUAGE_NAMES: Record<Language, string> = {
-  EN: "English",
-  ES: "Spanish",
-  FR: "French",
-  AR: "Arabic",
-};
-
-/** Arabic is the one RTL reading direction in the set; a title typed into an
- *  LTR box renders its punctuation on the wrong end. */
-export const languageDir = (lang: Language): "rtl" | "ltr" => (lang === "AR" ? "rtl" : "ltr");

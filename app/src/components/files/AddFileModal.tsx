@@ -6,7 +6,7 @@ import {
   filesAtom,
   documentGroupsAtom,
 } from "../../atoms/files";
-import { languageAtom } from "../../atoms/language";
+import { languageAtom, languageName } from "../../atoms/language";
 import { FileEntry, FileKind, DocumentGroup } from "../../data/files";
 import { asset } from "../../utils/asset";
 
@@ -336,7 +336,7 @@ export function AddFileModal() {
                           >
                             {Array.from(new Set([...knownLanguages, entry.language])).map((l) => (
                               <option key={l} value={l}>
-                                {l}
+                                {languageName(l)}
                               </option>
                             ))}
                           </select>

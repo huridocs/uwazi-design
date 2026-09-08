@@ -18,7 +18,7 @@ import {
   documentGroupsAtom,
   drawerEditFocusAtom,
 } from "../../atoms/files";
-import { languageAtom } from "../../atoms/language";
+import { languageAtom, languageName } from "../../atoms/language";
 import { formatFileDate } from "../../utils/dates";
 
 const typeIcons: Record<FileKind, typeof FileText> = {
@@ -176,9 +176,13 @@ export function FileDetailEditor({
                   className="appearance-none bg-transparent pl-2 pr-6 py-0.5 text-xs font-medium text-ink focus:outline-none cursor-pointer"
                   aria-label="File language"
                 >
+                  {/* Named, not coded: this is a chooser, and a reader picking
+                      a file's language should see the language. Codes this app
+                      has no name for (PT, DE, the "—" for none) fall back to
+                      themselves — see `languageName`. */}
                   {languageOptions.map((lang) => (
                     <option key={lang} value={lang}>
-                      {lang}
+                      {languageName(lang)}
                     </option>
                   ))}
                 </select>
@@ -189,7 +193,7 @@ export function FileDetailEditor({
               </div>
             ) : (
               <span className="inline-block px-2 py-0.5 text-xs font-medium text-ink-secondary bg-vellum rounded">
-                {file.language}
+                {languageName(file.language)}
               </span>
             )}
           </Field>
@@ -252,7 +256,11 @@ export function FileDetailEditor({
                           : "bg-paper border-border hover:bg-parchment cursor-pointer"
                       }`}
                     >
-                      <span className="text-meta font-semibold text-ink-secondary bg-vellum px-1 rounded">
+                      <span
+                        className="text-meta font-semibold text-ink-secondary bg-vellum px-1 rounded"
+                        title={languageName(t.language)}
+                        aria-label={languageName(t.language)}
+                      >
                         {t.language}
                       </span>
                       <span className="text-xs text-ink truncate max-w-[180px]">
