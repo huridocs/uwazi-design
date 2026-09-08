@@ -4,8 +4,8 @@ import { Select } from "../shared/Select";
  *  use so the toolbar reads as three of one control instead of two dropdowns
  *  flanking a segmented widget.
  *
- *  It is the compact end of a trade that has been round the houses. Five
- *  segments hold a fixed 156px whatever they show; one trigger holds the widest
+ *  It is the compact end of a trade that has been round the houses. Segments
+ *  hold a fixed width whatever they show; one trigger holds the widest
  *  label once, and names the active view into the bargain — which bare icons
  *  never did. What it costs is the one-click switch: every view is still
  *  reachable, but through a menu.
@@ -19,7 +19,6 @@ const VIEWS = [
   { value: "cards", label: "Cards" },
   { value: "list", label: "List" },
   { value: "map", label: "Map" },
-  { value: "timeline", label: "Timeline" },
   // Always listed, query or not — the view renders its own "search to see where
   // terms match" state rather than appearing and disappearing from the menu.
   { value: "results", label: "Results" },

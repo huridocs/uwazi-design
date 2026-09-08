@@ -461,14 +461,13 @@ The 5 sample rows in `data/imports.ts` are seeded to match `images/screens/impor
 
 ## Library search — where the evidence lives
 
-Search matches can hide in a property or a document body. Three surfaces answer
-"why is this row here?", all off ONE data path (`buildSnippetsFor` /
+Search matches can hide in a property or a document body. Two surfaces answer
+"why is this row here?", both off ONE data path (`buildSnippetsFor` /
 `matchCategories` in `utils/librarySnippets.ts`, tokenized by `utils/queryTokens.ts`):
 
 - **`MatchOrigin`** (`components/library/MatchOrigin.tsx`) — the row-level mark for
   layouts with no room for a snippet: the **List table** (a 3.5rem "Match" column,
-  mounted only while a query is active) and the **timeline Spine** (a fixed
-  2.25rem slot at the row's end). Renders ONLY where the evidence is off-row —
+  mounted only while a query is active). Renders ONLY where the evidence is off-row —
   `hiddenMatchOrigin` takes the field keys the row already marks, **per row**
   (a Country column showing an em-dash proves nothing). Carbon `Tag` = property,
   `FileText` = document body; hover/focus builds that one entity's excerpt into a
@@ -488,37 +487,20 @@ Search matches can hide in a property or a document body. Three surfaces answer
   `components/library/ResultsSnippets/ResultsMainView.tsx`, layout picked in the
   Display menu via `libraryResultsLayoutAtom` — **grouped** (wide card, properties
   beside passages) / **tree** (entity → field → snippets) / **passages** (flat
-  ranked passage list, entity secondary) / **spine** (best passage on a time axis).
+  ranked passage list, entity secondary).
   Every layout drops the TITLE snippet — each already prints the title marked.
   With the main pane in Results, a query no longer auto-opens the drawer's Results
   tab (two copies of one list).
-- **`TimeSpine`** (`components/library/TimeSpine.tsx`) — ONE proportional
-  chronology, rendered by both `LibraryTimelineView`'s Spine layout and the
-  Results spine. It owns `useTrackGeom` (the axis inset the Rail and Density
-  tracks share), the adaptive scale, year/month marks, elided-silence breaks,
-  collision push, leader lines and `SpineDate`. Callers pass rows + `rowHeight` +
-  `renderRow` and nothing else — **don't re-derive spine geometry anywhere.**
-  Three things it settled in 2026-08 that dense data breaks, so don't undo them:
-  - **Marks are nodes ON the axis, not dots behind it** — `MARK_R` 3.5 with a
-    `--bg-surface` ring painted under the fill (`paintOrder: "stroke"`), at full
-    colour. The old 2.5px/0.7-opacity dot was cut in half by the axis hairline.
-  - **Clusters get ONE mark and ONE brace.** Rows whose marks would touch
-    (`CLUSTER_EPS`, measured on the mark's drawn footprint — so a compressed
-    fortnight clusters exactly like thirteen same-day filings) share a capsule
-    spanning their instants plus a curve/stem/tick brace, instead of a bead of
-    fused dots and a fan of identical curves. The capsule takes the members'
-    colour where they agree and `--text-tertiary` where they don't; a selected
-    member surfaces from it in its own colour. **No count badge** — the brace
-    enumerates, and the rows are right there.
-  - **The "N later" elision label reads at the row columns' START**, rule running
-    toward the axis and stopping at the row bodies' edge. Against the axis it sat
-    in the trailing type-name column (an italic phrase among thirteen
-    "Document"s) AND in the leader gutter, where a post-break row's leader
-    crosses it. Marks inside an elided band compress WITH the band (`at()`), or
-    the axis prints Jan, Jul, Apr.
-  Empty `rows` renders `null`, not an axis anchored to the epoch. Stories:
-  `stories/TimeSpine.stories.tsx` (Default / Clustered / ClusteredMixed /
-  ClusteredSelected / Elided / Minimal / Empty).
+**Chronology left `main` with the Playground Split (2026-09-08).** The Library's
+Timeline view mode, the `TimeBrush` strip under every layout, `TimeSpine` and the
+Results "spine" layout are on the `playground` branch, with `BucketBreakdown` and
+`utils/timeline.ts` (their only consumers went with them). What answers "why is
+this row here?" on `main` is the pair above — the List table's Match column and
+the Results view. What a reader LOSES is the time axis: a search can still tell
+you WHERE a term matched, and the date facets and the Date column still narrow
+and order by date, but nothing plots the result set as a chronology, so "when
+does this cluster?" is now read off dates rather than seen. Don't rebuild a
+second spine here — take it from `playground`.
 
 Match-type chips (Title / Properties / Document) are `ToggleChip`
 (`components/shared/ToggleChip.tsx`) — `ActiveFilterChip`'s visual twin with
@@ -532,10 +514,9 @@ own reads a connected one's (`cejilRenderedDoc` → `docFilesFor`'s Sentencia
 fallback), so identical passages surface under a dozen case names.
 `EntitySnippets.borrowedFrom` carries that source through the one snippet path,
 and `components/library/BorrowedDocLine.tsx` prints it as `↳ from <document>` on
-all four Results layouts, the drawer's result card and the `MatchOrigin` popover.
-It rides an ALREADY-MOUNTED line (a section label, a row's attribution, the
-spine's fixed trailing slot) — never a line of its own that appears and
-disappears. Both it and metadata's `ProvenanceTrail` (`↳ via …`) render through
+every Results layout, the drawer's result card and the `MatchOrigin` popover.
+It rides an ALREADY-MOUNTED line (a section label, a row's attribution) — never a
+line of its own that appears and disappears. Both it and metadata's `ProvenanceTrail` (`↳ via …`) render through
 `components/shared/ProvenanceLine.tsx`, so the app has ONE provenance idiom.
 **Documents are addressed by file `_id`, not filename.** `files.json` was
 rewritten after the import: 5,245 records, 6 distinct filenames, 6 urls — so an

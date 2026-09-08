@@ -284,20 +284,8 @@ const enterSearchResultsAtom = atom(null, (get, set) => {
  *                document passages (the drawer's card, given room)
  *  - `tree`      entity → matched field → its snippets, collapsible at both levels
  *  - `passages`  every matching passage as one flat ranked list, entity secondary
- *                — the reading view
- *  - `spine`     passages on a proportional time axis, each entity carrying its
- *                strongest one */
-export type ResultsLayout = "grouped" | "tree" | "passages" | "spine";
-
-/** Timeline body flavour — four ways to read the same chronology:
- *  - `rail`     the text-references minimap on a vertical time track: dots and
- *               counted clusters that fan out into their members. Navigation —
- *               clicking picks an entity, it does not filter.
- *  - `density`  the same track as a volume histogram; clicking a bar FILTERS the
- *               Library to that period.
- *  - `spine`    a proportional chronology — every entity at its exact instant
- *  - `lanes`    a template × period grid */
-export type TimelineLayout = "rail" | "density" | "spine" | "lanes";
+ *                — the reading view */
+export type ResultsLayout = "grouped" | "tree" | "passages";
 
 /** Thumbnail rendering — how tall the preview slot is drawn and how an image
  *  sits inside it. */
@@ -420,22 +408,15 @@ function displayOption<T extends DisplayValue>(
 }
 
 export const DEFAULT_RESULTS_LAYOUT: ResultsLayout = "grouped";
-export const DEFAULT_TIMELINE_LAYOUT: TimelineLayout = "rail";
 export const DEFAULT_THUMB_SIZE: ThumbSize = "m";
 export const DEFAULT_THUMB_FRAME: ThumbFrame = "landscape";
 export const DEFAULT_THUMB_FIT: ThumbFit = "auto";
 export const DEFAULT_LIST_DENSITY: ListDensity = "comfortable";
-export const DEFAULT_TIME_HUB = true;
 
 export const libraryResultsLayoutAtom = displayOption<ResultsLayout>(
   "resultsLayout",
   "mode",
   DEFAULT_RESULTS_LAYOUT,
-);
-export const libraryTimelineLayoutAtom = displayOption<TimelineLayout>(
-  "timelineLayout",
-  "mode",
-  DEFAULT_TIMELINE_LAYOUT,
 );
 export const libraryThumbSizeAtom = displayOption<ThumbSize>("thumbSize", "mode", DEFAULT_THUMB_SIZE);
 export const libraryThumbFrameAtom = displayOption<ThumbFrame>(
@@ -451,7 +432,6 @@ export const libraryListDensityAtom = displayOption<ListDensity>(
 );
 /** The time strip charts the whole result set, so it is one switch for every
  *  mode — the only `shared` toggle in the registry. */
-export const libraryTimeHubAtom = displayOption<boolean>("timeStrip", "shared", DEFAULT_TIME_HUB);
 
 /** What a CARD carries, for whichever mode is drawing cards. Replaces the old
  *  `libraryInfoAtom`, which the list table also read. */
