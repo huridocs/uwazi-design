@@ -18,11 +18,22 @@ import {
  *    the record down column one, then back up for column two.
  *
  *  So: ONE grid, children in field order, fine-grained rows, and each item spans
- *  as many rows as it is tall. Placement is CSS Grid's own sparse auto-flow —
- *  items are placed in order, each into the first free position — which is
- *  masonry's packing and reading order at once. Deliberately NOT `dense`: dense
- *  backfills gaps with LATER items, which is the visual reordering this whole
- *  approach exists to avoid.
+ *  as many rows as it is tall.
+ *
+ *  Placement is `dense`, and that is a reversal worth explaining because the
+ *  first version of this file argued against it. Dense backfills a gap with a
+ *  LATER item, so visual order can diverge from DOM order — which was
+ *  unacceptable while the record was one long run of mixed-height cards, since
+ *  the divergence could be anywhere and about anything.
+ *
+ *  The record is no longer that. It is bands of like cards (see MetadataRecord):
+ *  a run of one-line scalars, then prose, then chips. Inside the scalar band
+ *  every card is the same height, so dense has nothing to reorder. The one place
+ *  it acts is the seam where a two-column prose card leaves a third column
+ *  empty — and there, filling it with the chip card that was coming next is
+ *  better than a column of blank paper, because both are already in the same
+ *  band of the reader's attention. The DOM order is untouched either way, so the
+ *  Tab order and a screen reader still walk the template's order exactly.
  *
  *  Rows are 1px with `row-gap: 0`, and the gutter is the item's own bottom
  *  padding. It has to be that way round: `row-gap` sits between TRACKS, so an
@@ -67,7 +78,7 @@ export function MasonryGrid({
     <div ref={containerRef} className={`@container ${className}`}>
       <Ctx.Provider value={{ gutter }}>
         <div
-          className={`grid items-start ${COLS}`}
+          className={`grid grid-flow-row-dense items-start ${COLS}`}
           style={{ gridAutoRows: "1px", rowGap: 0, columnGap: `${gutter}px` }}
         >
           {children}
