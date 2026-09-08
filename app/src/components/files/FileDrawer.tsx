@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   FileText,
   Music,
@@ -11,17 +10,11 @@ import {
   Eye,
   ArrowLeft,
 } from "lucide-react";
-import { useAtom, useAtomValue } from "jotai";
-import { DrawerTabs } from "../layout/DrawerTabs";
+import { useAtom } from "jotai";
 import { FileEntry } from "../../data/files";
-import {
-  filesAtom,
-  documentGroupsAtom,
-  viewerFileIdAtom,
-} from "../../atoms/files";
+import { viewerFileIdAtom } from "../../atoms/files";
 import { useNotify } from "../../hooks/useNotify";
 import { FileDetailEditor } from "./FileDetailEditor";
-import { AddFileDropArea } from "./AddFileDropArea";
 import { FileViewerBody, resolveFileUrl } from "./FileViewerModal";
 import { DocumentViewer } from "../viewer/DocumentViewer";
 
@@ -52,10 +45,7 @@ export function FileDrawer({
   onAddTranslation,
   onFocusFile,
 }: FileDrawerProps) {
-  const [activeTab, setActiveTab] = useState("file");
   const notify = useNotify();
-  const allFiles = useAtomValue(filesAtom);
-  const allGroups = useAtomValue(documentGroupsAtom);
   const [viewerFileId, setViewerFileId] = useAtom(viewerFileIdAtom);
 
   const focusedFile =
@@ -64,64 +54,9 @@ export function FileDrawer({
   // drawer body from editor to inline media + action bar to back/download.
   const viewing = focusedFile && focusedFile.id === viewerFileId;
 
-  // Translations tab is keyed on the focused file's group. Siblings include
-  // the focused file itself so users see the full set.
-  const translations = focusedFile
-    ? allFiles.filter((f) => f.groupId === focusedFile.groupId)
-    : [];
-  const focusedGroup = focusedFile
-    ? allGroups.find((g) => g.id === focusedFile.groupId)
-    : undefined;
-
-  const drawerTabs = [
-    { id: "file", label: "File" },
-    {
-      id: "translations",
-      label: "Translations",
-      count: translations.length || undefined,
-    },
-  ];
-
-  const handleDeleteFromTranslations = (id: string) => {
-    onRequestDelete?.([id]);
-  };
-
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-3 py-2 shrink-0">
-        <div
-          className="flex items-center rounded-md overflow-hidden w-fit"
-          style={{
-            border: "1px solid var(--border-primary)",
-            boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
-          }}
-        >
-          {drawerTabs.map((tab, i) => (
-            <div key={tab.id} className="flex items-center">
-              {i > 0 && <div className="w-px self-stretch bg-border" />}
-              <button
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center justify-center gap-1 px-3 py-1.5 text-tab font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? "bg-vellum text-ink"
-                    : "bg-paper text-ink-tertiary hover:text-ink-secondary"
-                }`}
-              >
-                {tab.label}
-                {tab.count !== undefined && (
-                  <span className="text-xs font-semibold text-ink-tertiary bg-warm px-1 rounded">
-                    {tab.count}
-                  </span>
-                )}
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {activeTab === "file" ? (
-        <>
-          <div className="flex-1 overflow-auto p-3 pb-8 space-y-3">
+      <div className="flex-1 overflow-auto p-3 pb-8 space-y-3">
             {selectedFiles.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center gap-3">
                 <MousePointerClick size={32} className="text-ink-muted/40" />
@@ -247,108 +182,6 @@ export function FileDrawer({
               </button>
             </div>
           )}
-        </>
-      ) : (
-        <>
-          <div className="flex-1 overflow-auto p-3 pb-8 space-y-4">
-            {!focusedFile || !focusedGroup ? (
-              <div className="flex flex-col items-center justify-center h-full text-center gap-3">
-                <MousePointerClick size={32} className="text-ink-muted/40" />
-                <p className="text-xs text-ink-muted">
-                  Focus a single file to see its translations
-                </p>
-              </div>
-            ) : (
-              <>
-                <p className="text-xs font-medium text-ink-secondary">
-                  {focusedGroup.title}
-                </p>
-                {translations.length === 0 ? (
-                  <p className="text-xs italic text-ink-tertiary">
-                    No translations yet.
-                  </p>
-                ) : (
-                  translations.map((sib) => (
-                    <TranslationCard
-                      key={sib.id}
-                      file={sib}
-                      onFocus={() => onFocusFile?.(sib.id)}
-                      onDelete={() => handleDeleteFromTranslations(sib.id)}
-                    />
-                  ))
-                )}
-                <AddFileDropArea
-                  variant="compact"
-                  targetGroupId={focusedGroup.id}
-                  onAdded={(id) => onFocusFile?.(id)}
-                />
-              </>
-            )}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-function TranslationCard({
-  file,
-  onFocus,
-  onDelete,
-}: {
-  file: FileEntry;
-  onFocus: () => void;
-  onDelete: () => void;
-}) {
-  const Icon = typeIcons[file.type];
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onFocus}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onFocus();
-        }
-      }}
-      className="flex items-center gap-2 px-3 py-2 rounded-md bg-paper border border-border/50 hover:bg-warm transition-colors cursor-pointer"
-    >
-      <span className="text-meta font-semibold text-ink-secondary bg-vellum px-1.5 py-0.5 rounded shrink-0">
-        {file.language}
-      </span>
-      <Icon size={14} className="text-ink-muted shrink-0" />
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-ink truncate">{file.name}</p>
-        <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-meta text-ink-muted">
-            {file.type.toUpperCase()}
-          </span>
-          <span className="text-meta text-ink-muted">{file.size}</span>
-        </div>
-      </div>
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onFocus();
-        }}
-        aria-label={`View ${file.name}`}
-        className="p-1 rounded hover:bg-parchment transition-colors"
-      >
-        <Eye size={14} className="text-ink-tertiary" />
-      </button>
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete();
-        }}
-        aria-label={`Delete ${file.name}`}
-        className="p-1 rounded hover:bg-seal-tint text-ink-muted hover:text-seal-label transition-colors"
-      >
-        <Trash2 size={14} />
-      </button>
     </div>
   );
 }

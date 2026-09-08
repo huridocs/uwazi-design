@@ -353,6 +353,13 @@ HURIDOCS tribute** — surface the name, keep the code identifiers (`agent*`).
 - Default focus = `files.find(f => f.isDefault) ?? files[0]`.
 - Drawer shows focused file when no checkboxes are ticked.
 - Selected rows use `bg-parchment`. No inset blue accent.
+- **The drawer has no tab strip.** Its Translations tab left `main` with the
+  Playground Split (2026-09-08) and is on `playground`; with `File` the only tab
+  left, a one-tab strip is chrome for nothing, so the drawer opens straight onto
+  the focused file's detail. TRANSLATIONS THEMSELVES STAY — the primary groups'
+  nested translation rows in `DrawerFilesBody` / `FileTable`, "Add translation",
+  and `AddFileModal`'s translation target all work as before. What went is the
+  second place to read the same set.
 
 ## Metadata view
 - Drawer tabs: **Relationships → Files**. (Document went to Files in `af531c5`;
