@@ -3,26 +3,32 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { MetadataRecord } from "../components/metadata/MetadataRecord";
 import { MAIN_ENTITY_ID, getEntityProfile } from "../data/entityProfiles";
 
-/** The record as a masonry: cards in field order, packed by height.
+/** The record as a masonry, laid out by field KIND.
  *
- *  Column count is a CONTAINER query on the record, so what changes the layout
- *  is the record's own width — resize the story frame and nothing happens; the
- *  widths below are what the component reads. One column under 44rem (the
- *  drawer and the preview overlay live here), two to 66rem, three above.
+ *  Packing by height is what made this read as scrambled — a twelve-line
+ *  Description landing beside eight one-line cards, with nothing to read across.
+ *  Height is an accident of the value. Kind is a fact about the field, so kind
+ *  decides:
  *
- *  What to look for, and what would be broken if it were absent:
- *  - **DOM order is field order.** Tab through it, or read the a11y tree: the
- *    record is walked the way the template defines it, whatever column a card
- *    ends up in. That is the reason this is one grid with row-spans rather than
- *    N column arrays or CSS `columns`.
- *  - **Cards keep their own height** — no card is stretched to a row.
- *  - **The connection tables span every column.** A table folds to per-entity
- *    cards below 28.5rem of container; a masonry column is ~345px, so in a
- *    column they would fold permanently on a record that has room for three.
+ *  1. **Short scalars** — a date, a country, a case number — are not cards at
+ *     all. They collect into ONE full-width Details card as a label-over-value
+ *     grid, 1–3 columns by container query, no rules between cells.
+ *  2. **Long text** gets its own card, two columns wide of three (one of two):
+ *     prose set in a third of a wide pane is a column of six-word lines.
+ *  3. **Chip fields** — a thesaurus multiselect, a link-only connection's pills —
+ *     get a card and ONE column, because chips wrap to fill whatever they are
+ *     given and a wide card of them is a paragraph of pills.
+ *  4. **Relationships** keep their heading and their full-width tables, below
+ *     and unchanged.
  *
- *  The Velásquez record is the mixed-height case on purpose: a long Description
- *  next to a dozen one-line fields is what makes a masonry worth having, and
- *  what a naive row grid wastes half a screen on. */
+ *  The bands run details → long → chips, and within each band the template's
+ *  order is untouched, so the DOM still walks the record the way the template
+ *  defines it — Tab order and a screen reader included.
+ *
+ *  Column count is a CONTAINER query on the record, so resizing the story frame
+ *  does nothing; the widths below are what the component reads. The Velásquez
+ *  record is the mixed case on purpose: ten short scalars, two paragraphs and a
+ *  set of chips is exactly the shape a height-packed masonry could not order. */
 const store = createStore();
 const profile = getEntityProfile(MAIN_ENTITY_ID);
 
@@ -52,17 +58,19 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Three columns. The tall Description holds column one while the short fields
- *  fill two and three, and the next long-enough card drops back into one. */
+/** Three columns: the Details grid across the top at three columns of its
+ *  own, Description two columns wide, and Rights invoked in the third beside
+ *  Articles invoked. */
 export const Default: Story = { args: { width: 1120, label: "Main view, wide" } };
 
-/** Two columns — the main view at a laptop width, or with the document pane
- *  dragged wide. */
+/** Two columns: the Details grid still finds three inside its full-width
+ *  card, and the long cards drop to one column each — there is no third to
+ *  borrow. */
 export const TwoColumns: Story = { args: { width: 800, label: "Main view, narrow" } };
 
-/** One column: the 390px drawer and the preview overlay never split. Below
- *  44rem the grid is a single column and the record reads exactly as it did
- *  before the masonry existed. */
+/** One column: the 390px drawer and the preview overlay. The Details grid
+ *  collapses to one column of label-over-value — the same component, not a
+ *  different rendering — and every card is full width. */
 export const Minimal: Story = { args: { width: 390, label: "Drawer / preview" } };
 
 /** All three side by side — the same DOM, the same order, three packings. */

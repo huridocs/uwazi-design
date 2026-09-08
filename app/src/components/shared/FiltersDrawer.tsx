@@ -87,34 +87,33 @@ export function FiltersDrawer({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        // A closed drawer is hidden by TWO things, and it needs both.
+        // A closed drawer occupies NO space its pane can scroll to.
         //
-        // The slide is the animation, and it was also the only thing keeping a
-        // closed drawer off screen — `translate-x-full` parking it one width
-        // past its pane. That is a bet on the transform landing, and it does not
-        // always: measured here, a closed drawer reported `translate: 100%` in
-        // its computed style and a bounding rect with NO displacement, so it sat
-        // fully visible at its `right-0` position. It only LOOKED hidden while
-        // its pane happened to extend past the viewport — and the moment the
-        // connection overlay changed the pane's geometry, a drawer nobody had
-        // opened appeared beside it, over a blank overlay body. That is the
-        // "opening a relationship triggers the filters" report: nothing opened
-        // it; it had been on screen all along, waiting for the layout to reveal
-        // it.
+        // It used to park itself one width past the pane with
+        // `translate-x-full`, and that is what caused the defect this component
+        // keeps producing. Measured: a pane 559px wide reported `scrollWidth`
+        // 899 and `scrollLeft` 340 — exactly this drawer's width. The parked
+        // drawer extends the pane's scrollable area, something scrolls to it
+        // (the browser revealing a focused descendant is the documented one —
+        // it is why `inert` is here at all), and then EVERYTHING in the pane is
+        // dragged 340px left. The connection overlay lands on top of the content
+        // beside it and the right 340px of the pane shows as an empty column
+        // that "pushes" the layout. Nothing opened, nothing broke; the pane was
+        // simply scrolled.
         //
-        // So opacity carries the hiding and the transform carries the motion.
-        // They share a duration, so an open drawer still slides and a closed one
-        // still slides away; if the translate is dropped the drawer is merely
-        // motionless, never visible. `pointer-events-none` matches `inert`
-        // below, which was already right and was the only reason a drawer
-        // sitting in plain sight could not also be clicked.
+        // So the closed drawer stays at `right-0` — inside the pane, adding no
+        // overflow — and is hidden by `invisible` + `opacity-0` instead. That
+        // also removes it from the paint and from focus entirely, which closes
+        // the scroll-into-view path at its source rather than after the fact.
+        //
+        // The slide is gone, and it was already gone: the transform never
+        // applied in the first place (computed `translate: 100%`, bounding rect
+        // undisplaced), which is how a closed drawer came to be sitting in plain
+        // sight. Opacity is what actually animates here, so opacity is the
+        // transition.
         className={`absolute top-0 bottom-0 z-40 bg-paper shadow-lg flex flex-col
-          transition-[transform,opacity] duration-200 ease-out ${
-            rtl ? "left-0" : "right-0"
-          } ${
-            open
-              ? "translate-x-0 opacity-100"
-              : `opacity-0 pointer-events-none ${rtl ? "-translate-x-full" : "translate-x-full"}`
+          transition-opacity duration-200 ease-out ${rtl ? "left-0" : "right-0"} ${
+            open ? "opacity-100" : "opacity-0 invisible pointer-events-none"
           }`}
         style={{
           width: `min(100%, ${width / 16}rem)`,
