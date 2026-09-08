@@ -48,6 +48,12 @@ interface NavbarProps {
   onToggleRtl?: () => void;
 }
 
+/** The two builds are deployed to the same site — `main` at the root and this
+ *  branch under /playground/ — so the only thing telling them apart is the URL.
+ *  Vite bakes the base in at build time, which is exactly when the difference is
+ *  decided; nothing at runtime needs to be asked. */
+const IS_PLAYGROUND = import.meta.env.BASE_URL.includes("/playground/");
+
 export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onToggleRtl }: NavbarProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
@@ -147,6 +153,14 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
         >
           <img src={asset("/nu-logo.svg")} alt="Uwazi" style={{ height: 14.7 }} className="logo-img" />
         </button>
+        {IS_PLAYGROUND && (
+          <span
+            className="px-1.5 py-0.5 text-meta font-medium rounded bg-warm text-ink-secondary shrink-0"
+            title="This build is the playground branch — it carries what main no longer does"
+          >
+            playground
+          </span>
+        )}
         {!showingCatalog && !isMobile && (
           <div className="flex items-center gap-2">
             {appView === "entity" ? (
