@@ -6,11 +6,11 @@ import { entityMetadataAtom } from "../../atoms/entityMetadata";
 import { fillTargetAtom, fillRequestAtom } from "../../atoms/fillTarget";
 import { focusMetadataFieldAtom } from "../../atoms/library";
 import type { MetadataField, RelationshipMetadataField } from "../../data/metadata";
-import { specInherits } from "../../utils/inheritance";
 import { MetadataCard } from "./MetadataCard";
 import { MasonryGrid, MasonryItem } from "./MasonryGrid";
 import { RelationshipCards } from "./RelationshipCards";
-import { fieldItem, connectionItem, isLongField, type MetadataItem } from "./items";
+import { fieldItem, connectionItem, type MetadataItem } from "./items";
+import { deriveTemplateStructure } from "../../utils/templateStructure";
 
 /** One field of the record, as its own card.
  *
@@ -101,38 +101,37 @@ export function MetadataRecord({
     clearFocus(null); // field not on this record — don't leave the request hanging
   }, [focusField, profile.id, clearFocus]);
 
-  const all = profile.metadata[language] ?? [];
-  const scalar = all.filter((f): f is MetadataField => f.type !== "relationship");
-  const relFields = all.filter(
-    (f): f is RelationshipMetadataField => f.type === "relationship",
-  );
-  // Link-only, ungrouped connections are properties; grouped or inheriting ones
-  // are sections with a table of their own.
-  const linkOnly = relFields.filter((f) => !specInherits(f) && !f.connectionKey);
-  const filled = scalar.filter((f) => !!f.value?.trim());
+  /* THE TEMPLATE DECIDES ORDER. `deriveTemplateStructure` is the same
+     derivation the Template tab draws from, so the tab that describes an
+     entity's shape and the record laid out in it cannot disagree.
 
-  const items: MetadataItem[] = [...filled.map(fieldItem), ...linkOnly.map(connectionItem)];
+     This replaces bucketing by field KIND, which was mine and was wrong: it
+     put every short scalar first, so Description — the Body group's FIRST
+     property — landed in the middle of the record, and the dates and names
+     arrived in an order the template never declared. Kind still decides a
+     card's SHAPE (how many columns it spans, chips vs prose; see MasonryItem
+     and `fieldKind`), and now nothing else.
 
-  /* THREE BANDS, by field KIND — not by height, which is what made the masonry
-     read as scrambled. Within each band the template's order is untouched, so
-     the DOM still walks the record the way the template defines it.
+     One pass over the body in declared sequence: a scalar with a value becomes
+     a value card, a link-only relationship becomes a pill card, and a field
+     with neither is skipped. Inheriting relationships are the `inherited`
+     group and render as the Relationships section below. */
+  const { body, inherited } = deriveTemplateStructure(profile, language);
+  const items: MetadataItem[] = [];
+  for (const f of body) {
+    if (f.type === "relationship") {
+      if (!f.connectionKey) items.push(connectionItem(f));
+    } else if (f.value?.trim()) {
+      items.push(fieldItem(f));
+    }
+  }
 
-     The bands are ordered by how much of the reader's attention each value
-     wants: the facts you scan (dates, a country, a case number) come first and
-     tile, the prose you actually read follows, and the sets of chips — which are
-     a list, not a sentence — come last. Link-only connections are chips and fall
-     at the end of that last band on their own, because `items` is built scalars-
-     then-connections and the band keeps that order.
-
-     Every one of them is its OWN bordered card. Collecting the scalars into a
-     single "Details" grid was tried and is out: the record's rule is one field,
-     one card, and it has been settled twice. What the band ordering buys is the
-     part that was actually missing — uniform cards next to uniform cards. */
-  const details = items.filter((i) => i.kind === "scalar");
-  const longs = items.filter((i) => i.kind === "long");
-  const chips = items.filter((i) => i.kind === "chips");
-
-  const hasRelCards = relFields.some((f) => specInherits(f) || !!f.connectionKey);
+  /* The Relationships section below carries the inheriting connections and the
+     grouped ones — a connection with a `connectionKey` shares a table with its
+     siblings, which is a section, not a property. */
+  const hasRelCards =
+    inherited.length > 0 ||
+    body.some((f) => f.type === "relationship" && !!f.connectionKey);
 
   // The document and the picture left this view — metadata is metadata, and
   // Files owns the renditions — so a file- or image-bearing entity no longer has
@@ -150,24 +149,14 @@ export function MetadataRecord({
 
   return (
     <MasonryGrid containerRef={rootRef}>
-      {/* Short scalars first, a card each. They are one line apiece, so at three
-          columns they tile three-across and the band reads as a block of facts
-          — which is what grouping them into a single grid was reaching for, and
-          the grouping is not wanted: every field is its own bordered card. */}
-      {details.map((item) => (
-        <MasonryItem key={item.id}>
-          <MetadataFieldBlock item={item} />
-        </MasonryItem>
-      ))}
-      {/* Prose: two columns of three, one of two — see MasonryItem's `wide`. */}
-      {longs.map((item) => (
-        <MasonryItem key={item.id} wide>
-          <MetadataFieldBlock item={item} />
-        </MasonryItem>
-      ))}
-      {/* Chips: one column, because they wrap to fill whatever they are given. */}
-      {chips.map((item) => (
-        <MasonryItem key={item.id}>
+      {/* Template sequence. The only thing kind decides here is `wide`: prose
+          takes two columns of three, because a paragraph set in a third of a
+          wide pane is a column of six-word lines. Chips and scalars take one.
+          Dense packing closes the hole a wide card would otherwise leave — and
+          it can only ever pull a card from within this group, because the
+          Relationships section below is its own block, not more grid. */}
+      {items.map((item) => (
+        <MasonryItem key={item.id} wide={item.kind === "long"}>
           <MetadataFieldBlock item={item} />
         </MasonryItem>
       ))}

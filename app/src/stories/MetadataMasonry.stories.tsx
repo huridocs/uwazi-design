@@ -58,9 +58,9 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Three columns: the scalars tiling three-across at the top, Description two
- *  columns wide with a scalar filling the third beside it (that is `dense`
- *  working), and Rights invoked beside Articles invoked. */
+/** Three columns, in the template's declared order. A wide card can leave the
+ *  rest of its row empty and that is deliberate: placement is sparse, so nothing
+ *  is ever pulled forward out of sequence to close a gap. */
 export const Default: Story = { args: { width: 1120, label: "Main view, wide" } };
 
 /** Two columns: scalars tile two-across and the long cards drop to one column

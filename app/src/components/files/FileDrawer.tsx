@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { languageName } from "../../atoms/language";
 import {
   FileText,
   Music,
@@ -314,7 +315,13 @@ function TranslationCard({
       }}
       className="flex items-center gap-2 px-3 py-2 rounded-md bg-paper border border-border/50 hover:bg-warm transition-colors cursor-pointer"
     >
-      <span className="text-meta font-semibold text-ink-secondary bg-vellum px-1.5 py-0.5 rounded shrink-0">
+      {/* A fixed badge leading a compact row: a name here would outweigh the
+          filename beside it, so the code stays and is named on hover. */}
+      <span
+        className="text-meta font-semibold text-ink-secondary bg-vellum px-1.5 py-0.5 rounded shrink-0"
+        title={languageName(file.language)}
+        aria-label={languageName(file.language)}
+      >
         {file.language}
       </span>
       <Icon size={14} className="text-ink-muted shrink-0" />
@@ -365,7 +372,7 @@ function FileCompactCard({ file }: { file: FileEntry }) {
             {file.type.toUpperCase()}
           </span>
           <span className="text-meta text-ink-muted">{file.size}</span>
-          <span className="text-meta text-ink-muted">{file.language}</span>
+          <span className="text-meta text-ink-muted">{languageName(file.language)}</span>
         </div>
       </div>
     </div>

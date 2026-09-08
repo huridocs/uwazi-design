@@ -2,6 +2,7 @@ import { useAtom } from "jotai";
 import { ArrowLeft, Pencil, Sparkles } from "lucide-react";
 import { breakpointAtom } from "../../atoms/viewport";
 import { Select } from "../shared/Select";
+import { languageName } from "../../atoms/language";
 
 interface MainTab {
   id: string;
@@ -128,6 +129,12 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
             onChange={(v) => onLanguageChange?.(v)}
             ariaLabel="Language"
             align="end"
+            /* Names, not codes — and `steady`, which holds the width of the
+               WIDEST option. Without it the trigger is sized to whatever is
+               selected, so picking Français after English widens it and shoves
+               the tab strip; with it the slot is Français-wide always and
+               switching language moves nothing. */
+            steady
             tone={languageEditing ? "carbon" : "default"}
             triggerIcon={languageEditing ? <Pencil size={11} aria-hidden /> : undefined}
             ariaSuffix={languageEditing ? "editing this language" : undefined}
@@ -138,7 +145,7 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
             }
             options={languages.map((lang) => ({
               value: lang,
-              label: lang,
+              label: languageName(lang),
               disabled: !!availableLanguages && !availableLanguages.includes(lang),
             }))}
           />

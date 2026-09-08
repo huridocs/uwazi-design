@@ -5,6 +5,7 @@ import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { languageAtom } from "../../atoms/language";
 import { getEntityProfile } from "../../data/entityProfiles";
 import { useNotify } from "../../hooks/useNotify";
+import { deriveTemplateStructure, fieldInherits } from "../../utils/templateStructure";
 
 interface TemplateProperty {
   icon: ReactNode;
@@ -86,40 +87,42 @@ export function TemplateStructure() {
   const focusedId = useAtomValue(focusedEntityIdAtom);
   const lang = useAtomValue(languageAtom);
   const { headerProperties, directFields, inheritedFields } = useMemo(() => {
-    const profile = getEntityProfile(focusedId);
-    const header: TemplateProperty[] = [
-      { icon: <CaseSensitive size={18} />, name: "Title", required: true, type: "text" },
-      ...(profile.hasDocument
-        ? [
-            { icon: <Image size={18} />, name: "Document", required: true, type: "media" },
-            { icon: <FileVideo size={18} />, name: "Document metadata", required: true, type: "generated" },
-          ]
-        : []),
-    ];
-    const direct: TemplateProperty[] = [];
-    const inherited: TemplateProperty[] = [];
-    for (const f of profile.metadata[lang] ?? []) {
+    // Order and grouping come from `deriveTemplateStructure`, which the metadata
+    // RECORD reads too — the tab that describes the template and the record laid
+    // out in it must not be able to disagree. This component only decides how a
+    // property is DRAWN.
+    const { header, body, inherited } = deriveTemplateStructure(
+      getEntityProfile(focusedId),
+      lang,
+    );
+    const headerIcons: Record<string, ReactNode> = {
+      Title: <CaseSensitive size={18} />,
+      Document: <Image size={18} />,
+      "Document metadata": <FileVideo size={18} />,
+    };
+    const toProp = (f: (typeof body)[number]): TemplateProperty => {
       if (f.type === "relationship") {
-        // Inheriting relationship fields (single- or multi-hop) group under
-        // "Inherited"; link-only ones sit in the body as plain relationships.
-        const inherits = !!(f.inheritProperty || f.inheritPath?.length || f.inheritLeaf);
+        const inherits = fieldInherits(f);
         const inheritLabel = f.inheritLabel ?? f.inheritLeaf ?? f.inheritProperty;
-        const prop: TemplateProperty = {
+        return {
           icon: <Link2 size={18} />,
           name: f.label,
           type: inherits ? `relationship · inherits ${inheritLabel}` : "relationship",
           inherited: inherits,
         };
-        (inherits ? inherited : direct).push(prop);
-      } else {
-        direct.push({
-          icon: typeIcons[f.type] || <Type size={18} />,
-          name: f.label,
-          type: f.type,
-        });
       }
-    }
-    return { headerProperties: header, directFields: direct, inheritedFields: inherited };
+      return { icon: typeIcons[f.type] || <Type size={18} />, name: f.label, type: f.type };
+    };
+    return {
+      headerProperties: header.map((h) => ({
+        icon: headerIcons[h.name] ?? <Type size={18} />,
+        name: h.name,
+        required: h.required,
+        type: h.type,
+      })),
+      directFields: body.map(toProp),
+      inheritedFields: inherited.map(toProp),
+    };
   }, [focusedId, lang]);
 
   return (
