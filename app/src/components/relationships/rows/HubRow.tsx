@@ -3,11 +3,10 @@ import { searchQueryAtom } from "../../../atoms/filters";
 import { getEntity } from "../../../data/entities";
 import { relationTypes } from "../../../data/references";
 import { Hub } from "../../../utils/relationships";
-import { EntityPill } from "../../shared/EntityPill";
 import { HighlightedText } from "../../shared/HighlightedText";
 import { RowCheckbox } from "./RowCheckbox";
 import { RowShell } from "./RowShell";
-import { EvidenceBadge, RowChevron } from "./RowControls";
+import { EvidenceBadge, RowChevron, RowEntityPill } from "./RowControls";
 
 export interface HubRowProps {
   hub: Hub;
@@ -29,11 +28,15 @@ export function HubRow({ hub, expanded, onToggleExpand, hideRelLabel }: HubRowPr
     relationTypes.find((r) => r.id === hub.relationType)?.label ??
     hub.relationType.replace("_", " ");
 
+  // A hub has no single target — it IS the relationship between all of them —
+  // so every member pill opens its own entity. That is also why the row has no
+  // click of its own: there would be no answer to "which entity".
   const memberPills = hub.members.map((m) => {
     const entity = getEntity(m.entityId);
     return (
-      <EntityPill
+      <RowEntityPill
         key={m.entityId}
+        entityId={m.entityId}
         typeId={entity?.typeId ?? ""}
         label={entity?.title}
         highlight={query}
@@ -129,8 +132,6 @@ export function HubRow({ hub, expanded, onToggleExpand, hideRelLabel }: HubRowPr
   return (
     <RowShell
       selected={false}
-      ariaLabel={`${relLabel} hub — ${hub.members.length} parties`}
-      onClick={() => onToggleExpand?.()}
       overviewBorderless
       overview={overview}
       compact={body(true)}

@@ -9,13 +9,12 @@ import { activeClusterRefIdsAtom, searchQueryAtom } from "../../../atoms/filters
 import { getEntity, getEntityType } from "../../../data/entities";
 import { relationTypes } from "../../../data/references";
 import { Relationship } from "../../../utils/relationships";
-import { EntityPill } from "../../shared/EntityPill";
 import { EntityTypeTag } from "../../shared/EntityTypeTag";
 import { HighlightedText } from "../../shared/HighlightedText";
 import { DirectionGlyph } from "../DirectionGlyph";
 import { RowCheckbox } from "./RowCheckbox";
 import { RowShell } from "./RowShell";
-import { EvidenceBadge, RowChevron } from "./RowControls";
+import { EvidenceBadge, RowChevron, RowEntityPill } from "./RowControls";
 
 export interface AggregateRowProps {
   rel: Relationship;
@@ -105,6 +104,10 @@ export function AggregateRow({
     <RowChevron expanded={expanded} onToggle={onToggleExpand} subject="evidence" />
   ) : null;
 
+  /** The pill's job: open the target entity, and mark THIS aggregate as the one
+   *  you opened it from. Several aggregates can point at the same entity (one
+   *  per relation type), so the highlight keys on the aggregate, not the
+   *  entity — which is why the pill can't just take the default open. */
   const openEntity = () => {
     setActiveAggregateId(rel.id);
     setOverlayEntityId(rel.targetEntityId);
@@ -123,7 +126,13 @@ export function AggregateRow({
             <HighlightedText text={relLabel} query={query} />
           </span>
         ) : (
-          <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} highlight={query} />
+          <RowEntityPill
+            entityId={rel.targetEntityId}
+            typeId={entity?.typeId ?? ""}
+            label={entity?.title}
+            highlight={query}
+            onOpen={openEntity}
+          />
         )}
       </div>
       {countBadge}
@@ -146,12 +155,19 @@ export function AggregateRow({
             {!hideTypePill && (
               <EntityTypeTag typeId={entity?.typeId ?? ""} label={type?.name} />
             )}
-            <span
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                openEntity();
+              }}
+              aria-label={`Open ${entity?.title ?? "entity"}`}
               title={entity?.title}
-              className="text-xs font-medium text-ink truncate min-w-0"
+              className="text-xs font-medium text-ink truncate min-w-0 text-left cursor-pointer
+                hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40 rounded"
             >
               <HighlightedText text={entity?.title ?? ""} query={query} />
-            </span>
+            </button>
             {!hideRelLabel && (
               <span className="text-meta text-ink-tertiary truncate capitalize shrink-0">
                 <HighlightedText text={relLabel} query={query} />
@@ -191,12 +207,19 @@ export function AggregateRow({
                 {!hideTypePill && (
                   <EntityTypeTag typeId={entity?.typeId ?? ""} label={type?.name} />
                 )}
-                <span
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openEntity();
+                  }}
+                  aria-label={`Open ${entity?.title ?? "entity"}`}
                   title={entity?.title}
-                  className="text-sm font-medium text-ink truncate min-w-0"
+                  className="text-sm font-medium text-ink truncate min-w-0 text-left cursor-pointer
+                    hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40 rounded"
                 >
                   <HighlightedText text={entity?.title ?? ""} query={query} />
-                </span>
+                </button>
               </>
             )}
           </div>
@@ -219,8 +242,6 @@ export function AggregateRow({
   return (
     <RowShell
       selected={selected}
-      ariaLabel={`${entity?.title ?? "Unknown entity"} — ${relLabel}`}
-      onClick={openEntity}
       overviewBorderless
       overview={overview}
       compact={compact}

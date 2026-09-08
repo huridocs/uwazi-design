@@ -10,9 +10,10 @@ import { deriveHubs } from "../utils/relationships";
  *  entities, every member related to every other. There is no direction glyph
  *  because there is no direction to draw: the relationship is symmetric.
  *
- *  Members render as pills, and the row is deliberately a peer of the aggregate
- *  row rather than a container above it — a hub IS one relationship, not a group
- *  of them. */
+ *  Members render as pills, and each pill opens its own entity — there is no
+ *  row-wide open here because there is no single entity to open. The row is
+ *  deliberately a peer of the aggregate row rather than a container above it: a
+ *  hub IS one relationship, not a group of them. */
 const meta = {
   title: "Relationships/HubRow",
   parameters: { layout: "padded" },

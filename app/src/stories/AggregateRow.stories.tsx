@@ -14,7 +14,10 @@ import { deriveRelationships } from "../utils/relationships";
  *  The count badge is the drill-down: inside the tree it toggles the backing
  *  references in place, elsewhere it routes to them in the References panel —
  *  which is why it always says which in its title. The chevron appears only
- *  where there is something to expand into. */
+ *  where there is something to expand into.
+ *
+ *  The entity is the target you press: the pill at overview, the title at
+ *  compact and detail. The row itself has no click. */
 const meta = {
   title: "Relationships/AggregateRow",
   parameters: { layout: "padded" },
