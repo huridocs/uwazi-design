@@ -7,20 +7,13 @@ name: Deploy prototype to GitHub Pages
 # A push to EITHER branch rebuilds BOTH. That is not redundancy: Pages replaces
 # the whole site on every deploy, so an artifact containing only the branch that
 # moved would delete the other branch's build.
-#
-# Only main DEPLOYS, though — the `github-pages` environment's branch policy
-# says so. A playground push builds, proves itself, and then asks main to run;
-# main's run publishes both.
 on:
   push:
     branches: [main, playground]
   workflow_dispatch:
 
 # Pages needs these; the token is scoped per-run, nothing long-lived is stored.
-# `actions: write` is for the one step below that re-triggers this workflow on
-# main after a playground push.
 permissions:
-  actions: write
   contents: read
   pages: write
   id-token: write
@@ -107,26 +100,11 @@ jobs:
         with:
           path: site
 
-      # A push to playground gets no deploy of its own (see the deploy job), so
-      # it asks main to run instead. That run rebuilds both trees from their
-      # tips — playground's included — and deploys, so the site still refreshes
-      # after a playground push, just one hop later. Guarded on the ref, and the
-      # run it starts is on main, so this step cannot re-trigger itself.
-      - name: Ask main to deploy
-        if: github.ref == 'refs/heads/playground'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh workflow run pages.yml --ref main --repo ${{ github.repository }}
-
   deploy:
     needs: build
-    # Only main deploys. The `github-pages` environment carries a deployment
-    # branch policy naming main, so a run from playground CANNOT deploy to it —
-    # it failed here with the build already green, which reads as a broken
-    # branch when nothing is broken. Working inside that policy rather than
-    # widening it: the build above proves playground compiles, and the dispatch
-    # step hands the publish to main, which is allowed to do it.
-    if: github.ref == 'refs/heads/main'
+    # Either branch may deploy: the `github-pages` environment's deployment
+    # branch policy names both. It named only main once, which failed a
+    # playground run here with its build already green — hence the note.
     runs-on: ubuntu-latest
     environment:
       name: github-pages
