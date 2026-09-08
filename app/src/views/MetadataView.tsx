@@ -1424,7 +1424,7 @@ function MetadataDrawer() {
   const [activeDrawerTab, setActiveDrawerTab] = useState("connections");
 
   return (
-    <div className="relative flex flex-col h-full overflow-hidden">
+    <div className="relative flex flex-col h-full overflow-clip">
       {/* Clicking a connected entity in a metadata relationship field opens its
           source preview here in the drawer (not as a slide-over on the left). */}
       <EntityOverlay />

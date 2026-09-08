@@ -34,7 +34,7 @@ export function ReferencePanel() {
   const docQuery = useAtomValue(docSearchQueryAtom);
 
   return (
-    <div className="flex flex-col h-full relative overflow-hidden">
+    <div className="flex flex-col h-full relative overflow-clip">
       <EntityOverlay />
 
       <DrawerTabs

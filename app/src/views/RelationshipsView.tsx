@@ -39,7 +39,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
   const hideMinimap = view === "graph";
 
   const renderLeft = (menuTrigger?: ReactNode) => (
-        <div className="flex flex-col h-full min-h-0 bg-paper relative overflow-hidden">
+        <div className="flex flex-col h-full min-h-0 bg-paper relative overflow-clip">
           <MainTabs
             tabs={tabs}
             activeId={activeTab}
@@ -74,7 +74,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
           id: "document",
           label: "Document",
           content: (
-            <div className="flex flex-col h-full min-h-0 relative overflow-hidden">
+            <div className="flex flex-col h-full min-h-0 relative overflow-clip">
               <EntityOverlay />
               <DocumentViewer />
             </div>
@@ -84,7 +84,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
       left={renderLeft()}
       mobileLeft={(menuTrigger) => renderLeft(menuTrigger)}
       right={
-        <div className="flex flex-col h-full min-h-0 relative overflow-hidden">
+        <div className="flex flex-col h-full min-h-0 relative overflow-clip">
           <EntityOverlay />
           {/* The document projection only makes sense for document-bearing
               entities — otherwise the viewer falls back to the sample PDF. */}

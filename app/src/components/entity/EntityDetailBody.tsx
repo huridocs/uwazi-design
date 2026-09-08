@@ -151,7 +151,7 @@ export function EntityDetailBody({
   return (
     <EntityScopeProvider entityId={entityId}>
       <FiltersHostProvider host={panelEl}>
-      <div ref={setPanelEl} className="relative flex flex-col h-full min-h-0 bg-paper overflow-hidden">
+      <div ref={setPanelEl} className="relative flex flex-col h-full min-h-0 bg-paper overflow-clip">
         {/* Identity header on top — the entity title + close, acting as the
             panel header. Tabs sit beneath it (flipped from the entity view so the
             panel reads title-first). */}

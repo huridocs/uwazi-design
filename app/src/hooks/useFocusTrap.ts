@@ -43,7 +43,10 @@ export function useFocusTrap<T extends HTMLElement>(active: boolean, contentKey?
     if (!container) return;
     const focused = document.activeElement;
     if (container.contains(focused) && focused !== container) return;
-    (focusablesIn(container)[0] ?? container).focus();
+    // preventScroll: this fires while a slide-over is still translated
+    // off-pane, and a plain focus() scrolls the overflow-hidden pane sideways
+    // to reach it — the pane then stays scrolled after the slide lands.
+    (focusablesIn(container)[0] ?? container).focus({ preventScroll: true });
   }, [active, contentKey]);
 
   useEffect(() => {
@@ -64,11 +67,11 @@ export function useFocusTrap<T extends HTMLElement>(active: boolean, contentKey?
       if (e.shiftKey) {
         if (current === first || !container.contains(current)) {
           e.preventDefault();
-          last.focus();
+          last.focus({ preventScroll: true });
         }
       } else if (current === last || !container.contains(current)) {
         e.preventDefault();
-        first.focus();
+        first.focus({ preventScroll: true });
       }
     };
 
