@@ -1,4 +1,7 @@
 import { ChevronRight, Link2 } from "lucide-react";
+import { useSetAtom } from "jotai";
+import { overlayEntityIdAtom } from "../../../atoms/references";
+import { EntityPill } from "../../shared/EntityPill";
 
 /** The disclosure chevron on an expandable row.
  *
@@ -87,6 +90,50 @@ export function EvidenceBadge({
       }`}
     >
       {body}
+    </button>
+  );
+}
+
+/** The entity pill AS A CONTROL: it opens that entity's preview overlay.
+ *
+ *  The pill IS the entity, so pressing it is how you ask to see the entity —
+ *  which used to be a hover-only eye icon at the row's far edge, discoverable
+ *  by hovering the right row with a mouse and by nothing else. Now the thing
+ *  you are already pointing at is the thing you press.
+ *
+ *  It names itself ("Open Case 12.045"): the pill's text alone announces a title
+ *  with no hint that pressing it goes anywhere. And it stops propagation, so a
+ *  host that does have its own row click can't fire twice. */
+export function RowEntityPill({
+  entityId,
+  typeId,
+  label,
+  highlight,
+  onOpen,
+}: {
+  entityId: string;
+  typeId: string;
+  label?: string;
+  highlight?: string;
+  /** Replaces the default open — for rows that mark themselves selected as they
+   *  open (the aggregate row keys its highlight on which aggregate you pressed,
+   *  not on which entity is showing). */
+  onOpen?: () => void;
+}) {
+  const setOverlayEntityId = useSetAtom(overlayEntityIdAtom);
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        if (onOpen) onOpen();
+        else setOverlayEntityId(entityId);
+      }}
+      aria-label={`Open ${label ?? "entity"}`}
+      className="min-w-0 rounded-md cursor-pointer transition-opacity hover:opacity-80
+        focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
+    >
+      <EntityPill typeId={typeId} label={label} highlight={highlight} />
     </button>
   );
 }

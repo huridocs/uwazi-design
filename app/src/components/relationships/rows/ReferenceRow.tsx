@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Eye, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import {
   activeRefIdAtom,
   overlayEntityIdAtom,
@@ -11,13 +11,13 @@ import { searchQueryAtom } from "../../../atoms/filters";
 import { currentPageAtom } from "../../../atoms/selection";
 import { getEntity, getEntityType } from "../../../data/entities";
 import { Reference, relationTypes } from "../../../data/references";
-import { EntityPill } from "../../shared/EntityPill";
 import { FadeTruncate } from "../../shared/FadeTruncate";
 import { HighlightedText } from "../../shared/HighlightedText";
 import { PageTag } from "../../shared/PageTag";
 import { DirectionGlyph } from "../DirectionGlyph";
 import { RowCheckbox } from "./RowCheckbox";
 import { RowShell } from "./RowShell";
+import { RowEntityPill } from "./RowControls";
 
 export interface ReferenceRowProps {
   reference: Reference;
@@ -62,7 +62,11 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
   }, [scrollToRef, reference.id, setScrollToRef, setActiveRefId]);
 
   const selection = reference.sourceSelection;
-  const handleClick = () => {
+
+  /** The page tag's job: go to this passage in the document, and mark the row
+   *  as the one you went from. Only ever reached by pressing the tag — the row
+   *  itself has no click, so reading a snippet can't move the document. */
+  const jumpToPassage = () => {
     setActiveRefId(reference.id);
     if (selection) {
       setCurrentPage(selection.page);
@@ -70,18 +74,19 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
     }
   };
 
-  const ariaLabel = `Reference to ${entity?.title ?? "unknown entity"}${
-    selection ? `, page ${selection.page}` : ""
-  }`;
-
   // Overview: single-line, entity pill + page tag only.
   const overview = (
     <div className="flex items-center justify-between gap-2">
       <div className="flex items-center gap-1.5 min-w-0">
         <RowCheckbox refIds={[reference.id]} />
-        <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} highlight={query} />
+        <RowEntityPill
+          entityId={reference.targetEntityId}
+          typeId={entity?.typeId ?? ""}
+          label={entity?.title}
+          highlight={query}
+        />
       </div>
-      {selection && <PageTag page={selection.page} onClick={handleClick} />}
+      {selection && <PageTag page={selection.page} onClick={jumpToPassage} />}
     </div>
   );
 
@@ -90,13 +95,18 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
     <div className="flex items-center justify-between gap-2">
       <div className="flex items-center gap-1.5 min-w-0">
         <RowCheckbox refIds={[reference.id]} />
-        <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} highlight={query} />
+        <RowEntityPill
+          entityId={reference.targetEntityId}
+          typeId={entity?.typeId ?? ""}
+          label={entity?.title}
+          highlight={query}
+        />
         <DirectionGlyph direction={direction} />
         <span className="text-meta text-ink-tertiary truncate capitalize">
           <HighlightedText text={relLabel} query={query} />
         </span>
       </div>
-      {selection && <PageTag page={selection.page} onClick={handleClick} />}
+      {selection && <PageTag page={selection.page} onClick={jumpToPassage} />}
     </div>
   );
 
@@ -111,12 +121,17 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
         <div className="flex items-start justify-between gap-2 mb-1.5">
           <div className="flex items-center gap-1.5 min-w-0">
             <RowCheckbox refIds={[reference.id]} />
-            <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} highlight={query} />
+            <RowEntityPill
+              entityId={reference.targetEntityId}
+              typeId={entity?.typeId ?? ""}
+              label={entity?.title}
+              highlight={query}
+            />
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             <span className="text-meta text-ink-tertiary">{type?.name ?? ""}</span>
             {selection && (
-              <PageTag page={selection.page} onClick={handleClick} />
+              <PageTag page={selection.page} onClick={jumpToPassage} />
             )}
           </div>
         </div>
@@ -136,7 +151,7 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
               fadeTo={isActive ? "var(--bg-primary)" : "var(--bg-warm)"}
             />
             <span className="shrink-0">
-              <PageTag page={selection.page} onClick={handleClick} />
+              <PageTag page={selection.page} onClick={jumpToPassage} />
             </span>
           </div>
         ) : (
@@ -180,17 +195,11 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
             </span>
           </span>
         )}
+        {/* The eye that used to sit here opened the entity — a hover-only route
+            to what the pill now does in place, in the open, for a pointer and a
+            keyboard alike. Delete stays: it is destructive and belongs behind
+            the deliberate reach of a hover, not on the row's face. */}
         <div className="flex items-center gap-0.5">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setOverlayEntityId(reference.targetEntityId);
-            }}
-            aria-label="Preview entity"
-            className="p-1 rounded opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-warm text-ink-muted hover:text-ink transition-all cursor-pointer"
-          >
-            <Eye size={12} />
-          </button>
           {onDelete && (
             <button
               onClick={(e) => {
@@ -212,8 +221,6 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
     <RowShell
       rowRef={rowRef as unknown as React.Ref<HTMLElement>}
       selected={isActive}
-      ariaLabel={ariaLabel}
-      onClick={handleClick}
       overview={overview}
       compact={compact}
       detail={detail}

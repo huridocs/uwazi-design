@@ -14,11 +14,12 @@ import { references } from "../data/references";
  *  is shared with the aggregate and hub rows (`rows/RowShell.tsx`) so a tier
  *  means the same thing in all three. What varies per tier is what the row can
  *  afford to say: overview is a pill and a page, compact adds the direction and
- *  the relation, detail adds the quoted passage and the hover actions.
+ *  the relation, detail adds the quoted passage and the delete action.
  *
- *  A row is never a `role="button"` — it hosts its own controls (page tag,
- *  checkbox, delete), so the keyboard path is a stretched invisible button
- *  behind the content. */
+ *  A row has TWO targets and is not itself one: the entity pill opens the
+ *  entity, the p.N tag goes to the passage. Both are real buttons that name
+ *  themselves ("Open Argentina", "Go to page 3"); the row around them is chrome
+ *  — hover and selected styling, no click, no tab stop. */
 const meta = {
   title: "Relationships/ReferenceRow",
   parameters: { layout: "padded" },
@@ -61,8 +62,8 @@ function Frame({
   );
 }
 
-/** Detail — the quoted passage, its page, the relation, and the hover actions
- *  (preview, delete) that appear on hover or keyboard focus. */
+/** Detail — the quoted passage, its page, and the relation. Delete appears on
+ *  hover or keyboard focus; opening the entity is the pill, in the open. */
 export const Default: Story = {
   render: () => (
     <Frame>

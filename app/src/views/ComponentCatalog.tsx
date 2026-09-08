@@ -635,7 +635,7 @@ export function ComponentCatalog({ onReturn }: Props) {
               <div id="ev-relationship-row-ref" ref={reg("ev-relationship-row-ref")}>
                 <CatalogEntry
                   name="RelationshipRow · reference"
-                  description="Text-anchored row variant — entity pill, page tag, snippet, direction + rel label"
+                  description="Text-anchored row variant — entity pill, page tag, snippet, direction + rel label. Two targets, and the row itself is not one: the pill opens the entity, the p.N tag goes to the passage."
                   code={`<RelationshipRow
   kind="reference"
   ref={reference}
@@ -1179,7 +1179,7 @@ sendFill(selection.text);                                    // commits, then di
               <div id="fl-list-card-row" ref={reg("fl-list-card-row")}>
                 <CatalogEntry
                   name="ListCardRow"
-                  description="Shell for list rows — owns selected (bg-parchment), cursor, border-b, px-3 py-2.5"
+                  description="Shell for list rows — owns selected (bg-parchment), cursor, border-b, px-3 py-2.5. With onClick it renders the stretched primary-action button; without one the row is chrome (no tab stop, no pointer)."
                   code={`<ListCardRow selected={selected} onClick={...}>
   {/* row content */}
 </ListCardRow>`}
@@ -1267,7 +1267,7 @@ sendFill(selection.text);                                    // commits, then di
               <div id="relationship-row-aggregate" ref={reg("relationship-row-aggregate")}>
                 <CatalogEntry
                   name="RelationshipRow · aggregate"
-                  description="Aggregate row variant — entity pill, evidence count badge, direction + rel label. Click on the count jumps into the refs cluster."
+                  description="Aggregate row variant — entity pill, evidence count badge, direction + rel label. The entity (pill at overview, title at compact/detail) opens the overlay; the count jumps into the refs cluster, or expands them in place inside the tree."
                   code={`<RelationshipRow
   kind="aggregate"
   rel={rel}
@@ -1282,7 +1282,7 @@ sendFill(selection.text);                                    // commits, then di
               <div id="relationship-row-hub" ref={reg("relationship-row-hub")}>
                 <CatalogEntry
                   name="RelationshipRow · hub"
-                  description="N-ary hub row — multiple member pills, evidence count badge, no direction (hubs are symmetric). Rendered when refs share a hubId."
+                  description="N-ary hub row — multiple member pills, evidence count badge, no direction (hubs are symmetric). Each member pill opens its own entity; a hub has no single one, so the row has no open of its own. Rendered when refs share a hubId."
                   code={`<RelationshipRow kind="hub" hub={hub} />
 
 {/* hub comes from deriveHubs(references) */}`}

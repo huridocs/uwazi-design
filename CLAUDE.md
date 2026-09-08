@@ -29,12 +29,25 @@ Keep it in sync when tokens.css or the style rules change.
 - Asks for changes, not designs — show, don't deliberate. After a non-trivial edit, prefer to commit on request rather than waiting.
 
 ## A11y patterns (post-audit, 2026-07 — don't regress these)
-- **Rows/cards with nested controls are NEVER `role="button"`.** The shells
-  (`ListCardRow`, `EntityCard`, `DataTable` rows, `ImportTable` rows) render a
-  stretched invisible **primary-action button** as first child (focus ring,
-  `aria-pressed`, accessible name, native Enter/Space); content sits above it in
-  a `relative` wrapper so nested controls stay clickable, and the container keeps
-  a plain `onClick` for mouse. Copy this pattern for any new clickable row.
+- **Rows/cards with nested controls are NEVER `role="button"`.** A CLICKABLE row
+  (`EntityCard`, `DataTable` rows, `ImportTable` rows, and `ListCardRow` given an
+  `onClick`) renders a stretched invisible **primary-action button** as first
+  child (focus ring, `aria-pressed`, accessible name, native Enter/Space);
+  content sits above it in a `relative` wrapper so nested controls stay
+  clickable, and the container keeps a plain `onClick` for mouse. Copy this
+  pattern for any new clickable row.
+- **…but a row whose actions are all visible controls is CHROME, not a control.**
+  `ListCardRow`'s `onClick` is optional: without it there is no stretched button,
+  no tab stop and no pointer cursor, just hover and selected styling. The
+  relationships rows (`rows/RowShell.tsx`) are that shape — their targets are the
+  **entity pill** (opens the entity overlay) and the **`p.N` page tag** (goes to
+  the passage in the document), each a real button naming itself ("Open Case
+  12.045", "Go to page 14"). A row-wide target on top of those was a third route
+  to what the pill does, announced as "Open row", and it made pill and tag fire
+  twice. The hover **eye** icon is gone with it — the pill replaced it in the
+  open; **delete stays** behind the hover, because it is destructive.
+  `PageTag`/`RowEntityPill` stop propagation, so a host that DOES keep a row
+  click still can't fire twice.
 - **Always-mounted slide-overs get `inert` while closed** (FiltersDrawer,
   NotificationsDrawer, EntityOverlay do this via `toggleAttribute("inert")`).
   Without it, tabbing into the closed drawer's controls force-scrolls the
@@ -198,7 +211,9 @@ Card-row pattern:
 <RelationshipRow kind="aggregate" rel={rel} expanded={…} onToggleExpand={…} />
 ```
 
-In tree mode, target cards are aggregate rows with inline-expand revealing their underlying ref rows. Selected state is read internally from `overlayEntityIdAtom` (aggregate) or `activeRefIdAtom`+`overlayEntityIdAtom` (reference).
+In tree mode, target cards are aggregate rows with inline-expand revealing their underlying ref rows. Selected state is read internally from `activeAggregateIdAtom` (aggregate — several aggregates can point at the same entity, so the highlight keys on WHICH one you opened) or `activeRefIdAtom` (reference, set by the page-tag jump).
+
+**Row targets**: the entity pill opens the overlay (`overlayEntityIdAtom`; on an aggregate it also marks that aggregate), the `p.N` page tag jumps to the passage (`activeRefIdAtom` + `currentPageAtom` + `scrollToHighlightAtom`). At compact and detail an aggregate has no pill, so the entity TITLE is the button instead. A hub's every member pill opens that member — a hub has no single entity, which is also why its row has no open at all; its chevron and evidence badge do the expanding. The row itself is not clickable in any of the three kinds.
 
 ## The entity preview panel — one body, two hosts
 
