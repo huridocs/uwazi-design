@@ -20,20 +20,16 @@ import {
  *  So: ONE grid, children in field order, fine-grained rows, and each item spans
  *  as many rows as it is tall.
  *
- *  Placement is `dense`, and that is a reversal worth explaining because the
- *  first version of this file argued against it. Dense backfills a gap with a
- *  LATER item, so visual order can diverge from DOM order — which was
- *  unacceptable while the record was one long run of mixed-height cards, since
- *  the divergence could be anywhere and about anything.
+ *  Placement is SPARSE — CSS Grid's default. Each item goes into the first free
+ *  position at or after the last one, so cards appear in the order the template
+ *  declares them, full stop.
  *
- *  The record is no longer that. It is bands of like cards (see MetadataRecord):
- *  a run of one-line scalars, then prose, then chips. Inside the scalar band
- *  every card is the same height, so dense has nothing to reorder. The one place
- *  it acts is the seam where a two-column prose card leaves a third column
- *  empty — and there, filling it with the chip card that was coming next is
- *  better than a column of blank paper, because both are already in the same
- *  band of the reader's attention. The DOM order is untouched either way, so the
- *  Tab order and a screen reader still walk the template's order exactly.
+ *  `dense` was tried in between and is out. It fills a hole with a card that
+ *  comes LATER, so a two-column paragraph could pull the next-but-three field up
+ *  beside it, and a record whose whole point is the template's sequence stopped
+ *  reading in it. The empty half-row beside a wide card is not a defect to
+ *  close: it is the honest shape of "this field is wide, and the next one comes
+ *  after it".
  *
  *  Rows are 1px with `row-gap: 0`, and the gutter is the item's own bottom
  *  padding. It has to be that way round: `row-gap` sits between TRACKS, so an
@@ -78,7 +74,7 @@ export function MasonryGrid({
     <div ref={containerRef} className={`@container ${className}`}>
       <Ctx.Provider value={{ gutter }}>
         <div
-          className={`grid grid-flow-row-dense items-start ${COLS}`}
+          className={`grid items-start ${COLS}`}
           style={{ gridAutoRows: "1px", rowGap: 0, columnGap: `${gutter}px` }}
         >
           {children}
