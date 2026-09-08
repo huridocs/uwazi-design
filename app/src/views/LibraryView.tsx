@@ -42,9 +42,6 @@ import {
   libraryListColumnsAtom,
   libraryListDensityAtom,
   libraryFieldLabelsAtom,
-  libraryThumbFrameAtom,
-  libraryThumbSizeAtom,
-  libraryTimeHubAtom,
   librarySortAtom,
   librarySortDirAtom,
   defaultSortDir,
@@ -73,8 +70,6 @@ import { LIBRARY_SORTS } from "../data/libraryDisplay";
 const LibraryMapView = lazy(() =>
   import("../components/library/LibraryMapView").then((m) => ({ default: m.LibraryMapView })),
 );
-import { LibraryTimelineView } from "../components/library/LibraryTimelineView";
-import { TimeBrush } from "../components/library/TimeBrush";
 import { LibraryFilters } from "../components/library/LibraryFilters";
 import { LibraryClusterDrawer } from "../components/library/LibraryClusterDrawer";
 import { EntityDrawerPreview } from "../components/library/EntityDrawerPreview";
@@ -198,22 +193,9 @@ export function LibraryView() {
   const listColumnOn = useAtomValue(libraryListColumnsAtom);
   const listDensity = useAtomValue(libraryListDensityAtom);
   const fieldLabels = useAtomValue(libraryFieldLabelsAtom);
-  const thumbFrame = useAtomValue(libraryThumbFrameAtom);
-  const thumbSize = useAtomValue(libraryThumbSizeAtom);
-  // Portrait cards are made portrait by the GRID: the 3:4 slot spans the card's
-  // width, so the column width is what sets the frame's height — Size steps the
-  // column count (S hangs five across, L three) instead of a slot-height table.
-  // Landscape keeps the classic three-column hang; previews off means the frame
-  // control isn't in play at all.
-  const cardGridCols =
-    thumbFrame === "portrait" && cardInfo.preview
-      ? {
-          s: "grid-cols-2 sm:grid-cols-3 xl:grid-cols-5",
-          m: "grid-cols-2 sm:grid-cols-3 xl:grid-cols-4",
-          l: "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3",
-        }[thumbSize]
-      : "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3";
-  const timeHub = useAtomValue(libraryTimeHubAtom);
+  // One hang: the classic three-column grid. The portrait frame and the sizes
+  // that re-hung it in narrower columns left `main` with the Playground Split.
+  const cardGridCols = "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3";
   const [sort, setSort] = useAtom(librarySortAtom);
   const [sortDir, setSortDir] = useAtom(librarySortDirAtom);
   const setSortKey = useCallback(
@@ -279,7 +261,7 @@ export function LibraryView() {
   const statusActive = wantPublished || wantRestricted;
   const q = query.trim().toLowerCase();
   const hasQuery = q.length > 0;
-  // The drawer's Results tab exists because cards / list / map / timeline can't
+  // The drawer's Results tab exists because cards / list / map can't
   // show a snippet. When the MAIN pane is the Results view, the tab is a 24rem
   // copy of what's already on screen at full width — so it isn't rendered at all,
   // and the drawer is simply the filter panel. Suppressing only its
@@ -521,28 +503,6 @@ export function LibraryView() {
     setMatchTypes(ALL_MATCH_TYPES);
   }, [q, setMatchTypes]);
 
-  // The time strip rides under EVERY layout, not just the map and the timeline it
-  // started under — it filters by date and charts the whole result set, so cards
-  // and the table want it just as much. A display option (Display → Time strip),
-  // on by default.
-  const showBrush = timeHub && !cejilLoading;
-
-  // The brush's histogram is the results with EVERY facet applied except the
-  // date one — so the bars keep showing what widening the window would give back
-  // (dimmed outside the range), instead of collapsing to the current selection.
-  const timeChart = useMemo(
-    () => (showBrush ? entities.filter((e) => matchesAll(e, filterState, "date")) : []),
-    [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, chainKey, activeChains, language, q, searchIndex, showBrush],
-  );
-  // …and the Lanes grid drops the template facet too, so drilling into one lane
-  // doesn't shrink the grid to that single lane.
-  const laneChart = useMemo(
-    () =>
-      viewMode === "timeline" && !cejilLoading
-        ? entities.filter((e) => matchesAll(e, { ...filterState, typeIds: [] }, "date"))
-        : [],
-    [entities, dataSource, hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, chainKey, activeChains, language, q, searchIndex, viewMode, cejilLoading],
-  );
 
   // The full CEJIL corpus is thousands of entities — cap the rendered cards and
   // let the user reveal more, so the card/list grid never paints them all at once.
@@ -774,7 +734,7 @@ export function LibraryView() {
         </span>
         {/* Sort steps aside on a phone — it moves into the Display popover, where
             it costs no width. The VIEW switcher does not: cards / list / map /
-            timeline are the point of the Library, and they were unreachable on
+            results are the point of the Library, and they were unreachable on
             mobile because this whole cluster was `hidden sm:block`. */}
         <div className="hidden sm:block">
           <Select
@@ -803,7 +763,7 @@ export function LibraryView() {
             names the active view where five icons couldn't. */}
         <ViewSwitcher value={viewMode} onChange={(v) => setViewMode(v as typeof viewMode)} />
         {/* Display is icon-only and ALWAYS mounted; the view-specific modifiers
-            (timeline layout) live inside its popover. Anything that appears and
+            (the results layout) live inside its popover. Anything that appears and
             disappears from this row shoves every other control sideways when you
             change view — which is exactly what it used to do. */}
         <DisplayMenu />
@@ -827,7 +787,7 @@ export function LibraryView() {
         // carries the app's standard `px-3`. Doubling up would indent the whole
         // view past every other layout.
         className={`flex-1 min-h-0 py-3 bg-warm ${viewMode === "results" ? "" : "px-3"} ${
-          viewMode === "map" || viewMode === "timeline" || viewMode === "results"
+          viewMode === "map" || viewMode === "results"
             ? "flex flex-col overflow-hidden"
             : "overflow-auto"
         }`}
@@ -860,19 +820,6 @@ export function LibraryView() {
             >
               <LibraryMapView entities={filtered} />
             </Suspense>
-          </div>
-        ) : viewMode === "timeline" ? (
-          <div className="flex-1 min-h-0">
-            <LibraryTimelineView
-              entities={filtered}
-              chart={timeChart}
-              laneChart={laneChart}
-              query={query}
-              selectedId={selectedId}
-              onSelect={handleSelect}
-              onView={openEntity}
-              countByEntity={countByEntity}
-            />
           </div>
         ) : viewMode === "results" ? (
           // The evidence view at full width. It owns its own scroll, paging and
@@ -941,7 +888,7 @@ export function LibraryView() {
 
         {/* Not while the table has no columns to draw them in — "show more" of
             nothing is an offer to widen an empty screen. */}
-        {!cejilLoading && viewMode !== "map" && viewMode !== "timeline" && viewMode !== "results" &&
+        {!cejilLoading && viewMode !== "map" && viewMode !== "results" &&
           !(viewMode === "list" && tableColumns.length === 0) && shown.length < filtered.length && (
           <div className="flex justify-center pt-4">
             <button
@@ -953,9 +900,6 @@ export function LibraryView() {
           </div>
         )}
       </div>
-
-      {/* Time brush — map + timeline */}
-      {showBrush && <TimeBrush entities={timeChart} />}
 
       {/* Footer action bar */}
       <div

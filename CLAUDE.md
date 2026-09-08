@@ -355,7 +355,11 @@ HURIDOCS tribute** — surface the name, keep the code identifiers (`agent*`).
 - Selected rows use `bg-parchment`. No inset blue accent.
 
 ## Metadata view
-- Drawer tabs: **Document → Connections → Files → Template** (Document is first by request).
+- Drawer tabs: **Relationships → Files**. (Document went to Files in `af531c5`;
+  the **Template** tab and its `TemplateStructure` left `main` with the Playground
+  Split, 2026-09-08, and are on `playground`. `getEntityProfile` and
+  `data/metadata.ts` stay — the template DATA is what the record reads; only the
+  tab that drew the template's shape is gone.)
 - Files tab maps over real `files[]` from `data/files.ts` — *not* hardcoded.
 - Connections tab inside the drawer renders `<ConnectionsDrawerSection />`; default panel mode is `tree`.
 
@@ -447,8 +451,6 @@ Several fields sharing a `connectionKey` = **one connection, many inherited colu
   panel"), so a source entity's properties are the metadata record itself. It no
   longer carries its own Properties editor — editing a source's native props is
   now reached through "Open entity".
-- `TemplateStructure` derives its Inherited group from the real relationship fields
-  (no longer the hardcoded `mechanism`/`signatories` flags).
 - Simplification vs. real Uwazi: connections are explicit `connectedEntityIds` on the
   field (not derived from `references[]`), so direction/inverse is sidestepped.
 
@@ -461,14 +463,13 @@ The 5 sample rows in `data/imports.ts` are seeded to match `images/screens/impor
 
 ## Library search — where the evidence lives
 
-Search matches can hide in a property or a document body. Three surfaces answer
-"why is this row here?", all off ONE data path (`buildSnippetsFor` /
+Search matches can hide in a property or a document body. Two surfaces answer
+"why is this row here?", both off ONE data path (`buildSnippetsFor` /
 `matchCategories` in `utils/librarySnippets.ts`, tokenized by `utils/queryTokens.ts`):
 
 - **`MatchOrigin`** (`components/library/MatchOrigin.tsx`) — the row-level mark for
   layouts with no room for a snippet: the **List table** (a 3.5rem "Match" column,
-  mounted only while a query is active) and the **timeline Spine** (a fixed
-  2.25rem slot at the row's end). Renders ONLY where the evidence is off-row —
+  mounted only while a query is active). Renders ONLY where the evidence is off-row —
   `hiddenMatchOrigin` takes the field keys the row already marks, **per row**
   (a Country column showing an em-dash proves nothing). Carbon `Tag` = property,
   `FileText` = document body; hover/focus builds that one entity's excerpt into a
@@ -488,37 +489,20 @@ Search matches can hide in a property or a document body. Three surfaces answer
   `components/library/ResultsSnippets/ResultsMainView.tsx`, layout picked in the
   Display menu via `libraryResultsLayoutAtom` — **grouped** (wide card, properties
   beside passages) / **tree** (entity → field → snippets) / **passages** (flat
-  ranked passage list, entity secondary) / **spine** (best passage on a time axis).
+  ranked passage list, entity secondary).
   Every layout drops the TITLE snippet — each already prints the title marked.
   With the main pane in Results, a query no longer auto-opens the drawer's Results
   tab (two copies of one list).
-- **`TimeSpine`** (`components/library/TimeSpine.tsx`) — ONE proportional
-  chronology, rendered by both `LibraryTimelineView`'s Spine layout and the
-  Results spine. It owns `useTrackGeom` (the axis inset the Rail and Density
-  tracks share), the adaptive scale, year/month marks, elided-silence breaks,
-  collision push, leader lines and `SpineDate`. Callers pass rows + `rowHeight` +
-  `renderRow` and nothing else — **don't re-derive spine geometry anywhere.**
-  Three things it settled in 2026-08 that dense data breaks, so don't undo them:
-  - **Marks are nodes ON the axis, not dots behind it** — `MARK_R` 3.5 with a
-    `--bg-surface` ring painted under the fill (`paintOrder: "stroke"`), at full
-    colour. The old 2.5px/0.7-opacity dot was cut in half by the axis hairline.
-  - **Clusters get ONE mark and ONE brace.** Rows whose marks would touch
-    (`CLUSTER_EPS`, measured on the mark's drawn footprint — so a compressed
-    fortnight clusters exactly like thirteen same-day filings) share a capsule
-    spanning their instants plus a curve/stem/tick brace, instead of a bead of
-    fused dots and a fan of identical curves. The capsule takes the members'
-    colour where they agree and `--text-tertiary` where they don't; a selected
-    member surfaces from it in its own colour. **No count badge** — the brace
-    enumerates, and the rows are right there.
-  - **The "N later" elision label reads at the row columns' START**, rule running
-    toward the axis and stopping at the row bodies' edge. Against the axis it sat
-    in the trailing type-name column (an italic phrase among thirteen
-    "Document"s) AND in the leader gutter, where a post-break row's leader
-    crosses it. Marks inside an elided band compress WITH the band (`at()`), or
-    the axis prints Jan, Jul, Apr.
-  Empty `rows` renders `null`, not an axis anchored to the epoch. Stories:
-  `stories/TimeSpine.stories.tsx` (Default / Clustered / ClusteredMixed /
-  ClusteredSelected / Elided / Minimal / Empty).
+**Chronology left `main` with the Playground Split (2026-09-08).** The Library's
+Timeline view mode, the `TimeBrush` strip under every layout, `TimeSpine` and the
+Results "spine" layout are on the `playground` branch, with `BucketBreakdown` and
+`utils/timeline.ts` (their only consumers went with them). What answers "why is
+this row here?" on `main` is the pair above — the List table's Match column and
+the Results view. What a reader LOSES is the time axis: a search can still tell
+you WHERE a term matched, and the date facets and the Date column still narrow
+and order by date, but nothing plots the result set as a chronology, so "when
+does this cluster?" is now read off dates rather than seen. Don't rebuild a
+second spine here — take it from `playground`.
 
 Match-type chips (Title / Properties / Document) are `ToggleChip`
 (`components/shared/ToggleChip.tsx`) — `ActiveFilterChip`'s visual twin with
@@ -532,10 +516,9 @@ own reads a connected one's (`cejilRenderedDoc` → `docFilesFor`'s Sentencia
 fallback), so identical passages surface under a dozen case names.
 `EntitySnippets.borrowedFrom` carries that source through the one snippet path,
 and `components/library/BorrowedDocLine.tsx` prints it as `↳ from <document>` on
-all four Results layouts, the drawer's result card and the `MatchOrigin` popover.
-It rides an ALREADY-MOUNTED line (a section label, a row's attribution, the
-spine's fixed trailing slot) — never a line of its own that appears and
-disappears. Both it and metadata's `ProvenanceTrail` (`↳ via …`) render through
+every Results layout, the drawer's result card and the `MatchOrigin` popover.
+It rides an ALREADY-MOUNTED line (a section label, a row's attribution) — never a
+line of its own that appears and disappears. Both it and metadata's `ProvenanceTrail` (`↳ via …`) render through
 `components/shared/ProvenanceLine.tsx`, so the app has ONE provenance idiom.
 **Documents are addressed by file `_id`, not filename.** `files.json` was
 rewritten after the import: 5,245 records, 6 distinct filenames, 6 urls — so an
@@ -597,41 +580,36 @@ memory, and the
 `pageFoldWithMap` builds them lazily, and priming them held 20.4MB of live
 `Int32Array` for pages no excerpt cuts (heap after prime 434.8MB → 326.2MB).
 
-## Library card thumbnails — size × frame × fit
+## Library card thumbnails — one treatment
 
-Three Display-menu controls over one slot, and they compose in that order: how
-big, what shape, how the picture sits in it.
+**The size / frame / fit controls left `main` with the Playground Split
+(2026-09-08)** and are on `playground` — `libraryThumbSizeAtom`,
+`libraryThumbFrameAtom`, `libraryThumbFitAtom`, their three Display-menu rows and
+the registry's `thumbSections()`. What `main` draws is the treatment they
+defaulted to, hardcoded in `EntityCard`: **a landscape band at the medium height
+(`h-24`), with `auto` fit**, in the classic three-column hang
+(`cardGridCols`, no longer re-hung per frame or size).
 
-- **Frame** (`libraryThumbFrameAtom`, `landscape | portrait`) is **one choice for
-  the whole grid, never per card** — per-card orientation ragged-edges the rows
-  the reserved slot exists to keep level. Landscape is a full-width band (h-16 /
-  h-24 / h-36 by Size). **Portrait is the card's full width at `aspect-[3/4]` —
-  the SLOT is portrait-shaped, and the GRID is what keeps it from becoming a
-  poster**: `LibraryView` re-hangs portrait cards in narrower columns
-  (`cardGridCols`), and **Size steps the column count** (S = five across at xl,
-  M = four, L = three) instead of a slot-height table. Two earlier treatments —
-  a 3:4 picture centred in a wide band, then a merely-taller band — both read
-  as landscape at real column widths; don't reintroduce them.
-- **Fit** (`libraryThumbFitAtom`, `auto | cover | contain`) — `auto` is ONE rule
-  read against the frame: **an image whose orientation matches the frame covers
-  it, anything else is matted on vellum.** A square matches neither, so it mats
-  in both. **Explicit `cover` is FULL-BLEED** — it fills the slot edge to edge in
-  either frame; `contain` always mats. The call is `ImageThumb`'s object-fit
+What survives the cut, because it is the drawing and not the choosing:
+
+- **`auto` is still a rule, not a shrug** — an image whose orientation matches
+  the frame covers it, anything else is matted on vellum; a square matches
+  neither, so it mats. The call is `ImageThumb`'s object-fit
   (`EntityThumbnail.tsx`), never a second box shape.
-- **Card floor** (`CARD_FLOOR`, landscape only, and only with metadata ON): it
+- **Card floor** (`CARD_FLOOR`, `min-h-[15.5rem]`, only with metadata ON): it
   absorbs the 1–3-field spread so a one-field card meets its neighbours. With
-  metadata off the card is slot + title + footer — already equal — and in
-  portrait the aspect slot plus the grid row's stretch keeps rows level; a rem
-  floor sized for one column width would be wrong at every other.
-- The **list row's chip stays square at every frame** — a 3:4 chip would outgrow
-  the two lines of text beside it, and a mat inside 2.25rem is almost all mat.
-- **No-shift holds by construction**: every box is definite before an image
-  loads (fixed height, or aspect against the column width), and the no-preview
-  vellum well uses the same box, so rows line up whatever a card is carrying.
-- Verified against the artworks corpus's real spread — 30 portrait / 22
-  landscape / 8 square. Stories: `Sizes` and `FitModes` render the full matrix
-  (3 ratios × 3 sizes/fits × both frames).
-
+  metadata off the card is slot + title + footer, already equal.
+- The **list row's chip stays square** (`w-9 h-9`) — a 3:4 chip would outgrow the
+  two lines of text beside it, and a mat inside 2.25rem is almost all mat.
+- **No-shift holds by construction**: the slot is a definite box before an image
+  loads, and the no-preview vellum well uses the same box, so rows line up
+  whatever a card is carrying.
+- `EntityThumbnail` KEEPS both frames and all three fits as props — the fit rule,
+  `PdfPageThumb`'s fill geometry, `QuietMark`, the video / audio / no-preview
+  treatments and `scripts/check-thumbs.ts --portrait` are all written against the
+  pair, and `playground` still drives them from the menu. Only `main`'s card
+  stops choosing. Stories: `Sizes` and `FitModes` still render the full matrix,
+  which is where the other shapes remain visible.
 
 ### What fills the slot, per kind
 - **Document** — the real first page. In the **band** it keeps the inset stack

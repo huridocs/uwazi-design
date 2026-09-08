@@ -19,10 +19,8 @@ import {
   resultsActivePageAtom,
   type MatchTypeFilters,
 } from "../../../atoms/library";
-import { entityTime } from "../../../utils/timeline";
 import { RelationshipGroupedCard } from "../../relationships/RelationshipGroupedCard";
 import { SectionLabel } from "../../shared/SectionLabel";
-import { TimeSpine, SpineDate } from "../TimeSpine";
 import { HighlightedText } from "../../shared/HighlightedText";
 import { EntityTypeChip } from "../../shared/EntityTypeChip";
 import { ListInfoRow } from "../../shared/ListInfoRow";
@@ -33,14 +31,12 @@ import { CountBadge } from "../../shared/CountBadge";
 /** The Results view in the MAIN pane — the drawer's evidence list given the
  *  width it always wanted.
  *
- *  Same data path as the Results tab (`buildSnippetsFor` → marked excerpts), four
- *  readings of it (`libraryResultsLayoutAtom`, picked in the Display menu the way
- *  the timeline picks its own):
+ *  Same data path as the Results tab (`buildSnippetsFor` → marked excerpts), three
+ *  readings of it (`libraryResultsLayoutAtom`, picked in the Display menu):
  *
  *    grouped   one wide card per entity — properties BESIDE passages, not stacked
  *    tree      entity → field → snippets, collapsible at both levels
  *    passages  every passage as one flat ranked list, the entity secondary
- *    spine     each entity's strongest passage at its exact date on a time axis
  *
  *  Honesty rules this surface inherits (PATTERNS §4.2): a page tag and a
  *  jump-to-page appear ONLY where the corpus really is page-mapped; a snippet
@@ -292,20 +288,12 @@ export function ResultsMainView({
             onFocusProperty={onFocusProperty}
             onSelectSnippet={onSelectSnippet}
           />
-        ) : layout === "passages" ? (
+        ) : (
           <PassagesBody
             results={results}
             query={trimmed}
             onSelect={onSelect}
             onFocusProperty={onFocusProperty}
-            onSelectSnippet={onSelectSnippet}
-          />
-        ) : (
-          <SpineBody
-            results={results}
-            query={trimmed}
-            selectedId={selectedId}
-            onSelect={onSelect}
             onSelectSnippet={onSelectSnippet}
           />
         )}
@@ -850,150 +838,6 @@ function PassagesBody({
       )}
     </div>
   );
-}
-
-/* ------------------------------------------------------------------ *
- * 4 — SPINE: the results on a proportional time axis, each carrying its
- *     strongest passage. Answers "when does this term happen?", which
- *     neither the card list nor the passage list can.
- * ------------------------------------------------------------------ */
-
-function SpineBody({
-  results,
-  query,
-  selectedId,
-  onSelect,
-  onSelectSnippet,
-}: {
-  results: Result[];
-  query: string;
-  selectedId: string | null;
-  onSelect: (id: string) => void;
-  onSelectSnippet: (id: string, page: number) => void;
-}) {
-  const dated = useMemo(
-    () =>
-      results
-        .filter((r) => entityTime(r.entity) !== null)
-        .map((r) => ({ key: r.entity.id, t: entityTime(r.entity)!, item: r })),
-    [results],
-  );
-  const undated = results.length - dated.length;
-
-  if (!dated.length) {
-    return (
-      <p className="pt-6 text-center text-xs text-ink-tertiary">
-        None of these results carries a date, so there is no axis to place them on.
-      </p>
-    );
-  }
-
-  return (
-    <div className="pb-2">
-      {/* The SAME spine the Timeline view draws, at the SAME row height. The
-          geometry — axis inset, adaptive scale, year marks, elided silences,
-          leader lines, date gutter — is all `TimeSpine`'s; this passes no
-          `rowHeight` at all, so it inherits `EVENT_H` and the two chronologies
-          are literally the same axis with different words on it.
-
-          A taller row was a mistake, not a feature: `TimeSpine` derives its scale
-          from `rowHeight`, so a 104px row stretched the axis 4.7× — and once rows
-          are taller than `MAX_GAP` (88), no silence can ever be long enough to
-          elide, which is what turned a chronology into a column of whitespace.
-          One event, one line. The passage rides the line as a continuation, not
-          as a block underneath it. */}
-      <TimeSpine
-        rows={dated}
-        dotColor={({ entity }) => getEntityType(entity.typeId)?.color ?? "#6B7280"}
-        dotActive={({ entity }) => selectedId === entity.id}
-        renderRow={({ entity, snippets }, { t }) => {
-          const selected = selectedId === entity.id;
-          const color = getEntityType(entity.typeId)?.color ?? "#6B7280";
-          // The strongest passage: the densest page, else the first matched
-          // property. One passage per result — the spine is a chronology, not a
-          // second results list.
-          const best = bestPassage(snippets);
-          return (
-            <button
-              type="button"
-              aria-pressed={selected}
-              onClick={() =>
-                best?.page != null ? onSelectSnippet(entity.id, best.page) : onSelect(entity.id)
-              }
-              className={`w-full flex items-center gap-2 h-[22px] px-2 rounded-md text-start
-                transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1
-                focus-visible:ring-inset focus-visible:ring-ink/20 ${
-                  selected ? "bg-parchment" : "hover:bg-warm"
-                }`}
-            >
-              <span
-                className="shrink-0 w-1.5 h-1.5 rounded-[2px]"
-                style={{ backgroundColor: color }}
-              />
-              <SpineDate t={t} />
-              {/* Title first and bounded, so a long case name can't eat the whole
-                  line — the passage is the reason to be in this layout. */}
-              <span className="shrink-0 max-w-[18rem] truncate text-xs font-medium text-ink">
-                <HighlightedText text={entity.title} query={query} />
-              </span>
-              <CountBadge count={snippets.count} />
-              {best && (
-                <span className="flex-1 min-w-0 truncate text-xs text-ink-secondary">
-                  <HighlightedText text={best.text} query={query} />
-                </span>
-              )}
-              {/* The trailing slot the timeline spends on a type name — spent
-                  here on where the passage came from: the page tag, and the
-                  connected document it was quoted from. `<bdi>` keeps "Document ·
-                  p.5" in order under RTL without flipping the box's alignment.
-                  A FIXED width, not `max-w`: this is the reserved space for the
-                  attribution, so a borrowed document appearing on one row can't
-                  pull that row's passage shorter than its neighbours'. */}
-              {best && (
-                <span className="hidden md:flex shrink-0 w-[14rem] items-center justify-end gap-1.5 overflow-hidden text-meta text-ink-muted">
-                  <bdi dir="ltr" className="shrink-0">
-                    {best.label}
-                  </bdi>
-                  {best.isDocument && (
-                    <BorrowedDocLine from={snippets.borrowedFrom} className="min-w-0" />
-                  )}
-                </span>
-              )}
-            </button>
-          );
-        }}
-      />
-      {undated > 0 && (
-        <p className="pt-3 text-center text-meta text-ink-muted">
-          {undated.toLocaleString()} matching {undated === 1 ? "result carries" : "results carry"} no
-          date and {undated === 1 ? "is" : "are"} not plotted.
-        </p>
-      )}
-    </div>
-  );
-}
-
-/** The passage that best represents a result: the densest document page, else
- *  the first matched property. Its label never claims a page the data can't back. */
-function bestPassage(
-  s: EntitySnippets,
-): { text: string; page: number | null; label: string; isDocument: boolean } | null {
-  const top = s.fullText.reduce<FullTextSnippet | null>(
-    (best, cur) => (!best || cur.hits > best.hits ? cur : best),
-    null,
-  );
-  if (top) {
-    const parts = ["Document"];
-    if (top.page !== null) parts.push(`p.${top.page}`);
-    if (top.hits > 1) parts.push(`${top.hits}×`);
-    return { text: top.text, page: top.page, label: parts.join(" · "), isDocument: true };
-  }
-  // Never the title: the row above already prints it, marked.
-  const m = properties(s)[0];
-  // `isDocument` gates the borrowed-document attribution: a property hit came
-  // from the entity itself, however its document was resolved.
-  if (m?.texts[0]) return { text: m.texts[0], page: null, label: m.field, isDocument: false };
-  return null;
 }
 
 /* ------------------------------------------------------------------ *

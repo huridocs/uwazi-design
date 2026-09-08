@@ -29,15 +29,9 @@
  *  place: turning Thumbnail off must not make three sections vanish from under
  *  the pointer that is still travelling toward them. */
 
-export type LibraryViewMode = "cards" | "list" | "map" | "timeline" | "results";
+export type LibraryViewMode = "cards" | "list" | "map" | "results";
 
-export const LIBRARY_VIEW_MODES: LibraryViewMode[] = [
-  "cards",
-  "list",
-  "map",
-  "timeline",
-  "results",
-];
+export const LIBRARY_VIEW_MODES: LibraryViewMode[] = ["cards", "list", "map", "results"];
 
 export type DisplayValue = string | boolean;
 export type DisplayValues = Record<string, DisplayValue>;
@@ -100,16 +94,6 @@ export type DisplaySection =
 
 // ── The shared sections ──────────────────────────────────────────────────────
 
-/** The time strip filters by date and charts the whole result set, so it is
- *  useful under every layout — not just the map and the timeline it started
- *  under. One switch, shared. */
-const CHART: DisplaySection = {
-  id: "chart",
-  label: "Chart",
-  kind: "toggles",
-  options: [{ id: "timeStrip", label: "Time strip", default: true, scope: "shared" }],
-};
-
 /** The sort keys, once — the toolbar Select reads this list and so does the
  *  phone's Display section, which is the only reason the two can't drift. */
 export const LIBRARY_SORTS: Choice[] = [
@@ -156,65 +140,11 @@ const CARD_INFO: DisplaySection = {
 /** Size, then frame, then fit — the order the questions come in: how big, what
  *  shape, how the picture sits in it. All three are dead while the Thumbnail
  *  toggle is off, and they say so by dimming rather than by leaving. */
-const thumbSections = (): DisplaySection[] => {
-  const enabled = (v: DisplayValues) => v.preview !== false;
-  return [
-    {
-      id: "thumbSize",
-      label: "Thumbnail size",
-      kind: "choice",
-      separator: true,
-      enabled,
-      option: {
-        id: "thumbSize",
-        default: "m",
-        choices: [
-          { id: "s", label: "Small" },
-          { id: "m", label: "Medium" },
-          { id: "l", label: "Large" },
-        ],
-      },
-    },
-    {
-      id: "thumbFrame",
-      label: "Thumbnail frame",
-      kind: "choice",
-      enabled,
-      option: {
-        id: "thumbFrame",
-        default: "landscape",
-        choices: [
-          { id: "landscape", label: "Landscape", detail: "A wide band across the card" },
-          {
-            id: "portrait",
-            label: "Portrait",
-            detail: "3:4 cards in narrower columns — a gallery hang",
-          },
-        ],
-      },
-    },
-    {
-      id: "thumbFit",
-      label: "Image fit",
-      kind: "choice",
-      enabled,
-      option: {
-        id: "thumbFit",
-        default: "auto",
-        choices: [
-          { id: "auto", label: "Auto", detail: "Ratio decides — wide fills, tall is matted" },
-          { id: "cover", label: "Cover", detail: "Fill the whole slot edge to edge, crop the image" },
-          { id: "contain", label: "Contain", detail: "Whole image on a quiet mat" },
-        ],
-      },
-    },
-  ];
-};
 
 // ── The registry ─────────────────────────────────────────────────────────────
 
 export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
-  cards: [CHART, SORT, CARD_INFO, ...thumbSections()],
+  cards: [SORT, CARD_INFO],
 
   /** The list's options are its COLUMNS, one per track the table can draw —
    *  including the corpus's own metadata properties, which no other view can
@@ -222,7 +152,6 @@ export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
    *  the same reason: rows are the only thing in the Library with a height you
    *  might want back. */
   list: [
-    CHART,
     SORT,
     {
       id: "columns",
@@ -247,31 +176,7 @@ export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
     },
   ],
 
-  timeline: [
-    CHART,
-    SORT,
-    {
-      id: "timelineLayout",
-      label: "Timeline layout",
-      kind: "choice",
-      separator: true,
-      option: {
-        id: "timelineLayout",
-        default: "rail",
-        choices: [
-          { id: "rail", label: "Rail", detail: "Periods on a track, click to filter" },
-          { id: "density", label: "Density", detail: "Volume per period, click to filter" },
-          { id: "spine", label: "Spine", detail: "Every entity at its exact date" },
-          { id: "lanes", label: "Lanes", detail: "Template × period grid" },
-        ],
-      },
-    },
-    CARD_INFO,
-    ...thumbSections(),
-  ],
-
   results: [
-    CHART,
     SORT,
     {
       id: "resultsLayout",
@@ -285,7 +190,6 @@ export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
           { id: "grouped", label: "Grouped", detail: "One card per entity, fields beside pages" },
           { id: "tree", label: "Tree", detail: "Entity → field → snippets, collapsible" },
           { id: "passages", label: "Passages", detail: "Every passage, ranked; entity secondary" },
-          { id: "spine", label: "Spine", detail: "Best passage at its date on a time axis" },
         ],
       },
     },
@@ -294,7 +198,7 @@ export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
   /** The map draws neither cards nor rows, so it offers the chart and the phone's
    *  sort and nothing else. An empty-feeling menu is the honest answer; a menu
    *  full of controls that act on nothing is not. */
-  map: [CHART, SORT],
+  map: [SORT],
 };
 
 // ── Reading the registry ─────────────────────────────────────────────────────
