@@ -30,6 +30,12 @@ export interface Entity {
    *  the Library has a natural, type-mixed order when sorted by date. Optional
    *  so runtime-created entities (CreateRelationship flow) don't need it. */
   createdAt?: string;
+  /** When the entity was last edited, if it ever was. Optional and often
+   *  absent: a record that has never been touched since import has no edited
+   *  date, and the record footer says only "Created X" for it — which is the
+   *  truth, not a gap to fill. Seeded for the curated Sample corpus below;
+   *  the CEJIL import carries no edit date at all (see `adapt.ts`). */
+  updatedAt?: string;
   /** Publishing status (seeded). Published entities are public; the rest are
    *  restricted. Drives the Library's Restricted/Published facet. */
   published?: boolean;
@@ -184,6 +190,21 @@ function seededDate(id: string): string {
   return d.toISOString().slice(0, 10);
 }
 
+/** An edit date for roughly three in five entities, always AFTER the created
+ *  one, and absent for the rest — so both halves of the record footer ("Created
+ *  X" alone, and "Created X · Edited Y") are visible in the same library rather
+ *  than one of them being a state nobody can find. Salted independently of the
+ *  created date so the two are not correlated. */
+function seededUpdatedAt(id: string): string | undefined {
+  if (hash(`${id}·edited`) % 5 < 2) return undefined;
+  const created = new Date(seededDate(id));
+  const days = 1 + (hash(`${id}·editgap`) % 400);
+  const edited = new Date(created.getTime() + days * 86_400_000);
+  // Never in the future relative to the corpus's own "today".
+  const cap = Date.UTC(2024, 5, 30);
+  return new Date(Math.min(edited.getTime(), cap)).toISOString().slice(0, 10);
+}
+
 /** ~80% published, the rest restricted — salted so it's independent of the date. */
 function seededPublished(id: string): boolean {
   return hash(`${id}·pub`) % 5 !== 0;
@@ -211,6 +232,7 @@ function entityGeo(id: string, typeId: string, title: string): LatLng | undefine
 export const entities: Entity[] = baseEntities.map((e) => ({
   ...e,
   createdAt: seededDate(e.id),
+  updatedAt: seededUpdatedAt(e.id),
   published: seededPublished(e.id),
   preview: seededPreview(e.id, e.typeId),
   geo: entityGeo(e.id, e.typeId, e.title),

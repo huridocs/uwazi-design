@@ -30,3 +30,28 @@ export function formatShortDate(iso: string): string {
     timeZone: "UTC",
   });
 }
+
+/** BCP-47 tag for each UI language, for `toLocaleDateString`. */
+const DATE_LOCALE: Record<string, string> = {
+  EN: "en-US",
+  ES: "es-ES",
+  FR: "fr-FR",
+  AR: "ar",
+};
+
+/** `MMM D, YYYY` in the UI's language — the record footer's dates.
+ *
+ *  Same UTC pinning as the rest of this file, and the same reason: these are
+ *  date-only strings, and a local-time render shows the previous day anywhere
+ *  west of Greenwich. An unparseable value is returned as it is stored rather
+ *  than as "Invalid Date". */
+export function formatRecordDate(iso: string, language = "EN"): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString(DATE_LOCALE[language] ?? "en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}

@@ -8,6 +8,7 @@ import { focusMetadataFieldAtom } from "../../atoms/library";
 import type { MetadataField, RelationshipMetadataField } from "../../data/metadata";
 import { MetadataCard } from "./MetadataCard";
 import { MasonryGrid, MasonryItem } from "./MasonryGrid";
+import { RecordFooter } from "./RecordFooter";
 import { RelationshipCards } from "./RelationshipCards";
 import { fieldItem, connectionItem, type MetadataItem } from "./items";
 import { deriveTemplateStructure } from "../../utils/templateStructure";
@@ -148,6 +149,7 @@ export function MetadataRecord({
   }
 
   return (
+    <>
     <MasonryGrid containerRef={rootRef}>
       {/* Template sequence. The only thing kind decides here is `wide`: prose
           takes two columns of three, because a paragraph set in a third of a
@@ -162,5 +164,8 @@ export function MetadataRecord({
       ))}
       <RelationshipCards profile={profile} language={language} span="full" inheritingOnly />
     </MasonryGrid>
+    {/* Outside the grid on purpose — see RecordFooter. */}
+    <RecordFooter entityId={profile.id} />
+    </>
   );
 }
