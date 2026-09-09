@@ -6,35 +6,34 @@ import { entityMetadataAtom } from "../../atoms/entityMetadata";
 import { fillTargetAtom, fillRequestAtom } from "../../atoms/fillTarget";
 import { focusMetadataFieldAtom } from "../../atoms/library";
 import type { MetadataField, RelationshipMetadataField } from "../../data/metadata";
-import { MetadataCard } from "./MetadataCard";
-import { MasonryGrid, MasonryItem } from "./MasonryGrid";
+import { SectionLabel } from "../shared/SectionLabel";
 import { RecordFooter } from "./RecordFooter";
 import { RelationshipCards } from "./RelationshipCards";
 import { fieldItem, connectionItem, type MetadataItem } from "./items";
 import { deriveTemplateStructure } from "../../utils/templateStructure";
 
-/** One field of the record, as its own card.
+/** One field of the record, in the FILE DETAILS idiom: a label above its value,
+ *  no card, no border, no fill of its own.
  *
- *  Every item gets this — a paragraph, a date, a link, a connection's pills —
- *  so the record is one stack of like things rather than a few titled cards
- *  above a ruled table of everything else.
+ *  This branch is the other half of a deliberate A/B — main keeps the bordered
+ *  `MetadataCard` per field, playground reads as one dense panel — so it is the
+ *  file panel's own recipe, not an approximation of it: `text-meta font-medium
+ *  uppercase tracking-wide text-ink-muted` over the value, which is what
+ *  `FileDetailEditor`'s `Field` has always used. Copying the shape but not the
+ *  type would make the comparison about something nobody chose.
  *
- *  The bordered `MetadataCard`, uniformly, in every host. A lighter
- *  label-value-hairline block shipped here first and was replaced on the user's
- *  call: the cost it avoids is real and worth naming, because it is what the
- *  drawer shows at 390px — a twelve-field entity is twelve boxes whose content
- *  is one short line each, and the card head is a 14px bold heading over the
- *  value it names. That is accepted. If it is ever revisited, the alternative
- *  is in the history (0aa1372), not a new idea to have.
- *
- *  `data-field-key` is on the card — what deep-focus from Results scrolls to
- *  and flashes, so the flash paints one field's title and value together. */
-export function MetadataFieldBlock({ item }: { item: MetadataItem }) {
+ *  `data-field-key` stays on the wrapper — deep-focus from Results scrolls to it
+ *  and flashes it, and the flash now paints a label and its value rather than a
+ *  card, which is the same field either way. */
+function MetadataFieldRow({ item, className = "" }: { item: MetadataItem; className?: string }) {
   return (
-    <div data-field-key={item.id}>
-      <MetadataCard title={item.label}>
+    <div data-field-key={item.id} className={`space-y-1 min-w-0 ${className}`}>
+      <span className="block text-meta font-medium text-ink-muted uppercase tracking-wide">
+        {item.label}
+      </span>
+      <div className="text-sm text-ink">
         <FillableValue item={item} />
-      </MetadataCard>
+      </div>
     </div>
   );
 }
@@ -149,23 +148,50 @@ export function MetadataRecord({
   }
 
   return (
-    <>
-    <MasonryGrid containerRef={rootRef}>
-      {/* Template sequence. The only thing kind decides here is `wide`: prose
-          takes two columns of three, because a paragraph set in a third of a
-          wide pane is a column of six-word lines. Chips and scalars take one.
-          Dense packing closes the hole a wide card would otherwise leave — and
-          it can only ever pull a card from within this group, because the
-          Relationships section below is its own block, not more grid. */}
-      {items.map((item) => (
-        <MasonryItem key={item.id} wide={item.kind === "long"}>
-          <MetadataFieldBlock item={item} />
-        </MasonryItem>
-      ))}
+    <div ref={rootRef} className="space-y-3">
+      {/* ONE PANEL, not a stack of cards: the file details' warm band with a
+          section label heading it, and the fields as a label-over-value grid
+          inside. Two columns where there is room, one below — a container query
+          on the panel, so the 390px drawer and the preview overlay get the
+          single column without a second component.
+
+          Template sequence is untouched (see above), and a plain grid places
+          its children in order, so the sparse placement the masonry was doing
+          by hand comes for free here — nothing is ever pulled forward to close
+          a gap. */}
+      <div className="rounded-md bg-warm p-4 space-y-3">
+        <SectionLabel as="h4" level="section">
+          Details
+        </SectionLabel>
+        <div className="@container">
+          <div className="grid grid-cols-1 @[26rem]:grid-cols-2 gap-x-6 gap-y-3">
+            {/* THE TWO SHAPES THIS IDIOM NEEDS. A 200-word Description in half
+                a column is a ribbon of four-word lines, and a chip row in half
+                a column is a vertical stack of pills — both are the case that
+                breaks a label/value grid. Both take the FULL width instead,
+                which keeps the idiom (label above value) and gives the value
+                the measure it needs. A scalar is one cell, which is the whole
+                point of the grid. The span rides the SAME element as
+                `data-field-key`, so the deep-focus flash paints the field at
+                the width it actually occupies. */}
+            {items.map((item) => (
+              <MetadataFieldRow
+                key={item.id}
+                item={item}
+                className={item.kind === "scalar" ? "" : "@[26rem]:col-span-2"}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Unchanged, and last: the relationships band keeps its own heading and
+          its bordered connection tables. Those carry a table, which is a
+          structure — the thing this treatment removes borders from is a
+          PROPERTY. */}
       <RelationshipCards profile={profile} language={language} span="full" inheritingOnly />
-    </MasonryGrid>
-    {/* Outside the grid on purpose — see RecordFooter. */}
-    <RecordFooter entityId={profile.id} />
-    </>
+
+      <RecordFooter entityId={profile.id} />
+    </div>
   );
 }
