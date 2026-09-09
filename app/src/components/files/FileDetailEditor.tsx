@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { SectionLabel } from "../shared/SectionLabel";
+import { MasonryGrid, MasonryItem } from "../metadata/MasonryGrid";
+import { MetadataCard } from "../metadata/MetadataCard";
 import {
   FileText,
   Music,
@@ -113,7 +115,11 @@ export function FileDetailEditor({
 
   return (
     <>
-      <div className="rounded-md bg-warm p-4 space-y-3">
+      {/* No warm panel around the band any more: the cards carry their own
+          edges, and a filled box around bordered boxes is the "boxed-in
+          compartment" the border tokens were lightened to avoid. The section
+          label heads the band, as it does in the metadata record. */}
+      <div className="space-y-2">
         <div className="flex items-center justify-between">
           <SectionLabel as="h4" level="section">
             File details
@@ -140,85 +146,124 @@ export function FileDetailEditor({
           </button>
         </div>
 
-        <Field label="Name">
-          {editing ? (
-            <div className="flex items-center gap-2 bg-paper rounded border border-border focus-within:ring-1 focus-within:ring-carbon/30">
-              <Icon size={14} className="text-ink-muted ml-2 shrink-0" />
-              <input
-                ref={nameRef}
-                key={file.id}
-                type="text"
-                defaultValue={file.name}
-                onBlur={(e) => updateField("name", e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-                }}
-                className="flex-1 min-w-0 px-1 py-1.5 text-sm text-ink bg-transparent focus:outline-none"
-                aria-label="File name"
-              />
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 px-2 py-1.5">
-              <Icon size={14} className="text-ink-muted shrink-0" />
-              <span className="text-sm text-ink truncate">{file.name}</span>
-            </div>
-          )}
-        </Field>
+        {/* The same record the metadata surfaces render: one bordered
+            MetadataCard per property, 11px uppercase head over a 14px value, in
+            the same container-query masonry at the same gutter. A file's
+            details ARE a record; they only looked like a different kind of
+            thing because they were written as one.
 
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Language">
-            {editing ? (
-              <div className="relative inline-flex items-center bg-paper rounded border border-border focus-within:ring-1 focus-within:ring-carbon/30">
-                <select
-                  ref={langRef}
-                  value={file.language}
-                  onChange={(e) => updateField("language", e.target.value)}
-                  className="appearance-none bg-transparent pl-2 pr-6 py-0.5 text-xs font-medium text-ink focus:outline-none cursor-pointer"
-                  aria-label="File language"
-                >
-                  {/* Named, not coded: this is a chooser, and a reader picking
-                      a file's language should see the language. Codes this app
-                      has no name for (PT, DE, the "—" for none) fall back to
-                      themselves — see `languageName`. */}
-                  {languageOptions.map((lang) => (
-                    <option key={lang} value={lang}>
-                      {languageName(lang)}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown
-                  size={11}
-                  className="absolute right-1.5 text-ink-tertiary pointer-events-none"
-                />
-              </div>
-            ) : (
-              <span className="inline-block px-2 py-0.5 text-xs font-medium text-ink-secondary bg-vellum rounded">
-                {languageName(file.language)}
+            ORDER, and a file has no template to read it from, so it is chosen:
+            NAME first, because it is what the file is called and the only field
+            a reader scans for. Then what the file IS at a glance — TYPE and
+            SIZE, facts about the artefact, then LANGUAGE, which is the one that
+            distinguishes THIS file from its siblings in the same document
+            group, so it sits last in that band and next to the Document section
+            that lists them. Then MODIFIED, because a date is what you check
+            after you have identified the thing, not before.
+
+            EDITABILITY IS UNCHANGED. Name and Language were the editable pair
+            and still are; Type, Size and Modified are derived from the file and
+            were never editable, so they render as values. An input keeps its
+            border, its background and its focus ring inside the card, so an
+            editable field never reads as static text. */}
+        <MasonryGrid>
+          <MasonryItem>
+            <MetadataCard title="Name">
+              {editing ? (
+                <div className="flex items-center gap-2 bg-paper rounded-md border border-border focus-within:ring-2 focus-within:ring-carbon/20 focus-within:border-carbon/40 transition-shadow">
+                  <Icon size={14} className="text-ink-muted ml-2 shrink-0" />
+                  <input
+                    ref={nameRef}
+                    key={file.id}
+                    type="text"
+                    defaultValue={file.name}
+                    onBlur={(e) => updateField("name", e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter")
+                        (e.target as HTMLInputElement).blur();
+                    }}
+                    className="flex-1 min-w-0 px-1 py-1.5 text-sm text-ink bg-transparent focus:outline-none"
+                    aria-label="File name"
+                  />
+                </div>
+              ) : (
+                <span className="flex items-center gap-2 min-w-0 text-sm font-medium leading-relaxed text-ink">
+                  <Icon size={14} className="text-ink-muted shrink-0" />
+                  <span className="truncate">{file.name}</span>
+                </span>
+              )}
+            </MetadataCard>
+          </MasonryItem>
+
+          <MasonryItem>
+            <MetadataCard title="Type">
+              <span className="flex items-center gap-1.5 text-sm font-medium leading-relaxed text-ink">
+                <Icon size={14} className="text-ink-muted shrink-0" />
+                {typeLabels[file.type]}
               </span>
-            )}
-          </Field>
+            </MetadataCard>
+          </MasonryItem>
 
-          <Field label="Type">
-            <div className="flex items-center gap-1.5 px-2 py-1.5 text-sm text-ink-secondary">
-              <Icon size={14} className="text-ink-muted shrink-0" />
-              <span>{typeLabels[file.type]}</span>
-            </div>
-          </Field>
+          <MasonryItem>
+            <MetadataCard title="Size">
+              <span
+                dir="ltr"
+                className="text-sm font-medium leading-relaxed text-ink"
+              >
+                {file.size}
+              </span>
+            </MetadataCard>
+          </MasonryItem>
 
-          <Field label="Size">
-            <span className="text-sm text-ink-secondary">{file.size}</span>
-          </Field>
+          <MasonryItem>
+            <MetadataCard title="Language">
+              {editing ? (
+                <div className="relative inline-flex items-center bg-paper rounded-md border border-border focus-within:ring-2 focus-within:ring-carbon/20 focus-within:border-carbon/40 transition-shadow">
+                  <select
+                    ref={langRef}
+                    value={file.language}
+                    onChange={(e) => updateField("language", e.target.value)}
+                    className="appearance-none bg-transparent pl-2 pr-6 py-1.5 text-sm font-medium text-ink focus:outline-none cursor-pointer"
+                    aria-label="File language"
+                  >
+                    {/* Named, not coded: this is a chooser, and a reader picking
+                        a file's language should see the language. Codes this app
+                        has no name for (PT, DE, the "—" for none) fall back to
+                        themselves — see `languageName`. */}
+                    {languageOptions.map((lang) => (
+                      <option key={lang} value={lang}>
+                        {languageName(lang)}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    size={11}
+                    className="absolute right-1.5 text-ink-tertiary pointer-events-none"
+                  />
+                </div>
+              ) : (
+                <span className="text-sm font-medium leading-relaxed text-ink">
+                  {languageName(file.language)}
+                </span>
+              )}
+            </MetadataCard>
+          </MasonryItem>
 
-          <Field label="Modified">
-            <span className="text-sm text-ink-secondary">
-              {formatFileDate(file.modified)}
-            </span>
-          </Field>
-        </div>
+          <MasonryItem>
+            <MetadataCard title="Modified">
+              <span
+                dir="ltr"
+                className="text-sm font-medium leading-relaxed text-ink"
+              >
+                {formatFileDate(file.modified)}
+              </span>
+            </MetadataCard>
+          </MasonryItem>
+        </MasonryGrid>
       </div>
 
       {group && (
-        <div className="rounded-md bg-warm p-4 space-y-3">
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
             <SectionLabel as="h4" level="section">
               Document
@@ -234,44 +279,52 @@ export function FileDetailEditor({
             </span>
           </div>
 
-          <p className="text-sm font-medium text-ink">{group.title}</p>
-
-          {translations.length > 1 && (
-            <div className="space-y-1.5">
-              <p className="text-meta font-medium text-ink-muted uppercase tracking-wide">
-                Translations
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {translations.map((t) => {
-                  const current = t.id === file.id;
-                  return (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => !current && onFocusSibling?.(t.id)}
-                      aria-current={current ? "true" : undefined}
-                      className={`flex items-center gap-1.5 px-2 py-1 rounded border transition-colors ${
-                        current
-                          ? "bg-parchment border-ink/30 cursor-default"
-                          : "bg-paper border-border hover:bg-parchment cursor-pointer"
-                      }`}
-                    >
-                      <span
-                        className="text-meta font-semibold text-ink-secondary bg-vellum px-1 rounded"
-                        title={languageName(t.language)}
-                        aria-label={languageName(t.language)}
-                      >
-                        {t.language}
-                      </span>
-                      <span className="text-xs text-ink truncate max-w-[180px]">
-                        {t.name}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+          <MasonryGrid>
+            <MasonryItem>
+              <MetadataCard title="Title">
+                <span className="text-sm font-medium leading-relaxed text-ink">
+                  {group.title}
+                </span>
+              </MetadataCard>
+            </MasonryItem>
+            {translations.length > 1 && (
+              <MasonryItem>
+                {/* A set of siblings is a chip field, and the record already has
+                    a shape for one: a card, one column, chips wrapping inside. */}
+                <MetadataCard title="Translations">
+                  <div className="flex flex-wrap gap-1.5">
+                    {translations.map((t) => {
+                      const current = t.id === file.id;
+                      return (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => !current && onFocusSibling?.(t.id)}
+                          aria-current={current ? "true" : undefined}
+                          className={`flex items-center gap-1.5 px-2 py-1 rounded border transition-colors ${
+                            current
+                              ? "bg-parchment border-ink/30 cursor-default"
+                              : "bg-paper border-border hover:bg-parchment cursor-pointer"
+                          }`}
+                        >
+                          <span
+                            className="text-meta font-semibold text-ink-secondary bg-vellum px-1 rounded"
+                            title={languageName(t.language)}
+                            aria-label={languageName(t.language)}
+                          >
+                            {t.language}
+                          </span>
+                          <span className="text-xs text-ink truncate max-w-[180px]">
+                            {t.name}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </MetadataCard>
+              </MasonryItem>
+            )}
+          </MasonryGrid>
 
           {/* A file's role is fixed at upload (see AddFileModal) — there is no
               promote / demote / set-active here any more, so the only action
@@ -300,22 +353,5 @@ export function FileDetailEditor({
         </button>
       </div>
     </>
-  );
-}
-
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1">
-      <span className="text-meta font-medium text-ink-muted uppercase tracking-wide">
-        {label}
-      </span>
-      <div>{children}</div>
-    </div>
   );
 }
