@@ -106,8 +106,18 @@ export function EntityThumbnail({
  *  It was a 10px dot, which is legible in a 2.25rem chip and lost in a portrait
  *  slot ten times that. This is the same idea at the slot's own scale: the
  *  entity's square dot, kept at its true colour, resting on a plaque of the same
- *  colour at a sixth strength — a mark, not a speck, and quiet enough that a
+ *  colour at a tenth strength — a mark, not a speck, and quiet enough that a
  *  grid of them still reads as empty slots rather than as content.
+ *
+ *  RE-TUNED with the band (2026-09-10). The plaque was 34% of the slot at a
+ *  sixth strength, sized when the band was 96px; at the re-based 144 it grew to
+ *  ~49px and a screen of empty slots read as a grid of coloured tiles — the
+ *  second half of the sentence above failing while the first half held. 22% at a
+ *  tenth, with the dot taking a slightly larger share of the smaller plaque so
+ *  the thing that actually identifies the template does not shrink with it.
+ *  The clamps are what make one rule serve three boxes: `max-h-8` is the
+ *  portrait slot, where a percentage of a 500px box is a poster, and `min-h-4`
+ *  is the 2.25rem list chip, where a percentage is a speck.
  *
  *  Vellum ground and the type colour, nothing new: `bg-parchment` stays
  *  selection and no other colour enters the card. */
@@ -116,11 +126,11 @@ export function QuietMark({ tint, className = "" }: { tint?: string; className?:
   return (
     <span className={`bg-vellum flex items-center justify-center ${className}`}>
       <span
-        className="flex items-center justify-center h-[34%] min-h-5 max-h-12 aspect-square rounded-md"
-        style={{ backgroundColor: `color-mix(in srgb, ${color} 16%, transparent)` }}
+        className="flex items-center justify-center h-[22%] min-h-4 max-h-8 aspect-square rounded-md"
+        style={{ backgroundColor: `color-mix(in srgb, ${color} 9%, transparent)` }}
       >
         <span
-          className="w-[38%] aspect-square rounded-[2px]"
+          className="w-[42%] aspect-square rounded-[2px]"
           style={{ backgroundColor: color }}
         />
       </span>
