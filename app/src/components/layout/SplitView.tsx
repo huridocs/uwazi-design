@@ -1,6 +1,5 @@
-import { ReactNode, useState, useCallback, useRef, useLayoutEffect } from "react";
-import { useAtom } from "jotai";
-import { drawerWidthAtom } from "../../atoms/session";
+import { ReactNode, useState, useCallback, useRef } from "react";
+import { DrawerWidthProvider, useDrawerWidth } from "../../hooks/useDrawerWidth";
 
 interface SplitViewProps {
   left: ReactNode;
@@ -16,39 +15,18 @@ export function SplitView({
   minRightWidth = 320,
 }: SplitViewProps) {
   // The drawer's width is remembered ONCE for every host (`drawerWidthAtom`), so
-  // it holds across views. Hosts differ only in their default and minimum, which
-  // is why the stored value is clamped here on read rather than stored per host.
-  const [storedWidth, setStoredWidth] = useAtom(drawerWidthAtom);
+  // it holds across views; `useDrawerWidth` clamps it into this host's minimum
+  // and half this container.
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { width, clamp, setStoredWidth, measured } = useDrawerWidth(containerRef, {
+    defaultWidth: defaultRightWidth,
+    minWidth: minRightWidth,
+  });
   // The live width while a drag is in progress — kept local so a drag doesn't
   // write to storage on every mousemove. `null` when not dragging.
   const [dragWidth, setDragWidth] = useState<number | null>(null);
-  const [containerWidth, setContainerWidth] = useState(Infinity);
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  // The drawer grows to at most HALF the split container's width — no fixed
-  // pixel cap. Measured from the container, not the viewport, and before paint so
-  // a remembered width wider than this host allows never flashes.
-  useLayoutEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const measure = () => {
-      // A hidden container reports 0; keep the last real width.
-      if (el.clientWidth > 0) setContainerWidth(el.clientWidth);
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  const clamp = useCallback(
-    (w: number) => Math.max(minRightWidth, Math.min(containerWidth / 2, w)),
-    [minRightWidth, containerWidth],
-  );
-
-  // Shrinking the window pulls the drawer back to half without overwriting what
-  // was remembered, so growing it again restores the dragged width.
-  const rightWidth = clamp(dragWidth ?? storedWidth ?? defaultRightWidth);
+  const rightWidth = dragWidth === null ? width : clamp(dragWidth);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -81,7 +59,8 @@ export function SplitView({
 
   return (
     <div ref={containerRef} className="flex flex-1 overflow-hidden">
-      <div className="flex-1 overflow-hidden">{left}</div>
+      {/* Both panes wait for the container's first measure — see `measured`. */}
+      <div className="flex-1 overflow-hidden">{measured && left}</div>
       <div
         className={`w-1 cursor-col-resize hover:bg-carbon/30 transition-colors shrink-0 ${
           dragWidth !== null ? "bg-carbon/30" : "bg-transparent"
@@ -92,7 +71,9 @@ export function SplitView({
         className="shrink-0 overflow-hidden bg-paper border-l border-border"
         style={{ width: rightWidth }}
       >
-        {right}
+        {/* Panels stacked INSIDE the drawer (the connected-entity overlay) read
+            this resolved width rather than the box they happen to be mounted in. */}
+        <DrawerWidthProvider value={rightWidth}>{measured && right}</DrawerWidthProvider>
       </div>
     </div>
   );

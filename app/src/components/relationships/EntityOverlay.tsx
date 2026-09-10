@@ -1,6 +1,7 @@
 import { useAtom, useSetAtom } from "jotai";
 import { useEffect, useState } from "react";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
+import { useHostDrawerWidth } from "../../hooks/useDrawerWidth";
 import { copyPreviewAtom } from "../../atoms/copyFrom";
 import { CopyPreviewSection } from "../metadata/CopyPreviewSection";
 import { activeAggregateIdAtom, overlayEntityIdAtom } from "../../atoms/references";
@@ -27,6 +28,7 @@ export function EntityOverlay() {
   const lang = useAtom(languageAtom)[0];
   const rtl = lang === "AR";
   const openEntity = useSetAtom(openEntityAtom);
+  const drawerWidth = useHostDrawerWidth();
   /* The body is mounted only while there is an entity to show — it carries a
      whole relationships surface, and four hosts mount this overlay. It lags the
      close by the slide-out so the panel doesn't empty on its way off-pane. */
@@ -119,7 +121,18 @@ export function EntityOverlay() {
           rtl ? "left-0" : "right-0"
         }`}
         style={{
-          width: "calc(100% - 0.75rem)",
+          /* The remembered drawer width, as the enclosing drawer resolved it
+             (host minimum, half its container) — not a share of whatever box
+             mounted this. Less the 0.75rem strip that shows the panel is
+             stacked on something, and never wider than that box. px because
+             the number is a measured width, not a layout choice. Outside a
+             drawer (the mobile bottom sheets) there is no remembered width to
+             take, so it fills the sheet as before. */
+          width:
+            drawerWidth === null
+              ? "calc(100% - 0.75rem)"
+              : `calc(${drawerWidth}px - 0.75rem)`,
+          maxWidth: "calc(100% - 0.75rem)",
           zIndex: 21,
           transform: isOpen
             ? "translateX(0)"
