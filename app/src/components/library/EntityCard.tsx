@@ -7,6 +7,7 @@ import { HighlightedText } from "../shared/HighlightedText";
 import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
 import { EntityThumbnail, QuietMark } from "./EntityThumbnail";
 import { CardValue, ownsItsRemainder } from "./CardValue";
+import { LIBRARY_SORTS } from "../../data/libraryDisplay";
 import { getEntityType } from "../../data/entities";
 import { entityScalarFields, type EntityScalarField } from "../../utils/entityFields";
 import type { PropertyKind } from "../../utils/propertyKind";
@@ -14,7 +15,9 @@ import type { Entity } from "../../data/entities";
 import {
   libraryCardInfoAtom,
   cardFieldLimit,
+  librarySortAtom,
   libraryThumbSizeAtom,
+  type LibrarySort,
   libraryThumbFitAtom,
   libraryThumbFrameAtom,
   type LibraryViewMode,
@@ -52,6 +55,29 @@ const CARD_FLOOR: Record<ThumbSize, string> = {
  *  NOT follow the band: a row is two lines of text tall, so the chip is sized
  *  against the row and the old m/l pair is the whole useful range there. */
 const CHIP_BOX: Record<ThumbSize, string> = { m: "w-9 h-9", l: "w-12 h-12" };
+
+/** What the sort key is READING on this card, so the card can mark it.
+ *
+ *  The sort answers "why is this row where it is", and the answer was only ever
+ *  in the toolbar — a Library sorted by Country gave no sign, on any card, of
+ *  which value put it there. Shading the value the sort read is the per-card
+ *  half of that, the way `MatchOrigin` is the per-card half of "why is this row
+ *  here" for search.
+ *
+ *  `country` is matched by VALUE, not by label: the property is "País" in this
+ *  corpus and "Country" in another, and the entity already carries the hoisted
+ *  value the sort itself compares. Matching the label would work in one language
+ *  and break in the next, the same trap the field keys avoid. `recent` marks
+ *  nothing — a card carries no added-on date, and inventing one to have
+ *  something to shade would be worse than the silence. */
+function sortedFieldId(
+  sort: LibrarySort,
+  entity: Entity,
+  fields: EntityScalarField[],
+): string | null {
+  if (sort !== "country" || !entity.country) return null;
+  return fields.find((f) => f.value === entity.country)?.id ?? null;
+}
 
 /** The footer glyph for a kind that cannot be a card line, and what it is
  *  called for anyone not reading glyphs. */
@@ -131,6 +157,7 @@ export const EntityCard = memo(function EntityCard({
   metadataTrack?: boolean;
 }) {
   const language = useAtomValue(languageAtom);
+  const sort = useAtomValue(librarySortAtom);
   const info = useAtomValue(libraryCardInfoAtom);
   const thumbSize = useAtomValue(libraryThumbSizeAtom);
   const thumbFit = useAtomValue(libraryThumbFitAtom);
@@ -140,7 +167,12 @@ export const EntityCard = memo(function EntityCard({
   const showConnections = info.connections;
 
   const connectionBadge = showConnections && connections > 0 && (
-    <span className="inline-flex items-center gap-1 text-meta text-ink-tertiary tabular-nums" title={`${connections} connections`}>
+    <span
+      className={`inline-flex items-center gap-1 text-meta text-ink-tertiary tabular-nums ${
+        sort === "connections" ? "rounded-sm bg-vellum -mx-1 px-1 -my-px py-px" : ""
+      }`}
+      title={sort === "connections" ? `Sorted by Connections — ${connections}` : `${connections} connections`}
+    >
       <Link2 size={11} className="text-ink-muted" />
       {connections.toLocaleString()}
     </span>
@@ -178,6 +210,14 @@ export const EntityCard = memo(function EntityCard({
   /* Kinds the entity holds that cannot be a line. Adapter-supplied; a corpus
      without one simply has none, which is the truth for the mock sample. */
   const marks = showMetadata ? (entity.marks ?? []) : [];
+  /* The mark rides whatever the sort is reading — a property row, the title, the
+     template tag or the connection count. It is a shade on an element that is
+     already there, so it costs no line and cannot move anything. */
+  const sortedId = sortedFieldId(sort, entity, fields);
+  const sortLabel = LIBRARY_SORTS.find((c) => c.id === sort)?.label ?? sort;
+  const sortedNote = `Sorted by ${sortLabel}`;
+  const sortMark = (on: boolean) =>
+    on ? "rounded-sm bg-vellum -mx-1 px-1 -my-px py-px" : "";
   const markTitle = marks.map((m) => MARK_LABEL[m]).join(" · ");
 
   const viewButton = (
@@ -353,7 +393,12 @@ export const EntityCard = memo(function EntityCard({
         className="relative min-w-0 text-sm font-semibold text-ink leading-snug line-clamp-2
           not-supports-[grid-template-rows:subgrid]:min-h-[2.375rem]"
       >
-        <HighlightedText text={entity.title} query={query} />
+        <span
+          className={sortMark(sort === "title")}
+          title={sort === "title" ? sortedNote : undefined}
+        >
+          <HighlightedText text={entity.title} query={query} />
+        </span>
       </span>
 
       {/* The track, not the card, decides. `metadataTrack` is computed ONCE
@@ -374,7 +419,10 @@ export const EntityCard = memo(function EntityCard({
                   applied — which is how three-line values reached the grid. The
                   "+N more" is a shrink-0 sibling, so it survives the ellipsis
                   instead of being cut off inside it. */}
-              <span className="flex items-baseline gap-1 min-w-0 text-xs text-ink leading-snug">
+              <span
+                className={`flex items-baseline gap-1 min-w-0 text-xs text-ink leading-snug ${sortMark(f.id === sortedId)}`}
+                title={f.id === sortedId ? sortedNote : undefined}
+              >
                 {inspectable(f) && onFocusProperty ? (
                   /* A property whose value is a THING TO INSPECT gets a real
                      button, above the card's stretched primary action and
@@ -412,7 +460,9 @@ export const EntityCard = memo(function EntityCard({
           keeps it on the track's bottom edge in the fallback, where the track
           may be taller than the footer. */}
       <div className="relative min-w-0 self-end flex items-center justify-between gap-2 pt-1">
-        <EntityTypeTag typeId={entity.typeId} />
+        <span className={sortMark(sort === "type")} title={sort === "type" ? sortedNote : undefined}>
+          <EntityTypeTag typeId={entity.typeId} />
+        </span>
         <div className="flex items-center gap-2">
           {/* Marks and the count ride a line that is ALREADY MOUNTED, which is
               the whole reason they are here: neither can make a card taller,
