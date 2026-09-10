@@ -1,9 +1,40 @@
-import { useAtom } from "jotai";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, Pencil, Sparkles } from "lucide-react";
-import { breakpointAtom } from "../../atoms/viewport";
 import { Select } from "../shared/Select";
 import { languageName } from "../../atoms/language";
 import { TabCount } from "../shared/TabCount";
+
+
+/** A callback ref that reports its node's width, live.
+ *
+ *  A callback ref rather than `useRef` + an effect: these nodes are not all
+ *  mounted on the first render (the strip and its probe come and go with the
+ *  fold), and an effect with an empty dependency list would run once against a
+ *  null ref and never again — the same trap that left the Results excerpt budget
+ *  at its floor. */
+function useResizeWidth(onWidth: (w: number) => void) {
+  const roRef = useRef<ResizeObserver | null>(null);
+  /* The REF owns the whole lifecycle, and there is no `useEffect` cleanup
+     beside it. There was one, and it was the bug: React calls a mount effect's
+     cleanup and re-runs the effect under StrictMode, so the cleanup disconnected
+     the observer the ref callback had just attached and nothing re-observed it.
+     The strip then folded on whatever width it happened to have at first paint
+     and never again. React already calls a ref with `null` on unmount, which is
+     the disconnect this needs and the only one. */
+  return useCallback(
+    (el: HTMLElement | null) => {
+      roRef.current?.disconnect();
+      roRef.current = null;
+      if (!el) return;
+      const measure = () => onWidth(el.getBoundingClientRect().width);
+      measure();
+      const ro = new ResizeObserver(measure);
+      ro.observe(el);
+      roRef.current = ro;
+    },
+    [onWidth],
+  );
+}
 
 interface MainTab {
   id: string;
@@ -47,13 +78,25 @@ interface MainTabsProps {
 }
 
 export function MainTabs({ tabs, activeId, onChange, languages = [], availableLanguages, activeLanguage, onLanguageChange, onBack, languageEditing = false, cardAligned = false }: MainTabsProps) {
-  const [breakpoint] = useAtom(breakpointAtom);
-  /* BELOW DESKTOP, not below mobile. `breakpointAtom` calls 768–1023 "tablet",
-     so a mobile-only test is false at 768 — the width this was reported at — and a
-     mobile-only rule would have left the reported defect exactly as it was. A
-     strip that scrolls sideways to reach "Files" is the same defect at 768 as
-     at 390, so the fold is for everything under desktop. */
-  const isNarrow = breakpoint !== "desktop";
+  /* THE FOLD IS DECIDED BY THE CONTAINER, not the viewport.
+     `dec4220` folded on `breakpointAtom`, which reads the WINDOW — so a strip
+     in a 400px pane at a 1440px window stayed expanded and clipped mid-tab.
+     That is the same defect one level in, and it is now the common case rather
+     than a rare one: the drawer's width is user-chosen and persists, so a narrow
+     pane at a wide window is a state someone deliberately left the app in.
+
+     The viewport rule is GONE rather than kept as a floor. Two conditions over
+     one question is how they drift, and this one subsumes it: at 390 the tabs
+     do not fit, so it folds; and where they DO fit, showing them is better than
+     hiding them because the window happens to be small.
+
+     Measured, not a threshold, because the labels are translated and
+     "Relationships 3,749" is a different width in every language. */
+  const [availW, setAvailW] = useState(0);
+  const [naturalW, setNaturalW] = useState(0);
+  const availRef = useResizeWidth(setAvailW);
+  const probeRef = useResizeWidth(setNaturalW);
+  const isNarrow = availW > 0 && naturalW > 0 && naturalW > availW;
   const currentLang = activeLanguage ?? languages[0];
   const activeTab = tabs.find((t) => t.id === activeId) ?? tabs[0];
   /* A dot marks live state behind a tab you are NOT on. Collapsing the strip is
@@ -71,7 +114,7 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
          takes the card's BORDER too, transparently: without it the strip's
          content box starts one pixel left of the card's, and you can have the
          edges flush or the text flush but not both. */
-      className={`flex items-center justify-between gap-3 pt-2 pb-1 md:pt-2.5 shrink-0 ${
+      className={`relative flex items-center justify-between gap-3 pt-2 pb-1 md:pt-2.5 shrink-0 ${
         cardAligned ? "px-4" : "px-3"
       }`}
     >
@@ -82,8 +125,15 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
           is not `visible`, so while it was unconditional it cut the section
           dropdown's menu off at the bar's own height — the menu was laid out
           (real rect, right z-index) and simply not painted. */}
+      {/* `flex-1` is load-bearing, not tidying: the cluster now always occupies
+          the space left over by the language picker, so what we measure does not
+          depend on what we render into it. Without it the cluster would shrink
+          to the dropdown, the strip would "fit" again, and the fold would
+          oscillate — the classic feedback loop of measuring the thing you are
+          deciding whether to show. */}
       <div
-        className={`flex items-center gap-3 md:gap-4 min-w-0 ${
+        ref={availRef}
+        className={`flex flex-1 items-center gap-3 md:gap-4 min-w-0 ${
           isNarrow ? "" : "overflow-x-auto"
         }`}
       >
@@ -126,60 +176,29 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
             }))}
           />
         ) : (
-        /* No `overflow-hidden`: it would clip the dots just outside a tab's
-            corner. The end tabs round themselves instead, logically, so the
-            strip still reads as one frame under RTL. */
-        <div
-          className={`flex items-center rounded-md shrink-0 ${
-            cardAligned ? "border border-transparent" : ""
-          }`}
-          role="tablist"
-          style={{
-            border: "1px solid var(--border-primary)",
-            boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
-          }}
-        >
-          {tabs.map((tab, i) => (
-            <div key={tab.id} className="flex items-center">
-              {i > 0 && <div className="w-px self-stretch bg-border" aria-hidden="true" />}
-              <button
-                role="tab"
-                aria-selected={activeId === tab.id}
-                onClick={() => onChange(tab.id)}
-                className={`relative flex items-center justify-center gap-1 py-1.5 text-tab font-medium transition-colors ${
-                  cardAligned ? "px-4" : "px-2.5 md:px-3"
-                } ${
-                  i === 0 ? "rounded-s-md" : ""
-                } ${i === tabs.length - 1 ? "rounded-e-md" : ""} ${
-                  activeId === tab.id
-                    ? "bg-vellum text-ink"
-                    : "bg-paper text-ink-tertiary hover:text-ink-secondary"
-                }`}
-              >
-                {tab.label}
-                {/* Always shown now: this strip only renders at desktop, and
-                    the narrow widths that had to hide counts to fit get them
-                    back as the dropdown's option hints instead. */}
-                {tab.count !== undefined && <TabCount count={tab.count} />}
-                {tab.sparkle && (
-                  <Sparkles size={11} className="text-carbon" aria-label="AI suggestions pending" />
-                )}
-                {/* Decorative — the state it points at is announced by the panel
-                    that owns it. Survives on mobile (unlike the count): it costs
-                    no width, and it is exactly there that the other panel is
-                    furthest out of sight. */}
-                {tab.dot && activeId !== tab.id && (
-                  <span
-                    aria-hidden="true"
-                    className="absolute -top-0.5 -end-0.5 w-1.5 h-1.5 rounded-full"
-                    style={{ backgroundColor: "var(--accent-blue)" }}
-                  />
-                )}
-              </button>
-            </div>
-          ))}
-        </div>
+        <TabStrip tabs={tabs} activeId={activeId} onChange={onChange} cardAligned={cardAligned} />
         )}
+      </div>
+
+      {/* THE PROBE: the same strip, laid out at its natural width and never
+          painted, so there is always a true number to compare the available
+          width against — including while the real strip is folded away, which
+          is exactly when it cannot be measured. Absolutely positioned, so it
+          costs no layout; `visibility: hidden` rather than `display: none`,
+          because a `display: none` box has no width to measure. */}
+      <div
+        ref={probeRef}
+        aria-hidden
+        className="pointer-events-none absolute -z-10 w-max"
+        style={{ visibility: "hidden", top: 0, insetInlineStart: 0 }}
+      >
+        <TabStrip
+          tabs={tabs}
+          activeId={activeId}
+          onChange={onChange}
+          cardAligned={cardAligned}
+          probe
+        />
       </div>
 
       {/* Right: language — the SAME control the Library uses (shared `Select`,
@@ -216,6 +235,81 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
           />
         </div>
       )}
+    </div>
+  );
+}
+
+/** The tab strip, rendered once for real and once invisibly to be measured.
+ *
+ *  ONE renderer for both, because the measurement is only true while it draws
+ *  exactly what the strip draws — a second copy of this markup would drift on
+ *  the first edit and the fold would start deciding on a strip that no longer
+ *  exists. `probe` renders the same tabs with nothing interactive in them. */
+function TabStrip({
+  tabs,
+  activeId,
+  onChange,
+  cardAligned,
+  probe = false,
+}: {
+  tabs: MainTab[];
+  activeId: string;
+  onChange: (id: string) => void;
+  cardAligned: boolean;
+  probe?: boolean;
+}) {
+  return (
+    /* No `overflow-hidden`: it would clip the dots just outside a tab's
+       corner. The end tabs round themselves instead, logically, so the strip
+       still reads as one frame under RTL. */
+    <div
+      className={`flex items-center rounded-md shrink-0 ${
+        cardAligned ? "border border-transparent" : ""
+      }`}
+      role={probe ? undefined : "tablist"}
+      aria-hidden={probe || undefined}
+      style={{
+        border: "1px solid var(--border-primary)",
+        boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
+      }}
+    >
+      {tabs.map((tab, i) => (
+        <div key={tab.id} className="flex items-center">
+          {i > 0 && <div className="w-px self-stretch bg-border" aria-hidden="true" />}
+          <button
+            role={probe ? undefined : "tab"}
+            tabIndex={probe ? -1 : undefined}
+            aria-selected={probe ? undefined : activeId === tab.id}
+            onClick={probe ? undefined : () => onChange(tab.id)}
+            className={`relative flex items-center justify-center gap-1 py-1.5 text-tab font-medium transition-colors ${
+              cardAligned ? "px-4" : "px-2.5 md:px-3"
+            } ${i === 0 ? "rounded-s-md" : ""} ${
+              i === tabs.length - 1 ? "rounded-e-md" : ""
+            } ${
+              activeId === tab.id
+                ? "bg-vellum text-ink"
+                : "bg-paper text-ink-tertiary hover:text-ink-secondary"
+            }`}
+          >
+            {tab.label}
+            {/* Always shown: where the counts would not fit, the whole strip
+                folds into the dropdown and they come back as option hints. */}
+            {tab.count !== undefined && <TabCount count={tab.count} />}
+            {tab.sparkle && (
+              <Sparkles size={11} className="text-carbon" aria-label="AI suggestions pending" />
+            )}
+            {/* Decorative — the state it points at is announced by the panel
+                that owns it. */}
+            {tab.dot && activeId !== tab.id && (
+              <span
+                aria-hidden="true"
+                className="absolute -top-0.5 -end-0.5 w-1.5 h-1.5 rounded-full"
+                style={{ backgroundColor: "var(--accent-blue)" }}
+              />
+            )}
+          </button>
+        </div>
+      ))}
     </div>
   );
 }
