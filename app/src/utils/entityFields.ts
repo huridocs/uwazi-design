@@ -2,12 +2,21 @@ import type { Entity } from "../data/entities";
 import type { Language } from "../atoms/language";
 import type { MetadataField } from "../data/metadata";
 import { getEntityProfile } from "../data/entityProfiles";
+import { kindOfFieldType, type PropertyKind } from "./propertyKind";
 
 /** One resolved scalar property of an entity — a label and the value to print.
  *  `more` is the "+N" tail a summarising adapter leaves on a multi-valued
  *  property. */
 export interface EntityScalarField {
   id: string;
+  /** The TEMPLATE's property name, where the corpus has one. This is the key the
+   *  metadata record puts on its field cards (`data-field-key`), so it is what a
+   *  card can send to `focusMetadataFieldAtom` to say WHICH property was
+   *  clicked. `id` above cannot do that job: for an adapter corpus it is
+   *  synthesized from the localized label, which the record has never seen. */
+  key?: string;
+  /** What the property is — see `utils/propertyKind`. */
+  kind?: PropertyKind;
   label: string;
   value: string;
   more?: number;
@@ -29,7 +38,12 @@ export interface EntityScalarField {
 export function entityScalarFields(entity: Entity, language: Language): EntityScalarField[] {
   if (entity.fields) {
     return entity.fields.map((f, i) => ({
-      id: `${f.label}-${i}`,
+      // `key` FIRST where the adapter supplies one: it is stable across
+      // languages and matches the record, where `${label}-${i}` matches nothing
+      // and changes the moment a property above it resolves to empty.
+      id: f.key ?? `${f.label}-${i}`,
+      key: f.key,
+      kind: f.kind,
       label: f.label,
       value: f.value,
       more: f.more,
@@ -42,7 +56,13 @@ export function entityScalarFields(entity: Entity, language: Language): EntitySc
         !!(f as MetadataField).value &&
         (f as MetadataField).value !== "—",
     )
-    .map((f) => ({ id: f.id, label: f.label, value: String(f.value) }));
+    .map((f) => ({
+      id: f.id,
+      key: f.id,
+      kind: kindOfFieldType(f.type),
+      label: f.label,
+      value: String(f.value),
+    }));
 }
 
 /** The value an entity carries for one property label, or undefined.

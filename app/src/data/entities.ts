@@ -1,9 +1,29 @@
 import { getEntityProp } from "./entityMetadata";
 import { countryCoords, type LatLng } from "./geo";
+import type { PropertyKind } from "../utils/propertyKind";
 import { cejilTypeById } from "./cejil/typesAdapter";
 import { cejilLibraryEntities } from "./cejil/adapt";
 import { artworkEntityById } from "./artworks/adapt";
 import { artworkTypeById } from "./artworks/typesAdapter";
+
+/** One property as a CARD shows it: the key that names it to the record, the
+ *  kind that says how to draw it, the label, the display value, and the "+N"
+ *  tail a summarising adapter leaves on a multi-valued property. */
+export interface CardField {
+  /** The TEMPLATE's own property name — the same key the metadata record puts
+   *  on its field cards as `data-field-key`. It is what lets a click on a card
+   *  property name that property to the drawer; without it the card carries a
+   *  localized label and a synthesized id, neither of which the record knows.
+   *  Optional because a hand-authored corpus may not have one. */
+  key?: string;
+  /** What the property IS, normalized — see `utils/propertyKind`. A card that
+   *  draws a coordinate differently from a sentence has to be told which it is
+   *  holding. */
+  kind?: PropertyKind;
+  label: string;
+  value: string;
+  more?: number;
+}
 
 export interface EntityType {
   id: string;
@@ -57,7 +77,7 @@ export interface Entity {
    *  multi-valued field (three document titles, say) renders as "first title
    *  +2 more", never as a comma-joined dump — joining two long titles was what
    *  turned the card grid into a wall of prose. */
-  fields?: { label: string; value: string; more?: number }[];
+  fields?: CardField[];
   /** Adapter-supplied FULL metadata projection, for SEARCH — every non-empty
    *  property, every value, untruncated.
    *

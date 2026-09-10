@@ -87,6 +87,33 @@ function mdFields(e: CejilEntity): MetadataField[] {
       if (value) out.push({ id: p.name, label: p.label, type: "date", value });
       continue;
     }
+    /* The record was losing the same dates the card was, and for the same
+       reason — see `formatVals` in adapt.ts. A multidate holds SEVERAL instants
+       and a multidaterange several spans, so the record prints all of them
+       rather than the first: this is the full view, and it is also what a card
+       property click has to be able to scroll to. */
+    if (p.type === "multidate") {
+      const value = vals
+        .map((v) => fmtDate(v?.value))
+        .filter(Boolean)
+        .join(" \u00b7 ");
+      if (value) out.push({ id: p.name, label: p.label, type: "date", value });
+      continue;
+    }
+    if (p.type === "multidaterange") {
+      const value = vals
+        .map((v) => {
+          const r = v?.value as { from?: unknown; to?: unknown } | undefined;
+          const from = fmtDate(r?.from);
+          const to = fmtDate(r?.to);
+          if (from && to) return `${from} \u2013 ${to}`;
+          return from ? `${from} \u2013` : to ? `\u2013 ${to}` : "";
+        })
+        .filter(Boolean)
+        .join(" \u00b7 ");
+      if (value) out.push({ id: p.name, label: p.label, type: "date", value });
+      continue;
+    }
     // país / country-flavoured relationship handled upstream as relationship —
     // but plain text/select/multiselect land here.
     const labels = vals.map((v) => (typeof v.label === "string" ? v.label : "")).filter(Boolean);

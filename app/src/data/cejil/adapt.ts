@@ -1,11 +1,12 @@
 // Heavy adapter: maps CEJIL entities → the prototype's `Entity` shape for the
 // Library. Imported only by the library-data atom (pulls the full entity list).
-import type { Entity } from "../entities";
+import type { CardField, Entity } from "../entities";
 import type { CejilEntity } from "./types";
 import type { LatLng } from "../geo";
 import { cejilTemplates } from "./templates";
 import { cejilDocBearingIds } from "./profile";
 import { cejilCorpus, cejilLoaded, cejilRelsByEntity } from "./load";
+import { kindOfUwaziType } from "../../utils/propertyKind";
 
 /** template _id → ordered [{name,label,type}] for resolving display fields. */
 const propsByTemplate = new Map(
@@ -29,11 +30,30 @@ function formatVals(
 ): { value: string; more: number } {
   const none = { value: "", more: 0 };
   if (SKIP_TYPES.has(type)) return none;
-  if (type === "date") {
+  if (type === "date" || type === "datasection") {
     const v = vals[0]?.value;
     return typeof v === "number" && v > 0
       ? { value: String(new Date(v * 1000).getUTCFullYear()), more: 0 }
       : none;
+  }
+  /* Dates that were being dropped by ACCIDENT, not by design.
+     `multidate` and `multidaterange` are on nobody's skip list — their values
+     simply matched no branch and fell through to the string test below, which a
+     bare epoch (`[{value: 958003200}]`) and a range object
+     (`[{value: {from, to}}]`) both fail. That erased a Causa's filing dates at
+     the Commission and the Court, a Medida Provisional's three MP dates and a
+     judge's Mandatos: 624 entities' worth of real properties, hidden by nobody's
+     decision. The years are what a card can hold; the fuller rendering is
+     CardValue's business. */
+  if (type === "multidate") {
+    const years = vals
+      .map((v) => (typeof v.value === "number" && v.value > 0 ? year(v.value) : ""))
+      .filter(Boolean);
+    return years.length ? { value: years[0], more: years.length - 1 } : none;
+  }
+  if (type === "multidaterange") {
+    const spans = vals.map((v) => rangeLabel(v.value)).filter(Boolean);
+    return spans.length ? { value: spans[0], more: spans.length - 1 } : none;
   }
   const labels = vals.map((v) => v?.label).filter((l): l is string => typeof l === "string" && !!l);
   if (labels.length) return { value: labels[0], more: labels.length - 1 };
@@ -47,17 +67,45 @@ function formatVals(
   return none;
 }
 
+/** An epoch second as a year. */
+function year(v: number): string {
+  return String(new Date(v * 1000).getUTCFullYear());
+}
+
+/** A `{from, to}` range as the span it is — "1980\u20131985", or an open end. */
+function rangeLabel(v: unknown): string {
+  if (!v || typeof v !== "object") return "";
+  const r = v as { from?: unknown; to?: unknown };
+  const from = typeof r.from === "number" && r.from > 0 ? year(r.from) : "";
+  const to = typeof r.to === "number" && r.to > 0 ? year(r.to) : "";
+  if (from && to) return from === to ? from : `${from}\u2013${to}`;
+  return from ? `${from}\u2013` : to ? `\u2013${to}` : "";
+}
+
 /** First few non-empty metadata fields (label + display value), in template order. */
 function fieldsOf(e: { template: string; metadata?: Record<string, { value?: unknown; label?: unknown }[]> }) {
   const props = propsByTemplate.get(e.template) || [];
-  const out: { label: string; value: string; more?: number }[] = [];
+  const out: CardField[] = [];
   for (const p of props) {
     if (p.name === "title") continue;
     const vals = e.metadata?.[p.name];
     if (!vals || !vals.length) continue;
     const { value, more } = formatVals(p.type, vals);
     if (!value) continue;
-    out.push(more > 0 ? { label: p.label, value, more } : { label: p.label, value });
+    /* The KEY and the KIND travel with the value now.
+       They were both in hand here and dropped one line later, which is why a
+       card could not tell a coordinate from a sentence, and why a click on a
+       property had no name to send the drawer: `entityScalarFields` had to
+       invent `${label}-${i}`, which bears no relation to the `data-field-key`
+       the record scrolls to. `p.name` is the template's own property name and
+       is what `profile.ts` keys the record on, so the two ends now match. */
+    out.push({
+      key: p.name,
+      kind: kindOfUwaziType(p.type),
+      label: p.label,
+      value,
+      ...(more > 0 ? { more } : {}),
+    });
     if (out.length >= 3) break;
   }
   return out.length ? out : undefined;

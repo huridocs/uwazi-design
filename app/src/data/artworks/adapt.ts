@@ -1,4 +1,4 @@
-import type { Entity } from "../entities";
+import type { CardField, Entity } from "../entities";
 import { asset } from "../../utils/asset";
 import { artworks, artworkArtists, ARTWORK_IMAGE_BASE } from "./artworks";
 import { ARTIST_TYPE_ID, ARTWORK_TYPE_ID } from "./typesAdapter";
@@ -46,11 +46,31 @@ export function artworkLibraryEntities(): Entity[] {
       // Card rows. Nationality is a DEMONYM here ("German", not "Germany"), so
       // it is shown as a field and deliberately NOT written to `country`, which
       // feeds the Countries facet and the map's geocoding.
-      fields: [
-        artist ? { label: "Artist", value: artist.name } : null,
-        w.genres.length ? { label: "Genre", value: w.genres[0], more: w.genres.length - 1 } : null,
-        w.nationalities.length ? { label: "Nationality", value: w.nationalities[0] } : null,
-      ].filter((f): f is { label: string; value: string; more?: number } => f !== null),
+      // Keys are this corpus's own property names (it has no Uwazi template),
+      // and they match the ids `artworks/profile.ts` builds the record from, so
+      // a card property can name itself to the drawer here too.
+      fields: ([
+        artist
+          ? { key: "artist", kind: "relationship" as const, label: "Artist", value: artist.name }
+          : null,
+        w.genres.length
+          ? {
+              key: "genre",
+              kind: "chips" as const,
+              label: "Genre",
+              value: w.genres[0],
+              more: w.genres.length - 1,
+            }
+          : null,
+        w.nationalities.length
+          ? {
+              key: "nationality",
+              kind: "text" as const,
+              label: "Nationality",
+              value: w.nationalities[0],
+            }
+          : null,
+      ] as (CardField | null)[]).filter((f): f is CardField => f !== null),
       // The movement is the keyword worth faceting on.
       descriptors: w.genres,
     };
@@ -61,13 +81,22 @@ export function artworkLibraryEntities(): Entity[] {
     title: a.name,
     typeId: ARTIST_TYPE_ID,
     published: true,
-    fields: [
+    fields: ([
       a.bornYear
-        ? { label: "Lived", value: a.diedYear ? `${a.bornYear}–${a.diedYear}` : `b. ${a.bornYear}` }
+        ? {
+            key: "lived",
+            kind: "dateSpan" as const,
+            label: "Lived",
+            value: a.diedYear ? `${a.bornYear}–${a.diedYear}` : `b. ${a.bornYear}`,
+          }
         : null,
-      a.nationalities.length ? { label: "Nationality", value: a.nationalities[0] } : null,
-      a.paintings ? { label: "Paintings", value: String(a.paintings) } : null,
-    ].filter((f): f is { label: string; value: string } => f !== null),
+      a.nationalities.length
+        ? { key: "nationality", kind: "text" as const, label: "Nationality", value: a.nationalities[0] }
+        : null,
+      a.paintings
+        ? { key: "paintings", kind: "text" as const, label: "Paintings", value: String(a.paintings) }
+        : null,
+    ] as (CardField | null)[]).filter((f): f is CardField => f !== null),
     descriptors: a.genres,
   }));
 
