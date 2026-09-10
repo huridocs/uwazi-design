@@ -32,14 +32,23 @@ import {
  *
  *  Both are DEFINITE boxes before an image loads — fixed height, or aspect
  *  resolved against the column width — which is the no-shift contract. */
-const COVER_H: Record<ThumbSize, string> = { s: "h-16", m: "h-24", l: "h-36" };
+/*  RE-BASED: what was Large is the base. The band ran 64 / 96 / 144px and only
+    the top of that ramp shows a document as a document — at 96 a judgment's
+    first page is a grey smudge with a PDF tag on it. So `m` is 144 and `l` is
+    the step above it; the old 64 is gone rather than renamed, because a control
+    whose first option nobody should pick has the wrong default.
+
+    The floors move with the band, one for one (+3rem each), so the 1–3 metadata
+    field spread they absorb is unchanged. */
+const COVER_H: Record<ThumbSize, string> = { m: "h-36", l: "h-48" };
 const CARD_FLOOR: Record<ThumbSize, string> = {
-  s: "min-h-[13.5rem]",
-  m: "min-h-[15.5rem]",
-  l: "min-h-[18.5rem]",
+  m: "min-h-[18.5rem]",
+  l: "min-h-[21.5rem]",
 };
-/** The list row's chip is square at every frame — see EntityThumbnail. */
-const CHIP_BOX: Record<ThumbSize, string> = { s: "w-7 h-7", m: "w-9 h-9", l: "w-12 h-12" };
+/** The list row's chip is square at every frame — see EntityThumbnail. It does
+ *  NOT follow the band: a row is two lines of text tall, so the chip is sized
+ *  against the row and the old m/l pair is the whole useful range there. */
+const CHIP_BOX: Record<ThumbSize, string> = { m: "w-9 h-9", l: "w-12 h-12" };
 
 /** How many of the parent grid's row tracks one card claims — one per row it
  *  draws (slot? · title · metadata? · footer).

@@ -37,7 +37,12 @@ const args = process.argv.slice(2);
 /** The card grid's real sheet boxes, measured in the running Library. Checking
  *  any other size would be checking something we don't ship.
  *
- *  LANDSCAPE — the wide band: a 281×94 frame insets to a 189.3×96.7 sheet.
+ *  LANDSCAPE — the wide band at the Medium size, measured at a 1440px viewport:
+ *  a 371×142 frame insets to a 324.8×147.1 sheet, and `PdfPageThumb` quantises
+ *  the request up to 352. It was 189 against a 96px band and a 16% side inset;
+ *  the band is 144 now and the inset is 6%, so the raster is nearly twice as
+ *  wide per document — which is the number worth regression-checking, because a
+ *  slow or failing render shows up there first.
  *  PORTRAIT (`--portrait`) — the 3:4 slot, where the page FILLS the box instead
  *  of sitting in the inset stack: a 269×359 slot asks `pdfThumb` for 288 CSS px,
  *  because a filled page is scaled until its HEIGHT covers and so draws ~7%
@@ -45,7 +50,7 @@ const args = process.argv.slice(2);
  *  That is a half-again bigger raster per document, which is the number worth
  *  regression-checking: it is where a slow or failing render would show up. */
 const portrait = args.includes("--portrait");
-const WIDTH = portrait ? 288 : 189;
+const WIDTH = portrait ? 288 : 352;
 // The sheet's height. Overridable because the card's preview slot is a design
 // lever too: a taller slot shows more of a fitted page, which is a different
 // treatment rather than a different number.
@@ -53,7 +58,7 @@ const HEIGHT = args.includes("--height")
   ? Number(args[args.indexOf("--height") + 1])
   : portrait
     ? 384
-    : 96;
+    : 147;
 
 // Whole-page is what SHIPS, so it is what a bare run checks. `--zoom` renders a
 // framed candidate instead — treatments live in the check, not in the app, until

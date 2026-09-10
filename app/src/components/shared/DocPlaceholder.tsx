@@ -32,12 +32,20 @@ export function DocPlaceholder({
     <div className="group relative w-full h-full overflow-hidden bg-vellum">
       {/* Inset at the sides, pinned near the top, running PAST the bottom so the
           frame crops it. Rounded on the top corners only — the bottom is
-          off-frame, and rounding it would put the sheet back inside the box. */}
+          off-frame, and rounding it would put the sheet back inside the box.
+
+          The side inset is 6%, not 16%. At 16 the sheet was two thirds of the
+          band's width — measured 250px of a 371px card — and the remaining third
+          was vellum on either side of a page too small to read. The framing is
+          what stops a fitted page reading as a crop, and it does that job at a
+          hairline's remove as well as at a margin's; the margin was only ever
+          sized for a 96px band. The sheet is still a sheet: same top anchor,
+          same run off the bottom edge, same border and shadow. */}
       <div
         className={
           fill
             ? "absolute inset-0 bg-paper overflow-hidden"
-            : "absolute inset-x-[16%] top-[10%] -bottom-[15%] bg-paper rounded-t-[3px] shadow-sm overflow-hidden"
+            : "absolute inset-x-[6%] top-[10%] -bottom-[15%] bg-paper rounded-t-[3px] shadow-sm overflow-hidden"
         }
         style={fill ? undefined : { border: "1px solid var(--border-soft)" }}
       >

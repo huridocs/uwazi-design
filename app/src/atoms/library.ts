@@ -300,8 +300,15 @@ export type ResultsLayout = "grouped" | "tree" | "passages" | "spine";
 export type TimelineLayout = "rail" | "density" | "spine" | "lanes";
 
 /** Thumbnail rendering — how tall the preview slot is drawn and how an image
- *  sits inside it. */
-export type ThumbSize = "s" | "m" | "l";
+ *  sits inside it.
+ *
+ *  Two steps, not three. The band was 64 / 96 / 144px and the top of that ramp
+ *  is where a document first reads as a document; below it a page is a grey
+ *  smudge with a PDF tag on it, which is not a preview of anything. So 144 is
+ *  the BASE now (`m`, the default) and `l` is the one step above it. The old
+ *  small was cut rather than renamed: a control whose first option nobody should
+ *  pick is a control with a wrong default. */
+export type ThumbSize = "m" | "l";
 
 /** The SHAPE of the slot, for the whole grid at once — never per card, or rows
  *  stop lining up and the grid ragged-edges the way it did before the slot was
@@ -437,7 +444,18 @@ export const libraryTimelineLayoutAtom = displayOption<TimelineLayout>(
   "mode",
   DEFAULT_TIMELINE_LAYOUT,
 );
-export const libraryThumbSizeAtom = displayOption<ThumbSize>("thumbSize", "mode", DEFAULT_THUMB_SIZE);
+const thumbSizeStateAtom = displayOption<ThumbSize>("thumbSize", "mode", DEFAULT_THUMB_SIZE);
+/** Reads through a validity check, because the stored value outlives the option
+ *  list: a session that had picked the old Small still holds `"s"`, and an
+ *  unknown key indexes the size tables to `undefined` — a card with no band
+ *  height at all. Anything not on the current list reads as the default. */
+export const libraryThumbSizeAtom = atom(
+  (get) => {
+    const v = get(thumbSizeStateAtom);
+    return v === "m" || v === "l" ? v : DEFAULT_THUMB_SIZE;
+  },
+  (_get, set, next: ThumbSize) => set(thumbSizeStateAtom, next),
+);
 export const libraryThumbFrameAtom = displayOption<ThumbFrame>(
   "thumbFrame",
   "mode",
