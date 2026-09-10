@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Children, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue } from "jotai";
 import { Search, ChevronDown, FileText, Tag } from "lucide-react";
 import type { Entity } from "../../../data/entities";
@@ -7,6 +7,7 @@ import type { Language } from "../../../atoms/language";
 import type { DataSource } from "../../../utils/libraryFacets";
 import {
   buildSnippetsFor,
+  contextWordsFor,
   MAX_FULLTEXT,
   type BorrowedDoc,
   type EntitySnippets,
@@ -18,6 +19,7 @@ import {
   libraryResultsLayoutAtom,
   resultsActivePageAtom,
   type MatchTypeFilters,
+  type ResultsLayout,
 } from "../../../atoms/library";
 import { entityTime } from "../../../utils/timeline";
 import { RelationshipGroupedCard } from "../../relationships/RelationshipGroupedCard";
@@ -66,6 +68,60 @@ const STEP = 24;
 /** Passages view excerpts more per entity (it IS the passage list) but still a
  *  bounded number; the surplus is reported, never silently dropped. */
 const PASSAGES_PER_ENTITY = 8;
+
+/** Container width at which a tree field's snippets go two-up — the point where
+ *  one column of short leaf lines stops filling the pane. */
+const TWO_COL_TREE = 1024; // 64rem
+/** …and where a passage can afford a second line of context. */
+const TWO_LINE_PASSAGE = 896; // 56rem
+
+/** The MEASURE a passage is set to, in characters, and in px at `text-sm`.
+ *
+ *  Prose has a readable measure, and a wide pane does not abolish it — but 74ch
+ *  was the bottom of the comfortable range, chosen when the excerpt was one
+ *  line. A ranked list of quotations reads perfectly well at 96, which is where
+ *  newspapers and search engines sit, and it is the difference between a
+ *  sentence ending halfway across the pane and one that reaches. Past 72rem the
+ *  measure grows once, and then stops: the next step would be a wall of text.
+ *  The container query below (`@[72rem]:max-w-[96ch]`) is the same threshold. */
+const MEASURE_WIDE = 1152; // 72rem
+const measurePx = (w: number) => (w >= MEASURE_WIDE ? 96 : 74) * 7.2;
+
+/** The excerpt budget each layout gets: the column the prose is set in, and how
+ *  many lines of it the layout can afford.
+ *
+ *  WIDTH BUYS CONTENT, NOT LONGER LINES. The measure stays 74ch everywhere —
+ *  160-character lines would be a worse result list, not a fuller one — so a
+ *  wide pane spends its width on more context words, wrapped onto a second
+ *  line, and on more columns where a layout can take them.
+ *
+ *  What it does NOT buy, in passages, is a meta column beside the quote. That
+ *  was tried in this file and removed: a stretched `1fr_15rem` split left the
+ *  passage stopping at its cap and the attribution pinned to the far edge, a
+ *  hand's width from the sentence it names. Passage and attribution are one
+ *  block; the empty margin beside them is a page's margin, which is what a sheet
+ *  of ranked quotations should have. */
+function excerptBudget(layout: ResultsLayout, w: number): { ctx: number; twoCol: boolean } {
+  if (!w) return { ctx: contextWordsFor(0), twoCol: false };
+  const measure = measurePx(w);
+  if (layout === "passages") {
+    return { ctx: contextWordsFor(measure, w >= TWO_LINE_PASSAGE ? 2 : 1), twoCol: false };
+  }
+  if (layout === "tree") {
+    const twoCol = w >= TWO_COL_TREE;
+    const col = Math.min(measure, (w - 56) / (twoCol ? 2 : 1) - (twoCol ? 24 : 0));
+    return { ctx: contextWordsFor(col, 2), twoCol };
+  }
+  if (layout === "grouped") {
+    // `lg:grid-cols-[minmax(14rem,1fr)_2fr]` — the passages take two thirds of
+    // the card's inner width (2rem of padding, 1.5rem of gap), capped to measure.
+    const col = Math.min(measure, ((w - 32 - 24) * 2) / 3);
+    return { ctx: contextWordsFor(col, 2), twoCol: false };
+  }
+  // Spine: one passage in a fixed row on a time axis — its measure is the axis's,
+  // not the pane's, so it keeps the floor.
+  return { ctx: contextWordsFor(0), twoCol: false };
+}
 
 interface Props {
   query: string;
@@ -126,6 +182,37 @@ export function ResultsMainView({
   const layout = useAtomValue(libraryResultsLayoutAtom);
   const [activeTypes, setActiveTypes] = useAtom(matchTypeFiltersAtom);
   const [visible, setVisible] = useState(STEP);
+  /* THE PANE'S OWN WIDTH, quantised to 64px.
+     Quantised because this feeds a memo that re-snippets the visible page: an
+     exact pixel would rebuild every excerpt on every frame of a drawer drag,
+     and the drawer width now persists (`drawerWidthAtom`), so a wide drawer is
+     a lasting condition rather than a moment. To the nearest 64px the budget
+     changes a handful of times across the whole range and never mid-drag. */
+  /* A CALLBACK REF, not `useRef` + `useLayoutEffect([])`. This body is not
+     mounted on the first render — the view returns a loading or no-query branch
+     before it — so an effect with an empty dependency list ran once against a
+     null ref and never again, and the budget stayed at its floor forever. A
+     callback ref fires when the node actually arrives, and again if it is
+     remounted by a layout switch. */
+  const [paneW, setPaneW] = useState(0);
+  const roRef = useRef<ResizeObserver | null>(null);
+  const bodyRef = useCallback((el: HTMLDivElement | null) => {
+    roRef.current?.disconnect();
+    roRef.current = null;
+    if (!el) return;
+    const measure = () => {
+      const w = el.getBoundingClientRect().width;
+      setPaneW((prev) => {
+        const next = Math.round(w / 64) * 64;
+        return next === prev ? prev : next;
+      });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    roRef.current = ro;
+  }, []);
+  useEffect(() => () => roRef.current?.disconnect(), []);
   // Per-entity "show every page-snippet", owned here so the capped `results`
   // memo stays cheap and only the expanded cards pay for the extra windowing.
   const [showAll, setShowAll] = useState<Record<string, boolean>>({});
@@ -136,6 +223,8 @@ export function ResultsMainView({
     setShowAll({});
   }, [entities, trimmed, language, source, layout]);
 
+  const budget = excerptBudget(layout, paneW);
+
   const cappedResults = useMemo<Result[]>(
     () =>
       entities
@@ -144,10 +233,11 @@ export function ResultsMainView({
           entity: e,
           snippets: buildSnippetsFor(e, trimmed, language, source, {
             maxFullText: layout === "passages" ? PASSAGES_PER_ENTITY : MAX_FULLTEXT,
+            contextWords: budget.ctx,
           }),
         }))
         .filter((r) => r.snippets.count > 0),
-    [entities, visible, trimmed, language, source, layout],
+    [entities, visible, trimmed, language, source, layout, budget.ctx],
   );
 
   // Only the cards the user expanded are re-derived uncapped — the windowing
@@ -161,11 +251,12 @@ export function ResultsMainView({
               entity: r.entity,
               snippets: buildSnippetsFor(r.entity, trimmed, language, source, {
                 maxFullText: Infinity,
+                contextWords: budget.ctx,
               }),
             }
           : r,
       ),
-    [cappedResults, showAll, trimmed, language, source],
+    [cappedResults, showAll, trimmed, language, source, budget.ctx],
   );
 
   if (source === "cejil" && cejilLoading) {
@@ -267,7 +358,7 @@ export function ResultsMainView({
         </p>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-auto px-3">
+      <div ref={bodyRef} className="@container flex-1 min-h-0 overflow-auto px-3">
         {entities.length === 0 ? (
           <p className="pt-6 text-center text-xs text-ink-tertiary">
             No results for the selected match types.
@@ -291,6 +382,7 @@ export function ResultsMainView({
             query={trimmed}
             onFocusProperty={onFocusProperty}
             onSelectSnippet={onSelectSnippet}
+            twoUp={budget.twoCol}
           />
         ) : layout === "passages" ? (
           <PassagesBody
@@ -499,11 +591,14 @@ function TreeBody({
   query,
   onFocusProperty,
   onSelectSnippet,
+  twoUp,
 }: {
   results: Result[];
   query: string;
   onFocusProperty: (id: string, fieldKey: string) => void;
   onSelectSnippet: (id: string, page: number) => void;
+  /** Lay each branch's leaves in two columns — see `excerptBudget`. */
+  twoUp: boolean;
 }) {
   return (
     <div className="flex flex-col gap-1.5 pb-2">
@@ -532,6 +627,7 @@ function TreeBody({
               {props.map((group) => (
                 <TreeBranch
                   key={group.fieldKey}
+                  twoUp={twoUp}
                   label={group.field}
                   count={group.texts.length}
                   icon={<Tag size={11} className="text-ink-muted" />}
@@ -552,6 +648,7 @@ function TreeBody({
               ))}
               {snippets.fullText.length > 0 && (
                 <TreeBranch
+                  twoUp={twoUp}
                   label="Document"
                   count={snippets.fullTextTotal}
                   icon={<FileText size={11} className="text-ink-muted" />}
@@ -587,6 +684,7 @@ function TreeBody({
 /** One collapsible field branch. Indented under the entity with a quiet guide
  *  rail, mirroring the relationships tree. */
 function TreeBranch({
+  twoUp = false,
   label,
   count,
   icon,
@@ -594,6 +692,8 @@ function TreeBranch({
   trailing,
   children,
 }: {
+  /** Lay the branch's children out in two columns — see the body. */
+  twoUp?: boolean;
   label: string;
   count: number;
   icon: ReactNode;
@@ -625,8 +725,22 @@ function TreeBranch({
         {trailing}
       </button>
       {open && (
+        /* TWO-UP past 64rem, and only here. A tree's leaves are short lines —
+           a field's snippets, a page's excerpt — so one column of them down a
+           wide pane is mostly rule and margin. Two columns is the hierarchy's
+           own way to spend width: the branch still owns its children, they are
+           still under its rule, there are just two of them across. `grid`, not
+           `columns`, because CSS columns flow top-to-bottom and would put leaf 2
+           halfway down the pane. */
         <div
-          className="mt-1 ms-2 ps-3 flex flex-col gap-0.5"
+          className={`mt-1 ms-2 ps-3 ${
+            // …and only when there are two to put across. A single leaf in a
+            // two-column grid is a half-width leaf beside nothing, which is the
+            // emptiness this change exists to remove, moved one level in.
+            twoUp && Children.count(children) > 1
+              ? "grid grid-cols-2 gap-x-6 gap-y-0.5 items-start"
+              : "flex flex-col gap-0.5"
+          }`}
           style={{ borderInlineStart: "1px solid var(--border-soft)" }}
         >
           {children}
@@ -769,7 +883,7 @@ function PassagesBody({
                   width of nothing between a sentence and the name of the thing
                   it came from. `text-sm` here so `ch` is measured in the
                   passage's own type size, not the inherited one. */}
-              <span className="block max-w-[74ch] text-sm">
+              <span className="block max-w-[74ch] @[72rem]:max-w-[96ch] text-sm">
                 <span className="block leading-relaxed text-ink">
                   <HighlightedText text={row.text} query={query} />
                 </span>
@@ -1062,7 +1176,7 @@ function PassageRow({
   const body = (
     // A block <span>, not <p>: this body is also the content of a <button>,
     // where a paragraph isn't phrasing content.
-    <span className="block max-w-[74ch] text-sm text-ink leading-relaxed">
+    <span className="block max-w-[74ch] @[72rem]:max-w-[96ch] text-sm text-ink leading-relaxed">
       <HighlightedText text={snippet.text} query={query} />
       {tag && (
         <bdi
