@@ -201,6 +201,15 @@ function ImageThumb({
   // only what runs the same way as the frame.
   const matted =
     fit === "contain" || (fit === "auto" && size !== "sm" && image.aspect !== frame);
+  /* WHERE the crop falls, for the case cover exists to handle: an image TALLER
+     than its frame. Anchored to the TOP, not centred — the same call the
+     document sheet makes and for the same reason. What identifies a picture
+     sits high in it: a face in a portrait, a masthead on a page, a horizon
+     above a foreground. A centre crop of a standing figure is a torso.
+     An image WIDER than its frame has no such prior — nothing says the left
+     third of a landscape matters more than the middle — so it stays centred. */
+  const taller =
+    !matted && (image.aspect === "portrait" || (image.aspect === "square" && frame === "landscape"));
   return (
     <div className={`flex items-center justify-center ${matted ? "bg-vellum" : ""} ${className}`}>
       <img
@@ -214,7 +223,10 @@ function ImageThumb({
         decoding="async"
         onError={() => setFailed(true)}
         className="w-full h-full"
-        style={{ objectFit: matted ? "contain" : "cover" }}
+        style={{
+          objectFit: matted ? "contain" : "cover",
+          objectPosition: taller ? "50% 0%" : "50% 50%",
+        }}
       />
     </div>
   );

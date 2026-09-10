@@ -464,7 +464,12 @@ export const DEFAULT_RESULTS_LAYOUT: ResultsLayout = "grouped";
 export const DEFAULT_TIMELINE_LAYOUT: TimelineLayout = "rail";
 export const DEFAULT_THUMB_SIZE: ThumbSize = "m";
 export const DEFAULT_THUMB_FRAME: ThumbFrame = "landscape";
-export const DEFAULT_THUMB_FIT: ThumbFit = "auto";
+/* COVER, not `auto`. `auto` mats anything whose orientation does not match the
+   frame, which was my argument and is now overruled: a slot with a picture in it
+   should hold a picture, not a picture in a box. `auto` stays on the Fit control
+   as a real third behaviour — it is neither "always fill" nor "always mat" — and
+   so does `contain`. */
+export const DEFAULT_THUMB_FIT: ThumbFit = "cover";
 export const DEFAULT_LIST_DENSITY: ListDensity = "comfortable";
 export const DEFAULT_TIME_HUB = true;
 
