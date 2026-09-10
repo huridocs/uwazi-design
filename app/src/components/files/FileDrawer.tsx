@@ -25,6 +25,7 @@ import { FileDetailEditor } from "./FileDetailEditor";
 import { AddFileDropArea } from "./AddFileDropArea";
 import { FileViewerBody, resolveFileUrl } from "./FileViewerModal";
 import { DocumentViewer } from "../viewer/DocumentViewer";
+import { TabCount } from "../shared/TabCount";
 
 const typeIcons: Record<FileEntry["type"], typeof FileText> = {
   pdf: FileText,
@@ -109,11 +110,7 @@ export function FileDrawer({
                 }`}
               >
                 {tab.label}
-                {tab.count !== undefined && (
-                  <span className="text-xs font-semibold text-ink-tertiary bg-warm px-1 rounded">
-                    {tab.count}
-                  </span>
-                )}
+                {tab.count !== undefined && <TabCount count={tab.count} />}
               </button>
             </div>
           ))}
