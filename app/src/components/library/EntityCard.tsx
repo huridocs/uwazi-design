@@ -24,15 +24,19 @@ import {
    (2026-09-08); they are on `playground`. What stayed is the treatment those
    controls defaulted to — a landscape BAND at the medium height, with `auto`
    fit — so the cards render exactly as they did before the controls went. The
-   numbers below are the M row of the tables that used to be here.
+   numbers below are the M row of the tables that used to be here — re-based
+   2026-09-09 along with playground's control, where the old M was cut: the band
+   ran 64 / 96 / 144 and only the top of that ramp shows a document as a
+   document. At 96 a judgment's first page was a grey smudge with a PDF tag on
+   it. The floor moves with the band, one for one.
 
    `auto` is still a real rule, not "do nothing": an image whose orientation
    matches the frame covers it, anything else is matted on vellum. It lives in
    `EntityThumbnail`, which keeps taking `fit` and `frame` — `PdfPageThumb`'s
    geometry, `QuietMark` and the video / audio / no-preview treatments all read
    the frame, and `scripts/check-thumbs.ts` measures against it. */
-const COVER_H = "h-24";
-const CARD_FLOOR = "min-h-[15.5rem]";
+const COVER_H = "h-36";
+const CARD_FLOOR = "min-h-[18.5rem]";
 /** The list row's chip is square — see EntityThumbnail. */
 const CHIP_BOX = "w-9 h-9";
 
