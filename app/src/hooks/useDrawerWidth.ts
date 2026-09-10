@@ -50,6 +50,10 @@ export function useDrawerWidth(
     /** The width this host shows when nothing is being dragged. */
     width: clamp(storedWidth ?? defaultWidth),
     clamp,
+    /** The widest this host allows — half its container. Exposed because the
+     *  divider is a `role="separator"` now and has to say `aria-valuemax`; a
+     *  range control that cannot state its own bounds is not one. */
+    maxWidth: containerWidth / 2,
     setStoredWidth,
     /** False for the one render before the container is measured, when `width`
      *  is the stored value UNCLAMPED (half of an unknown container is no cap).
