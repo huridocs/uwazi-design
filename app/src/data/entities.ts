@@ -7,6 +7,7 @@ import { artworkEntityById } from "./artworks/adapt";
 import { artworkTypeById } from "./artworks/typesAdapter";
 import { artworks, ARTWORK_IMAGE_BASE } from "./artworks/artworks";
 import { asset } from "../utils/asset";
+import { docPageAssets, DOC_PAGE_BASE, type DocPageAsset } from "./docPages";
 
 /** One property as a CARD shows it: the key that names it to the record, the
  *  kind that says how to draw it, the label, the display value, and the "+N"
@@ -302,46 +303,42 @@ function entityGeo(id: string, typeId: string, title: string): LatLng | undefine
  *  the artworks are one painting each. So the card's "name what you cannot
  *  draw" path had nothing to render and nothing to be checked against.
  *
- *  The ASSETS ARE REAL — the artwork corpus's own files, with their own original
- *  filenames — because a seeded 404 would prove the layout and hide the loading.
- *  Three of the sample's templates carry an image property, chosen where a
- *  picture is plausible: a person's portraits, a case's exhibits, a violation's
- *  documentation. */
-/** The artwork corpus's assets, as a flat pool to draw seeded images from. */
+ *  THE PICTURES ARE PAGES OF REAL FILINGS, not paintings. Drawing from the
+ *  artwork corpus put a Warhol silkscreen on a court case's exhibits, and
+ *  matching by subject only got as far as a Goya print — still a painting on a
+ *  human-rights case, still a gallery rather than evidence. A case's exhibit IS
+ *  a filing; we ship 33 of them; `scripts/render-doc-pages.cjs` rasterises three
+ *  visually distinct pages of eight (masthead, body, signature page) into 24
+ *  JPEGs, 3.2MB.
+ *
+ *  THE EXCEPTION IS A PERSON. A document page is not a portrait, and no
+ *  photographs exist in this repo — so `person` keeps the painted portraits
+ *  (Modigliani, Velázquez, El Greco, Klimt). A painted portrait standing in for
+ *  a photograph is a far smaller lie than a painting standing in for a court
+ *  exhibit, and it is the one place where a picture OF A PERSON is the right
+ *  kind of object. It also keeps a non-document image kind in the corpus.
+ *
+ *  ORIENTATION still gets exercised: a filing's page is portrait, which in the
+ *  landscape band is exactly the top-anchored crop, and the artworks corpus
+ *  carries the landscape and square cases (22 and 8 of them) on its own cards. */
+/** The artwork corpus's assets, as a flat pool the portrait case draws from. */
 const artworkAssets = artworks.map((w) => ({
   ...w.image,
   title: w.title,
   artistName: w.artistName ?? "",
 }));
 
-/* WHICH pictures, not just how many. The pool is the artwork corpus, so every
-   asset is a painting; drawn at random it put Warhol soup-tin silkscreens on a
-   court case's exhibits, which is funny and useless — a seed has to look like
-   the thing it stands in for or it teaches the reader to distrust the screen.
+const SAMPLE_PORTRAIT_PAINTERS = [
+  "Amedeo Modigliani",
+  "Diego Velazquez",
+  "El Greco",
+  "Gustav Klimt",
+];
 
-   So each property draws from painters whose subject FITS it: portraits for a
-   person, social realism and war for a case's exhibits and a violation's
-   documentation. Goya, Rivera, Kahlo, Courbet and Munch are the ones that read
-   as a Latin-American human-rights archive rather than as an art gallery. */
-const SAMPLE_IMAGE_TYPES: Record<
-  string,
-  { key: string; label: string; painters: string[] }
-> = {
-  person: {
-    key: "portraits",
-    label: "Portraits",
-    painters: ["Amedeo Modigliani", "Diego Velazquez", "El Greco", "Gustav Klimt"],
-  },
-  court_case: {
-    key: "exhibits",
-    label: "Exhibits",
-    painters: ["Francisco Goya", "Diego Rivera", "Gustave Courbet"],
-  },
-  violation: {
-    key: "documentation",
-    label: "Documentation",
-    painters: ["Francisco Goya", "Edvard Munch", "Frida Kahlo"],
-  },
+const SAMPLE_IMAGE_TYPES: Record<string, { key: string; label: string; kind: "pages" | "portraits" }> = {
+  person: { key: "portraits", label: "Portraits", kind: "portraits" },
+  court_case: { key: "exhibits", label: "Exhibits", kind: "pages" },
+  violation: { key: "documentation", label: "Documentation", kind: "pages" },
 };
 
 /** How many images an entity of an image-bearing type carries: 0, 2 or 3.
@@ -352,18 +349,43 @@ function seededImages(id: string, typeId: string): EntityImage[] | undefined {
   if (!spec) return undefined;
   const r = hash(`${id}\u00b7imgs`) % 5;
   if (r > 1) return undefined; // most entities have none
-  const pool = artworkAssets.filter((a) => spec.painters.includes(a.artistName));
+  const count = r === 0 ? 2 : 3;
+
+  if (spec.kind === "pages") {
+    /* Different KINDS of page, not three pages of one filing: a masthead, a
+       body page and a signature page read as three documents at card size,
+       where three covers would read as one repeated. */
+    const kinds: DocPageAsset["kind"][] = ["cover", "body", "signatures"];
+    const start = hash(`${id}\u00b7pg`) % docPageAssets.length;
+    const out: EntityImage[] = [];
+    for (let i = 0; i < count; i++) {
+      const want = kinds[i % kinds.length];
+      const pool = docPageAssets.filter((a) => a.kind === want);
+      const a = pool[(start + i) % pool.length];
+      out.push({
+        url: asset(`${DOC_PAGE_BASE}/${a.file}`),
+        width: a.width,
+        height: a.height,
+        aspect: a.aspect,
+        alt: `${spec.label} — page ${a.page}`,
+        filename: a.originalName,
+        fieldKey: spec.key,
+      });
+    }
+    return out;
+  }
+
+  const pool = artworkAssets.filter((a) => SAMPLE_PORTRAIT_PAINTERS.includes(a.artistName));
   if (pool.length < 2) return undefined;
-  const count = Math.min(r === 0 ? 2 : 3, pool.length);
   const start = hash(`${id}\u00b7imgoff`) % pool.length;
-  return Array.from({ length: count }, (_, i) => {
+  return Array.from({ length: Math.min(count, pool.length) }, (_, i) => {
     const a = pool[(start + i) % pool.length];
     return {
       url: asset(`${ARTWORK_IMAGE_BASE}/${a.file}`),
       width: a.width,
       height: a.height,
       aspect: a.aspect,
-      alt: `${spec.label} \u2014 ${a.title}`,
+      alt: `${spec.label} — ${a.title}`,
       filename: a.originalName,
       fieldKey: spec.key,
     };
