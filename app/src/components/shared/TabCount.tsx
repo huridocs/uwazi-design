@@ -7,33 +7,39 @@
  *
  *  IT IS AN INVENTORY COUNT, which is what decides everything here. Per
  *  CLAUDE.md a count is always present and sits in the flow (a dot is live state
- *  and is positioned out of it), so this must stay quieter than the label it
- *  sits beside — it is not a badge demanding attention, and neither carbon nor
- *  seal belongs on it. What it was, though, was invisible: `bg-warm` on a
- *  `bg-paper` tab is one step of tint, and `text-ink-tertiary` is the lightest
- *  step on the ladder, so the number read as a smudge.
+ *  and is positioned out of it), so it must stay quieter than the label it sits
+ *  beside — it is not a badge demanding attention, and neither carbon nor seal
+ *  belongs on it.
  *
- *  So it goes one step up the ladder to `text-ink-secondary`, and its ground is
- *  a TINT OF THE INK rather than a warm neutral. That is the part worth keeping:
- *  a fixed warm fill has to work over `bg-paper` (inactive tab) and `bg-vellum`
- *  (active), in both themes, and there is no warm value that separates from all
- *  four — in dark the warm ground is closest of all to its surroundings. A tint
- *  of the text colour darkens whatever is under it in light and lifts it in
- *  dark, because `--text-primary` flips with the theme, so one value separates
- *  on every ground by construction.
+ *  NO FILL, and that is the whole design. Three treatments were tried in order:
+ *  `bg-warm` with tertiary ink, which was invisible — one step of tint on a
+ *  `bg-paper` tab, under the lightest step on the ink ladder, so the number read
+ *  as a smudge. Then an ink tint at 8%, which overshot in the other direction:
+ *  walls plus a two-digit box around a single figure made a CHIP, and a chip
+ *  beside a label reads as a control rather than as a count belonging to it.
  *
- *  NOTHING SHIFTS AS THE NUMBER GROWS. Fixed height, tabular numerals, and a
- *  min-width sized for TWO digits — 1.5rem, which is `px-1` plus the advance of
- *  two tabular figures — so 2 and 11 occupy exactly the same box and only 456
- *  and 3,749 grow, and only in width. Measured: 24 / 24 / 31.7 / 43.5px wide,
- *  18px tall throughout. The height is 18px — the height the old
- *  `px-1` badge happened to have from its line box — so the strip and every tab
- *  keep the geometry they had. */
+ *  A fainter tint would not have fixed that — a faint box is still a box, and at
+ *  the strength needed to stop reading as one it would have disappeared against
+ *  `bg-vellum` anyway, which is the ground the ink tint existed to survive. So
+ *  the presence lives in the INK: one step up the ladder to `text-ink-secondary`
+ *  and semibold, which is more present than where this started and has no walls
+ *  to be a control with. `ms-0.5` keeps it from reading as the last word of the
+ *  label.
+ *
+ *  DROPPING THE FILL IS ALSO WHAT RESOLVES THE MIN-WIDTH. A box reserved for two
+ *  digits is what made `2` look boxed — but only because there was a box. With
+ *  no fill the reserved width is invisible, so the geometry stays stable (2 and
+ *  11 occupy the same space and the tab beside them never moves) at no visual
+ *  cost at all. `1rem` is two tabular figures; three and four grow, and only in
+ *  width.
+ *
+ *  Fixed height throughout, so the strip and the tabs keep the geometry they
+ *  have always had. */
 export function TabCount({ count }: { count: number }) {
   return (
     <span
-      className="shrink-0 inline-flex items-center justify-center h-[1.125rem] min-w-[1.5rem]
-        px-1 rounded text-xs font-semibold leading-none tabular-nums text-ink-secondary bg-ink/8"
+      className="shrink-0 inline-flex items-center justify-center ms-0.5 h-[1.125rem] min-w-[1rem]
+        text-xs font-semibold leading-none tabular-nums text-ink-secondary"
     >
       {count.toLocaleString()}
     </span>
