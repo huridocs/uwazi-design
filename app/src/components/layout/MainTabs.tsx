@@ -3,6 +3,7 @@ import { ArrowLeft, Pencil, Sparkles } from "lucide-react";
 import { breakpointAtom } from "../../atoms/viewport";
 import { Select } from "../shared/Select";
 import { languageName } from "../../atoms/language";
+import { TabCount } from "../shared/TabCount";
 
 interface MainTab {
   id: string;
@@ -159,11 +160,7 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
                 {/* Always shown now: this strip only renders at desktop, and
                     the narrow widths that had to hide counts to fit get them
                     back as the dropdown's option hints instead. */}
-                {tab.count !== undefined && (
-                  <span className="text-xs font-semibold text-ink-tertiary bg-warm px-1 rounded">
-                    {tab.count}
-                  </span>
-                )}
+                {tab.count !== undefined && <TabCount count={tab.count} />}
                 {tab.sparkle && (
                   <Sparkles size={11} className="text-carbon" aria-label="AI suggestions pending" />
                 )}

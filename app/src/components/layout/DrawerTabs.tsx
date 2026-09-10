@@ -1,3 +1,4 @@
+import { TabCount } from "../shared/TabCount";
 interface DrawerTab {
   id: string;
   label: string;
@@ -86,11 +87,7 @@ export function DrawerTabs({ tabs, activeId, onChange, className = "px-3.5 py-2"
                 }`}
               >
                 <span className="truncate">{tab.label}</span>
-                {tab.count !== undefined && (
-                  <span className="text-xs font-semibold text-ink-tertiary bg-warm px-1 rounded shrink-0 tabular-nums">
-                    {tab.count.toLocaleString()}
-                  </span>
-                )}
+                {tab.count !== undefined && <TabCount count={tab.count} />}
                 {/* Decorative — the state it points at is announced by the panel
                     it belongs to, so nothing depends on seeing it. */}
                 {tab.dot && !active && (
