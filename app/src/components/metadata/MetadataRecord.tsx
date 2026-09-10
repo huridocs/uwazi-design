@@ -10,7 +10,7 @@ import { MetadataCard } from "./MetadataCard";
 import { ImageCard } from "./ImageCard";
 import { ImageLightbox } from "../shared/ImageLightbox";
 import { SectionLabel } from "../shared/SectionLabel";
-import type { EntityImage } from "../../data/entities";
+import { imageFocusKey, type EntityImage } from "../../data/entities";
 import { MasonryGrid, MasonryItem } from "./MasonryGrid";
 import { RecordFooter } from "./RecordFooter";
 import { RelationshipCards } from "./RelationshipCards";
@@ -105,11 +105,32 @@ export function MetadataRecord({
       `[data-field-key="${k}"], [data-field-keys~="${k}"]`,
     );
     if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      /* SCROLL, AND KEEP SCROLLING WHILE THE RECORD IS STILL SETTLING.
+         One `scrollIntoView` is not enough here and the reason is the masonry:
+         `MasonryItem` gives every card `gridRowEnd: span 1` until its first
+         measure, so at the moment this effect runs the whole record is still
+         collapsing to its real heights — and an image card, whose box resolves
+         from an aspect ratio against a column width, is the tallest thing that
+         moves. The target got flashed at a position it then left, which read as
+         "the scroll went nowhere".
+
+         So the root is observed and the scroll re-issued while it changes, for
+         a bounded window. Smooth all the way, so the repeats retarget an
+         animation in flight rather than jumping. */
+      const settle = () => el.scrollIntoView({ behavior: "smooth", block: "center" });
+      settle();
+      const ro = new ResizeObserver(settle);
+      if (rootRef.current) ro.observe(rootRef.current);
+      const stopSettling = setTimeout(() => ro.disconnect(), 700);
+
       el.classList.add("flash-highlight");
       const t = setTimeout(() => el.classList.remove("flash-highlight"), 1100);
       clearFocus(null);
-      return () => clearTimeout(t);
+      return () => {
+        clearTimeout(t);
+        clearTimeout(stopSettling);
+        ro.disconnect();
+      };
     }
     clearFocus(null); // field not on this record — don't leave the request hanging
   }, [focusField, profile.id, clearFocus]);
@@ -185,7 +206,11 @@ export function MetadataRecord({
       ))}
       {hasImages && (
         <MasonryItem full>
-          <div className="mt-2 flex items-center">
+          {/* The PROPERTY key lives on the section, so a property-level focus
+              from anywhere else still lands here — at the heading, above the
+              first picture, which is the honest answer to "where is this
+              property". The cards below address one asset each. */}
+          <div className="mt-2 flex items-center" data-field-key={images[0].fieldKey}>
             <SectionLabel as="h3" level="section">
               Images
             </SectionLabel>
@@ -195,10 +220,12 @@ export function MetadataRecord({
       {hasImages &&
         images.map((img, i) => (
           <MasonryItem key={`${img.url}-${i}`} wide>
-            {/* The key is the PROPERTY, so every image of one property shares it
-                — a filename link scrolls to the first of them, which is the
-                section, which is the honest answer to "where is this picture". */}
-            <div data-field-key={img.fieldKey}>
+            {/* ONE KEY PER ASSET. Sharing the property key across every image
+                of a property meant `querySelector` stopped at the first card,
+                so clicking the third filename on a Library card scrolled to the
+                first image — and on a card whose thumbnail is image 1, the
+                clicked link could never be the match. */}
+            <div data-field-key={imageFocusKey(img)}>
               <ImageCard
                 image={img}
                 title={img.filename ?? `Image ${i + 1}`}

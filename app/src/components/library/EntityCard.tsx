@@ -15,7 +15,7 @@ import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
 import { EntityThumbnail, QuietMark } from "./EntityThumbnail";
 import { CardValue, ownsItsRemainder } from "./CardValue";
 import { LIBRARY_SORTS } from "../../data/libraryDisplay";
-import { getEntityType, type EntityImage } from "../../data/entities";
+import { getEntityType, imageFocusKey, type EntityImage } from "../../data/entities";
 import { entityScalarFields, type EntityScalarField } from "../../utils/entityFields";
 import type { PropertyKind } from "../../utils/propertyKind";
 import type { Entity } from "../../data/entities";
@@ -568,7 +568,7 @@ export const EntityCard = memo(function EntityCard({
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onFocusProperty(entity.id, img.fieldKey!);
+                    onFocusProperty(entity.id, imageFocusKey(img));
                   }}
                   aria-label={`Open ${img.filename ?? "image"} on ${entity.title}`}
                   title={img.filename}

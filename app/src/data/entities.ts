@@ -126,6 +126,19 @@ export interface Entity {
 
 export type PreviewKind = "document" | "image" | "video" | "audio";
 
+/** An image's own deep-focus key — the property it came from, plus the ASSET.
+ *
+ *  A property key alone cannot address one picture of several: every image of a
+ *  multi-image property carried the same `data-field-key`, so `querySelector`
+ *  stopped at the first card and a click on the third filename scrolled to the
+ *  first image. Keyed on the FILENAME (falling back to the url) rather than on
+ *  the index, because the card's array and the record's are built by different
+ *  functions and index parity between them is an assumption waiting to break;
+ *  the asset is the same asset on both sides by construction. */
+export function imageFocusKey(image: EntityImage): string {
+  return `${image.fieldKey ?? "image"}#${image.filename ?? image.url}`;
+}
+
 /** A real image asset for a card whose `preview` is `"image"`.
  *
  *  Until the artworks corpus there was nothing behind that preview kind —
