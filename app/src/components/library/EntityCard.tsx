@@ -1,5 +1,12 @@
 import { Fragment, memo } from "react";
-import { Clapperboard, Image as ImageIcon, Link2, Pilcrow, Table2 } from "lucide-react";
+import {
+  Clapperboard,
+  Image as ImageIcon,
+  Link2,
+  Maximize2,
+  Pilcrow,
+  Table2,
+} from "lucide-react";
 import { useAtomValue } from "jotai";
 import { languageAtom } from "../../atoms/language";
 import { EntityTypeTag } from "../shared/EntityTypeTag";
@@ -8,7 +15,7 @@ import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
 import { EntityThumbnail, QuietMark } from "./EntityThumbnail";
 import { CardValue, ownsItsRemainder } from "./CardValue";
 import { LIBRARY_SORTS } from "../../data/libraryDisplay";
-import { getEntityType } from "../../data/entities";
+import { getEntityType, imageFocusKey, type EntityImage } from "../../data/entities";
 import { entityScalarFields, type EntityScalarField } from "../../utils/entityFields";
 import type { PropertyKind } from "../../utils/propertyKind";
 import type { Entity } from "../../data/entities";
@@ -133,6 +140,7 @@ export const EntityCard = memo(function EntityCard({
   onSelect,
   onView,
   onFocusProperty,
+  onOpenImage,
   metadataTrack = true,
 }: {
   entity: Entity;
@@ -152,6 +160,9 @@ export const EntityCard = memo(function EntityCard({
    *  scrolls to it and flashes it. Optional: the layouts that don't offer a
    *  property trigger simply don't pass it. */
   onFocusProperty?: (id: string, fieldKey: string) => void;
+  /** Show one image at its own size. The VIEW owns the lightbox, not the card:
+   *  one overlay for a grid of 120 rather than 120 that each render nothing. */
+  onOpenImage?: (image: EntityImage) => void;
   /** Whether the grid draws a metadata track AT ALL — one answer for every card
    *  on screen, computed by the view. See the track comment below. */
   metadataTrack?: boolean;
@@ -210,6 +221,11 @@ export const EntityCard = memo(function EntityCard({
   /* Kinds the entity holds that cannot be a line. Adapter-supplied; a corpus
      without one simply has none, which is the truth for the mock sample. */
   const marks = showMetadata ? (entity.marks ?? []) : [];
+  /* A picture worth enlarging: a real asset behind an `image` preview. See the
+     slot below for why documents, video, audio and the no-preview mark are all
+     out. */
+  const enlargeable =
+    showPreview && layout === "cards" && entity.preview === "image" && !!entity.image && !!onOpenImage;
   /* Images past the first — the first IS the slot's picture. Only those with a
      property key, since a name with nothing to open is a dead link. */
   const extraImages =
@@ -368,15 +384,70 @@ export const EntityCard = memo(function EntityCard({
       {showPreview && (
         <span className={`relative min-w-0 shrink-0 w-full ${slotShape}`}>
           {entity.preview ? (
-            <EntityThumbnail
-              kind={entity.preview}
-              entityId={entity.id}
-              image={entity.image}
-              fit={thumbFit}
-              frame={thumbFrame}
-              tint={getEntityType(entity.typeId)?.color}
-              className="h-full w-full rounded overflow-hidden border border-border/60"
-            />
+            enlargeable ? (
+              /* The picture opens full size, WITHOUT becoming the card's main
+                 gesture. Selecting the entity is still what clicking a card
+                 does; this is a nested control on top of the stretched primary
+                 action, the same shape the property triggers take, with its own
+                 name and `stopPropagation` so a click never fires both.
+
+                 Only a REAL ASSET. Not the no-preview mark, which is a mark.
+                 Not the video or audio treatments, which are drawings of a kind
+                 of file and enlarge into bigger drawings. And deliberately not
+                 the document sheet: what the card holds there is a bitmap
+                 rasterised at the card's own width, so "full size" would be that
+                 same 352px raster blown up — softer than the card, and a lie
+                 about what full size means. A document's full size is the
+                 document, and `View` already goes there. */
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenImage!(entity.image!);
+                }}
+                aria-label={`Open ${entity.image!.filename ?? entity.title} full size`}
+                title="View full size"
+                /* `cursor-zoom-in!` because `index.css` sets `cursor: pointer`
+                   on every enabled button, and this one is not a pointer thing
+                   — the cursor is most of what says "this enlarges". */
+                className="thumb-zoom-trigger relative block h-full w-full cursor-zoom-in! rounded
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
+              >
+                <EntityThumbnail
+                  kind={entity.preview}
+                  entityId={entity.id}
+                  image={entity.image}
+                  fit={thumbFit}
+                  frame={thumbFrame}
+                  tint={getEntityType(entity.typeId)?.color}
+                  className="h-full w-full rounded overflow-hidden border border-border/60"
+                />
+                {/* The only affordance a mouse gets besides the cursor, which
+                    it cannot see until it is already there. One element, in one
+                    corner, on hover or focus — the card already changes ground
+                    on hover and does not need a second thing moving. */}
+                {/* `.thumb-zoom` / `.thumb-zoom-trigger` are a plain pair in
+                    index.css, not a Tailwind named-group variant — see the rule
+                    there for why the variant loses a specificity tie. */}
+                <span
+                  aria-hidden
+                  className="thumb-zoom pointer-events-none absolute bottom-1 end-1 flex items-center
+                    justify-center w-5 h-5 rounded-md bg-ink/60 text-paper"
+                >
+                  <Maximize2 size={11} />
+                </span>
+              </button>
+            ) : (
+              <EntityThumbnail
+                kind={entity.preview}
+                entityId={entity.id}
+                image={entity.image}
+                fit={thumbFit}
+                frame={thumbFrame}
+                tint={getEntityType(entity.typeId)?.color}
+                className="h-full w-full rounded overflow-hidden border border-border/60"
+              />
+            )
           ) : (
             <QuietMark
               tint={getEntityType(entity.typeId)?.color}
@@ -497,7 +568,7 @@ export const EntityCard = memo(function EntityCard({
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onFocusProperty(entity.id, img.fieldKey!);
+                    onFocusProperty(entity.id, imageFocusKey(img));
                   }}
                   aria-label={`Open ${img.filename ?? "image"} on ${entity.title}`}
                   title={img.filename}

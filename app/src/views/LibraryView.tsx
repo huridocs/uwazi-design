@@ -56,7 +56,7 @@ import {
   matchTypeFiltersAtom,
   ALL_MATCH_TYPES,
 } from "../atoms/library";
-import { getEntityType, type Entity } from "../data/entities";
+import { getEntityType, type Entity, type EntityImage } from "../data/entities";
 import { libraryInheritedDefs } from "../utils/libraryFacets";
 import { buildActiveChains, cejilChainGraph } from "../data/cejil/chainFacets";
 import { matchesAll, matchesSearch, passesMatchTypes, buildSearchIndex, type LibraryFilterState } from "../utils/libraryFilter";
@@ -64,6 +64,7 @@ import { highlightTerms, fold } from "../utils/queryTokens";
 import { matchCategoriesWithTerms, type MatchCategories } from "../utils/librarySnippets";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { EntityCard } from "../components/library/EntityCard";
+import { ImageLightbox } from "../components/shared/ImageLightbox";
 import { entityScalarFields } from "../utils/entityFields";
 import { MatchOrigin } from "../components/library/MatchOrigin";
 import { listColumnSpecs, buildListColumns } from "../components/library/listColumns";
@@ -213,6 +214,9 @@ export function LibraryView() {
           l: "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3",
         }[thumbSize]
       : "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3";
+  /* ONE lightbox for the whole grid — see `EntityCard.onOpenImage`. */
+  const [lightbox, setLightbox] = useState<EntityImage | null>(null);
+
   const timeHub = useAtomValue(libraryTimeHubAtom);
   const [sort, setSort] = useAtom(librarySortAtom);
   const [sortDir, setSortDir] = useAtom(librarySortDirAtom);
@@ -928,6 +932,7 @@ export function LibraryView() {
                 onSelect={handleSelect}
                 onView={openEntity}
                 onFocusProperty={handleFocusProperty}
+                onOpenImage={setLightbox}
                 metadataTrack={metadataTrack}
               />
             ))}
@@ -1072,6 +1077,12 @@ export function LibraryView() {
   );
 
   return (
+    <>
+    {/* ONE lightbox for the whole grid, mounted beside the view rather than
+        inside a card — it portals to `document.body` anyway, so where it is
+        declared decides only who owns the state, and 120 cards each holding
+        their own would be 120 components rendering nothing. */}
+    <ImageLightbox image={lightbox} onClose={() => setLightbox(null)} />
     <AdaptiveSplitView
       left={renderLeft()}
       mobileLeft={(menuTrigger) => renderLeft(menuTrigger)}
@@ -1099,6 +1110,7 @@ export function LibraryView() {
           : []),
       ]}
     />
+    </>
   );
 }
 

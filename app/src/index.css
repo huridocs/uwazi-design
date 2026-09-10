@@ -113,6 +113,26 @@ body {
   transition: none !important;
 }
 
+/* The "enlarge" badge on a Library card's picture: visible only while the
+   picture is hovered or focused.
+
+   A plain rule rather than a Tailwind NAMED-group variant, and the reason is
+   worth keeping. `group-hover/img:opacity-100` compiles to
+   `:is(:where(.group\/img):hover *)`, and `:where()` zeroes the class's
+   specificity — so the variant ties with plain `opacity-0` and loses on source
+   order. The unnamed `group-hover:` used elsewhere in the app does not have
+   this problem (`.group:hover .group-hover\:opacity-100` is two classes), but
+   the unnamed group on a card is the whole CARD, and this badge answers to the
+   picture. Two real classes, no ambiguity. */
+.thumb-zoom {
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+.thumb-zoom-trigger:hover .thumb-zoom,
+.thumb-zoom-trigger:focus-visible .thumb-zoom {
+  opacity: 1;
+}
+
 /* Buttons should always show pointer cursor */
 button:not(:disabled) {
   cursor: pointer;

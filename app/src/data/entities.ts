@@ -126,6 +126,19 @@ export interface Entity {
 
 export type PreviewKind = "document" | "image" | "video" | "audio";
 
+/** An image's own deep-focus key — the property it came from, plus the ASSET.
+ *
+ *  A property key alone cannot address one picture of several: every image of a
+ *  multi-image property carried the same `data-field-key`, so `querySelector`
+ *  stopped at the first card and a click on the third filename scrolled to the
+ *  first image. Keyed on the FILENAME (falling back to the url) rather than on
+ *  the index, because the card's array and the record's are built by different
+ *  functions and index parity between them is an assumption waiting to break;
+ *  the asset is the same asset on both sides by construction. */
+export function imageFocusKey(image: EntityImage): string {
+  return `${image.fieldKey ?? "image"}#${image.filename ?? image.url}`;
+}
+
 /** A real image asset for a card whose `preview` is `"image"`.
  *
  *  Until the artworks corpus there was nothing behind that preview kind —
@@ -295,12 +308,40 @@ function entityGeo(id: string, typeId: string, title: string): LatLng | undefine
  *  picture is plausible: a person's portraits, a case's exhibits, a violation's
  *  documentation. */
 /** The artwork corpus's assets, as a flat pool to draw seeded images from. */
-const artworkAssets = artworks.map((w) => ({ ...w.image, title: w.title }));
+const artworkAssets = artworks.map((w) => ({
+  ...w.image,
+  title: w.title,
+  artistName: w.artistName ?? "",
+}));
 
-const SAMPLE_IMAGE_TYPES: Record<string, { key: string; label: string }> = {
-  person: { key: "portraits", label: "Portraits" },
-  court_case: { key: "exhibits", label: "Exhibits" },
-  violation: { key: "documentation", label: "Documentation" },
+/* WHICH pictures, not just how many. The pool is the artwork corpus, so every
+   asset is a painting; drawn at random it put Warhol soup-tin silkscreens on a
+   court case's exhibits, which is funny and useless — a seed has to look like
+   the thing it stands in for or it teaches the reader to distrust the screen.
+
+   So each property draws from painters whose subject FITS it: portraits for a
+   person, social realism and war for a case's exhibits and a violation's
+   documentation. Goya, Rivera, Kahlo, Courbet and Munch are the ones that read
+   as a Latin-American human-rights archive rather than as an art gallery. */
+const SAMPLE_IMAGE_TYPES: Record<
+  string,
+  { key: string; label: string; painters: string[] }
+> = {
+  person: {
+    key: "portraits",
+    label: "Portraits",
+    painters: ["Amedeo Modigliani", "Diego Velazquez", "El Greco", "Gustav Klimt"],
+  },
+  court_case: {
+    key: "exhibits",
+    label: "Exhibits",
+    painters: ["Francisco Goya", "Diego Rivera", "Gustave Courbet"],
+  },
+  violation: {
+    key: "documentation",
+    label: "Documentation",
+    painters: ["Francisco Goya", "Edvard Munch", "Frida Kahlo"],
+  },
 };
 
 /** How many images an entity of an image-bearing type carries: 0, 2 or 3.
@@ -311,10 +352,12 @@ function seededImages(id: string, typeId: string): EntityImage[] | undefined {
   if (!spec) return undefined;
   const r = hash(`${id}\u00b7imgs`) % 5;
   if (r > 1) return undefined; // most entities have none
-  const count = r === 0 ? 2 : 3;
-  const start = hash(`${id}\u00b7imgoff`) % artworkAssets.length;
+  const pool = artworkAssets.filter((a) => spec.painters.includes(a.artistName));
+  if (pool.length < 2) return undefined;
+  const count = Math.min(r === 0 ? 2 : 3, pool.length);
+  const start = hash(`${id}\u00b7imgoff`) % pool.length;
   return Array.from({ length: count }, (_, i) => {
-    const a = artworkAssets[(start + i) % artworkAssets.length];
+    const a = pool[(start + i) % pool.length];
     return {
       url: asset(`${ARTWORK_IMAGE_BASE}/${a.file}`),
       width: a.width,
