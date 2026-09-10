@@ -4,17 +4,6 @@ import type { MetadataField } from "../data/metadata";
 import { getEntityProfile } from "../data/entityProfiles";
 import { kindOfFieldType, type PropertyKind } from "./propertyKind";
 
-/** How many properties a Library card draws before it stops and counts.
- *
- *  It CAPS and does not pad: a template with two properties renders two lines
- *  and the row's other cards keep their footers level anyway, because the cards
- *  share subgrid row tracks. The ceiling is only for the outlier — a
- *  thirteen-property template would drive its metadata track thirteen lines deep
- *  and stretch every card in its row to match. Five: the real product carries
- *  five on a card, and three was chosen when every line was a label and a
- *  string, before chips and spans carried more per line than that. */
-export const CARD_FIELD_CAP = 5;
-
 /** One resolved scalar property of an entity — a label and the value to print.
  *  `more` is the "+N" tail a summarising adapter leaves on a multi-valued
  *  property. */

@@ -84,13 +84,6 @@ export interface Entity {
    *  +2 more", never as a comma-joined dump — joining two long titles was what
    *  turned the card grid into a wall of prose. */
   fields?: CardField[];
-  /** How many further properties resolved but did not fit the card's ceiling.
-   *
-   *  The card prints it as "+N more" and the number has to be true, so it is
-   *  counted by the adapter over EVERY property rather than inferred from the
-   *  few that were emitted. Four in five entities carried one of these and the
-   *  card said nothing about it. */
-  fieldsBeyond?: number;
   /** Kinds the entity carries that cannot be a card LINE — a paragraph, a
    *  table, a media config. Drawn as footer glyphs, so they cost no line and no
    *  layout. */

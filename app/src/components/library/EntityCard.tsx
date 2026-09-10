@@ -8,15 +8,12 @@ import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
 import { EntityThumbnail, QuietMark } from "./EntityThumbnail";
 import { CardValue, ownsItsRemainder } from "./CardValue";
 import { getEntityType } from "../../data/entities";
-import {
-  CARD_FIELD_CAP,
-  entityScalarFields,
-  type EntityScalarField,
-} from "../../utils/entityFields";
+import { entityScalarFields, type EntityScalarField } from "../../utils/entityFields";
 import type { PropertyKind } from "../../utils/propertyKind";
 import type { Entity } from "../../data/entities";
 import {
   libraryCardInfoAtom,
+  cardFieldLimit,
   libraryThumbSizeAtom,
   libraryThumbFitAtom,
   libraryThumbFrameAtom,
@@ -153,14 +150,30 @@ export const EntityCard = memo(function EntityCard({
   // entityMetadata profile. Only fields that resolved to a value. Shared with
   // the list table's metadata columns, which ask the identical question.
   const scalarFields = entityScalarFields(entity, language);
-  // Up to CARD_FIELD_CAP fields, and no appended "Language" row: the card is a
-  // scan-target, not a record. Language repeats the toolbar's own selector on
-  // every card, and the full record is one click away in the drawer.
-  const fields = scalarFields.slice(0, CARD_FIELD_CAP);
-  /* How many properties this entity has that the card is not drawing. The
-     adapter counts them over EVERY property (`fieldsBeyond`); the mock corpus
-     has no adapter, so its remainder is what the slice above dropped. */
-  const beyond = entity.fieldsBeyond ?? Math.max(0, scalarFields.length - CARD_FIELD_CAP);
+  /* EVERY property the entity resolves, and no appended "Language" row — that
+     one repeats the toolbar's own selector on every card.
+
+     There is no ceiling. There was one, at five, and it was mine and it was
+     wrong: I justified it with a thirteen-property Causa that does not exist.
+     Once paragraphs, tables and media became footer marks the real spread across
+     the corpus is 0-9 properties and Causa tops out at 7, so a ceiling of five
+     was truncating 1,138 of 4,398 entities — 26% — to save at most four lines in
+     the worst row. And level rows were never the ceiling's job: the subgrid sizes
+     each track to the tallest card in the row and pins every footer to the same
+     y, whatever the line counts are. Cards SHOULD carry different numbers of
+     properties; that is the whole point of taking shape from a template.
+
+     How many is the READER's choice, in the Display menu — "Metadata
+     properties: None / First 3 / First 5 / All", defaulting to All. It replaced
+     a Metadata on/off switch, which answered only "all or nothing" while the
+     interesting number sat in this file as a constant nobody could see. */
+  const limit = cardFieldLimit(info.fields);
+  const fields = limit === null ? scalarFields : scalarFields.slice(0, limit);
+  /* What the choice left behind, so a card showing three of nine says so. At
+     "All" it is always 0. At "None" it is suppressed rather than accurate: the
+     reader has said they do not want properties on the card, and answering that
+     with "+7" on every card is a count nobody asked for. */
+  const beyond = limit === 0 ? 0 : scalarFields.length - fields.length;
 
   /* Kinds the entity holds that cannot be a line. Adapter-supplied; a corpus
      without one simply has none, which is the truth for the mock sample. */
@@ -417,7 +430,10 @@ export const EntityCard = memo(function EntityCard({
             </span>
           )}
           {beyond > 0 && (
-            <span className="text-meta text-ink-tertiary tabular-nums" title={`${beyond} more ${beyond === 1 ? "property" : "properties"} on the record`}>
+            <span
+              className="text-meta text-ink-tertiary tabular-nums"
+              title={`${beyond} more ${beyond === 1 ? "property" : "properties"} on the record`}
+            >
               +{beyond}
             </span>
           )}

@@ -318,6 +318,21 @@ export type ResultsLayout = "grouped" | "tree" | "passages" | "spine";
  *  - `lanes`    a template × period grid */
 export type TimelineLayout = "rail" | "density" | "spine" | "lanes";
 
+/** How many metadata properties a card draws.
+ *
+ *  It replaced a boolean. `Metadata: on/off` answered only "all or nothing",
+ *  and the interesting question — how much of a record a card should carry —
+ *  had been answered by a constant in the code (three, then five) that nobody
+ *  could see or change. A template's property count is not the app's business
+ *  to cap; it is the reader's to choose. `none` is the old `off`. */
+export type CardFields = "none" | "3" | "5" | "all";
+export const DEFAULT_CARD_FIELDS: CardFields = "all";
+
+/** The choice as a number of lines, or null for "every one this entity has". */
+export function cardFieldLimit(v: CardFields): number | null {
+  return v === "none" ? 0 : v === "all" ? null : Number(v);
+}
+
 /** Thumbnail rendering — how tall the preview slot is drawn and how an image
  *  sits inside it.
  *
@@ -496,9 +511,17 @@ export const libraryCardInfoAtom = atom((get) => {
   const state = get(libraryDisplayAtom);
   const mode = get(libraryViewModeAtom);
   const read = (id: string) => readOption(state, mode, id, "mode", true) !== false;
+  const fieldsRaw = readOption(state, mode, "cardFields", "mode", DEFAULT_CARD_FIELDS);
+  const fields: CardFields =
+    fieldsRaw === "none" || fieldsRaw === "3" || fieldsRaw === "5" || fieldsRaw === "all"
+      ? fieldsRaw
+      : DEFAULT_CARD_FIELDS;
   return {
     preview: read("preview"),
-    metadata: read("metadata"),
+    /** Kept as the boolean the surfaces already ask for — it is now derived from
+     *  the count rather than stored beside it, so the two can never disagree. */
+    metadata: fields !== "none",
+    fields,
     country: read("country"),
     date: read("date"),
     connections: read("connections"),
