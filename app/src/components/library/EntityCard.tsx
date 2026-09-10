@@ -80,8 +80,8 @@ const ROW_SPAN: Record<number, string> = {
 };
 
 /** A Library result for one standalone entity. Mirrors the Uwazi card IA:
- *  title → metadata field label/value pairs → footer (template pill · View).
- *  Clicking the surface opens the entity in the drawer; "View" navigates in.
+ *  title → metadata field label/value pairs → footer (template pill · Open).
+ *  Clicking the surface opens the entity in the drawer; "Open" navigates in.
  *  Selected (previewed) = bg-parchment; no left-border accent. */
 export const EntityCard = memo(function EntityCard({
   entity,
@@ -145,7 +145,7 @@ export const EntityCard = memo(function EntityCard({
       }}
       className="shrink-0 inline-flex items-center px-2.5 h-6 text-meta font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
     >
-      View
+      Open
     </button>
   );
 
@@ -153,7 +153,7 @@ export const EntityCard = memo(function EntityCard({
     "group relative text-start rounded-md border transition-colors cursor-pointer";
   const surface = selected ? "bg-parchment border-border" : "bg-paper border-border/60 hover:bg-parchment";
 
-  // The card container is NOT a button — it hosts nested controls (View,
+  // The card container is NOT a button — it hosts nested controls (Open,
   // connection badge), so a stretched invisible primary-action button carries
   // the keyboard/AT path instead, and the content sits above it. Clicks on
   // content bubble to the container's plain onClick (mouse path unchanged).
@@ -264,7 +264,7 @@ export const EntityCard = memo(function EntityCard({
     // row carries its own `relative`. That is load-bearing, not tidying: the
     // stretched primary-action button is `absolute inset-0` and paints in the
     // positioned layer, so a STATIC sibling would paint underneath it and the
-    // nested View button would stop taking clicks. Positioned siblings at
+    // nested Open button would stop taking clicks. Positioned siblings at
     // `z-index: auto` paint in DOM order, and the rows come after.
     <div
       onClick={() => onSelect(entity.id)}
