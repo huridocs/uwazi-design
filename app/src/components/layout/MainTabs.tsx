@@ -44,15 +44,37 @@ interface MainTabsProps {
 
 export function MainTabs({ tabs, activeId, onChange, languages = [], availableLanguages, activeLanguage, onLanguageChange, onBack, languageEditing = false }: MainTabsProps) {
   const [breakpoint] = useAtom(breakpointAtom);
-  const isMobile = breakpoint === "mobile";
+  /* BELOW DESKTOP, not below mobile. `breakpointAtom` calls 768–1023 "tablet",
+     so a mobile-only test is false at 768 — the width this was reported at — and a
+     mobile-only rule would have left the reported defect exactly as it was. A
+     strip that scrolls sideways to reach "Files" is the same defect at 768 as
+     at 390, so the fold is for everything under desktop. */
+  const isNarrow = breakpoint !== "desktop";
   const currentLang = activeLanguage ?? languages[0];
+  const activeTab = tabs.find((t) => t.id === activeId) ?? tabs[0];
+  /* A dot marks live state behind a tab you are NOT on. Collapsing the strip is
+     exactly when that state is furthest out of sight, so the trigger has to
+     carry it — a dropdown losing this signal is the one thing this change could
+     silently break. It rides `triggerIcon`, and the options carry their own
+     dots, so opening the menu says WHICH section it is about. */
+  const hiddenDot = tabs.some((t) => t.dot && t.id !== activeId);
 
   return (
     <div
       className="flex items-center justify-between gap-3 px-3 pt-2 pb-1 md:pt-2.5 shrink-0"
     >
-      {/* Left: Back + Tabs */}
-      <div className="flex items-center gap-3 md:gap-4 min-w-0 overflow-x-auto">
+      {/* Left: Back + Tabs.
+
+          `overflow-x-auto` is the STRIP's, so it belongs to the branch that
+          renders the strip. A scroll container clips on both axes the moment one
+          is not `visible`, so while it was unconditional it cut the section
+          dropdown's menu off at the bar's own height — the menu was laid out
+          (real rect, right z-index) and simply not painted. */}
+      <div
+        className={`flex items-center gap-3 md:gap-4 min-w-0 ${
+          isNarrow ? "" : "overflow-x-auto"
+        }`}
+      >
         {onBack && (
           <button
             onClick={onBack}
@@ -62,9 +84,39 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
             <ArrowLeft size={20} />
           </button>
         )}
-        {/* No `overflow-hidden`: it would clip the dots just outside a tab's
+        {/* Below desktop the strip is ONE dropdown naming the section — the
+            shared `Select`, not a second control that would have to relearn
+            RTL, focus and the popover. `steady` reserves the widest tab NAME
+            (the counts ride the options' `hint`, which cannot widen the
+            trigger), so switching section never moves the language picker
+            beside it. */}
+        {isNarrow ? (
+          <Select
+            value={activeTab?.id ?? ""}
+            onChange={onChange}
+            ariaLabel="Section"
+            ariaSuffix={hiddenDot ? "another section has active filters or search" : undefined}
+            steady
+            triggerIcon={
+              hiddenDot ? (
+                <span
+                  aria-hidden="true"
+                  className="w-1.5 h-1.5 rounded-full"
+                  style={{ backgroundColor: "var(--accent-blue)" }}
+                />
+              ) : undefined
+            }
+            options={tabs.map((tab) => ({
+              value: tab.id,
+              label: tab.label,
+              hint: tab.count !== undefined ? String(tab.count) : undefined,
+              dot: tab.dot && tab.id !== activeId,
+            }))}
+          />
+        ) : (
+        /* No `overflow-hidden`: it would clip the dots just outside a tab's
             corner. The end tabs round themselves instead, logically, so the
-            strip still reads as one frame under RTL. */}
+            strip still reads as one frame under RTL. */
         <div
           className="flex items-center rounded-md shrink-0"
           role="tablist"
@@ -89,10 +141,10 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
                 }`}
               >
                 {tab.label}
-                {/* Counts are redundant on mobile (the panel's info row shows
-                    them) and their width pushes later tabs off-screen — hide
-                    them so all tabs fit without horizontal scroll. */}
-                {!isMobile && tab.count !== undefined && (
+                {/* Always shown now: this strip only renders at desktop, and
+                    the narrow widths that had to hide counts to fit get them
+                    back as the dropdown's option hints instead. */}
+                {tab.count !== undefined && (
                   <span className="text-xs font-semibold text-ink-tertiary bg-warm px-1 rounded">
                     {tab.count}
                   </span>
@@ -115,6 +167,7 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
             </div>
           ))}
         </div>
+        )}
       </div>
 
       {/* Right: language — the SAME control the Library uses (shared `Select`,
