@@ -8,6 +8,17 @@ export interface SelectOption {
    *  for. Shown greyed rather than hidden: which languages EXIST is part of what
    *  the control tells you. */
   disabled?: boolean;
+  /** Trailing secondary text in the OPTION row — a count, a size, a hint.
+   *
+   *  Option-only on purpose: `steady` sizes the trigger from the labels, so a
+   *  hint here cannot widen the control. That is what lets a tab dropdown show
+   *  "Relationships 456" in its menu while the trigger reserves only the widest
+   *  tab NAME and the language picker beside it never moves. */
+  hint?: string;
+  /** A carbon dot on the option — live state behind that choice. The same 6px
+   *  mark the tab strip and `DrawerTabs` use, so a signal does not change shape
+   *  when the strip it lives on collapses into this control. */
+  dot?: boolean;
 }
 
 /** A calm, borderless dropdown matching the app's action style: bg-warm trigger
@@ -189,7 +200,7 @@ export function Select({
                 onChange(o.value);
                 setOpen(false);
               }}
-              className={`flex items-center w-full px-3 py-1.5 text-xs text-start transition-colors ${
+              className={`flex items-center gap-2 w-full px-3 py-1.5 text-xs text-start transition-colors ${
                 o.disabled
                   ? "text-ink-muted/50 cursor-not-allowed"
                   : o.value === value
@@ -197,7 +208,17 @@ export function Select({
                     : "text-ink-secondary hover:bg-warm cursor-pointer"
               }`}
             >
-              {o.label}
+              {o.dot && (
+                <span
+                  aria-hidden="true"
+                  className="w-1.5 h-1.5 rounded-full shrink-0"
+                  style={{ backgroundColor: "var(--accent-blue)" }}
+                />
+              )}
+              <span className="truncate">{o.label}</span>
+              {o.hint !== undefined && (
+                <span className="ms-auto shrink-0 text-meta text-ink-tertiary">{o.hint}</span>
+              )}
             </button>
           ))}
         </div>
