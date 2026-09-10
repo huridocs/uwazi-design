@@ -165,10 +165,27 @@ export function buildArtworkProfile(id: string): EntityProfile {
 
   const artist = artistById.get(id);
   if (artist) {
+    /* An artist's works ARE their pictures in this collection, and there are up
+       to three — the multi-image case, with real assets. The record draws one
+       card per image so a card's filename link has somewhere to land. */
+    const works = (index().worksByArtist.get(artist.id) ?? [])
+      .map((wid) => artworkById.get(wid))
+      .filter((w): w is Artwork => !!w);
+    const images = works.map((w) => ({
+      url: asset(`${ARTWORK_IMAGE_BASE}/${w.image.file}`),
+      width: w.image.width,
+      height: w.image.height,
+      aspect: w.image.aspect,
+      alt: w.title,
+      filename: w.image.originalName,
+      fieldKey: "works",
+    }));
     return {
       id,
       typeId: ARTIST_TYPE_ID,
       hasDocument: false,
+      image: images[0],
+      images: images.length > 1 ? images : undefined,
       metadata: byLang(artistFields(artist)),
       documentGroups: [],
       files: [],

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import type { Language } from "../../atoms/language";
 import type { EntityProfile } from "../../data/entityProfiles";
@@ -7,6 +7,10 @@ import { fillTargetAtom, fillRequestAtom } from "../../atoms/fillTarget";
 import { focusMetadataFieldAtom } from "../../atoms/library";
 import type { MetadataField, RelationshipMetadataField } from "../../data/metadata";
 import { MetadataCard } from "./MetadataCard";
+import { ImageCard } from "./ImageCard";
+import { ImageLightbox } from "../shared/ImageLightbox";
+import { SectionLabel } from "../shared/SectionLabel";
+import type { EntityImage } from "../../data/entities";
 import { MasonryGrid, MasonryItem } from "./MasonryGrid";
 import { RecordFooter } from "./RecordFooter";
 import { RelationshipCards } from "./RelationshipCards";
@@ -93,6 +97,7 @@ export function MetadataRecord({
   const focusField = useAtomValue(focusMetadataFieldAtom);
   const clearFocus = useSetAtom(focusMetadataFieldAtom);
   const rootRef = useRef<HTMLDivElement>(null);
+  const [lightbox, setLightbox] = useState<EntityImage | null>(null);
   useEffect(() => {
     if (!focusField || focusField.entityId !== profile.id) return;
     const k = CSS.escape(focusField.fieldKey);
@@ -146,7 +151,17 @@ export function MetadataRecord({
   // anything of its own down here. Emptiness is now decided by the fields alone;
   // the old carve-out for `profile.files` / `profile.image` would just leave a
   // PDF-and-little-else entity staring at a blank pane.
-  const empty = items.length === 0 && !hasRelCards;
+  /* IMAGES an entity carries as PROPERTIES, one card each.
+     Only when there is more than one: a single picture is what the Library card
+     and the Files tab already show, and the record deliberately stopped leading
+     with it. More than one is the case nothing else covers — the slot draws the
+     first and the others were simply absent, so this is where they are. Each
+     card is keyed on its property, which is the target of the filename link the
+     Library card prints. */
+  const images = profile.images ?? [];
+  const hasImages = images.length > 1;
+
+  const empty = items.length === 0 && !hasRelCards && !hasImages;
   if (empty) {
     return (
       <div className="flex items-center justify-center py-10 text-center">
@@ -168,10 +183,35 @@ export function MetadataRecord({
           <MetadataFieldBlock item={item} />
         </MasonryItem>
       ))}
+      {hasImages && (
+        <MasonryItem full>
+          <div className="mt-2 flex items-center">
+            <SectionLabel as="h3" level="section">
+              Images
+            </SectionLabel>
+          </div>
+        </MasonryItem>
+      )}
+      {hasImages &&
+        images.map((img, i) => (
+          <MasonryItem key={`${img.url}-${i}`} wide>
+            {/* The key is the PROPERTY, so every image of one property shares it
+                — a filename link scrolls to the first of them, which is the
+                section, which is the honest answer to "where is this picture". */}
+            <div data-field-key={img.fieldKey}>
+              <ImageCard
+                image={img}
+                title={img.filename ?? `Image ${i + 1}`}
+                onOpen={setLightbox}
+              />
+            </div>
+          </MasonryItem>
+        ))}
       <RelationshipCards profile={profile} language={language} span="full" inheritingOnly />
     </MasonryGrid>
     {/* Outside the grid on purpose — see RecordFooter. */}
     <RecordFooter entityId={profile.id} />
+    <ImageLightbox image={lightbox} onClose={() => setLightbox(null)} />
     </>
   );
 }

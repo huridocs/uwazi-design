@@ -46,6 +46,10 @@ export interface EntityProfile {
    *  the record can lead with it instead of a document card that has no
    *  document to draw. */
   image?: EntityImage;
+  /** Every image, `image` first — see `Entity.images`. The record draws one card
+   *  per entry, each keyed on its property, which is what a card's filename
+   *  link scrolls to. */
+  images?: EntityImage[];
   metadata: Record<Language, AnyMetadataField[]>;
   pdfMetadata?: PdfMetaByLang;
   relationships: RelationshipSource;
@@ -248,6 +252,10 @@ function buildLightweightProfile(entity: Entity): EntityProfile {
     id: entity.id,
     typeId: entity.typeId,
     hasDocument,
+    // Carried through so the record can draw a card per image — which is what a
+    // filename link on the Library card scrolls to.
+    image: entity.image,
+    images: entity.images,
     metadata,
     documentGroups: doc ? [doc.group] : [],
     files: doc ? doc.files : [],

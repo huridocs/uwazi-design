@@ -19,10 +19,32 @@ import { ARTIST_TYPE_ID, ARTWORK_TYPE_ID } from "./typesAdapter";
  */
 let _entities: Entity[] | null = null;
 
+/** One artwork's asset as an `EntityImage`, carrying the two things a
+ *  multi-image card needs: the ORIGINAL filename (how the uploader refers to
+ *  it) and the property key it came from. */
+function imageOf(w: (typeof artworks)[number], fieldKey: string) {
+  return {
+    url: asset(`${ARTWORK_IMAGE_BASE}/${w.image.file}`),
+    width: w.image.width,
+    height: w.image.height,
+    aspect: w.image.aspect,
+    alt: w.title,
+    filename: w.image.originalName,
+    fieldKey,
+  };
+}
+
 export function artworkLibraryEntities(): Entity[] {
   if (_entities) return _entities;
 
   const artistById = new Map(artworkArtists.map((a) => [a.id, a]));
+  const worksByArtist = new Map<string, (typeof artworks)[number][]>();
+  for (const w of artworks) {
+    if (!w.artistId) continue;
+    const list = worksByArtist.get(w.artistId);
+    if (list) list.push(w);
+    else worksByArtist.set(w.artistId, [w]);
+  }
 
   const paintings: Entity[] = artworks.map((w) => {
     const artist = w.artistId ? artistById.get(w.artistId) : undefined;
@@ -76,29 +98,44 @@ export function artworkLibraryEntities(): Entity[] {
     };
   });
 
-  const artists: Entity[] = artworkArtists.map((a) => ({
-    id: a.id,
-    title: a.name,
-    typeId: ARTIST_TYPE_ID,
-    published: true,
-    fields: ([
-      a.bornYear
-        ? {
-            key: "lived",
-            kind: "dateSpan" as const,
-            label: "Lived",
-            value: a.diedYear ? `${a.bornYear}–${a.diedYear}` : `b. ${a.bornYear}`,
-          }
-        : null,
-      a.nationalities.length
-        ? { key: "nationality", kind: "text" as const, label: "Nationality", value: a.nationalities[0] }
-        : null,
-      a.paintings
-        ? { key: "paintings", kind: "text" as const, label: "Paintings", value: String(a.paintings) }
-        : null,
-    ] as (CardField | null)[]).filter((f): f is CardField => f !== null),
-    descriptors: a.genres,
-  }));
+  const artists: Entity[] = artworkArtists.map((a) => {
+    /* THE MULTI-IMAGE CASE, with real assets rather than an invented one.
+       An artist in this collection is known by their works, and the works'
+       pictures are real files with real original filenames — so an artist
+       entity carries every one of them under a single "Works" property, the
+       way a template that selects a multi-valued image property would. The
+       first becomes the card's thumbnail; the rest are what the card can only
+       NAME. Neither corpus had an entity with two images before this, so the
+       fallback had nothing to render and nothing to be checked against. */
+    const works = worksByArtist.get(a.id) ?? [];
+    const images = works.map((w) => imageOf(w, "works"));
+    return {
+      id: a.id,
+      title: a.name,
+      typeId: ARTIST_TYPE_ID,
+      published: true,
+      preview: images.length ? ("image" as const) : undefined,
+      image: images[0],
+      images: images.length > 1 ? images : undefined,
+      fields: ([
+        a.bornYear
+          ? {
+              key: "lived",
+              kind: "dateSpan" as const,
+              label: "Lived",
+              value: a.diedYear ? `${a.bornYear}\u2013${a.diedYear}` : `b. ${a.bornYear}`,
+            }
+          : null,
+        a.nationalities.length
+          ? { key: "nationality", kind: "text" as const, label: "Nationality", value: a.nationalities[0] }
+          : null,
+        a.paintings
+          ? { key: "paintings", kind: "text" as const, label: "Paintings", value: String(a.paintings) }
+          : null,
+      ] as (CardField | null)[]).filter((f): f is CardField => f !== null),
+      descriptors: a.genres,
+    };
+  });
 
   // Artworks first: they are what this corpus is for, and the Library's default
   // sort has nothing else to order by — neither template carries a date, so

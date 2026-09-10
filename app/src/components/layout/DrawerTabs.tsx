@@ -23,7 +23,8 @@ interface DrawerTabsProps {
   tabs: DrawerTab[];
   activeId: string;
   onChange: (id: string) => void;
-  /** Wrapper padding — defaults to the drawer's `px-3 py-2`. Pass e.g. `""`
+  /** Wrapper padding — defaults to `px-3.5 py-2`, which is the facet panel's
+   *  own `px-3.5`, so the strip and the cards under it share an edge. Pass e.g. `""`
    *  to render flush within a page body that owns its own padding. */
   className?: string;
 }
@@ -42,7 +43,7 @@ interface DrawerTabsProps {
  *  The dot is the same mark the Display menu uses (6px, carbon, `-top-0.5
  *  -end-0.5` on a `relative` trigger, logical `-end-` so it mirrors under RTL),
  *  because they say the same thing in the same visual language. */
-export function DrawerTabs({ tabs, activeId, onChange, className = "px-3 py-2" }: DrawerTabsProps) {
+export function DrawerTabs({ tabs, activeId, onChange, className = "px-3.5 py-2" }: DrawerTabsProps) {
   return (
     <div
       className={`${className} shrink-0 overflow-x-auto no-scrollbar`}
@@ -67,7 +68,18 @@ export function DrawerTabs({ tabs, activeId, onChange, className = "px-3 py-2" }
                 role="tab"
                 aria-selected={active}
                 onClick={() => onChange(tab.id)}
-                className={`relative flex items-center justify-center gap-1 w-full px-3 py-1.5 text-tab font-medium transition-colors ${
+                /* `px-3.5`, matching the wrapper, so the strip lines up with
+                   the panel BELOW it on both counts: the strip's edge on the
+                   facet cards' edge (both 14px in from the pane), and the first
+                   tab's text on a section's heading. It was 12 + 12, which put
+                   the edge 2px out and the text 3px out — close enough to read
+                   as a mistake rather than as a choice.
+
+                   13, not 14, because the STRIP has a 1px border and a facet
+                   card does not: the tab's box starts one pixel further in than
+                   the wrapper does, so its padding gives that pixel back.
+                   14 + 13 + 1 = the card's own 14 + 6 + 8. */
+                className={`relative flex items-center justify-center gap-1 w-full px-3.25 py-1.5 text-tab font-medium transition-colors ${
                   i === 0 ? "rounded-s-md" : ""
                 } ${i === tabs.length - 1 ? "rounded-e-md" : ""} ${
                   active ? "bg-vellum text-ink" : "bg-paper text-ink-tertiary hover:text-ink-secondary"
