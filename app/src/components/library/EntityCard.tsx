@@ -1,5 +1,5 @@
 import { Fragment, memo } from "react";
-import { Link2 } from "lucide-react";
+import { Clapperboard, Link2, Pilcrow, Table2 } from "lucide-react";
 import { useAtomValue } from "jotai";
 import { languageAtom } from "../../atoms/language";
 import { EntityTypeTag } from "../shared/EntityTypeTag";
@@ -8,7 +8,11 @@ import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
 import { EntityThumbnail, QuietMark } from "./EntityThumbnail";
 import { CardValue, ownsItsRemainder } from "./CardValue";
 import { getEntityType } from "../../data/entities";
-import { entityScalarFields, type EntityScalarField } from "../../utils/entityFields";
+import {
+  CARD_FIELD_CAP,
+  entityScalarFields,
+  type EntityScalarField,
+} from "../../utils/entityFields";
 import type { PropertyKind } from "../../utils/propertyKind";
 import type { Entity } from "../../data/entities";
 import {
@@ -52,6 +56,19 @@ const CARD_FLOOR: Record<ThumbSize, string> = {
  *  against the row and the old m/l pair is the whole useful range there. */
 const CHIP_BOX: Record<ThumbSize, string> = { m: "w-9 h-9", l: "w-12 h-12" };
 
+/** The footer glyph for a kind that cannot be a card line, and what it is
+ *  called for anyone not reading glyphs. */
+const MARK_ICON: Partial<Record<PropertyKind, typeof Pilcrow>> = {
+  long: Pilcrow,
+  table: Table2,
+  media: Clapperboard,
+};
+const MARK_LABEL: Partial<Record<PropertyKind, string>> = {
+  long: "Has a written summary",
+  table: "Has a table",
+  media: "Has media",
+};
+
 /** The kinds whose value is a THING you would open rather than a sentence you
  *  have already read: a place, a connected entity, a table, a file.
  *
@@ -93,6 +110,7 @@ export const EntityCard = memo(function EntityCard({
   onSelect,
   onView,
   onFocusProperty,
+  metadataTrack = true,
 }: {
   entity: Entity;
   layout: LibraryViewMode;
@@ -111,6 +129,9 @@ export const EntityCard = memo(function EntityCard({
    *  scrolls to it and flashes it. Optional: the layouts that don't offer a
    *  property trigger simply don't pass it. */
   onFocusProperty?: (id: string, fieldKey: string) => void;
+  /** Whether the grid draws a metadata track AT ALL — one answer for every card
+   *  on screen, computed by the view. See the track comment below. */
+  metadataTrack?: boolean;
 }) {
   const language = useAtomValue(languageAtom);
   const info = useAtomValue(libraryCardInfoAtom);
@@ -132,11 +153,19 @@ export const EntityCard = memo(function EntityCard({
   // entityMetadata profile. Only fields that resolved to a value. Shared with
   // the list table's metadata columns, which ask the identical question.
   const scalarFields = entityScalarFields(entity, language);
-  // At most THREE fields, and no appended "Language" row: the card is a
+  // Up to CARD_FIELD_CAP fields, and no appended "Language" row: the card is a
   // scan-target, not a record. Language repeats the toolbar's own selector on
-  // every card, and beyond three rows the grid stops reading as cards and starts
-  // reading as prose. The full record is one click away in the drawer.
-  const fields = scalarFields.slice(0, 3);
+  // every card, and the full record is one click away in the drawer.
+  const fields = scalarFields.slice(0, CARD_FIELD_CAP);
+  /* How many properties this entity has that the card is not drawing. The
+     adapter counts them over EVERY property (`fieldsBeyond`); the mock corpus
+     has no adapter, so its remainder is what the slice above dropped. */
+  const beyond = entity.fieldsBeyond ?? Math.max(0, scalarFields.length - CARD_FIELD_CAP);
+
+  /* Kinds the entity holds that cannot be a line. Adapter-supplied; a corpus
+     without one simply has none, which is the truth for the mock sample. */
+  const marks = showMetadata ? (entity.marks ?? []) : [];
+  const markTitle = marks.map((m) => MARK_LABEL[m]).join(" · ");
 
   const viewButton = (
     <button
@@ -236,13 +265,13 @@ export const EntityCard = memo(function EntityCard({
   // slot plus the grid row's own stretch keeps neighbours level — a rem floor
   // sized for one column width is wrong at every other.
   const minHeight =
-    showPreview && showMetadata && thumbFrame === "landscape"
+    showPreview && showMetadata && metadataTrack && thumbFrame === "landscape"
       ? CARD_FLOOR[thumbSize]
       : "";
 
   /** One track per row this card draws. Both toggles are global, so every card
    *  on screen agrees — see ROW_SPAN. */
-  const rowCount = 2 + (showPreview ? 1 : 0) + (showMetadata ? 1 : 0);
+  const rowCount = 2 + (showPreview ? 1 : 0) + (showMetadata && metadataTrack ? 1 : 0);
 
   /** Slot class: landscape = the fixed band; portrait = the card's width at
    *  3:4. The picture fills the slot either way — Cover crops to fill it,
@@ -314,7 +343,14 @@ export const EntityCard = memo(function EntityCard({
         <HighlightedText text={entity.title} query={query} />
       </span>
 
-      {showMetadata && (
+      {/* The track, not the card, decides. `metadataTrack` is computed ONCE
+          over the whole result set by the view and handed to every card, so all
+          of them claim the same subgrid tracks — a per-card `fields.length > 0`
+          would let one template's cards claim three tracks and another's four,
+          and the row would stop sharing them. What it fixes is a template that
+          resolves nothing (Instrumento): the row was mounted regardless and
+          drew a visible gap between title and footer. */}
+      {showMetadata && metadataTrack && (
         <div className="relative min-w-0 space-y-1.5">
           {fields.map((f) => (
             <div key={f.id} className="min-w-0">
@@ -365,6 +401,26 @@ export const EntityCard = memo(function EntityCard({
       <div className="relative min-w-0 self-end flex items-center justify-between gap-2 pt-1">
         <EntityTypeTag typeId={entity.typeId} />
         <div className="flex items-center gap-2">
+          {/* Marks and the count ride a line that is ALREADY MOUNTED, which is
+              the whole reason they are here: neither can make a card taller,
+              and a card that gains a paragraph does not shove its neighbours.
+              They are signals, not targets — the record has no field for a
+              nested table or a media config yet, and a click that lands
+              nowhere is worse than no click. */}
+          {marks.length > 0 && (
+            <span className="flex items-center gap-1 text-ink-muted" title={markTitle}>
+              {marks.map((m) => {
+                const Icon = MARK_ICON[m];
+                return Icon ? <Icon key={m} size={11} aria-hidden /> : null;
+              })}
+              <span className="sr-only">{markTitle}</span>
+            </span>
+          )}
+          {beyond > 0 && (
+            <span className="text-meta text-ink-tertiary tabular-nums" title={`${beyond} more ${beyond === 1 ? "property" : "properties"} on the record`}>
+              +{beyond}
+            </span>
+          )}
           {connectionBadge}
           {viewButton}
         </div>

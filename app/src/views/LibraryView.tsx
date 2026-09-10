@@ -64,6 +64,7 @@ import { highlightTerms, fold } from "../utils/queryTokens";
 import { matchCategoriesWithTerms, type MatchCategories } from "../utils/librarySnippets";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { EntityCard } from "../components/library/EntityCard";
+import { entityScalarFields } from "../utils/entityFields";
 import { MatchOrigin } from "../components/library/MatchOrigin";
 import { listColumnSpecs, buildListColumns } from "../components/library/listColumns";
 import { LIBRARY_SORTS } from "../data/libraryDisplay";
@@ -549,6 +550,19 @@ export function LibraryView() {
   useEffect(() => setVisibleCount(DISPLAY_STEP), [filtered]);
   const shown = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
 
+  /* ONE answer for the whole grid: does any entity on screen resolve a property?
+     Handed to every card so they all claim the same subgrid row tracks — a
+     per-card test would let one template's cards claim three tracks and another's
+     four, and a row that does not share tracks stops lining up. What it fixes is
+     the template that resolves nothing (CEJIL's Instrumento): its card mounted an
+     empty metadata row and drew a gap between title and footer. */
+  const metadataTrack = useMemo(
+    () => shown.some((e) => entityScalarFields(e, language).length > 0),
+    [shown, language],
+  );
+
+
+
 
   // Tap-to-preview on desktop/tablet; tap-to-open on mobile (no side drawer).
   // Previewing focuses the entity so the drawer's tabbed bodies (Relationships /
@@ -914,6 +928,7 @@ export function LibraryView() {
                 onSelect={handleSelect}
                 onView={openEntity}
                 onFocusProperty={handleFocusProperty}
+                metadataTrack={metadataTrack}
               />
             ))}
           </div>

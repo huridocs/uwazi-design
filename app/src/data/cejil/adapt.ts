@@ -7,7 +7,8 @@ import { cejilTemplates } from "./templates";
 import { cejilRelationTypes } from "./relationTypes";
 import { cejilDocBearingIds } from "./profile";
 import { cejilCorpus, cejilLoaded, cejilRelsByEntity } from "./load";
-import { kindOfUwaziType } from "../../utils/propertyKind";
+import { kindOfUwaziType, type PropertyKind } from "../../utils/propertyKind";
+import { CARD_FIELD_CAP } from "../../utils/entityFields";
 
 /** template _id → ordered [{name,label,type}] for resolving display fields. */
 const propsByTemplate = new Map(
@@ -113,7 +114,23 @@ function relPropResolves(sharedId: string, relationType: string | undefined): bo
   return false;
 }
 
-/** First few non-empty metadata fields (label + display value), in template order. */
+/** The kinds that cannot be a card LINE but are worth saying an entity has.
+ *
+ *  A paragraph cut at ninety characters is a broken sentence on every card; a
+ *  table of violated articles is a table; a media config is a player. None of
+ *  them shrink into a label/value row, and all three are things you would open.
+ *  They ride the footer as a glyph instead of taking a line. */
+const MARK_KINDS = new Set<PropertyKind>(["long", "table", "media"]);
+
+/** The card's properties: the first `CARD_FIELD_CAP` that resolve, in template
+ *  order, plus how many resolved after them and which mark kinds the entity
+ *  carries.
+ *
+ *  The cap CAPS and does not pad — a template with two properties renders two
+ *  lines. It exists only for the outlier: a thirteen-property Causa would drive
+ *  its metadata track thirteen lines deep and stretch every card in its row to
+ *  match, for one card's benefit. Five, because the real product carries five on
+ *  a card and three was chosen when every line was a label and a string. */
 function fieldsOf(e: {
   sharedId?: string;
   template: string;
@@ -121,12 +138,25 @@ function fieldsOf(e: {
 }) {
   const props = propsByTemplate.get(e.template) || [];
   const out: CardField[] = [];
+  const marks: PropertyKind[] = [];
+  let beyond = 0;
   for (const p of props) {
     if (p.name === "title") continue;
     const vals = e.metadata?.[p.name];
     if (!vals || !vals.length) continue;
+    // A mark kind is counted as PRESENT, never as a line, and never as part of
+    // the "+N more" — it is already saying itself in the footer.
+    const kind = kindOfUwaziType(p.type);
+    if (kind && MARK_KINDS.has(kind) && hasAnyValue(p.type, vals)) {
+      if (!marks.includes(kind)) marks.push(kind);
+      continue;
+    }
     const { value, more, values } = formatVals(p.type, vals);
     if (!value) continue;
+    if (out.length >= CARD_FIELD_CAP) {
+      beyond++;
+      continue;
+    }
     /* The KEY and the KIND travel with the value now.
        They were both in hand here and dropped one line later, which is why a
        card could not tell a coordinate from a sentence, and why a click on a
@@ -144,9 +174,20 @@ function fieldsOf(e: {
       ...(values && values.length > 1 ? { values } : {}),
       ...(more > 0 ? { more } : {}),
     });
-    if (out.length >= 3) break;
   }
-  return out.length ? out : undefined;
+  return { fields: out.length ? out : undefined, beyond, marks: marks.length ? marks : undefined };
+}
+
+/** Does this property hold anything at all? The mark tier only needs presence —
+ *  it prints no value — and `formatVals` deliberately returns nothing for the
+ *  kinds that cannot be drawn as a line, so it cannot answer this. */
+function hasAnyValue(type: string, vals: { value?: unknown; label?: unknown }[]): boolean {
+  if (type === "nested") return vals.length > 0;
+  return vals.some((v) => {
+    if (typeof v.label === "string" && v.label.trim()) return true;
+    if (typeof v.value === "string") return !!v.value.trim();
+    return v.value != null && v.value !== "";
+  });
 }
 
 /** Metadata keys the `Entity` already hoists to a field of its own — `pa_s` →
@@ -331,6 +372,7 @@ export function cejilLibraryEntities(): Entity[] {
     .map((e) => {
       const country = countryOf(e);
       const geo = geoOf(e);
+      const card = fieldsOf(e);
       return {
         id: e.sharedId,
         title: e.title.trim(),
@@ -340,7 +382,9 @@ export function cejilLibraryEntities(): Entity[] {
         country,
         geo,
         createdAt: createdOf(e, geo, causaDateBySid),
-        fields: fieldsOf(e),
+        fields: card.fields,
+        fieldsBeyond: card.beyond || undefined,
+        marks: card.marks,
         searchFields: searchFieldsOf(e),
         descriptors: (e.metadata?.descriptores || [])
           .map((v) => (typeof v.label === "string" ? v.label : ""))
