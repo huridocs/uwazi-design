@@ -148,9 +148,30 @@ const CARD_INFO: DisplaySection = {
   separator: true,
   options: [
     { id: "preview", label: "Thumbnail", default: true },
-    { id: "metadata", label: "Metadata", default: true },
     { id: "connections", label: "Connections", default: true },
   ],
+};
+
+/** How much of the record a card carries.
+ *
+ *  This was a Metadata on/off switch, which answered only "all or nothing" while
+ *  the interesting number — how many properties — sat in the code as a constant
+ *  nobody could see. A template's property count is not the app's to cap; the
+ *  reader picks. `None` is the old off state, so nothing is lost. */
+const CARD_FIELDS: DisplaySection = {
+  id: "cardFields",
+  label: "Metadata properties",
+  kind: "choice",
+  option: {
+    id: "cardFields",
+    default: "all",
+    choices: [
+      { id: "none", label: "None" },
+      { id: "3", label: "First 3" },
+      { id: "5", label: "First 5" },
+      { id: "all", label: "All", detail: "Every property the template fills" },
+    ],
+  },
 };
 
 /** Size, then frame, then fit — the order the questions come in: how big, what
@@ -213,7 +234,7 @@ const thumbSections = (): DisplaySection[] => {
 // ── The registry ─────────────────────────────────────────────────────────────
 
 export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
-  cards: [CHART, SORT, CARD_INFO, ...thumbSections()],
+  cards: [CHART, SORT, CARD_INFO, CARD_FIELDS, ...thumbSections()],
 
   /** The list's options are its COLUMNS, one per track the table can draw —
    *  including the corpus's own metadata properties, which no other view can
@@ -266,6 +287,7 @@ export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
       },
     },
     CARD_INFO,
+    CARD_FIELDS,
     ...thumbSections(),
   ],
 

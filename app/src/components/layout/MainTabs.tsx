@@ -40,9 +40,12 @@ interface MainTabsProps {
   /** When provided, the header shows a back button that returns to the
    *  precedent screen. */
   onBack?: () => void;
+  /** Align the strip to a body of metadata cards below it — see the wrapper
+   *  comment for why both the padding and a transparent border are needed. */
+  cardAligned?: boolean;
 }
 
-export function MainTabs({ tabs, activeId, onChange, languages = [], availableLanguages, activeLanguage, onLanguageChange, onBack, languageEditing = false }: MainTabsProps) {
+export function MainTabs({ tabs, activeId, onChange, languages = [], availableLanguages, activeLanguage, onLanguageChange, onBack, languageEditing = false, cardAligned = false }: MainTabsProps) {
   const [breakpoint] = useAtom(breakpointAtom);
   /* BELOW DESKTOP, not below mobile. `breakpointAtom` calls 768–1023 "tablet",
      so a mobile-only test is false at 768 — the width this was reported at — and a
@@ -61,7 +64,15 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
 
   return (
     <div
-      className="flex items-center justify-between gap-3 px-3 pt-2 pb-1 md:pt-2.5 shrink-0"
+      /* `cardAligned` lines the strip up with a body of `p-4` metadata cards
+         beneath it — the drawer, where the two sat 4px apart at the edge and
+         8px apart at the text. Both alignments hold at once because the strip
+         takes the card's BORDER too, transparently: without it the strip's
+         content box starts one pixel left of the card's, and you can have the
+         edges flush or the text flush but not both. */
+      className={`flex items-center justify-between gap-3 pt-2 pb-1 md:pt-2.5 shrink-0 ${
+        cardAligned ? "px-4" : "px-3"
+      }`}
     >
       {/* Left: Back + Tabs.
 
@@ -118,7 +129,9 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
             corner. The end tabs round themselves instead, logically, so the
             strip still reads as one frame under RTL. */
         <div
-          className="flex items-center rounded-md shrink-0"
+          className={`flex items-center rounded-md shrink-0 ${
+            cardAligned ? "border border-transparent" : ""
+          }`}
           role="tablist"
           style={{
             border: "1px solid var(--border-primary)",
@@ -132,7 +145,9 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
                 role="tab"
                 aria-selected={activeId === tab.id}
                 onClick={() => onChange(tab.id)}
-                className={`relative flex items-center justify-center gap-1 px-2.5 md:px-3 py-1.5 text-tab font-medium transition-colors ${
+                className={`relative flex items-center justify-center gap-1 py-1.5 text-tab font-medium transition-colors ${
+                  cardAligned ? "px-4" : "px-2.5 md:px-3"
+                } ${
                   i === 0 ? "rounded-s-md" : ""
                 } ${i === tabs.length - 1 ? "rounded-e-md" : ""} ${
                   activeId === tab.id

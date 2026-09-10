@@ -22,6 +22,12 @@ export interface CardField {
   kind?: PropertyKind;
   label: string;
   value: string;
+  /** The first few values of a MULTI-valued property, where the kind is drawn as
+   *  a set rather than as a sentence (`chips`). `value` stays the first of them,
+   *  so every consumer that wants one string still gets one — this is the extra
+   *  a chip row needs and nothing else reads. Capped at four: three are drawn
+   *  and the fourth only proves there are more, which `more` already counts. */
+  values?: string[];
   more?: number;
 }
 
@@ -78,6 +84,10 @@ export interface Entity {
    *  +2 more", never as a comma-joined dump — joining two long titles was what
    *  turned the card grid into a wall of prose. */
   fields?: CardField[];
+  /** Kinds the entity carries that cannot be a card LINE — a paragraph, a
+   *  table, a media config. Drawn as footer glyphs, so they cost no line and no
+   *  layout. */
+  marks?: PropertyKind[];
   /** Adapter-supplied FULL metadata projection, for SEARCH — every non-empty
    *  property, every value, untruncated.
    *

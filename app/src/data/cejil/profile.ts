@@ -10,6 +10,9 @@ import type { DocRendition, HtmlBlock } from "../documentRenditions";
 import type { FileEntry, DocumentGroup } from "../files";
 import type { Reference } from "../references";
 import type { CejilEntity, CejilFile } from "./types";
+import type { LatLng } from "../geo";
+import { formatPlace } from "../../utils/geoFormat";
+import { PLACE_INHERITED_KEY } from "./placeKey";
 import { cejilTemplates } from "./templates";
 import { cejilRelationTypes } from "./relationTypes";
 import { chains, type ChainGraph, type ProvenanceStep } from "../../utils/chainTraversal";
@@ -61,11 +64,44 @@ export function cejilReferencesFor(sharedId: string): Reference[] {
 const propsByTemplate = new Map(
   cejilTemplates.map((t) => [
     t._id,
-    [...(t.commonProperties || []), ...t.properties].map((p) => ({ name: p.name, label: p.label, type: p.type })),
+    [...(t.commonProperties || []), ...t.properties].map((p) => ({
+      name: p.name,
+      label: p.label,
+      type: p.type,
+      relationType: (p as { relationType?: string }).relationType,
+      inherit: (p as { inherit?: { type?: string } }).inherit,
+    })),
   ]),
 );
 
-const SKIP = new Set(["preview", "geolocation", "image", "link", "media", "nested", "generatedtoc", "relationship"]);
+const SKIP = new Set(["preview", "image", "link", "media", "nested", "generatedtoc", "relationship"]);
+
+/** The relation type NAME a template inherits a geolocation through — the
+ *  `inherit: {type: "geolocation"}` spec, read at last. Mirrors the adapter's
+ *  copy so the record and the card resolve the same connection. */
+const inheritedPlaceRelCache = new Map<string, string | undefined>();
+function inheritedPlaceRelName(templateId: string): string | undefined {
+  if (inheritedPlaceRelCache.has(templateId)) return inheritedPlaceRelCache.get(templateId);
+  const nameOf = new Map(cejilRelationTypes.map((r) => [r._id, r.name]));
+  let name: string | undefined;
+  for (const p of propsByTemplate.get(templateId) || []) {
+    if (p.type === "relationship" && p.inherit?.type === "geolocation" && p.relationType) {
+      name = nameOf.get(p.relationType);
+      break;
+    }
+  }
+  inheritedPlaceRelCache.set(templateId, name);
+  return name;
+}
+
+/** A CEJIL geolocation value as a LatLng. The dump writes `lon`, not `lng`. */
+function latLngOf(v: unknown): LatLng | undefined {
+  if (!v || typeof v !== "object") return undefined;
+  const o = v as { lat?: unknown; lon?: unknown; lng?: unknown };
+  const lat = o.lat;
+  const lng = o.lon ?? o.lng;
+  return typeof lat === "number" && typeof lng === "number" ? { lat, lng } : undefined;
+}
 
 function fmtDate(v: unknown): string {
   if (typeof v !== "number" || v <= 0) return "";
@@ -83,6 +119,16 @@ function mdFields(e: CejilEntity): MetadataField[] {
     const vals = e.metadata?.[p.name];
     if (!vals || !vals.length) continue;
 
+    /* A PLACE, in the record too — until now `SKIP` dropped geolocation here as
+       well, so even an entity whose only real property was a coordinate had a
+       record with nothing in it, and a card click had nowhere to land. The raw
+       `{lat, lon}` stays unread; what the record holds is the coordinate as it
+       is written. */
+    if (p.type === "geolocation") {
+      const coords = latLngOf(vals[0]?.value);
+      if (coords) out.push({ id: p.name, label: p.label, type: "text", value: formatPlace(coords) });
+      continue;
+    }
     if (p.type === "date" || p.type === "datasection") {
       const value = fmtDate(vals[0]?.value);
       if (value) out.push({ id: p.name, label: p.label, type: "date", value });
@@ -411,12 +457,57 @@ function cejilRelationshipFields(sharedId: string, template: string): Relationsh
   return out;
 }
 
+
+/** The place an entity reached through a connection, for one that carries no
+ *  coordinate of its own.
+ *
+ *  The record's half of the Causa fix: `Causa` declares its location as a
+ *  relationship carrying `inherit: {type: "geolocation"}`, which nothing has
+ *  ever read, so a case has never said where its events happened. Walking that
+ *  edge once gives the record a field — which is also what a card's place row
+ *  needs somewhere to scroll TO.
+ *
+ *  Narrow in the same way the borrowed DATE is narrow (see `createdOf` in
+ *  adapt.ts): only from a record that HAS a coordinate, only to one that has
+ *  none. Nothing else borrows anything. */
+function inheritedPlaceField(sharedId: string, own: CejilEntity): MetadataField | undefined {
+  for (const p of propsByTemplate.get(own.template) || []) {
+    if (p.type === "geolocation" && own.metadata?.[p.name]?.length) return undefined;
+  }
+  /* Follow the relation type the TEMPLATE names, not any edge that happens to
+     end somewhere with coordinates. A Causa is also connected to its País, and a
+     País carries a centroid, so the loose version made every case in a country
+     print one identical point — the country facet drawn on a map, which is what
+     this corpus's adapter rewrite rejected. */
+  const viaName = inheritedPlaceRelName(own.template);
+  if (!viaName) return undefined;
+  for (const r of cejilRelsByEntity().get(sharedId) ?? []) {
+    if ((r.typeName || "Relacionado") !== viaName) continue;
+    const other = r.from === sharedId ? r.to : r.from;
+    const doc = cejilBySidLang().get(`${other}::es`) || cejilBySidLang().get(`${other}::en`);
+    if (!doc) continue;
+    for (const p of propsByTemplate.get(doc.template) || []) {
+      if (p.type !== "geolocation") continue;
+      const coords = latLngOf(doc.metadata?.[p.name]?.[0]?.value);
+      if (!coords) continue;
+      return {
+        id: PLACE_INHERITED_KEY,
+        label: "Lugar de los hechos",
+        type: "text",
+        value: formatPlace(coords, doc.title.trim()),
+      };
+    }
+  }
+  return undefined;
+}
+
 export function buildCejilProfile(sharedId: string): EntityProfile {
   const es = cejilBySidLang().get(`${sharedId}::es`) || cejilBySidLang().get(`${sharedId}::en`)!;
   const relFields = cejilRelationshipFields(sharedId, es.template);
+  const place = inheritedPlaceField(sharedId, es);
   const metadata = LANGS.reduce((acc, lang) => {
     const doc = cejilBySidLang().get(`${sharedId}::${LANG_CODE[lang]}`) || es;
-    acc[lang] = [...mdFields(doc), ...relFields];
+    acc[lang] = [...mdFields(doc), ...(place ? [place] : []), ...relFields];
     return acc;
   }, {} as Record<Language, AnyMetadataField[]>);
 

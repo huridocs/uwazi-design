@@ -7,7 +7,9 @@ import { cejilTemplates } from "./templates";
 import { cejilRelationTypes } from "./relationTypes";
 import { cejilDocBearingIds } from "./profile";
 import { cejilCorpus, cejilLoaded, cejilRelsByEntity } from "./load";
-import { kindOfUwaziType } from "../../utils/propertyKind";
+import { kindOfUwaziType, type PropertyKind } from "../../utils/propertyKind";
+import { formatPlace } from "../../utils/geoFormat";
+import { PLACE_INHERITED_KEY } from "./placeKey";
 
 /** template _id → ordered [{name,label,type}] for resolving display fields. */
 const propsByTemplate = new Map(
@@ -21,6 +23,10 @@ const propsByTemplate = new Map(
       // property points at, so the card can tell whether the record has a
       // group for it (see `relPropResolves`).
       relationType: (p as { relationType?: string }).relationType,
+      // The inherit spec, which is how a template says a connection carries a
+      // VALUE and not just a link — `Causa` declares
+      // `inherit: {type: "geolocation"}` here and nothing had ever read it.
+      inherit: (p as { inherit?: { type?: string } }).inherit,
     })),
   ]),
 );
@@ -36,7 +42,7 @@ const SKIP_TYPES = new Set(["preview", "geolocation", "image", "link", "media", 
 function formatVals(
   type: string,
   vals: { value?: unknown; label?: unknown }[],
-): { value: string; more: number } {
+): { value: string; more: number; values?: string[] } {
   const none = { value: "", more: 0 };
   if (SKIP_TYPES.has(type)) return none;
   if (type === "date" || type === "datasection") {
@@ -65,7 +71,8 @@ function formatVals(
     return spans.length ? { value: spans[0], more: spans.length - 1 } : none;
   }
   const labels = vals.map((v) => v?.label).filter((l): l is string => typeof l === "string" && !!l);
-  if (labels.length) return { value: labels[0], more: labels.length - 1 };
+  if (labels.length)
+    return { value: labels[0], more: labels.length - 1, values: labels.slice(0, 4) };
   const v = vals[0]?.value;
   if (typeof v === "string" && v.trim()) {
     const s = v.replace(/\s+/g, " ").trim();
@@ -112,19 +119,69 @@ function relPropResolves(sharedId: string, relationType: string | undefined): bo
   return false;
 }
 
-/** First few non-empty metadata fields (label + display value), in template order. */
-function fieldsOf(e: {
-  sharedId?: string;
-  template: string;
-  metadata?: Record<string, { value?: unknown; label?: unknown }[]>;
-}) {
+/** The kinds that cannot be a card LINE but are worth saying an entity has.
+ *
+ *  A paragraph cut at ninety characters is a broken sentence on every card; a
+ *  table of violated articles is a table; a media config is a player. None of
+ *  them shrink into a label/value row, and all three are things you would open.
+ *  They ride the footer as a glyph instead of taking a line. */
+const MARK_KINDS = new Set<PropertyKind>(["long", "table", "media"]);
+
+/** The card's properties — EVERY one that resolves, in template order — plus the
+ *  mark kinds the entity carries.
+ *
+ *  No ceiling. There was one, and it was justified with an outlier that does not
+ *  exist: the real spread here is 0-9 properties, Causa tops out at 7, and a cap
+ *  of five was truncating 1,138 of 4,398 entities to save at most four lines in
+ *  the worst row. Level rows come from the cards' shared subgrid tracks, not from
+ *  every card carrying the same number of lines. */
+function fieldsOf(
+  e: {
+    sharedId?: string;
+    template: string;
+    metadata?: Record<string, { value?: unknown; label?: unknown }[]>;
+  },
+  /** The entity's OWN coordinate, if it has one. */
+  ownCoords?: LatLng,
+  /** A coordinate reached through a connection, for an entity with none of its
+   *  own — see `ConnectedPlace`. */
+  connectedPlace?: ConnectedPlace,
+) {
   const props = propsByTemplate.get(e.template) || [];
   const out: CardField[] = [];
+  const marks: PropertyKind[] = [];
   for (const p of props) {
     if (p.name === "title") continue;
+    /* The connection a place was inherited THROUGH is not also a row of its own.
+       It resolved to the place row below; printing both gives one card two lines
+       about the same fact, one of them naming a record whose only content is the
+       coordinate the other line already shows. Same reasoning as `promotedRelType`
+       in profile.ts: a connection shown as what it resolves to is shown once. */
+    if (connectedPlace && p.inherit?.type === "geolocation") continue;
     const vals = e.metadata?.[p.name];
     if (!vals || !vals.length) continue;
-    const { value, more } = formatVals(p.type, vals);
+    // A mark kind is counted as PRESENT, never as a line, and never as part of
+    // the "+N more" — it is already saying itself in the footer.
+    const kind = kindOfUwaziType(p.type);
+    /* A PLACE. `SKIP_TYPES` still drops the raw geolocation value — it is a
+       `{lat, lon}` blob and nothing downstream should read one — but the
+       coordinate is lifted here in the notation a coordinate is written in.
+       No place name: this entity's own title already IS the place, and printing
+       it again would say "Colindres" twice on one card. */
+    if (kind === "place" && ownCoords) {
+      out.push({
+        key: p.name,
+        kind: "place",
+        label: p.label,
+        value: formatPlace(ownCoords),
+      });
+      continue;
+    }
+    if (kind && MARK_KINDS.has(kind) && hasAnyValue(p.type, vals)) {
+      if (!marks.includes(kind)) marks.push(kind);
+      continue;
+    }
+    const { value, more, values } = formatVals(p.type, vals);
     if (!value) continue;
     /* The KEY and the KIND travel with the value now.
        They were both in hand here and dropped one line later, which is why a
@@ -140,11 +197,36 @@ function fieldsOf(e: {
       kind: kindOfUwaziType(p.type),
       label: p.label,
       value,
+      ...(values && values.length > 1 ? { values } : {}),
       ...(more > 0 ? { more } : {}),
     });
-    if (out.length >= 3) break;
   }
-  return out.length ? out : undefined;
+  /* THE INHERITED PLACE, appended rather than slotted into template order —
+     the property it comes from is a relationship, and its position in the
+     template is where the CONNECTION sits, not where a coordinate would read.
+     It goes last so the card's own properties are never displaced by one it
+     borrowed. */
+  if (connectedPlace) {
+    out.push({
+      key: PLACE_INHERITED_KEY,
+      kind: "place",
+      label: "Lugar de los hechos",
+      value: formatPlace(connectedPlace.coords, connectedPlace.name),
+    });
+  }
+  return { fields: out.length ? out : undefined, marks: marks.length ? marks : undefined };
+}
+
+/** Does this property hold anything at all? The mark tier only needs presence —
+ *  it prints no value — and `formatVals` deliberately returns nothing for the
+ *  kinds that cannot be drawn as a line, so it cannot answer this. */
+function hasAnyValue(type: string, vals: { value?: unknown; label?: unknown }[]): boolean {
+  if (type === "nested") return vals.length > 0;
+  return vals.some((v) => {
+    if (typeof v.label === "string" && v.label.trim()) return true;
+    if (typeof v.value === "string") return !!v.value.trim();
+    return v.value != null && v.value !== "";
+  });
 }
 
 /** Metadata keys the `Entity` already hoists to a field of its own — `pa_s` →
@@ -307,6 +389,35 @@ function createdOf(
   return undefined;
 }
 
+/** A place reached through a connection: the coordinate, and what it is called.
+ *
+ *  `Causa` declares its location as a RELATIONSHIP —
+ *  `geolocalizaci_n_de_los_hechos`, carrying `inherit: {type: "geolocation"}` —
+ *  and nothing has ever read that inherit spec, so a case has never said where
+ *  it happened. The 343 entities that DO carry coordinates are the anonymous
+ *  place-records hanging off it, whose own cards said only which country they
+ *  were in. Both halves of that are fixed by walking the edge once. */
+interface ConnectedPlace {
+  coords: LatLng;
+  name: string;
+}
+
+/** The relation type NAME a template inherits a geolocation through, if it
+ *  declares one. Cached per template — it is a walk over a handful of props. */
+const inheritedPlaceRel = new Map<string, string | undefined>();
+function inheritedPlaceRelName(templateId: string): string | undefined {
+  if (inheritedPlaceRel.has(templateId)) return inheritedPlaceRel.get(templateId);
+  let name: string | undefined;
+  for (const p of propsByTemplate.get(templateId) || []) {
+    if (p.type === "relationship" && p.inherit?.type === "geolocation" && p.relationType) {
+      name = relTypeName.get(p.relationType);
+      break;
+    }
+  }
+  inheritedPlaceRel.set(templateId, name);
+  return name;
+}
+
 /** The Library entity list, built once from the loaded corpus (Spanish docs are
  *  canonical — titles/labels are richest in es). Returns [] until the corpus is
  *  fetched; the Library gates on `cejilLoaded()` and re-renders on load. */
@@ -325,10 +436,45 @@ export function cejilLibraryEntities(): Entity[] {
     if (d) causaDateBySid.set(e.sharedId, d);
   }
 
+  /* Pass 1b: the same edge, walked the other way, and read off the TEMPLATE.
+     `Causa` declares its location as a relationship carrying
+     `inherit: {type: "geolocation"}` — the spec nothing has ever read, which is
+     why a case has never said where its events happened. So the rule is the
+     spec: follow THAT relation type, and take the coordinate of what is on the
+     other end.
+
+     Following any connected entity with a coordinate was the first attempt and
+     it was wrong in a way worth recording: a Causa is also connected to its
+     País, and a País carries a centroid, so every case in Brazil borrowed one
+     identical point. That is the country facet drawn on a map — the exact
+     pattern CEJIL's own adapter rewrite rejected — and it made two different
+     cases print the same coordinate. */
+  const placeBySid = new Map<string, ConnectedPlace>();
+  const geoByEntity = new Map<string, ConnectedPlace>();
+  for (const e of es) {
+    const coords = geoOf(e);
+    if (coords) geoByEntity.set(e.sharedId, { coords, name: e.title.trim() });
+  }
+  for (const e of es) {
+    if (geoByEntity.has(e.sharedId)) continue; // has its own; borrows nothing
+    const viaName = inheritedPlaceRelName(e.template);
+    if (!viaName) continue;
+    for (const r of cejilRelsByEntity().get(e.sharedId) ?? []) {
+      if ((r.typeName || "Relacionado") !== viaName) continue;
+      const other = r.from === e.sharedId ? r.to : r.from;
+      const place = geoByEntity.get(other);
+      if (place) {
+        placeBySid.set(e.sharedId, place);
+        break;
+      }
+    }
+  }
+
   _libraryEntities = es
     .map((e) => {
       const country = countryOf(e);
       const geo = geoOf(e);
+      const card = fieldsOf(e, geo, geo ? undefined : placeBySid.get(e.sharedId));
       return {
         id: e.sharedId,
         title: e.title.trim(),
@@ -338,7 +484,8 @@ export function cejilLibraryEntities(): Entity[] {
         country,
         geo,
         createdAt: createdOf(e, geo, causaDateBySid),
-        fields: fieldsOf(e),
+        fields: card.fields,
+        marks: card.marks,
         searchFields: searchFieldsOf(e),
         descriptors: (e.metadata?.descriptores || [])
           .map((v) => (typeof v.label === "string" ? v.label : ""))

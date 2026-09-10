@@ -1,18 +1,23 @@
 import { Fragment, memo } from "react";
-import { Link2 } from "lucide-react";
+import { Clapperboard, Link2, Pilcrow, Table2 } from "lucide-react";
 import { useAtomValue } from "jotai";
 import { languageAtom } from "../../atoms/language";
 import { EntityTypeTag } from "../shared/EntityTypeTag";
 import { HighlightedText } from "../shared/HighlightedText";
 import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
 import { EntityThumbnail, QuietMark } from "./EntityThumbnail";
+import { CardValue, ownsItsRemainder } from "./CardValue";
+import { LIBRARY_SORTS } from "../../data/libraryDisplay";
 import { getEntityType } from "../../data/entities";
 import { entityScalarFields, type EntityScalarField } from "../../utils/entityFields";
 import type { PropertyKind } from "../../utils/propertyKind";
 import type { Entity } from "../../data/entities";
 import {
   libraryCardInfoAtom,
+  cardFieldLimit,
+  librarySortAtom,
   libraryThumbSizeAtom,
+  type LibrarySort,
   libraryThumbFitAtom,
   libraryThumbFrameAtom,
   type LibraryViewMode,
@@ -50,6 +55,42 @@ const CARD_FLOOR: Record<ThumbSize, string> = {
  *  NOT follow the band: a row is two lines of text tall, so the chip is sized
  *  against the row and the old m/l pair is the whole useful range there. */
 const CHIP_BOX: Record<ThumbSize, string> = { m: "w-9 h-9", l: "w-12 h-12" };
+
+/** What the sort key is READING on this card, so the card can mark it.
+ *
+ *  The sort answers "why is this row where it is", and the answer was only ever
+ *  in the toolbar — a Library sorted by Country gave no sign, on any card, of
+ *  which value put it there. Shading the value the sort read is the per-card
+ *  half of that, the way `MatchOrigin` is the per-card half of "why is this row
+ *  here" for search.
+ *
+ *  `country` is matched by VALUE, not by label: the property is "País" in this
+ *  corpus and "Country" in another, and the entity already carries the hoisted
+ *  value the sort itself compares. Matching the label would work in one language
+ *  and break in the next, the same trap the field keys avoid. `recent` marks
+ *  nothing — a card carries no added-on date, and inventing one to have
+ *  something to shade would be worse than the silence. */
+function sortedFieldId(
+  sort: LibrarySort,
+  entity: Entity,
+  fields: EntityScalarField[],
+): string | null {
+  if (sort !== "country" || !entity.country) return null;
+  return fields.find((f) => f.value === entity.country)?.id ?? null;
+}
+
+/** The footer glyph for a kind that cannot be a card line, and what it is
+ *  called for anyone not reading glyphs. */
+const MARK_ICON: Partial<Record<PropertyKind, typeof Pilcrow>> = {
+  long: Pilcrow,
+  table: Table2,
+  media: Clapperboard,
+};
+const MARK_LABEL: Partial<Record<PropertyKind, string>> = {
+  long: "Has a written summary",
+  table: "Has a table",
+  media: "Has media",
+};
 
 /** The kinds whose value is a THING you would open rather than a sentence you
  *  have already read: a place, a connected entity, a table, a file.
@@ -92,6 +133,7 @@ export const EntityCard = memo(function EntityCard({
   onSelect,
   onView,
   onFocusProperty,
+  metadataTrack = true,
 }: {
   entity: Entity;
   layout: LibraryViewMode;
@@ -110,8 +152,12 @@ export const EntityCard = memo(function EntityCard({
    *  scrolls to it and flashes it. Optional: the layouts that don't offer a
    *  property trigger simply don't pass it. */
   onFocusProperty?: (id: string, fieldKey: string) => void;
+  /** Whether the grid draws a metadata track AT ALL — one answer for every card
+   *  on screen, computed by the view. See the track comment below. */
+  metadataTrack?: boolean;
 }) {
   const language = useAtomValue(languageAtom);
+  const sort = useAtomValue(librarySortAtom);
   const info = useAtomValue(libraryCardInfoAtom);
   const thumbSize = useAtomValue(libraryThumbSizeAtom);
   const thumbFit = useAtomValue(libraryThumbFitAtom);
@@ -121,7 +167,12 @@ export const EntityCard = memo(function EntityCard({
   const showConnections = info.connections;
 
   const connectionBadge = showConnections && connections > 0 && (
-    <span className="inline-flex items-center gap-1 text-meta text-ink-tertiary tabular-nums" title={`${connections} connections`}>
+    <span
+      className={`inline-flex items-center gap-1 text-meta text-ink-tertiary tabular-nums ${
+        sort === "connections" ? "rounded-sm bg-vellum -mx-1 px-1 -my-px py-px" : ""
+      }`}
+      title={sort === "connections" ? `Sorted by Connections — ${connections}` : `${connections} connections`}
+    >
       <Link2 size={11} className="text-ink-muted" />
       {connections.toLocaleString()}
     </span>
@@ -131,11 +182,43 @@ export const EntityCard = memo(function EntityCard({
   // entityMetadata profile. Only fields that resolved to a value. Shared with
   // the list table's metadata columns, which ask the identical question.
   const scalarFields = entityScalarFields(entity, language);
-  // At most THREE fields, and no appended "Language" row: the card is a
-  // scan-target, not a record. Language repeats the toolbar's own selector on
-  // every card, and beyond three rows the grid stops reading as cards and starts
-  // reading as prose. The full record is one click away in the drawer.
-  const fields = scalarFields.slice(0, 3);
+  /* EVERY property the entity resolves, and no appended "Language" row — that
+     one repeats the toolbar's own selector on every card.
+
+     There is no ceiling. There was one, at five, and it was mine and it was
+     wrong: I justified it with a thirteen-property Causa that does not exist.
+     Once paragraphs, tables and media became footer marks the real spread across
+     the corpus is 0-9 properties and Causa tops out at 7, so a ceiling of five
+     was truncating 1,138 of 4,398 entities — 26% — to save at most four lines in
+     the worst row. And level rows were never the ceiling's job: the subgrid sizes
+     each track to the tallest card in the row and pins every footer to the same
+     y, whatever the line counts are. Cards SHOULD carry different numbers of
+     properties; that is the whole point of taking shape from a template.
+
+     How many is the READER's choice, in the Display menu — "Metadata
+     properties: None / First 3 / First 5 / All", defaulting to All. It replaced
+     a Metadata on/off switch, which answered only "all or nothing" while the
+     interesting number sat in this file as a constant nobody could see. */
+  const limit = cardFieldLimit(info.fields);
+  const fields = limit === null ? scalarFields : scalarFields.slice(0, limit);
+  /* What the choice left behind, so a card showing three of nine says so. At
+     "All" it is always 0. At "None" it is suppressed rather than accurate: the
+     reader has said they do not want properties on the card, and answering that
+     with "+7" on every card is a count nobody asked for. */
+  const beyond = limit === 0 ? 0 : scalarFields.length - fields.length;
+
+  /* Kinds the entity holds that cannot be a line. Adapter-supplied; a corpus
+     without one simply has none, which is the truth for the mock sample. */
+  const marks = showMetadata ? (entity.marks ?? []) : [];
+  /* The mark rides whatever the sort is reading — a property row, the title, the
+     template tag or the connection count. It is a shade on an element that is
+     already there, so it costs no line and cannot move anything. */
+  const sortedId = sortedFieldId(sort, entity, fields);
+  const sortLabel = LIBRARY_SORTS.find((c) => c.id === sort)?.label ?? sort;
+  const sortedNote = `Sorted by ${sortLabel}`;
+  const sortMark = (on: boolean) =>
+    on ? "rounded-sm bg-vellum -mx-1 px-1 -my-px py-px" : "";
+  const markTitle = marks.map((m) => MARK_LABEL[m]).join(" · ");
 
   const viewButton = (
     <button
@@ -214,11 +297,7 @@ export const EntityCard = memo(function EntityCard({
                 metaFields.map((f) => (
                   <Fragment key={f.id}>
                     <span className="shrink-0 text-ink-muted">·</span>
-                    <span className="truncate">
-                      <ThesaurusValueLabel value={f.value}>
-                        <HighlightedText text={f.value} query={query} />
-                      </ThesaurusValueLabel>
-                    </span>
+                    <CardValue field={f} query={query} compact />
                   </Fragment>
                 ))}
             </div>
@@ -239,13 +318,13 @@ export const EntityCard = memo(function EntityCard({
   // slot plus the grid row's own stretch keeps neighbours level — a rem floor
   // sized for one column width is wrong at every other.
   const minHeight =
-    showPreview && showMetadata && thumbFrame === "landscape"
+    showPreview && showMetadata && metadataTrack && thumbFrame === "landscape"
       ? CARD_FLOOR[thumbSize]
       : "";
 
   /** One track per row this card draws. Both toggles are global, so every card
    *  on screen agrees — see ROW_SPAN. */
-  const rowCount = 2 + (showPreview ? 1 : 0) + (showMetadata ? 1 : 0);
+  const rowCount = 2 + (showPreview ? 1 : 0) + (showMetadata && metadataTrack ? 1 : 0);
 
   /** Slot class: landscape = the fixed band; portrait = the card's width at
    *  3:4. The picture fills the slot either way — Cover crops to fill it,
@@ -314,21 +393,54 @@ export const EntityCard = memo(function EntityCard({
         className="relative min-w-0 text-sm font-semibold text-ink leading-snug line-clamp-2
           not-supports-[grid-template-rows:subgrid]:min-h-[2.375rem]"
       >
-        <HighlightedText text={entity.title} query={query} />
+        <span
+          className={sortMark(sort === "title")}
+          title={sort === "title" ? sortedNote : undefined}
+        >
+          <HighlightedText text={entity.title} query={query} />
+        </span>
       </span>
 
-      {showMetadata && (
-        <div className="relative min-w-0 space-y-1.5">
+      {/* The track, not the card, decides. `metadataTrack` is computed ONCE
+          over the whole result set by the view and handed to every card, so all
+          of them claim the same subgrid tracks — a per-card `fields.length > 0`
+          would let one template's cards claim three tracks and another's four,
+          and the row would stop sharing them. What it fixes is a template that
+          resolves nothing (Instrumento): the row was mounted regardless and
+          drew a visible gap between title and footer. */}
+      {showMetadata && metadataTrack && (
+        /* READABILITY, not decoration. Seven label/value pairs at nearly equal
+           weight, evenly spaced, read as one flat ladder with nothing to land
+           on — which is what a card grew into once the ceiling came off.
+
+           Two changes, and between them the values become the thing you scan.
+           The LABEL takes the record's own field-label recipe (uppercase,
+           tracked, muted, semibold at 11px — `MetadataCard`'s head, verbatim),
+           so it reads as a caption rather than as a second value; it is
+           smaller-looking than the sentence-case grey it replaces despite the
+           same size, because small caps at this scale sit lower than lowercase
+           with ascenders. And the pairs get AIR between them (`space-y-2`)
+           while label and value stay locked together (`leading-tight`, no gap),
+           so the eye chunks by pair instead of reading fourteen equal lines.
+
+           It also makes the card and the record say a field name the same way,
+           which they did not before. */
+        <div className="relative min-w-0 space-y-2">
           {fields.map((f) => (
             <div key={f.id} className="min-w-0">
-              <span className="block text-meta text-ink-tertiary leading-tight">{f.label}</span>
+              <span className="block text-meta font-semibold uppercase tracking-wider text-ink-tertiary leading-tight">
+                {f.label}
+              </span>
               {/* Exactly ONE line per field, always. `truncate` rather than
                   `line-clamp-1` because the old `block line-clamp-1` pair fought
                   over `display` (block won) and the clamp silently never
                   applied — which is how three-line values reached the grid. The
                   "+N more" is a shrink-0 sibling, so it survives the ellipsis
                   instead of being cut off inside it. */}
-              <span className="flex items-baseline gap-1 min-w-0 text-xs text-ink leading-snug">
+              <span
+                className={`flex items-baseline gap-1 min-w-0 text-xs text-ink leading-snug ${sortMark(f.id === sortedId)}`}
+                title={f.id === sortedId ? sortedNote : undefined}
+              >
                 {inspectable(f) && onFocusProperty ? (
                   /* A property whose value is a THING TO INSPECT gets a real
                      button, above the card's stretched primary action and
@@ -343,23 +455,16 @@ export const EntityCard = memo(function EntityCard({
                       onFocusProperty(entity.id, f.key!);
                     }}
                     aria-label={`Open ${f.label} on ${entity.title}`}
-                    className="min-w-0 text-start truncate rounded-sm cursor-pointer
+                    className="flex min-w-0 text-start rounded-sm cursor-pointer
                       underline decoration-transparent hover:decoration-current underline-offset-2
                       transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
-                    title={f.value}
                   >
-                    <ThesaurusValueLabel value={f.value}>
-                      <HighlightedText text={f.value} query={query} />
-                    </ThesaurusValueLabel>
+                    <CardValue field={f} query={query} />
                   </button>
                 ) : (
-                  <span className="truncate" title={f.value}>
-                    <ThesaurusValueLabel value={f.value}>
-                      <HighlightedText text={f.value} query={query} />
-                    </ThesaurusValueLabel>
-                  </span>
+                  <CardValue field={f} query={query} />
                 )}
-                {!!f.more && (
+                {!!f.more && !ownsItsRemainder(f) && (
                   <span className="shrink-0 text-meta text-ink-tertiary">+{f.more} more</span>
                 )}
               </span>
@@ -373,8 +478,33 @@ export const EntityCard = memo(function EntityCard({
           keeps it on the track's bottom edge in the fallback, where the track
           may be taller than the footer. */}
       <div className="relative min-w-0 self-end flex items-center justify-between gap-2 pt-1">
-        <EntityTypeTag typeId={entity.typeId} />
+        <span className={sortMark(sort === "type")} title={sort === "type" ? sortedNote : undefined}>
+          <EntityTypeTag typeId={entity.typeId} />
+        </span>
         <div className="flex items-center gap-2">
+          {/* Marks and the count ride a line that is ALREADY MOUNTED, which is
+              the whole reason they are here: neither can make a card taller,
+              and a card that gains a paragraph does not shove its neighbours.
+              They are signals, not targets — the record has no field for a
+              nested table or a media config yet, and a click that lands
+              nowhere is worse than no click. */}
+          {marks.length > 0 && (
+            <span className="flex items-center gap-1 text-ink-muted" title={markTitle}>
+              {marks.map((m) => {
+                const Icon = MARK_ICON[m];
+                return Icon ? <Icon key={m} size={11} aria-hidden /> : null;
+              })}
+              <span className="sr-only">{markTitle}</span>
+            </span>
+          )}
+          {beyond > 0 && (
+            <span
+              className="text-meta text-ink-tertiary tabular-nums"
+              title={`${beyond} more ${beyond === 1 ? "property" : "properties"} on the record`}
+            >
+              +{beyond}
+            </span>
+          )}
           {connectionBadge}
           {viewButton}
         </div>
