@@ -1,5 +1,5 @@
 import { Fragment, memo } from "react";
-import { Clapperboard, Link2, Pilcrow, Table2 } from "lucide-react";
+import { Clapperboard, Image as ImageIcon, Link2, Pilcrow, Table2 } from "lucide-react";
 import { useAtomValue } from "jotai";
 import { languageAtom } from "../../atoms/language";
 import { EntityTypeTag } from "../shared/EntityTypeTag";
@@ -210,6 +210,12 @@ export const EntityCard = memo(function EntityCard({
   /* Kinds the entity holds that cannot be a line. Adapter-supplied; a corpus
      without one simply has none, which is the truth for the mock sample. */
   const marks = showMetadata ? (entity.marks ?? []) : [];
+  /* Images past the first — the first IS the slot's picture. Only those with a
+     property key, since a name with nothing to open is a dead link. */
+  const extraImages =
+    showMetadata && metadataTrack
+      ? (entity.images ?? []).slice(1).filter((img) => !!img.fieldKey)
+      : [];
   /* The mark rides whatever the sort is reading — a property row, the title, the
      template tag or the connection count. It is a shade on an element that is
      already there, so it costs no line and cannot move anything. */
@@ -470,6 +476,42 @@ export const EntityCard = memo(function EntityCard({
               </span>
             </div>
           ))}
+
+          {/* THE IMAGES THE SLOT CANNOT DRAW.
+              A template may select several image properties for the card, and a
+              slot holds one. The rest were absent — not truncated, not counted.
+              A filename is a poorer thing than a picture and an honest one, and
+              it is a way IN: the click opens the record at the images.
+
+              Inside the metadata track, so it costs no row of its own and the
+              grid stays level. Only from the second image on; the first is the
+              picture above. */}
+          {extraImages.length > 0 && onFocusProperty && (
+            <div className="min-w-0 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+              <span className="block text-meta font-semibold uppercase tracking-wider text-ink-tertiary leading-tight w-full">
+                {extraImages.length === 1 ? "1 more image" : `${extraImages.length} more images`}
+              </span>
+              {extraImages.map((img, i) => (
+                <button
+                  key={`${img.url}-${i}`}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onFocusProperty(entity.id, img.fieldKey!);
+                  }}
+                  aria-label={`Open ${img.filename ?? "image"} on ${entity.title}`}
+                  title={img.filename}
+                  className="inline-flex items-center gap-1 min-w-0 max-w-full text-xs text-ink
+                    underline decoration-transparent hover:decoration-current underline-offset-2
+                    transition-colors cursor-pointer rounded-sm
+                    focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
+                >
+                  <ImageIcon size={11} className="shrink-0 text-ink-muted" aria-hidden />
+                  <span className="truncate">{img.filename ?? "Image"}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

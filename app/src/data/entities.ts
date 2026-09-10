@@ -5,6 +5,8 @@ import { cejilTypeById } from "./cejil/typesAdapter";
 import { cejilLibraryEntities } from "./cejil/adapt";
 import { artworkEntityById } from "./artworks/adapt";
 import { artworkTypeById } from "./artworks/typesAdapter";
+import { artworks, ARTWORK_IMAGE_BASE } from "./artworks/artworks";
+import { asset } from "../utils/asset";
 
 /** One property as a CARD shows it: the key that names it to the record, the
  *  kind that says how to draw it, the label, the display value, and the "+N"
@@ -71,6 +73,17 @@ export interface Entity {
   /** The actual asset behind `preview: "image"`. Adapter-supplied, like `geo`
    *  and `fields` — see {@link EntityImage}. */
   image?: EntityImage;
+  /** EVERY image the template fills, `image` first.
+   *
+   *  Uwazi templates can select more than one image or preview property to show
+   *  on a card, and a slot draws ONE. The rest were simply gone: not truncated,
+   *  not counted, absent. So the card names them instead — a filename is a
+   *  poorer thing than a picture and an honest one, and it is a link into the
+   *  record where the picture actually is.
+   *
+   *  Absent, or one entry long, for the ordinary single-image entity: the
+   *  fallback row only appears when there is something it alone can say. */
+  images?: EntityImage[];
   /** Optional geolocation (from the entity's country) for the Library map view. */
   geo?: LatLng;
   /** Optional country name (for the Countries facet) — set by adapters whose
@@ -139,6 +152,14 @@ export interface EntityImage {
   /** Human-readable description for `alt` — the asset's original filename is
    *  not one. */
   alt: string;
+  /** The asset's ORIGINAL filename, which is not alt text and is not a caption
+   *  — it is how the person who uploaded it refers to it. A card that cannot
+   *  draw a second picture can still name one, and this is the name. */
+  filename?: string;
+  /** The template property this image came from, so a click on its name can
+   *  tell the record WHICH image to scroll to — the same key the record puts on
+   *  its field cards. */
+  fieldKey?: string;
 }
 
 const baseEntities: Omit<Entity, "createdAt">[] = [
@@ -259,6 +280,53 @@ function entityGeo(id: string, typeId: string, title: string): LatLng | undefine
   return country ? countryCoords[country] : undefined;
 }
 
+
+/* MULTI-IMAGE ENTITIES, seeded so the fallback has something to fall back FROM.
+ *
+ *  Uwazi templates can select more than one image property to show on a card,
+ *  and neither corpus had an entity carrying two: CEJIL declares nine `preview`
+ *  properties that hold no values at all and 254 `media` links, one apiece, and
+ *  the artworks are one painting each. So the card's "name what you cannot
+ *  draw" path had nothing to render and nothing to be checked against.
+ *
+ *  The ASSETS ARE REAL — the artwork corpus's own files, with their own original
+ *  filenames — because a seeded 404 would prove the layout and hide the loading.
+ *  Three of the sample's templates carry an image property, chosen where a
+ *  picture is plausible: a person's portraits, a case's exhibits, a violation's
+ *  documentation. */
+/** The artwork corpus's assets, as a flat pool to draw seeded images from. */
+const artworkAssets = artworks.map((w) => ({ ...w.image, title: w.title }));
+
+const SAMPLE_IMAGE_TYPES: Record<string, { key: string; label: string }> = {
+  person: { key: "portraits", label: "Portraits" },
+  court_case: { key: "exhibits", label: "Exhibits" },
+  violation: { key: "documentation", label: "Documentation" },
+};
+
+/** How many images an entity of an image-bearing type carries: 0, 2 or 3.
+ *  Never 1 — a single image is the case that already worked, and seeding more
+ *  of it would tell us nothing. */
+function seededImages(id: string, typeId: string): EntityImage[] | undefined {
+  const spec = SAMPLE_IMAGE_TYPES[typeId];
+  if (!spec) return undefined;
+  const r = hash(`${id}\u00b7imgs`) % 5;
+  if (r > 1) return undefined; // most entities have none
+  const count = r === 0 ? 2 : 3;
+  const start = hash(`${id}\u00b7imgoff`) % artworkAssets.length;
+  return Array.from({ length: count }, (_, i) => {
+    const a = artworkAssets[(start + i) % artworkAssets.length];
+    return {
+      url: asset(`${ARTWORK_IMAGE_BASE}/${a.file}`),
+      width: a.width,
+      height: a.height,
+      aspect: a.aspect,
+      alt: `${spec.label} \u2014 ${a.title}`,
+      filename: a.originalName,
+      fieldKey: spec.key,
+    };
+  });
+}
+
 export const entities: Entity[] = baseEntities.map((e) => ({
   ...e,
   createdAt: seededDate(e.id),
@@ -266,7 +334,17 @@ export const entities: Entity[] = baseEntities.map((e) => ({
   published: seededPublished(e.id),
   preview: seededPreview(e.id, e.typeId),
   geo: entityGeo(e.id, e.typeId, e.title),
+  ...withImages(seededImages(e.id, e.typeId)),
 }));
+
+/** An entity's images, and the thumbnail that comes with them: the FIRST image
+ *  becomes the card's picture, which is what a template selecting an image
+ *  property means by it. Nothing is set for an entity with none, so the seeded
+ *  document / video / audio previews are untouched. */
+function withImages(images: EntityImage[] | undefined) {
+  if (!images?.length) return {};
+  return { preview: "image" as const, image: images[0], images };
+}
 
 /** Ephemeral types for previews (the settings TemplateCardPreview): a template
  *  being edited isn't in any registry yet, but the real EntityCard resolves its

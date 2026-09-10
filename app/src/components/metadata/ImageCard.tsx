@@ -1,4 +1,5 @@
 import type { EntityProfile } from "../../data/entityProfiles";
+import type { EntityImage } from "../../data/entities";
 import { EntityThumbnail } from "../library/EntityThumbnail";
 import { MetadataCard, Property } from "./MetadataCard";
 
@@ -24,34 +25,72 @@ import { MetadataCard, Property } from "./MetadataCard";
  *  would otherwise reserve a box taller than the pane it sits in — the cap is a
  *  layout constant, resolved at layout time like the ratio, so it costs no
  *  reflow either. */
-export function ImageCard({ profile }: { profile: EntityProfile }) {
-  const image = profile.image;
+export function ImageCard({
+  profile,
+  image: only,
+  title = "Image",
+  onOpen,
+}: {
+  profile?: EntityProfile;
+  /** Render THIS image rather than the profile's leading one — the multi-image
+   *  case, where the record draws one card per image. */
+  image?: EntityImage;
+  title?: string;
+  /** Open it full size. Without a handler the picture is not a button, because
+   *  a control that does nothing is worse than none. */
+  onOpen?: (image: EntityImage) => void;
+}) {
+  const image = only ?? profile?.image;
   if (!image) return null;
 
+  const frame = (
+    <div
+      className="w-full overflow-hidden rounded bg-vellum"
+      style={{
+        aspectRatio: `${image.width} / ${image.height}`,
+        maxHeight: "22rem",
+        border: "1px solid var(--border-primary)",
+      }}
+    >
+      <EntityThumbnail
+        kind="image"
+        image={image}
+        size="lg"
+        fit="contain"
+        className="w-full h-full"
+      />
+    </div>
+  );
+
   return (
-    <MetadataCard title="Image">
-      <div
-        className="w-full overflow-hidden rounded bg-vellum"
-        style={{
-          aspectRatio: `${image.width} / ${image.height}`,
-          maxHeight: "22rem",
-          border: "1px solid var(--border-primary)",
-        }}
-      >
-        <EntityThumbnail
-          kind="image"
-          image={image}
-          size="lg"
-          fit="contain"
-          className="w-full h-full"
-        />
-      </div>
+    <MetadataCard title={title}>
+      {onOpen ? (
+        /* The card shows which picture this is; full size is the looking. The
+           button wraps the FRAME, not the image, so the hit area is the box
+           that was already reserved and nothing moves on hover. */
+        <button
+          type="button"
+          onClick={() => onOpen(image)}
+          aria-label={`View ${image.filename ?? image.alt} full size`}
+          title="View full size"
+          className="block w-full cursor-zoom-in rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
+        >
+          {frame}
+        </button>
+      ) : (
+        frame
+      )}
       {/* Two facts, so two columns at every width — no container query to serve,
           and the file's own name and size are one tab away in Files rather than
           repeated here under a second label. */}
       <div className="grid grid-cols-2 gap-x-6 gap-y-2 pt-2">
         <Property label="Dimensions" value={`${image.width} × ${image.height} px`} ltr />
         <Property label="Orientation" value={image.aspect} />
+        {image.filename && (
+          <div className="col-span-2">
+            <Property label="File" value={image.filename} ltr />
+          </div>
+        )}
       </div>
     </MetadataCard>
   );
