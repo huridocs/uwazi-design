@@ -409,10 +409,28 @@ export const EntityCard = memo(function EntityCard({
           resolves nothing (Instrumento): the row was mounted regardless and
           drew a visible gap between title and footer. */}
       {showMetadata && metadataTrack && (
-        <div className="relative min-w-0 space-y-1.5">
+        /* READABILITY, not decoration. Seven label/value pairs at nearly equal
+           weight, evenly spaced, read as one flat ladder with nothing to land
+           on — which is what a card grew into once the ceiling came off.
+
+           Two changes, and between them the values become the thing you scan.
+           The LABEL takes the record's own field-label recipe (uppercase,
+           tracked, muted, semibold at 11px — `MetadataCard`'s head, verbatim),
+           so it reads as a caption rather than as a second value; it is
+           smaller-looking than the sentence-case grey it replaces despite the
+           same size, because small caps at this scale sit lower than lowercase
+           with ascenders. And the pairs get AIR between them (`space-y-2`)
+           while label and value stay locked together (`leading-tight`, no gap),
+           so the eye chunks by pair instead of reading fourteen equal lines.
+
+           It also makes the card and the record say a field name the same way,
+           which they did not before. */
+        <div className="relative min-w-0 space-y-2">
           {fields.map((f) => (
             <div key={f.id} className="min-w-0">
-              <span className="block text-meta text-ink-tertiary leading-tight">{f.label}</span>
+              <span className="block text-meta font-semibold uppercase tracking-wider text-ink-tertiary leading-tight">
+                {f.label}
+              </span>
               {/* Exactly ONE line per field, always. `truncate` rather than
                   `line-clamp-1` because the old `block line-clamp-1` pair fought
                   over `display` (block won) and the clamp silently never
