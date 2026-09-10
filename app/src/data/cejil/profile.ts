@@ -11,6 +11,7 @@ import type { FileEntry, DocumentGroup } from "../files";
 import type { Reference } from "../references";
 import type { CejilEntity, CejilFile } from "./types";
 import { cejilTemplates } from "./templates";
+import { cejilRelationTypes } from "./relationTypes";
 import { chains, type ChainGraph, type ProvenanceStep } from "../../utils/chainTraversal";
 import { registerInheritanceGraph } from "../../utils/inheritance";
 import { cejilChainGraph, CEJIL_PERPETRATOR_CHAIN } from "./graph";
@@ -237,6 +238,35 @@ export function cejilDocBearingIds(): Set<string> {
   return _docBearing;
 }
 
+
+/** Template property names that point at a relation TYPE, per template.
+ *
+ *  The record groups relationships by the type name the GRAPH carries, while a
+ *  Library card addresses a property by the template's own name for it. This is
+ *  the bridge: a group emitted below says which property names it covers, and
+ *  the record's deep-focus query matches any of them. Several properties can
+ *  share one relation type — they land on one group, which is the truth.
+ *  Built once, keyed `${templateId}::${typeName}`. */
+let aliasIndex: Map<string, string[]> | null = null;
+function propNamesForRelType(templateId: string, typeName: string): string[] | undefined {
+  if (!aliasIndex) {
+    const nameOf = new Map(cejilRelationTypes.map((r) => [r._id, r.name]));
+    aliasIndex = new Map();
+    for (const t of cejilTemplates) {
+      for (const p of t.properties || []) {
+        if (p.type !== "relationship" || !p.relationType) continue;
+        const n = nameOf.get(p.relationType);
+        if (!n) continue;
+        const k = `${t._id}::${n}`;
+        const list = aliasIndex.get(k);
+        if (list) list.push(p.name);
+        else aliasIndex.set(k, [p.name]);
+      }
+    }
+  }
+  return aliasIndex.get(`${templateId}::${typeName}`);
+}
+
 /** Cap connected entities rendered per relationship card — a País hub has
  *  thousands of edges; show a workable slice rather than the whole fan-out. */
 const REL_CONN_CAP = 15;
@@ -331,6 +361,7 @@ function cejilRelationshipFields(sharedId: string, template: string): Relationsh
       const { judges, provenance } = signing;
       out.push({
         id: `cejil-firmantes-${sharedId}`,
+        keyAliases: propNamesForRelType(template, "Firmantes"),
         label: "Jueces firmantes",
         type: "relationship",
         relationType: "Firmantes",
@@ -366,6 +397,7 @@ function cejilRelationshipFields(sharedId: string, template: string): Relationsh
   for (const [typeName, g] of byType) {
     out.push({
       id: `cejil-rel-${sharedId}-${typeName}`,
+      keyAliases: propNamesForRelType(template, typeName),
       label: typeName,
       type: "relationship",
       relationType: typeName,

@@ -27,7 +27,14 @@ import { deriveTemplateStructure } from "../../utils/templateStructure";
  *  card, which is the same field either way. */
 function MetadataFieldRow({ item, className = "" }: { item: MetadataItem; className?: string }) {
   return (
-    <div data-field-key={item.id} className={`space-y-1 min-w-0 ${className}`}>
+    <div
+      data-field-key={item.id}
+      /* Space-separated, matched with `~=`: a relationship field is grouped by
+         relation TYPE here and addressed by template PROPERTY from a card, and
+         one field can answer to several property names. */
+      data-field-keys={item.keyAliases?.join(" ")}
+      className={`space-y-1 min-w-0 ${className}`}
+    >
       <span className="block text-meta font-medium text-ink-muted uppercase tracking-wide">
         {item.label}
       </span>
@@ -88,8 +95,9 @@ export function MetadataRecord({
   const rootRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!focusField || focusField.entityId !== profile.id) return;
+    const k = CSS.escape(focusField.fieldKey);
     const el = rootRef.current?.querySelector<HTMLElement>(
-      `[data-field-key="${CSS.escape(focusField.fieldKey)}"]`,
+      `[data-field-key="${k}"], [data-field-keys~="${k}"]`,
     );
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });

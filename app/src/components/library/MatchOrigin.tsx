@@ -7,7 +7,7 @@ import type { Entity } from "../../data/entities";
 import { languageAtom } from "../../atoms/language";
 import { dataSourceAtom } from "../../atoms/dataSource";
 import {
-  focusMetadataFieldAtom,
+  requestMetadataFocusAtom,
   resultsActivePageAtom,
 } from "../../atoms/library";
 import { scrollToPageAtom } from "../../atoms/selection";
@@ -81,7 +81,7 @@ export const MatchOrigin = memo(function MatchOrigin({
 }: Props) {
   const language = useAtomValue(languageAtom);
   const source = useAtomValue(dataSourceAtom);
-  const setFocusField = useSetAtom(focusMetadataFieldAtom);
+  const setFocusField = useSetAtom(requestMetadataFocusAtom);
   const setScrollToPage = useSetAtom(scrollToPageAtom);
   const setResultsActivePage = useSetAtom(resultsActivePageAtom);
   const q = query.trim();

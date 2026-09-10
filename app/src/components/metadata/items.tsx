@@ -24,6 +24,9 @@ export interface MetadataItem {
   kind: FieldKind;
   /** A paragraph: it gets its own titled card, not a value cell. */
   long: boolean;
+  /** Extra keys this item answers to for deep focus — see
+   *  `RelationshipMetadataField.keyAliases`. */
+  keyAliases?: string[];
   /** The value as plain text, when there is one a metadata field could be
    *  filled with. While click-to-fill is armed the row's value becomes the
    *  button that answers it — the value a user is looking for is as often
@@ -165,6 +168,7 @@ export function connectionItem(field: RelationshipMetadataField): MetadataItem {
     // value is a set of entities, and it wraps.
     kind: "chips",
     long: false,
+    keyAliases: field.keyAliases,
     content: <ConnectionPills field={field} />,
   };
 }

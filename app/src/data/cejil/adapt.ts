@@ -4,6 +4,7 @@ import type { CardField, Entity } from "../entities";
 import type { CejilEntity } from "./types";
 import type { LatLng } from "../geo";
 import { cejilTemplates } from "./templates";
+import { cejilRelationTypes } from "./relationTypes";
 import { cejilDocBearingIds } from "./profile";
 import { cejilCorpus, cejilLoaded, cejilRelsByEntity } from "./load";
 import { kindOfUwaziType } from "../../utils/propertyKind";
@@ -12,7 +13,15 @@ import { kindOfUwaziType } from "../../utils/propertyKind";
 const propsByTemplate = new Map(
   cejilTemplates.map((t) => [
     t._id,
-    [...(t.commonProperties || []), ...t.properties].map((p) => ({ name: p.name, label: p.label, type: p.type })),
+    [...(t.commonProperties || []), ...t.properties].map((p) => ({
+      name: p.name,
+      label: p.label,
+      type: p.type,
+      // Carried for one question only: which relation type a relationship
+      // property points at, so the card can tell whether the record has a
+      // group for it (see `relPropResolves`).
+      relationType: (p as { relationType?: string }).relationType,
+    })),
   ]),
 );
 
@@ -82,8 +91,33 @@ function rangeLabel(v: unknown): string {
   return from ? `${from}\u2013` : to ? `\u2013${to}` : "";
 }
 
+
+/** The relation type NAME behind a template's relationship property. */
+const relTypeName = new Map(cejilRelationTypes.map((r) => [r._id, r.name]));
+
+/** Whether a relationship property has a field to land on in the RECORD.
+ *
+ *  The record builds its relationship groups from the graph — one per relation
+ *  type the entity actually has edges of — so a property whose type has no edges
+ *  here (`mecanismo` is stored in metadata and has none) has nothing to focus.
+ *  Rather than offer a click that does nothing, the card gets no key for it and
+ *  the value renders as plain text. Measured: 3,881 of 5,760 relationship card
+ *  fields resolve, and the other 1,879 look exactly as they did before. */
+function relPropResolves(sharedId: string, relationType: string | undefined): boolean {
+  const name = relationType ? relTypeName.get(relationType) : undefined;
+  if (!name) return false;
+  for (const r of cejilRelsByEntity().get(sharedId) ?? []) {
+    if ((r.typeName || "Relacionado") === name) return true;
+  }
+  return false;
+}
+
 /** First few non-empty metadata fields (label + display value), in template order. */
-function fieldsOf(e: { template: string; metadata?: Record<string, { value?: unknown; label?: unknown }[]> }) {
+function fieldsOf(e: {
+  sharedId?: string;
+  template: string;
+  metadata?: Record<string, { value?: unknown; label?: unknown }[]>;
+}) {
   const props = propsByTemplate.get(e.template) || [];
   const out: CardField[] = [];
   for (const p of props) {
@@ -99,8 +133,10 @@ function fieldsOf(e: { template: string; metadata?: Record<string, { value?: unk
        invent `${label}-${i}`, which bears no relation to the `data-field-key`
        the record scrolls to. `p.name` is the template's own property name and
        is what `profile.ts` keys the record on, so the two ends now match. */
+    const resolves =
+      p.type !== "relationship" || relPropResolves(e.sharedId ?? "", p.relationType);
     out.push({
-      key: p.name,
+      key: resolves ? p.name : undefined,
       kind: kindOfUwaziType(p.type),
       label: p.label,
       value,

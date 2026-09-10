@@ -51,7 +51,7 @@ import {
   librarySelectedEntityIdAtom,
   librarySelectedClusterAtom,
   resultsActivePageAtom,
-  focusMetadataFieldAtom,
+  requestMetadataFocusAtom,
   clearLibraryFacetsAtom,
   matchTypeFiltersAtom,
   ALL_MATCH_TYPES,
@@ -235,7 +235,7 @@ export function LibraryView() {
   const focusForPreview = useSetAtom(focusEntityForPreviewAtom);
   const setScrollToPage = useSetAtom(scrollToPageAtom);
   const setResultsActivePage = useSetAtom(resultsActivePageAtom);
-  const setFocusMetadataField = useSetAtom(focusMetadataFieldAtom);
+  const setFocusMetadataField = useSetAtom(requestMetadataFocusAtom);
   const clearFacets = useSetAtom(clearLibraryFacetsAtom);
   const [matchTypes, setMatchTypes] = useAtom(matchTypeFiltersAtom);
   const setAppView = useSetAtom(appViewAtom);
@@ -913,6 +913,7 @@ export function LibraryView() {
                 connections={countByEntity.get(e.id) ?? 0}
                 onSelect={handleSelect}
                 onView={openEntity}
+                onFocusProperty={handleFocusProperty}
               />
             ))}
           </div>

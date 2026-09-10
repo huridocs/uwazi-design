@@ -184,8 +184,27 @@ export const matchTypeFiltersAtom = atom<MatchTypeFilters>(ALL_MATCH_TYPES);
 export interface FocusMetadataField {
   entityId: string;
   fieldKey: string;
+  /** Bumped on every request, and the reason this is not a plain object.
+   *
+   *  The record CLEARS the request once it has scrolled and flashed, which is
+   *  right — a focus is an event, not a state. But clicking the same property
+   *  twice writes an equal-looking value, and without something that differs
+   *  the second write is indistinguishable from the first for any consumer that
+   *  compares. The nonce is the `pageJumpAtom` / `fillRequestAtom` idiom the
+   *  app already uses wherever an atom carries a request rather than a value. */
+  nonce: number;
 }
 export const focusMetadataFieldAtom = atom<FocusMetadataField | null>(null);
+
+/** Ask the record to scroll to a field and flash it. THE way to raise a focus
+ *  request — it stamps the nonce, so no caller has to remember to. */
+let focusNonce = 0;
+export const requestMetadataFocusAtom = atom(
+  null,
+  (_get, set, req: { entityId: string; fieldKey: string }) => {
+    set(focusMetadataFieldAtom, { ...req, nonce: ++focusNonce });
+  },
+);
 
 /** A map cluster opened in the drawer — the entities located at one place. */
 export interface LibraryCluster {

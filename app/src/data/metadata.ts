@@ -37,6 +37,15 @@ export interface MetadataField {
 export type InheritReduce = "list" | "distinct" | "count" | "min" | "max" | "first";
 
 export interface RelationshipMetadataField {
+  /** OTHER names this same field answers to, for deep focus.
+   *
+   *  A card addresses a property by the TEMPLATE's property name; this record
+   *  groups relationships by RELATION TYPE, taken from the graph, so one field
+   *  here can be what several template properties point at and its `id` is
+   *  neither of their names. Rather than have the card guess this id, the field
+   *  says which property names it covers and the record's focus query matches
+   *  any of them. One field, several names. */
+  keyAliases?: string[];
   id: string;
   label: string;
   type: "relationship";

@@ -6,7 +6,7 @@ import { activeDrawerTabAtom, docSearchQueryAtom } from "../../atoms/references"
 import { languageAtom } from "../../atoms/language";
 import { dataSourceAtom } from "../../atoms/dataSource";
 import { scrollToPageAtom } from "../../atoms/selection";
-import { resultsActivePageAtom, focusMetadataFieldAtom } from "../../atoms/library";
+import { resultsActivePageAtom, requestMetadataFocusAtom } from "../../atoms/library";
 import { getEntity } from "../../data/entities";
 import { buildSnippetsFor } from "../../utils/librarySnippets";
 import { HighlightedText } from "../shared/HighlightedText";
@@ -32,14 +32,14 @@ function Centered({ children }: { children: ReactNode }) {
  *  page hit scrolls the viewer and records `resultsActivePageAtom`, so the row
  *  stays lit exactly as it does in the Library. Property hits group above the
  *  document hits and deep-focus the Metadata tab, reusing
- *  `focusMetadataFieldAtom`. */
+ *  `requestMetadataFocusAtom`. */
 export function DocumentSearchBody() {
   const focusedId = useAtomValue(focusedEntityIdAtom);
   const language = useAtomValue(languageAtom);
   const source = useAtomValue(dataSourceAtom);
   const setScrollToPage = useSetAtom(scrollToPageAtom);
   const setActivePage = useSetAtom(resultsActivePageAtom);
-  const setFocusField = useSetAtom(focusMetadataFieldAtom);
+  const setFocusField = useSetAtom(requestMetadataFocusAtom);
   const setDrawerTab = useSetAtom(activeDrawerTabAtom);
 
   const [query, setQuery] = useAtom(docSearchQueryAtom);

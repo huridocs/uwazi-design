@@ -7,7 +7,8 @@ import { HighlightedText } from "../shared/HighlightedText";
 import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
 import { EntityThumbnail, QuietMark } from "./EntityThumbnail";
 import { getEntityType } from "../../data/entities";
-import { entityScalarFields } from "../../utils/entityFields";
+import { entityScalarFields, type EntityScalarField } from "../../utils/entityFields";
+import type { PropertyKind } from "../../utils/propertyKind";
 import type { Entity } from "../../data/entities";
 import {
   libraryCardInfoAtom,
@@ -50,6 +51,21 @@ const CARD_FLOOR: Record<ThumbSize, string> = {
  *  against the row and the old m/l pair is the whole useful range there. */
 const CHIP_BOX: Record<ThumbSize, string> = { m: "w-9 h-9", l: "w-12 h-12" };
 
+/** The kinds whose value is a THING you would open rather than a sentence you
+ *  have already read: a place, a connected entity, a table, a file.
+ *
+ *  This is the whole restraint in Part B of the proposal, and it is about tab
+ *  stops. Every trigger is one, times every card on screen; making all three
+ *  rows clickable turns a five-stop grid row into a fifteen-stop one, which is
+ *  a worse library to move through than the one that has no triggers at all. */
+const INSPECTABLE = new Set<PropertyKind>(["place", "relationship", "table", "media", "files"]);
+
+/** A field is a trigger only when it is an inspectable kind AND carries the
+ *  template key the record is keyed on. No key, no honest target. */
+function inspectable(f: EntityScalarField): boolean {
+  return !!f.key && !!f.kind && INSPECTABLE.has(f.kind);
+}
+
 /** How many of the parent grid's row tracks one card claims — one per row it
  *  draws (slot? · title · metadata? · footer).
  *
@@ -75,6 +91,7 @@ export const EntityCard = memo(function EntityCard({
   connections = 0,
   onSelect,
   onView,
+  onFocusProperty,
 }: {
   entity: Entity;
   layout: LibraryViewMode;
@@ -89,6 +106,10 @@ export const EntityCard = memo(function EntityCard({
   connections?: number;
   onSelect: (id: string) => void;
   onView: (id: string) => void;
+  /** Open the entity in the drawer WITH one property focused — the record
+   *  scrolls to it and flashes it. Optional: the layouts that don't offer a
+   *  property trigger simply don't pass it. */
+  onFocusProperty?: (id: string, fieldKey: string) => void;
 }) {
   const language = useAtomValue(languageAtom);
   const info = useAtomValue(libraryCardInfoAtom);
@@ -308,11 +329,36 @@ export const EntityCard = memo(function EntityCard({
                   "+N more" is a shrink-0 sibling, so it survives the ellipsis
                   instead of being cut off inside it. */}
               <span className="flex items-baseline gap-1 min-w-0 text-xs text-ink leading-snug">
-                <span className="truncate" title={f.value}>
-                  <ThesaurusValueLabel value={f.value}>
-                    <HighlightedText text={f.value} query={query} />
-                  </ThesaurusValueLabel>
-                </span>
+                {inspectable(f) && onFocusProperty ? (
+                  /* A property whose value is a THING TO INSPECT gets a real
+                     button, above the card's stretched primary action and
+                     stopping propagation — the pattern every nested card
+                     control uses. Deliberately not every property: each trigger
+                     is a tab stop, and a plain sentence has already said
+                     everything it has. */
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onFocusProperty(entity.id, f.key!);
+                    }}
+                    aria-label={`Open ${f.label} on ${entity.title}`}
+                    className="min-w-0 text-start truncate rounded-sm cursor-pointer
+                      underline decoration-transparent hover:decoration-current underline-offset-2
+                      transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
+                    title={f.value}
+                  >
+                    <ThesaurusValueLabel value={f.value}>
+                      <HighlightedText text={f.value} query={query} />
+                    </ThesaurusValueLabel>
+                  </button>
+                ) : (
+                  <span className="truncate" title={f.value}>
+                    <ThesaurusValueLabel value={f.value}>
+                      <HighlightedText text={f.value} query={query} />
+                    </ThesaurusValueLabel>
+                  </span>
+                )}
                 {!!f.more && (
                   <span className="shrink-0 text-meta text-ink-tertiary">+{f.more} more</span>
                 )}
