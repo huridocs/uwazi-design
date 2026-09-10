@@ -36,7 +36,7 @@ const SKIP_TYPES = new Set(["preview", "geolocation", "image", "link", "media", 
 function formatVals(
   type: string,
   vals: { value?: unknown; label?: unknown }[],
-): { value: string; more: number } {
+): { value: string; more: number; values?: string[] } {
   const none = { value: "", more: 0 };
   if (SKIP_TYPES.has(type)) return none;
   if (type === "date" || type === "datasection") {
@@ -65,7 +65,8 @@ function formatVals(
     return spans.length ? { value: spans[0], more: spans.length - 1 } : none;
   }
   const labels = vals.map((v) => v?.label).filter((l): l is string => typeof l === "string" && !!l);
-  if (labels.length) return { value: labels[0], more: labels.length - 1 };
+  if (labels.length)
+    return { value: labels[0], more: labels.length - 1, values: labels.slice(0, 4) };
   const v = vals[0]?.value;
   if (typeof v === "string" && v.trim()) {
     const s = v.replace(/\s+/g, " ").trim();
@@ -124,7 +125,7 @@ function fieldsOf(e: {
     if (p.name === "title") continue;
     const vals = e.metadata?.[p.name];
     if (!vals || !vals.length) continue;
-    const { value, more } = formatVals(p.type, vals);
+    const { value, more, values } = formatVals(p.type, vals);
     if (!value) continue;
     /* The KEY and the KIND travel with the value now.
        They were both in hand here and dropped one line later, which is why a
@@ -140,6 +141,7 @@ function fieldsOf(e: {
       kind: kindOfUwaziType(p.type),
       label: p.label,
       value,
+      ...(values && values.length > 1 ? { values } : {}),
       ...(more > 0 ? { more } : {}),
     });
     if (out.length >= 3) break;

@@ -19,6 +19,8 @@ export interface EntityScalarField {
   kind?: PropertyKind;
   label: string;
   value: string;
+  /** The first few values of a multi-valued property — see `CardField`. */
+  values?: string[];
   more?: number;
 }
 
@@ -46,6 +48,7 @@ export function entityScalarFields(entity: Entity, language: Language): EntitySc
       kind: f.kind,
       label: f.label,
       value: f.value,
+      values: f.values,
       more: f.more,
     }));
   }

@@ -6,6 +6,7 @@ import { EntityTypeTag } from "../shared/EntityTypeTag";
 import { HighlightedText } from "../shared/HighlightedText";
 import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
 import { EntityThumbnail, QuietMark } from "./EntityThumbnail";
+import { CardValue, ownsItsRemainder } from "./CardValue";
 import { getEntityType } from "../../data/entities";
 import { entityScalarFields, type EntityScalarField } from "../../utils/entityFields";
 import type { PropertyKind } from "../../utils/propertyKind";
@@ -214,11 +215,7 @@ export const EntityCard = memo(function EntityCard({
                 metaFields.map((f) => (
                   <Fragment key={f.id}>
                     <span className="shrink-0 text-ink-muted">·</span>
-                    <span className="truncate">
-                      <ThesaurusValueLabel value={f.value}>
-                        <HighlightedText text={f.value} query={query} />
-                      </ThesaurusValueLabel>
-                    </span>
+                    <CardValue field={f} query={query} compact />
                   </Fragment>
                 ))}
             </div>
@@ -343,23 +340,16 @@ export const EntityCard = memo(function EntityCard({
                       onFocusProperty(entity.id, f.key!);
                     }}
                     aria-label={`Open ${f.label} on ${entity.title}`}
-                    className="min-w-0 text-start truncate rounded-sm cursor-pointer
+                    className="flex min-w-0 text-start rounded-sm cursor-pointer
                       underline decoration-transparent hover:decoration-current underline-offset-2
                       transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
-                    title={f.value}
                   >
-                    <ThesaurusValueLabel value={f.value}>
-                      <HighlightedText text={f.value} query={query} />
-                    </ThesaurusValueLabel>
+                    <CardValue field={f} query={query} />
                   </button>
                 ) : (
-                  <span className="truncate" title={f.value}>
-                    <ThesaurusValueLabel value={f.value}>
-                      <HighlightedText text={f.value} query={query} />
-                    </ThesaurusValueLabel>
-                  </span>
+                  <CardValue field={f} query={query} />
                 )}
-                {!!f.more && (
+                {!!f.more && !ownsItsRemainder(f) && (
                   <span className="shrink-0 text-meta text-ink-tertiary">+{f.more} more</span>
                 )}
               </span>
