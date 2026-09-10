@@ -86,8 +86,32 @@ export interface EntitySnippets {
   fullTextTotal: number;
 }
 
-/** Words of context on each side of a hit — ~12-word windows. */
+/** Words of context on each side of a hit — the FLOOR, and what a narrow column
+ *  still gets. */
 const CONTEXT_WORDS = 6;
+
+/** Words of context for a column of `px` that can spend `lines` on the excerpt.
+ *
+ *  Six was a constant, and a constant is why a wide pane bought nothing: eight
+ *  results matching the same phrase truncated at the same word and became
+ *  indistinguishable from one another. That — not the whitespace — is the cost.
+ *  More context per side is what makes two hits on the same sentence in
+ *  different documents diverge.
+ *
+ *  `CH` is the average advance of the row's type (14px system sans, ~7.2px per
+ *  character measured against the rendered rows). The match itself is allowed
+ *  ~12 characters before the two flanks are sized. The ceiling is not a
+ *  performance guard — the window is a slice, and its cost does not scale with
+ *  its width — it is an editorial one: past ~40 words a side the "excerpt" is a
+ *  paragraph, and a ranked list of paragraphs is not a ranked list. */
+const CH = 7.2;
+export function contextWordsFor(px: number, lines = 1): number {
+  if (!px) return CONTEXT_WORDS;
+  const chars = (px / CH) * lines;
+  const perSide = (chars - 12) / 2;
+  // ~6 characters a word, space included.
+  return Math.max(CONTEXT_WORDS, Math.min(40, Math.round(perSide / 6)));
+}
 /** How many full-text excerpts a card shows before "Show all" — a cap on what's
  *  RENDERED, never on what's counted (`fullTextTotal` always sees every page). */
 export const MAX_FULLTEXT = 5;
@@ -487,7 +511,10 @@ export function buildSnippetsFor(
   q: string,
   language: Language,
   source: DataSource,
-  { maxFullText = MAX_FULLTEXT }: { maxFullText?: number } = {},
+  {
+    maxFullText = MAX_FULLTEXT,
+    contextWords = CONTEXT_WORDS,
+  }: { maxFullText?: number; contextWords?: number } = {},
 ): EntitySnippets {
   const terms = highlightTerms(q); // already folded (lowercase + de-accented)
   const metadata: MetadataSnippet[] = [];
@@ -501,7 +528,7 @@ export function buildSnippetsFor(
   // twice — and not again on the next keystroke.
   for (const { field, fieldKey, text, folded } of foldedFields(entity, language)) {
     if (!terms.some((t) => folded.includes(t))) continue;
-    const excerpt = excerptAroundTerms(text, terms);
+    const excerpt = excerptAroundTerms(text, terms, contextWords);
     if (excerpt) metadata.push({ field, fieldKey, texts: [excerpt] });
   }
 
@@ -519,7 +546,7 @@ export function buildSnippetsFor(
     if (hits === 0) continue;
     fullTextTotal++; // counted whether or not it gets excerpted below
     if (fullText.length >= maxFullText) continue;
-    const excerpt = excerptAroundTerms(pages[i], terms, CONTEXT_WORDS, pageFoldWithMap(pages, i));
+    const excerpt = excerptAroundTerms(pages[i], terms, contextWords, pageFoldWithMap(pages, i));
     if (excerpt) fullText.push({ page: paged ? i + 1 : null, text: excerpt, hits });
   }
 
