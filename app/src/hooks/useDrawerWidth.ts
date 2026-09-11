@@ -9,6 +9,21 @@ import {
 import { useAtom } from "jotai";
 import { drawerWidthAtom } from "../atoms/session";
 
+/** THE MINIMUM, for every host that has a drawer.
+ *
+ *  It was 360 in the Library and 460 in the other four, and that asymmetry is
+ *  what "the Library one works and this one does not" was about: only the
+ *  Library could be dragged into the range where its strips fold. With the width
+ *  shared across hosts, two minimums also meant dragging one host narrow and
+ *  finding another had clamped it back.
+ *
+ *  460 was not arbitrary — it was roughly what kept the entity drawer's
+ *  five-tab strip from overflowing. That strip folds now (`DrawerTabs`), which
+ *  is what makes 360 safe. The other width-sensitive parts already had designed
+ *  narrow forms a 460 drawer was below: connection tables stack below 28.5rem,
+ *  and the metadata masonry is single-column below 44rem. */
+export const DRAWER_MIN_WIDTH = 360;
+
 /** The right drawer's width as ONE host resolves it: the remembered value
  *  (`drawerWidthAtom`, shared by every host), else the host's default, clamped
  *  into [the host's minimum, half the host's container].

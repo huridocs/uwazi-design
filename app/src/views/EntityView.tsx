@@ -22,6 +22,7 @@ import { MetadataView } from "./MetadataView";
 import { RelationshipsView } from "./RelationshipsView";
 import { t } from "../utils/i18n";
 import { useDirtyGuard } from "../hooks/useDirtyGuard";
+import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
 
 export function EntityView() {
   const focusedId = useAtomValue(focusedEntityIdAtom);
@@ -115,7 +116,7 @@ export function EntityView() {
         mobileLeft={(menuTrigger) => renderLeft(menuTrigger)}
         right={<ReferencePanel />}
         defaultRightWidth={560}
-        minRightWidth={460}
+        minRightWidth={DRAWER_MIN_WIDTH}
         mobileSections={[
           {
             id: "connections",
