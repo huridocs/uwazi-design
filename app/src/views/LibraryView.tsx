@@ -86,6 +86,7 @@ import { EntityTypeChip } from "../components/shared/EntityTypeChip";
 import { HighlightedText } from "../components/shared/HighlightedText";
 import { Select } from "../components/shared/Select";
 import { ViewSwitcher } from "../components/library/ViewSwitcher";
+import { DRAWER_MIN_WIDTH } from "../components/layout/SplitView";
 
 const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -1006,7 +1007,7 @@ export function LibraryView() {
       mobileLeft={(menuTrigger) => renderLeft(menuTrigger)}
       right={drawer}
       defaultRightWidth={460}
-      minRightWidth={360}
+      minRightWidth={DRAWER_MIN_WIDTH}
       mobileSections={[
         {
           id: "filters",

@@ -16,6 +16,7 @@ import {
 import { LANGUAGES, languageAtom, type Language } from "../atoms/language";
 import { ConfirmDialog } from "../components/shared/ConfirmDialog";
 import { SelectControls } from "../components/shared/SelectControls";
+import { DRAWER_MIN_WIDTH } from "../components/layout/SplitView";
 
 interface FilesViewProps {
   tabs: { id: string; label: string; count?: number }[];
@@ -209,7 +210,7 @@ export function FilesView({ tabs, activeTab, onTabChange, onBack }: FilesViewPro
           />
         }
         defaultRightWidth={560}
-        minRightWidth={460}
+        minRightWidth={DRAWER_MIN_WIDTH}
       />
 
       <AddFileModal />

@@ -1,5 +1,16 @@
 import { ReactNode, useState, useCallback, useRef, useEffect } from "react";
 
+/** THE MINIMUM, for every host with a drawer.
+ *
+ *  It was 360 in the Library and 460 in the entity, Metadata, Relationships and
+ *  Files views, so only the Library could be dragged into the range where its
+ *  tab strips fold and it alone appeared to respond. 460 was roughly what kept
+ *  the entity drawer's five-tab strip from overflowing; that strip folds now
+ *  (`DrawerTabs`), which is what makes 360 safe. Connection tables stack below
+ *  28.5rem and the metadata masonry is single-column below 44rem — a 460 drawer
+ *  was already below both. */
+export const DRAWER_MIN_WIDTH = 360;
+
 interface SplitViewProps {
   left: ReactNode;
   right: ReactNode;

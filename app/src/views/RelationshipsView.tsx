@@ -18,6 +18,7 @@ import {
 import { EntityOverlay } from "../components/relationships/EntityOverlay";
 import { RelationshipsPanelBody } from "../components/relationships/RelationshipsPanelBody";
 import { RelationshipsActionBar } from "../components/relationships/RelationshipsActionBar";
+import { DRAWER_MIN_WIDTH } from "../components/layout/SplitView";
 
 interface Props {
   tabs: { id: string; label: string; count?: number }[];
@@ -107,7 +108,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
         </div>
       }
       defaultRightWidth={560}
-      minRightWidth={460}
+      minRightWidth={DRAWER_MIN_WIDTH}
     />
     </>
   );

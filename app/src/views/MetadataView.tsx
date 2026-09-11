@@ -53,6 +53,7 @@ import { useNotify } from "../hooks/useNotify";
 import { useRegisterDirtyForm } from "../hooks/useDirtyGuard";
 import { ShareEntityModal } from "../components/share/ShareEntityModal";
 import { fromDateInputValue, toDateInputValue } from "../utils/dateValue";
+import { DRAWER_MIN_WIDTH } from "../components/layout/SplitView";
 
 interface MetadataViewProps {
   tabs: { id: string; label: string; count?: number }[];
@@ -103,7 +104,7 @@ export function MetadataView({ tabs, activeTab, onTabChange, onBack }: MetadataV
       mobileLeft={(menuTrigger) => renderLeft(menuTrigger)}
       right={<MetadataDrawer />}
       defaultRightWidth={560}
-      minRightWidth={460}
+      minRightWidth={DRAWER_MIN_WIDTH}
       mobileSections={[
         { id: "details", label: "Details", content: <MetadataDrawer /> },
       ]}
