@@ -35,6 +35,16 @@ export function SplitView({
     [],
   );
 
+  /* The drawer sits at the inline END: on the right in LTR, on the left in RTL,
+     where the flex row mirrors. Moving the divider toward the drawer's side
+     narrows it, so the sign of a leftward move flips with the direction. Read
+     from the computed style at the moment of the gesture, because the language
+     (and with it `dir`) can change while this view stays mounted. */
+  const leftwardGrows = useCallback(
+    () => !containerRef.current || getComputedStyle(containerRef.current).direction !== "rtl",
+    [],
+  );
+
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
@@ -42,9 +52,10 @@ export function SplitView({
 
       const startX = e.clientX;
       const startWidth = rightWidth;
+      const sign = leftwardGrows() ? 1 : -1;
 
       const handleMouseMove = (e: MouseEvent) => {
-        const delta = startX - e.clientX;
+        const delta = sign * (startX - e.clientX);
         const newWidth = Math.max(
           minRightWidth,
           Math.min(maxRightWidth(), startWidth + delta)
@@ -61,7 +72,7 @@ export function SplitView({
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
     },
-    [rightWidth, minRightWidth, maxRightWidth]
+    [rightWidth, minRightWidth, maxRightWidth, leftwardGrows]
   );
 
   // Shrinking the window must pull the drawer back so it never exceeds half.
