@@ -28,8 +28,9 @@ import { useFocusTrap } from "../../hooks/useFocusTrap";
 /** The drawer's section headers stick to the top of the scroller as their group
  *  passes under it, so they carry a ground of their own — the box, not the type,
  *  which is why it rides `SectionLabel`'s `className` rather than the shared
- *  primitive. */
-const STICKY = "sticky top-0 z-10 bg-warm px-4 pt-3 pb-1.5";
+ *  primitive. `bleed` spreads that ground to the panel edge and puts the text
+ *  back on the gutter. */
+const STICKY = "sticky top-0 z-10 bg-warm bleed pt-3 pb-1.5";
 
 const kindStyle: Record<
   NotificationKind,
@@ -150,20 +151,21 @@ export function NotificationsDrawer({ rtl = false }: { rtl?: boolean }) {
         role="dialog"
         aria-modal="true"
         aria-label="Notifications"
+        data-gutter-host
         className={`fixed top-0 bottom-0 ${side} z-[61] w-[23rem] max-w-[calc(100vw-2.5rem)]
-          bg-paper border-border shadow-xl flex flex-col beacon-spring
+          gutter-host-main bg-paper border-border shadow-xl flex flex-col beacon-spring
           transition-transform duration-300 ${open ? "translate-x-0" : closedTransform}`}
       >
-        {/* Header */}
-        <div className="shrink-0 border-b border-border">
-          <div className="flex items-center gap-2 px-4 h-14">
+        {/* Header — `bleed`, so its rule runs to the panel edge */}
+        <div className="shrink-0 bleed border-b border-border">
+          <div className="flex items-center gap-2 h-14">
             <h2 className="text-base font-semibold text-ink">Notifications</h2>
             {unread > 0 && (
               <span className="min-w-[18px] h-[18px] px-1.5 flex items-center justify-center rounded-full bg-carbon text-paper text-meta font-bold tabular-nums">
                 {unread}
               </span>
             )}
-            <div className="ml-auto flex items-center gap-0.5">
+            <div className="ms-auto flex items-center gap-0.5">
               {unread > 0 && (
                 <button
                   onClick={markAllRead}
@@ -176,26 +178,28 @@ export function NotificationsDrawer({ rtl = false }: { rtl?: boolean }) {
                 onClick={() => setOpen(false)}
                 className="flex items-center justify-center w-7 h-7 rounded-md text-ink-muted hover:bg-warm hover:text-ink-secondary transition-colors"
                 aria-label="Close"
+                data-gutter-align="box"
               >
                 <X size={18} />
               </button>
             </div>
           </div>
           {/* Filter */}
-          <div className="flex items-center gap-1 px-4 pb-2.5">
+          <div className="flex items-center gap-1 pb-2.5">
             <FilterPill active={filter === "all"} onClick={() => setFilter("all")} label="All" count={notifications.length} />
             <FilterPill active={filter === "unread"} onClick={() => setFilter("unread")} label="Unread" count={unread} />
           </div>
         </div>
 
         {/* Body — polite live region so task progress + new arrivals are
-            announced while the drawer is open. */}
-        <div aria-live="polite" className="flex-1 overflow-y-auto bg-warm">
+            announced while the drawer is open. A `bleed` scroll lane: warm ground
+            and scrollbar at the panel edge. */}
+        <div aria-live="polite" className="flex-1 overflow-y-auto bg-warm bleed">
           {/* Tasks */}
           {activities.length > 0 && (
             <section>
               <SectionLabel className={STICKY}>Tasks · {activities.length}</SectionLabel>
-              <div className="px-3 pb-3 space-y-2">
+              <div className="pb-3 space-y-2">
                 {activities.map((a) => (
                   <TaskCard key={a.id} a={a} onCancel={() => setActivities((p) => p.filter((x) => x.id !== a.id))} />
                 ))}
@@ -211,7 +215,7 @@ export function NotificationsDrawer({ rtl = false }: { rtl?: boolean }) {
               groups[b].length === 0 ? null : (
                 <section key={b}>
                   <SectionLabel className={STICKY}>{bucketLabel[b]}</SectionLabel>
-                  <div className="px-3 pb-3 space-y-2">
+                  <div className="pb-3 space-y-2">
                     {groups[b].map((n) => (
                       <NotifCard
                         key={n.id}
@@ -232,7 +236,7 @@ export function NotificationsDrawer({ rtl = false }: { rtl?: boolean }) {
         </div>
 
         {/* Footer */}
-        <div className="shrink-0 border-t border-border p-3">
+        <div className="shrink-0 bleed border-t border-border py-3">
           <button
             onClick={() => setNotifications([])}
             disabled={notifications.length === 0}
@@ -290,7 +294,7 @@ function TaskCard({ a, onCancel }: { a: Activity; onCancel: () => void }) {
           <X size={13} />
         </button>
       </div>
-      {a.detail && <div className="mt-0.5 ml-[1.375rem] text-meta text-ink-muted truncate">{a.detail}</div>}
+      {a.detail && <div className="mt-0.5 ms-[1.375rem] text-meta text-ink-muted truncate">{a.detail}</div>}
       <div className="mt-2 flex items-center gap-2">
         <div className="flex-1 h-1.5 rounded-full bg-vellum overflow-hidden">
           <div
@@ -351,12 +355,12 @@ function NotifCard({
           e.stopPropagation();
           onDismiss();
         }}
-        className="absolute top-2.5 right-2.5 flex items-center justify-center w-5 h-5 rounded text-ink-muted opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-ink/5 transition-opacity"
+        className="absolute top-2.5 end-2.5 flex items-center justify-center w-5 h-5 rounded text-ink-muted opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-ink/5 transition-opacity"
         aria-label="Dismiss"
       >
         <X size={13} />
       </button>
-      <div className="flex items-start gap-2.5 pr-5">
+      <div className="flex items-start gap-2.5 pe-5">
         <Icon size={17} className={`${color} shrink-0 mt-px`} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
@@ -388,7 +392,7 @@ function NotifCard({
           {/* Footer: actions + timestamp */}
           <div className="mt-1.5 flex items-center gap-2">
             <span className="text-meta text-ink-tertiary">{fmtTime(n.time, now)}</span>
-            <div className="ml-auto flex items-center gap-1">
+            <div className="ms-auto flex items-center gap-1">
               {n.kind === "error" && (
                 <button
                   onClick={(e) => {
