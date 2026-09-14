@@ -50,6 +50,10 @@ export function TreeBranch({
         type="button"
         onClick={toggle}
         aria-expanded={expanded}
+        /* The BOX sits on the gutter, not the chevron: the hover fill has to stay
+           inside the panel's edge, and the connector geometry below is measured
+           from this box. */
+        data-gutter-align="box"
         className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded text-left cursor-pointer hover:bg-warm/60 transition-colors"
       >
         <ChevronRight

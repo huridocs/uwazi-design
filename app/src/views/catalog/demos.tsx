@@ -67,15 +67,18 @@ export function SegmentedTabsDemo() {
 export function DrawerTabsDemo() {
   const [active, setActive] = useState("metadata");
   return (
-    <DrawerTabs
-      tabs={[
-        { id: "metadata", label: "Metadata" },
-        { id: "references", label: "References", count: 12 },
-        { id: "toc", label: "TOC" },
-      ]}
-      activeId={active}
-      onChange={setActive}
-    />
+    // The strip takes its side inset from its host, as in the app.
+    <div data-gutter-host className="gutter-host">
+      <DrawerTabs
+        tabs={[
+          { id: "metadata", label: "Metadata" },
+          { id: "references", label: "References", count: 12 },
+          { id: "toc", label: "TOC" },
+        ]}
+        activeId={active}
+        onChange={setActive}
+      />
+    </div>
   );
 }
 
@@ -687,7 +690,7 @@ export function IsolatedRelationshipsActionBar() {
   const store = createStore();
   return (
     <Provider store={store}>
-      <div className="w-full border border-border/40 rounded-md overflow-hidden">
+      <div className="gutter-host w-full border border-border/40 rounded-md overflow-hidden">
         <RelationshipsActionBar />
       </div>
       <p className="text-meta text-ink-muted mt-2">

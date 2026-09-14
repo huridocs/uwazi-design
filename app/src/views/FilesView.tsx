@@ -109,24 +109,27 @@ export function FilesView({ tabs, activeTab, onTabChange, onBack }: FilesViewPro
   };
 
   const renderLeft = (menuTrigger?: ReactNode) => (
-    <div className="flex flex-col h-full min-h-0 bg-paper">
+    // The main-tier gutter host: tabs, DocMeta, the file lane and the action bar
+    // all take their side inset from this padding (see `gutter-host`).
+    <div data-gutter-host className="gutter-host-main flex flex-col h-full min-h-0 bg-paper">
       <MainTabs
         tabs={tabs}
         activeId={activeTab}
         onChange={onTabChange}
         onBack={onBack}
+        gutter
         languages={LANGUAGES}
         availableLanguages={LANGUAGES}
         activeLanguage={language}
         onLanguageChange={(lang) => setLanguage(lang as Language)}
       />
-      <DocMeta showPdfSelector={false} />
-      <div className="flex-1 overflow-auto p-4 pb-8 bg-warm">
-        <SectionLabel as="h3" level="section" className="mb-2 px-1">
+      <DocMeta showPdfSelector={false} gutter />
+      <div className="bleed flex-1 overflow-auto pt-4 pb-8 bg-warm">
+        <SectionLabel as="h3" level="section" className="mb-2">
           Primary documents
         </SectionLabel>
         {primaryGroups.length === 0 ? (
-          <p className="text-xs italic text-ink-tertiary px-1 mb-5">
+          <p className="text-xs italic text-ink-tertiary mb-5">
             No primary documents yet. Promote a supporting file or add a new one.
           </p>
         ) : (
@@ -159,11 +162,11 @@ export function FilesView({ tabs, activeTab, onTabChange, onBack }: FilesViewPro
           })
         )}
 
-        <SectionLabel as="h3" level="section" className="mb-2 mt-5 px-1">
+        <SectionLabel as="h3" level="section" className="mb-2 mt-5">
           Supporting files
         </SectionLabel>
         {supportingFiles.length === 0 ? (
-          <p className="text-xs italic text-ink-tertiary px-1">
+          <p className="text-xs italic text-ink-tertiary">
             No supporting files yet. Add a file to get started.
           </p>
         ) : (
@@ -279,7 +282,7 @@ function FilesActionBar({
 
   return (
     <div
-      className={`flex items-center justify-between h-12 px-4 shrink-0 transition-colors ${
+      className={`flex items-center justify-between h-12 bleed shrink-0 transition-colors ${
         hasSelection ? "bg-selected" : "bg-paper"
       }`}
       style={{ borderTop: "1px solid var(--border-primary)" }}

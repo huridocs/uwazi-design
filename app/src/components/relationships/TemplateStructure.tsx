@@ -127,7 +127,7 @@ export function TemplateStructure() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-auto px-4 py-3 pb-8">
+      <div className="bleed flex-1 overflow-auto pt-stack pb-8">
         <div className="flex flex-col gap-2">
           {/* Header group */}
           <PropertyGroup label="Header" variant="header">
@@ -156,7 +156,7 @@ export function TemplateStructure() {
 
       {/* Action bar */}
       <div
-        className="flex items-center justify-between h-12 px-4 shrink-0"
+        className="bleed flex items-center justify-between h-12 shrink-0"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
         <span className="text-xs text-ink-tertiary">

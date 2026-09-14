@@ -78,6 +78,20 @@ Keep it in sync when tokens.css or the style rules change.
 
 ## Style rules that bite
 - **Layout in `rem`, never `px`.** Tailwind spacing utilities (`px-4`, `gap-3`) are fine. Reserve raw `px` for borders, shadows, sub-pixel details.
+- **The pane owns the side gutter, not the rows.** A pane sets it once with
+  `gutter-host` (narrow, 12px: drawers, side panels, Library/Relationships
+  panes), `gutter-host-main` (16px: full-width card grids — Metadata, Files) or
+  `gutter-host-rail` (20px: rails, centred modals), plus `data-gutter-host`.
+  Rows inside carry NO `px-*`/`mx-*` of their own; a box that must reach the
+  pane edge (a header/footer rule, a scroll lane, a canvas) uses `bleed` or
+  `bleed-flush` (`index.css`). `MainTabs gutter`, `DocMeta gutter` and
+  `DrawerTabs` (no side padding by default) follow it; `SearchBar` has none.
+  Vertical rhythm is `stack` (8px): tabs → search → controls → first card →
+  card. A padded control declares its edge: `data-gutter-align="box"` (hover
+  fill stays inside — close X, tree/ToC rows) or `"text"` (the group title
+  field). Verify with `window.__gutter()` in the console — it asserts one left
+  and one right inset for the open host; don't eyeball it. `px-3.5` is retired
+  except the Library facet column, which waits for its own pass.
 - **No thick left-border accents** on cards or sidebar items. Use a small dot, an icon colour, or a bg tint.
 - **Selected card state = `bg-parchment`** (#F5F0E8). Don't reach for inline `color-mix`, `bg-warm`, or `bg-vellum`.
 - **Badges are `w-fit`** so they don't stretch in flex/grid.

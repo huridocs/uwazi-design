@@ -40,20 +40,22 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
   const hideMinimap = view === "graph";
 
   const renderLeft = (menuTrigger?: ReactNode) => (
-        <div className="flex flex-col h-full min-h-0 bg-paper relative overflow-clip">
+        // The narrow-tier gutter host: tabs, DocMeta, toolbar, lane and action
+        // bar all take their side inset from this padding (see `gutter-host`).
+        <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0 bg-paper relative overflow-clip">
           <MainTabs
             tabs={tabs}
             activeId={activeTab}
             onChange={onTabChange}
             onBack={onBack}
+            gutter
             languages={LANGUAGES}
             availableLanguages={LANGUAGES}
             activeLanguage={language}
             onLanguageChange={(lang) => setLanguage(lang as Language)}
           />
-          <DocMeta showPdfSelector={false} />
+          <DocMeta showPdfSelector={false} gutter />
 
-          <div className="pt-2" />
           <RelationshipsToolbar />
 
           <RelationshipsPanelBody
@@ -85,18 +87,21 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
       left={renderLeft()}
       mobileLeft={(menuTrigger) => renderLeft(menuTrigger)}
       right={
-        <div className="flex flex-col h-full min-h-0 relative overflow-clip">
+        <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0 relative overflow-clip">
           <EntityOverlay />
           {/* The document projection only makes sense for document-bearing
               entities — otherwise the viewer falls back to the sample PDF. */}
           {profile.hasDocument && (
             <DrawerTabs
+              className="py-2"
               tabs={[{ id: "document", label: "Document" }]}
               activeId="document"
               onChange={() => {}}
             />
           )}
           <RelationshipsFiltersPanel width={720} />
+          {/* The page runs edge to edge; the strip above sits on the gutter. */}
+          <div data-gutter-bleed className="bleed-flush flex-1 min-h-0 flex flex-col">
           {profile.hasDocument ? (
             <DocumentViewer showMinimap={!hideMinimap} />
           ) : (
@@ -104,6 +109,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
                bare empty state (the real doc isn't shipped in this sample). */
             <DocumentViewer fileOverride={MOCK_DOCUMENT_FILE} showMinimap={false} />
           )}
+          </div>
           {deleteDialog}
         </div>
       }

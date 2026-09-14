@@ -68,12 +68,15 @@ export function MetadataView({ tabs, activeTab, onTabChange, onBack }: MetadataV
   const [language, setLanguage] = useAtom(languageAtom);
 
   const renderLeft = (menuTrigger?: ReactNode) => (
-    <div className="flex flex-col h-full min-h-0 bg-paper">
+    // The main-tier gutter host: tabs, DocMeta, the card lane and the action bar
+    // all take their side inset from this padding (see `gutter-host`).
+    <div data-gutter-host className="gutter-host-main flex flex-col h-full min-h-0 bg-paper">
       <MainTabs
         tabs={tabs}
         activeId={activeTab}
         onChange={onTabChange}
         onBack={onBack}
+        gutter
         languages={LANGUAGES}
         availableLanguages={LANGUAGES}
         activeLanguage={language}
@@ -125,10 +128,10 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
 
   return (
     <>
-      <DocMeta showPdfSelector={false} />
+      <DocMeta showPdfSelector={false} gutter />
       <ShareEntityModal open={shareOpen} onClose={() => setShareOpen(false)} />
 
-      <div className="flex-1 overflow-auto px-4 py-3 pb-8">
+      <div className="bleed flex-1 overflow-auto py-3 pb-8">
         {/* Full width — no 56rem cap. The label|value table sizes its label column
             to the labels and lets values run in one column, so a wide pane just
             gives the values more room rather than stretching a line of prose. */}
@@ -141,7 +144,7 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
       
       {/* Action bar */}
       <div
-        className="flex items-center gap-3 h-12 px-4 bg-paper shrink-0"
+        className="bleed flex items-center gap-3 h-12 bg-paper shrink-0"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
         <button
@@ -758,7 +761,9 @@ export function MetadataEditBody({
       )}
       <div
         ref={bodyRef}
-        className={`flex-1 overflow-auto py-3 pb-8 space-y-3 ${compact ? "px-3" : "px-4"}`}
+        /* A `bleed` scroll lane with the fields back on the host's gutter —
+           narrow in the entity drawer, main in the full view. */
+        className={`bleed flex-1 overflow-auto pb-8 space-y-3 ${compact ? "pt-stack" : "pt-3"}`}
       >
         {/* Title */}
         <EditSection
@@ -1094,7 +1099,7 @@ export function MetadataEditBody({
       {/* Edit action bar */}
       <div
         className={`flex items-center justify-end gap-3 h-12 bg-paper shrink-0 ${
-          compact ? "px-3 gap-2" : "px-4"
+          compact ? "bleed gap-2" : "bleed"
         }`}
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
@@ -1425,11 +1430,17 @@ function MetadataDrawer() {
   const [activeDrawerTab, setActiveDrawerTab] = useState("connections");
 
   return (
-    <div className="relative flex flex-col h-full overflow-clip">
+    // The gutter host (see `gutter-host`): tabs and tab bodies carry no side padding.
+    <div data-gutter-host className="gutter-host relative flex flex-col h-full overflow-clip">
       {/* Clicking a connected entity in a metadata relationship field opens its
           source preview here in the drawer (not as a slide-over on the left). */}
       <EntityOverlay />
-      <DrawerTabs tabs={drawerTabs} activeId={activeDrawerTab} onChange={setActiveDrawerTab} />
+      <DrawerTabs
+        className="pt-stack"
+        tabs={drawerTabs}
+        activeId={activeDrawerTab}
+        onChange={setActiveDrawerTab}
+      />
 
       {activeDrawerTab === "template" ? (
         <TemplateStructure />

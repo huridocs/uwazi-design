@@ -43,12 +43,13 @@ interface MainTabsProps {
   /** When provided, the header shows a back button that returns to the
    *  precedent screen. */
   onBack?: () => void;
-  /** Align the strip to a body of metadata cards below it — see the wrapper
-   *  comment for why both the padding and a transparent border are needed. */
-  cardAligned?: boolean;
+  /** Rendered inside a gutter host (the entity drawer): no side padding of its
+   *  own, and one `stack` step above — the host places it on the same edge as
+   *  every row below it. */
+  gutter?: boolean;
 }
 
-export function MainTabs({ tabs, activeId, onChange, languages = [], availableLanguages, activeLanguage, onLanguageChange, onBack, languageEditing = false, cardAligned = false }: MainTabsProps) {
+export function MainTabs({ tabs, activeId, onChange, languages = [], availableLanguages, activeLanguage, onLanguageChange, onBack, languageEditing = false, gutter = false }: MainTabsProps) {
   /* THE FOLD IS DECIDED BY THE CONTAINER, not the viewport.
      `dec4220` folded on `breakpointAtom`, which reads the WINDOW — so a strip
      in a 400px pane at a 1440px window stayed expanded and clipped mid-tab.
@@ -79,14 +80,12 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
 
   return (
     <div
-      /* `cardAligned` lines the strip up with a body of `p-4` metadata cards
-         beneath it — the drawer, where the two sat 4px apart at the edge and
-         8px apart at the text. Both alignments hold at once because the strip
-         takes the card's BORDER too, transparently: without it the strip's
-         content box starts one pixel left of the card's, and you can have the
-         edges flush or the text flush but not both. */
-      className={`relative flex items-center justify-between gap-3 pt-2 pb-1 md:pt-2.5 shrink-0 ${
-        cardAligned ? "px-4" : "px-3"
+      /* Inside a gutter host (`gutter`) the strip takes no side padding: the
+         host's gutter puts its edge on the same line as the toolbar and cards
+         beneath it. It used to carry its own `px-4` to match the metadata
+         cards' `p-4`, which put it 4px off every other tab's toolbar. */
+      className={`relative flex items-center justify-between gap-3 shrink-0 ${
+        gutter ? "pt-stack" : "px-3 pt-2 pb-1 md:pt-2.5"
       }`}
     >
       {/* Left: Back + Tabs.
@@ -147,7 +146,7 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
             }))}
           />
         ) : (
-        <TabStrip tabs={tabs} activeId={activeId} onChange={onChange} cardAligned={cardAligned} />
+        <TabStrip tabs={tabs} activeId={activeId} onChange={onChange} />
         )}
       </div>
 
@@ -167,8 +166,7 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
           tabs={tabs}
           activeId={activeId}
           onChange={onChange}
-          cardAligned={cardAligned}
-          probe
+                   probe
         />
       </div>
 
@@ -220,13 +218,11 @@ function TabStrip({
   tabs,
   activeId,
   onChange,
-  cardAligned,
   probe = false,
 }: {
   tabs: MainTab[];
   activeId: string;
   onChange: (id: string) => void;
-  cardAligned: boolean;
   probe?: boolean;
 }) {
   return (
@@ -234,9 +230,7 @@ function TabStrip({
        corner. The end tabs round themselves instead, logically, so the strip
        still reads as one frame under RTL. */
     <div
-      className={`flex items-center rounded-md shrink-0 ${
-        cardAligned ? "border border-transparent" : ""
-      }`}
+      className="flex items-center rounded-md shrink-0"
       role={probe ? undefined : "tablist"}
       aria-hidden={probe || undefined}
       style={{
@@ -252,9 +246,7 @@ function TabStrip({
             tabIndex={probe ? -1 : undefined}
             aria-selected={probe ? undefined : activeId === tab.id}
             onClick={probe ? undefined : () => onChange(tab.id)}
-            className={`relative flex items-center justify-center gap-1 py-1.5 text-tab font-medium transition-colors ${
-              cardAligned ? "px-4" : "px-2.5 md:px-3"
-            } ${i === 0 ? "rounded-s-md" : ""} ${
+            className={`relative flex items-center justify-center gap-1 py-1.5 text-tab font-medium transition-colors px-2.5 md:px-3 ${i === 0 ? "rounded-s-md" : ""} ${
               i === tabs.length - 1 ? "rounded-e-md" : ""
             } ${
               activeId === tab.id

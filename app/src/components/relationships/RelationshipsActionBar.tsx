@@ -86,7 +86,10 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
   return (
     <>
       <div
-        className={`flex items-center justify-between h-12 px-4 shrink-0 transition-colors ${
+        /* Every host is a gutter host (the Relationships pane, the drawers):
+           `bleed` runs the rule and the selection tint to the pane edge and
+           puts the buttons back on the host's gutter. */
+        className={`bleed flex items-center justify-between h-12 shrink-0 transition-colors ${
           editMode && hasSelection ? "bg-selected" : "bg-paper"
         }`}
         style={{ borderTop: "1px solid var(--border-primary)" }}
@@ -119,6 +122,9 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
           ) : (
             <button
               onClick={enterEdit}
+              /* Ghost with a hover fill: its BOX meets the gutter, so the fill
+                 never crosses the panel edge. */
+              data-gutter-align="box"
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary hover:bg-warm hover:text-ink rounded-md transition-colors cursor-pointer"
             >
               <Pencil size={12} className="text-ink-tertiary" /> Edit

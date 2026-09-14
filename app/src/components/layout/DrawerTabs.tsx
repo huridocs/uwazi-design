@@ -27,9 +27,10 @@ interface DrawerTabsProps {
   tabs: DrawerTab[];
   activeId: string;
   onChange: (id: string) => void;
-  /** Wrapper padding — defaults to `px-3.5 py-2`, which is the facet panel's
-   *  own `px-3.5`, so the strip and the cards under it share an edge. Pass e.g. `""`
-   *  to render flush within a page body that owns its own padding. */
+  /** Wrapper padding — vertical only by default. The strip carries no side
+   *  padding: the host that lays it out owns the gutter (`gutter-host`), which
+   *  is how it lines up with the rows below it. A host with no gutter of its own
+   *  passes one here (the Library's filter panel passes `px-3.5 py-2`). */
   className?: string;
 }
 
@@ -47,7 +48,7 @@ interface DrawerTabsProps {
  *  The dot is the same mark the Display menu uses (6px, carbon, `-top-0.5
  *  -end-0.5` on a `relative` trigger, logical `-end-` so it mirrors under RTL),
  *  because they say the same thing in the same visual language. */
-export function DrawerTabs({ tabs, activeId, onChange, className = "px-3.5 py-2" }: DrawerTabsProps) {
+export function DrawerTabs({ tabs, activeId, onChange, className = "py-2" }: DrawerTabsProps) {
   /* FOLDS LIKE `MainTabs`, on the same measurement and for the same reason.
      This strip used to SCROLL when it did not fit — `overflow-x-auto` with the
      scrollbar hidden — so every tab stayed reachable but the strip read as cut,

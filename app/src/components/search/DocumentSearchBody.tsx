@@ -71,7 +71,7 @@ export function DocumentSearchBody() {
     <div className="flex-1 min-h-0 flex flex-col">
       {/* Search input — the tab's own query, independent of the Library's. */}
       <div
-        className="shrink-0 px-3 py-2"
+        className="bleed shrink-0 py-2"
         style={{ borderBottom: "1px solid var(--border-primary)" }}
       >
         <div
@@ -126,15 +126,15 @@ export function DocumentSearchBody() {
           </button>
         </Centered>
       ) : (
-        <div className="flex-1 overflow-auto px-3 py-3 flex flex-col gap-3">
-          <span dir="ltr" className="px-1 text-meta text-ink-tertiary">
+        <div className="bleed flex-1 overflow-auto py-3 flex flex-col gap-3">
+          <span dir="ltr" className="text-meta text-ink-tertiary">
             {snippets.count.toLocaleString()} {snippets.count === 1 ? "match" : "matches"} for{" "}
             <span className="font-medium text-ink">“{trimmed}”</span>
           </span>
 
           {hasMeta && (
             <div className="flex flex-col gap-1.5">
-              <SectionLabel className="px-1">Properties</SectionLabel>
+              <SectionLabel>Properties</SectionLabel>
               {snippets.metadata.map((group) => (
                 <button
                   key={group.fieldKey}
@@ -165,7 +165,7 @@ export function DocumentSearchBody() {
                   appears; and it draws NOTHING for an entity's own document,
                   because `borrowedFrom` is null there. Same call as
                   `EntityResultCard`. */}
-              <SectionLabel className="px-1">
+              <SectionLabel>
                 Document
                 <BorrowedDocLine from={snippets.borrowedFrom} className="min-w-0" />
               </SectionLabel>

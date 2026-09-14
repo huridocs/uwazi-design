@@ -34,10 +34,13 @@ export function ReferencePanel() {
   const docQuery = useAtomValue(docSearchQueryAtom);
 
   return (
-    <div className="flex flex-col h-full relative overflow-clip">
+    // The gutter host (see `gutter-host`): the tabs and every tab body below sit
+    // in this padding and carry none of their own.
+    <div data-gutter-host className="gutter-host flex flex-col h-full relative overflow-clip">
       <EntityOverlay />
 
       <DrawerTabs
+        className="pt-stack"
         tabs={baseDrawerTabs.map((tab) => {
           if (tab.id === "connections")
             return { ...tab, count: references.length, dot: relFilterCount > 0 };

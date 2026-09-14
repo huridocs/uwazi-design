@@ -66,7 +66,9 @@ export function RelationshipsTreeView() {
           footer action bar's, which is mounted whatever the view. Keeping this
           row would have given tree a second collapse pair over the same two
           signal atoms. */}
-      <div className="flex-1 overflow-auto bg-warm">
+      {/* A scroll lane: `bleed` takes the warm ground and the scrollbar to the
+          panel edge and puts the rows back on the host's gutter. */}
+      <div className="bleed flex-1 overflow-auto bg-warm">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Link2 size={36} className="text-ink-tertiary/40 mb-3" />
@@ -76,11 +78,11 @@ export function RelationshipsTreeView() {
             </p>
           </div>
         ) : groupBy === "none" ? (
-          <div className="px-3 py-3">
+          <div className="py-stack">
             {renderAggregates(filtered)}
           </div>
         ) : (
-          <div className="px-3 py-3">
+          <div className="py-stack">
             {groups.map(({ key, refs, subGroups }) => (
               <TreeBranch
                 key={`p:${key}`}
