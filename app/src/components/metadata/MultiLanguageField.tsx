@@ -3,6 +3,10 @@ import { ChevronRight, Languages, RotateCw, Sparkles } from "lucide-react";
 import { LANGUAGE_NAMES, languageDir, type Language } from "../../atoms/language";
 import { UwaziLoader } from "../shared/UwaziLoader";
 import { mockTranslate } from "../../utils/mockTranslate";
+import { useResizeWidth } from "../../hooks/useResizeWidth";
+
+/** How far the summary row has folded; see `MultiLanguageField`. */
+type Step = 0 | 1 | 2 | 3;
 
 /** One field, every language — the in-place translation control.
  *
@@ -94,13 +98,103 @@ export function MultiLanguageField({
 
   const translateEmpty = () => { setOpen(true); empties.forEach(translate); };
 
-  const summary =
-    empties.length === 0
-      ? `${others.length} other languages set`
-      : `${empties.length} of ${others.length} other languages empty`;
+  const setText = `${others.length} other languages set`;
+  const emptyText = `${Math.max(empties.length, 1)} of ${others.length} other languages empty`;
+  const summary = empties.length === 0 ? setText : emptyText;
+  const shortSummary = `${others.length - empties.length}/${others.length}`;
+
+  /* The summary row folds on its own width, in steps, so it stays one line in
+     every pane the record renders in (the 360px drawer included). Each step
+     drops the lowest-priority text still showing:
+       0  › 🌐 Languages · 3 other languages set   [✨ Auto-translate]
+       1  › 🌐 Languages · 3/3                     [✨ Auto-translate]
+       2  › 🌐 3/3                                 [✨ Auto-translate]
+       3  › 🌐 3/3                                 [✨]
+     The step comes from the row's width against hidden probes of each step,
+     not from the viewport, the same way `DrawerTabs` folds. The probes carry
+     both status wordings in one grid cell, so a step never depends on which
+     wording is showing and changing it moves nothing. */
+  const [availW, setAvailW] = useState(0);
+  const [w0, setW0] = useState(0);
+  const [w1, setW1] = useState(0);
+  const [w2, setW2] = useState(0);
+  const availRef = useResizeWidth(setAvailW);
+  const probeRefs = [useResizeWidth(setW0), useResizeWidth(setW1), useResizeWidth(setW2)];
+  const fits = (w: number) => w > 0 && w <= availW + 0.5;
+  const step: Step = availW === 0 ? 0 : fits(w0) ? 0 : fits(w1) ? 1 : fits(w2) ? 2 : 3;
+
+  const translateTitle =
+    source.length === 0
+      ? `Write the ${LANGUAGE_NAMES[current]} ${label.toLowerCase()} first`
+      : empties.length === 0
+        ? "Every language has a value — use the re-translate button on a row"
+        : `Fill ${empties.map((l) => LANGUAGE_NAMES[l]).join(", ")} from ${LANGUAGE_NAMES[current]}`;
+
+  const controls = (s: Step, probe: boolean) => (
+    <>
+      <button
+        type="button"
+        tabIndex={probe ? -1 : undefined}
+        onClick={probe ? undefined : () => setOpen((v) => !v)}
+        aria-expanded={probe ? undefined : open}
+        aria-controls={probe ? undefined : `${idPrefix}-langs`}
+        aria-label={`Languages: ${summary}`}
+        title={probe ? undefined : summary}
+        className="inline-flex items-center gap-1.5 h-6 px-1.5 -ms-1.5 min-w-0 rounded-md
+          whitespace-nowrap text-meta text-ink-tertiary hover:text-ink-secondary hover:bg-warm
+          transition-colors cursor-pointer focus:outline-none
+          focus-visible:ring-2 focus-visible:ring-carbon/40"
+      >
+        <ChevronRight
+          size={11}
+          className={`shrink-0 transition-transform ${open ? "rotate-90" : ""}`}
+          aria-hidden
+        />
+        <Languages size={11} className="shrink-0" aria-hidden />
+        {s < 2 && (
+          <>
+            <span className="shrink-0">Languages</span>
+            <span className="shrink-0 text-ink-muted">·</span>
+          </>
+        )}
+        {s === 0 ? (
+          /* Both wordings share one grid cell; the one not showing is invisible
+             and only holds the width. */
+          <span className="grid grid-cols-[minmax(0,max-content)] min-w-0 text-start text-ink-muted tabular-nums">
+            <span className={`col-start-1 row-start-1 truncate ${empties.length === 0 || probe ? "" : "invisible"}`}>
+              {setText}
+            </span>
+            <span className={`col-start-1 row-start-1 truncate ${empties.length > 0 && !probe ? "" : "invisible"}`}>
+              {emptyText}
+            </span>
+          </span>
+        ) : (
+          <span className="min-w-0 truncate text-start text-ink-muted tabular-nums">{shortSummary}</span>
+        )}
+      </button>
+      <button
+        type="button"
+        tabIndex={probe ? -1 : undefined}
+        onClick={probe ? undefined : translateEmpty}
+        aria-disabled={!canTranslate || undefined}
+        aria-label={s === 3 ? "Auto-translate" : undefined}
+        title={probe ? undefined : translateTitle}
+        className={`inline-flex items-center justify-center gap-1.5 h-6 rounded-md text-meta
+          shrink-0 whitespace-nowrap border transition-colors cursor-pointer focus:outline-none
+          focus-visible:ring-2 focus-visible:ring-carbon/40 ${s === 3 ? "w-6" : "px-2"} ${
+            canTranslate
+              ? "text-carbon border-carbon/30 bg-carbon-tint/40 hover:bg-carbon-tint"
+              : "text-ink-muted border-border bg-paper cursor-default"
+          }`}
+      >
+        <Sparkles size={11} className="shrink-0" aria-hidden />
+        {s < 3 && "Auto-translate"}
+      </button>
+    </>
+  );
 
   return (
-    <div>
+    <div className="relative">
       {/* Summary row — always mounted, fixed height, whatever the panel does.
           The two controls are ONE left-aligned cluster. They were `justify-between`
           across the form's full width, which on a wide pane put a foot of empty
@@ -110,53 +204,26 @@ export function MultiLanguageField({
           it, so it starts where that box starts and ends where it runs out of
           words. `-mt-1` pulls it up under the message slot's reserved line —
           it is part of the Title field, not a band between Title and Icon. */}
-      <div className="flex items-center gap-2 h-6 -mt-1">
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          aria-controls={`${idPrefix}-langs`}
-          className="inline-flex items-center gap-1.5 h-6 px-1.5 -ms-1.5 rounded-md
-            text-meta text-ink-tertiary hover:text-ink-secondary hover:bg-warm
-            transition-colors cursor-pointer focus:outline-none
-            focus-visible:ring-2 focus-visible:ring-carbon/40"
-        >
-          <ChevronRight
-            size={11}
-            className={`transition-transform ${open ? "rotate-90" : ""}`}
-            aria-hidden
-          />
-          <Languages size={11} aria-hidden />
-          <span>Languages</span>
-          <span className="text-ink-muted">·</span>
-          <span className="text-ink-muted">{summary}</span>
-        </button>
-        <button
-          type="button"
-          onClick={translateEmpty}
-          aria-disabled={!canTranslate || undefined}
-          title={
-            source.length === 0
-              ? `Write the ${LANGUAGE_NAMES[current]} ${label.toLowerCase()} first`
-              : empties.length === 0
-                ? "Every language has a value — use the re-translate button on a row"
-                : `Fill ${empties.map((l) => LANGUAGE_NAMES[l]).join(", ")} from ${LANGUAGE_NAMES[current]}`
-          }
-          className={`inline-flex items-center gap-1.5 h-6 px-2 rounded-md text-meta
-            border transition-colors cursor-pointer focus:outline-none
-            focus-visible:ring-2 focus-visible:ring-carbon/40 ${
-              canTranslate
-                ? "text-carbon border-carbon/30 bg-carbon-tint/40 hover:bg-carbon-tint"
-                : "text-ink-muted border-border bg-paper cursor-default"
-            }`}
-        >
-          <Sparkles size={11} aria-hidden />
-          Auto-translate
-        </button>
+      <div ref={availRef} className="flex items-center gap-2 h-6 -mt-1 min-w-0">
+        {controls(step, false)}
         {/* `min-w-0` so a long message yields rather than pushing the cluster;
             the input still points at it via `aria-describedby`, so the full
             string reaches a screen reader whatever the pane's width. */}
         {messageSlot && <div className="min-w-0 truncate">{messageSlot}</div>}
+      </div>
+      {/* The probes: steps 0–2 laid out at their natural width and never
+          painted. A zero-size clipping box holds them so they add no scroll
+          overflow to the pane. Step 3 needs no probe; it is the floor. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute top-0 start-0 w-0 h-0 overflow-hidden"
+        style={{ visibility: "hidden" }}
+      >
+        {([0, 1, 2] as const).map((s) => (
+          <div key={s} ref={probeRefs[s]} className="flex items-center gap-2 h-6 w-max">
+            {controls(s, true)}
+          </div>
+        ))}
       </div>
 
       {/* The panel. Opened deliberately, so it may take its own height. */}
