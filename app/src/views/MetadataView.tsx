@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { SectionLabel } from "../components/shared/SectionLabel";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Search, ClipboardCopy, ChevronDown } from "lucide-react";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
@@ -9,7 +8,6 @@ import { DocMeta } from "../components/layout/DocMeta";
 import { MetadataRecord } from "../components/metadata/MetadataRecord";
 import { ConnectionGroupCard } from "../components/metadata/ConnectionGroupCard";
 import { RelationshipFieldCard } from "../components/metadata/RelationshipFieldCard";
-import { RelationshipCards } from "../components/metadata/RelationshipCards";
 import { RelationshipFieldEditor } from "../components/metadata/RelationshipFieldEditor";
 import { CopyFromPicker } from "../components/metadata/CopyFromPicker";
 import { CopyFieldRow, COPY_ROW_SLOT } from "../components/metadata/CopyFieldRow";
@@ -526,7 +524,8 @@ export function MetadataEditBody({
   // Relationship fields → one editor per connection. The connection (entity
   // set) is the source of truth, keyed so multi-inheritance siblings sync.
   // Read-only fields (CEJIL projections, chain-traversed inheritance) are NOT
-  // editable inline — they render as read cards below (design doc Q6).
+  // editable inline — they render as read cards at their template position
+  // (design doc Q6; see `editUnits`).
   const allRelFields = profile.metadata[language].filter(
     (f): f is RelationshipMetadataField => f.type === "relationship",
   );
@@ -562,6 +561,48 @@ export function MetadataEditBody({
   const [connections, setConnections] = useState<Record<string, string[]>>(() =>
     Object.fromEntries(connectionDefs.map((d) => [d.key, d.entityIds])),
   );
+
+  /* The form below Country, in TEMPLATE order — the same sequence the read
+     record uses (`profile.metadata`), so entering and leaving edit mode does
+     not reorder fields and there is no separate Relationships section.
+     Title, Template, Description, Geolocation and Country keep their fixed
+     controls above and are skipped here.
+     A multi-inheritance group (several fields sharing one `connectionKey`) is
+     ONE connection: its editor, or its read-only card for a derived group,
+     renders once, at the template position of its FIRST member field. */
+  type EditUnit =
+    | { kind: "scalar"; field: MetadataField }
+    | { kind: "files"; field: MetadataField }
+    | { kind: "connection"; def: (typeof connectionDefs)[number] }
+    | { kind: "derived-group"; group: (typeof readOnlyRel.groups)[number] }
+    | { kind: "derived-single"; field: RelationshipMetadataField };
+  const editableGroupKeys = new Set(groups.map((g) => g.connectionKey));
+  const derivedGroupByKey = new Map(readOnlyRel.groups.map((g) => [g.connectionKey, g]));
+  const placedUnits = new Set<string>();
+  const editUnits: EditUnit[] = [];
+  for (const f of profile.metadata[language]) {
+    if (f.type === "relationship") {
+      if (f.readOnly) {
+        const group = f.connectionKey ? derivedGroupByKey.get(f.connectionKey) : undefined;
+        const key = group ? `derived:${group.connectionKey}` : f.id;
+        if (placedUnits.has(key)) continue;
+        placedUnits.add(key);
+        editUnits.push(group ? { kind: "derived-group", group } : { kind: "derived-single", field: f });
+      } else {
+        const key = f.connectionKey && editableGroupKeys.has(f.connectionKey) ? f.connectionKey : f.id;
+        const def = connectionDefs.find((d) => d.key === key);
+        if (!def || placedUnits.has(key)) continue;
+        placedUnits.add(key);
+        editUnits.push({ kind: "connection", def });
+      }
+      continue;
+    }
+    if (f.id === "description" || f.id === "country") continue;
+    // The form's own copy of the field: it holds the edited value.
+    const field = fields.find((x) => x.id === f.id);
+    if (!field) continue;
+    editUnits.push({ kind: field.type === "file-list" ? "files" : "scalar", field });
+  }
 
   /* ── Copy From ────────────────────────────────────────────────────────────
      Staged in two steps, and NEITHER writes the entity: picking a source opens
@@ -913,11 +954,66 @@ export function MetadataEditBody({
           <CountryPicker />
         </EditSection>
 
-        {/* Editable scalar fields (date / link / text / multiline). file-list
-            fields render below as item editors; description/country handled
-            above with their own controls. */}
-        {scalarEditable
-          .map((field) => (
+        {/* Every other field in template order (see `editUnits`): scalar
+            editors (date / link / text / multiline), file-list item editors,
+            connection editors, and derived connections as read-only cards. */}
+        {editUnits.map((unit) => {
+          if (unit.kind === "connection") {
+            const d = unit.def;
+            return (
+              <div key={`connection:${d.key}`} className="space-y-1.5">
+                <RelationshipFieldEditor
+                  title={d.title}
+                  relationLabel={d.relationLabel}
+                  targetTypeId={d.targetTypeId}
+                  columns={d.columns}
+                  entityIds={connections[d.key] ?? d.entityIds}
+                  onChange={(ids) => setConnections((prev) => ({ ...prev, [d.key]: ids }))}
+                />
+                {/* A connection copies too — and REPLACES the set above it, which is
+                    exactly the kind of overwrite that has to be read before it
+                    happens. One row per connection, not per inherited column. */}
+                <CopyFieldSlot
+                  active={copyActive}
+                  reserved={rowReserved.has(d.key)}
+                  unit={stagedByKey.get(d.key)}
+                  checked={!!stage?.checked[d.key]}
+                  onChange={(v) => setChecked(d.key, v)}
+                  sourceId={copiedFrom[d.key]}
+                />
+              </div>
+            );
+          }
+          // Derived / chain-traversed connections are not edited inline (managed
+          // via the relationship graph), so they keep their read cards here.
+          if (unit.kind === "derived-group") {
+            return <ConnectionGroupCard key={`derived:${unit.group.connectionKey}`} group={unit.group} />;
+          }
+          if (unit.kind === "derived-single") {
+            return <RelationshipFieldCard key={unit.field.id} field={unit.field} span="full" />;
+          }
+          if (unit.kind === "files") {
+            const field = unit.field;
+            return (
+              <EditSection key={field.id} label={field.label}>
+                {field.items?.map((item, i) => (
+                  <div key={i} className="space-y-1">
+                    {item.label && (
+                      <span className="text-xs text-ink-tertiary">{item.label}</span>
+                    )}
+                    <input
+                      type="text"
+                      defaultValue={item.value}
+                      className="w-full px-3 py-2 text-sm text-ink bg-paper border border-border rounded-md
+                        focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40"
+                    />
+                  </div>
+                ))}
+              </EditSection>
+            );
+          }
+          const field = unit.field;
+          return (
             <EditSection
               key={field.id}
               label={field.label}
@@ -1001,79 +1097,8 @@ export function MetadataEditBody({
                 sourceId={copiedFrom[field.id]}
               />
             </EditSection>
-          ))}
-
-        {/* file-list fields (Bench, Other Files) — one section per field with
-            an inline editor for each item's value. */}
-        {fields
-          .filter((f) => f.type === "file-list")
-          .map((field) => (
-            <EditSection key={field.id} label={field.label}>
-              {field.items?.map((item, i) => (
-                <div key={i} className="space-y-1">
-                  {item.label && (
-                    <span className="text-xs text-ink-tertiary">{item.label}</span>
-                  )}
-                  <input
-                    type="text"
-                    defaultValue={item.value}
-                    className="w-full px-3 py-2 text-sm text-ink bg-paper border border-border rounded-md
-                      focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40"
-                  />
-                </div>
-              ))}
-            </EditSection>
-          ))}
-
-        {/* Relationship fields — edit the connection; inherited values shown
-            read-only. One editor per connection (siblings sync). The band
-            mirrors the read-mode "Relationships" separator. */}
-        {connectionDefs.length > 0 && (
-          <SectionLabel as="h3" level="section" className="pt-2">
-            Relationships
-          </SectionLabel>
-        )}
-        {connectionDefs.map((d) => (
-          <div key={d.key} className="space-y-1.5">
-            <RelationshipFieldEditor
-              title={d.title}
-              relationLabel={d.relationLabel}
-              targetTypeId={d.targetTypeId}
-              columns={d.columns}
-              entityIds={connections[d.key] ?? d.entityIds}
-              onChange={(ids) => setConnections((prev) => ({ ...prev, [d.key]: ids }))}
-            />
-            {/* A connection copies too — and REPLACES the set above it, which is
-                exactly the kind of overwrite that has to be read before it
-                happens. One row per connection, not per inherited column. */}
-            <CopyFieldSlot
-              active={copyActive}
-              reserved={rowReserved.has(d.key)}
-              unit={stagedByKey.get(d.key)}
-              checked={!!stage?.checked[d.key]}
-              onChange={(v) => setChecked(d.key, v)}
-              sourceId={copiedFrom[d.key]}
-            />
-          </div>
-        ))}
-
-        {/* Derived / chain-traversed relationships — shown read-only here; they
-            aren't edited inline (managed via the relationship graph). */}
-        {(readOnlyRel.groups.length > 0 || readOnlyRel.singles.length > 0) && (
-          <>
-            <SectionLabel as="h3" level="section" className="pt-2">
-              Derived relationships · read-only
-            </SectionLabel>
-            <div className="grid gap-3 grid-cols-1">
-              {readOnlyRel.groups.map((group) => (
-                <ConnectionGroupCard key={group.connectionKey} group={group} />
-              ))}
-              {readOnlyRel.singles.map((field) => (
-                <RelationshipFieldCard key={field.id} field={field} span="full" />
-              ))}
-            </div>
-          </>
-        )}
+          );
+        })}
       </div>
 
       {/* Save-attempt summary — a RESERVED line above the action bar, mounted

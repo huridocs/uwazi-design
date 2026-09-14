@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import type { Language } from "../../atoms/language";
 import type { EntityProfile } from "../../data/entityProfiles";
-import { entityMetadataAtom } from "../../atoms/entityMetadata";
+import { entityMetadataAtom, makeEntityPropReader } from "../../atoms/entityMetadata";
 import { fillTargetAtom, fillRequestAtom } from "../../atoms/fillTarget";
 import { focusMetadataFieldAtom } from "../../atoms/library";
-import type { MetadataField, RelationshipMetadataField } from "../../data/metadata";
+import type { RelationshipMetadataField } from "../../data/metadata";
 import { MetadataCard } from "./MetadataCard";
 import { ImageCard } from "./ImageCard";
 import { ImageLightbox } from "../shared/ImageLightbox";
@@ -13,9 +13,19 @@ import { SectionLabel } from "../shared/SectionLabel";
 import { imageFocusKey, type EntityImage } from "../../data/entities";
 import { MasonryGrid, MasonryItem } from "./MasonryGrid";
 import { RecordFooter } from "./RecordFooter";
-import { RelationshipCards } from "./RelationshipCards";
+import { ConnectionGroupCard } from "./ConnectionGroupCard";
+import { RelationshipFieldCard } from "./RelationshipFieldCard";
 import { fieldItem, connectionItem, type MetadataItem } from "./items";
 import { deriveTemplateStructure } from "../../utils/templateStructure";
+import { groupConnections, specInherits, type ConnectionGroup } from "../../utils/inheritance";
+
+/** One entry of the record, in template order. A plain item is a value card or
+ *  a link-only connection's pill card; a connection that carries a TABLE (an
+ *  inheriting single, or a multi-inheritance group) keeps its own card. */
+type RecordEntry =
+  | { kind: "item"; item: MetadataItem }
+  | { kind: "group"; group: ConnectionGroup; keys: string[] }
+  | { kind: "table"; field: RelationshipMetadataField };
 
 /** One field of the record, as its own card.
  *
@@ -74,7 +84,8 @@ function FillableValue({ item }: { item: MetadataItem }) {
 }
 
 /** An entity's record: every field its own titled block, in template order,
- *  then the connections that carry a table of their own.
+ *  connections included (a connection that carries a table keeps its table
+ *  card, at its template position).
  *
  *  ONE component behind the drawer and the main Metadata view. They had drifted
  *  into three different treatments of the same data (a masonry of per-field cards,
@@ -88,7 +99,7 @@ export function MetadataRecord({
   language: Language;
 }) {
   // Subscribing here keeps the record live when a value is edited at source.
-  useAtomValue(entityMetadataAtom);
+  const getProp = makeEntityPropReader(useAtomValue(entityMetadataAtom));
 
   // Deep-focus from the Results tab: when a field of THIS entity is requested,
   // scroll it into view and flash it (the shared `flash-highlight` keyframe),
@@ -146,26 +157,41 @@ export function MetadataRecord({
      card's SHAPE (how many columns it spans, chips vs prose; see MasonryItem
      and `fieldKind`), and now nothing else.
 
-     One pass over the body in declared sequence: a scalar with a value becomes
-     a value card, a link-only relationship becomes a pill card, and a field
-     with neither is skipped. Inheriting relationships are the `inherited`
-     group and render as the Relationships section below. */
-  const { body, inherited } = deriveTemplateStructure(profile, language);
-  const items: MetadataItem[] = [];
-  for (const f of body) {
+     One pass over every property in declared sequence, relationships included
+     — there is no separate Relationships section. A scalar with a value becomes
+     a value card, a link-only relationship a pill card, an inheriting one its
+     table card, and a scalar with no value is skipped.
+
+     A multi-inheritance group (several fields sharing one `connectionKey`) is
+     ONE connection, so its table renders ONCE, at the template position of its
+     FIRST member field; the later members are skipped where they are declared.
+     Its card answers deep focus for every member's id and aliases. */
+  const { fields } = deriveTemplateStructure(profile, language);
+  const relFields = fields.filter(
+    (f): f is RelationshipMetadataField => f.type === "relationship",
+  );
+  const { groups } = groupConnections(relFields, language, getProp);
+  const groupByKey = new Map(groups.map((g) => [g.connectionKey, g]));
+  const placedGroups = new Set<string>();
+  const entries: RecordEntry[] = [];
+  for (const f of fields) {
     if (f.type === "relationship") {
-      if (!f.connectionKey) items.push(connectionItem(f));
+      const group = f.connectionKey ? groupByKey.get(f.connectionKey) : undefined;
+      if (group) {
+        if (placedGroups.has(group.connectionKey)) continue;
+        placedGroups.add(group.connectionKey);
+        const members = relFields.filter((m) => m.connectionKey === group.connectionKey);
+        const keys = members.flatMap((m) => [m.id, ...(m.keyAliases ?? [])]);
+        entries.push({ kind: "group", group, keys });
+      } else if (specInherits(f)) {
+        entries.push({ kind: "table", field: f });
+      } else {
+        entries.push({ kind: "item", item: connectionItem(f) });
+      }
     } else if (f.value?.trim()) {
-      items.push(fieldItem(f));
+      entries.push({ kind: "item", item: fieldItem(f) });
     }
   }
-
-  /* The Relationships section below carries the inheriting connections and the
-     grouped ones — a connection with a `connectionKey` shares a table with its
-     siblings, which is a section, not a property. */
-  const hasRelCards =
-    inherited.length > 0 ||
-    body.some((f) => f.type === "relationship" && !!f.connectionKey);
 
   // The document and the picture left this view — metadata is metadata, and
   // Files owns the renditions — so a file- or image-bearing entity no longer has
@@ -182,7 +208,7 @@ export function MetadataRecord({
   const images = profile.images ?? [];
   const hasImages = images.length > 1;
 
-  const empty = items.length === 0 && !hasRelCards && !hasImages;
+  const empty = entries.length === 0 && !hasImages;
   if (empty) {
     return (
       <div className="flex items-center justify-center py-10 text-center">
@@ -198,12 +224,32 @@ export function MetadataRecord({
           takes two columns of three, because a paragraph set in a third of a
           wide pane is a column of six-word lines. Chips and scalars take one.
           Placement is sparse, so the empty half-row beside a wide card stays
-          empty — see MasonryGrid on why `dense` is out. */}
-      {items.map((item) => (
-        <MasonryItem key={item.id} wide={item.kind === "long"}>
-          <MetadataFieldBlock item={item} />
-        </MasonryItem>
-      ))}
+          empty — see MasonryGrid on why `dense` is out.
+
+          Connection TABLES span the full width: a connection table folds to one
+          card per connected entity below 28.5rem of its own container (see
+          tableBreakpoint.ts), and a masonry column is ~345px, so left in a
+          column every table would fold on a record with room for three
+          columns. Full width keeps the table while the record can carry one. */}
+      {entries.map((entry) =>
+        entry.kind === "item" ? (
+          <MasonryItem key={entry.item.id} wide={entry.item.kind === "long"}>
+            <MetadataFieldBlock item={entry.item} />
+          </MasonryItem>
+        ) : entry.kind === "group" ? (
+          <MasonryItem key={`group:${entry.group.connectionKey}`} full>
+            <div data-field-key={entry.group.connectionKey} data-field-keys={entry.keys.join(" ")}>
+              <ConnectionGroupCard group={entry.group} />
+            </div>
+          </MasonryItem>
+        ) : (
+          <MasonryItem key={entry.field.id} full>
+            <div data-field-key={entry.field.id} data-field-keys={entry.field.keyAliases?.join(" ")}>
+              <RelationshipFieldCard field={entry.field} span="full" />
+            </div>
+          </MasonryItem>
+        ),
+      )}
       {hasImages && (
         <MasonryItem full>
           {/* The PROPERTY key lives on the section, so a property-level focus
@@ -234,7 +280,6 @@ export function MetadataRecord({
             </div>
           </MasonryItem>
         ))}
-      <RelationshipCards profile={profile} language={language} span="full" inheritingOnly />
     </MasonryGrid>
     {/* Outside the grid on purpose — see RecordFooter. */}
     <RecordFooter entityId={profile.id} />

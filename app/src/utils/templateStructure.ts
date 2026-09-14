@@ -33,11 +33,15 @@ export interface HeaderProperty {
 
 export interface TemplateStructure {
   header: HeaderProperty[];
+  /** Every property, in the template's own order: scalars, link-only
+   *  relationships and inheriting relationships interleaved exactly as declared.
+   *  This is what the metadata record lays out. */
+  fields: AnyMetadataField[];
   /** Direct properties, in the template's own order — scalars and link-only
    *  relationships interleaved exactly as declared. */
   body: AnyMetadataField[];
   /** Relationship fields that inherit a value. Their own group in the Template
-   *  tab, and the record's Relationships section below the body. */
+   *  tab only; the record places them at their position in `fields`. */
   inherited: RelationshipMetadataField[];
 }
 
@@ -60,11 +64,12 @@ export function deriveTemplateStructure(
         ]
       : []),
   ];
+  const fields = profile.metadata[language] ?? [];
   const body: AnyMetadataField[] = [];
   const inherited: RelationshipMetadataField[] = [];
-  for (const f of profile.metadata[language] ?? []) {
+  for (const f of fields) {
     if (f.type === "relationship" && fieldInherits(f)) inherited.push(f);
     else body.push(f);
   }
-  return { header, body, inherited };
+  return { header, fields, body, inherited };
 }

@@ -459,6 +459,21 @@ Several fields sharing a `connectionKey` = **one connection, many inherited colu
 - **Reduce/rollup**: `reduce?: InheritReduce` (`list|distinct|count|min|max|first`) →
   `reduceInherited()` → a carbon `Σ` `RollupChip` (Notion/Airtable "calculation"). Shown
   per-column on the grouped table and in the single card's value-column header.
+- **Template order, no Relationships section.** The record (`MetadataRecord`, every
+  host) and the edit form (`MetadataEditBody`) lay out relationship and inherited
+  fields at their template position among the scalars, read from
+  `deriveTemplateStructure(...).fields` / `profile.metadata[lang]` order. There is
+  no "Relationships" or "Derived relationships" heading in either mode. A
+  multi-inheritance group renders ONCE, at the position of its FIRST member field.
+  A connection table spans the full record width (`MasonryItem full`), like before.
+  CEJIL profiles are sorted into template order in `buildCejilProfile`
+  (`orderByTemplate`): a relationship group sits at the first template property of
+  its relation type (`keyAliases`), the inherited place at the geolocation-inheriting
+  relationship property, and fields the template doesn't declare (e.g. "Relacionado",
+  or "Jueces firmantes" on a Causa) go last in build order. The Template tab's
+  separate Inherited group is unchanged; it describes the template, not the record.
+  In edit mode Title, Template, Description, Geolocation and Country keep their
+  fixed controls at the top; everything else follows template order.
 - **Read UI** (`MetadataReadBody`): `ConnectionGroupCard` (a table, entities once ×
   inherited columns, cell-merged) for shared connections; `RelationshipFieldCard` for
   singletons — an **inheriting single now renders as the SAME bordered table** (entity

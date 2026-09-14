@@ -501,13 +501,53 @@ function inheritedPlaceField(sharedId: string, own: CejilEntity): MetadataField 
   return undefined;
 }
 
+/** Put an entity's fields in its template's declared order.
+ *
+ *  The fields are built in three batches (scalars, the inherited place, the
+ *  relationship groups), and the record lays them out in array order, so the
+ *  batches have to be merged back into the template's sequence here:
+ *   - a scalar sits at its own property (`id` is the property name);
+ *   - the inherited place sits at the relationship property that declares
+ *     `inherit: {type: "geolocation"}`;
+ *   - a relationship group sits at the first template property of its relation
+ *     type (`keyAliases` lists those property names).
+ *  A field the template does not declare (a relation type no property names,
+ *  or "Jueces firmantes" on a Causa, which reaches its judges through a
+ *  Sentencia) has no position and goes after every declared one, in the order
+ *  it was built. The sort is stable, so ties keep build order too. */
+function orderByTemplate(templateId: string, fields: AnyMetadataField[]): AnyMetadataField[] {
+  const props = propsByTemplate.get(templateId) || [];
+  const indexOf = new Map(props.map((p, i) => [p.name, i]));
+  const placeIndex = props.findIndex(
+    (p) => p.type === "relationship" && p.inherit?.type === "geolocation",
+  );
+  const position = (f: AnyMetadataField): number => {
+    if (f.id === PLACE_INHERITED_KEY) return placeIndex >= 0 ? placeIndex : Infinity;
+    if (f.type === "relationship") {
+      const hits = (f.keyAliases ?? [])
+        .map((name) => indexOf.get(name))
+        .filter((i): i is number => i !== undefined);
+      return hits.length ? Math.min(...hits) : Infinity;
+    }
+    return indexOf.get(f.id) ?? Infinity;
+  };
+  return fields
+    .map((field, i) => ({ field, i, pos: position(field) }))
+    .sort((a, b) => (a.pos === b.pos ? a.i - b.i : a.pos < b.pos ? -1 : 1))
+    .map((x) => x.field);
+}
+
 export function buildCejilProfile(sharedId: string): EntityProfile {
   const es = cejilBySidLang().get(`${sharedId}::es`) || cejilBySidLang().get(`${sharedId}::en`)!;
   const relFields = cejilRelationshipFields(sharedId, es.template);
   const place = inheritedPlaceField(sharedId, es);
   const metadata = LANGS.reduce((acc, lang) => {
     const doc = cejilBySidLang().get(`${sharedId}::${LANG_CODE[lang]}`) || es;
-    acc[lang] = [...mdFields(doc), ...(place ? [place] : []), ...relFields];
+    acc[lang] = orderByTemplate(es.template, [
+      ...mdFields(doc),
+      ...(place ? [place] : []),
+      ...relFields,
+    ]);
     return acc;
   }, {} as Record<Language, AnyMetadataField[]>);
 
