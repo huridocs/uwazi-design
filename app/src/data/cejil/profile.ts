@@ -18,6 +18,7 @@ import { cejilChainGraph, CEJIL_PERPETRATOR_CHAIN } from "./graph";
 import { curatedCejilRefsFor } from "./textAnchors";
 import {
   cejilBySidLang,
+  cejilEsBySid,
   cejilRelsByEntity,
   cejilFilesBySid,
   cejilSharedIdSet,
@@ -66,6 +67,8 @@ const propsByTemplate = new Map(
       label: p.label,
       type: p.type,
       relationType: (p as { relationType?: string }).relationType,
+      /** Target template of a relationship property, when it names one. */
+      content: (p as { content?: string }).content,
     })),
   ]),
 );
@@ -365,23 +368,37 @@ function cejilRelationshipFields(sharedId: string, template: string): Relationsh
  *  merged back into the template's sequence here:
  *   - a scalar sits at its own property (`id` is the property name);
  *   - a relationship group sits at the first template property whose relation
- *     type has the group's type name (`relationType` on the field).
- *  A field the template does not declare (a relation type no property names,
- *  or "Jueces firmantes" on a Causa, which reaches its judges through a
- *  Sentencia) has no position and goes after every declared one, in the order
- *  it was built. The sort is stable, so ties keep build order too. */
+ *     type has the group's type name (`relationType` on the field);
+ *   - failing that, at the first relationship property whose target template
+ *     (`content`) is the template of EVERY entity the group connects. This
+ *     places groups whose edges carry another relation type, or none
+ *     ("Relacionado"), but point at exactly what a property points at. A group
+ *     whose entities span several templates is not placed by one of them.
+ *  A field neither rule places (a relation the template does not model, e.g.
+ *  "Jueces firmantes" on a Causa, which reaches its judges through a Sentencia
+ *  and has no Juez property) has no position and goes after every declared one,
+ *  in the order it was built. The sort is stable, so ties keep build order too. */
 let relTypeNameById: Map<string, string> | null = null;
 function orderByTemplate(templateId: string, fields: AnyMetadataField[]): AnyMetadataField[] {
   if (!relTypeNameById) relTypeNameById = new Map(cejilRelationTypes.map((r) => [r._id, r.name]));
   const names = relTypeNameById;
   const props = propsByTemplate.get(templateId) || [];
   const indexOf = new Map(props.map((p, i) => [p.name, i]));
+  const byTarget = (f: RelationshipMetadataField): number => {
+    const templates = new Set(
+      f.connectedEntityIds.map((id) => cejilEsBySid().get(id)?.template).filter(Boolean),
+    );
+    if (templates.size !== 1) return Infinity;
+    const [target] = templates;
+    const i = props.findIndex((p) => p.type === "relationship" && p.content === target);
+    return i >= 0 ? i : Infinity;
+  };
   const position = (f: AnyMetadataField): number => {
     if (f.type === "relationship") {
       const i = props.findIndex(
         (p) => p.type === "relationship" && !!p.relationType && names.get(p.relationType) === f.relationType,
       );
-      return i >= 0 ? i : Infinity;
+      return i >= 0 ? i : byTarget(f);
     }
     return indexOf.get(f.id) ?? Infinity;
   };

@@ -503,8 +503,10 @@ Several fields sharing a `connectionKey` = **one connection, many inherited colu
   A connection table spans the full record width (`MasonryItem full`), like before.
   CEJIL profiles are sorted into template order in `buildCejilProfile`
   (`orderByTemplate`): a relationship group sits at the first template property
-  whose relation type has the group's type name, and fields the template doesn't
-  declare (e.g. "Jueces firmantes" on a Causa) go last in build order.
+  whose relation type has the group's type name, failing that at the first
+  relationship property whose target template (`content`) is the template of
+  every entity the group connects, and fields neither rule places (e.g. "Jueces
+  firmantes" on a Causa) go last in build order.
   In edit mode Title, Template, Description, Geolocation and Country keep their
   fixed controls at the top; everything else follows template order.
 - **Read UI** (`MetadataReadBody`): `ConnectionGroupCard` (a table, entities once ×
