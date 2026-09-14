@@ -41,8 +41,7 @@ import type { ElementType, ReactNode } from "react";
  *
  *  `section` is the 12px one, and it was hand-written at ten sites before this
  *  prop existed: a label heading a whole SECTION of a view — "Primary
- *  documents" over the Files list, "File details", "Issues (3)",
- *  "Relationships". They could not adopt this component without shrinking a
+ *  documents" over the Files list, "File details", "Issues (3)". They could not adopt this component without shrinking a
  *  step, which is why they never did.
  *
  *  Two levels, not a free size: the difference is one of scope (a label in a

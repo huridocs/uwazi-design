@@ -11,6 +11,7 @@ import type { FileEntry, DocumentGroup } from "../files";
 import type { Reference } from "../references";
 import type { CejilEntity, CejilFile } from "./types";
 import { cejilTemplates } from "./templates";
+import { cejilRelationTypes } from "./relationTypes";
 import { chains, type ChainGraph, type ProvenanceStep } from "../../utils/chainTraversal";
 import { registerInheritanceGraph } from "../../utils/inheritance";
 import { cejilChainGraph, CEJIL_PERPETRATOR_CHAIN } from "./graph";
@@ -60,7 +61,12 @@ export function cejilReferencesFor(sharedId: string): Reference[] {
 const propsByTemplate = new Map(
   cejilTemplates.map((t) => [
     t._id,
-    [...(t.commonProperties || []), ...t.properties].map((p) => ({ name: p.name, label: p.label, type: p.type })),
+    [...(t.commonProperties || []), ...t.properties].map((p) => ({
+      name: p.name,
+      label: p.label,
+      type: p.type,
+      relationType: (p as { relationType?: string }).relationType,
+    })),
   ]),
 );
 
@@ -352,12 +358,45 @@ function cejilRelationshipFields(sharedId: string, template: string): Relationsh
   return out;
 }
 
+/** Put an entity's fields in its template's declared order.
+ *
+ *  The fields are built in two batches (scalars, then the relationship groups),
+ *  and the record lays them out in array order, so the batches have to be
+ *  merged back into the template's sequence here:
+ *   - a scalar sits at its own property (`id` is the property name);
+ *   - a relationship group sits at the first template property whose relation
+ *     type has the group's type name (`relationType` on the field).
+ *  A field the template does not declare (a relation type no property names,
+ *  or "Jueces firmantes" on a Causa, which reaches its judges through a
+ *  Sentencia) has no position and goes after every declared one, in the order
+ *  it was built. The sort is stable, so ties keep build order too. */
+let relTypeNameById: Map<string, string> | null = null;
+function orderByTemplate(templateId: string, fields: AnyMetadataField[]): AnyMetadataField[] {
+  if (!relTypeNameById) relTypeNameById = new Map(cejilRelationTypes.map((r) => [r._id, r.name]));
+  const names = relTypeNameById;
+  const props = propsByTemplate.get(templateId) || [];
+  const indexOf = new Map(props.map((p, i) => [p.name, i]));
+  const position = (f: AnyMetadataField): number => {
+    if (f.type === "relationship") {
+      const i = props.findIndex(
+        (p) => p.type === "relationship" && !!p.relationType && names.get(p.relationType) === f.relationType,
+      );
+      return i >= 0 ? i : Infinity;
+    }
+    return indexOf.get(f.id) ?? Infinity;
+  };
+  return fields
+    .map((field, i) => ({ field, i, pos: position(field) }))
+    .sort((a, b) => (a.pos === b.pos ? a.i - b.i : a.pos < b.pos ? -1 : 1))
+    .map((x) => x.field);
+}
+
 export function buildCejilProfile(sharedId: string): EntityProfile {
   const es = cejilBySidLang().get(`${sharedId}::es`) || cejilBySidLang().get(`${sharedId}::en`)!;
   const relFields = cejilRelationshipFields(sharedId, es.template);
   const metadata = LANGS.reduce((acc, lang) => {
     const doc = cejilBySidLang().get(`${sharedId}::${LANG_CODE[lang]}`) || es;
-    acc[lang] = [...mdFields(doc), ...relFields];
+    acc[lang] = orderByTemplate(es.template, [...mdFields(doc), ...relFields]);
     return acc;
   }, {} as Record<Language, AnyMetadataField[]>);
 
