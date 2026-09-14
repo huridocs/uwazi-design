@@ -1,4 +1,5 @@
 import { ReactNode, useState, useCallback, useRef, useEffect } from "react";
+import { SplitWidthProvider } from "../../hooks/useSplitWidth";
 
 /** THE MINIMUM, for every host with a drawer.
  *
@@ -84,6 +85,9 @@ export function SplitView({
   }, [minRightWidth, maxRightWidth]);
 
   return (
+    // Both panes read the drawer width, so a component that measures itself
+    // (the tab strips' fold) re-renders and measures again when it changes.
+    <SplitWidthProvider value={rightWidth}>
     <div ref={containerRef} className="flex flex-1 overflow-hidden">
       <div className="flex-1 overflow-hidden">{left}</div>
       <div
@@ -99,5 +103,6 @@ export function SplitView({
         {right}
       </div>
     </div>
+    </SplitWidthProvider>
   );
 }
