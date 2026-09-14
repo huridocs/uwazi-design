@@ -83,17 +83,30 @@
 @utility gutter-host {
   --gutter: var(--spacing-gutter-narrow);
   --gutter-reach: initial;
+  --tabstrip-top: var(--spacing-stack);
   padding-inline: var(--gutter);
 }
 @utility gutter-host-main {
   --gutter: var(--spacing-gutter-main);
   --gutter-reach: initial;
+  --tabstrip-top: var(--spacing-stack);
   padding-inline: var(--gutter);
 }
 @utility gutter-host-rail {
   --gutter: var(--spacing-gutter-rail);
   --gutter-reach: initial;
+  --tabstrip-top: var(--spacing-stack);
   padding-inline: var(--gutter);
+}
+/* THE HOST OWNS THE TAB STRIP'S TOP OFFSET, as it owns the side gutter. Every
+ * gutter host declares `--tabstrip-top` (one `stack` step), and the wrapper of
+ * `MainTabs` and `DrawerTabs` pads its top by it and nothing else, so every pane
+ * that opens with a strip puts it at the same distance from the pane top (or
+ * from the header above it). The strip adds no bottom padding: the block below
+ * it owns that `stack` gap. Outside a host the variable is unset and the strip
+ * sits flush. */
+@utility tabstrip-slot {
+  padding-top: var(--tabstrip-top, 0px);
 }
 @utility bleed {
   margin-inline: calc(var(--gutter-reach, var(--gutter, 0px)) * -1);

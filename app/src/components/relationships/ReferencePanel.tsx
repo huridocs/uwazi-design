@@ -40,7 +40,6 @@ export function ReferencePanel() {
       <EntityOverlay />
 
       <DrawerTabs
-        className="pt-stack"
         tabs={baseDrawerTabs.map((tab) => {
           if (tab.id === "connections")
             return { ...tab, count: references.length, dot: relFilterCount > 0 };

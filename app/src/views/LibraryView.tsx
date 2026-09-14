@@ -1049,7 +1049,6 @@ export function LibraryView() {
     // does not move the tab strip.
     <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0 bg-warm">
       <DrawerTabs
-        className="py-2"
         tabs={[
           // DOTS, not counts. Both signals here are user-set state that is still
           // in effect while you're looking at the other panel — filters you
@@ -1071,8 +1070,9 @@ export function LibraryView() {
         activeId={drawerTab}
         onChange={(id) => setDrawerTab(id as "filters" | "results")}
       />
-      {/* `bleed`: it clips, so it spans the panel for the lanes inside to reach the edge. */}
-      <div className="bleed flex-1 min-h-0 overflow-hidden">
+      {/* `bleed`: it clips, so it spans the panel for the lanes inside to reach
+          the edge. `pt-stack`: the one step below the strip, which pads only its top. */}
+      <div className="bleed flex-1 min-h-0 overflow-hidden pt-stack">
         {drawerTab === "results" && showResultsTab ? resultsBody : <LibraryFilters />}
       </div>
     </div>

@@ -92,14 +92,14 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
               entities — otherwise the viewer falls back to the sample PDF. */}
           {profile.hasDocument && (
             <DrawerTabs
-              className="py-2"
               tabs={[{ id: "document", label: "Document" }]}
               activeId="document"
               onChange={() => {}}
             />
           )}
           <RelationshipsFiltersPanel width={720} />
-          <div className="flex-1 min-h-0 flex flex-col">
+          {/* One `stack` step below the strip; the strip itself pads only its top. */}
+          <div className={`flex-1 min-h-0 flex flex-col ${profile.hasDocument ? "pt-stack" : ""}`}>
           {profile.hasDocument ? (
             <DocumentViewer showMinimap={!hideMinimap} />
           ) : (
