@@ -18,6 +18,7 @@ import { RelationshipFieldCard } from "./RelationshipFieldCard";
 import { fieldItem, connectionItem, type MetadataItem } from "./items";
 import { deriveTemplateStructure } from "../../utils/templateStructure";
 import { flashElement } from "../../utils/flash";
+import { settleScrollTo } from "../../utils/settleScroll";
 import { groupConnections, specInherits, type ConnectionGroup } from "../../utils/inheritance";
 
 /** One entry of the record, in template order. A plain item is a value card or
@@ -110,13 +111,17 @@ export function MetadataRecord({
   const clearFocus = useSetAtom(focusMetadataFieldAtom);
   const rootRef = useRef<HTMLDivElement>(null);
   const [lightbox, setLightbox] = useState<EntityImage | null>(null);
+  // Cancels this record's settle-scroll on unmount. Not on a re-run of the
+  // focus effect: that effect clears the request, which re-runs it at once.
+  const cancelSettle = useRef<(() => void) | null>(null);
+  useEffect(() => () => cancelSettle.current?.(), []);
   useEffect(() => {
     if (!focusField || focusField.entityId !== profile.id) return;
     const k = CSS.escape(focusField.fieldKey);
     const el = rootRef.current?.querySelector<HTMLElement>(
       `[data-field-key="${k}"], [data-field-keys~="${k}"]`,
     );
-    if (el) {
+    if (el && rootRef.current) {
       /* SCROLL, AND KEEP SCROLLING WHILE THE RECORD IS STILL SETTLING.
          One `scrollIntoView` is not enough here and the reason is the masonry:
          `MasonryItem` gives every card `gridRowEnd: span 1` until its first
@@ -126,23 +131,15 @@ export function MetadataRecord({
          moves. The target got flashed at a position it then left, which read as
          "the scroll went nowhere".
 
-         So the root is observed and the scroll re-issued while it changes, for
-         a bounded window. Smooth all the way, so the repeats retarget an
-         animation in flight rather than jumping. */
-      const settle = () => el.scrollIntoView({ behavior: "smooth", block: "center" });
-      settle();
-      const ro = new ResizeObserver(settle);
-      if (rootRef.current) ro.observe(rootRef.current);
-      const stopSettling = setTimeout(() => ro.disconnect(), 700);
-
-      // The flash ends itself; clearing the request below re-runs this effect,
-      // so nothing that must outlive this commit can live in its cleanup.
-      flashElement(el);
+         `settleScrollTo` observes the root and re-issues the scroll while it
+         changes, for a bounded window, and flashes the field when the scroll
+         lands. It owns its observer and timers: `clearFocus` below re-runs this
+         effect, so anything tied to this effect's cleanup would stop at once. */
+      cancelSettle.current = settleScrollTo(el, rootRef.current, {
+        onLand: () => flashElement(el),
+      });
       clearFocus(null);
-      return () => {
-        clearTimeout(stopSettling);
-        ro.disconnect();
-      };
+      return;
     }
     clearFocus(null); // field not on this record — don't leave the request hanging
   }, [focusField, profile.id, clearFocus]);
