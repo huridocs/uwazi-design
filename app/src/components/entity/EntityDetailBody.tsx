@@ -195,9 +195,7 @@ export function EntityDetailBody({
             it has to span the panel for the lanes inside it to reach the edge. */}
         <div className="bleed flex-1 min-h-0 relative overflow-hidden flex flex-col">
           {activeTab === "document" ? (
-            <div data-gutter-bleed className="bleed-flush flex-1 min-h-0 flex flex-col">
-              <DocumentViewer showMinimap={false} hideActionBar />
-            </div>
+            <DocumentViewer showMinimap={false} hideActionBar />
           ) : activeTab === "relationships" ? (
             <RelationshipsDrawerSection hideActionBar />
           ) : activeTab === "files" ? (

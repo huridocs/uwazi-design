@@ -36,10 +36,10 @@ export function ActiveFiltersSheet() {
 
   return (
     <div
-      className="shrink-0 bg-paper animate-fade-in-up"
+      className="bleed shrink-0 bg-paper animate-fade-in-up"
       style={{ borderTop: "1px solid var(--border-primary)" }}
     >
-      <div className="flex items-center gap-2 px-3.5 h-9">
+      <div className="flex items-center gap-2 h-9">
         <button
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
@@ -68,7 +68,7 @@ export function ActiveFiltersSheet() {
       </div>
 
       {open && (
-        <div className="h-16 overflow-y-auto px-3.5 pb-3 flex flex-wrap gap-1.5">
+        <div className="h-16 overflow-y-auto pb-3 flex flex-wrap gap-1.5">
           {items.map((it) => (
             <ActiveFilterChip
               key={it.id}

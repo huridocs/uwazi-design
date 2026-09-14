@@ -89,9 +89,13 @@ Keep it in sync when tokens.css or the style rules change.
   Vertical rhythm is `stack` (8px): tabs → search → controls → first card →
   card. A padded control declares its edge: `data-gutter-align="box"` (hover
   fill stays inside — close X, tree/ToC rows) or `"text"` (the group title
-  field). Verify with `window.__gutter()` in the console — it asserts one left
-  and one right inset for the open host; don't eyeball it. `px-3.5` is retired
-  except the Library facet column, which waits for its own pass.
+  field). Verify with `window.__gutter()` in the console — it asserts one start
+  and one end inset (logical, read in the host's `direction`, measured inside the
+  host's border) for the open host; don't eyeball it. `px-3.5` is retired: the
+  Library facet column and the Relationships/Files filter slide-over are both
+  narrow hosts (12px), and `DocumentViewer` is `bleed-flush` itself — inside it
+  `bleed` reaches nothing (`--gutter-reach: 0`), so its action bar takes the
+  gutter as padding.
 - **No thick left-border accents** on cards or sidebar items. Use a small dot, an icon colour, or a bg tint.
 - **Selected card state = `bg-parchment`** (#F5F0E8). Don't reach for inline `color-mix`, `bg-warm`, or `bg-vellum`.
 - **Badges are `w-fit`** so they don't stretch in flex/grid.

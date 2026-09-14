@@ -77,7 +77,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
           id: "document",
           label: "Document",
           content: (
-            <div className="flex flex-col h-full min-h-0 relative overflow-clip">
+            <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0 relative overflow-clip">
               <EntityOverlay />
               <DocumentViewer />
             </div>
@@ -100,8 +100,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
             />
           )}
           <RelationshipsFiltersPanel width={720} />
-          {/* The page runs edge to edge; the strip above sits on the gutter. */}
-          <div data-gutter-bleed className="bleed-flush flex-1 min-h-0 flex flex-col">
+          <div className="flex-1 min-h-0 flex flex-col">
           {profile.hasDocument ? (
             <DocumentViewer showMinimap={!hideMinimap} />
           ) : (

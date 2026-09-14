@@ -28,8 +28,8 @@ interface DrawerTabsProps {
   onChange: (id: string) => void;
   /** Wrapper padding — vertical only by default. The strip carries no side
    *  padding: the host that lays it out owns the gutter (`gutter-host`), which
-   *  is how it lines up with the rows below it. A host with no gutter of its own
-   *  passes one here (the Library's filter panel passes `px-3.5 py-2`). */
+   *  is how it lines up with the rows below it. A caller that is not a host
+   *  passes its own padding here. */
   className?: string;
 }
 

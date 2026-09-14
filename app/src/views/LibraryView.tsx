@@ -964,11 +964,12 @@ export function LibraryView() {
   );
 
   const filtersDrawer = (
-    <div className="flex flex-col h-full min-h-0 bg-warm">
+    // The narrow-tier gutter host (12px): the same edge as the entity preview
+    // that replaces this panel when an entity is selected, so selecting one
+    // does not move the tab strip.
+    <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0 bg-warm">
       <DrawerTabs
-        /* The facet panel's own `px-3.5`, so the strip and the cards under it
-           share an edge — this panel is not a gutter host. */
-        className="px-3.5 py-2"
+        className="py-2"
         tabs={[
           // DOTS, not counts. Both signals here are user-set state that is still
           // in effect while you're looking at the other panel — filters you
@@ -990,7 +991,8 @@ export function LibraryView() {
         activeId={drawerTab}
         onChange={(id) => setDrawerTab(id as "filters" | "results")}
       />
-      <div className="flex-1 min-h-0 overflow-hidden">
+      {/* `bleed`: it clips, so it spans the panel for the lanes inside to reach the edge. */}
+      <div className="bleed flex-1 min-h-0 overflow-hidden">
         {drawerTab === "results" && showResultsTab ? resultsBody : <LibraryFilters />}
       </div>
     </div>
@@ -1016,7 +1018,13 @@ export function LibraryView() {
           id: "filters",
           label: "Filters",
           count: activeFilterCount || undefined,
-          content: <LibraryFilters />,
+          // Both bodies are written for a gutter host (the drawer); the sheet
+          // gives them one.
+          content: (
+            <div data-gutter-host className="gutter-host h-full min-h-0 flex flex-col">
+              <LibraryFilters />
+            </div>
+          ),
         },
         // Same rule on a phone: the Results section is a second copy of the
         // main pane when that pane is already the Results view.
@@ -1026,7 +1034,11 @@ export function LibraryView() {
                 id: "results",
                 label: "Results",
                 count: hasQuery ? filtered.length : undefined,
-                content: resultsBody,
+                content: (
+                  <div data-gutter-host className="gutter-host h-full min-h-0 flex flex-col">
+                    {resultsBody}
+                  </div>
+                ),
               },
             ]
           : []),

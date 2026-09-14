@@ -67,7 +67,7 @@ export function DrawerFilesBody({
       <div className="flex-1 min-h-0 flex flex-col">
         {/* The viewer is a stage, edge to edge; the bar under it is on the gutter. */}
         {viewingFile.type === "pdf" ? (
-          <div data-gutter-bleed className="bleed-flush flex-1 min-h-0">
+          <div className="flex-1 min-h-0">
             <DocumentViewer
               showMinimap={false}
               fileOverride={{ url, language: viewingFile.language }}

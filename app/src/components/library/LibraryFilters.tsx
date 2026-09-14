@@ -262,7 +262,9 @@ export function LibraryFilters() {
           dead space. The facet cards sit flush under the tabs at all times. */}
       {/* Facet cards — top padding matches the main content (py-3) so the first
           block lines up with the first library card. */}
-      <div className="flex-1 overflow-auto px-3.5 pt-3 pb-3 space-y-1.5">
+      {/* A scroll lane on the host's gutter (12px, the same edge as the entity
+          preview that takes this drawer slot); `px-3.5` retired. */}
+      <div className="bleed flex-1 overflow-auto pt-3 pb-3 space-y-1.5">
         <FacetCard title="Status">
           <FacetRow
             checked={!!statusFilters.restricted}
@@ -469,7 +471,11 @@ export function LibraryFilters() {
 
       {/* Footer — Collapse all / Expand all (left) + Clear (right). */}
       <div
-        className="shrink-0 flex items-center gap-2 h-12 px-3.5"
+        /* `bg-paper`, like every other drawer footer (the entity preview's takes
+           this same slot): on the warm rail the buttons' `bg-warm` fill was
+           invisible at rest, so their TEXT was the edge and sat 12px in from the
+           facet cards. On paper the fill reads, and the box meets the gutter. */
+        className="bleed shrink-0 flex items-center gap-2 h-12 bg-paper"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
         <button

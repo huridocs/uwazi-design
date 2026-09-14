@@ -75,24 +75,32 @@
  * Outside a host `--gutter` is unset and both are no-ops.
  *
  * Mark the host `data-gutter-host` so `window.__gutter()` can find and measure it. */
+/* `--gutter-reach` is how far a `bleed` box has to reach to find the pane edge.
+ * Normally that is the gutter; inside a `bleed-flush` box it is nothing — the
+ * box is already at the edge — so a bar inside a document viewer takes the
+ * gutter as padding without being pushed past the pane. Each host resets it. */
 @utility gutter-host {
   --gutter: var(--spacing-gutter-narrow);
+  --gutter-reach: initial;
   padding-inline: var(--gutter);
 }
 @utility gutter-host-main {
   --gutter: var(--spacing-gutter-main);
+  --gutter-reach: initial;
   padding-inline: var(--gutter);
 }
 @utility gutter-host-rail {
   --gutter: var(--spacing-gutter-rail);
+  --gutter-reach: initial;
   padding-inline: var(--gutter);
 }
 @utility bleed {
-  margin-inline: calc(var(--gutter, 0px) * -1);
+  margin-inline: calc(var(--gutter-reach, var(--gutter, 0px)) * -1);
   padding-inline: var(--gutter, 0px);
 }
 @utility bleed-flush {
   margin-inline: calc(var(--gutter, 0px) * -1);
+  --gutter-reach: 0px;
 }
 
 /* Brand radii — softer than Tailwind defaults but not pillowy. The earlier

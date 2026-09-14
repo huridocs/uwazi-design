@@ -416,9 +416,12 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
   }, [scrollTarget, references, setScrollToHighlight]);
 
   return (
-    <div className="flex flex-col h-full min-h-0 bg-paper">
+    // `bleed-flush`: the viewer runs to the pane edge wherever it is hosted, so
+    // hosts place it without a wrapper. Its page area is a stage (unasserted by
+    // `__gutter`); its action bar puts the buttons back on the pane's gutter.
+    <div className="bleed-flush flex flex-col h-full min-h-0 bg-paper">
       {/* Scrollable document area + minimap */}
-      <div className="flex-1 relative min-h-0">
+      <div data-gutter-bleed className="flex-1 relative min-h-0">
         {showLangFallback && (
           <div
             className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 ps-3 pe-1.5 py-1.5 rounded-md bg-warning-light text-warning text-xs font-medium shadow-sm animate-fade-in-up"

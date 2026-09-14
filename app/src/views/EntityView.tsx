@@ -93,18 +93,21 @@ export function EntityView() {
   }
 
   const renderLeft = (menuTrigger?: ReactNode) => (
-    <div className="flex flex-col h-full min-h-0 bg-paper">
+    // The narrow-tier gutter host: tabs, DocMeta and the viewer's action bar take
+    // their side inset from this padding (see `gutter-host`).
+    <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0 bg-paper">
       <MainTabs
         tabs={tabs}
         activeId={activeTab}
         onChange={handleTabChange}
         onBack={goBack}
+        gutter
         languages={LANGUAGES}
         availableLanguages={LANGUAGES}
         activeLanguage={language}
         onLanguageChange={(lang) => setLanguage(lang as Language)}
       />
-      <DocMeta />
+      <DocMeta gutter />
       <DocumentViewer actionBarMenu={menuTrigger} />
     </div>
   );
