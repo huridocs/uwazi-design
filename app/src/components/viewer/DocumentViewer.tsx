@@ -443,7 +443,7 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
             to reload + repaint when the user switches back. */}
         <div
           ref={containerRef}
-          className={`absolute inset-0 overflow-auto flex flex-col items-center py-4 gap-4 ${renditionMode ? "hidden" : ""}`}
+          className={`absolute inset-0 overflow-auto flex flex-col items-center body-top pb-4 gap-4 ${renditionMode ? "hidden" : ""}`}
           style={{
             paddingLeft: 16,
             paddingRight: isMobile ? 16 : showMinimap ? 80 : 16,

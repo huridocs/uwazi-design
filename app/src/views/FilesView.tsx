@@ -126,7 +126,7 @@ export function FilesView({ tabs, activeTab, onTabChange, onBack }: FilesViewPro
         onLanguageChange={(lang) => setLanguage(lang as Language)}
       />
       <DocMeta showPdfSelector={false} />
-      <div className="bleed flex-1 overflow-auto pt-4 pb-8 bg-warm">
+      <div className="bleed flex-1 overflow-auto body-top pb-8 bg-warm">
         <SectionLabel as="h3" level="section" className="mb-2">
           Primary documents
         </SectionLabel>

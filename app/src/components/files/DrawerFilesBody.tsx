@@ -117,7 +117,7 @@ export function DrawerFilesBody({
       {/* A scroll lane: reaches the panel edge, content back on the host's
           gutter. Nothing inside adds side padding — headings, notes and the
           "+ Add translation" link start on the same edge as the file cards. */}
-      <div className="bleed flex-1 min-h-0 overflow-auto pt-stack pb-8">
+      <div className="bleed flex-1 min-h-0 overflow-auto body-top pb-8">
         <SectionHeader label="Primary documents" />
         {primaryGroups.length === 0 && (
           <p className="text-xs italic text-ink-tertiary mb-5">
