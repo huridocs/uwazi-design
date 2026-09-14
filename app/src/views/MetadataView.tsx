@@ -54,6 +54,7 @@ import { ShareEntityModal } from "../components/share/ShareEntityModal";
 import { fromDateInputValue, toDateInputValue } from "../utils/dateValue";
 import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
 import { WARM_BUTTON, WARM_EDGE } from "../components/shared/warmButton";
+import { flashElement } from "../utils/flash";
 
 interface MetadataViewProps {
   tabs: { id: string; label: string; count?: number }[];
@@ -492,9 +493,9 @@ export function MetadataEditBody({
     const el = bodyRef.current?.querySelector<HTMLElement>(`[data-fill-id="${CSS.escape(fieldId)}"]`);
     if (!el) return;
     el.scrollIntoView({ behavior: "smooth", block: "center" });
-    el.classList.add("flash-highlight");
-    const t = setTimeout(() => el.classList.remove("flash-highlight"), 1100);
-    return () => clearTimeout(t);
+    // The flash ends itself: `sendFill(null)` above re-runs this effect, which
+    // would cancel a timeout returned from here.
+    flashElement(el);
     // `fillRequest.nonce` is the signal — filling one field twice with the same
     // text has to fire twice, so the object identity is what we watch.
   }, [fillRequest, sendFill, sessionId]);

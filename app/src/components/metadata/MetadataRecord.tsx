@@ -17,6 +17,7 @@ import { ConnectionGroupCard } from "./ConnectionGroupCard";
 import { RelationshipFieldCard } from "./RelationshipFieldCard";
 import { fieldItem, connectionItem, type MetadataItem } from "./items";
 import { deriveTemplateStructure } from "../../utils/templateStructure";
+import { flashElement } from "../../utils/flash";
 import { groupConnections, specInherits, type ConnectionGroup } from "../../utils/inheritance";
 
 /** One entry of the record, in template order. A plain item is a value card or
@@ -134,11 +135,11 @@ export function MetadataRecord({
       if (rootRef.current) ro.observe(rootRef.current);
       const stopSettling = setTimeout(() => ro.disconnect(), 700);
 
-      el.classList.add("flash-highlight");
-      const t = setTimeout(() => el.classList.remove("flash-highlight"), 1100);
+      // The flash ends itself; clearing the request below re-runs this effect,
+      // so nothing that must outlive this commit can live in its cleanup.
+      flashElement(el);
       clearFocus(null);
       return () => {
-        clearTimeout(t);
         clearTimeout(stopSettling);
         ro.disconnect();
       };
