@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { WARM_BUTTON } from "../shared/warmButton";
 
 type Variant = "primary" | "secondary" | "danger" | "ghost" | "success";
 type Size = "sm" | "md";
@@ -13,9 +14,10 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const variants: Record<Variant, string> = {
   // The canonical action-bar button (the Translations page's "Translate" /
   // "Import" buttons) — calm warm fill, ink-secondary text. Used for every
-  // action-bar action. Seal stays for danger only.
-  primary: "bg-warm text-ink-secondary hover:bg-parchment hover:text-ink",
-  secondary: "bg-warm text-ink-secondary hover:bg-parchment hover:text-ink",
+  // action-bar action. Seal stays for danger only. Settings pages and their
+  // footers are paper, so both warm variants carry the paper-ground edge.
+  primary: WARM_BUTTON,
+  secondary: WARM_BUTTON,
   danger: "bg-seal-fill text-white hover:bg-seal-fill/90",
   ghost: "text-ink-secondary hover:bg-warm hover:text-ink",
   // Active save affordance — green only once there's an unsaved change.

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { X, CloudUpload, FileSpreadsheet, ChevronDown, Search } from "lucide-react";
 import { templates } from "../../data/imports";
+import { WARM_BUTTON } from "../shared/warmButton";
 
 interface NewImportModalProps {
   open: boolean;
@@ -184,7 +185,7 @@ export function NewImportModal({ open, onClose, onImport }: NewImportModalProps)
         <div className="flex justify-end gap-3 px-6 py-4" style={{ borderTop: "1px solid var(--border-primary)" }}>
           <button
             onClick={onClose}
-            className="px-3 py-1.5 text-xs font-medium rounded-md text-ink-secondary bg-warm hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
+            className={`px-3 py-1.5 text-xs font-medium rounded-md ${WARM_BUTTON} transition-colors cursor-pointer`}
           >
             Cancel
           </button>

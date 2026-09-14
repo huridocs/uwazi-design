@@ -19,6 +19,7 @@ import { RelationshipsCollapseControls } from "../relationships/FiltersRow";
 import { DrawerFilesBody } from "../files/DrawerFilesBody";
 import { EntityMetadataSummary } from "../metadata/EntityMetadataSummary";
 import { MetadataEditBody } from "../../views/MetadataView";
+import { WARM_BUTTON } from "../shared/warmButton";
 
 export interface EntityDetailBodyProps {
   entityId: string;
@@ -243,7 +244,7 @@ export function EntityDetailBody({
             {focused && activeTab === "metadata" && (
               <button
                 onClick={() => setEditing(true)}
-                className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+                className={`px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
               >
                 Edit
               </button>
@@ -251,7 +252,7 @@ export function EntityDetailBody({
             <div className="flex-1" />
             <button
               onClick={onClose}
-              className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+              className={`px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
             >
               Close
             </button>

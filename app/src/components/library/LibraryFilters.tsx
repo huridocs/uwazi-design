@@ -46,6 +46,7 @@ import {
 import { highlightTerms } from "../../utils/queryTokens";
 import { Checkbox } from "../shared/Checkbox";
 import { ActiveFiltersSheet } from "./ActiveFiltersSheet";
+import { WARM_BUTTON } from "../shared/warmButton";
 
 /** Carded, grouped facets matching the Uwazi library filters: a "Filters" pill,
  *  bordered facet cards, an expandable Documents group, a keyword-style
@@ -472,28 +473,28 @@ export function LibraryFilters() {
       {/* Footer — Collapse all / Expand all (left) + Clear (right). */}
       <div
         /* `bg-paper`, like every other drawer footer (the entity preview's takes
-           this same slot): on the warm rail the buttons' `bg-warm` fill was
-           invisible at rest, so their TEXT was the edge and sat 12px in from the
-           facet cards. On paper the fill reads, and the box meets the gutter. */
+           this same slot), so the footer meets the gutter. */
         className="bleed shrink-0 flex items-center gap-2 h-12 bg-paper"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
+        {/* The warm fill alone does not show on paper; `WARM_BUTTON` carries
+            the edge every warm button on a paper bar shares. */}
         <button
           onClick={collapseAll}
-          className="px-3 py-1.5 text-xs font-medium rounded-md text-ink-secondary bg-warm hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
+          className={FOOTER_BUTTON}
         >
           Collapse all
         </button>
         <button
           onClick={expandAll}
-          className="px-3 py-1.5 text-xs font-medium rounded-md text-ink-secondary bg-warm hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
+          className={FOOTER_BUTTON}
         >
           Expand all
         </button>
         <button
           onClick={clearAll}
           disabled={activeFilterCount === 0}
-          className="ms-auto px-3 py-1.5 text-xs font-medium rounded-md text-ink-secondary bg-warm hover:bg-parchment hover:text-ink transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-default disabled:hover:bg-warm"
+          className={`ms-auto ${FOOTER_BUTTON} disabled:opacity-40 disabled:cursor-default disabled:hover:bg-warm disabled:hover:text-ink-secondary`}
         >
           Clear
         </button>
@@ -501,6 +502,8 @@ export function LibraryFilters() {
     </div>
   );
 }
+
+const FOOTER_BUTTON = `px-3 py-1.5 text-xs font-medium rounded-md ${WARM_BUTTON} transition-colors cursor-pointer`;
 
 /* ── Cards & rows ── */
 

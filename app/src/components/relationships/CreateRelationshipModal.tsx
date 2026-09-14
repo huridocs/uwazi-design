@@ -13,6 +13,7 @@ import { getEntityType, Entity, entities as seedEntities } from "../../data/enti
 import { RelationType } from "../../data/references";
 import { EntityPill } from "../shared/EntityPill";
 import { t } from "../../utils/i18n";
+import { WARM_BUTTON } from "../shared/warmButton";
 
 type Step = "entity" | "new-entity" | "relation";
 
@@ -325,7 +326,7 @@ export function CreateRelationshipModal() {
             <div className="px-5 py-4 border-t border-border flex justify-between">
               <button
                 onClick={() => setStep("entity")}
-                className="px-3 py-1.5 text-xs font-medium rounded-md text-ink-secondary bg-warm hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
+                className={`px-3 py-1.5 text-xs font-medium rounded-md ${WARM_BUTTON} transition-colors cursor-pointer`}
               >
                 {t("System", "Back")}
               </button>
@@ -373,7 +374,7 @@ export function CreateRelationshipModal() {
             <div className="px-5 py-4 border-t border-border flex justify-between">
               <button
                 onClick={() => setStep("entity")}
-                className="px-3 py-1.5 text-xs font-medium rounded-md text-ink-secondary bg-warm hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
+                className={`px-3 py-1.5 text-xs font-medium rounded-md ${WARM_BUTTON} transition-colors cursor-pointer`}
               >
                 {t("System", "Back")}
               </button>

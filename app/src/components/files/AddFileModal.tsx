@@ -9,6 +9,7 @@ import {
 import { languageAtom, languageName } from "../../atoms/language";
 import { FileEntry, FileKind, DocumentGroup } from "../../data/files";
 import { asset } from "../../utils/asset";
+import { WARM_BUTTON } from "../shared/warmButton";
 
 interface PendingFile {
   id: string;
@@ -464,7 +465,7 @@ export function AddFileModal() {
         >
           <button
             onClick={() => setTarget(null)}
-            className="px-3 py-1.5 text-xs font-medium rounded-md text-ink-secondary bg-warm hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
+            className={`px-3 py-1.5 text-xs font-medium rounded-md ${WARM_BUTTON} transition-colors cursor-pointer`}
           >
             Cancel
           </button>
