@@ -109,6 +109,11 @@ Keep it in sync when tokens.css or the style rules change.
   conditional mount inside a scrollable column shoves everything below it the
   moment a user ticks a box. Reserve the space; don't grow into it.
 - **Active sidebar items**: `bg-warm text-ink` with the *same* icon colour as inactive. Background change alone signals state.
+- **Warm buttons on a paper bar or footer use `WARM_BUTTON` / `WARM_EDGE`** from
+  `components/shared/warmButton.ts`, never a hand-rolled `bg-warm` string. The
+  edge is an inset ring, so the button's box size never changes. Buttons on a
+  warm, parchment or vellum ground, in the navbar, and the Beacon pill take no
+  edge.
 
 ## CSS tokens — use real names
 
@@ -298,8 +303,10 @@ Modelled on the real Uwazi notification drawer (tasks + tinted severity cards +
 expandable stack traces + Clear).
 
 - **Pill** — lives in the navbar **right cluster** (with Settings/theme), an
-  inline `rounded-md bg-warm` button (matches the borderless action buttons in the
-  bottom `ActionBar`; **don't** give it a border or make it a pill/circle). It
+  inline `rounded-md bg-warm` button (the same fill as the bottom `ActionBar`
+  buttons, which sit on paper and carry the `WARM_EDGE` inset ring from
+  `components/shared/warmButton.ts`; the pill sits in the navbar and takes no
+  edge: **don't** give it a border or ring, or make it a pill/circle). It
   animates `width` (`beacon-spring`). The icon is always the **`UwaziLoader` mark**
   (not a bell), coloured by the most pressing state and animated **only** while a
   task runs:
