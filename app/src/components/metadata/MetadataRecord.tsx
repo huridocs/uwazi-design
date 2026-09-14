@@ -13,6 +13,7 @@ import { ConnectionGroupCard } from "./ConnectionGroupCard";
 import { RelationshipFieldCard } from "./RelationshipFieldCard";
 import { fieldItem, connectionItem, type MetadataItem } from "./items";
 import { deriveTemplateStructure } from "../../utils/templateStructure";
+import { flashElement } from "../../utils/flash";
 import { groupConnections, specInherits, type ConnectionGroup } from "../../utils/inheritance";
 
 /** One entry of the record, in template order. A plain item is a value card or
@@ -105,10 +106,11 @@ export function MetadataRecord({
     );
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
-      el.classList.add("flash-highlight");
-      const t = setTimeout(() => el.classList.remove("flash-highlight"), 1100);
+      // The flash ends itself; clearing the request below re-runs this effect,
+      // so a timeout returned from here would be cancelled at once.
+      flashElement(el);
       clearFocus(null);
-      return () => clearTimeout(t);
+      return;
     }
     clearFocus(null); // field not on this record — don't leave the request hanging
   }, [focusField, profile.id, clearFocus]);
