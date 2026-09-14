@@ -84,18 +84,21 @@
   --gutter: var(--spacing-gutter-narrow);
   --gutter-reach: initial;
   --tabstrip-top: var(--spacing-stack);
+  --body-top: var(--spacing-stack);
   padding-inline: var(--gutter);
 }
 @utility gutter-host-main {
   --gutter: var(--spacing-gutter-main);
   --gutter-reach: initial;
   --tabstrip-top: var(--spacing-stack);
+  --body-top: var(--spacing-stack);
   padding-inline: var(--gutter);
 }
 @utility gutter-host-rail {
   --gutter: var(--spacing-gutter-rail);
   --gutter-reach: initial;
   --tabstrip-top: var(--spacing-stack);
+  --body-top: var(--spacing-stack);
   padding-inline: var(--gutter);
 }
 /* THE HOST OWNS THE TAB STRIP'S TOP OFFSET, as it owns the side gutter. Every
@@ -107,6 +110,16 @@
  * sits flush. */
 @utility tabstrip-slot {
   padding-top: var(--tabstrip-top, 0px);
+}
+/* THE HOST OWNS THE GAP ABOVE A TAB'S BODY, as it owns the strip's top offset.
+ * Every gutter host declares `--body-top` (one `stack` step), and the first
+ * block of each tab body pads its top by it: the main pane measures from the
+ * DocMeta rule, a drawer from the tab strip. A scroll lane takes it as padding
+ * INSIDE the scroll, so its content is inset at rest and scrolls under the rule.
+ * Before this, each body chose its own (12, 16, 8), so the first card jumped up
+ * or down on every tab switch. Outside a host it falls back to one step. */
+@utility body-top {
+  padding-top: var(--body-top, var(--spacing-stack));
 }
 @utility bleed {
   margin-inline: calc(var(--gutter-reach, var(--gutter, 0px)) * -1);

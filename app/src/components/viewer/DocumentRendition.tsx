@@ -18,7 +18,7 @@ export function DocumentRendition({ format }: { format: DocumentFormat }) {
       <div className="absolute inset-0 overflow-auto bg-paper">
         <pre
           dir={rtl ? "rtl" : "ltr"}
-          className="mx-auto max-w-[44rem] whitespace-pre-wrap font-mono text-sm leading-relaxed text-ink-secondary px-6 py-8"
+          className="mx-auto max-w-[44rem] whitespace-pre-wrap font-mono text-sm leading-relaxed text-ink-secondary px-6 body-top pb-8"
         >
           {rendition.plainText}
         </pre>
@@ -29,7 +29,7 @@ export function DocumentRendition({ format }: { format: DocumentFormat }) {
   // HTML — styled article rendering.
   return (
     <div className="absolute inset-0 overflow-auto bg-paper">
-      <article dir={rtl ? "rtl" : "ltr"} className="mx-auto max-w-[44rem] px-6 py-8">
+      <article dir={rtl ? "rtl" : "ltr"} className="mx-auto max-w-[44rem] px-6 body-top pb-8">
         {rendition.html.map((block, i) => {
           switch (block.type) {
             case "h1":

@@ -14,7 +14,7 @@ export function EntityMetadataSummary({ entityId }: { entityId: string }) {
   return (
     // A scroll lane: it reaches the panel edge (`bleed`) and puts the record back
     // on the host's gutter, so the cards share the tab selector's edge.
-    <div className="bleed h-full overflow-auto pt-stack pb-8">
+    <div className="bleed h-full overflow-auto body-top pb-8">
       <MetadataRecord profile={profile} language={language} />
     </div>
   );

@@ -97,7 +97,13 @@ Keep it in sync when tokens.css or the style rules change.
   `bleed` button or link must be STRETCHED by a flex column to widen: `w-full`
   plus negative margins only moves it.
   Vertical rhythm is `stack` (8px): tabs → search → controls → first card →
-  card. A padded control declares its edge: `data-gutter-align="box"` (hover
+  card. The gap above a tab's body is the host's too: every host declares
+  `--body-top` (one step) and each body's first block takes it with `body-top`
+  (the metadata and files lanes, `SearchBar`, the document viewer's page scroll
+  and renditions). The main pane measures it from the DocMeta rule, a drawer
+  from its tab strip, so the first block sits at the same y in every tab. A
+  scroll lane takes it as padding inside the scroll. No tab is an exception:
+  the viewer's ground is the pane's own paper, so the page is its first block. A padded control declares its edge: `data-gutter-align="box"` (hover
   fill stays inside — close X, tree/ToC rows) or `"text"` (the group title
   field). Verify with `window.__gutter()` in the console — it asserts one start
   and one end inset (logical, read in the host's `direction`, measured inside the

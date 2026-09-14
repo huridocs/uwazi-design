@@ -131,7 +131,7 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
       <DocMeta showPdfSelector={false} />
       <ShareEntityModal open={shareOpen} onClose={() => setShareOpen(false)} />
 
-      <div className="bleed flex-1 overflow-auto py-3 pb-8">
+      <div className="bleed flex-1 overflow-auto body-top pb-8">
         {/* Full width — no 56rem cap. The label|value table sizes its label column
             to the labels and lets values run in one column, so a wide pane just
             gives the values more room rather than stretching a line of prose. */}
@@ -820,7 +820,7 @@ export function MetadataEditBody({
         ref={bodyRef}
         /* A `bleed` scroll lane with the fields back on the host's gutter —
            narrow in the entity drawer, main in the full view. */
-        className={`bleed flex-1 overflow-auto pb-8 space-y-3 ${compact ? "pt-stack" : "pt-3"}`}
+        className={`bleed flex-1 overflow-auto body-top pb-8 space-y-3`}
       >
         {/* Title */}
         <EditSection

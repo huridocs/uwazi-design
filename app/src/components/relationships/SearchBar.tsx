@@ -37,7 +37,7 @@ export function SearchBar({ rightSlot, inlineSlot }: SearchBarProps = {}) {
     // No side padding: the host's gutter places it (see `gutter-host`). One
     // `stack` step above and below, and the same step between the lines it
     // wraps onto, so tabs → search → controls → first card read as one rhythm.
-    <div className="py-stack flex items-center gap-stack flex-wrap">
+    <div className="body-top pb-stack flex items-center gap-stack flex-wrap">
       {/* min-h-8, not h-8: the chips wrap onto extra rows. But py-1 around an h-6
           input plus borders came to 34px — 2px taller than every control beside
           it, so the row sat a pixel off at both edges. py-0.5 keeps the content
