@@ -213,7 +213,7 @@ function HubNode({
         hideRelLabel={hideRelLabel}
       />
       {expanded && (
-        <div className="ml-[14px]">
+        <div className="ms-[14px]">
           {evidence
             .map((ref) => (
               <TreeNode key={ref.id}>
@@ -257,7 +257,7 @@ function AggregateNode({
         hideTypePill={hideTypePill}
       />
       {expanded && (
-        <div className="ml-[14px]">
+        <div className="ms-[14px]">
           {evidence
             .map((ref) => (
               <TreeNode key={ref.id}>

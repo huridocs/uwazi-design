@@ -54,7 +54,7 @@ export function TreeBranch({
            inside the panel's edge, and the connector geometry below is measured
            from this box. */
         data-gutter-align="box"
-        className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded text-left cursor-pointer hover:bg-warm/60 transition-colors"
+        className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded text-start cursor-pointer hover:bg-warm/60 transition-colors"
       >
         <ChevronRight
           size={12}
@@ -71,15 +71,16 @@ export function TreeBranch({
         <span className="text-sm font-medium text-ink truncate">
           <HighlightedText text={title} query={highlight} />
         </span>
-        <span className="ml-auto text-meta text-ink-tertiary tabular-nums shrink-0">
+        <span className="ms-auto text-meta text-ink-tertiary tabular-nums shrink-0">
           {count}
         </span>
       </button>
       {expanded && items.length > 0 && (
         // Aligns the vertical guide line below the chevron centre of the
-        // header above (chevron is at px-2 + ~6px = ~14px from the wrapper
-        // edge; ml-[14px] keeps the line continuous across nested branches).
-        <div className="ml-[14px]">
+        // header above (chevron is at px-2 + ~6px = ~14px from the wrapper's
+        // start edge; ms-[14px] keeps the line continuous across nested
+        // branches, and follows the chevron to the right under RTL).
+        <div className="ms-[14px]">
           {items.map((child, i) => (
             <TreeNode key={i}>{child}</TreeNode>
           ))}
@@ -90,7 +91,8 @@ export function TreeBranch({
 }
 
 /** Connector slot for a direct child of a TreeBranch — draws a vertical line
- *  along the left edge and a horizontal stub into the child's first row.
+ *  along the start edge and a horizontal stub into the child's first row.
+ *  All inline geometry is logical, so the connectors mirror under RTL.
  *  The vertical line is clipped on the last child to produce the "L" corner
  *  that closes the branch. Exported so other tree leaves (aggregate rows
  *  with inline-expanded refs) can render their children with the same
@@ -102,36 +104,35 @@ export function TreeNode({ children }: { children: ReactNode }) {
   return (
     <div
       className={[
-        "relative pl-5",
+        "relative ps-5",
         // Vertical guide: top of this row down to bottom (full height).
-        "before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0",
-        "before:border-l before:border-border-soft",
+        "before:content-[''] before:absolute before:start-0 before:top-0 before:bottom-0",
+        "before:border-s before:border-border-soft",
         // On the last child, cut the vertical short so it ends at the
         // horizontal stub, giving a proper L corner.
         "last:before:bottom-auto last:before:h-[18px]",
         // Horizontal stub aligned with the visual centre of a single-line
         // header (~18px from top of the row). The stub reaches the chevron's
-        // left edge — `pl-5` (20px) places the child at x=20; the chevron's
-        // own padding nudges its visual left edge to ~22-26px, so a 22px stub
+        // start edge — `ps-5` (20px) places the child at x=20; the chevron's
+        // own padding nudges its visual start edge to ~22-26px, so a 22px stub
         // meets it cleanly.
-        "after:content-[''] after:absolute after:left-0 after:top-[18px] after:w-[22px]",
+        "after:content-[''] after:absolute after:start-0 after:top-[18px] after:w-[22px]",
         "after:border-t after:border-border-soft",
       ].join(" ")}
     >
       {/* Node marker at the connector junction — centred on the vertical guide
-          (x=0) where the horizontal stub meets it, at the stub's height (y=18).
-          translate(-50%,-50%) pins the dot's centre to that corner. Overview
-          only. */}
+          (the start edge) where the horizontal stub meets it, at the stub's
+          height (y=18). Half a dot back across the start edge pins its centre to
+          that corner: -50% in LTR, +50% under RTL, where the start edge is the
+          right. Overview only. */}
       {showDot && (
         <span
           aria-hidden
-          className="absolute z-[1] rounded-full"
+          className="absolute z-[1] start-0 rounded-full -translate-x-1/2 rtl:translate-x-1/2 -translate-y-1/2"
           style={{
-            left: 0,
             top: "1.125rem",
             width: 5,
             height: 5,
-            transform: "translate(-50%, -50%)",
             backgroundColor: "var(--border-primary)",
           }}
         />
