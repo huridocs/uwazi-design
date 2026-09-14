@@ -84,6 +84,18 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
     setEditMode(false);
   };
 
+  const editButton = (
+    <button
+      onClick={enterEdit}
+      /* Ghost with a hover fill: its BOX meets the gutter, so the fill never
+         crosses the panel edge. */
+      data-gutter-align="box"
+      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary hover:bg-warm hover:text-ink rounded-md transition-colors cursor-pointer"
+    >
+      <Pencil size={12} className="text-ink-tertiary" /> Edit
+    </button>
+  );
+
   return (
     <>
       <div
@@ -96,56 +108,51 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
         <div className="flex items-center gap-2">
-          {editMode ? (
-            compact ? null : (
-              <>
-                <button
-                  onClick={handleCreate}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
-                >
-                  <Plus size={12} className="text-ink-tertiary" /> Create relationship
-                </button>
-                <button
-                  onClick={() => setManageOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary hover:bg-warm hover:text-ink rounded-md transition-colors cursor-pointer"
-                >
-                  <Settings2 size={12} className="text-ink-tertiary" /> Manage types
-                </button>
-                <SelectControls
-                  allSelected={allSelected}
-                  hasSelection={hasSelection}
-                  totalCount={totalCount}
-                  onSelectAll={handleSelectAll}
-                  onDeselectAll={handleDeselectAll}
-                />
-              </>
-            )
+          {compact ? (
+            /* Compact has no data actions to hold at the start, so the collapse
+               pair takes it in both modes. If this cluster rendered nothing while
+               editing, every control would sit in the end cluster and the bar
+               would start far off the gutter. The pair never moves: entering
+               edit mode only swaps Edit for Cancel/Save at the end edge. The
+               entity preview footer (`EntityDetailBody`) uses the same order. */
+            <RelationshipsCollapseControls />
+          ) : editMode ? (
+            <>
+              <button
+                onClick={handleCreate}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+              >
+                <Plus size={12} className="text-ink-tertiary" /> Create relationship
+              </button>
+              <button
+                onClick={() => setManageOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary hover:bg-warm hover:text-ink rounded-md transition-colors cursor-pointer"
+              >
+                <Settings2 size={12} className="text-ink-tertiary" /> Manage types
+              </button>
+              <SelectControls
+                allSelected={allSelected}
+                hasSelection={hasSelection}
+                totalCount={totalCount}
+                onSelectAll={handleSelectAll}
+                onDeselectAll={handleDeselectAll}
+              />
+            </>
           ) : (
-            <button
-              onClick={enterEdit}
-              /* Ghost with a hover fill: its BOX meets the gutter, so the fill
-                 never crosses the panel edge. */
-              data-gutter-align="box"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary hover:bg-warm hover:text-ink rounded-md transition-colors cursor-pointer"
-            >
-              <Pencil size={12} className="text-ink-tertiary" /> Edit
-            </button>
+            editButton
           )}
         </div>
 
         <div className="flex items-center gap-3">
-          {/* The collapse pair, FIRST in the right cluster and present in every
-              view and both variants.
+          {/* The full bar keeps the collapse pair FIRST in the end cluster, in
+              every view and both modes.
 
-              It sits here rather than in the actions cluster opposite because it
-              is not an action on the relationships — it is a control on how they
-              are drawn, and the left cluster is where this bar keeps the things
-              that CHANGE data (Edit, Create, Manage types, Select all). Right
-              also balances the bar in the state it is in most of the time: not
-              editing, when the left holds "Edit" alone and the right would
-              otherwise be empty in both the full and the compact flavour. */}
-          <RelationshipsCollapseControls />
-          {editMode && (
+              It is not an action on the relationships but a control on how they
+              are drawn, and the start cluster is where the full bar keeps the
+              things that CHANGE data (Edit, Create, Manage types, Select all).
+              The end cluster would otherwise be empty while not editing. */}
+          {!compact && <RelationshipsCollapseControls />}
+          {editMode ? (
             <>
               {hasSelection && (
                 <>
@@ -173,6 +180,8 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
                 Save
               </button>
             </>
+          ) : (
+            compact && editButton
           )}
           {menuSlot}
         </div>
