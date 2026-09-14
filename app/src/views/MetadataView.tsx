@@ -67,9 +67,11 @@ export function MetadataView({ tabs, activeTab, onTabChange, onBack }: MetadataV
   const [language, setLanguage] = useAtom(languageAtom);
 
   const renderLeft = (menuTrigger?: ReactNode) => (
-    // The main-tier gutter host: tabs, DocMeta, the card lane and the action bar
-    // all take their side inset from this padding (see `gutter-host`).
-    <div data-gutter-host className="gutter-host-main flex flex-col h-full min-h-0 bg-paper">
+    // The narrow-tier gutter host: tabs, DocMeta, the card lane and the action bar
+    // all take their side inset from this padding (see `gutter-host`). Narrow,
+    // like the Document and Relationships tabs: all four tabs share the tab
+    // strip, so a different gutter here moved the strip 4px when switching.
+    <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0 bg-paper">
       <MainTabs
         tabs={tabs}
         activeId={activeTab}

@@ -80,10 +80,16 @@ Keep it in sync when tokens.css or the style rules change.
 - **Layout in `rem`, never `px`.** Tailwind spacing utilities (`px-4`, `gap-3`) are fine. Reserve raw `px` for borders, shadows, sub-pixel details.
 - **The pane owns the side gutter, not the rows.** A pane sets it once with
   `gutter-host` (narrow, 12px: drawers, side panels, the Library main pane,
-  the Relationships panes), `gutter-host-main` (16px: Metadata, Files, the
-  Settings content pane, Import CSV, the notifications drawer) or
+  every entity-view main pane: Document, Metadata, Relationships, Files),
+  `gutter-host-main` (16px: the Settings content pane, Import CSV, the
+  notifications drawer) or
   `gutter-host-rail` (20px: `SettingsNav`, the Bert modal), plus
-  `data-gutter-host`. Rows inside carry NO `px-*`/`mx-*` of their own; a box
+  `data-gutter-host`. Views that share one tab strip share one tier: the four
+  entity tabs are separate views with separate hosts, and while Metadata and
+  Files sat at 16px the strip moved 4px and folded 8px earlier on every switch.
+  At a 1200px pane the difference is 2.7px per masonry column, and both tiers
+  cross into three columns within 8px of each other.
+  Rows inside carry NO `px-*`/`mx-*` of their own; a box
   that must reach the pane edge (a header/footer rule, a scroll lane, a canvas)
   uses `bleed` or `bleed-flush` (`index.css`). `MainTabs`, `DocMeta`,
   `ListInfoRow`, `DrawerTabs` and `SearchBar` carry no side padding at all, so
