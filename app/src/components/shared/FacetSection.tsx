@@ -115,9 +115,12 @@ export function FacetSection({
   const hiddenCount = ordered.length - regularRows.length;
 
   return (
-    <div style={{ borderBottom: "1px solid var(--border-soft)" }}>
+    /* Rows carry no side padding: the host's gutter places the content, and
+       `bleed` runs the divider and each row's hover / selected fill to the pane
+       edge. Group children indent by 0.75rem PAST the gutter. */
+    <div className="bleed" style={{ borderBottom: "1px solid var(--border-soft)" }}>
       <div
-        className={`flex items-center gap-2 px-4 py-2.5 transition-colors ${
+        className={`bleed flex items-center gap-2 py-2.5 transition-colors ${
           open ? "" : "hover:bg-warm"
         }`}
       >
@@ -157,7 +160,7 @@ export function FacetSection({
       {open && (
         <div className="pb-2">
           {(showSearch || mode) && (
-            <div className="px-4 pt-0.5 pb-2 space-y-2">
+            <div className="pt-0.5 pb-2 space-y-2">
               {mode && onModeChange && (
                 <MatchModeToggle mode={mode} onChange={onModeChange} label="Match" />
               )}
@@ -187,7 +190,7 @@ export function FacetSection({
             </div>
           )}
           {matched.length === 0 && (
-            <p className="px-4 py-1.5 text-xs text-ink-muted">No matches.</p>
+            <p className="py-1.5 text-xs text-ink-muted">No matches.</p>
           )}
           {regularRows.map((row, idx) => {
             const [id, count] = row.entry;
@@ -198,14 +201,19 @@ export function FacetSection({
             return (
               <Fragment key={id}>
                 {showGroupHeader && (
-                  <SectionLabel className="px-4 pt-2 pb-0.5">
+                  <SectionLabel className="pt-2 pb-0.5">
                     <span className="truncate">{row.group}</span>
                   </SectionLabel>
                 )}
                 <label
-                  className={`flex items-center gap-2 py-1.5 cursor-pointer transition-colors ${
-                    row.group ? "ps-7 pe-4" : "px-4"
-                  } ${checked ? "bg-carbon/[0.04] hover:bg-carbon/[0.07]" : "hover:bg-warm"}`}
+                  className={`bleed flex items-center gap-2 py-1.5 cursor-pointer transition-colors ${
+                    checked ? "bg-carbon/[0.04] hover:bg-carbon/[0.07]" : "hover:bg-warm"
+                  }`}
+                  style={
+                    row.group
+                      ? { paddingInlineStart: "calc(var(--gutter, 0px) + 0.75rem)" }
+                      : undefined
+                  }
                 >
                   <Checkbox
                     checked={checked}
@@ -230,7 +238,7 @@ export function FacetSection({
           {hiddenCount > 0 && (
             <button
               onClick={() => setShowAll(true)}
-              className="px-4 py-1.5 text-xs font-medium text-ink-secondary underline underline-offset-2 hover:text-ink transition-colors cursor-pointer"
+              className="py-1.5 text-xs font-medium text-ink-secondary underline underline-offset-2 hover:text-ink transition-colors cursor-pointer"
             >
               Load {hiddenCount} more
             </button>
@@ -238,13 +246,13 @@ export function FacetSection({
           {showAll && !q && matched.length > collapsedCount && (
             <button
               onClick={() => setShowAll(false)}
-              className="px-4 py-1.5 text-xs font-medium text-ink-tertiary underline underline-offset-2 hover:text-ink transition-colors cursor-pointer"
+              className="py-1.5 text-xs font-medium text-ink-tertiary underline underline-offset-2 hover:text-ink transition-colors cursor-pointer"
             >
               Show less
             </button>
           )}
           {noLabelEntry && (
-            <label className="flex items-center gap-2 px-4 py-1.5 cursor-pointer hover:bg-warm transition-colors border-t border-border-soft">
+            <label className="bleed flex items-center gap-2 py-1.5 cursor-pointer hover:bg-warm transition-colors border-t border-border-soft">
               <Checkbox
                 checked={!!selected[noLabelEntry[0]]}
                 onChange={() => onToggle(noLabelEntry[0])}

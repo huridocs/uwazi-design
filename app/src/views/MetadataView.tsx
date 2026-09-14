@@ -1080,7 +1080,7 @@ export function MetadataEditBody({
           at a fixed height with only its contents toggling, so a failed save
           cannot shove the footer (never-shift rule). role="alert" fires only
           on the save attempt, never per keystroke. */}
-      <div className="flex items-center justify-end h-6 px-4 bg-paper shrink-0">
+      <div className="bleed flex items-center justify-end h-6 bg-paper shrink-0">
         {saveState === "failed" ? (
           <span role="alert" className="text-meta font-medium text-seal-label">
             Save failed: the server rejected the update.

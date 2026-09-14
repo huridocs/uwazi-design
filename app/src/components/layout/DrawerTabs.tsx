@@ -29,8 +29,8 @@ interface DrawerTabsProps {
   onChange: (id: string) => void;
   /** Wrapper padding — vertical only by default. The strip carries no side
    *  padding: the host that lays it out owns the gutter (`gutter-host`), which
-   *  is how it lines up with the rows below it. A host with no gutter of its own
-   *  passes one here (the Library's filter panel passes `px-3.5 py-2`). */
+   *  is how it lines up with the rows below it. A caller that is not a host
+   *  passes its own padding here. */
   className?: string;
 }
 
@@ -151,14 +151,11 @@ function Strip({
               tabIndex={probe ? -1 : undefined}
               aria-selected={probe ? undefined : active}
               onClick={probe ? undefined : () => onChange(tab.id)}
-              /* `px-3.5`, matching the wrapper, so the strip lines up with
-                 the panel BELOW it on both counts: the strip's edge on the
-                 facet cards' edge (both 14px in from the pane), and the first
-                 tab's text on a section's heading. 13, not 14, because the
-                 STRIP has a 1px border and a facet card does not: the tab's box
-                 starts one pixel further in than the wrapper does, so its
-                 padding gives that pixel back. 14 + 13 + 1 = the card's own
-                 14 + 6 + 8. */
+              /* 13px, so the first tab's text lines up with a facet card's
+                 heading in the Library filter panel below it. Strip and card
+                 both start on the host's gutter; the strip then has a 1px
+                 border and this padding, the card its own 6px and the row's
+                 8px: 1 + 13 = 6 + 8. */
               className={`relative flex items-center justify-center gap-1 w-full px-3.25 py-1.5 text-tab font-medium transition-colors ${
                 i === 0 ? "rounded-s-md" : ""
               } ${i === tabs.length - 1 ? "rounded-e-md" : ""} ${

@@ -19,6 +19,9 @@ interface ListInfoRowProps {
    *  count is rewritten, or that themselves change width with it. */
   inlineSlot?: ReactNode;
   rightSlot?: ReactNode;
+  /** Rendered inside a gutter host: no side padding of its own. Without it the
+   *  row keeps `px-3` for panes that are not hosts (the Library main pane). */
+  gutter?: boolean;
 }
 
 export function ListInfoRow({
@@ -28,9 +31,10 @@ export function ListInfoRow({
   leadingSlot,
   inlineSlot,
   rightSlot,
+  gutter = false,
 }: ListInfoRowProps) {
   return (
-    <div className="px-3 pt-1 pb-2 flex items-center justify-between gap-2 flex-wrap text-meta text-ink-tertiary shrink-0">
+    <div className={`${gutter ? "" : "px-3 "}pt-1 pb-2 flex items-center justify-between gap-2 flex-wrap text-meta text-ink-tertiary shrink-0`}>
       <div className="flex items-center gap-2 flex-wrap">
         {leadingSlot}
         {count != null && <span className="shrink-0">{count}</span>}

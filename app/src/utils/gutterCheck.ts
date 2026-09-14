@@ -11,19 +11,25 @@
  *  its children out side by side. Wrappers that only stack rows vertically are
  *  passed through. For every row it records
  *
- *  - `left`  — where the row's visible ink starts: its box when it draws one,
+ *  - `start` — where the row's visible ink starts: its box when it draws one,
  *    else the first text or icon inside it. A padded button can declare that its
  *    BOX, not its text, is the edge (`data-gutter-align="box"`), and a field can
  *    declare the opposite — its text, not its focus box (`data-gutter-align="text"`).
- *  - `right` — the right edge of the box the row is laid out in. A row whose ink
+ *  - `end` — the end edge of the box the row is laid out in. A row whose ink
  *    stops short of it (a tab selector sized to its widest label) is still
  *    inside the gutter; ink past it is reported as overflow.
+ *
+ *  Both are LOGICAL insets, read in the host's computed `direction`: start is
+ *  the left edge in LTR and the right edge in RTL. And both are measured from
+ *  INSIDE the host's border. A host that draws its own `border-inline-start`
+ *  (the notifications drawer's `border-l`) otherwise reads one pixel more on
+ *  that side than the other — 17 against 16 — for a layout that is symmetric.
  *
  *  Rows marked `data-gutter-bleed` (a graph canvas, a document page) run edge to
  *  edge on purpose and are listed but not asserted. Absolutely positioned boxes
  *  (tab dots, the fold probe, closed slide-overs) are not rows.
  *
- *  Passes when every asserted row shares one `left` inset and one `right` inset
+ *  Passes when every asserted row shares one `start` inset and one `end` inset
  *  and nothing overflows. `gaps` lists the vertical distance between successive
  *  visual lines — the lines of a toolbar that wraps count separately, and a row
  *  with a rule (header, footer) is measured from the rule — so the stack's
@@ -38,17 +44,18 @@ interface Box {
 
 export interface GutterRow {
   row: string;
-  left: number;
-  right: number;
-  inkRight: number;
+  start: number;
+  end: number;
+  inkEnd: number;
   bleed: boolean;
 }
 
 export interface GutterReport {
   pass: boolean;
+  dir: "ltr" | "rtl";
   hostWidth: number;
-  lefts: number[];
-  rights: number[];
+  starts: number[];
+  ends: number[];
   overflow: string[];
   gaps: string[];
   rows: GutterRow[];
@@ -214,6 +221,11 @@ export function gutter(target?: Element | string, { maxRows = 14 } = {}): Gutter
     return null;
   }
   const clip = host.getBoundingClientRect();
+  const hostCs = getComputedStyle(host);
+  const rtl = hostCs.direction === "rtl";
+  // The host's inner edges: insets are counted from inside its own border.
+  const innerLeft = clip.left + (parseFloat(hostCs.borderLeftWidth) || 0);
+  const innerRight = clip.right - (parseFloat(hostCs.borderRightWidth) || 0);
   type Found = { el: Element; frame: Box; bleed: boolean; centred?: boolean };
   const found: Found[] = [];
   const kidsOf = (el: Element) => Array.from(el.children).filter((k) => visibleIn(k, clip));
@@ -259,9 +271,10 @@ export function gutter(target?: Element | string, { maxRows = 14 } = {}): Gutter
    *  ink. A row of children starts at its first child's ink — or, when that
    *  child paints nothing (the `flex-1` spacer before a footer's end-aligned
    *  buttons), at that child's box, which is where the layout put the start. */
+  const startOf = (b: { left: number; right: number }) => (rtl ? b.right : b.left);
   const rowStart = (el: Element, box: Box, frame: Box, centred?: boolean) => {
-    if (centred) return frame.left;
-    if (boxAligned(el) || (!isLane(el) && drawsSide(el)) || isGraphic(el) || hasOwnText(el)) return box.left;
+    if (centred) return startOf(frame);
+    if (boxAligned(el) || (!isLane(el) && drawsSide(el)) || isGraphic(el) || hasOwnText(el)) return startOf(box);
     // Children by LAYOUT, not by visibility: a `flex-1` spacer has no height, and
     // the empty `<div />` that opens a `justify-between` row has no width, and
     // each is exactly the child that says where the row starts.
@@ -269,19 +282,21 @@ export function gutter(target?: Element | string, { maxRows = 14 } = {}): Gutter
       const kcs = getComputedStyle(k);
       return kcs.display !== "none" && kcs.position !== "absolute" && kcs.position !== "fixed";
     });
-    if (!first) return box.left;
-    return ink(first, clip)?.left ?? first.getBoundingClientRect().left;
+    // DOM order is start order: a flex row runs from the start edge in RTL too.
+    if (!first) return startOf(box);
+    return startOf(ink(first, clip) ?? first.getBoundingClientRect());
   };
 
   for (const { el, frame, bleed, centred } of found) {
     const rect = el.getBoundingClientRect();
     const box = ink(el, clip) ?? frame;
     const name = describe(el);
+    const startX = rowStart(el, box, frame, centred);
     rows.push({
       row: name,
-      left: round(rowStart(el, box, frame, centred) - clip.left),
-      right: round(clip.right - frame.right),
-      inkRight: round(clip.right - box.right),
+      start: round(rtl ? innerRight - startX : startX - innerLeft),
+      end: round(rtl ? frame.left - innerLeft : innerRight - frame.right),
+      inkEnd: round(rtl ? box.left - innerLeft : innerRight - box.right),
       bleed,
     });
 
@@ -321,14 +336,15 @@ export function gutter(target?: Element | string, { maxRows = 14 } = {}): Gutter
   }
 
   const asserted = rows.filter((r) => !r.bleed);
-  const lefts = Array.from(new Set(asserted.map((r) => r.left))).sort((a, b) => a - b);
-  const rights = Array.from(new Set(asserted.map((r) => r.right))).sort((a, b) => a - b);
-  const overflow = asserted.filter((r) => r.inkRight < r.right - EPS).map((r) => r.row);
+  const starts = Array.from(new Set(asserted.map((r) => r.start))).sort((a, b) => a - b);
+  const ends = Array.from(new Set(asserted.map((r) => r.end))).sort((a, b) => a - b);
+  const overflow = asserted.filter((r) => r.inkEnd < r.end - EPS).map((r) => r.row);
   const report: GutterReport = {
-    pass: lefts.length === 1 && rights.length === 1 && overflow.length === 0,
+    pass: starts.length === 1 && ends.length === 1 && overflow.length === 0,
+    dir: rtl ? "rtl" : "ltr",
     hostWidth: round(clip.width),
-    lefts,
-    rights,
+    starts,
+    ends,
     overflow,
     gaps,
     rows,

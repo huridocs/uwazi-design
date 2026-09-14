@@ -40,7 +40,9 @@ export function ActionBar({ numPages, onScrollToPage, leftSlot, rightSlot, showP
 
   return (
     <div
-      className="flex items-center justify-between h-12 px-4 bg-paper shrink-0"
+      // No baked side padding: `bleed` takes the host pane's gutter (12 under the
+      // entity and relationships views), and the rule still spans the pane.
+      className="bleed flex items-center justify-between h-12 bg-paper shrink-0"
       style={{ borderTop: "1px solid var(--border-primary)" }}
     >
       {/* Left: optional slot or default OCR button (PDF only) */}

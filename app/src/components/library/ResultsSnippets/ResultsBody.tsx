@@ -199,7 +199,9 @@ export const ResultsBody = memo(function ResultsBody({
 
   return (
     <Shell>
-      <div className="shrink-0" style={{ borderBottom: "1px solid var(--border-primary)" }}>
+      {/* Hosted by the Library drawer (a gutter host): the header's rule spans the
+          panel (`bleed`), and nothing in it carries side padding of its own. */}
+      <div className="bleed shrink-0" style={{ borderBottom: "1px solid var(--border-primary)" }}>
         {/* Match-type chips and the collapse controls on ONE row — the shared
             list-header shape. NO count and no search chip here: this drawer sits
             beside the toolbar masthead that already prints "N results for
@@ -207,6 +209,7 @@ export const ResultsBody = memo(function ResultsBody({
             number — a second copy in the panel was the duplication this row
             used to be. */}
         <ListInfoRow
+          gutter
           count={null}
           activeFilterCount={0}
           showFilterChips={false}
@@ -239,7 +242,7 @@ export const ResultsBody = memo(function ResultsBody({
             The height is reserved; only the contents toggle. */}
         <div
           aria-hidden={hiddenByFilters === 0}
-          className={`px-3 pb-2 text-meta text-ink-tertiary ${
+          className={`pb-2 text-meta text-ink-tertiary ${
             hiddenByFilters === 0 ? "invisible" : ""
           }`}
         >
@@ -261,9 +264,9 @@ export const ResultsBody = memo(function ResultsBody({
           `overflow-hidden`, so in a flex column that overflows they'd shrink to
           their header height and clip their own content. Block flow keeps each
           card at its natural height and lets this container scroll. */}
-      <div className="flex-1 overflow-auto px-3 py-3 space-y-2">
+      <div className="bleed flex-1 overflow-auto py-3 space-y-2">
         {entities.length === 0 && (
-          <p className="px-1 pt-2 text-xs text-ink-tertiary">
+          <p className="pt-2 text-xs text-ink-tertiary">
             No results for the selected match types.
           </p>
         )}

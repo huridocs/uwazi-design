@@ -251,7 +251,7 @@ export function IsolatedActionBar() {
   const store = createStore();
   return (
     <Provider store={store}>
-      <div className="w-full border border-border/40 rounded-md overflow-hidden">
+      <div className="gutter-host w-full border border-border/40 rounded-md overflow-hidden">
         <ActionBar numPages={15} onScrollToPage={() => {}} />
       </div>
     </Provider>
@@ -499,7 +499,7 @@ export function FacetSectionDemo() {
     case: "Court Case",
   };
   return (
-    <div className="w-full max-w-xs border border-border/60 rounded-md bg-paper overflow-hidden">
+    <div className="gutter-host w-full max-w-xs border border-border/60 rounded-md bg-paper overflow-hidden">
       <FacetSection
         title="Target entity type"
         total={entries.length}

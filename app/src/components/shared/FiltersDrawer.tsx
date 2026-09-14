@@ -111,7 +111,10 @@ export function FiltersDrawer({
         // undisplaced), which is how a closed drawer came to be sitting in plain
         // sight. Opacity is what actually animates here, so opacity is the
         // transition.
-        className={`absolute top-0 bottom-0 z-40 bg-paper shadow-lg flex flex-col
+        // A narrow-tier gutter host (12px), the same edge as the drawers and
+        // panes it opens over; the facet rows inside carry no side padding.
+        data-gutter-host
+        className={`gutter-host absolute top-0 bottom-0 z-40 bg-paper shadow-lg flex flex-col
           transition-opacity duration-200 ease-out ${rtl ? "left-0" : "right-0"} ${
             open ? "opacity-100" : "opacity-0 invisible pointer-events-none"
           }`}
@@ -121,24 +124,27 @@ export function FiltersDrawer({
         }}
       >
         <header
-          className="shrink-0 flex items-center justify-between px-4 py-2.5"
+          className="bleed shrink-0 flex items-center justify-between py-2.5"
           style={{ borderBottom: "1px solid var(--border-primary)" }}
         >
           <span className="text-xs font-semibold text-ink-secondary">{title}</span>
           <button
             onClick={onClose}
             aria-label="Close filters"
-            className="flex items-center justify-center w-5 h-5 rounded-sm text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
+            /* The same close as the entity drawer's: a hover fill, so its BOX
+               meets the gutter; `-my-1` keeps the header its old height. */
+            data-gutter-align="box"
+            className="-my-1 p-1 rounded-md hover:bg-warm text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
           >
             <X size={14} />
           </button>
         </header>
 
-        <div className="flex-1 overflow-auto">{children}</div>
+        <div className="bleed flex-1 overflow-auto">{children}</div>
 
         {footer && (
           <footer
-            className="shrink-0 px-4 py-2"
+            className="bleed shrink-0 py-2"
             style={{ borderTop: "1px solid var(--border-primary)" }}
           >
             {footer}

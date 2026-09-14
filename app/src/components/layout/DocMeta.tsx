@@ -16,7 +16,7 @@ interface DocMetaProps {
   showPdfSelector?: boolean;
   /** Rendered inside a gutter host: no side padding of its own, and `bleed`
    *  so its bottom rule still spans the pane. Without it the strip keeps its
-   *  own `px-3` for panes that are not hosts yet (the Document tab). */
+   *  own `px-3` for a caller that is not a host. */
   gutter?: boolean;
 }
 
