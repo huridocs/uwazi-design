@@ -42,8 +42,11 @@ export function SettingsNav({
          Documentation footer are `bleed`, so hover and active fills and the
          footer rule reach the rail edge while the text sits on the gutter. */
       data-gutter-host
+      /* The rule is on the inline END, the side that meets the content pane:
+         the right in LTR, the left in RTL. A physical `borderRight` put it on
+         the viewport edge in RTL and left nothing between rail and content. */
       className="gutter-host-rail h-full w-full md:w-[15.625rem] shrink-0 flex flex-col bg-paper"
-      style={{ borderRight: "1px solid var(--border-primary)" }}
+      style={{ borderInlineEnd: "1px solid var(--border-primary)" }}
     >
       {/* The data-source switch used to live here as well. It's the collection
           picker on the navbar's Library button now — one control, one place. */}
