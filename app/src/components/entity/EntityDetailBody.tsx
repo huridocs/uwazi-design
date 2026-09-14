@@ -185,7 +185,7 @@ export function EntityDetailBody({
         {banner && <div className="pt-3 shrink-0">{banner}</div>}
 
         {/* Main-tab navigation beneath the identity header. */}
-        <MainTabs tabs={tabs} activeId={activeTab} onChange={setActiveTab} gutter />
+        <MainTabs tabs={tabs} activeId={activeTab} onChange={setActiveTab} />
 
         {/* Tab content — drawer-flavoured bodies, scoped to this entity.
             flex COLUMN: the bodies are toolbar + flex-1 pane (the graph canvas, the

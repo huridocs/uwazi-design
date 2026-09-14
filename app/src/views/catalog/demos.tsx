@@ -85,16 +85,19 @@ export function DrawerTabsDemo() {
 export function MainTabsDemo() {
   const [active, setActive] = useState("document");
   return (
-    <MainTabs
-      tabs={[
-        { id: "metadata", label: "Metadata" },
-        { id: "document", label: "Document" },
-        { id: "references", label: "References", count: 12 },
-        { id: "files", label: "Files", count: 6 },
-      ]}
-      activeId={active}
-      onChange={setActive}
-    />
+    // The strip takes its side inset from its host, as in the app.
+    <div data-gutter-host className="gutter-host">
+      <MainTabs
+        tabs={[
+          { id: "metadata", label: "Metadata" },
+          { id: "document", label: "Document" },
+          { id: "references", label: "References", count: 12 },
+          { id: "files", label: "Files", count: 6 },
+        ]}
+        activeId={active}
+        onChange={setActive}
+      />
+    </div>
   );
 }
 
@@ -543,7 +546,7 @@ export function IsolatedListInfoRow() {
   const store = createStore();
   return (
     <Provider store={store}>
-      <div className="w-full border border-border/40 rounded-md bg-paper">
+      <div data-gutter-host className="gutter-host w-full border border-border/40 rounded-md bg-paper">
         <ListInfoRow
           count={
             <>

@@ -15,7 +15,14 @@ import { settingsMobileDrilledAtom } from "../../atoms/settings";
  */
 export function SettingsContent({ children }: { children: ReactNode }) {
   return (
-    <div className="flex flex-col h-full min-h-0 bg-paper" data-testid="settings-content">
+    // The main-tier gutter host (16px). Header, Body and Footer are `bleed`
+    // bands: rules, the scrollbar and the footer tint reach the pane edge, and
+    // their content sits on the gutter.
+    <div
+      data-gutter-host
+      className="gutter-host-main flex flex-col h-full min-h-0 bg-paper"
+      data-testid="settings-content"
+    >
       {children}
     </div>
   );
@@ -36,7 +43,7 @@ SettingsContent.Header = function SettingsHeader({ path, title, onBack }: Header
   const setDrilled = useSetAtom(settingsMobileDrilledAtom);
   return (
     <div
-      className="flex items-center gap-2 h-12 px-4 shrink-0 bg-paper"
+      className="bleed flex items-center gap-2 h-12 shrink-0 bg-paper"
       style={{ borderBottom: "1px solid var(--border-primary)" }}
       data-testid="settings-content-header"
     >
@@ -93,7 +100,7 @@ SettingsContent.Body = function SettingsBody({
 }) {
   return (
     <div
-      className={`grow min-h-0 overflow-auto px-4 py-4 ${className}`}
+      className={`bleed grow min-h-0 overflow-auto py-4 ${className}`}
       data-testid="settings-content-body"
     >
       {children}
@@ -110,7 +117,7 @@ SettingsContent.Footer = function SettingsFooter({
 }) {
   return (
     <div
-      className={`sticky bottom-0 z-10 flex items-center justify-end gap-2 h-12 px-4 shrink-0 ${
+      className={`bleed sticky bottom-0 z-10 flex items-center justify-end gap-2 h-12 shrink-0 ${
         highlighted ? "bg-carbon-tint" : "bg-paper"
       }`}
       style={{ borderTop: "1px solid var(--border-primary)" }}

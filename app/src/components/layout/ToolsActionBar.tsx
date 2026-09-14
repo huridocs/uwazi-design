@@ -24,7 +24,7 @@ export function ToolsActionBar({
   if (mode === "detail") {
     return (
       <div
-        className="flex items-center justify-between h-12 px-4 shrink-0 bg-paper"
+        className="flex items-center justify-between h-12 bleed shrink-0 bg-paper"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
         <button
@@ -47,7 +47,7 @@ export function ToolsActionBar({
 
   return (
     <div
-      className={`flex items-center justify-between h-12 px-4 shrink-0 transition-colors ${
+      className={`flex items-center justify-between h-12 bleed shrink-0 transition-colors ${
         hasSelection ? "bg-selected" : "bg-paper"
       }`}
       style={{ borderTop: "1px solid var(--border-primary)" }}

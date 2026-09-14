@@ -177,7 +177,7 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
     return (
       <div
         dir="ltr"
-        className="shrink-0 bg-paper px-3 pt-1.5 pb-2 select-none"
+        className="shrink-0 bg-paper bleed pt-1.5 pb-2 select-none"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
         <div className="flex items-center gap-2 h-6">
@@ -277,7 +277,7 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
   return (
     <div
       dir="ltr"
-      className="shrink-0 bg-paper px-3 pt-1.5 pb-2 select-none"
+      className="shrink-0 bg-paper bleed pt-1.5 pb-2 select-none"
       style={{ borderTop: "1px solid var(--border-primary)" }}
     >
       {/* Caption + presets. On a phone the range reads as YEARS, not full dates,

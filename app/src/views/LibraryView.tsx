@@ -648,10 +648,13 @@ export function LibraryView() {
   });
 
   const renderLeft = (menuTrigger?: ReactNode) => (
-    <div className="flex flex-col h-full min-h-0 bg-paper">
+    // The narrow-tier gutter host (12px). The toolbar, the view lane, the time
+    // brush and the footer are `bleed` bands: their grounds and rules reach the
+    // pane edge and their content sits on the gutter.
+    <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0 bg-paper">
       {/* Toolbar */}
       <div
-        className="shrink-0 flex items-center gap-2 px-3 py-2 bg-parchment"
+        className="bleed shrink-0 flex items-center gap-2 py-2 bg-parchment"
         style={{ borderBottom: "1px solid var(--border-primary)" }}
       >
         <div
@@ -841,10 +844,10 @@ export function LibraryView() {
 
       {/* Results */}
       <div
-        // Results brings its own gutters — its header is a `ListInfoRow`, which
-        // carries the app's standard `px-3`. Doubling up would indent the whole
-        // view past every other layout.
-        className={`flex-1 min-h-0 py-3 bg-warm ${viewMode === "results" ? "" : "px-3"} ${
+        // A `bleed` lane: warm ground and scrollbar at the pane edge, content on
+        // the gutter. Every view mode sits on it, Results included — its header
+        // row and card lane carry no side padding of their own.
+        className={`bleed flex-1 min-h-0 py-3 bg-warm ${
           viewMode === "map" || viewMode === "timeline" || viewMode === "results"
             ? "flex flex-col overflow-hidden"
             : "overflow-auto"
@@ -980,7 +983,7 @@ export function LibraryView() {
 
       {/* Footer action bar */}
       <div
-        className="shrink-0 flex items-center gap-2 h-12 px-3 bg-paper"
+        className="bleed shrink-0 flex items-center gap-2 h-12 bg-paper"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
         <FooterButton

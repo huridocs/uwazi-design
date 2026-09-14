@@ -42,7 +42,7 @@ export function ImportListView({
   const isEmpty = imports.length === 0;
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 p-4 gap-3">
+    <div className="flex flex-col flex-1 min-h-0 py-4 gap-3">
       <Breadcrumb segments={[{ label: "Import CSV" }]} />
 
       <section

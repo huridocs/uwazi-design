@@ -12,7 +12,7 @@ import type { AppView } from "../../atoms/navigation";
 import { useDirtyGuard } from "../../hooks/useDirtyGuard";
 
 /** The settings rail — three grouped sections (User / System / Tools) matching
- *  Uwazi's V2 SettingsNavigation: full-width items, px-5 py-2, active =
+ *  Uwazi's V2 SettingsNavigation: full-width items on the rail gutter, py-2, active =
  *  vellum + semibold (no rounded inset, no left-border accent).
  *
  *  Also the IMPORT CSV rail. That view used to mount `ToolsSidebar`, a second
@@ -38,20 +38,27 @@ export function SettingsNav({
   return (
     <nav
       aria-label="Settings navigation"
-      className="h-full w-full md:w-[15.625rem] shrink-0 flex flex-col bg-paper"
+      /* The rail-tier gutter host (20px). Items, the scroll lane and the
+         Documentation footer are `bleed`, so hover and active fills and the
+         footer rule reach the rail edge while the text sits on the gutter. */
+      data-gutter-host
+      className="gutter-host-rail h-full w-full md:w-[15.625rem] shrink-0 flex flex-col bg-paper"
       style={{ borderRight: "1px solid var(--border-primary)" }}
     >
       {/* The data-source switch used to live here as well. It's the collection
           picker on the navbar's Library button now — one control, one place. */}
-      <div className="flex-1 min-h-0 overflow-y-auto py-4">
+      <div className="bleed flex-1 min-h-0 overflow-y-auto py-4">
       {/* ONE group — the one you came in through. Settings ▸ User settings,
           Settings ▸ System settings and the Tools dropdown are three separate
           doors; the rail behind each shows that door's destinations rather than
           all twenty under every one. */}
       {[settingsGroupOf(current)].map((group) => (
-        <div key={group.id} className="mb-2">
+        // A flex column, so the items stretch: a stretched item's `bleed`
+        // margins widen it to the rail edge. A `w-full` button does not widen,
+        // it only moves.
+        <div key={group.id} className="mb-2 flex flex-col">
           {group.label && (
-            <SectionLabel as="h3" className="px-5 py-2">
+            <SectionLabel as="h3" className="py-2">
               {group.label}
             </SectionLabel>
           )}
@@ -81,7 +88,7 @@ export function SettingsNav({
             // It steps up to vellum + semibold: a real state, not a hover echo.
             // (Still no left-border accent, and the icon keeps its colour — the
             // background carries the state.)
-            const cls = `flex items-center gap-2.5 w-full px-5 py-2 text-tab text-left transition-colors ${
+            const cls = `bleed flex items-center gap-2.5 py-2 text-tab text-left transition-colors ${
               active
                 ? "bg-vellum text-ink font-semibold"
                 : "font-medium text-ink-secondary hover:bg-warm hover:text-ink"
@@ -91,7 +98,7 @@ export function SettingsNav({
               <SectionLabel
                 as="h4"
                 key={`sub-${item.subgroup}`}
-                className="px-5 pt-3 pb-1"
+                className="pt-3 pb-1"
               >
                 {item.subgroup}
               </SectionLabel>
@@ -152,7 +159,7 @@ export function SettingsNav({
         href={settingsDocumentation.external}
         target="_blank"
         rel="noopener noreferrer"
-        className="shrink-0 flex items-center gap-2.5 w-full px-5 h-12 text-tab font-medium text-left text-ink-secondary hover:bg-warm hover:text-ink transition-colors"
+        className="bleed shrink-0 flex items-center gap-2.5 h-12 text-tab font-medium text-left text-ink-secondary hover:bg-warm hover:text-ink transition-colors"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
         <settingsDocumentation.icon size={15} className="text-ink-tertiary shrink-0" />

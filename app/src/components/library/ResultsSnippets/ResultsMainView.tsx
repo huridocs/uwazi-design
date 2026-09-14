@@ -340,7 +340,7 @@ export function ResultsMainView({
             below are being read. */}
         <p
           aria-hidden={hiddenByFilters === 0}
-          className={`px-3 pb-2 text-meta text-ink-tertiary ${
+          className={`pb-2 text-meta text-ink-tertiary ${
             hiddenByFilters === 0 ? "invisible" : ""
           }`}
         >
@@ -358,7 +358,9 @@ export function ResultsMainView({
         </p>
       </div>
 
-      <div ref={bodyRef} className="@container flex-1 min-h-0 overflow-auto px-3">
+      {/* Hosted by the Library main pane (a gutter host): the card lane is a
+          `bleed` scroll lane, so its scrollbar sits at the pane edge. */}
+      <div ref={bodyRef} className="@container bleed flex-1 min-h-0 overflow-auto">
         {entities.length === 0 ? (
           <p className="pt-6 text-center text-xs text-ink-tertiary">
             No results for the selected match types.
