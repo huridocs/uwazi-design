@@ -1,7 +1,6 @@
-import { useState } from "react";
 import { TabCount } from "../shared/TabCount";
 import { Select } from "../shared/Select";
-import { useResizeWidth } from "../../hooks/useResizeWidth";
+import { useStripFold } from "../../hooks/useStripFold";
 import { TAB_BUTTON, TAB_STRIP_FRAME } from "./tabStrip";
 interface DrawerTab {
   id: string;
@@ -65,11 +64,7 @@ export function DrawerTabs({ tabs, activeId, onChange, className = "tabstrip-slo
      the options as hints, a dot behind an unselected tab rides the trigger with
      a spoken suffix, and `steady` sizes the trigger from the widest label so
      switching tabs never changes its width. */
-  const [availW, setAvailW] = useState(0);
-  const [naturalW, setNaturalW] = useState(0);
-  const availRef = useResizeWidth(setAvailW);
-  const probeRef = useResizeWidth(setNaturalW);
-  const folded = availW > 0 && naturalW > 0 && naturalW > availW;
+  const { availRef, probeRef, folded } = useStripFold();
   const activeTab = tabs.find((t) => t.id === activeId) ?? tabs[0];
   const hiddenDot = tabs.some((t) => t.dot && t.id !== activeId);
 

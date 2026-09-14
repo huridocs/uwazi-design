@@ -51,7 +51,11 @@ export interface GutterRow {
 }
 
 export interface GutterReport {
-  pass: boolean;
+  /** `null` while the page is hidden: rendering is paused, so the reading is not
+   *  a result either way. */
+  pass: boolean | null;
+  /** `document.hidden` when the reading was taken. */
+  hidden: boolean;
   dir: "ltr" | "rtl";
   hostWidth: number;
   starts: number[];
@@ -339,8 +343,13 @@ export function gutter(target?: Element | string, { maxRows = 14 } = {}): Gutter
   const starts = Array.from(new Set(asserted.map((r) => r.start))).sort((a, b) => a - b);
   const ends = Array.from(new Set(asserted.map((r) => r.end))).sort((a, b) => a - b);
   const overflow = asserted.filter((r) => r.inkEnd < r.end - EPS).map((r) => r.row);
+  // A hidden page gets no ResizeObserver callbacks and paused rendering, so what
+  // the layout says then is not a result. Report the numbers, but no verdict.
+  const hidden = document.hidden;
+  if (hidden) console.warn("__gutter: page is hidden; pass is null because rendering is paused");
   const report: GutterReport = {
-    pass: starts.length === 1 && ends.length === 1 && overflow.length === 0,
+    pass: hidden ? null : starts.length === 1 && ends.length === 1 && overflow.length === 0,
+    hidden,
     dir: rtl ? "rtl" : "ltr",
     hostWidth: round(clip.width),
     starts,

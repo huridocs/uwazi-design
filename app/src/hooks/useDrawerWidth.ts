@@ -92,3 +92,17 @@ export const DrawerWidthProvider = DrawerWidthContext.Provider;
 export function useHostDrawerWidth() {
   return useContext(DrawerWidthContext);
 }
+
+/** The drawer width as seen from EITHER pane of a `SplitView`. The other pane
+ *  changes width whenever the drawer does, but it sits outside
+ *  `DrawerWidthProvider` (which means "the drawer I am inside"), so nothing told
+ *  it to re-render. A component that measures itself (the tab strips' fold)
+ *  reads this to re-measure on a width change even when no ResizeObserver
+ *  callback arrives, as in a hidden page. `null` outside a split. */
+const SplitWidthContext = createContext<number | null>(null);
+
+export const SplitWidthProvider = SplitWidthContext.Provider;
+
+export function useSplitWidth() {
+  return useContext(SplitWidthContext);
+}

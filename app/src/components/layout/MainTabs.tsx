@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { useResizeWidth } from "../../hooks/useResizeWidth";
+import { useStripFold } from "../../hooks/useStripFold";
 import { ArrowLeft, Pencil, Sparkles } from "lucide-react";
 import { Select } from "../shared/Select";
 import { languageName } from "../../atoms/language";
@@ -61,11 +60,7 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
 
      Measured, not a threshold, because the labels are translated and
      "Relationships 3,749" is a different width in every language. */
-  const [availW, setAvailW] = useState(0);
-  const [naturalW, setNaturalW] = useState(0);
-  const availRef = useResizeWidth(setAvailW);
-  const probeRef = useResizeWidth(setNaturalW);
-  const isNarrow = availW > 0 && naturalW > 0 && naturalW > availW;
+  const { availRef, probeRef, folded: isNarrow } = useStripFold();
   const currentLang = activeLanguage ?? languages[0];
   const activeTab = tabs.find((t) => t.id === activeId) ?? tabs[0];
   /* A dot marks live state behind a tab you are NOT on. Collapsing the strip is
@@ -98,21 +93,25 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
           to the dropdown, the strip would "fit" again, and the fold would
           oscillate — the classic feedback loop of measuring the thing you are
           deciding whether to show. */}
+      {/* The back button sits OUTSIDE the measured cluster. Inside it, its 20px
+          and the gap after it were counted in the width available to the tabs
+          but not in the probe, so a strip up to 32px too wide still showed tabs
+          below 768px. The row's own `gap-3` spaces it from the cluster. */}
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="md:hidden text-ink-tertiary hover:text-ink transition-colors shrink-0 cursor-pointer"
+          aria-label="Go back"
+        >
+          <ArrowLeft size={20} />
+        </button>
+      )}
       <div
         ref={availRef}
         className={`flex flex-1 items-center gap-3 md:gap-4 min-w-0 ${
           isNarrow ? "" : "overflow-x-auto"
         }`}
       >
-        {onBack && (
-          <button
-            onClick={onBack}
-            className="md:hidden text-ink-tertiary hover:text-ink transition-colors shrink-0 cursor-pointer"
-            aria-label="Go back"
-          >
-            <ArrowLeft size={20} />
-          </button>
-        )}
         {/* Below desktop the strip is ONE dropdown naming the section — the
             shared `Select`, not a second control that would have to relearn
             RTL, focus and the popover. `steady` reserves the widest tab NAME
