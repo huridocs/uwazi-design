@@ -112,13 +112,13 @@ function searchVals(type: string, vals: { value?: unknown; label?: unknown }[]):
  *  `Entity.searchFields`. `fieldsOf` above is what the CARD shows. */
 function searchFieldsOf(e: { template: string; metadata?: Record<string, { value?: unknown; label?: unknown }[]> }) {
   const props = propsByTemplate.get(e.template) || [];
-  const out: { label: string; value: string }[] = [];
+  const out: { key: string; label: string; value: string }[] = [];
   for (const p of props) {
     if (p.name === "title" || HOISTED_KEYS.has(p.name)) continue;
     const vals = e.metadata?.[p.name];
     if (!vals || !vals.length) continue;
     const value = searchVals(p.type, vals);
-    if (value) out.push({ label: p.label, value });
+    if (value) out.push({ key: p.name, label: p.label, value });
   }
   return out.length ? out : undefined;
 }

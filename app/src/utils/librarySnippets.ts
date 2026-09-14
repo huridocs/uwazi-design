@@ -45,8 +45,9 @@ export interface MetadataSnippet {
   field: string;
   /** Stable field key (NOT the localized label) for deep-focus: matched against
    *  the drawer's `MetadataField.id`. Natural keys for the pseudo-fields
-   *  (`title`/`country`/`descriptors`); adapter fields fall back to a label slug
-   *  (see `entitySearchFields`). */
+   *  (`title`/`country`/`descriptors`); adapter fields send their template
+   *  property name, or a label slug where the adapter has none (see
+   *  `entitySearchFields`). */
   fieldKey: string;
   /** One windowed excerpt per matched field (around the first hit). */
   texts: string[];
@@ -100,7 +101,8 @@ const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(
 
 /** The searchable + snippet-able metadata fields of an entity, each with a stable
  *  key for deep-focus. Adapter entities (CEJIL) carry their scalars in
- *  `searchFields`/`fields` (label/value, no id — slug the label); mock entities
+ *  `searchFields`/`fields` (label/value plus the template property name as
+ *  `key` where known — else slug the label); mock entities
  *  carry theirs in the PROFILE, whose fields have real ids matching the drawer's
  *  `MetadataField.id`, so `country`/`definition`/etc. deep-focus cleanly and
  *  localization-safely.
@@ -123,7 +125,10 @@ export function entitySearchFields(
   const adapterFields = e.searchFields ?? e.fields;
   if (adapterFields?.length) {
     for (const f of adapterFields) {
-      if (f.value) out.push({ field: f.label, fieldKey: slug(f.label), text: f.value });
+      // The template property name when the adapter supplies it: it is what
+      // a scalar's card carries (`data-field-key`), so a Results click lands on
+      // that card. The label slug is only a fallback.
+      if (f.value) out.push({ field: f.label, fieldKey: ("key" in f ? f.key : undefined) ?? slug(f.label), text: f.value });
     }
   } else {
     for (const f of getEntityProfile(e.id).metadata[language] ?? []) {
