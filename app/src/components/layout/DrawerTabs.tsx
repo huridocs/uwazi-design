@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Select } from "../shared/Select";
 import { useResizeWidth } from "../../hooks/useResizeWidth";
+import { TAB_BUTTON, TAB_STRIP_FRAME } from "./tabStrip";
 interface DrawerTab {
   id: string;
   label: string;
@@ -26,10 +27,10 @@ interface DrawerTabsProps {
   tabs: DrawerTab[];
   activeId: string;
   onChange: (id: string) => void;
-  /** Wrapper padding — vertical only by default. The strip carries no side
-   *  padding: the host that lays it out owns the gutter (`gutter-host`), which
-   *  is how it lines up with the rows below it. A caller that is not a host
-   *  passes its own padding here. */
+  /** Wrapper padding. By default the strip takes its top offset from the host
+   *  (`tabstrip-slot`) and carries no side or bottom padding: the host owns the
+   *  gutter and the top offset, and the block below owns the `stack` gap. A
+   *  caller that is not a host passes its own padding here. */
   className?: string;
 }
 
@@ -47,7 +48,7 @@ interface DrawerTabsProps {
  *  The dot is the same mark the Display menu uses (6px, carbon, `-top-0.5
  *  -end-0.5` on a `relative` trigger, logical `-end-` so it mirrors under RTL),
  *  because they say the same thing in the same visual language. */
-export function DrawerTabs({ tabs, activeId, onChange, className = "py-2" }: DrawerTabsProps) {
+export function DrawerTabs({ tabs, activeId, onChange, className = "tabstrip-slot" }: DrawerTabsProps) {
   /* FOLDS INTO A SELECTOR WHEN IT DOES NOT FIT.
      It used to SCROLL — `overflow-x-auto` with the scrollbar hidden — so every
      tab stayed reachable but the strip read as cut, with nothing saying it
@@ -135,7 +136,7 @@ function Strip({
     <div
       className="flex items-stretch rounded-md w-fit"
       role={probe ? undefined : "tablist"}
-      style={{ border: "1px solid var(--border-primary)" }}
+      style={TAB_STRIP_FRAME}
     >
       {tabs.map((tab, i) => {
         const active = activeId === tab.id;
@@ -147,7 +148,8 @@ function Strip({
               tabIndex={probe ? -1 : undefined}
               aria-selected={probe ? undefined : active}
               onClick={probe ? undefined : () => onChange(tab.id)}
-              className={`relative flex items-center justify-center gap-1 w-full px-3 py-1.5 text-tab font-medium transition-colors ${
+              /* Frame and padding are shared with MainTabs (`tabStrip.ts`). */
+              className={`${TAB_BUTTON} w-full ${
                 i === 0 ? "rounded-s-md" : ""
               } ${i === tabs.length - 1 ? "rounded-e-md" : ""} ${
                 active ? "bg-vellum text-ink" : "bg-paper text-ink-tertiary hover:text-ink-secondary"

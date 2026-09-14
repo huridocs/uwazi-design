@@ -3,6 +3,7 @@ import { ArrowLeft, Pencil, Sparkles } from "lucide-react";
 import { useResizeWidth } from "../../hooks/useResizeWidth";
 import { Select } from "../shared/Select";
 import { languageName } from "../../atoms/language";
+import { TAB_BUTTON, TAB_STRIP_FRAME } from "./tabStrip";
 
 interface MainTab {
   id: string;
@@ -72,12 +73,13 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
 
   return (
     <div
-      /* The strip takes no side padding and one `stack` step above: it is
-         rendered inside a gutter host, whose gutter puts its edge on the same
-         line as the toolbar and cards beneath it. It used to carry its own
-         `px-4` to match the metadata cards' `p-4`, which put it 4px off every
-         other tab's toolbar. */
-      className="relative flex items-center justify-between gap-3 shrink-0 pt-stack"
+      /* The strip takes no side padding and its top offset from the host
+         (`tabstrip-slot`, the same one `DrawerTabs` uses): it is rendered
+         inside a gutter host, whose gutter puts its edge on the same line as
+         the toolbar and cards beneath it. It used to carry its own `px-4` to
+         match the metadata cards' `p-4`, which put it 4px off every other
+         tab's toolbar. */
+      className="tabstrip-slot relative flex items-center justify-between gap-3 shrink-0"
     >
       {/* Left: Back + Tabs.
 
@@ -213,22 +215,19 @@ function TabStrip({
        corner. The end tabs round themselves instead, logically, so the strip
        still reads as one frame under RTL. */
     <div
-      className="flex items-center rounded-md shrink-0"
+      className="flex items-stretch rounded-md shrink-0"
       role={probe ? undefined : "tablist"}
-      style={{
-        border: "1px solid var(--border-primary)",
-        boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
-      }}
+      style={TAB_STRIP_FRAME}
     >
       {tabs.map((tab, i) => (
-        <div key={tab.id} className="flex items-center">
+        <div key={tab.id} className="flex items-stretch">
           {i > 0 && <div className="w-px self-stretch bg-border" aria-hidden="true" />}
           <button
             role={probe ? undefined : "tab"}
             tabIndex={probe ? -1 : undefined}
             aria-selected={probe ? undefined : activeId === tab.id}
             onClick={probe ? undefined : () => onChange(tab.id)}
-            className={`relative flex items-center justify-center gap-1 px-2.5 md:px-3 py-1.5 text-tab font-medium transition-colors ${
+            className={`${TAB_BUTTON} ${
               i === 0 ? "rounded-s-md" : ""
             } ${i === tabs.length - 1 ? "rounded-e-md" : ""} ${
               activeId === tab.id

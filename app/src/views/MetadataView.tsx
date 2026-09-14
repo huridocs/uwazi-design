@@ -1477,7 +1477,6 @@ function MetadataDrawer() {
           source preview here in the drawer (not as a slide-over on the left). */}
       <EntityOverlay />
       <DrawerTabs
-        className="pt-stack"
         tabs={drawerTabs}
         activeId={activeDrawerTab}
         onChange={setActiveDrawerTab}
