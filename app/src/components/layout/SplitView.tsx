@@ -96,8 +96,10 @@ export function SplitView({
         }`}
         onMouseDown={handleMouseDown}
       />
+      {/* The rule sits on the drawer's inline start, the side facing the
+          content: left in LTR, right in RTL where the row runs the other way. */}
       <div
-        className="shrink-0 overflow-hidden bg-paper border-l border-border"
+        className="shrink-0 overflow-hidden bg-paper border-s border-border"
         style={{ width: rightWidth }}
       >
         {right}
