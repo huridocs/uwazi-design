@@ -966,6 +966,9 @@ export function LibraryView() {
   const filtersDrawer = (
     <div className="flex flex-col h-full min-h-0 bg-warm">
       <DrawerTabs
+        /* The facet panel's own `px-3.5`, so the strip and the cards under it
+           share an edge — this panel is not a gutter host. */
+        className="px-3.5 py-2"
         tabs={[
           // DOTS, not counts. Both signals here are user-set state that is still
           // in effect while you're looking at the other panel — filters you

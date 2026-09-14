@@ -52,7 +52,8 @@ export function DrawerActionBar({ activeTab }: DrawerActionBarProps) {
 
   return (
     <div
-      className="flex items-center justify-between h-12 px-3 bg-paper shrink-0"
+      // `bleed`: the rule spans the panel, the pills sit on the host's gutter.
+      className="bleed flex items-center justify-between h-12 bg-paper shrink-0"
       style={{ borderTop: "1px solid var(--border-primary)" }}
     >
       <ShareEntityModal open={shareOpen} onClose={() => setShareOpen(false)} />

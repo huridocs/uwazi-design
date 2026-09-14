@@ -49,7 +49,8 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
   }
   if (view === "graph") {
     return (
-      <div className="flex-1 flex flex-col min-h-0">
+      // The canvas runs edge to edge on purpose.
+      <div data-gutter-bleed className="bleed-flush flex-1 flex flex-col min-h-0">
         <RelationshipsGraphView />
       </div>
     );
@@ -68,7 +69,7 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
     );
   } else if (groupBy === "none") {
     body = (
-      <div className="px-3 py-3">
+      <div>
         <div className="border border-border/60 rounded-md overflow-hidden bg-paper">
           {filtered.slice(0, listLimit).map((ref) => (
             <RelationshipRow
@@ -80,7 +81,7 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
           ))}
         </div>
         {filtered.length > listLimit && (
-          <div className="flex justify-center pt-3">
+          <div className="flex justify-center pt-stack">
             <button
               onClick={() => setListLimit((n) => n + LIST_CAP)}
               className="px-4 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
@@ -94,7 +95,7 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
   } else {
     const primaryGroups = groupRefs(filtered, groupBy);
     body = (
-      <div className="px-3 py-3 space-y-1.5">
+      <div className="space-y-stack">
         {primaryGroups.map(([key, refs]) => (
           <RelationshipGroupedCard
             key={`p:${key}`}
@@ -148,7 +149,9 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
   // the body. What is left is the list itself, starting directly under the
   // toolbar: an empty reserved row would have been holding space for nothing.
   return (
-    <div className={`flex-1 overflow-auto pb-8 relative ${scrollBgClass ?? ""}`}>
+    // A scroll lane: `bleed` puts the scrollbar at the panel edge and the cards
+    // back on the host's gutter.
+    <div className={`bleed flex-1 overflow-auto pb-8 relative ${scrollBgClass ?? ""}`}>
       {body}
     </div>
   );

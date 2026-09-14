@@ -39,6 +39,60 @@
    * attaching one would silently reflow every site that inherits its leading. */
   --text-meta: 0.6875rem;
   --text-tab: 0.8125rem;
+  /* Pane spacing. The GUTTER is the side inset of a pane's content — every
+   * row's left and right edge — and it is a scale of three, one per kind of
+   * pane, not one number:
+   *   narrow  12px  drawers, side panels, the Library and Relationships panes
+   *   main    16px  full-width card grids (Metadata, Files)
+   *   rail    20px  navigation rails and centred modals
+   * `stack` is the vertical step between the rows stacked in a pane (tab
+   * selector → search → controls → first card) and between sibling cards.
+   * All of it is applied by the HOST, never by the rows: see `gutter-host`. */
+  --spacing-gutter-narrow: 0.75rem;
+  --spacing-gutter-main: 1rem;
+  --spacing-gutter-rail: 1.25rem;
+  --spacing-stack: 0.5rem;
+}
+
+/* THE LAYOUT OWNS THE GUTTER.
+ *
+ * A pane applies its side gutter ONCE, as its own padding, and the rows inside
+ * it carry no side padding of their own. Rows that each brought their own
+ * `px-3` / `px-3.5` / `p-4` are what put a tab selector 2–4px off the search box
+ * under it: three gutters were in circulation and tabs and bodies picked
+ * different ones.
+ *
+ *   - `gutter-host`       narrow tier (the default: drawers, side panels)
+ *   - `gutter-host-main`  main tier
+ *   - `gutter-host-rail`  rail tier
+ *
+ * Each declares `--gutter`, so a box that has to reach the pane's edge can undo
+ * it without knowing which tier it is in:
+ *   - `bleed`       reaches the edge and puts its content back on the gutter —
+ *                   a header or footer with a full-width rule, a scroll lane
+ *                   (scrollbar at the edge, focus rings unclipped).
+ *   - `bleed-flush` reaches the edge and stays there — a canvas, a document page.
+ * Outside a host `--gutter` is unset and both are no-ops.
+ *
+ * Mark the host `data-gutter-host` so `window.__gutter()` can find and measure it. */
+@utility gutter-host {
+  --gutter: var(--spacing-gutter-narrow);
+  padding-inline: var(--gutter);
+}
+@utility gutter-host-main {
+  --gutter: var(--spacing-gutter-main);
+  padding-inline: var(--gutter);
+}
+@utility gutter-host-rail {
+  --gutter: var(--spacing-gutter-rail);
+  padding-inline: var(--gutter);
+}
+@utility bleed {
+  margin-inline: calc(var(--gutter, 0px) * -1);
+  padding-inline: var(--gutter, 0px);
+}
+@utility bleed-flush {
+  margin-inline: calc(var(--gutter, 0px) * -1);
 }
 
 /* Brand radii — softer than Tailwind defaults but not pillowy. The earlier

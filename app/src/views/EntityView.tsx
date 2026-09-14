@@ -127,12 +127,22 @@ export function EntityView() {
           {
             id: "metadata",
             label: t("System", "Metadata"),
-            content: <MetadataDrawerContent />,
+            // Its body is written for a gutter host (the drawer); the sheet
+            // gives it one.
+            content: (
+              <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0">
+                <MetadataDrawerContent />
+              </div>
+            ),
           },
           {
             id: "toc",
             label: t("System", "Table of contents"),
-            content: <ToCPanel />,
+            content: (
+              <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0">
+                <ToCPanel />
+              </div>
+            ),
           },
         ]}
       />

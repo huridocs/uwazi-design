@@ -170,3 +170,22 @@
  *   }
  * }
  * ─────────────────────────────────────────────────────────────────────────── */
+
+/* ── OPT-IN: pane gutter & stack ────────────────────────────────────────────
+ * The pane owns its side gutter; rows inside it carry no side padding. Three
+ * tiers, one per kind of pane, plus the vertical step between stacked rows.
+ * Needs Tailwind v4 (`@theme` + `@utility`), so it ships commented — move it
+ * into the app stylesheet when a pane is migrated.
+ *
+ *   @theme {
+ *     --spacing-gutter-narrow: 0.75rem;   drawers, side panels, list panes
+ *     --spacing-gutter-main: 1rem;        full-width card grids
+ *     --spacing-gutter-rail: 1.25rem;     rails, centred modals
+ *     --spacing-stack: 0.5rem;            tabs → search → controls → cards
+ *   }
+ *   @utility gutter-host      { --gutter: var(--spacing-gutter-narrow); padding-inline: var(--gutter); }
+ *   @utility gutter-host-main { --gutter: var(--spacing-gutter-main);   padding-inline: var(--gutter); }
+ *   @utility gutter-host-rail { --gutter: var(--spacing-gutter-rail);   padding-inline: var(--gutter); }
+ *   @utility bleed       { margin-inline: calc(var(--gutter, 0px) * -1); padding-inline: var(--gutter, 0px); }
+ *   @utility bleed-flush { margin-inline: calc(var(--gutter, 0px) * -1); }
+ */

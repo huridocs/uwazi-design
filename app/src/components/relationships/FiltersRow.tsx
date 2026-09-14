@@ -34,7 +34,10 @@ export function CollapseControls({
     disabled || (totalCount > 0 && expandedCount >= totalCount);
 
   return (
-    <div className="flex items-center gap-1">
+    /* Ghost TEXT buttons: no fill at rest or on hover, so the text is their
+       visible edge. `px-1` is hit area only; `-mx-1` gives it back, putting
+       "Collapse all" and "Expand all" on the row's edges rather than 4px in. */
+    <div className="flex items-center gap-1 -mx-1">
       <button
         onClick={onCollapseAll}
         disabled={collapseDisabled}

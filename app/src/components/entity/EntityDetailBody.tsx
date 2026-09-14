@@ -151,37 +151,53 @@ export function EntityDetailBody({
   return (
     <EntityScopeProvider entityId={entityId}>
       <FiltersHostProvider host={panelEl}>
-      <div ref={setPanelEl} className="relative flex flex-col h-full min-h-0 bg-paper overflow-clip">
+      {/* THE GUTTER HOST. The side gutter is this box's padding and nothing
+          else's: the header, tabs, toolbar, cards and footer below carry no side
+          padding of their own, so they cannot disagree about where the content
+          starts. Boxes that must reach the panel edge — the header and footer
+          rules, the tab-content clip, scroll lanes, the document page — use
+          `bleed` / `bleed-flush`. `window.__gutter()` measures it. */}
+      <div
+        ref={setPanelEl}
+        data-gutter-host
+        className="gutter-host relative flex flex-col h-full min-h-0 bg-paper overflow-clip"
+      >
         {/* Identity header on top — the entity title + close, acting as the
             panel header. Tabs sit beneath it (flipped from the entity view so the
             panel reads title-first). */}
         <div
-          className="flex items-start gap-2 px-3 pt-3 pb-2.5 shrink-0"
+          className="bleed flex items-start gap-2 pt-3 pb-2.5 shrink-0"
           style={{ borderBottom: "1px solid var(--border-primary)" }}
         >
           <EntityIdentity entity={entity} size={identitySize} />
+          {/* Its BOX meets the gutter, not the icon: the hover fill must stay
+              inside the panel edge. */}
           <button
             onClick={onClose}
             aria-label={closeLabel}
+            data-gutter-align="box"
             className="-mt-0.5 p-1.5 rounded-md hover:bg-warm text-ink-muted hover:text-ink transition-colors shrink-0"
           >
             <X size={16} />
           </button>
         </div>
 
-        {banner && <div className="px-3 pt-3 shrink-0">{banner}</div>}
+        {banner && <div className="pt-3 shrink-0">{banner}</div>}
 
         {/* Main-tab navigation beneath the identity header. */}
-        <MainTabs tabs={tabs} activeId={activeTab} onChange={setActiveTab} />
+        <MainTabs tabs={tabs} activeId={activeTab} onChange={setActiveTab} gutter />
 
         {/* Tab content — drawer-flavoured bodies, scoped to this entity.
             flex COLUMN: the bodies are toolbar + flex-1 pane (the graph canvas, the
             scrolling list). As a plain block this box gave `flex-1` nothing to grow
             against, so the graph collapsed to the SVG's intrinsic height and sat in
-            the top half of an empty pane. */}
-        <div className="flex-1 min-h-0 relative overflow-hidden flex flex-col">
+            the top half of an empty pane. `bleed`: it clips (`overflow-hidden`), so
+            it has to span the panel for the lanes inside it to reach the edge. */}
+        <div className="bleed flex-1 min-h-0 relative overflow-hidden flex flex-col">
           {activeTab === "document" ? (
-            <DocumentViewer showMinimap={false} hideActionBar />
+            <div data-gutter-bleed className="bleed-flush flex-1 min-h-0 flex flex-col">
+              <DocumentViewer showMinimap={false} hideActionBar />
+            </div>
           ) : activeTab === "relationships" ? (
             <RelationshipsDrawerSection hideActionBar />
           ) : activeTab === "files" ? (
@@ -213,7 +229,7 @@ export function EntityDetailBody({
             only thing you can be doing here, so it gets the slot. */}
         {!editing && (
           <div
-            className="shrink-0 flex items-center gap-2 h-12 px-3 bg-paper"
+            className="bleed shrink-0 flex items-center gap-2 h-12 bg-paper"
             style={{ borderTop: "1px solid var(--border-primary)" }}
           >
             {/* The collapse pair lives in the Relationships action bar, and this

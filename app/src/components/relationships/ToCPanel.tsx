@@ -75,7 +75,7 @@ export function ToCPanel() {
   return (
     <>
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2.5 shrink-0">
+      <div className="flex items-center justify-between py-2.5 shrink-0">
         <div className="flex items-center gap-1.5">
           <span className="text-sm font-semibold text-ink">{t("System", "Table of contents")}</span>
           <Sparkles size={14} className="text-ink-tertiary" />
@@ -99,7 +99,9 @@ export function ToCPanel() {
       </div>
 
       {/* Tree */}
-      <div className="flex-1 overflow-auto px-1 pb-8">
+      {/* A scroll lane on the host's gutter. The rows are filled when active,
+          so their BOX meets the gutter and their text sits inside it. */}
+      <div className="bleed flex-1 overflow-auto pb-8">
         {tocEntries.map((entry) => (
           <TocNode
             key={entry.id}
@@ -155,6 +157,7 @@ function TocNode({
         type="button"
         onClick={handleRowClick}
         aria-current={isActive ? "true" : undefined}
+        data-gutter-align="box"
         className={`flex items-center gap-2 w-full px-2 py-2 text-left rounded transition-colors group cursor-pointer ${
           isActive
             ? "bg-parchment"

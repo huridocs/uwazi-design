@@ -120,11 +120,28 @@ Light values are unchanged; they already clear their floors.
 `xs 2 · sm 3 · base 4 · md 6 · lg 8 · xl 10 · 2xl 12 · 3xl 14 · 4xl 16` (px).
 Half Tailwind's ramp — "soft but not pillowy". Global change; own PR.
 
+### Gutter & stack (opt-in — see the commented block in the CSS)
+
+| Token | Tailwind | Value | Use |
+|---|---|---|---|
+| `--spacing-gutter-narrow` | `gutter-host` | 0.75rem (12px) | drawers, side panels, list panes |
+| `--spacing-gutter-main` | `gutter-host-main` | 1rem (16px) | full-width card grids |
+| `--spacing-gutter-rail` | `gutter-host-rail` | 1.25rem (20px) | navigation rails, centred modals |
+| `--spacing-stack` | `gap-stack`, `py-stack` | 0.5rem (8px) | vertical step between stacked rows |
+
+The prototype had three gutters in circulation (`px-3`, `px-3.5`, `px-4`), chosen
+row by row, so a tab strip and the body under it disagreed by 2–4px. Uwazi V2
+has the same shape of problem. The fix is structural, not a value: see the rule below.
+
 ## Style rules that come with the tokens
 
 - **Layout in `rem`, never raw px.** Tailwind spacing utilities are fine (v4's
   numeric scale is dynamic — `h-13` = 3.25rem just works). Raw px only for
   borders, shadows, sub-pixel details.
+- **The pane owns the side gutter.** A pane applies its tier once
+  (`gutter-host*`); rows inside carry no side padding. A box that must reach the
+  pane edge — a header/footer rule, a scroll lane, a canvas — uses `bleed`
+  (edge to edge, content back on the gutter) or `bleed-flush` (edge to edge).
 - **Selected card/row = `bg-parchment`.** One selected color everywhere. No inline
   `color-mix`, no `bg-warm`/`bg-vellum` for selection.
 - **No thick left-border accents** on cards/list items — use a small dot, icon

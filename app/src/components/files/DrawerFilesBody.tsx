@@ -65,20 +65,21 @@ export function DrawerFilesBody({
     const url = resolveFileUrl(viewingFile);
     return (
       <div className="flex-1 min-h-0 flex flex-col">
+        {/* The viewer is a stage, edge to edge; the bar under it is on the gutter. */}
         {viewingFile.type === "pdf" ? (
-          <div className="flex-1 min-h-0">
+          <div data-gutter-bleed className="bleed-flush flex-1 min-h-0">
             <DocumentViewer
               showMinimap={false}
               fileOverride={{ url, language: viewingFile.language }}
             />
           </div>
         ) : (
-          <div className="flex-1 min-h-0 overflow-auto bg-warm/40 flex items-center justify-center p-4">
+          <div data-gutter-bleed className="bleed-flush flex-1 min-h-0 overflow-auto bg-warm/40 flex items-center justify-center p-4">
             <FileViewerBody file={viewingFile} url={url} />
           </div>
         )}
         <div
-          className="flex items-center justify-between h-12 px-3 bg-paper shrink-0"
+          className="bleed flex items-center justify-between h-12 bg-paper shrink-0"
           style={{ borderTop: "1px solid var(--border-primary)" }}
         >
           <button
@@ -106,10 +107,13 @@ export function DrawerFilesBody({
 
   return (
     <div className="flex-1 min-h-0 flex flex-col">
-      <div className="flex-1 min-h-0 overflow-auto px-3 py-4 pb-8">
+      {/* A scroll lane: reaches the panel edge, content back on the host's
+          gutter. Nothing inside adds side padding — headings, notes and the
+          "+ Add translation" link start on the same edge as the file cards. */}
+      <div className="bleed flex-1 min-h-0 overflow-auto pt-stack pb-8">
         <SectionHeader label="Primary documents" />
         {primaryGroups.length === 0 && (
-          <p className="text-xs italic text-ink-tertiary px-1 mb-5">
+          <p className="text-xs italic text-ink-tertiary mb-5">
             No primary documents yet. Promote a supporting file or add a new one.
           </p>
         )}
@@ -117,7 +121,7 @@ export function DrawerFilesBody({
           const groupFiles = files.filter((f) => f.groupId === group.id);
           return (
             <section key={group.id} className="mb-6">
-              <div className="flex items-baseline justify-between px-1 mb-2">
+              <div className="flex items-baseline justify-between mb-2">
                 <h4 className="text-sm font-semibold text-ink truncate">
                   {group.title}
                 </h4>
@@ -145,7 +149,7 @@ export function DrawerFilesBody({
                 onClick={() =>
                   setAddFileTarget({ mode: "translation", groupId: group.id })
                 }
-                className="text-meta font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer mt-2 pl-1"
+                className="text-meta font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer mt-2"
               >
                 + Add translation
               </button>
@@ -155,7 +159,7 @@ export function DrawerFilesBody({
 
         <SectionHeader label="Supporting files" />
         {supportingFiles.length === 0 ? (
-          <p className="text-xs italic text-ink-tertiary px-1">
+          <p className="text-xs italic text-ink-tertiary">
             No supporting files yet. Add a file to get started.
           </p>
         ) : (
@@ -178,7 +182,7 @@ export function DrawerFilesBody({
 
       {!hideActionBar && (
         <div
-          className="flex items-center gap-3 h-12 px-3 bg-paper shrink-0"
+          className="bleed flex items-center gap-3 h-12 bg-paper shrink-0"
           style={{ borderTop: "1px solid var(--border-primary)" }}
         >
           <button
@@ -199,7 +203,7 @@ export function DrawerFilesBody({
 
 function SectionHeader({ label }: { label: string }) {
   return (
-    <SectionLabel as="h3" className="px-1 mb-3">
+    <SectionLabel as="h3" className="mb-3">
       {label}
     </SectionLabel>
   );

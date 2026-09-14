@@ -32,7 +32,9 @@ export function DocumentGroupCard({
 
   return (
     <section className="mb-4">
-      <header className="flex items-center gap-2 flex-wrap mb-2 px-1">
+      {/* No side padding: the pane's gutter places it, on the same edge as the
+          section labels and the file table under it. */}
+      <header className="flex items-center gap-2 flex-wrap mb-2">
         <GroupTitleField initial={group.title} onCommit={renameGroup} />
         {/* A file's role is fixed at upload, so this pill states how the
             document came in — not a rank anything on screen can change. */}
@@ -72,6 +74,9 @@ function GroupTitleField({
           focus:outline-none focus:bg-paper focus:ring-1 focus:ring-carbon/30 focus:rounded px-1 -mx-1"
         style={{ fieldSizing: "content" } as React.CSSProperties}
         aria-label="Document title"
+        /* The TEXT meets the gutter, not the box: `px-1 -mx-1` gives the focus
+           fill room without moving the title off the section labels' edge. */
+        data-gutter-align="text"
       />
       <Pencil
         size={11}
