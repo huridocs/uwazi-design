@@ -561,15 +561,23 @@ export function MetadataEditBody({
     Object.fromEntries(connectionDefs.map((d) => [d.key, d.entityIds])),
   );
 
-  /* The form below Country, in TEMPLATE order — the same sequence the read
+  /* The form below Description, in TEMPLATE order — the same sequence the read
      record uses (`profile.metadata`), so entering and leaving edit mode does
      not reorder fields and there is no separate Relationships section.
-     Title, Template, Description, Geolocation and Country keep their fixed
-     controls above and are skipped here.
+     Title, Template and Description keep their fixed controls above: Title is
+     the template's header property, Template is the entity's type rather than a
+     property, and Description is the form's required body field (the seed
+     template declares it first, so its position there is the same).
+     Country renders at the template position of the `country` field. A control
+     the template does not declare goes last, the same rule untemplated fields
+     follow: the Geolocation placeholder always (no seed or CEJIL field backs
+     it), and Country when the template has no `country` field.
      A multi-inheritance group (several fields sharing one `connectionKey`) is
      ONE connection: its editor, or its read-only card for a derived group,
      renders once, at the template position of its FIRST member field. */
   type EditUnit =
+    | { kind: "country" }
+    | { kind: "geolocation" }
     | { kind: "scalar"; field: MetadataField }
     | { kind: "files"; field: MetadataField }
     | { kind: "connection"; def: (typeof connectionDefs)[number] }
@@ -596,12 +604,18 @@ export function MetadataEditBody({
       }
       continue;
     }
-    if (f.id === "description" || f.id === "country") continue;
+    if (f.id === "description") continue;
+    if (f.id === "country") {
+      editUnits.push({ kind: "country" });
+      continue;
+    }
     // The form's own copy of the field: it holds the edited value.
     const field = fields.find((x) => x.id === f.id);
     if (!field) continue;
     editUnits.push({ kind: field.type === "file-list" ? "files" : "scalar", field });
   }
+  if (!editUnits.some((u) => u.kind === "country")) editUnits.push({ kind: "country" });
+  editUnits.push({ kind: "geolocation" });
 
   /* ── Copy From ────────────────────────────────────────────────────────────
      Staged in two steps, and NEITHER writes the entity: picking a source opens
@@ -934,29 +948,33 @@ export function MetadataEditBody({
           />
         </EditSection>
 
-        {/* Geolocation */}
-        <EditSection label="Geolocation">
-          <div className="h-40 bg-warm rounded-md flex items-center justify-center overflow-hidden">
-            <span className="text-xs text-ink-muted">Map Preview</span>
-          </div>
-          {/* The only side-by-side pair in the form. In the drawer it stacks:
-              two number boxes across 460px leaves each of them narrower than
-              the value it holds. */}
-          <div className={`gap-2 mt-2 ${compact ? "flex flex-col" : "flex items-center"}`}>
-            <EditInput label="Latitude" value="" placeholder="Value" />
-            <EditInput label="Longitude" value="" placeholder="Value" />
-          </div>
-        </EditSection>
-
-        {/* Country with search */}
-        <EditSection label="Country">
-          <CountryPicker />
-        </EditSection>
-
         {/* Every other field in template order (see `editUnits`): scalar
             editors (date / link / text / multiline), file-list item editors,
             connection editors, and derived connections as read-only cards. */}
         {editUnits.map((unit) => {
+          if (unit.kind === "country") {
+            return (
+              <EditSection key="control:country" label="Country">
+                <CountryPicker />
+              </EditSection>
+            );
+          }
+          if (unit.kind === "geolocation") {
+            return (
+              <EditSection key="control:geolocation" label="Geolocation">
+                <div className="h-40 bg-warm rounded-md flex items-center justify-center overflow-hidden">
+                  <span className="text-xs text-ink-muted">Map Preview</span>
+                </div>
+                {/* The only side-by-side pair in the form. In the drawer it stacks:
+                    two number boxes across 460px leaves each of them narrower than
+                    the value it holds. */}
+                <div className={`gap-2 mt-2 ${compact ? "flex flex-col" : "flex items-center"}`}>
+                  <EditInput label="Latitude" value="" placeholder="Value" />
+                  <EditInput label="Longitude" value="" placeholder="Value" />
+                </div>
+              </EditSection>
+            );
+          }
           if (unit.kind === "connection") {
             const d = unit.def;
             return (

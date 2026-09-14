@@ -507,8 +507,10 @@ Several fields sharing a `connectionKey` = **one connection, many inherited colu
   relationship property whose target template (`content`) is the template of
   every entity the group connects, and fields neither rule places (e.g. "Jueces
   firmantes" on a Causa) go last in build order.
-  In edit mode Title, Template, Description, Geolocation and Country keep their
-  fixed controls at the top; everything else follows template order.
+  In edit mode only Title, Template and Description keep fixed controls at the
+  top; everything else follows template order. Country renders at the template
+  position of the `country` field (last when the template has none), and the
+  Geolocation placeholder goes last.
 - **Read UI** (`MetadataReadBody`): `ConnectionGroupCard` (a table, entities once ×
   inherited columns, cell-merged) for shared connections; `RelationshipFieldCard` for
   singletons — an **inheriting single now renders as the SAME bordered table** (entity
