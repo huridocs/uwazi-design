@@ -46,6 +46,7 @@ import {
 import { highlightTerms } from "../../utils/queryTokens";
 import { Checkbox } from "../shared/Checkbox";
 import { ActiveFiltersSheet } from "./ActiveFiltersSheet";
+import { WARM_BUTTON } from "../shared/warmButton";
 
 /** Carded, grouped facets matching the Uwazi library filters: a "Filters" pill,
  *  bordered facet cards, an expandable Documents group, a keyword-style
@@ -476,10 +477,8 @@ export function LibraryFilters() {
         className="bleed shrink-0 flex items-center gap-2 h-12 bg-paper"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
-        {/* The warm fill alone does not show on paper: 1.04:1 in light, 1.08:1
-            in dark, so at rest the buttons read as loose text. The fill stays
-            warm, as on every action-bar button, and a `border-soft` hairline
-            gives the box an edge: 1.38:1 in light, 2.26:1 in dark. */}
+        {/* The warm fill alone does not show on paper; `WARM_BUTTON` carries
+            the edge every warm button on a paper bar shares. */}
         <button
           onClick={collapseAll}
           className={FOOTER_BUTTON}
@@ -504,8 +503,7 @@ export function LibraryFilters() {
   );
 }
 
-const FOOTER_BUTTON =
-  "px-3 py-1.5 text-xs font-medium rounded-md text-ink-secondary bg-warm border border-border-soft hover:bg-parchment hover:text-ink transition-colors cursor-pointer";
+const FOOTER_BUTTON = `px-3 py-1.5 text-xs font-medium rounded-md ${WARM_BUTTON} transition-colors cursor-pointer`;
 
 /* ── Cards & rows ── */
 

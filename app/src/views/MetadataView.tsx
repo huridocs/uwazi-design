@@ -55,6 +55,7 @@ import { useRegisterDirtyForm } from "../hooks/useDirtyGuard";
 import { ShareEntityModal } from "../components/share/ShareEntityModal";
 import { fromDateInputValue, toDateInputValue } from "../utils/dateValue";
 import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
+import { WARM_BUTTON, WARM_EDGE } from "../components/shared/warmButton";
 
 interface MetadataViewProps {
   tabs: { id: string; label: string; count?: number }[];
@@ -148,13 +149,13 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
       >
         <button
           onClick={onEdit}
-          className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+          className={`px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
         >
           Edit
         </button>
         <button
           onClick={() => setShareOpen(true)}
-          className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+          className={`px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
         >
           Share
         </button>
@@ -1126,7 +1127,7 @@ export function MetadataEditBody({
             </span>
             <button
               onClick={cancelCopy}
-              className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+              className={`px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
             >
               Discard copy
             </button>
@@ -1145,9 +1146,9 @@ export function MetadataEditBody({
         ) : (
           <button
             onClick={() => setPickerOpen(true)}
-            className="me-auto inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary
-              bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer
-              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"
+            className={`me-auto inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium
+              ${WARM_BUTTON} rounded-md transition-colors cursor-pointer
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30`}
           >
             <ClipboardCopy size={13} className="text-ink-tertiary" />
             Copy from…
@@ -1158,7 +1159,7 @@ export function MetadataEditBody({
             if (!saving) onCancel();
           }}
           aria-disabled={saving || undefined}
-          className={`px-4 py-1.5 text-xs font-medium text-ink-secondary bg-warm rounded-md transition-colors ${
+          className={`px-4 py-1.5 text-xs font-medium text-ink-secondary bg-warm ${WARM_EDGE} rounded-md transition-colors ${
             saving
               ? "opacity-50 cursor-not-allowed"
               : "hover:bg-parchment hover:text-ink cursor-pointer"

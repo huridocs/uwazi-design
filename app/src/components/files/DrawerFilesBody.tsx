@@ -15,6 +15,7 @@ import { AddFileModal } from "./AddFileModal";
 import { FileViewerBody, resolveFileUrl } from "./FileViewerModal";
 import { DocumentViewer } from "../viewer/DocumentViewer";
 import { ViewButton } from "../shared/ViewButton";
+import { WARM_BUTTON } from "../shared/warmButton";
 
 const KNOWN_LANGUAGES = ["EN", "ES", "FR", "AR", "PT", "DE", "—"];
 
@@ -90,7 +91,7 @@ export function DrawerFilesBody({
         >
           <button
             onClick={() => setViewerFileId(null)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
           >
             <ArrowLeft size={12} className="text-ink-tertiary" /> Back to files
           </button>
@@ -100,7 +101,7 @@ export function DrawerFilesBody({
               download
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
             >
               <Download size={12} className="text-ink-tertiary" /> Download
             </a>
@@ -193,7 +194,7 @@ export function DrawerFilesBody({
         >
           <button
             onClick={() => setAddFileTarget({ mode: "new" })}
-            className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+            className={`px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
           >
             Add file
           </button>

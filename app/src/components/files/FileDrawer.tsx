@@ -26,6 +26,7 @@ import { AddFileDropArea } from "./AddFileDropArea";
 import { FileViewerBody, resolveFileUrl } from "./FileViewerModal";
 import { DocumentViewer } from "../viewer/DocumentViewer";
 import { TabCount } from "../shared/TabCount";
+import { WARM_BUTTON } from "../shared/warmButton";
 
 const typeIcons: Record<FileEntry["type"], typeof FileText> = {
   pdf: FileText,
@@ -179,7 +180,7 @@ export function FileDrawer({
                 <>
                   <button
                     onClick={() => setViewerFileId(null)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
                   >
                     <ArrowLeft size={12} className="text-ink-tertiary" /> Back to details
                   </button>
@@ -191,7 +192,7 @@ export function FileDrawer({
                         download
                         target="_blank"
                         rel="noreferrer"
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
                       >
                         <Download size={12} className="text-ink-tertiary" /> Download
                       </a>
@@ -205,13 +206,13 @@ export function FileDrawer({
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setViewerFileId(selectedFiles[0].id)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+                      className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
                     >
                       <Eye size={12} className="text-ink-tertiary" /> View
                     </button>
                     <button
                       onClick={() => notify("File downloaded", "success")}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+                      className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
                     >
                       <Download size={12} className="text-ink-tertiary" /> Download
                     </button>
@@ -233,7 +234,7 @@ export function FileDrawer({
             >
               <button
                 onClick={() => notify(`Downloading ${selectedFiles.length} files`, "success")}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
               >
                 <Download size={12} className="text-ink-tertiary" /> Download all
               </button>

@@ -11,6 +11,7 @@ import { editModeAtom, selectedRefIdsAtom } from "../../atoms/filters";
 import { ConfirmDialog } from "../shared/ConfirmDialog";
 import { SelectControls } from "../shared/SelectControls";
 import { RelationshipsCollapseControls } from "./FiltersRow";
+import { WARM_BUTTON } from "../shared/warmButton";
 
 interface RelationshipsActionBarProps {
   /** Compact (drawer) flavour. Drops Create relationship + Manage types +
@@ -100,7 +101,7 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
               <>
                 <button
                   onClick={handleCreate}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
                 >
                   <Plus size={12} className="text-ink-tertiary" /> Create relationship
                 </button>

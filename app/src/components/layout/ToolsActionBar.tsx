@@ -1,4 +1,5 @@
 import { ArrowLeft, Trash2 } from "lucide-react";
+import { WARM_BUTTON } from "../shared/warmButton";
 
 type ActionBarMode = "list" | "detail";
 
@@ -29,7 +30,7 @@ export function ToolsActionBar({
       >
         <button
           onClick={onBack}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
         >
           <ArrowLeft size={14} className="text-ink-tertiary" /> Back to list
         </button>

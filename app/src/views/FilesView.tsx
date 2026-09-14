@@ -18,6 +18,7 @@ import { LANGUAGES, languageAtom, type Language } from "../atoms/language";
 import { ConfirmDialog } from "../components/shared/ConfirmDialog";
 import { SelectControls } from "../components/shared/SelectControls";
 import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
+import { WARM_BUTTON } from "../components/shared/warmButton";
 
 interface FilesViewProps {
   tabs: { id: string; label: string; count?: number }[];
@@ -289,7 +290,7 @@ function FilesActionBar({
       <div className="flex items-center gap-3">
         <button
           onClick={onAddFile}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
         >
           <span className="text-ink-tertiary">+</span> Add file
         </button>

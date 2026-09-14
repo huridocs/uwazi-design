@@ -5,14 +5,14 @@ import { ShareEntityModal } from "../share/ShareEntityModal";
 import { SearchTipsPopover } from "../library/SearchTipsPopover";
 import { docSearchQueryAtom } from "../../atoms/references";
 import { useSetAtom } from "jotai";
+import { WARM_BUTTON } from "../shared/warmButton";
 
 interface DrawerActionBarProps {
   activeTab: string;
 }
 
-/** Soft pill button used across the drawer action bar. No visible border;
- *  bg-warm sits on the bar, parchment on hover. Matches ViewButton so the
- *  whole drawer reads with one button vocabulary. */
+/** Soft pill button used across the drawer action bar: the warm action-bar
+ *  button, with the paper-ground edge from `WARM_BUTTON`. */
 function ActionPill({
   icon: Icon,
   label,
@@ -27,7 +27,7 @@ function ActionPill({
   const tone =
     variant === "danger"
       ? "text-seal-label bg-seal-tint/40 hover:bg-seal-tint"
-      : "text-ink-secondary bg-warm hover:bg-parchment hover:text-ink";
+      : WARM_BUTTON;
   return (
     <button
       type="button"

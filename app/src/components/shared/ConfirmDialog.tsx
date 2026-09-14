@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { AlertTriangle, X } from "lucide-react";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
+import { WARM_BUTTON } from "./warmButton";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -62,7 +63,7 @@ export function ConfirmDialog({
         <div className="flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="px-3 py-1.5 text-xs font-medium rounded-md text-ink-secondary bg-warm hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
+            className={`px-3 py-1.5 text-xs font-medium rounded-md ${WARM_BUTTON} transition-colors cursor-pointer`}
           >
             {cancelLabel}
           </button>
