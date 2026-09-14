@@ -28,17 +28,28 @@ export function SplitView({
 
   const rightWidth = dragWidth === null ? width : clamp(dragWidth);
 
+  /* The drawer sits at the inline END: on the right in LTR, on the left in RTL,
+     where the flex row mirrors. Moving the divider toward the drawer's side
+     narrows it, so the sign of a leftward move flips with the direction. Read
+     from the computed style at the moment of the gesture, because the language
+     (and with it `dir`) can change while this view stays mounted. */
+  const leftwardGrows = useCallback(
+    () => !containerRef.current || getComputedStyle(containerRef.current).direction !== "rtl",
+    [],
+  );
+
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
 
       const startX = e.clientX;
       const startWidth = rightWidth;
+      const sign = leftwardGrows() ? 1 : -1;
       let latest = startWidth;
       setDragWidth(startWidth);
 
       const handleMouseMove = (e: MouseEvent) => {
-        latest = clamp(startWidth + (startX - e.clientX));
+        latest = clamp(startWidth + sign * (startX - e.clientX));
         setDragWidth(latest);
       };
 
@@ -54,14 +65,16 @@ export function SplitView({
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
     },
-    [rightWidth, clamp, setStoredWidth]
+    [rightWidth, clamp, setStoredWidth, leftwardGrows]
   );
 
   /* THE DIVIDER IS A CONTROL, not only a gesture.
      A keyboard user could not move it at all, and it announced nothing. Arrows
-     step it; shift takes a bigger stride, the way a slider does. Left widens
-     the drawer because the drawer is on the right — the key moves the DIVIDER,
-     and the pane follows it. */
+     step it; shift takes a bigger stride, the way a slider does. The key moves
+     the DIVIDER and the pane follows it: ArrowLeft widens the drawer in LTR,
+     where the drawer is on the right, and narrows it in RTL, where it is on the
+     left. Home and End are not directional — they go to the minimum and maximum
+     width, as `aria-valuemin`/`aria-valuemax` state them. */
   const nudge = useCallback(
     (delta: number) => {
       const next = clamp(rightWidth + delta);
@@ -73,12 +86,13 @@ export function SplitView({
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       const step = e.shiftKey ? 64 : 16;
+      const leftStep = leftwardGrows() ? step : -step;
       if (e.key === "ArrowLeft") {
         e.preventDefault();
-        nudge(step);
+        nudge(leftStep);
       } else if (e.key === "ArrowRight") {
         e.preventDefault();
-        nudge(-step);
+        nudge(-leftStep);
       } else if (e.key === "Home") {
         e.preventDefault();
         setStoredWidth(clamp(minRightWidth));
@@ -87,7 +101,7 @@ export function SplitView({
         setStoredWidth(clamp(Number.MAX_SAFE_INTEGER));
       }
     },
-    [nudge, clamp, setStoredWidth, minRightWidth],
+    [nudge, clamp, setStoredWidth, minRightWidth, leftwardGrows],
   );
 
   const dragging = dragWidth !== null;
