@@ -165,7 +165,7 @@ export function NotificationsDrawer({ rtl = false }: { rtl?: boolean }) {
                 {unread}
               </span>
             )}
-            <div className="ml-auto flex items-center gap-0.5">
+            <div className="ms-auto flex items-center gap-0.5">
               {unread > 0 && (
                 <button
                   onClick={markAllRead}
@@ -294,7 +294,7 @@ function TaskCard({ a, onCancel }: { a: Activity; onCancel: () => void }) {
           <X size={13} />
         </button>
       </div>
-      {a.detail && <div className="mt-0.5 ml-[1.375rem] text-meta text-ink-muted truncate">{a.detail}</div>}
+      {a.detail && <div className="mt-0.5 ms-[1.375rem] text-meta text-ink-muted truncate">{a.detail}</div>}
       <div className="mt-2 flex items-center gap-2">
         <div className="flex-1 h-1.5 rounded-full bg-vellum overflow-hidden">
           <div
@@ -355,12 +355,12 @@ function NotifCard({
           e.stopPropagation();
           onDismiss();
         }}
-        className="absolute top-2.5 right-2.5 flex items-center justify-center w-5 h-5 rounded text-ink-muted opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-ink/5 transition-opacity"
+        className="absolute top-2.5 end-2.5 flex items-center justify-center w-5 h-5 rounded text-ink-muted opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-ink/5 transition-opacity"
         aria-label="Dismiss"
       >
         <X size={13} />
       </button>
-      <div className="flex items-start gap-2.5 pr-5">
+      <div className="flex items-start gap-2.5 pe-5">
         <Icon size={17} className={`${color} shrink-0 mt-px`} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
@@ -392,7 +392,7 @@ function NotifCard({
           {/* Footer: actions + timestamp */}
           <div className="mt-1.5 flex items-center gap-2">
             <span className="text-meta text-ink-tertiary">{fmtTime(n.time, now)}</span>
-            <div className="ml-auto flex items-center gap-1">
+            <div className="ms-auto flex items-center gap-1">
               {n.kind === "error" && (
                 <button
                   onClick={(e) => {
