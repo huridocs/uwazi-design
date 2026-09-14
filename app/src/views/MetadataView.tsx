@@ -75,7 +75,6 @@ export function MetadataView({ tabs, activeTab, onTabChange, onBack }: MetadataV
         activeId={activeTab}
         onChange={onTabChange}
         onBack={onBack}
-        gutter
         languages={LANGUAGES}
         availableLanguages={LANGUAGES}
         activeLanguage={language}
@@ -127,7 +126,7 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
 
   return (
     <>
-      <DocMeta showPdfSelector={false} gutter />
+      <DocMeta showPdfSelector={false} />
       <ShareEntityModal open={shareOpen} onClose={() => setShareOpen(false)} />
 
       <div className="bleed flex-1 overflow-auto py-3 pb-8">

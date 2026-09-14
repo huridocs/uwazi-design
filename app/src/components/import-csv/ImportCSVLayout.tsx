@@ -20,7 +20,9 @@ export function ImportCSVLayout({ children, actionBar, onNavigate }: ImportCSVLa
   return (
     <div className="flex flex-1 min-h-0">
       {!isMobile && <SettingsNav onNavigate={onNavigate} activeId="import-csv" />}
-      <div className="flex flex-col flex-1 min-h-0 bg-warm">
+      {/* The main-tier gutter host (16px): the list and detail views and the
+          action bar take their side inset from it. */}
+      <div data-gutter-host className="gutter-host-main flex flex-col flex-1 min-h-0 bg-warm">
         <div className="flex flex-col flex-1 min-h-0">
           {children}
         </div>

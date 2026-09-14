@@ -13,10 +13,6 @@ interface DocMetaProps {
   /** Show the format picker (PDF / Plain text / HTML). Only the Document tab
    *  wants it; the metadata/files headers pass false. */
   showPdfSelector?: boolean;
-  /** Rendered inside a gutter host: no side padding of its own, and `bleed`
-   *  so its bottom rule still spans the pane. Without it the strip keeps its
-   *  own `px-3` for a caller that is not a host. */
-  gutter?: boolean;
 }
 
 const FORMATS: { id: DocumentFormat; label: string; icon: typeof FileText }[] = [
@@ -28,7 +24,7 @@ const FORMATS: { id: DocumentFormat; label: string; icon: typeof FileText }[] = 
 /** Entity header strip. Names the ENTITY (type tag + its own title) and — on the
  *  Document tab — the document on screen plus a picker that switches between
  *  that document's renditions (PDF, plain text, HTML). */
-export function DocMeta({ showPdfSelector = true, gutter = false }: DocMetaProps) {
+export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
   const groups = useAtomValue(documentGroupsAtom);
   const [format, setFormat] = useAtom(documentFormatAtom);
   const focusedId = useAtomValue(focusedEntityIdAtom);
@@ -90,7 +86,9 @@ export function DocMeta({ showPdfSelector = true, gutter = false }: DocMetaProps
 
   return (
     <div
-      className={`flex items-center gap-2 min-h-11 pt-1 pb-2 shrink-0 ${gutter ? "bleed" : "px-3"}`}
+      /* Rendered inside a gutter host: no side padding of its own, and `bleed`
+         so its bottom rule spans the pane. */
+      className="bleed flex items-center gap-2 min-h-11 pt-1 pb-2 shrink-0"
       style={{ borderBottom: "1px solid var(--border-primary)" }}
     >
       {/* Stacked, like the drawer: tag over title. Side by side, a long template

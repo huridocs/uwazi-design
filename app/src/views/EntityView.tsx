@@ -101,13 +101,12 @@ export function EntityView() {
         activeId={activeTab}
         onChange={handleTabChange}
         onBack={goBack}
-        gutter
         languages={LANGUAGES}
         availableLanguages={LANGUAGES}
         activeLanguage={language}
         onLanguageChange={(lang) => setLanguage(lang as Language)}
       />
-      <DocMeta gutter />
+      <DocMeta />
       <DocumentViewer actionBarMenu={menuTrigger} />
     </div>
   );

@@ -304,11 +304,14 @@ export function AgentModal() {
         role="dialog"
         aria-modal="true"
         aria-label="Bert"
-        className="relative w-full max-w-[46rem] max-h-[min(70vh,34rem)] bg-paper border border-border rounded-xl shadow-2xl flex flex-col animate-agent-modal overflow-hidden"
+        // The rail-tier gutter host (20px). The header zone and the thread are
+        // `bleed` bands, so the rule and the scrollbar reach the panel edge.
+        data-gutter-host
+        className="gutter-host-rail relative w-full max-w-[46rem] max-h-[min(70vh,34rem)] bg-paper border border-border rounded-xl shadow-2xl flex flex-col animate-agent-modal overflow-hidden"
       >
         {/* Header + context (one calm top zone) */}
-        <div className="shrink-0 border-b border-border-soft">
-          <div className="flex items-center gap-2 px-5 h-11">
+        <div className="bleed shrink-0 border-b border-border-soft">
+          <div className="flex items-center gap-2 h-11">
             {/* Bert's mark — the two Uwazi squares: Seal above Carbon, drop-in.
                 Kept in a tight lockup with the wordmark. */}
             <span className="flex items-center gap-1.5">
@@ -320,18 +323,22 @@ export function AgentModal() {
             <kbd className="px-1.5 py-0.5 text-meta font-medium text-ink-muted bg-warm rounded leading-none">{shortcutLabel}</kbd>
             <button
               onClick={() => setOpen(false)}
-              className="ml-auto flex items-center justify-center w-7 h-7 rounded-md text-ink-muted hover:bg-warm hover:text-ink-secondary transition-colors"
+              className="ms-auto flex items-center justify-center w-7 h-7 rounded-md text-ink-muted hover:bg-warm hover:text-ink-secondary transition-colors"
               aria-label="Close"
+              data-gutter-align="box"
             >
               <X size={17} />
             </button>
           </div>
 
           {/* Context row */}
-          <div className="flex items-center gap-1.5 flex-wrap px-5 pb-2.5">
+          <div className="flex items-center gap-1.5 flex-wrap pb-2.5">
             <Dropdown
               trigger={
-                <span className="inline-flex items-center gap-1 h-6 px-1.5 text-meta font-medium text-ink-secondary rounded-md hover:bg-warm transition-colors">
+                <span
+                  data-gutter-align="box"
+                  className="inline-flex items-center gap-1 h-6 px-1.5 text-meta font-medium text-ink-secondary rounded-md hover:bg-warm transition-colors"
+                >
                   <span className="text-ink-tertiary">Context</span>
                   <span className="text-ink font-semibold">{scopeText}</span>
                   <ChevronDown size={11} className="text-ink-muted" />
@@ -415,7 +422,7 @@ export function AgentModal() {
           ref={threadRef}
           role="log"
           aria-live="polite"
-          className="flex-1 overflow-y-auto px-5 py-4 min-h-[11rem]"
+          className="bleed flex-1 overflow-y-auto py-4 min-h-[11rem]"
         >
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center gap-2.5 py-6">
@@ -464,7 +471,7 @@ export function AgentModal() {
         </div>
 
         {/* Input */}
-        <div className="px-5 pt-2 pb-5 shrink-0">
+        <div className="pt-2 pb-5 shrink-0">
           <div className="flex items-center gap-2 bg-warm border border-border-soft rounded-xl pl-3.5 pr-2 py-2 focus-within:ring-2 focus-within:ring-carbon/20 focus-within:border-carbon/30 transition-shadow">
             <textarea
               autoFocus
@@ -500,7 +507,7 @@ export function AgentModal() {
               )}
             </button>
           </div>
-          <p className="mt-1.5 px-1 flex items-center gap-1 text-meta text-ink-tertiary">
+          <p className="mt-1.5 flex items-center gap-1 text-meta text-ink-tertiary">
             <Bell size={10} /> Long-running tasks keep running in notifications after you close this.
           </p>
         </div>

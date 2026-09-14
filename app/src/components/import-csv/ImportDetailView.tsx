@@ -85,7 +85,7 @@ export function ImportDetailView({ entry, onBack }: ImportDetailViewProps) {
   const hasTable = entry.issues.length > 0 || (isCompleted && entry.entities > 0);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 p-4 gap-4 overflow-y-auto">
+    <div className="bleed flex flex-col flex-1 min-h-0 py-4 gap-4 overflow-y-auto">
       <Breadcrumb
         segments={[
           { label: "Import CSV", onClick: onBack },
@@ -180,12 +180,12 @@ export function ImportDetailView({ entry, onBack }: ImportDetailViewProps) {
 
       {/* Section header for table */}
       {entry.issues.length > 0 && (
-        <SectionLabel as="h3" level="section" className="px-1">
+        <SectionLabel as="h3" level="section">
           Issues ({entry.issues.length})
         </SectionLabel>
       )}
       {entry.issues.length === 0 && isCompleted && entry.entities > 0 && (
-        <SectionLabel as="h3" level="section" className="px-1">
+        <SectionLabel as="h3" level="section">
           Created entities{" "}
           {entry.entities > 20 && (
             <span className="normal-case font-normal">

@@ -209,7 +209,6 @@ export const ResultsBody = memo(function ResultsBody({
             number — a second copy in the panel was the duplication this row
             used to be. */}
         <ListInfoRow
-          gutter
           count={null}
           activeFilterCount={0}
           showFilterChips={false}

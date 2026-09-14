@@ -43,8 +43,9 @@
    * row's left and right edge — and it is a scale of three, one per kind of
    * pane, not one number:
    *   narrow  12px  drawers, side panels, the Library and Relationships panes
-   *   main    16px  full-width card grids (Metadata, Files)
-   *   rail    20px  navigation rails and centred modals
+   *   main    16px  full-width panes (Metadata, Files, Settings content,
+   *                 Import CSV, the notifications drawer)
+   *   rail    20px  navigation rails and centred modals (SettingsNav, Bert)
    * `stack` is the vertical step between the rows stacked in a pane (tab
    * selector → search → controls → first card) and between sibling cards.
    * All of it is applied by the HOST, never by the rows: see `gutter-host`. */

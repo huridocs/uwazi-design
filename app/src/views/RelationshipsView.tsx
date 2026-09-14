@@ -48,13 +48,12 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
             activeId={activeTab}
             onChange={onTabChange}
             onBack={onBack}
-            gutter
             languages={LANGUAGES}
             availableLanguages={LANGUAGES}
             activeLanguage={language}
             onLanguageChange={(lang) => setLanguage(lang as Language)}
           />
-          <DocMeta showPdfSelector={false} gutter />
+          <DocMeta showPdfSelector={false} />
 
           <RelationshipsToolbar />
 

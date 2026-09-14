@@ -40,13 +40,9 @@ interface MainTabsProps {
   /** When provided, the header shows a back button that returns to the
    *  precedent screen. */
   onBack?: () => void;
-  /** Rendered inside a gutter host (the entity drawer): no side padding of its
-   *  own, and one `stack` step above — the host places it on the same edge as
-   *  every row below it. */
-  gutter?: boolean;
 }
 
-export function MainTabs({ tabs, activeId, onChange, languages = [], availableLanguages, activeLanguage, onLanguageChange, onBack, languageEditing = false, gutter = false }: MainTabsProps) {
+export function MainTabs({ tabs, activeId, onChange, languages = [], availableLanguages, activeLanguage, onLanguageChange, onBack, languageEditing = false }: MainTabsProps) {
   /* THE FOLD IS DECIDED BY THE CONTAINER, not the viewport.
      It used to fold on `breakpointAtom`, which reads the WINDOW — so a strip in
      a 360px pane at a 1440px window stayed expanded and clipped mid-tab. The
@@ -76,13 +72,12 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
 
   return (
     <div
-      /* Inside a gutter host (`gutter`) the strip takes no side padding: the
-         host's gutter puts its edge on the same line as the toolbar and cards
-         beneath it. It used to carry its own `px-4` to match the metadata
-         cards' `p-4`, which put it 4px off every other tab's toolbar. */
-      className={`relative flex items-center justify-between gap-3 shrink-0 ${
-        gutter ? "pt-stack" : "px-3 pt-2 pb-1 md:pt-2.5"
-      }`}
+      /* The strip takes no side padding and one `stack` step above: it is
+         rendered inside a gutter host, whose gutter puts its edge on the same
+         line as the toolbar and cards beneath it. It used to carry its own
+         `px-4` to match the metadata cards' `p-4`, which put it 4px off every
+         other tab's toolbar. */
+      className="relative flex items-center justify-between gap-3 shrink-0 pt-stack"
     >
       {/* Left: Back + Tabs.
 

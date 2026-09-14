@@ -79,13 +79,17 @@ Keep it in sync when tokens.css or the style rules change.
 ## Style rules that bite
 - **Layout in `rem`, never `px`.** Tailwind spacing utilities (`px-4`, `gap-3`) are fine. Reserve raw `px` for borders, shadows, sub-pixel details.
 - **The pane owns the side gutter, not the rows.** A pane sets it once with
-  `gutter-host` (narrow, 12px: drawers, side panels, Library/Relationships
-  panes), `gutter-host-main` (16px: full-width card grids — Metadata, Files) or
-  `gutter-host-rail` (20px: rails, centred modals), plus `data-gutter-host`.
-  Rows inside carry NO `px-*`/`mx-*` of their own; a box that must reach the
-  pane edge (a header/footer rule, a scroll lane, a canvas) uses `bleed` or
-  `bleed-flush` (`index.css`). `MainTabs gutter`, `DocMeta gutter` and
-  `DrawerTabs` (no side padding by default) follow it; `SearchBar` has none.
+  `gutter-host` (narrow, 12px: drawers, side panels, the Library main pane,
+  the Relationships panes), `gutter-host-main` (16px: Metadata, Files, the
+  Settings content pane, Import CSV, the notifications drawer) or
+  `gutter-host-rail` (20px: `SettingsNav`, the Bert modal), plus
+  `data-gutter-host`. Rows inside carry NO `px-*`/`mx-*` of their own; a box
+  that must reach the pane edge (a header/footer rule, a scroll lane, a canvas)
+  uses `bleed` or `bleed-flush` (`index.css`). `MainTabs`, `DocMeta`,
+  `ListInfoRow`, `DrawerTabs` and `SearchBar` carry no side padding at all, so
+  they only sit right inside a host (the catalog demos wrap them in one). A
+  `bleed` button or link must be STRETCHED by a flex column to widen: `w-full`
+  plus negative margins only moves it.
   Vertical rhythm is `stack` (8px): tabs → search → controls → first card →
   card. A padded control declares its edge: `data-gutter-align="box"` (hover
   fill stays inside — close X, tree/ToC rows) or `"text"` (the group title
@@ -362,7 +366,7 @@ HURIDOCS tribute** — surface the name, keep the code identifiers (`agent*`).
   (`createPortal`) because the modal is `overflow-hidden`.
 - **Layout**: landscape on desktop (`max-w-[46rem]`, `max-h-[min(70vh,34rem)]`),
   anchored to the **lower third** (`items-end`, `pb-[8vh]`), gentle rise + fading
-  scrim entrance (`animate-agent-modal` / `agent-scrim`, `index.css`), `px-5` content.
+  scrim entrance (`animate-agent-modal` / `agent-scrim`, `index.css`), content on the rail gutter (`gutter-host-rail`, 20px).
 - Send button: arrow when idle (active = ink + white arrow on focus/text); the Uwazi
   mark animates while thinking. Input auto-focuses on open.
 
