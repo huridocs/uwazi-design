@@ -115,7 +115,10 @@ export interface Entity {
    *  Adapters that summarise supply this too. Where it's absent, `fields` IS the
    *  whole record (the mock and artwork corpora hold a handful of short values)
    *  and search reads that, as before. */
-  searchFields?: { label: string; value: string }[];
+  /** `key` is the template property name, where the corpus has one — the key
+   *  the metadata record puts on its field cards, so deep focus from a search
+   *  result can find the field (see `entitySearchFields`). */
+  searchFields?: { key?: string; label: string; value: string }[];
   /** Adapter-supplied keyword facet values (e.g. CEJIL "descriptores"/violations). */
   descriptors?: string[];
   /** Adapter-supplied INHERITED relationship-property values, keyed by propId
