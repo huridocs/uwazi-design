@@ -27,19 +27,20 @@ export function CopyPreviewSection({
 
   return (
     <section
+      data-component="CopyPreviewSection"
       className="rounded-lg p-3 space-y-3"
       style={{ backgroundColor: "var(--bg-warm)" }}
       aria-label="Copy From preview"
     >
-      <div className="flex items-center justify-between gap-2">
+      <header data-part="header" className="flex items-center justify-between gap-2">
         <SectionLabel as="h4">Copy from this entity</SectionLabel>
-        <span className="text-meta text-ink-tertiary">
+        <span data-part="match-count" className="text-meta text-ink-tertiary">
           {plan.matchCount} {plan.matchCount === 1 ? "field matches" : "fields match"}
         </span>
-      </div>
+      </header>
 
       {plan.matches.length > 0 ? (
-        <ul className="space-y-1.5">
+        <ul data-part="matches" className="space-y-1.5">
           {plan.matches.map((m) => (
             <li key={m.id} className="flex items-start gap-1.5 text-meta">
               <Check size={12} className="shrink-0 mt-px text-success" aria-hidden />
@@ -54,13 +55,13 @@ export function CopyPreviewSection({
           ))}
         </ul>
       ) : (
-        <p className="text-meta text-ink-tertiary">
+        <p data-part="empty" className="text-meta text-ink-tertiary">
           Nothing on this entity lines up with the one you are editing.
         </p>
       )}
 
       {nearMisses.length > 0 && (
-        <div className="space-y-1.5 pt-1" style={{ borderTop: "1px solid var(--border-soft)" }}>
+        <div data-part="skipped" className="space-y-1.5 pt-1" style={{ borderTop: "1px solid var(--border-soft)" }}>
           <SectionLabel as="h5" className="pt-2">
             Not copied
           </SectionLabel>
@@ -80,10 +81,11 @@ export function CopyPreviewSection({
         </div>
       )}
 
-      <div className="flex items-center gap-2 pt-1">
+      <div data-part="actions" className="flex items-center gap-2 pt-1">
         <button
           type="button"
           onClick={onUse}
+          data-part="stage"
           disabled={plan.matchCount === 0}
           className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
             plan.matchCount === 0
@@ -96,6 +98,7 @@ export function CopyPreviewSection({
         <button
           type="button"
           onClick={onBack}
+          data-part="back"
           className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment
             hover:text-ink rounded-md transition-colors cursor-pointer
             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"

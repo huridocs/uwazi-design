@@ -33,7 +33,7 @@ export function EditInput({
   const val = controlled ? value : internal;
 
   return (
-    <div className="flex-1">
+    <div data-component="EditInput" className="flex-1">
       {label && (
         <label htmlFor={id} className="text-xs font-medium text-ink-secondary">
           {label}

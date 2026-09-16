@@ -54,23 +54,28 @@ export function ConnectionCardStack({
   const chips = (rollups ?? []).filter((r) => r.summary);
 
   return (
-    <div className="mt-1.5 space-y-1.5">
+    <div data-component="ConnectionCardStack" className="mt-1.5 space-y-1.5">
       {chips.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5">
+        <dl data-part="rollups" className="flex flex-wrap items-center gap-1.5">
           {chips.map((r) => (
-            <span key={r.label} className="inline-flex items-center gap-1">
-              <span className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
+            <div key={r.label} className="inline-flex items-center gap-1">
+              <dt className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
                 {r.label}
-              </span>
-              <RollupChip summary={r.summary!} />
-            </span>
+              </dt>
+              <dd>
+                <RollupChip summary={r.summary!} />
+              </dd>
+            </div>
           ))}
-        </div>
+        </dl>
       )}
 
+      <ul data-part="entities" className="space-y-1.5">
       {entities.map((e) => (
-        <div key={e.entityId} className="rounded-md border border-border/40 p-2.5 space-y-1.5">
+        <li key={e.entityId} data-part="entity" className="rounded-md border border-border/40 p-2.5 space-y-1.5">
           <button
+            type="button"
+            data-part="entity-open"
             onClick={() => setOverlay(e.entityId)}
             className="max-w-full min-w-0 rounded-md hover:opacity-80 transition-opacity cursor-pointer"
             title="Preview source entity"
@@ -81,13 +86,13 @@ export function ConnectionCardStack({
             // `auto_1fr`: the labels share one column so the values line up down
             // the card, and a long value wraps in its own column rather than
             // pushing the label out of the card the way a flex row would.
-            <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 items-baseline">
+            <dl data-part="cells" className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 items-baseline">
               {e.cells.map((c) => (
                 <div key={c.key} className="contents">
-                  <span className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
+                  <dt className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
                     {c.label}
-                  </span>
-                  <span className="min-w-0">
+                  </dt>
+                  <dd className="min-w-0">
                     {c.value ? (
                       <InheritedValueTag
                         value={c.value}
@@ -103,13 +108,14 @@ export function ConnectionCardStack({
                         <ProvenanceTrail steps={c.provenance} />
                       </span>
                     )}
-                  </span>
+                  </dd>
                 </div>
               ))}
-            </div>
+            </dl>
           )}
-        </div>
+        </li>
       ))}
+      </ul>
     </div>
   );
 }

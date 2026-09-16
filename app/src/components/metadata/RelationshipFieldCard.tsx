@@ -56,7 +56,9 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
 
   const entityCell = (v: (typeof resolved.values)[number]) => (
     <button
+      type="button"
       key={v.entityId}
+      data-part="entity-open"
       onClick={() => setOverlay(v.entityId)}
       className="min-w-0 rounded-md hover:opacity-80 transition-opacity cursor-pointer"
       title="Preview source entity"
@@ -68,12 +70,13 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
   return (
     <MetadataCard
       title={field.label}
-      icon={<Link2 size={11} className="text-carbon" />}
+      component="RelationshipFieldCard"
+      icon={<Link2 size={11} className="text-carbon" aria-hidden />}
       className={spanClass(span)}
     >
       <RelationCaption relationLabel={resolved.relationLabel} inheritLabel={field.inheritLabel} />
       {sharedProvenance && (
-        <div className="mt-0.5">
+        <div data-part="shared-provenance" className="mt-0.5">
           <ProvenanceTrail steps={sharedProvenance} sharedLabel="all inherited" />
         </div>
       )}
@@ -81,15 +84,17 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
       {inherits ? (
         // Container query, not a viewport breakpoint — see ConnectionGroupCard.
         <div className={`-mx-1 mt-1.5 ${TABLE_MIN.container}`}>
-        <div className={TABLE_MIN.tableOnly}>
-          <table className="w-full text-sm border-collapse">
+        <div data-part="table-view" className={TABLE_MIN.tableOnly}>
+          {/* Native table layout, not re-displayed — see ConnectionGroupCard. */}
+          <table data-part="table" className="w-full text-sm border-collapse">
+            <caption className="sr-only">{field.label}</caption>
             <thead>
               <tr className="text-meta uppercase tracking-wider text-ink-tertiary">
-                <th className="font-semibold py-1.5 px-1 text-start">{entityHeader}</th>
-                <th className="font-semibold py-1.5 px-3 text-start align-top">
+                <th scope="col" data-part="column-header" className="font-semibold py-1.5 px-1 text-start">{entityHeader}</th>
+                <th scope="col" data-part="column-header" className="font-semibold py-1.5 px-3 text-start align-top">
                   <span className="flex flex-col items-start gap-1">
                     <span className="inline-flex items-center gap-1">
-                      <Link2 size={10} className="text-carbon" />
+                      <Link2 size={10} className="text-carbon" aria-hidden />
                       {field.inheritLabel}
                     </span>
                     {rollup && <RollupChip summary={rollup} />}
@@ -99,9 +104,9 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
             </thead>
             <tbody>
               {resolved.values.map((v) => (
-                <tr key={v.entityId} className="hover:bg-warm/30 transition-colors">
-                  <td className="py-1.5 px-1 align-middle border-t border-border/40">{entityCell(v)}</td>
-                  <td className="py-1.5 px-3 align-middle whitespace-nowrap border-t border-s border-border/40">
+                <tr key={v.entityId} data-part="row" className="hover:bg-warm/30 transition-colors">
+                  <td data-part="entity" className="py-1.5 px-1 align-middle border-t border-border/40">{entityCell(v)}</td>
+                  <td data-part="value" className="py-1.5 px-3 align-middle whitespace-nowrap border-t border-s border-border/40">
                     {v.inheritedValue ? (
                       <InheritedValueTag
                         value={v.inheritedValue}
@@ -124,7 +129,7 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
           </table>
         </div>
 
-        <div className={TABLE_MIN.stackOnly}>
+        <div data-part="stack-view" className={TABLE_MIN.stackOnly}>
           <ConnectionCardStack
             entities={stackEntities}
             relationLabel={resolved.relationLabel}
@@ -134,11 +139,11 @@ export function RelationshipFieldCard({ field, span = "wide" }: { field: Relatio
         </div>
         </div>
       ) : (
-        <div className="flex flex-wrap gap-1.5 mt-1">{resolved.values.map((v) => entityCell(v))}</div>
+        <div data-part="entities" className="flex flex-wrap gap-1.5 mt-1">{resolved.values.map((v) => entityCell(v))}</div>
       )}
 
       {field.totalConnected != null && field.totalConnected > resolved.values.length && (
-        <p className="text-meta text-ink-tertiary mt-1">
+        <p data-part="more" className="text-meta text-ink-tertiary mt-1">
           showing {resolved.values.length} of {field.totalConnected}
         </p>
       )}

@@ -1,10 +1,17 @@
-import { ReactNode } from "react";
+import { ReactNode, useId } from "react";
 
 interface MetadataCardProps {
   title: string;
   icon?: ReactNode;
   children: ReactNode;
   className?: string;
+  /** The heading's level in the outline it sits in. A record card sits under
+   *  the entity's `h2` title; a card inside a titled section (the Images group)
+   *  is one below that section's heading. */
+  headingLevel?: 3 | 4;
+  /** The `data-component` the card stamps — the wrapping component's name
+   *  (DocumentCard, ConnectionGroupCard…) where there is one. */
+  component?: string;
 }
 
 /** The card head NAMES the thing in the card — a metadata field, a connection,
@@ -27,19 +34,37 @@ interface MetadataCardProps {
  *  would otherwise be the same text. One colour step, no second size.
  *
  *  Icons in this row belong at 11px to match; the callers pass them. */
-export function MetadataCard({ title, icon, children, className = "" }: MetadataCardProps) {
+export function MetadataCard({
+  title,
+  icon,
+  children,
+  className = "",
+  headingLevel = 3,
+  component = "MetadataCard",
+}: MetadataCardProps) {
+  const Heading = headingLevel === 4 ? "h4" : "h3";
+  const titleId = useId();
   return (
-    <div className={`bg-paper border border-border/40 rounded-md overflow-hidden ${className}`}>
-      <div className="flex flex-col gap-2 px-4 py-3">
-        <div className="flex items-center gap-1.5">
+    /* `section` without a landmark: no accessible name is set on the element
+       itself, so a record of twelve cards is not twelve regions. */
+    <section
+      data-component={component}
+      className={`bg-paper border border-border/40 rounded-md overflow-hidden ${className}`}
+    >
+      <div data-part="body" className="flex flex-col gap-2 px-4 py-3">
+        <header data-part="header" className="flex items-center gap-1.5">
           {icon}
-          <h4 className="text-meta font-semibold uppercase tracking-wider text-ink-secondary">
+          <Heading
+            id={titleId}
+            data-part="title"
+            className="text-meta font-semibold uppercase tracking-wider text-ink-secondary"
+          >
             {title}
-          </h4>
-        </div>
+          </Heading>
+        </header>
         {children}
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -56,13 +81,16 @@ interface PropertyProps {
   ltr?: boolean;
 }
 
+/** A label over its value — one `dl` pair per property, so it is valid on its
+ *  own (the catalog renders it bare) and inside any grid a caller lays out. */
 export function Property({ label, value, linked, ltr, truncate }: PropertyProps) {
   return (
-    <div className="flex flex-col items-start min-w-0 w-full">
+    <dl data-component="Property" className="flex flex-col items-start min-w-0 w-full">
       {label && (
-        <span className="text-xs text-ink-tertiary leading-relaxed">{label}</span>
+        <dt data-part="label" className="text-xs text-ink-tertiary leading-relaxed">{label}</dt>
       )}
-      <span
+      <dd
+        data-part="value"
         dir={ltr ? "ltr" : undefined}
         title={truncate ? value : undefined}
         className={`text-sm font-medium text-ink leading-relaxed max-w-full ${
@@ -70,14 +98,14 @@ export function Property({ label, value, linked, ltr, truncate }: PropertyProps)
         } ${truncate ? "truncate" : ""}`}
       >
         {value}
-      </span>
-    </div>
+      </dd>
+    </dl>
   );
 }
 
 export function PropertyRow({ children }: { children: ReactNode }) {
   return (
-    <div className="flex gap-6 items-start w-full">
+    <div data-component="PropertyRow" className="flex gap-6 items-start w-full">
       {children}
     </div>
   );

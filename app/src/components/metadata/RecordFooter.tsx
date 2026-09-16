@@ -29,14 +29,18 @@ export function RecordFooter({ entityId }: { entityId: string }) {
     entity?.updatedAt && entity.updatedAt !== created ? entity.updatedAt : undefined;
 
   return (
-    <p className="text-meta text-ink-tertiary pt-1">
-      Created {formatRecordDate(created, language)}
+    <footer data-component="RecordFooter" className="text-meta text-ink-tertiary pt-1">
+      <span data-part="created">
+        Created <time dateTime={created}>{formatRecordDate(created, language)}</time>
+      </span>
       {edited && (
         <>
           {" · "}
-          Edited {formatRecordDate(edited, language)}
+          <span data-part="edited">
+            Edited <time dateTime={edited}>{formatRecordDate(edited, language)}</time>
+          </span>
         </>
       )}
-    </p>
+    </footer>
   );
 }

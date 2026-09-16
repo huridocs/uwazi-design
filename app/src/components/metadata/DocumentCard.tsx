@@ -75,8 +75,8 @@ export function DocumentCard({
   ].filter((f) => !!f.value?.trim());
 
   return (
-    <MetadataCard title="Document">
-      <div className="flex items-start gap-4">
+    <MetadataCard title="Document" component="DocumentCard">
+      <div data-part="summary" className="flex items-start gap-4">
         <PdfPageThumb
           url={file?.url}
           ext={file?.type ?? doc.type}
@@ -90,7 +90,7 @@ export function DocumentCard({
           // which happens at the masthead, not four inches down.
           style={{ width: 104, height: 118, border: "1px solid var(--border-primary)" }}
         />
-        <div className="@container flex-1 min-w-0 space-y-2">
+        <div data-part="facts" className="@container flex-1 min-w-0 space-y-2">
           <Property label="Name" value={doc.name} ltr truncate />
           {/* Only the facts we actually have. CEJIL files carry a type but no size
               or dates, and a label sitting over an empty value reads as a bug, not
@@ -109,10 +109,12 @@ export function DocumentCard({
           sat indented by the width of the thumbnail, floating in the middle of a
           narrow drawer instead of starting where every other line of the card
           does. */}
-      <div className="flex items-center gap-2 pt-1">
+      <div data-part="actions" className="flex items-center gap-2 pt-1">
         <ViewButton size="md" />
         <button
+          type="button"
           onClick={() => notify("Download started", "success")}
+          data-part="download"
           className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer flex items-center gap-1.5"
         >
           <Download size={12} className="text-ink-tertiary" /> Download

@@ -134,6 +134,7 @@ export function MultiLanguageField({
     <>
       <button
         type="button"
+        data-part="toggle"
         tabIndex={probe ? -1 : undefined}
         onClick={probe ? undefined : () => setOpen((v) => !v)}
         aria-expanded={probe ? undefined : open}
@@ -174,6 +175,7 @@ export function MultiLanguageField({
       </button>
       <button
         type="button"
+        data-part="auto-translate"
         tabIndex={probe ? -1 : undefined}
         onClick={probe ? undefined : translateEmpty}
         aria-disabled={!canTranslate || undefined}
@@ -194,7 +196,7 @@ export function MultiLanguageField({
   );
 
   return (
-    <div className="relative">
+    <div data-component="MultiLanguageField" data-step={step} data-state={open ? "open" : "closed"} className="relative">
       {/* Summary row — always mounted, fixed height, whatever the panel does.
           The two controls are ONE left-aligned cluster. They were `justify-between`
           across the form's full width, which on a wide pane put a foot of empty
@@ -204,18 +206,19 @@ export function MultiLanguageField({
           it, so it starts where that box starts and ends where it runs out of
           words. `-mt-1` pulls it up under the message slot's reserved line —
           it is part of the Title field, not a band between Title and Icon. */}
-      <div ref={availRef} className="flex items-center gap-2 h-6 -mt-1 min-w-0">
+      <div ref={availRef} data-part="summary" className="flex items-center gap-2 h-6 -mt-1 min-w-0">
         {controls(step, false)}
         {/* `min-w-0` so a long message yields rather than pushing the cluster;
             the input still points at it via `aria-describedby`, so the full
             string reaches a screen reader whatever the pane's width. */}
-        {messageSlot && <div className="min-w-0 truncate">{messageSlot}</div>}
+        {messageSlot && <div data-part="message" className="min-w-0 truncate">{messageSlot}</div>}
       </div>
       {/* The probes: steps 0–2 laid out at their natural width and never
           painted. A zero-size clipping box holds them so they add no scroll
           overflow to the pane. Step 3 needs no probe; it is the floor. */}
       <div
         aria-hidden
+        data-part="probe"
         className="pointer-events-none absolute top-0 start-0 w-0 h-0 overflow-hidden"
         style={{ visibility: "hidden" }}
       >
@@ -228,13 +231,13 @@ export function MultiLanguageField({
 
       {/* The panel. Opened deliberately, so it may take its own height. */}
       {open && (
-        <div id={`${idPrefix}-langs`} className="mt-1 space-y-1">
+        <div id={`${idPrefix}-langs`} data-part="panel" className="mt-1 space-y-1">
           {others.map((lang) => {
             const busy = working.includes(lang);
             const isMachine = !!machine[lang] && !busy;
             const value = values[lang] ?? "";
             return (
-              <div key={lang} className="flex items-start gap-2">
+              <div key={lang} data-part="language" data-language={lang} className="flex items-start gap-2">
                 {/* The language's own name, not its code — and the column is
                     sized for the widest of them (`w-[4.5rem]`, Français) so the
                     inputs beside them stay in one line down the panel whatever
@@ -272,7 +275,7 @@ export function MultiLanguageField({
                 })()}
                 {/* Reserved status slot — the loader, the marker and the button
                     all live at this one width so the input never resizes. */}
-                <div className="w-[5.5rem] shrink-0 flex items-center justify-end gap-1 h-8">
+                <div data-part="status" className="w-[5.5rem] shrink-0 flex items-center justify-end gap-1 h-8">
                   {busy ? (
                     <span className="inline-flex items-center gap-1 text-meta text-ink-tertiary">
                       <UwaziLoader size="xs" color="carbon" animate />
@@ -291,6 +294,7 @@ export function MultiLanguageField({
                       )}
                       <button
                         type="button"
+                        data-part="retranslate"
                         onClick={() => translate(lang)}
                         aria-disabled={!source || undefined}
                         title={

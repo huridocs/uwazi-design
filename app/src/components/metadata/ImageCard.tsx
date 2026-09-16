@@ -30,6 +30,7 @@ export function ImageCard({
   image: only,
   title = "Image",
   onOpen,
+  headingLevel,
 }: {
   profile?: EntityProfile;
   /** Render THIS image rather than the profile's leading one — the multi-image
@@ -39,12 +40,14 @@ export function ImageCard({
   /** Open it full size. Without a handler the picture is not a button, because
    *  a control that does nothing is worse than none. */
   onOpen?: (image: EntityImage) => void;
+  headingLevel?: 3 | 4;
 }) {
   const image = only ?? profile?.image;
   if (!image) return null;
 
   const frame = (
     <div
+      data-part="frame"
       className="w-full overflow-hidden rounded bg-vellum"
       style={{
         aspectRatio: `${image.width} / ${image.height}`,
@@ -63,7 +66,7 @@ export function ImageCard({
   );
 
   return (
-    <MetadataCard title={title}>
+    <MetadataCard title={title} component="ImageCard" headingLevel={headingLevel}>
       {onOpen ? (
         /* The card shows which picture this is; full size is the looking. The
            button wraps the FRAME, not the image, so the hit area is the box
@@ -71,6 +74,7 @@ export function ImageCard({
         <button
           type="button"
           onClick={() => onOpen(image)}
+          data-part="open"
           aria-label={`View ${image.filename ?? image.alt} full size`}
           title="View full size"
           className="block w-full cursor-zoom-in rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
@@ -83,7 +87,7 @@ export function ImageCard({
       {/* Two facts, so two columns at every width — no container query to serve,
           and the file's own name and size are one tab away in Files rather than
           repeated here under a second label. */}
-      <div className="grid grid-cols-2 gap-x-6 gap-y-2 pt-2">
+      <div data-part="facts" className="grid grid-cols-2 gap-x-6 gap-y-2 pt-2">
         <Property label="Dimensions" value={`${image.width} × ${image.height} px`} ltr />
         <Property label="Orientation" value={image.aspect} />
         {image.filename && (

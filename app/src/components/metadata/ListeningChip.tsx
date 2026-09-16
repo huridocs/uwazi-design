@@ -17,16 +17,17 @@ import { X } from "lucide-react";
  *  bg-parchment stays what it has always been: selection. */
 export function ListeningChip({ label, onStop }: { label: string; onStop: () => void }) {
   return (
-    <span className="inline-flex items-center gap-1.5 h-4 ps-1.5 pe-0.5 rounded-md bg-warm">
-      <span className="w-1.5 h-1.5 rounded-full bg-carbon shrink-0" aria-hidden />
+    <span data-component="ListeningChip" className="inline-flex items-center gap-1.5 h-4 ps-1.5 pe-0.5 rounded-md bg-warm">
+      <span data-part="dot" className="w-1.5 h-1.5 rounded-full bg-carbon shrink-0" aria-hidden />
       {/* `aria-live`: arming happens on FOCUS, so a keyboard user who tabbed
           into the field never sees the chip appear — it has to be spoken. */}
-      <span className="text-meta leading-none text-ink-tertiary" aria-live="polite">
+      <span data-part="instruction" className="text-meta leading-none text-ink-tertiary" aria-live="polite">
         select text or a value
       </span>
       <button
         type="button"
         onClick={onStop}
+        data-part="stop"
         title={`Stop filling ${label} — Escape does the same`}
         aria-label={`Stop filling ${label}`}
         className="flex items-center justify-center w-4 h-4 rounded text-ink-muted

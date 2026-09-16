@@ -132,9 +132,11 @@ function ConnectionPills({ field }: { field: RelationshipMetadataField }) {
   const resolved = resolveRelationshipField(field, lang, getProp);
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div data-component="ConnectionPills" className="flex flex-wrap items-center gap-1.5">
       {resolved.values.map((v) => (
         <button
+          type="button"
+          data-part="entity-open"
           key={v.entityId}
           onClick={() => setOverlay(v.entityId)}
           className="min-w-0 rounded-md hover:opacity-80 transition-opacity cursor-pointer"
@@ -144,7 +146,7 @@ function ConnectionPills({ field }: { field: RelationshipMetadataField }) {
         </button>
       ))}
       {field.totalConnected != null && field.totalConnected > resolved.values.length && (
-        <span className="text-meta text-ink-tertiary">
+        <span data-part="more" className="text-meta text-ink-tertiary">
           +{field.totalConnected - resolved.values.length} more
         </span>
       )}

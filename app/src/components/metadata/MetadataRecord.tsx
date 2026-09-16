@@ -48,13 +48,14 @@ type RecordEntry =
 export function MetadataFieldBlock({ item }: { item: MetadataItem }) {
   return (
     <div
+      data-part="field"
       data-field-key={item.id}
       /* Space-separated, matched with `~=`: a relationship field is grouped by
          relation TYPE here and addressed by template PROPERTY from a Library
          card, and one field can answer to several property names. */
       data-field-keys={item.keyAliases?.join(" ")}
     >
-      <MetadataCard title={item.label}>
+      <MetadataCard title={item.label} component="MetadataFieldBlock">
         <FillableValue item={item} />
       </MetadataCard>
     </div>
@@ -71,10 +72,20 @@ export function MetadataFieldBlock({ item }: { item: MetadataItem }) {
 function FillableValue({ item }: { item: MetadataItem }) {
   const fillTarget = useAtomValue(fillTargetAtom);
   const sendFill = useSetAtom(fillRequestAtom);
-  if (!fillTarget || !item.fillValue) return <>{item.content}</>;
+  if (!fillTarget || !item.fillValue)
+    return (
+      // `contents`: the wrapper names the value without adding a box, so the
+      // value lays out exactly as it did when this returned a fragment.
+      <div data-part="value" data-kind={item.kind} className="contents">
+        {item.content}
+      </div>
+    );
   return (
     <button
       type="button"
+      data-part="value"
+      data-kind={item.kind}
+      data-fillable
       onClick={() => sendFill(item.fillValue!)}
       title={`Fill ${fillTarget.label} with this value`}
       className="w-full -m-1 p-1 rounded-md text-start hover:bg-parchment transition-colors
@@ -209,7 +220,7 @@ export function MetadataRecord({
   const empty = entries.length === 0 && !hasImages;
   if (empty) {
     return (
-      <div className="flex items-center justify-center py-10 text-center">
+      <div data-component="MetadataRecord" data-part="empty" className="flex items-center justify-center py-10 text-center">
         <p className="text-xs text-ink-muted">No metadata for this entity yet.</p>
       </div>
     );
@@ -217,7 +228,7 @@ export function MetadataRecord({
 
   return (
     <>
-    <MasonryGrid containerRef={rootRef}>
+    <MasonryGrid containerRef={rootRef} component="MetadataRecord">
       {/* Template sequence. The only thing kind decides here is `wide`: prose
           takes two columns of three, because a paragraph set in a third of a
           wide pane is a column of six-word lines. Chips and scalars take one.
@@ -236,13 +247,13 @@ export function MetadataRecord({
           </MasonryItem>
         ) : entry.kind === "group" ? (
           <MasonryItem key={`group:${entry.group.connectionKey}`} full>
-            <div data-field-key={entry.group.connectionKey} data-field-keys={entry.keys.join(" ")}>
+            <div data-part="field" data-field-key={entry.group.connectionKey} data-field-keys={entry.keys.join(" ")}>
               <ConnectionGroupCard group={entry.group} />
             </div>
           </MasonryItem>
         ) : (
           <MasonryItem key={entry.field.id} full>
-            <div data-field-key={entry.field.id} data-field-keys={entry.field.keyAliases?.join(" ")}>
+            <div data-part="field" data-field-key={entry.field.id} data-field-keys={entry.field.keyAliases?.join(" ")}>
               <RelationshipFieldCard field={entry.field} span="full" />
             </div>
           </MasonryItem>
@@ -254,7 +265,7 @@ export function MetadataRecord({
               from anywhere else still lands here — at the heading, above the
               first picture, which is the honest answer to "where is this
               property". The cards below address one asset each. */}
-          <div className="mt-2 flex items-center" data-field-key={images[0].fieldKey}>
+          <div data-part="images-heading" className="mt-2 flex items-center" data-field-key={images[0].fieldKey}>
             <SectionLabel as="h3" level="section">
               Images
             </SectionLabel>
@@ -269,9 +280,10 @@ export function MetadataRecord({
                 so clicking the third filename on a Library card scrolled to the
                 first image — and on a card whose thumbnail is image 1, the
                 clicked link could never be the match. */}
-            <div data-field-key={imageFocusKey(img)}>
+            <div data-part="image" data-field-key={imageFocusKey(img)}>
               <ImageCard
                 image={img}
+                headingLevel={4}
                 title={img.filename ?? `Image ${i + 1}`}
                 onOpen={setLightbox}
               />
