@@ -134,6 +134,9 @@ export function AddFileDropArea({
   if (variant === "large") {
     return (
       <div
+        data-component="AddFileDropArea"
+        data-variant="large"
+        data-state={dragging ? "dragging" : "idle"}
         onDragEnter={(e) => {
           e.preventDefault();
           setDragging(true);
@@ -144,12 +147,13 @@ export function AddFileDropArea({
         className={`flex flex-col items-center justify-center gap-3 rounded-md py-12 transition-colors ${ringClass}`}
         style={{ border: "2px dashed var(--border-soft)" }}
       >
-        <CloudUpload size={36} className="text-ink-tertiary/40" />
-        <p className="text-sm font-medium text-ink-secondary">
+        <CloudUpload size={36} className="text-ink-tertiary/40" aria-hidden />
+        <p data-part="prompt" className="text-sm font-medium text-ink-secondary">
           Drag files here or click to add
         </p>
         <button
           type="button"
+          data-part="pick"
           onClick={openPicker}
           className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
         >
@@ -161,6 +165,9 @@ export function AddFileDropArea({
 
   return (
     <div
+      data-component="AddFileDropArea"
+      data-variant="compact"
+      data-state={dragging ? "dragging" : "idle"}
       onDragEnter={(e) => {
         e.preventDefault();
         setDragging(true);
@@ -171,12 +178,13 @@ export function AddFileDropArea({
       className={`flex items-center justify-center gap-3 rounded-md py-3 transition-colors mt-3 ${ringClass}`}
       style={{ border: "1.5px dashed var(--border-soft)" }}
     >
-      <Plus size={14} className="text-ink-muted" />
-      <span className="text-xs text-ink-muted">
+      <Plus size={14} className="text-ink-muted" aria-hidden />
+      <span data-part="prompt" className="text-xs text-ink-muted">
         {dragging ? "Drop to add" : "Drag a file here, or"}
       </span>
       <button
         type="button"
+        data-part="pick"
         onClick={openPicker}
         className="text-xs font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
       >

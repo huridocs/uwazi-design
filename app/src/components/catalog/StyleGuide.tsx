@@ -4,7 +4,7 @@ import { SectionLabel } from "../shared/SectionLabel";
 function CopyText({ text, children }: { text: string; children: React.ReactNode }) {
   const copyToast = useCopyToast();
   return (
-    <button onClick={() => copyToast(text, text)} className="text-left" title={`Copy: ${text}`}>
+    <button type="button" data-component="CopyText" onClick={() => copyToast(text, text)} className="text-left" title={`Copy: ${text}`}>
       {children}
     </button>
   );
@@ -60,8 +60,9 @@ const highlightColors: ColorDef[] = [
 function ColorSwatch({ hex, name, cssVar, tw }: { hex: string; name: string; cssVar: string; tw: string }) {
   const copyToast = useCopyToast();
   return (
-    <div className="flex flex-col gap-1">
+    <div data-component="ColorSwatch" className="flex flex-col gap-1">
       <div
+        data-part="chip"
         className="h-10 rounded-md border border-border/60 cursor-pointer hover:ring-2 hover:ring-carbon/30 transition-all"
         style={{ backgroundColor: hex }}
         onClick={() => copyToast(hex, name)}
@@ -82,11 +83,11 @@ function ColorSwatch({ hex, name, cssVar, tw }: { hex: string; name: string; css
 
 function ColorGroup({ title, colors }: { title: string; colors: ColorDef[] }) {
   return (
-    <div>
+    <section data-component="ColorGroup">
       <SectionLabel as="h4" level="section" className="mb-3">{title}</SectionLabel>
-      <div className="grid grid-cols-2 gap-4">
+      <div data-part="themes" className="grid grid-cols-2 gap-4">
         {/* Light column */}
-        <div className="rounded-lg border border-border/40 p-3" style={{ backgroundColor: "#F5F0E8" }}>
+        <div data-part="theme" data-variant="light" className="rounded-lg border border-border/40 p-3" style={{ backgroundColor: "#F5F0E8" }}>
           <span className="text-meta font-semibold uppercase tracking-wider mb-2 block" style={{ color: "#6B6B6B" }}>
             Light
           </span>
@@ -97,7 +98,7 @@ function ColorGroup({ title, colors }: { title: string; colors: ColorDef[] }) {
           </div>
         </div>
         {/* Dark column */}
-        <div className="rounded-lg border border-border/40 p-3" style={{ backgroundColor: "#1A1A1A" }}>
+        <div data-part="theme" data-variant="dark" className="rounded-lg border border-border/40 p-3" style={{ backgroundColor: "#1A1A1A" }}>
           <span className="text-meta font-semibold uppercase tracking-wider mb-2 block" style={{ color: "#9A9A9A" }}>
             Dark
           </span>
@@ -108,15 +109,16 @@ function ColorGroup({ title, colors }: { title: string; colors: ColorDef[] }) {
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
 function DarkSwatch({ hex, name, cssVar, tw }: { hex: string; name: string; cssVar: string; tw: string }) {
   const copyToast = useCopyToast();
   return (
-    <div className="flex flex-col gap-1">
+    <div data-component="DarkSwatch" className="flex flex-col gap-1">
       <div
+        data-part="chip"
         className="h-10 rounded-md cursor-pointer hover:ring-2 hover:ring-white/30 transition-all"
         style={{ backgroundColor: hex, border: "1px solid rgba(255,255,255,0.12)" }}
         onClick={() => copyToast(hex, `${name} dark`)}
@@ -176,10 +178,10 @@ const spacingValues = [
 
 export function StyleGuide() {
   return (
-    <div className="flex flex-col gap-8">
+    <div data-component="StyleGuide" className="flex flex-col gap-8">
       {/* Colors */}
-      <section id="sg-colors">
-        <h3 className="text-base font-semibold text-ink mb-4">Colors</h3>
+      <section id="sg-colors" data-part="colors" aria-labelledby="sg-colors-title">
+        <h3 id="sg-colors-title" className="text-base font-semibold text-ink mb-4">Colors</h3>
         <div className="flex flex-col gap-6">
           <ColorGroup title="Brand" colors={brandColors} />
           <ColorGroup title="Text" colors={textColors} />
@@ -191,8 +193,8 @@ export function StyleGuide() {
       </section>
 
       {/* Typography */}
-      <section id="sg-typography">
-        <h3 className="text-base font-semibold text-ink mb-4">Typography</h3>
+      <section id="sg-typography" data-part="typography" aria-labelledby="sg-typography-title">
+        <h3 id="sg-typography-title" className="text-base font-semibold text-ink mb-4">Typography</h3>
         <div className="flex flex-col gap-3 bg-paper border border-border/40 rounded-md p-4">
           {typeSamples.map((s) => (
             <div key={s.label} className="flex items-baseline gap-4">
@@ -206,8 +208,8 @@ export function StyleGuide() {
       </section>
 
       {/* Shadows */}
-      <section id="sg-shadows">
-        <h3 className="text-base font-semibold text-ink mb-4">Shadows</h3>
+      <section id="sg-shadows" data-part="shadows" aria-labelledby="sg-shadows-title">
+        <h3 id="sg-shadows-title" className="text-base font-semibold text-ink mb-4">Shadows</h3>
         <div className="grid grid-cols-4 gap-4">
           {shadows.map((s) => (
             <div key={s.name} className="flex flex-col items-center gap-2">
@@ -224,8 +226,8 @@ export function StyleGuide() {
       </section>
 
       {/* Radii */}
-      <section id="sg-radii">
-        <h3 className="text-base font-semibold text-ink mb-4">Border Radius</h3>
+      <section id="sg-radii" data-part="radii" aria-labelledby="sg-radii-title">
+        <h3 id="sg-radii-title" className="text-base font-semibold text-ink mb-4">Border Radius</h3>
         <div className="grid grid-cols-4 gap-4">
           {radii.map((r) => (
             <div key={r.name} className="flex flex-col items-center gap-2">
@@ -242,8 +244,8 @@ export function StyleGuide() {
       </section>
 
       {/* Spacing */}
-      <section id="sg-spacing">
-        <h3 className="text-base font-semibold text-ink mb-4">Spacing</h3>
+      <section id="sg-spacing" data-part="spacing" aria-labelledby="sg-spacing-title">
+        <h3 id="sg-spacing-title" className="text-base font-semibold text-ink mb-4">Spacing</h3>
         <div className="flex flex-col gap-1.5">
           {spacingValues.map((s) => (
             <CopyText key={s.name} text={s.tw}>

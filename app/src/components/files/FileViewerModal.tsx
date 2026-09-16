@@ -33,6 +33,7 @@ export function FileViewerModal() {
 
   return (
     <div
+      data-component="FileViewerModal"
       className="fixed inset-0 z-50 flex md:items-center md:justify-center md:p-6 bg-overlay"
       role="dialog"
       aria-modal="true"
@@ -40,52 +41,58 @@ export function FileViewerModal() {
       onClick={close}
     >
       <div
+        data-part="panel"
         className="bg-paper shadow-xl w-full md:max-w-3xl md:rounded-lg md:max-h-[90vh] h-full md:h-auto flex flex-col md:animate-fade-in-up"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div
+          data-part="header"
           className="flex items-center justify-between gap-3 px-5 py-3 shrink-0"
           style={{ borderBottom: "1px solid var(--border-primary)" }}
         >
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-ink truncate">{file.name}</p>
-            <div className="flex items-center gap-2 mt-0.5">
+            <h2 data-part="title" className="text-sm font-semibold text-ink truncate">{file.name}</h2>
+            <div data-part="meta" className="flex items-center gap-2 mt-0.5">
               <span
+                data-part="language"
                 className="text-meta font-semibold text-ink-secondary bg-vellum px-1.5 py-px rounded"
                 title={languageName(file.language)}
                 aria-label={languageName(file.language)}
               >
                 {file.language}
               </span>
-              <span className="text-meta text-ink-tertiary uppercase">{file.type}</span>
-              <span className="text-meta text-ink-tertiary">{file.size}</span>
+              <span data-part="kind" className="text-meta text-ink-tertiary uppercase">{file.type}</span>
+              <span data-part="size" className="text-meta text-ink-tertiary">{file.size}</span>
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div data-part="actions" className="flex items-center gap-2 shrink-0">
             {url && file.type !== "link" && (
               <a
                 href={url}
                 download
+                data-part="download"
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
               >
-                <Download size={12} className="text-ink-tertiary" /> Download
+                <Download size={12} className="text-ink-tertiary" aria-hidden /> Download
               </a>
             )}
             <button
+              type="button"
+              data-part="close"
               onClick={close}
               aria-label="Close viewer"
               className="p-1.5 rounded-md hover:bg-parchment transition-colors cursor-pointer"
             >
-              <X size={18} className="text-ink-muted" />
+              <X size={18} className="text-ink-muted" aria-hidden />
             </button>
           </div>
         </div>
 
         {/* Body */}
-        <div className="flex-1 min-h-0 overflow-auto bg-warm/40 flex items-center justify-center p-6">
+        <div data-part="body" className="flex-1 min-h-0 overflow-auto bg-warm/40 flex items-center justify-center p-6">
           <FileViewerBody file={file} url={url} />
         </div>
       </div>
@@ -103,6 +110,8 @@ export function FileViewerBody({ file, url }: { file: FileEntry; url?: string })
   if (file.type === "pdf") {
     return (
       <iframe
+        data-component="FileViewerBody"
+        data-kind="pdf"
         title={file.name}
         src={url}
         className="w-full h-[70vh] bg-paper rounded shadow-sm"
@@ -112,6 +121,8 @@ export function FileViewerBody({ file, url }: { file: FileEntry; url?: string })
   if (file.type === "image" && url) {
     return (
       <img
+        data-component="FileViewerBody"
+        data-kind="image"
         src={url}
         alt={file.name}
         className="max-h-[70vh] max-w-full rounded shadow-sm object-contain"
@@ -120,8 +131,8 @@ export function FileViewerBody({ file, url }: { file: FileEntry; url?: string })
   }
   if (file.type === "audio" && url) {
     return (
-      <div className="w-full max-w-md bg-paper rounded-md shadow-sm p-6 flex flex-col items-center gap-4">
-        <div className="w-16 h-16 rounded-md bg-warm flex items-center justify-center">
+      <div data-component="FileViewerBody" data-kind="audio" className="w-full max-w-md bg-paper rounded-md shadow-sm p-6 flex flex-col items-center gap-4">
+        <div aria-hidden className="w-16 h-16 rounded-md bg-warm flex items-center justify-center">
           <div className="w-0 h-0 border-t-[10px] border-t-transparent border-b-[10px] border-b-transparent border-l-[16px] border-l-ink ml-1" />
         </div>
         <audio controls src={url} className="w-full" />
@@ -134,6 +145,8 @@ export function FileViewerBody({ file, url }: { file: FileEntry; url?: string })
   if (file.type === "video" && url) {
     return (
       <video
+        data-component="FileViewerBody"
+        data-kind="video"
         controls
         src={url}
         className="max-h-[70vh] max-w-full bg-ink rounded shadow-sm"
@@ -143,9 +156,9 @@ export function FileViewerBody({ file, url }: { file: FileEntry; url?: string })
   if (file.type === "link") {
     const href = file.name.startsWith("http") ? file.name : `https://${file.name}`;
     return (
-      <div className="w-full max-w-md bg-paper rounded-md shadow-sm p-6 flex flex-col items-center gap-3">
+      <div data-component="FileViewerBody" data-kind="link" className="w-full max-w-md bg-paper rounded-md shadow-sm p-6 flex flex-col items-center gap-3">
         <div className="w-12 h-12 rounded-md bg-seal flex items-center justify-center">
-          <ExternalLink size={20} className="text-white" />
+          <ExternalLink size={20} className="text-white" aria-hidden />
         </div>
         <p className="text-sm font-medium text-ink text-center break-all">
           {file.name}
@@ -162,7 +175,7 @@ export function FileViewerBody({ file, url }: { file: FileEntry; url?: string })
     );
   }
   return (
-    <div className="text-sm text-ink-muted">
+    <div data-component="FileViewerBody" data-part="empty" className="text-sm text-ink-muted">
       No preview available for this file kind.
     </div>
   );

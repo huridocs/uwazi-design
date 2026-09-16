@@ -90,9 +90,10 @@ export function FileDrawer({
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-3 py-2 shrink-0">
+    <div data-component="FileDrawer" className="flex flex-col h-full">
+      <div data-part="toolbar" className="flex items-center justify-between px-3 py-2 shrink-0">
         <div
+          data-part="tabs"
           className="flex items-center rounded-md overflow-hidden w-fit"
           style={{
             border: "1px solid var(--border-primary)",
@@ -101,8 +102,12 @@ export function FileDrawer({
         >
           {drawerTabs.map((tab, i) => (
             <div key={tab.id} className="flex items-center">
-              {i > 0 && <div className="w-px self-stretch bg-border" />}
+              {i > 0 && <div aria-hidden className="w-px self-stretch bg-border" />}
               <button
+                type="button"
+                data-part="tab"
+                data-state={activeTab === tab.id ? "active" : "inactive"}
+                aria-pressed={activeTab === tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center justify-center gap-1 px-3 py-1.5 text-tab font-medium transition-colors ${
                   activeTab === tab.id
@@ -120,10 +125,10 @@ export function FileDrawer({
 
       {activeTab === "file" ? (
         <>
-          <div className="flex-1 overflow-auto p-3 pb-8 space-y-3">
+          <div data-part="body" className="flex-1 overflow-auto p-3 pb-8 space-y-3">
             {selectedFiles.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center gap-3">
-                <MousePointerClick size={32} className="text-ink-muted/40" />
+              <div data-part="empty" className="flex flex-col items-center justify-center h-full text-center gap-3">
+                <MousePointerClick size={32} className="text-ink-muted/40" aria-hidden />
                 <div>
                   <p className="text-sm font-medium text-ink-secondary">No file selected</p>
                   <p className="text-xs text-ink-muted mt-1">
@@ -132,19 +137,23 @@ export function FileDrawer({
                 </div>
               </div>
             ) : selectedFiles.length > 1 ? (
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-ink-tertiary mb-2">
+              <div data-part="selection" className="space-y-2">
+                <p data-part="selection-count" className="text-xs font-medium text-ink-tertiary mb-2">
                   {selectedFiles.length} files selected
                 </p>
-                {selectedFiles.map((file) => (
-                  <FileCompactCard key={file.id} file={file} />
-                ))}
+                <ul data-part="rows" className="space-y-2">
+                  {selectedFiles.map((file) => (
+                    <li key={file.id}>
+                      <FileCompactCard file={file} />
+                    </li>
+                  ))}
+                </ul>
               </div>
             ) : viewing ? (
               selectedFiles[0].type === "pdf" ? (
                 // Match the Metadata drawer's Document tab — full page-by-page
                 // viewer with highlights overlay, not a flat iframe.
-                <div className="-m-3 h-full min-h-[60vh]">
+                <div data-part="viewer" className="-m-3 h-full min-h-[60vh]">
                   <DocumentViewer
                     showMinimap={false}
                     fileOverride={{
@@ -154,7 +163,7 @@ export function FileDrawer({
                   />
                 </div>
               ) : (
-                <div className="flex items-center justify-center min-h-full">
+                <div data-part="viewer" className="flex items-center justify-center min-h-full">
                   <FileViewerBody
                     file={selectedFiles[0]}
                     url={resolveFileUrl(selectedFiles[0])}
@@ -173,16 +182,19 @@ export function FileDrawer({
 
           {selectedFiles.length === 1 && (
             <div
+              data-part="footer"
               className="flex items-center justify-between h-12 px-3 shrink-0"
               style={{ borderTop: "1px solid var(--border-primary)" }}
             >
               {viewing ? (
                 <>
                   <button
+                    type="button"
+                    data-part="back"
                     onClick={() => setViewerFileId(null)}
                     className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
                   >
-                    <ArrowLeft size={12} className="text-ink-tertiary" /> Back to details
+                    <ArrowLeft size={12} className="text-ink-tertiary" aria-hidden /> Back to details
                   </button>
                   {(() => {
                     const url = resolveFileUrl(selectedFiles[0]);
@@ -190,6 +202,7 @@ export function FileDrawer({
                       <a
                         href={url}
                         download
+                        data-part="download"
                         target="_blank"
                         rel="noreferrer"
                         className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
@@ -205,12 +218,16 @@ export function FileDrawer({
                 <>
                   <div className="flex items-center gap-2">
                     <button
+                      type="button"
+                      data-part="view"
                       onClick={() => setViewerFileId(selectedFiles[0].id)}
                       className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
                     >
-                      <Eye size={12} className="text-ink-tertiary" /> View
+                      <Eye size={12} className="text-ink-tertiary" aria-hidden /> View
                     </button>
                     <button
+                      type="button"
+                      data-part="download"
                       onClick={() => notify("File downloaded", "success")}
                       className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
                     >
@@ -218,10 +235,12 @@ export function FileDrawer({
                     </button>
                   </div>
                   <button
+                    type="button"
+                    data-part="delete"
                     onClick={() => onRequestDelete?.([selectedFiles[0].id])}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-seal-label bg-seal-tint/40 hover:bg-seal-tint rounded-md transition-colors cursor-pointer"
                   >
-                    <Trash2 size={12} /> Delete
+                    <Trash2 size={12} aria-hidden /> Delete
                   </button>
                 </>
               )}
@@ -229,52 +248,60 @@ export function FileDrawer({
           )}
           {selectedFiles.length > 1 && (
             <div
+              data-part="footer"
               className="flex items-center justify-between h-12 px-3 shrink-0"
               style={{ borderTop: "1px solid var(--border-primary)" }}
             >
               <button
+                type="button"
+                data-part="download"
                 onClick={() => notify(`Downloading ${selectedFiles.length} files`, "success")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
               >
                 <Download size={12} className="text-ink-tertiary" /> Download all
               </button>
               <button
+                type="button"
+                data-part="delete"
                 onClick={() => onRequestDelete?.(selectedFiles.map((f) => f.id))}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-seal-label bg-seal-tint/40 hover:bg-seal-tint rounded-md transition-colors cursor-pointer"
               >
-                <Trash2 size={12} /> Delete {selectedFiles.length}
+                <Trash2 size={12} aria-hidden /> Delete {selectedFiles.length}
               </button>
             </div>
           )}
         </>
       ) : (
         <>
-          <div className="flex-1 overflow-auto p-3 pb-8 space-y-4">
+          <div data-part="body" className="flex-1 overflow-auto p-3 pb-8 space-y-4">
             {!focusedFile || !focusedGroup ? (
-              <div className="flex flex-col items-center justify-center h-full text-center gap-3">
-                <MousePointerClick size={32} className="text-ink-muted/40" />
+              <div data-part="empty" className="flex flex-col items-center justify-center h-full text-center gap-3">
+                <MousePointerClick size={32} className="text-ink-muted/40" aria-hidden />
                 <p className="text-xs text-ink-muted">
                   Focus a single file to see its translations
                 </p>
               </div>
             ) : (
               <>
-                <p className="text-xs font-medium text-ink-secondary">
+                <p data-part="group-title" className="text-xs font-medium text-ink-secondary">
                   {focusedGroup.title}
                 </p>
                 {translations.length === 0 ? (
-                  <p className="text-xs italic text-ink-tertiary">
+                  <p data-part="translations-empty" className="text-xs italic text-ink-tertiary">
                     No translations yet.
                   </p>
                 ) : (
-                  translations.map((sib) => (
-                    <TranslationCard
-                      key={sib.id}
-                      file={sib}
-                      onFocus={() => onFocusFile?.(sib.id)}
-                      onDelete={() => handleDeleteFromTranslations(sib.id)}
-                    />
-                  ))
+                  <ul data-part="rows" className="space-y-4">
+                    {translations.map((sib) => (
+                      <li key={sib.id}>
+                        <TranslationCard
+                          file={sib}
+                          onFocus={() => onFocusFile?.(sib.id)}
+                          onDelete={() => handleDeleteFromTranslations(sib.id)}
+                        />
+                      </li>
+                    ))}
+                  </ul>
                 )}
                 <AddFileDropArea
                   variant="compact"
@@ -301,31 +328,38 @@ function TranslationCard({
 }) {
   const Icon = typeIcons[file.type];
   return (
-    <div
-      role="button"
-      tabIndex={0}
+    // Not `role="button"`: the card hosts View and Delete buttons. A stretched
+    // primary-action button carries the keyboard path; the content sits above
+    // it (`relative`) and mouse clicks bubble to the card's plain onClick.
+    <article
+      data-component="TranslationCard"
       onClick={onFocus}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onFocus();
-        }
-      }}
-      className="flex items-center gap-2 px-3 py-2 rounded-md bg-paper border border-border/50 hover:bg-warm transition-colors cursor-pointer"
+      className="relative flex items-center gap-2 px-3 py-2 rounded-md bg-paper border border-border/50 hover:bg-warm transition-colors cursor-pointer"
     >
+      <button
+        type="button"
+        data-part="primary-action"
+        aria-label={`Focus ${file.name}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          onFocus();
+        }}
+        className="absolute inset-0 w-full rounded-md cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20"
+      />
       {/* A fixed badge leading a compact row: a name here would outweigh the
           filename beside it, so the code stays and is named on hover. */}
       <span
-        className="text-meta font-semibold text-ink-secondary bg-vellum px-1.5 py-0.5 rounded shrink-0"
+        data-part="language"
+        className="relative text-meta font-semibold text-ink-secondary bg-vellum px-1.5 py-0.5 rounded shrink-0"
         title={languageName(file.language)}
         aria-label={languageName(file.language)}
       >
         {file.language}
       </span>
-      <Icon size={14} className="text-ink-muted shrink-0" />
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-ink truncate">{file.name}</p>
-        <div className="flex items-center gap-2 mt-0.5">
+      <Icon size={14} className="relative text-ink-muted shrink-0" aria-hidden />
+      <div data-part="content" className="relative flex-1 min-w-0">
+        <h3 data-part="title" className="text-xs font-medium text-ink truncate">{file.name}</h3>
+        <div data-part="meta" className="flex items-center gap-2 mt-0.5">
           <span className="text-meta text-ink-muted">
             {file.type.toUpperCase()}
           </span>
@@ -334,14 +368,15 @@ function TranslationCard({
       </div>
       <button
         type="button"
+        data-part="view"
         onClick={(e) => {
           e.stopPropagation();
           onFocus();
         }}
         aria-label={`View ${file.name}`}
-        className="p-1 rounded hover:bg-parchment transition-colors"
+        className="relative p-1 rounded hover:bg-parchment transition-colors"
       >
-        <Eye size={14} className="text-ink-tertiary" />
+        <Eye size={14} className="text-ink-tertiary" aria-hidden />
       </button>
       <button
         type="button"
@@ -349,23 +384,24 @@ function TranslationCard({
           e.stopPropagation();
           onDelete();
         }}
+        data-part="delete"
         aria-label={`Delete ${file.name}`}
-        className="p-1 rounded hover:bg-seal-tint text-ink-muted hover:text-seal-label transition-colors"
+        className="relative p-1 rounded hover:bg-seal-tint text-ink-muted hover:text-seal-label transition-colors"
       >
-        <Trash2 size={14} />
+        <Trash2 size={14} aria-hidden />
       </button>
-    </div>
+    </article>
   );
 }
 
 function FileCompactCard({ file }: { file: FileEntry }) {
   const Icon = typeIcons[file.type];
   return (
-    <div className="flex items-center gap-3 px-3 py-2.5 rounded-md bg-warm border border-border/40">
-      <Icon size={14} className="text-ink-muted shrink-0" />
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-ink truncate">{file.name}</p>
-        <div className="flex items-center gap-2 mt-0.5">
+    <article data-component="FileCompactCard" className="flex items-center gap-3 px-3 py-2.5 rounded-md bg-warm border border-border/40">
+      <Icon size={14} className="text-ink-muted shrink-0" aria-hidden />
+      <div data-part="content" className="flex-1 min-w-0">
+        <h3 data-part="title" className="text-xs font-medium text-ink truncate">{file.name}</h3>
+        <div data-part="meta" className="flex items-center gap-2 mt-0.5">
           <span className="text-meta text-ink-muted">
             {file.type.toUpperCase()}
           </span>
@@ -373,6 +409,6 @@ function FileCompactCard({ file }: { file: FileEntry }) {
           <span className="text-meta text-ink-muted">{languageName(file.language)}</span>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

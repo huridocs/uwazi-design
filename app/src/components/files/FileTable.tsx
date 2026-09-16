@@ -186,57 +186,75 @@ export function FileTable({
   if (isMobile) {
     return (
       <div
+        data-component="FileTable"
+        data-variant="mobile"
         className="rounded-md overflow-hidden bg-paper"
         style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)" }}
       >
+        <ul data-part="rows">
         {files.map((file) => {
           const isSelected = selectedIds.has(file.id);
           const isFocused = focusedId === file.id;
           const Icon = typeIcons[file.type];
+          // Not `role="button"`: the row hosts a checkbox and a kebab. The
+          // stretched primary-action button carries focus; content sits above
+          // it (`relative`) and mouse clicks bubble to the row's onClick.
           return (
-            <div
+            <li
               key={file.id}
-              role="button"
-              tabIndex={0}
+              data-part="row"
+              data-state={isFocused ? "focused" : undefined}
               onClick={() => onFocus?.(file.id)}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onFocus?.(file.id); } }}
-              className={`flex items-start gap-3 p-3 cursor-pointer transition-colors hover:bg-warm ${isFocused ? "bg-parchment" : ""}`}
+              className={`relative flex items-start gap-3 p-3 cursor-pointer transition-colors hover:bg-warm ${isFocused ? "bg-parchment" : ""}`}
               style={{
                 borderBottom: "1px solid var(--border-primary)",
               }}
             >
-              <label className="flex items-center pt-0.5" onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                data-part="primary-action"
+                aria-pressed={isFocused}
+                aria-label={`Focus ${file.name}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onFocus?.(file.id);
+                }}
+                className="absolute inset-0 w-full cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20"
+              />
+              <label data-part="select" className="relative flex items-center pt-0.5" onClick={(e) => e.stopPropagation()}>
                 <Checkbox
                   checked={isSelected}
                   onChange={() => onSelect(file.id)}
                   ariaLabel={`Select ${file.name}`}
                 />
               </label>
-              <Icon size={16} className="text-ink-muted shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
+              <Icon size={16} className="relative text-ink-muted shrink-0 mt-0.5" aria-hidden />
+              <div data-part="content" className="relative flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-medium text-ink truncate">{file.name}</span>
+                  <span data-part="title" className="text-sm font-medium text-ink truncate">{file.name}</span>
                   {renderBadge(file)}
                 </div>
-                <div className="flex items-center gap-3 text-meta text-ink-tertiary">
+                <div data-part="meta" className="flex items-center gap-3 text-meta text-ink-tertiary">
                   <span>{typeLabels[file.type]}</span>
-                  <span>•</span>
+                  <span aria-hidden>•</span>
                   <span dir="ltr">{file.size}</span>
-                  <span>•</span>
+                  <span aria-hidden>•</span>
                   <span>{languageName(file.language)}</span>
                 </div>
-                <div className="text-meta text-ink-muted mt-0.5">
+                <div data-part="modified" className="text-meta text-ink-muted mt-0.5">
                   {formatFileDate(file.modified)}
                 </div>
               </div>
-              <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
+              <div data-part="actions" className="relative flex items-center" onClick={(e) => e.stopPropagation()}>
                 {renderMenu(file)}
               </div>
-            </div>
+            </li>
           );
         })}
+        </ul>
         {!embedded && (
           <div
+            data-part="footer"
             className="flex items-center justify-between px-3 h-10 text-xs text-ink-muted"
             style={{ backgroundColor: "var(--bg-warm)", borderTop: "1px solid var(--border-primary)" }}
           >
@@ -274,7 +292,7 @@ export function FileTable({
         const Icon = typeIcons[file.type];
         return (
           <div className="flex items-center gap-2 min-w-0">
-            <Icon size={14} className="text-ink-muted shrink-0" />
+            <Icon size={14} className="text-ink-muted shrink-0" aria-hidden />
             <span className="text-xs font-medium text-ink truncate">{file.name}</span>
             {renderBadge(file)}
           </div>
@@ -412,6 +430,7 @@ function RowKebab({ items }: { items: KebabItem[] }) {
       <button
         ref={buttonRef}
         type="button"
+        data-component="RowKebab"
         onClick={(e) => {
           e.stopPropagation();
           setOpen((o) => !o);
@@ -421,12 +440,14 @@ function RowKebab({ items }: { items: KebabItem[] }) {
         aria-label="Row actions"
         className="flex items-center justify-center p-1 rounded hover:bg-parchment transition-colors"
       >
-        <MoreVertical size={14} className="text-ink-tertiary" />
+        <MoreVertical size={14} className="text-ink-tertiary" aria-hidden />
       </button>
       {open && pos && createPortal(
         <div
           ref={menuRef}
           role="menu"
+          data-component="RowKebab"
+          data-part="menu"
           className="fixed z-50 min-w-55 rounded-md bg-paper border border-border shadow-xl py-1 animate-fade-in-up"
           style={{
             top: pos.top,
@@ -440,12 +461,15 @@ function RowKebab({ items }: { items: KebabItem[] }) {
                 className="my-1 mx-2 h-px"
                 style={{ backgroundColor: "var(--border-soft)" }}
                 role="separator"
+                data-part="separator"
               />
             ) : (
               <button
                 key={item.id}
                 type="button"
                 role="menuitem"
+                data-part="menu-item"
+                data-variant={item.danger ? "danger" : undefined}
                 onClick={(e) => {
                   e.stopPropagation();
                   setOpen(false);
@@ -457,7 +481,7 @@ function RowKebab({ items }: { items: KebabItem[] }) {
                     : "text-ink-secondary hover:bg-warm"
                 }`}
               >
-                <item.icon size={12} className="shrink-0" />
+                <item.icon size={12} className="shrink-0" aria-hidden />
                 {item.label}
               </button>
             ),

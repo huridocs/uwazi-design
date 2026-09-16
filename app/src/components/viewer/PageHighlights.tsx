@@ -111,6 +111,10 @@ export function PageHighlights({ page }: PageHighlightsProps) {
         return hl.rects.map((rect, i) => (
           <div
             key={`${hl.id}-${i}`}
+            data-component="PageHighlights"
+            data-part="highlight"
+            data-highlight-id={hl.id}
+            data-state={isHovered ? "hovered" : undefined}
             role={i === 0 ? "button" : undefined}
             tabIndex={i === 0 ? 0 : undefined}
             aria-label={i === 0 ? `Remove highlight: ${hl.text.slice(0, 60)}` : undefined}
@@ -161,6 +165,10 @@ export function PageHighlights({ page }: PageHighlightsProps) {
           return (
             <div
               key={`${ref.id}-${i}`}
+              data-component="PageHighlights"
+              data-part="reference"
+              data-ref-id={ref.id}
+              data-state={isFlashing ? "flashing" : isActive ? "active" : isHovered ? "hovered" : undefined}
               role={isFirst ? "button" : undefined}
               tabIndex={isFirst ? 0 : undefined}
               aria-label={isFirst ? `Reference: ${sel.text.slice(0, 60)}` : undefined}
@@ -187,6 +195,7 @@ export function PageHighlights({ page }: PageHighlightsProps) {
               {/* Entity name tag on first line rect */}
               {isFirst && showTag && entity && (
                 <span
+                  data-part="entity-tag"
                   className="absolute whitespace-nowrap px-1.5 py-[3px] rounded text-meta font-medium leading-none pointer-events-none"
                   style={{
                     left: 0,

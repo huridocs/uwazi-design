@@ -182,15 +182,20 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
   return (
     <div
       ref={minimapRef}
+      data-component="RefMinimap"
+      data-mode={mode}
       className="absolute pointer-events-none"
       style={{ top: 8, bottom: 8, right: 40, width: DOT_SIZE + 22, zIndex: 5 }}
     >
       {/* Mode toggle */}
       <div
+        data-part="mode-toggle"
         className="absolute pointer-events-auto flex flex-col items-center"
         style={{ top: 0, left: "50%", transform: "translateX(-50%)" }}
       >
         <button
+          type="button"
+          aria-label={mode === "global" ? "Whole document" : `Page ${currentPage}`}
           onClick={() => setMode(mode === "global" ? "page" : "global")}
           className="flex items-center justify-center rounded-md transition-colors hover:bg-warm"
           style={{
@@ -200,12 +205,14 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
           }}
           title={mode === "global" ? "Whole document" : `Page ${currentPage}`}
         >
-          {mode === "global" ? <Layers size={12} /> : <FileText size={12} />}
+          {mode === "global" ? <Layers size={12} aria-hidden /> : <FileText size={12} aria-hidden />}
         </button>
       </div>
 
       {/* Track line */}
       <div
+        data-part="track"
+        aria-hidden
         className="absolute rounded-full"
         style={{
           top: 28,
@@ -224,6 +231,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
           {/* Top edge: refs from previous pages */}
           {beforeCount > 0 && (
             <div
+              data-part="edge-before"
               className="absolute pointer-events-none flex flex-col items-center"
               style={{
                 top: 32,
@@ -261,6 +269,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
           {/* Bottom edge: refs from next pages */}
           {afterCount > 0 && (
             <div
+              data-part="edge-after"
               className="absolute pointer-events-none flex flex-col items-center"
               style={{
                 bottom: 4,
@@ -297,6 +306,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
 
           {/* Current page divider with label */}
           <div
+            data-part="page-label"
             className="absolute pointer-events-none flex items-center"
             style={{
               top: `${18 - 4}%`,
@@ -322,6 +332,8 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
 
           {/* End-of-page divider */}
           <div
+            data-part="page-end"
+            aria-hidden
             className="absolute pointer-events-none flex items-center"
             style={{
               top: `${18 + 64 + 2}%`,
@@ -351,6 +363,9 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
           return (
             <div
               key={ref.id}
+              data-part="dot"
+              data-ref-id={ref.id}
+              data-state={isActive ? "active" : isHov ? "hovered" : undefined}
               className="absolute pointer-events-auto cursor-pointer"
               style={{ top: `${cluster.yPercent}%`, left: "50%", transform: "translate(-50%, -50%)", padding: 3 }}
               onClick={() => handleDotClick(ref.id)}
@@ -369,6 +384,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
               {/* Tooltip — slides in from the right of the dot */}
               {isHov && (
                 <div
+                  data-part="tooltip"
                   className="absolute pointer-events-none text-meta font-medium whitespace-nowrap rounded-md"
                   style={{
                     right: "calc(100% + 6px)",
@@ -396,6 +412,8 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
         return (
           <div
             key={`c-${ci}`}
+            data-part="cluster"
+            data-state={isExpanded ? "expanded" : hasActiveRef ? "active" : undefined}
             className="absolute pointer-events-auto"
             style={{
               top: `${cluster.yPercent}%`,
@@ -405,6 +423,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
           >
             {/* Cluster square with count — always visible */}
             <div
+              data-part="cluster-count"
               className="cursor-pointer relative flex items-center justify-center"
               style={{
                 width: outerSize,
@@ -464,6 +483,7 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
               return (
                 <>
                   <svg
+                    data-part="cluster-tree"
                     className="absolute pointer-events-auto"
                     style={{
                       top: topOffset,
@@ -539,7 +559,8 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
                     return (
                       <div
                         key={`tip-${ref.id}`}
-                        className="absolute pointer-events-none text-meta font-medium whitespace-nowrap rounded-md"
+                        data-part="tooltip"
+                  className="absolute pointer-events-none text-meta font-medium whitespace-nowrap rounded-md"
                         style={{
                           top: topOffset + cy,
                           right: `calc(50% + ${outerSize / 2 + svgW + 12}px)`,

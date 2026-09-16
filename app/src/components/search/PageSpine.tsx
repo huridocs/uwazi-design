@@ -23,65 +23,72 @@ export function PageSpine({ entityId, fullText, query, onSelect }: Props) {
   const active = useAtomValue(resultsActivePageAtom);
 
   return (
-    <div className="relative flex flex-col gap-1.5 ps-4">
+    <div data-component="PageSpine" className="relative ps-4">
       {/* The rail — a continuous quiet line, inline-start edge. */}
       <span
         aria-hidden="true"
+        data-part="rail"
         className="absolute inset-y-1.5 w-px bg-border/60"
         style={{ insetInlineStart: "0.1875rem" }}
       />
-      {fullText.map((snippet, i) => {
-        const isActive =
-          snippet.page !== null &&
-          active?.entityId === entityId &&
-          active.page === snippet.page;
-        // A snippet whose corpus can't name a real page is a passive excerpt:
-        // no "p.N", no click. Jumping to a page we invented would land nowhere.
-        if (snippet.page === null) {
+      <ul data-part="rows" className="flex flex-col gap-1.5">
+        {fullText.map((snippet, i) => {
+          const isActive =
+            snippet.page !== null &&
+            active?.entityId === entityId &&
+            active.page === snippet.page;
+          // A snippet whose corpus can't name a real page is a passive excerpt:
+          // no "p.N", no click. Jumping to a page we invented would land nowhere.
+          if (snippet.page === null) {
+            return (
+              <li key={i} data-part="row" data-variant="passive" className="w-full rounded-md px-2 py-1.5">
+                <p data-part="excerpt" className="text-sm text-ink leading-relaxed">
+                  <HighlightedText text={snippet.text} query={query} />
+                </p>
+                {snippet.hits > 1 && (
+                  <span
+                    dir="ltr"
+                    data-part="hits"
+                    className="mt-0.5 block text-end text-xs font-semibold text-ink-tertiary tabular-nums"
+                  >
+                    {snippet.hits}×
+                  </span>
+                )}
+              </li>
+            );
+          }
+          const page = snippet.page;
           return (
-            <div key={i} className="w-full rounded-md px-2 py-1.5">
-              <p className="text-sm text-ink leading-relaxed">
-                <HighlightedText text={snippet.text} query={query} />
-              </p>
-              {snippet.hits > 1 && (
+            <li key={i} data-part="row" data-state={isActive ? "active" : undefined}>
+              <button
+                type="button"
+                data-part="jump"
+                aria-pressed={isActive}
+                aria-label={`Page ${page}, ${snippet.hits} ${
+                  snippet.hits === 1 ? "match" : "matches"
+                }`}
+                onClick={() => onSelect(entityId, page)}
+                className={`w-full text-start rounded-md px-2 py-1.5 transition-colors cursor-pointer
+                  focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20 ${
+                    isActive ? "bg-parchment" : "hover:bg-warm"
+                  }`}
+              >
+                <span data-part="excerpt" className="block text-sm text-ink leading-relaxed">
+                  <HighlightedText text={snippet.text} query={query} />
+                </span>
                 <span
                   dir="ltr"
+                  data-part="page"
                   className="mt-0.5 block text-end text-xs font-semibold text-ink-tertiary tabular-nums"
                 >
-                  {snippet.hits}×
+                  p.{page}
+                  {snippet.hits > 1 ? ` · ${snippet.hits}×` : ""}
                 </span>
-              )}
-            </div>
+              </button>
+            </li>
           );
-        }
-        const page = snippet.page;
-        return (
-          <button
-            key={i}
-            type="button"
-            aria-pressed={isActive}
-            aria-label={`Page ${page}, ${snippet.hits} ${
-              snippet.hits === 1 ? "match" : "matches"
-            }`}
-            onClick={() => onSelect(entityId, page)}
-            className={`w-full text-start rounded-md px-2 py-1.5 transition-colors cursor-pointer
-              focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20 ${
-                isActive ? "bg-parchment" : "hover:bg-warm"
-              }`}
-          >
-            <p className="text-sm text-ink leading-relaxed">
-              <HighlightedText text={snippet.text} query={query} />
-            </p>
-            <span
-              dir="ltr"
-              className="mt-0.5 block text-end text-xs font-semibold text-ink-tertiary tabular-nums"
-            >
-              p.{page}
-              {snippet.hits > 1 ? ` · ${snippet.hits}×` : ""}
-            </span>
-          </button>
-        );
-      })}
+        })}
+      </ul>
     </div>
   );
 }

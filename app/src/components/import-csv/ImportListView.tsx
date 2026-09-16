@@ -42,22 +42,26 @@ export function ImportListView({
   const isEmpty = imports.length === 0;
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 py-4 gap-3">
+    <div data-component="ImportListView" className="flex flex-col flex-1 min-h-0 py-4 gap-3">
       <Breadcrumb segments={[{ label: "Import CSV" }]} />
 
       <section
+        data-part="card"
+        data-state={isEmpty ? "empty" : "populated"}
+        aria-labelledby="import-list-title"
         className="flex flex-col flex-1 min-h-0 rounded-md bg-paper overflow-hidden"
         style={{ border: "1px solid var(--border-primary)" }}
       >
         {/* Card header */}
         <header
+          data-part="header"
           className="flex items-center justify-between px-4 h-12 shrink-0"
           style={{ borderBottom: isEmpty ? "none" : "1px solid var(--border-primary)" }}
         >
-          <h2 className="text-sm font-bold text-ink">CSVs</h2>
+          <h2 id="import-list-title" data-part="title" className="text-sm font-bold text-ink">CSVs</h2>
           {processing > 0 && (
-            <span className="flex items-center gap-1.5 text-xs font-medium text-success">
-              <RefreshCw size={12} className="animate-spin" />
+            <span data-part="auto-refresh" className="flex items-center gap-1.5 text-xs font-medium text-success">
+              <RefreshCw size={12} className="animate-spin" aria-hidden />
               Auto-refreshing
             </span>
           )}
@@ -69,6 +73,7 @@ export function ImportListView({
           <>
             {/* Stats breakdown row */}
             <div
+              data-part="stats"
               className="flex items-center gap-3 md:gap-6 px-4 h-10 shrink-0 text-xs text-ink-tertiary overflow-x-auto no-scrollbar [&>*]:shrink-0"
               style={{ borderBottom: "1px solid var(--border-primary)" }}
             >
@@ -115,9 +120,12 @@ function Stat({
             ? "text-ink-muted"
             : "text-ink";
   return (
-    <span className="flex items-center gap-1.5">
-      <span className={`text-sm font-semibold tabular-nums ${toneClass}`}>{count}</span>
-      <span>{label}</span>
-    </span>
+    // One label/value pair per `dl`: the dividers between stats can't sit
+    // inside a shared list. The count is drawn first (`order-first`) but read
+    // after its label.
+    <dl data-part="stat" data-tone={tone} className="flex items-center gap-1.5">
+      <dt>{label}</dt>
+      <dd className={`order-first text-sm font-semibold tabular-nums ${toneClass}`}>{count}</dd>
+    </dl>
   );
 }

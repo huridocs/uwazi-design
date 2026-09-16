@@ -142,6 +142,7 @@ export function ShareEntityModal({ open, onClose }: ShareEntityModalProps) {
 
   return (
     <div
+      data-component="ShareEntityModal"
       className="fixed inset-0 z-50 flex md:items-center md:justify-center md:p-4 bg-overlay"
       role="dialog"
       aria-modal="true"
@@ -149,31 +150,33 @@ export function ShareEntityModal({ open, onClose }: ShareEntityModalProps) {
     >
       <div
         ref={panelRef}
+        data-part="panel"
         className="bg-paper shadow-xl w-full md:max-w-lg md:rounded-lg md:max-h-[80vh] h-full md:h-auto flex flex-col md:animate-fade-in-up"
       >
-        <div className="flex items-start justify-between gap-3 px-5 py-3 border-b border-border">
+        <div data-part="header" className="flex items-start justify-between gap-3 px-5 py-3 border-b border-border">
           <div className="min-w-0">
-            <h3 id="share-entity-modal-title" className="text-base font-semibold text-ink">
+            <h2 id="share-entity-modal-title" data-part="title" className="text-base font-semibold text-ink">
               {t("System", "Share")}
-            </h3>
-            <p className="mt-0.5 truncate text-xs text-ink-muted">{entityTitle}</p>
+            </h2>
+            <p data-part="subtitle" className="mt-0.5 truncate text-xs text-ink-muted">{entityTitle}</p>
           </div>
           <button
             type="button"
+            data-part="close"
             onClick={onClose}
             className="p-1.5 rounded-md hover:bg-parchment transition-colors cursor-pointer"
             aria-label={t("System", "Close")}
           >
-            <X size={18} className="text-ink-muted" />
+            <X size={18} className="text-ink-muted" aria-hidden />
           </button>
         </div>
 
-        <div className="flex-1 overflow-auto">
-          <section className="space-y-2 border-b border-border/50 px-5 pt-3 pb-4">
+        <div data-part="body" className="flex-1 overflow-auto">
+          <section data-part="general-access" aria-labelledby="share-general-access-title" className="space-y-2 border-b border-border/50 px-5 pt-3 pb-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h4 className="text-xs font-medium text-ink-secondary">
+              <h3 id="share-general-access-title" className="text-xs font-medium text-ink-secondary">
                 {t("System", "General access")}
-              </h4>
+              </h3>
               <div ref={generalAccessRef} className="relative">
                 <div
                   role="radiogroup"
@@ -187,7 +190,7 @@ export function ShareEntityModal({ open, onClose }: ShareEntityModalProps) {
                     onClick={() => setGeneralAccess("private")}
                     first
                   >
-                    <Lock size={12} />
+                    <Lock size={12} aria-hidden />
                     <span className="text-xs font-medium whitespace-nowrap">
                       {t("System", "Private")}
                     </span>
@@ -198,7 +201,7 @@ export function ShareEntityModal({ open, onClose }: ShareEntityModalProps) {
                     onClick={() => setGeneralAccess("published")}
                     published
                   >
-                    <Globe size={12} />
+                    <Globe size={12} aria-hidden />
                     <span className="text-xs font-medium whitespace-nowrap">
                       {t("System", "Published")}
                     </span>
@@ -207,6 +210,7 @@ export function ShareEntityModal({ open, onClose }: ShareEntityModalProps) {
                 {showPublicTip ? (
                   <div
                     role="tooltip"
+                    data-part="public-tip"
                     className={`pointer-events-none absolute inset-e-0 top-full z-20 mt-1.5 w-56 ${hintClass}`}
                   >
                     {t(
@@ -230,11 +234,11 @@ export function ShareEntityModal({ open, onClose }: ShareEntityModalProps) {
             ) : null}
           </section>
 
-          <section className="space-y-3 px-5 pt-3">
+          <section data-part="lookup" aria-labelledby="share-people-title" className="space-y-3 px-5 pt-3">
             <div className="flex items-center gap-1.5">
-              <h4 className="text-xs font-medium text-ink-secondary">
+              <h3 id="share-people-title" className="text-xs font-medium text-ink-secondary">
                 {t("System", "People and groups")}
-              </h4>
+              </h3>
               <button
                 type="button"
                 aria-label={t("System", "Lookup help")}
@@ -262,6 +266,7 @@ export function ShareEntityModal({ open, onClose }: ShareEntityModalProps) {
                     if (lookupError) setLookupError("");
                   }}
                   placeholder={t("System", "Username, email or group")}
+                  aria-label={t("System", "Username, email or group")}
                   autoComplete="off"
                   aria-invalid={Boolean(lookupError)}
                   className={`w-full rounded-md border bg-paper px-3 py-2 text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-carbon/20 ${
@@ -291,13 +296,13 @@ export function ShareEntityModal({ open, onClose }: ShareEntityModalProps) {
             ) : null}
           </section>
 
-          <section className="px-5 py-3">
+          <section data-part="members" aria-labelledby="share-people-title" className="px-5 py-3">
             {members.length === 0 ? (
-              <p className="px-1 py-6 text-center text-sm text-ink-muted">
+              <p data-part="empty" className="px-1 py-6 text-center text-sm text-ink-muted">
                 {t("System", "No people or groups added yet")}
               </p>
             ) : (
-              <div className="divide-y divide-border/50">
+              <ul data-part="rows" className="divide-y divide-border/50">
                 {members.map((member) => (
                   <MemberRow
                     key={member.id}
@@ -315,12 +320,12 @@ export function ShareEntityModal({ open, onClose }: ShareEntityModalProps) {
                     }}
                   />
                 ))}
-              </div>
+              </ul>
             )}
           </section>
         </div>
 
-        <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-border">
+        <div data-part="footer" className="flex items-center justify-end gap-2 px-5 py-3 border-t border-border">
           {dirty ? (
             <>
               <button
@@ -381,6 +386,8 @@ function AccessSegment({
       role="radio"
       aria-checked={active}
       aria-label={label}
+      data-component="AccessSegment"
+      data-state={active ? "active" : "inactive"}
       onClick={onClick}
       className={`flex h-8 items-center gap-1.5 px-2.5 transition-colors cursor-pointer ${activeClass}`}
       style={{ borderLeft: first ? "none" : "1px solid var(--border-primary)" }}
@@ -405,10 +412,10 @@ function MemberRow({
   const canEdit = member.level === "write";
 
   return (
-    <div className="flex items-center gap-3 px-1 py-2.5">
-      <span className="min-w-0 flex-1 truncate text-sm text-ink">{member.label}</span>
-      <div className="flex shrink-0 items-center">
-        <div className="flex items-center gap-0.5" role="group" aria-label={t("System", "Permission level")}>
+    <li data-component="MemberRow" data-level={member.level} className="flex items-center gap-3 px-1 py-2.5">
+      <span data-part="name" className="min-w-0 flex-1 truncate text-sm text-ink">{member.label}</span>
+      <div data-part="actions" className="flex shrink-0 items-center">
+        <div data-part="permissions" className="flex items-center gap-0.5" role="group" aria-label={t("System", "Permission level")}>
           {showCanSee ? (
             <IconAction
               label={t("System", "Can see")}
@@ -432,7 +439,7 @@ function MemberRow({
           </IconAction>
         </div>
       </div>
-    </div>
+    </li>
   );
 }
 
@@ -460,6 +467,8 @@ function IconAction({
       type="button"
       title={label}
       aria-label={label}
+      data-component="IconAction"
+      data-variant={danger ? "danger" : "default"}
       aria-pressed={danger ? undefined : active}
       className={className}
       onClick={onClick}

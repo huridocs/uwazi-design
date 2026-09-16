@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { SectionLabel } from "../shared/SectionLabel";
 import {
   FileText,
@@ -70,6 +70,8 @@ export function FileDetailEditor({
   const language = useAtomValue(languageAtom);
 
   const nameRef = useRef<HTMLInputElement>(null);
+  const nameId = useId();
+  const langId = useId();
   const langRef = useRef<HTMLSelectElement>(null);
 
   // Edit mode — name + language fall back to read-only labels unless the
@@ -134,13 +136,19 @@ export function FileDetailEditor({
 
   return (
     <>
-      <div className="rounded-md bg-warm p-4 space-y-3">
-        <div className="flex items-center justify-between">
+      <section
+        data-component="FileDetailEditor"
+        data-part="details"
+        data-state={editing ? "editing" : "reading"}
+        className="rounded-md bg-warm p-4 space-y-3"
+      >
+        <div data-part="header" className="flex items-center justify-between">
           <SectionLabel as="h4" level="section">
             File details
           </SectionLabel>
           <button
             type="button"
+            data-part="edit-toggle"
             onClick={() => setEditing((e) => !e)}
             className={`flex items-center gap-1 px-2 py-0.5 text-meta font-medium rounded transition-colors cursor-pointer ${
               editing
@@ -151,22 +159,24 @@ export function FileDetailEditor({
           >
             {editing ? (
               <>
-                <Check size={11} /> Done
+                <Check size={11} aria-hidden /> Done
               </>
             ) : (
               <>
-                <Pencil size={11} className="text-ink-tertiary" /> Edit
+                <Pencil size={11} className="text-ink-tertiary" aria-hidden /> Edit
               </>
             )}
           </button>
         </div>
 
-        <Field label="Name">
+        <dl data-part="name">
+        <Field label="Name" htmlFor={editing ? nameId : undefined}>
           {editing ? (
             <div className="flex items-center gap-2 bg-paper rounded border border-border focus-within:ring-1 focus-within:ring-carbon/30">
-              <Icon size={14} className="text-ink-muted ml-2 shrink-0" />
+              <Icon size={14} className="text-ink-muted ml-2 shrink-0" aria-hidden />
               <input
                 ref={nameRef}
+                id={nameId}
                 key={file.id}
                 type="text"
                 defaultValue={file.name}
@@ -180,18 +190,20 @@ export function FileDetailEditor({
             </div>
           ) : (
             <div className="flex items-center gap-2 px-2 py-1.5">
-              <Icon size={14} className="text-ink-muted shrink-0" />
+              <Icon size={14} className="text-ink-muted shrink-0" aria-hidden />
               <span className="text-sm text-ink truncate">{file.name}</span>
             </div>
           )}
         </Field>
+        </dl>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Language">
+        <dl data-part="properties" className="grid grid-cols-2 gap-3">
+          <Field label="Language" htmlFor={editing ? langId : undefined}>
             {editing ? (
               <div className="relative inline-flex items-center bg-paper rounded border border-border focus-within:ring-1 focus-within:ring-carbon/30">
                 <select
                   ref={langRef}
+                  id={langId}
                   value={file.language}
                   onChange={(e) => updateField("language", e.target.value)}
                   className="appearance-none bg-transparent pl-2 pr-6 py-0.5 text-xs font-medium text-ink focus:outline-none cursor-pointer"
@@ -209,6 +221,7 @@ export function FileDetailEditor({
                 </select>
                 <ChevronDown
                   size={11}
+                  aria-hidden
                   className="absolute right-1.5 text-ink-tertiary pointer-events-none"
                 />
               </div>
@@ -221,7 +234,7 @@ export function FileDetailEditor({
 
           <Field label="Type">
             <div className="flex items-center gap-1.5 px-2 py-1.5 text-sm text-ink-secondary">
-              <Icon size={14} className="text-ink-muted shrink-0" />
+              <Icon size={14} className="text-ink-muted shrink-0" aria-hidden />
               <span>{typeLabels[file.type]}</span>
             </div>
           </Field>
@@ -235,16 +248,18 @@ export function FileDetailEditor({
               {formatFileDate(file.modified)}
             </span>
           </Field>
-        </div>
-      </div>
+        </dl>
+      </section>
 
       {group && (
-        <div className="rounded-md bg-warm p-4 space-y-3">
-          <div className="flex items-center justify-between">
+        <section data-part="document" className="rounded-md bg-warm p-4 space-y-3">
+          <div data-part="header" className="flex items-center justify-between">
             <SectionLabel as="h4" level="section">
               Document
             </SectionLabel>
             <span
+              data-part="role-badge"
+              data-variant={group.isPrimary ? (isActiveGroup ? "active-primary" : "primary") : "supporting"}
               className={`px-1.5 py-0.5 text-meta font-medium rounded ${
                 group.isPrimary
                   ? isActiveGroup
@@ -257,19 +272,19 @@ export function FileDetailEditor({
             </span>
           </div>
 
-          <p className="text-sm font-medium text-ink">{group.title}</p>
+          <p data-part="document-title" className="text-sm font-medium text-ink">{group.title}</p>
 
           {translations.length > 1 && (
-            <div className="space-y-1.5">
-              <p className="text-meta font-medium text-ink-muted uppercase tracking-wide">
+            <div data-part="translations" className="space-y-1.5">
+              <p id={`${langId}-translations`} className="text-meta font-medium text-ink-muted uppercase tracking-wide">
                 Translations
               </p>
-              <div className="flex flex-wrap gap-1.5">
+              <ul aria-labelledby={`${langId}-translations`} className="flex flex-wrap gap-1.5">
                 {translations.map((t) => {
                   const current = t.id === file.id;
                   return (
+                    <li key={t.id} data-part="translation" className="flex">
                     <button
-                      key={t.id}
                       type="button"
                       onClick={() => !current && onFocusSibling?.(t.id)}
                       aria-current={current ? "true" : undefined}
@@ -290,13 +305,14 @@ export function FileDetailEditor({
                         {t.name}
                       </span>
                     </button>
+                    </li>
                   );
                 })}
-              </div>
+              </ul>
             </div>
           )}
 
-          <div className="flex items-center gap-2 pt-1">
+          <div data-part="actions" className="flex items-center gap-2 pt-1">
             <button
               type="button"
               onClick={promoteOrDemote}
@@ -304,11 +320,11 @@ export function FileDetailEditor({
             >
               {group.isPrimary ? (
                 <>
-                  <ArrowDownCircle size={12} /> Demote to supporting
+                  <ArrowDownCircle size={12} aria-hidden /> Demote to supporting
                 </>
               ) : (
                 <>
-                  <ArrowUpCircle size={12} /> Promote to primary
+                  <ArrowUpCircle size={12} aria-hidden /> Promote to primary
                 </>
               )}
             </button>
@@ -318,7 +334,7 @@ export function FileDetailEditor({
                 onClick={setAsActive}
                 className="flex items-center gap-1.5 px-2.5 py-1 text-meta font-medium text-ink-secondary bg-paper hover:bg-parchment hover:text-ink rounded transition-colors cursor-pointer"
               >
-                <Eye size={12} /> Set as active
+                <Eye size={12} aria-hidden /> Set as active
               </button>
             )}
             {group.isPrimary && (
@@ -331,35 +347,40 @@ export function FileDetailEditor({
               </button>
             )}
           </div>
-        </div>
+        </section>
       )}
 
-      <div className="flex items-center justify-end pt-1">
+      <div data-part="footer" className="flex items-center justify-end pt-1">
         <button
           type="button"
           onClick={() => onRequestDelete(file.id)}
           className="flex items-center gap-1.5 px-2.5 py-1 text-meta font-medium text-seal-label rounded hover:bg-seal-tint transition-colors cursor-pointer"
         >
-          <Trash2 size={12} /> Delete file
+          <Trash2 size={12} aria-hidden /> Delete file
         </button>
       </div>
     </>
   );
 }
 
+/** One label/value pair inside a `dl`. `dt` is `inline` so its line box is
+ *  the same one the old `span` sat in. `htmlFor` makes the term a real label
+ *  while its value is an editable control. */
 function Field({
   label,
+  htmlFor,
   children,
 }: {
   label: string;
+  htmlFor?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-1">
-      <span className="text-meta font-medium text-ink-muted uppercase tracking-wide">
-        {label}
-      </span>
-      <div>{children}</div>
+    <div data-part="field" className="space-y-1">
+      <dt className="inline text-meta font-medium text-ink-muted uppercase tracking-wide">
+        {htmlFor ? <label htmlFor={htmlFor}>{label}</label> : label}
+      </dt>
+      <dd>{children}</dd>
     </div>
   );
 }

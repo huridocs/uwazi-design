@@ -70,6 +70,8 @@ export function FloatingMenu({ x, y, text }: FloatingMenuProps) {
 
   return (
     <div
+      data-component="FloatingMenu"
+      data-state={fillTarget ? "filling" : undefined}
       className="fixed z-50 animate-fade-in-up"
       style={{
         left: clampedX,
@@ -77,7 +79,11 @@ export function FloatingMenu({ x, y, text }: FloatingMenuProps) {
         transform: "translateX(-50%)",
       }}
     >
-      <div className="flex items-center gap-0.5 rounded-md shadow-xl px-1 py-1" style={{ backgroundColor: "#1A1A1A" }}>
+      <div
+        data-part="actions"
+        role="group"
+        aria-label={t("System", "Selection actions")}
+        className="flex items-center gap-0.5 rounded-md shadow-xl px-1 py-1" style={{ backgroundColor: "#1A1A1A" }}>
         {/* When a field is listening, filling it LEADS — that is what the user
             crossed the pane to do. "Create relationship" keeps its place and its
             wording behind it; arming a field narrows what you are most likely
@@ -87,38 +93,46 @@ export function FloatingMenu({ x, y, text }: FloatingMenuProps) {
         {fillTarget && (
           <>
             <button
+              type="button"
+              data-part="fill"
               onClick={handleFill}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white
                 whitespace-nowrap rounded-md hover:bg-white/15 transition-colors"
             >
-              <TextCursorInput size={14} />
+              <TextCursorInput size={14} aria-hidden />
               {t("System", "Fill")} {fillTarget.label}
             </button>
             <div className="w-px h-4 bg-white/20" aria-hidden="true" />
           </>
         )}
         <button
+          type="button"
+          data-part="create-relationship"
           onClick={handleCreateRef}
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white
             whitespace-nowrap rounded-md hover:bg-white/15 transition-colors"
         >
-          <Link2 size={14} />
+          <Link2 size={14} aria-hidden />
           {t("System", "Create relationship")}
         </button>
         <div className="w-px h-4 bg-white/20" aria-hidden="true" />
         <button
+          type="button"
+          data-part="copy"
           onClick={handleCopy}
           className="p-1.5 text-white/70 rounded-md hover:bg-white/15 hover:text-white transition-colors"
           aria-label={t("System", "Copy text")}
         >
-          <Copy size={14} />
+          <Copy size={14} aria-hidden />
         </button>
         <button
+          type="button"
+          data-part="highlight"
           onClick={handleHighlight}
           className="p-1.5 text-white/70 rounded-md hover:bg-white/15 hover:text-white transition-colors"
           aria-label={t("System", "Highlight text")}
         >
-          <Highlighter size={14} />
+          <Highlighter size={14} aria-hidden />
         </button>
       </div>
     </div>
