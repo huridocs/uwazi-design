@@ -61,7 +61,7 @@ All components are bound to variables — switching a frame to Dark mode updates
 │   │   │   │                      # UwaziLoader, StatusBadge, ProgressBar, StatsCard, Stepper, AlertBanner)
 │   │   │   └── catalog/           # CatalogEntry, StyleGuide
 │   │   │   ├── library/           # The Library view: EntityCard, EntityThumbnail, LibraryFilters,
-│   │   │   │                      # ActiveFiltersSheet/Button, ActiveSearchChip, DisplayMenu, TimeBrush,
+│   │   │   │                      # ActiveFiltersSheet/Button, ActiveSearchChip, LibraryDisplayMenu, TimeBrush,
 │   │   │   │                      # BucketBreakdown, LibraryTimelineView, LibraryMapView, TimeSpine
 │   │   │   │                      # (the one shared chronology), MatchOrigin, RecentSearches,
 │   │   │   │                      # LibraryClusterDrawer, EntityDrawerPreview, SearchTipsPopover,

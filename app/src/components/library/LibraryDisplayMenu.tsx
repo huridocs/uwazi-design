@@ -35,7 +35,7 @@ import { t } from "../../utils/i18n";
  *  lives INSIDE the popover — a control that only exists in one view is a
  *  control that shoves every other control sideways when you switch views. The
  *  toolbar row is the same width whatever is selected. */
-export function DisplayMenu() {
+export function LibraryDisplayMenu() {
   const [state, setState] = useAtom(libraryDisplayAtom);
   const mode = useAtomValue(libraryViewModeAtom);
   const ctx = useAtomValue(libraryDisplayContextAtom);
@@ -146,7 +146,7 @@ export function DisplayMenu() {
   };
 
   return (
-    <div data-component="DisplayMenu" className="relative">
+    <div data-component="LibraryDisplayMenu" className="relative">
       <button
         type="button"
         data-part="trigger"

@@ -14,7 +14,7 @@ import { HighlightedText } from "../../shared/HighlightedText";
 import { DirectionGlyph } from "../DirectionGlyph";
 import { RowCheckbox } from "./RowCheckbox";
 import { RowShell } from "./RowShell";
-import { EvidenceBadge, RowChevron, RowEntityPill } from "./RowControls";
+import { EvidenceBadge, RowChevron, RowEntityPill } from "./RowParts";
 
 export interface AggregateRowProps {
   rel: Relationship;

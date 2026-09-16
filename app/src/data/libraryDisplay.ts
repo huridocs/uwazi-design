@@ -2,7 +2,7 @@
  *
  *  Every view mode draws different things, so every view mode offers different
  *  options — and until this file that fact lived as a run of `viewMode === …`
- *  booleans in `DisplayMenu`, each one repeated a second time inside the dot's
+ *  booleans in `LibraryDisplayMenu`, each one repeated a second time inside the dot's
  *  "is anything off its default?" expression, and a third time in the table's
  *  column list. Three copies of one truth, and the dot was the copy that had
  *  already gone wrong once (hiding Thumbnail in Cards, then switching to

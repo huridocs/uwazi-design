@@ -17,7 +17,7 @@ import { PageTag } from "../../shared/PageTag";
 import { DirectionGlyph } from "../DirectionGlyph";
 import { RowCheckbox } from "./RowCheckbox";
 import { RowShell } from "./RowShell";
-import { RowEntityPill } from "./RowControls";
+import { RowEntityPill } from "./RowParts";
 
 export interface ReferenceRowProps {
   reference: Reference;

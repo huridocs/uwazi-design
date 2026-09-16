@@ -97,10 +97,10 @@ that don't exist as reusable components anywhere in `production` yet.
 | ActiveFilterChips.tsx | `.../relationships/filters/RelationshipsActiveFilterChips.tsx` | Yes — `Relationships.stories.tsx` | None | S | Near-identical chip logic, already uses shared ActiveFilterChip |
 | CreateRelationshipModal.tsx | `.../relationships/create-reference/CreateRelationshipModal.tsx` | Yes — `CreateRelationshipModal.stories.tsx` | None | M | Real flow has 5 steps (search/new/file/reltype/text) vs prototype's 3 |
 | DirectionGlyph.tsx | `.../relationships/rows/DirectionGlyph.tsx` | Partial — rendered inside `Relationships.stories.tsx` rows, no dedicated story | None | S | Byte-for-byte same concept, heroicons vs lucide icon swap |
-| DisplayMenu.tsx | none — net-new | N/A | None | L | Real toolbar keeps Group/Sort/Zoom/View always visible; no consolidated popover exists to reskin |
+| RelationshipsDisplayMenu.tsx | none — net-new | N/A | None | L | Real toolbar keeps Group/Sort/Zoom/View always visible; no consolidated popover exists to reskin |
 | DrawerActionBar.tsx | `Routes/Entity/Tabs/SideTabsFooters.tsx` + `footers/*TabFooter.tsx` | No | None | M | Same switch-by-tab footer idea, split across 7 footer components |
 | EntityOverlay.tsx | `.../relationships/overlay/EntityOverlay.tsx` | Yes — `EntityOverlay.stories.tsx` | None | M | Same focus-trap/escape pattern; real overlay is read-only, prototype adds inline editing |
-| FiltersRow.tsx | `.../relationships/panel/RelationshipsListInfoRow.tsx` | Yes — `Relationships.stories.tsx` (Panel) | None | M | Collapse/expand+count row matches; prototype's grouping-toggle half has no toolbar analog |
+| CollapseControls.tsx | `.../relationships/panel/RelationshipsListInfoRow.tsx` | Yes — `Relationships.stories.tsx` (Panel) | None | M | Collapse/expand+count row matches; prototype's grouping-toggle half has no toolbar analog |
 | GroupByControl.tsx | `.../relationships/controls/RelationshipsGroupByControl.tsx` | Yes — `Relationships.stories.tsx` | None | S | Same primary/secondary axis dropdown, real uses shared DropdownListbox |
 | HighlightCard.tsx | folded into `.../relationships/rows/RelationshipRowVariants.tsx` (nested snippet) | Partial — nested row shown in `Relationships.stories.tsx` | None | M | Unused prototype catalog demo; not a standalone card in real repo |
 | IxSuggestionsCard.tsx | `Settings/IX/IXSuggestions.tsx` (admin review page only) | No | None | L | Real IX review lives in Settings, not an inline entity-panel triage card |
@@ -132,7 +132,7 @@ that don't exist as reusable components anywhere in `production` yet.
 | DocumentCard.tsx | `Routes/Entity/Components/Files/FileDetailsView.tsx` (separate Files tab) | No | None | L | Lives in separate Files tab, not inline metadata card |
 | EditInput.tsx | `EntityEditor/Components/TextField.tsx` (wraps Forms `InputField`) | Partial — via `EditEntity.stories.tsx` | None | M | Real repo uses RHF-registered InputField, not standalone controlled input |
 | EntityMetadataSummary.tsx | `relationships/overlay/EntityOverlayMetadataSummary.tsx` | No dedicated story (only via Relationships/EntityOverlay stories) | None | L | Real one shows 4 fixed facts, not the full metadata record |
-| InheritedValueChip.tsx | none — net-new (`RelationCaption.tsx` shows only a text suffix, no chip/glyph/rollup/trail) | No | None | L | Rollup chip & provenance trail concepts don't exist in real repo |
+| InheritedValue.tsx | none — net-new (`RelationCaption.tsx` shows only a text suffix, no chip/glyph/rollup/trail) | No | None | L | Rollup chip & provenance trail concepts don't exist in real repo |
 | MetadataCard.tsx | `Components/MetadataCard.tsx` | Yes — `Metadata.stories.tsx`, `EditEntity.stories.tsx` | None | S | Near-identical wrapper div/className shape |
 | MetadataRecord.tsx | `MetadataDisplay.tsx` | Yes — `Metadata.stories.tsx` | None | M | Real one is a flat `dl` field list, not a ruled table + long-field cards split |
 | RelationshipCards.tsx | `Components/RelationshipCards.tsx` | Yes — `Metadata.stories.tsx` | None | S | Same section-wrapper role; drops grouped-connection branch |
@@ -191,7 +191,7 @@ folded into work that's already needed, not an extra pass.
    `InheritedValueChip`/rollup chips means porting the resolver
    (`utils/inheritance.ts`) too, not just the component.
 5. **Mobile chrome** (`MobileBottomSheet`, `DocMeta`, `TemplateStructure`,
-   `DisplayMenu`) can slot in anytime — they're isolated L items with no
+   `RelationshipsDisplayMenu`) can slot in anytime — they're isolated L items with no
    downstream dependents.
 
 ## Reference

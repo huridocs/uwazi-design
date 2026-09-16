@@ -7,7 +7,7 @@ import { getEntityType } from "../../data/entities";
 import { entityMetadataAtom, makeEntityPropReader } from "../../atoms/entityMetadata";
 import { overlayEntityIdAtom } from "../../atoms/references";
 import { EntityPill } from "../shared/EntityPill";
-import { InheritedValueTag, MissingValue } from "./InheritedValueChip";
+import { InheritedValueTag, MissingValue } from "./InheritedValue";
 import { resolveInheritedValue, type ConnectionColumn } from "../../utils/inheritance";
 
 /**

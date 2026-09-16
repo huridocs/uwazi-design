@@ -10,7 +10,7 @@ import {
 import { editModeAtom, selectedRefIdsAtom } from "../../atoms/filters";
 import { ConfirmDialog } from "../shared/ConfirmDialog";
 import { SelectControls } from "../shared/SelectControls";
-import { RelationshipsCollapseControls } from "./FiltersRow";
+import { RelationshipsCollapseControls } from "./CollapseControls";
 import { WARM_BUTTON } from "../shared/warmButton";
 
 interface RelationshipsActionBarProps {

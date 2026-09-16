@@ -7,7 +7,7 @@ import {
 } from "../../atoms/filters";
 import { useFiltersDrawerOpen, useSetScopedReferences } from "../../hooks/useEntityScope";
 import { SearchBar } from "./SearchBar";
-import { DisplayMenu } from "./DisplayMenu";
+import { RelationshipsDisplayMenu } from "./RelationshipsDisplayMenu";
 import { ActiveFilterChips } from "./ActiveFilterChips";
 import { ViewControls } from "./ViewControls";
 import { RelationshipsFilterDrawer } from "./RelationshipsFilterDrawer";
@@ -39,7 +39,7 @@ export function RelationshipsToolbar() {
            a line of its own. */
         <div data-component="RelationshipsToolbar" className="flex items-center gap-2 shrink-0">
           <ViewControls />
-          <DisplayMenu />
+          <RelationshipsDisplayMenu />
           <FiltersButton
             activeCount={activeFilterCount}
             onClick={() => setFiltersOpen(true)}

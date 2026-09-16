@@ -5,7 +5,7 @@ import { entityMetadataAtom, makeEntityPropReader } from "../../atoms/entityMeta
 import { overlayEntityIdAtom } from "../../atoms/references";
 import { MetadataCard } from "./MetadataCard";
 import { spanClass, type CardSpan } from "./cardSpan";
-import { InheritedValueTag, MissingValue, ProvenanceTrail, RelationCaption, RollupChip } from "./InheritedValueChip";
+import { InheritedValueTag, MissingValue, ProvenanceTrail, RelationCaption, RollupChip } from "./InheritedValue";
 import { EntityPill } from "../shared/EntityPill";
 import { getEntityType } from "../../data/entities";
 import { reduceInherited, resolveRelationshipField, specInherits } from "../../utils/inheritance";

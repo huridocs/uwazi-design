@@ -8,7 +8,7 @@ import { useAtom } from "jotai";
 import { matchTypeFiltersAtom, type MatchTypeFilters } from "../../../atoms/library";
 import { ListInfoRow } from "../../shared/ListInfoRow";
 import { ToggleChip } from "../../shared/ToggleChip";
-import { CollapseControls } from "../../relationships/FiltersRow";
+import { CollapseControls } from "../../relationships/CollapseControls";
 import { EntityResultCard } from "./EntityResultCard";
 
 type MatchType = keyof MatchTypeFilters;

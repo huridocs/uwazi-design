@@ -1,7 +1,7 @@
 import { useSetAtom } from "jotai";
 import { overlayEntityIdAtom } from "../../atoms/references";
 import { EntityPill } from "../shared/EntityPill";
-import { InheritedValueTag, MissingValue, ProvenanceTrail, RollupChip } from "./InheritedValueChip";
+import { InheritedValueTag, MissingValue, ProvenanceTrail, RollupChip } from "./InheritedValue";
 import type { ProvenanceStep } from "../../utils/inheritance";
 
 /** One connected entity, flattened — no merged cells, no shared rows. */

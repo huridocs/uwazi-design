@@ -15,7 +15,7 @@ import { MainTabs } from "../layout/MainTabs";
 import { DocumentViewer } from "../viewer/DocumentViewer";
 import { RelationshipsDrawerSection } from "../relationships/RelationshipsDrawerSection";
 import { FiltersHostProvider } from "../shared/FiltersDrawer";
-import { RelationshipsCollapseControls } from "../relationships/FiltersRow";
+import { RelationshipsCollapseControls } from "../relationships/CollapseControls";
 import { DrawerFilesBody } from "../files/DrawerFilesBody";
 import { EntityMetadataSummary } from "../metadata/EntityMetadataSummary";
 import { MetadataEditBody } from "../../views/MetadataView";

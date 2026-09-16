@@ -85,7 +85,7 @@ import { ResultsBody } from "../components/library/ResultsSnippets/ResultsBody";
 import { ResultsMainView } from "../components/library/ResultsSnippets/ResultsMainView";
 import { SearchTipsPopover } from "../components/library/SearchTipsPopover";
 import { RecentSearches } from "../components/library/RecentSearches";
-import { DisplayMenu } from "../components/library/DisplayMenu";
+import { LibraryDisplayMenu } from "../components/library/LibraryDisplayMenu";
 import { ActiveSearchChip } from "../components/library/ActiveSearchChip";
 import { ActiveFiltersButton } from "../components/library/ActiveFiltersButton";
 import { DataTable, type Column } from "../components/shared/DataTable";
@@ -828,7 +828,7 @@ export function LibraryView() {
             (timeline layout) live inside its popover. Anything that appears and
             disappears from this row shoves every other control sideways when you
             change view — which is exactly what it used to do. */}
-        <DisplayMenu />
+        <LibraryDisplayMenu />
         {/* Languages: one dropdown of fixed width (codes, not names — a "Français"
             label would resize the trigger and shift the row again). */}
         <div className="hidden md:block">

@@ -3,7 +3,7 @@ import { Link2 } from "lucide-react";
 import { overlayEntityIdAtom } from "../../atoms/references";
 import { MetadataCard } from "./MetadataCard";
 import { spanClass, type CardSpan } from "./cardSpan";
-import { RelationCaption, InheritedValueTag, MissingValue, RollupChip } from "./InheritedValueChip";
+import { RelationCaption, InheritedValueTag, MissingValue, RollupChip } from "./InheritedValue";
 import { EntityPill } from "../shared/EntityPill";
 import { getEntityType } from "../../data/entities";
 import { mergeConnectionRows, reduceInherited, type ConnectionGroup } from "../../utils/inheritance";

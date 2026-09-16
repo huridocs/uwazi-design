@@ -6,7 +6,7 @@ import { Hub } from "../../../utils/relationships";
 import { HighlightedText } from "../../shared/HighlightedText";
 import { RowCheckbox } from "./RowCheckbox";
 import { RowShell } from "./RowShell";
-import { EvidenceBadge, RowChevron, RowEntityPill } from "./RowControls";
+import { EvidenceBadge, RowChevron, RowEntityPill } from "./RowParts";
 
 export interface HubRowProps {
   hub: Hub;
