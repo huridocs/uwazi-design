@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useSetAtom, useAtomValue } from "jotai";
 import { Plus, BookOpen } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Table, type Column } from "../Table";
+import { SettingsButton } from "../SettingsButton";
+import { SettingsTable, type Column } from "../SettingsTable";
 import { RowActions } from "../RowActions";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { ThesaurusEditor } from "./ThesaurusEditor";
@@ -56,12 +56,12 @@ export function ThesauriPage() {
         <p className="text-xs text-ink-tertiary mb-4">
           Controlled vocabularies you can attach to template properties.
         </p>
-        <Table columns={columns} data={thesauri} getRowId={(t) => t.id} onRowClick={(t) => setEditing(t)} />
+        <SettingsTable columns={columns} data={thesauri} getRowId={(t) => t.id} onRowClick={(t) => setEditing(t)} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
+        <SettingsButton variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
           Add thesaurus
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
 
       <ConfirmDialog

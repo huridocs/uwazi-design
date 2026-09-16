@@ -3,11 +3,11 @@ import { useSetAtom } from "jotai";
 import { Plus, X } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { TemplateCardPreview } from "../TemplateCardPreview";
-import { Button } from "../Button";
+import { SettingsButton } from "../SettingsButton";
 import { RowActions } from "../RowActions";
 import { DragGrip } from "../DragGrip";
 import { useReorder } from "../../../hooks/useReorder";
-import { Field, TextInput } from "../Field";
+import { SettingsField, TextInput } from "../SettingsField";
 import { Checkbox } from "../../shared/Checkbox";
 import { Select } from "../../shared/Select";
 import {
@@ -155,7 +155,7 @@ export function TemplateEditor({
         <div className="flex flex-col lg:flex-row gap-6">
         <div className="flex flex-col gap-6 flex-1 min-w-0">
           <section className="grid sm:grid-cols-2 gap-3">
-            <Field label="Template name" issue={nameIssue}>
+            <SettingsField label="Template name" issue={nameIssue}>
               <TextInput
                 id="template-name-input"
                 value={name}
@@ -167,8 +167,8 @@ export function TemplateEditor({
                 onBlur={(e) => setNameIssue(checkName(e.currentTarget.value))}
                 placeholder="e.g. Court Case"
               />
-            </Field>
-            <Field label="Colour" group>
+            </SettingsField>
+            <SettingsField label="Colour" group>
               <div className="flex items-center gap-1.5 flex-wrap pt-1">
                 {PALETTE.map((c) => (
                   <button
@@ -202,7 +202,7 @@ export function TemplateEditor({
                   />
                 </label>
               </div>
-            </Field>
+            </SettingsField>
           </section>
 
           <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
@@ -297,9 +297,9 @@ export function TemplateEditor({
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="secondary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
+        <SettingsButton variant="secondary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
           Add property
-        </Button>
+        </SettingsButton>
         {/* Save-attempt summary — alert only on the attempt, not per keystroke.
             The footer keeps its fixed height; this rides the existing row. */}
         {saveBlocked && (
@@ -307,10 +307,10 @@ export function TemplateEditor({
             {blockingSummary(1, 0)}
           </span>
         )}
-        <Button variant="ghost" size="sm" onClick={onClose}>
+        <SettingsButton variant="ghost" size="sm" onClick={onClose}>
           Cancel
-        </Button>
-        <Button
+        </SettingsButton>
+        <SettingsButton
           variant="success"
           size="sm"
           disabled={!dirty}
@@ -319,7 +319,7 @@ export function TemplateEditor({
           onClick={trySave}
         >
           {isNew ? "Create template" : "Save"}
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
 
       {editing !== null && (
@@ -389,7 +389,7 @@ function PropertyDialog({
         </div>
 
         <div className="flex flex-col gap-3 p-4">
-          <Field label="Label" issue={labelIssue}>
+          <SettingsField label="Label" issue={labelIssue}>
             <TextInput
               value={label}
               issue={labelIssue}
@@ -401,24 +401,24 @@ function PropertyDialog({
               placeholder="e.g. Date filed"
               autoFocus
             />
-          </Field>
-          <Field label="Type">
+          </SettingsField>
+          <SettingsField label="Type">
             <Select value={type} options={TYPE_OPTIONS} onChange={(v) => setType(v as TemplateProperty["type"])} ariaLabel="Property type" />
-          </Field>
+          </SettingsField>
 
           {type === "select" && (
-            <Field label="Thesaurus" hint="Which thesaurus the options come from.">
+            <SettingsField label="Thesaurus" hint="Which thesaurus the options come from.">
               <Select value={content} options={THESAURUS_OPTIONS} onChange={setContent} ariaLabel="Thesaurus" />
-            </Field>
+            </SettingsField>
           )}
           {type === "relationship" && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="Related template">
+              <SettingsField label="Related template">
                 <Select value={targetTemplate} options={TEMPLATE_OPTIONS} onChange={setTargetTemplate} ariaLabel="Related template" />
-              </Field>
-              <Field label="Relation type">
+              </SettingsField>
+              <SettingsField label="Relation type">
                 <Select value={relationType} options={RELATION_OPTIONS} onChange={setRelationType} ariaLabel="Relation type" />
-              </Field>
+              </SettingsField>
             </div>
           )}
 
@@ -435,10 +435,10 @@ function PropertyDialog({
         </div>
 
         <div className="flex items-center justify-end gap-2 h-12 px-4" style={{ borderTop: "1px solid var(--border-soft)" }}>
-          <Button variant="ghost" size="sm" onClick={onCancel}>Cancel</Button>
-          <Button variant="success" size="sm" disabled={!label.trim()} onClick={submit}>
+          <SettingsButton variant="ghost" size="sm" onClick={onCancel}>Cancel</SettingsButton>
+          <SettingsButton variant="success" size="sm" disabled={!label.trim()} onClick={submit}>
             {isNew ? "Add property" : "Save"}
-          </Button>
+          </SettingsButton>
         </div>
       </div>
     </div>

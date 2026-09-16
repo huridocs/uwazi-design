@@ -1,7 +1,7 @@
 import { useAtomValue } from "jotai";
 import { SettingsContent } from "../SettingsContent";
 import { StatsCard } from "../../shared/StatsCard";
-import { Table, type Column } from "../Table";
+import { SettingsTable, type Column } from "../SettingsTable";
 import { entities } from "../../../data/entities";
 import { dataSourceAtom } from "../../../atoms/dataSource";
 import { cejilDashboardStats } from "../../../data/cejil/settingsAdapt";
@@ -69,7 +69,7 @@ export function DashboardPage() {
             source to see demo activity.
           </p>
         ) : (
-          <Table columns={columns} data={seedActivityLog.slice(0, 5)} getRowId={(e) => e.id} />
+          <SettingsTable columns={columns} data={seedActivityLog.slice(0, 5)} getRowId={(e) => e.id} />
         )}
       </SettingsContent.Body>
     </SettingsContent>

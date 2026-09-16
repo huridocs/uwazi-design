@@ -3,7 +3,7 @@ import { DataTable, type Column } from "../shared/DataTable";
 
 export type { Column };
 
-interface TableProps<T> {
+interface SettingsTableProps<T> {
   columns: Column<T>[];
   data: T[];
   getRowId: (row: T) => string;
@@ -16,8 +16,8 @@ interface TableProps<T> {
 /** Settings list table — the shared `DataTable` (entity-view Files style) with
  *  a rem-based min-width so wide settings tables scroll horizontally on narrow
  *  panes instead of squishing. Kept as a thin wrapper so the many settings
- *  pages keep importing `{ Table, Column }` from here unchanged. */
-export function Table<T>({ columns, data, getRowId, onRowClick, selectedId, emptyState, rowProps }: TableProps<T>) {
+ *  pages import `{ SettingsTable, Column }` from here. */
+export function SettingsTable<T>({ columns, data, getRowId, onRowClick, selectedId, emptyState, rowProps }: SettingsTableProps<T>) {
   // Flexible columns counted at a ~9rem floor, + gaps + padding.
   const minWidthRem =
     columns.reduce((sum, c) => {

@@ -23,7 +23,7 @@ import type { ValidationIssue } from "../../utils/validation";
  *  name and are linked by `aria-describedby` instead. A field whose content is a
  *  set of controls rather than one (a swatch palette, a checklist) passes
  *  `group`, and renders as a `fieldset` whose `legend` is the label. */
-export function Field({
+export function SettingsField({
   label,
   hint,
   error,
@@ -54,7 +54,7 @@ export function Field({
   if (group) {
     return (
       <fieldset
-        data-component="Field"
+        data-component="SettingsField"
         data-kind="group"
         aria-describedby={described ? msgId : undefined}
         className="flex flex-col gap-1.5 min-w-0"
@@ -82,7 +82,7 @@ export function Field({
     : children;
 
   return (
-    <div data-component="Field" className="flex flex-col gap-1.5">
+    <div data-component="SettingsField" className="flex flex-col gap-1.5">
       {label &&
         (single || htmlFor ? (
           <label htmlFor={controlId} data-part="label" className={labelClass}>

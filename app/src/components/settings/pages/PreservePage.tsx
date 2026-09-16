@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useSetAtom } from "jotai";
 import { Plus } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Table, type Column } from "../Table";
+import { SettingsButton } from "../SettingsButton";
+import { SettingsTable, type Column } from "../SettingsTable";
 import { RowActions } from "../RowActions";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { PreserveTokenEditor } from "./PreserveTokenEditor";
@@ -42,12 +42,12 @@ export function PreservePage() {
         <p className="text-xs text-ink-tertiary mb-4">
           Capture and archive web sources on a schedule. Each token authenticates one capture source.
         </p>
-        <Table columns={columns} data={tokens} getRowId={(t) => t.id} onRowClick={(t) => setEditing(t)} />
+        <SettingsTable columns={columns} data={tokens} getRowId={(t) => t.id} onRowClick={(t) => setEditing(t)} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
+        <SettingsButton variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
           New token
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
 
       <ConfirmDialog

@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useSetAtom, useAtomValue } from "jotai";
 import { Plus } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Table, type Column } from "../Table";
+import { SettingsButton } from "../SettingsButton";
+import { SettingsTable, type Column } from "../SettingsTable";
 import { RowActions } from "../RowActions";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { PageEditor } from "./PageEditor";
@@ -65,12 +65,12 @@ export function PagesPage() {
         <p className="text-xs text-ink-tertiary mb-4">
           Custom pages for your collection — about pages, methodology, landing content.
         </p>
-        <Table columns={columns} data={pages} getRowId={(p) => p.id} onRowClick={(p) => setEditing(p)} />
+        <SettingsTable columns={columns} data={pages} getRowId={(p) => p.id} onRowClick={(p) => setEditing(p)} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
+        <SettingsButton variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
           Add page
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
 
       <ConfirmDialog

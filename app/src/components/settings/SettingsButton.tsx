@@ -4,7 +4,7 @@ import { WARM_BUTTON } from "../shared/warmButton";
 type Variant = "primary" | "secondary" | "danger" | "ghost" | "success";
 type Size = "sm" | "md";
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface SettingsButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
   size?: Size;
   icon?: ReactNode;
@@ -38,7 +38,7 @@ const sizes: Record<Size, string> = {
 // (which goes muddy-grey over a paper footer). Replaces the variant fill.
 const disabledClass = "bg-vellum text-ink-muted cursor-not-allowed";
 
-export function Button({
+export function SettingsButton({
   variant = "secondary",
   size = "md",
   icon,
@@ -46,11 +46,11 @@ export function Button({
   className = "",
   disabled,
   ...props
-}: ButtonProps) {
+}: SettingsButtonProps) {
   return (
     <button
       type="button"
-      data-component="Button"
+      data-component="SettingsButton"
       data-variant={variant}
       disabled={disabled}
       className={`inline-flex items-center justify-center font-medium rounded-md transition-colors ${

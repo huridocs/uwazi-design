@@ -1,7 +1,7 @@
 import { useId, useMemo, useState } from "react";
 import { Search, X, ChevronRight } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
-import { Field, TextInput } from "../Field";
+import { SettingsField, TextInput } from "../SettingsField";
 import { Select } from "../../shared/Select";
 import { seedActivityLog, type SettingsLogEntry, type LogMethod } from "../../../data/settings";
 
@@ -76,7 +76,7 @@ export function ActivityLogPage() {
         {/* Filter toolbar */}
         <div role="search" data-part="filters" className="flex flex-wrap items-end gap-3 mb-4">
           <div className="grow min-w-[14rem] max-w-sm">
-            <Field label="Search" htmlFor={searchId}>
+            <SettingsField label="Search" htmlFor={searchId}>
               <div className="relative">
                 <Search size={14} aria-hidden className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted" />
                 <TextInput
@@ -96,14 +96,14 @@ export function ActivityLogPage() {
                   </button>
                 )}
               </div>
-            </Field>
+            </SettingsField>
           </div>
-          <Field label="Action">
+          <SettingsField label="Action">
             <Select value={method} options={METHOD_OPTIONS} onChange={setMethod} ariaLabel="Filter by action" />
-          </Field>
-          <Field label="User">
+          </SettingsField>
+          <SettingsField label="User">
             <Select value={user} options={userOptions} onChange={setUser} ariaLabel="Filter by user" />
-          </Field>
+          </SettingsField>
         </div>
 
         <p className="text-xs text-ink-tertiary mb-3">

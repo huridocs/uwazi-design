@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useSetAtom } from "jotai";
 import { ShieldCheck, KeyRound, Copy } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Field, TextInput } from "../Field";
-import { Table, type Column } from "../Table";
+import { SettingsButton } from "../SettingsButton";
+import { SettingsField, TextInput } from "../SettingsField";
+import { SettingsTable, type Column } from "../SettingsTable";
 import { currentAccount } from "../../../data/settings";
 import { toastsAtom } from "../../../atoms/references";
 
@@ -148,12 +148,12 @@ export function AccountPage() {
               The address and name you use to sign in.
             </p>
             <div className="grid sm:grid-cols-2 gap-3">
-              <Field label="Username">
+              <SettingsField label="Username">
                 <TextInput value={username} onChange={(e) => setUsername(e.target.value)} />
-              </Field>
-              <Field label="Email">
+              </SettingsField>
+              <SettingsField label="Email">
                 <TextInput type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-              </Field>
+              </SettingsField>
             </div>
           </section>
 
@@ -164,7 +164,7 @@ export function AccountPage() {
               Choose a strong password you don't use elsewhere.
             </p>
             <div className="flex flex-col gap-3">
-              <Field label="Current password">
+              <SettingsField label="Current password">
                 <TextInput
                   type="password"
                   value={current}
@@ -172,9 +172,9 @@ export function AccountPage() {
                   placeholder="••••••••"
                   autoComplete="current-password"
                 />
-              </Field>
+              </SettingsField>
               <div className="grid sm:grid-cols-2 gap-3">
-                <Field label="New password">
+                <SettingsField label="New password">
                   <TextInput
                     type="password"
                     value={password}
@@ -182,8 +182,8 @@ export function AccountPage() {
                     placeholder="••••••••"
                     autoComplete="new-password"
                   />
-                </Field>
-                <Field
+                </SettingsField>
+                <SettingsField
                   label="Confirm password"
                   error={mismatch ? "Passwords don't match" : undefined}
                 >
@@ -194,17 +194,17 @@ export function AccountPage() {
                     placeholder="••••••••"
                     autoComplete="new-password"
                   />
-                </Field>
+                </SettingsField>
               </div>
               <div>
-                <Button
+                <SettingsButton
                   variant="success"
                   size="sm"
                   disabled={!canSavePassword}
                   onClick={savePassword}
                 >
                   Update password
-                </Button>
+                </SettingsButton>
               </div>
             </div>
           </section>
@@ -229,9 +229,9 @@ export function AccountPage() {
             </div>
 
             {twoFactorEnabled ? (
-              <Button variant="danger" size="sm" onClick={disableTwoFactor}>
+              <SettingsButton variant="danger" size="sm" onClick={disableTwoFactor}>
                 Disable
-              </Button>
+              </SettingsButton>
             ) : setupOpen ? (
               <div className="rounded-lg border border-border bg-paper px-4 py-4 flex flex-col gap-4">
                 <div className="flex items-start gap-4">
@@ -247,7 +247,7 @@ export function AccountPage() {
                   </p>
                 </div>
                 <div className="max-w-[16rem]">
-                  <Field label="Verification code">
+                  <SettingsField label="Verification code">
                     <TextInput
                       inputMode="numeric"
                       maxLength={6}
@@ -255,18 +255,18 @@ export function AccountPage() {
                       onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                       placeholder="000000"
                     />
-                  </Field>
+                  </SettingsField>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button
+                  <SettingsButton
                     variant="success"
                     size="sm"
                     disabled={code.length !== 6}
                     onClick={verifyTwoFactor}
                   >
                     Verify &amp; enable
-                  </Button>
-                  <Button
+                  </SettingsButton>
+                  <SettingsButton
                     variant="ghost"
                     size="sm"
                     onClick={() => {
@@ -275,13 +275,13 @@ export function AccountPage() {
                     }}
                   >
                     Cancel
-                  </Button>
+                  </SettingsButton>
                 </div>
               </div>
             ) : (
-              <Button variant="secondary" size="sm" onClick={() => setSetupOpen(true)}>
+              <SettingsButton variant="secondary" size="sm" onClick={() => setSetupOpen(true)}>
                 Enable two-factor authentication
-              </Button>
+              </SettingsButton>
             )}
           </section>
 
@@ -296,16 +296,16 @@ export function AccountPage() {
                   Use these tokens to authenticate against the Uwazi API.
                 </p>
               </div>
-              <Button
+              <SettingsButton
                 variant="secondary"
                 size="sm"
                 icon={<KeyRound size={14} />}
                 onClick={generateKey}
               >
                 Generate key
-              </Button>
+              </SettingsButton>
             </div>
-            <Table
+            <SettingsTable
               columns={keyColumns}
               data={keys}
               getRowId={(row) => row.id}

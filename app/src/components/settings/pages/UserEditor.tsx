@@ -2,8 +2,8 @@ import { useId, useState } from "react";
 import { useSetAtom } from "jotai";
 import { ShieldCheck } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Field, TextInput } from "../Field";
+import { SettingsButton } from "../SettingsButton";
+import { SettingsField, TextInput } from "../SettingsField";
 import { RadioGroup } from "../../shared/RadioGroup";
 import { Checkbox } from "../../shared/Checkbox";
 import { seedGroups, type SettingsUser, type UserRole } from "../../../data/settings";
@@ -56,12 +56,12 @@ export function UserEditor({
       <SettingsContent.Body>
         <div className="flex flex-col gap-6">
           <section className="grid sm:grid-cols-2 gap-3">
-            <Field label="Username">
+            <SettingsField label="Username">
               <TextInput value={username} onChange={(e) => setUsername(e.target.value)} placeholder="e.g. jdoe" />
-            </Field>
-            <Field label="Email">
+            </SettingsField>
+            <SettingsField label="Email">
               <TextInput type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@org.example" />
-            </Field>
+            </SettingsField>
           </section>
 
           <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
@@ -104,7 +104,7 @@ export function UserEditor({
                 <p className="text-sm text-ink flex-1 min-w-0">
                   {base!.using2fa ? "2FA is enabled for this account." : "This account has not enabled 2FA."}
                 </p>
-                <Button
+                <SettingsButton
                   variant="secondary"
                   size="sm"
                   onClick={() =>
@@ -115,17 +115,17 @@ export function UserEditor({
                   }
                 >
                   Reset
-                </Button>
+                </SettingsButton>
               </div>
             </section>
           )}
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-        <Button variant="success" size="sm" disabled={!dirty || !username || !email} onClick={save}>
+        <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
+        <SettingsButton variant="success" size="sm" disabled={!dirty || !username || !email} onClick={save}>
           {isNew ? "Invite user" : "Save"}
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
     </SettingsContent>
   );

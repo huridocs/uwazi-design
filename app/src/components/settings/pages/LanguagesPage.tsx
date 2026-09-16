@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { useSetAtom, useAtomValue } from "jotai";
 import { Plus, RotateCcw, Trash2, Check, Search, X } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Field, TextInput } from "../Field";
-import { Table, type Column } from "../Table";
+import { SettingsButton } from "../SettingsButton";
+import { SettingsField, TextInput } from "../SettingsField";
+import { SettingsTable, type Column } from "../SettingsTable";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { ProgressBar } from "../../shared/ProgressBar";
 import { seedLanguages, type SettingsLanguage } from "../../../data/settings";
@@ -199,10 +199,10 @@ export function LanguagesPage() {
           Active languages for your collection. The default language is shown to users who haven't
           chosen one.
         </p>
-        <Table columns={columns} data={languages} getRowId={(l) => l.key} />
+        <SettingsTable columns={columns} data={languages} getRowId={(l) => l.key} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button
+        <SettingsButton
           variant="primary"
           size="sm"
           className="me-auto"
@@ -213,7 +213,7 @@ export function LanguagesPage() {
           }}
         >
           Install language
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
 
       {installOpen && (
@@ -243,7 +243,7 @@ export function LanguagesPage() {
             </div>
 
             <div className="px-4 pt-3">
-              <Field>
+              <SettingsField>
                 <div className="relative">
                   <Search
                     size={14}
@@ -258,7 +258,7 @@ export function LanguagesPage() {
                     className="ps-8"
                   />
                 </div>
-              </Field>
+              </SettingsField>
             </div>
 
             <div className="flex-1 overflow-y-auto px-4 pb-4 pt-2">
@@ -283,14 +283,14 @@ export function LanguagesPage() {
                           </span>
                         )}
                       </div>
-                      <Button
+                      <SettingsButton
                         variant="secondary"
                         size="sm"
                         icon={<Plus size={14} />}
                         onClick={() => installLanguage(c)}
                       >
                         Install
-                      </Button>
+                      </SettingsButton>
                     </li>
                   ))}
                 </ul>

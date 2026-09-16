@@ -1,8 +1,8 @@
 import { useId, useState } from "react";
 import { useSetAtom, useAtomValue } from "jotai";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Field, TextInput } from "../Field";
+import { SettingsButton } from "../SettingsButton";
+import { SettingsField, TextInput } from "../SettingsField";
 import { RadioGroup } from "../../shared/RadioGroup";
 import { Checkbox } from "../../shared/Checkbox";
 import { LayoutGrid, Table2, Map } from "lucide-react";
@@ -63,12 +63,12 @@ export function CollectionPage() {
       <SettingsContent.Body>
         <div className="flex flex-col gap-6">
           <section className="grid sm:grid-cols-2 gap-3">
-            <Field label="Collection name">
+            <SettingsField label="Collection name">
               <TextInput value={name} onChange={(e) => setName(e.target.value)} />
-            </Field>
-            <Field label="Custom landing page" hint="Where visitors land first.">
+            </SettingsField>
+            <SettingsField label="Custom landing page" hint="Where visitors land first.">
               <TextInput value={landing} onChange={(e) => setLanding(e.target.value)} />
-            </Field>
+            </SettingsField>
           </section>
 
           <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
@@ -116,9 +116,9 @@ export function CollectionPage() {
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="success" size="sm" disabled={!dirty} onClick={save}>
+        <SettingsButton variant="success" size="sm" disabled={!dirty} onClick={save}>
           Save
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
     </SettingsContent>
   );

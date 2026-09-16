@@ -2,11 +2,11 @@ import { useMemo, useState } from "react";
 import { useSetAtom } from "jotai";
 import { Copy, Camera, ExternalLink, RefreshCw } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Field, TextInput } from "../Field";
+import { SettingsButton } from "../SettingsButton";
+import { SettingsField, TextInput } from "../SettingsField";
 import { Select } from "../../shared/Select";
 import { RadioGroup } from "../../shared/RadioGroup";
-import { Table, type Column } from "../Table";
+import { SettingsTable, type Column } from "../SettingsTable";
 import { type SettingsPreserveToken } from "../../../data/settings";
 import { toastsAtom } from "../../../atoms/references";
 
@@ -199,17 +199,17 @@ export function PreserveTokenEditor({
         <div className="flex flex-col gap-6">
           {/* Config */}
           <section className="flex flex-col gap-6 max-w-lg">
-            <Field label="Source name">
+            <SettingsField label="Source name">
               <TextInput value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Court press releases" />
-            </Field>
+            </SettingsField>
 
-            <Field label="Source URL" hint="The page or feed Preserve captures.">
+            <SettingsField label="Source URL" hint="The page or feed Preserve captures.">
               <TextInput value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…" />
-            </Field>
+            </SettingsField>
 
-            <Field label="Auth">
+            <SettingsField label="Auth">
               <Select value={auth} options={AUTH_OPTIONS} onChange={setAuth} ariaLabel="Auth" />
-            </Field>
+            </SettingsField>
 
             <div>
               <h3 className="text-sm font-semibold text-ink mb-1">Capture schedule</h3>
@@ -239,9 +239,9 @@ export function PreserveTokenEditor({
                   <Stat label="Failed" value={failed} />
                   <Stat label="Last run" value={base!.lastRun} ltr />
                 </dl>
-                <Button variant="primary" size="sm" icon={<Camera size={14} />} onClick={captureNow}>
+                <SettingsButton variant="primary" size="sm" icon={<Camera size={14} />} onClick={captureNow}>
                   Capture now
-                </Button>
+                </SettingsButton>
               </div>
 
               {/* Token */}
@@ -252,9 +252,9 @@ export function PreserveTokenEditor({
                   <code className="flex-1 min-w-0 truncate text-xs font-mono text-ink-secondary bg-vellum px-3 py-2 rounded-md" dir="ltr">
                     {base!.token}
                   </code>
-                  <Button variant="secondary" size="sm" icon={<Copy size={13} />} onClick={() => toast("Token copied")}>
+                  <SettingsButton variant="secondary" size="sm" icon={<Copy size={13} />} onClick={() => toast("Token copied")}>
                     Copy
-                  </Button>
+                  </SettingsButton>
                 </dd>
               </dl>
 
@@ -265,16 +265,16 @@ export function PreserveTokenEditor({
                 </h3>
                 <Select value={filter} options={FILTERS} onChange={setFilter} ariaLabel="Filter captures" />
               </div>
-              <Table columns={columns} data={visible} getRowId={(r) => r.id} emptyState="No captures in this view." />
+              <SettingsTable columns={columns} data={visible} getRowId={(r) => r.id} emptyState="No captures in this view." />
             </section>
           )}
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-        <Button variant="success" size="sm" disabled={!dirty || !name} onClick={save}>
+        <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
+        <SettingsButton variant="success" size="sm" disabled={!dirty || !name} onClick={save}>
           {isNew ? "Add source" : "Save"}
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
     </SettingsContent>
   );

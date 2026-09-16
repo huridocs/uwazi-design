@@ -9,7 +9,7 @@ import type { ValidationIssue } from "../../utils/validation";
  *  `reserve` keeps the line MOUNTED at its height with only the content
  *  toggling (PATTERNS: never shift layout on state change) — a message landing
  *  on blur must not shove the fields below it. Hosts that already reserve
- *  space in their own flow (settings `Field`, which swaps hint ↔ message on
+ *  space in their own flow (`SettingsField`, which swaps hint ↔ message on
  *  one line) leave it off.
  *
  *  No `role="alert"` here on purpose: per-field messages arrive on blur and

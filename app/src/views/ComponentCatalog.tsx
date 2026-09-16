@@ -40,8 +40,8 @@ import { Breadcrumb } from "../components/layout/Breadcrumb";
 import { SettingsNav } from "../components/settings/SettingsNav";
 
 // Settings primitives (static demos)
-import { Button as SettingsButton } from "../components/settings/Button";
-import { Field, TextInput } from "../components/settings/Field";
+import { SettingsButton } from "../components/settings/SettingsButton";
+import { SettingsField, TextInput } from "../components/settings/SettingsField";
 import { RowActions } from "../components/settings/RowActions";
 import { StatusPill } from "../components/settings/StatusPill";
 
@@ -1825,12 +1825,12 @@ const textColor = typeLabelColor(type.color);`}
 
               <div id="set-button" ref={reg("set-button")}>
                 <CatalogEntry
-                  name="Button"
+                  name="SettingsButton"
                   description="Settings-scoped action button. Warm fill is canonical; seal for danger only."
-                  code={`<Button variant="primary" size="sm">Save</Button>
-<Button variant="secondary" size="sm">Translate</Button>
-<Button variant="ghost" size="sm">Cancel</Button>
-<Button variant="danger" size="sm">Delete</Button>`}
+                  code={`<SettingsButton variant="primary" size="sm">Save</SettingsButton>
+<SettingsButton variant="secondary" size="sm">Translate</SettingsButton>
+<SettingsButton variant="ghost" size="sm">Cancel</SettingsButton>
+<SettingsButton variant="danger" size="sm">Delete</SettingsButton>`}
                 >
                   <div className="flex flex-wrap items-center gap-2">
                     <SettingsButton variant="primary" size="sm">Save</SettingsButton>
@@ -1844,19 +1844,19 @@ const textColor = typeLabelColor(type.color);`}
 
               <div id="set-field" ref={reg("set-field")}>
                 <CatalogEntry
-                  name="Field"
+                  name="SettingsField"
                   description="Labelled form field wrapper (label + hint/error) with the warm TextInput."
-                  code={`<Field label="Email" hint="Used to sign in.">
+                  code={`<SettingsField label="Email" hint="Used to sign in.">
   <TextInput type="email" defaultValue="admin@uwazi.io" />
-</Field>`}
+</SettingsField>`}
                 >
                   <div className="w-full max-w-sm flex flex-col gap-3">
-                    <Field label="Email" hint="Used to sign in.">
+                    <SettingsField label="Email" hint="Used to sign in.">
                       <TextInput type="email" defaultValue="admin@uwazi.io" />
-                    </Field>
-                    <Field label="Password" error="Passwords don't match">
+                    </SettingsField>
+                    <SettingsField label="Password" error="Passwords don't match">
                       <TextInput type="password" defaultValue="••••••" />
-                    </Field>
+                    </SettingsField>
                   </div>
                 </CatalogEntry>
               </div>

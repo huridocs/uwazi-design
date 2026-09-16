@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Table, type Column } from "../Table";
+import { SettingsButton } from "../SettingsButton";
+import { SettingsTable, type Column } from "../SettingsTable";
 import { StatusPill } from "../StatusPill";
 import { ParagraphJobEditor } from "./ParagraphJobEditor";
 import { seedParagraphJobs, type SettingsParagraphJob } from "../../../data/settings";
@@ -30,12 +30,12 @@ export function ParagraphExtractionPage() {
         <p className="text-xs text-ink-tertiary mb-4">
           Split documents into paragraph-level records for fine-grained search and analysis.
         </p>
-        <Table columns={columns} data={seedParagraphJobs} getRowId={(j) => j.id} onRowClick={(j) => setEditing(j)} />
+        <SettingsTable columns={columns} data={seedParagraphJobs} getRowId={(j) => j.id} onRowClick={(j) => setEditing(j)} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
+        <SettingsButton variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
           New extraction
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
     </SettingsContent>
   );

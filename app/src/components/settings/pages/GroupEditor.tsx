@@ -1,8 +1,8 @@
 import { useId, useState } from "react";
 import { useSetAtom } from "jotai";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Field, TextInput } from "../Field";
+import { SettingsButton } from "../SettingsButton";
+import { SettingsField, TextInput } from "../SettingsField";
 import { Checkbox } from "../../shared/Checkbox";
 import { seedUsers, type SettingsGroupRecord } from "../../../data/settings";
 import { toastsAtom } from "../../../atoms/references";
@@ -48,9 +48,9 @@ export function GroupEditor({
       <SettingsContent.Body>
         <div className="flex flex-col gap-6">
           <section className="max-w-sm">
-            <Field label="Group name">
+            <SettingsField label="Group name">
               <TextInput value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Litigation" />
-            </Field>
+            </SettingsField>
           </section>
 
           <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
@@ -79,10 +79,10 @@ export function GroupEditor({
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-        <Button variant="success" size="sm" disabled={!dirty || !name} onClick={save}>
+        <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
+        <SettingsButton variant="success" size="sm" disabled={!dirty || !name} onClick={save}>
           {isNew ? "Create group" : "Save"}
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
     </SettingsContent>
   );

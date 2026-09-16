@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useSetAtom } from "jotai";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Table, type Column } from "../Table";
+import { SettingsButton } from "../SettingsButton";
+import { SettingsTable, type Column } from "../SettingsTable";
 import {
   seedLanguages,
   seedTranslationKeys,
@@ -98,15 +98,15 @@ export function TranslationEditor({
         <p className="text-xs text-ink-tertiary mb-4">
           Translate each term into your active languages. The source language is shown for reference.
         </p>
-        <Table columns={columns} data={rows} getRowId={(r) => r.key} />
+        <SettingsTable columns={columns} data={rows} getRowId={(r) => r.key} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="ghost" size="sm" onClick={onClose}>
+        <SettingsButton variant="ghost" size="sm" onClick={onClose}>
           Cancel
-        </Button>
-        <Button variant="success" size="sm" disabled={!dirty} onClick={save}>
+        </SettingsButton>
+        <SettingsButton variant="success" size="sm" disabled={!dirty} onClick={save}>
           Save
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
     </SettingsContent>
   );

@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useSetAtom } from "jotai";
 import { Plus, Pencil, Trash2, ShieldCheck } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Table, type Column } from "../Table";
+import { SettingsButton } from "../SettingsButton";
+import { SettingsTable, type Column } from "../SettingsTable";
 import { DrawerTabs } from "../../layout/DrawerTabs";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { UserEditor } from "./UserEditor";
@@ -169,13 +169,13 @@ export function UsersPage() {
           />
         </div>
         {tab === "users" ? (
-          <Table columns={userColumns} data={users} getRowId={(u) => u.id} onRowClick={(u) => setEditingUser(u)} />
+          <SettingsTable columns={userColumns} data={users} getRowId={(u) => u.id} onRowClick={(u) => setEditingUser(u)} />
         ) : (
-          <Table columns={groupColumns} data={groups} getRowId={(g) => g.id} onRowClick={(g) => setEditingGroup(g)} />
+          <SettingsTable columns={groupColumns} data={groups} getRowId={(g) => g.id} onRowClick={(g) => setEditingGroup(g)} />
         )}
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button
+        <SettingsButton
           variant="primary"
           size="sm"
           className="me-auto"
@@ -183,7 +183,7 @@ export function UsersPage() {
           onClick={() => (tab === "users" ? setEditingUser("new") : setEditingGroup("new"))}
         >
           {tab === "users" ? "Add user" : "Add group"}
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
 
       <ConfirmDialog

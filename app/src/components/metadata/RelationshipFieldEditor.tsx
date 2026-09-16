@@ -57,7 +57,7 @@ export function RelationshipFieldEditor({
     <div data-component="RelationshipFieldEditor" role="group" aria-labelledby={titleId} className="space-y-1.5">
       <div data-part="header" className="flex items-center gap-1.5">
         <Link2 size={14} className="text-carbon" aria-hidden />
-        {/* The form-label recipe (`settings/Field.tsx`), not the card-title one
+        {/* The form-label recipe (`settings/SettingsField.tsx`), not the card-title one
             this used to borrow — it names the connection editor's input, and a
             14px bold label made one field in the metadata form shout while its
             neighbours spoke. */}

@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useSetAtom, useAtomValue } from "jotai";
 import { Plus, Link2, Folder } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Table, type Column } from "../Table";
+import { SettingsButton } from "../SettingsButton";
+import { SettingsTable, type Column } from "../SettingsTable";
 import { RowActions } from "../RowActions";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { MenuLinkEditor } from "./MenuLinkEditor";
@@ -64,12 +64,12 @@ export function MenuPage() {
         <p className="text-xs text-ink-tertiary mb-4">
           Links shown in the top navigation. Groups nest links into a dropdown.
         </p>
-        <Table columns={columns} data={links} getRowId={(m) => m.id} onRowClick={(m) => setEditing(m)} />
+        <SettingsTable columns={columns} data={links} getRowId={(m) => m.id} onRowClick={(m) => setEditing(m)} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
+        <SettingsButton variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
           Add link
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
 
       <ConfirmDialog

@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useSetAtom, useAtomValue } from "jotai";
 import { ChevronUp, ChevronDown, FolderPlus, Trash2 } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Table, type Column } from "../Table";
+import { SettingsButton } from "../SettingsButton";
+import { SettingsTable, type Column } from "../SettingsTable";
 import { DragGrip } from "../DragGrip";
 import { useReorder } from "../../../hooks/useReorder";
 import { Checkbox } from "../../shared/Checkbox";
@@ -155,7 +155,7 @@ export function FiltersPage() {
             Choose which entity types appear as filters in the library sidebar, group them, and set
             their order — exactly how readers will see them.
           </p>
-          <Button
+          <SettingsButton
             variant="secondary"
             size="sm"
             icon={<FolderPlus size={14} />}
@@ -163,7 +163,7 @@ export function FiltersPage() {
             className="shrink-0 whitespace-nowrap"
           >
             New group
-          </Button>
+          </SettingsButton>
         </div>
 
         {groups.length > 0 && (
@@ -188,7 +188,7 @@ export function FiltersPage() {
           </div>
         )}
 
-        <Table
+        <SettingsTable
           columns={columns}
           data={rows}
           getRowId={(r) => r.templateId}
@@ -200,9 +200,9 @@ export function FiltersPage() {
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <span className="text-xs text-ink-tertiary me-auto">{activeCount} filters shown</span>
-        <Button variant="success" size="sm" disabled={!dirty} onClick={save}>
+        <SettingsButton variant="success" size="sm" disabled={!dirty} onClick={save}>
           Save
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
     </SettingsContent>
   );

@@ -1278,7 +1278,7 @@ function EditSection({
     <div className="space-y-1.5">
       {label && (
         // `text-xs font-medium text-ink-secondary` — the form-label recipe, the
-        // one `settings/Field.tsx` already gives every Settings page and both
+        // one `settings/SettingsField.tsx` already gives every Settings page and both
         // modals. This row used to carry `text-sm font-bold text-ink`, which is
         // the CARD-TITLE recipe: 14px/700 naming an input, two full steps above
         // every other field label in the app, on the form a reader meets most.

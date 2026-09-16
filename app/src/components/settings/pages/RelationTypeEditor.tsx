@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useSetAtom } from "jotai";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Field, TextInput } from "../Field";
+import { SettingsButton } from "../SettingsButton";
+import { SettingsField, TextInput } from "../SettingsField";
 import { type SettingsRelationType } from "../../../data/settings";
 import { toastsAtom } from "../../../atoms/references";
 
@@ -45,12 +45,12 @@ export function RelationTypeEditor({
       <SettingsContent.Body>
         <div className="flex flex-col gap-4 max-w-lg">
           <section className="grid sm:grid-cols-2 gap-3">
-            <Field label="Name" hint="The label shown when connecting two entities.">
+            <SettingsField label="Name" hint="The label shown when connecting two entities.">
               <TextInput value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Appealed to" />
-            </Field>
-            <Field label="Inverse name" hint="Optional — the label for the reverse direction.">
+            </SettingsField>
+            <SettingsField label="Inverse name" hint="Optional — the label for the reverse direction.">
               <TextInput value={inverseName} onChange={(e) => setInverseName(e.target.value)} placeholder="e.g. Ruled on" />
-            </Field>
+            </SettingsField>
           </section>
           {usageCount !== undefined && (
             <p className="text-xs text-ink-tertiary">
@@ -60,10 +60,10 @@ export function RelationTypeEditor({
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-        <Button variant="success" size="sm" disabled={!dirty || !name} onClick={save}>
+        <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
+        <SettingsButton variant="success" size="sm" disabled={!dirty || !name} onClick={save}>
           {isNew ? "Create type" : "Save"}
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
     </SettingsContent>
   );

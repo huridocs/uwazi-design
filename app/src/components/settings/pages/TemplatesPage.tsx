@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useSetAtom, useAtomValue } from "jotai";
 import { Plus } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Table, type Column } from "../Table";
+import { SettingsButton } from "../SettingsButton";
+import { SettingsTable, type Column } from "../SettingsTable";
 import { RowActions } from "../RowActions";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { TemplateEditor } from "./TemplateEditor";
@@ -91,12 +91,12 @@ export function TemplatesPage() {
         <p className="text-xs text-ink-tertiary mb-4">
           Templates define the metadata properties an entity of each type can carry.
         </p>
-        <Table columns={columns} data={templates} getRowId={(t) => t.id} onRowClick={(t) => setEditing(t)} />
+        <SettingsTable columns={columns} data={templates} getRowId={(t) => t.id} onRowClick={(t) => setEditing(t)} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
+        <SettingsButton variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
           Add template
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
 
       <ConfirmDialog

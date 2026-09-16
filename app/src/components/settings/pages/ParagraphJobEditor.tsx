@@ -2,11 +2,11 @@ import { useMemo, useState } from "react";
 import { useSetAtom } from "jotai";
 import { Play, RotateCw } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Field, TextInput } from "../Field";
+import { SettingsButton } from "../SettingsButton";
+import { SettingsField, TextInput } from "../SettingsField";
 import { Select } from "../../shared/Select";
 import { StatusPill } from "../StatusPill";
-import { Table, type Column } from "../Table";
+import { SettingsTable, type Column } from "../SettingsTable";
 import { seedTemplates, type SettingsParagraphJob } from "../../../data/settings";
 import { toastsAtom } from "../../../atoms/references";
 
@@ -186,24 +186,24 @@ export function ParagraphJobEditor({
 
           {/* Config */}
           <section className="grid sm:grid-cols-3 gap-3">
-            <Field label="Template">
+            <SettingsField label="Template">
               {isNew ? (
                 <Select value={template} options={TEMPLATE_OPTIONS} onChange={setTemplate} ariaLabel="Template" />
               ) : (
                 <span className="text-sm text-ink py-2">{base!.template}</span>
               )}
-            </Field>
-            <Field label="Segmentation" hint="How documents are split into records.">
+            </SettingsField>
+            <SettingsField label="Segmentation" hint="How documents are split into records.">
               <Select value={segmentation} options={SEGMENTATION_OPTIONS} onChange={setSegmentation} ariaLabel="Segmentation" />
-            </Field>
-            <Field label="Min characters" hint="Drop fragments shorter than this.">
+            </SettingsField>
+            <SettingsField label="Min characters" hint="Drop fragments shorter than this.">
               <TextInput
                 value={minChars}
                 inputMode="numeric"
                 onChange={(e) => setMinChars(e.target.value.replace(/[^0-9]/g, ""))}
                 placeholder="40"
               />
-            </Field>
+            </SettingsField>
           </section>
 
           {/* Stats + run */}
@@ -221,9 +221,9 @@ export function ParagraphJobEditor({
                   </div>
                   <Stat label="Last run" value="2 days ago" />
                 </dl>
-                <Button variant="primary" size="sm" icon={<Play size={14} />} onClick={runExtraction}>
+                <SettingsButton variant="primary" size="sm" icon={<Play size={14} />} onClick={runExtraction}>
                   Run extraction
-                </Button>
+                </SettingsButton>
               </div>
 
               {/* Per-document breakdown */}
@@ -233,16 +233,16 @@ export function ParagraphJobEditor({
                 </h3>
                 <Select value={filter} options={FILTERS} onChange={setFilter} ariaLabel="Filter documents" />
               </div>
-              <Table columns={columns} data={visible} getRowId={(r) => r.id} emptyState="No documents in this view." />
+              <SettingsTable columns={columns} data={visible} getRowId={(r) => r.id} emptyState="No documents in this view." />
             </section>
           )}
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-        <Button variant="primary" size="sm" onClick={save}>
+        <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
+        <SettingsButton variant="primary" size="sm" onClick={save}>
           {isNew ? "Start extraction" : "Re-run"}
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
     </SettingsContent>
   );

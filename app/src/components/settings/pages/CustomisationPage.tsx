@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { useSetAtom } from "jotai";
 import { RotateCcw, AlertTriangle } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
+import { SettingsButton } from "../SettingsButton";
 import { DrawerTabs } from "../../layout/DrawerTabs";
 import { toastsAtom } from "../../../atoms/references";
 
@@ -116,9 +116,9 @@ export function CustomisationPage() {
         )}
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="success" size="sm" disabled={!dirty} onClick={save}>
+        <SettingsButton variant="success" size="sm" disabled={!dirty} onClick={save}>
           Save
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
     </SettingsContent>
   );

@@ -2,11 +2,11 @@ import { useState } from "react";
 import { useSetAtom } from "jotai";
 import { Plus, FolderOpen } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
+import { SettingsButton } from "../SettingsButton";
 import { RowActions } from "../RowActions";
 import { DragGrip } from "../DragGrip";
 import { useReorder } from "../../../hooks/useReorder";
-import { Field, TextInput } from "../Field";
+import { SettingsField, TextInput } from "../SettingsField";
 import { seedThesaurusValues, type SettingsThesaurus } from "../../../data/settings";
 import { cejilThesaurusValues } from "../../../data/cejil/settingsAdapt";
 import { toastsAtom } from "../../../atoms/references";
@@ -131,9 +131,9 @@ export function ThesaurusEditor({
       <SettingsContent.Body>
         <div className="flex flex-col gap-6">
           <section className="max-w-sm">
-            <Field label="Thesaurus name">
+            <SettingsField label="Thesaurus name">
               <TextInput value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Violation types" />
-            </Field>
+            </SettingsField>
           </section>
 
           <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
@@ -142,12 +142,12 @@ export function ThesaurusEditor({
                 Items <span className="text-ink-tertiary font-normal">({countItems(items)})</span>
               </h3>
               <div className="flex items-center gap-2">
-                <Button variant="secondary" size="sm" icon={<FolderOpen size={14} />} onClick={addGroup}>
+                <SettingsButton variant="secondary" size="sm" icon={<FolderOpen size={14} />} onClick={addGroup}>
                   Add group
-                </Button>
-                <Button variant="secondary" size="sm" icon={<Plus size={14} />} onClick={addItem}>
+                </SettingsButton>
+                <SettingsButton variant="secondary" size="sm" icon={<Plus size={14} />} onClick={addItem}>
                   Add item
-                </Button>
+                </SettingsButton>
               </div>
             </div>
 
@@ -196,9 +196,9 @@ export function ThesaurusEditor({
                           </div>
                         ))}
                         <div className="py-1.5">
-                          <Button variant="ghost" size="sm" icon={<Plus size={14} />} onClick={() => addChild(it.id)}>
+                          <SettingsButton variant="ghost" size="sm" icon={<Plus size={14} />} onClick={() => addChild(it.id)}>
                             Add item
-                          </Button>
+                          </SettingsButton>
                         </div>
                       </div>
                     </li>
@@ -220,10 +220,10 @@ export function ThesaurusEditor({
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-        <Button variant="success" size="sm" disabled={!dirty || !name} onClick={save}>
+        <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
+        <SettingsButton variant="success" size="sm" disabled={!dirty || !name} onClick={save}>
           {isNew ? "Create thesaurus" : "Save"}
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
     </SettingsContent>
   );

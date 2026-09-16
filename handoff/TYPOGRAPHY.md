@@ -177,7 +177,7 @@ file said, because the app was measured and the app won:
   it now has ONE implementation: `components/shared/SectionLabel.tsx`. Reach for
   that rather than the class string — four hand-written components of that name
   had already drifted apart on tracking and colour before it existed.
-- **`form label` is new**, and it is what `components/settings/Field.tsx` gives
+- **`form label` is new**, and it is what `components/settings/SettingsField.tsx` gives
   every Settings page. It was worth writing down because the entity-edit form
   had been using the card-title recipe for it — a 14px bold word naming an
   input, two full steps above every other field label in the app.

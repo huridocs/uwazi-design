@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Upload } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Table, type Column } from "../Table";
+import { SettingsButton } from "../SettingsButton";
+import { SettingsTable, type Column } from "../SettingsTable";
 import { TranslationEditor } from "./TranslationEditor";
 import { useNotify } from "../../../hooks/useNotify";
 import { seedTranslationContexts, type SettingsTranslationContext } from "../../../data/settings";
@@ -48,7 +48,7 @@ export function TranslationsPage() {
       width: "7rem",
       align: "right",
       cell: (c) => (
-        <Button
+        <SettingsButton
           variant="secondary"
           size="sm"
           onClick={(e) => {
@@ -57,7 +57,7 @@ export function TranslationsPage() {
           }}
         >
           Translate
-        </Button>
+        </SettingsButton>
       ),
     },
   ];
@@ -69,10 +69,10 @@ export function TranslationsPage() {
         <p className="text-xs text-ink-tertiary mb-4">
           Translate the interface and your collection's content across active languages.
         </p>
-        <Table columns={columns} data={seedTranslationContexts} getRowId={(c) => c.id} onRowClick={(c) => setEditing(c)} />
+        <SettingsTable columns={columns} data={seedTranslationContexts} getRowId={(c) => c.id} onRowClick={(c) => setEditing(c)} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button
+        <SettingsButton
           variant="secondary"
           size="sm"
           className="me-auto"
@@ -80,7 +80,7 @@ export function TranslationsPage() {
           onClick={() => notify("Translations imported", "success")}
         >
           Import translations (CSV)
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
     </SettingsContent>
   );

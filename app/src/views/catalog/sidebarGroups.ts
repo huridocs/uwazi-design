@@ -144,8 +144,8 @@ export const sidebarGroups: SidebarGroup[] = [
     items: [
       { id: "set-data-table", label: "DataTable" },
       { id: "set-radio-group", label: "RadioGroup" },
-      { id: "set-button", label: "Button" },
-      { id: "set-field", label: "Field" },
+      { id: "set-button", label: "SettingsButton" },
+      { id: "set-field", label: "SettingsField" },
       { id: "set-status-pill", label: "StatusPill" },
       { id: "set-row-actions", label: "RowActions" },
     ],

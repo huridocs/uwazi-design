@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useSetAtom, useAtomValue } from "jotai";
 import { Plus, Spline } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Table, type Column } from "../Table";
+import { SettingsButton } from "../SettingsButton";
+import { SettingsTable, type Column } from "../SettingsTable";
 import { RowActions } from "../RowActions";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { RelationTypeEditor } from "./RelationTypeEditor";
@@ -61,12 +61,12 @@ export function RelationTypesPage() {
           The labels available when connecting entities. Deleting a type re-labels its connections as
           unlabeled.
         </p>
-        <Table columns={columns} data={types} getRowId={(r) => r.id} onRowClick={(r) => setEditing(r)} />
+        <SettingsTable columns={columns} data={types} getRowId={(r) => r.id} onRowClick={(r) => setEditing(r)} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
+        <SettingsButton variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
           Add type
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
 
       <ConfirmDialog

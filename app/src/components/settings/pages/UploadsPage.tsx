@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import { useSetAtom } from "jotai";
 import { Upload, Image, FileText, Type, File, Search, X, LayoutGrid, List, Link2, Trash2 } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Table, type Column } from "../Table";
+import { SettingsButton } from "../SettingsButton";
+import { SettingsTable, type Column } from "../SettingsTable";
 import { RowActions } from "../RowActions";
 import { Select } from "../../shared/Select";
 import { SegmentedControl } from "../../shared/SegmentedControl";
@@ -151,11 +151,11 @@ export function UploadsPage() {
             })}
           </ul>
         ) : (
-          <Table columns={columns} data={filtered} getRowId={(u) => u.id} />
+          <SettingsTable columns={columns} data={filtered} getRowId={(u) => u.id} />
         )}
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button
+        <SettingsButton
           variant="primary"
           size="sm"
           className="me-auto"
@@ -163,7 +163,7 @@ export function UploadsPage() {
           onClick={() => toast("File uploaded")}
         >
           Upload file
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
 
       <ConfirmDialog

@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useSetAtom } from "jotai";
 import { Plus } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Table, type Column } from "../Table";
+import { SettingsButton } from "../SettingsButton";
+import { SettingsTable, type Column } from "../SettingsTable";
 import { RowActions } from "../RowActions";
 import { StatusPill } from "../StatusPill";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
@@ -53,12 +53,12 @@ export function MetadataExtractionPage() {
         <p className="text-xs text-ink-tertiary mb-4">
           Train extractors to suggest property values from document text automatically.
         </p>
-        <Table columns={columns} data={extractors} getRowId={(x) => x.id} onRowClick={(x) => setEditing(x)} />
+        <SettingsTable columns={columns} data={extractors} getRowId={(x) => x.id} onRowClick={(x) => setEditing(x)} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
+        <SettingsButton variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
           Create extractor
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
 
       <ConfirmDialog

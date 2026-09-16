@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useSetAtom } from "jotai";
 import { Plus } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
+import { SettingsButton } from "../SettingsButton";
 import { RowActions } from "../RowActions";
-import { Field, TextInput } from "../Field";
+import { SettingsField, TextInput } from "../SettingsField";
 import { DragGrip } from "../DragGrip";
 import { useReorder } from "../../../hooks/useReorder";
 import { SegmentedControl } from "../../shared/SegmentedControl";
@@ -90,23 +90,23 @@ export function MenuLinkEditor({
             </span>
           </div>
 
-          <Field label="Label">
+          <SettingsField label="Label">
             <TextInput value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. About" />
-          </Field>
+          </SettingsField>
 
           {type === "link" && (
-            <Field label="URL" hint="An internal path (/page/about) or a full URL.">
+            <SettingsField label="URL" hint="An internal path (/page/about) or a full URL.">
               <TextInput value={url} onChange={(e) => setUrl(e.target.value)} placeholder="/page/about" />
-            </Field>
+            </SettingsField>
           )}
 
           {type === "group" && (
             <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
               <div className="flex items-center justify-between gap-2 mb-3">
                 <h3 className="text-sm font-semibold text-ink">Sub-links</h3>
-                <Button variant="secondary" size="sm" icon={<Plus size={14} />} onClick={addSubLink}>
+                <SettingsButton variant="secondary" size="sm" icon={<Plus size={14} />} onClick={addSubLink}>
                   Add sub-link
-                </Button>
+                </SettingsButton>
               </div>
 
               <ul data-part="sub-links" className="flex flex-col rounded-md overflow-hidden" style={{ border: "1px solid var(--border-soft)" }}>
@@ -124,12 +124,12 @@ export function MenuLinkEditor({
                       <div className="flex justify-center pb-2.5">
                         <DragGrip {...gripProps(i)} />
                       </div>
-                      <Field label="Title">
+                      <SettingsField label="Title">
                         <TextInput value={s.title} onChange={(e) => patchSubLink(s.id, { title: e.target.value })} placeholder="e.g. Methodology" />
-                      </Field>
-                      <Field label="URL">
+                      </SettingsField>
+                      <SettingsField label="URL">
                         <TextInput value={s.url} onChange={(e) => patchSubLink(s.id, { url: e.target.value })} placeholder="/page/methodology" />
-                      </Field>
+                      </SettingsField>
                       <div className="flex justify-end pb-1.5">
                         <RowActions label={s.title || "sub-link"} onDelete={() => deleteSubLink(s.id)} />
                       </div>
@@ -142,10 +142,10 @@ export function MenuLinkEditor({
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-        <Button variant="success" size="sm" disabled={!dirty || !title} onClick={save}>
+        <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
+        <SettingsButton variant="success" size="sm" disabled={!dirty || !title} onClick={save}>
           {isNew ? "Add item" : "Save"}
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
     </SettingsContent>
   );

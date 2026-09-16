@@ -1,8 +1,8 @@
 import { useState, type ReactNode } from "react";
 import { useSetAtom } from "jotai";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Field, TextInput } from "../Field";
+import { SettingsButton } from "../SettingsButton";
+import { SettingsField, TextInput } from "../SettingsField";
 import { Checkbox } from "../../shared/Checkbox";
 import { SegmentedControl } from "../../shared/SegmentedControl";
 import { type SettingsPage } from "../../../data/settings";
@@ -125,12 +125,12 @@ export function PageEditor({
       <SettingsContent.Header path={["Pages"]} title={isNew ? "New page" : base!.title} onBack={onClose} />
       <SettingsContent.Body className="flex flex-col min-h-0">
         <section className="grid sm:grid-cols-2 gap-3 mb-4">
-          <Field label="Title">
+          <SettingsField label="Title">
             <TextInput value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Methodology" />
-          </Field>
-          <Field label="URL slug" hint={`/page/${slug || "…"}`}>
+          </SettingsField>
+          <SettingsField label="URL slug" hint={`/page/${slug || "…"}`}>
             <TextInput value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="methodology" />
-          </Field>
+          </SettingsField>
         </section>
 
         <label className="flex items-center gap-2.5 mb-4 cursor-pointer w-fit">
@@ -174,10 +174,10 @@ export function PageEditor({
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-        <Button variant="success" size="sm" disabled={!dirty || !title} onClick={save}>
+        <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
+        <SettingsButton variant="success" size="sm" disabled={!dirty || !title} onClick={save}>
           {isNew ? "Create page" : "Save"}
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
     </SettingsContent>
   );

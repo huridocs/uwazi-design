@@ -2,10 +2,10 @@ import { useMemo, useState } from "react";
 import { useSetAtom } from "jotai";
 import { Sparkles, Check, X } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Field, TextInput } from "../Field";
+import { SettingsButton } from "../SettingsButton";
+import { SettingsField, TextInput } from "../SettingsField";
 import { Select } from "../../shared/Select";
-import { Table, type Column } from "../Table";
+import { SettingsTable, type Column } from "../SettingsTable";
 import { seedTemplates, type SettingsExtractor } from "../../../data/settings";
 import { toastsAtom } from "../../../atoms/references";
 
@@ -214,15 +214,15 @@ export function ExtractorEditor({
         <div className="flex flex-col gap-6">
           {/* Config */}
           <section className="grid sm:grid-cols-3 gap-3">
-            <Field label="Template">
+            <SettingsField label="Template">
               <Select value={template} options={TEMPLATE_OPTIONS} onChange={setTemplate} ariaLabel="Template" />
-            </Field>
-            <Field label="Property" hint="The metadata property to suggest values for.">
+            </SettingsField>
+            <SettingsField label="Property" hint="The metadata property to suggest values for.">
               <TextInput value={property} onChange={(e) => setProperty(e.target.value)} placeholder="e.g. Date filed" />
-            </Field>
-            <Field label="Property type">
+            </SettingsField>
+            <SettingsField label="Property type">
               <Select value={propType} options={TYPE_OPTIONS} onChange={setPropType} ariaLabel="Property type" />
-            </Field>
+            </SettingsField>
           </section>
 
           {/* Stats + train */}
@@ -235,9 +235,9 @@ export function ExtractorEditor({
                   <Stat label="Pending" value={pending} />
                   <Stat label="Accuracy" value={accuracy === null ? "—" : `${accuracy}%`} />
                 </dl>
-                <Button variant="primary" size="sm" icon={<Sparkles size={14} />} onClick={findSuggestions}>
+                <SettingsButton variant="primary" size="sm" icon={<Sparkles size={14} />} onClick={findSuggestions}>
                   Find suggestions
-                </Button>
+                </SettingsButton>
               </div>
 
               {/* Review table */}
@@ -247,7 +247,7 @@ export function ExtractorEditor({
                 </h3>
                 <div className="flex items-center gap-2">
                   <Select value={filter} options={FILTERS} onChange={setFilter} ariaLabel="Filter suggestions" />
-                  <Button
+                  <SettingsButton
                     variant="secondary"
                     size="sm"
                     icon={<Check size={14} />}
@@ -255,19 +255,19 @@ export function ExtractorEditor({
                     disabled={!rows.some((r) => r.state !== "accepted")}
                   >
                     Accept all
-                  </Button>
+                  </SettingsButton>
                 </div>
               </div>
-              <Table columns={columns} data={visible} getRowId={(r) => r.id} emptyState="No suggestions in this view." />
+              <SettingsTable columns={columns} data={visible} getRowId={(r) => r.id} emptyState="No suggestions in this view." />
             </section>
           )}
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-        <Button variant="success" size="sm" disabled={!dirty || !property} onClick={save}>
+        <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
+        <SettingsButton variant="success" size="sm" disabled={!dirty || !property} onClick={save}>
           {isNew ? "Create extractor" : "Save"}
-        </Button>
+        </SettingsButton>
       </SettingsContent.Footer>
     </SettingsContent>
   );
