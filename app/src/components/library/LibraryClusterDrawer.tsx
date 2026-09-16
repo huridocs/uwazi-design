@@ -45,10 +45,11 @@ export function LibraryClusterDrawer() {
         </button>
       </div>
 
-      <div className="flex-1 overflow-auto p-3 flex flex-col gap-2">
+      <ul className="flex-1 overflow-auto p-3 flex flex-col gap-2">
         {ents.map((e) => (
           <EntityCard
             key={e.id}
+            as="li"
             entity={e}
             layout="list"
             query={query}
@@ -57,7 +58,7 @@ export function LibraryClusterDrawer() {
             onView={() => openEntity(e.id)}
           />
         ))}
-      </div>
+      </ul>
     </div>
   );
 }

@@ -925,10 +925,11 @@ export function LibraryView() {
             No entities match your filters.
           </div>
         ) : viewMode === "cards" ? (
-          <div className={`grid ${cardGridCols} gap-3`}>
+          <ul className={`grid ${cardGridCols} gap-3`}>
             {shown.map((e) => (
               <EntityCard
                 key={e.id}
+                as="li"
                 entity={e}
                 layout="cards"
                 query={query}
@@ -941,7 +942,7 @@ export function LibraryView() {
                 metadataTrack={metadataTrack}
               />
             ))}
-          </div>
+          </ul>
         ) : tableColumns.length === 0 ? (
           // Every column can be switched off, so "none of them" is a state the
           // table can be in — and an empty grid is not a thing to render. It

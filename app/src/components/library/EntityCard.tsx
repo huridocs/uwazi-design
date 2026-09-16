@@ -142,6 +142,7 @@ export const EntityCard = memo(function EntityCard({
   onFocusProperty,
   onOpenImage,
   metadataTrack = true,
+  as: Root = "article",
 }: {
   entity: Entity;
   layout: LibraryViewMode;
@@ -166,6 +167,13 @@ export const EntityCard = memo(function EntityCard({
   /** Whether the grid draws a metadata track AT ALL — one answer for every card
    *  on screen, computed by the view. See the track comment below. */
   metadataTrack?: boolean;
+  /** The card's own element. A card is an `article` — a self-contained entity
+   *  record — EXCEPT where it is one item of a list, and then it is the `li`
+   *  itself rather than sitting inside one: in the grid the card IS the subgrid
+   *  item, so a wrapper `li` would take the row tracks and the cards would stop
+   *  sharing them. The three list hosts pass `li`; the template preview renders
+   *  a lone inert card and keeps the default. */
+  as?: "article" | "li";
 }) {
   const language = useAtomValue(languageAtom);
   const sort = useAtomValue(librarySortAtom);
@@ -271,6 +279,7 @@ export const EntityCard = memo(function EntityCard({
         e.stopPropagation();
         onSelect(entity.id);
       }}
+      data-part="primary-action"
       className="absolute inset-0 w-full cursor-pointer rounded-[inherit] focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"
     />
   );
@@ -284,7 +293,12 @@ export const EntityCard = memo(function EntityCard({
     // dot — so rows always align and carry the entity colour without
     // repeating a pill per row.
     return (
-      <div onClick={() => onSelect(entity.id)} className={`${base} ${surface} w-full`}>
+      <Root
+        data-component="EntityCard"
+        data-layout="list"
+        onClick={() => onSelect(entity.id)}
+        className={`${base} ${surface} w-full`}
+      >
         {primaryAction}
         <div className="relative px-3 py-2 flex items-center gap-3">
           {showPreview &&
@@ -329,7 +343,7 @@ export const EntityCard = memo(function EntityCard({
             {viewButton}
           </div>
         </div>
-      </div>
+      </Root>
     );
   }
 
@@ -367,7 +381,9 @@ export const EntityCard = memo(function EntityCard({
     // positioned layer, so a STATIC sibling would paint underneath it and the
     // nested Open button would stop taking clicks. Positioned siblings at
     // `z-index: auto` paint in DOM order, and the rows come after.
-    <div
+    <Root
+      data-component="EntityCard"
+      data-layout="cards"
       onClick={() => onSelect(entity.id)}
       className={`${base} ${surface} ${minHeight} grid grid-rows-subgrid ${ROW_SPAN[rowCount]} gap-y-2.5 p-3`}
     >
@@ -382,7 +398,7 @@ export const EntityCard = memo(function EntityCard({
           picture fills it. The no-preview well takes the same box, so empty
           slots and pictures agree on both height and position. */}
       {showPreview && (
-        <span className={`relative min-w-0 shrink-0 w-full ${slotShape}`}>
+        <span data-part="preview" className={`relative min-w-0 shrink-0 w-full ${slotShape}`}>
           {entity.preview ? (
             enlargeable ? (
               /* The picture opens full size, WITHOUT becoming the card's main
@@ -467,6 +483,7 @@ export const EntityCard = memo(function EntityCard({
           each card is back to sizing itself and a reserved line is the only
           thing holding a row level. */}
       <span
+        data-part="title"
         className="relative min-w-0 text-sm font-semibold text-ink leading-snug line-clamp-2
           not-supports-[grid-template-rows:subgrid]:min-h-[2.375rem]"
       >
@@ -502,19 +519,23 @@ export const EntityCard = memo(function EntityCard({
 
            It also makes the card and the record say a field name the same way,
            which they did not before. */
-        <div className="relative min-w-0 space-y-2">
+        /* A record's label/value pairs ARE a description list: `dl` with one
+           `dt`/`dd` per property, so the pairing is in the markup and not only
+           in the spacing. The `div` wrapper per pair is valid inside a `dl` and
+           is what keeps label and value locked together. */
+        <dl data-part="metadata" className="relative min-w-0 space-y-2">
           {fields.map((f) => (
             <div key={f.id} className="min-w-0">
-              <span className="block text-meta font-semibold uppercase tracking-wider text-ink-tertiary leading-tight">
+              <dt className="block text-meta font-semibold uppercase tracking-wider text-ink-tertiary leading-tight">
                 {f.label}
-              </span>
+              </dt>
               {/* Exactly ONE line per field, always. `truncate` rather than
                   `line-clamp-1` because the old `block line-clamp-1` pair fought
                   over `display` (block won) and the clamp silently never
                   applied — which is how three-line values reached the grid. The
                   "+N more" is a shrink-0 sibling, so it survives the ellipsis
                   instead of being cut off inside it. */}
-              <span
+              <dd
                 className={`flex items-baseline gap-1 min-w-0 text-xs text-ink leading-snug ${sortMark(f.id === sortedId)}`}
                 title={f.id === sortedId ? sortedNote : undefined}
               >
@@ -544,7 +565,7 @@ export const EntityCard = memo(function EntityCard({
                 {!!f.more && !ownsItsRemainder(f) && (
                   <span className="shrink-0 text-meta text-ink-tertiary">+{f.more} more</span>
                 )}
-              </span>
+              </dd>
             </div>
           ))}
 
@@ -583,14 +604,17 @@ export const EntityCard = memo(function EntityCard({
               ))}
             </div>
           )}
-        </div>
+        </dl>
       )}
 
       {/* The footer is its own row track, so it lands on one line across the
           whole grid row without `mt-auto` pushing it there — and `self-end`
           keeps it on the track's bottom edge in the fallback, where the track
           may be taller than the footer. */}
-      <div className="relative min-w-0 self-end flex items-center justify-between gap-2 pt-1">
+      <div
+        data-part="footer"
+        className="relative min-w-0 self-end flex items-center justify-between gap-2 pt-1"
+      >
         <span className={sortMark(sort === "type")} title={sort === "type" ? sortedNote : undefined}>
           <EntityTypeTag typeId={entity.typeId} />
         </span>
@@ -622,6 +646,6 @@ export const EntityCard = memo(function EntityCard({
           {viewButton}
         </div>
       </div>
-    </div>
+    </Root>
   );
 });

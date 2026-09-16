@@ -306,10 +306,11 @@ function TrackedList({
               className="pb-4"
             >
               <PeriodHeader bucket={g} active={activeKey === g.key} />
-              <div className="space-y-1.5 pt-1.5">
+              <ul className="space-y-1.5 pt-1.5">
                 {shown.map((e) => (
                   <EntityCard
                     key={e.id}
+                    as="li"
                     entity={e}
                     layout="list"
                     query={query}
@@ -319,7 +320,7 @@ function TrackedList({
                     onView={onView}
                   />
                 ))}
-              </div>
+              </ul>
               {g.entities.length > GROUP_CAP && (
                 <button
                   onClick={() => setOpenGroups((s) => ({ ...s, [g.key]: !s[g.key] }))}
