@@ -138,9 +138,10 @@ export const ResultsBody = memo(function ResultsBody({
         <Centered>
           {cejilError ? (
             <>
-              <span className="text-sm text-ink-muted">Couldn’t load the CEJIL collection.</span>
+              <span role="alert" className="text-sm text-ink-muted">Couldn’t load the CEJIL collection.</span>
               <button
                 type="button"
+                data-part="retry"
                 onClick={onRetry}
                 className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment
                   hover:text-ink rounded-md transition-colors cursor-pointer"
@@ -150,8 +151,8 @@ export const ResultsBody = memo(function ResultsBody({
             </>
           ) : (
             <>
-              <span className="w-5 h-5 rounded-full border-2 border-border border-t-carbon animate-spin" />
-              <span className="text-sm text-ink-muted">Loading the full CEJIL collection…</span>
+              <span aria-hidden className="w-5 h-5 rounded-full border-2 border-border border-t-carbon animate-spin" />
+              <span role="status" className="text-sm text-ink-muted">Loading the full CEJIL collection…</span>
             </>
           )}
         </Centered>
@@ -186,6 +187,7 @@ export const ResultsBody = memo(function ResultsBody({
           </span>
           <button
             type="button"
+            data-part="clear-search"
             onClick={onClearSearch}
             className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment
               hover:text-ink rounded-md transition-colors cursor-pointer"
@@ -201,7 +203,7 @@ export const ResultsBody = memo(function ResultsBody({
     <Shell>
       {/* Hosted by the Library drawer (a gutter host): the header's rule spans the
           panel (`bleed`), and nothing in it carries side padding of its own. */}
-      <div className="bleed shrink-0" style={{ borderBottom: "1px solid var(--border-primary)" }}>
+      <header data-part="header" className="bleed shrink-0" style={{ borderBottom: "1px solid var(--border-primary)" }}>
         {/* Match-type chips and the collapse controls on ONE row — the shared
             list-header shape. NO count and no search chip here: this drawer sits
             beside the toolbar masthead that already prints "N results for
@@ -240,6 +242,7 @@ export const ResultsBody = memo(function ResultsBody({
             reading the list below — so mounting it late shoved every card down.
             The height is reserved; only the contents toggle. */}
         <div
+          data-part="hidden-by-filters"
           aria-hidden={hiddenByFilters === 0}
           className={`pb-2 text-meta text-ink-tertiary ${
             hiddenByFilters === 0 ? "invisible" : ""
@@ -257,21 +260,24 @@ export const ResultsBody = memo(function ResultsBody({
             Clear filters
           </button>
         </div>
-      </div>
+      </header>
 
       {/* Block flow (space-y), NOT flex-col: the grouped cards are
           `overflow-hidden`, so in a flex column that overflows they'd shrink to
           their header height and clip their own content. Block flow keeps each
           card at its natural height and lets this container scroll. */}
-      <div className="bleed flex-1 overflow-auto py-3 space-y-2">
+      <div data-part="results" className="bleed flex-1 overflow-auto py-3 space-y-2">
         {entities.length === 0 && (
-          <p className="pt-2 text-xs text-ink-tertiary">
+          <p data-part="empty" className="pt-2 text-xs text-ink-tertiary">
             No results for the selected match types.
           </p>
         )}
+        {/* The list, and only the list: the empty line and "Show more" sit
+            beside it in the lane, since neither is a result. */}
+        <ul data-part="list" className="space-y-2">
         {rendered.map(({ entity, snippets }) => (
+          <li key={entity.id} data-part="result">
           <EntityResultCard
-            key={entity.id}
             entity={entity}
             snippets={snippets}
             query={trimmed}
@@ -286,11 +292,14 @@ export const ResultsBody = memo(function ResultsBody({
               setShowAllMap((m) => ({ ...m, [entity.id]: !m[entity.id] }))
             }
           />
+          </li>
         ))}
+        </ul>
         {visible < entities.length && (
           <div className="flex justify-center pt-1">
             <button
               type="button"
+              data-part="show-more"
               onClick={() => setVisible((n) => n + RESULTS_STEP)}
               className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm
                 hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
@@ -305,12 +314,12 @@ export const ResultsBody = memo(function ResultsBody({
 });
 
 function Shell({ children }: { children: ReactNode }) {
-  return <div className="flex flex-col h-full min-h-0 bg-warm">{children}</div>;
+  return <div data-component="ResultsBody" className="flex flex-col h-full min-h-0 bg-warm">{children}</div>;
 }
 
 function Centered({ children }: { children: ReactNode }) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-2 px-6 text-center">
+    <div data-part="blank" className="flex-1 flex flex-col items-center justify-center gap-2 px-6 text-center">
       {children}
     </div>
   );

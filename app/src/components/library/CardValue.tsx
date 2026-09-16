@@ -45,18 +45,19 @@ export function CardValue({
     const shown = field.values.slice(0, 3);
     const rest = field.more ?? 0;
     return (
-      <span className="flex items-center gap-1 min-w-0 overflow-hidden">
+      <span data-component="CardValue" data-kind="chips" className="flex items-center gap-1 min-w-0 overflow-hidden">
         {shown.map((v, i) => (
           <span
             key={`${v}-${i}`}
             title={v}
+            data-part="chip"
             className="shrink-0 max-w-[9rem] truncate rounded-md bg-warm px-1.5 py-px text-meta text-ink-secondary"
           >
             {marked(v)}
           </span>
         ))}
         {rest > shown.length - 1 && (
-          <span className="shrink-0 text-meta text-ink-tertiary">
+          <span data-part="more" className="shrink-0 text-meta text-ink-tertiary">
             +{rest - (shown.length - 1)}
           </span>
         )}
@@ -68,7 +69,7 @@ export function CardValue({
      wrapping: "1993–2002" broken across a line break is two years. */
   if (field.kind === "dateSpan" || field.kind === "date") {
     return (
-      <span className="truncate tabular-nums" title={field.value}>
+      <span data-component="CardValue" data-kind={field.kind} className="truncate tabular-nums" title={field.value}>
         {marked(field.value)}
       </span>
     );
@@ -79,14 +80,14 @@ export function CardValue({
      cards, and they are digits, not prose. */
   if (field.kind === "place") {
     return (
-      <span className="truncate font-mono text-meta tabular-nums" title={field.value}>
+      <span data-component="CardValue" data-kind="place" className="truncate font-mono text-meta tabular-nums" title={field.value}>
         {marked(field.value)}
       </span>
     );
   }
 
   return (
-    <span className="truncate" title={field.value}>
+    <span data-component="CardValue" data-kind={field.kind} className="truncate" title={field.value}>
       {marked(field.value)}
     </span>
   );

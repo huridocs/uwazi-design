@@ -73,6 +73,8 @@ export function EntityThumbnail({
     // list chip; sized against the box it reads the same at both.
     return (
       <div
+        data-component="EntityThumbnail"
+        data-kind="video"
         className={`flex items-center justify-center ${className}`}
         style={{ backgroundColor: "var(--text-primary)" }}
       >
@@ -80,8 +82,8 @@ export function EntityThumbnail({
             ratio, not by scale, and a width fraction that reads right in a 3:4
             box is half the height of the wide band. Height plus a cap holds one
             apparent size across both. */}
-        <span className="flex items-center justify-center h-[40%] min-h-6 max-h-16 aspect-square rounded-full bg-paper/90">
-          <Play className="w-[38%] h-[38%] text-ink ms-[6%]" fill="currentColor" />
+        <span data-part="puck" className="flex items-center justify-center h-[40%] min-h-6 max-h-16 aspect-square rounded-full bg-paper/90">
+          <Play aria-hidden className="w-[38%] h-[38%] text-ink ms-[6%]" fill="currentColor" />
         </span>
       </div>
     );
@@ -90,9 +92,10 @@ export function EntityThumbnail({
   // to the slot. The old 24px glyph in `ink-tertiary` was a grey speck adrift in
   // a portrait box, and said nothing about what the recording belonged to.
   return (
-    <div className={`flex items-center justify-center bg-warm ${className}`}>
-      <span className="flex items-center justify-center h-[38%] min-h-4 max-h-16 aspect-square">
+    <div data-component="EntityThumbnail" data-kind="audio" className={`flex items-center justify-center bg-warm ${className}`}>
+      <span data-part="waveform" className="flex items-center justify-center h-[38%] min-h-4 max-h-16 aspect-square">
         <AudioLines
+          aria-hidden
           className="w-full h-full"
           style={{ color: tint ?? "var(--text-tertiary)" }}
         />
@@ -124,12 +127,14 @@ export function EntityThumbnail({
 export function QuietMark({ tint, className = "" }: { tint?: string; className?: string }) {
   const color = tint ?? "#6B7280";
   return (
-    <span className={`bg-vellum flex items-center justify-center ${className}`}>
+    <span data-component="QuietMark" className={`bg-vellum flex items-center justify-center ${className}`}>
       <span
+        data-part="plaque"
         className="flex items-center justify-center h-[22%] min-h-4 max-h-8 aspect-square rounded-md"
         style={{ backgroundColor: `color-mix(in srgb, ${color} 9%, transparent)` }}
       >
         <span
+          data-part="dot"
           className="w-[42%] aspect-square rounded-[2px]"
           style={{ backgroundColor: color }}
         />
@@ -189,8 +194,8 @@ function ImageThumb({
   const [failed, setFailed] = useState(false);
   if (!image || failed) {
     return (
-      <div className={`flex items-center justify-center bg-carbon-tint ${className}`}>
-        <ImageIcon size={24} className="text-carbon/60" />
+      <div data-component="EntityThumbnail" data-kind="image" data-state="missing" className={`flex items-center justify-center bg-carbon-tint ${className}`}>
+        <ImageIcon size={24} aria-hidden className="text-carbon/60" />
       </div>
     );
   }
@@ -211,8 +216,14 @@ function ImageThumb({
   const taller =
     !matted && (image.aspect === "portrait" || (image.aspect === "square" && frame === "landscape"));
   return (
-    <div className={`flex items-center justify-center ${matted ? "bg-vellum" : ""} ${className}`}>
+    <div
+      data-component="EntityThumbnail"
+      data-kind="image"
+      data-fit={matted ? "contain" : "cover"}
+      className={`flex items-center justify-center ${matted ? "bg-vellum" : ""} ${className}`}
+    >
       <img
+        data-part="image"
         src={image.url}
         alt=""
         width={image.width}

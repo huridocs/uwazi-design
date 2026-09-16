@@ -255,7 +255,7 @@ export function LibraryFilters() {
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0 bg-warm">
+    <div data-component="LibraryFilters" className="flex flex-col h-full min-h-0 bg-warm">
       {/* No active-filter summary row here: the count rides as a BADGE on the
           "Filters" drawer tab, and "Clear" lives in this panel's footer. A row
           that mounts on first tick shoved every facet card down; reserving a
@@ -265,7 +265,7 @@ export function LibraryFilters() {
           block lines up with the first library card. */}
       {/* A scroll lane on the host's gutter (12px, the same edge as the entity
           preview that takes this drawer slot); `px-3.5` retired. */}
-      <div className="bleed flex-1 overflow-auto pt-3 pb-3 space-y-1.5">
+      <div data-part="facets" className="bleed flex-1 overflow-auto pt-3 pb-3 space-y-1.5">
         <FacetCard title="Status">
           <FacetRow
             checked={!!statusFilters.restricted}
@@ -308,7 +308,7 @@ export function LibraryFilters() {
                 const open = openGroups[node.name] ?? true;
                 const total = ids.reduce((s, id) => s + (typeCounts[id] ?? 0), 0);
                 return (
-                  <div key={node.name}>
+                  <div key={node.name} data-part="facet-group" role="group" aria-label={node.name}>
                     <FacetRow
                       checked={groupActive(ids)}
                       onToggle={() => toggleGroup(ids)}
@@ -418,19 +418,19 @@ export function LibraryFilters() {
         ))}
 
         {chainHasAny && (
-          <div className="space-y-1.5">
+          <section data-part="chain-group" className="space-y-1.5">
             {/* Chain-filter group: a relationship path the facets traverse. The
                 breadcrumb shows the full path; the segments these facets filter
                 are emphasised. Selections combine path-coupled. */}
-            <div className="px-1.5 pt-1 space-y-1">
-              <span className="block text-tab font-bold text-ink">
+            <header data-part="chain-header" className="px-1.5 pt-1 space-y-1">
+              <h2 className="block text-tab font-bold text-ink">
                 {chainDefs[0].groupLabel}
-              </span>
+              </h2>
               <p className="text-meta text-ink-tertiary leading-snug">
                 {chainDefs[0].groupDescription}
               </p>
               <ChainPathHelper defs={chainDefs} />
-            </div>
+            </header>
             {chainDefs.map((def) => (
               <KeywordFacetCard
                 key={def.key}
@@ -441,9 +441,10 @@ export function LibraryFilters() {
                 onClear={() => setChainFilters((s) => ({ ...s, [def.key]: {} }))}
                 sort="count"
                 hideWhenEmpty
+                headingLevel={3}
               />
             ))}
-          </div>
+          </section>
         )}
 
         {hasDates && (
@@ -471,7 +472,8 @@ export function LibraryFilters() {
       <ActiveFiltersSheet />
 
       {/* Footer — Collapse all / Expand all (left) + Clear (right). */}
-      <div
+      <footer
+        data-part="footer"
         /* `bg-paper`, like every other drawer footer (the entity preview's takes
            this same slot), so the footer meets the gutter. */
         className="bleed shrink-0 flex items-center gap-2 h-12 bg-paper"
@@ -480,25 +482,31 @@ export function LibraryFilters() {
         {/* The warm fill alone does not show on paper; `WARM_BUTTON` carries
             the edge every warm button on a paper bar shares. */}
         <button
+          type="button"
+          data-part="collapse-all"
           onClick={collapseAll}
           className={FOOTER_BUTTON}
         >
           Collapse all
         </button>
         <button
+          type="button"
+          data-part="expand-all"
           onClick={expandAll}
           className={FOOTER_BUTTON}
         >
           Expand all
         </button>
         <button
+          type="button"
+          data-part="clear"
           onClick={clearAll}
           disabled={activeFilterCount === 0}
           className={`ms-auto ${FOOTER_BUTTON} disabled:opacity-40 disabled:cursor-default disabled:hover:bg-warm disabled:hover:text-ink-secondary`}
         >
           Clear
         </button>
-      </div>
+      </footer>
     </div>
   );
 }
@@ -524,14 +532,14 @@ const FACET_CARD = "bg-paper rounded-lg p-1.5";
  *  Descriptores) carry, so every filter block reads as one titled system. */
 function FacetCard({ title, children }: { title?: string; children: ReactNode }) {
   return (
-    <div className={FACET_CARD}>
+    <section data-component="FacetCard" className={FACET_CARD}>
       {title && (
-        <div className="px-2 pt-1 pb-0.5">
-          <span className="text-tab font-bold text-ink">{title}</span>
-        </div>
+        <header data-part="header" className="px-2 pt-1 pb-0.5">
+          <h2 data-part="title" className="text-tab font-bold text-ink">{title}</h2>
+        </header>
       )}
       {children}
-    </div>
+    </section>
   );
 }
 
@@ -548,12 +556,13 @@ function ChainPathHelper({ defs }: { defs: ChainFacetDef[] }) {
     ...segments.map((s) => s.label ?? s.toTypeId ?? s.relationType),
   ];
   return (
-    <div className="flex items-center flex-wrap gap-x-0.5 gap-y-0.5">
-      <Link2 size={10} className="text-carbon shrink-0 me-0.5" />
+    <div data-component="ChainPathHelper" className="flex items-center flex-wrap gap-x-0.5 gap-y-0.5">
+      <Link2 size={10} aria-hidden className="text-carbon shrink-0 me-0.5" />
       {nodes.map((n, i) => (
-        <span key={i} className="inline-flex items-center">
-          {i > 0 && <ChevronRight size={10} className="text-ink-muted shrink-0" />}
+        <span key={i} data-part="node" className="inline-flex items-center">
+          {i > 0 && <ChevronRight size={10} aria-hidden className="text-ink-muted shrink-0" />}
           <span
+            data-state={facetIdx.has(i) ? "filtered" : undefined}
             className={`text-meta ${
               facetIdx.has(i) ? "font-semibold text-carbon" : "text-ink-tertiary"
             }`}
@@ -572,7 +581,7 @@ function ChainPathHelper({ defs }: { defs: ChainFacetDef[] }) {
  *  belong to the row above" and the child checkboxes form their own column. */
 function TreeChildren({ children }: { children: ReactNode }) {
   return (
-    <div className="relative ps-[2.375rem]">
+    <div data-component="TreeChildren" className="relative ps-[2.375rem]">
       {/* Slim group line in the parent's checkbox column (≈1.25rem). Child rows
           drop their own padding so their checkboxes align under the parent's
           LABEL (≈2.375rem) — mirroring the parent row one level in. */}
@@ -624,6 +633,8 @@ function FacetRow({
   // whatever the padding happens to add up to.
   return (
     <label
+      data-component="FacetRow"
+      data-state={checked ? "checked" : "unchecked"}
       className={`flex items-center rounded-md min-h-11 md:min-h-0 py-1 pe-2 cursor-pointer hover:bg-warm transition-colors ${
         child ? "ps-0" : expandable || reserveGutter ? "ps-0" : "ps-2"
       }`}
@@ -636,11 +647,14 @@ function FacetRow({
         <span className="shrink-0 w-3 me-0.5 flex items-center justify-start">
           {expandable && (
             <button
+              type="button"
+              data-part="expand"
               onClick={(e) => {
                 e.preventDefault();
                 onExpand?.();
               }}
-              aria-label={expanded ? "Collapse" : "Expand"}
+              aria-label={expanded ? `Collapse ${label}` : `Expand ${label}`}
+              aria-expanded={expanded}
               className="flex items-center justify-center text-ink-tertiary hover:text-ink cursor-pointer
                 focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30 rounded"
             >
@@ -656,9 +670,9 @@ function FacetRow({
       <Checkbox checked={checked} onChange={onToggle} ariaLabel={label} />
       <span className="flex-1 min-w-0 flex items-center gap-1.5 ms-2.5">
         {Icon && <Icon size={13} className="text-ink-tertiary shrink-0" />}
-        <span className={`truncate text-tab ${bold ? "text-ink" : "text-ink-secondary"}`}>{label}</span>
+        <span data-part="label" className={`truncate text-tab ${bold ? "text-ink" : "text-ink-secondary"}`}>{label}</span>
       </span>
-      <span className={`shrink-0 text-tab tabular-nums ${bold ? "font-bold text-ink" : "font-semibold text-ink-secondary"}`}>
+      <span data-part="count" className={`shrink-0 text-tab tabular-nums ${bold ? "font-bold text-ink" : "font-semibold text-ink-secondary"}`}>
         {count}
       </span>
     </label>
@@ -682,6 +696,7 @@ function KeywordFacetCard({
   onModeChange,
   sort,
   hideWhenEmpty = false,
+  headingLevel = 2,
 }: {
   title: string;
   counts: Map<string, number>;
@@ -692,7 +707,10 @@ function KeywordFacetCard({
   onModeChange?: (m: FacetMode) => void;
   sort: "alpha" | "count";
   hideWhenEmpty?: boolean;
+  /** 3 inside the chain-filter group, which carries its own `h2`. */
+  headingLevel?: 2 | 3;
 }) {
+  const Heading = headingLevel === 3 ? "h3" : "h2";
   const [search, setSearch] = useState("");
   const [showAll, setShowAll] = useState(false);
   const q = search.trim().toLowerCase();
@@ -718,12 +736,12 @@ function KeywordFacetCard({
   if (hideWhenEmpty && list.length === 0) return null;
 
   return (
-    <div className={`${FACET_CARD} space-y-1.5`}>
-      <div className="flex items-center justify-between gap-2 px-2 pt-1">
+    <section data-component="KeywordFacetCard" className={`${FACET_CARD} space-y-1.5`}>
+      <header data-part="header" className="flex items-center justify-between gap-2 px-2 pt-1">
         <span className="flex items-center gap-1.5 min-w-0">
-          <span className="text-tab font-bold text-ink truncate">{title}</span>
+          <Heading data-part="title" className="text-tab font-bold text-ink truncate">{title}</Heading>
           {selectedCount > 0 && (
-            <span className="shrink-0 inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-carbon/10 text-meta font-semibold text-carbon tabular-nums">
+            <span data-part="selected-count" className="shrink-0 inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-carbon/10 text-meta font-semibold text-carbon tabular-nums">
               {selectedCount}
             </span>
           )}
@@ -731,10 +749,13 @@ function KeywordFacetCard({
         <span className="flex items-center gap-1.5 shrink-0">
           {selectedCount > 0 && (
             <button
+              type="button"
+              data-part="clear"
               onClick={onClear}
+              aria-label={`Clear ${title}`}
               className="inline-flex items-center gap-0.5 text-meta text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
             >
-              <X size={11} />
+              <X size={11} aria-hidden />
               Clear
             </button>
           )}
@@ -746,9 +767,9 @@ function KeywordFacetCard({
             />
           )}
         </span>
-      </div>
+      </header>
 
-      <div className="px-1">
+      <div data-part="search" className="px-1">
         <div className="relative flex items-center gap-1.5 h-8 px-2 bg-warm border border-border rounded-md focus-within:ring-2 focus-within:ring-carbon/20 focus-within:border-carbon/40 transition-all">
           <input
             type="text"
@@ -760,6 +781,7 @@ function KeywordFacetCard({
           />
           {search ? (
             <button
+              type="button"
               onClick={() => setSearch("")}
               aria-label="Clear search"
               className="shrink-0 text-ink-muted hover:text-ink cursor-pointer"
@@ -772,7 +794,7 @@ function KeywordFacetCard({
         </div>
       </div>
 
-      <div className="max-h-64 overflow-auto">
+      <div data-part="options" className="max-h-64 overflow-auto">
         {visible.length === 0 ? (
           <p className="px-2 py-1 text-xs text-ink-muted">No matches.</p>
         ) : (
@@ -781,6 +803,8 @@ function KeywordFacetCard({
             return (
               <label
                 key={c}
+                data-part="option"
+                data-state={checked ? "checked" : "unchecked"}
                 className={`flex items-center gap-2.5 py-1 px-2 rounded-sm transition-colors cursor-pointer ${
                   checked ? "bg-carbon/[0.04] hover:bg-carbon/[0.07]" : "hover:bg-warm"
                 }`}
@@ -798,6 +822,8 @@ function KeywordFacetCard({
         )}
         {hidden > 0 && (
           <button
+            type="button"
+            data-part="load-more"
             onClick={() => setShowAll(true)}
             className="px-2 py-1 text-xs font-medium text-ink-secondary underline underline-offset-2 hover:text-ink transition-colors cursor-pointer"
           >
@@ -806,6 +832,8 @@ function KeywordFacetCard({
         )}
         {showAll && !q && matched.length > KEYWORD_CAP && (
           <button
+            type="button"
+            data-part="show-less"
             onClick={() => setShowAll(false)}
             className="px-2 py-1 text-xs font-medium text-ink-tertiary underline underline-offset-2 hover:text-ink transition-colors cursor-pointer"
           >
@@ -813,7 +841,7 @@ function KeywordFacetCard({
           </button>
         )}
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -845,11 +873,14 @@ function DateRangeCard({
 }) {
   const active = !!from || !!to;
   return (
-    <div className={`${FACET_CARD} space-y-1.5`}>
-      <div className="flex items-center justify-between gap-2 px-2 pt-1">
-        <span className="text-tab font-bold text-ink">Date</span>
+    <section data-component="DateRangeCard" className={`${FACET_CARD} space-y-1.5`}>
+      <header data-part="header" className="flex items-center justify-between gap-2 px-2 pt-1">
+        <h2 data-part="title" className="text-tab font-bold text-ink">Date</h2>
         {active && (
           <button
+            type="button"
+            data-part="clear"
+            aria-label="Clear date"
             onClick={onClear}
             className="inline-flex items-center gap-0.5 text-meta text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
           >
@@ -857,14 +888,17 @@ function DateRangeCard({
             Clear
           </button>
         )}
-      </div>
+      </header>
       {presets.length > 0 && (
-        <div className="px-1 flex flex-col gap-0.5">
+        <div data-part="presets" className="px-1 flex flex-col gap-0.5">
           {presets.map((p) => {
             const isActive = from === p.from && to === p.to;
             return (
               <button
+                type="button"
                 key={p.label}
+                data-part="preset"
+                aria-pressed={isActive}
                 onClick={() => (isActive ? onClear() : onSetRange(p.from, p.to))}
                 className={`flex items-center justify-between gap-2 px-1.5 py-1 rounded-sm text-tab transition-colors cursor-pointer ${
                   isActive ? "bg-carbon/[0.06] text-ink font-medium" : "text-ink-secondary hover:bg-warm"
@@ -879,12 +913,12 @@ function DateRangeCard({
           })}
         </div>
       )}
-      <div className="px-1 flex items-center gap-1.5">
+      <div data-part="range" className="px-1 flex items-center gap-1.5">
         <DateBox value={from} onChange={onFrom} ariaLabel="From date" />
-        <span className="text-ink-tertiary text-xs shrink-0">→</span>
+        <span aria-hidden className="text-ink-tertiary text-xs shrink-0">→</span>
         <DateBox value={to} onChange={onTo} ariaLabel="To date" />
       </div>
-    </div>
+    </section>
   );
 }
 

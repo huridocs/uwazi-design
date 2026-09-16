@@ -29,7 +29,7 @@ export function BorrowedDocLine({
   if (!from) return null;
   return (
     <ProvenanceLine inline label="from" className={className}>
-      <span className="truncate" title={`Passage from ${from.title}, a connected document`}>
+      <span data-part="document" className="truncate" title={`Passage from ${from.title}, a connected document`}>
         {from.title}
       </span>
     </ProvenanceLine>

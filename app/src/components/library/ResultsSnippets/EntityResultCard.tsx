@@ -64,14 +64,16 @@ export function EntityResultCard({
       expanded={expanded}
       onToggle={onToggle}
     >
-      <div className="flex flex-col gap-3 p-2">
+      <div data-component="EntityResultCard" className="flex flex-col gap-3 p-2">
         {hasMeta && (
-          <div className="flex flex-col gap-1.5">
+          <section data-part="properties" className="flex flex-col gap-1.5">
             <SectionLabel className="px-1">Properties</SectionLabel>
+            <ul className="flex flex-col gap-1.5">
             {snippets.metadata.map((group) => (
+              <li key={group.fieldKey} data-part="property">
               <button
-                key={group.fieldKey}
                 type="button"
+                data-part="focus-property"
                 onClick={() => onFocusProperty(entity.id, group.fieldKey)}
                 className="w-full text-start rounded-md px-2 py-1.5 bg-warm/50 hover:bg-parchment
                   transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1
@@ -79,17 +81,19 @@ export function EntityResultCard({
               >
                 <SectionLabel as="span">{group.field}</SectionLabel>
                 {group.texts.map((t, i) => (
-                  <span key={i} className="block text-sm text-ink leading-relaxed">
+                  <span key={i} data-part="excerpt" className="block text-sm text-ink leading-relaxed">
                     <HighlightedText text={t} query={query} />
                   </span>
                 ))}
               </button>
+              </li>
             ))}
-          </div>
+            </ul>
+          </section>
         )}
 
         {hasFullText && (
-          <div className="flex flex-col gap-1.5">
+          <section data-part="document" className="flex flex-col gap-1.5">
             {/* The label is mounted whether or not the document is borrowed, so
                 the attribution rides it rather than taking a line the spine
                 below would have to move for. */}
@@ -107,7 +111,7 @@ export function EntityResultCard({
                 (`fullTextTotal`), so the card never passes its cap off as the
                 whole document. Indented to the spine's text column. */}
             {canShowAll && (
-              <p dir="ltr" className="ps-4 px-2 text-meta text-ink-tertiary">
+              <p dir="ltr" data-part="page-count" className="ps-4 px-2 text-meta text-ink-tertiary">
                 <span className="tabular-nums">
                   {shown.toLocaleString()} of {total.toLocaleString()}
                 </span>{" "}
@@ -115,6 +119,7 @@ export function EntityResultCard({
                 <span className="mx-1 text-ink-muted">·</span>
                 <button
                   type="button"
+                  data-part="show-all"
                   onClick={onToggleFullText}
                   aria-expanded={showAllFullText}
                   className="font-medium text-carbon hover:underline cursor-pointer
@@ -124,7 +129,7 @@ export function EntityResultCard({
                 </button>
               </p>
             )}
-          </div>
+          </section>
         )}
       </div>
     </RelationshipGroupedCard>

@@ -339,10 +339,12 @@ export function TimeSpine<T>({
   if (!rows.length) return null;
 
   return (
-    <div className="relative" style={{ height }}>
+    <div data-component="TimeSpine" className="relative" style={{ height }}>
       {/* Axis — right rail (inline-end), where the document's reference minimap
           sits and where the Rail and Density tracks put theirs. */}
       <div
+        data-part="axis"
+        aria-hidden
         className="absolute top-0 bottom-0"
         style={{
           insetInlineEnd: AXIS_GUTTER,
@@ -353,6 +355,8 @@ export function TimeSpine<T>({
       {years.map((y) => (
         <div
           key={`${y.label}-${y.y}`}
+          data-part="year"
+          aria-hidden
           className="absolute flex items-center gap-1 -translate-y-1/2"
           style={{ top: y.y, insetInlineEnd: 0 }}
         >
@@ -389,6 +393,7 @@ export function TimeSpine<T>({
       {gaps.map((g, i) => (
         <div
           key={`gap-${i}-${g.y}`}
+          data-part="gap"
           className="absolute flex items-center gap-2 ps-2 pointer-events-none -translate-y-1/2"
           style={{ top: g.y, insetInlineStart: 0, insetInlineEnd: AXIS_GUTTER + LEADER_W }}
         >
@@ -428,6 +433,7 @@ export function TimeSpine<T>({
       {rows.map(({ row, y }) => (
         <div
           key={row.key}
+          data-part="row"
           className="absolute"
           style={{
             top: y - rowHeight / 2 + 1,
@@ -505,6 +511,7 @@ function ClusterLeader<T>({
 
   return (
     <svg
+      data-part={many ? "cluster" : "instant"}
       className="absolute pointer-events-none"
       style={{
         insetInlineEnd: axisGutter - 4,
@@ -591,8 +598,12 @@ function ClusterLeader<T>({
  *  the dot it belongs to. */
 export function SpineDate({ t }: { t: number }) {
   return (
-    <span className="shrink-0 w-[5.5rem] text-meta tabular-nums text-ink-tertiary">
+    <time
+      data-component="SpineDate"
+      dateTime={Number.isFinite(t) ? new Date(t).toISOString().slice(0, 10) : undefined}
+      className="shrink-0 w-[5.5rem] text-meta tabular-nums text-ink-tertiary"
+    >
       <bdi dir="ltr">{formatDay(t)}</bdi>
-    </span>
+    </time>
   );
 }

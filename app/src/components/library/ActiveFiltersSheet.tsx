@@ -35,23 +35,30 @@ export function ActiveFiltersSheet() {
   if (count === 0) return null;
 
   return (
-    <div
+    <section
+      data-component="ActiveFiltersSheet"
+      data-state={open ? "open" : "closed"}
+      aria-label="Active filters"
       className="bleed shrink-0 bg-paper animate-fade-in-up"
       style={{ borderTop: "1px solid var(--border-primary)" }}
     >
-      <div className="flex items-center gap-2 h-9">
+      <header data-part="header" className="flex items-center gap-2 h-9">
         <button
+          type="button"
+          data-part="toggle"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
           className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-wide
             text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
         >
           <ChevronDown
+            aria-hidden
             size={13}
             className={`transition-transform ${open ? "" : "-rotate-90"}`}
           />
           Active filters
           <span
+            data-part="count"
             className="inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full text-meta tabular-nums"
             style={{ backgroundColor: "var(--bg-muted)", color: "var(--text-secondary)" }}
           >
@@ -59,16 +66,18 @@ export function ActiveFiltersSheet() {
           </span>
         </button>
         <button
+          type="button"
+          data-part="clear-all"
           onClick={() => clearAll()}
           className="ms-auto px-2 h-6 text-meta font-medium rounded-md text-ink-tertiary
             hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
         >
           Clear all
         </button>
-      </div>
+      </header>
 
       {open && (
-        <div className="h-16 overflow-y-auto pb-3 flex flex-wrap gap-1.5">
+        <div data-part="chips" className="h-16 overflow-y-auto pb-3 flex flex-wrap gap-1.5">
           {items.map((it) => (
             <ActiveFilterChip
               key={it.id}
@@ -79,6 +88,6 @@ export function ActiveFiltersSheet() {
           ))}
         </div>
       )}
-    </div>
+    </section>
   );
 }

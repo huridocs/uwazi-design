@@ -264,13 +264,13 @@ export function ResultsMainView({
       <Centered>
         {cejilError ? (
           <>
-            <span className="text-sm text-ink-muted">Couldn’t load the CEJIL collection.</span>
+            <span role="alert" className="text-sm text-ink-muted">Couldn’t load the CEJIL collection.</span>
             <WarmButton onClick={onRetry}>Retry</WarmButton>
           </>
         ) : (
           <>
-            <span className="w-5 h-5 rounded-full border-2 border-border border-t-carbon animate-spin" />
-            <span className="text-sm text-ink-muted">Loading the full CEJIL collection…</span>
+            <span aria-hidden className="w-5 h-5 rounded-full border-2 border-border border-t-carbon animate-spin" />
+            <span role="status" className="text-sm text-ink-muted">Loading the full CEJIL collection…</span>
           </>
         )}
       </Centered>
@@ -305,14 +305,14 @@ export function ResultsMainView({
   const capped = entities.length > results.length + (entities.length - visible);
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <div data-component="ResultsMainView" data-layout={layout} className="flex flex-col h-full min-h-0">
       {/* Header strip — always mounted; only its contents change. Match-type
           chips and the cap note ride the shared list-header shape so this
           surface and the drawer's Results tab read as one component at two
           widths. NO count here: "N results for [chip]" lives in the toolbar
           masthead — the one place this surface's number is printed — and a
           second copy a line below it was the scatter this row used to be. */}
-      <div className="shrink-0">
+      <header data-part="header" className="shrink-0">
         <ListInfoRow
           count={null}
           activeFilterCount={0}
@@ -339,6 +339,7 @@ export function ResultsMainView({
             appears and vanishes as facets are ticked, exactly while the results
             below are being read. */}
         <p
+          data-part="hidden-by-filters"
           aria-hidden={hiddenByFilters === 0}
           className={`pb-2 text-meta text-ink-tertiary ${
             hiddenByFilters === 0 ? "invisible" : ""
@@ -356,13 +357,13 @@ export function ResultsMainView({
             Clear filters
           </button>
         </p>
-      </div>
+      </header>
 
       {/* Hosted by the Library main pane (a gutter host): the card lane is a
           `bleed` scroll lane, so its scrollbar sits at the pane edge. */}
-      <div ref={bodyRef} className="@container bleed flex-1 min-h-0 overflow-auto">
+      <div ref={bodyRef} data-part="results" className="@container bleed flex-1 min-h-0 overflow-auto">
         {entities.length === 0 ? (
-          <p className="pt-6 text-center text-xs text-ink-tertiary">
+          <p data-part="empty" className="pt-6 text-center text-xs text-ink-tertiary">
             No results for the selected match types.
           </p>
         ) : layout === "grouped" ? (
@@ -405,14 +406,14 @@ export function ResultsMainView({
         )}
 
         {visible < entities.length && (
-          <div className="flex justify-center py-4">
+          <div data-part="show-more" className="flex justify-center py-4">
             <WarmButton onClick={() => setVisible((n) => n + STEP)}>
               Show more — {(entities.length - visible).toLocaleString()} remaining
             </WarmButton>
           </div>
         )}
         {capped && visible >= entities.length && (
-          <p className="py-4 text-center text-meta text-ink-muted">
+          <p data-part="end" className="py-4 text-center text-meta text-ink-muted">
             Showing every result for this query.
           </p>
         )}
@@ -448,7 +449,7 @@ function GroupedBody({
   onToggleShowAll: (id: string) => void;
 }) {
   return (
-    <div className="flex flex-col gap-2.5 pb-2">
+    <ul data-part="grouped" className="flex flex-col gap-2.5 pb-2">
       {results.map(({ entity, snippets }) => {
         const type = getEntityType(entity.typeId);
         const selected = selectedId === entity.id;
@@ -457,18 +458,25 @@ function GroupedBody({
         const hasText = snippets.fullText.length > 0;
         const expanded = !!showAll[entity.id];
         return (
-          <article
+          // The card IS the list item, as EntityCard's is.
+          <li
             key={entity.id}
+            data-part="result"
+            data-state={selected ? "selected" : undefined}
             className={`relative rounded-md border transition-colors ${
               selected ? "bg-parchment border-border" : "bg-paper border-border/60"
             }`}
           >
             <header
+              data-part="result-header"
               className={`flex items-center gap-2 px-4 py-2.5 ${
                 hasMeta || hasText ? "border-b border-border/40" : ""
               }`}
             >
               <EntityTypeChip typeId={entity.typeId} />
+              {/* The heading is a flex box so the button inside it keeps
+                  shrinking and truncating exactly as it did as a direct child. */}
+              <h2 data-part="title" className="flex min-w-0">
               <button
                 type="button"
                 onClick={() => onSelect(entity.id)}
@@ -479,8 +487,9 @@ function GroupedBody({
               >
                 <HighlightedText text={entity.title} query={query} />
               </button>
+              </h2>
               <CountBadge count={snippets.count} />
-              <span className="ms-auto shrink-0 flex items-center gap-2 text-meta text-ink-tertiary">
+              <span data-part="facts" className="ms-auto shrink-0 flex items-center gap-2 text-meta text-ink-tertiary">
                 {type && <span>{type.name}</span>}
                 {entity.country && (
                   <>
@@ -511,23 +520,24 @@ function GroupedBody({
                 }`}
               >
                 {hasMeta && (
-                  <section className={hasText ? "" : "max-w-[70ch]"}>
+                  <section data-part="properties" className={hasText ? "" : "max-w-[70ch]"}>
                     <SectionLabel icon={<Tag size={11} />}>Properties</SectionLabel>
-                    <div className="mt-1.5 flex flex-col gap-1">
+                    <ul className="mt-1.5 flex flex-col gap-1">
                       {props.map((group) => (
+                        <li key={group.fieldKey}>
                         <PropertyRow
-                          key={group.fieldKey}
                           group={group}
                           query={query}
                           onClick={() => onFocusProperty(entity.id, group.fieldKey)}
                         />
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   </section>
                 )}
 
                 {hasText && (
-                  <section className={hasMeta ? "" : "max-w-[80ch]"}>
+                  <section data-part="document" className={hasMeta ? "" : "max-w-[80ch]"}>
                     <SectionLabel icon={<FileText size={11} />}>
                       Document
                       <PageCount shown={snippets.fullText.length} total={snippets.fullTextTotal} />
@@ -540,17 +550,18 @@ function GroupedBody({
                           it attributes. */}
                       <BorrowedDocLine from={snippets.borrowedFrom} className="min-w-0" />
                     </SectionLabel>
-                    <div className="mt-1.5 flex flex-col gap-1">
+                    <ul className="mt-1.5 flex flex-col gap-1">
                       {snippets.fullText.map((s, i) => (
+                        <li key={i}>
                         <PassageRow
-                          key={i}
                           snippet={s}
                           query={query}
                           entityId={entity.id}
                           onSelectSnippet={onSelectSnippet}
                         />
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                     {/* The card already PRINTS the honest total beside the
                         section label; without this it stated a number it gave
                         you no way to reach. Same contract as the drawer's
@@ -560,6 +571,7 @@ function GroupedBody({
                       expanded) && (
                       <button
                         type="button"
+                        data-part="show-all"
                         onClick={() => onToggleShowAll(entity.id)}
                         aria-expanded={expanded}
                         className="mt-1 self-start px-1 text-meta font-medium text-carbon
@@ -575,10 +587,10 @@ function GroupedBody({
                 )}
               </div>
             )}
-          </article>
+          </li>
         );
       })}
-    </div>
+    </ul>
   );
 }
 
@@ -603,7 +615,7 @@ function TreeBody({
   twoUp: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-1.5 pb-2">
+    <ul data-part="tree" className="flex flex-col gap-1.5 pb-2">
       {results.map(({ entity, snippets }) => {
         const color = getEntityType(entity.typeId)?.color ?? "#6B7280";
         const props = properties(snippets);
@@ -611,8 +623,8 @@ function TreeBody({
         return (
           // The shared grouped-card shell in `standalone` mode — off the
           // relationships panel's expand/collapse globals entirely.
+          <li key={entity.id} data-part="result">
           <RelationshipGroupedCard
-            key={entity.id}
             title={entity.title}
             highlight={query}
             color={color}
@@ -622,7 +634,7 @@ function TreeBody({
           >
             <div className="flex flex-col">
               {bare && (
-                <p className="px-4 py-2 text-xs text-ink-muted">
+                <p data-part="title-only" className="px-4 py-2 text-xs text-ink-muted">
                   Matched in the title — nothing else.
                 </p>
               )}
@@ -635,9 +647,10 @@ function TreeBody({
                   icon={<Tag size={11} className="text-ink-muted" />}
                 >
                   {group.texts.map((t, i) => (
+                    <li key={i}>
                     <button
-                      key={i}
                       type="button"
+                      data-part="leaf"
                       onClick={() => onFocusProperty(entity.id, group.fieldKey)}
                       className="w-full text-start rounded-md px-2 py-1 text-sm text-ink leading-relaxed
                         hover:bg-warm transition-colors cursor-pointer focus-visible:outline-none
@@ -645,6 +658,7 @@ function TreeBody({
                     >
                       <HighlightedText text={t} query={query} />
                     </button>
+                    </li>
                   ))}
                 </TreeBranch>
               ))}
@@ -665,21 +679,23 @@ function TreeBody({
                   trailing={<BorrowedDocLine from={snippets.borrowedFrom} />}
                 >
                   {snippets.fullText.map((s, i) => (
+                    <li key={i}>
                     <PassageRow
-                      key={i}
                       snippet={s}
                       query={query}
                       entityId={entity.id}
                       onSelectSnippet={onSelectSnippet}
                     />
+                    </li>
                   ))}
                 </TreeBranch>
               )}
             </div>
           </RelationshipGroupedCard>
+          </li>
         );
       })}
-    </div>
+    </ul>
   );
 }
 
@@ -707,9 +723,10 @@ function TreeBranch({
 }) {
   const [open, setOpen] = useState(true);
   return (
-    <div className="px-3 py-1.5">
+    <div data-component="TreeBranch" data-state={open ? "open" : "closed"} className="px-3 py-1.5">
       <button
         type="button"
+        data-part="toggle"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         className="flex items-center gap-1.5 max-w-full rounded-md px-1 py-0.5 hover:bg-warm
@@ -718,12 +735,13 @@ function TreeBranch({
       >
         <ChevronDown
           size={12}
+          aria-hidden
           className={`text-ink-muted transition-transform ${open ? "" : "-rotate-90"}`}
         />
         {icon}
         <SectionLabel as="span">{label}</SectionLabel>
-        <span className="text-meta tabular-nums text-ink-muted">{count.toLocaleString()}</span>
-        {note && <span className="text-meta text-ink-muted">· {note}</span>}
+        <span data-part="count" className="text-meta tabular-nums text-ink-muted">{count.toLocaleString()}</span>
+        {note && <span data-part="note" className="text-meta text-ink-muted">· {note}</span>}
         {trailing}
       </button>
       {open && (
@@ -734,7 +752,8 @@ function TreeBranch({
            still under its rule, there are just two of them across. `grid`, not
            `columns`, because CSS columns flow top-to-bottom and would put leaf 2
            halfway down the pane. */
-        <div
+        <ul
+          data-part="leaves"
           className={`mt-1 ms-2 ps-3 ${
             // …and only when there are two to put across. A single leaf in a
             // two-column grid is a half-width leaf beside nothing, which is the
@@ -746,7 +765,7 @@ function TreeBranch({
           style={{ borderInlineStart: "1px solid var(--border-soft)" }}
         >
           {children}
-        </div>
+        </ul>
       )}
     </div>
   );
@@ -840,13 +859,13 @@ function PassagesBody({
   }, [results]);
 
   return (
-    <div className="pb-2">
+    <div data-part="passages" className="pb-2">
       {/* ONE paper sheet of hairline-separated rows, not a stack of bordered
           boxes. A card per passage is a box the passage never fills: the excerpt
           is a sentence, so at pane width every card was mostly empty and the
           list read as 120 half-filled containers. The sheet turns that leftover
           into the margin of a page, which is what it actually is. */}
-      <div className="rounded-md border border-border/60 bg-paper overflow-hidden">
+      <ul className="rounded-md border border-border/60 bg-paper overflow-hidden">
         {rows.map((row, i) => {
           const color = getEntityType(row.entity.typeId)?.color ?? "#6B7280";
           const isDoc = row.field === null;
@@ -860,8 +879,14 @@ function PassagesBody({
               activePage?.entityId === row.entity.id &&
               activePage.page === row.page);
           return (
-            <button
+            // The hairline rides the ITEM: `last:` has to see the last row of
+            // the sheet, and the button is now the only child of its item.
+            <li
               key={`${row.entity.id}-${i}`}
+              data-part="passage"
+              className="border-b border-border/50 last:border-b-0"
+            >
+            <button
               type="button"
               aria-pressed={selected}
               onClick={() => {
@@ -872,7 +897,7 @@ function PassagesBody({
               }}
               // The WHOLE entry is the target — passage and attribution were two
               // halves of one thought, and only one of them used to be clickable.
-              className={`w-full text-start px-3 py-2.5 border-b border-border/50 last:border-b-0
+              className={`w-full text-start px-3 py-2.5
                 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1
                 focus-visible:ring-inset focus-visible:ring-ink/20 ${
                   selected ? "bg-parchment" : "hover:bg-warm"
@@ -886,15 +911,16 @@ function PassagesBody({
                   it came from. `text-sm` here so `ch` is measured in the
                   passage's own type size, not the inherited one. */}
               <span className="block max-w-[74ch] @[72rem]:max-w-[96ch] text-sm">
-                <span className="block leading-relaxed text-ink">
+                <span data-part="excerpt" className="block leading-relaxed text-ink">
                   <HighlightedText text={row.text} query={query} />
                 </span>
                 {/* The attribution, under the quote it belongs to. Small and
                     quiet: this layout ranks passages, so the entity stays
                     secondary — but it now has the row's width to be legible in
                     rather than a 15rem track that truncated most case names. */}
-                <span className="mt-1 flex items-center gap-1.5 min-w-0 text-meta">
+                <span data-part="attribution" className="mt-1 flex items-center gap-1.5 min-w-0 text-meta">
                   <span
+                    aria-hidden
                     className="w-1.5 h-1.5 rounded-[2px] shrink-0"
                     style={{ backgroundColor: color }}
                   />
@@ -944,11 +970,12 @@ function PassagesBody({
                 </span>
               </span>
             </button>
+            </li>
           );
         })}
-      </div>
+      </ul>
       {(notShown > 0 || titleOnly > 0) && (
-        <p className="pt-3 text-center text-meta text-ink-muted">
+        <p data-part="note" className="pt-3 text-center text-meta text-ink-muted">
           {notShown > 0 && (
             <>
               {notShown.toLocaleString()} further matching {notShown === 1 ? "page" : "pages"}{" "}
@@ -998,14 +1025,14 @@ function SpineBody({
 
   if (!dated.length) {
     return (
-      <p className="pt-6 text-center text-xs text-ink-tertiary">
+      <p data-part="empty" className="pt-6 text-center text-xs text-ink-tertiary">
         None of these results carries a date, so there is no axis to place them on.
       </p>
     );
   }
 
   return (
-    <div className="pb-2">
+    <div data-part="spine" className="pb-2">
       {/* The SAME spine the Timeline view draws, at the SAME row height. The
           geometry — axis inset, adaptive scale, year marks, elided silences,
           leader lines, date gutter — is all `TimeSpine`'s; this passes no
@@ -1032,6 +1059,7 @@ function SpineBody({
           return (
             <button
               type="button"
+              data-part="spine-row"
               aria-pressed={selected}
               onClick={() =>
                 best?.page != null ? onSelectSnippet(entity.id, best.page) : onSelect(entity.id)
@@ -1043,6 +1071,7 @@ function SpineBody({
                 }`}
             >
               <span
+                aria-hidden
                 className="shrink-0 w-1.5 h-1.5 rounded-[2px]"
                 style={{ backgroundColor: color }}
               />
@@ -1080,7 +1109,7 @@ function SpineBody({
         }}
       />
       {undated > 0 && (
-        <p className="pt-3 text-center text-meta text-ink-muted">
+        <p data-part="note" className="pt-3 text-center text-meta text-ink-muted">
           {undated.toLocaleString()} matching {undated === 1 ? "result carries" : "results carry"} no
           date and {undated === 1 ? "is" : "are"} not plotted.
         </p>
@@ -1129,6 +1158,7 @@ function PropertyRow({
   return (
     <button
       type="button"
+      data-component="PropertyRow"
       onClick={onClick}
       // Flat, not tinted. The drawer tints these because a 24rem column needs the
       // separation; across a full-width card a filled block reads as a stranded
@@ -1139,7 +1169,7 @@ function PropertyRow({
     >
       <SectionLabel as="span">{group.field}</SectionLabel>
       {group.texts.map((t, i) => (
-        <span key={i} className="block text-sm text-ink leading-relaxed">
+        <span key={i} data-part="excerpt" className="block text-sm text-ink leading-relaxed">
           <HighlightedText text={t} query={query} />
         </span>
       ))}
@@ -1192,13 +1222,14 @@ function PassageRow({
   );
 
   if (snippet.page === null) {
-    return <div className="rounded-md px-2 py-1.5">{body}</div>;
+    return <div data-component="PassageRow" className="rounded-md px-2 py-1.5">{body}</div>;
   }
   const page = snippet.page;
   const isActive = active?.entityId === entityId && active.page === page;
   return (
     <button
       type="button"
+      data-component="PassageRow"
       aria-pressed={isActive}
       aria-label={`Page ${page}, ${snippet.hits} ${snippet.hits === 1 ? "match" : "matches"}`}
       onClick={() => onSelectSnippet(entityId, page)}
@@ -1215,7 +1246,7 @@ function PassageRow({
  *  passes its cap off as the whole document. */
 function PageCount({ shown, total }: { shown: number; total: number }) {
   return (
-    <span dir="ltr" className="ms-1.5 font-normal normal-case tracking-normal text-ink-muted">
+    <span dir="ltr" data-part="page-count" className="ms-1.5 font-normal normal-case tracking-normal text-ink-muted">
       <span className="tabular-nums">
         {shown < total ? `${shown} of ${total.toLocaleString()}` : total.toLocaleString()}
       </span>{" "}
@@ -1225,7 +1256,7 @@ function PageCount({ shown, total }: { shown: number; total: number }) {
 }
 
 function Dot() {
-  return <span className="text-ink-muted">·</span>;
+  return <span aria-hidden className="text-ink-muted">·</span>;
 }
 
 function WarmButton({ onClick, children }: { onClick: () => void; children: ReactNode }) {
@@ -1243,7 +1274,7 @@ function WarmButton({ onClick, children }: { onClick: () => void; children: Reac
 
 function Centered({ children }: { children: ReactNode }) {
   return (
-    <div className="flex-1 h-full flex flex-col items-center justify-center gap-2 px-6 text-center">
+    <div data-component="ResultsMainView" data-part="blank" className="flex-1 h-full flex flex-col items-center justify-center gap-2 px-6 text-center">
       {children}
     </div>
   );
