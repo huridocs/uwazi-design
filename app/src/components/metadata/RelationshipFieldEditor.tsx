@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { X, Plus, Search, PenLine, Link2, Info } from "lucide-react";
 import { languageAtom } from "../../atoms/language";
@@ -37,6 +37,7 @@ export function RelationshipFieldEditor({
   const setOverlay = useSetAtom(overlayEntityIdAtom);
   const [query, setQuery] = useState("");
   const [adding, setAdding] = useState(false);
+  const titleId = useId();
   const entityHeader = getEntityType(targetTypeId)?.name ?? "Entity";
 
   const candidates = allEntities.filter(
@@ -51,15 +52,17 @@ export function RelationshipFieldEditor({
   const remove = (id: string) => onChange(entityIds.filter((x) => x !== id));
 
   return (
-    <div className="space-y-1.5">
-      <div className="flex items-center gap-1.5">
-        <Link2 size={14} className="text-carbon" />
+    /* A group, named by its title. The title was a `<label>` with no control
+       to label — it named nothing. */
+    <div data-component="RelationshipFieldEditor" role="group" aria-labelledby={titleId} className="space-y-1.5">
+      <div data-part="header" className="flex items-center gap-1.5">
+        <Link2 size={14} className="text-carbon" aria-hidden />
         {/* The form-label recipe (`settings/Field.tsx`), not the card-title one
             this used to borrow — it names the connection editor's input, and a
             14px bold label made one field in the metadata form shout while its
             neighbours spoke. */}
-        <label className="text-xs font-medium text-ink-secondary">{title}</label>
-        <span className="text-meta text-ink-tertiary">
+        <span id={titleId} data-part="title" className="text-xs font-medium text-ink-secondary">{title}</span>
+        <span data-part="relation" className="text-meta text-ink-tertiary">
           via <span className="text-carbon font-medium">{relationLabel}</span>
         </span>
       </div>
@@ -69,24 +72,25 @@ export function RelationshipFieldEditor({
           actions (Source / Remove). */}
       <div className="border border-border rounded-md overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
+          <table data-part="table" className="w-full text-sm border-collapse">
+            <caption className="sr-only">{`${title}: connected entities`}</caption>
             <thead>
               <tr className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
-                <th className="py-1.5 px-3 text-start">{entityHeader}</th>
+                <th scope="col" data-part="column-header" className="py-1.5 px-3 text-start">{entityHeader}</th>
                 {columns.map((c) => (
-                  <th key={c.fieldId} className="py-1.5 px-3 text-start whitespace-nowrap">
+                  <th key={c.fieldId} scope="col" data-part="column-header" className="py-1.5 px-3 text-start whitespace-nowrap">
                     <span className="inline-flex items-center gap-1">
-                      <Link2 size={10} className="text-carbon" />
+                      <Link2 size={10} className="text-carbon" aria-hidden />
                       {c.label}
                     </span>
                   </th>
                 ))}
-                <th className="w-0 px-2" aria-label="Actions" />
+                <th scope="col" className="w-0 px-2"><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
             <tbody>
               {entityIds.length === 0 ? (
-                <tr>
+                <tr data-part="empty">
                   <td
                     colSpan={columns.length + 2}
                     className="px-3 py-2.5 text-xs text-ink-muted border-t border-border/40"
@@ -98,9 +102,11 @@ export function RelationshipFieldEditor({
                 entityIds.map((id) => {
                   const entity = allEntities.find((e) => e.id === id);
                   return (
-                    <tr key={id} className="border-t border-border/40 hover:bg-warm/30 transition-colors">
+                    <tr key={id} data-part="row" className="border-t border-border/40 hover:bg-warm/30 transition-colors">
                       <td className="py-1.5 px-3 align-middle">
                         <button
+                          type="button"
+                          data-part="entity-open"
                           onClick={() => setOverlay(id)}
                           title="Preview source entity"
                           className="rounded-md hover:opacity-80 transition-opacity cursor-pointer"
@@ -126,6 +132,8 @@ export function RelationshipFieldEditor({
                       <td className="py-1 px-2 align-middle border-s border-border/40">
                         <div className="flex items-center justify-end gap-0.5">
                           <button
+                            type="button"
+                            data-part="source"
                             onClick={() => setOverlay(id)}
                             title="Edit at source"
                             className="flex items-center gap-1 px-1.5 h-6 text-meta font-medium text-ink-secondary rounded hover:bg-warm transition-colors cursor-pointer"
@@ -133,8 +141,11 @@ export function RelationshipFieldEditor({
                             <PenLine size={12} /> Source
                           </button>
                           <button
+                            type="button"
+                            data-part="remove"
                             onClick={() => remove(id)}
                             title="Remove from connection"
+                            aria-label={`Remove ${entity?.title ?? "entity"} from ${title}`}
                             className="flex items-center justify-center w-6 h-6 rounded text-ink-muted hover:bg-warm hover:text-seal-label transition-colors cursor-pointer"
                           >
                             <X size={13} />
@@ -152,7 +163,7 @@ export function RelationshipFieldEditor({
 
       {/* Add an entity to the connection */}
       {adding ? (
-        <div className="border border-border rounded-md overflow-hidden">
+        <div data-part="picker" className="border border-border rounded-md overflow-hidden">
           <div className="relative">
             <input
               autoFocus
@@ -160,6 +171,7 @@ export function RelationshipFieldEditor({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search entities…"
+              aria-label={`Search ${entityHeader} to add`}
               className="w-full h-8 pl-3 pr-8 text-xs font-medium bg-paper border-b border-border
                 placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-carbon/20"
             />
@@ -171,7 +183,9 @@ export function RelationshipFieldEditor({
             ) : (
               candidates.map((e) => (
                 <button
+                  type="button"
                   key={e.id}
+                  data-part="candidate"
                   onClick={() => add(e.id)}
                   className="flex items-center gap-2 w-full px-3 py-2 text-start hover:bg-warm transition-colors"
                 >
@@ -183,6 +197,8 @@ export function RelationshipFieldEditor({
         </div>
       ) : (
         <button
+          type="button"
+          data-part="add"
           onClick={() => setAdding(true)}
           className="flex items-center gap-1.5 px-2.5 h-7 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors"
         >
@@ -191,8 +207,8 @@ export function RelationshipFieldEditor({
       )}
 
       {columns.length > 0 && (
-        <p className="flex items-start gap-1.5 text-meta text-ink-tertiary">
-          <Info size={12} className="text-carbon shrink-0 mt-px" />
+        <p data-part="note" className="flex items-start gap-1.5 text-meta text-ink-tertiary">
+          <Info size={12} className="text-carbon shrink-0 mt-px" aria-hidden />
           Inherited values are read-only. Change the connection above, or edit the source entity.
         </p>
       )}

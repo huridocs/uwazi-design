@@ -29,6 +29,7 @@ export function InheritedValueTag({
   const flag = countryFlag(value);
   return (
     <span
+      data-component="InheritedValueTag"
       title={`Inherited${propLabel ? ` ${propLabel}` : ""} · via ${relationLabel}`}
       className="inline-flex items-center gap-1.5 min-w-0 text-sm font-medium text-ink"
     >
@@ -40,7 +41,7 @@ export function InheritedValueTag({
       )}
       {/* Nested thesaurus values keep their group context in the inherited
           cell too ("Americas › Central America"); other values are unchanged. */}
-      <span className="truncate min-w-0">
+      <span data-part="value" className="truncate min-w-0">
         <ThesaurusValueLabel value={value} />
       </span>
     </span>
@@ -54,6 +55,7 @@ export function InheritedValueTag({
 export function RollupChip({ summary }: { summary: { text: string; title: string } }) {
   return (
     <span
+      data-component="RollupChip"
       title={summary.title}
       className="inline-flex w-fit items-center gap-1 rounded-md bg-carbon-tint px-1.5 py-0.5 text-meta font-medium text-carbon"
     >
@@ -79,6 +81,8 @@ export function ProvenanceTrail({ steps, sharedLabel }: { steps: ProvenanceStep[
         <Fragment key={s.entityId}>
           {i > 0 && <span className="shrink-0 text-ink-muted" aria-hidden>→</span>}
           <button
+            type="button"
+            data-part="step"
             onClick={() => setOverlay(s.entityId)}
             title={`${s.relationLabel ? `${s.relationLabel}: ` : ""}${s.title} — open`}
             className="min-w-0 truncate text-ink-secondary underline decoration-carbon decoration-2 underline-offset-2 hover:text-ink cursor-pointer"
@@ -97,6 +101,7 @@ export function ProvenanceTrail({ steps, sharedLabel }: { steps: ProvenanceStep[
 export function MissingValue({ propLabel }: { propLabel?: string }) {
   return (
     <span
+      data-component="MissingValue"
       title={`No ${propLabel ?? "value"} on the connected entity`}
       className="text-sm text-ink-muted select-none"
       aria-label={`No ${propLabel ?? "value"}`}
@@ -121,8 +126,8 @@ export function RelationCaption({
   inheritLabels?: string[];
 }) {
   return (
-    <p className="text-meta text-ink-tertiary -mt-1">
-      via <span className="text-carbon font-medium">{relationLabel}</span>
+    <p data-component="RelationCaption" className="text-meta text-ink-tertiary -mt-1">
+      via <span data-part="relation" className="text-carbon font-medium">{relationLabel}</span>
       {inheritLabels && inheritLabels.length > 0 ? (
         <> · inherits {inheritLabels.join(", ")}</>
       ) : inheritLabel ? (
@@ -147,8 +152,10 @@ export function InheritedValueChip({
 }) {
   const setOverlay = useSetAtom(overlayEntityIdAtom);
   return (
-    <div className="flex items-center gap-2 min-w-0">
+    <div data-component="InheritedValueChip" className="flex items-center gap-2 min-w-0">
       <button
+        type="button"
+        data-part="entity"
         onClick={() => setOverlay(value.entityId)}
         className="shrink-0 rounded-md hover:opacity-80 transition-opacity cursor-pointer"
         title="Preview source entity"

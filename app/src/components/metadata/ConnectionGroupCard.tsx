@@ -41,7 +41,8 @@ export function ConnectionGroupCard({ group, span = "full" }: { group: Connectio
   return (
     <MetadataCard
       title={group.label}
-      icon={<Link2 size={11} className="text-carbon" />}
+      component="ConnectionGroupCard"
+      icon={<Link2 size={11} className="text-carbon" aria-hidden />}
       className={spanClass(span)}
     >
       <RelationCaption
@@ -54,8 +55,12 @@ export function ConnectionGroupCard({ group, span = "full" }: { group: Connectio
           overlay, so what decides the layout is how wide THE CARD is, not how
           wide the window is. */}
       <div className={`-mx-1 ${TABLE_MIN.container}`}>
-      <div className={TABLE_MIN.tableOnly}>
-        <table className="w-full text-sm border-collapse">
+      <div data-part="table-view" className={TABLE_MIN.tableOnly}>
+        {/* A native table on table layout: the cell merges are `rowSpan`, which
+            only a table box honours, so these elements are NOT re-displayed the
+            way DataTable's are — and they keep their implicit roles in WebKit. */}
+        <table data-part="table" className="w-full text-sm border-collapse">
+          <caption className="sr-only">{group.label}</caption>
           <thead>
             {/* `font-semibold` on the ROW is inherited, and a `<th>` carries the
                 UA's own `font-weight: bold` — a declaration on the element
@@ -65,17 +70,17 @@ export function ConnectionGroupCard({ group, span = "full" }: { group: Connectio
                 each `th` instead. */}
             <tr className="text-meta uppercase tracking-wider text-ink-tertiary">
               {group.columns.map((c, i) => (
-                <th key={c.fieldId} className="font-semibold py-1.5 px-3 text-start whitespace-nowrap align-top">
+                <th key={c.fieldId} scope="col" data-part="column-header" className="font-semibold py-1.5 px-3 text-start whitespace-nowrap align-top">
                   <span className="flex flex-col items-start gap-1">
                     <span className="inline-flex items-center gap-1">
-                      <Link2 size={10} className="text-carbon" />
+                      <Link2 size={10} className="text-carbon" aria-hidden />
                       {c.label}
                     </span>
                     {summaries[i] && <RollupChip summary={summaries[i]!} />}
                   </span>
                 </th>
               ))}
-              <th className="font-semibold py-1.5 px-1 text-start">{entityHeader}</th>
+              <th scope="col" data-part="column-header" className="font-semibold py-1.5 px-1 text-start">{entityHeader}</th>
             </tr>
           </thead>
           <tbody>
@@ -86,12 +91,13 @@ export function ConnectionGroupCard({ group, span = "full" }: { group: Connectio
                 so a spanned group reads as one block instead of a flat grid.
                 Spanning labels are vertically centred against their group. */}
             {rows.map((row) => (
-              <tr key={row.entityId} className="hover:bg-warm/30 transition-colors">
+              <tr key={row.entityId} data-part="row" className="hover:bg-warm/30 transition-colors">
                 {row.cells.map((cell, i) =>
                   cell.lead ? (
                     <td
                       key={cell.fieldId}
                       rowSpan={cell.rowSpan}
+                      data-part="value"
                       className="py-1.5 px-3 whitespace-nowrap align-middle border-t border-s border-border/40 first:border-s-0"
                     >
                       {cell.value ? (
@@ -107,8 +113,9 @@ export function ConnectionGroupCard({ group, span = "full" }: { group: Connectio
                     </td>
                   ) : null,
                 )}
-                <td className="py-1.5 px-1 align-middle border-t border-s border-border/40">
+                <td data-part="entity" className="py-1.5 px-1 align-middle border-t border-s border-border/40">
                   <button
+                    type="button"
                     onClick={() => setOverlay(row.entityId)}
                     className="rounded-md hover:opacity-80 transition-opacity cursor-pointer"
                     title="Preview source entity"
@@ -123,7 +130,7 @@ export function ConnectionGroupCard({ group, span = "full" }: { group: Connectio
       </div>
 
       {/* Below the threshold: one card per connected entity, merges expanded. */}
-      <div className={TABLE_MIN.stackOnly}>
+      <div data-part="stack-view" className={TABLE_MIN.stackOnly}>
         <ConnectionCardStack
           entities={stackEntities}
           relationLabel={group.relationLabel}

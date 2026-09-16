@@ -58,10 +58,14 @@ export function MasonryGrid({
   gutter = 12,
   className = "",
   containerRef,
+  component = "MasonryGrid",
 }: {
   children: ReactNode;
   gutter?: number;
   className?: string;
+  /** The `data-component` stamped on the container — the record that owns the
+   *  grid, where there is one. */
+  component?: string;
   /** The record's root, for the deep-focus query that scrolls and flashes a
    *  field — it looks for `[data-field-key]` INSIDE the record, and the
    *  container is the record. */
@@ -71,9 +75,10 @@ export function MasonryGrid({
     // Two elements on purpose: an element cannot query ITSELF, so the
     // `@container` and the `@[…]:grid-cols-*` that read it can't be the same
     // node.
-    <div ref={containerRef} className={`@container ${className}`}>
+    <div ref={containerRef} data-component={component} className={`@container ${className}`}>
       <Ctx.Provider value={{ gutter }}>
         <div
+          data-part="grid"
           className={`grid items-start ${COLS}`}
           style={{ gridAutoRows: "1px", rowGap: 0, columnGap: `${gutter}px` }}
         >
@@ -124,6 +129,8 @@ export function MasonryItem({
   return (
     <div
       ref={ref}
+      data-part="item"
+      data-span={full ? "full" : wide ? "wide" : "single"}
       className={
         full ? "col-span-full" : wide ? "@[66rem]:col-span-2" : undefined
       }

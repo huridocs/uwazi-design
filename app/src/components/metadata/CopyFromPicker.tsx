@@ -92,6 +92,8 @@ export function CopyFromPicker({
 
   return (
     <div
+      data-component="CopyFromPicker"
+      data-part="scrim"
       className="absolute inset-0 z-30 flex items-center justify-center bg-ink/20 p-4"
       onClick={onClose}
     >
@@ -100,19 +102,22 @@ export function CopyFromPicker({
         role="dialog"
         aria-modal="true"
         aria-label="Copy metadata from another entity"
+        data-part="panel"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
           if (e.key === "Escape") onClose();
         }}
         className="w-full max-w-[32rem] max-h-full flex flex-col bg-paper rounded-lg border border-border shadow-lg overflow-hidden"
       >
-        <header className="shrink-0 flex items-center gap-2 h-11 px-3 border-b border-border">
-          <span className="text-xs font-semibold text-ink">Copy from</span>
-          <span className="text-meta text-ink-tertiary">
+        <header data-part="header" className="shrink-0 flex items-center gap-2 h-11 px-3 border-b border-border">
+          <h2 data-part="title" className="text-xs font-semibold text-ink">Copy from</h2>
+          <span data-part="subtitle" className="text-meta text-ink-tertiary">
             values are staged, not saved
           </span>
           <button
+            type="button"
             onClick={onClose}
+            data-part="close"
             aria-label="Close"
             className="ms-auto p-1 rounded-md text-ink-muted hover:bg-warm hover:text-ink cursor-pointer
               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"
@@ -121,7 +126,7 @@ export function CopyFromPicker({
           </button>
         </header>
 
-        <div className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-border">
+        <div data-part="controls" className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-border">
           <div className="flex-1 flex items-center gap-1.5 h-8 px-2 bg-warm rounded-md">
             <Search size={13} className="text-ink-muted shrink-0" />
             <input
@@ -146,9 +151,9 @@ export function CopyFromPicker({
           />
         </div>
 
-        <ul className="flex-1 overflow-auto py-1">
+        <ul data-part="candidates" className="flex-1 overflow-auto py-1">
           {candidates.length === 0 && (
-            <li className="px-3 py-6 text-center text-xs text-ink-muted">
+            <li data-part="empty" className="px-3 py-6 text-center text-xs text-ink-muted">
               {emptyMessage({
                 targetHasNoFields,
                 loading,
@@ -159,7 +164,7 @@ export function CopyFromPicker({
             </li>
           )}
           {candidates.map(({ entity, matches }) => (
-            <li key={entity.id}>
+            <li key={entity.id} data-part="candidate">
               <button
                 type="button"
                 onClick={() => onPreview(entity)}
@@ -179,7 +184,7 @@ export function CopyFromPicker({
                   </span>
                 </span>
                 {/* The number Uwazi makes you click to find out. */}
-                <span className="shrink-0 flex items-center gap-1.5 text-meta text-ink-tertiary">
+                <span data-part="match-count" className="shrink-0 flex items-center gap-1.5 text-meta text-ink-tertiary">
                   {matches === 0 ? (
                     <span>no shared fields</span>
                   ) : (
@@ -197,7 +202,7 @@ export function CopyFromPicker({
         {/* Always mounted, contents toggling — the list is capped, and a footer
             that only appears once the cap bites would move the list under the
             user's cursor the moment they typed. */}
-        <footer className="shrink-0 h-7 flex items-center px-3 border-t border-border text-meta text-ink-tertiary">
+        <footer data-part="footer" className="shrink-0 h-7 flex items-center px-3 border-t border-border text-meta text-ink-tertiary">
           {total > LIMIT
             ? `Showing the first ${LIMIT} of ${total.toLocaleString()} — search by title to reach the rest.`
             : total > 0
