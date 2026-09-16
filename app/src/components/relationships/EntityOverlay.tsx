@@ -97,6 +97,8 @@ export function EntityOverlay() {
     <>
       {/* Backdrop */}
       <div
+        data-component="EntityOverlay"
+        data-part="scrim"
         className="absolute inset-0 transition-opacity duration-200"
         style={{
           backgroundColor: "color-mix(in srgb, var(--text-primary) 15%, transparent)",
@@ -111,6 +113,7 @@ export function EntityOverlay() {
       <div
         ref={panelRef}
         role="dialog"
+        data-component="EntityOverlay"
         // Focusable as a fallback target: the panel takes focus on the opening
         // tick, before its body exists, and hands it to the first control once
         // it does.

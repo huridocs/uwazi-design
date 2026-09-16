@@ -27,16 +27,24 @@ const typeIcons: Record<string, ReactNode> = {
 function PropertyItem({ prop }: { prop: TemplateProperty }) {
   const notify = useNotify();
   return (
-    <div className="flex items-center gap-3 p-3 bg-warm rounded-md shadow-sm">
-      <span className="text-ink-tertiary shrink-0">{prop.icon}</span>
-      <span className="flex-1 text-sm font-medium text-ink">
+    <li data-part="property" className="flex items-center gap-3 p-3 bg-warm rounded-md shadow-sm">
+      <span data-part="icon" aria-hidden className="text-ink-tertiary shrink-0">
+        {prop.icon}
+      </span>
+      <span data-part="name" className="flex-1 text-sm font-medium text-ink">
         {prop.name}
         {prop.required && (
-          <span className="text-xs font-medium text-ink-muted ml-1.5">*Required</span>
+          <span data-part="required" className="text-xs font-medium text-ink-muted ml-1.5">
+            *Required
+          </span>
         )}
       </span>
-      <span className="text-meta text-ink-muted shrink-0 capitalize">{prop.type}</span>
+      <span data-part="type" className="text-meta text-ink-muted shrink-0 capitalize">
+        {prop.type}
+      </span>
       <button
+        type="button"
+        data-part="edit"
         onClick={() =>
           prop.inherited
             ? notify("Inherited property — edit at its source")
@@ -50,7 +58,7 @@ function PropertyItem({ prop }: { prop: TemplateProperty }) {
       >
         Edit
       </button>
-    </div>
+    </li>
   );
 }
 
@@ -70,12 +78,18 @@ function PropertyGroup({
     variant === "inherited"
       ? "border-carbon/40 bg-carbon-tint/40"
       : "border-carbon/30";
+  const Heading = variant === "inherited" ? "h4" : "h3";
 
   return (
-    <div className={`border border-dashed ${variantClass} rounded-lg p-3 flex flex-col gap-2`}>
-      <span className="text-xs font-medium text-ink-secondary text-center">{label}</span>
-      {children}
-    </div>
+    <section
+      data-part="group"
+      data-variant={variant}
+      className={`border border-dashed ${variantClass} rounded-lg p-3 flex flex-col gap-2`}
+    >
+      {/* Inherited sits inside Body, so it heads one level down. */}
+      <Heading className="text-xs font-medium text-ink-secondary text-center">{label}</Heading>
+      <ul className="flex flex-col gap-2">{children}</ul>
+    </section>
   );
 }
 
@@ -126,8 +140,8 @@ export function TemplateStructure() {
   }, [focusedId, lang]);
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="bleed flex-1 overflow-auto pt-stack pb-8">
+    <div data-component="TemplateStructure" className="flex flex-col h-full">
+      <div data-part="body" className="bleed flex-1 overflow-auto pt-stack pb-8">
         <div className="flex flex-col gap-2">
           {/* Header group */}
           <PropertyGroup label="Header" variant="header">
@@ -144,11 +158,13 @@ export function TemplateStructure() {
 
             {/* Inherited nested group */}
             {inheritedFields.length > 0 && (
-              <PropertyGroup label="Inherited" variant="inherited">
-                {inheritedFields.map((p, i) => (
-                  <PropertyItem key={`${p.name}-${i}`} prop={p} />
-                ))}
-              </PropertyGroup>
+              <li>
+                <PropertyGroup label="Inherited" variant="inherited">
+                  {inheritedFields.map((p, i) => (
+                    <PropertyItem key={`${p.name}-${i}`} prop={p} />
+                  ))}
+                </PropertyGroup>
+              </li>
             )}
           </PropertyGroup>
         </div>
@@ -156,6 +172,7 @@ export function TemplateStructure() {
 
       {/* Action bar */}
       <div
+        data-part="footer"
         className="bleed flex items-center justify-between h-12 shrink-0"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
@@ -170,7 +187,7 @@ export function TemplateStructure() {
           </button>
         </span>
         <button type="button" onClick={() => notify("Opening entities guide")} aria-label="Help">
-          <HelpCircle size={18} className="text-ink-muted" />
+          <HelpCircle size={18} aria-hidden className="text-ink-muted" />
         </button>
       </div>
     </div>

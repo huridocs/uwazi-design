@@ -17,6 +17,7 @@ import { RelationshipsTreeView } from "./RelationshipsTreeView";
 import { RelationshipsGraphView } from "./RelationshipsGraphView";
 import { RelationshipRow } from "./RelationshipRow";
 import { RelationshipGroupedCard } from "./RelationshipGroupedCard";
+import { RowStack } from "./rows/RowShell";
 
 interface Props {
   onDelete?: (id: string) => void;
@@ -50,7 +51,7 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
   if (view === "graph") {
     return (
       // The canvas runs edge to edge on purpose.
-      <div data-gutter-bleed className="bleed-flush flex-1 flex flex-col min-h-0">
+      <div data-component="RelationshipsPanelBody" data-view="graph" data-gutter-bleed className="bleed-flush flex-1 flex flex-col min-h-0">
         <RelationshipsGraphView />
       </div>
     );
@@ -59,8 +60,8 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
   let body: ReactNode;
   if (filtered.length === 0) {
     body = (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <Link2 size={36} className="text-ink-tertiary/40 mb-3" />
+      <div data-part="empty" className="flex flex-col items-center justify-center py-16 text-center">
+        <Link2 size={36} className="text-ink-tertiary/40 mb-3" aria-hidden />
         <p className="text-sm text-ink-tertiary">No relationships found</p>
         <p className="text-xs text-ink-tertiary mt-1">
           Select text in the document to create one
@@ -70,7 +71,7 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
   } else if (groupBy === "none") {
     body = (
       <div>
-        <div className="border border-border/60 rounded-md overflow-hidden bg-paper">
+        <RowStack className="border border-border/60 rounded-md overflow-hidden bg-paper">
           {filtered.slice(0, listLimit).map((ref) => (
             <RelationshipRow
               key={ref.id}
@@ -79,10 +80,12 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
               onDelete={onDelete}
             />
           ))}
-        </div>
+        </RowStack>
         {filtered.length > listLimit && (
           <div className="flex justify-center pt-stack">
             <button
+              type="button"
+              data-part="show-more"
               onClick={() => setListLimit((n) => n + LIST_CAP)}
               className="px-4 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
             >
@@ -95,51 +98,59 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
   } else {
     const primaryGroups = groupRefs(filtered, groupBy);
     body = (
-      <div className="space-y-stack">
+      <ul data-part="groups" className="space-y-stack">
         {primaryGroups.map(([key, refs]) => (
-          <RelationshipGroupedCard
-            key={`p:${key}`}
-            title={getGroupLabel(key, groupBy)}
-            highlight={query}
-            color={getGroupColor(key, groupBy)}
-            count={refs.length}
-            refIdsToWatch={refs.map((r) => r.id)}
-          >
-            {subGroupBy === "none"
-              ? refs.map((ref) => (
-                  <RelationshipRow
-                    key={ref.id}
-                    kind="reference"
-                    reference={ref}
-                    onDelete={onDelete}
-                  />
-                ))
-              : (
-                <div className="px-2 py-2 space-y-1.5 bg-warm/30">
-                  {groupRefs(refs, subGroupBy).map(([subKey, subRefs]) => (
-                    <RelationshipGroupedCard
-                      key={`s:${key}::${subKey}`}
-                      title={getGroupLabel(subKey, subGroupBy)}
-                      highlight={query}
-                      color={getGroupColor(subKey, subGroupBy)}
-                      count={subRefs.length}
-                      refIdsToWatch={subRefs.map((r) => r.id)}
-                    >
-                      {subRefs.map((ref) => (
-                        <RelationshipRow
-                          key={ref.id}
-                          kind="reference"
-                          reference={ref}
-                          onDelete={onDelete}
-                        />
-                      ))}
-                    </RelationshipGroupedCard>
-                  ))}
-                </div>
-              )}
-          </RelationshipGroupedCard>
+          <li key={`p:${key}`}>
+            <RelationshipGroupedCard
+              title={getGroupLabel(key, groupBy)}
+              highlight={query}
+              color={getGroupColor(key, groupBy)}
+              count={refs.length}
+              refIdsToWatch={refs.map((r) => r.id)}
+            >
+              {subGroupBy === "none"
+                ? (
+                  <RowStack>
+                    {refs.map((ref) => (
+                      <RelationshipRow
+                        key={ref.id}
+                        kind="reference"
+                        reference={ref}
+                        onDelete={onDelete}
+                      />
+                    ))}
+                  </RowStack>
+                )
+                : (
+                  <ul data-part="groups" className="px-2 py-2 space-y-1.5 bg-warm/30">
+                    {groupRefs(refs, subGroupBy).map(([subKey, subRefs]) => (
+                      <li key={`s:${key}::${subKey}`}>
+                        <RelationshipGroupedCard
+                          title={getGroupLabel(subKey, subGroupBy)}
+                          highlight={query}
+                          color={getGroupColor(subKey, subGroupBy)}
+                          count={subRefs.length}
+                          refIdsToWatch={subRefs.map((r) => r.id)}
+                        >
+                          <RowStack>
+                            {subRefs.map((ref) => (
+                              <RelationshipRow
+                                key={ref.id}
+                                kind="reference"
+                                reference={ref}
+                                onDelete={onDelete}
+                              />
+                            ))}
+                          </RowStack>
+                        </RelationshipGroupedCard>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+            </RelationshipGroupedCard>
+          </li>
         ))}
-      </div>
+      </ul>
     );
   }
 
@@ -151,7 +162,10 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
   return (
     // A scroll lane: `bleed` puts the scrollbar at the panel edge and the cards
     // back on the host's gutter.
-    <div className={`bleed flex-1 overflow-auto pb-8 relative ${scrollBgClass ?? ""}`}>
+    <div
+      data-component="RelationshipsPanelBody"
+      data-view={view}
+      className={`bleed flex-1 overflow-auto pb-8 relative ${scrollBgClass ?? ""}`}>
       {body}
     </div>
   );

@@ -26,6 +26,8 @@ export function RowChevron({
         onToggle();
       }}
       aria-label={`${expanded ? "Collapse" : "Expand"} ${subject}`}
+      aria-expanded={!!expanded}
+      data-part="toggle"
       className="shrink-0 p-0.5 -ml-0.5 text-ink-tertiary hover:text-ink cursor-pointer"
     >
       <ChevronRight
@@ -62,7 +64,7 @@ export function EvidenceBadge({
 }) {
   const body = (
     <>
-      <Link2 size={10} />
+      <Link2 size={10} aria-hidden />
       {count}
     </>
   );
@@ -70,7 +72,13 @@ export function EvidenceBadge({
 
   if (!onActivate) {
     return (
-      <span aria-label={ariaLabel} className={`${base} bg-warm text-ink-tertiary`}>
+      <span
+        data-part="evidence"
+        // A generic span can't carry a name; as an image it announces the count.
+        role="img"
+        aria-label={ariaLabel}
+        className={`${base} bg-warm text-ink-tertiary`}
+      >
         {body}
       </span>
     );
@@ -83,6 +91,7 @@ export function EvidenceBadge({
       aria-label={ariaLabel}
       aria-expanded={ariaExpanded}
       title={title}
+      data-part="evidence"
       className={`${base} transition-colors cursor-pointer ${
         expanded
           ? "bg-vellum text-ink-secondary"
@@ -130,6 +139,7 @@ export function RowEntityPill({
         else setOverlayEntityId(entityId);
       }}
       aria-label={`Open ${label ?? "entity"}`}
+      data-part="entity"
       className="min-w-0 rounded-md cursor-pointer transition-opacity hover:opacity-80
         focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
     >

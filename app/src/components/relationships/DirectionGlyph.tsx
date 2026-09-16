@@ -39,10 +39,12 @@ export function DirectionGlyph({ direction, size = "sm" }: DirectionGlyphProps) 
       // relationship runs. Named as an image, it announces "Outgoing".
       role="img"
       aria-label={title}
+      data-component="DirectionGlyph"
+      data-direction={direction}
       title={title}
       className={`inline-flex items-center justify-center ${box} rounded-[2px] bg-vellum text-ink-tertiary shrink-0`}
     >
-      <Icon size={icon} strokeWidth={2.5} />
+      <Icon size={icon} strokeWidth={2.5} aria-hidden />
     </span>
   );
 }

@@ -112,15 +112,16 @@ export function ManageRelationTypesModal() {
 
   return (
     <div
+      data-component="ManageRelationTypesModal"
       className="fixed inset-0 z-50 flex md:items-center md:justify-center md:p-4 bg-overlay"
       role="dialog"
       aria-modal="true"
       aria-label={t("System", "Manage relationship types")}
     >
-      <div className="bg-paper shadow-xl w-full md:max-w-lg md:rounded-lg md:max-h-[80vh] h-full md:h-auto flex flex-col md:animate-fade-in-up">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+      <div data-part="panel" className="bg-paper shadow-xl w-full md:max-w-lg md:rounded-lg md:max-h-[80vh] h-full md:h-auto flex flex-col md:animate-fade-in-up">
+        <div data-part="header" className="flex items-center justify-between px-5 py-4 border-b border-border">
           <div>
-            <h3 className="text-base font-semibold text-ink">
+            <h3 data-part="title" className="text-base font-semibold text-ink">
               {t("System", "Manage relationship types")}
             </h3>
             <p className="text-xs text-ink-muted mt-0.5">
@@ -131,28 +132,31 @@ export function ManageRelationTypesModal() {
             </p>
           </div>
           <button
+            type="button"
+            data-part="close"
             onClick={handleClose}
             className="p-1.5 rounded-md hover:bg-parchment transition-colors cursor-pointer"
             aria-label={t("System", "Close")}
           >
-            <X size={18} className="text-ink-muted" />
+            <X size={18} aria-hidden className="text-ink-muted" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-auto px-5 py-3 space-y-1">
+        <ul data-part="types" className="flex-1 overflow-auto px-5 py-3 space-y-1">
           {types.map((tdef) => {
             const usage = refCountByType.get(tdef.id) ?? 0;
             const isNoLabel = tdef.id === NO_LABEL_RELATION_TYPE;
             const confirming = pendingDelete === tdef.id;
             return (
-              <div
+              <li
                 key={tdef.id}
+                data-part="type"
                 className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-warm transition-colors"
               >
-                <span className="text-sm text-ink flex-1 truncate">
+                <span data-part="label" className="text-sm text-ink flex-1 truncate">
                   {tdef.label}
                 </span>
-                <span className="text-meta text-ink-tertiary tabular-nums shrink-0">
+                <span data-part="usage" className="text-meta text-ink-tertiary tabular-nums shrink-0">
                   {usage} {usage === 1 ? "ref" : "refs"}
                 </span>
                 {isNoLabel ? (
@@ -168,6 +172,8 @@ export function ManageRelationTypesModal() {
                 ) : confirming ? (
                   <div className="flex items-center gap-1 shrink-0">
                     <button
+                      type="button"
+                      data-part="confirm-delete"
                       onClick={() => handleDelete(tdef.id)}
                       className="px-2 py-1 text-meta font-medium text-white bg-seal-fill rounded-md hover:bg-seal-fill/90 transition-colors cursor-pointer"
                     >
@@ -176,6 +182,8 @@ export function ManageRelationTypesModal() {
                         : t("System", "Delete")}
                     </button>
                     <button
+                      type="button"
+                      data-part="cancel-delete"
                       onClick={() => setPendingDelete(null)}
                       className="px-2 py-1 text-meta font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
                     >
@@ -184,6 +192,8 @@ export function ManageRelationTypesModal() {
                   </div>
                 ) : (
                   <button
+                    type="button"
+                    data-part="delete"
                     onClick={() => setPendingDelete(tdef.id)}
                     aria-label={`Delete ${tdef.label}`}
                     className="p-1 rounded text-ink-tertiary hover:bg-seal-tint hover:text-seal-label transition-colors cursor-pointer shrink-0"
@@ -191,12 +201,12 @@ export function ManageRelationTypesModal() {
                     <Trash2 size={13} />
                   </button>
                 )}
-              </div>
+              </li>
             );
           })}
-        </div>
+        </ul>
 
-        <div className="px-5 py-4 border-t border-border flex items-center gap-2">
+        <div data-part="add" className="px-5 py-4 border-t border-border flex items-center gap-2">
           <input
             type="text"
             value={draftLabel}
@@ -205,10 +215,12 @@ export function ManageRelationTypesModal() {
               if (e.key === "Enter") handleAdd();
             }}
             placeholder={t("System", "New relation type label…")}
+            aria-label={t("System", "New relation type label")}
             className="flex-1 px-3 py-2 text-sm bg-warm border border-border rounded-md
               placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-carbon/20"
           />
           <button
+            type="button"
             onClick={handleAdd}
             disabled={!draftLabel.trim()}
             className="flex items-center gap-1 px-3 py-2 text-xs font-medium rounded-md bg-ink text-parchment

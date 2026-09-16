@@ -32,11 +32,13 @@ function ActionPill({
     <button
       type="button"
       onClick={onClick}
+      data-part="action"
       className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${tone}`}
     >
       {Icon && (
         <Icon
           size={12}
+          aria-hidden
           className={variant === "danger" ? "" : "text-ink-tertiary"}
         />
       )}
@@ -52,6 +54,8 @@ export function DrawerActionBar({ activeTab }: DrawerActionBarProps) {
 
   return (
     <div
+      data-component="DrawerActionBar"
+      data-tab={activeTab}
       // `bleed`: the rule spans the panel, the pills sit on the host's gutter.
       className="bleed flex items-center justify-between h-12 bg-paper shrink-0"
       style={{ borderTop: "1px solid var(--border-primary)" }}
@@ -80,7 +84,7 @@ export function DrawerActionBar({ activeTab }: DrawerActionBarProps) {
             </button>
           </div>
           <button type="button" onClick={() => notify("Opening references guide")} aria-label="Help">
-            <HelpCircle size={18} className="text-carbon" />
+            <HelpCircle size={18} aria-hidden className="text-carbon" />
           </button>
         </>
       )}

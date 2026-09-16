@@ -10,11 +10,16 @@ interface BaseProps {
   onKeyDown?: (e: KeyboardEvent) => void;
   ariaLabel?: string;
   className?: string;
+  /** The `data-component` name, for a row kind that renders through this shell
+   *  (`ReferenceRow`, `AggregateRow`, `HubRow`). Defaults to "ListCardRow". */
+  component?: string;
   children: ReactNode;
 }
 
 type ListCardRowProps =
   | ({ as?: "div" } & BaseProps)
+  /** A row that is one item of a list (`ul`/`ol`). Same shape as `div`. */
+  | ({ as: "li" } & BaseProps)
   | ({ as: "button" } & BaseProps);
 
 const baseClasses =
@@ -22,8 +27,16 @@ const baseClasses =
 
 export const ListCardRow = forwardRef<HTMLElement, ListCardRowProps>(
   function ListCardRow(props, ref) {
-    const { selected, onClick, onKeyDown, ariaLabel, className, children, as } =
-      props;
+    const {
+      selected,
+      onClick,
+      onKeyDown,
+      ariaLabel,
+      className,
+      component = "ListCardRow",
+      children,
+      as,
+    } = props;
     const selectedClass = selected ? "bg-parchment" : "";
     const cursorClass = onClick ? "cursor-pointer" : "";
     const composed = `${baseClasses} ${selectedClass} ${cursorClass} ${className ?? ""}`;
@@ -33,7 +46,7 @@ export const ListCardRow = forwardRef<HTMLElement, ListCardRowProps>(
         <button
           ref={ref as React.Ref<HTMLButtonElement>}
           type="button"
-          data-component="ListCardRow"
+          data-component={component}
           onClick={onClick}
           aria-pressed={selected}
           aria-label={ariaLabel}
@@ -58,10 +71,11 @@ export const ListCardRow = forwardRef<HTMLElement, ListCardRowProps>(
     // pointer cursor. That is the right shape when every action in the row is
     // already a control of its own — a row-wide target would be a third way to
     // do what the pill does, announced as "Open row".
+    const Tag = as === "li" ? "li" : "div";
     return (
-      <div
-        ref={ref as React.Ref<HTMLDivElement>}
-        data-component="ListCardRow"
+      <Tag
+        ref={ref as React.Ref<HTMLDivElement & HTMLLIElement>}
+        data-component={component}
         onClick={onClick}
         className={`relative ${composed}`}
       >
@@ -82,7 +96,7 @@ export const ListCardRow = forwardRef<HTMLElement, ListCardRowProps>(
         <div data-part="content" className="relative">
           {children}
         </div>
-      </div>
+      </Tag>
     );
   },
 );

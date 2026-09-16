@@ -60,8 +60,12 @@ export function ToCPanel() {
 
   if (tocEntries.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center text-center gap-3 px-4">
-        <List size={32} className="text-ink-tertiary/40" />
+      <div
+        data-component="ToCPanel"
+        data-part="empty"
+        className="flex-1 flex flex-col items-center justify-center text-center gap-3 px-4"
+      >
+        <List size={32} aria-hidden className="text-ink-tertiary/40" />
         <div>
           <p className="text-sm font-semibold text-ink-tertiary">{t("System", "No ToC")}</p>
           <p className="text-xs text-ink-tertiary mt-1">
@@ -75,20 +79,30 @@ export function ToCPanel() {
   return (
     <>
       {/* Header */}
-      <div className="flex items-center justify-between py-2.5 shrink-0">
+      <div
+        data-component="ToCPanel"
+        data-part="header"
+        className="flex items-center justify-between py-2.5 shrink-0"
+      >
         <div className="flex items-center gap-1.5">
-          <span className="text-sm font-semibold text-ink">{t("System", "Table of contents")}</span>
-          <Sparkles size={14} className="text-ink-tertiary" />
+          <h3 data-part="title" className="text-sm font-semibold text-ink">
+            {t("System", "Table of contents")}
+          </h3>
+          <Sparkles size={14} aria-hidden className="text-ink-tertiary" />
         </div>
         {hasAnyChildren && (
           <div className="flex items-center gap-3">
             <button
+              type="button"
+              data-part="collapse-all"
               onClick={collapseAll}
               className="text-xs text-ink-tertiary hover:text-ink-secondary transition-colors cursor-pointer"
             >
               {t("System", "Collapse All")}
             </button>
             <button
+              type="button"
+              data-part="expand-all"
               onClick={expandAll}
               className="text-xs font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
             >
@@ -101,7 +115,11 @@ export function ToCPanel() {
       {/* Tree */}
       {/* A scroll lane on the host's gutter. The rows are filled when active,
           so their BOX meets the gutter and their text sits inside it. */}
-      <div className="bleed flex-1 overflow-auto pb-8">
+      <ul
+        data-component="ToCPanel"
+        data-part="tree"
+        className="bleed flex-1 overflow-auto pb-8"
+      >
         {tocEntries.map((entry) => (
           <TocNode
             key={entry.id}
@@ -113,7 +131,7 @@ export function ToCPanel() {
             onJump={jumpTo}
           />
         ))}
-      </div>
+      </ul>
     </>
   );
 }
@@ -152,11 +170,12 @@ function TocNode({
   };
 
   return (
-    <div>
+    <li data-part="entry" data-level={entry.level}>
       <button
         type="button"
         onClick={handleRowClick}
         aria-current={isActive ? "true" : undefined}
+        aria-expanded={hasChildren ? isExpanded : undefined}
         data-gutter-align="box"
         className={`flex items-center gap-2 w-full px-2 py-2 text-left rounded transition-colors group cursor-pointer ${
           isActive
@@ -168,7 +187,7 @@ function TocNode({
         style={{ paddingLeft: 8 + indent }}
       >
         {/* Chevron */}
-        <span className="w-3.5 shrink-0 flex items-center justify-center">
+        <span aria-hidden className="w-3.5 shrink-0 flex items-center justify-center">
           {hasChildren && (
             <ChevronDown
               size={12}
@@ -179,6 +198,7 @@ function TocNode({
 
         {/* Label */}
         <span
+          data-part="label"
           className={`flex-1 text-xs leading-relaxed truncate ${
             entry.level === 0
               ? "font-bold text-ink uppercase"
@@ -198,7 +218,7 @@ function TocNode({
 
       {/* Children */}
       {hasChildren && isExpanded && (
-        <div>
+        <ul data-part="children">
           {entry.children!.map((child) => (
             <TocNode
               key={child.id}
@@ -210,8 +230,8 @@ function TocNode({
               onJump={onJump}
             />
           ))}
-        </div>
+        </ul>
       )}
-    </div>
+    </li>
   );
 }

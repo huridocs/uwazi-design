@@ -36,7 +36,11 @@ export function ReferencePanel() {
   return (
     // The gutter host (see `gutter-host`): the tabs and every tab body below sit
     // in this padding and carry none of their own.
-    <div data-gutter-host className="gutter-host flex flex-col h-full relative overflow-clip">
+    <div
+      data-component="ReferencePanel"
+      data-gutter-host
+      className="gutter-host flex flex-col h-full relative overflow-clip"
+    >
       <EntityOverlay />
 
       <DrawerTabs
@@ -58,7 +62,7 @@ export function ReferencePanel() {
       {activeDrawerTab === "search" && <DocumentSearchBody />}
 
       {!["metadata", "toc", "connections", "files", "search"].includes(activeDrawerTab) && (
-        <div className="flex-1 flex items-center justify-center">
+        <div data-part="empty" className="flex-1 flex items-center justify-center">
           <p className="text-sm text-ink-muted capitalize">
             {activeDrawerTab} content
           </p>
