@@ -38,6 +38,7 @@ export function SettingsNav({
   return (
     <nav
       aria-label="Settings navigation"
+      data-component="SettingsNav"
       /* The rail-tier gutter host (20px). Items, the scroll lane and the
          Documentation footer are `bleed`, so hover and active fills and the
          footer rule reach the rail edge while the text sits on the gutter. */
@@ -50,7 +51,7 @@ export function SettingsNav({
     >
       {/* The data-source switch used to live here as well. It's the collection
           picker on the navbar's Library button now — one control, one place. */}
-      <div className="bleed flex-1 min-h-0 overflow-y-auto py-4">
+      <div data-part="groups" className="bleed flex-1 min-h-0 overflow-y-auto py-4">
       {/* ONE group — the one you came in through. Settings ▸ User settings,
           Settings ▸ System settings and the Tools dropdown are three separate
           doors; the rail behind each shows that door's destinations rather than
@@ -59,9 +60,9 @@ export function SettingsNav({
         // A flex column, so the items stretch: a stretched item's `bleed`
         // margins widen it to the rail edge. A `w-full` button does not widen,
         // it only moves.
-        <div key={group.id} className="mb-2 flex flex-col">
+        <div key={group.id} data-part="group" className="mb-2 flex flex-col">
           {group.label && (
-            <SectionLabel as="h3" className="py-2">
+            <SectionLabel as="h2" className="py-2">
               {group.label}
             </SectionLabel>
           )}
@@ -77,12 +78,14 @@ export function SettingsNav({
 
             const inner = (
               <>
-                <Icon size={15} className="text-ink-tertiary shrink-0" />
+                <Icon size={15} aria-hidden className="text-ink-tertiary shrink-0" />
                 <span className="truncate flex-1">{item.label}</span>
                 {item.badge && (
-                  <span className="text-meta font-semibold text-carbon">{item.badge}</span>
+                  <span data-part="badge" className="text-meta font-semibold text-carbon">
+                    {item.badge}
+                  </span>
                 )}
-                {item.external && <ExternalLink size={12} className="text-ink-muted shrink-0" />}
+                {item.external && <ExternalLink size={12} aria-hidden className="text-ink-muted shrink-0" />}
               </>
             );
 
@@ -99,7 +102,7 @@ export function SettingsNav({
 
             const sub = startsSub && (
               <SectionLabel
-                as="h4"
+                as="h3"
                 key={`sub-${item.subgroup}`}
                 className="pt-3 pb-1"
               >
@@ -111,7 +114,13 @@ export function SettingsNav({
               return (
                 <Fragment key={item.id}>
                   {sub}
-                  <a href={item.external} target="_blank" rel="noopener noreferrer" className={cls}>
+                  <a
+                    href={item.external}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-part="item"
+                    className={cls}
+                  >
                     {inner}
                   </a>
                 </Fragment>
@@ -122,6 +131,9 @@ export function SettingsNav({
               <Fragment key={item.id}>
                 {sub}
                 <button
+                  type="button"
+                  data-part="item"
+                  aria-current={active ? "page" : undefined}
                   className={cls}
                   onClick={() => {
                     // navigateTo routes through App's handleNavigate, which is
@@ -162,12 +174,13 @@ export function SettingsNav({
         href={settingsDocumentation.external}
         target="_blank"
         rel="noopener noreferrer"
+        data-part="documentation"
         className="bleed shrink-0 flex items-center gap-2.5 h-12 text-tab font-medium text-left text-ink-secondary hover:bg-warm hover:text-ink transition-colors"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
-        <settingsDocumentation.icon size={15} className="text-ink-tertiary shrink-0" />
+        <settingsDocumentation.icon size={15} aria-hidden className="text-ink-tertiary shrink-0" />
         <span className="truncate flex-1">{settingsDocumentation.label}</span>
-        <ExternalLink size={12} className="text-ink-muted shrink-0" />
+        <ExternalLink size={12} aria-hidden className="text-ink-muted shrink-0" />
       </a>
     </nav>
   );

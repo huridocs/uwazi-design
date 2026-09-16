@@ -24,7 +24,7 @@ export function ParagraphExtractionPage() {
   ];
 
   return (
-    <SettingsContent>
+    <SettingsContent component="ParagraphExtractionPage">
       <SettingsContent.Header title="Paragraph Extraction" />
       <SettingsContent.Body>
         <p className="text-xs text-ink-tertiary mb-4">

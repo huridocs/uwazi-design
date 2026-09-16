@@ -193,7 +193,7 @@ export function PreserveTokenEditor({
   ];
 
   return (
-    <SettingsContent>
+    <SettingsContent component="PreserveTokenEditor">
       <SettingsContent.Header path={["Preserve"]} title={isNew ? "New capture source" : base!.name} onBack={onClose} />
       <SettingsContent.Body>
         <div className="flex flex-col gap-6">
@@ -233,28 +233,30 @@ export function PreserveTokenEditor({
           {!isNew && (
             <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
               <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3">
+                <dl data-part="stats" className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3">
                   <Stat label="Captures" value={captured} />
                   <Stat label="Schedule" value={schedule[0].toUpperCase() + schedule.slice(1)} />
                   <Stat label="Failed" value={failed} />
                   <Stat label="Last run" value={base!.lastRun} ltr />
-                </div>
+                </dl>
                 <Button variant="primary" size="sm" icon={<Camera size={14} />} onClick={captureNow}>
                   Capture now
                 </Button>
               </div>
 
               {/* Token */}
-              <Field label="Token">
-                <div className="flex items-center gap-2 max-w-lg">
+              {/* A readout with a copy action, not a control: a label/value pair. */}
+              <dl data-part="token" className="flex flex-col gap-1.5">
+                <dt className="text-xs font-medium text-ink-secondary">Token</dt>
+                <dd className="flex items-center gap-2 max-w-lg">
                   <code className="flex-1 min-w-0 truncate text-xs font-mono text-ink-secondary bg-vellum px-3 py-2 rounded-md" dir="ltr">
                     {base!.token}
                   </code>
                   <Button variant="secondary" size="sm" icon={<Copy size={13} />} onClick={() => toast("Token copied")}>
                     Copy
                   </Button>
-                </div>
-              </Field>
+                </dd>
+              </dl>
 
               {/* Evidence table */}
               <div className="flex flex-wrap items-center justify-between gap-2 mt-6 mb-3">
@@ -278,13 +280,14 @@ export function PreserveTokenEditor({
   );
 }
 
+/** One term of the stats `dl`: a `dt`/`dd` pair in a `div`, which a `dl` allows. */
 function Stat({ label, value, ltr }: { label: string; value: string | number; ltr?: boolean }) {
   return (
-    <div className="flex flex-col gap-1">
-      <span className="text-xs font-medium text-ink-tertiary uppercase tracking-wider">{label}</span>
-      <span className="text-lg font-semibold text-ink tabular-nums" dir={ltr ? "ltr" : undefined}>
+    <div data-part="stat" className="flex flex-col gap-1">
+      <dt className="text-xs font-medium text-ink-tertiary uppercase tracking-wider">{label}</dt>
+      <dd className="text-lg font-semibold text-ink tabular-nums" dir={ltr ? "ltr" : undefined}>
         {value}
-      </span>
+      </dd>
     </div>
   );
 }

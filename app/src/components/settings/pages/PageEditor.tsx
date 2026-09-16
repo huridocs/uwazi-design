@@ -121,7 +121,7 @@ export function PageEditor({
   };
 
   return (
-    <SettingsContent>
+    <SettingsContent component="PageEditor">
       <SettingsContent.Header path={["Pages"]} title={isNew ? "New page" : base!.title} onBack={onClose} />
       <SettingsContent.Body className="flex flex-col min-h-0">
         <section className="grid sm:grid-cols-2 gap-3 mb-4">

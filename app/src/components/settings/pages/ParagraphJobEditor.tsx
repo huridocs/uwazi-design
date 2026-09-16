@@ -176,7 +176,7 @@ export function ParagraphJobEditor({
   ];
 
   return (
-    <SettingsContent>
+    <SettingsContent component="ParagraphJobEditor">
       <SettingsContent.Header path={["Paragraph Extraction"]} title={isNew ? "New extraction" : base!.template} onBack={onClose} />
       <SettingsContent.Body>
         <div className="flex flex-col gap-6">
@@ -210,15 +210,17 @@ export function ParagraphJobEditor({
           {!isNew && (
             <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
               <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3">
+                <dl data-part="stats" className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3">
                   <Stat label="Documents" value={documents} />
                   <Stat label="Paragraphs" value={totalParagraphs.toLocaleString()} />
-                  <div className="flex flex-col gap-1">
-                    <span className="text-xs font-medium text-ink-tertiary uppercase tracking-wider">Status</span>
-                    <StatusPill status={base!.status} />
+                  <div data-part="stat" className="flex flex-col gap-1">
+                    <dt className="text-xs font-medium text-ink-tertiary uppercase tracking-wider">Status</dt>
+                    <dd>
+                      <StatusPill status={base!.status} />
+                    </dd>
                   </div>
                   <Stat label="Last run" value="2 days ago" />
-                </div>
+                </dl>
                 <Button variant="primary" size="sm" icon={<Play size={14} />} onClick={runExtraction}>
                   Run extraction
                 </Button>
@@ -246,11 +248,12 @@ export function ParagraphJobEditor({
   );
 }
 
+/** One term of the stats `dl`: a `dt`/`dd` pair in a `div`, which a `dl` allows. */
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="flex flex-col gap-1">
-      <span className="text-xs font-medium text-ink-tertiary uppercase tracking-wider">{label}</span>
-      <span className="text-lg font-semibold text-ink tabular-nums">{value}</span>
+    <div data-part="stat" className="flex flex-col gap-1">
+      <dt className="text-xs font-medium text-ink-tertiary uppercase tracking-wider">{label}</dt>
+      <dd className="text-lg font-semibold text-ink tabular-nums">{value}</dd>
     </div>
   );
 }

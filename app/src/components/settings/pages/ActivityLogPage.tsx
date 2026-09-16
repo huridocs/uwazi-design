@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { Search, X, ChevronRight } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { Field, TextInput } from "../Field";
@@ -50,6 +50,7 @@ function synthesizeRequest(e: SettingsLogEntry): string {
 }
 
 export function ActivityLogPage() {
+  const searchId = useId();
   const [query, setQuery] = useState("");
   const [method, setMethod] = useState("all");
   const [user, setUser] = useState("all");
@@ -69,16 +70,17 @@ export function ActivityLogPage() {
   });
 
   return (
-    <SettingsContent>
+    <SettingsContent component="ActivityLogPage">
       <SettingsContent.Header title="Activity log" />
       <SettingsContent.Body>
         {/* Filter toolbar */}
-        <div className="flex flex-wrap items-end gap-3 mb-4">
+        <div role="search" data-part="filters" className="flex flex-wrap items-end gap-3 mb-4">
           <div className="grow min-w-[14rem] max-w-sm">
-            <Field label="Search">
+            <Field label="Search" htmlFor={searchId}>
               <div className="relative">
-                <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted" />
+                <Search size={14} aria-hidden className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted" />
                 <TextInput
+                  id={searchId}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search summary, user…"

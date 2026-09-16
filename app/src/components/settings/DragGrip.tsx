@@ -7,10 +7,13 @@ export function DragGrip(props: HTMLAttributes<HTMLSpanElement> & { draggable?: 
   return (
     <span
       {...props}
+      data-component="DragGrip"
+      // A named image: a generic span cannot carry a label.
+      role="img"
       aria-label="Drag to reorder"
       className="shrink-0 cursor-grab active:cursor-grabbing"
     >
-      <GripVertical size={14} className="text-ink-muted" />
+      <GripVertical size={14} aria-hidden className="text-ink-muted" />
     </span>
   );
 }

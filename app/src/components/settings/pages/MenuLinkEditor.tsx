@@ -70,7 +70,7 @@ export function MenuLinkEditor({
   };
 
   return (
-    <SettingsContent>
+    <SettingsContent component="MenuLinkEditor">
       <SettingsContent.Header path={["Menu"]} title={isNew ? "New menu item" : base!.title} onBack={onClose} />
       <SettingsContent.Body>
         <div className="flex flex-col gap-6 max-w-lg">
@@ -109,14 +109,15 @@ export function MenuLinkEditor({
                 </Button>
               </div>
 
-              <div className="flex flex-col rounded-md overflow-hidden" style={{ border: "1px solid var(--border-soft)" }}>
+              <ul data-part="sub-links" className="flex flex-col rounded-md overflow-hidden" style={{ border: "1px solid var(--border-soft)" }}>
                 {subLinks.length === 0 ? (
-                  <div className="px-3 py-6 text-sm text-ink-muted text-center">No sub-links yet.</div>
+                  <li className="px-3 py-6 text-sm text-ink-muted text-center">No sub-links yet.</li>
                 ) : (
                   subLinks.map((s, i) => (
-                    <div
+                    <li
                       key={s.id}
                       {...rowProps(i)}
+                      data-part="sub-link"
                       className={`grid items-end gap-3 px-3 py-2.5 transition-opacity ${dragIdx === i ? "opacity-40" : ""}`}
                       style={{ gridTemplateColumns: "1.25rem 1fr 1fr 2.5rem", borderTop: "1px solid var(--border-soft)" }}
                     >
@@ -132,10 +133,10 @@ export function MenuLinkEditor({
                       <div className="flex justify-end pb-1.5">
                         <RowActions label={s.title || "sub-link"} onDelete={() => deleteSubLink(s.id)} />
                       </div>
-                    </div>
+                    </li>
                   ))
                 )}
-              </div>
+              </ul>
             </section>
           )}
         </div>

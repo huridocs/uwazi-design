@@ -54,7 +54,7 @@ export function RelationTypesPage() {
   ];
 
   return (
-    <SettingsContent>
+    <SettingsContent component="RelationTypesPage">
       <SettingsContent.Header title="Relationship types" />
       <SettingsContent.Body>
         <p className="text-xs text-ink-tertiary mb-4">

@@ -58,7 +58,7 @@ export function MenuPage() {
   ];
 
   return (
-    <SettingsContent>
+    <SettingsContent component="MenuPage">
       <SettingsContent.Header title="Menu" />
       <SettingsContent.Body>
         <p className="text-xs text-ink-tertiary mb-4">

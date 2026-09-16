@@ -36,6 +36,7 @@ export function Select({
   ariaSuffix,
   triggerTitle,
   steady = false,
+  id,
 }: {
   value: string;
   options: SelectOption[];
@@ -69,6 +70,8 @@ export function Select({
    *  every control beside it. (Measured before this existed: the Sort trigger
    *  swung 65.45px on "Title" to 112.67px on "Connections".) */
   steady?: boolean;
+  /** Put on the trigger, so a `<label htmlFor>` can name and focus it. */
+  id?: string;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -96,6 +99,7 @@ export function Select({
     <div ref={ref} data-component="Select" className="relative shrink-0">
       <button
         type="button"
+        id={id}
         data-part="trigger"
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="listbox"

@@ -208,7 +208,7 @@ export function ExtractorEditor({
   ];
 
   return (
-    <SettingsContent>
+    <SettingsContent component="ExtractorEditor">
       <SettingsContent.Header path={["Metadata Extraction"]} title={isNew ? "New extractor" : base!.property} onBack={onClose} />
       <SettingsContent.Body>
         <div className="flex flex-col gap-6">
@@ -229,12 +229,12 @@ export function ExtractorEditor({
           {!isNew && (
             <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
               <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3">
+                <dl data-part="stats" className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3">
                   <Stat label="Documents" value={base!.documents} />
                   <Stat label="Reviewed" value={reviewed} />
                   <Stat label="Pending" value={pending} />
                   <Stat label="Accuracy" value={accuracy === null ? "—" : `${accuracy}%`} />
-                </div>
+                </dl>
                 <Button variant="primary" size="sm" icon={<Sparkles size={14} />} onClick={findSuggestions}>
                   Find suggestions
                 </Button>
@@ -273,11 +273,12 @@ export function ExtractorEditor({
   );
 }
 
+/** One term of the stats `dl`: a `dt`/`dd` pair in a `div`, which a `dl` allows. */
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="flex flex-col gap-1">
-      <span className="text-xs font-medium text-ink-tertiary uppercase tracking-wider">{label}</span>
-      <span className="text-lg font-semibold text-ink tabular-nums">{value}</span>
+    <div data-part="stat" className="flex flex-col gap-1">
+      <dt className="text-xs font-medium text-ink-tertiary uppercase tracking-wider">{label}</dt>
+      <dd className="text-lg font-semibold text-ink tabular-nums">{value}</dd>
     </div>
   );
 }

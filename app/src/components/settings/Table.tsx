@@ -10,7 +10,7 @@ interface TableProps<T> {
   onRowClick?: (row: T) => void;
   selectedId?: string | null;
   emptyState?: React.ReactNode;
-  rowProps?: (row: T, index: number) => HTMLAttributes<HTMLDivElement>;
+  rowProps?: (row: T, index: number) => HTMLAttributes<HTMLTableRowElement>;
 }
 
 /** Settings list table — the shared `DataTable` (entity-view Files style) with
