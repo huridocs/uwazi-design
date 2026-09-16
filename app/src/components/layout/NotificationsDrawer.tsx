@@ -138,6 +138,8 @@ export function NotificationsDrawer({ rtl = false }: { rtl?: boolean }) {
       {/* Scrim */}
       <div
         onClick={() => setOpen(false)}
+        data-component="NotificationsDrawer"
+        data-part="scrim"
         className={`fixed inset-0 z-[60] bg-ink/20 transition-opacity duration-300 ${
           open ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
@@ -150,32 +152,39 @@ export function NotificationsDrawer({ rtl = false }: { rtl?: boolean }) {
         dir={rtl ? "rtl" : "ltr"}
         role="dialog"
         aria-modal="true"
-        aria-label="Notifications"
+        aria-labelledby="notifications-drawer-title"
+        data-component="NotificationsDrawer"
+        data-part="panel"
+        data-state={open ? "open" : "closed"}
         data-gutter-host
         className={`fixed top-0 bottom-0 ${side} z-[61] w-[23rem] max-w-[calc(100vw-2.5rem)]
           gutter-host-main bg-paper border-border shadow-xl flex flex-col beacon-spring
           transition-transform duration-300 ${open ? "translate-x-0" : closedTransform}`}
       >
         {/* Header — `bleed`, so its rule runs to the panel edge */}
-        <div className="shrink-0 bleed border-b border-border">
+        <header data-part="header" className="shrink-0 bleed border-b border-border">
           <div className="flex items-center gap-2 h-14">
-            <h2 className="text-base font-semibold text-ink">Notifications</h2>
+            <h2 id="notifications-drawer-title" data-part="title" className="text-base font-semibold text-ink">Notifications</h2>
             {unread > 0 && (
-              <span className="min-w-[18px] h-[18px] px-1.5 flex items-center justify-center rounded-full bg-carbon text-paper text-meta font-bold tabular-nums">
+              <span data-part="unread-count" className="min-w-[18px] h-[18px] px-1.5 flex items-center justify-center rounded-full bg-carbon text-paper text-meta font-bold tabular-nums">
                 {unread}
               </span>
             )}
             <div className="ms-auto flex items-center gap-0.5">
               {unread > 0 && (
                 <button
+                  type="button"
                   onClick={markAllRead}
+                  data-part="mark-all-read"
                   className="flex items-center gap-1 px-2 h-7 text-xs leading-normal font-medium text-ink-secondary rounded-md hover:bg-warm transition-colors"
                 >
                   <CheckCheck size={14} /> Mark all read
                 </button>
               )}
               <button
+                type="button"
                 onClick={() => setOpen(false)}
+                data-part="close"
                 className="flex items-center justify-center w-7 h-7 rounded-md text-ink-muted hover:bg-warm hover:text-ink-secondary transition-colors"
                 aria-label="Close"
                 data-gutter-align="box"
@@ -185,19 +194,19 @@ export function NotificationsDrawer({ rtl = false }: { rtl?: boolean }) {
             </div>
           </div>
           {/* Filter */}
-          <div className="flex items-center gap-1 pb-2.5">
+          <div data-part="filter" role="group" aria-label="Show" className="flex items-center gap-1 pb-2.5">
             <FilterPill active={filter === "all"} onClick={() => setFilter("all")} label="All" count={notifications.length} />
             <FilterPill active={filter === "unread"} onClick={() => setFilter("unread")} label="Unread" count={unread} />
           </div>
-        </div>
+        </header>
 
         {/* Body — polite live region so task progress + new arrivals are
             announced while the drawer is open. A `bleed` scroll lane: warm ground
             and scrollbar at the panel edge. */}
-        <div aria-live="polite" className="flex-1 overflow-y-auto bg-warm bleed">
+        <div aria-live="polite" data-part="body" className="flex-1 overflow-y-auto bg-warm bleed">
           {/* Tasks */}
           {activities.length > 0 && (
-            <section>
+            <section data-part="tasks">
               <SectionLabel className={STICKY}>Tasks · {activities.length}</SectionLabel>
               <div className="pb-3 space-y-2">
                 {activities.map((a) => (
@@ -213,7 +222,7 @@ export function NotificationsDrawer({ rtl = false }: { rtl?: boolean }) {
           ) : (
             orderedBuckets.map((b) =>
               groups[b].length === 0 ? null : (
-                <section key={b}>
+                <section key={b} data-part="bucket" data-bucket={b}>
                   <SectionLabel className={STICKY}>{bucketLabel[b]}</SectionLabel>
                   <div className="pb-3 space-y-2">
                     {groups[b].map((n) => (
@@ -236,16 +245,18 @@ export function NotificationsDrawer({ rtl = false }: { rtl?: boolean }) {
         </div>
 
         {/* Footer */}
-        <div className="shrink-0 bleed border-t border-border py-3">
+        <footer data-part="footer" className="shrink-0 bleed border-t border-border py-3">
           <button
+            type="button"
             onClick={() => setNotifications([])}
+            data-part="clear-all"
             disabled={notifications.length === 0}
             className="w-full h-9 text-tab font-medium text-ink-secondary bg-paper border border-border rounded-md
               hover:bg-warm transition-colors disabled:opacity-40 disabled:cursor-default"
           >
             Clear all
           </button>
-        </div>
+        </footer>
       </aside>
     </>
   );
@@ -264,7 +275,10 @@ function FilterPill({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
+      data-part="filter-option"
+      aria-pressed={active}
       className={`flex items-center gap-1.5 px-2.5 h-7 text-xs leading-normal font-medium rounded-md transition-colors ${
         active ? "bg-vellum text-ink" : "text-ink-secondary hover:bg-warm"
       }`}
@@ -279,15 +293,17 @@ function TaskCard({ a, onCancel }: { a: Activity; onCancel: () => void }) {
   const pct = Math.round((a.current / a.total) * 100);
   const done = a.current >= a.total;
   return (
-    <div className="bg-paper border border-border-soft rounded-lg px-3 py-2.5">
+    <article data-part="task" className="bg-paper border border-border-soft rounded-lg px-3 py-2.5">
       <div className="flex items-center gap-2">
         <span className="shrink-0 flex items-center">
           <UwaziLoader size="xs" color="carbon" animate={!done} />
         </span>
-        <span className="text-tab font-medium text-ink truncate flex-1">{a.label}…</span>
+        <h4 data-part="task-label" className="text-tab font-medium text-ink truncate flex-1">{a.label}…</h4>
         <span className="text-meta font-medium text-carbon shrink-0">{done ? "Finishing" : "Running"}</span>
         <button
+          type="button"
           onClick={onCancel}
+          data-part="cancel"
           className="shrink-0 flex items-center justify-center w-5 h-5 rounded text-ink-muted hover:bg-warm transition-colors"
           aria-label="Cancel task"
         >
@@ -304,13 +320,13 @@ function TaskCard({ a, onCancel }: { a: Activity; onCancel: () => void }) {
         </div>
         <span className="text-meta font-semibold text-ink-tertiary tabular-nums shrink-0">{pct}%</span>
       </div>
-    </div>
+    </article>
   );
 }
 
 function EmptyState({ filter }: { filter: "all" | "unread" }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-2 py-16 px-6 text-center">
+    <div data-part="empty" className="flex flex-col items-center justify-center gap-2 py-16 px-6 text-center">
       <Inbox size={28} className="text-ink-muted" strokeWidth={1.5} />
       <p className="text-sm font-medium text-ink-secondary">
         {filter === "unread" ? "No unread notifications" : "You're all caught up"}
@@ -343,7 +359,10 @@ function NotifCard({
   const { Icon, color, card } = kindStyle[n.kind];
 
   return (
-    <div
+    <article
+      data-part="notification"
+      data-kind={n.kind}
+      data-read={n.read}
       onClick={() => !n.read && onRead()}
       className={`group relative rounded-lg border px-3 py-2.5 ${card} cursor-pointer
         transition-all duration-200 ${removing ? "opacity-0 scale-[0.97]" : "opacity-100"}
@@ -351,10 +370,12 @@ function NotifCard({
         ${n.read ? "opacity-75 hover:opacity-100" : ""}`}
     >
       <button
+        type="button"
         onClick={(e) => {
           e.stopPropagation();
           onDismiss();
         }}
+        data-part="dismiss"
         className="absolute top-2.5 end-2.5 flex items-center justify-center w-5 h-5 rounded text-ink-muted opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-ink/5 transition-opacity"
         aria-label="Dismiss"
       >
@@ -365,24 +386,27 @@ function NotifCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             {!n.read && <span className="w-1.5 h-1.5 rounded-full bg-carbon shrink-0" />}
-            <span className="text-tab font-medium text-ink">{n.title}</span>
+            <h4 data-part="title" className="text-tab font-medium text-ink">{n.title}</h4>
           </div>
           {n.detail && <div className="text-xs leading-normal text-ink-secondary mt-0.5">{n.detail}</div>}
 
           {n.details && (
             <>
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   setExpanded((v) => !v);
                 }}
+                data-part="details-toggle"
+                aria-expanded={expanded}
                 className="mt-1 inline-flex items-center gap-1 text-meta font-medium text-ink-tertiary hover:text-ink-secondary transition-colors"
               >
                 <ChevronDown size={12} className={`transition-transform ${expanded ? "rotate-180" : ""}`} />
                 {expanded ? "Hide details" : "Show details"}
               </button>
               {expanded && (
-                <pre className="mt-1.5 rounded-md bg-ink/[0.04] border border-border-soft px-2.5 py-2 text-meta leading-relaxed font-mono text-ink-secondary whitespace-pre-wrap break-words">
+                <pre data-part="details" className="mt-1.5 rounded-md bg-ink/[0.04] border border-border-soft px-2.5 py-2 text-meta leading-relaxed font-mono text-ink-secondary whitespace-pre-wrap break-words">
                   {n.details}
                 </pre>
               )}
@@ -391,14 +415,16 @@ function NotifCard({
 
           {/* Footer: actions + timestamp */}
           <div className="mt-1.5 flex items-center gap-2">
-            <span className="text-meta text-ink-tertiary">{fmtTime(n.time, now)}</span>
+            <time data-part="time" dateTime={new Date(n.time).toISOString()} className="text-meta text-ink-tertiary">{fmtTime(n.time, now)}</time>
             <div className="ms-auto flex items-center gap-1">
               {n.kind === "error" && (
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     onRetry();
                   }}
+                  data-part="retry"
                   className="flex items-center gap-1 px-2 h-6 text-meta font-medium text-ink-secondary bg-paper/70 border border-border-soft rounded-md hover:bg-paper transition-colors"
                 >
                   <RotateCw size={11} /> Retry
@@ -406,10 +432,12 @@ function NotifCard({
               )}
               {!n.read && (
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     onRead();
                   }}
+                  data-part="mark-read"
                   className="flex items-center justify-center w-6 h-6 rounded-md text-ink-tertiary hover:bg-ink/5 transition-colors"
                   aria-label="Mark read"
                   title="Mark read"
@@ -421,6 +449,6 @@ function NotifCard({
           </div>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

@@ -61,7 +61,7 @@ export function App() {
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <div data-component="App" className="h-screen flex flex-col overflow-hidden">
       <Navbar
         onLogoClick={handleLogoClick}
         appView={appView}
@@ -69,7 +69,8 @@ export function App() {
         rtl={rtl}
         onToggleRtl={handleToggleRtl}
       />
-      <div className="flex-1 min-h-0 flex flex-col">
+      {/* The document's one `main`: whichever view is switched in. */}
+      <main data-part="view" data-view={appView} className="flex-1 min-h-0 flex flex-col">
         {appView === "import-csv" ? (
           <ImportCSVView onNavigate={handleNavigate} />
         ) : appView === "settings" ? (
@@ -79,7 +80,7 @@ export function App() {
         ) : (
           <EntityView />
         )}
-      </div>
+      </main>
       <AgentModal />
       <UnsavedChangesGuard />
     </div>

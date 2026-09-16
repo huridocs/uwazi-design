@@ -54,9 +54,12 @@ export function MobileActionMenu({ items }: MobileActionMenuProps) {
   };
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} data-component="MobileActionMenu" className="relative">
       <button
+        type="button"
         onClick={toggle}
+        data-part="trigger"
+        aria-haspopup="menu"
         className="flex items-center justify-center rounded-md border border-border hover:bg-warm transition-colors w-9 h-9"
         style={{ color: "var(--text-secondary)" }}
         aria-label="More options"
@@ -68,6 +71,7 @@ export function MobileActionMenu({ items }: MobileActionMenuProps) {
       {open && (
         <div
           role="menu"
+          data-part="menu"
           className="absolute bg-paper rounded-md overflow-hidden"
           style={{
             [side === "bottom" ? "top" : "bottom"]: "calc(100% + 6px)",
@@ -81,7 +85,9 @@ export function MobileActionMenu({ items }: MobileActionMenuProps) {
           {items.map((item) => (
             <button
               key={item.id}
+              type="button"
               role="menuitem"
+              data-part="item"
               onClick={() => {
                 item.onSelect();
                 setOpen(false);
@@ -93,7 +99,7 @@ export function MobileActionMenu({ items }: MobileActionMenuProps) {
                 {item.label}
               </div>
               {item.count !== undefined && (
-                <span className="text-meta font-semibold text-ink-tertiary">
+                <span data-part="count" className="text-meta font-semibold text-ink-tertiary">
                   {item.count}
                 </span>
               )}

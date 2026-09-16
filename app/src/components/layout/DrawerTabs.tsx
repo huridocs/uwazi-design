@@ -69,8 +69,8 @@ export function DrawerTabs({ tabs, activeId, onChange, className = "tabstrip-slo
   const hiddenDot = tabs.some((t) => t.dot && t.id !== activeId);
 
   return (
-    <div className={`${className} shrink-0 relative`}>
-      <div ref={availRef} className="w-full min-w-0">
+    <div data-component="DrawerTabs" data-folded={folded} className={`${className} shrink-0 relative`}>
+      <div ref={availRef} data-part="tabs" className="w-full min-w-0">
         {folded ? (
           <Select
             value={activeTab?.id ?? ""}
@@ -103,6 +103,7 @@ export function DrawerTabs({ tabs, activeId, onChange, className = "tabstrip-slo
           no width to measure; absolutely positioned, so it costs no layout. */}
       <div
         ref={probeRef}
+        data-part="probe"
         aria-hidden
         className="pointer-events-none absolute -z-10 w-max"
         style={{ visibility: "hidden", top: 0, insetInlineStart: 0 }}
@@ -134,6 +135,7 @@ function Strip({
        strip still reads as one frame under RTL. */
     <div
       className="flex items-stretch rounded-md w-fit"
+      data-part="strip"
       role={probe ? undefined : "tablist"}
       style={TAB_STRIP_FRAME}
     >
@@ -143,7 +145,10 @@ function Strip({
           <div key={tab.id} className="flex items-stretch">
             {i > 0 && <div className="w-px self-stretch bg-border" aria-hidden="true" />}
             <button
+              type="button"
               role={probe ? undefined : "tab"}
+              data-part="tab"
+              data-tab-id={tab.id}
               tabIndex={probe ? -1 : undefined}
               aria-selected={probe ? undefined : active}
               onClick={probe ? undefined : () => onChange(tab.id)}
@@ -154,13 +159,14 @@ function Strip({
                 active ? "bg-vellum text-ink" : "bg-paper text-ink-tertiary hover:text-ink-secondary"
               }`}
             >
-              <span className="truncate">{tab.label}</span>
+              <span data-part="label" className="truncate">{tab.label}</span>
               {tab.count !== undefined && <TabCount count={tab.count} />}
               {/* Decorative — the state it points at is announced by the panel
                   it belongs to, so nothing depends on seeing it. */}
               {tab.dot && !active && (
                 <span
                   aria-hidden="true"
+                  data-part="dot"
                   className="absolute -top-0.5 -end-0.5 w-1.5 h-1.5 rounded-full"
                   style={{ backgroundColor: "var(--accent-blue)" }}
                 />

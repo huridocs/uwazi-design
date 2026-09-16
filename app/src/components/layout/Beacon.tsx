@@ -186,11 +186,13 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
     <>
       {/* Visually-hidden live region — announces flashes (action feedback /
           new arrivals) to screen readers; the pill itself is purely visual. */}
-      <span aria-live="polite" className="sr-only">
+      <span aria-live="polite" data-component="Beacon" data-part="announcer" className="sr-only">
         {flash?.message ?? ""}
       </span>
       <div
         dir="ltr"
+        data-component="Beacon"
+        data-state={flash ? "flash" : isExpanded ? "expanded" : "collapsed"}
         className="relative shrink-0"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -208,7 +210,9 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
           {/* Clip wrapper keeps rail content rounded through the width morph. */}
           <div className="overflow-hidden" style={{ borderRadius: "inherit" }}>
             <button
+              type="button"
               onClick={() => { setOpen(true); setFlash(null); }}
+              data-part="trigger"
               className="relative flex items-center w-full h-7 px-2.5 hover:bg-parchment transition-colors"
               aria-label={`Notifications${unread > 0 ? `, ${unread} unread` : ""}`}
               aria-haspopup="dialog"

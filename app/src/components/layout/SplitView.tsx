@@ -108,9 +108,9 @@ export function SplitView({
 
   return (
     <SplitWidthProvider value={rightWidth}>
-    <div ref={containerRef} className="flex flex-1 overflow-hidden">
+    <div ref={containerRef} data-component="SplitView" className="flex flex-1 overflow-hidden">
       {/* Both panes wait for the container's first measure — see `measured`. */}
-      <div className="flex-1 overflow-hidden">{measured && left}</div>
+      <div data-part="content" className="flex-1 overflow-hidden">{measured && left}</div>
       {/* ONE EDGE, not two. The drawer used to carry `border-l` and the divider
           sat beside it as a 4px transparent strip, so the line you could see and
           the thing you could drag were different objects a few pixels apart —
@@ -120,6 +120,7 @@ export function SplitView({
           5px divider that paints its own last pixel. */}
       <div
         role="separator"
+        data-part="divider"
         aria-orientation="vertical"
         aria-label="Resize panel"
         aria-valuenow={Math.round(rightWidth)}
@@ -161,14 +162,17 @@ export function SplitView({
           }`}
         />
       </div>
-      <div
+      {/* The drawer is supporting content beside the view: `aside`. */}
+      <aside
+        data-part="drawer"
+        aria-label="Side panel"
         className="shrink-0 overflow-hidden bg-paper"
         style={{ width: rightWidth }}
       >
         {/* Panels stacked INSIDE the drawer (the connected-entity overlay) read
             this resolved width rather than the box they happen to be mounted in. */}
         <DrawerWidthProvider value={rightWidth}>{measured && right}</DrawerWidthProvider>
-      </div>
+      </aside>
     </div>
     </SplitWidthProvider>
   );

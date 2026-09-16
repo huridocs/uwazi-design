@@ -18,14 +18,18 @@ export function ThemeToggle({ variant = "icon" }: { variant?: "icon" | "row" }) 
   if (variant === "row") {
     return (
       <button
+        type="button"
         onClick={toggle}
+        data-component="ThemeToggle"
+        data-variant="row"
+        data-theme-value={theme}
         className="flex items-center justify-between gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
       >
         <div className="flex items-center gap-3">
           <Icon size={16} className="text-ink-tertiary" />
           {t("System", "Theme")}
         </div>
-        <span className="px-1.5 py-0.5 text-meta font-semibold rounded bg-warm text-ink-muted">
+        <span data-part="value" className="px-1.5 py-0.5 text-meta font-semibold rounded bg-warm text-ink-muted">
           {label}
         </span>
       </button>
@@ -34,7 +38,11 @@ export function ThemeToggle({ variant = "icon" }: { variant?: "icon" | "row" }) 
 
   return (
     <button
+      type="button"
       onClick={toggle}
+      data-component="ThemeToggle"
+      data-variant="icon"
+      data-theme-value={theme}
       className="p-1.5 text-ink-tertiary hover:text-ink-secondary hover:bg-warm rounded-md transition-colors"
       aria-label={`${t("System", "Theme")}: ${label}`}
       title={`${t("System", "Theme")}: ${label}`}

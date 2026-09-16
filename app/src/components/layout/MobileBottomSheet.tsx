@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState, useRef } from "react";
+import { ReactNode, useEffect, useId, useState, useRef } from "react";
 import { X } from "lucide-react";
 
 interface MobileBottomSheetProps {
@@ -23,6 +23,7 @@ export function MobileBottomSheet({
   const sheetRef = useRef<HTMLDivElement>(null);
   const dragStartY = useRef<number | null>(null);
   const dragStartHeight = useRef<number>(0);
+  const titleId = useId();
 
   // Reset snap point when reopened
   useEffect(() => {
@@ -89,6 +90,8 @@ export function MobileBottomSheet({
     <>
       {/* Backdrop */}
       <div
+        data-component="MobileBottomSheet"
+        data-part="backdrop"
         className="fixed inset-0 transition-opacity duration-200"
         style={{
           backgroundColor: "color-mix(in srgb, var(--text-primary) 30%, transparent)",
@@ -105,7 +108,10 @@ export function MobileBottomSheet({
         ref={sheetRef}
         role="dialog"
         aria-modal="true"
-        aria-label={title}
+        aria-labelledby={title ? titleId : undefined}
+        data-component="MobileBottomSheet"
+        data-part="sheet"
+        data-snap={snap}
         className="fixed left-0 right-0 bottom-0 flex flex-col bg-paper transition-transform duration-250 ease-out"
         style={{
           height: `${snap === "full" ? SNAP_FULL_VH : SNAP_HALF_VH}vh`,
@@ -119,6 +125,7 @@ export function MobileBottomSheet({
       >
         {/* Drag handle */}
         <div
+          data-part="handle"
           className="flex justify-center pt-2 pb-1 cursor-grab active:cursor-grabbing touch-none"
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
@@ -134,12 +141,15 @@ export function MobileBottomSheet({
         {/* Header */}
         {(title || true) && (
           <div
+            data-part="header"
             className="flex items-center justify-between px-4 py-2 shrink-0"
             style={{ borderBottom: "1px solid var(--border-primary)" }}
           >
-            <span className="text-sm font-semibold text-ink">{title}</span>
+            <h2 id={titleId} data-part="title" className="text-sm font-semibold text-ink">{title}</h2>
             <button
+              type="button"
               onClick={onClose}
+              data-part="close"
               className="p-1 rounded-md hover:bg-warm text-ink-muted hover:text-ink transition-colors"
               aria-label="Close"
             >
@@ -149,7 +159,7 @@ export function MobileBottomSheet({
         )}
 
         {/* Content */}
-        <div className="flex-1 min-h-0 overflow-auto" style={{ overscrollBehavior: "contain" }}>
+        <div data-part="body" className="flex-1 min-h-0 overflow-auto" style={{ overscrollBehavior: "contain" }}>
           {children}
         </div>
       </div>

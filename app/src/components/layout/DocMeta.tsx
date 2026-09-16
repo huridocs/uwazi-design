@@ -89,7 +89,8 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
   const ActiveIcon = activeFormat.icon;
 
   return (
-    <div
+    <header
+      data-component="DocMeta"
       /* Rendered inside a gutter host: no side padding of its own, and `bleed`
          so its bottom rule spans the pane. */
       className="bleed flex items-center gap-2 min-h-11 pt-1 pb-2 shrink-0"
@@ -106,6 +107,7 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
         // nothing else; the Files tab names the document there.
         <span
           title={docName}
+          data-part="document-name"
           className="hidden md:block shrink max-w-[18rem] truncate text-meta text-ink-tertiary"
         >
           {docName}
@@ -113,10 +115,11 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
       )}
 
       {showPdfSelector && (
-        <div ref={pickerRef} className="relative shrink-0">
+        <div ref={pickerRef} data-part="format-picker" className="relative shrink-0">
           <button
             type="button"
             onClick={() => setPickerOpen((o) => !o)}
+            data-part="trigger"
             aria-haspopup="menu"
             aria-expanded={pickerOpen}
             aria-label="Document format"
@@ -132,6 +135,7 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
           {pickerOpen && (
             <div
               role="menu"
+              data-part="menu"
               className="absolute right-0 top-full mt-1 z-30 min-w-40 rounded-md bg-paper border border-border shadow-xl py-1 animate-fade-in-up"
             >
               {FORMATS.map((f) => {
@@ -141,6 +145,9 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
                     key={f.id}
                     type="button"
                     role="menuitem"
+                    data-part="option"
+                    data-format={f.id}
+                    aria-current={f.id === format || undefined}
                     onClick={() => {
                       setFormat(f.id);
                       setPickerOpen(false);
@@ -160,6 +167,6 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
           )}
         </div>
       )}
-    </div>
+    </header>
   );
 }

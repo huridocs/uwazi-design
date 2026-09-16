@@ -78,6 +78,8 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
          the toolbar and cards beneath it. It used to carry its own `px-4` to
          match the metadata cards' `p-4`, which put it 4px off every other
          tab's toolbar. */
+      data-component="MainTabs"
+      data-folded={isNarrow}
       className="tabstrip-slot relative flex items-center justify-between gap-3 shrink-0"
     >
       {/* Left: Back + Tabs.
@@ -99,7 +101,9 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
           below 768px. The row's own `gap-3` spaces it from the cluster. */}
       {onBack && (
         <button
+          type="button"
           onClick={onBack}
+          data-part="back"
           className="md:hidden text-ink-tertiary hover:text-ink transition-colors shrink-0 cursor-pointer"
           aria-label="Go back"
         >
@@ -108,6 +112,7 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
       )}
       <div
         ref={availRef}
+        data-part="tabs"
         className={`flex flex-1 items-center gap-3 md:gap-4 min-w-0 ${
           isNarrow ? "" : "overflow-x-auto"
         }`}
@@ -154,6 +159,7 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
           because a `display: none` box has no width to measure. */}
       <div
         ref={probeRef}
+        data-part="probe"
         aria-hidden
         className="pointer-events-none absolute -z-10 w-max"
         style={{ visibility: "hidden", top: 0, insetInlineStart: 0 }}
@@ -172,7 +178,7 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
           pill for every language the collection adds. Unavailable renditions stay
           listed but disabled. */}
       {languages.length > 0 && (
-        <div className="shrink-0">
+        <div data-part="language" className="shrink-0">
           <Select
             value={currentLang}
             onChange={(v) => onLanguageChange?.(v)}
@@ -227,6 +233,7 @@ function TabStrip({
        still reads as one frame under RTL. */
     <div
       className="flex items-stretch rounded-md shrink-0"
+      data-part="strip"
       role={probe ? undefined : "tablist"}
       aria-hidden={probe || undefined}
       style={TAB_STRIP_FRAME}
@@ -235,7 +242,10 @@ function TabStrip({
         <div key={tab.id} className="flex items-stretch">
           {i > 0 && <div className="w-px self-stretch bg-border" aria-hidden="true" />}
           <button
+            type="button"
             role={probe ? undefined : "tab"}
+            data-part="tab"
+            data-tab-id={tab.id}
             tabIndex={probe ? -1 : undefined}
             aria-selected={probe ? undefined : activeId === tab.id}
             onClick={probe ? undefined : () => onChange(tab.id)}
@@ -259,6 +269,7 @@ function TabStrip({
             {tab.dot && activeId !== tab.id && (
               <span
                 aria-hidden="true"
+                data-part="dot"
                 className="absolute -top-0.5 -end-0.5 w-1.5 h-1.5 rounded-full"
                 style={{ backgroundColor: "var(--accent-blue)" }}
               />

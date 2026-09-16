@@ -52,14 +52,15 @@ export function AdaptiveSplitView({
 
     return (
       <>
-        <div className="flex flex-1 overflow-hidden">
-          <div className="flex-1 overflow-hidden">
+        <div data-component="AdaptiveSplitView" data-layout="mobile" className="flex flex-1 overflow-hidden">
+          <div data-part="content" className="flex-1 overflow-hidden">
             {mobileLeft ? mobileLeft(<MobileActionMenu items={menuItems} />) : left}
           </div>
         </div>
         {/* Floating menu trigger when no embedded slot — sits above any action bar */}
         {!mobileLeft && (
           <div
+            data-part="menu-trigger"
             className="fixed"
             style={{
               right: 12,

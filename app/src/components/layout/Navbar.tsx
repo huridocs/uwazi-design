@@ -132,14 +132,22 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
     // padding parked the logo (and the right cluster) 8px inboard of everything it
     // sits above. The chrome and its content share a left edge now.
     <header
+      data-component="Navbar"
       className="relative h-13 bg-paper flex items-center justify-between px-3 shrink-0"
       style={{ borderBottom: "1px solid var(--border-primary)" }}
     >
+      {/* The page's one h1. The logo is an image inside a button, so it can't
+          carry the heading itself without changing what the button announces. */}
+      <h1 className="sr-only">Uwazi</h1>
       {/* Left: Logo + (mobile hamburger | desktop nav) */}
-      <div className="flex items-center gap-3 md:gap-4">
+      <div data-part="start" className="flex items-center gap-3 md:gap-4">
         {isMobile && !showingCatalog && (
           <button
+            type="button"
             onClick={() => setMobileMenuOpen(true)}
+            data-part="menu-trigger"
+            aria-haspopup="dialog"
+            aria-expanded={mobileMenuOpen}
             className="flex items-center justify-center rounded-md hover:bg-warm transition-colors w-8 h-8"
             style={{ color: "var(--text-secondary)" }}
             aria-label="Open menu"
@@ -148,13 +156,16 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
           </button>
         )}
         <button
+          type="button"
           onClick={onLogoClick}
+          data-part="logo"
           className="flex items-center"
         >
           <img src={asset("/nu-logo.svg")} alt="Uwazi" style={{ height: 14.7 }} className="logo-img" />
         </button>
         {IS_PLAYGROUND && (
           <span
+            data-part="build-tag"
             className="px-1.5 py-0.5 text-meta font-medium rounded bg-warm text-ink-secondary shrink-0"
             title="This build is the playground branch — it carries what main no longer does"
           >
@@ -162,19 +173,23 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
           </span>
         )}
         {!showingCatalog && !isMobile && (
-          <div className="flex items-center gap-2">
+          <nav data-part="primary-nav" aria-label="Primary" className="flex items-center gap-2">
             {appView === "entity" ? (
               // Locator/breadcrumb: Library (back) › current entity.
-              <div className="flex items-center gap-1 min-w-0">
+              <div data-part="locator" className="flex items-center gap-1 min-w-0">
                 <button
+                  type="button"
                   onClick={() => onNavigate?.("library")}
+                  data-part="library"
                   className="flex items-center gap-1.5 px-3 py-1 text-tab font-medium rounded-md transition-colors text-ink-secondary bg-warm hover:bg-parchment hover:text-ink"
                 >
                   <BookOpen size={14} /> {t("System", "Library")}
                 </button>
-                <ChevronRight size={14} className="text-ink-tertiary shrink-0" />
+                <ChevronRight size={14} aria-hidden className="text-ink-tertiary shrink-0" />
                 <span
                   title={focalTitle}
+                  data-part="current-entity"
+                  aria-current="page"
                   className="px-2.5 py-1 text-tab font-medium text-ink bg-vellum rounded-md truncate max-w-[16rem]"
                 >
                   {focalTitle}
@@ -184,9 +199,12 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
               // Library + its COLLECTION picker. The dataset switch used to sit in
               // the Library toolbar, where it was one more thing pushing the view
               // controls around; it belongs to the destination, not the view.
-              <div ref={collectionRef} className="relative flex items-center">
+              <div ref={collectionRef} data-part="collection" className="relative flex items-center">
                 <button
+                  type="button"
                   onClick={() => onNavigate?.("library")}
+                  data-part="library"
+                  aria-current={appView === "library" ? "page" : undefined}
                   className={`flex items-center gap-1.5 ps-3 pe-2 py-1 text-tab font-medium rounded-s-md transition-colors ${
                     appView === "library"
                       ? "text-ink bg-vellum"
@@ -196,6 +214,8 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                   <BookOpen size={14} /> {t("System", "Library")}
                 </button>
                 <button
+                  type="button"
+                  data-part="collection-trigger"
                   onClick={() => {
                     setCollectionOpen((o) => !o);
                     setToolsOpen(false);
@@ -221,6 +241,8 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                 {collectionOpen && (
                   <div
                     role="listbox"
+                    data-part="collection-menu"
+                    aria-label="Collection"
                     className="absolute top-full mt-1.5 end-0 w-52 bg-paper border border-border rounded-lg shadow-lg overflow-hidden z-50 py-1"
                   >
                     <SectionLabel as="p" className="px-3 pt-1 pb-1">
@@ -231,7 +253,9 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                       return (
                         <button
                           key={c.id}
+                          type="button"
                           role="option"
+                          data-part="option"
                           aria-selected={on}
                           onClick={() => {
                             selectSource(c.id);
@@ -260,9 +284,12 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                 )}
               </div>
             )}
-            <div className="relative" ref={toolsRef}>
+            <div className="relative" ref={toolsRef} data-part="tools">
               <button
+                type="button"
                 onClick={() => { setToolsOpen((o) => !o); setSettingsOpen(false); }}
+                data-part="tools-trigger"
+                aria-expanded={toolsOpen}
                 className={`flex items-center gap-1.5 px-3 py-1 text-tab font-medium rounded-md transition-colors ${
                   toolsOpen || appView === "import-csv"
                     ? "text-ink bg-vellum"
@@ -273,6 +300,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
               </button>
               {toolsOpen && (
                 <div
+                  data-part="tools-menu"
                   dir="ltr"
                   className="absolute top-full mt-1.5 w-48 bg-paper border border-border rounded-lg shadow-lg overflow-hidden z-50"
                   style={{ left: rtl ? undefined : 0, right: rtl ? 0 : undefined }}
@@ -330,6 +358,8 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                         <Fragment key={item.id}>
                           {sub}
                           <button
+                            type="button"
+                            data-part="tools-item"
                             onClick={() => {
                               // Import CSV is its own top-level view; the rest are
                               // settings pages that were sitting unreachable in a
@@ -349,16 +379,18 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                 </div>
               )}
             </div>
-          </div>
+          </nav>
         )}
       </div>
 
       {/* Right: Notifications + Assistant + Settings + Theme toggle */}
-      <div className="flex items-center gap-2">
+      <div data-part="end" className="flex items-center gap-2">
         {!showingCatalog && <Beacon rtl={rtl} />}
         {!showingCatalog && (
           <button
+            type="button"
             onClick={() => openAgent(true)}
+            data-part="ask-bert"
             className="flex items-center gap-1.5 px-2.5 h-7 text-tab font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors"
             title={`${t("System", "Ask Bert")} (${shortcutLabel})`}
           >
@@ -368,15 +400,20 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
         )}
         {showingCatalog ? (
           <button
+            type="button"
             onClick={onLogoClick}
+            data-part="return"
             className="flex items-center gap-1.5 px-3 py-1 text-tab font-medium text-ink-secondary rounded-md bg-warm hover:bg-parchment hover:text-ink transition-colors"
           >
             <ArrowLeft size={14} /> Return to app
           </button>
         ) : !isMobile ? (
-          <div className="relative" ref={settingsRef}>
+          <div className="relative" ref={settingsRef} data-part="settings">
             <button
+              type="button"
               onClick={() => { setSettingsOpen((o) => !o); setToolsOpen(false); }}
+              data-part="settings-trigger"
+              aria-expanded={settingsOpen}
               className={`flex items-center gap-1.5 px-3 py-1 text-tab font-medium rounded-md transition-colors ${
                 settingsOpen
                   ? "text-ink bg-vellum"
@@ -391,6 +428,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                 one surface reading against the page. */}
             {settingsOpen && (
               <div
+                data-part="settings-menu"
                 // w-72, not the old w-52: the language row carries a control in
                 // its trailing slot, so the label has far less room than the
                 // plain rows. Sized against the LONGEST of the three UI
@@ -486,7 +524,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
           onClose={() => setMobileMenuOpen(false)}
           title="Menu"
         >
-          <div className="flex flex-col py-2">
+          <nav data-part="mobile-nav" aria-label="Primary" className="flex flex-col py-2">
             {/* Library */}
             <button
               onClick={() => { onNavigate?.("library"); setMobileMenuOpen(false); }}
@@ -605,7 +643,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
               <Server size={16} className="text-ink-tertiary" />
               {t("System", "System settings")}
             </button>
-          </div>
+          </nav>
         </MobileBottomSheet>
       )}
     </header>
