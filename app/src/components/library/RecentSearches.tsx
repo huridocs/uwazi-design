@@ -66,6 +66,7 @@ export function RecentSearches({ anchorRef, open, onPick, onClose }: Props) {
     <div
       role="group"
       aria-label="Recent searches"
+      data-component="RecentSearches"
       // Keeps the input focused through a click in here: without it the
       // mousedown blurs the box, `open` flips false, and the panel unmounts
       // before the click can land on anything.
@@ -84,12 +85,13 @@ export function RecentSearches({ anchorRef, open, onPick, onClose }: Props) {
       >
         Recent searches
       </SectionLabel>
-      <ul className="flex flex-col">
+      <ul data-part="list" className="flex flex-col">
         {history.map((q) => (
-          <li key={q} className="group relative flex items-stretch">
+          <li key={q} data-part="item" className="group relative flex items-stretch">
             <button
               type="button"
               onClick={() => onPick(q)}
+              data-part="pick"
               className="flex-1 min-w-0 text-start ps-2.5 pe-8 py-1.5 text-xs text-ink
                 hover:bg-warm transition-colors cursor-pointer focus:outline-none
                 focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20"
@@ -101,6 +103,7 @@ export function RecentSearches({ anchorRef, open, onPick, onClose }: Props) {
             <button
               type="button"
               onClick={() => forget(q)}
+              data-part="forget"
               aria-label={`Forget search: ${q}`}
               className="absolute inset-y-0 end-1 my-auto w-5 h-5 flex items-center justify-center
                 rounded text-ink-muted opacity-0 group-hover:opacity-100 group-focus-within:opacity-100
@@ -112,13 +115,14 @@ export function RecentSearches({ anchorRef, open, onPick, onClose }: Props) {
           </li>
         ))}
       </ul>
-      <div className="mt-1 pt-1 px-2.5 pb-0.5" style={{ borderTop: "1px solid var(--border-soft)" }}>
+      <div data-part="footer" className="mt-1 pt-1 px-2.5 pb-0.5" style={{ borderTop: "1px solid var(--border-soft)" }}>
         <button
           type="button"
           onClick={() => {
             clearAll();
             onClose();
           }}
+          data-part="clear-all"
           className="text-meta font-medium text-ink-tertiary hover:text-ink transition-colors
             cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-ink/20 rounded-sm"
         >

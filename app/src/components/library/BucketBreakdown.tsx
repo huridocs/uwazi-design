@@ -21,18 +21,18 @@ export function BucketBreakdown({
   const top = ranked.slice(0, max);
   const rest = ranked.length - top.length;
   return (
-    <span className="block text-start">
-      <span className="block font-semibold tabular-nums pb-0.5">
+    <span data-component="BucketBreakdown" className="block text-start">
+      <span data-part="total" className="block font-semibold tabular-nums pb-0.5">
         {label} · {total.toLocaleString()}
       </span>
       {top.map((s) => (
-        <span key={s.typeId} className="flex items-center gap-1.5 leading-[14px]">
-          <span className="w-1.5 h-1.5 rounded-[2px] shrink-0" style={{ backgroundColor: s.color }} />
+        <span key={s.typeId} data-part="slice" data-type-id={s.typeId} className="flex items-center gap-1.5 leading-[14px]">
+          <span data-part="dot" aria-hidden className="w-1.5 h-1.5 rounded-[2px] shrink-0" style={{ backgroundColor: s.color }} />
           <span className="opacity-80">{s.name}</span>
           <span className="ms-auto ps-3 tabular-nums">{s.n.toLocaleString()}</span>
         </span>
       ))}
-      {rest > 0 && <span className="block opacity-60 leading-[14px]">+{rest} more</span>}
+      {rest > 0 && <span data-part="more" className="block opacity-60 leading-[14px]">+{rest} more</span>}
     </span>
   );
 }
@@ -48,6 +48,8 @@ export function ChartTip({
 }) {
   return (
     <span
+      data-component="ChartTip"
+      data-anchor={anchor}
       className="absolute z-50 pointer-events-none text-meta font-medium whitespace-nowrap rounded-md"
       style={{
         ...(anchor === "start"

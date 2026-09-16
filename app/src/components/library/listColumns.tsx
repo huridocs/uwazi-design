@@ -67,9 +67,9 @@ export const LIST_COLUMNS: ListColumnSpec[] = [
     default: true,
     sortKey: "title",
     cell: (e, ctx) => (
-      <span className="flex items-center gap-2 min-w-0">
+      <span data-part="title-cell" className="flex items-center gap-2 min-w-0">
         <EntityTypeChip typeId={e.typeId} />
-        <span className="font-medium text-ink truncate">
+        <span data-part="title" className="font-medium text-ink truncate">
           <HighlightedText text={e.title} query={ctx.query} />
         </span>
       </span>
@@ -106,7 +106,7 @@ export const LIST_COLUMNS: ListColumnSpec[] = [
     width: "9rem",
     sortKey: "country",
     cell: (e, ctx) => (
-      <span className="text-ink-secondary truncate">
+      <span data-part="country" className="text-ink-secondary truncate">
         {e.country ? <HighlightedText text={e.country} query={ctx.query} /> : "—"}
       </span>
     ),
@@ -118,7 +118,7 @@ export const LIST_COLUMNS: ListColumnSpec[] = [
     width: "5rem",
     sortKey: "recent",
     cell: (e) => (
-      <span className="text-ink-tertiary tabular-nums">
+      <span data-part="date" className="text-ink-tertiary tabular-nums">
         {e.createdAt ? new Date(e.createdAt).getUTCFullYear() : "—"}
       </span>
     ),
@@ -131,7 +131,7 @@ export const LIST_COLUMNS: ListColumnSpec[] = [
     align: "right",
     sortKey: "connections",
     cell: (e, ctx) => (
-      <span className="text-ink-secondary tabular-nums">
+      <span data-part="connections" className="text-ink-secondary tabular-nums">
         {ctx.connectionsOf(e).toLocaleString()}
       </span>
     ),
@@ -156,14 +156,14 @@ export function metaColumn(label: string): ListColumnSpec {
     width: "10rem",
     cell: (e, ctx) => {
       const field = entityFieldValue(e, label, ctx.language);
-      if (!field) return <span className="text-ink-tertiary">—</span>;
+      if (!field) return <span data-part="meta" data-empty className="text-ink-tertiary">—</span>;
       return (
-        <span className="flex items-baseline gap-1 min-w-0 text-ink-secondary">
+        <span data-part="meta" className="flex items-baseline gap-1 min-w-0 text-ink-secondary">
           <span className="truncate">
             <HighlightedText text={field.value} query={ctx.query} />
           </span>
           {field.more ? (
-            <span className="shrink-0 text-meta text-ink-tertiary tabular-nums">
+            <span data-part="more" className="shrink-0 text-meta text-ink-tertiary tabular-nums">
               +{field.more}
             </span>
           ) : null}
@@ -218,7 +218,7 @@ export function buildListColumns(
     cell:
       c.id === "title" && typeColumn
         ? (e: Entity) => (
-            <span className="font-medium text-ink truncate">
+            <span data-part="title" className="font-medium text-ink truncate">
               <HighlightedText text={e.title} query={cellCtx.query} />
             </span>
           )

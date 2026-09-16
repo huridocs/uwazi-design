@@ -134,8 +134,9 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
   };
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+    <div data-component="LibraryMapView" className="relative w-full h-full flex items-center justify-center overflow-hidden">
       <div
+        data-part="map"
         className="relative w-full bg-vellum rounded-lg border border-border/60 overflow-hidden"
         style={{ aspectRatio: "2 / 1", maxHeight: "100%" }}
       >
@@ -188,7 +189,7 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
                 selectedCluster.ids.length === c.ids.length &&
                 selectedCluster.ids[0] === c.ids[0];
               return (
-                <Marker key={c.key} coordinates={[c.lng, c.lat]} onClick={() => open(c)}>
+                <Marker key={c.key} data-part="pin" data-count={c.count} coordinates={[c.lng, c.lat]} onClick={() => open(c)}>
                   <circle
                     r={r}
                     strokeWidth={1 / zoom}
@@ -230,12 +231,13 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
             failed to load. Say which, over the map rather than instead of it, so
             the geography stays as context and the way out is right there. */}
         {located === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+          <div data-part="empty" className="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
             <div
+              role="status"
               className="pointer-events-auto max-w-[20rem] text-center bg-paper/90 backdrop-blur-sm rounded-lg px-4 py-3"
               style={{ border: "1px solid var(--border-primary)", boxShadow: "0 6px 18px rgba(0,0,0,0.08)" }}
             >
-              <MapPinOff size={18} className="mx-auto text-ink-muted" />
+              <MapPinOff size={18} aria-hidden className="mx-auto text-ink-muted" />
               <p className="mt-2 text-xs font-semibold text-ink">
                 {entities.length ? "Nothing to place on the map" : "No results"}
               </p>
@@ -246,6 +248,8 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
               </p>
               {hasNarrowing && (
                 <button
+                  type="button"
+                  data-part="clear-filters"
                   onClick={() => clearFilters()}
                   className="mt-2.5 px-2.5 h-6 text-meta font-medium rounded-md bg-warm text-ink-secondary hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
                 >
@@ -259,7 +263,7 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
         {/* Caption — states what ISN'T here. Only entities with a real
             geolocation property are plotted, and in a corpus like CEJIL that is
             a small minority; without this the map reads as the whole library. */}
-        <div className="absolute bottom-2 left-2 text-meta text-ink-tertiary bg-paper/70 backdrop-blur-sm rounded px-2 py-0.5">
+        <p data-part="caption" className="absolute bottom-2 left-2 text-meta text-ink-tertiary bg-paper/70 backdrop-blur-sm rounded px-2 py-0.5">
           {located.toLocaleString()} located {located === 1 ? "entity" : "entities"} ·{" "}
           {clusters.length.toLocaleString()} {clusters.length === 1 ? "pin" : "pins"}
           {unlocated > 0 && (
@@ -268,7 +272,7 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
               {unlocated.toLocaleString()} with no geolocation
             </span>
           )}
-        </div>
+        </p>
       </div>
     </div>
   );

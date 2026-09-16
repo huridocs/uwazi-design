@@ -177,11 +177,13 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
     return (
       <div
         dir="ltr"
+        data-component="TimeBrush"
+        data-state="empty"
         className="shrink-0 bg-paper bleed pt-1.5 pb-2 select-none"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
-        <div className="flex items-center gap-2 h-6">
-          <span className="text-meta text-ink-tertiary">
+        <div data-part="caption" className="flex items-center gap-2 h-6">
+          <span role="status" className="text-meta text-ink-tertiary">
             {entities.length
               ? `None of these ${entities.length.toLocaleString()} results carry a date`
               : "No results to plot"}
@@ -189,6 +191,8 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
           <div className="flex-1" />
           {hasNarrowing && (
             <button
+              type="button"
+              data-part="clear-filters"
               onClick={() => clearFilters()}
               className="px-2 h-5 text-meta font-medium rounded-md bg-warm text-ink-tertiary hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
             >
@@ -196,7 +200,7 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
             </button>
           )}
         </div>
-        <div className="relative h-11">
+        <div data-part="track" className="relative h-11">
           <div
             className="absolute left-0 right-0 bottom-0"
             style={{ height: 1, backgroundColor: "var(--border-primary)" }}
@@ -277,14 +281,16 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
   return (
     <div
       dir="ltr"
+      data-component="TimeBrush"
+      data-state={isFull ? "full" : "windowed"}
       className="shrink-0 bg-paper bleed pt-1.5 pb-2 select-none"
       style={{ borderTop: "1px solid var(--border-primary)" }}
     >
       {/* Caption + presets. On a phone the range reads as YEARS, not full dates,
           and the zoom presets step aside — five of them plus "All" ran straight
           off a 414px screen. "All" stays: it's the way back. */}
-      <div className="flex items-center gap-2 h-6">
-        <span className="text-meta text-ink-tertiary tabular-nums whitespace-nowrap">
+      <div data-part="caption" className="flex items-center gap-2 h-6">
+        <span data-part="range" className="text-meta text-ink-tertiary tabular-nums whitespace-nowrap">
           <span className="font-semibold text-ink-secondary">{inRange.toLocaleString()}</span>
           {" dated · "}
           <span className="text-ink-secondary">
@@ -297,14 +303,16 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
         </span>
         <div className="flex-1" />
         {hovered && !isMobile && (
-          <span className="text-meta text-ink-tertiary tabular-nums whitespace-nowrap">
+          <span data-part="hover-readout" className="text-meta text-ink-tertiary tabular-nums whitespace-nowrap">
             {hovered.label} · {hovered.entities.length.toLocaleString()}
           </span>
         )}
         {!isMobile &&
           presets.map((p) => (
             <button
+              type="button"
               key={p.label}
+              data-part="preset"
               onClick={() => commit(axis.max - p.ms, axis.max, false)}
               className="px-2 h-5 text-meta font-medium rounded-md bg-warm text-ink-tertiary hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
             >
@@ -312,6 +320,8 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
             </button>
           ))}
         <button
+          type="button"
+          data-part="all"
           onClick={() => commit(axis.min, axis.max, true)}
           disabled={isFull}
           className={`px-2 h-5 text-meta font-medium rounded-md transition-colors ${
@@ -327,6 +337,7 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
       {/* Track */}
       <div
         ref={trackRef}
+        data-part="track"
         className="relative h-11 cursor-crosshair touch-none"
         onPointerDown={startDrag("new")}
         onPointerMove={onMove}
@@ -376,7 +387,7 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
         </svg>
 
         {/* Hover readout — purely visual (the track owns the pointer). */}
-        <div className="absolute inset-0 flex items-end pointer-events-none">
+        <div aria-hidden className="absolute inset-0 flex items-end pointer-events-none">
           {buckets.map((b) => {
             const n = b.entities.length;
             const h = n ? 8 + Math.sqrt(n / maxCount) * 92 : 0;
@@ -452,6 +463,7 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
 
         {/* Window */}
         <div
+          data-part="window"
           className="absolute top-0 bottom-0 cursor-grab active:cursor-grabbing"
           style={{
             left: `${pct(winFrom)}%`,
@@ -467,6 +479,8 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
           <div
             key={which}
             role="slider"
+            data-part="handle"
+            data-handle={which}
             tabIndex={0}
             aria-label={which === "start" ? "Range start" : "Range end"}
             aria-valuemin={axis.min}
@@ -495,7 +509,7 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
       </div>
 
       {/* Axis */}
-      <div className="relative h-4">
+      <div data-part="axis" aria-hidden className="relative h-4">
         {ticks.map((b) => {
           // Clamp the end ticks so they don't hang off the strip.
           const p = pct(b.start);

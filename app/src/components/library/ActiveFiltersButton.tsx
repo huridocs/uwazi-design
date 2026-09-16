@@ -57,8 +57,10 @@ export function ActiveFiltersButton({ className = "" }: { className?: string } =
     // a LINE BOX and gets baseline-aligned, leaving room for descenders under it.
     // The wrapper measured 25px tall around a 20px button, so the button rode
     // 2.5px low and sat out of line with the rest of the footer row.
-    <div ref={ref} className={`relative flex items-center ${className}`}>
+    <div ref={ref} data-component="ActiveFiltersButton" className={`relative flex items-center ${className}`}>
       <button
+        type="button"
+        data-part="trigger"
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="dialog"
         aria-expanded={open}
@@ -68,6 +70,8 @@ export function ActiveFiltersButton({ className = "" }: { className?: string } =
           }`}
       >
         <span
+          data-part="dot"
+          aria-hidden
           className="w-1.5 h-1.5 rounded-full"
           style={{ backgroundColor: "var(--accent-blue)" }}
         />
@@ -79,15 +83,19 @@ export function ActiveFiltersButton({ className = "" }: { className?: string } =
         <div
           role="dialog"
           aria-label="Active filters"
+          data-part="popover"
           className="absolute bottom-full mb-1.5 start-0 z-50 w-72 bg-paper border border-border rounded-md shadow-lg
             animate-fade-in-up overflow-hidden"
         >
-          <div
+          <header
+            data-part="header"
             className="flex items-center gap-2 px-3 py-2"
             style={{ borderBottom: "1px solid var(--border-soft)" }}
           >
-            <SectionLabel>Active filters</SectionLabel>
+            <SectionLabel as="h2">Active filters</SectionLabel>
             <button
+              type="button"
+              data-part="clear-all"
               onClick={() => {
                 clearAll();
                 setOpen(false);
@@ -96,32 +104,35 @@ export function ActiveFiltersButton({ className = "" }: { className?: string } =
             >
               Clear all
             </button>
-          </div>
+          </header>
 
-          <ul className="max-h-64 overflow-auto py-1">
+          <ul data-part="list" className="max-h-64 overflow-auto py-1">
             {items.map((it) => (
-              <li key={it.id}>
+              <li key={it.id} data-part="item">
                 {/* Full-width rows, so removing one can't shift the NEXT row
                     under the cursor sideways the way a wrapping chip row did —
                     the list only ever collapses downward. */}
                 <div className="group flex items-center gap-2 px-3 py-1.5 hover:bg-warm transition-colors">
                   {it.color ? (
                     <span
+                      aria-hidden
                       className="w-1.5 h-1.5 rounded-[2px] shrink-0"
                       style={{ backgroundColor: it.color }}
                     />
                   ) : (
                     <span className="w-1.5 shrink-0" />
                   )}
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-meta text-ink-tertiary leading-tight">
+                  <dl className="min-w-0 flex-1">
+                    <dt data-part="group" className="block text-meta text-ink-tertiary leading-tight">
                       {it.group}
-                    </span>
-                    <span className="block text-xs text-ink truncate">{it.label}</span>
-                  </span>
+                    </dt>
+                    <dd data-part="label" className="block text-xs text-ink truncate">{it.label}</dd>
+                  </dl>
                   {/* Always visible: this is a list OF things to remove, so
                       hiding the remove until hover would be hiding the point. */}
                   <button
+                    type="button"
+                    data-part="remove"
                     onClick={it.remove}
                     aria-label={`Remove ${it.group}: ${it.label}`}
                     className="shrink-0 p-1 rounded text-ink-muted hover:bg-parchment hover:text-ink
@@ -136,6 +147,8 @@ export function ActiveFiltersButton({ className = "" }: { className?: string } =
           </ul>
 
           <button
+            type="button"
+            data-part="open-filters"
             onClick={() => {
               setSelectedId(null);
               setSelectedCluster(null);

@@ -112,9 +112,9 @@ export function DisplayMenu() {
           });
 
     return (
-      <div key={section.id}>
+      <div key={section.id} data-part="section" data-section={section.id} role="group" aria-label={section.label}>
         {section.separator && (
-          <div className="my-1 h-px" style={{ backgroundColor: "var(--border-soft)" }} />
+          <div role="separator" className="my-1 h-px" style={{ backgroundColor: "var(--border-soft)" }} />
         )}
         <SectionLabel as="p" className={`px-2 pt-1 pb-1 ${live ? "" : "opacity-40"}`}>
           {section.label}
@@ -146,8 +146,10 @@ export function DisplayMenu() {
   };
 
   return (
-    <div className="relative">
+    <div data-component="DisplayMenu" className="relative">
       <button
+        type="button"
+        data-part="trigger"
         onClick={() => setOpen((o) => !o)}
         aria-label={t("System", "Display options")}
         aria-haspopup="menu"
@@ -161,9 +163,11 @@ export function DisplayMenu() {
             : "bg-paper text-ink-secondary border-border hover:bg-parchment hover:text-ink"
         }`}
       >
-        <SlidersHorizontal size={14} />
+        <SlidersHorizontal size={14} aria-hidden />
         {modified && (
           <span
+            data-part="dot"
+            aria-hidden
             className="absolute -top-0.5 -end-0.5 w-1.5 h-1.5 rounded-full"
             style={{ backgroundColor: "var(--accent-blue)" }}
           />
@@ -171,11 +175,12 @@ export function DisplayMenu() {
       </button>
       {open && (
         <>
-          <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} aria-hidden />
+          <div data-part="scrim" className="fixed inset-0 z-30" onClick={() => setOpen(false)} aria-hidden />
           {/* The list's column list can run long on a corpus with a dozen
               properties, so the panel scrolls at a fixed ceiling rather than
               growing past the viewport. Every mode's menu is the same width. */}
           <div
+            data-part="menu"
             className="absolute end-0 mt-1 z-40 w-52 max-h-[70vh] overflow-y-auto bg-paper
               border border-border rounded-md shadow-lg p-1"
             role="menu"
@@ -186,8 +191,11 @@ export function DisplayMenu() {
                 to reset — a row that appeared with the dot would shove the whole
                 panel the moment you ticked anything. Shared options (the time
                 strip) are not this mode's to clear, so it resets the mode. */}
-            <div className="my-1 h-px" style={{ backgroundColor: "var(--border-soft)" }} />
+            <div role="separator" className="my-1 h-px" style={{ backgroundColor: "var(--border-soft)" }} />
             <button
+              type="button"
+              role="menuitem"
+              data-part="reset"
               onClick={() => reset()}
               disabled={!modified}
               className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-start text-xs transition-colors ${
@@ -234,9 +242,11 @@ function OptionRow({
 }) {
   return (
     <button
+      type="button"
+      data-part="option"
+      data-state={on ? "on" : "off"}
       onClick={onClick}
       disabled={disabled}
-      aria-pressed={on}
       role="menuitemcheckbox"
       aria-checked={on}
       className={`w-full flex items-start gap-2 px-2 py-1.5 rounded transition-colors text-start ${
@@ -244,7 +254,7 @@ function OptionRow({
       }`}
     >
       <span className="w-4 shrink-0 pt-0.5 flex justify-center text-carbon">
-        {on && <Check size={13} />}
+        {on && <Check size={13} aria-hidden />}
       </span>
       <span className="min-w-0">
         <span

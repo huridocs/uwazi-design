@@ -134,6 +134,8 @@ export function SearchTipsPopover({
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls={PANEL_ID}
+        data-component="SearchTipsPopover"
+        data-part="trigger"
         className="shrink-0 inline-flex items-center gap-1 h-5 px-1.5 rounded text-meta font-medium
           text-ink-tertiary bg-warm hover:bg-parchment hover:text-ink-secondary transition-colors
           cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20"
@@ -150,18 +152,20 @@ export function SearchTipsPopover({
             id={PANEL_ID}
             role="dialog"
             aria-label="Search tips"
+            data-component="SearchTipsPopover"
+            data-part="panel"
             className="fixed z-50 rounded-lg border border-border bg-paper p-2 shadow-lg animate-fade-in-up"
             style={{ top: pos.top, left: pos.left, width: PANEL_WIDTH }}
           >
             {/* Header — frames the list and names the intent. */}
-            <div className="flex items-center gap-1.5 px-2 pt-1 pb-2 mb-1 border-b border-border-soft">
+            <header data-part="header" className="flex items-center gap-1.5 px-2 pt-1 pb-2 mb-1 border-b border-border-soft">
               <Lightbulb size={12} className="text-ink-tertiary" aria-hidden="true" />
-              <SectionLabel>Narrow your search</SectionLabel>
-            </div>
+              <SectionLabel as="h2">Narrow your search</SectionLabel>
+            </header>
 
-            <ul className="flex flex-col">
+            <ul data-part="tips" className="flex flex-col">
               {TIPS.map((tip) => (
-                <li key={tip.example}>
+                <li key={tip.example} data-part="tip">
                   <button
                     type="button"
                     onClick={() => insert(tip.example)}
@@ -180,7 +184,7 @@ export function SearchTipsPopover({
                 </li>
               ))}
               {/* Booleans — full width, example and prose on one line. */}
-              <li>
+              <li data-part="tip">
                 <button
                   type="button"
                   onClick={() => insert(BOOLEAN_TIP.example)}

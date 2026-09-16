@@ -185,9 +185,10 @@ export const MatchOrigin = memo(function MatchOrigin({
   const tipId = `match-origin-${entity.id}`;
 
   return (
-    <span className="inline-flex items-center gap-0.5">
+    <span data-component="MatchOrigin" className="inline-flex items-center gap-0.5">
       {origin.property && (
         <Mark
+          origin="property"
           icon={<Tag size={11} />}
           label={propertyLabel}
           describedBy={open === "property" ? tipId : undefined}
@@ -198,6 +199,7 @@ export const MatchOrigin = memo(function MatchOrigin({
       )}
       {origin.document && (
         <Mark
+          origin="document"
           icon={<FileText size={11} />}
           label="Matched in the document text — open the document"
           describedBy={open === "document" ? tipId : undefined}
@@ -214,6 +216,9 @@ export const MatchOrigin = memo(function MatchOrigin({
           <div
             id={tipId}
             role="tooltip"
+            data-component="MatchOrigin"
+            data-part="popover"
+            data-origin={open}
             className="fixed z-50 rounded-md bg-paper border border-border px-2.5 py-2 shadow-lg"
             style={{
               left: pos.left,
@@ -237,6 +242,7 @@ export const MatchOrigin = memo(function MatchOrigin({
 /** One glyph. Focus opens the excerpt immediately (a keyboard user gets what a
  *  hover gives); Enter/Space come free from the native button. */
 function Mark({
+  origin,
   icon,
   label,
   describedBy,
@@ -244,6 +250,7 @@ function Mark({
   onClose,
   onActivate,
 }: {
+  origin: "property" | "document";
   icon: React.ReactNode;
   label: string;
   describedBy?: string;
@@ -254,6 +261,8 @@ function Mark({
   return (
     <button
       type="button"
+      data-part="mark"
+      data-origin={origin}
       aria-label={label}
       aria-describedby={describedBy}
       onClick={(e) => {
@@ -277,12 +286,13 @@ function Mark({
 
 function TipLabel({ children }: { children: React.ReactNode }) {
   return (
-    <SectionLabel>{children}</SectionLabel>
+    // A span: this label heads a tooltip, which is not part of the outline.
+    <SectionLabel as="span">{children}</SectionLabel>
   );
 }
 
 function TipHint({ children }: { children: React.ReactNode }) {
-  return <span className="mt-1 block text-meta text-ink-muted">{children}</span>;
+  return <span data-part="hint" className="mt-1 block text-meta text-ink-muted">{children}</span>;
 }
 
 function PropertyTip({
@@ -299,7 +309,7 @@ function PropertyTip({
     <>
       <TipLabel>{origin.property?.field}</TipLabel>
       {group?.texts[0] && (
-        <span className="mt-0.5 block text-xs leading-relaxed text-ink">
+        <span data-part="excerpt" className="mt-0.5 block text-xs leading-relaxed text-ink">
           <HighlightedText text={group.texts[0]} query={query} />
         </span>
       )}
@@ -340,7 +350,7 @@ function DocumentTip({
         </span>
       </TipLabel>
       {first && (
-        <span className="mt-0.5 block text-xs leading-relaxed text-ink">
+        <span data-part="excerpt" className="mt-0.5 block text-xs leading-relaxed text-ink">
           <HighlightedText text={first.text} query={query} />
         </span>
       )}
