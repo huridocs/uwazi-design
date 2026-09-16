@@ -29,11 +29,12 @@ export function ProvenanceLine({
 }) {
   return (
     <span
+      data-component="ProvenanceLine"
       className={`${inline ? "inline-flex" : "flex"} items-center gap-1 min-w-0
         text-meta font-normal normal-case tracking-normal text-ink-tertiary ${className}`}
     >
-      <CornerDownRight size={10} className="shrink-0 text-ink-muted" aria-hidden />
-      <span className="shrink-0">{label}</span>
+      <CornerDownRight size={10} data-part="icon" className="shrink-0 text-ink-muted" aria-hidden />
+      <span data-part="label" className="shrink-0">{label}</span>
       {children}
     </span>
   );

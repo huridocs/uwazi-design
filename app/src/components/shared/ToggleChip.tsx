@@ -45,6 +45,7 @@ export function ToggleChip({
       type="button"
       onClick={onToggle}
       aria-pressed={active}
+      data-component="ToggleChip"
       aria-label={
         ariaLabel ?? (count === undefined ? label : `${label}, ${count.toLocaleString()} results`)
       }
@@ -61,11 +62,13 @@ export function ToggleChip({
       }}
     >
       {color && (
-        <span className="shrink-0 rounded-[2px] w-1.5 h-1.5" style={{ backgroundColor: color }} />
+        <span data-part="dot" aria-hidden className="shrink-0 rounded-[2px] w-1.5 h-1.5" style={{ backgroundColor: color }} />
       )}
-      <span className="truncate max-w-40">{label}</span>
+      <span data-part="label" className="truncate max-w-40">
+        {label}
+      </span>
       {count !== undefined && (
-        <span aria-hidden className="shrink-0 tabular-nums text-ink-tertiary">
+        <span data-part="count" aria-hidden className="shrink-0 tabular-nums text-ink-tertiary">
           {count.toLocaleString()}
         </span>
       )}

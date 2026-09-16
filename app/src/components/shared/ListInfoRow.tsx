@@ -32,14 +32,20 @@ export function ListInfoRow({
   rightSlot,
 }: ListInfoRowProps) {
   return (
-    <div className="pt-1 pb-2 flex items-center justify-between gap-2 flex-wrap text-meta text-ink-tertiary shrink-0">
-      <div className="flex items-center gap-2 flex-wrap">
+    <div data-component="ListInfoRow" className="pt-1 pb-2 flex items-center justify-between gap-2 flex-wrap text-meta text-ink-tertiary shrink-0">
+      <div data-part="summary" className="flex items-center gap-2 flex-wrap">
         {leadingSlot}
-        {count != null && <span className="shrink-0">{count}</span>}
+        {count != null && (
+          <span data-part="count" className="shrink-0">
+            {count}
+          </span>
+        )}
         {inlineSlot}
         {showFilterChips && activeFilterCount > 0 && (
           <>
-            <span className="shrink-0 font-medium text-ink-secondary">Filters:</span>
+            <span data-part="filters-label" className="shrink-0 font-medium text-ink-secondary">
+              Filters:
+            </span>
             <ActiveFilterChips />
           </>
         )}

@@ -22,6 +22,7 @@ export function Checkbox({
   return (
     <input
       type="checkbox"
+      data-component="Checkbox"
       checked={checked}
       onChange={onChange}
       aria-label={ariaLabel}

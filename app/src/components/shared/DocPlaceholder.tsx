@@ -29,7 +29,10 @@ export function DocPlaceholder({
   children?: ReactNode;
 }) {
   return (
-    <div className="group relative w-full h-full overflow-hidden bg-vellum">
+    <div
+      data-component="DocPlaceholder"
+      className="group relative w-full h-full overflow-hidden bg-vellum"
+    >
       {/* Inset at the sides, pinned near the top, running PAST the bottom so the
           frame crops it. Rounded on the top corners only — the bottom is
           off-frame, and rounding it would put the sheet back inside the box.
@@ -42,6 +45,7 @@ export function DocPlaceholder({
           sized for a 96px band. The sheet is still a sheet: same top anchor,
           same run off the bottom edge, same border and shadow. */}
       <div
+        data-part="sheet"
         className={
           fill
             ? "absolute inset-0 bg-paper overflow-hidden"
@@ -58,6 +62,7 @@ export function DocPlaceholder({
           faint: a flourish when you're looking at this one, not a permanent mark on
           every thumbnail. */}
       <div
+        data-part="pocket"
         aria-hidden
         className={`pointer-events-none absolute inset-x-0 bottom-0 h-[14%] opacity-0 transition-opacity duration-200 ${
           // The pocket is the stack's shadow. A filled sheet has no bottom edge
@@ -71,7 +76,10 @@ export function DocPlaceholder({
       />
 
       {ext && size !== "sm" && (
-        <span className="absolute bottom-1 end-1 px-1 py-px rounded-[2px] bg-ink/70 text-paper text-meta font-semibold uppercase tracking-wider leading-none">
+        <span
+          data-part="extension"
+          className="absolute bottom-1 end-1 px-1 py-px rounded-[2px] bg-ink/70 text-paper text-meta font-semibold uppercase tracking-wider leading-none"
+        >
           {ext}
         </span>
       )}

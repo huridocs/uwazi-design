@@ -144,7 +144,7 @@ export function DocumentSearchBody() {
                     transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1
                     focus-visible:ring-inset focus-visible:ring-ink/20"
                 >
-                  <SectionLabel>{group.field}</SectionLabel>
+                  <SectionLabel as="span">{group.field}</SectionLabel>
                   {group.texts.map((text, i) => (
                     <span key={i} className="block text-sm text-ink leading-relaxed">
                       <HighlightedText text={text} query={trimmed} />

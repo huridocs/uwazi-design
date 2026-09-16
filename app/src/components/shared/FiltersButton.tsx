@@ -23,6 +23,7 @@ export function FiltersButton({
     <button
       onClick={onClick}
       aria-pressed={active}
+      data-component="FiltersButton"
       // Resting hover is a background tint only — no border darkening, no
       // shadow. The lift read as the button rising off a flat toolbar, and it
       // also blurred the line with ACTIVE, which is what the shadow means here:
@@ -35,10 +36,11 @@ export function FiltersButton({
           : "bg-paper border border-border text-ink-secondary hover:bg-parchment hover:text-ink"
       }`}
     >
-      <Filter size={iconSize} className={active ? "text-ink" : "text-ink-secondary"} />
-      <span>{label}</span>
+      <Filter size={iconSize} data-part="icon" aria-hidden className={active ? "text-ink" : "text-ink-secondary"} />
+      <span data-part="label">{label}</span>
       {active && (
         <span
+          data-part="count"
           className="inline-flex items-center justify-center rounded-full bg-ink text-paper tabular-nums"
           style={{
             minWidth: 14,

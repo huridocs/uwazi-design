@@ -46,6 +46,7 @@
 export function TabCount({ count }: { count: number }) {
   return (
     <span
+      data-component="TabCount"
       className="shrink-0 inline-flex items-center justify-center ms-0.5 h-[1.125rem] min-w-[1.125rem]
         px-1 rounded-full text-xs font-semibold leading-none tabular-nums text-ink-secondary bg-ink/4"
     >

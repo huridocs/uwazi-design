@@ -23,10 +23,11 @@ export function ViewButton({
       type="button"
       onClick={onClick}
       aria-label={ariaLabel ?? label}
+      data-component="ViewButton"
       className={`inline-flex items-center font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer ${dims}`}
     >
-      <Eye size={icon} className="text-ink-tertiary" />
-      {label}
+      <Eye size={icon} data-part="icon" className="text-ink-tertiary" aria-hidden />
+      <span data-part="label">{label}</span>
     </button>
   );
 }

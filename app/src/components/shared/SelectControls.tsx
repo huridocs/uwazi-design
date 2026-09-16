@@ -19,9 +19,10 @@ export function SelectControls({
   const selectDisabled = totalCount === 0 || allSelected;
   const deselectDisabled = !hasSelection;
   return (
-    <div className="flex items-center gap-1">
+    <div data-component="SelectControls" className="flex items-center gap-1">
       <button
         onClick={onSelectAll}
+        data-part="select-all"
         disabled={selectDisabled}
         className={`text-meta font-medium transition-colors px-1 ${
           selectDisabled
@@ -33,6 +34,7 @@ export function SelectControls({
       </button>
       <button
         onClick={onDeselectAll}
+        data-part="deselect-all"
         disabled={deselectDisabled}
         className={`text-meta font-medium transition-colors px-1 ${
           deselectDisabled

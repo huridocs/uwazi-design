@@ -20,7 +20,11 @@ const BOX =
  *  that does nothing is a tab stop that wastes a keyboard user's time. */
 export function PageTag({ page, onClick }: PageTagProps) {
   if (!onClick) {
-    return <span className={BOX}>p.{page}</span>;
+    return (
+      <span data-component="PageTag" className={BOX}>
+        p.{page}
+      </span>
+    );
   }
   return (
     <button
@@ -30,6 +34,7 @@ export function PageTag({ page, onClick }: PageTagProps) {
         onClick(e);
       }}
       aria-label={`Go to page ${page}`}
+      data-component="PageTag"
       className={`${BOX} hover:bg-border hover:text-ink transition-colors cursor-pointer
         focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40`}
     >

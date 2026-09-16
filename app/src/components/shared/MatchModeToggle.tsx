@@ -31,11 +31,14 @@ export function MatchModeToggle({
     <div
       role="group"
       aria-label={label ?? groupLabel}
+      {...(label ? { "data-part": "control" } : { "data-component": "MatchModeToggle" })}
       className="inline-flex items-center gap-0.5 bg-warm rounded-md p-0.5"
     >
       {(["AND", "OR"] as const).map((m) => (
         <button
           key={m}
+          type="button"
+          data-part="option"
           onClick={() => onChange(m)}
           aria-pressed={mode === m}
           className={`px-2 h-5 rounded text-meta font-bold tracking-wide transition-colors cursor-pointer ${
@@ -53,7 +56,7 @@ export function MatchModeToggle({
   if (!label) return control;
 
   return (
-    <div className="flex items-center gap-2">
+    <div data-component="MatchModeToggle" className="flex items-center gap-2">
       {/* `-tertiary`, not `-muted`. At 11px this is small text by WCAG's measure
           and muted has never cleared AA on any ground in this palette: on the
           drawer's own `bg-paper` it measured 4.48:1 light and 2.91:1 DARK,
@@ -65,7 +68,7 @@ export function MatchModeToggle({
           One caveat for whoever moves this: tertiary clears on paper, warm and
           parchment in both themes, but lands at 4.49:1 on VELLUM in dark. Don't
           set this control on a vellum ground without re-measuring. */}
-      <span className="text-meta uppercase tracking-wide text-ink-tertiary">
+      <span data-part="label" className="text-meta uppercase tracking-wide text-ink-tertiary">
         {label}
       </span>
       {control}

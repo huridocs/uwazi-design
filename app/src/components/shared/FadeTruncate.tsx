@@ -31,8 +31,9 @@ export function FadeTruncate({
   const showFade = isTruncated && !expanded;
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} data-component="FadeTruncate" className="relative">
       <p
+        data-part="text"
         className={`overflow-hidden transition-[max-height] duration-200 ease-out ${className}`}
         style={{ maxHeight: expanded ? 1000 : visibleHeight }}
       >
@@ -40,6 +41,8 @@ export function FadeTruncate({
       </p>
       {showFade && (
         <div
+          data-part="fade"
+          aria-hidden
           className="absolute bottom-0 inset-x-0 pointer-events-none"
           style={{
             height: 20,
@@ -49,6 +52,9 @@ export function FadeTruncate({
       )}
       {expandable && isTruncated && (
         <button
+          type="button"
+          data-part="toggle"
+          aria-expanded={expanded}
           onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
           className="text-meta font-medium text-ink-tertiary hover:text-ink-secondary mt-0.5 transition-colors"
         >

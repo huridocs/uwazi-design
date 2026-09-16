@@ -37,16 +37,18 @@ export function FieldMessage({
       : "text-warning";
   return (
     <div
+      data-component="FieldMessage"
+      data-severity={issue?.severity ?? "hint"}
       id={id}
       className={`flex items-center gap-1 text-meta leading-4 ${reserve ? "min-h-4" : ""} ${tone}`}
     >
       {issue &&
         (issue.severity === "error" ? (
-          <CircleAlert size={11} className="shrink-0" aria-hidden />
+          <CircleAlert size={11} data-part="icon" className="shrink-0" aria-hidden />
         ) : (
-          <AlertTriangle size={11} className="shrink-0" aria-hidden />
+          <AlertTriangle size={11} data-part="icon" className="shrink-0" aria-hidden />
         ))}
-      <span className="min-w-0">{issue ? issue.message : (hint ?? "")}</span>
+      <span data-part="message" className="min-w-0">{issue ? issue.message : (hint ?? "")}</span>
     </div>
   );
 }

@@ -75,6 +75,8 @@ export function FiltersDrawer({
   const content = (
     <>
       <div
+        data-component="FiltersDrawer"
+        data-part="scrim"
         aria-hidden={!open}
         onClick={onClose}
         className={`absolute inset-0 z-30 transition-opacity ${
@@ -87,6 +89,7 @@ export function FiltersDrawer({
         role="dialog"
         aria-modal="true"
         aria-label={title}
+        data-component="FiltersDrawer"
         // A closed drawer occupies NO space its pane can scroll to.
         //
         // It used to park itself one width past the pane with
@@ -124,13 +127,17 @@ export function FiltersDrawer({
         }}
       >
         <header
+          data-part="header"
           className="bleed shrink-0 flex items-center justify-between py-2.5"
           style={{ borderBottom: "1px solid var(--border-primary)" }}
         >
-          <span className="text-xs font-semibold text-ink-secondary">{title}</span>
+          <span data-part="title" className="text-xs font-semibold text-ink-secondary">
+            {title}
+          </span>
           <button
             onClick={onClose}
             aria-label="Close filters"
+            data-part="close"
             /* The same close as the entity drawer's: a hover fill, so its BOX
                meets the gutter; `-my-1` keeps the header its old height. */
             data-gutter-align="box"
@@ -140,10 +147,13 @@ export function FiltersDrawer({
           </button>
         </header>
 
-        <div className="bleed flex-1 overflow-auto">{children}</div>
+        <div data-part="body" className="bleed flex-1 overflow-auto">
+          {children}
+        </div>
 
         {footer && (
           <footer
+            data-part="footer"
             className="bleed shrink-0 py-2"
             style={{ borderTop: "1px solid var(--border-primary)" }}
           >

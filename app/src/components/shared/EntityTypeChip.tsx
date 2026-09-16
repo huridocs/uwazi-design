@@ -16,15 +16,21 @@ export function EntityTypeChip({ typeId }: { typeId: string }) {
 
   const dot = (
     <span
+      data-part="dot"
       className="rounded-[2px] shrink-0 ring-1 ring-inset ring-ink/20 w-[0.4375rem] h-[0.4375rem]"
       style={{ backgroundColor: color }}
     />
   );
 
   return (
-    <span className="group/chip relative inline-flex items-center" title={name}>
+    <span
+      data-component="EntityTypeChip"
+      className="group/chip relative inline-flex items-center"
+      title={name}
+    >
       {/* Collapsed: a small tinted square holding the dot. */}
       <span
+        data-part="swatch"
         className="inline-flex items-center justify-center rounded-md shrink-0"
         style={{
           backgroundColor: `${color}20`,
@@ -38,6 +44,7 @@ export function EntityTypeChip({ typeId }: { typeId: string }) {
       {/* Expanded overlay on row hover — opaque (tint over surface) so it covers
           whatever sits to the right. */}
       <span
+        data-part="expanded"
         className="absolute start-0 top-1/2 -translate-y-1/2 z-10 hidden group-hover/chip:inline-flex
           items-center gap-1.5 h-6 ps-1.5 pe-2.5 rounded-md whitespace-nowrap shadow-sm"
         style={{
@@ -47,7 +54,9 @@ export function EntityTypeChip({ typeId }: { typeId: string }) {
         }}
       >
         {dot}
-        <span className="text-xs font-medium">{name}</span>
+        <span data-part="label" className="text-xs font-medium">
+          {name}
+        </span>
       </span>
     </span>
   );

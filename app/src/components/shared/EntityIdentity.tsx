@@ -46,9 +46,13 @@ export function EntityIdentity({
       // "these aren't lined up". On the baseline they sit on one line.
       // The entity view is the ENTITY's page — its name is the loudest thing on
       // it, not a caption beside a tag.
-      <div className="flex items-baseline gap-2.5 min-w-0 flex-1">
+      <div
+        data-component="EntityIdentity"
+        data-layout="inline"
+        className="flex items-baseline gap-2.5 min-w-0 flex-1"
+      >
         <EntityTypeTag typeId={tid} className="shrink-0 max-w-[12rem]" />
-        <h2 title={label} className="text-sm font-semibold text-ink truncate min-w-0">
+        <h2 data-part="title" title={label} className="text-sm font-semibold text-ink truncate min-w-0">
           {label}
         </h2>
       </div>
@@ -56,9 +60,10 @@ export function EntityIdentity({
   }
 
   return (
-    <div className="min-w-0 flex-1">
+    <div data-component="EntityIdentity" data-layout="stacked" className="min-w-0 flex-1">
       <EntityTypeTag typeId={tid} className="flex" />
       <h2
+        data-part="title"
         title={label}
         className={`mt-0.5 font-semibold text-ink leading-snug line-clamp-2 ${
           size === "sm" ? "text-tab" : "text-sm"

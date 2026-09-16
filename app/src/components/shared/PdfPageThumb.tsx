@@ -128,7 +128,7 @@ export function PdfPageThumb({
   const matted = pageAspect !== null && pageAspect > 0.95;
 
   return (
-    <div className={className} style={style}>
+    <div data-component="PdfPageThumb" className={className} style={style}>
       <DocPlaceholder ext={ext} size={size} fill={fill}>
         {/* The ref is on the SHEET, not the frame: its width is what the page gets
             rendered at, and it's what has to come on screen. */}
@@ -137,11 +137,12 @@ export function PdfPageThumb({
             it's drawn in" is the one question about this component that a
             screenshot cannot answer, and it is exactly what went wrong when the
             portrait slot inherited the band's smaller render. */}
-        <div ref={sheetRef} data-thumb-w={renderW || undefined} className="w-full h-full">
+        <div ref={sheetRef} data-part="page" data-thumb-w={renderW || undefined} className="w-full h-full">
           {src &&
             (fill ? (
               <img
                 src={src}
+                data-part="image"
                 alt=""
                 aria-hidden
                 onLoad={(e) => {
@@ -154,7 +155,7 @@ export function PdfPageThumb({
             ) : (
               /* Full width, natural height, running off the sheet's bottom the
                  way a page in a stack does — the frame crops it. */
-              <img src={src} alt="" aria-hidden className="w-full block" />
+              <img src={src} data-part="image" alt="" aria-hidden className="w-full block" />
             ))}
         </div>
       </DocPlaceholder>

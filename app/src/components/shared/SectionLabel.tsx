@@ -27,11 +27,12 @@ import type { ElementType, ReactNode } from "react";
  *  tracking or colour, which is what stopped this from being one component in
  *  the first place.
  *
- *  **`as` is the one other thing the caller owns**, and only because several of
- *  the labels this replaced were real headings (`h3`/`h4`) rather than
- *  decoration. Rendering those as a `span` would have quietly deleted them from
- *  the document outline, which is a bigger loss than a hand-rolled class list —
- *  so the ELEMENT is the caller's, while everything painted on it still isn't. */
+ *  **`as` is the one other thing the caller owns.** A section label heads a
+ *  section, so it renders a real heading (`h3`) by default and sits in the
+ *  document outline. Pass `h2`…`h5` to place it at the right level, and a
+ *  phrasing element (`span`) only where a heading is not allowed — inside a
+ *  button, a listbox or a menu. The ELEMENT is the caller's; everything painted
+ *  on it still isn't. */
 /** The two sizes this label is actually written at in the product.
  *
  *  `group` is the 11px one this component already served: a label INSIDE a
@@ -53,14 +54,15 @@ const LEVEL = {
 } as const;
 
 export function SectionLabel({
-  as: Tag = "span",
+  as: Tag = "h3",
   level = "group",
   icon,
   className = "",
   children,
 }: {
-  /** The element to render. `span` by default; pass `h2`…`h5` where the label
-   *  genuinely heads a section, so it keeps its place in the outline. */
+  /** The element to render. `h3` by default; pass the heading level that fits
+   *  the outline, or `span`/`p` where a heading can't go (inside a button, a
+   *  listbox, a menu). */
   as?: ElementType;
   /** How far up the page this label sits — see `LEVEL`. `group` (11px) by
    *  default, which is what every call site written before this prop expects. */
@@ -75,11 +77,13 @@ export function SectionLabel({
     // `flex`, so this is block-level and a caller's `sticky` + background paints
     // the full width — the notification drawer's section headers depend on it.
     <Tag
+      data-component="SectionLabel"
+      data-level={level}
       className={`flex items-center gap-1.5 min-w-0 font-semibold uppercase
         text-ink-tertiary ${LEVEL[level]} ${className}`}
     >
       {icon && (
-        <span className="text-ink-muted shrink-0" aria-hidden>
+        <span data-part="icon" className="text-ink-muted shrink-0" aria-hidden>
           {icon}
         </span>
       )}

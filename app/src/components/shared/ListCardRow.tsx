@@ -33,6 +33,7 @@ export const ListCardRow = forwardRef<HTMLElement, ListCardRowProps>(
         <button
           ref={ref as React.Ref<HTMLButtonElement>}
           type="button"
+          data-component="ListCardRow"
           onClick={onClick}
           aria-pressed={selected}
           aria-label={ariaLabel}
@@ -60,6 +61,7 @@ export const ListCardRow = forwardRef<HTMLElement, ListCardRowProps>(
     return (
       <div
         ref={ref as React.Ref<HTMLDivElement>}
+        data-component="ListCardRow"
         onClick={onClick}
         className={`relative ${composed}`}
       >
@@ -73,10 +75,13 @@ export const ListCardRow = forwardRef<HTMLElement, ListCardRowProps>(
               onClick();
             }}
             onKeyDown={onKeyDown}
+            data-part="primary-action"
             className="absolute inset-0 w-full cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20"
           />
         )}
-        <div className="relative">{children}</div>
+        <div data-part="content" className="relative">
+          {children}
+        </div>
       </div>
     );
   },

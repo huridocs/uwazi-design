@@ -35,12 +35,16 @@ export function ThesaurusValueLabel({
   const child = children ?? value;
   if (!group) return <>{child}</>;
   return (
-    <span className={`inline-flex max-w-full items-baseline gap-1 min-w-0 ${className}`}>
-      <span className="shrink-0 font-normal text-ink-tertiary">{group}</span>
-      <span aria-hidden className="shrink-0 text-ink-muted">
+    <span data-component="ThesaurusValueLabel" className={`inline-flex max-w-full items-baseline gap-1 min-w-0 ${className}`}>
+      <span data-part="group" className="shrink-0 font-normal text-ink-tertiary">
+        {group}
+      </span>
+      <span data-part="separator" aria-hidden className="shrink-0 text-ink-muted">
         ›
       </span>
-      <span className="truncate min-w-0">{child}</span>
+      <span data-part="value" className="truncate min-w-0">
+        {child}
+      </span>
     </span>
   );
 }

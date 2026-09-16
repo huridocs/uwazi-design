@@ -28,6 +28,7 @@ export function SegmentedControl({
   return (
     <div
       role="group"
+      data-component="SegmentedControl"
       aria-label={ariaLabel}
       className={`inline-flex w-fit items-center rounded-md overflow-hidden ${h}`}
       style={{ border: "1px solid var(--border-primary)" }}
@@ -41,6 +42,7 @@ export function SegmentedControl({
             type="button"
             onClick={() => onChange(opt.id)}
             aria-pressed={active}
+            data-part="option"
             aria-label={opt.label}
             title={opt.label}
             className={`flex items-center justify-center ${h} px-2 transition-colors cursor-pointer ${

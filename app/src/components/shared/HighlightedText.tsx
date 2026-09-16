@@ -56,7 +56,7 @@ export function HighlightedText({ text, query }: { text: string; query: string }
   for (const [start, end] of merged) {
     if (start > cursor) parts.push(<Fragment key={key++}>{text.slice(cursor, start)}</Fragment>);
     parts.push(
-      <mark key={key++} className={MARK_CLASS}>
+      <mark key={key++} data-component="HighlightedText" className={MARK_CLASS}>
         {text.slice(start, end)}
       </mark>,
     );

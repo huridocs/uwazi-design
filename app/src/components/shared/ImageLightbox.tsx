@@ -45,6 +45,7 @@ export function ImageLightbox({
   return createPortal(
     <div
       ref={trapRef}
+      data-component="ImageLightbox"
       role="dialog"
       aria-modal="true"
       aria-label={image.alt}
@@ -54,6 +55,7 @@ export function ImageLightbox({
     >
       <img
         src={image.url}
+        data-part="image"
         alt={image.alt}
         // Clicking the picture itself must not close what you opened to look at.
         onClick={(e) => e.stopPropagation()}
@@ -67,7 +69,7 @@ export function ImageLightbox({
       {/* The filename, because this is also where you confirm WHICH file this
           is — the same name the Library card printed to get you here. */}
       {image.filename && (
-        <span className="fixed bottom-4 start-1/2 -translate-x-1/2 rounded-md bg-ink/70 px-2 py-1 text-meta text-paper">
+        <span data-part="filename" className="fixed bottom-4 start-1/2 -translate-x-1/2 rounded-md bg-ink/70 px-2 py-1 text-meta text-paper">
           {image.filename}
         </span>
       )}
@@ -75,6 +77,7 @@ export function ImageLightbox({
         type="button"
         onClick={onClose}
         aria-label="Close image"
+        data-part="close"
         className="fixed top-4 end-4 flex items-center justify-center w-8 h-8 rounded-md bg-ink/60 text-paper hover:bg-ink/80 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-paper/60"
       >
         <X size={16} />

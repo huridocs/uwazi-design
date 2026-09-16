@@ -118,13 +118,21 @@ export function FacetSection({
     /* Rows carry no side padding: the host's gutter places the content, and
        `bleed` runs the divider and each row's hover / selected fill to the pane
        edge. Group children indent by 0.75rem PAST the gutter. */
-    <div className="bleed" style={{ borderBottom: "1px solid var(--border-soft)" }}>
+    <div
+      data-component="FacetSection"
+      className="bleed"
+      style={{ borderBottom: "1px solid var(--border-soft)" }}
+    >
       <div
+        data-part="header"
         className={`bleed flex items-center gap-2 py-2.5 transition-colors ${
           open ? "" : "hover:bg-warm"
         }`}
       >
         <button
+          type="button"
+          data-part="toggle"
+          aria-expanded={open}
           onClick={() => setOpen((o) => !o)}
           className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer text-left"
         >
@@ -134,17 +142,21 @@ export function FacetSection({
               open ? "" : "-rotate-90"
             }`}
           />
-          <span className="text-tab font-semibold text-ink-secondary truncate">
+          <span data-part="title" className="text-tab font-semibold text-ink-secondary truncate">
             {title}
           </span>
           {selectedCount > 0 && (
-            <span className="shrink-0 inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-carbon/10 text-meta font-semibold text-carbon tabular-nums">
+            <span
+              data-part="selected-count"
+              className="shrink-0 inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-carbon/10 text-meta font-semibold text-carbon tabular-nums">
               {selectedCount}
             </span>
           )}
         </button>
         {selectedCount > 0 && onClear ? (
           <button
+            type="button"
+            data-part="clear"
             onClick={onClear}
             className="shrink-0 inline-flex items-center gap-0.5 text-meta text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
           >
@@ -152,20 +164,22 @@ export function FacetSection({
             Clear
           </button>
         ) : (
-          <span className="shrink-0 text-meta text-ink-tertiary tabular-nums">
+          <span data-part="total" className="shrink-0 text-meta text-ink-tertiary tabular-nums">
             {total}
           </span>
         )}
       </div>
       {open && (
-        <div className="pb-2">
+        <div data-part="body" className="pb-2">
           {(showSearch || mode) && (
             <div className="pt-0.5 pb-2 space-y-2">
               {mode && onModeChange && (
                 <MatchModeToggle mode={mode} onChange={onModeChange} label="Match" />
               )}
               {showSearch && (
-                <div className="relative flex items-center gap-1.5 h-7 px-2 bg-warm border border-border rounded-md focus-within:ring-2 focus-within:ring-carbon/20 focus-within:border-carbon/40 transition-all">
+                <div
+                  data-part="search"
+                  className="relative flex items-center gap-1.5 h-7 px-2 bg-warm border border-border rounded-md focus-within:ring-2 focus-within:ring-carbon/20 focus-within:border-carbon/40 transition-all">
                   <input
                     type="text"
                     value={query}
@@ -190,7 +204,9 @@ export function FacetSection({
             </div>
           )}
           {matched.length === 0 && (
-            <p className="py-1.5 text-xs text-ink-muted">No matches.</p>
+            <p data-part="empty" className="py-1.5 text-xs text-ink-muted">
+              No matches.
+            </p>
           )}
           {regularRows.map((row, idx) => {
             const [id, count] = row.entry;
@@ -200,12 +216,15 @@ export function FacetSection({
             const showGroupHeader = !!row.group && row.group !== regularRows[idx - 1]?.group;
             return (
               <Fragment key={id}>
+                {/* A `span`, not the label's default heading: the facet title
+                    above is a button, so there is no section for it to head. */}
                 {showGroupHeader && (
-                  <SectionLabel className="pt-2 pb-0.5">
+                  <SectionLabel as="span" className="pt-2 pb-0.5">
                     <span className="truncate">{row.group}</span>
                   </SectionLabel>
                 )}
                 <label
+                  data-part="option"
                   className={`bleed flex items-center gap-2 py-1.5 cursor-pointer transition-colors ${
                     checked ? "bg-carbon/[0.04] hover:bg-carbon/[0.07]" : "hover:bg-warm"
                   }`}
@@ -237,6 +256,8 @@ export function FacetSection({
           })}
           {hiddenCount > 0 && (
             <button
+              type="button"
+              data-part="show-more"
               onClick={() => setShowAll(true)}
               className="py-1.5 text-xs font-medium text-ink-secondary underline underline-offset-2 hover:text-ink transition-colors cursor-pointer"
             >
@@ -245,6 +266,8 @@ export function FacetSection({
           )}
           {showAll && !q && matched.length > collapsedCount && (
             <button
+              type="button"
+              data-part="show-less"
               onClick={() => setShowAll(false)}
               className="py-1.5 text-xs font-medium text-ink-tertiary underline underline-offset-2 hover:text-ink transition-colors cursor-pointer"
             >
@@ -252,7 +275,10 @@ export function FacetSection({
             </button>
           )}
           {noLabelEntry && (
-            <label className="bleed flex items-center gap-2 py-1.5 cursor-pointer hover:bg-warm transition-colors border-t border-border-soft">
+            <label
+              data-part="no-label"
+              className="bleed flex items-center gap-2 py-1.5 cursor-pointer hover:bg-warm transition-colors border-t border-border-soft"
+            >
               <Checkbox
                 checked={!!selected[noLabelEntry[0]]}
                 onChange={() => onToggle(noLabelEntry[0])}

@@ -40,18 +40,27 @@ export function ConfirmDialog({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
-      <div ref={trapRef} className="bg-paper rounded-lg shadow-xl w-full max-w-md p-6 animate-fade-in-up">
-        <div className="flex items-start justify-between mb-4">
+    <div
+      data-component="ConfirmDialog"
+      data-variant={variant}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirm-dialog-title"
+    >
+      <div ref={trapRef} data-part="panel" className="bg-paper rounded-lg shadow-xl w-full max-w-md p-6 animate-fade-in-up">
+        <div data-part="header" className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
             {variant === "danger" && (
-              <div className="w-10 h-10 rounded-md bg-seal-tint flex items-center justify-center">
+              <div data-part="icon" aria-hidden className="w-10 h-10 rounded-md bg-seal-tint flex items-center justify-center">
                 <AlertTriangle size={20} className="text-seal-label" />
               </div>
             )}
-            <h3 id="confirm-dialog-title" className="text-base font-semibold text-ink">{title}</h3>
+            <h3 id="confirm-dialog-title" data-part="title" className="text-base font-semibold text-ink">{title}</h3>
           </div>
           <button
+            type="button"
+            data-part="close"
             onClick={onCancel}
             aria-label="Close"
             className="p-1 rounded-md hover:bg-parchment transition-colors"
@@ -59,15 +68,19 @@ export function ConfirmDialog({
             <X size={18} className="text-ink-muted" />
           </button>
         </div>
-        <p className="text-sm text-ink-secondary mb-6">{message}</p>
-        <div className="flex justify-end gap-3">
+        <p data-part="message" className="text-sm text-ink-secondary mb-6">{message}</p>
+        <div data-part="actions" className="flex justify-end gap-3">
           <button
+            type="button"
+            data-part="cancel"
             onClick={onCancel}
             className={`px-3 py-1.5 text-xs font-medium rounded-md ${WARM_BUTTON} transition-colors cursor-pointer`}
           >
             {cancelLabel}
           </button>
           <button
+            type="button"
+            data-part="confirm"
             onClick={onConfirm}
             className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
               variant === "danger"

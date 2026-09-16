@@ -16,6 +16,7 @@ interface ActiveFilterChipProps {
 export function ActiveFilterChip({ label, color, onRemove, removeLabel, className }: ActiveFilterChipProps) {
   return (
     <span
+      data-component="ActiveFilterChip"
       className={`inline-flex items-center gap-1 h-6 ps-1.5 pe-1 rounded text-meta font-medium text-ink-secondary ${className ?? ""}`}
       style={{
         backgroundColor: "color-mix(in srgb, var(--text-primary) 6%, var(--bg-surface))",
@@ -24,11 +25,15 @@ export function ActiveFilterChip({ label, color, onRemove, removeLabel, classNam
     >
       {color && (
         <span
+          data-part="dot"
+          aria-hidden
           className="shrink-0 rounded-[2px] w-1.5 h-1.5"
           style={{ backgroundColor: color }}
         />
       )}
-      <span className="truncate max-w-40">{label}</span>
+      <span data-part="label" className="truncate max-w-40">
+        {label}
+      </span>
       {/* The × is the only focusable thing here (the chip itself is a span), and it
           took the browser default. Same carbon halo as `ToggleChip` — solid carbon
           outline, 1px gap, no layout cost. At 3px of extension it clears the chip's
@@ -37,6 +42,7 @@ export function ActiveFilterChip({ label, color, onRemove, removeLabel, classNam
         type="button"
         onClick={onRemove}
         aria-label={removeLabel ?? `Remove filter: ${label}`}
+        data-part="remove"
         className="shrink-0 flex items-center justify-center w-4 h-4 rounded-sm text-ink-tertiary
           hover:text-ink transition-colors cursor-pointer focus-visible:outline-2
           focus-visible:outline-offset-1 focus-visible:outline-carbon"

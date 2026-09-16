@@ -93,9 +93,10 @@ export function Select({
   const current = options.find((o) => o.value === value) ?? options[0];
 
   return (
-    <div ref={ref} className="relative shrink-0">
+    <div ref={ref} data-component="Select" className="relative shrink-0">
       <button
         type="button"
+        data-part="trigger"
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -137,14 +138,22 @@ export function Select({
               : "text-ink-secondary bg-paper border border-border hover:bg-parchment hover:text-ink"
           }`}
       >
-        {triggerIcon && <span className="shrink-0 flex items-center">{triggerIcon}</span>}
+        {triggerIcon && (
+          <span data-part="icon" className="shrink-0 flex items-center">
+            {triggerIcon}
+          </span>
+        )}
         {/* Prefix and value are ONE run. As two loose spans they are two inline
             boxes, so an RTL page lays them end-to-start and "View: Cards"
             renders as "Cards :View". `<bdi>` resolves direction from its own
             first strong character, so a Latin pair stays Latin-ordered inside an
             RTL toolbar and a translated pair orders itself correctly too. */}
-        <bdi className="flex items-center gap-1 min-w-0">
-          {triggerPrefix && <span className="shrink-0 text-ink-secondary">{triggerPrefix}</span>}
+        <bdi data-part="value" className="flex items-center gap-1 min-w-0">
+          {triggerPrefix && (
+            <span data-part="prefix" className="shrink-0 text-ink-secondary">
+              {triggerPrefix}
+            </span>
+          )}
           {steady ? (
             // Every label laid out in ONE grid cell, only the current one
             // visible: the cell is as wide as the widest label RENDERS. A
@@ -171,12 +180,13 @@ export function Select({
             <span className="truncate">{current?.label}</span>
           )}
         </bdi>
-        <ChevronDown size={14} className={`text-ink-secondary shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown size={14} data-part="chevron" aria-hidden className={`text-ink-secondary shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
         <div
           role="listbox"
           id={listId}
+          data-part="listbox"
           // The panel is named too — landing in an unnamed listbox tells you
           // nothing about what you are choosing.
           aria-label={ariaLabel}
@@ -193,6 +203,7 @@ export function Select({
               key={o.value}
               type="button"
               role="option"
+              data-part="option"
               aria-selected={o.value === value}
               disabled={o.disabled}
               onClick={() => {
