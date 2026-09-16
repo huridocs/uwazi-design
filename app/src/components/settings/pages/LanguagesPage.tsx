@@ -192,7 +192,7 @@ export function LanguagesPage() {
   ];
 
   return (
-    <SettingsContent>
+    <SettingsContent component="LanguagesPage">
       <SettingsContent.Header title="Languages" />
       <SettingsContent.Body>
         <p className="text-xs text-ink-tertiary mb-4">
@@ -251,6 +251,7 @@ export function LanguagesPage() {
                   />
                   <TextInput
                     autoFocus
+                    aria-label="Search languages"
                     placeholder="Search languages…"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}

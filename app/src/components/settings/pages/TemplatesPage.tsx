@@ -85,7 +85,7 @@ export function TemplatesPage() {
   ];
 
   return (
-    <SettingsContent>
+    <SettingsContent component="TemplatesPage">
       <SettingsContent.Header title="Templates" />
       <SettingsContent.Body>
         <p className="text-xs text-ink-tertiary mb-4">

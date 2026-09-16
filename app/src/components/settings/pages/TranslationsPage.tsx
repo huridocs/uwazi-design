@@ -63,7 +63,7 @@ export function TranslationsPage() {
   ];
 
   return (
-    <SettingsContent>
+    <SettingsContent component="TranslationsPage">
       <SettingsContent.Header title="Translations" />
       <SettingsContent.Body>
         <p className="text-xs text-ink-tertiary mb-4">

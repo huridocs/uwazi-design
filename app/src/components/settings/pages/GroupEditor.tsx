@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useSetAtom } from "jotai";
 import { SettingsContent } from "../SettingsContent";
 import { Button } from "../Button";
@@ -20,6 +20,7 @@ export function GroupEditor({
   const base = isNew ? undefined : group;
 
   const [name, setName] = useState(base?.name ?? "");
+  const membersHeadingId = useId();
   const [members, setMembers] = useState<string[]>(
     isNew ? [] : seedUsers.filter((u) => u.groups.includes(base!.name)).map((u) => u.id),
   );
@@ -42,7 +43,7 @@ export function GroupEditor({
   };
 
   return (
-    <SettingsContent>
+    <SettingsContent component="GroupEditor">
       <SettingsContent.Header path={["Users & Groups"]} title={isNew ? "New group" : base!.name} onBack={onClose} />
       <SettingsContent.Body>
         <div className="flex flex-col gap-6">
@@ -53,9 +54,11 @@ export function GroupEditor({
           </section>
 
           <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
-            <h3 className="text-sm font-semibold text-ink mb-1">Members</h3>
+            <h3 id={membersHeadingId} className="text-sm font-semibold text-ink mb-1">Members</h3>
             <p className="text-xs text-ink-tertiary mb-3">{members.length} of {seedUsers.length} users.</p>
-            <div className="flex flex-col gap-2">
+            {/* A set of checkboxes answering one question: a fieldset, named by the
+                section heading above it (a legend would draw into the rule). */}
+            <fieldset aria-labelledby={membersHeadingId} data-part="members" className="flex flex-col gap-2 min-w-0">
               {seedUsers.map((u) => (
                 <label
                   key={u.id}
@@ -71,7 +74,7 @@ export function GroupEditor({
                   </span>
                 </label>
               ))}
-            </div>
+            </fieldset>
           </section>
         </div>
       </SettingsContent.Body>

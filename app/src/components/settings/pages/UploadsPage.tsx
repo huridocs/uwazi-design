@@ -71,7 +71,7 @@ export function UploadsPage() {
   ];
 
   return (
-    <SettingsContent>
+    <SettingsContent component="UploadsPage">
       <SettingsContent.Header title="Uploads" />
       <SettingsContent.Body>
         <p className="text-xs text-ink-tertiary mb-4">
@@ -79,12 +79,13 @@ export function UploadsPage() {
         </p>
 
         {/* Toolbar */}
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          <div className="relative flex-1 min-w-[12rem] max-w-sm">
+        <div data-part="toolbar" className="flex flex-wrap items-center gap-2 mb-4">
+          <div role="search" className="relative flex-1 min-w-[12rem] max-w-sm">
             <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              aria-label="Search uploads"
               placeholder="Search by name or URL…"
               className="w-full pl-8 pr-8 py-2 text-sm text-ink bg-warm border border-border rounded-md placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-carbon/20"
             />
@@ -110,12 +111,13 @@ export function UploadsPage() {
             No assets match your search.
           </div>
         ) : view === "grid" ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          <ul data-part="assets" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {filtered.map((u) => {
               const Icon = typeIcon[u.type];
               return (
-                <div
+                <li
                   key={u.id}
+                  data-part="asset"
                   className="flex flex-col rounded-lg bg-paper overflow-hidden"
                   style={{ border: "1px solid var(--border-primary)" }}
                 >
@@ -144,10 +146,10 @@ export function UploadsPage() {
                       </button>
                     </div>
                   </div>
-                </div>
+                </li>
               );
             })}
-          </div>
+          </ul>
         ) : (
           <Table columns={columns} data={filtered} getRowId={(u) => u.id} />
         )}

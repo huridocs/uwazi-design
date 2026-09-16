@@ -7,13 +7,13 @@ export function PlaceholderPage({ section }: { section: string }) {
   const item = settingsItemsById[section];
   const Icon = item?.icon;
   return (
-    <SettingsContent>
+    <SettingsContent component="PlaceholderPage">
       <SettingsContent.Header title={item?.label ?? "Settings"} />
       <SettingsContent.Body>
-        <div className="h-full flex flex-col items-center justify-center text-center gap-3 py-16">
+        <div data-part="empty" className="h-full flex flex-col items-center justify-center text-center gap-3 py-16">
           {Icon && (
             <span className="flex items-center justify-center w-12 h-12 rounded-lg bg-vellum">
-              <Icon size={22} className="text-ink-tertiary" />
+              <Icon size={22} aria-hidden className="text-ink-tertiary" />
             </span>
           )}
           <div>

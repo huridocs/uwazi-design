@@ -92,7 +92,7 @@ export function TranslationEditor({
   ];
 
   return (
-    <SettingsContent>
+    <SettingsContent component="TranslationEditor">
       <SettingsContent.Header path={["Translations"]} title={context.name} onBack={onClose} />
       <SettingsContent.Body>
         <p className="text-xs text-ink-tertiary mb-4">

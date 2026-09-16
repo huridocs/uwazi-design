@@ -12,22 +12,26 @@ export function RowActions({
   onDelete?: () => void;
 }) {
   return (
-    <div className="flex items-center justify-end gap-1">
+    <div data-component="RowActions" className="flex items-center justify-end gap-1">
       {onEdit && (
         <button
+          type="button"
+          data-part="edit"
           onClick={(e) => { e.stopPropagation(); onEdit(); }}
           aria-label={`Edit ${label}`}
           className="p-1.5 rounded-md text-ink-tertiary hover:bg-warm hover:text-ink transition-colors cursor-pointer"
         >
-          <Pencil size={14} />
+          <Pencil size={14} aria-hidden />
         </button>
       )}
       <button
+        type="button"
+        data-part="delete"
         onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
         aria-label={`Delete ${label}`}
         className="p-1.5 rounded-md text-ink-tertiary hover:bg-seal-tint hover:text-seal-label transition-colors cursor-pointer"
       >
-        <Trash2 size={14} />
+        <Trash2 size={14} aria-hidden />
       </button>
     </div>
   );

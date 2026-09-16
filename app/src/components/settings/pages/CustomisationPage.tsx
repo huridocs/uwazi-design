@@ -43,7 +43,7 @@ export function CustomisationPage() {
   };
 
   return (
-    <SettingsContent>
+    <SettingsContent component="CustomisationPage">
       <SettingsContent.Header title="Global CSS & JS" />
       <SettingsContent.Body className="flex flex-col min-h-0">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3">

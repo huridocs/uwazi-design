@@ -147,7 +147,7 @@ export function FiltersPage() {
   ];
 
   return (
-    <SettingsContent>
+    <SettingsContent component="FiltersPage">
       <SettingsContent.Header title="Filters" />
       <SettingsContent.Body>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between mb-4">

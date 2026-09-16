@@ -126,7 +126,7 @@ export function ThesaurusEditor({
   );
 
   return (
-    <SettingsContent>
+    <SettingsContent component="ThesaurusEditor">
       <SettingsContent.Header path={["Thesauri"]} title={isNew ? "New thesaurus" : base!.name} onBack={onClose} />
       <SettingsContent.Body>
         <div className="flex flex-col gap-6">

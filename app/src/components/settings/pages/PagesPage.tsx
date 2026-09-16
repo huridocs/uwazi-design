@@ -59,7 +59,7 @@ export function PagesPage() {
   ];
 
   return (
-    <SettingsContent>
+    <SettingsContent component="PagesPage">
       <SettingsContent.Header title="Pages" />
       <SettingsContent.Body>
         <p className="text-xs text-ink-tertiary mb-4">

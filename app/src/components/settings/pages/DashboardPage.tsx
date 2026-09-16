@@ -42,7 +42,7 @@ export function DashboardPage() {
   ];
 
   return (
-    <SettingsContent>
+    <SettingsContent component="DashboardPage">
       <SettingsContent.Header title="Dashboard" />
       <SettingsContent.Body>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">

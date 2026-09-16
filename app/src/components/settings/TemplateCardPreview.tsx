@@ -89,10 +89,11 @@ export function TemplateCardPreview({
   }, [name, color, properties, config]);
 
   return (
-    <div className={className}>
+    <section data-component="TemplateCardPreview" className={className}>
       <h3 className="text-sm font-semibold text-ink mb-1">Card preview</h3>
       <p className="text-xs text-ink-tertiary mb-3">How entities of this template appear in the Library.</p>
       <div
+        data-part="card"
         aria-hidden="true"
         className="pointer-events-none select-none max-w-[16.5rem]"
         // React 18 has no `inert` prop; set the attribute directly so the
@@ -101,6 +102,6 @@ export function TemplateCardPreview({
       >
         <EntityCard entity={entity} layout="cards" query="" selected={false} connections={3} onSelect={noop} onView={noop} />
       </div>
-    </div>
+    </section>
   );
 }

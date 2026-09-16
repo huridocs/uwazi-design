@@ -50,7 +50,7 @@ export function ThesauriPage() {
   ];
 
   return (
-    <SettingsContent>
+    <SettingsContent component="ThesauriPage">
       <SettingsContent.Header title="Thesauri" />
       <SettingsContent.Body>
         <p className="text-xs text-ink-tertiary mb-4">

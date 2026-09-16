@@ -49,6 +49,9 @@ export function Button({
 }: ButtonProps) {
   return (
     <button
+      type="button"
+      data-component="Button"
+      data-variant={variant}
       disabled={disabled}
       className={`inline-flex items-center justify-center font-medium rounded-md transition-colors ${
         disabled ? disabledClass : `cursor-pointer ${variants[variant]}`

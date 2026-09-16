@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useSetAtom } from "jotai";
 import { ShieldCheck } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
@@ -31,6 +31,7 @@ export function UserEditor({
   const [email, setEmail] = useState(base?.email ?? "");
   const [role, setRole] = useState<UserRole>(base?.role ?? "collaborator");
   const [groups, setGroups] = useState<string[]>(base?.groups ?? []);
+  const groupsHeadingId = useId();
 
   const dirty =
     username !== (base?.username ?? "") ||
@@ -50,7 +51,7 @@ export function UserEditor({
   };
 
   return (
-    <SettingsContent>
+    <SettingsContent component="UserEditor">
       <SettingsContent.Header path={["Users & Groups"]} title={isNew ? "New user" : base!.username} onBack={onClose} />
       <SettingsContent.Body>
         <div className="flex flex-col gap-6">
@@ -76,8 +77,10 @@ export function UserEditor({
           </section>
 
           <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
-            <h3 className="text-sm font-semibold text-ink mb-3">Groups</h3>
-            <div className="flex flex-col gap-2">
+            <h3 id={groupsHeadingId} className="text-sm font-semibold text-ink mb-3">Groups</h3>
+            {/* A set of checkboxes answering one question: a fieldset, named by the
+                section heading above it (a legend would draw into the rule). */}
+            <fieldset aria-labelledby={groupsHeadingId} data-part="groups" className="flex flex-col gap-2 min-w-0">
               {seedGroups.map((g) => (
                 <label
                   key={g.id}
@@ -88,7 +91,7 @@ export function UserEditor({
                   <span className="text-xs text-ink-tertiary">{g.memberCount} members</span>
                 </label>
               ))}
-            </div>
+            </fieldset>
           </section>
 
           {!isNew && (
@@ -96,7 +99,7 @@ export function UserEditor({
               <h3 className="text-sm font-semibold text-ink mb-3">Two-factor authentication</h3>
               <div className="flex items-center gap-3 rounded-lg border border-border bg-paper px-4 py-3">
                 <span className="flex items-center justify-center w-8 h-8 rounded-md bg-success-light shrink-0">
-                  <ShieldCheck size={16} className="text-success" />
+                  <ShieldCheck size={16} aria-hidden className="text-success" />
                 </span>
                 <p className="text-sm text-ink flex-1 min-w-0">
                   {base!.using2fa ? "2FA is enabled for this account." : "This account has not enabled 2FA."}

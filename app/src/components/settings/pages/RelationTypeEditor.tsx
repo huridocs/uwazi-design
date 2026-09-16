@@ -40,7 +40,7 @@ export function RelationTypeEditor({
   };
 
   return (
-    <SettingsContent>
+    <SettingsContent component="RelationTypeEditor">
       <SettingsContent.Header path={["Relationship types"]} title={isNew ? "New relationship type" : base!.name} onBack={onClose} />
       <SettingsContent.Body>
         <div className="flex flex-col gap-4 max-w-lg">

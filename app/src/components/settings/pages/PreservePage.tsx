@@ -36,7 +36,7 @@ export function PreservePage() {
   ];
 
   return (
-    <SettingsContent>
+    <SettingsContent component="PreservePage">
       <SettingsContent.Header title="Preserve" />
       <SettingsContent.Body>
         <p className="text-xs text-ink-tertiary mb-4">

@@ -47,7 +47,7 @@ export function MetadataExtractionPage() {
   ];
 
   return (
-    <SettingsContent>
+    <SettingsContent component="MetadataExtractionPage">
       <SettingsContent.Header title="Metadata Extraction" />
       <SettingsContent.Body>
         <p className="text-xs text-ink-tertiary mb-4">

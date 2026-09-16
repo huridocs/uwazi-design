@@ -154,7 +154,7 @@ export function UsersPage() {
   ];
 
   return (
-    <SettingsContent>
+    <SettingsContent component="UsersPage">
       <SettingsContent.Header title="Users & Groups" />
       <SettingsContent.Body>
         <div className="mb-4">

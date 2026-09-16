@@ -137,7 +137,7 @@ export function AccountPage() {
   ];
 
   return (
-    <SettingsContent>
+    <SettingsContent component="AccountPage">
       <SettingsContent.Header title="Account" />
       <SettingsContent.Body>
         <div className="flex flex-col gap-6">

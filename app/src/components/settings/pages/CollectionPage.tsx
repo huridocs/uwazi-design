@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useSetAtom, useAtomValue } from "jotai";
 import { SettingsContent } from "../SettingsContent";
 import { Button } from "../Button";
@@ -19,7 +19,7 @@ interface ToggleRowProps {
 
 function ToggleRow({ label, hint, checked, onChange }: ToggleRowProps) {
   return (
-    <label className="flex items-start gap-3 rounded-lg border border-border bg-paper px-4 py-3 cursor-pointer">
+    <label data-part="toggle" className="flex items-start gap-3 rounded-lg border border-border bg-paper px-4 py-3 cursor-pointer">
       <span className="pt-0.5">
         <Checkbox checked={checked} onChange={(e) => onChange(e.target.checked)} ariaLabel={label} />
       </span>
@@ -39,6 +39,7 @@ export function CollectionPage() {
       ? { name: cejilCollection.name, view: cejilCollection.defaultView }
       : { name: "Inter-American Human Rights Archive", view: "cards" };
   const [name, setName] = useState(init.name);
+  const accessHeadingId = useId();
   const [landing, setLanding] = useState("/library");
   const [defaultView, setDefaultView] = useState(init.view);
   const [privateInstance, setPrivateInstance] = useState(false);
@@ -57,7 +58,7 @@ export function CollectionPage() {
     setToasts((p) => [...p, { id: Date.now().toString(), message: "Collection settings saved", type: "success" as const }]);
 
   return (
-    <SettingsContent>
+    <SettingsContent component="CollectionPage">
       <SettingsContent.Header title="Collection" />
       <SettingsContent.Body>
         <div className="flex flex-col gap-6">
@@ -88,25 +89,29 @@ export function CollectionPage() {
           </section>
 
           <section className="pt-6 flex flex-col gap-2" style={{ borderTop: "1px solid var(--border-soft)" }}>
-            <h3 className="text-sm font-semibold text-ink mb-1">Access</h3>
-            <ToggleRow
-              label="Private instance"
-              hint="Only logged-in users can see the collection."
-              checked={privateInstance}
-              onChange={setPrivateInstance}
-            />
-            <ToggleRow
-              label="Show cookie policy"
-              hint="Display a cookie consent banner to visitors."
-              checked={cookiePolicy}
-              onChange={setCookiePolicy}
-            />
-            <ToggleRow
-              label="Allow public sharing"
-              hint="Let visitors share entity links on social media."
-              checked={publicSharing}
-              onChange={setPublicSharing}
-            />
+            <h3 id={accessHeadingId} className="text-sm font-semibold text-ink mb-1">Access</h3>
+            {/* A set of checkboxes answering one question: a fieldset, named by the
+                section heading above it (a legend would draw into the rule). */}
+            <fieldset aria-labelledby={accessHeadingId} data-part="access" className="flex flex-col gap-2 min-w-0">
+              <ToggleRow
+                label="Private instance"
+                hint="Only logged-in users can see the collection."
+                checked={privateInstance}
+                onChange={setPrivateInstance}
+              />
+              <ToggleRow
+                label="Show cookie policy"
+                hint="Display a cookie consent banner to visitors."
+                checked={cookiePolicy}
+                onChange={setCookiePolicy}
+              />
+              <ToggleRow
+                label="Allow public sharing"
+                hint="Let visitors share entity links on social media."
+                checked={publicSharing}
+                onChange={setPublicSharing}
+              />
+            </fieldset>
           </section>
         </div>
       </SettingsContent.Body>

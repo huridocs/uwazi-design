@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useSetAtom } from "jotai";
 import { Plus, X } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
@@ -79,6 +79,7 @@ export function TemplateEditor({
   // The property being edited in the dialog: an existing property, "new", or none.
   const [editing, setEditing] = useState<TemplateProperty | "new" | null>(null);
   const { dragIdx, rowProps, gripProps } = useReorder(setProps);
+  const propertiesHeadingId = useId();
 
   /* ── Validation — same rules + message idiom as the entity metadata form.
      Name is required (error, blocks save); a very short name only warns. */
@@ -148,7 +149,7 @@ export function TemplateEditor({
   const customSelected = !PALETTE.some((c) => c.toLowerCase() === color.toLowerCase());
 
   return (
-    <SettingsContent>
+    <SettingsContent component="TemplateEditor">
       <SettingsContent.Header path={["Templates"]} title={isNew ? "New template" : base!.name} onBack={onClose} />
       <SettingsContent.Body>
         <div className="flex flex-col lg:flex-row gap-6">
@@ -167,7 +168,7 @@ export function TemplateEditor({
                 placeholder="e.g. Court Case"
               />
             </Field>
-            <Field label="Colour">
+            <Field label="Colour" group>
               <div className="flex items-center gap-1.5 flex-wrap pt-1">
                 {PALETTE.map((c) => (
                   <button
@@ -205,61 +206,84 @@ export function TemplateEditor({
           </section>
 
           <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
-            <h3 className="text-sm font-semibold text-ink mb-3">Properties</h3>
+            <h3 id={propertiesHeadingId} className="text-sm font-semibold text-ink mb-3">Properties</h3>
 
-            <div className="flex flex-col rounded-md overflow-hidden" style={{ border: "1px solid var(--border-soft)" }}>
-              {/* Header row */}
-              <div
-                className="grid items-center gap-3 px-3 py-2 text-meta font-semibold uppercase tracking-wide text-ink-tertiary bg-warm"
-                style={{ gridTemplateColumns: "1fr 9rem 6rem 5rem 4rem" }}
-              >
-                <span>Property</span>
-                <span>Type</span>
-                <span className="text-center">Required</span>
-                <span className="text-center">Filter</span>
-                <span />
-              </div>
+            {/* A real table, re-displayed as grid rows like the shared DataTable.
+                WebKit drops table semantics from re-displayed table elements, so
+                the implicit roles are stated too. */}
+            <table
+              role="table"
+              aria-labelledby={propertiesHeadingId}
+              data-part="properties"
+              className="flex flex-col rounded-md overflow-hidden"
+              style={{ border: "1px solid var(--border-soft)" }}
+            >
+              <thead role="rowgroup" className="block">
+                <tr
+                  role="row"
+                  className="grid items-center gap-3 px-3 py-2 text-meta font-semibold uppercase tracking-wide text-ink-tertiary bg-warm"
+                  style={{ gridTemplateColumns: "1fr 9rem 6rem 5rem 4rem" }}
+                >
+                  <th role="columnheader" scope="col" className="font-semibold text-start">Property</th>
+                  <th role="columnheader" scope="col" className="font-semibold text-start">Type</th>
+                  <th role="columnheader" scope="col" className="font-semibold text-center">Required</th>
+                  <th role="columnheader" scope="col" className="font-semibold text-center">Filter</th>
+                  <th role="columnheader" scope="col">
+                    <span className="sr-only">Actions</span>
+                  </th>
+                </tr>
+              </thead>
 
-              {props.length === 0 ? (
-                <div className="px-3 py-6 text-sm text-ink-muted text-center">No properties yet.</div>
-              ) : (
-                props.map((p, i) => {
-                  const cfg = config[p.id] ?? {};
-                  const detail =
-                    p.type === "relationship"
-                      ? cfg.targetTemplate
-                      : p.type === "select"
-                        ? cfg.content
-                        : undefined;
-                  return (
-                    <div
-                      key={p.id}
-                      {...rowProps(i)}
-                      className={`grid items-center gap-3 px-3 py-2 transition-opacity ${dragIdx === i ? "opacity-40" : ""}`}
-                      style={{ gridTemplateColumns: "1fr 9rem 6rem 5rem 4rem", borderTop: "1px solid var(--border-soft)" }}
-                    >
-                      <div className="flex items-center gap-2 w-full min-w-0">
-                        <DragGrip {...gripProps(i)} />
-                        <span className="truncate text-sm font-medium text-ink">{p.label}</span>
-                        {detail && (
-                          <span className="truncate text-xs text-ink-tertiary shrink-0">· {detail}</span>
-                        )}
-                      </div>
-                      <span className="text-meta font-semibold text-ink-secondary bg-vellum px-2 py-0.5 rounded-md w-fit">
-                        {propertyTypeLabels[p.type]}
-                      </span>
-                      <div className="flex justify-center">
-                        <Checkbox checked={p.required} onChange={(e) => patchProp(p.id, { required: e.target.checked })} ariaLabel={`${p.label} required`} />
-                      </div>
-                      <div className="flex justify-center">
-                        <Checkbox checked={p.filterable} onChange={(e) => patchProp(p.id, { filterable: e.target.checked })} ariaLabel={`${p.label} filterable`} />
-                      </div>
-                      <RowActions label={p.label} onEdit={() => setEditing(p)} onDelete={() => deleteProperty(p.id)} />
-                    </div>
-                  );
-                })
-              )}
-            </div>
+              <tbody role="rowgroup" className="block">
+                {props.length === 0 ? (
+                  <tr role="row" className="block">
+                    <td role="cell" className="block px-3 py-6 text-sm text-ink-muted text-center">No properties yet.</td>
+                  </tr>
+                ) : (
+                  props.map((p, i) => {
+                    const cfg = config[p.id] ?? {};
+                    const detail =
+                      p.type === "relationship"
+                        ? cfg.targetTemplate
+                        : p.type === "select"
+                          ? cfg.content
+                          : undefined;
+                    return (
+                      <tr
+                        key={p.id}
+                        {...rowProps(i)}
+                        role="row"
+                        data-part="property"
+                        className={`grid items-center gap-3 px-3 py-2 transition-opacity ${dragIdx === i ? "opacity-40" : ""}`}
+                        style={{ gridTemplateColumns: "1fr 9rem 6rem 5rem 4rem", borderTop: "1px solid var(--border-soft)" }}
+                      >
+                        <td role="cell" className="flex items-center gap-2 w-full min-w-0">
+                          <DragGrip {...gripProps(i)} />
+                          <span className="truncate text-sm font-medium text-ink">{p.label}</span>
+                          {detail && (
+                            <span className="truncate text-xs text-ink-tertiary shrink-0">· {detail}</span>
+                          )}
+                        </td>
+                        <td role="cell">
+                          <span className="block text-meta font-semibold text-ink-secondary bg-vellum px-2 py-0.5 rounded-md w-fit">
+                            {propertyTypeLabels[p.type]}
+                          </span>
+                        </td>
+                        <td role="cell" className="flex justify-center">
+                          <Checkbox checked={p.required} onChange={(e) => patchProp(p.id, { required: e.target.checked })} ariaLabel={`${p.label} required`} />
+                        </td>
+                        <td role="cell" className="flex justify-center">
+                          <Checkbox checked={p.filterable} onChange={(e) => patchProp(p.id, { filterable: e.target.checked })} ariaLabel={`${p.label} filterable`} />
+                        </td>
+                        <td role="cell">
+                          <RowActions label={p.label} onEdit={() => setEditing(p)} onDelete={() => deleteProperty(p.id)} />
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           </section>
         </div>
 
