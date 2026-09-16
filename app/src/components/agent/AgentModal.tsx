@@ -293,9 +293,9 @@ export function AgentModal() {
   const suggestions = ["Summarize this document", "Find related cases", "Re-process this document"];
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-end justify-center p-4 pb-[8vh]">
+    <div data-component="AgentModal" className="fixed inset-0 z-[80] flex items-end justify-center p-4 pb-[8vh]">
       {/* Scrim */}
-      <div className="absolute inset-0 bg-ink/30 animate-agent-scrim" onClick={() => setOpen(false)} aria-hidden />
+      <div data-part="scrim" className="absolute inset-0 bg-ink/30 animate-agent-scrim" onClick={() => setOpen(false)} aria-hidden />
 
       {/* Panel. "Bert" — named in tribute to a long-time HURIDOCS member.
           Landscape on desktop, anchored to the lower third. */}
@@ -303,36 +303,39 @@ export function AgentModal() {
         ref={trapRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Bert"
+        aria-labelledby="agent-modal-title"
+        data-part="panel"
         // The rail-tier gutter host (20px). The header zone and the thread are
         // `bleed` bands, so the rule and the scrollbar reach the panel edge.
         data-gutter-host
         className="gutter-host-rail relative w-full max-w-[46rem] max-h-[min(70vh,34rem)] bg-paper border border-border rounded-xl shadow-2xl flex flex-col animate-agent-modal overflow-hidden"
       >
         {/* Header + context (one calm top zone) */}
-        <div className="bleed shrink-0 border-b border-border-soft">
-          <div className="flex items-center gap-2 h-11">
+        <div data-part="header" className="bleed shrink-0 border-b border-border-soft">
+          <div data-part="title-bar" className="flex items-center gap-2 h-11">
             {/* Bert's mark — the two Uwazi squares: Seal above Carbon, drop-in.
                 Kept in a tight lockup with the wordmark. */}
-            <span className="flex items-center gap-1.5">
+            <div data-part="identity" className="flex items-center gap-1.5">
               <span className="flex items-center">
                 <BertMark px={6} gap={2} entrance />
               </span>
-              <span className="text-base font-semibold text-ink leading-none">Bert</span>
-            </span>
-            <kbd className="px-1.5 py-0.5 text-meta font-medium text-ink-muted bg-warm rounded leading-none">{shortcutLabel}</kbd>
+              <h2 id="agent-modal-title" data-part="title" className="text-base font-semibold text-ink leading-none">Bert</h2>
+            </div>
+            <kbd data-part="shortcut" className="px-1.5 py-0.5 text-meta font-medium text-ink-muted bg-warm rounded leading-none">{shortcutLabel}</kbd>
             <button
+              type="button"
+              data-part="close"
               onClick={() => setOpen(false)}
               className="ms-auto flex items-center justify-center w-7 h-7 rounded-md text-ink-muted hover:bg-warm hover:text-ink-secondary transition-colors"
               aria-label="Close"
               data-gutter-align="box"
             >
-              <X size={17} />
+              <X size={17} aria-hidden />
             </button>
           </div>
 
           {/* Context row */}
-          <div className="flex items-center gap-1.5 flex-wrap pb-2.5">
+          <div data-part="context" className="flex items-center gap-1.5 flex-wrap pb-2.5">
             <Dropdown
               trigger={
                 <span
@@ -341,15 +344,17 @@ export function AgentModal() {
                 >
                   <span className="text-ink-tertiary">Context</span>
                   <span className="text-ink font-semibold">{scopeText}</span>
-                  <ChevronDown size={11} className="text-ink-muted" />
+                  <ChevronDown size={11} className="text-ink-muted" aria-hidden />
                 </span>
               }
             >
               {(close) => (
-                <div className="py-1">
+                <div data-part="scope-menu" className="py-1">
                   {(Object.keys(scopePresets) as ScopeId[]).map((id) => (
                     <button
+                      type="button"
                       key={id}
+                      data-state={id === scope ? "active" : "inactive"}
                       onClick={() => {
                         setScope(id);
                         close();
@@ -372,8 +377,9 @@ export function AgentModal() {
                 selector. */}
             {chain.map((chip, i) => (
               <Fragment key={chip.key}>
-                {i > 0 && <ChevronRight size={12} className="text-ink-muted shrink-0" />}
+                {i > 0 && <ChevronRight size={12} className="text-ink-muted shrink-0" aria-hidden />}
                 <span
+                  data-part="context-chip"
                   title={`${chip.label}: ${chip.value}`}
                   className={`inline-flex items-center gap-1 h-6 ps-2 text-meta rounded-md bg-carbon-tint/50 ${
                     chip.uid ? "pe-0.5" : "pe-2"
@@ -383,11 +389,13 @@ export function AgentModal() {
                   <span className="text-ink-secondary truncate max-w-[10rem]">{chip.value}</span>
                   {chip.uid && (
                     <button
+                      type="button"
+                      data-part="context-chip-remove"
                       onClick={() => removeNode(chip.uid!)}
                       className="flex items-center justify-center w-4 h-4 rounded text-carbon/50 hover:text-carbon hover:bg-carbon/10 transition-colors"
                       aria-label={`Remove ${chip.label}`}
                     >
-                      <X size={11} />
+                      <X size={11} aria-hidden />
                     </button>
                   )}
                 </span>
@@ -398,7 +406,7 @@ export function AgentModal() {
             <Dropdown
               trigger={
                 <span className="inline-flex items-center gap-0.5 h-6 px-1.5 text-meta font-medium text-ink-tertiary rounded-md hover:bg-warm hover:text-ink-secondary transition-colors">
-                  <Plus size={12} /> Add
+                  <Plus size={12} aria-hidden /> Add
                 </span>
               }
             >
@@ -422,10 +430,11 @@ export function AgentModal() {
           ref={threadRef}
           role="log"
           aria-live="polite"
+          data-part="thread"
           className="bleed flex-1 overflow-y-auto py-4 min-h-[11rem]"
         >
           {messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center gap-2.5 py-6">
+            <div data-part="empty" className="h-full flex flex-col items-center justify-center text-center gap-2.5 py-6">
               <div className="flex items-center justify-center w-9 h-9 rounded-full bg-warm">
                 <BertMark px={10} gap={3} />
               </div>
@@ -433,9 +442,10 @@ export function AgentModal() {
               <p className="text-xs text-ink-muted max-w-[19rem] leading-relaxed">
                 A friendly hand for serious work — I'll act in the context shown above.
               </p>
-              <div className="flex flex-col gap-1 w-full max-w-[20rem] mt-1">
+              <div data-part="suggestions" className="flex flex-col gap-1 w-full max-w-[20rem] mt-1">
                 {suggestions.map((s) => (
                   <button
+                    type="button"
                     key={s}
                     onClick={() => send(s)}
                     className="px-3 py-2 text-tab text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-lg transition-colors text-start"
@@ -446,12 +456,12 @@ export function AgentModal() {
               </div>
             </div>
           ) : (
-            <div className="flex flex-col gap-4">
+            <ol data-part="messages" className="flex flex-col gap-4">
               {messages.map((m) => (
                 <MessageBubble key={m.id} message={m} />
               ))}
               {thinking && (
-                <div className="flex items-center gap-2">
+                <li data-part="thinking" className="flex items-center gap-2">
                   <div className="flex items-center justify-center w-6 h-6 rounded-full bg-warm shrink-0">
                     <BertMark px={6} gap={2} />
                   </div>
@@ -464,17 +474,18 @@ export function AgentModal() {
                       />
                     ))}
                   </div>
-                </div>
+                </li>
               )}
-            </div>
+            </ol>
           )}
         </div>
 
         {/* Input */}
-        <div className="pt-2 pb-5 shrink-0">
+        <div data-part="composer" className="pt-2 pb-5 shrink-0">
           <div className="flex items-center gap-2 bg-warm border border-border-soft rounded-xl pl-3.5 pr-2 py-2 focus-within:ring-2 focus-within:ring-carbon/20 focus-within:border-carbon/30 transition-shadow">
             <textarea
               autoFocus
+              aria-label="Message Bert"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onFocus={() => setFocused(true)}
@@ -493,6 +504,9 @@ export function AgentModal() {
                 mark animates while Bert is thinking. preventDefault on mousedown
                 keeps the textarea focused through the click. */}
             <button
+              type="button"
+              data-part="send"
+              data-state={thinking ? "thinking" : "idle"}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => send(input)}
               className={`flex items-center justify-center w-7 h-7 rounded-lg transition-colors shrink-0 ${
@@ -503,12 +517,12 @@ export function AgentModal() {
               {thinking ? (
                 <UwaziLoader size="xs" color={sendActive ? "white" : "muted"} animate />
               ) : (
-                <ArrowUp size={15} className={sendActive ? "text-paper" : "text-ink-muted"} />
+                <ArrowUp size={15} className={sendActive ? "text-paper" : "text-ink-muted"} aria-hidden />
               )}
             </button>
           </div>
-          <p className="mt-1.5 flex items-center gap-1 text-meta text-ink-tertiary">
-            <Bell size={10} /> Long-running tasks keep running in notifications after you close this.
+          <p data-part="note" className="mt-1.5 flex items-center gap-1 text-meta text-ink-tertiary">
+            <Bell size={10} aria-hidden /> Long-running tasks keep running in notifications after you close this.
           </p>
         </div>
       </div>
@@ -542,23 +556,25 @@ function AddMenu({
       ? entities.filter((e) => e.title.toLowerCase().includes(q.toLowerCase())).slice(0, 40)
       : files.filter((f) => f.name.toLowerCase().includes(q.toLowerCase())).slice(0, 40);
     return (
-      <div className="w-64">
-        <div className="relative border-b border-border-soft">
+      <div data-component="AddMenu" data-state={mode} className="w-64">
+        <div data-part="search" className="relative border-b border-border-soft">
           <input
             autoFocus
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={`Search ${isEntity ? "entities" : "files"}…`}
+            aria-label={`Search ${isEntity ? "entities" : "files"}`}
             className="w-full h-8 pl-3 pr-8 text-xs font-medium bg-paper placeholder:text-ink-muted focus:outline-none"
           />
-          <Search size={13} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted" />
+          <Search size={13} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted" aria-hidden />
         </div>
-        <div className="max-h-50 overflow-auto py-1">
+        <div data-part="results" className="max-h-50 overflow-auto py-1">
           {items.length === 0 ? (
-            <div className="px-3 py-2 text-xs text-ink-muted">No matches.</div>
+            <div data-part="empty" className="px-3 py-2 text-xs text-ink-muted">No matches.</div>
           ) : (
             items.map((it) => (
               <button
+                type="button"
                 key={it.id}
                 onClick={() => {
                   onAdd(isEntity ? "entity" : "file", {
@@ -579,6 +595,8 @@ function AddMenu({
           )}
         </div>
         <button
+          type="button"
+          data-part="back"
           onClick={() => { setMode("root"); setQ(""); }}
           className="w-full px-3 py-1.5 text-meta text-ink-tertiary hover:bg-warm border-t border-border-soft text-start"
         >
@@ -590,6 +608,7 @@ function AddMenu({
 
   const item = (label: string, onClick: () => void) => (
     <button
+      type="button"
       onClick={onClick}
       className="flex w-full px-3 py-1.5 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors"
     >
@@ -601,7 +620,7 @@ function AddMenu({
   );
 
   return (
-    <div className="w-52 py-1">
+    <div data-component="AddMenu" data-state="root" className="w-52 py-1">
       {groupLabel("Deepen")}
       {!hasKind("page") && item("Page", () => { onAdd("page"); close(); })}
       {hasSelection && !hasKind("selection") && item("Selection", () => { onAdd("selection"); close(); })}
@@ -619,7 +638,7 @@ function AddMenu({
 /** Bert's identity mark — the two Uwazi squares, Seal above Carbon. */
 function BertMark({ px = 6, gap = 2, entrance = false }: { px?: number; gap?: number; entrance?: boolean }) {
   return (
-    <span className="inline-flex flex-col" style={{ gap }} aria-hidden>
+    <span data-component="BertMark" className="inline-flex flex-col" style={{ gap }} aria-hidden>
       <span
         className={`rounded-[2px] bg-seal ${entrance ? "animate-fade-in-up" : ""}`}
         style={{ width: px, height: px, ...(entrance ? { animationDelay: "0.03s", animationFillMode: "both" } : {}) }}
@@ -642,22 +661,22 @@ function shortDoc(title: string): string {
 function MessageBubble({ message }: { message: AgentMessage }) {
   if (message.role === "user") {
     return (
-      <div className="flex justify-end">
-        <div className="max-w-[82%] px-3 py-2 text-sm text-ink bg-parchment rounded-2xl rounded-br-md">
+      <li data-component="MessageBubble" data-variant="user" className="flex justify-end">
+        <div data-part="text" className="max-w-[82%] px-3 py-2 text-sm text-ink bg-parchment rounded-2xl rounded-br-md">
           {message.text}
         </div>
-      </div>
+      </li>
     );
   }
   return (
-    <div className="flex items-start gap-2">
-      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-warm shrink-0 mt-1.5">
+    <li data-component="MessageBubble" data-variant="agent" className="flex items-start gap-2">
+      <div data-part="avatar" className="flex items-center justify-center w-6 h-6 rounded-full bg-warm shrink-0 mt-1.5">
         <BertMark px={6} gap={2} />
       </div>
-      <div className="max-w-[86%] px-3 py-2 text-sm text-ink leading-relaxed whitespace-pre-line bg-warm/60 rounded-2xl rounded-tl-md">
+      <div data-part="text" className="max-w-[86%] px-3 py-2 text-sm text-ink leading-relaxed whitespace-pre-line bg-warm/60 rounded-2xl rounded-tl-md">
         {message.text}
       </div>
-    </div>
+    </li>
   );
 }
 
@@ -703,7 +722,13 @@ function Dropdown({
 
   return (
     <>
-      <button ref={btnRef} onClick={() => setOpen((o) => !o)}>
+      <button
+        ref={btnRef}
+        type="button"
+        data-component="Dropdown"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
         {trigger}
       </button>
       {open &&
@@ -711,6 +736,7 @@ function Dropdown({
         createPortal(
           <div
             ref={menuRef}
+            data-part="dropdown-menu"
             style={{ position: "fixed", top: pos.top, left: pos.left, zIndex: 90 }}
             className="min-w-[10rem] bg-paper border border-border rounded-lg shadow-lg overflow-hidden"
           >

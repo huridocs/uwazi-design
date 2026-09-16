@@ -85,7 +85,7 @@ export function ImportDetailView({ entry, onBack }: ImportDetailViewProps) {
   const hasTable = entry.issues.length > 0 || (isCompleted && entry.entities > 0);
 
   return (
-    <div className="bleed flex flex-col flex-1 min-h-0 py-4 gap-4 overflow-y-auto">
+    <div data-component="ImportDetailView" data-status={entry.status} className="bleed flex flex-col flex-1 min-h-0 py-4 gap-4 overflow-y-auto">
       <Breadcrumb
         segments={[
           { label: "Import CSV", onClick: onBack },
@@ -94,33 +94,43 @@ export function ImportDetailView({ entry, onBack }: ImportDetailViewProps) {
       />
 
       {/* Title + status */}
-      <div className="flex items-center gap-3">
-        <h2 className="text-base font-bold text-ink font-mono">{entry.filename}</h2>
+      <div data-part="header" className="flex items-center gap-3">
+        <h2 data-part="title" className="text-base font-bold text-ink font-mono">{entry.filename}</h2>
         <StatusBadge status={entry.status} />
       </div>
 
       {/* Meta row */}
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-xs text-ink-tertiary">
-        <span>
-          Template: <strong className="text-ink font-medium">{entry.template}</strong>
-        </span>
-        <span>
-          Created by: <strong className="text-ink font-medium">{entry.createdBy ?? "—"}</strong>
-        </span>
-        <span className="tabular-nums">
-          <strong className="text-ink font-medium">{formatDate(entry.date)}</strong>
-          {entry.time && <> — <strong className="text-ink font-medium">{entry.time}</strong></>}
-        </span>
-        <span>
-          Source: <strong className="text-ink font-medium">{source}</strong>
-          {" • "}
-          <strong className="text-ink font-medium">{sizeLabel}</strong>
-        </span>
-      </div>
+      {/* Label/value pairs, each group inline so the row reads as before. */}
+      <dl data-part="meta" className="flex flex-wrap items-center gap-x-6 gap-y-1 text-xs text-ink-tertiary">
+        <div>
+          <dt className="inline">Template:</dt>{" "}
+          <dd className="inline"><strong className="text-ink font-medium">{entry.template}</strong></dd>
+        </div>
+        <div>
+          <dt className="inline">Created by:</dt>{" "}
+          <dd className="inline"><strong className="text-ink font-medium">{entry.createdBy ?? "—"}</strong></dd>
+        </div>
+        <div className="tabular-nums">
+          <dt className="sr-only">Created</dt>
+          <dd className="inline">
+            <strong className="text-ink font-medium">{formatDate(entry.date)}</strong>
+            {entry.time && <> — <strong className="text-ink font-medium">{entry.time}</strong></>}
+          </dd>
+        </div>
+        <div>
+          <dt className="inline">Source:</dt>{" "}
+          <dd className="inline">
+            <strong className="text-ink font-medium">{source}</strong>
+            {" • "}
+            <strong className="text-ink font-medium">{sizeLabel}</strong>
+          </dd>
+        </div>
+      </dl>
 
       {/* Stepper (only while in progress) */}
       {isInProgress && (
         <div
+          data-part="stepper"
           className="flex items-center gap-4 px-4 py-3 rounded-md bg-paper"
           style={{ border: "1px solid var(--border-primary)" }}
         >
@@ -149,34 +159,39 @@ export function ImportDetailView({ entry, onBack }: ImportDetailViewProps) {
       )}
 
       {/* Big stats cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <dl data-part="stats" className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <StatBox label="Entities Created" value={entry.entities} />
         <StatBox label="Rows Processed" value={processed} />
         <StatBox label="Rows Failed" value={entry.failed} tone={entry.failed > 0 ? "seal" : "success"} />
         <StatBox label="Thesauri Touched" value={entry.thesauriTouched ?? 0} />
         <StatBox label="Relationships" value={entry.relationshipsCreated ?? 0} />
-      </div>
+      </dl>
 
       {/* Progress bar */}
-      <div className="space-y-2">
+      <section data-part="progress" className="space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold text-ink">Progress</span>
-          <span className="text-xs text-ink-tertiary tabular-nums">{progressText}</span>
+          <h3 className="text-sm font-semibold text-ink">Progress</h3>
+          <span data-part="progress-text" className="text-xs text-ink-tertiary tabular-nums">{progressText}</span>
         </div>
-        <ProgressBar value={entry.progress} color={progressColor(entry.status)} size="md" />
-      </div>
+        <ProgressBar
+          value={entry.progress}
+          color={progressColor(entry.status)}
+          size="md"
+          ariaLabel={`Import progress, ${entry.filename}`}
+        />
+      </section>
 
       {/* Extraction details */}
-      <div className="space-y-3">
+      <section data-part="extraction" className="space-y-3">
         <h3 className="text-sm font-semibold text-ink">Extraction Details</h3>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-x-6 gap-y-2 text-xs">
+        <dl className="grid grid-cols-2 md:grid-cols-5 gap-x-6 gap-y-2 text-xs">
           <DetailField label="Source Type" value={source} />
           <DetailField label="Upload Size" value={sizeLabel} />
           <DetailField label="Files Extracted" value={(entry.filesExtracted ?? 1).toLocaleString()} />
           <DetailField label="Thesauri Values Observed" value={(entry.thesauriObserved ?? 0).toLocaleString()} />
           <DetailField label="Thesauri Values Created" value={(entry.thesauriCreated ?? 0).toLocaleString()} />
-        </div>
-      </div>
+        </dl>
+      </section>
 
       {/* Section header for table */}
       {entry.issues.length > 0 && (
@@ -197,7 +212,7 @@ export function ImportDetailView({ entry, onBack }: ImportDetailViewProps) {
 
       {/* Table */}
       {hasTable && (
-        <div className="flex flex-col min-h-0">
+        <div data-part="table" className="flex flex-col min-h-0">
           {entry.issues.length > 0 ? (
             <IssuesTable issues={entry.issues} />
           ) : isCompleted && entry.entities > 0 ? (
@@ -222,22 +237,24 @@ function StatBox({
     tone === "seal" ? "text-seal-label" : tone === "success" ? "text-success" : "text-ink";
   return (
     <div
+      data-part="stat"
+      data-tone={tone}
       className="rounded-md bg-paper px-4 py-3"
       style={{ border: "1px solid var(--border-primary)" }}
     >
-      <div className="text-meta text-ink-tertiary mb-1">{label}</div>
-      <div className={`text-2xl font-bold tabular-nums ${valueClass}`}>
+      <dt className="text-meta text-ink-tertiary mb-1">{label}</dt>
+      <dd className={`text-2xl font-bold tabular-nums ${valueClass}`}>
         {value.toLocaleString()}
-      </div>
+      </dd>
     </div>
   );
 }
 
 function DetailField({ label, value }: { label: string; value: string }) {
   return (
-    <div className="space-y-0.5">
-      <div className="text-ink-tertiary">{label}</div>
-      <div className="text-ink font-medium">{value}</div>
+    <div data-part="detail" className="space-y-0.5">
+      <dt className="text-ink-tertiary">{label}</dt>
+      <dd className="text-ink font-medium">{value}</dd>
     </div>
   );
 }

@@ -16,7 +16,7 @@ import { PageSpine } from "./PageSpine";
 
 function Centered({ children }: { children: ReactNode }) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-2 px-6 text-center">
+    <div data-part="empty" className="flex-1 flex flex-col items-center justify-center gap-2 px-6 text-center">
       {children}
     </div>
   );
@@ -68,9 +68,11 @@ export function DocumentSearchBody() {
   const hasFullText = !!snippets?.fullText.length;
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col">
+    <div data-component="DocumentSearchBody" className="flex-1 min-h-0 flex flex-col">
       {/* Search input — the tab's own query, independent of the Library's. */}
       <div
+        role="search"
+        data-part="search"
         className="bleed shrink-0 py-2"
         style={{ borderBottom: "1px solid var(--border-primary)" }}
       >
@@ -90,12 +92,13 @@ export function DocumentSearchBody() {
           {query && (
             <button
               type="button"
+              data-part="clear"
               onClick={() => setQuery("")}
               aria-label="Clear search"
               className="shrink-0 p-0.5 rounded-full hover:bg-parchment text-ink-muted hover:text-ink
                 cursor-pointer transition-colors"
             >
-              <X size={12} />
+              <X size={12} aria-hidden="true" />
             </button>
           )}
         </div>
@@ -126,37 +129,41 @@ export function DocumentSearchBody() {
           </button>
         </Centered>
       ) : (
-        <div className="bleed flex-1 overflow-auto py-3 flex flex-col gap-3">
-          <span dir="ltr" className="text-meta text-ink-tertiary">
+        <div data-part="results" className="bleed flex-1 overflow-auto py-3 flex flex-col gap-3">
+          <span dir="ltr" data-part="summary" className="text-meta text-ink-tertiary">
             {snippets.count.toLocaleString()} {snippets.count === 1 ? "match" : "matches"} for{" "}
             <span className="font-medium text-ink">“{trimmed}”</span>
           </span>
 
           {hasMeta && (
-            <div className="flex flex-col gap-1.5">
+            <section data-part="properties" className="flex flex-col gap-1.5">
               <SectionLabel>Properties</SectionLabel>
-              {snippets.metadata.map((group) => (
-                <button
-                  key={group.fieldKey}
-                  type="button"
-                  onClick={() => focusProperty(group.fieldKey)}
-                  className="w-full text-start rounded-md px-2 py-1.5 bg-warm/50 hover:bg-parchment
-                    transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1
-                    focus-visible:ring-inset focus-visible:ring-ink/20"
-                >
-                  <SectionLabel as="span">{group.field}</SectionLabel>
-                  {group.texts.map((text, i) => (
-                    <span key={i} className="block text-sm text-ink leading-relaxed">
-                      <HighlightedText text={text} query={trimmed} />
-                    </span>
-                  ))}
-                </button>
-              ))}
-            </div>
+              <ul className="flex flex-col gap-1.5">
+                {snippets.metadata.map((group) => (
+                  <li key={group.fieldKey} data-part="property">
+                    <button
+                      type="button"
+                      onClick={() => focusProperty(group.fieldKey)}
+                      className="w-full text-start rounded-md px-2 py-1.5 bg-warm/50 hover:bg-parchment
+                        transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1
+                        focus-visible:ring-inset focus-visible:ring-ink/20"
+                    >
+                      {/* Inside a button: a span, never a heading. */}
+                      <SectionLabel as="span">{group.field}</SectionLabel>
+                      {group.texts.map((text, i) => (
+                        <span key={i} className="block text-sm text-ink leading-relaxed">
+                          <HighlightedText text={text} query={trimmed} />
+                        </span>
+                      ))}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
           )}
 
           {hasFullText && (
-            <div className="flex flex-col gap-1.5">
+            <section data-part="document" className="flex flex-col gap-1.5">
               {/* An entity with no PDF of its own reads a connected one's, so
                   these passages can come from another case's judgment — and
                   this tab was the one surface that never said so, while the
@@ -175,7 +182,7 @@ export function DocumentSearchBody() {
                 query={trimmed}
                 onSelect={jumpToPage}
               />
-            </div>
+            </section>
           )}
         </div>
       )}

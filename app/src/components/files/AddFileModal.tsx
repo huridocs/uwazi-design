@@ -233,6 +233,8 @@ export function AddFileModal() {
 
   return (
     <div
+      data-component="AddFileModal"
+      data-mode={lockedGroupId ? "translation" : "new"}
       className="fixed inset-0 z-50 flex md:items-center md:justify-center md:p-4 bg-overlay"
       role="dialog"
       aria-modal="true"
@@ -240,35 +242,40 @@ export function AddFileModal() {
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
     >
-      <div className="bg-paper shadow-xl w-full md:max-w-[36rem] md:rounded-xl md:animate-fade-in-up h-full md:h-auto md:max-h-[90vh] flex flex-col">
+      <div data-part="panel" className="bg-paper shadow-xl w-full md:max-w-[36rem] md:rounded-xl md:animate-fade-in-up h-full md:h-auto md:max-h-[90vh] flex flex-col">
         <div
+          data-part="header"
           className="flex items-center justify-between px-6 py-4"
           style={{ borderBottom: "1px solid var(--border-primary)" }}
         >
-          <h2 id="add-file-modal-title" className="text-base font-semibold text-ink">
+          <h2 id="add-file-modal-title" data-part="title" className="text-base font-semibold text-ink">
             {lockedGroup
               ? `Add translation to "${lockedGroup.title}"`
               : "Add file"}
           </h2>
           <button
+            type="button"
+            data-part="close"
             onClick={() => setTarget(null)}
             aria-label="Close"
             className="p-1 rounded-md hover:bg-parchment transition-colors cursor-pointer"
           >
-            <X size={18} className="text-ink-muted" />
+            <X size={18} className="text-ink-muted" aria-hidden />
           </button>
         </div>
 
-        <div className="flex-1 overflow-auto px-6 py-5 space-y-4">
+        <div data-part="body" className="flex-1 overflow-auto px-6 py-5 space-y-4">
           {/* Dropzone — large when empty, compact "add more" when not. */}
           {entries.length === 0 ? (
             <button
               type="button"
+              data-part="dropzone"
+              data-variant="large"
               onClick={simulatePick}
               className="flex flex-col items-center justify-center w-full py-6 rounded-lg bg-warm hover:bg-parchment transition-colors cursor-pointer"
               style={{ border: "2px dashed var(--border-soft)" }}
             >
-              <CloudUpload size={28} className="text-ink-tertiary/50 mb-1.5" />
+              <CloudUpload size={28} className="text-ink-tertiary/50 mb-1.5" aria-hidden />
               <span className="text-sm font-medium text-ink-secondary">
                 Click to select files
               </span>
@@ -279,11 +286,13 @@ export function AddFileModal() {
           ) : (
             <button
               type="button"
+              data-part="dropzone"
+              data-variant="compact"
               onClick={simulatePick}
               className="flex items-center justify-center gap-2 w-full py-2.5 rounded-md bg-warm hover:bg-parchment transition-colors cursor-pointer"
               style={{ border: "1.5px dashed var(--border-soft)" }}
             >
-              <Plus size={14} className="text-ink-tertiary" />
+              <Plus size={14} className="text-ink-tertiary" aria-hidden />
               <span className="text-xs font-medium text-ink-secondary">
                 Add another file
               </span>
@@ -295,18 +304,21 @@ export function AddFileModal() {
 
           {/* Queued entries */}
           {entries.length > 0 && (
-            <ul className="space-y-2.5">
+            <ul data-part="rows" className="space-y-2.5">
               {entries.map((entry) => {
                 const Icon = typeIcons[entry.kind];
                 return (
                   <li
                     key={entry.id}
+                    data-part="row"
+                    data-state={entry.progress >= 1 ? "ready" : "uploading"}
                     className="rounded-md bg-warm border border-border/50 p-3 space-y-2.5"
                   >
                     <div className="flex items-start gap-2">
-                      <Icon size={16} className="text-ink-muted mt-1 shrink-0" />
+                      <Icon size={16} className="text-ink-muted mt-1 shrink-0" aria-hidden />
                       <input
                         type="text"
+                        data-part="name"
                         value={entry.name}
                         onChange={(e) => updateEntry(entry.id, { name: e.target.value })}
                         className="flex-1 min-w-0 px-2 py-1 text-sm text-ink bg-paper border border-border rounded focus:outline-none focus:ring-1 focus:ring-carbon/30"
@@ -314,6 +326,8 @@ export function AddFileModal() {
                       />
                       <button
                         type="button"
+                        data-part="remove"
+                        aria-label={`Remove ${entry.name}`}
                         onClick={() => removeEntry(entry.id)}
                         className="text-xs text-ink-tertiary hover:text-ink transition-colors cursor-pointer shrink-0 pt-1"
                       >
@@ -321,8 +335,8 @@ export function AddFileModal() {
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <label className="space-y-1">
+                    <div data-part="fields" className="grid grid-cols-2 gap-3">
+                      <label data-part="language" className="space-y-1">
                         <span className="text-meta font-medium text-ink-muted uppercase tracking-wide">
                           Language
                         </span>
@@ -343,12 +357,13 @@ export function AddFileModal() {
                           </select>
                           <ChevronDown
                             size={12}
+                            aria-hidden
                             className="absolute right-2 top-1/2 -translate-y-1/2 text-ink-tertiary pointer-events-none"
                           />
                         </div>
                       </label>
 
-                      <label className="space-y-1">
+                      <label data-part="add-as" className="space-y-1">
                         <span className="text-meta font-medium text-ink-muted uppercase tracking-wide">
                           Add as
                         </span>
@@ -385,6 +400,7 @@ export function AddFileModal() {
                           </select>
                           <ChevronDown
                             size={12}
+                            aria-hidden
                             className="absolute right-2 top-1/2 -translate-y-1/2 text-ink-tertiary pointer-events-none"
                           />
                         </div>
@@ -392,8 +408,15 @@ export function AddFileModal() {
                     </div>
 
                     {/* Progress */}
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1 rounded bg-vellum overflow-hidden">
+                    <div data-part="progress" className="flex items-center gap-2">
+                      <div
+                        role="progressbar"
+                        aria-label={`Uploading ${entry.name}`}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={Math.round(entry.progress * 100)}
+                        className="flex-1 h-1 rounded bg-vellum overflow-hidden"
+                      >
                         <div
                           className={`h-full transition-[width] duration-200 ${
                             entry.progress >= 1 ? "bg-success" : "bg-ink/40"
@@ -403,7 +426,7 @@ export function AddFileModal() {
                       </div>
                       {entry.progress >= 1 ? (
                         <span className="flex items-center gap-1 text-meta font-medium text-success">
-                          <Check size={11} /> Ready
+                          <Check size={11} aria-hidden /> Ready
                         </span>
                       ) : (
                         <span className="text-meta text-ink-tertiary tabular-nums">
@@ -418,23 +441,28 @@ export function AddFileModal() {
           )}
 
           {entries.length === 0 && (
-            <p className="text-xs text-ink-tertiary text-center">
+            <p data-part="empty" className="text-xs text-ink-tertiary text-center">
               No files queued yet.
             </p>
           )}
         </div>
 
         <div
+          data-part="footer"
           className="flex justify-end gap-3 px-6 py-4"
           style={{ borderTop: "1px solid var(--border-primary)" }}
         >
           <button
+            type="button"
+            data-part="cancel"
             onClick={() => setTarget(null)}
             className={`px-3 py-1.5 text-xs font-medium rounded-md ${WARM_BUTTON} transition-colors cursor-pointer`}
           >
             Cancel
           </button>
           <button
+            type="button"
+            data-part="confirm"
             onClick={confirmAll}
             disabled={!allReady}
             className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${

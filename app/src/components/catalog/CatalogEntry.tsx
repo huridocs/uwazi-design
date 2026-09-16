@@ -12,15 +12,15 @@ interface CatalogEntryProps {
 
 export function CatalogEntry({ name, description, code, children, tailwind }: CatalogEntryProps) {
   return (
-    <div className="border border-border/60 rounded-lg overflow-hidden bg-paper">
+    <article data-component="CatalogEntry" className="border border-border/60 rounded-lg overflow-hidden bg-paper">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-border/40">
-        <h3 className="text-sm font-semibold text-ink">{name}</h3>
-        <p className="text-xs text-ink-tertiary mt-0.5">{description}</p>
-      </div>
+      <header data-part="header" className="px-4 py-3 border-b border-border/40">
+        <h3 data-part="title" className="text-sm font-semibold text-ink">{name}</h3>
+        <p data-part="description" className="text-xs text-ink-tertiary mt-0.5">{description}</p>
+      </header>
 
       {/* Preview */}
-      <div className="px-4 py-6 bg-warm flex items-start justify-center min-h-20 w-full">
+      <div data-part="preview" className="px-4 py-6 bg-warm flex items-start justify-center min-h-20 w-full">
         <div className="w-full">{children}</div>
       </div>
 
@@ -31,7 +31,7 @@ export function CatalogEntry({ name, description, code, children, tailwind }: Ca
       {tailwind && (
         <CodeBlock label="Tailwind" content={tailwind} name={name} />
       )}
-    </div>
+    </article>
   );
 }
 
@@ -43,18 +43,21 @@ function CodeBlock({ label, content, name }: { label: string; content: string; n
   };
 
   return (
-    <div className="relative border-t border-border/40">
-      <div className="flex items-center justify-between px-4 py-1.5" style={{ backgroundColor: "#1A1A1A" }}>
+    <div data-component="CodeBlock" data-variant={label.toLowerCase()} className="relative border-t border-border/40">
+      <div data-part="toolbar" className="flex items-center justify-between px-4 py-1.5" style={{ backgroundColor: "#1A1A1A" }}>
         <span className="text-meta font-medium uppercase tracking-wider" style={{ color: "#9A9A9A" }}>{label}</span>
         <button
+          type="button"
+          data-part="copy"
+          aria-label={`Copy ${label} code for ${name}`}
           onClick={handleCopy}
           className="flex items-center gap-1 px-1.5 py-0.5 rounded text-meta font-medium hover:bg-white/10 transition-colors"
           style={{ color: "#9A9A9A" }}
         >
-          <Copy size={10} /> Copy
+          <Copy size={10} aria-hidden /> Copy
         </button>
       </div>
-      <pre className="px-4 py-2.5 overflow-x-auto text-xs leading-relaxed font-mono" style={{ backgroundColor: "#1A1A1A" }}>
+      <pre data-part="code" className="px-4 py-2.5 overflow-x-auto text-xs leading-relaxed font-mono" style={{ backgroundColor: "#1A1A1A" }}>
         <code>
           {label === "React" ? (
             <SyntaxHighlight code={content} />

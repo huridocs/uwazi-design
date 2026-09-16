@@ -421,21 +421,24 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
     // `bleed-flush`: the viewer runs to the pane edge wherever it is hosted, so
     // hosts place it without a wrapper. Its page area is a stage (unasserted by
     // `__gutter`); its action bar puts the buttons back on the pane's gutter.
-    <div className="bleed-flush flex flex-col h-full min-h-0 bg-paper">
+    <div data-component="DocumentViewer" className="bleed-flush flex flex-col h-full min-h-0 bg-paper">
       {/* Scrollable document area + minimap */}
-      <div data-gutter-bleed className="flex-1 relative min-h-0">
+      <div data-gutter-bleed data-part="stage" className="flex-1 relative min-h-0">
         {showLangFallback && (
           <div
+            data-part="language-notice"
             className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 ps-3 pe-1.5 py-1.5 rounded-md bg-warning-light text-warning text-xs font-medium shadow-sm animate-fade-in-up"
             role="status"
           >
             No translation in {language}. Showing {activeFile?.language}.
             <button
+              type="button"
+              data-part="dismiss"
               onClick={() => setLangNoticeDismissed(true)}
               aria-label="Dismiss"
               className="shrink-0 p-0.5 rounded hover:bg-warning/15 transition-colors cursor-pointer"
             >
-              <X size={12} />
+              <X size={12} aria-hidden />
             </button>
           </div>
         )}
@@ -443,6 +446,8 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
             to reload + repaint when the user switches back. */}
         <div
           ref={containerRef}
+          data-part="pages"
+          data-state={renditionMode ? "hidden" : undefined}
           className={`absolute inset-0 overflow-auto flex flex-col items-center body-top pb-4 gap-4 ${renditionMode ? "hidden" : ""}`}
           style={{
             paddingLeft: 16,
@@ -455,12 +460,12 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
           file={filePath}
           onLoadSuccess={onDocumentLoadSuccess}
           loading={
-            <div className="flex items-center justify-center h-[56.25rem] bg-paper rounded-md" style={{ width: "100%", maxWidth: "56.25rem" }}>
+            <div data-part="loading" className="flex items-center justify-center h-[56.25rem] bg-paper rounded-md" style={{ width: "100%", maxWidth: "56.25rem" }}>
               <p className="text-ink-muted text-sm">Loading document...</p>
             </div>
           }
           error={
-            <div className="flex flex-col items-center justify-center h-[56.25rem] bg-paper rounded-md gap-3" style={{ width: "100%", maxWidth: "56.25rem" }}>
+            <div data-part="error" className="flex flex-col items-center justify-center h-[56.25rem] bg-paper rounded-md gap-3" style={{ width: "100%", maxWidth: "56.25rem" }}>
               <p className="text-ink-muted text-sm">
                 PDF not found. Place a sample.pdf in app/public/
               </p>
@@ -479,6 +484,7 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
                 if (el) pageRefs.current.set(pageNum, el);
                 else pageRefs.current.delete(pageNum);
               }}
+              data-part="page"
               className="relative mb-4"
               data-search-active={activeJumpPage === pageNum ? "" : undefined}
               style={{

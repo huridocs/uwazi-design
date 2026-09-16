@@ -35,24 +35,24 @@ export function DocumentGroupCard({
   };
 
   return (
-    <section className="mb-4">
+    <section data-component="DocumentGroupCard" data-state={active ? "active" : undefined} className="mb-4">
       {/* No side padding: the pane's gutter places it, on the same edge as the
           section labels and the file table under it. */}
-      <header className="flex items-center gap-2 flex-wrap mb-2">
+      <header data-part="header" className="flex items-center gap-2 flex-wrap mb-2">
         <GroupTitleField initial={group.title} onCommit={renameGroup} />
         {/* Primary always shows on every primary group; Active is the
             single source of "which one the viewer's rendering". Same
             shape, different fill so they read as a continuum, not two
             unrelated states. */}
-        <span className="px-1.5 py-0.5 text-meta font-medium rounded shrink-0 bg-warning-light text-warning">
+        <span data-part="primary-badge" className="px-1.5 py-0.5 text-meta font-medium rounded shrink-0 bg-warning-light text-warning">
           Primary
         </span>
         {active && (
-          <span className="px-1.5 py-0.5 text-meta font-medium rounded bg-ink text-parchment shrink-0">
+          <span data-part="active-badge" className="px-1.5 py-0.5 text-meta font-medium rounded bg-ink text-parchment shrink-0">
             Active
           </span>
         )}
-        <span className="text-meta text-ink-tertiary tabular-nums shrink-0">
+        <span data-part="translation-count" className="text-meta text-ink-tertiary tabular-nums shrink-0">
           {translationCount} {translationCount === 1 ? "translation" : "translations"}
         </span>
       </header>
@@ -69,7 +69,7 @@ function GroupTitleField({
   onCommit: (next: string) => void;
 }) {
   return (
-    <label className="group flex items-center gap-1">
+    <label data-component="GroupTitleField" className="group flex items-center gap-1">
       <input
         defaultValue={initial}
         size={Math.max(initial.length, 16)}
@@ -91,6 +91,7 @@ function GroupTitleField({
       />
       <Pencil
         size={11}
+        aria-hidden
         className="text-ink-tertiary opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity shrink-0"
       />
     </label>
