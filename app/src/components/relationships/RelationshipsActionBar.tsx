@@ -86,6 +86,8 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
 
   const editButton = (
     <button
+      type="button"
+      data-part="edit"
       onClick={enterEdit}
       /* Ghost with a hover fill: its BOX meets the gutter, so the fill never
          crosses the panel edge. */
@@ -99,6 +101,8 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
   return (
     <>
       <div
+        data-component="RelationshipsActionBar"
+        data-mode={editMode ? "edit" : "read"}
         /* Every host is a gutter host (the Relationships pane, the drawers):
            `bleed` runs the rule and the selection tint to the pane edge and
            puts the buttons back on the host's gutter. */
@@ -107,7 +111,7 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
         }`}
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
-        <div className="flex items-center gap-2">
+        <div data-part="start" className="flex items-center gap-2">
           {compact ? (
             /* Compact has no data actions to hold at the start, so the collapse
                pair takes it in both modes. If this cluster rendered nothing while
@@ -119,12 +123,16 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
           ) : editMode ? (
             <>
               <button
+                type="button"
+                data-part="create"
                 onClick={handleCreate}
                 className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
               >
                 <Plus size={12} className="text-ink-tertiary" /> Create relationship
               </button>
               <button
+                type="button"
+                data-part="manage-types"
                 onClick={() => setManageOpen(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary hover:bg-warm hover:text-ink rounded-md transition-colors cursor-pointer"
               >
@@ -143,7 +151,7 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
           )}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div data-part="end" className="flex items-center gap-3">
           {/* The full bar keeps the collapse pair FIRST in the end cluster, in
               every view and both modes.
 
@@ -156,10 +164,12 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
             <>
               {hasSelection && (
                 <>
-                  <span className="text-xs text-ink-secondary">
+                  <span data-part="selection" className="text-xs text-ink-secondary">
                     Selected {selectedCount} of {totalCount}
                   </span>
                   <button
+                    type="button"
+                    data-part="delete"
                     onClick={() => setConfirmDelete(true)}
                     className="px-3 py-1.5 text-xs font-medium text-white bg-seal-fill rounded-md hover:bg-seal-fill/90 transition-colors cursor-pointer"
                   >
@@ -168,12 +178,16 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
                 </>
               )}
               <button
+                type="button"
+                data-part="cancel"
                 onClick={cancelEdit}
                 className="px-3 py-1.5 text-xs font-medium text-ink-secondary hover:bg-warm hover:text-ink rounded-md transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
+                type="button"
+                data-part="save"
                 onClick={saveEdit}
                 className="px-3 py-1.5 text-xs font-medium text-parchment bg-ink hover:bg-ink/90 rounded-md transition-colors cursor-pointer"
               >

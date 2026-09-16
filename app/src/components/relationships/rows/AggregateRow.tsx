@@ -121,7 +121,7 @@ export function AggregateRow({
         <RowCheckbox refIds={rel.refIds} />
         {chevron}
         {hidePill ? (
-          <span className="flex items-center gap-1.5 text-xs text-ink-secondary capitalize">
+          <span data-part="relation" className="flex items-center gap-1.5 text-xs text-ink-secondary capitalize">
             <DirectionGlyph direction={glyphDirection} />
             <HighlightedText text={relLabel} query={query} />
           </span>
@@ -147,7 +147,7 @@ export function AggregateRow({
         {chevron}
         <DirectionGlyph direction={glyphDirection} />
         {hidePill ? (
-          <span className="text-xs text-ink-secondary capitalize truncate">
+          <span data-part="relation" className="text-xs text-ink-secondary capitalize truncate">
             <HighlightedText text={relLabel} query={query} />
           </span>
         ) : (
@@ -163,13 +163,14 @@ export function AggregateRow({
               }}
               aria-label={`Open ${entity?.title ?? "entity"}`}
               title={entity?.title}
+              data-part="entity"
               className="text-xs font-medium text-ink truncate min-w-0 text-left cursor-pointer
                 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40 rounded"
             >
               <HighlightedText text={entity?.title ?? ""} query={query} />
             </button>
             {!hideRelLabel && (
-              <span className="text-meta text-ink-tertiary truncate capitalize shrink-0">
+              <span data-part="relation" className="text-meta text-ink-tertiary truncate capitalize shrink-0">
                 <HighlightedText text={relLabel} query={query} />
               </span>
             )}
@@ -198,7 +199,7 @@ export function AggregateRow({
             {hidePill ? (
               <>
                 <DirectionGlyph direction={glyphDirection} />
-                <span className="text-sm font-medium text-ink capitalize truncate">
+                <span data-part="relation" className="text-sm font-medium text-ink capitalize truncate">
                   <HighlightedText text={relLabel} query={query} />
                 </span>
               </>
@@ -215,6 +216,7 @@ export function AggregateRow({
                   }}
                   aria-label={`Open ${entity?.title ?? "entity"}`}
                   title={entity?.title}
+                  data-part="entity"
                   className="text-sm font-medium text-ink truncate min-w-0 text-left cursor-pointer
                     hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40 rounded"
                 >
@@ -226,10 +228,10 @@ export function AggregateRow({
           <div className="flex items-center gap-1.5 shrink-0">{countBadge}</div>
         </div>
         {!hidePill && (
-          <div className="flex items-center gap-1 mt-1 text-meta text-ink-tertiary">
+          <div data-part="caption" className="flex items-center gap-1 mt-1 text-meta text-ink-tertiary">
             <DirectionGlyph direction={glyphDirection} />
             {!hideRelLabel && (
-              <span className="capitalize">
+              <span data-part="relation" className="capitalize">
                 <HighlightedText text={relLabel} query={query} />
               </span>
             )}
@@ -241,6 +243,7 @@ export function AggregateRow({
 
   return (
     <RowShell
+      component="AggregateRow"
       selected={selected}
       overviewBorderless
       overview={overview}

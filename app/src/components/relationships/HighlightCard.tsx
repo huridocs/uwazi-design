@@ -13,8 +13,8 @@ export function HighlightCard({ reference }: HighlightCardProps) {
   const selection = reference.sourceSelection;
 
   return (
-    <div className="bg-highlight/20 rounded-lg px-3 py-2.5">
-      <div className="flex items-center justify-between mb-1.5">
+    <article data-component="HighlightCard" className="bg-highlight/20 rounded-lg px-3 py-2.5">
+      <div data-part="header" className="flex items-center justify-between mb-1.5">
         <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
         {selection && <PageTag page={selection.page} />}
       </div>
@@ -27,6 +27,6 @@ export function HighlightCard({ reference }: HighlightCardProps) {
           fadeTo="color-mix(in srgb, var(--highlight-yellow) 20%, var(--bg-surface))"
         />
       )}
-    </div>
+    </article>
   );
 }

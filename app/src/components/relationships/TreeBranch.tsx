@@ -45,11 +45,12 @@ export function TreeBranch({
   const items = Children.toArray(children);
 
   return (
-    <div>
+    <div data-component="TreeBranch">
       <button
         type="button"
         onClick={toggle}
         aria-expanded={expanded}
+        data-part="toggle"
         /* The BOX sits on the gutter, not the chevron: the hover fill has to stay
            inside the panel's edge, and the connector geometry below is measured
            from this box. */
@@ -58,20 +59,23 @@ export function TreeBranch({
       >
         <ChevronRight
           size={12}
+          aria-hidden
           className={`shrink-0 transition-transform ${
             expanded ? "rotate-90 text-ink-secondary" : "text-ink-tertiary"
           }`}
         />
         {color && (
           <span
+            data-part="dot"
+            aria-hidden
             className="w-2 h-2 rounded-[2px] shrink-0"
             style={{ backgroundColor: color }}
           />
         )}
-        <span className="text-sm font-medium text-ink truncate">
+        <span data-part="title" className="text-sm font-medium text-ink truncate">
           <HighlightedText text={title} query={highlight} />
         </span>
-        <span className="ms-auto text-meta text-ink-tertiary tabular-nums shrink-0">
+        <span data-part="count" className="ms-auto text-meta text-ink-tertiary tabular-nums shrink-0">
           {count}
         </span>
       </button>
@@ -80,17 +84,18 @@ export function TreeBranch({
         // header above (chevron is at px-2 + ~6px = ~14px from the wrapper's
         // start edge; ms-[14px] keeps the line continuous across nested
         // branches, and follows the chevron to the right under RTL).
-        <div className="ms-[14px]">
+        <ul data-part="children" className="ms-[14px]">
           {items.map((child, i) => (
             <TreeNode key={i}>{child}</TreeNode>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );
 }
 
-/** Connector slot for a direct child of a TreeBranch — draws a vertical line
+/** Connector slot for a direct child of a TreeBranch — an `li`, so its parent
+ *  must be a list (`TreeBranch`'s children, an aggregate's evidence). Draws a vertical line
  *  along the start edge and a horizontal stub into the child's first row.
  *  All inline geometry is logical, so the connectors mirror under RTL.
  *  The vertical line is clipped on the last child to produce the "L" corner
@@ -102,7 +107,8 @@ export function TreeNode({ children }: { children: ReactNode }) {
   // Compact/detail keep plain connectors so the denser rows don't read busy.
   const showDot = useAtomValue(zoomAtom) === "overview";
   return (
-    <div
+    <li
+      data-component="TreeNode"
       className={[
         "relative ps-5",
         // Vertical guide: top of this row down to bottom (full height).
@@ -138,6 +144,6 @@ export function TreeNode({ children }: { children: ReactNode }) {
         />
       )}
       {children}
-    </div>
+    </li>
   );
 }

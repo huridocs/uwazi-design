@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useId, useState, useMemo } from "react";
 import { X, Search, Plus } from "lucide-react";
 import { useAtom, useSetAtom, useAtomValue } from "jotai";
 import { entityPickerOpenAtom, textSelectionAtom } from "../../atoms/selection";
@@ -38,6 +38,8 @@ export function CreateRelationshipModal() {
 
   // New-entity form state
   const [newEntityTitle, setNewEntityTitle] = useState("");
+  const titleId = useId();
+  const typeLabelId = useId();
   const [newEntityTypeId, setNewEntityTypeId] = useState(entityTypes[0]?.id ?? "person");
 
   const filtered = useMemo(() => {
@@ -165,16 +167,20 @@ export function CreateRelationshipModal() {
 
   return (
     <div
+      data-component="CreateRelationshipModal"
+      data-step={step}
       className="fixed inset-0 z-50 flex md:items-center md:justify-center md:p-4 bg-overlay"
       role="dialog"
       aria-modal="true"
       aria-label={t("System", "Create relationship")}
     >
-      <div className="bg-paper shadow-xl w-full md:max-w-lg md:rounded-lg md:max-h-[80vh] h-full md:h-auto flex flex-col md:animate-fade-in-up">
+      <div data-part="panel" className="bg-paper shadow-xl w-full md:max-w-lg md:rounded-lg md:max-h-[80vh] h-full md:h-auto flex flex-col md:animate-fade-in-up">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+        <div data-part="header" className="flex items-center justify-between px-5 py-4 border-b border-border">
           <div>
-            <h3 className="text-base font-semibold text-ink">{headerTitle}</h3>
+            <h3 data-part="title" className="text-base font-semibold text-ink">
+              {headerTitle}
+            </h3>
             {selection && (
               <p className="text-xs text-ink-muted mt-0.5 truncate max-w-[350px]">
                 {t("System", "From:")} "{selection.text.slice(0, 60)}
@@ -183,21 +189,24 @@ export function CreateRelationshipModal() {
             )}
           </div>
           <button
+            type="button"
+            data-part="close"
             onClick={handleClose}
             className="p-1.5 rounded-md hover:bg-parchment transition-colors"
             aria-label={t("System", "Close")}
           >
-            <X size={18} className="text-ink-muted" />
+            <X size={18} aria-hidden className="text-ink-muted" />
           </button>
         </div>
 
         {step === "entity" && (
           <>
             {/* Search */}
-            <div className="px-5 py-3 border-b border-border/50">
+            <div data-part="search" role="search" className="px-5 py-3 border-b border-border/50">
               <div className="relative">
                 <Search
                   size={14}
+                  aria-hidden
                   className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted"
                 />
                 <input
@@ -205,12 +214,14 @@ export function CreateRelationshipModal() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder={t("System", "Search entities...")}
+                  aria-label={t("System", "Search entities")}
                   className="w-full pl-8 pr-8 py-2 text-sm bg-warm border border-border rounded-md
                     placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-carbon/20"
                   autoFocus
                 />
                 {search && (
                   <button
+                    type="button"
                     onClick={() => setSearch("")}
                     className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-parchment text-ink-muted hover:text-ink cursor-pointer transition-colors"
                     aria-label={t("System", "Clear search")}
@@ -222,14 +233,16 @@ export function CreateRelationshipModal() {
             </div>
 
             {/* Entity list */}
-            <div className="flex-1 overflow-auto px-5 py-3 space-y-4">
+            <div data-part="entities" className="flex-1 overflow-auto px-5 py-3 space-y-4">
               {/* Create-new affordance pinned at the top */}
               <button
+                type="button"
+                data-part="create-entity"
                 onClick={handleStartNewEntity}
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left
                   border border-dashed border-border hover:bg-warm hover:border-ink/30 transition-colors cursor-pointer"
               >
-                <Plus size={14} className="text-ink-muted shrink-0" />
+                <Plus size={14} aria-hidden className="text-ink-muted shrink-0" />
                 <span className="text-sm text-ink-secondary">
                   {t("System", "Create new entity from selection")}
                 </span>
@@ -238,38 +251,42 @@ export function CreateRelationshipModal() {
               {Array.from(grouped.entries()).map(([typeId, ents]) => {
                 const type = getEntityType(typeId);
                 return (
-                  <div key={typeId}>
+                  <section key={typeId} data-part="entity-group">
                     <h4 className="text-meta font-medium text-ink-muted uppercase tracking-wider mb-2">
                       {type?.name}
                     </h4>
-                    <div className="space-y-1">
+                    <ul className="space-y-1">
                       {ents.map((entity) => (
-                        <button
-                          key={entity.id}
-                          onClick={() => {
-                            setSelectedEntity(entity);
-                            setStep("relation");
-                          }}
-                          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md
-                            text-left hover:bg-warm transition-colors ${
-                              selectedEntity?.id === entity.id
-                                ? "bg-warm ring-1 ring-carbon/20"
-                                : ""
-                            }`}
-                        >
-                          <span
-                            className="w-2 h-2 rounded-[2px] shrink-0"
-                            style={{ backgroundColor: type?.color }}
-                          />
-                          <span className="text-sm text-ink">{entity.title}</span>
-                        </button>
+                        <li key={entity.id}>
+                          <button
+                            type="button"
+                            data-part="entity"
+                            onClick={() => {
+                              setSelectedEntity(entity);
+                              setStep("relation");
+                            }}
+                            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md
+                              text-left hover:bg-warm transition-colors ${
+                                selectedEntity?.id === entity.id
+                                  ? "bg-warm ring-1 ring-carbon/20"
+                                  : ""
+                              }`}
+                          >
+                            <span
+                              aria-hidden
+                              className="w-2 h-2 rounded-[2px] shrink-0"
+                              style={{ backgroundColor: type?.color }}
+                            />
+                            <span className="text-sm text-ink">{entity.title}</span>
+                          </button>
+                        </li>
                       ))}
-                    </div>
-                  </div>
+                    </ul>
+                  </section>
                 );
               })}
               {filtered.length === 0 && (
-                <p className="text-sm text-ink-muted text-center py-8">
+                <p data-part="empty" className="text-sm text-ink-muted text-center py-8">
                   {t("System", "No entities match")} "{search}"
                 </p>
               )}
@@ -279,12 +296,16 @@ export function CreateRelationshipModal() {
 
         {step === "new-entity" && (
           <>
-            <div className="flex-1 overflow-auto px-5 py-4 space-y-4">
+            <div data-part="new-entity" className="flex-1 overflow-auto px-5 py-4 space-y-4">
               <div>
-                <label className="block text-xs font-medium text-ink-secondary mb-1.5">
+                <label
+                  htmlFor={titleId}
+                  className="block text-xs font-medium text-ink-secondary mb-1.5"
+                >
                   {t("System", "Title")}
                 </label>
                 <input
+                  id={titleId}
                   type="text"
                   value={newEntityTitle}
                   onChange={(e) => setNewEntityTitle(e.target.value)}
@@ -297,14 +318,19 @@ export function CreateRelationshipModal() {
                 </p>
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-ink-secondary mb-1.5">
+              <div role="group" aria-labelledby={typeLabelId}>
+                <span
+                  id={typeLabelId}
+                  className="block text-xs font-medium text-ink-secondary mb-1.5"
+                >
                   {t("System", "Entity type")}
-                </label>
+                </span>
                 <div className="grid grid-cols-2 gap-1.5">
                   {entityTypes.map((type) => (
                     <button
                       key={type.id}
+                      type="button"
+                      data-part="entity-type"
                       onClick={() => setNewEntityTypeId(type.id)}
                       aria-pressed={newEntityTypeId === type.id}
                       className={`flex items-center gap-2 px-3 py-2 rounded-md text-left text-sm transition-colors cursor-pointer ${
@@ -314,6 +340,7 @@ export function CreateRelationshipModal() {
                       }`}
                     >
                       <span
+                        aria-hidden
                         className="w-2 h-2 rounded-[2px] shrink-0"
                         style={{ backgroundColor: type.color }}
                       />
@@ -323,14 +350,18 @@ export function CreateRelationshipModal() {
                 </div>
               </div>
             </div>
-            <div className="px-5 py-4 border-t border-border flex justify-between">
+            <div data-part="footer" className="px-5 py-4 border-t border-border flex justify-between">
               <button
+                type="button"
+                data-part="back"
                 onClick={() => setStep("entity")}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md ${WARM_BUTTON} transition-colors cursor-pointer`}
               >
                 {t("System", "Back")}
               </button>
               <button
+                type="button"
+                data-part="confirm"
                 onClick={handleConfirmNewEntity}
                 disabled={!newEntityTitle.trim()}
                 className="px-3 py-1.5 text-xs font-medium rounded-md bg-ink text-parchment
@@ -345,7 +376,7 @@ export function CreateRelationshipModal() {
         {step === "relation" && (
           <>
             <div className="px-5 py-4 border-b border-border/50">
-              <div className="flex items-center gap-2 mb-3">
+              <div data-part="target" className="flex items-center gap-2 mb-3">
                 <span className="text-xs text-ink-muted">{t("System", "Target:")}</span>
                 <EntityPill
                   typeId={selectedEntity?.typeId ?? ""}
@@ -354,31 +385,38 @@ export function CreateRelationshipModal() {
                 />
               </div>
             </div>
-            <div className="flex-1 overflow-auto px-5 py-3 space-y-1">
+            <ul data-part="relation-types" className="flex-1 overflow-auto px-5 py-3 space-y-1">
               {relationTypes.map((rel) => (
-                <button
-                  key={rel.id}
-                  onClick={() => setSelectedRelation(rel.id)}
-                  aria-pressed={selectedRelation === rel.id}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-left
-                    transition-colors cursor-pointer ${
-                      selectedRelation === rel.id
-                        ? "bg-carbon-tint ring-1 ring-carbon/30"
-                        : "hover:bg-warm"
-                    }`}
-                >
-                  <span className="text-sm text-ink">{rel.label}</span>
-                </button>
+                <li key={rel.id}>
+                  <button
+                    type="button"
+                    data-part="relation-type"
+                    onClick={() => setSelectedRelation(rel.id)}
+                    aria-pressed={selectedRelation === rel.id}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-left
+                      transition-colors cursor-pointer ${
+                        selectedRelation === rel.id
+                          ? "bg-carbon-tint ring-1 ring-carbon/30"
+                          : "hover:bg-warm"
+                      }`}
+                  >
+                    <span className="text-sm text-ink">{rel.label}</span>
+                  </button>
+                </li>
               ))}
-            </div>
-            <div className="px-5 py-4 border-t border-border flex justify-between">
+            </ul>
+            <div data-part="footer" className="px-5 py-4 border-t border-border flex justify-between">
               <button
+                type="button"
+                data-part="back"
                 onClick={() => setStep("entity")}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md ${WARM_BUTTON} transition-colors cursor-pointer`}
               >
                 {t("System", "Back")}
               </button>
               <button
+                type="button"
+                data-part="confirm"
                 onClick={handleCreate}
                 className="px-3 py-1.5 text-xs font-medium rounded-md bg-ink text-parchment
                   hover:bg-ink/90 transition-colors cursor-pointer"

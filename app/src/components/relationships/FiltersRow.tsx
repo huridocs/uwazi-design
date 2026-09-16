@@ -37,8 +37,10 @@ export function CollapseControls({
     /* Ghost TEXT buttons: no fill at rest or on hover, so the text is their
        visible edge. `px-1` is hit area only; `-mx-1` gives it back, putting
        "Collapse all" and "Expand all" on the row's edges rather than 4px in. */
-    <div className="flex items-center gap-1 -mx-1">
+    <div data-component="CollapseControls" className="flex items-center gap-1 -mx-1">
       <button
+        type="button"
+        data-part="collapse-all"
         onClick={onCollapseAll}
         disabled={collapseDisabled}
         className={`text-meta font-medium transition-colors px-1 ${
@@ -50,6 +52,8 @@ export function CollapseControls({
         Collapse all
       </button>
       <button
+        type="button"
+        data-part="expand-all"
         onClick={onExpandAll}
         disabled={expandDisabled}
         className={`text-meta font-medium transition-colors px-1 ${

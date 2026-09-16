@@ -26,6 +26,7 @@ export function RowCheckbox({ refIds }: { refIds: string[] }) {
   return (
     <span
       onClick={(e) => e.stopPropagation()}
+      data-part="select"
       className="flex items-center shrink-0"
     >
       <Checkbox

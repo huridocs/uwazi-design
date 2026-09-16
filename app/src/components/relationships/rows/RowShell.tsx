@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from "react";
+import { createContext, useContext, type ReactNode, type Ref } from "react";
 import { useAtomValue } from "jotai";
 import { zoomAtom, type Zoom } from "../../../atoms/filters";
 import { ListCardRow } from "../../shared/ListCardRow";
@@ -12,6 +12,8 @@ const TIER_CLASS: Record<Zoom, string> = {
 };
 
 interface RowShellProps {
+  /** The row kind, stamped as the row's `data-component`. */
+  component: "ReferenceRow" | "AggregateRow" | "HubRow";
   selected: boolean;
   rowRef?: Ref<HTMLElement>;
   /** Overview rows in a TREE drop the row divider — the connector lines are the
@@ -44,7 +46,24 @@ interface RowShellProps {
  *  The tier CONTENT stays with each row: the difference between a hub's three
  *  clipped pills and an aggregate's direction glyph is the row's business, not
  *  the shell's. */
+/** Whether the row is one item of a `RowStack`. Rows render as `li` inside one
+ *  and as `div` anywhere else — a tree node, an aggregate's evidence, a story —
+ *  because an `li` outside a list is invalid. */
+const InRowStack = createContext(false);
+
+/** A list of relationship rows: a `ul` whose rows render as its `li`s. The row
+ *  keeps its own box, so `ListCardRow`'s `last:border-b-0` still finds the last
+ *  row. */
+export function RowStack({ className, children }: { className?: string; children: ReactNode }) {
+  return (
+    <ul data-part="rows" className={className}>
+      <InRowStack.Provider value>{children}</InRowStack.Provider>
+    </ul>
+  );
+}
+
 export function RowShell({
+  component,
   selected,
   rowRef,
   overviewBorderless = false,
@@ -53,12 +72,19 @@ export function RowShell({
   detail,
 }: RowShellProps) {
   const zoom = useAtomValue(zoomAtom);
+  const inStack = useContext(InRowStack);
   const tier = TIER_CLASS[zoom];
   const className =
     zoom === "overview" && overviewBorderless ? `${tier} !border-b-0` : tier;
 
   return (
-    <ListCardRow ref={rowRef} selected={selected} className={className}>
+    <ListCardRow
+      ref={rowRef}
+      as={inStack ? "li" : "div"}
+      component={component}
+      selected={selected}
+      className={className}
+    >
       {zoom === "overview" ? overview : zoom === "compact" ? compact : detail}
     </ListCardRow>
   );

@@ -73,7 +73,7 @@ export function HubRow({ hub, expanded, onToggleExpand, hideRelLabel }: HubRowPr
       </div>
       {/* Overview is the ONE-LINE zoom: pills clip rather than wrap, so every
           row is the same height and the tree stays scannable. */}
-      <div className="flex items-center gap-1 min-w-0 flex-1 overflow-hidden">
+      <div data-part="members" className="flex items-center gap-1 min-w-0 flex-1 overflow-hidden">
         {memberPills.slice(0, 3)}
         {hub.members.length > 3 && (
           <span className="text-meta text-ink-tertiary shrink-0">
@@ -104,22 +104,24 @@ export function HubRow({ hub, expanded, onToggleExpand, hideRelLabel }: HubRowPr
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           {/* items-start, so a clipped pill doesn't stretch its neighbours */}
-          <div className="flex flex-wrap items-start gap-1 min-w-0">{memberPills}</div>
+          <div data-part="members" className="flex flex-wrap items-start gap-1 min-w-0">
+            {memberPills}
+          </div>
           <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-meta text-ink-tertiary uppercase tracking-wide">
+            <span data-part="kind" className="text-meta text-ink-tertiary uppercase tracking-wide">
               hub
             </span>
             {countBadge}
           </div>
         </div>
         {!compact && (
-          <div className="flex items-center gap-1 mt-1 text-meta text-ink-tertiary">
+          <div data-part="caption" className="flex items-center gap-1 mt-1 text-meta text-ink-tertiary">
             {!hideRelLabel && (
               <>
-                <span className="capitalize">
+                <span data-part="relation" className="capitalize">
                   <HighlightedText text={relLabel} query={query} />
                 </span>
-                <span>·</span>
+                <span aria-hidden>·</span>
               </>
             )}
             <span>{hub.members.length} parties</span>
@@ -131,6 +133,7 @@ export function HubRow({ hub, expanded, onToggleExpand, hideRelLabel }: HubRowPr
 
   return (
     <RowShell
+      component="HubRow"
       selected={false}
       overviewBorderless
       overview={overview}

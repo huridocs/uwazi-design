@@ -27,8 +27,8 @@ const SORTS: { id: SortOrder; label: string }[] = [
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-3 px-1.5 py-1">
-      <span className="text-meta font-medium text-ink-secondary shrink-0">{label}</span>
+    <div data-part="row" className="flex items-center justify-between gap-3 px-1.5 py-1">
+      <span data-part="label" className="text-meta font-medium text-ink-secondary shrink-0">{label}</span>
       {children}
     </div>
   );
@@ -83,22 +83,25 @@ export function DisplayMenu({ size = "md" }: { size?: "sm" | "md" }) {
       .map((o) => ({ value: o.id, label: o.label }));
 
   return (
-    <div className="relative shrink-0">
+    <div data-component="DisplayMenu" className="relative shrink-0">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-label="Display options"
-        aria-haspopup="menu"
+        aria-haspopup="dialog"
         aria-expanded={open}
+        data-part="trigger"
         className={`relative inline-flex items-center justify-center ${box} rounded-md transition-colors cursor-pointer ${
           open || modified
             ? "bg-vellum text-ink"
             : "bg-warm text-ink-secondary hover:bg-parchment hover:text-ink"
         }`}
       >
-        <SlidersHorizontal size={size === "sm" ? 12 : 14} />
+        <SlidersHorizontal size={size === "sm" ? 12 : 14} aria-hidden />
         {modified && (
           <span
+            data-part="modified"
+            aria-hidden
             className="absolute -top-0.5 -end-0.5 w-1.5 h-1.5 rounded-full"
             style={{ backgroundColor: "var(--accent-blue)" }}
           />
@@ -107,9 +110,12 @@ export function DisplayMenu({ size = "md" }: { size?: "sm" | "md" }) {
 
       {open && (
         <>
-          <div className="fixed inset-0 z-30" aria-hidden onClick={() => setOpen(false)} />
+          <div data-part="scrim" className="fixed inset-0 z-30" aria-hidden onClick={() => setOpen(false)} />
           <div
-            role="menu"
+            // Selects with their labels, not menu items — so a dialog, not a `menu`.
+            role="dialog"
+            aria-label="Display options"
+            data-part="panel"
             className="absolute end-0 mt-1 z-40 w-[17rem] rounded-md bg-paper p-1.5 animate-fade-in-up"
             style={{ border: "1px solid var(--border-primary)", boxShadow: "0 6px 18px rgba(0,0,0,0.12)" }}
           >

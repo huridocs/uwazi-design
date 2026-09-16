@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useId } from "react";
 import { ChevronDown } from "lucide-react";
 import { useGroupExpansion } from "../../hooks/useGroupExpansion";
 import { CountBadge } from "../shared/CountBadge";
@@ -56,31 +56,51 @@ export function RelationshipGroupedCard({
     expanded: expandedProp,
     onToggle,
   });
+  const bodyId = useId();
 
   return (
-    <div className="border border-border/60 rounded-md overflow-hidden bg-paper">
-      <button
-        onClick={toggle}
-        className="w-full flex items-center gap-2 px-3 py-2 hover:bg-warm transition-colors"
-      >
-        <ChevronDown
-          size={14}
-          className={`text-ink-muted shrink-0 transition-transform ${
-            expanded ? "" : "-rotate-90"
-          }`}
-        />
-        {color && (
-          <span
-            className="w-2 h-2 rounded-[2px] shrink-0"
-            style={{ backgroundColor: color }}
+    // A section headed by its title. The heading wraps the toggle (the
+    // disclosure pattern), so the group is in the outline and its button still
+    // says whether it is open.
+    <section
+      data-component="RelationshipGroupedCard"
+      className="border border-border/60 rounded-md overflow-hidden bg-paper"
+    >
+      <h3 data-part="header">
+        <button
+          type="button"
+          onClick={toggle}
+          aria-expanded={expanded}
+          aria-controls={expanded ? bodyId : undefined}
+          data-part="toggle"
+          className="w-full flex items-center gap-2 px-3 py-2 hover:bg-warm transition-colors"
+        >
+          <ChevronDown
+            size={14}
+            aria-hidden
+            className={`text-ink-muted shrink-0 transition-transform ${
+              expanded ? "" : "-rotate-90"
+            }`}
           />
-        )}
-        <span className="text-sm font-medium text-ink truncate">
-          <HighlightedText text={title} query={highlight} />
-        </span>
-        <CountBadge count={count} />
-      </button>
-      {expanded && <div className="border-t border-border/40">{children}</div>}
-    </div>
+          {color && (
+            <span
+              data-part="dot"
+              aria-hidden
+              className="w-2 h-2 rounded-[2px] shrink-0"
+              style={{ backgroundColor: color }}
+            />
+          )}
+          <span data-part="title" className="text-sm font-medium text-ink truncate">
+            <HighlightedText text={title} query={highlight} />
+          </span>
+          <CountBadge count={count} />
+        </button>
+      </h3>
+      {expanded && (
+        <div id={bodyId} data-part="body" className="border-t border-border/40">
+          {children}
+        </div>
+      )}
+    </section>
   );
 }

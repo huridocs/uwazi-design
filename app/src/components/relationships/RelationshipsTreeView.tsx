@@ -61,7 +61,7 @@ export function RelationshipsTreeView() {
   }, [filtered, setActiveRefId, setOverlayEntityId]);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0">
+    <div data-component="RelationshipsTreeView" className="flex flex-col flex-1 min-h-0">
       {/* No info row — the count is the tab strip's and the collapse pair is the
           footer action bar's, which is mounted whatever the view. Keeping this
           row would have given tree a second collapse pair over the same two
@@ -70,61 +70,64 @@ export function RelationshipsTreeView() {
           panel edge and puts the rows back on the host's gutter. */}
       <div className="bleed flex-1 overflow-auto bg-warm">
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <Link2 size={36} className="text-ink-tertiary/40 mb-3" />
+          <div data-part="empty" className="flex flex-col items-center justify-center py-20 text-center">
+            <Link2 size={36} className="text-ink-tertiary/40 mb-3" aria-hidden />
             <p className="text-sm text-ink-tertiary">No relationships found</p>
             <p className="text-xs text-ink-tertiary mt-1">
               References between entities appear here
             </p>
           </div>
         ) : groupBy === "none" ? (
-          <div className="py-stack">
-            {renderAggregates(filtered)}
-          </div>
-        ) : (
-          <div className="py-stack">
-            {groups.map(({ key, refs, subGroups }) => (
-              <TreeBranch
-                key={`p:${key}`}
-                title={getGroupLabel(key, groupBy)}
-                highlight={query}
-                color={getGroupColor(key, groupBy)}
-                count={deriveRelationships(refs).length + deriveHubs(refs).length}
-                refIdsToWatch={refs.map((r) => r.id)}
-                defaultExpanded
-              >
-                {subGroups === null
-                  ? renderAggregates(refs, {
-                      hidePill: groupBy === "target-entity",
-                      hideRelLabel: groupBy === "relation-type",
-                      hideTypePill: groupBy === "target-template",
-                    })
-                  : subGroups.map(([subKey, subRefs]) => (
-                      <TreeBranch
-                        key={`s:${key}::${subKey}`}
-                        title={getGroupLabel(subKey, subGroupBy)}
-                        highlight={query}
-                        color={getGroupColor(subKey, subGroupBy)}
-                        count={deriveRelationships(subRefs).length + deriveHubs(subRefs).length}
-                        refIdsToWatch={subRefs.map((r) => r.id)}
-                        defaultExpanded
-                      >
-                        {renderAggregates(subRefs, {
-                          hidePill:
-                            subGroupBy === "target-entity" ||
-                            groupBy === "target-entity",
-                          hideRelLabel:
-                            subGroupBy === "relation-type" ||
-                            groupBy === "relation-type",
-                          hideTypePill:
-                            subGroupBy === "target-template" ||
-                            groupBy === "target-template",
-                        })}
-                      </TreeBranch>
-                    ))}
-              </TreeBranch>
+          <ul data-part="nodes" className="py-stack">
+            {renderAggregates(filtered).map((node) => (
+              <li key={node.key}>{node}</li>
             ))}
-          </div>
+          </ul>
+        ) : (
+          <ul data-part="branches" className="py-stack">
+            {groups.map(({ key, refs, subGroups }) => (
+              <li key={`p:${key}`}>
+                <TreeBranch
+                  title={getGroupLabel(key, groupBy)}
+                  highlight={query}
+                  color={getGroupColor(key, groupBy)}
+                  count={deriveRelationships(refs).length + deriveHubs(refs).length}
+                  refIdsToWatch={refs.map((r) => r.id)}
+                  defaultExpanded
+                >
+                  {subGroups === null
+                    ? renderAggregates(refs, {
+                        hidePill: groupBy === "target-entity",
+                        hideRelLabel: groupBy === "relation-type",
+                        hideTypePill: groupBy === "target-template",
+                      })
+                    : subGroups.map(([subKey, subRefs]) => (
+                        <TreeBranch
+                          key={`s:${key}::${subKey}`}
+                          title={getGroupLabel(subKey, subGroupBy)}
+                          highlight={query}
+                          color={getGroupColor(subKey, subGroupBy)}
+                          count={deriveRelationships(subRefs).length + deriveHubs(subRefs).length}
+                          refIdsToWatch={subRefs.map((r) => r.id)}
+                          defaultExpanded
+                        >
+                          {renderAggregates(subRefs, {
+                            hidePill:
+                              subGroupBy === "target-entity" ||
+                              groupBy === "target-entity",
+                            hideRelLabel:
+                              subGroupBy === "relation-type" ||
+                              groupBy === "relation-type",
+                            hideTypePill:
+                              subGroupBy === "target-template" ||
+                              groupBy === "target-template",
+                          })}
+                        </TreeBranch>
+                      ))}
+                </TreeBranch>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
     </div>
@@ -179,7 +182,7 @@ function renderAggregates(
     )),
     ...(hidden > 0
       ? [
-          <div key="more" className="px-3 py-2 text-xs text-ink-tertiary bg-warm/40 text-center">
+          <div key="more" data-part="more" className="px-3 py-2 text-xs text-ink-tertiary bg-warm/40 text-center">
             + {hidden.toLocaleString()} more — switch to List view to see all
           </div>,
         ]
@@ -204,7 +207,7 @@ function HubNode({
   const { expanded, toggle } = useAutoExpandOnRefJump(hub.refIds);
 
   return (
-    <div>
+    <div data-part="hub-node">
       <RelationshipRow
         kind="hub"
         hub={hub}
@@ -213,14 +216,14 @@ function HubNode({
         hideRelLabel={hideRelLabel}
       />
       {expanded && (
-        <div className="ms-[14px]">
+        <ul data-part="evidence-list" className="ms-[14px]">
           {evidence
             .map((ref) => (
               <TreeNode key={ref.id}>
                 <RelationshipRow kind="reference" reference={ref} nested />
               </TreeNode>
             ))}
-        </div>
+        </ul>
       )}
     </div>
   );
@@ -246,7 +249,7 @@ function AggregateNode({
   const { expanded, toggle } = useAutoExpandOnRefJump(rel.refIds);
 
   return (
-    <div>
+    <div data-part="aggregate-node">
       <RelationshipRow
         kind="aggregate"
         rel={rel}
@@ -257,14 +260,14 @@ function AggregateNode({
         hideTypePill={hideTypePill}
       />
       {expanded && (
-        <div className="ms-[14px]">
+        <ul data-part="evidence-list" className="ms-[14px]">
           {evidence
             .map((ref) => (
               <TreeNode key={ref.id}>
                 <RelationshipRow kind="reference" reference={ref} nested />
               </TreeNode>
             ))}
-        </div>
+        </ul>
       )}
     </div>
   );

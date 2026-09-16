@@ -365,17 +365,27 @@ export function RelationshipsGraphView() {
 
   if (nodes.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-warm">
-        <Link2 size={36} className="text-ink-tertiary/40 mb-3" />
+      <div
+        data-component="RelationshipsGraphView"
+        data-part="empty"
+        className="flex-1 flex flex-col items-center justify-center bg-warm"
+      >
+        <Link2 size={36} aria-hidden className="text-ink-tertiary/40 mb-3" />
         <p className="text-sm text-ink-tertiary">No relationships to graph</p>
       </div>
     );
   }
 
   return (
-    <div ref={containerRef} className="relative flex-1 overflow-hidden bg-warm">
+    <div
+      ref={containerRef}
+      data-component="RelationshipsGraphView"
+      className="relative flex-1 overflow-hidden bg-warm"
+    >
       {truncated > 0 && (
         <div
+          data-part="truncated"
+          role="status"
           className="absolute top-2 left-1/2 -translate-x-1/2 z-10 px-3 py-1 rounded-md bg-paper/90 text-meta text-ink-tertiary shadow-sm"
           style={{ border: "1px solid var(--border-soft)" }}
         >
@@ -384,6 +394,10 @@ export function RelationshipsGraphView() {
       )}
       <svg
         ref={svgRef}
+        data-part="canvas"
+        // A group, not an image: the canvas holds focusable branch labels and nodes.
+        role="group"
+        aria-label="Relationships graph"
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
         preserveAspectRatio="xMidYMid meet"
         onPointerDown={onPointerDown}
@@ -687,6 +701,8 @@ export function RelationshipsGraphView() {
         const top = Math.min(rect.height - estHeight - pad, Math.max(pad, hover.y - estHeight - 10));
         return (
           <div
+            data-part="tooltip"
+            aria-hidden
             className="absolute z-10 pointer-events-none px-2.5 py-1.5 rounded-md bg-ink text-paper shadow-md max-w-60"
             style={{ left, top, opacity: 0.94 }}
           >
@@ -702,18 +718,24 @@ export function RelationshipsGraphView() {
         );
       })()}
 
-      <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-paper border border-border rounded-md shadow-sm px-1 py-0.5">
+      <div
+        data-part="zoom"
+        role="group"
+        aria-label="Zoom"
+        className="absolute bottom-3 right-3 flex items-center gap-1 bg-paper border border-border rounded-md shadow-sm px-1 py-0.5">
         <button
+          type="button"
           onClick={() => setTransform((t) => ({ ...t, scale: Math.max(0.4, t.scale / 1.2) }))}
           className="h-6 w-6 text-sm text-ink-secondary hover:text-ink cursor-pointer"
           aria-label="Zoom out"
         >
           −
         </button>
-        <span className="text-meta tabular-nums text-ink-tertiary w-9 text-center">
+        <span data-part="scale" className="text-meta tabular-nums text-ink-tertiary w-9 text-center">
           {Math.round(transform.scale * 100)}%
         </span>
         <button
+          type="button"
           onClick={() => setTransform((t) => ({ ...t, scale: Math.min(2.5, t.scale * 1.2) }))}
           className="h-6 w-6 text-sm text-ink-secondary hover:text-ink cursor-pointer"
           aria-label="Zoom in"
@@ -721,6 +743,7 @@ export function RelationshipsGraphView() {
           +
         </button>
         <button
+          type="button"
           onClick={resetView}
           className="h-6 px-2 text-meta text-ink-secondary hover:text-ink cursor-pointer"
           aria-label="Reset view"

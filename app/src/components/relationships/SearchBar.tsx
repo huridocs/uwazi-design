@@ -37,21 +37,24 @@ export function SearchBar({ rightSlot, inlineSlot }: SearchBarProps = {}) {
     // No side padding: the host's gutter places it (see `gutter-host`). One
     // `stack` step above and below, and the same step between the lines it
     // wraps onto, so tabs → search → controls → first card read as one rhythm.
-    <div className="body-top pb-stack flex items-center gap-stack flex-wrap">
+    <div data-component="SearchBar" className="body-top pb-stack flex items-center gap-stack flex-wrap">
       {/* min-h-8, not h-8: the chips wrap onto extra rows. But py-1 around an h-6
           input plus borders came to 34px — 2px taller than every control beside
           it, so the row sat a pixel off at both edges. py-0.5 keeps the content
           under the 32px floor and lets min-h do the work. */}
       <div
+        role="search"
+        data-part="field"
         className="relative flex-1 min-w-[12rem] flex items-center gap-1.5 min-h-8 py-0.5 ps-2 pe-2 bg-warm border border-border rounded-md
           focus-within:ring-2 focus-within:ring-carbon/20 focus-within:border-carbon/40 transition-all flex-wrap"
         onClick={() => inputRef.current?.focus()}
       >
-        <Search size={14} className="text-ink-muted shrink-0" />
+        <Search size={14} aria-hidden className="text-ink-muted shrink-0" />
         {inlineSlot}
         <input
           ref={inputRef}
           type="text"
+          data-part="input"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search  •  AND, OR, NOT, &quot;exact&quot;, wild*"
@@ -61,6 +64,8 @@ export function SearchBar({ rightSlot, inlineSlot }: SearchBarProps = {}) {
 
         {query && (
           <button
+            type="button"
+            data-part="clear"
             onClick={() => { setQuery(""); inputRef.current?.focus(); }}
             aria-label="Clear search"
             className="shrink-0 p-0.5 rounded-full hover:bg-parchment text-ink-muted hover:text-ink cursor-pointer transition-colors"
@@ -73,6 +78,8 @@ export function SearchBar({ rightSlot, inlineSlot }: SearchBarProps = {}) {
             always was — a question mark, not a search icon doing double duty. */}
         <div ref={hintRef} className="shrink-0 relative">
           <button
+            type="button"
+            data-part="tips-toggle"
             onClick={(e) => { e.stopPropagation(); setHintOpen((o) => !o); }}
             aria-label="Search tips"
             aria-expanded={hintOpen}
@@ -85,6 +92,7 @@ export function SearchBar({ rightSlot, inlineSlot }: SearchBarProps = {}) {
             <div
               role="dialog"
               aria-label="Search tips"
+              data-part="tips"
               className="absolute right-0 top-full mt-1 w-64 rounded-md bg-paper p-3 text-meta leading-snug"
               style={{
                 border: "1px solid var(--border-primary)",
@@ -92,7 +100,7 @@ export function SearchBar({ rightSlot, inlineSlot }: SearchBarProps = {}) {
                 zIndex: 40,
               }}
             >
-              <div className="font-semibold text-ink mb-1.5 text-xs">Search tips</div>
+              <h3 className="font-semibold text-ink mb-1.5 text-xs">Search tips</h3>
               <ul className="space-y-1 text-ink-secondary">
                 <li>
                   <code className="font-mono text-meta text-ink">AND OR NOT</code> — boolean

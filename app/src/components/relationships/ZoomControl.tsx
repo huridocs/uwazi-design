@@ -46,6 +46,7 @@ export function ZoomControl({ size = "md", disabled = false }: Props = {}) {
     <div
       role="group"
       aria-label="Row density"
+      data-component="ZoomControl"
       onKeyDown={onKeyDown}
       aria-disabled={disabled}
       className={`flex items-center rounded-md overflow-hidden ${h} ${
@@ -63,6 +64,7 @@ export function ZoomControl({ size = "md", disabled = false }: Props = {}) {
             onClick={() => !disabled && setZoom(opt.id)}
             aria-pressed={active}
             aria-label={opt.label}
+            data-part="option"
             title={opt.label}
             disabled={disabled}
             className={`flex items-center justify-center ${h} ${px} transition-colors ${
@@ -74,7 +76,7 @@ export function ZoomControl({ size = "md", disabled = false }: Props = {}) {
             }`}
             style={{ borderLeft: i > 0 ? "1px solid var(--border-primary)" : "none" }}
           >
-            <Icon size={iconSize} />
+            <Icon size={iconSize} aria-hidden />
           </button>
         );
       })}

@@ -102,7 +102,7 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
           highlight={query}
         />
         <DirectionGlyph direction={direction} />
-        <span className="text-meta text-ink-tertiary truncate capitalize">
+        <span data-part="relation" className="text-meta text-ink-tertiary truncate capitalize">
           <HighlightedText text={relLabel} query={query} />
         </span>
       </div>
@@ -118,7 +118,7 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
   const detail = (
     <>
       {!nested && (
-        <div className="flex items-start justify-between gap-2 mb-1.5">
+        <div data-part="header" className="flex items-start justify-between gap-2 mb-1.5">
           <div className="flex items-center gap-1.5 min-w-0">
             <RowCheckbox refIds={[reference.id]} />
             <RowEntityPill
@@ -129,7 +129,9 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
             />
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-meta text-ink-tertiary">{type?.name ?? ""}</span>
+            <span data-part="type" className="text-meta text-ink-tertiary">
+              {type?.name ?? ""}
+            </span>
             {selection && (
               <PageTag page={selection.page} onClick={jumpToPassage} />
             )}
@@ -141,7 +143,10 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
           // Evidence-card treatment: indented warm bg + italic snippet. Reads
           // as "a quoted passage supporting the relationship above" via
           // typography and surface, no decorative glyph needed.
-          <div className="flex items-start justify-between gap-2 px-2 py-1.5 bg-warm/50 rounded">
+          <div
+            data-part="snippet"
+            className="flex items-start justify-between gap-2 px-2 py-1.5 bg-warm/50 rounded"
+          >
             <FadeTruncate
               text={selection.text}
               maxLines={2}
@@ -169,7 +174,10 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
           quieter snippet — labelled so the two quotes read as the two ends
           of one relationship. */}
       {reference.targetSelection && (
-        <div className="flex items-start justify-between gap-2 px-2 py-1.5 mt-1.5 bg-warm/50 rounded">
+        <div
+          data-part="target-snippet"
+          className="flex items-start justify-between gap-2 px-2 py-1.5 mt-1.5 bg-warm/50 rounded"
+        >
           <FadeTruncate
             text={reference.targetSelection.text}
             maxLines={2}
@@ -184,11 +192,11 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
           </span>
         </div>
       )}
-      <div className="flex items-center justify-between mt-1 text-meta text-ink-tertiary">
+      <div data-part="footer" className="flex items-center justify-between mt-1 text-meta text-ink-tertiary">
         {nested ? (
           <span />
         ) : (
-          <span className="flex items-center gap-1">
+          <span data-part="relation" className="flex items-center gap-1">
             <DirectionGlyph direction={direction} />
             <span className="capitalize">
               <HighlightedText text={relLabel} query={query} />
@@ -199,14 +207,16 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
             to what the pill now does in place, in the open, for a pointer and a
             keyboard alike. Delete stays: it is destructive and belongs behind
             the deliberate reach of a hover, not on the row's face. */}
-        <div className="flex items-center gap-0.5">
+        <div data-part="actions" className="flex items-center gap-0.5">
           {onDelete && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete(reference.id);
               }}
+              type="button"
               aria-label="Delete reference"
+              data-part="delete"
               className="p-1 rounded opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-seal-tint text-ink-muted hover:text-seal-label transition-all cursor-pointer"
             >
               <Trash2 size={12} />
@@ -219,6 +229,7 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
 
   return (
     <RowShell
+      component="ReferenceRow"
       rowRef={rowRef as unknown as React.Ref<HTMLElement>}
       selected={isActive}
       overview={overview}
