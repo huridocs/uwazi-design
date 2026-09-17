@@ -68,6 +68,12 @@
   --highlight-yellow: #FDE68A;
   --highlight-yellow-active: #FCD34D;
   --highlight-blue: #BFDBFE;
+  /* Marks on a rendered PDF page. NOT redefined under `.dark`: the page is
+     printed paper, white with black glyphs, in both themes, so the marks keep
+     the light yellow and an ink ring. The dark highlight (#92400E) is for light
+     text on a dark surface; on the page it blacked the word out. */
+  --pdf-hit: #FCD34D;
+  --pdf-hit-ring: #1A1A1A;
 
   /* Shadows */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
