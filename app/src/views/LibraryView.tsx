@@ -657,7 +657,13 @@ export function LibraryView() {
     language,
     connectionsOf: (e) => countByEntity.get(e.id) ?? 0,
     renderMatch: (e) => (
-      <MatchOrigin entity={e} query={query} visibleFieldKeys={rowMarkedFields(e)} onSelect={handleSelect} />
+      <MatchOrigin
+        entity={e}
+        query={query}
+        visibleFieldKeys={rowMarkedFields(e)}
+        onSelect={handleSelect}
+        relevanceOf={scoreOf}
+      />
     ),
   });
 
@@ -932,6 +938,7 @@ export function LibraryView() {
               onClearFilters={() => clearFacets()}
               matchTypeCounts={matchTypeCounts}
               totalMatches={matchTypeBase.length}
+              relevanceOf={scoreOf}
             />
           </div>
         ) : filtered.length === 0 ? (
@@ -1055,6 +1062,7 @@ export function LibraryView() {
       onClearFilters={handleClearFacets}
       matchTypeCounts={matchTypeCounts}
       totalMatches={matchTypeBase.length}
+      relevanceOf={scoreOf}
     />
   );
 

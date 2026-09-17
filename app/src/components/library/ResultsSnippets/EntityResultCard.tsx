@@ -6,6 +6,8 @@ import { HighlightedText } from "../../shared/HighlightedText";
 import { SectionLabel } from "../../shared/SectionLabel";
 import { PageSpine } from "../../search/PageSpine";
 import { BorrowedDocLine } from "../BorrowedDocLine";
+import { MatchedTerms } from "../MatchedTerms";
+import type { RelevanceBreakdown } from "../../../utils/relevance";
 
 interface Props {
   entity: Entity;
@@ -24,6 +26,8 @@ interface Props {
    *  ResultsBody (it re-builds the snippets uncapped), same as `expanded`. */
   showAllFullText: boolean;
   onToggleFullText: () => void;
+  /** This entity's breakdown, for the "matched" line on multi-term queries. */
+  relevance: RelevanceBreakdown | null;
 }
 
 /** One matched entity, composed from the shared grouped-card shell
@@ -41,6 +45,7 @@ export function EntityResultCard({
   onSelectSnippet,
   showAllFullText,
   onToggleFullText,
+  relevance,
 }: Props) {
   const color = getEntityType(entity.typeId)?.color ?? "#6B7280";
   const hasMeta = snippets.metadata.length > 0;
@@ -65,6 +70,8 @@ export function EntityResultCard({
       onToggle={onToggle}
     >
       <div data-component="EntityResultCard" className="flex flex-col gap-3 p-2">
+        {/* Multi-term queries only — renders nothing for one term. */}
+        <MatchedTerms relevance={relevance} query={query} className="px-1" />
         {hasMeta && (
           <section data-part="properties" className="flex flex-col gap-1.5">
             <SectionLabel className="px-1">Properties</SectionLabel>
@@ -98,7 +105,7 @@ export function EntityResultCard({
                 the attribution rides it rather than taking a line the spine
                 below would have to move for. */}
             <SectionLabel className="px-1">
-              Document
+              {snippets.borrowedFrom ? "Borrowed document" : "Document"}
               <BorrowedDocLine from={snippets.borrowedFrom} className="min-w-0" />
             </SectionLabel>
             <PageSpine

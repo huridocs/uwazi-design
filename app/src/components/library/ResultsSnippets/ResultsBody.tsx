@@ -10,6 +10,7 @@ import { ListInfoRow } from "../../shared/ListInfoRow";
 import { ToggleChip } from "../../shared/ToggleChip";
 import { CollapseControls } from "../../relationships/CollapseControls";
 import { EntityResultCard } from "./EntityResultCard";
+import type { RelevanceBreakdown } from "../../../utils/relevance";
 
 type MatchType = keyof MatchTypeFilters;
 const MATCH_TYPES: { key: MatchType; label: string }[] = [
@@ -42,6 +43,9 @@ interface Props {
   matchTypeCounts: Record<MatchType, number>;
   /** Matches before the chips narrow them — the "of M" in the header count. */
   totalMatches: number;
+  /** LibraryView's per-query breakdown cache. Its identity changes only with the
+   *  query (it is memoised there), so it doesn't defeat this component's memo. */
+  relevanceOf: (e: Entity) => RelevanceBreakdown;
 }
 
 /** The Results-tab evidence view: per matched entity, WHERE the term hit — which
@@ -71,6 +75,7 @@ export const ResultsBody = memo(function ResultsBody({
   onClearFilters,
   matchTypeCounts,
   totalMatches,
+  relevanceOf,
 }: Props) {
   const [visible, setVisible] = useState(RESULTS_STEP);
   // The chips are FILTER state (they narrow the left pane too — see
@@ -281,6 +286,7 @@ export const ResultsBody = memo(function ResultsBody({
             entity={entity}
             snippets={snippets}
             query={trimmed}
+            relevance={relevanceOf(entity)}
             expanded={isExpanded(entity.id)}
             onToggle={() =>
               setExpandedMap((m) => ({ ...m, [entity.id]: !(m[entity.id] ?? true) }))

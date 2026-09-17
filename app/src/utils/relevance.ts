@@ -42,6 +42,23 @@ const SECONDARY_FIELDS = 0.2;
 /** Stop counting a term in one text past this — log2 has flattened by then. */
 const COUNT_CAP = 64;
 
+/** Where ONE query term counted most. `null` field = the term hit nothing.
+ *
+ *  This is attribution, not a second score: it names the field that carried the
+ *  term's weight and never how much weight that was. `ownDocumentHits` is the
+ *  term's occurrences in the entity's OWN document (capped at `COUNT_CAP`), and
+ *  stays 0 for a borrowed one — that count describes a stand-in judgment many
+ *  entities read, not this entity. */
+export interface TermAttribution {
+  /** Folded, as `highlightTerms` returns it. */
+  term: string;
+  field: "title" | "property" | "document" | "borrowed document" | null;
+  /** The property that carried it, when `field` is "property". */
+  propertyKey?: string;
+  propertyLabel?: string;
+  ownDocumentHits: number;
+}
+
 export interface RelevanceBreakdown {
   score: number;
   /** Positive terms hit anywhere, of `terms`. */
@@ -50,6 +67,8 @@ export interface RelevanceBreakdown {
   exactTitle: boolean;
   /** Best field per hit term, for reading a ranking by eye. */
   fields: string[];
+  /** Every positive term, in query order, hit or not. */
+  perTerm: TermAttribution[];
 }
 
 interface Hits {
@@ -122,24 +141,42 @@ export function scoreRelevance(
 
   let covered = 0;
   const best: string[] = [];
+  const perTerm: TermAttribution[] = [];
   for (const term of terms) {
     const inTitle = fieldScore(WEIGHT.title, countHits(title, term));
     let propHits: Hits = { count: 0, whole: false };
+    // The single property that answers the term best, for attribution only —
+    // the SCORE still sums every property's hits, as before.
+    let bestProp: { key: string; label: string; score: number } | null = null;
     for (const f of fields) {
       if (f.fieldKey === "title") continue;
       const h = countHits(f.folded, term);
       propHits = { count: propHits.count + h.count, whole: propHits.whole || h.whole };
+      const s = fieldScore(WEIGHT.property, h);
+      if (s > 0 && (!bestProp || s > bestProp.score)) bestProp = { key: f.fieldKey, label: f.field, score: s };
     }
     const inProps = fieldScore(WEIGHT.property, propHits);
-    const inBody = blob
-      ? fieldScore(borrowed ? WEIGHT.borrowedBody : WEIGHT.body, bodyHits(pages, blob, term))
+    const docHits = blob ? bodyHits(pages, blob, term) : null;
+    const inBody = docHits
+      ? fieldScore(borrowed ? WEIGHT.borrowedBody : WEIGHT.body, docHits)
       : 0;
 
     const parts = [inTitle, inProps, inBody];
     const top = Math.max(...parts);
-    if (top === 0) continue;
+    const ownDocumentHits = docHits && !borrowed ? docHits.count : 0;
+    if (top === 0) {
+      perTerm.push({ term, field: null, ownDocumentHits });
+      continue;
+    }
     covered++;
     best.push(top === inTitle ? "title" : top === inProps ? "property" : borrowed ? "borrowed body" : "body");
+    perTerm.push(
+      top === inTitle
+        ? { term, field: "title", ownDocumentHits }
+        : top === inProps
+          ? { term, field: "property", propertyKey: bestProp?.key, propertyLabel: bestProp?.label, ownDocumentHits }
+          : { term, field: borrowed ? "borrowed document" : "document", ownDocumentHits },
+    );
     score += PER_TERM_COVERAGE + top + SECONDARY_FIELDS * (inTitle + inProps + inBody - top);
   }
 
@@ -148,5 +185,5 @@ export function scoreRelevance(
   const year = entity.createdAt ? Number(entity.createdAt.slice(0, 4)) : NaN;
   if (Number.isFinite(year)) score += 0.4 * Math.min(1, Math.max(0, (year - 1950) / 80));
 
-  return { score, covered, terms: terms.length, exactTitle, fields: best };
+  return { score, covered, terms: terms.length, exactTitle, fields: best, perTerm };
 }

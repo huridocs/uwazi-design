@@ -31,6 +31,8 @@ import { ListInfoRow } from "../../shared/ListInfoRow";
 import { BorrowedDocLine } from "../BorrowedDocLine";
 import { ToggleChip } from "../../shared/ToggleChip";
 import { CountBadge } from "../../shared/CountBadge";
+import { MatchedTerms } from "../MatchedTerms";
+import type { RelevanceBreakdown } from "../../../utils/relevance";
 
 /** The Results view in the MAIN pane — the drawer's evidence list given the
  *  width it always wanted.
@@ -145,7 +147,14 @@ interface Props {
   onClearFilters: () => void;
   matchTypeCounts: Record<MatchType, number>;
   totalMatches: number;
+  /** The relevance breakdown LibraryView already computes once per entity per
+   *  query. Read for attribution only (`MatchedTerms`); never printed as a score. */
+  relevanceOf: (e: Entity) => RelevanceBreakdown;
 }
+
+/** What a document hit is called: the entity's own document, or one it reads
+ *  from a connected entity. The source is named by `BorrowedDocLine` beside it. */
+const documentLabel = (borrowed: BorrowedDoc | null) => (borrowed ? "Borrowed document" : "Document");
 
 interface Result {
   entity: Entity;
@@ -178,6 +187,7 @@ export function ResultsMainView({
   onClearFilters,
   matchTypeCounts,
   totalMatches,
+  relevanceOf,
 }: Props) {
   const layout = useAtomValue(libraryResultsLayoutAtom);
   const [activeTypes, setActiveTypes] = useAtom(matchTypeFiltersAtom);
@@ -375,6 +385,7 @@ export function ResultsMainView({
             onFocusProperty={onFocusProperty}
             onSelectSnippet={onSelectSnippet}
             showAll={showAll}
+            relevanceOf={relevanceOf}
             onToggleShowAll={(id) =>
               setShowAll((m2) => ({ ...m2, [id]: !m2[id] }))
             }
@@ -383,6 +394,7 @@ export function ResultsMainView({
           <TreeBody
             results={results}
             query={trimmed}
+            relevanceOf={relevanceOf}
             onFocusProperty={onFocusProperty}
             onSelectSnippet={onSelectSnippet}
             twoUp={budget.twoCol}
@@ -437,9 +449,11 @@ function GroupedBody({
   onSelectSnippet,
   showAll,
   onToggleShowAll,
+  relevanceOf,
 }: {
   results: Result[];
   query: string;
+  relevanceOf: (e: Entity) => RelevanceBreakdown;
   selectedId: string | null;
   onSelect: (id: string) => void;
   onFocusProperty: (id: string, fieldKey: string) => void;
@@ -469,10 +483,9 @@ function GroupedBody({
           >
             <header
               data-part="result-header"
-              className={`flex items-center gap-2 px-4 py-2.5 ${
-                hasMeta || hasText ? "border-b border-border/40" : ""
-              }`}
+              className={`px-4 py-2.5 ${hasMeta || hasText ? "border-b border-border/40" : ""}`}
             >
+              <div className="flex items-center gap-2">
               <EntityTypeChip typeId={entity.typeId} />
               {/* The heading is a flex box so the button inside it keeps
                   shrinking and truncating exactly as it did as a direct child. */}
@@ -506,6 +519,11 @@ function GroupedBody({
                   </>
                 )}
               </span>
+              </div>
+              {/* Multi-term queries only (renders nothing for one term), and
+                  constant for the life of the query, so it never appears under a
+                  card the reader is looking at. */}
+              <MatchedTerms relevance={relevanceOf(entity)} query={query} className="mt-1" />
             </header>
 
             {/* Two columns from `lg` up when there ARE two — properties read as a
@@ -539,7 +557,7 @@ function GroupedBody({
                 {hasText && (
                   <section data-part="document" className={hasMeta ? "" : "max-w-[80ch]"}>
                     <SectionLabel icon={<FileText size={11} />}>
-                      Document
+                      {documentLabel(snippets.borrowedFrom)}
                       <PageCount shown={snippets.fullText.length} total={snippets.fullTextTotal} />
                       {/* Rides the section label rather than taking a line of
                           its own — the label is mounted whether or not the
@@ -606,9 +624,11 @@ function TreeBody({
   onFocusProperty,
   onSelectSnippet,
   twoUp,
+  relevanceOf,
 }: {
   results: Result[];
   query: string;
+  relevanceOf: (e: Entity) => RelevanceBreakdown;
   onFocusProperty: (id: string, fieldKey: string) => void;
   onSelectSnippet: (id: string, page: number) => void;
   /** Lay each branch's leaves in two columns — see `excerptBudget`. */
@@ -665,7 +685,7 @@ function TreeBody({
               {snippets.fullText.length > 0 && (
                 <TreeBranch
                   twoUp={twoUp}
-                  label="Document"
+                  label={documentLabel(snippets.borrowedFrom)}
                   count={snippets.fullTextTotal}
                   icon={<FileText size={11} className="text-ink-muted" />}
                   note={
@@ -690,6 +710,10 @@ function TreeBody({
                   ))}
                 </TreeBranch>
               )}
+              {/* The branches above already name the fields that matched; the
+                  terms that matched nothing are the one thing they can't show.
+                  Multi-term queries only. */}
+              <MatchedTerms relevance={relevanceOf(entity)} query={query} missedOnly className="px-4 py-1.5" />
             </div>
           </RelationshipGroupedCard>
           </li>
@@ -942,7 +966,7 @@ function PassagesBody({
                   >
                     {isDoc ? (
                       <>
-                        Document
+                        {documentLabel(row.from)}
                         {/* No invented page numbers: the tag exists only where
                             the corpus is genuinely page-mapped. */}
                         {row.page !== null && (
@@ -1128,7 +1152,7 @@ function bestPassage(
     null,
   );
   if (top) {
-    const parts = ["Document"];
+    const parts = [documentLabel(s.borrowedFrom)];
     if (top.page !== null) parts.push(`p.${top.page}`);
     if (top.hits > 1) parts.push(`${top.hits}×`);
     return { text: top.text, page: top.page, label: parts.join(" · "), isDocument: true };

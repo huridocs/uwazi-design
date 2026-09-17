@@ -1,6 +1,6 @@
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { FileText, Tag } from "lucide-react";
+import { FileSymlink, FileText, Tag } from "lucide-react";
 import { SectionLabel } from "../shared/SectionLabel";
 import { useAtomValue, useSetAtom } from "jotai";
 import type { Entity } from "../../data/entities";
@@ -13,9 +13,12 @@ import {
 import { scrollToPageAtom } from "../../atoms/selection";
 import {
   buildSnippetsFor,
+  entitySearchParts,
   hiddenMatchOrigin,
   type BorrowedDoc,
 } from "../../utils/librarySnippets";
+import type { RelevanceBreakdown } from "../../utils/relevance";
+import { MatchedTerms } from "./MatchedTerms";
 import { HighlightedText } from "../shared/HighlightedText";
 import { BorrowedDocLine } from "./BorrowedDocLine";
 
@@ -61,6 +64,9 @@ interface Props {
   /** Select/preview the entity. Owned by the surface because it's viewport-aware
    *  (mobile opens the full view instead of the drawer). */
   onSelect: (id: string) => void;
+  /** The breakdown the surface already holds, for the popover's "matched" line
+   *  on multi-term queries. Optional: a surface without it shows no line. */
+  relevanceOf?: (e: Entity) => RelevanceBreakdown;
 }
 
 type Kind = "property" | "document";
@@ -78,6 +84,7 @@ export const MatchOrigin = memo(function MatchOrigin({
   query,
   visibleFieldKeys,
   onSelect,
+  relevanceOf,
 }: Props) {
   const language = useAtomValue(languageAtom);
   const source = useAtomValue(dataSourceAtom);
@@ -91,6 +98,13 @@ export const MatchOrigin = memo(function MatchOrigin({
     () => hiddenMatchOrigin(entity, q, language, source, visibleFieldKeys),
     // `visibleKey` stands in for the array so a fresh literal doesn't re-scan.
     [entity, q, language, source, visibleKey],
+  );
+  // Own or borrowed, asked only when the document matched: the two get
+  // different glyphs, because a borrowed hit is a stand-in judgment's text and
+  // ranks at a fifth of the entity's own.
+  const borrowedDoc = useMemo(
+    () => origin.document && entitySearchParts(entity, language, source).borrowed,
+    [origin.document, entity, language, source],
   );
 
   const [open, setOpen] = useState<Kind | null>(null);
@@ -199,9 +213,13 @@ export const MatchOrigin = memo(function MatchOrigin({
       )}
       {origin.document && (
         <Mark
-          origin="document"
-          icon={<FileText size={11} />}
-          label="Matched in the document text — open the document"
+          origin={borrowedDoc ? "borrowed document" : "document"}
+          icon={borrowedDoc ? <FileSymlink size={11} /> : <FileText size={11} />}
+          label={
+            borrowedDoc
+              ? "Matched in a borrowed document — open the document"
+              : "Matched in the document text — open the document"
+          }
           describedBy={open === "document" ? tipId : undefined}
           onOpen={(el, immediate) => show("document", el, immediate)}
           onClose={hide}
@@ -227,6 +245,8 @@ export const MatchOrigin = memo(function MatchOrigin({
               width: Math.min(POPOVER_W, window.innerWidth - EDGE * 2),
             }}
           >
+            {/* Multi-term queries only; renders nothing for one term. */}
+            <MatchedTerms relevance={relevanceOf?.(entity) ?? null} query={q} className="mb-1.5" />
             {open === "property" ? (
               <PropertyTip origin={origin} snippets={snippets} query={q} />
             ) : (
@@ -250,7 +270,7 @@ function Mark({
   onClose,
   onActivate,
 }: {
-  origin: "property" | "document";
+  origin: "property" | "document" | "borrowed document";
   icon: React.ReactNode;
   label: string;
   describedBy?: string;
@@ -345,7 +365,7 @@ function DocumentTip({
     <>
       <TipLabel>
         <span dir="ltr">
-          Document<span className="mx-1 text-ink-muted">·</span>
+          {snippets.borrowedFrom ? "Borrowed document" : "Document"}<span className="mx-1 text-ink-muted">·</span>
           <span className="tabular-nums">{total.toLocaleString()}</span> {unit}
         </span>
       </TipLabel>
