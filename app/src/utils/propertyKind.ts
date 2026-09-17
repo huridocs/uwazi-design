@@ -82,6 +82,8 @@ export function kindOfFieldType(type: MetadataField["type"]): PropertyKind {
       return "long";
     case "file-list":
       return "files";
+    case "media":
+      return "media";
     case "country":
     case "text":
     default:

@@ -631,14 +631,41 @@ export const EntityCard = memo(function EntityCard({
           {/* Marks and the count ride a line that is ALREADY MOUNTED, which is
               the whole reason they are here: neither can make a card taller,
               and a card that gains a paragraph does not shove its neighbours.
-              They are signals, not targets — the record has no field for a
-              nested table or a media config yet, and a click that lands
-              nowhere is worse than no click. */}
+
+              The MEDIA mark is also a pointer target now: the record renders the
+              recording and its chapters (`MediaFieldValue`), so a click lands
+              somewhere — the drawer, focused on that property, like a property
+              trigger. It is `tabIndex={-1}` on purpose: a tab stop on every
+              hearing card is a stop nobody asked for, and a keyboard reader
+              already reaches the same record through the card's primary action.
+              The paragraph and table marks stay signals; a nested table still
+              has no place in the record to land. */}
           {marks.length > 0 && (
             <span className="flex items-center gap-1 text-ink-muted" title={markTitle}>
               {marks.map((m) => {
                 const Icon = MARK_ICON[m];
-                return Icon ? <Icon key={m} size={11} aria-hidden /> : null;
+                if (!Icon) return null;
+                if (m === "media" && entity.mediaKey && onFocusProperty) {
+                  const key = entity.mediaKey;
+                  return (
+                    <button
+                      key={m}
+                      type="button"
+                      tabIndex={-1}
+                      data-part="media-mark"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onFocusProperty(entity.id, key);
+                      }}
+                      aria-label={`Open the recording on ${entity.title}`}
+                      title="Open the recording in the record"
+                      className="flex items-center rounded-sm cursor-pointer hover:text-ink transition-colors"
+                    >
+                      <Icon size={11} aria-hidden />
+                    </button>
+                  );
+                }
+                return <Icon key={m} size={11} aria-hidden />;
               })}
               <span className="sr-only">{markTitle}</span>
             </span>

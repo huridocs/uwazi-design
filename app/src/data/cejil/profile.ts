@@ -77,7 +77,7 @@ const propsByTemplate = new Map(
   ]),
 );
 
-const SKIP = new Set(["preview", "image", "link", "media", "nested", "generatedtoc", "relationship"]);
+const SKIP = new Set(["preview", "image", "link", "nested", "generatedtoc", "relationship"]);
 
 /** The relation type NAME a template inherits a geolocation through — the
  *  `inherit: {type: "geolocation"}` spec, read at last. Mirrors the adapter's
@@ -121,6 +121,18 @@ function mdFields(e: CejilEntity): MetadataField[] {
     if (p.name === "title" || SKIP.has(p.type)) continue;
     const vals = e.metadata?.[p.name];
     if (!vals || !vals.length) continue;
+
+    /* A RECORDING. `SKIP` used to drop `media` here while the card marked it, so
+       a hearing's card said a video existed and its record had no trace of one.
+       The raw value (URL + timelinks JSON) is kept as written; the record reads
+       it with `parseMediaValue` and draws a link and its chapters. */
+    if (p.type === "media") {
+      const raw = vals[0]?.value;
+      if (typeof raw === "string" && raw.trim()) {
+        out.push({ id: p.name, label: p.label, type: "media", value: raw.trim() });
+      }
+      continue;
+    }
 
     /* A PLACE, in the record too — until now `SKIP` dropped geolocation here as
        well, so even an entity whose only real property was a coordinate had a

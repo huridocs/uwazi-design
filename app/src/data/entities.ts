@@ -102,6 +102,11 @@ export interface Entity {
    *  table, a media config. Drawn as footer glyphs, so they cost no line and no
    *  layout. */
   marks?: PropertyKind[];
+  /** For a mark that has a place in the record, the property it stands for —
+   *  the key the record's deep focus scrolls to. Only `media` today: the record
+   *  renders a recording (see `MediaFieldValue`), while a nested table still has
+   *  nowhere to land. */
+  mediaKey?: string;
   /** Adapter-supplied FULL metadata projection, for SEARCH — every non-empty
    *  property, every value, untruncated.
    *

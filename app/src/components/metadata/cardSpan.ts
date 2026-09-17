@@ -20,6 +20,6 @@ export function spanClass(span: CardSpan): string {
 /** Width a scalar field's card should occupy: large fields get more room. */
 export function fieldSpan(field: AnyMetadataField): CardSpan {
   if (field.type === "multiline") return "full";
-  if (field.type === "file-list") return "wide";
+  if (field.type === "file-list" || field.type === "media") return "wide";
   return "single";
 }

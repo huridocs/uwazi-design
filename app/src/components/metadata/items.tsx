@@ -5,6 +5,7 @@ import { languageAtom } from "../../atoms/language";
 import { entityMetadataAtom, makeEntityPropReader } from "../../atoms/entityMetadata";
 import { overlayEntityIdAtom } from "../../atoms/references";
 import { EntityPill } from "../shared/EntityPill";
+import { MediaFieldValue } from "./MediaFieldValue";
 import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
 import { resolveRelationshipField } from "../../utils/inheritance";
 import type { MetadataField, RelationshipMetadataField } from "../../data/metadata";
@@ -65,7 +66,8 @@ export type FieldKind = "scalar" | "long" | "chips";
 const LONG_CHARS = 60;
 
 export function fieldKind(f: MetadataField): FieldKind {
-  if (f.type === "multiline") return "long";
+  // A recording and its chapter list is a block of its own, like a paragraph.
+  if (f.type === "multiline" || f.type === "media") return "long";
   if (f.items && f.items.length > 0) return "chips";
   return (f.value?.length ?? 0) > LONG_CHARS ? "long" : "scalar";
 }
@@ -86,7 +88,9 @@ export function fieldItem(f: MetadataField): MetadataItem {
     // field is asking for.
     fillValue: !long && f.type !== "link" ? f.value?.trim() || undefined : undefined,
     content:
-      f.type === "country" ? (
+      f.type === "media" ? (
+        <MediaFieldValue raw={f.value} />
+      ) : f.type === "country" ? (
         <span className="inline-flex items-center gap-1.5 text-sm text-ink leading-relaxed">
           <span className="leading-none">{f.flag}</span>
           <span className="font-medium">{f.value}</span>

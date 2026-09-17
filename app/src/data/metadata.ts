@@ -5,7 +5,9 @@ import type { ChainSegment, ProvenanceStep } from "../utils/chainTraversal";
 export interface MetadataField {
   id: string;
   label: string;
-  type: "text" | "date" | "link" | "country" | "multiline" | "file-list";
+  /** `media`: the raw Uwazi media value — a URL, optionally a comma and a JSON
+   *  config of chapter timelinks. Read with `parseMediaValue`. */
+  type: "text" | "date" | "link" | "country" | "multiline" | "file-list" | "media";
   value: string;
   flag?: string;
   items?: { label?: string; value: string }[];

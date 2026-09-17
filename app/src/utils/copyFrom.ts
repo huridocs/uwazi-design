@@ -146,9 +146,11 @@ export interface CopyPlan {
   matchCount: number;
 }
 
-/** Our `media`/`image` equivalent — see the header. Exported so a UI can explain
- *  the exclusion without hardcoding the same list a second time. */
-export const COPY_EXCLUDED_TYPES: ReadonlySet<AnyMetadataField["type"]> = new Set(["file-list"]);
+/** Our `media`/`image` equivalent — see the header — and, now that the record
+ *  carries one, `media` itself: another entity's recording is never this
+ *  entity's. Exported so a UI can explain the exclusion without hardcoding the
+ *  same list a second time. */
+export const COPY_EXCLUDED_TYPES: ReadonlySet<AnyMetadataField["type"]> = new Set(["file-list", "media"]);
 
 const isRelationship = (f: AnyMetadataField): f is RelationshipMetadataField =>
   f.type === "relationship";

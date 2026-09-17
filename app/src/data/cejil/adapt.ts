@@ -150,6 +150,7 @@ function fieldsOf(
   const props = propsByTemplate.get(e.template) || [];
   const out: CardField[] = [];
   const marks: PropertyKind[] = [];
+  let mediaKey: string | undefined;
   for (const p of props) {
     if (p.name === "title") continue;
     /* The connection a place was inherited THROUGH is not also a row of its own.
@@ -179,6 +180,7 @@ function fieldsOf(
     }
     if (kind && MARK_KINDS.has(kind) && hasAnyValue(p.type, vals)) {
       if (!marks.includes(kind)) marks.push(kind);
+      if (kind === "media" && !mediaKey) mediaKey = p.name;
       continue;
     }
     const { value, more, values } = formatVals(p.type, vals);
@@ -214,7 +216,7 @@ function fieldsOf(
       value: formatPlace(connectedPlace.coords, connectedPlace.name),
     });
   }
-  return { fields: out.length ? out : undefined, marks: marks.length ? marks : undefined };
+  return { fields: out.length ? out : undefined, marks: marks.length ? marks : undefined, mediaKey };
 }
 
 /** Does this property hold anything at all? The mark tier only needs presence —
@@ -486,6 +488,7 @@ export function cejilLibraryEntities(): Entity[] {
         createdAt: createdOf(e, geo, causaDateBySid),
         fields: card.fields,
         marks: card.marks,
+        mediaKey: card.mediaKey,
         searchFields: searchFieldsOf(e),
         descriptors: (e.metadata?.descriptores || [])
           .map((v) => (typeof v.label === "string" ? v.label : ""))
