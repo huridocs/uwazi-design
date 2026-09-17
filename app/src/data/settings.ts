@@ -93,31 +93,36 @@ export interface TemplateProperty {
   type: PropertyType;
   required: boolean;
   filterable: boolean;
+  /** Shown as a line on this template's Library card. Editor-only, like
+   *  `filterable`: the CEJIL cards are built in `data/cejil/adapt.ts` and do not
+   *  read this list. Seeded from `filterable` — what a template already offers
+   *  as a filter is what its card shows. */
+  showInCard: boolean;
 }
 
 /** Per-template property lists for the Template editor. Court Case is fleshed
  *  out; others fall back to a small default set. */
 export const templatePropertiesByTemplate: Record<string, TemplateProperty[]> = {
   court_case: [
-    { id: "cp1", label: "Case number", type: "text", required: true, filterable: true },
-    { id: "cp2", label: "Date filed", type: "date", required: true, filterable: true },
-    { id: "cp3", label: "Respondent state", type: "relationship", required: true, filterable: true },
-    { id: "cp4", label: "Status", type: "select", required: false, filterable: true },
-    { id: "cp5", label: "Summary", type: "markdown", required: false, filterable: false },
-    { id: "cp6", label: "Location", type: "geolocation", required: false, filterable: false },
+    { id: "cp1", label: "Case number", type: "text", required: true, filterable: true, showInCard: true },
+    { id: "cp2", label: "Date filed", type: "date", required: true, filterable: true, showInCard: true },
+    { id: "cp3", label: "Respondent state", type: "relationship", required: true, filterable: true, showInCard: true },
+    { id: "cp4", label: "Status", type: "select", required: false, filterable: true, showInCard: true },
+    { id: "cp5", label: "Summary", type: "markdown", required: false, filterable: false, showInCard: false },
+    { id: "cp6", label: "Location", type: "geolocation", required: false, filterable: false, showInCard: false },
   ],
   person: [
-    { id: "pp1", label: "Full name", type: "text", required: true, filterable: true },
-    { id: "pp2", label: "Date of birth", type: "date", required: false, filterable: true },
-    { id: "pp3", label: "Nationality", type: "relationship", required: false, filterable: true },
-    { id: "pp4", label: "Photo", type: "image", required: false, filterable: false },
+    { id: "pp1", label: "Full name", type: "text", required: true, filterable: true, showInCard: true },
+    { id: "pp2", label: "Date of birth", type: "date", required: false, filterable: true, showInCard: true },
+    { id: "pp3", label: "Nationality", type: "relationship", required: false, filterable: true, showInCard: true },
+    { id: "pp4", label: "Photo", type: "image", required: false, filterable: false, showInCard: false },
   ],
 };
 
 export const defaultTemplateProperties: TemplateProperty[] = [
-  { id: "dp1", label: "Title", type: "text", required: true, filterable: true },
-  { id: "dp2", label: "Date", type: "date", required: false, filterable: true },
-  { id: "dp3", label: "Description", type: "markdown", required: false, filterable: false },
+  { id: "dp1", label: "Title", type: "text", required: true, filterable: true, showInCard: true },
+  { id: "dp2", label: "Date", type: "date", required: false, filterable: true, showInCard: true },
+  { id: "dp3", label: "Description", type: "markdown", required: false, filterable: false, showInCard: false },
 ];
 
 export const propertyTypeLabels: Record<PropertyType, string> = {

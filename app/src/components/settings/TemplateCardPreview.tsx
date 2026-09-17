@@ -79,7 +79,10 @@ export function TemplateCardPreview({
       id: "template-preview-entity",
       title: `Sample ${displayName.toLowerCase()}`,
       typeId: PREVIEW_TYPE_ID,
+      // Only what the author put on the card, so ticking "Cards" updates the
+      // preview live.
       fields: properties
+        .filter((p) => p.showInCard)
         .map((p, i) => {
           const value = demoValueFor(p, config?.[p.id], i);
           return value ? { label: p.label, value } : null;

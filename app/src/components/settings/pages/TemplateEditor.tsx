@@ -49,7 +49,12 @@ interface PropertyDraft extends PropConfig {
   type: TemplateProperty["type"];
   required: boolean;
   filterable: boolean;
+  showInCard: boolean;
 }
+
+/** The property table's tracks — header and rows must share them to align:
+ *  property · type · required · filter · cards · actions. */
+const PROPERTY_COLUMNS = "minmax(0, 1fr) 8rem 5rem 3.5rem 3.5rem 4rem";
 
 /** Template detail/editor — name, colour, and the property list. Opened from
  *  the Templates list (list → detail pattern). `onClose` returns to the list. */
@@ -112,13 +117,13 @@ export function TemplateEditor({
 
   /** Commit a property dialog — append (new) or patch (existing) + its config. */
   const commitProperty = (draft: PropertyDraft) => {
-    const { label, type, required, filterable, ...cfg } = draft;
+    const { label, type, required, filterable, showInCard, ...cfg } = draft;
     if (editing === "new") {
       const id = `np-${props.length}-${name.length}-${label.length}`;
-      setProps((prev) => [...prev, { id, label, type, required, filterable }]);
+      setProps((prev) => [...prev, { id, label, type, required, filterable, showInCard }]);
       setConfig((prev) => ({ ...prev, [id]: cfg }));
     } else if (editing) {
-      patchProp(editing.id, { label, type, required, filterable });
+      patchProp(editing.id, { label, type, required, filterable, showInCard });
       setConfig((prev) => ({ ...prev, [editing.id]: cfg }));
     }
     setEditing(null);
@@ -222,12 +227,13 @@ export function TemplateEditor({
                 <tr
                   role="row"
                   className="grid items-center gap-3 px-3 py-2 text-meta font-semibold uppercase tracking-wide text-ink-tertiary bg-warm"
-                  style={{ gridTemplateColumns: "1fr 9rem 6rem 5rem 4rem" }}
+                  style={{ gridTemplateColumns: PROPERTY_COLUMNS }}
                 >
-                  <th role="columnheader" scope="col" className="font-semibold text-start">Property</th>
+                  <th role="columnheader" scope="col" className="font-semibold text-start min-w-0 truncate">Property</th>
                   <th role="columnheader" scope="col" className="font-semibold text-start">Type</th>
                   <th role="columnheader" scope="col" className="font-semibold text-center">Required</th>
                   <th role="columnheader" scope="col" className="font-semibold text-center">Filter</th>
+                  <th role="columnheader" scope="col" className="font-semibold text-center">Cards</th>
                   <th role="columnheader" scope="col">
                     <span className="sr-only">Actions</span>
                   </th>
@@ -255,7 +261,7 @@ export function TemplateEditor({
                         role="row"
                         data-part="property"
                         className={`grid items-center gap-3 px-3 py-2 transition-opacity ${dragIdx === i ? "opacity-40" : ""}`}
-                        style={{ gridTemplateColumns: "1fr 9rem 6rem 5rem 4rem", borderTop: "1px solid var(--border-soft)" }}
+                        style={{ gridTemplateColumns: PROPERTY_COLUMNS, borderTop: "1px solid var(--border-soft)" }}
                       >
                         <td role="cell" className="flex items-center gap-2 w-full min-w-0">
                           <DragGrip {...gripProps(i)} />
@@ -274,6 +280,9 @@ export function TemplateEditor({
                         </td>
                         <td role="cell" className="flex justify-center">
                           <Checkbox checked={p.filterable} onChange={(e) => patchProp(p.id, { filterable: e.target.checked })} ariaLabel={`${p.label} filterable`} />
+                        </td>
+                        <td role="cell" className="flex justify-center">
+                          <Checkbox checked={p.showInCard} onChange={(e) => patchProp(p.id, { showInCard: e.target.checked })} ariaLabel={`${p.label} show in cards`} />
                         </td>
                         <td role="cell">
                           <RowActions label={p.label} onEdit={() => setEditing(p)} onDelete={() => deleteProperty(p.id)} />
@@ -352,6 +361,8 @@ function PropertyDialog({
   const [type, setType] = useState<TemplateProperty["type"]>(property?.type ?? "text");
   const [required, setRequired] = useState(property?.required ?? false);
   const [filterable, setFilterable] = useState(property?.filterable ?? false);
+  // A new property is on the card unless the author says otherwise.
+  const [showInCard, setShowInCard] = useState(property?.showInCard ?? true);
   const [content, setContent] = useState(config?.content ?? THESAURUS_OPTIONS[0]?.value ?? "");
   const [targetTemplate, setTargetTemplate] = useState(config?.targetTemplate ?? TEMPLATE_OPTIONS[0]?.value ?? "");
   const [relationType, setRelationType] = useState(config?.relationType ?? RELATION_OPTIONS[0]?.value ?? "");
@@ -365,7 +376,7 @@ function PropertyDialog({
   }, [onCancel]);
 
   const submit = () => {
-    const draft: PropertyDraft = { label: label.trim() || "Untitled", type, required, filterable };
+    const draft: PropertyDraft = { label: label.trim() || "Untitled", type, required, filterable, showInCard };
     if (type === "select") draft.content = content;
     if (type === "relationship") {
       draft.targetTemplate = targetTemplate;
@@ -430,6 +441,10 @@ function PropertyDialog({
             <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
               <Checkbox checked={filterable} onChange={(e) => setFilterable(e.target.checked)} ariaLabel="Use as filter" />
               Use as filter
+            </label>
+            <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
+              <Checkbox checked={showInCard} onChange={(e) => setShowInCard(e.target.checked)} ariaLabel="Show in cards" />
+              Show in cards
             </label>
           </div>
         </div>

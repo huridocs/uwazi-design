@@ -8,17 +8,17 @@ import type { TemplateProperty } from "../data/settings";
  *  inert + aria-hidden — a picture, not a control. */
 
 const properties: TemplateProperty[] = [
-  { id: "p1", label: "Case number", type: "text", required: true, filterable: true },
-  { id: "p2", label: "Date filed", type: "date", required: true, filterable: true },
-  { id: "p3", label: "Status", type: "select", required: false, filterable: true },
+  { id: "p1", label: "Case number", type: "text", required: true, filterable: true, showInCard: true },
+  { id: "p2", label: "Date filed", type: "date", required: true, filterable: true, showInCard: true },
+  { id: "p3", label: "Status", type: "select", required: false, filterable: true, showInCard: true },
 ];
 
 const manyProperties: TemplateProperty[] = [
   ...properties,
-  { id: "p4", label: "Respondent state", type: "relationship", required: false, filterable: true },
-  { id: "p5", label: "Summary", type: "markdown", required: false, filterable: false },
-  { id: "p6", label: "Location", type: "geolocation", required: false, filterable: false },
-  { id: "p7", label: "Paragraphs", type: "numeric", required: false, filterable: false },
+  { id: "p4", label: "Respondent state", type: "relationship", required: false, filterable: true, showInCard: true },
+  { id: "p5", label: "Summary", type: "markdown", required: false, filterable: false, showInCard: false },
+  { id: "p6", label: "Location", type: "geolocation", required: false, filterable: false, showInCard: false },
+  { id: "p7", label: "Paragraphs", type: "numeric", required: false, filterable: false, showInCard: false },
 ];
 
 const meta = {

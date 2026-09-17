@@ -62,6 +62,7 @@ export const cejilTemplateProperties: Record<string, TemplateProperty[]> = Objec
       type: ptype(p.type),
       required: false,
       filterable: false,
+      showInCard: false,
     })),
   ]),
 );
