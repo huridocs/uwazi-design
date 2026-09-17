@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ComponentProps } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { FieldMessage, issueBorderClass } from "../shared/FieldMessage";
 import type { ValidationIssue } from "../../utils/validation";
@@ -11,6 +11,60 @@ import {
   timecodeToSeconds,
   type ChapterRow,
 } from "../../utils/mediaValue";
+
+/** A one-line text field that grows to show its whole value.
+ *
+ *  A chapter title is a sentence ("statement of Rodrigo UPRIMNY YEPES/ expert
+ *  witness proposed by the IACHR"), and a single-line input cut it at a phone's
+ *  width with no way to read it except by scrolling the caret through it. This
+ *  wraps instead. It is still ONE line of data: Enter does nothing and pasted
+ *  line breaks become spaces, because a timelink label is a single string.
+ *
+ *  Sized before paint (`useLayoutEffect`) and again when its width changes, so
+ *  the row is at its final height the first frame it is seen; it only grows
+ *  or shrinks as the reader types, which is the value changing, not the UI. */
+function GrowingField({ value, onValue, className = "", ...rest }: Omit<ComponentProps<"textarea">, "onChange" | "rows"> & {
+  value: string;
+  onValue: (v: string) => void;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const fit = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    // scrollHeight excludes the border; the box is border-box.
+    const border = el.offsetHeight - el.clientHeight;
+    el.style.height = `${el.scrollHeight + border}px`;
+  };
+  useLayoutEffect(fit, [value]);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    let w = el.clientWidth;
+    const ro = new ResizeObserver(() => {
+      if (el.clientWidth !== w) {
+        w = el.clientWidth;
+        fit();
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return (
+    <textarea
+      {...rest}
+      ref={ref}
+      rows={1}
+      value={value}
+      onChange={(e) => onValue(e.target.value.replace(/\r?\n/g, " "))}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") e.preventDefault();
+        rest.onKeyDown?.(e);
+      }}
+      className={`${className} resize-none overflow-hidden`}
+    />
+  );
+}
 
 interface Row extends ChapterRow {
   /** Stable React key: rows move when they are put back in time order. */
@@ -169,18 +223,9 @@ export function MediaFieldEditor({
   }
 
   const chaptersId = `${inputId}-chapters`;
-  const errorBorder = issueBorderClass({ severity: "error", message: "" });
   const inputClass = (bad: boolean) =>
-    `w-full min-w-0 px-3 py-2 text-sm text-ink bg-paper border rounded-md focus:outline-none
-     focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 ${bad ? errorBorder : issueBorderClass(null)}`;
-  /** A chapter cell reads as TEXT in a ruled sheet until you touch it: no box at
-   *  rest, the input's border on hover, the focus ring on focus, and the error
-   *  border always while it is wrong. The border is there in every state (only
-   *  its colour changes), so nothing moves. */
-  const cellClass = (bad: boolean) =>
-    `w-full min-w-0 h-8 px-2 text-sm text-ink bg-transparent border rounded placeholder:text-ink-muted
-     hover:border-border focus:bg-paper focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40
-     transition-colors ${bad ? errorBorder : "border-transparent"}`;
+    `w-full min-w-0 px-3 py-2 text-sm leading-5 text-ink bg-paper border rounded-md focus:outline-none
+     focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 ${issueBorderClass(bad ? { severity: "error", message: "" } : null)}`;
 
   return (
     <div data-component="MediaFieldEditor" data-state={touched ? "edited" : "stored"} className="flex flex-col gap-3 min-w-0">
@@ -200,34 +245,16 @@ export function MediaFieldEditor({
         <FieldMessage key={note} issue={{ severity: "warning", message: note }} />
       ))}
 
-      <div role="group" aria-labelledby={chaptersId} data-part="chapters" className="@container flex flex-col gap-1.5 min-w-0">
+      <div role="group" aria-labelledby={chaptersId} data-part="chapters" className="flex flex-col gap-2">
         <span id={chaptersId} className="text-xs font-medium text-ink-secondary">
           Chapters
         </span>
-        {/* ONE sheet, not a column of boxes: sixteen chapters were thirty-two
-            bordered inputs and sixteen bins. Rows are hairline-ruled, cells are
-            quiet until touched, and "Add chapter" is the sheet's last row, where
-            the next chapter will appear. */}
-        <div className="rounded-md border border-border bg-paper overflow-hidden">
-          {rows.length > 0 && (
-          <ol className="flex flex-col divide-y divide-border">
+        {rows.length > 0 && (
+          <ol className="flex flex-col gap-1.5">
             {rows.map((r, i) => (
-              <li
-                key={r.key}
-                data-part="chapter"
-                /* Narrow (a phone, the drawer): number, time and remove on one
-                   line, the title under them at full width — a title cut to
-                   twenty characters can't be proofread. From 30rem of the
-                   editor's own width, one line. */
-                className="group grid grid-cols-[1.5rem_minmax(0,1fr)_2rem] @[30rem]:grid-cols-[1.5rem_6rem_minmax(0,1fr)_2rem]
-                  items-center gap-x-1.5 gap-y-0.5 px-1.5 py-1"
-              >
-                {/* The number the error messages use ("Chapter 3 needs a title"),
-                    so a message can be found in the list. The inputs' own names
-                    already carry it. */}
-                <span aria-hidden className="row-start-1 col-start-1 text-end text-meta tabular-nums text-ink-tertiary">
-                  {i + 1}
-                </span>
+              // `items-start`: a title that wraps grows its own cell downward;
+              // the time and the remove button stay on its first line.
+              <li key={r.key} data-part="chapter" className="grid grid-cols-[6.5rem_1fr_auto] items-start gap-2">
                 <input
                   ref={(el) => {
                     if (el) timeRefs.current.set(r.key, el);
@@ -242,50 +269,39 @@ export function MediaFieldEditor({
                   aria-invalid={badTime.has(r.key) || undefined}
                   onChange={(e) => updateRow(r.key, { time: e.target.value })}
                   onBlur={sortRows}
-                  className={`${cellClass(badTime.has(r.key))} row-start-1 col-start-2 w-[6rem] tabular-nums`}
+                  className={`${inputClass(badTime.has(r.key))} font-mono tabular-nums`}
                 />
-                <input
-                  type="text"
+                <GrowingField
                   value={r.label}
+                  onValue={(v) => updateRow(r.key, { label: v })}
                   placeholder="What happens here"
                   aria-label={`${label} chapter ${i + 1} title`}
                   aria-invalid={badLabel.has(r.key) || undefined}
-                  onChange={(e) => updateRow(r.key, { label: e.target.value })}
-                  className={`${cellClass(badLabel.has(r.key))} row-start-2 col-start-2 col-span-2
-                    @[30rem]:row-start-1 @[30rem]:col-start-3 @[30rem]:col-span-1`}
+                  className={inputClass(badLabel.has(r.key))}
                 />
-                {/* Destructive, so behind hover and focus on a pointer device —
-                    and always shown where there is no hover to reveal it. The
-                    seal wash is the one place this editor uses seal. */}
                 <button
                   type="button"
                   onClick={() => removeRow(r.key)}
                   aria-label={`Remove chapter ${i + 1}${r.label.trim() ? `, ${r.label.trim()}` : ""}`}
-                  className="row-start-1 col-start-3 @[30rem]:col-start-4 justify-self-center flex items-center justify-center
-                    w-7 h-7 rounded-md text-ink-tertiary hover:bg-seal-tint hover:text-seal-label transition-[color,background-color,opacity]
-                    cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40
-                    [@media(hover:hover)]:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
+                  className="p-2 rounded-md text-ink-tertiary hover:bg-seal-tint hover:text-seal-label transition-colors cursor-pointer
+                    focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
                 >
-                  <Trash2 size={13} aria-hidden />
+                  <Trash2 size={14} aria-hidden />
                 </button>
               </li>
             ))}
           </ol>
-          )}
-          <button
-            ref={addRef}
-            type="button"
-            onClick={addRow}
-            className={`flex w-full items-center gap-1.5 px-3 h-9 text-start text-xs font-medium text-ink-secondary
-              hover:bg-warm hover:text-ink transition-colors cursor-pointer focus:outline-none
-              focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-carbon/40 ${
-                rows.length > 0 ? "border-t border-border" : ""
-              }`}
-          >
-            <Plus size={12} aria-hidden />
-            Add chapter
-          </button>
-        </div>
+        )}
+        <button
+          ref={addRef}
+          type="button"
+          onClick={addRow}
+          className="inline-flex w-fit items-center gap-1.5 px-2 py-1 -mx-2 rounded-md text-xs font-medium text-ink-secondary
+            hover:bg-warm hover:text-ink transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
+        >
+          <Plus size={12} aria-hidden />
+          Add chapter
+        </button>
       </div>
     </div>
   );
