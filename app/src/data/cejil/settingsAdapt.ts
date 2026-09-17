@@ -53,6 +53,14 @@ export const cejilSettingsTemplates: SettingsTemplate[] = cejilTemplates.map((t)
   isDefault: !!t.default,
 }));
 
+/** A CEJIL property is filterable when it is thesaurus-backed: a `select` or
+ *  `multiselect` carrying the thesaurus id in `content`. The dump has no
+ *  per-property filter flag, and those are the properties the Library can
+ *  facet on. */
+function isThesaurusBacked(p: { type: string; content?: string }): boolean {
+  return (p.type === "select" || p.type === "multiselect") && !!p.content;
+}
+
 export const cejilTemplateProperties: Record<string, TemplateProperty[]> = Object.fromEntries(
   cejilTemplates.map((t) => [
     t._id,
@@ -61,8 +69,8 @@ export const cejilTemplateProperties: Record<string, TemplateProperty[]> = Objec
       label: p.label,
       type: ptype(p.type),
       required: false,
-      filterable: false,
-      showInCard: false,
+      filterable: isThesaurusBacked(p),
+      showInCard: isThesaurusBacked(p),
     })),
   ]),
 );
@@ -148,6 +156,27 @@ export const cejilFilterMeta: Record<string, { name: string; color: string; coun
   Object.fromEntries(
     cejilSettingsTemplates.map((t) => [t.id, { name: t.name, color: t.color, count: t.entityCount }]),
   );
+
+/** The filterable properties, one row per thesaurus: "Tipo" on four templates
+ *  is one filter, not four. Named by the thesaurus, which is what the reader
+ *  filters by (Diligencia's property is labelled "Select"; its thesaurus is
+ *  "Tipo de diligencia"). */
+const cejilFilterThesaurusIds = [
+  ...new Set(
+    cejilTemplates.flatMap((t) =>
+      [...(t.commonProperties || []), ...(t.properties || [])].filter(isThesaurusBacked).map((p) => p.content!),
+    ),
+  ),
+].filter((id) => cejilSettingsThesauri.some((th) => th.id === id));
+
+export const cejilPropertyFilterRows = cejilFilterThesaurusIds.map((id) => ({ propertyId: id, active: true }));
+
+/** name / value-count per filterable property, by thesaurus id. */
+export const cejilPropertyFilterMeta: Record<string, { name: string; count: number | null }> = Object.fromEntries(
+  cejilSettingsThesauri
+    .filter((th) => cejilFilterThesaurusIds.includes(th.id))
+    .map((th) => [th.id, { name: th.name, count: th.itemCount }]),
+);
 
 // --- Dashboard: source-aware headline stats --------------------------------
 export const cejilDashboardStats = {
