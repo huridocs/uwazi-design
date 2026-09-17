@@ -1,4 +1,4 @@
-import { ExternalLink, Film, AudioLines, PlayCircle } from "lucide-react";
+import { AudioLines, CirclePlay, Clapperboard, ExternalLink } from "lucide-react";
 import { mediaUrlAt, parseMediaValue } from "../../utils/mediaValue";
 
 /** A `media` property in the record: the recording as a named link, and its
@@ -18,7 +18,9 @@ export function MediaFieldValue({ raw }: { raw: string }) {
     return <p className="text-sm text-ink-secondary leading-relaxed break-words">{raw}</p>;
   }
 
-  const Icon = media.kind === "video" ? Film : media.kind === "audio" ? AudioLines : PlayCircle;
+  // The same three glyphs the Library card marks with, so the mark and the
+  // record agree about what kind of recording this is.
+  const Icon = media.kind === "video" ? Clapperboard : media.kind === "audio" ? AudioLines : CirclePlay;
   const verb = media.kind === "audio" ? "Listen" : media.kind === "video" ? "Watch" : "Open";
   const name = media.provider ? `${verb} on ${media.provider}` : `${verb} recording`;
 

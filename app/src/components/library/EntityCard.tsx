@@ -1,5 +1,7 @@
 import { Fragment, memo } from "react";
 import {
+  AudioLines,
+  CirclePlay,
   Clapperboard,
   Image as ImageIcon,
   Link2,
@@ -18,6 +20,7 @@ import { LIBRARY_SORTS } from "../../data/libraryDisplay";
 import { getEntityType, imageFocusKey, type EntityImage } from "../../data/entities";
 import { entityScalarFields, type EntityScalarField } from "../../utils/entityFields";
 import type { PropertyKind } from "../../utils/propertyKind";
+import type { CardMark, MediaMark } from "../../data/entities";
 import type { Entity } from "../../data/entities";
 import {
   libraryCardInfoAtom,
@@ -87,17 +90,26 @@ function sortedFieldId(
 }
 
 /** The footer glyph for a kind that cannot be a card line, and what it is
- *  called for anyone not reading glyphs. */
-const MARK_ICON: Partial<Record<PropertyKind, typeof Pilcrow>> = {
+ *  called for anyone not reading glyphs.
+ *
+ *  Media is split by what the VALUE is (the adapter reads it): the clapperboard
+ *  means video and only video, a waveform means audio, and a recording whose
+ *  address names neither gets a neutral play mark rather than a guessed film. */
+const MARK_ICON: Record<CardMark, typeof Pilcrow> = {
   long: Pilcrow,
   table: Table2,
-  media: Clapperboard,
+  video: Clapperboard,
+  audio: AudioLines,
+  media: CirclePlay,
 };
-const MARK_LABEL: Partial<Record<PropertyKind, string>> = {
+const MARK_LABEL: Record<CardMark, string> = {
   long: "Has a written summary",
   table: "Has a table",
+  video: "Has video",
+  audio: "Has audio",
   media: "Has media",
 };
+const isMediaMark = (m: CardMark): m is MediaMark => m === "video" || m === "audio" || m === "media";
 
 /** The kinds whose value is a THING you would open rather than a sentence you
  *  have already read: a place, a connected entity, a table, a file.
@@ -632,40 +644,41 @@ export const EntityCard = memo(function EntityCard({
               the whole reason they are here: neither can make a card taller,
               and a card that gains a paragraph does not shove its neighbours.
 
-              The MEDIA mark is also a pointer target now: the record renders the
-              recording and its chapters (`MediaFieldValue`), so a click lands
-              somewhere — the drawer, focused on that property, like a property
-              trigger. It is `tabIndex={-1}` on purpose: a tab stop on every
-              hearing card is a stop nobody asked for, and a keyboard reader
-              already reaches the same record through the card's primary action.
-              The paragraph and table marks stay signals; a nested table still
-              has no place in the record to land. */}
+              A MEDIA mark (video / audio / neutral) is also a POINTER shortcut:
+              the record renders the recording and its chapters
+              (`MediaFieldValue`), so a click lands on that property, like a
+              property trigger. Pointer only, and deliberately NOT a control to
+              assistive tech: no button, no role, no name — the glyph stays
+              `aria-hidden` and the sr-only line below still says "Has video".
+              It was a `<button tabIndex={-1}>` named "Open the recording…",
+              which a screen reader announced as a button no keyboard could
+              reach. Nothing may be announced as operable unless it can be
+              operated. Keyboard readers open the record through Open or the
+              card itself. Paragraph and table marks stay plain signals. */}
           {marks.length > 0 && (
             <span className="flex items-center gap-1 text-ink-muted" title={markTitle}>
               {marks.map((m) => {
                 const Icon = MARK_ICON[m];
-                if (!Icon) return null;
-                if (m === "media" && entity.mediaKey && onFocusProperty) {
-                  const key = entity.mediaKey;
+                const key = isMediaMark(m) ? entity.mediaKeys?.[m] : undefined;
+                if (key && onFocusProperty) {
                   return (
-                    <button
+                    <span
                       key={m}
-                      type="button"
-                      tabIndex={-1}
+                      aria-hidden
                       data-part="media-mark"
+                      data-kind={m}
                       onClick={(e) => {
                         e.stopPropagation();
                         onFocusProperty(entity.id, key);
                       }}
-                      aria-label={`Open the recording on ${entity.title}`}
-                      title="Open the recording in the record"
+                      title={`${MARK_LABEL[m]} — open it in the record`}
                       className="flex items-center rounded-sm cursor-pointer hover:text-ink transition-colors"
                     >
-                      <Icon size={11} aria-hidden />
-                    </button>
+                      <Icon size={11} />
+                    </span>
                   );
                 }
-                return <Icon key={m} size={11} aria-hidden />;
+                return <Icon key={m} size={11} aria-hidden data-part="mark" data-kind={m} />;
               })}
               <span className="sr-only">{markTitle}</span>
             </span>

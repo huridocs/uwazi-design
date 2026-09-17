@@ -1,6 +1,15 @@
 import { getEntityProp } from "./entityMetadata";
 import { countryCoords, type LatLng } from "./geo";
 import type { PropertyKind } from "../utils/propertyKind";
+
+/** A media property's mark, decided by its VALUE rather than its Uwazi type:
+ *  `media` covers audio and video alike. `media` itself is the neutral mark for
+ *  a value whose address says neither (see `parseMediaValue`). */
+export type MediaMark = "video" | "audio" | "media";
+
+/** A footer mark on a card — something the entity carries that cannot be a
+ *  card LINE: a paragraph, a table, a recording. */
+export type CardMark = "long" | "table" | MediaMark;
 import { cejilTypeById } from "./cejil/typesAdapter";
 import { cejilLibraryEntities } from "./cejil/adapt";
 import { artworkEntityById } from "./artworks/adapt";
@@ -101,12 +110,12 @@ export interface Entity {
   /** Kinds the entity carries that cannot be a card LINE — a paragraph, a
    *  table, a media config. Drawn as footer glyphs, so they cost no line and no
    *  layout. */
-  marks?: PropertyKind[];
-  /** For a mark that has a place in the record, the property it stands for —
-   *  the key the record's deep focus scrolls to. Only `media` today: the record
-   *  renders a recording (see `MediaFieldValue`), while a nested table still has
-   *  nowhere to land. */
-  mediaKey?: string;
+  marks?: CardMark[];
+  /** For a media mark, the property it stands for — the key the record's deep
+   *  focus scrolls to — per class, so an entity carrying a video AND an audio
+   *  property sends each mark to its own. A nested table still has nowhere in
+   *  the record to land, so it has no key. */
+  mediaKeys?: Partial<Record<MediaMark, string>>;
   /** Adapter-supplied FULL metadata projection, for SEARCH — every non-empty
    *  property, every value, untruncated.
    *

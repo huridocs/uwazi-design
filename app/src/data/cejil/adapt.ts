@@ -1,6 +1,6 @@
 // Heavy adapter: maps CEJIL entities → the prototype's `Entity` shape for the
 // Library. Imported only by the library-data atom (pulls the full entity list).
-import type { CardField, Entity } from "../entities";
+import type { CardField, CardMark, Entity, MediaMark } from "../entities";
 import type { CejilEntity } from "./types";
 import type { LatLng } from "../geo";
 import { cejilTemplates } from "./templates";
@@ -9,6 +9,7 @@ import { cejilDocBearingIds } from "./profile";
 import { cejilCorpus, cejilLoaded, cejilRelsByEntity } from "./load";
 import { kindOfUwaziType, type PropertyKind } from "../../utils/propertyKind";
 import { formatPlace } from "../../utils/geoFormat";
+import { parseMediaValue } from "../../utils/mediaValue";
 import { PLACE_INHERITED_KEY } from "./placeKey";
 
 /** template _id → ordered [{name,label,type}] for resolving display fields. */
@@ -149,8 +150,8 @@ function fieldsOf(
 ) {
   const props = propsByTemplate.get(e.template) || [];
   const out: CardField[] = [];
-  const marks: PropertyKind[] = [];
-  let mediaKey: string | undefined;
+  const marks: CardMark[] = [];
+  const mediaKeys: Partial<Record<MediaMark, string>> = {};
   for (const p of props) {
     if (p.name === "title") continue;
     /* The connection a place was inherited THROUGH is not also a row of its own.
@@ -179,8 +180,20 @@ function fieldsOf(
       continue;
     }
     if (kind && MARK_KINDS.has(kind) && hasAnyValue(p.type, vals)) {
-      if (!marks.includes(kind)) marks.push(kind);
-      if (kind === "media" && !mediaKey) mediaKey = p.name;
+      if (kind === "media") {
+        /* Classified by the VALUE: Uwazi's `media` type holds audio as well as
+           video, and a film mark on a recording of a voice is a mark that lies.
+           Every value of the property counts, so a property holding both says
+           both; a value whose address names neither gets the neutral mark. */
+        for (const v of vals) {
+          const parsed = parseMediaValue(v.value);
+          const mark: MediaMark = parsed?.kind === "video" ? "video" : parsed?.kind === "audio" ? "audio" : "media";
+          if (!marks.includes(mark)) marks.push(mark);
+          mediaKeys[mark] ??= p.name;
+        }
+        continue;
+      }
+      if (!marks.includes(kind as CardMark)) marks.push(kind as CardMark);
       continue;
     }
     const { value, more, values } = formatVals(p.type, vals);
@@ -216,7 +229,11 @@ function fieldsOf(
       value: formatPlace(connectedPlace.coords, connectedPlace.name),
     });
   }
-  return { fields: out.length ? out : undefined, marks: marks.length ? marks : undefined, mediaKey };
+  return {
+    fields: out.length ? out : undefined,
+    marks: marks.length ? marks : undefined,
+    mediaKeys: Object.keys(mediaKeys).length ? mediaKeys : undefined,
+  };
 }
 
 /** Does this property hold anything at all? The mark tier only needs presence —
@@ -488,7 +505,7 @@ export function cejilLibraryEntities(): Entity[] {
         createdAt: createdOf(e, geo, causaDateBySid),
         fields: card.fields,
         marks: card.marks,
-        mediaKey: card.mediaKey,
+        mediaKeys: card.mediaKeys,
         searchFields: searchFieldsOf(e),
         descriptors: (e.metadata?.descriptores || [])
           .map((v) => (typeof v.label === "string" ? v.label : ""))
