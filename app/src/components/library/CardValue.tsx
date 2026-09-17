@@ -46,12 +46,19 @@ export function CardValue({
     const rest = field.more ?? 0;
     return (
       <span data-component="CardValue" data-kind="chips" className="flex items-center gap-1 min-w-0 overflow-hidden">
+        {/* Chips SHARE the row's width instead of each taking a fixed ceiling.
+            `max-w-[9rem]` capped every chip at the same arbitrary width, so a
+            long value truncated ("Excepciones Preliminar…") while a LONGER one
+            beside it rendered whole because it happened to fit under the cap —
+            which reads as a broken rule rather than a considered one. `min-w-0`
+            lets a chip shrink, and the basis keeps a short chip from being
+            squeezed by a long neighbour. */}
         {shown.map((v, i) => (
           <span
             key={`${v}-${i}`}
             title={v}
             data-part="chip"
-            className="shrink-0 max-w-[9rem] truncate rounded-md bg-warm px-1.5 py-px text-meta text-ink-secondary"
+            className="min-w-0 shrink basis-auto truncate rounded-md bg-warm px-1.5 py-px text-meta text-ink-secondary"
           >
             {marked(v)}
           </span>

@@ -615,10 +615,19 @@ export const EntityCard = memo(function EntityCard({
         data-part="footer"
         className="relative min-w-0 self-end flex items-center justify-between gap-2 pt-1"
       >
-        <span className={sortMark(sort === "type")} title={sort === "type" ? sortedNote : undefined}>
+        {/* `min-w-0` on the wrapper, not just on the tag: the tag already says
+            it may shrink (`min-w-0 max-w-full`, truncating label), but a flex
+            ITEM only shrinks below its content when it is allowed to, and this
+            wrapper sat at its natural width. A long template name — "Resolución
+            de Presidencia de la CorteIDH" — then pushed the count and Open past
+            the card's edge instead of truncating. */}
+        <span
+          className={`min-w-0 flex-1 ${sortMark(sort === "type")}`}
+          title={sort === "type" ? sortedNote : undefined}
+        >
           <EntityTypeTag typeId={entity.typeId} />
         </span>
-        <div className="flex items-center gap-2">
+        <div className="shrink-0 flex items-center gap-2">
           {/* Marks and the count ride a line that is ALREADY MOUNTED, which is
               the whole reason they are here: neither can make a card taller,
               and a card that gains a paragraph does not shove its neighbours.
