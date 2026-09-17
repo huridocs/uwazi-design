@@ -441,15 +441,19 @@ button:not(:disabled) {
 .pdf-search-hit {
   color: inherit;
   border-radius: 2px;
-  background-color: color-mix(in srgb, var(--highlight-yellow-active) 55%, transparent);
+  background-color: color-mix(in srgb, var(--pdf-hit) 55%, transparent);
 }
 /* The page you jumped to — stronger tint plus a hairline, so you can see which
    hit the click landed on rather than hunting the page. Driven by an attribute
    on the page wrapper, NOT by re-rendering the text layer: re-rendering it on
-   every jump reset the scroll position and undid the jump. */
+   every jump reset the scroll position and undid the jump.
+   The weight is in the RING, not the fill: the glyphs are on the canvas under a
+   transparent text layer, so a fill is something you read THROUGH. At 92% it
+   painted the word out; the page fill now sits just under the base tint and the
+   hairline says "this page". */
 [data-search-active] .pdf-search-hit {
-  background-color: color-mix(in srgb, var(--highlight-yellow-active) 92%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--text-primary) 30%, transparent);
+  background-color: color-mix(in srgb, var(--pdf-hit) 45%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--pdf-hit-ring) 55%, transparent);
 }
 /* THE match you stepped to — the same attribute, one level down: on the page
    wrapper it lights every hit on that page, on the mark itself it singles out
@@ -460,6 +464,6 @@ button:not(:disabled) {
      and the text layer itself is transparent, so an opaque fill paints the word
      out and leaves a blank yellow box. The RING carries the "you are here", not
      the opacity. */
-  background-color: color-mix(in srgb, var(--highlight-yellow-active) 75%, transparent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--text-primary) 55%, transparent);
+  background-color: color-mix(in srgb, var(--pdf-hit) 75%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--pdf-hit-ring) 55%, transparent);
 }
