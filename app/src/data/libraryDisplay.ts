@@ -113,6 +113,9 @@ const CHART: DisplaySection = {
 /** The sort keys, once — the toolbar Select reads this list and so does the
  *  phone's Display section, which is the only reason the two can't drift. */
 export const LIBRARY_SORTS: Choice[] = [
+  // Only offered while a query is active (see `librarySortAtom`); the toolbar
+  // drops it with no query.
+  { id: "relevance", label: "Relevance" },
   { id: "recent", label: "Date added" },
   { id: "title", label: "Title" },
   { id: "connections", label: "Connections" },

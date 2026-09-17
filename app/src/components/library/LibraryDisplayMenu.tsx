@@ -10,6 +10,7 @@ import {
   libraryViewModeAtom,
   librarySortAtom,
   librarySortDirAtom,
+  libraryActiveSearchAtom,
   defaultSortDir,
   type LibraryDisplayState,
 } from "../../atoms/library";
@@ -43,6 +44,7 @@ export function LibraryDisplayMenu() {
   const reset = useSetAtom(resetLibraryDisplayAtom);
   const [sort, setSort] = useAtom(librarySortAtom);
   const setSortDir = useSetAtom(librarySortDirAtom);
+  const searching = useAtomValue(libraryActiveSearchAtom) !== null;
   const [open, setOpen] = useState(false);
 
   // Escape closes it, like every other overlay in the app. The scrim was the
@@ -132,7 +134,9 @@ export function LibraryDisplayMenu() {
     const scope = option.scope ?? "mode";
     const bound = scope === "external" ? external[option.id] : undefined;
     const current = bound ? bound.value : (valueOf(option.id, scope, option.default) as string);
-    return option.choices.map((c) => (
+    // Relevance is an order only while a query runs; with none it isn't offered.
+    const choices = bound && !searching ? option.choices.filter((c) => c.id !== "relevance") : option.choices;
+    return choices.map((c) => (
       <OptionRow
         key={c.id}
         label={c.label}

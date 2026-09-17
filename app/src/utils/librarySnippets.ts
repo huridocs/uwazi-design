@@ -13,15 +13,13 @@ import { highlightTerms, fold, foldWithMap, parseSearchQuery, termHit, termIn } 
  *  (`{ count, metadata: [{ field, texts[] }], fullText: [{ page, text }] }`) so
  *  the Results-tab UI maps 1:1 onto what the real V2 sidepanel renders.
  *
- *  Matching is **per-token, case-insensitive** — the SAME tokens the left-pane
- *  filter ANDs (`highlightTerms` via `utils/queryTokens.ts`) and that
- *  `HighlightedText` marks: quoted phrases as contiguous units, bare words
- *  separately, `AND`/`OR`/`NOT` dropped. Filter, snippets, and marks therefore
- *  share ONE matching semantics — an entity that passed the filter (every token
- *  hit somewhere in its metadata index OR its full-text blob) is guaranteed a
- *  snippet here, so `count > 0` holds. (The operator-aware engine in
- *  `searchSnippets.ts` — wildcards, real AND/OR/NOT precedence — is the follow-up
- *  for when the filter parses operators as connectives, not just literal tokens.)
+ *  Matching is **per-term, case- and diacritic-insensitive** — the SAME terms the
+ *  Library filter reads (`parseSearchQuery` / `highlightTerms` in
+ *  `utils/queryTokens.ts`) and that `HighlightedText` marks: quoted phrases as
+ *  contiguous units, bare words separately, `*`/`?` as whole-word globs, `NOT`
+ *  terms never marked. Filter, snippets, and marks therefore share ONE matching
+ *  semantics — an entity that passed the filter is guaranteed a snippet here, so
+ *  `count > 0` holds whenever the query has a positive term.
  *
  *  Excerpts are returned as PLAIN text (windowed, ellipsed) — NOT HTML with
  *  `<b>`. `HighlightedText` re-derives the marks from the query by string-split,
@@ -168,7 +166,7 @@ export function entitySearchFields(
   return out;
 }
 
-interface FoldedField {
+export interface FoldedField {
   field: string;
   fieldKey: string;
   /** Original text — what excerpts are cut from (accents and case intact). */
@@ -706,6 +704,25 @@ export function hiddenMatchOrigin(
  *  case (Greek final sigma) turns on adjacent letters — and the "\n" separator is
  *  a word boundary either way. Asserted over the real corpus, not assumed. */
 const blobByPages = new WeakMap<string[], string>();
+/** The pieces a ranker needs from the SAME caches the filter and snippets fill:
+ *  the folded fields (title included, `fieldKey === "title"`), the document's
+ *  page array (its identity is shared by every entity that borrows it — a stable
+ *  cache key), its folded blob, and whether the document is borrowed. Nothing
+ *  here computes anything the search path hasn't already. */
+export function entitySearchParts(
+  entity: Entity,
+  language: Language,
+  source: DataSource,
+): { fields: FoldedField[]; pages: string[]; blob: string; borrowed: boolean } {
+  const doc = documentPages(entity, language, source);
+  return {
+    fields: foldedFields(entity, language),
+    pages: doc.pages,
+    blob: entityFullTextBlob(entity, language, source),
+    borrowed: doc.borrowedFrom != null,
+  };
+}
+
 export function entityFullTextBlob(
   entity: Entity,
   language: Language,

@@ -60,7 +60,8 @@ import { getEntityType, type Entity, type EntityImage } from "../data/entities";
 import { libraryInheritedDefs } from "../utils/libraryFacets";
 import { buildActiveChains, cejilChainGraph } from "../data/cejil/chainFacets";
 import { matchesAll, matchesSearch, passesMatchTypes, buildSearchIndex, type LibraryFilterState } from "../utils/libraryFilter";
-import { highlightTerms, fold, parseSearchQuery } from "../utils/queryTokens";
+import { highlightTerms, parseSearchQuery } from "../utils/queryTokens";
+import { scoreRelevance, type RelevanceBreakdown } from "../utils/relevance";
 import { matchCategoriesWithTerms, type MatchCategories } from "../utils/librarySnippets";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { EntityCard } from "../components/library/EntityCard";
@@ -436,6 +437,29 @@ export function LibraryView() {
     // "document: false" answers from before that must not survive it.
   }, [searchTerms, language, dataSource, cejilReady]);
 
+  // Relevance per entity, at most ONCE per entity per query — the same lazy cache
+  // shape as `categoriesOf`, so toggling a match-type chip or a facet never
+  // re-scores an entity it has already seen. Only asked for when the sort is
+  // relevance.
+  const maxConnections = useMemo(() => {
+    let m = 0;
+    for (const n of countByEntity.values()) if (n > m) m = n;
+    return m;
+  }, [countByEntity]);
+  const scoreOf = useMemo(() => {
+    const cache = new Map<string, RelevanceBreakdown>();
+    const relevanceQuery = { terms: searchTerms, phrase: searchTerms.join(" ") };
+    return (e: Entity): RelevanceBreakdown => {
+      let s = cache.get(e.id);
+      if (!s) {
+        s = scoreRelevance(e, relevanceQuery, language, dataSource, countByEntity.get(e.id) ?? 0, maxConnections);
+        cache.set(e.id, s);
+      }
+      return s;
+    };
+    // `cejilReady`: document bodies go empty→real when the corpus lands.
+  }, [searchTerms, language, dataSource, cejilReady, countByEntity, maxConnections]);
+
   // ONE full-corpus pass. `matchTypeBase` is every entity passing the facets and
   // the search but NOT the chips; the chip-narrowed list is a subset of it, so
   // running `matchesAll` again over all 4,398 entities to get it was scanning the
@@ -472,38 +496,23 @@ export function LibraryView() {
       }
       return sortDir === "asc" ? r : -r;
     };
-    // With an active query, match quality outranks the sort: exact title →
-    // title prefix → title contains → metadata/full-text hit. Otherwise a
-    // "Date added" sort buries the entity literally named what you typed
-    // under documents that merely mention it.
-    if (q) {
-      // Relevance tiers: exact title → title prefix → title contains → a title
-      // TOKEN hit → a property hit → document-only. Folded, so an unaccented
-      // query ranks accented titles correctly. Precomputed per entity (O(n)):
-      // calling `matchCategories` inside the comparator would re-scan blobs
-      // O(n log n) times.
-      const qf = fold(q);
-      const rankOf = new Map<string, number>();
-      for (const e of list) {
-        const t = fold(e.title);
-        let r: number;
-        if (t === qf) r = 0;
-        else if (t.startsWith(qf)) r = 1;
-        else if (t.includes(qf)) r = 2;
-        else {
-          const c = categoriesOf(e);
-          r = c.title ? 3 : c.properties ? 4 : 5;
-        }
-        rankOf.set(e.id, r);
-      }
-      return [...list].sort(
-        (a, b) => (rankOf.get(a.id) ?? 9) - (rankOf.get(b.id) ?? 9) || cmp(a, b),
+    // With an active query the default order is RELEVANCE (`utils/relevance.ts`):
+    // exact title first, then coverage, field weight, frequency and whole-word
+    // hits, with connections and recency as weak tie-breakers. The reader can pick
+    // another sort for the query (`librarySortAtom`), and then that sort applies
+    // as it does without one. Scored once per entity per query (`scoreOf`),
+    // never inside the comparator.
+    if (q && sort === "relevance") {
+      const scored = list.map((e) => ({ e, s: scoreOf(e).score }));
+      scored.sort(
+        (a, b) => b.s - a.s || typeName(a.e).localeCompare(typeName(b.e)) || a.e.title.localeCompare(b.e.title),
       );
+      return scored.map((x) => x.e);
     }
     return [...list].sort(cmp);
     // `cejilReady`: once the corpus loads, full-text blobs go empty→real, so the
     // filtered set must recompute to surface document-body-only matches.
-  }, [entities, matchTypeBase, categoriesOf, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, chainKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex, cejilReady, matchTypes]);
+  }, [entities, matchTypeBase, categoriesOf, scoreOf, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, chainKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex, cejilReady, matchTypes]);
 
   // How many entities the query matches with the FACETS widened — so the Results
   // tab can offer to reveal the ones the current facets are hiding.
@@ -812,7 +821,8 @@ export function LibraryView() {
             }}
             ariaLabel={t("System", "Sort")}
             // Same rows, chrome-language labels; values stay the sort keys.
-            options={SORTS.map((s) => ({ ...s, label: t("System", s.label) }))}
+            // Relevance only exists while a query runs (`librarySortAtom`).
+            options={SORTS.filter((s) => q || s.value !== "relevance").map((s) => ({ ...s, label: t("System", s.label) }))}
             // Same row, same reason as the switcher: this trigger swung 47px
             // between "Title" and "Connections", shoving View, Display and
             // Language sideways on every sort change.

@@ -65,6 +65,10 @@ export const clearLibrarySearchAtom = atom(null, (get, set) => {
   if (prior && get(viewModeStateAtom) === "results") set(viewModeStateAtom, prior);
   set(preSearchViewModeAtom, null);
   set(searchModeOverriddenAtom, false);
+  // The sort picked DURING the search was for the search; the one from before
+  // it comes back (see `librarySortAtom`).
+  set(searchSortOverrideAtom, null);
+  set(searchSortDirOverrideAtom, null);
 });
 
 /** The running search, or `null` — the search as its OWN state, deliberately not
@@ -580,17 +584,70 @@ export const resetLibraryDisplayAtom = atom(null, (get, set) => {
   set(libraryDisplayAtom, { ...state, modes });
 });
 
-/** Sort order. */
+/** Sort order. `relevance` exists only while a query is active — it is the
+ *  order of match quality (`utils/relevance.ts`), which a list with nothing
+ *  searched doesn't have. */
 export type LibrarySort =
+  | "relevance"
   | "recent"
   | "title"
   | "connections"
   | "type"
   | "country";
 export const DEFAULT_LIBRARY_SORT: LibrarySort = "recent";
-export const librarySortAtom = atom<LibrarySort>(DEFAULT_LIBRARY_SORT);
 export type LibrarySortDir = "asc" | "desc";
-export const librarySortDirAtom = atom<LibrarySortDir>("desc");
+
+/** The sort the reader chose for browsing — what applies with no query, and
+ *  what a search hands back when it is dismissed. */
+const sortStateAtom = atom<LibrarySort>(DEFAULT_LIBRARY_SORT);
+const sortDirStateAtom = atom<LibrarySortDir>("desc");
+/** A sort picked while a query runs, for that query only. `null` = relevance. */
+const searchSortOverrideAtom = atom<LibrarySort | null>(null);
+const searchSortDirOverrideAtom = atom<LibrarySortDir | null>(null);
+
+type Update<T> = T | ((prev: T) => T);
+const resolve = <T,>(next: Update<T>, prev: T): T =>
+  typeof next === "function" ? (next as (p: T) => T)(prev) : next;
+
+/** The Library's sort key.
+ *
+ *  A query sorts by RELEVANCE unless the reader picks something else for it,
+ *  which lasts until the search is dismissed (`clearLibrarySearchAtom`); then
+ *  the browsing sort from before the search is back. Same shape as the view
+ *  mode's search steering above. With no query, `relevance` isn't an order —
+ *  writing it then changes nothing. */
+export const librarySortAtom = atom(
+  (get): LibrarySort =>
+    get(libraryQueryAtom).trim()
+      ? (get(searchSortOverrideAtom) ?? "relevance")
+      : get(sortStateAtom),
+  (get, set, next: Update<LibrarySort>) => {
+    const searching = !!get(libraryQueryAtom).trim();
+    if (searching) {
+      const prev = get(searchSortOverrideAtom) ?? "relevance";
+      const key = resolve(next, prev);
+      set(searchSortOverrideAtom, key === "relevance" ? null : key);
+      return;
+    }
+    const key = resolve(next, get(sortStateAtom));
+    if (key !== "relevance") set(sortStateAtom, key);
+  },
+);
+/** Direction, kept per the same split so a search can't overwrite the browsing
+ *  sort's direction either. Relevance itself ignores it: best match first. */
+export const librarySortDirAtom = atom(
+  (get): LibrarySortDir =>
+    get(libraryQueryAtom).trim()
+      ? (get(searchSortDirOverrideAtom) ?? "desc")
+      : get(sortDirStateAtom),
+  (get, set, next: Update<LibrarySortDir>) => {
+    if (get(libraryQueryAtom).trim()) {
+      set(searchSortDirOverrideAtom, resolve(next, get(searchSortDirOverrideAtom) ?? "desc"));
+      return;
+    }
+    set(sortDirStateAtom, resolve(next, get(sortDirStateAtom)));
+  },
+);
 /** Natural direction for a freshly-picked sort key: text → A→Z, value → high→low. */
 export const defaultSortDir = (key: LibrarySort): LibrarySortDir =>
   key === "title" || key === "type" || key === "country" ? "asc" : "desc";
