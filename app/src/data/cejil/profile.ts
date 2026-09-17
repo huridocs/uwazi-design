@@ -120,19 +120,20 @@ function mdFields(e: CejilEntity): MetadataField[] {
   for (const p of props) {
     if (p.name === "title" || SKIP.has(p.type)) continue;
     const vals = e.metadata?.[p.name];
-    if (!vals || !vals.length) continue;
 
     /* A RECORDING. `SKIP` used to drop `media` here while the card marked it, so
        a hearing's card said a video existed and its record had no trace of one.
-       The raw value (URL + timelinks JSON) is kept as written; the record reads
-       it with `parseMediaValue` and draws a link and its chapters. */
+       The raw value (URL + timelinks JSON) is kept EXACTLY as stored — not even
+       trimmed — because the editor must save an untouched value byte-identical.
+       A template's media property is emitted even when EMPTY, so the edit form
+       offers an empty editor to add one; the read record skips empty values. */
     if (p.type === "media") {
-      const raw = vals[0]?.value;
-      if (typeof raw === "string" && raw.trim()) {
-        out.push({ id: p.name, label: p.label, type: "media", value: raw.trim() });
-      }
+      const raw = vals?.[0]?.value;
+      out.push({ id: p.name, label: p.label, type: "media", value: typeof raw === "string" ? raw : "" });
       continue;
     }
+
+    if (!vals || !vals.length) continue;
 
     /* A PLACE, in the record too — until now `SKIP` dropped geolocation here as
        well, so even an entity whose only real property was a coordinate had a

@@ -31,12 +31,18 @@ export interface MediaValue {
 
 const TIME = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/;
 
-function toSeconds(time: string): number | null {
+/** A chapter timecode in seconds: `HH:MM:SS` or `MM:SS` (the corpus mixes both,
+ *  hours may be one digit). `null` for anything else, including a minute or
+ *  second field of 60 or more. THE one conversion — reading, the player's seek
+ *  and the editor's validation all go through it. */
+export function timecodeToSeconds(time: string): number | null {
   const m = TIME.exec(time.trim());
   if (!m) return null;
   const [a, b, c] = [Number(m[1]), Number(m[2]), m[3] === undefined ? null : Number(m[3])];
-  return c === null ? a * 60 + b : a * 3600 + b * 60 + c;
+  if (c === null) return b < 60 ? a * 60 + b : null;
+  return b < 60 && c < 60 ? a * 3600 + b * 60 + c : null;
 }
+const toSeconds = timecodeToSeconds;
 
 function chaptersFrom(record: Record<string, unknown>): MediaChapter[] {
   const out: MediaChapter[] = [];
@@ -78,15 +84,77 @@ function classify(url: URL): Pick<MediaValue, "kind" | "provider"> {
   return { kind: "unknown" };
 }
 
+/** A stored value in its two halves, exactly as written: the address before the
+ *  config (no repair — the editor shows what is stored) and the config text
+ *  from its first `{`, or `null` when there is none. */
+export function splitMediaValue(raw: string): { head: string; config: string | null } {
+  const s = raw.trim();
+  const brace = s.indexOf("{");
+  return {
+    head: (brace >= 0 ? s.slice(0, brace) : s).replace(/,\s*$/, "").trim(),
+    config: brace >= 0 ? s.slice(brace) : null,
+  };
+}
+
+/** Whether the stored config is real JSON. `null` when there is no config. The
+ *  18 that aren't still READ (pair extraction), but an editor has to be able to
+ *  say that saving an edit will rewrite them. */
+export function mediaConfigIsJson(raw: string): boolean | null {
+  const { config } = splitMediaValue(raw);
+  if (config === null) return null;
+  try {
+    JSON.parse(config);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** A chapter as the EDITOR holds it: the stored strings, untouched. */
+export interface ChapterRow {
+  time: string;
+  label: string;
+}
+
+/** The chapters of a stored value, for editing: in STORED order with the stored
+ *  strings (spaces inside labels included), not the read path's trimmed and
+ *  time-sorted list — so an edit to one chapter rewrites as little of the rest
+ *  as the format allows. A config that isn't JSON falls back to the same pair
+ *  extraction the reader uses. */
+export function chapterRows(raw: string): ChapterRow[] {
+  const { config } = splitMediaValue(raw);
+  if (config === null) return [];
+  try {
+    const parsed = JSON.parse(config) as { timelinks?: unknown };
+    const links = parsed && typeof parsed.timelinks === "object" ? parsed.timelinks : null;
+    if (!links) return [];
+    return Object.entries(links as Record<string, unknown>).map(([time, label]) => ({
+      time,
+      label: typeof label === "string" ? label : String(label ?? ""),
+    }));
+  } catch {
+    return [...config.matchAll(PAIR)].map((m) => ({ time: m[1], label: m[2] }));
+  }
+}
+
+/** The inverse of `parseMediaValue`, in Uwazi's own shape:
+ *  `URL, {"timelinks": {"00:00:58": "apertura", …}}` — `, ` after the URL and
+ *  after each pair, `: ` inside it, labels as JSON strings with non-ASCII kept
+ *  literal, strings written exactly as given. No chapters → the URL alone. Only
+ *  ever called on an EDIT: an untouched value is never re-written. */
+export function serializeMediaValue(url: string, chapters: ChapterRow[]): string {
+  const address = url.trim();
+  if (chapters.length === 0) return address;
+  const pairs = chapters.map((c) => `${JSON.stringify(c.time)}: ${JSON.stringify(c.label)}`).join(", ");
+  return `${address}, {"timelinks": {${pairs}}}`;
+}
+
 export function parseMediaValue(raw: unknown): MediaValue | null {
   if (typeof raw !== "string") return null;
   const s = raw.trim();
   if (!s) return null;
   const brace = s.indexOf("{");
-  const head = (brace >= 0 ? s.slice(0, brace) : s)
-    .replace(/,\s*$/, "")
-    .trim()
-    .replace(/^ttps?:\/\//, (m) => `h${m}`);
+  const head = splitMediaValue(s).head.replace(/^ttps?:\/\//, (m) => `h${m}`);
   let url: URL;
   try {
     url = new URL(head);

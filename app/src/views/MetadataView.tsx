@@ -55,6 +55,7 @@ import { fromDateInputValue, toDateInputValue } from "../utils/dateValue";
 import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
 import { WARM_BUTTON, WARM_EDGE } from "../components/shared/warmButton";
 import { flashElement } from "../utils/flash";
+import { MediaFieldEditor } from "../components/metadata/MediaFieldEditor";
 
 interface MetadataViewProps {
   tabs: { id: string; label: string; count?: number }[];
@@ -316,11 +317,17 @@ export function MetadataEditBody({
   const scalarEditable = fields.filter(
     (f) => !["description", "country"].includes(f.id) && f.type !== "file-list",
   );
+  /** The media editor judges its own value (a URL and chapter rows are not a
+   *  string rule) and reports here; a ref, so a save attempt reads the verdict
+   *  from the same keystroke rather than the last render. Never set for an
+   *  untouched media value — stored data does not block a save. */
+  const mediaIssues = useRef<Record<string, ValidationIssue | null>>({});
   const issueFor = (id: string, value: string): ValidationIssue | null => {
     if (id === "title") return validateValue("text", value, { required: true, label: "Title" });
     if (id === "description")
       return validateValue("multiline", value, { required: true, label: "Description" });
     const f = fields.find((x) => x.id === id);
+    if (f?.type === "media") return mediaIssues.current[id] ?? null;
     return f ? validateValue(kindOf(f.type), value, { label: f.label }) : null;
   };
   const [issues, setIssues] = useState<Record<string, ValidationIssue | null>>({});
@@ -1042,7 +1049,25 @@ export function MetadataEditBody({
               listening={fillTarget?.fieldId === field.id}
               onStopListening={() => setFillTarget(null)}
             >
-              {field.type === "date" ? (
+              {field.type === "media" ? (
+                // A URL and chapter rows, not a one-line box around the raw
+                // `URL, {json}` string. Keyed per language: each language's
+                // record holds its own value (the chapter titles are
+                // translated), and the editor seeds its rows from the value it
+                // mounts with. Not armed for click-to-fill — see the editor.
+                <MediaFieldEditor
+                  key={`${language}:${field.id}`}
+                  inputId={inputId(field.id)}
+                  label={field.label}
+                  value={field.value}
+                  onChange={(raw) => updateField(field.id, raw)}
+                  describedBy={issues[field.id] ? msgId(field.id) : undefined}
+                  onIssue={(issue) => {
+                    mediaIssues.current[field.id] = issue;
+                    setIssues((prev) => ({ ...prev, [field.id]: issue }));
+                  }}
+                />
+              ) : field.type === "date" ? (
                 // A date input takes `yyyy-mm-dd` and nothing else, so it is not
                 // armed: a passage of prose is not a date, and quietly dropping
                 // the fill would be worse than never offering it.
