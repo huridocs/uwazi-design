@@ -1,7 +1,8 @@
 /** The tokenizer, parser and term matcher for a search query, shared by the
- *  Library filter, the snippet builder (`librarySnippets.ts`), the document
- *  search matcher (`searchSnippets.ts`) and the highlighter (`HighlightedText`),
- *  so what MATCHES and what gets MARKED can never drift out of sync.
+ *  Library filter, the snippet builder (`librarySnippets.ts`, which also serves
+ *  the entity drawer's Search tab) and the highlighter (`HighlightedText`), so
+ *  what MATCHES and what gets MARKED can never drift out of sync. (The older
+ *  `searchSnippets.ts` parser has no callers.)
  *
  *  Tokenizing splits on whitespace but keeps `"quoted phrases"` intact as one
  *  token, and classifies the bare uppercase booleans `AND`/`OR`/`NOT` as

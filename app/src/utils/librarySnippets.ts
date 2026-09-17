@@ -6,7 +6,7 @@ import { renditionsByLanguage } from "../data/documentRenditions";
 import { documentsByLanguage } from "../data/document";
 import { cejilLoaded, cejilFullText } from "../data/cejil/load";
 import { cejilRenderedDoc, type BorrowedDoc } from "../data/cejil/profile";
-import { highlightTerms, fold, foldWithMap, termHit, termIn } from "./queryTokens";
+import { highlightTerms, fold, foldWithMap, parseSearchQuery, termHit, termIn } from "./queryTokens";
 
 /** Synthesizes Uwazi's per-entity search-snippets shape from the data we already
  *  hold — no backend. Mirrors `SnippetsSearchResponse`
@@ -506,6 +506,14 @@ function paginate(text: string, pageCount: number): string[] {
  *  (count > 0). An empty/termless query yields `count: 0` (the caller drops
  *  those).
  *
+ *  `perPassage` applies the whole query to EACH passage (a field, a page) rather
+ *  than to the entity. The Library gates the ENTITY with the boolean rules
+ *  (`matchesSearch`) and then shows where any term hit, since an entity is its
+ *  result. The entity drawer's Search tab lists PASSAGES as its results, so there
+ *  the same rules apply to each one: `a b` lists passages holding both, `a OR b`
+ *  either, `a NOT b` drops any passage that mentions `b`. One parser, one set
+ *  of rules, applied to whatever the surface returns.
+ *
  *  EVERY page is scanned, always. `maxFullText` caps only how many excerpts get
  *  BUILT — pages past the cap are still counted into `fullTextTotal`, which is
  *  what lets a card offer "5 of 23 · Show all" instead of implying 5 is all
@@ -519,9 +527,17 @@ export function buildSnippetsFor(
   {
     maxFullText = MAX_FULLTEXT,
     contextWords = CONTEXT_WORDS,
-  }: { maxFullText?: number; contextWords?: number } = {},
+    perPassage = false,
+  }: { maxFullText?: number; contextWords?: number; perPassage?: boolean } = {},
 ): EntitySnippets {
   const terms = highlightTerms(q); // already folded (lowercase + de-accented)
+  const { groups, exclude } = parseSearchQuery(q);
+  /** Does this (folded) passage belong in the results? */
+  const passes = perPassage
+    ? (text: string) =>
+        groups.every((g) => g.some((t) => termIn(text, t))) &&
+        !exclude.some((t) => termIn(text, t))
+    : (text: string) => terms.some((t) => termIn(text, t));
   const metadata: MetadataSnippet[] = [];
   const fullText: FullTextSnippet[] = [];
   if (terms.length === 0) {
@@ -532,7 +548,7 @@ export function buildSnippetsFor(
   // uses, so a card that is both ranked and excerpted folds its fields once, not
   // twice — and not again on the next keystroke.
   for (const { field, fieldKey, text, folded } of foldedFields(entity, language)) {
-    if (!terms.some((t) => termIn(folded, t))) continue;
+    if (!passes(folded)) continue;
     const excerpt = excerptAroundTerms(text, terms, contextWords);
     if (excerpt) metadata.push({ field, fieldKey, texts: [excerpt] });
   }
@@ -547,6 +563,7 @@ export function buildSnippetsFor(
   const lowerPages = foldedPages(pages);
   for (let i = 0; i < pages.length; i++) {
     const lower = lowerPages[i];
+    if (!passes(lower)) continue;
     const hits = terms.reduce((n, t) => n + countOccurrences(lower, t), 0);
     if (hits === 0) continue;
     fullTextTotal++; // counted whether or not it gets excerpted below

@@ -9,6 +9,7 @@ import { scrollToPageAtom } from "../../atoms/selection";
 import { resultsActivePageAtom, requestMetadataFocusAtom } from "../../atoms/library";
 import { getEntity } from "../../data/entities";
 import { buildSnippetsFor } from "../../utils/librarySnippets";
+import { parseSearchQuery } from "../../utils/queryTokens";
 import { HighlightedText } from "../shared/HighlightedText";
 import { SectionLabel } from "../shared/SectionLabel";
 import { BorrowedDocLine } from "../library/BorrowedDocLine";
@@ -47,7 +48,12 @@ export function DocumentSearchBody() {
   const entity = getEntity(focusedId);
 
   const snippets = useMemo(
-    () => (entity && trimmed ? buildSnippetsFor(entity, trimmed, language, source) : null),
+    // `perPassage`: the results here are passages, so the query's AND / OR / NOT
+    // is judged per field and per page — see `buildSnippetsFor`.
+    () =>
+      entity && trimmed
+        ? buildSnippetsFor(entity, trimmed, language, source, { perPassage: true })
+        : null,
     [entity, trimmed, language, source],
   );
 
@@ -63,6 +69,13 @@ export function DocumentSearchBody() {
     setFocusField({ entityId: focusedId, fieldKey });
     setDrawerTab("metadata");
   };
+
+  // Only `NOT` terms: there is nothing to find a passage BY, and listing every
+  // page that lacks a word is not a search result. Say so instead of "No matches".
+  const onlyExcludes = (() => {
+    const { groups, exclude } = parseSearchQuery(trimmed);
+    return groups.length === 0 && exclude.length > 0;
+  })();
 
   const hasMeta = !!snippets?.metadata.length;
   const hasFullText = !!snippets?.fullText.length;
@@ -115,10 +128,16 @@ export function DocumentSearchBody() {
       ) : !snippets || snippets.count === 0 ? (
         <Centered>
           {/* The phrase is English; `dir="ltr"` keeps it from reordering in RTL. */}
-          <span dir="ltr" className="text-sm text-ink-tertiary">
-            No matches for{" "}
-            <span className="font-medium text-ink-secondary">“{trimmed}”</span>
-          </span>
+          {onlyExcludes ? (
+            <span className="text-sm text-ink-tertiary">
+              {"Add a term to find. NOT\u00a0only leaves passages out."}
+            </span>
+          ) : (
+            <span dir="ltr" className="text-sm text-ink-tertiary">
+              No matches for{" "}
+              <span className="font-medium text-ink-secondary">“{trimmed}”</span>
+            </span>
+          )}
           <button
             type="button"
             onClick={() => setQuery("")}
