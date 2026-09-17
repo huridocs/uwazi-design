@@ -101,6 +101,23 @@ export function parseMediaValue(raw: unknown): MediaValue | null {
   };
 }
 
+/** The YouTube video id, when the URL is a YouTube video — `youtu.be/ID`,
+ *  `youtube.com/watch?v=ID`, `/embed/ID`, `/shorts/ID`, `/live/ID`. Ids are
+ *  11 characters of `[A-Za-z0-9_-]`; anything else is not embeddable. */
+export function youtubeId(media: MediaValue): string | null {
+  if (media.provider !== "YouTube") return null;
+  const url = new URL(media.url);
+  const host = url.hostname.replace(/^www\./, "");
+  let id: string | null = null;
+  if (host === "youtu.be") id = url.pathname.split("/")[1] ?? null;
+  else if (url.pathname === "/watch") id = url.searchParams.get("v");
+  else {
+    const m = /^\/(?:embed|shorts|live)\/([^/?#]+)/.exec(url.pathname);
+    id = m ? m[1] : null;
+  }
+  return id && /^[A-Za-z0-9_-]{11}$/.test(id) ? id : null;
+}
+
 /** The URL that starts playback at `seconds`. */
 export function mediaUrlAt(media: MediaValue, seconds: number): string {
   const url = new URL(media.url);
