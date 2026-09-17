@@ -6,8 +6,8 @@ import { SectionLabel } from "../shared/SectionLabel";
 import { librarySearchDraftAtom } from "../../atoms/library";
 
 const PANEL_ID = "library-search-tips";
-/** Rough panel height (header + 5 fixed rows) — only used to decide flip. */
-const PANEL_EST_HEIGHT = 232;
+/** Rough panel height (header + 4 fixed rows) — only used to decide flip. */
+const PANEL_EST_HEIGHT = 196;
 const PANEL_WIDTH = 432; // 27rem — sized so the longest example+prose pair fits on ONE line
 
 /** The operator tips, copied (shortened) from real Uwazi's
@@ -20,26 +20,28 @@ const PANEL_WIDTH = 432; // 27rem — sized so the longest example+prose pair fi
  *  into two lines. The EXAMPLE is the syntax, so the symbol column was carrying
  *  no information the example didn't already show.
  *
- *  GUIDANCE — the Library filter matches literal tokens (quoted phrases as
- *  units); it doesn't parse `*`/`?`/`~N` yet (a named follow-up), so clicking an
- *  example is a "try this shape" affordance, not a promise the operator runs.
+ *  ONLY WHAT RUNS. Every row here is syntax the Library filter implements
+ *  (`parseSearchQuery` / `termIn` in `utils/queryTokens.ts`): `*` and `?` match
+ *  within whole words, quotes keep a phrase together, `AND`/`OR`/`NOT` combine.
+ *  Proximity (`"a b"~5`) was listed and matched nothing — it tokenized into a
+ *  phrase plus a literal `~5` — so it is gone until the pipeline keeps word
+ *  positions. Don't add a tip for an operator the filter doesn't parse.
  *  Quotes are STRAIGHT: the tokenizer's phrase regex only recognises `"`, so a
  *  typographic quote would insert a query that silently matches nothing. */
 const TIPS: { example: string; prose: string }[] = [
   { example: "juris*", prose: "matches jurisdiction, jurists, jurisprudence" },
   { example: "198?", prose: "any single character" },
   { example: '"Costa Rica"', prose: "the words together, in that order" },
-  { example: '"the status"~5', prose: "the words within 5 of each other" },
 ];
 
 /** The booleans sit in a final FULL-WIDTH row: the example alone is ~30 mono
  *  characters, so holding it in the start column would have set that column's
- *  width for all five rows and pushed the panel past 30rem. Spanning is the
+ *  width for all four rows and pushed the panel past 30rem. Spanning is the
  *  cheaper compromise — it costs this one row's column alignment, not the
  *  panel's whole proportion. */
 const BOOLEAN_TIP = {
-  example: "status AND women NOT Nicaragua",
-  prose: "combine or exclude terms",
+  example: "Chile OR Peru NOT Bolivia",
+  prose: "either one, never the last",
 };
 
 /** One rhythm for every row — the grid rows and the spanning boolean row share

@@ -5,10 +5,10 @@ import { chains, valueAt, type ChainGraph, type ChainSegment } from "./chainTrav
 import {
   entityFullTextBlob,
   entitySearchFields,
-  matchCategories,
+  matchCategoriesWithTerms,
   type MatchCategories,
 } from "./librarySnippets";
-import { fold } from "./queryTokens";
+import { fold, termIn, type SearchQuery } from "./queryTokens";
 import {
   entityCountries,
   matchesCountries,
@@ -71,6 +71,11 @@ export interface LibraryFilterState {
    *  `utils/queryTokens.ts`. A term must hit metadata OR full text; all must hit
    *  (AND). */
   searchTerms: string[];
+  /** The parsed query — AND groups of OR terms, plus NOT terms — from the RAW
+   *  query (`q` is lowercased, which would turn the operators into words). Built
+   *  with `parseSearchQuery`. Absent: every `searchTerms` entry is ANDed, as
+   *  before operators were read. */
+  searchQuery?: SearchQuery;
   /** Whether to scan document bodies (gated on `q.length ≥ 3` for corpus perf). */
   fullTextSearch: boolean;
   /** Which KINDS of match to keep (Results-tab chips). All-true = no narrowing. */
@@ -191,6 +196,7 @@ function withDefaults(s: LibraryFilterState | null | undefined): LibraryFilterSt
     q: s.q ?? "",
     searchIndex: s.searchIndex ?? EMPTY_SEARCH_INDEX,
     searchTerms: s.searchTerms ?? [],
+    searchQuery: s.searchQuery ?? { groups: (s.searchTerms ?? []).map((t) => [t]), exclude: [] },
     fullTextSearch: s.fullTextSearch ?? false,
     matchTypes: s.matchTypes ?? ALL_MATCH_TYPES,
   };
@@ -241,7 +247,9 @@ const PREDICATES: Record<
   // categorisation is only paid when the user has actually narrowed.
   matchType: (e, s) =>
     passesMatchTypes(s.matchTypes, s.q, () =>
-      matchCategories(e, s.q, s.language, s.source),
+      // The parsed terms, not `s.q`: that is lowercased, and re-tokenising it
+      // would read `not` / `or` as words to match.
+      matchCategoriesWithTerms(e, s.searchTerms, s.language, s.source),
     ),
 };
 
@@ -265,20 +273,22 @@ export function passesMatchTypes(
   return (title && c.title) || (properties && c.properties) || (document && c.document);
 }
 
-/** The search predicate on its own (facets excepted) — every query token must
- *  hit the entity's metadata index OR its document body. Exported so callers can
- *  count "entities matching the search regardless of facets" (e.g. the Results
- *  tab's hidden-by-filters line). */
+/** The search predicate on its own (facets excepted). A term "hits" when it is
+ *  in the entity's metadata index OR its document body; every group needs one
+ *  hit (implicit AND, `OR` inside a group) and no `NOT` term may hit — in the
+ *  body either, so an excluded word can't hide in a document. Exported so callers
+ *  can count "entities matching the search regardless of facets" (e.g. the
+ *  Results tab's hidden-by-filters line). */
 export function matchesSearch(e: Entity, state: LibraryFilterState): boolean {
   const s = withDefaults(state);
   if (!s.q) return true;
-  if (s.searchTerms.length === 0) return true;
+  const { groups, exclude } = s.searchQuery!;
+  if (groups.length === 0 && exclude.length === 0) return true;
   const meta = s.searchIndex.get(e.id) ?? "";
-  return s.searchTerms.every(
-    (t) =>
-      meta.includes(t) ||
-      (s.fullTextSearch && entityFullTextBlob(e, s.language, s.source).includes(t)),
-  );
+  const hit = (t: string) =>
+    termIn(meta, t) ||
+    (s.fullTextSearch && termIn(entityFullTextBlob(e, s.language, s.source), t));
+  return groups.every((g) => g.some(hit)) && !exclude.some(hit);
 }
 
 const ALL_KEYS = Object.keys(PREDICATES) as FacetKey[];

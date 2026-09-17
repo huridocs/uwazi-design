@@ -1,10 +1,12 @@
-/** The raw tokenizer for a search query, shared by the snippet matcher
- *  (`searchSnippets.ts`) and the highlighter (`HighlightedText`) so what MATCHES
- *  and what gets MARKED can never drift out of sync.
+/** The tokenizer, parser and term matcher for a search query, shared by the
+ *  Library filter, the snippet builder (`librarySnippets.ts`), the document
+ *  search matcher (`searchSnippets.ts`) and the highlighter (`HighlightedText`),
+ *  so what MATCHES and what gets MARKED can never drift out of sync.
  *
- *  Splits on whitespace but keeps `"quoted phrases"` intact as one token, and
- *  classifies the bare uppercase booleans `AND`/`OR`/`NOT` as operators (not
- *  content). No wildcard/regex semantics here — that's the matcher's job. */
+ *  Tokenizing splits on whitespace but keeps `"quoted phrases"` intact as one
+ *  token, and classifies the bare uppercase booleans `AND`/`OR`/`NOT` as
+ *  operators (not content). `parseSearchQuery` gives them their meaning; `termIn`
+ *  / `termHit` give `*` / `?` theirs. */
 
 /** Case- AND diacritic-insensitive fold: "Velásquez" → "velasquez", so an
  *  unaccented query finds accented text (and vice versa). Every searchable text
@@ -73,19 +75,125 @@ export function tokenizeQuery(query: string): QueryToken[] {
   return out;
 }
 
-/** The terms to MATCH and HIGHLIGHT for a query: phrase inner-text and bare
- *  words, operators dropped, wildcard chars (`*`/`?`) stripped (a `juris*` token
- *  still marks the literal run it shares with matches — the Library filter is
- *  substring, not glob).
+/** A query as the Library filter reads it: every GROUP must match (implicit
+ *  AND between terms), a group matches when ANY of its terms does (`OR`), and no
+ *  EXCLUDE term may match (`NOT`). Terms are folded, wildcards kept.
+ *
+ *  Deliberately flat, so it stays predictable:
+ *   - bare terms and `AND` are the same thing: `a b` = `a AND b`;
+ *   - `OR` joins the positive terms either side of it: `a OR b c` = `(a|b) c`,
+ *     and a chain `a OR b OR c` is one group;
+ *   - `NOT` binds the ONE term after it: `a NOT b` = `a` without `b`. An `OR`
+ *     beside a `NOT` term has nothing to join and reads as `AND`;
+ *   - no parentheses; they are ordinary characters in a term. */
+export interface SearchQuery {
+  groups: string[][];
+  exclude: string[];
+}
+
+/** Folded term, or "" when there is nothing to match (a lone `*`). */
+function foldTerm(raw: string): string {
+  const t = fold(raw.trim());
+  return /[^*?]/.test(t) ? t : "";
+}
+
+let lastQuery: string | null = null;
+let lastParsed: SearchQuery = { groups: [], exclude: [] };
+
+/** Parse a RAW query (case intact — the operators are uppercase). Cached on the
+ *  last query string, since the highlighter, snippets and filter all ask for the
+ *  same one within a keystroke. */
+export function parseSearchQuery(query: string): SearchQuery {
+  if (query === lastQuery) return lastParsed;
+  const groups: string[][] = [];
+  const exclude: string[] = [];
+  let negate = false;
+  let or = false;
+  let lastPositive = false;
+  for (const tok of tokenizeQuery(query)) {
+    if (tok.kind === "op") {
+      if (tok.value === "NOT") negate = true;
+      else or = tok.value === "OR";
+      continue;
+    }
+    const term = foldTerm(tok.value);
+    if (term) {
+      if (negate) {
+        exclude.push(term);
+        lastPositive = false;
+      } else if (or && lastPositive) {
+        groups[groups.length - 1].push(term);
+      } else {
+        groups.push([term]);
+        lastPositive = true;
+      }
+    }
+    negate = false;
+    or = false;
+  }
+  lastQuery = query;
+  lastParsed = { groups, exclude };
+  return lastParsed;
+}
+
+/** The terms to HIGHLIGHT (and to categorise and excerpt by): every positive
+ *  term, wildcards kept. Excluded (`NOT`) terms are left out — a result is
+ *  there BECAUSE it lacks them, so there is nothing of theirs to mark. An `OR`
+ *  term that matched is marked like any other.
  *
  *  Terms come back FOLDED (lowercased + de-accented) because every text they're
  *  tested against is folded too — so filter, snippets, and marks all compare in
- *  the same normalisation and an unaccented query matches accented text. */
+ *  the same normalisation and an unaccented query matches accented text. Test
+ *  them with `termIn` / `termHit`, never a bare `includes`: a term may be a glob. */
 export function highlightTerms(query: string): string[] {
-  return tokenizeQuery(query)
-    .filter((t) => t.kind !== "op")
-    .map((t) => fold(t.value.replace(/[*?]/g, "").trim()))
-    .filter(Boolean);
+  return parseSearchQuery(query).groups.flat();
+}
+
+/** A letter or digit, in any script — the edge of a word for globs. */
+const WORD_CHAR = "[\\p{L}\\p{N}]";
+const globCache = new Map<string, RegExp>();
+
+/** Whether a (folded) term carries a wildcard. Only these build a RegExp; a
+ *  plain term keeps the `includes()` / `indexOf()` path. */
+export const isGlob = (term: string): boolean => term.includes("*") || term.includes("?");
+
+/** A wildcard term matches WHOLE WORDS: `*` is any run of letters/digits, `?`
+ *  exactly one, and the match may not start or end inside a word. That edge is
+ *  what makes a glob mean something: without it `juris*` is just the substring
+ *  "juris" and `198?` just "198" — which is what a plain term already does. */
+function globRegex(term: string): RegExp {
+  let re = globCache.get(term);
+  if (!re) {
+    let src = "";
+    for (const ch of term) {
+      if (ch === "*") src += `${WORD_CHAR}*`;
+      else if (ch === "?") src += WORD_CHAR;
+      else src += ch.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+    re = new RegExp(`(?<!${WORD_CHAR})${src}(?!${WORD_CHAR})`, "gu");
+    globCache.set(term, re);
+  }
+  return re;
+}
+
+/** Does folded `text` contain `term`? */
+export function termIn(text: string, term: string): boolean {
+  if (!isGlob(term)) return text.includes(term);
+  const re = globRegex(term);
+  re.lastIndex = 0;
+  return re.test(text);
+}
+
+/** The first hit of `term` in folded `text` at or after `from`, as [start, end). */
+export function termHit(text: string, term: string, from = 0): [number, number] | null {
+  if (!isGlob(term)) {
+    const i = text.indexOf(term, from);
+    return i < 0 ? null : [i, i + term.length];
+  }
+  const re = globRegex(term);
+  re.lastIndex = from;
+  const m = re.exec(text);
+  return m ? [m.index, m.index + m[0].length] : null;
 }
 
 
@@ -105,10 +213,10 @@ export function highlightRanges(text: string, terms: string[]): [number, number]
     if (!needle) continue;
     let from = 0;
     for (;;) {
-      const hit = folded.indexOf(needle, from);
-      if (hit < 0) break;
+      const found = termHit(folded, needle, from);
+      if (!found) break;
+      const [hit, stop] = found;
       const start = map[hit] ?? 0;
-      const stop = hit + needle.length;
       const end = stop < map.length ? map[stop] : text.length;
       if (end > start) ranges.push([start, end]);
       from = stop;

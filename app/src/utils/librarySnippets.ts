@@ -6,7 +6,7 @@ import { renditionsByLanguage } from "../data/documentRenditions";
 import { documentsByLanguage } from "../data/document";
 import { cejilLoaded, cejilFullText } from "../data/cejil/load";
 import { cejilRenderedDoc, type BorrowedDoc } from "../data/cejil/profile";
-import { highlightTerms, fold, foldWithMap } from "./queryTokens";
+import { highlightTerms, fold, foldWithMap, termHit, termIn } from "./queryTokens";
 
 /** Synthesizes Uwazi's per-entity search-snippets shape from the data we already
  *  hold — no backend. Mirrors `SnippetsSearchResponse`
@@ -203,15 +203,15 @@ function foldedFields(e: Entity, language: Language): FoldedField[] {
   return cached;
 }
 
-/** How many times `needle` (already lowercased) occurs in `lowerText`. */
+/** How many times `needle` (already folded, possibly a glob) occurs in `lowerText`. */
 function countOccurrences(lowerText: string, needle: string): number {
   let n = 0;
   let from = 0;
   for (;;) {
-    const i = lowerText.indexOf(needle, from);
-    if (i < 0) break;
+    const hit = termHit(lowerText, needle, from);
+    if (!hit) break;
     n++;
-    from = i + needle.length;
+    from = hit[1];
   }
   return n;
 }
@@ -284,10 +284,9 @@ function excerptAroundTerms(
   let best = -1;
   let bestEnd = 0;
   for (const t of terms) {
-    const i = folded.indexOf(t);
-    if (i >= 0 && (best < 0 || i < best)) {
-      best = i;
-      bestEnd = i + t.length;
+    const hit = termHit(folded, t);
+    if (hit && (best < 0 || hit[0] < best)) {
+      [best, bestEnd] = hit;
     }
   }
   if (best < 0) return null;
@@ -533,7 +532,7 @@ export function buildSnippetsFor(
   // uses, so a card that is both ranked and excerpted folds its fields once, not
   // twice — and not again on the next keystroke.
   for (const { field, fieldKey, text, folded } of foldedFields(entity, language)) {
-    if (!terms.some((t) => folded.includes(t))) continue;
+    if (!terms.some((t) => termIn(folded, t))) continue;
     const excerpt = excerptAroundTerms(text, terms, contextWords);
     if (excerpt) metadata.push({ field, fieldKey, texts: [excerpt] });
   }
@@ -587,14 +586,14 @@ export function matchCategoriesWithTerms(
   let title = false;
   let properties = false;
   for (const f of foldedFields(entity, language)) {
-    if (!terms.some((t) => f.folded.includes(t))) continue;
+    if (!terms.some((t) => termIn(f.folded, t))) continue;
     if (f.fieldKey === "title") title = true;
     else properties = true;
     // Both flags set — no later field can change the answer.
     if (title && properties) break;
   }
   const blob = entityFullTextBlob(entity, language, source);
-  const document = terms.some((t) => blob.includes(t));
+  const document = terms.some((t) => termIn(blob, t));
 
   return { title, properties, document };
 }
@@ -658,7 +657,7 @@ export function hiddenMatchOrigin(
   // it was re-folding each row's fields from scratch every time.
   for (const f of foldedFields(entity, language)) {
     if (visible.has(f.fieldKey)) continue;
-    if (!terms.some((t) => f.folded.includes(t))) continue;
+    if (!terms.some((t) => termIn(f.folded, t))) continue;
     if (property) moreProperties++;
     else property = { field: f.field, fieldKey: f.fieldKey };
   }
@@ -667,7 +666,7 @@ export function hiddenMatchOrigin(
     q.trim().length >= 3 &&
     (() => {
       const blob = entityFullTextBlob(entity, language, source);
-      return terms.some((t) => blob.includes(t));
+      return terms.some((t) => termIn(blob, t));
     })();
 
   return { property, moreProperties, document };

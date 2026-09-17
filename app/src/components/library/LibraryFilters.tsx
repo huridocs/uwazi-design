@@ -43,7 +43,7 @@ import {
   entityIsDoc,
   type LibraryFilterState,
 } from "../../utils/libraryFilter";
-import { highlightTerms } from "../../utils/queryTokens";
+import { highlightTerms, parseSearchQuery } from "../../utils/queryTokens";
 import { Checkbox } from "../shared/Checkbox";
 import { ActiveFiltersSheet } from "./ActiveFiltersSheet";
 import { WARM_BUTTON } from "../shared/warmButton";
@@ -114,6 +114,7 @@ export function LibraryFilters() {
       q: query.trim().toLowerCase(),
       searchIndex,
       searchTerms: highlightTerms(query), // folded
+      searchQuery: parseSearchQuery(query),
       fullTextSearch: query.trim().length >= 3,
       matchTypes,
     };

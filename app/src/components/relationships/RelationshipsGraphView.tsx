@@ -8,7 +8,7 @@ import {
 import { groupByAtom, searchQueryAtom } from "../../atoms/filters";
 import { useEntityScopeId } from "../../hooks/useEntityScope";
 import { HighlightedText } from "../shared/HighlightedText";
-import { fold, highlightTerms } from "../../utils/queryTokens";
+import { fold, highlightTerms, termIn } from "../../utils/queryTokens";
 import { useFilteredReferences } from "./useFilteredReferences";
 import { getEntity, getEntityType } from "../../data/entities";
 import { Direction } from "../../data/references";
@@ -73,7 +73,7 @@ const LABEL_PX = 11;
 function matchesQuery(text: string, terms: string[]): boolean {
   if (terms.length === 0) return false;
   const folded = fold(text); // same fold the marks match under — no second dialect
-  return terms.some((t) => folded.includes(t));
+  return terms.some((t) => termIn(folded, t));
 }
 
 export function RelationshipsGraphView() {

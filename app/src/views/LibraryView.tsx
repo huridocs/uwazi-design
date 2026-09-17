@@ -60,7 +60,7 @@ import { getEntityType, type Entity, type EntityImage } from "../data/entities";
 import { libraryInheritedDefs } from "../utils/libraryFacets";
 import { buildActiveChains, cejilChainGraph } from "../data/cejil/chainFacets";
 import { matchesAll, matchesSearch, passesMatchTypes, buildSearchIndex, type LibraryFilterState } from "../utils/libraryFilter";
-import { highlightTerms, fold } from "../utils/queryTokens";
+import { highlightTerms, fold, parseSearchQuery } from "../utils/queryTokens";
 import { matchCategoriesWithTerms, type MatchCategories } from "../utils/librarySnippets";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { EntityCard } from "../components/library/EntityCard";
@@ -320,6 +320,8 @@ export function LibraryView() {
     () => highlightTerms(query), // already folded
     [query],
   );
+  // The boolean shape of the same query (AND groups, OR within, NOT excluded).
+  const searchQuery = useMemo(() => parseSearchQuery(query), [query]);
   const fullTextSearch = q.length >= 3;
   const fromMs = dateFrom ? Date.parse(dateFrom) : null;
   // Inclusive of the whole "to" day.
@@ -383,6 +385,7 @@ export function LibraryView() {
       q,
       searchIndex,
       searchTerms,
+      searchQuery,
       fullTextSearch,
       matchTypes,
     }),
@@ -405,6 +408,7 @@ export function LibraryView() {
       q,
       searchIndex,
       searchTerms,
+      searchQuery,
       fullTextSearch,
       matchTypes,
     ],
