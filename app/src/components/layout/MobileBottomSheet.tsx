@@ -1,5 +1,6 @@
-import { ReactNode, useEffect, useId, useState, useRef } from "react";
+import { ReactNode, useEffect, useId, useLayoutEffect, useState, useRef } from "react";
 import { X } from "lucide-react";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 
 interface MobileBottomSheetProps {
   open: boolean;
@@ -20,10 +21,21 @@ export function MobileBottomSheet({
   defaultSnap = "half",
 }: MobileBottomSheetProps) {
   const [snap, setSnap] = useState<"half" | "full">(defaultSnap);
-  const sheetRef = useRef<HTMLDivElement>(null);
+  /* The sheet is `role="dialog"` + `aria-modal`, so it traps focus while open
+     and gives it back to whatever opened it (the navbar hamburger, a split
+     view's sheet trigger). The same ref drives the drag transform below. */
+  const sheetRef = useFocusTrap<HTMLDivElement>(open);
   const dragStartY = useRef<number | null>(null);
   const dragStartHeight = useRef<number>(0);
   const titleId = useId();
+
+  /* A CLOSED sheet stays mounted, pushed below the viewport by translateY, so
+     without `inert` Tab walks into controls nobody can see — the FiltersDrawer
+     defect, again. A layout effect, so the attribute is gone before the focus
+     trap's effect looks for something to focus. */
+  useLayoutEffect(() => {
+    sheetRef.current?.toggleAttribute("inert", !open);
+  }, [open, sheetRef]);
 
   // Reset snap point when reopened
   useEffect(() => {
@@ -153,7 +165,7 @@ export function MobileBottomSheet({
               className="p-1 rounded-md hover:bg-warm text-ink-muted hover:text-ink transition-colors"
               aria-label="Close"
             >
-              <X size={16} />
+              <X size={16} aria-hidden />
             </button>
           </div>
         )}

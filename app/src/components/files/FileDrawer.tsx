@@ -296,6 +296,7 @@ export function FileDrawer({
                       <li key={sib.id}>
                         <TranslationCard
                           file={sib}
+                          focused={sib.id === focusedFile?.id}
                           onFocus={() => onFocusFile?.(sib.id)}
                           onDelete={() => handleDeleteFromTranslations(sib.id)}
                         />
@@ -319,10 +320,14 @@ export function FileDrawer({
 
 function TranslationCard({
   file,
+  focused,
   onFocus,
   onDelete,
 }: {
   file: FileEntry;
+  /** This card is the file open in the drawer — the list includes it (see
+   *  `translations` above). Said with `aria-pressed` and the selected fill. */
+  focused: boolean;
   onFocus: () => void;
   onDelete: () => void;
 }) {
@@ -333,12 +338,16 @@ function TranslationCard({
     // it (`relative`) and mouse clicks bubble to the card's plain onClick.
     <article
       data-component="TranslationCard"
+      data-state={focused ? "focused" : undefined}
       onClick={onFocus}
-      className="relative flex items-center gap-2 px-3 py-2 rounded-md bg-paper border border-border/50 hover:bg-warm transition-colors cursor-pointer"
+      className={`relative flex items-center gap-2 px-3 py-2 rounded-md border border-border/50 transition-colors cursor-pointer ${
+        focused ? "bg-parchment" : "bg-paper hover:bg-warm"
+      }`}
     >
       <button
         type="button"
         data-part="primary-action"
+        aria-pressed={focused}
         aria-label={`Focus ${file.name}`}
         onClick={(e) => {
           e.stopPropagation();

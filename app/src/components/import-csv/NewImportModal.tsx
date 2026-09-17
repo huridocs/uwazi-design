@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { X, CloudUpload, FileSpreadsheet, ChevronDown, Search } from "lucide-react";
 import { templates } from "../../data/imports";
 import { WARM_BUTTON } from "../shared/warmButton";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 
 interface NewImportModalProps {
   open: boolean;
@@ -15,6 +16,11 @@ export function NewImportModal({ open, onClose, onImport }: NewImportModalProps)
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [search, setSearch] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  // The panel, not the scrim: Tab wraps inside it, focus moves in on open and
+  // returns to the "New Import" trigger on close. `role="dialog"` +
+  // `aria-modal` promised this; nothing delivered it.
+  const panelRef = useFocusTrap<HTMLDivElement>(open);
 
   useEffect(() => {
     if (!dropdownOpen) return;
@@ -36,15 +42,23 @@ export function NewImportModal({ open, onClose, onImport }: NewImportModalProps)
     }
   }, [open]);
 
-  // Escape closes — same convention as the drawers/dialogs.
+  // Escape closes — same convention as the drawers/dialogs. With the template
+  // list open, Escape closes the LIST first and puts focus back on its trigger;
+  // closing the whole dialog from inside a popover loses the reader's place.
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key !== "Escape") return;
+      if (dropdownOpen) {
+        setDropdownOpen(false);
+        triggerRef.current?.focus();
+        return;
+      }
+      onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  }, [open, onClose, dropdownOpen]);
 
   if (!open) return null;
 
@@ -67,7 +81,7 @@ export function NewImportModal({ open, onClose, onImport }: NewImportModalProps)
       aria-modal="true"
       aria-labelledby="import-modal-title"
     >
-      <div data-part="panel" className="bg-paper shadow-xl w-full md:max-w-[35rem] md:rounded-xl md:animate-fade-in-up h-full md:h-auto md:max-h-[90vh] flex flex-col">
+      <div ref={panelRef} data-part="panel" className="bg-paper shadow-xl w-full md:max-w-[35rem] md:rounded-xl md:animate-fade-in-up h-full md:h-auto md:max-h-[90vh] flex flex-col">
         {/* Header */}
         <div data-part="header" className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid var(--border-primary)" }}>
           <h2 id="import-modal-title" data-part="title" className="text-base font-semibold text-ink">New Import</h2>
@@ -127,7 +141,12 @@ export function NewImportModal({ open, onClose, onImport }: NewImportModalProps)
           {/* Template Select */}
           <div ref={dropdownRef} data-part="template" data-state={dropdownOpen ? "open" : "closed"}>
             <span id="import-modal-template-label" className="text-xs font-medium text-ink-secondary mb-2 block">Template</span>
+            {/* A DISCLOSURE, not a listbox: the popup is a search field and a
+                list of pressed buttons, with no `listbox` / `option` roles and no
+                arrow-key selection. `aria-haspopup="listbox"` would promise that
+                behaviour; `aria-expanded` + `aria-controls` describe what is here. */}
             <button
+              ref={triggerRef}
               type="button"
               data-part="template-trigger"
               aria-labelledby="import-modal-template-label import-modal-template-value"
