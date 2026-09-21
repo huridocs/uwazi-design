@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createStore, Provider, useSetAtom } from "jotai";
 import { ChevronDown } from "lucide-react";
 import { AddThesaurusValueModal, ThesaurusPicker } from "../../components/metadata/ThesaurusPicker";
+import { BulkFieldRow } from "../../components/metadata/BulkFieldRow";
 import { seedThesaurusValues, type ThesaurusValue } from "../../data/settings";
 import { selectableLabels } from "../../atoms/thesauri";
 
@@ -947,6 +948,61 @@ export function IsolatedThesaurusPicker() {
           }}
         />
       )}
+    </div>
+  );
+}
+
+/** BulkFieldRow, live: a mixed text field that turns "Will change" when typed
+ *  in, and a tri-state thesaurus list with coverage. Revert returns each. */
+export function IsolatedBulkFieldRows() {
+  const [text, setText] = useState<string | null>(null);
+  const [edit, setEdit] = useState<{ add: string[]; remove: string[] }>({ add: [], remove: [] });
+  const base: Record<string, number> = { "American Convention on Human Rights": 12, ICCPR: 4 };
+  const of = 12;
+  const projected = (v: string) => (edit.add.includes(v) ? of : edit.remove.includes(v) ? 0 : base[v] ?? 0);
+  const labels = seedThesaurusValues.t2.map((v) => v.label);
+  const cycle = (v: string) =>
+    setEdit((e) => {
+      const add = e.add.filter((x) => x !== v);
+      const remove = e.remove.filter((x) => x !== v);
+      const orig = base[v] ?? 0;
+      const eff = projected(v);
+      if (eff === of) {
+        if (orig > 0) remove.push(v);
+      } else if (eff === 0) {
+        if (orig === 0) add.push(v);
+      } else add.push(v);
+      return { add, remove };
+    });
+  const changed = edit.add.length + edit.remove.length > 0;
+  return (
+    <div className="w-full max-w-md space-y-4">
+      <BulkFieldRow
+        label="Case number"
+        htmlFor="catalog-bulk-text"
+        state={text === null ? "mixed" : "changed"}
+        distinct={4}
+        onRevert={() => setText(null)}
+      >
+        <input
+          id="catalog-bulk-text"
+          value={text ?? ""}
+          placeholder="Mixed"
+          onChange={(e) => setText(e.target.value)}
+          className="w-full px-3 py-2 text-sm text-ink bg-paper rounded-md border border-border placeholder:text-ink-muted"
+        />
+      </BulkFieldRow>
+      <BulkFieldRow label="Legal instruments" state={changed ? "changed" : "mixed"} onRevert={() => setEdit({ add: [], remove: [] })}>
+        <ThesaurusPicker
+          label="Legal instruments"
+          values={seedThesaurusValues.t2}
+          multiple
+          chosen={labels.filter((l) => projected(l) === of)}
+          mixed={labels.filter((l) => projected(l) > 0 && projected(l) < of)}
+          coverage={{ counts: Object.fromEntries(labels.map((l) => [l, projected(l)])), of }}
+          onToggle={cycle}
+        />
+      </BulkFieldRow>
     </div>
   );
 }

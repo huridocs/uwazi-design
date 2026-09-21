@@ -54,12 +54,17 @@ export const libraryEntityOverlayAtom = atom(
 
    ONE level: the next undoable operation replaces this one, and the older
    notification's Undo goes disabled, saying why. */
-export interface UndoOp {
-  ref: string;
-  kind: "undelete";
-  corpus: Corpus;
-  ids: string[];
-}
+export type UndoOp =
+  | { ref: string; kind: "undelete"; corpus: Corpus; ids: string[] }
+  | {
+      ref: string;
+      kind: "restore";
+      corpus: Corpus;
+      /** Per entity: what its record and patch were before the change, and
+       *  the record the change wrote — undo restores an entity only while that
+       *  record is still the one there, so a later edit is never clobbered. */
+      entries: { id: string; record?: EntityRecord; patch?: Partial<Entity>; wrote: EntityRecord }[];
+    };
 export const undoOpAtom = atom<UndoOp | null>(null);
 
 let undoSeq = 0;
@@ -83,10 +88,28 @@ export const deleteWithUndoAtom = atom(
 export const undoAtom = atom(null, (get, set, ref: string): boolean => {
   const op = get(undoOpAtom);
   if (!op || op.ref !== ref) return false;
-  const back = new Set(op.ids);
-  set(libraryEntityOverlayAtom, (prev) =>
-    updateCorpus(prev, op.corpus, (o) => ({ ...o, deleted: o.deleted.filter((id) => !back.has(id)) })),
-  );
+  if (op.kind === "undelete") {
+    const back = new Set(op.ids);
+    set(libraryEntityOverlayAtom, (prev) =>
+      updateCorpus(prev, op.corpus, (o) => ({ ...o, deleted: o.deleted.filter((id) => !back.has(id)) })),
+    );
+  } else {
+    set(libraryEntityOverlayAtom, (prev) =>
+      updateCorpus(prev, op.corpus, (o) => {
+        const records = { ...o.records };
+        const patched = { ...o.patched };
+        for (const e of op.entries) {
+          if (records[e.id] !== e.wrote) continue;
+          if (e.record) records[e.id] = e.record;
+          else delete records[e.id];
+          // A new object even when restoring the same patch: the cards are
+          // memoised on the entity, and the record under it just changed back.
+          patched[e.id] = { ...(e.patch ?? {}) };
+        }
+        return { ...o, records, patched };
+      }),
+    );
+  }
   set(undoOpAtom, null);
   return true;
 });
@@ -138,6 +161,36 @@ export const patchEntitiesAtom = atom(
         records: { ...o.records, ...records },
       })),
     );
+  },
+);
+
+/** Write a bulk edit's records and patches (see `planBulkEdit`) AND record the
+ *  exact inverse. Returns the ref its notification's Undo names. */
+export const applyBulkEditAtom = atom(
+  null,
+  (
+    get,
+    set,
+    {
+      corpus,
+      records,
+      patches,
+    }: { corpus: Corpus; records: Record<string, EntityRecord>; patches: Record<string, Partial<Entity>> },
+  ): string => {
+    const before = get(overlayValueAtom)[corpus];
+    const entries = Object.keys(records).map((id) => ({
+      id,
+      record: before.records[id],
+      patch: before.patched[id],
+      wrote: records[id],
+    }));
+    undoSeq += 1;
+    const ref = `undo-${Date.now().toString(36)}-${undoSeq}`;
+    // Every edited entity gets a patch, empty or not — see `saveEntityEditAtom`.
+    const allPatches = Object.fromEntries(Object.keys(records).map((id) => [id, patches[id] ?? {}]));
+    set(patchEntitiesAtom, { corpus, patches: allPatches, records });
+    set(undoOpAtom, { ref, kind: "restore", corpus, entries });
+    return ref;
   },
 );
 
