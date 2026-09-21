@@ -87,6 +87,7 @@ import {
   IsolatedRelationshipFieldCard,
   IsolatedInheritedValueChip,
   IsolatedRelationshipFieldEditor,
+  IsolatedThesaurusPicker,
   IsolatedRadioGroup,
   IsolatedDataTable,
 } from "./catalog/demos";
@@ -882,6 +883,25 @@ sendFill(selection.text);                                    // commits, then di
 />`}
                 >
                   <IsolatedRelationshipFieldEditor />
+                </CatalogEntry>
+              </div>
+
+              <div id="ev-thesaurus-picker" ref={reg("ev-thesaurus-picker")}>
+                <CatalogEntry
+                  name="ThesaurusPicker · AddThesaurusValueModal"
+                  description="The edit form's editor for select and multiselect properties: the thesaurus's values as an inline list — search box, rows, 'N more' — built on FacetSection's bare flavour, so no popover and nothing for the drawer to clip. Chosen values sort to the top, carrying their group in the label. A select is the same list as a radio group. 'Add value' on the field's label row opens a one-field modal (focus trap, Escape) that writes to the shared thesauri store, so Settings › Thesauri and the Library facets see it; a label that folds to an existing value selects that one. In bulk the rows go tri-state with coverage ('4 of 12'). A property bound to no thesaurus offers 'Create thesaurus' in place of the list."
+                  code={`<ThesaurusPicker
+  label={field.label}
+  values={thesaurus?.values ?? null}   // null = no thesaurus bound
+  multiple={field.type === "multiselect"}
+  chosen={chosenLabels(field)}
+  mixed={mixedLabels}                  // bulk
+  coverage={{ counts, of: ids.length }}  // bulk
+  onToggle={toggle}
+/>
+<AddThesaurusValueModal thesaurusName={t.name} existing={labels} onSave={add} onClose={close} />`}
+                >
+                  <IsolatedThesaurusPicker />
                 </CatalogEntry>
               </div>
             </div>

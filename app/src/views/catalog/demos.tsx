@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { createStore, Provider, useSetAtom } from "jotai";
 import { ChevronDown } from "lucide-react";
+import { AddThesaurusValueModal, ThesaurusPicker } from "../../components/metadata/ThesaurusPicker";
+import { seedThesaurusValues, type ThesaurusValue } from "../../data/settings";
+import { selectableLabels } from "../../atoms/thesauri";
 
 // Components
 import { SegmentedTabs } from "../../components/layout/SegmentedTabs";
@@ -899,6 +902,51 @@ export function IsolatedCopyFromPicker({ step = "source" }: { step?: "source" | 
         onCopy={() => {}}
         onClose={() => {}}
       />
+    </div>
+  );
+}
+
+/** ThesaurusPicker, live: a multiselect over the Sample's "Violation types"
+ *  (nested groups), with "Add value" opening the one-field modal. Local state
+ *  only — the catalog doesn't write the thesauri store. */
+export function IsolatedThesaurusPicker() {
+  const values = seedThesaurusValues.t1;
+  const [extra, setExtra] = useState<string[]>([]);
+  const [chosen, setChosen] = useState<string[]>(["Torture"]);
+  const [adding, setAdding] = useState(false);
+  const all: ThesaurusValue[] = [...values, ...extra.map((label, i) => ({ id: `demo-${i}`, label }))];
+  return (
+    <div className="w-full max-w-md space-y-1.5">
+      <div className="flex items-center gap-2 min-h-4">
+        <span className="text-xs font-medium text-ink-secondary">Violations</span>
+        <button
+          type="button"
+          onClick={() => setAdding(true)}
+          className="ms-auto text-meta font-medium text-ink-tertiary hover:text-ink-secondary cursor-pointer"
+        >
+          Add value
+        </button>
+      </div>
+      <ThesaurusPicker
+        label="Violations"
+        values={all}
+        multiple
+        chosen={chosen}
+        fresh={new Set(extra)}
+        onToggle={(l) => setChosen((p) => (p.includes(l) ? p.filter((x) => x !== l) : [...p, l]))}
+      />
+      {adding && (
+        <AddThesaurusValueModal
+          thesaurusName="Violation types"
+          existing={selectableLabels(all)}
+          onClose={() => setAdding(false)}
+          onSave={(label) => {
+            setExtra((p) => (p.includes(label) ? p : [...p, label]));
+            setChosen((p) => (p.includes(label) ? p : [...p, label]));
+            setAdding(false);
+          }}
+        />
+      )}
     </div>
   );
 }

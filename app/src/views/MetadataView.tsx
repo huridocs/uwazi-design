@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Search, ClipboardCopy, ChevronDown } from "lucide-react";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { MainTabs } from "../components/layout/MainTabs";
@@ -30,11 +30,27 @@ import { TemplateStructure } from "../components/relationships/TemplateStructure
 import { EntityOverlay } from "../components/relationships/EntityOverlay";
 import { groupConnections, relationLabel, specInherits } from "../utils/inheritance";
 import {
+  chosenLabels,
+  withLabels,
   type MetadataField,
   type RelationshipMetadataField,
 } from "../data/metadata";
+import { AddThesaurusValueModal, ThesaurusPicker } from "../components/metadata/ThesaurusPicker";
+import {
+  addThesaurusValueAtom,
+  bindingKey,
+  choiceByLanguage,
+  createThesaurusAtom,
+  foldLabel,
+  localizeValues,
+  selectableLabels,
+  thesauriAtom,
+  thesaurusBindingsAtom,
+} from "../atoms/thesauri";
+import type { Corpus } from "../data/entityOverlay";
 import { focusedEntityIdAtom } from "../atoms/focusedEntity";
-import { entityCorpusOf, getEntity, type Entity } from "../data/entities";
+import { saveEntityEditAtom } from "../atoms/entityOverlay";
+import { entityCorpusOf, getEntity, getEntityType, type Entity } from "../data/entities";
 import { corpusTypes } from "../atoms/dataSource";
 import { entityTypesAtom } from "../atoms/entities";
 import { typeLabelColor } from "../utils/typeColor";
@@ -66,6 +82,8 @@ interface MetadataViewProps {
 export function MetadataView({ tabs, activeTab, onTabChange, onBack }: MetadataViewProps) {
   const [editing, setEditing] = useState(false);
   const [language, setLanguage] = useAtom(languageAtom);
+  const focusedId = useAtomValue(focusedEntityIdAtom);
+  const saveEdit = useSetAtom(saveEntityEditAtom);
 
   const renderLeft = (menuTrigger?: ReactNode) => (
     // The narrow-tier gutter host: tabs, DocMeta, the card lane and the action bar
@@ -94,7 +112,10 @@ export function MetadataView({ tabs, activeTab, onTabChange, onBack }: MetadataV
       {editing ? (
         <MetadataEditBody
           onCancel={() => setEditing(false)}
-          onSave={() => setEditing(false)}
+          onSave={(result) => {
+            saveEdit({ id: focusedId, result, language });
+            setEditing(false);
+          }}
           menuSlot={menuTrigger}
         />
       ) : (
@@ -418,6 +439,20 @@ export function MetadataEditBody({
     );
     if (lang === language) reflag(id, value);
   };
+  /** A select / multiselect holds labels from a thesaurus, which are the same
+   *  in every language (Uwazi stores the value's id and translates it at
+   *  display), so a choice is written into every language's copy at once. */
+  const setLabels = (id: string, byLang: Record<Language, string[]>, ids: (string | null)[]) =>
+    setFieldsByLang(
+      (prev) =>
+        Object.fromEntries(
+          LANGUAGES.map((l) => [l, prev[l].map((f) => (f.id === id ? withLabels(f, byLang[l], ids) : f))]),
+        ) as Record<Language, MetadataField[]>,
+    );
+  /** Labels created from this form, tagged "New" in their list until it closes. */
+  const [freshLabels, setFreshLabels] = useState<ReadonlySet<string>>(new Set());
+  const corpus = entityCorpusOf(focusedId);
+
   /** Every language's value for one field — what the translation rows show. */
   const valuesFor = (id: string) =>
     Object.fromEntries(
@@ -692,7 +727,12 @@ export function MetadataEditBody({
     setFields((prev) =>
       prev.map((f) => {
         const u = taking.find((x) => x.kind === "value" && x.key === f.id);
-        return u ? { ...f, value: u.row.sourceValue ?? "" } : f;
+        if (!u) return f;
+        // A multiselect's copy arrives as its display string; its set is
+        // rebuilt from it so the list and the string agree.
+        return f.type === "multiselect"
+          ? withLabels(f, (u.row.sourceValue ?? "").split(", ").filter(Boolean))
+          : { ...f, value: u.row.sourceValue ?? "" };
       }),
     );
     setConnections((prev) => {
@@ -953,6 +993,21 @@ export function MetadataEditBody({
             );
           }
           const field = unit.field;
+          if (field.type === "select" || field.type === "multiselect") {
+            return (
+              <ThesaurusFieldEditor
+                key={field.id}
+                field={field}
+                corpus={corpus}
+                typeId={profile.typeId}
+                language={language}
+                fresh={freshLabels}
+                onChange={(byLang, ids) => setLabels(field.id, byLang, ids)}
+                onFresh={(labels) => setFreshLabels((prev) => new Set([...prev, ...labels]))}
+                copySlot={<CopyFieldSlot active={copyActive} sourceId={copiedFrom[field.id]} />}
+              />
+            );
+          }
           return (
             <EditSection
               key={field.id}
@@ -1196,6 +1251,128 @@ function EditSection({
       )}
       {children}
     </div>
+  );
+}
+
+/** A select / multiselect property's editor: the thesaurus picker under the
+ *  field label, with "Add value" on the label row (the row is always mounted,
+ *  so the action costs no layout) and, for a select holding a value, "Clear" —
+ *  a radio group cannot be emptied by clicking it.
+ *
+ *  The values come from the shared thesauri store of the entity's own corpus;
+ *  the binding is the template's, or one made in this session by "New
+ *  thesaurus". A value added here is written to the store on the modal's Save,
+ *  so Settings › Thesauri lists it at once; the CHOICE is the form's, and is
+ *  saved or discarded with it. */
+function ThesaurusFieldEditor({
+  field,
+  corpus,
+  typeId,
+  language,
+  fresh,
+  onChange: onChoice,
+  onFresh,
+  copySlot,
+}: {
+  field: MetadataField;
+  corpus: Corpus;
+  typeId: string;
+  language: Language;
+  fresh: ReadonlySet<string>;
+  /** The choice as labels in every language, and the value ids behind them. */
+  onChange: (byLang: Record<Language, string[]>, ids: (string | null)[]) => void;
+  onFresh: (labels: string[]) => void;
+  copySlot?: ReactNode;
+}) {
+  const thesauri = useAtomValue(thesauriAtom(corpus));
+  const bindings = useAtomValue(thesaurusBindingsAtom(corpus));
+  const addValue = useSetAtom(addThesaurusValueAtom);
+  const createThesaurus = useSetAtom(createThesaurusAtom);
+  const [adding, setAdding] = useState(false);
+  const thesaurusId = bindings[bindingKey(typeId, field.id)] ?? field.thesaurus;
+  const thesaurus = thesauri.find((t) => t.id === thesaurusId) ?? null;
+  const multiple = field.type === "multiselect";
+  const chosen = chosenLabels(field);
+  // The list in the language being written: CEJIL's records hold translated
+  // labels, its thesauri the Spanish ones. Ids the record already holds place
+  // labels the list can't (see `choiceByLanguage`).
+  const shown = useMemo(
+    () => (thesaurus ? localizeValues(thesaurus.values, corpus, language) : null),
+    [thesaurus, corpus, language],
+  );
+  const knownIds = Object.fromEntries(
+    chosen.map((l, i) => [l, field.valueIds?.[i]]).filter(([, id]) => id),
+  ) as Record<string, string>;
+  const onChange = (labels: string[], extra: Record<string, string> = {}) => {
+    const { byLang, ids } = choiceByLanguage(labels, language, thesaurus?.values ?? null, corpus, {
+      ...knownIds,
+      ...extra,
+    });
+    onChoice(byLang, ids);
+  };
+  const choose = (label: string) =>
+    onChange(multiple ? (chosen.includes(label) ? chosen.filter((l) => l !== label) : [...chosen, label]) : [label]);
+
+  const quiet =
+    "text-meta font-medium text-ink-tertiary hover:text-ink-secondary transition-colors cursor-pointer";
+  return (
+    <EditSection
+      label={field.label}
+      action={
+        <span className="inline-flex items-center gap-3">
+          {!multiple && chosen.length > 0 && (
+            <button type="button" onClick={() => onChange([])} className={quiet}>
+              Clear
+            </button>
+          )}
+          {thesaurus && (
+            <button type="button" onClick={() => setAdding(true)} className={quiet}>
+              Add value
+            </button>
+          )}
+        </span>
+      }
+    >
+      <ThesaurusPicker
+        label={field.label}
+        values={shown}
+        multiple={multiple}
+        chosen={chosen}
+        onToggle={choose}
+        fresh={fresh}
+        templateName={getEntityType(typeId)?.name}
+        onCreateThesaurus={(name, labels) => {
+          createThesaurus({ corpus, name, labels, bind: { typeId, propertyId: field.id } });
+          if (labels.length) {
+            onChange(multiple ? labels : [labels[0]]);
+            onFresh(labels);
+          }
+        }}
+      />
+      {copySlot}
+      {adding && thesaurus && (
+        <AddThesaurusValueModal
+          thesaurusName={thesaurus.name}
+          existing={selectableLabels(shown ?? [])}
+          onClose={() => setAdding(false)}
+          onSave={(label) => {
+            // A label the reader's language already shows is that value: pick
+            // it rather than adding a second one in another language.
+            const shownMatch = selectableLabels(shown ?? []).find((l) => foldLabel(l) === foldLabel(label));
+            let pick = shownMatch;
+            let extra: Record<string, string> = {};
+            if (!pick) {
+              const saved = addValue({ corpus, thesaurusId: thesaurus.id, label });
+              pick = saved.label;
+              if (saved.id) extra = { [saved.label]: saved.id };
+              if (!selectableLabels(thesaurus.values).includes(saved.label)) onFresh([saved.label]);
+            }
+            if (!chosen.includes(pick)) onChange(multiple ? [...chosen, pick] : [pick], extra);
+            setAdding(false);
+          }}
+        />
+      )}
+    </EditSection>
   );
 }
 

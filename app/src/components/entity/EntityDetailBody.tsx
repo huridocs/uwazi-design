@@ -6,7 +6,7 @@ import { activeFilterCountAtom } from "../../atoms/filters";
 import { focusMetadataFieldAtom } from "../../atoms/library";
 import { getEntity, getEntityType } from "../../data/entities";
 import { languageAtom } from "../../atoms/language";
-import { commitDraftAtom, discardDraftAtom, draftEntityIdAtom } from "../../atoms/entityOverlay";
+import { commitDraftAtom, discardDraftAtom, draftEntityIdAtom, saveEntityEditAtom } from "../../atoms/entityOverlay";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { getEntityProfile } from "../../data/entityProfiles";
 import { isCejilEntity, cejilReferencesFor } from "../../data/cejil/profile";
@@ -87,6 +87,7 @@ export function EntityDetailBody({
      Cancel discards it and its Save is what adds it to the library. */
   const isDraft = useAtomValue(draftEntityIdAtom) === entityId;
   const commitDraft = useSetAtom(commitDraftAtom);
+  const saveEdit = useSetAtom(saveEntityEditAtom);
   /* The edit form edits the FOCUSED entity, and a host focuses this one in an
      effect — after the first render. A draft opens straight into its form, so
      on that first render the form would seed itself from whatever was focused
@@ -270,6 +271,7 @@ export function EntityDetailBody({
                 }}
                 onSave={(result) => {
                   if (isDraft) commitDraft({ id: entityId, result, language });
+                  else saveEdit({ id: entityId, result, language });
                   setEditing(false);
                 }}
               />
