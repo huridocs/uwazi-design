@@ -55,6 +55,10 @@ interface DataTableProps<T> {
   rowAriaLabel?: (row: T) => string;
   /** Row height and padding. Defaults to `comfortable` — today's table. */
   density?: TableDensity;
+  /** A control that belongs to the row but to no column — rendered in the
+   *  primary action's cell, so it costs no grid track. The Library puts its
+   *  visually hidden selection checkbox here. Clickable rows only. */
+  rowAccessory?: (row: T) => ReactNode;
 }
 
 const alignClass = {
@@ -84,6 +88,7 @@ export function DataTable<T>({
   onSort,
   rowAriaLabel,
   density = "comfortable",
+  rowAccessory,
 }: DataTableProps<T>) {
   const gridTemplateColumns = columns.map((c) => c.width ?? "1fr").join(" ");
   const box = DENSITY[density];
@@ -183,7 +188,9 @@ export function DataTable<T>({
                     className={`group relative grid items-center gap-3 px-4 ${box.row} text-sm transition-colors ${
                       clickable ? "cursor-pointer" : ""
                     } ${selected ? "bg-parchment" : "hover:bg-warm"}
-                      has-[[data-part=select]_input:checked]:bg-parchment ${extraClass ?? ""}`}
+                      has-[[data-part=select]_input:checked]:bg-parchment
+                      has-[[data-part=select]_input:focus-visible]:ring-2 has-[[data-part=select]_input:focus-visible]:ring-inset
+                      has-[[data-part=select]_input:focus-visible]:ring-carbon/30 ${extraClass ?? ""}`}
                     style={{ gridTemplateColumns, borderBottom: "1px solid var(--border-primary)", ...extraStyle }}
                   >
                     {/* The row itself is not focusable (a focusable row wrapping
@@ -207,6 +214,7 @@ export function DataTable<T>({
                           data-part="primary-action"
                           className="absolute inset-0 w-full cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20"
                         />
+                        {rowAccessory?.(row)}
                       </td>
                     )}
                     {columns.map((col) => (

@@ -15,8 +15,9 @@ const STEP = 120;
 /** A list of entities in the Library drawer — ONE body with two hosts: a map
  *  cluster (`LibraryClusterDrawer`) and the multi-selection
  *  (`LibrarySelectionDrawer`). Header (icon, title, "N entities", an optional
- *  action, the close X), then `EntityCard layout="list"` rows, each with its
- *  selection checkbox.
+ *  action, the close X), then `EntityCard layout="list"` rows — each with the
+ *  visually hidden selection checkbox, and in the selection drawer a hover /
+ *  focus "Remove from selection" X.
  *
  *  A narrow-tier gutter host like every Library drawer body: the header rule
  *  and the scroll lane are `bleed` bands and nothing inside carries side
@@ -36,6 +37,7 @@ export function EntityListDrawer({
   onSelect,
   rowClassName,
   query,
+  onRemove,
 }: {
   icon: ReactNode;
   title: string;
@@ -53,12 +55,16 @@ export function EntityListDrawer({
    *  selection survives searching and its drawer stays open, so reading the
    *  raw query re-rendered every row on every keystroke (see `EntityCard`). */
   query: string;
+  /** The selection drawer's per-row "Remove from selection". Returns whether
+   *  the row can still be removed (an already-removed row keeps its slot and
+   *  shows no X). Absent: no remove slot at all (the cluster drawer). */
+  onRemove?: { remove: (id: string) => void; can: (id: string) => boolean };
 }) {
   const openEntity = useSetAtom(openEntityAtom);
   const range = useSetAtom(rangeSelectionAtom);
   // Stable, so the rows' memo holds.
   const onView = useCallback((id: string) => openEntity(id), [openEntity]);
-  // A Shift+click on a row's BODY ranges over THIS list, as its checkbox does
+  // A Shift+click on a row's BODY ranges over THIS list, as Shift+Space does
   // — the host's handler would range over the view behind the drawer.
   const onRow = useCallback(
     (id: string, e?: React.MouseEvent) => {
@@ -116,6 +122,7 @@ export function EntityListDrawer({
                 onSelect={onRow}
                 onView={onView}
                 selectable
+                onRemove={onRemove ? (onRemove.can(e.id) ? onRemove.remove : null) : undefined}
                 className={rowClassName?.(e.id) ?? ""}
               />
             ))}

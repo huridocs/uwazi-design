@@ -1,17 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { CheckSquare } from "lucide-react";
-import { libraryBulkEditOpenAtom, librarySelectionAtom, librarySelectionDrawerOpenAtom } from "../../atoms/library";
+import { deselectIdsAtom, libraryBulkEditOpenAtom, librarySelectionAtom, librarySelectionDrawerOpenAtom } from "../../atoms/library";
 import { LibraryBulkEditDrawer } from "./LibraryBulkEditDrawer";
 import { EntityListDrawer } from "./EntityListDrawer";
 
 /** The multi-selection, listed in the Library drawer by the same body a map
  *  cluster uses (`EntityListDrawer`).
  *
- *  Unticking a row removes it from the selection, but the row STAYS where it
- *  is, dimmed, until the drawer is left — nothing moves under the pointer, and
- *  a mis-click can be ticked again. The header count is the live selection.
- *  Rows ticked elsewhere while the list is open join its end.
+ *  A row's hover / focus X takes it out of the selection, but the row STAYS
+ *  where it is, dimmed, until the drawer is left — nothing moves under the
+ *  pointer, and a Cmd/Ctrl+click adds it back. The header count is the live
+ *  selection. Rows selected elsewhere while the list is open join its end.
  *
  *  The X closes the list without clearing the selection (Clear, in the
  *  footer, is the one clear); the footer's "N selected" reopens it. */
@@ -25,6 +25,7 @@ export function LibrarySelectionDrawer({
 }) {
   const selection = useAtomValue(librarySelectionAtom);
   const setOpen = useSetAtom(librarySelectionDrawerOpenAtom);
+  const deselect = useSetAtom(deselectIdsAtom);
   // Every id listed since the drawer opened, in the order it arrived. A Set
   // beside the array for membership: a selection can be the whole corpus, and
   // `includes` over it per render was ~19M comparisons at 4,398.
@@ -65,6 +66,7 @@ export function LibrarySelectionDrawer({
       onSelect={onSelect}
       query={query}
       rowClassName={(id) => (selection.has(id) ? "" : "opacity-60")}
+      onRemove={{ remove: (id) => deselect([id]), can: (id) => selection.has(id) }}
     />
   );
 }

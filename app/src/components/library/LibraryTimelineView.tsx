@@ -28,7 +28,7 @@ import {
 } from "../../utils/timeline";
 import { breakpointAtom } from "../../atoms/viewport";
 import { BucketBreakdown, ChartTip } from "./BucketBreakdown";
-import { EntitySelectBox, holdTextSelection, useDrawnIds, useSelectionOrder } from "./EntitySelectBox";
+import { EntitySelectBox, FOCUS_RING_ON_SELECT, holdTextSelection, useDrawnIds, useSelectionOrder } from "./EntitySelectBox";
 import { EntityCard } from "./EntityCard";
 import { HighlightedText } from "../shared/HighlightedText";
 import { MatchOrigin } from "./MatchOrigin";
@@ -703,7 +703,7 @@ function SpineLayout({ dated, query, selectedId, onSelect }: LayoutProps) {
               onMouseDown={holdTextSelection}
               className={`group relative flex items-center h-[22px] px-2 rounded-md cursor-pointer
                 transition-colors ${sel ? "bg-parchment" : "hover:bg-parchment"}
-                has-[[data-part=select]_input:checked]:bg-parchment`}
+                has-[[data-part=select]_input:checked]:bg-parchment ${FOCUS_RING_ON_SELECT}`}
             >
               <button
                 type="button"
@@ -716,15 +716,10 @@ function SpineLayout({ dated, query, selectedId, onSelect }: LayoutProps) {
                 className="absolute inset-0 w-full rounded-md cursor-pointer focus:outline-none
                   focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-carbon/30"
               />
+              <EntitySelectBox id={e.id} title={e.title} />
               <span className="relative flex-1 min-w-0 flex items-center gap-2">
-                {/* The type dot and the selection checkbox share one 1rem slot:
-                    the dot at rest, the box over it when shown (hover, focus,
-                    checked, or anything selected). Nothing moves either way. */}
                 <span className="relative shrink-0 w-4 h-4 flex items-center justify-center">
                   <span className="w-1.5 h-1.5 rounded-[2px]" style={{ backgroundColor: color }} />
-                  {/* Centred over the slot: the box's 24px target is larger than the
-                      slot, and auto margins over inset-0 centre it exactly. */}
-                  <EntitySelectBox id={e.id} title={e.title} className="absolute inset-0 m-auto!" />
                 </span>
                 <SpineDate t={t} />
                 <span

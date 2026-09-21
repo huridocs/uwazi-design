@@ -3,7 +3,6 @@ import { useAtomValue, useSetAtom } from "jotai";
 import {
   libraryDrawnIdsAtom,
   entitySelectedAtom,
-  librarySelectionActiveAtom,
   rangeSelectionAtom,
   toggleSelectionAtom,
 } from "../../atoms/library";
@@ -60,20 +59,23 @@ export function holdTextSelection(e: MouseEvent) {
   if (e.shiftKey) e.preventDefault();
 }
 
-/** One entity's checkbox — the same control in a card, a table row, a
- *  timeline line, a Results card and a drawer row.
+/** One entity's selection control — the same control in a card, a table
+ *  row, a timeline line, a Results card and a drawer row.
  *
- *  A real `<input type="checkbox">`, named "Select <title>", a tab stop after
- *  the row's primary action. Hidden at rest and shown on hover, on focus
- *  within the row, when checked, and on EVERY row while anything is selected;
- *  its slot is reserved either way, so showing it moves nothing.
+ *  NOT DRAWN (Juan, 2026-09-21): the Library selects by modifier click —
+ *  Cmd/Ctrl toggles, Shift ranges — and selected is the row's `bg-parchment`,
+ *  so a visible checkbox on every card was a second way to say the same thing,
+ *  and a slot every card paid for. What stays is the ACCESSIBLE route: a real
+ *  `<input type="checkbox">`, visually hidden but focusable, named "Select
+ *  <title>", a tab stop after the row's primary action. While it has focus
+ *  the ROW draws the focus ring (`FOCUS_RING_ON_SELECT`), since the box itself
+ *  can't be seen. Screen readers get its checked state.
  *
  *  Keys: Space toggles (native); Shift+Space and Shift+Arrow extend the range
- *  from the anchor, the arrow moving focus to the next box in the view's
+ *  from the anchor, the arrow moving focus to the next one in the view's
  *  order. Clicks stop here — the row's own click is the preview. */
-export function EntitySelectBox({ id, title, className = "" }: { id: string; title: string; className?: string }) {
+export function EntitySelectBox({ id, title }: { id: string; title: string }) {
   const checked = useAtomValue(entitySelectedAtom(id));
-  const active = useAtomValue(librarySelectionActiveAtom);
   const toggle = useSetAtom(toggleSelectionAtom);
   const range = useSetAtom(rangeSelectionAtom);
   const scoped = useContext(OrderScope);
@@ -105,19 +107,7 @@ export function EntitySelectBox({ id, title, className = "" }: { id: string; tit
   };
 
   return (
-    // A <label> 24px square around the 14px box (WCAG 2.5.8): a click
-    // anywhere in it is a click on the input, modifier keys included. The
-    // negative margin keeps its footprint the box's own, so rows don't move.
-    <label
-      data-part="select"
-      data-select-id={id}
-      onClick={(e) => e.stopPropagation()}
-      className={`inline-flex items-center justify-center shrink-0 w-6 h-6 -m-[0.3125rem] cursor-pointer transition-opacity ${
-        checked || active
-          ? "opacity-100"
-          : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100"
-      } ${className}`}
-    >
+    <span data-part="select" data-select-id={id} onClick={(e) => e.stopPropagation()} className="sr-only">
       <input
         type="checkbox"
         data-component="Checkbox"
@@ -128,6 +118,11 @@ export function EntitySelectBox({ id, title, className = "" }: { id: string; tit
         aria-label={`Select ${title}`}
         className="w-3.5 h-3.5 rounded cursor-pointer shrink-0 accent-ink"
       />
-    </label>
+    </span>
   );
 }
+
+/** The row's focus ring while its hidden selection checkbox has focus — the
+ *  one visible sign of where a keyboard user is. Put on every host row. */
+export const FOCUS_RING_ON_SELECT =
+  "has-[[data-part=select]_input:focus-visible]:ring-2 has-[[data-part=select]_input:focus-visible]:ring-carbon/30";
