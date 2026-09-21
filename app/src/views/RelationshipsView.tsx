@@ -9,6 +9,7 @@ import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DocMeta } from "../components/layout/DocMeta";
+import { PaneHeader } from "../components/layout/PaneHeader";
 import { DocumentViewer } from "../components/viewer/DocumentViewer";
 import {
   RelationshipsToolbar,
@@ -43,17 +44,19 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
         // The narrow-tier gutter host: tabs, DocMeta, toolbar, lane and action
         // bar all take their side inset from this padding (see `gutter-host`).
         <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0 bg-paper relative overflow-clip">
-          <MainTabs
-            tabs={tabs}
-            activeId={activeTab}
-            onChange={onTabChange}
-            onBack={onBack}
-            languages={LANGUAGES}
-            availableLanguages={LANGUAGES}
-            activeLanguage={language}
-            onLanguageChange={(lang) => setLanguage(lang as Language)}
-          />
-          <DocMeta showPdfSelector={false} />
+          <PaneHeader>
+            <DocMeta showPdfSelector={false} ruled={false} />
+            <MainTabs
+              tabs={tabs}
+              activeId={activeTab}
+              onChange={onTabChange}
+              onBack={onBack}
+              languages={LANGUAGES}
+              availableLanguages={LANGUAGES}
+              activeLanguage={language}
+              onLanguageChange={(lang) => setLanguage(lang as Language)}
+            />
+          </PaneHeader>
 
           <RelationshipsToolbar />
 

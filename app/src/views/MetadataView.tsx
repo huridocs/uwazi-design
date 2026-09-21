@@ -5,6 +5,7 @@ import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { DocMeta } from "../components/layout/DocMeta";
+import { PaneHeader } from "../components/layout/PaneHeader";
 import { MetadataRecord } from "../components/metadata/MetadataRecord";
 import { ConnectionGroupCard } from "../components/metadata/ConnectionGroupCard";
 import { RelationshipFieldCard } from "../components/metadata/RelationshipFieldCard";
@@ -72,23 +73,26 @@ export function MetadataView({ tabs, activeTab, onTabChange, onBack }: MetadataV
     // like the Document and Relationships tabs: all four tabs share the tab
     // strip, so a different gutter here moved the strip 4px when switching.
     <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0 bg-paper">
-      <MainTabs
-        tabs={tabs}
-        activeId={activeTab}
-        onChange={onTabChange}
-        onBack={onBack}
-        languages={LANGUAGES}
-        availableLanguages={LANGUAGES}
-        activeLanguage={language}
-        onLanguageChange={(lang) => setLanguage(lang as Language)}
-        /* While the form is open this picker is not "which language am I
-           reading" but "which language am I writing into" — the same switch,
-           two different consequences. The value it points at is the slice every
-           field's editor holds, and every MultiLanguageField's `current`, so
-           moving it moves the whole form to that language at once. It has to
-           say so; see MainTabs. */
-        languageEditing={editing}
-      />
+      <PaneHeader>
+        <DocMeta showPdfSelector={false} ruled={false} />
+        <MainTabs
+          tabs={tabs}
+          activeId={activeTab}
+          onChange={onTabChange}
+          onBack={onBack}
+          languages={LANGUAGES}
+          availableLanguages={LANGUAGES}
+          activeLanguage={language}
+          onLanguageChange={(lang) => setLanguage(lang as Language)}
+          /* While the form is open this picker is not "which language am I
+             reading" but "which language am I writing into" — the same switch,
+             two different consequences. The value it points at is the slice every
+             field's editor holds, and every MultiLanguageField's `current`, so
+             moving it moves the whole form to that language at once. It has to
+             say so; see MainTabs. */
+          languageEditing={editing}
+        />
+      </PaneHeader>
 
       {editing ? (
         <MetadataEditBody
@@ -128,7 +132,6 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
 
   return (
     <>
-      <DocMeta showPdfSelector={false} />
       <ShareEntityModal open={shareOpen} onClose={() => setShareOpen(false)} />
 
       <div className="bleed flex-1 overflow-auto body-top pb-8">

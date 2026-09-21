@@ -4,6 +4,7 @@ import { useAtom, useSetAtom } from "jotai";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DocMeta } from "../components/layout/DocMeta";
+import { PaneHeader } from "../components/layout/PaneHeader";
 import { FileTable } from "../components/files/FileTable";
 import { FileDrawer } from "../components/files/FileDrawer";
 import { DocumentGroupCard } from "../components/files/DocumentGroupCard";
@@ -115,17 +116,19 @@ export function FilesView({ tabs, activeTab, onTabChange, onBack }: FilesViewPro
     // like the Document and Relationships tabs: all four tabs share the tab
     // strip, so a different gutter here moved the strip 4px when switching.
     <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0 bg-paper">
-      <MainTabs
-        tabs={tabs}
-        activeId={activeTab}
-        onChange={onTabChange}
-        onBack={onBack}
-        languages={LANGUAGES}
-        availableLanguages={LANGUAGES}
-        activeLanguage={language}
-        onLanguageChange={(lang) => setLanguage(lang as Language)}
-      />
-      <DocMeta showPdfSelector={false} />
+      <PaneHeader>
+        <DocMeta showPdfSelector={false} ruled={false} />
+        <MainTabs
+          tabs={tabs}
+          activeId={activeTab}
+          onChange={onTabChange}
+          onBack={onBack}
+          languages={LANGUAGES}
+          availableLanguages={LANGUAGES}
+          activeLanguage={language}
+          onLanguageChange={(lang) => setLanguage(lang as Language)}
+        />
+      </PaneHeader>
       <div className="bleed flex-1 overflow-auto body-top pb-8 bg-warm">
         <SectionLabel as="h3" level="section" className="mb-2">
           Primary documents

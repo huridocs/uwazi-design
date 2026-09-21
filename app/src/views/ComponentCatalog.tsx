@@ -58,6 +58,7 @@ import {
   SegmentedTabsDemo,
   DrawerTabsDemo,
   MainTabsDemo,
+  PaneHeaderDemo,
   IsolatedBeacon,
   IsolatedViewSwitcher,
   IsolatedCopyFromPicker,
@@ -507,6 +508,19 @@ export function ComponentCatalog({ onReturn }: Props) {
           <section>
             <h2 className="text-lg font-bold text-ink mb-6">Entity View — Layout</h2>
             <div className="flex flex-col gap-6">
+              <div id="ev-pane-header" ref={reg("ev-pane-header")}>
+                <CatalogEntry
+                  name="PaneHeader"
+                  description="Main-pane header shared by the Library and the entity view: identity and primary zone, then the view tabs with the secondary controls. One rule under both rows."
+                  code={`<PaneHeader ground="parchment">
+  {/* row 1: identity, primary zone */}
+  <MainTabs tabs={views} activeId={view} onChange={setView} />
+</PaneHeader>`}
+                >
+                  <PaneHeaderDemo />
+                </CatalogEntry>
+              </div>
+
               <div id="ev-main-tabs" ref={reg("ev-main-tabs")}>
                 <CatalogEntry
                   name="MainTabs"

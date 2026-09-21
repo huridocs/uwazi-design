@@ -1,3 +1,4 @@
+import { PaneHeader } from "../../components/layout/PaneHeader";
 import { useEffect, useState } from "react";
 import { createStore, Provider, useSetAtom } from "jotai";
 import { ChevronDown } from "lucide-react";
@@ -79,6 +80,32 @@ export function DrawerTabsDemo() {
         activeId={active}
         onChange={setActive}
       />
+    </div>
+  );
+}
+
+export function PaneHeaderDemo() {
+  const [active, setActive] = useState("cards");
+  return (
+    <div data-gutter-host className="gutter-host bg-paper">
+      <PaneHeader ground="parchment">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          <div className="shrink-0 w-[16rem] min-w-0 flex flex-col justify-center h-9">
+            <h1 className="text-sm font-semibold leading-tight text-ink truncate">Collection</h1>
+            <p className="h-4 text-meta tabular-nums text-ink-tertiary">4,398 entities</p>
+          </div>
+          <div className="flex-1 basis-[16rem] min-w-[11rem] h-8 rounded-md border border-border bg-paper" />
+        </div>
+        <MainTabs
+          tabs={[
+            { id: "cards", label: "Cards" },
+            { id: "list", label: "List" },
+            { id: "map", label: "Map" },
+          ]}
+          activeId={active}
+          onChange={setActive}
+        />
+      </PaneHeader>
     </div>
   );
 }

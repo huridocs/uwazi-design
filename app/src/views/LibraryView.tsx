@@ -102,10 +102,24 @@ import { DataTable, type Column } from "../components/shared/DataTable";
 import { EntityTypeChip } from "../components/shared/EntityTypeChip";
 import { HighlightedText } from "../components/shared/HighlightedText";
 import { Select } from "../components/shared/Select";
-import { ViewSwitcher } from "../components/library/ViewSwitcher";
+import { MainTabs } from "../components/layout/MainTabs";
+import { PaneHeader } from "../components/layout/PaneHeader";
 import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
 import { WARM_BUTTON } from "../components/shared/warmButton";
 
+/** The Library's views, as tabs. Same order the select had. */
+const LIBRARY_VIEWS = [
+  { id: "cards", label: "Cards" },
+  { id: "list", label: "List" },
+  { id: "map", label: "Map" },
+  { id: "timeline", label: "Timeline" },
+  { id: "results", label: "Results" },
+];
+const COLLECTION_LABELS: Record<string, string> = {
+  mock: "Sample",
+  cejil: "CEJIL",
+  artworks: "Best Artworks",
+};
 const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
 
 /** Sort keys — shared by the toolbar Select and (on mobile, where the Select
@@ -128,6 +142,7 @@ const TITLE_AND_COUNTRY = ["title", "country"] as const;
 export function LibraryView() {
   const entities = useAtomValue(libraryEntitiesAtom);
   const dataSource = useAtomValue(dataSourceAtom);
+  const collectionLabel = COLLECTION_LABELS[dataSource] ?? "Library";
   // Chrome language (not `languageAtom`, the content language below): the
   // masthead's t() labels re-render when the navbar switcher changes it.
   useAtomValue(uiLanguageAtom);
@@ -353,9 +368,17 @@ export function LibraryView() {
   // Unmeasured (the first render) counts as wide; the observer corrects it
   // before paint.
   const fits = (w: number) => mastheadW === 0 || mastheadW >= w + mastheadExtra;
-  const readoutInline = fits(746);
-  const sortInline = fits(498);
-  const langInline = fits(377);
+  // ONE FOLD RULE, shared with the entity header (see `PaneHeader` in CLAUDE.md):
+  //   row 1  identity never folds; the primary zone (the search box) drops to
+  //          its own line under it when the two no longer fit side by side;
+  //   row 2  the secondary controls leave for the Display menu, Sort first and
+  //          Language second, BEFORE the view tabs have to fold; past that the
+  //          tabs fold themselves into one select (`useStripFold`, measured).
+  // 16rem identity slot + gap + 16rem search = 520. Five view tabs measure
+  // ~330px; Sort 113, Display 32, Language 56, 8px gaps.
+  const identityInline = fits(520);
+  const sortInline = fits(555);
+  const langInline = fits(434);
   const setSortInMenu = useSetAtom(librarySortInMenuAtom);
   const setLanguageInMenu = useSetAtom(libraryLanguageInMenuAtom);
   useEffect(() => {
@@ -812,16 +835,39 @@ export function LibraryView() {
     <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0 bg-paper">
       {/* Toolbar — a row of controls, and under it (when the row can't hold
           it) the readout's own line. See "Masthead fold" above. */}
-      <div
-        ref={mastheadRef}
-        data-part="masthead"
-        className="bleed shrink-0 py-2 bg-parchment"
-        style={{ borderBottom: "1px solid var(--border-primary)" }}
-      >
-      <div data-part="masthead-row" className="flex items-center gap-2">
+      <PaneHeader ref={mastheadRef as never} part="masthead" ground="parchment">
+      {/* ROW 1 — identity, then the primary zone. `flex-wrap` is for ONE child:
+          below 520px the search box takes the line under the identity. */}
+      <div data-part="identity-row" className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+        {/* IDENTITY: what this page is, and THE number for it. A FIXED slot while
+            it shares the row, for the reason the readout slot always was: the
+            sentence swings from "82 entities" to "312 of 4,398 results for …" on
+            every keystroke, and the search box beside it must not resize. Title
+            over readout, as `EntityIdentity` sets tag over title. Folded, it is
+            one full-width line (title, then the readout) at a fixed height. */}
+        <div
+          data-part="identity"
+          className={
+            identityInline
+              ? "shrink-0 w-[16rem] min-w-0 flex flex-col justify-center h-9"
+              : "basis-full min-w-0 flex items-baseline gap-2 h-5"
+          }
+        >
+          <h1 className="shrink-0 text-sm font-semibold leading-tight text-ink truncate">
+            {collectionLabel}
+          </h1>
+          <p
+            data-part="readout"
+            aria-busy={searchPending}
+            className={`flex items-center gap-1.5 min-w-0 h-4 text-meta tabular-nums text-ink-tertiary
+              transition-opacity ${searchPending ? "opacity-60" : "opacity-100"}`}
+          >
+            {readoutContent}
+          </p>
+        </div>
         <div
           ref={searchBoxRef}
-          className="relative flex-1 min-w-0 flex items-center gap-1.5 h-8 py-1 pl-2 pr-2 bg-paper border border-border rounded-md
+          className="relative flex-1 basis-[16rem] min-w-[11rem] flex items-center gap-1.5 h-8 py-1 pl-2 pr-2 bg-paper border border-border rounded-md
             focus-within:ring-2 focus-within:ring-ink/25 focus-within:border-ink/30 transition-all"
         >
           <Search size={14} className="text-ink-tertiary shrink-0" />
@@ -864,7 +910,7 @@ export function LibraryView() {
               <X size={12} />
             </button>
           )}
-          <SearchTipsPopover compact={!readoutInline} />
+          <SearchTipsPopover compact={!identityInline} />
           {/* Follows FOCUS; the tips popover follows a click on its chip — which
               blurs the input, so the two can never be open at once without any
               shared state to arbitrate. */}
@@ -924,22 +970,17 @@ export function LibraryView() {
             the words attached to it. It is one sentence and now looks like one;
             `tabular-nums` stays, because what the figure actually needs is to
             not reflow while it changes, and that was never the weight's job. */}
-        {readoutInline && (
-          <span
-            data-part="readout"
-            aria-busy={searchPending}
-            // `pe-3` is INSIDE the fixed slot: it guarantees a gap before Sort in
-            // the long state too, where the chip otherwise truncates flush to the
-            // slot's edge and reads as a second control pill beside "Date added".
-            // The slot's outer width is untouched, so the controls still never move.
-            className={`flex items-center justify-start gap-1.5 shrink-0 w-[15rem] pe-3
-              text-meta tabular-nums text-ink-tertiary transition-opacity ${
-                searchPending ? "opacity-60" : "opacity-100"
-              }`}
-          >
-            {readoutContent}
-          </span>
-        )}
+      </div>
+      {/* ROW 2 — the views of this collection as the SAME tab strip the entity
+          header uses, then the secondary controls (arrange · display · language). */}
+      <div data-part="controls-row" className="flex items-end gap-2">
+        <div className="min-w-0 flex-1">
+          <MainTabs
+            tabs={LIBRARY_VIEWS}
+            activeId={viewMode}
+            onChange={(v) => setViewMode(v as typeof viewMode)}
+          />
+        </div>
         {/* Sort steps aside on a phone — it moves into the Display popover, where
             it costs no width. The VIEW switcher does not: cards / list / map /
             timeline are the point of the Library, and they were unreachable on
@@ -972,7 +1013,6 @@ export function LibraryView() {
             safe — see Select. The trade is real and deliberate: every view is
             still reachable, but at two clicks rather than one, and the trigger
             names the active view where five icons couldn't. */}
-        <ViewSwitcher value={viewMode} onChange={(v) => setViewMode(v as typeof viewMode)} />
         {/* Display is icon-only and ALWAYS mounted; the view-specific modifiers
             (timeline layout) live inside its popover. Anything that appears and
             disappears from this row shoves every other control sideways when you
@@ -993,21 +1033,7 @@ export function LibraryView() {
         )}
         {menuTrigger}
       </div>
-      {/* The readout's own line, when the row can't hold it. Mounted for as
-          long as the row is this narrow — with or without a query — so a
-          search never adds a line and shoves the results down. The sentence
-          is `shrink-0` and the chip yields (`min-w-0`), as in the row. */}
-      {!readoutInline && (
-        <p
-          data-part="readout"
-          aria-busy={searchPending}
-          className={`mt-1.5 h-5 flex items-center gap-1.5 min-w-0 text-meta tabular-nums text-ink-tertiary
-            transition-opacity ${searchPending ? "opacity-60" : "opacity-100"}`}
-        >
-          {readoutContent}
-        </p>
-      )}
-      </div>
+      </PaneHeader>
 
       {/* Results */}
       <div
