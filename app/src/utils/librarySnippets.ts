@@ -112,12 +112,17 @@ export interface EntitySnippets {
 
 /** The count badge's wording: matched pages as passages when the document
  *  matched, else matched fields. `count` used to add the two into one unitless
- *  number (2 fields + 81 pages printed as 83). */
+ *  number (2 fields + 81 pages printed as 83).
+ *
+ *  The TITLE is not a field here: every Results layout drops its snippet (the
+ *  heading already prints it marked), so counting it put "1 field" on a
+ *  header-only card. A title-only match says so. */
 export function evidenceBadge(s: EntitySnippets): { count: number; unit: string } {
   if (s.fullTextTotal > 0) {
     return { count: s.fullTextTotal, unit: s.fullTextTotal === 1 ? "passage" : "passages" };
   }
-  const n = s.metadata.length;
+  const n = s.metadata.filter((m) => m.fieldKey !== "title").length;
+  if (n === 0) return { count: 1, unit: "title match" };
   return { count: n, unit: n === 1 ? "field" : "fields" };
 }
 

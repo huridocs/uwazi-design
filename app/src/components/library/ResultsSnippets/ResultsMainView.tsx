@@ -784,6 +784,10 @@ interface FlatPassage {
   /** Other results whose document has this same passage on the same page. The
    *  row is listed once, under `entity`; these are counted in its attribution. */
   also: Entity[];
+  /** The row's identity, stable while the fold changes which result heads it
+   *  (a "Show more" can bring in the document's owner) — so a selection made
+   *  on the row doesn't go dark when its head swaps. */
+  key: string;
 }
 
 function PassagesBody({
@@ -815,6 +819,10 @@ function PassagesBody({
     let notShown = 0;
     let titleOnly = 0;
     const byPassage = new Map<string, FlatPassage>();
+    // Per DOCUMENT, not per result: the note counts matched pages the list
+    // doesn't excerpt, and twelve results reading one judgment fold into that
+    // judgment's rows — summing per result counted its pages twelve times.
+    const byDoc = new Map<string, { total: number; shown: number }>();
     for (const { entity, snippets } of results) {
       const props = properties(snippets);
       // A title-only result has no passage to list here — counted and reported
@@ -832,6 +840,7 @@ function PassagesBody({
             text: t,
             from: null,
             also: [],
+            key: `${entity.id}|${m.fieldKey}|${t}`,
           });
         }
       }
@@ -843,7 +852,14 @@ function PassagesBody({
         // passages. Keyed on `docKey` (the text a document resolves to), not
         // on the document entity: the repeats come from DIFFERENT document
         // entities serving the same file. A page-less corpus keys on the text.
-        const key = `${snippets.docKey ?? entity.id}|${s.page ?? s.text}`;
+        const docId = snippets.docKey ?? entity.id;
+        const key = `${docId}|${s.page ?? s.text}`;
+        let doc = byDoc.get(docId);
+        if (!doc) {
+          doc = { total: 0, shown: 0 };
+          byDoc.set(docId, doc);
+        }
+        doc.total = Math.max(doc.total, snippets.fullTextTotal);
         const seen = byPassage.get(key);
         if (seen) {
           // A result reading its OWN document heads the row; otherwise the
@@ -866,13 +882,15 @@ function PassagesBody({
           text: s.text,
           from: snippets.borrowedFrom,
           also: [],
+          key,
         };
         byPassage.set(key, row);
         rows.push(row);
+        doc.shown++;
       }
-      // Pages counted but not excerpted — said out loud rather than dropped.
-      notShown += Math.max(0, snippets.fullTextTotal - snippets.fullText.length);
     }
+    // Pages counted but not excerpted — said out loud rather than dropped.
+    for (const { total, shown } of byDoc.values()) notShown += Math.max(0, total - shown);
     // Densest passages first; ties keep the relevance order the entities arrived in.
     rows.sort((a, b) => b.hits - a.hits);
     return { rows, notShown, titleOnly };
@@ -892,7 +910,7 @@ function PassagesBody({
           // Keyed by CONTENT, not by index: "Show more" splices new rows into a
           // list ranked by hit density, so an index would quietly slide the lit
           // state onto whatever passage inherited the slot.
-          const rowKey = `${row.entity.id}|${row.fieldKey ?? "doc"}|${row.page ?? "-"}|${row.text}`;
+          const rowKey = row.key;
           const selected =
             activeKey === rowKey ||
             (row.page !== null &&
