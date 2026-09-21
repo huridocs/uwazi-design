@@ -5,6 +5,7 @@ import { getEntityType } from "../../../data/entities";
 import { useFocusTrap } from "../../../hooks/useFocusTrap";
 import { ProvenanceLine } from "../../shared/ProvenanceLine";
 import { Hint } from "../../shared/Hint";
+import { useSplitDragging } from "../../../hooks/useDrawerWidth";
 
 const POPOVER_W = 288; // 18rem
 const EDGE = 8;
@@ -27,6 +28,10 @@ export function AlsoUnder({
   onOpenEntity: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  // The trigger's hint stays down while the list is open AND through the focus
+  // the list hands back on close, until the trigger is left (blur or pointer).
+  const [muteHint, setMuteHint] = useState(false);
+  const dragging = useSplitDragging();
   const [pos, setPos] = useState<{ left: number; top?: number; bottom?: number } | null>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const panel = useFocusTrap<HTMLDivElement>(open);
@@ -37,7 +42,11 @@ export function AlsoUnder({
     if (!open || !trigger.current) return setPos(null);
     const r = trigger.current.getBoundingClientRect();
     const w = Math.min(POPOVER_W, window.innerWidth - EDGE * 2);
-    const left = Math.max(EDGE, Math.min(r.left, window.innerWidth - w - EDGE));
+    // Hang from the trigger's inline START: its left edge in LTR, its right
+    // edge in RTL, where the trigger sits at the line's end.
+    const rtl = getComputedStyle(trigger.current).direction === "rtl";
+    const start = rtl ? r.right - w : r.left;
+    const left = Math.max(EDGE, Math.min(start, window.innerWidth - w - EDGE));
     // Flip above when the lower part of the viewport can't hold the list.
     setPos(
       window.innerHeight - r.bottom < 220
@@ -49,36 +58,52 @@ export function AlsoUnder({
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.stopPropagation();
-        setOpen(false);
-      }
+      if (e.key === "Escape") setOpen(false);
     };
     const onDown = (e: PointerEvent) => {
       const t = e.target as Node;
       if (!panel.current?.contains(t) && !trigger.current?.contains(t)) setOpen(false);
     };
-    // The list is placed once from the trigger's rect; any scroll would leave it
-    // floating over the wrong row, so a scroll outside it closes it.
+    // The list is placed once from the trigger's rect; a scroll outside it or a
+    // resize would leave it floating over the wrong row, so either closes it.
     const onScroll = (e: Event) => {
       if (!panel.current?.contains(e.target as Node)) setOpen(false);
     };
+    const onResize = () => setOpen(false);
     window.addEventListener("keydown", onKey);
     window.addEventListener("pointerdown", onDown, true);
     window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", onResize);
     return () => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("pointerdown", onDown, true);
       window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", onResize);
     };
   }, [open, panel]);
 
+  // …and so does dragging the drawer divider, which moves the row without a
+  // scroll or a resize event.
+  useEffect(() => {
+    if (dragging) setOpen(false);
+  }, [dragging]);
+
   return (
     <ProvenanceLine inline label="also under" className="shrink-0">
-      <Hint text={`Show the ${label} with this passage`}>
+      <Hint text={`Show the ${label} with this passage`} muted={open || muteHint}>
         {(hint) => (
           <button
             {...hint}
+            onBlur={() => {
+              hint.onBlur();
+              // Focus moving INTO the open list blurs the trigger too; only a
+              // blur with the list closed means the reader left.
+              if (!open) setMuteHint(false);
+            }}
+            onMouseLeave={() => {
+              hint.onMouseLeave();
+              setMuteHint(false);
+            }}
             ref={trigger}
             type="button"
             data-part="also"
@@ -86,6 +111,7 @@ export function AlsoUnder({
             aria-expanded={open}
             onClick={(e) => {
               e.stopPropagation();
+              setMuteHint(true);
               setOpen((o) => !o);
             }}
             className="tabular-nums rounded-sm hover:underline cursor-pointer
