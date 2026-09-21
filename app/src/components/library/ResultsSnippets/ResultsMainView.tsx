@@ -7,6 +7,7 @@ import type { Language } from "../../../atoms/language";
 import type { DataSource } from "../../../utils/libraryFacets";
 import {
   buildSnippetsFor,
+  compareEvidence,
   contextWordsFor,
   evidenceBadge,
   MAX_FULLTEXT,
@@ -774,6 +775,8 @@ interface FlatPassage {
   /** Document page hit, or a matched metadata field — one row shape for both. */
   page: number | null;
   hits: number;
+  /** AND groups the passage satisfies — with `hits`, its rank (`compareEvidence`). */
+  groupsMet: number;
   field: string | null;
   fieldKey: string | null;
   text: string;
@@ -834,7 +837,8 @@ function PassagesBody({
           rows.push({
             entity,
             page: null,
-            hits: 1,
+            hits: m.hits,
+            groupsMet: m.groupsMet,
             field: m.field,
             fieldKey: m.fieldKey,
             text: t,
@@ -877,6 +881,7 @@ function PassagesBody({
           entity,
           page: s.page,
           hits: s.hits,
+          groupsMet: s.groupsMet,
           field: null,
           fieldKey: null,
           text: s.text,
@@ -891,8 +896,11 @@ function PassagesBody({
     }
     // Pages counted but not excerpted — said out loud rather than dropped.
     for (const { total, shown } of byDoc.values()) notShown += Math.max(0, total - shown);
-    // Densest passages first; ties keep the relevance order the entities arrived in.
-    rows.sort((a, b) => b.hits - a.hits);
+    // Best passages first, by the SAME rank that chose each entity's pages
+    // (`compareEvidence`: AND groups met, then occurrences) — raw hits let a
+    // page that misses the AND outrank one that meets it. The sort is stable,
+    // so ties keep the relevance order the entities arrived in.
+    rows.sort(compareEvidence);
     return { rows, notShown, titleOnly };
   }, [results]);
 
@@ -1214,26 +1222,30 @@ function SpineBody({
   );
 }
 
-/** The passage that best represents a result: the densest document page, else
- *  the first matched property. Its label never claims a page the data can't back. */
+/** The passage that best represents a result: the best-ranked of its pages
+ *  and its properties by `compareEvidence` — the same rank every other surface
+ *  orders evidence by — a page winning a tie. Never the title: the row already
+ *  prints it, marked. Its label never claims a page the data can't back. */
 function bestPassage(
   s: EntitySnippets,
 ): { text: string; page: number | null; label: string; isDocument: boolean } | null {
   const top = s.fullText.reduce<FullTextSnippet | null>(
-    (best, cur) => (!best || cur.hits > best.hits ? cur : best),
+    (best, cur) => (!best || compareEvidence(cur, best) < 0 ? cur : best),
     null,
   );
-  if (top) {
+  const prop = properties(s).reduce<MetadataSnippet | null>(
+    (best, cur) => (!best || compareEvidence(cur, best) < 0 ? cur : best),
+    null,
+  );
+  if (top && (!prop || compareEvidence(prop, top) >= 0)) {
     const parts = [documentLabel(s.borrowedFrom)];
     if (top.page !== null) parts.push(`p.${top.page}`);
     if (top.hits > 1) parts.push(`${top.hits}×`);
     return { text: top.text, page: top.page, label: parts.join(" · "), isDocument: true };
   }
-  // Never the title: the row above already prints it, marked.
-  const m = properties(s)[0];
   // `isDocument` gates the borrowed-document attribution: a property hit came
   // from the entity itself, however its document was resolved.
-  if (m?.texts[0]) return { text: m.texts[0], page: null, label: m.field, isDocument: false };
+  if (prop?.texts[0]) return { text: prop.texts[0], page: null, label: prop.field, isDocument: false };
   return null;
 }
 

@@ -49,6 +49,11 @@ export interface MetadataSnippet {
   fieldKey: string;
   /** One windowed excerpt per matched field (around the first hit). */
   texts: string[];
+  /** Query occurrences in the field, and the AND groups it satisfies — the same
+   *  two numbers a page carries, so a property and a page rank on one scale
+   *  (`compareEvidence`). */
+  hits: number;
+  groupsMet: number;
 }
 
 export interface FullTextSnippet {
@@ -64,6 +69,22 @@ export interface FullTextSnippet {
   /** How many DISTINCT query terms occur on this page. (The best-first order
    *  ranks on AND groups met, not on this — see `buildSnippetsFor`.) */
   termsHit: number;
+  /** How many of the query's AND groups this page satisfies — the first key
+   *  of `compareEvidence`. */
+  groupsMet: number;
+}
+
+/** A passage's rank: the query's AND groups it satisfies, then its occurrences.
+ *  ONE comparator for every surface that orders evidence — `buildSnippetsFor`
+ *  picking an entity's best pages, the Passages layout ordering its rows, the
+ *  Spine choosing each row's passage — so a page that misses the AND never
+ *  outranks one that meets it anywhere. Returns 0 on a tie, so a stable sort
+ *  keeps whatever order the caller arrived in. */
+export function compareEvidence(
+  a: { groupsMet: number; hits: number },
+  b: { groupsMet: number; hits: number },
+): number {
+  return b.groupsMet - a.groupsMet || b.hits - a.hits;
 }
 
 /** Where one query term matched an entity. `term` is the folded token
@@ -627,13 +648,26 @@ export function buildSnippetsFor(
   // twice — and not again on the next keystroke.
   for (const { field, fieldKey, text, folded } of foldedFields(entity, language)) {
     if (!passes(folded)) continue;
+    let fieldHits = 0;
+    const inField = new Set<string>();
     for (const th of termsHit) {
-      if (!termIn(folded, th.term)) continue;
+      const n = countOccurrences(folded, th.term);
+      if (n === 0) continue;
+      fieldHits += n;
+      inField.add(th.term);
       if (fieldKey === "title") th.title = true;
       else th.properties = true;
     }
     const excerpt = excerptAroundTerms(text, terms, contextWords);
-    if (excerpt) metadata.push({ field, fieldKey, texts: [excerpt] });
+    if (excerpt) {
+      metadata.push({
+        field,
+        fieldKey,
+        texts: [excerpt],
+        hits: Math.max(1, fieldHits),
+        groupsMet: groups.reduce((n, g) => (g.some((t) => inField.has(t)) ? n + 1 : n), 0),
+      });
+    }
   }
 
   const { pages, paged, borrowedFrom, docKey } = documentPages(entity, language, source);
@@ -670,13 +704,19 @@ export function buildSnippetsFor(
     matched.push({ i, hits, termsHit: onPage.size, groupsMet });
   }
   if (order === "best") {
-    matched.sort((a, b) => b.groupsMet - a.groupsMet || b.hits - a.hits || a.i - b.i);
+    matched.sort((a, b) => compareEvidence(a, b) || a.i - b.i);
   }
   for (const m of matched) {
     if (fullText.length >= maxFullText) break;
     const excerpt = excerptAroundTerms(pages[m.i], terms, contextWords, pageFoldWithMap(pages, m.i));
     if (excerpt) {
-      fullText.push({ page: paged ? m.i + 1 : null, text: excerpt, hits: m.hits, termsHit: m.termsHit });
+      fullText.push({
+        page: paged ? m.i + 1 : null,
+        text: excerpt,
+        hits: m.hits,
+        termsHit: m.termsHit,
+        groupsMet: m.groupsMet,
+      });
     }
   }
   const fullTextTotal = matched.length;
