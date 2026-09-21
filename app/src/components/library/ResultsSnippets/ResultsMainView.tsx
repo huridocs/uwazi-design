@@ -34,6 +34,7 @@ import { BorrowedDocLine } from "../BorrowedDocLine";
 import { Hint } from "../../shared/Hint";
 import { PageTag } from "../../shared/PageTag";
 import { AlsoUnder } from "./AlsoUnder";
+import { EntitySelectBox, useSelectionOrder } from "../EntitySelectBox";
 import { useSettledWidth } from "../../../hooks/useSettledWidth";
 import { ToggleChip } from "../../shared/ToggleChip";
 import { CountBadge } from "../../shared/CountBadge";
@@ -133,7 +134,7 @@ interface Props {
   /** Select + jump the preview's document to a page. */
   onSelectSnippet: (id: string, page: number) => void;
   /** Select for preview (no page jump). */
-  onSelect: (id: string) => void;
+  onSelect: (id: string, e?: React.MouseEvent) => void;
   selectedId: string | null;
   onClearSearch: () => void;
   hiddenByFilters: number;
@@ -183,6 +184,9 @@ export function ResultsMainView({
   relevanceOf,
 }: Props) {
   const layout = useAtomValue(libraryResultsLayoutAtom);
+  // A Shift range runs in the ranked order these results are drawn in.
+  const rankedIds = useMemo(() => entities.map((e) => e.id), [entities]);
+  useSelectionOrder(rankedIds);
   const [activeTypes, setActiveTypes] = useAtom(matchTypeFiltersAtom);
   const [visible, setVisible] = useState(STEP);
   /* THE PANE'S OWN WIDTH, quantised to 64px and held while the drawer divider
@@ -426,7 +430,7 @@ function GroupedBody({
   query: string;
   relevanceOf: (e: Entity) => RelevanceBreakdown;
   selectedId: string | null;
-  onSelect: (id: string) => void;
+  onSelect: (id: string, e?: React.MouseEvent) => void;
   onFocusProperty: (id: string, fieldKey: string) => void;
   onSelectSnippet: (id: string, page: number) => void;
   /** Entities currently showing every page-snippet rather than the capped few. */
@@ -448,22 +452,26 @@ function GroupedBody({
             key={entity.id}
             data-part="result"
             data-state={selected ? "selected" : undefined}
-            className={`relative rounded-md border transition-colors ${
+            className={`group relative rounded-md border transition-colors ${
               selected ? "bg-parchment border-border" : "bg-paper border-border/60"
-            }`}
+            } has-[[data-part=select]_input:checked]:bg-parchment has-[[data-part=select]_input:checked]:border-border`}
           >
             <header
               data-part="result-header"
               className={`px-4 py-2.5 ${hasMeta || hasText ? "border-b border-border/40" : ""}`}
             >
               <div className="flex items-center gap-2">
+              {/* The selection checkbox, in a slot of its own before the
+                  type chip. A passage row is evidence, not an entity, so only
+                  the entity's card is selectable. */}
+              <EntitySelectBox id={entity.id} title={entity.title} />
               <EntityTypeChip typeId={entity.typeId} />
               {/* The heading is a flex box so the button inside it keeps
                   shrinking and truncating exactly as it did as a direct child. */}
               <h2 data-part="title" className="flex min-w-0">
               <button
                 type="button"
-                onClick={() => onSelect(entity.id)}
+                onClick={(e) => onSelect(entity.id, e)}
                 aria-pressed={selected}
                 className="min-w-0 text-start text-sm font-semibold text-ink truncate hover:underline
                   cursor-pointer focus-visible:outline-none focus-visible:ring-1
@@ -803,7 +811,7 @@ function PassagesBody({
 }: {
   results: Result[];
   query: string;
-  onSelect: (id: string) => void;
+  onSelect: (id: string, e?: React.MouseEvent) => void;
   onFocusProperty: (id: string, fieldKey: string) => void;
   onSelectSnippet: (id: string, page: number) => void;
 }) {
@@ -1127,7 +1135,7 @@ function SpineBody({
   results: Result[];
   query: string;
   selectedId: string | null;
-  onSelect: (id: string) => void;
+  onSelect: (id: string, e?: React.MouseEvent) => void;
   onSelectSnippet: (id: string, page: number) => void;
 }) {
   const dated = useMemo(

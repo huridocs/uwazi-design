@@ -64,7 +64,21 @@ import {
   clearLibraryFacetsAtom,
   matchTypeFiltersAtom,
   ALL_MATCH_TYPES,
+  toggleSelectionAtom,
+  rangeSelectionAtom,
+  clearSelectionAtom,
+  librarySelectionActiveAtom,
+  librarySelectionDrawerOpenAtom,
 } from "../atoms/library";
+import {
+  EntitySelectBox,
+  currentSelectionOrder,
+  selectionIntent,
+  useSelectionOrder,
+} from "../components/library/EntitySelectBox";
+import { SelectAllBox } from "../components/library/SelectAllBox";
+import { LibrarySelectionBar } from "../components/library/LibrarySelectionBar";
+import { LibrarySelectionDrawer } from "../components/library/LibrarySelectionDrawer";
 import { getEntityType, type Entity, type EntityImage } from "../data/entities";
 import { libraryInheritedDefs } from "../utils/libraryFacets";
 import { buildActiveChains, cejilChainGraph } from "../data/cejil/chainFacets";
@@ -717,8 +731,41 @@ export function LibraryView() {
   // Previewing focuses the entity so the drawer's tabbed bodies (Relationships /
   // Files / Document read the focused + scoped atoms) reflect it immediately.
   // Stable so memoized EntityCards don't re-render on every selection/hover.
+  /* ── Multi-selection ─────────────────────────────────────────────────────
+     A plain click previews, as it always has. Cmd/Ctrl+click toggles the
+     entity in the selection and Shift+click spans from the anchor over the
+     order the visible view draws (`currentSelectionOrder`) — without a
+     preview. This component never reads the selection Set: the cards read
+     their own flag, and the footer and drawer subscribe on their own. */
+  const toggleSelection = useSetAtom(toggleSelectionAtom);
+  const rangeSelection = useSetAtom(rangeSelectionAtom);
+  const clearSelection = useSetAtom(clearSelectionAtom);
+  const selectionActive = useAtomValue(librarySelectionActiveAtom);
+  const selectionDrawerOpen = useAtomValue(librarySelectionDrawerOpenAtom);
+  const shownIds = useMemo(() => shown.map((e) => e.id), [shown]);
+  const filteredIds = useMemo(() => filtered.map((e) => e.id), [filtered]);
+  // The grid's and the table's order — Timeline and Results register their own.
+  useSelectionOrder(shownIds);
+
+  // Escape clears — except where Escape already means something: a text field,
+  // a dialog, an open menu.
+  useEffect(() => {
+    if (!selectionActive) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      const t = e.target as HTMLElement | null;
+      if (t?.closest("input:not([type=checkbox]), textarea, select, [role=dialog], [role=menu], [role=listbox]")) return;
+      clearSelection();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selectionActive, clearSelection]);
+
   const handleSelect = useCallback(
-    (id: string) => {
+    (id: string, e?: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => {
+      const intent = e ? selectionIntent(e) : null;
+      if (intent === "toggle") return toggleSelection(id);
+      if (intent === "range") return rangeSelection({ order: currentSelectionOrder(), id });
       if (isMobile) {
         openEntity(id);
       } else {
@@ -726,7 +773,7 @@ export function LibraryView() {
         setSelectedId(id);
       }
     },
-    [isMobile, openEntity, focusForPreview, setSelectedId],
+    [isMobile, openEntity, focusForPreview, setSelectedId, toggleSelection, rangeSelection],
   );
 
   // Results-tab full-text snippet: select the entity, then jump the preview's
@@ -1042,6 +1089,10 @@ export function LibraryView() {
 
       {/* Results */}
       <div
+        // A Shift+click is a range, not a text selection across the grid.
+        onMouseDown={(e) => {
+          if (e.shiftKey) e.preventDefault();
+        }}
         // A `bleed` lane: warm ground and scrollbar at the pane edge, content on
         // the gutter. Every view mode sits on it, Results included — its header
         // row and card lane carry no side padding of their own.
@@ -1138,6 +1189,7 @@ export function LibraryView() {
                 onFocusProperty={handleFocusProperty}
                 onOpenImage={setLightbox}
                 metadataTrack={metadataTrack}
+                selectable
               />
             ))}
           </ul>
@@ -1150,11 +1202,21 @@ export function LibraryView() {
           </div>
         ) : (
           <DataTable
-            columns={tableColumns}
+            columns={[
+              // The selection column is always mounted — from first paint, so
+              // the first tick doesn't push the table sideways.
+              {
+                id: "select",
+                header: <SelectAllBox loadedIds={shownIds} />,
+                width: "1rem",
+                cell: (e) => <EntitySelectBox id={e.id} title={e.title} />,
+              },
+              ...tableColumns,
+            ]}
             data={shown}
             getRowId={(e) => e.id}
-            onRowClick={(e) => handleSelect(e.id)}
-            rowAriaLabel={(e) => `Select ${e.title}`}
+            onRowClick={(row, ev) => handleSelect(row.id, ev)}
+            rowAriaLabel={(e) => `Preview ${e.title}`}
             isRowSelected={(e) => selectedId === e.id}
             sort={{ key: sort, dir: sortDir }}
             onSort={(key) => setSortKey(key as typeof sort)}
@@ -1189,11 +1251,22 @@ export function LibraryView() {
         className="@container bleed shrink-0 flex items-center gap-2 h-12 bg-paper"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
-        <FooterButton
-          icon={<Plus size={13} className="text-ink-tertiary" />}
-          label="Create entity"
-          onClick={() => setCreateOpen(true)}
-        />
+        {/* Always mounted, at the bar's start: the tri-state select-all over
+            the loaded entities. The rest of the bar swaps IN PLACE between
+            the baseline actions and the selection's — same bar, same height. */}
+        <span className="hidden sm:inline-flex shrink-0 me-1">
+          <SelectAllBox loadedIds={shownIds} disabled={cejilLoading} />
+        </span>
+        {selectionActive && (
+          <LibrarySelectionBar filteredIds={filteredIds} loadedIds={shownIds} corpus={dataSource} />
+        )}
+        {!selectionActive && (
+          <FooterButton
+            icon={<Plus size={13} className="text-ink-tertiary" />}
+            label="Create entity"
+            onClick={() => setCreateOpen(true)}
+          />
+        )}
         {pendingUploads && (
           <UploadDocumentsModal
             files={pendingUploads}
@@ -1211,11 +1284,13 @@ export function LibraryView() {
             onClose={() => setCreateOpen(false)}
           />
         )}
-        <FooterButton
-          icon={<Upload size={13} className="text-ink-tertiary" />}
-          label="Upload PDF"
-          onClick={() => uploadInputRef.current?.click()}
-        />
+        {!selectionActive && (
+          <FooterButton
+            icon={<Upload size={13} className="text-ink-tertiary" />}
+            label="Upload PDF"
+            onClick={() => uploadInputRef.current?.click()}
+          />
+        )}
         {/* Not rendered: the file input the button above opens. */}
         <input
           ref={uploadInputRef}
@@ -1229,21 +1304,27 @@ export function LibraryView() {
             e.target.value = "";
           }}
         />
-        <FooterButton
-          icon={<FileUp size={13} className="text-ink-tertiary" />}
-          label="Import CSV"
-          onClick={() =>
-            guard(() => {
-              setOpenNewImport(true);
-              setAppView("import-csv");
-            })
-          }
-        />
-        <FooterButton
-          icon={<FileDown size={13} className="text-ink-tertiary" />}
-          label="Export CSV"
-          onClick={handleExport}
-        />
+        {!selectionActive && (
+          <>
+            <FooterButton
+              icon={<FileUp size={13} className="text-ink-tertiary" />}
+              label="Import CSV"
+              onClick={() =>
+                guard(() => {
+                  setOpenNewImport(true);
+                  setAppView("import-csv");
+                })
+              }
+            />
+            {/* With a selection, the bar's own Export CSV exports the
+                selection; without one, this exports the current results. */}
+            <FooterButton
+              icon={<FileDown size={13} className="text-ink-tertiary" />}
+              label="Export CSV"
+              onClick={handleExport}
+            />
+          </>
+        )}
         {/* The count used to be printed here too ("Showing N of M", with an
             "updating…" beside it while the query settled). It is the masthead
             readout's number — same set, same two figures — and the toolbar slot
@@ -1321,10 +1402,15 @@ export function LibraryView() {
     </div>
   );
 
+  // Preview, else the selection (1 or more, unless its list was closed), else
+  // a map cluster, else Filters. The threshold is 1, not 2, so unticking down
+  // to one doesn't swap the drawer under the pointer.
   const drawer = selectedId ? (
     <EntityDrawerPreview entityId={selectedId} />
+  ) : selectionActive && selectionDrawerOpen ? (
+    <LibrarySelectionDrawer onSelect={handleSelect} />
   ) : selectedCluster && viewMode === "map" ? (
-    <LibraryClusterDrawer />
+    <LibraryClusterDrawer onSelect={handleSelect} />
   ) : (
     filtersDrawer
   );

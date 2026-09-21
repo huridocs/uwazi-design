@@ -32,7 +32,9 @@ interface DataTableProps<T> {
   columns: Column<T>[];
   data: T[];
   getRowId: (row: T) => string;
-  onRowClick?: (row: T) => void;
+  /** The row's click — passed the event so a host can read modifier keys
+   *  (the Library's Cmd/Ctrl and Shift selection gestures). */
+  onRowClick?: (row: T, e?: React.MouseEvent) => void;
   /** Highlight predicate (bg-parchment). Use for focus/selection. */
   isRowSelected?: (row: T) => boolean;
   emptyState?: ReactNode;
@@ -174,10 +176,11 @@ export function DataTable<T>({
                     {...extra}
                     role="row"
                     data-part="row"
-                    onClick={onRowClick ? () => onRowClick(row) : undefined}
+                    onClick={onRowClick ? (e) => onRowClick(row, e) : undefined}
                     className={`group relative grid items-center gap-3 px-4 ${box.row} text-sm transition-colors ${
                       clickable ? "cursor-pointer" : ""
-                    } ${selected ? "bg-parchment" : "hover:bg-warm"} ${extraClass ?? ""}`}
+                    } ${selected ? "bg-parchment" : "hover:bg-warm"}
+                      has-[[data-part=select]_input:checked]:bg-parchment ${extraClass ?? ""}`}
                     style={{ gridTemplateColumns, borderBottom: "1px solid var(--border-primary)", ...extraStyle }}
                   >
                     {/* The row itself is not focusable (a focusable row wrapping
@@ -196,7 +199,7 @@ export function DataTable<T>({
                           aria-label={rowAriaLabel?.(row) ?? "Open row"}
                           onClick={(e) => {
                             e.stopPropagation();
-                            onRowClick!(row);
+                            onRowClick!(row, e);
                           }}
                           data-part="primary-action"
                           className="absolute inset-0 w-full cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20"

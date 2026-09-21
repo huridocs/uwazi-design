@@ -28,6 +28,7 @@ import {
 } from "../../utils/timeline";
 import { breakpointAtom } from "../../atoms/viewport";
 import { BucketBreakdown, ChartTip } from "./BucketBreakdown";
+import { EntitySelectBox, useSelectionOrder } from "./EntitySelectBox";
 import { EntityCard } from "./EntityCard";
 import { HighlightedText } from "../shared/HighlightedText";
 import { MatchOrigin } from "./MatchOrigin";
@@ -55,7 +56,9 @@ interface Props {
    *  `libraryQueryAtom` per row (see `EntityCard`). */
   query: string;
   selectedId: string | null;
-  onSelect: (id: string) => void;
+  /** A row's click, with its event — Cmd/Ctrl and Shift select (the host
+   *  reads the modifiers); a plain click previews. */
+  onSelect: (id: string, e?: React.MouseEvent) => void;
   onView: (id: string) => void;
   countByEntity: Map<string, number>;
 }
@@ -66,6 +69,9 @@ export function LibraryTimelineView(props: Props) {
 
   const dated = useMemo(() => sortByTime(entities), [entities]);
   const undated = entities.length - dated.length;
+  // A Shift range runs in the order this view draws: by date.
+  const datedIds = useMemo(() => dated.map((e) => e.id), [dated]);
+  useSelectionOrder(datedIds);
 
   if (!dated.length) {
     return (
@@ -318,6 +324,7 @@ function TrackedList({
                     connections={countByEntity.get(e.id) ?? 0}
                     onSelect={onSelect}
                     onView={onView}
+                    selectable
                   />
                 ))}
               </ul>
@@ -685,9 +692,10 @@ function SpineLayout({ dated, query, selectedId, onSelect }: LayoutProps) {
             // shell, not a `<button>` — a control inside a button is invalid for
             // AT (and invalid HTML). Same keyboard behaviour, one level down.
             <div
-              onClick={() => onSelect(e.id)}
-              className={`relative flex items-center h-[22px] px-2 rounded-md cursor-pointer
-                transition-colors ${sel ? "bg-parchment" : "hover:bg-parchment"}`}
+              onClick={(ev) => onSelect(e.id, ev)}
+              className={`group relative flex items-center h-[22px] px-2 rounded-md cursor-pointer
+                transition-colors ${sel ? "bg-parchment" : "hover:bg-parchment"}
+                has-[[data-part=select]_input:checked]:bg-parchment`}
             >
               <button
                 type="button"
@@ -695,16 +703,19 @@ function SpineLayout({ dated, query, selectedId, onSelect }: LayoutProps) {
                 aria-label={`Select ${e.title}`}
                 onClick={(ev) => {
                   ev.stopPropagation();
-                  onSelect(e.id);
+                  onSelect(e.id, ev);
                 }}
                 className="absolute inset-0 w-full rounded-md cursor-pointer focus:outline-none
                   focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-carbon/30"
               />
               <span className="relative flex-1 min-w-0 flex items-center gap-2">
-                <span
-                  className="shrink-0 w-1.5 h-1.5 rounded-[2px]"
-                  style={{ backgroundColor: color }}
-                />
+                {/* The type dot and the selection checkbox share one 1rem slot:
+                    the dot at rest, the box over it when shown (hover, focus,
+                    checked, or anything selected). Nothing moves either way. */}
+                <span className="relative shrink-0 w-4 h-4 flex items-center justify-center">
+                  <span className="w-1.5 h-1.5 rounded-[2px]" style={{ backgroundColor: color }} />
+                  <EntitySelectBox id={e.id} title={e.title} className="absolute inset-0" />
+                </span>
                 <SpineDate t={t} />
                 <span
                   className={`flex-1 min-w-0 truncate text-xs ${sel ? "text-ink font-medium" : "text-ink-secondary"}`}

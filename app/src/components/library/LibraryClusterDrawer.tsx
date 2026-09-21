@@ -1,64 +1,35 @@
 import { useAtomValue, useSetAtom } from "jotai";
-import { X, MapPin } from "lucide-react";
-import {
-  libraryQueryAtom,
-  librarySelectedClusterAtom,
-  librarySelectedEntityIdAtom,
-} from "../../atoms/library";
-import { openEntityAtom } from "../../atoms/focusedEntity";
-import { getEntity, type Entity } from "../../data/entities";
-import { EntityCard } from "./EntityCard";
+import { MapPin } from "lucide-react";
+import { librarySelectedClusterAtom, selectIdsAtom } from "../../atoms/library";
+import { EntityListDrawer } from "./EntityListDrawer";
 
 /** The drawer list of entities located at a clicked map cluster — mirrors the
  *  relationships "cluster → list in the drawer" pattern. Closing returns the
- *  drawer to Filters; selecting a row opens its preview on top. */
-export function LibraryClusterDrawer() {
+ *  drawer to Filters; clicking a row opens its preview on top. A thin host of
+ *  `EntityListDrawer`, which the selection drawer shares — so a cluster's rows
+ *  are selectable, and "Select all N" adds the whole cluster. */
+export function LibraryClusterDrawer({ onSelect }: { onSelect: (id: string, e?: React.MouseEvent) => void }) {
   const cluster = useAtomValue(librarySelectedClusterAtom);
-  // Read here and passed down: the cards don't subscribe (see `EntityCard`).
-  // This list is a clicked cluster — tens of rows, not the corpus — so the raw
-  // committed query is fine; it isn't on the keystroke path.
-  const query = useAtomValue(libraryQueryAtom);
   const setCluster = useSetAtom(librarySelectedClusterAtom);
-  const setSelectedId = useSetAtom(librarySelectedEntityIdAtom);
-  const openEntity = useSetAtom(openEntityAtom);
-
+  const selectIds = useSetAtom(selectIdsAtom);
   if (!cluster) return null;
-  const ents = cluster.ids.map((id) => getEntity(id)).filter(Boolean) as Entity[];
-
   return (
-    <div className="flex flex-col h-full min-h-0 bg-paper">
-      <div
-        className="shrink-0 flex items-center gap-2 px-4 py-3"
-        style={{ borderBottom: "1px solid var(--border-primary)" }}
-      >
-        <MapPin size={15} className="text-ink-tertiary shrink-0" />
-        <span className="text-sm font-semibold text-ink truncate">{cluster.label}</span>
-        <span className="text-meta text-ink-tertiary">
-          {ents.length} {ents.length === 1 ? "entity" : "entities"}
-        </span>
+    <EntityListDrawer
+      icon={<MapPin size={15} />}
+      title={cluster.label}
+      ids={cluster.ids}
+      onClose={() => setCluster(null)}
+      closeLabel="Back to filters"
+      onSelect={onSelect}
+      headerAction={
         <button
-          onClick={() => setCluster(null)}
-          aria-label="Back to filters"
-          className="ms-auto p-1.5 rounded-md hover:bg-warm text-ink-muted hover:text-ink transition-colors shrink-0"
+          type="button"
+          onClick={() => selectIds(cluster.ids)}
+          className="px-2 h-6 text-meta font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
         >
-          <X size={16} />
+          Select all {cluster.ids.length.toLocaleString()}
         </button>
-      </div>
-
-      <ul className="flex-1 overflow-auto p-3 flex flex-col gap-2">
-        {ents.map((e) => (
-          <EntityCard
-            key={e.id}
-            as="li"
-            entity={e}
-            layout="list"
-            query={query}
-            selected={false}
-            onSelect={() => setSelectedId(e.id)}
-            onView={() => openEntity(e.id)}
-          />
-        ))}
-      </ul>
-    </div>
+      }
+    />
   );
 }

@@ -81,6 +81,16 @@ export function entityCorpusPool(
   return { corpus, entities: mock, loading: false };
 }
 
+/** The templates of ONE corpus — for a surface about a single entity (its
+ *  edit form's Template picker), which must offer that entity's own corpus's
+ *  templates whatever the Library is showing. `mockTypes` is the Sample
+ *  corpus's list (`entityTypesAtom`), passed in so this stays a function. */
+export function corpusTypes(corpus: DataSource, mockTypes: EntityType[]): EntityType[] {
+  if (corpus === "cejil") return cejilEntityTypes;
+  if (corpus === "artworks") return artworkEntityTypes;
+  return mockTypes ?? entityTypes;
+}
+
 /** The entity types present for the active source (drives facet lists + colours). */
 export const libraryTypesAtom = atom<EntityType[]>((get) => {
   const source = get(dataSourceAtom);

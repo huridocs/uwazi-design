@@ -27,6 +27,17 @@ export interface Notification {
   /** epoch ms */
   time: number;
   read: boolean;
+  /** One action the notification offers, by REFERENCE — a value naming what
+   *  to act on (`ref` names an undo snapshot), never a callback: an atom
+   *  holding closures owned by a component is how the Copy From preview came
+   *  to set state on an unmounted form. */
+  action?: NotificationAction;
+}
+
+export interface NotificationAction {
+  label: string;
+  kind: "undo";
+  ref: string;
 }
 
 export interface Activity {
