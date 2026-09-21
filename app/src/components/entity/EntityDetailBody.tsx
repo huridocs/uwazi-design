@@ -1,10 +1,13 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { X, ArrowRight } from "lucide-react";
 import { referencesAtom } from "../../atoms/references";
 import { activeFilterCountAtom } from "../../atoms/filters";
 import { focusMetadataFieldAtom } from "../../atoms/library";
-import { getEntity } from "../../data/entities";
+import { getEntity, getEntityType } from "../../data/entities";
+import { languageAtom } from "../../atoms/language";
+import { commitDraftAtom, discardDraftAtom, draftEntityIdAtom } from "../../atoms/entityOverlay";
+import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { getEntityProfile } from "../../data/entityProfiles";
 import { isCejilEntity, cejilReferencesFor } from "../../data/cejil/profile";
 import { uiLanguageAtom } from "../../atoms/uiLanguage";
@@ -51,6 +54,9 @@ export interface EntityDetailBodyProps {
   editDirtyLabel?: string;
 }
 
+/** Draft discards waiting a tick — see the draft cleanup in the body. */
+const pendingDraftDiscard = new Map<string, number>();
+
 /** The side-panel entity detail: identity header, the entity view's own main
  *  tabs (Document / Metadata / Relationships / Files) with drawer-flavoured
  *  bodies, and a Close / open-entity footer.
@@ -75,7 +81,44 @@ export function EntityDetailBody({
   editDirtyLabel = "Metadata edits (preview)",
 }: EntityDetailBodyProps) {
   const references = useAtomValue(referencesAtom);
-  const entity = getEntity(entityId);
+  const language = useAtomValue(languageAtom);
+  /* An entity being CREATED (Create entity): it opens straight into its form,
+     offers no other tab — it has no connections or files yet — and its
+     Cancel discards it and its Save is what adds it to the library. */
+  const isDraft = useAtomValue(draftEntityIdAtom) === entityId;
+  const commitDraft = useSetAtom(commitDraftAtom);
+  /* The edit form edits the FOCUSED entity, and a host focuses this one in an
+     effect — after the first render. A draft opens straight into its form, so
+     on that first render the form would seed itself from whatever was focused
+     before. It waits for the focus to arrive. */
+  const focusArrived = useAtomValue(focusedEntityIdAtom) === entityId;
+  const discardDraft = useSetAtom(discardDraftAtom);
+  // Leaving a draft any other way — the drawer's X, another entity selected —
+  // discards it too; a draft nothing is showing is a record nobody can reach.
+  const isDraftRef = useRef(isDraft);
+  isDraftRef.current = isDraft;
+  // Deferred a tick, and cancelled by a remount of the same entity: StrictMode
+  // mounts, cleans up and mounts again, and an immediate discard there dropped
+  // every new draft the moment it opened.
+  useEffect(() => {
+    window.clearTimeout(pendingDraftDiscard.get(entityId));
+    return () => {
+      if (!isDraftRef.current) return;
+      pendingDraftDiscard.set(
+        entityId,
+        window.setTimeout(() => {
+          pendingDraftDiscard.delete(entityId);
+          discardDraft(entityId);
+        }, 0),
+      );
+    };
+  }, [entityId, discardDraft]);
+  const stored = getEntity(entityId);
+  // Its title is the form's to fill; until then the header names the template.
+  const entity =
+    stored && isDraft && !stored.title
+      ? { ...stored, title: `New ${getEntityType(stored.typeId)?.name ?? "entity"}` }
+      : stored;
   const profile = getEntityProfile(entityId);
 
   // Connection count for the tab strip (matches the scoped Relationships body,
@@ -99,6 +142,7 @@ export function EntityDetailBody({
     // Files reads the globally seeded file atoms, so it only tells the truth
     // about the entity the app has focused.
     .filter((tab) => (tab.id === "files" ? focused : true))
+    .filter((tab) => (isDraft ? tab.id === "metadata" : true))
     .map((tab) => {
       if (tab.id === "relationships")
         return { ...tab, count: connectionCount, dot: relFilterCount > 0 };
@@ -125,7 +169,7 @@ export function EntityDetailBody({
      The SAME MetadataEditBody the full view renders, in its compact flavour.
      It edits the FOCUSED entity, so it is offered only where this panel and the
      focus agree on which entity that is. */
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(isDraft);
   // Any edit session anywhere, this panel's own included — see the footer.
   const editSessionOpen = useAtomValue(editSessionOpenAtom);
 
@@ -133,7 +177,8 @@ export function EntityDetailBody({
   // one entity's unsaved edits into another's form. The registration tears down
   // with the body, so nothing is left registered.
   useEffect(() => {
-    setEditing(false);
+    setEditing(isDraft);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- a new entity, not a new draft flag
   }, [entityId]);
 
   // Only the Metadata tab has an editor; leaving that tab ends the session.
@@ -204,15 +249,29 @@ export function EntityDetailBody({
             <RelationshipsDrawerSection hideActionBar />
           ) : activeTab === "files" ? (
             <DrawerFilesBody hideActionBar />
-          ) : editing ? (
+          ) : editing && (!isDraft || focusArrived) ? (
             <>
               {editOverlay}
               <MetadataEditBody
+                key={entityId}
                 compact
-                sessionId={editSessionId}
-                dirtyLabel={editDirtyLabel}
-                onCancel={() => setEditing(false)}
-                onSave={() => setEditing(false)}
+                sessionId={isDraft ? "create-entity" : editSessionId}
+                dirtyLabel={isDraft ? "New entity" : editDirtyLabel}
+                onCancel={() => {
+                  setEditing(false);
+                  if (!isDraft) return;
+                  // Close first — on the next tick, once the form has unmounted
+                  // and left the dirty registry, so Cancel doesn't ask whether to
+                  // discard what it is discarding — then drop the draft.
+                  window.setTimeout(() => {
+                    onClose();
+                    discardDraft(entityId);
+                  }, 0);
+                }}
+                onSave={(result) => {
+                  if (isDraft) commitDraft({ id: entityId, result, language });
+                  setEditing(false);
+                }}
               />
             </>
           ) : (

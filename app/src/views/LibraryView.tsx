@@ -1,13 +1,20 @@
 import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import {
   Search,
   X,
   Plus,
   Upload,
-  FileSpreadsheet,
+  FileUp,
+  FileDown,
 } from "lucide-react";
-import { dataSourceAtom, libraryEntitiesAtom, cejilReadyAtom } from "../atoms/dataSource";
+import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom } from "../atoms/dataSource";
+import { startDraftAtom } from "../atoms/entityOverlay";
+import { openNewImportOnArrivalAtom } from "../atoms/navigation";
+import { CreateEntityDialog } from "../components/library/CreateEntityDialog";
+import { isPdf, runCsvExport, runPdfUploadBatch } from "../utils/libraryTasks";
+import { defaultTemplateId, uploadTemplateId } from "../utils/createEntity";
+import { UploadDocumentsModal } from "../components/library/UploadDocumentsModal";
 import { loadCejilData, cejilRelsByEntity } from "../data/cejil/load";
 import { warmSearchScan } from "../utils/warmSearchScan";
 import { referencesAtom } from "../atoms/references";
@@ -249,6 +256,59 @@ export function LibraryView() {
   const setAppView = useSetAtom(appViewAtom);
   const notify = useNotify();
   const guard = useDirtyGuard();
+
+  /* ── Footer actions ───────────────────────────────────────────────────── */
+  const store = useStore();
+  const libraryTypes = useAtomValue(libraryTypesAtom);
+  const startDraft = useSetAtom(startDraftAtom);
+  const setOpenNewImport = useSetAtom(openNewImportOnArrivalAtom);
+  const [createOpen, setCreateOpen] = useState(false);
+  const uploadInputRef = useRef<HTMLInputElement | null>(null);
+  /** Create entity: the chosen template opens as a draft in the drawer, on its
+   *  edit form. Guarded — the drawer may be holding another entity's edit. */
+  const handleCreate = (typeId: string) => {
+    setCreateOpen(false);
+    guard(() => setSelectedId(startDraft({ typeId, corpus: dataSource })));
+  };
+  /** Upload PDF: the picked PDFs open `UploadDocumentsModal` (a title each,
+   *  one template), and Upload runs the batch as ONE Beacon task. A single
+   *  document opens in the drawer when it lands; a batch doesn't pick one. */
+  const [pendingUploads, setPendingUploads] = useState<File[] | null>(null);
+  function handleUpload(files: FileList | null) {
+    const list = Array.from(files ?? []);
+    const pdfs = list.filter(isPdf);
+    const skipped = list.length - pdfs.length;
+    if (skipped > 0) {
+      notify(
+        `${skipped} ${skipped === 1 ? "file isn't a PDF and was" : "files aren't PDFs and were"} skipped`,
+        "error",
+      );
+    }
+    if (pdfs.length) setPendingUploads(pdfs);
+  }
+  function startUpload(batch: { typeId: string; uploads: { file: File; title: string }[] }) {
+    setPendingUploads(null);
+    const corpus = dataSource;
+    runPdfUploadBatch(store, { corpus, ...batch }, (ids) => {
+      // Only while the library still shows that corpus: an upload that lands
+      // after the user moved elsewhere shouldn't pull them back.
+      if (ids.length === 1 && store.get(dataSourceAtom) === corpus) setSelectedId(ids[0]);
+    });
+  }
+  /** Export CSV: the CURRENT result set — facets, query and match types
+   *  applied — which is `filtered`, the list every view mode draws. */
+  function handleExport() {
+    if (filtered.length === 0) {
+      notify("Nothing to export — no entity matches the current filters", "info");
+      return;
+    }
+    void runCsvExport(
+      store,
+      filtered,
+      language,
+      `uwazi-${dataSource}-${new Date().toISOString().slice(0, 10)}.csv`,
+    );
+  }
 
   const isMobile = breakpoint === "mobile";
 
@@ -1004,25 +1064,68 @@ export function LibraryView() {
       {/* Time brush — map + timeline */}
       {showBrush && <TimeBrush entities={timeChart} />}
 
-      {/* Footer action bar */}
+      {/* Footer action bar. A container, so the four actions fold to their
+          icons (each keeps its name) when the pane is too narrow for their
+          labels — a drawer open beside the library, a small window — instead
+          of wrapping onto a second line inside a fixed-height bar. */}
       <div
-        className="bleed shrink-0 flex items-center gap-2 h-12 bg-paper"
+        className="@container bleed shrink-0 flex items-center gap-2 h-12 bg-paper"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
         <FooterButton
           icon={<Plus size={13} className="text-ink-tertiary" />}
           label="Create entity"
-          onClick={() => notify("Create entity isn't available in the prototype")}
+          onClick={() => setCreateOpen(true)}
         />
+        {pendingUploads && (
+          <UploadDocumentsModal
+            files={pendingUploads}
+            types={libraryTypes}
+            defaultTypeId={uploadTemplateId(dataSource)}
+            onUpload={startUpload}
+            onClose={() => setPendingUploads(null)}
+          />
+        )}
+        {createOpen && (
+          <CreateEntityDialog
+            types={libraryTypes}
+            defaultTypeId={defaultTemplateId(dataSource)}
+            onChoose={handleCreate}
+            onClose={() => setCreateOpen(false)}
+          />
+        )}
         <FooterButton
           icon={<Upload size={13} className="text-ink-tertiary" />}
           label="Upload PDF"
-          onClick={() => notify("Upload started")}
+          onClick={() => uploadInputRef.current?.click()}
+        />
+        {/* Not rendered: the file input the button above opens. */}
+        <input
+          ref={uploadInputRef}
+          type="file"
+          accept="application/pdf,.pdf"
+          multiple
+          hidden
+          onChange={(e) => {
+            handleUpload(e.target.files);
+            // Cleared so choosing the same file again still fires a change.
+            e.target.value = "";
+          }}
         />
         <FooterButton
-          icon={<FileSpreadsheet size={13} className="text-ink-tertiary" />}
-          label="Import / Export CSV"
-          onClick={() => guard(() => setAppView("import-csv"))}
+          icon={<FileUp size={13} className="text-ink-tertiary" />}
+          label="Import CSV"
+          onClick={() =>
+            guard(() => {
+              setOpenNewImport(true);
+              setAppView("import-csv");
+            })
+          }
+        />
+        <FooterButton
+          icon={<FileDown size={13} className="text-ink-tertiary" />}
+          label="Export CSV"
+          onClick={handleExport}
         />
         {/* The count used to be printed here too ("Showing N of M", with an
             "updating…" beside it while the query settled). It is the masthead
@@ -1167,13 +1270,17 @@ function FooterButton({
   label: string;
   onClick?: () => void;
 }) {
+  // The label hides below a 44rem bar (the bar is the container), and the
+  // button keeps its name through `aria-label`.
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+      aria-label={label}
+      className={`hidden sm:flex shrink-0 items-center gap-1.5 px-2.5 @[44rem]:px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
     >
       {icon}
-      {label}
+      <span className="hidden @[44rem]:inline">{label}</span>
     </button>
   );
 }
