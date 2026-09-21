@@ -103,11 +103,9 @@ function excerptBudget(layout: ResultsLayout, w: number): { ctx: number; twoCol:
     return { ctx: contextWordsFor(col, 2), twoCol };
   }
   if (layout === "grouped") {
-    // `lg:grid-cols-[minmax(14rem,1fr)_2fr]` — the passages take two thirds of
-    // the card's inner width (2rem of padding, 1.5rem of gap). One budget covers
-    // every card, so it is sized to that narrower column; a document-only card
-    // spans the card and simply wraps sooner.
-    const col = ((w - 32 - 24) * 2) / 3;
+    // Properties and Document stack, each the card's full inner width: the
+    // card's padding and border (34) and the passage row's own padding (16).
+    const col = w - 34 - 16;
     return { ctx: contextWordsFor(col, 3), twoCol: false };
   }
   // Spine: one passage in a fixed row on a time axis — its measure is the axis's,
@@ -518,16 +516,14 @@ function GroupedBody({
               <MatchedTerms relevance={relevanceOf(entity)} query={query} className="mt-1" />
             </header>
 
-            {/* Two columns from `lg` up when there ARE two — properties read as a
-                short list and take a third, the passages are prose and take the
-                rest. One section alone spans the card to its edge; neither means a header-only card,
-                which is the honest shape of a title-only match. */}
+            {/* Properties, then Document, one above the other at the card's
+                full width, at every pane width. Side by side, the properties
+                column left the passages two thirds of the card and a short
+                property list beside a long column of prose. Neither section
+                means a header-only card, which is the honest shape of a
+                title-only match. */}
             {(hasMeta || hasText) && (
-              <div
-                className={`grid gap-x-6 gap-y-3 px-4 py-3 ${
-                  hasMeta && hasText ? "lg:grid-cols-[minmax(14rem,1fr)_2fr]" : ""
-                }`}
-              >
+              <div className="flex flex-col gap-stack px-4 py-3">
                 {hasMeta && (
                   <section data-part="properties">
                     <SectionLabel icon={<Tag size={11} />}>Properties</SectionLabel>
