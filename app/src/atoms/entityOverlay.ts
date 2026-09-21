@@ -164,9 +164,13 @@ export const patchEntitiesAtom = atom(
   },
 );
 
-/** Write a bulk edit's records and patches (see `planBulkEdit`) AND record the
- *  exact inverse. Returns the ref its notification's Undo names. */
-export const applyBulkEditAtom = atom(
+type RestoreEntry = Extract<UndoOp, { kind: "restore" }>["entries"][number];
+
+/** Write one batch of a bulk change's records and patches, and return the
+ *  inverse entries for them. No undo is recorded: a change applied in chunks
+ *  collects every chunk's entries and records ONE undo at the end
+ *  (`recordRestoreUndoAtom`). */
+export const writeBulkChunkAtom = atom(
   null,
   (
     get,
@@ -176,7 +180,7 @@ export const applyBulkEditAtom = atom(
       records,
       patches,
     }: { corpus: Corpus; records: Record<string, EntityRecord>; patches: Record<string, Partial<Entity>> },
-  ): string => {
+  ): RestoreEntry[] => {
     const before = get(overlayValueAtom)[corpus];
     const entries = Object.keys(records).map((id) => ({
       id,
@@ -184,14 +188,33 @@ export const applyBulkEditAtom = atom(
       patch: before.patched[id],
       wrote: records[id],
     }));
-    undoSeq += 1;
-    const ref = `undo-${Date.now().toString(36)}-${undoSeq}`;
     // Every edited entity gets a patch, empty or not — see `saveEntityEditAtom`.
     const allPatches = Object.fromEntries(Object.keys(records).map((id) => [id, patches[id] ?? {}]));
     set(patchEntitiesAtom, { corpus, patches: allPatches, records });
+    return entries;
+  },
+);
+
+/** Record the exact inverse of a change as THE undo. Returns its ref. */
+export const recordRestoreUndoAtom = atom(
+  null,
+  (_get, set, { corpus, entries }: { corpus: Corpus; entries: RestoreEntry[] }): string => {
+    undoSeq += 1;
+    const ref = `undo-${Date.now().toString(36)}-${undoSeq}`;
     set(undoOpAtom, { ref, kind: "restore", corpus, entries });
     return ref;
   },
+);
+
+/** Write a bulk change at once AND record its exact inverse. Returns the ref
+ *  its notification's Undo names. */
+export const applyBulkEditAtom = atom(
+  null,
+  (
+    _get,
+    set,
+    args: { corpus: Corpus; records: Record<string, EntityRecord>; patches: Record<string, Partial<Entity>> },
+  ): string => set(recordRestoreUndoAtom, { corpus: args.corpus, entries: set(writeBulkChunkAtom, args) }),
 );
 
 /** Save a single edit of an EXISTING entity: the form's scalar values become

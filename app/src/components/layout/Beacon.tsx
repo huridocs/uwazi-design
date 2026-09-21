@@ -162,6 +162,7 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
               detail: a.done ? a.done.detail : `${a.total} items processed.`,
               time: Date.now(),
               read: false,
+              ...(a.done?.action ? { action: a.done.action } : {}),
             },
             ...prev,
           ]);

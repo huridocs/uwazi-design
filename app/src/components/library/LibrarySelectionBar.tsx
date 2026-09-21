@@ -7,8 +7,8 @@ import { useFocusTrap } from "../../hooks/useFocusTrap";
 import {
   clearSelectionAtom,
   deselectIdsAtom,
-  libraryBulkEditOpenAtom,
   libraryEditRequestAtom,
+  openBulkEditAtom,
   librarySelectedEntityIdAtom,
   librarySelectionAtom,
   librarySelectionDrawerOpenAtom,
@@ -92,9 +92,7 @@ export function LibrarySelectionBar({
       setPreview(id);
       return;
     }
-    setPreview(null);
-    store.set(libraryBulkEditOpenAtom, true);
-    openDrawer(true);
+    store.set(openBulkEditAtom);
   };
 
   const exportSelection = () =>

@@ -156,6 +156,7 @@ export function planBulkEdit({
   language,
   corpus,
   thesaurusOf,
+  withRecords = true,
 }: {
   entities: Entity[];
   fields: BulkField[];
@@ -163,6 +164,9 @@ export function planBulkEdit({
   language: Language;
   corpus: Corpus;
   thesaurusOf: (field: BulkField) => ThesaurusValue[] | null;
+  /** false: the review's counts only, no records — for a set big enough that
+   *  Apply runs as a task and builds them chunk by chunk. */
+  withRecords?: boolean;
 }): BulkPlan {
   const ids = entities.map((e) => e.id);
   const lines: BulkLine[] = [];
@@ -210,6 +214,23 @@ export function planBulkEdit({
         lines.push({ fieldId: f.id, label: f.label, change: `− ${displayOf(f, v)}`, entities: have, removes: have });
       }
     }
+  }
+
+  if (!withRecords) {
+    // Which entities a line changes, read in the edited language — the same
+    // test the counts above make, per entity.
+    let touched = 0;
+    for (const id of ids) {
+      const hit = editedFields.some((f) => {
+        const e = edits[f.id];
+        const v = valueOf(id, f, language);
+        if (e.kind === "scalar") return v !== e.value;
+        const held = new Set(v as string[]);
+        return e.add.some((x) => !held.has(x)) || e.remove.some((x) => held.has(x));
+      });
+      if (hit) touched++;
+    }
+    return { records: {}, patches: {}, lines, removes, touched };
   }
 
   // Records.

@@ -1,6 +1,6 @@
 import { startTransition } from "react";
 import { atom, type Getter, type Setter } from "jotai";
-import { editSessionOpenAtom } from "./dirtyGuard";
+import { bulkEditDirtyAtom, editSessionOpenAtom, guardNavigationAtom } from "./dirtyGuard";
 import { atomFamily, atomWithStorage, createJSONStorage } from "jotai/utils";
 import { dataSourceAtom, libraryEntitiesAtom, type DataSource } from "./dataSource";
 import { languageAtom } from "./language";
@@ -257,6 +257,36 @@ export const librarySelectionDrawerOpenAtom = atom(true);
  *  Apply and clearing the selection end it. */
 export const libraryBulkEditOpenAtom = atom(false);
 
+/** The ids the bulk form edits — FROZEN when it opens, so what Apply writes
+ *  is the set the form (and its review step) names, not whatever the
+ *  selection has become since. While the form is clean it follows the
+ *  selection; while it is dirty a selection change goes through the
+ *  dirty-form guard (`selectionWrite`). */
+export const libraryBulkEditIdsAtom = atom<string[]>([]);
+
+/** Open the bulk form over the current selection. */
+export const openBulkEditAtom = atom(null, (get, set) => {
+  set(libraryBulkEditIdsAtom, [...get(librarySelectionAtom)]);
+  set(libraryBulkEditOpenAtom, true);
+  set(librarySelectedEntityIdAtom, null);
+  set(librarySelectionDrawerOpenAtom, true);
+});
+
+/** Every selection write goes through here. With a dirty bulk form it is
+ *  held by the discard-confirm; Discard closes the form and then applies the
+ *  change. With a clean one, the form's set follows the new selection. */
+function selectionWrite(get: Getter, set: Setter, run: () => void) {
+  if (get(bulkEditDirtyAtom)) {
+    set(guardNavigationAtom, () => {
+      set(libraryBulkEditOpenAtom, false);
+      run();
+    });
+    return;
+  }
+  run();
+  if (get(libraryBulkEditOpenAtom)) set(libraryBulkEditIdsAtom, [...get(librarySelectionAtom)]);
+}
+
 /** An entity whose preview should open straight on its edit form — Edit with
  *  exactly one entity selected is that entity's ordinary edit. Spent by the
  *  entity panel once it has opened the form. */
@@ -278,20 +308,25 @@ function showSelectionList(get: Getter, set: Setter) {
 
 /** Toggle one id. Sets the anchor, ends any range, and — like every selection
  *  gesture — drops the preview so the drawer shows the selection being built. */
-export const toggleSelectionAtom = atom(null, (get, set, id: string) => {
-  const next = new Set(get(librarySelectionAtom));
-  if (next.has(id)) next.delete(id);
-  else next.add(id);
-  set(librarySelectionAtom, next);
-  set(librarySelectionAnchorAtom, id);
-  set(lastRangeAtom, []);
-  showSelectionList(get, set);
-});
+export const toggleSelectionAtom = atom(null, (get, set, id: string) =>
+  selectionWrite(get, set, () => {
+    const next = new Set(get(librarySelectionAtom));
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    set(librarySelectionAtom, next);
+    set(librarySelectionAnchorAtom, id);
+    set(lastRangeAtom, []);
+    showSelectionList(get, set);
+  }),
+);
 
 /** Shift+click: select from the anchor to `id` over `order` — the order the
  *  current view draws. With no anchor, the previewed entity is the anchor;
  *  with neither (or an anchor this view doesn't draw), it toggles `id`. */
-export const rangeSelectionAtom = atom(null, (get, set, { order, id }: { order: readonly string[]; id: string }) => {
+export const rangeSelectionAtom = atom(null, (get, set, { order, id }: { order: readonly string[]; id: string }) =>
+  selectionWrite(get, set, () => rangeSelect(get, set, order, id)),
+);
+function rangeSelect(get: Getter, set: Setter, order: readonly string[], id: string) {
   const anchor = get(librarySelectionAnchorAtom) ?? get(librarySelectedEntityIdAtom);
   const a = anchor ? order.indexOf(anchor) : -1;
   const b = order.indexOf(id);
@@ -311,32 +346,38 @@ export const rangeSelectionAtom = atom(null, (get, set, { order, id }: { order: 
   set(librarySelectionAtom, next);
   set(lastRangeAtom, added.filter((x) => x !== anchor));
   showSelectionList(get, set);
-});
+}
 
 /** Add ids (select all loaded, select all results, a map cluster). */
-export const selectIdsAtom = atom(null, (get, set, ids: readonly string[]) => {
-  const next = new Set(get(librarySelectionAtom));
-  for (const id of ids) next.add(id);
-  set(librarySelectionAtom, next);
-  set(lastRangeAtom, []);
-  showSelectionList(get, set);
-});
+export const selectIdsAtom = atom(null, (get, set, ids: readonly string[]) =>
+  selectionWrite(get, set, () => {
+    const next = new Set(get(librarySelectionAtom));
+    for (const id of ids) next.add(id);
+    set(librarySelectionAtom, next);
+    set(lastRangeAtom, []);
+    showSelectionList(get, set);
+  }),
+);
 
 /** Remove ids (a row unticked in the selection drawer, deleted entities). */
-export const deselectIdsAtom = atom(null, (get, set, ids: readonly string[]) => {
-  const next = new Set(get(librarySelectionAtom));
-  for (const id of ids) next.delete(id);
-  set(librarySelectionAtom, next);
-  set(lastRangeAtom, (prev) => prev.filter((x) => !ids.includes(x)));
-});
+export const deselectIdsAtom = atom(null, (get, set, ids: readonly string[]) =>
+  selectionWrite(get, set, () => {
+    const next = new Set(get(librarySelectionAtom));
+    for (const id of ids) next.delete(id);
+    set(librarySelectionAtom, next);
+    set(lastRangeAtom, (prev) => prev.filter((x) => !ids.includes(x)));
+  }),
+);
 
 /** Clear — the ONE control that ends a selection (Escape routes here too). */
-export const clearSelectionAtom = atom(null, (_get, set) => {
-  set(librarySelectionAtom, new Set<string>());
-  set(librarySelectionAnchorAtom, null);
-  set(lastRangeAtom, []);
-  set(libraryBulkEditOpenAtom, false);
-});
+export const clearSelectionAtom = atom(null, (get, set) =>
+  selectionWrite(get, set, () => {
+    set(librarySelectionAtom, new Set<string>());
+    set(librarySelectionAnchorAtom, null);
+    set(lastRangeAtom, []);
+    set(libraryBulkEditOpenAtom, false);
+  }),
+);
 
 /** Keyword-style Countries facet: selected country names + match mode. */
 export const libraryCountryFiltersAtom = atom<Record<string, boolean>>({});
