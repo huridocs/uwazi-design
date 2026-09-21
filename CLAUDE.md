@@ -264,8 +264,16 @@ Both panels that show an entity beside something else render ONE component,
   `components/relationships/EntityOverlay.tsx` (the connected-entity slide-over,
   mounted by RelationshipsView, MetadataView, ReferencePanel and — while editing
   — the drawer preview itself). The overlay owns only its chrome: backdrop,
-  slide-in, focus trap, `inert` while closed, Escape / outside-click, and the
-  Copy From banner.
+  slide-in, focus trap, `inert` while closed and Escape / outside-click.
+- **"Open entity" is hidden while any edit form is open** (`editSessionOpenAtom`;
+  `invisible`, not unmounted, so Close keeps its place and the footer its
+  height). Opening an entity navigates and discards the form. Both hosts.
+- **Copy From chooses its properties in the picker.** `CopyFromPicker` is two
+  steps in one fixed-size modal: the source list, then the matched properties as
+  a checkbox list (current → incoming, all/none, a disabled "Not copied" list
+  with reasons). The form receives only the ticked `CopyUnit`s
+  (`resolveUnits` / `onCopy`) and still never saves. The overlay's Copy From
+  banner, `CopyPreviewSection` and `atoms/copyFrom.ts` are removed.
 - **Scope is a context, not the app's focus.** Everything relationship-shaped
   reads `scopedReferencesAtom`, keyed to `focusedEntityIdAtom`. The drawer
   preview can focus its entity (`focusEntityForPreviewAtom`); the overlay CANNOT
@@ -417,7 +425,7 @@ in the document, a property on a connected entity's preview.
   overwrite a field would make the mode frightening to leave on.
 - **The signal is a VALUE, not a callback** (`fillRequestAtom`, `{fieldId, value,
   nonce}` — the `pageJumpAtom` idiom). An atom holding closures owned by the edit
-  form is exactly how `copyPreviewAtom` came to setState on an unmounted form.
+  form is exactly how the since-removed `copyPreviewAtom` came to setState on an unmounted form.
   `MetadataEditBody` clears `fillTargetAtom` **on unmount** for the same reason.
 - Ends on: fill (which disarms — the field asked for one value), Escape (skipped
   while focus is inside a `[role="dialog"]`, so closing the source preview
