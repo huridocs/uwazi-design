@@ -29,6 +29,7 @@ import { HighlightedText } from "../../shared/HighlightedText";
 import { EntityTypeChip } from "../../shared/EntityTypeChip";
 import { ListInfoRow } from "../../shared/ListInfoRow";
 import { BorrowedDocLine } from "../BorrowedDocLine";
+import { ProvenanceLine } from "../../shared/ProvenanceLine";
 import { ToggleChip } from "../../shared/ToggleChip";
 import { CountBadge } from "../../shared/CountBadge";
 import { MatchedTerms } from "../MatchedTerms";
@@ -332,29 +333,31 @@ export function ResultsMainView({
               ))}
             </span>
           }
+          // Always mounted, contents hidden when nothing is excluded — this note
+          // appears and vanishes as facets are ticked, exactly while the results
+          // below are being read. It rides the chip row rather than a line of
+          // its own: an invisible reserved line under the chips doubled the gap
+          // above the first result.
+          rightSlot={
+            <span
+              data-part="hidden-by-filters"
+              aria-hidden={hiddenByFilters === 0}
+              className={hiddenByFilters === 0 ? "invisible" : ""}
+            >
+              {hiddenByFilters.toLocaleString()} more {hiddenByFilters === 1 ? "match" : "matches"}{" "}
+              hidden by filters
+              <span className="mx-1 text-ink-muted">·</span>
+              <button
+                type="button"
+                onClick={onClearFilters}
+                tabIndex={hiddenByFilters === 0 ? -1 : undefined}
+                className="font-medium text-carbon hover:underline cursor-pointer"
+              >
+                Clear filters
+              </button>
+            </span>
+          }
         />
-        {/* Always mounted, contents hidden when nothing is excluded — this line
-            appears and vanishes as facets are ticked, exactly while the results
-            below are being read. */}
-        <p
-          data-part="hidden-by-filters"
-          aria-hidden={hiddenByFilters === 0}
-          className={`pb-2 text-meta text-ink-tertiary ${
-            hiddenByFilters === 0 ? "invisible" : ""
-          }`}
-        >
-          {hiddenByFilters.toLocaleString()} more {hiddenByFilters === 1 ? "match" : "matches"}{" "}
-          hidden by filters
-          <span className="mx-1 text-ink-muted">·</span>
-          <button
-            type="button"
-            onClick={onClearFilters}
-            tabIndex={hiddenByFilters === 0 ? -1 : undefined}
-            className="font-medium text-carbon hover:underline cursor-pointer"
-          >
-            Clear filters
-          </button>
-        </p>
       </header>
 
       {/* Hosted by the Library main pane (a gutter host): the card lane is a
@@ -801,6 +804,9 @@ interface FlatPassage {
    *  flattening loses the entity's snippets, and this list is exactly where the
    *  same judgment shows up under a dozen different case names. */
   from: BorrowedDoc | null;
+  /** Other results whose document has this same passage on the same page. The
+   *  row is listed once, under `entity`; these are counted in its attribution. */
+  also: Entity[];
 }
 
 function PassagesBody({
@@ -831,6 +837,7 @@ function PassagesBody({
     const rows: FlatPassage[] = [];
     let notShown = 0;
     let titleOnly = 0;
+    const byPassage = new Map<string, FlatPassage>();
     for (const { entity, snippets } of results) {
       const props = properties(snippets);
       // A title-only result has no passage to list here — counted and reported
@@ -847,11 +854,32 @@ function PassagesBody({
             fieldKey: m.fieldKey,
             text: t,
             from: null,
+            also: [],
           });
         }
       }
       for (const s of snippets.fullText) {
-        rows.push({
+        // One passage is one row, however many results read it. A Causa with
+        // no PDF of its own quotes a connected document, and the corpus's
+        // documents share six stand-in files, so the same page used to be
+        // listed once per result — five identical rows in a list that ranks
+        // passages. Keyed on page + text, not on the document entity: the
+        // repeats come from DIFFERENT document entities serving the same file.
+        const key = `${s.page ?? "-"}|${s.text}`;
+        const seen = byPassage.get(key);
+        if (seen) {
+          // A result reading its OWN document heads the row; otherwise the
+          // best-ranked result that quotes the passage does.
+          if (!snippets.borrowedFrom && seen.from) {
+            seen.also.unshift(seen.entity);
+            seen.entity = entity;
+            seen.from = null;
+          } else {
+            seen.also.push(entity);
+          }
+          continue;
+        }
+        const row: FlatPassage = {
           entity,
           page: s.page,
           hits: s.hits,
@@ -859,7 +887,10 @@ function PassagesBody({
           fieldKey: null,
           text: s.text,
           from: snippets.borrowedFrom,
-        });
+          also: [],
+        };
+        byPassage.set(key, row);
+        rows.push(row);
       }
       // Pages counted but not excerpted — said out loud rather than dropped.
       notShown += Math.max(0, snippets.fullTextTotal - snippets.fullText.length);
@@ -887,8 +918,9 @@ function PassagesBody({
           const selected =
             activeKey === rowKey ||
             (row.page !== null &&
-              activePage?.entityId === row.entity.id &&
-              activePage.page === row.page);
+              activePage?.page === row.page &&
+              (activePage.entityId === row.entity.id ||
+                row.also.some((e) => e.id === activePage.entityId)));
           return (
             // The hairline rides the ITEM: `last:` has to see the last row of
             // the sheet, and the button is now the only child of its item.
@@ -975,6 +1007,20 @@ function PassagesBody({
                       is what turns a run of identical passages under a dozen
                       case names into a dozen cases citing one judgment. */}
                   <BorrowedDocLine from={row.from} className="min-w-0" />
+                  {/* The results folded into this row, in the same `↳` idiom.
+                      Rides the mounted attribution line, so it moves nothing. */}
+                  {row.also.length > 0 && (
+                    <ProvenanceLine inline label="also under" className="shrink-0">
+                      <span
+                        data-part="also"
+                        title={row.also.map((e) => e.title).join("\n")}
+                        className="tabular-nums"
+                      >
+                        {row.also.length.toLocaleString()}{" "}
+                        {row.also.length === 1 ? "entity" : "entities"}
+                      </span>
+                    </ProvenanceLine>
+                  )}
                 </span>
               </span>
             </button>

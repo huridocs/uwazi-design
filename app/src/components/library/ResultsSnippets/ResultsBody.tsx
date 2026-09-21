@@ -1,9 +1,9 @@
-import { memo, useEffect, useMemo, useState, type ReactNode } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Search } from "lucide-react";
 import type { Entity } from "../../../data/entities";
 import type { Language } from "../../../atoms/language";
 import type { DataSource } from "../../../utils/libraryFacets";
-import { buildSnippetsFor } from "../../../utils/librarySnippets";
+import { buildSnippetsFor, contextWordsFor } from "../../../utils/librarySnippets";
 import { useAtom } from "jotai";
 import { matchTypeFiltersAtom, type MatchTypeFilters } from "../../../atoms/library";
 import { ListInfoRow } from "../../shared/ListInfoRow";
@@ -22,6 +22,11 @@ const MATCH_TYPES: { key: MatchType; label: string }[] = [
 /** How many entity cards to render before "Show more" (the drawer is narrow and
  *  the CEJIL corpus is thousands of entities — mirror the left pane's paging). */
 const RESULTS_STEP = 40;
+
+/** What a passage row's text column loses to its surroundings inside the lane:
+ *  the pane gutter both sides (24), the card's border and padding (18), the page
+ *  spine's rail indent (16) and the row's own padding (16). */
+const PASSAGE_INSET = 74;
 
 interface Props {
   query: string;
@@ -90,6 +95,28 @@ export const ResultsBody = memo(function ResultsBody({
   // ride the relationships panel's expand/collapse atoms.
   const [showAllMap, setShowAllMap] = useState<Record<string, boolean>>({});
   const trimmed = query.trim();
+  /* The lane's width, quantised to 64px, sets how much context each excerpt
+     carries: about three lines of the passage column. Quantised because it
+     feeds the snippet memo — an exact pixel would re-snippet every card on each
+     frame of a drawer drag. A callback ref, because the lane is not mounted on
+     the blank-state renders (same reasoning as ResultsMainView). */
+  const [laneW, setLaneW] = useState(0);
+  const roRef = useRef<ResizeObserver | null>(null);
+  const laneRef = useCallback((el: HTMLDivElement | null) => {
+    roRef.current?.disconnect();
+    roRef.current = null;
+    if (!el) return;
+    const measure = () => {
+      const next = Math.round(el.getBoundingClientRect().width / 64) * 64;
+      setLaneW((prev) => (next === prev ? prev : next));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    roRef.current = ro;
+  }, []);
+  useEffect(() => () => roRef.current?.disconnect(), []);
+  const ctx = contextWordsFor(laneW ? laneW - PASSAGE_INSET : 0, 3);
 
   // `entities` is the already-filtered set. The left-pane filter and
   // `buildSnippetsFor` scan the SAME metadata fields, so every filtered entity is
@@ -100,9 +127,12 @@ export const ResultsBody = memo(function ResultsBody({
     () =>
       entities
         .slice(0, visible)
-        .map((e) => ({ entity: e, snippets: buildSnippetsFor(e, trimmed, language, source) }))
+        .map((e) => ({
+          entity: e,
+          snippets: buildSnippetsFor(e, trimmed, language, source, { contextWords: ctx }),
+        }))
         .filter((x) => x.snippets.count > 0),
-    [entities, visible, trimmed, language, source],
+    [entities, visible, trimmed, language, source, ctx],
   );
 
   // Only the cards the user actually expanded are rebuilt uncapped — the excerpt
@@ -118,11 +148,12 @@ export const ResultsBody = memo(function ResultsBody({
               entity: x.entity,
               snippets: buildSnippetsFor(x.entity, trimmed, language, source, {
                 maxFullText: Infinity,
+                contextWords: ctx,
               }),
             }
           : x,
       ),
-    [capped, showAllMap, trimmed, language, source],
+    [capped, showAllMap, trimmed, language, source, ctx],
   );
 
   useEffect(() => {
@@ -271,7 +302,7 @@ export const ResultsBody = memo(function ResultsBody({
           `overflow-hidden`, so in a flex column that overflows they'd shrink to
           their header height and clip their own content. Block flow keeps each
           card at its natural height and lets this container scroll. */}
-      <div data-part="results" className="bleed flex-1 overflow-auto py-3 space-y-2">
+      <div ref={laneRef} data-part="results" className="bleed flex-1 overflow-auto py-3 space-y-2">
         {entities.length === 0 && (
           <p data-part="empty" className="pt-2 text-xs text-ink-tertiary">
             No results for the selected match types.

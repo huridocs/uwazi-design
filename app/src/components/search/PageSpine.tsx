@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useAtomValue } from "jotai";
 import type { FullTextSnippet } from "../../utils/librarySnippets";
 import { resultsActivePageAtom } from "../../atoms/library";
@@ -14,7 +15,10 @@ interface Props {
 
 /** The full-text hits as a vertical list against a thin spine rail — one row per
  *  hit page, in page order. Each row is an excerpt + a page tag; a page with more
- *  than one hit folds its count into the tag (`p.7 · 2×`). No node markers on the
+ *  than one hit folds its count into the tag (`p.7 · 2×`). The tag trails the
+ *  excerpt's last word, as `PassageRow` does in the main Results view: on a line
+ *  of its own, right-aligned, it cost every row a line and sat apart from the
+ *  sentence it cites. No node markers on the
  *  rail — the rail is just quiet structure. Clicking a row jumps the doc to that
  *  page (§8) and records it in `resultsActivePageAtom`, so the row returns lit +
  *  `aria-pressed` after the preview closes. RTL-safe: rail on the inline-start
@@ -44,16 +48,8 @@ export function PageSpine({ entityId, fullText, query, onSelect }: Props) {
               <li key={i} data-part="row" data-variant="passive" className="w-full rounded-md px-2 py-1.5">
                 <p data-part="excerpt" className="text-sm text-ink leading-relaxed">
                   <HighlightedText text={snippet.text} query={query} />
+                  {snippet.hits > 1 && <PageTag>{snippet.hits}×</PageTag>}
                 </p>
-                {snippet.hits > 1 && (
-                  <span
-                    dir="ltr"
-                    data-part="hits"
-                    className="mt-0.5 block text-end text-xs font-semibold text-ink-tertiary tabular-nums"
-                  >
-                    {snippet.hits}×
-                  </span>
-                )}
               </li>
             );
           }
@@ -75,14 +71,10 @@ export function PageSpine({ entityId, fullText, query, onSelect }: Props) {
               >
                 <span data-part="excerpt" className="block text-sm text-ink leading-relaxed">
                   <HighlightedText text={snippet.text} query={query} />
-                </span>
-                <span
-                  dir="ltr"
-                  data-part="page"
-                  className="mt-0.5 block text-end text-xs font-semibold text-ink-tertiary tabular-nums"
-                >
-                  p.{page}
-                  {snippet.hits > 1 ? ` · ${snippet.hits}×` : ""}
+                  <PageTag>
+                    p.{page}
+                    {snippet.hits > 1 ? ` · ${snippet.hits}×` : ""}
+                  </PageTag>
                 </span>
               </button>
             </li>
@@ -90,5 +82,20 @@ export function PageSpine({ entityId, fullText, query, onSelect }: Props) {
         })}
       </ul>
     </div>
+  );
+}
+
+/** The citation after the excerpt's last word. `bdi dir="ltr"` holds "p.15 · 2×"
+ *  in order under RTL without forcing the excerpt's own direction; `nowrap`
+ *  keeps the tag in one piece when it lands at a line end. */
+function PageTag({ children }: { children: ReactNode }) {
+  return (
+    <bdi
+      dir="ltr"
+      data-part="page"
+      className="ms-1.5 whitespace-nowrap text-meta font-semibold text-ink-tertiary tabular-nums"
+    >
+      {children}
+    </bdi>
   );
 }
