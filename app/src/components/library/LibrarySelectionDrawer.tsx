@@ -14,7 +14,14 @@ import { EntityListDrawer } from "./EntityListDrawer";
  *
  *  The X closes the list without clearing the selection (Clear, in the
  *  footer, is the one clear); the footer's "N selected" reopens it. */
-export function LibrarySelectionDrawer({ onSelect }: { onSelect: (id: string, e?: React.MouseEvent) => void }) {
+export function LibrarySelectionDrawer({
+  onSelect,
+  query,
+}: {
+  onSelect: (id: string, e?: React.MouseEvent) => void;
+  /** The host's deferred query, to mark. */
+  query: string;
+}) {
   const selection = useAtomValue(librarySelectionAtom);
   const setOpen = useSetAtom(librarySelectionDrawerOpenAtom);
   // Every id listed since the drawer opened, in the order it arrived. A Set
@@ -43,6 +50,7 @@ export function LibrarySelectionDrawer({ onSelect }: { onSelect: (id: string, e?
       onClose={() => setOpen(false)}
       closeLabel="Close selection list"
       onSelect={onSelect}
+      query={query}
       rowClassName={(id) => (selection.has(id) ? "" : "opacity-60")}
     />
   );

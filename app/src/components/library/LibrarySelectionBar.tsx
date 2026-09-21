@@ -71,8 +71,14 @@ export function LibrarySelectionBar({
     setPreview(null);
     openDrawer(true);
   };
-  const selectedEntities = (): Entity[] =>
-    [...selection].map((id) => getEntity(id)).filter((e): e is Entity => !!e);
+  // In the order the results are drawn, then the ones not in view — not the
+  // order they happened to be clicked in.
+  const selectedEntities = (): Entity[] => {
+    const ordered = filteredIds.filter((id) => selection.has(id));
+    const shown = new Set(ordered);
+    for (const id of selection) if (!shown.has(id)) ordered.push(id);
+    return ordered.map((id) => getEntity(id)).filter((e): e is Entity => !!e);
+  };
 
   const exportSelection = () =>
     void runCsvExport(
@@ -87,6 +93,9 @@ export function LibrarySelectionBar({
     const ids = [...selection];
     const ref = store.set(deleteWithUndoAtom, { corpus, ids });
     deselect(ids);
+    // A deleted entity left open in the preview would go on offering Edit.
+    const previewed = store.get(librarySelectedEntityIdAtom);
+    if (previewed && ids.includes(previewed)) setPreview(null);
     store.set(notificationsAtom, (prev) => [
       {
         id: `n-${ref}`,
@@ -103,45 +112,19 @@ export function LibrarySelectionBar({
 
   return (
     <>
-      <span
-        role="status"
-        aria-live="polite"
-        className="shrink-0 min-w-[7rem] flex items-center gap-1.5 text-xs tabular-nums"
-      >
+      {/* The count, in a FIXED slot (up to "4,398 selected" in tabular
+          figures), so 9 → 10 → 100 moves no button. What varies more — "N not
+          in view", "Select all N" — rides after Clear, where appearing and
+          disappearing moves nothing but the empty space before the filters. */}
+      <span role="status" aria-live="polite" className="shrink-0 w-[7rem] flex items-center text-xs tabular-nums">
         <button
           type="button"
           onClick={showList}
-          className="font-semibold text-ink hover:underline cursor-pointer rounded-sm
+          className="font-semibold text-ink hover:underline cursor-pointer rounded-sm truncate
             focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
         >
           {n.toLocaleString()} selected
         </button>
-        {notInView > 0 && (
-          <>
-            <span aria-hidden className="text-ink-muted">·</span>
-            <button
-              type="button"
-              onClick={showList}
-              className="text-carbon hover:underline cursor-pointer rounded-sm whitespace-nowrap
-                focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
-            >
-              {notInView.toLocaleString()} not in view
-            </button>
-          </>
-        )}
-        {moreToSelect && (
-          <>
-            <span aria-hidden className="text-ink-muted">·</span>
-            <button
-              type="button"
-              onClick={() => selectIds(filteredIds)}
-              className="text-carbon hover:underline cursor-pointer rounded-sm whitespace-nowrap
-                focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
-            >
-              Select all {filteredIds.length.toLocaleString()}
-            </button>
-          </>
-        )}
       </span>
       <BarButton icon={<PenLine size={13} />} label="Edit" disabledReason="Bulk edit comes in a later step" />
       <BarButton
@@ -154,6 +137,34 @@ export function LibrarySelectionBar({
       <BarButton icon={<Lock size={13} />} label="Permissions" disabledReason="Permissions come in a later step" />
       <BarButton icon={<Trash2 size={13} />} label="Delete" onClick={() => setConfirmDelete(true)} />
       <BarButton icon={<X size={13} />} label="Clear" onClick={() => clear()} />
+      <span aria-live="polite" className="hidden sm:flex min-w-0 items-center gap-1.5 text-xs tabular-nums">
+        {notInView > 0 && (
+            <>
+              <span aria-hidden className="text-ink-muted">·</span>
+              <button
+                type="button"
+                onClick={showList}
+                className="text-carbon hover:underline cursor-pointer rounded-sm whitespace-nowrap
+                  focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
+              >
+                {notInView.toLocaleString()} not in view
+              </button>
+            </>
+          )}
+          {moreToSelect && (
+            <>
+              <span aria-hidden className="text-ink-muted">·</span>
+              <button
+                type="button"
+                onClick={() => selectIds(filteredIds)}
+                className="text-carbon hover:underline cursor-pointer rounded-sm whitespace-nowrap
+                  focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
+              >
+                Select all {filteredIds.length.toLocaleString()}
+              </button>
+            </>
+          )}
+      </span>
       {/* Phone: the same actions, reachable. */}
       <button
         type="button"

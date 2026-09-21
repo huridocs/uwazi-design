@@ -34,7 +34,7 @@ import { BorrowedDocLine } from "../BorrowedDocLine";
 import { Hint } from "../../shared/Hint";
 import { PageTag } from "../../shared/PageTag";
 import { AlsoUnder } from "./AlsoUnder";
-import { EntitySelectBox, useDrawnIds, useSelectionOrder } from "../EntitySelectBox";
+import { EntitySelectBox, holdTextSelection, useDrawnIds, useSelectionOrder } from "../EntitySelectBox";
 import { useSettledWidth } from "../../../hooks/useSettledWidth";
 import { ToggleChip } from "../../shared/ToggleChip";
 import { CountBadge } from "../../shared/CountBadge";
@@ -475,6 +475,7 @@ function GroupedBody({
               <button
                 type="button"
                 onClick={(e) => onSelect(entity.id, e)}
+                onMouseDown={holdTextSelection}
                 aria-pressed={selected}
                 className="min-w-0 text-start text-sm font-semibold text-ink truncate hover:underline
                   cursor-pointer focus-visible:outline-none focus-visible:ring-1

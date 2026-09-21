@@ -753,8 +753,9 @@ export function LibraryView() {
   const selectionDrawerOpen = useAtomValue(librarySelectionDrawerOpenAtom);
   const shownIds = useMemo(() => shown.map((e) => e.id), [shown]);
   const filteredIds = useMemo(() => filtered.map((e) => e.id), [filtered]);
-  // The grid's and the table's order — Timeline and Results register their own.
-  useSelectionOrder(shownIds);
+  // The grid's and the table's order — Timeline and Results register their own,
+  // so this one stands down while they draw (see `useSelectionOrder`).
+  useSelectionOrder(viewMode === "timeline" || viewMode === "results" ? null : shownIds);
   // What the visible view DRAWS, for "select all loaded". The grid, the table
   // and the map are drawn here; Timeline and Results publish their own.
   const setDrawnIds = useSetAtom(libraryDrawnIdsAtom);
@@ -1434,9 +1435,9 @@ export function LibraryView() {
   const drawer = selectedId ? (
     <EntityDrawerPreview entityId={selectedId} />
   ) : selectionActive && selectionDrawerOpen ? (
-    <LibrarySelectionDrawer onSelect={handleSelect} />
+    <LibrarySelectionDrawer onSelect={handleSelect} query={query} />
   ) : selectedCluster && viewMode === "map" ? (
-    <LibraryClusterDrawer onSelect={handleSelect} />
+    <LibraryClusterDrawer onSelect={handleSelect} query={query} />
   ) : (
     filtersDrawer
   );

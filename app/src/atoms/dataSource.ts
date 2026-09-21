@@ -1,5 +1,5 @@
 import { atom, type Getter } from "jotai";
-import { atomWithStorage } from "jotai/utils";
+import { atomFamily, atomWithStorage } from "jotai/utils";
 import { entitiesAtom, entityTypesAtom } from "./entities";
 import { entityCorpusOf, entityTypes, type Entity, type EntityType } from "../data/entities";
 import { cejilEntityTypes } from "../data/cejil/typesAdapter";
@@ -7,7 +7,7 @@ import { cejilLibraryEntities } from "../data/cejil/adapt";
 import { artworkEntityTypes } from "../data/artworks/typesAdapter";
 import { artworkLibraryEntities } from "../data/artworks/adapt";
 import { libraryEntityOverlayAtom } from "./entityOverlay";
-import { applyOverlay } from "../data/entityOverlay";
+import { applyOverlay, overlayMirror, type Corpus, type CorpusOverlay } from "../data/entityOverlay";
 
 export type DataSource = "mock" | "cejil" | "artworks";
 
@@ -22,6 +22,14 @@ export const dataSourceAtom = atomWithStorage<DataSource>("uwazi:dataSource", "m
  *  re-evaluates when it changes. */
 export const cejilReadyAtom = atom(false);
 
+/** One corpus's slice of the overlay. A derived atom per corpus: a write to
+ *  one corpus leaves the others' slices the same object, so the list below
+ *  is not rebuilt (and its list-keyed caches not invalidated) for a change
+ *  that never touched it. */
+const corpusOverlayAtom = atomFamily((corpus: Corpus) =>
+  atom<CorpusOverlay>((get) => get(libraryEntityOverlayAtom)[corpus]),
+);
+
 /** The entity list the Library shows, by source. CEJIL data loads on demand, so
  *  this is [] until `cejilReadyAtom` flips (the Library shows a loading state). */
 export const libraryEntitiesAtom = atom<Entity[]>((get) => {
@@ -30,7 +38,7 @@ export const libraryEntitiesAtom = atom<Entity[]>((get) => {
   // entities first, deleted ones out, patched ones as new objects so every
   // per-entity cache recomputes. With none, the corpus's own array comes back
   // as is — its identity keys caches too.
-  return applyOverlay(get(libraryEntityOverlayAtom)[source], seedFor(source, get));
+  return applyOverlay(get(corpusOverlayAtom(source)), seedFor(source, get));
 });
 
 function seedFor(source: DataSource, get: Getter): Entity[] {
@@ -73,12 +81,15 @@ export function entityCorpusPool(
   mock: Entity[],
 ): { corpus: DataSource; entities: Entity[]; loading: boolean } {
   const corpus = entityCorpusOf(entityId);
-  if (corpus === "artworks") return { corpus, entities: artworkLibraryEntities(), loading: false };
+  // The session's changes apply here too: a pool that offered deleted
+  // entities and never the created ones disagreed with the Library.
+  const overlay = overlayMirror()[corpus];
+  if (corpus === "artworks") return { corpus, entities: applyOverlay(overlay, artworkLibraryEntities()), loading: false };
   if (corpus === "cejil") {
     const entities = cejilLibraryEntities();
-    return { corpus, entities, loading: entities.length === 0 };
+    return { corpus, entities: applyOverlay(overlay, entities), loading: entities.length === 0 };
   }
-  return { corpus, entities: mock, loading: false };
+  return { corpus, entities: applyOverlay(overlay, mock), loading: false };
 }
 
 /** The templates of ONE corpus — for a surface about a single entity (its

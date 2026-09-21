@@ -15,6 +15,10 @@ import { Hint } from "../shared/Hint";
  *
  *  The hint carries the gestures Uwazi prints under its grid, because a
  *  checkbox is not where anyone expects to learn them. */
+/** The modifier this platform calls Cmd — Ctrl everywhere but Apple's. */
+const MOD =
+  typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? "Cmd" : "Ctrl";
+
 export function SelectAllBox({ loadedIds, disabled = false }: { loadedIds: readonly string[]; disabled?: boolean }) {
   const selection = useAtomValue(librarySelectionAtom);
   const selectIds = useSetAtom(selectIdsAtom);
@@ -33,7 +37,7 @@ export function SelectAllBox({ loadedIds, disabled = false }: { loadedIds: reado
   }, [mixed]);
 
   return (
-    <Hint text="Select all loaded. Cmd or Shift + click selects several." describe={false}>
+    <Hint text={`Select all loaded. ${MOD} or Shift + click selects several.`} describe={false}>
       {(hint) => (
         <span {...hint} className="inline-flex items-center">
           <input

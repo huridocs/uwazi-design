@@ -1,5 +1,6 @@
 import { startTransition } from "react";
-import { atom } from "jotai";
+import { atom, type Getter, type Setter } from "jotai";
+import { editSessionOpenAtom } from "./dirtyGuard";
 import { atomFamily, atomWithStorage, createJSONStorage } from "jotai/utils";
 import { dataSourceAtom, libraryEntitiesAtom, type DataSource } from "./dataSource";
 import { languageAtom } from "./language";
@@ -256,6 +257,15 @@ export const librarySelectionDrawerOpenAtom = atom(true);
  *  "Select all loaded" means these, in every view; each view writes its own. */
 export const libraryDrawnIdsAtom = atom<readonly string[]>([]);
 
+/** Show the selection list in the drawer — by dropping the preview, unless
+ *  the preview is holding an open form (a draft, an edit): ticking a box
+ *  must not unmount it and lose what was typed. The list shows once the form
+ *  is closed. */
+function showSelectionList(get: Getter, set: Setter) {
+  if (!get(editSessionOpenAtom)) set(librarySelectedEntityIdAtom, null);
+  set(librarySelectionDrawerOpenAtom, true);
+}
+
 /** Toggle one id. Sets the anchor, ends any range, and — like every selection
  *  gesture — drops the preview so the drawer shows the selection being built. */
 export const toggleSelectionAtom = atom(null, (get, set, id: string) => {
@@ -265,8 +275,7 @@ export const toggleSelectionAtom = atom(null, (get, set, id: string) => {
   set(librarySelectionAtom, next);
   set(librarySelectionAnchorAtom, id);
   set(lastRangeAtom, []);
-  set(librarySelectedEntityIdAtom, null);
-  set(librarySelectionDrawerOpenAtom, true);
+  showSelectionList(get, set);
 });
 
 /** Shift+click: select from the anchor to `id` over `order` — the order the
@@ -291,8 +300,7 @@ export const rangeSelectionAtom = atom(null, (get, set, { order, id }: { order: 
   if (anchor) next.add(anchor);
   set(librarySelectionAtom, next);
   set(lastRangeAtom, added.filter((x) => x !== anchor));
-  set(librarySelectedEntityIdAtom, null);
-  set(librarySelectionDrawerOpenAtom, true);
+  showSelectionList(get, set);
 });
 
 /** Add ids (select all loaded, select all results, a map cluster). */
@@ -301,8 +309,7 @@ export const selectIdsAtom = atom(null, (get, set, ids: readonly string[]) => {
   for (const id of ids) next.add(id);
   set(librarySelectionAtom, next);
   set(lastRangeAtom, []);
-  set(librarySelectedEntityIdAtom, null);
-  set(librarySelectionDrawerOpenAtom, true);
+  showSelectionList(get, set);
 });
 
 /** Remove ids (a row unticked in the selection drawer, deleted entities). */

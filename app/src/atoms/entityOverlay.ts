@@ -1,7 +1,7 @@
 import { atom } from "jotai";
 import type { Entity } from "../data/entities";
 import {
-  EMPTY_OVERLAY,
+  overlayMirror,
   setDraftMirror,
   setOverlayMirror,
   overlayCreated,
@@ -29,7 +29,10 @@ import type { Language } from "./language";
  *  `getEntityProfile`) in the same step as the atom, so React and the
  *  resolvers never disagree about what an entity is. Undo is a write of an
  *  earlier value: `set(libraryEntityOverlayAtom, snapshot)`. */
-const overlayValueAtom = atom<EntityOverlay>(EMPTY_OVERLAY);
+// Seeded from the mirror, not EMPTY: a hot reload of this module recreates the
+// atom, and starting empty while the mirror kept the old value left getEntity
+// resolving entities the list no longer had (dev only).
+const overlayValueAtom = atom<EntityOverlay>(overlayMirror());
 
 export const libraryEntityOverlayAtom = atom(
   (get) => get(overlayValueAtom),
