@@ -52,7 +52,7 @@ export function SelectionActionsMenu({ actions }: { actions: SelectionAction[] }
       type="button"
       role="menuitem"
       aria-disabled={a.disabledReason ? true : undefined}
-      title={a.disabledReason}
+      aria-describedby={a.disabledReason ? `sel-action-${a.id}-why` : undefined}
       onClick={() => {
         if (a.disabledReason) return;
         close();
@@ -69,7 +69,15 @@ export function SelectionActionsMenu({ actions }: { actions: SelectionAction[] }
       <span className={a.danger ? "" : "text-ink-tertiary"} aria-hidden>
         {a.icon}
       </span>
-      <span className="flex-1">{a.label}</span>
+      <span className="flex-1 min-w-0">
+        {a.label}
+        {/* Why it is off, IN the item — a `title` never shows to a keyboard. */}
+        {a.disabledReason && (
+          <span id={`sel-action-${a.id}-why`} className="block text-meta text-ink-muted">
+            {a.disabledReason}
+          </span>
+        )}
+      </span>
     </button>
   );
 
@@ -92,7 +100,14 @@ export function SelectionActionsMenu({ actions }: { actions: SelectionAction[] }
           role="menu"
           aria-label="Selection actions"
           onKeyDown={onKeyDown}
-          className="absolute bottom-full end-0 mb-1.5 z-20 w-48 p-1 bg-paper rounded-md border border-border shadow-lg"
+          // Tabbing out of the menu closes it: left open, its items stayed in
+          // the tab order behind whatever took the focus.
+          onBlur={(e) => {
+            const to = e.relatedTarget as Node | null;
+            if (to && (menuRef.current?.contains(to) || buttonRef.current?.contains(to))) return;
+            setOpen(false);
+          }}
+          className="absolute bottom-full end-0 mb-1.5 z-20 w-56 p-1 bg-paper rounded-md border border-border shadow-lg"
         >
           {regular.map(item)}
           {danger.length > 0 && <div role="separator" className="my-1 h-px bg-border" />}

@@ -6,7 +6,7 @@ import { applyBulkEditAtom } from "../../atoms/entityOverlay";
 import { languageAtom } from "../../atoms/language";
 import { notificationsAtom } from "../../atoms/notifications";
 import { getEntity, type Entity, type EntityType } from "../../data/entities";
-import type { Corpus } from "../../data/entityOverlay";
+import { isOverlayDeleted, type Corpus } from "../../data/entityOverlay";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { planTemplateChange, templateChangeRecords, type TemplateChangePlan } from "../../utils/changeTemplate";
 import { BULK_TASK_THRESHOLD, runBulkApply } from "../../utils/libraryTasks";
@@ -35,7 +35,9 @@ export function ChangeTemplateDialog({
   const applyBulk = useSetAtom(applyBulkEditAtom);
   const panelRef = useFocusTrap<HTMLDivElement>(true);
   // Frozen at open, like the bulk form.
-  const [entities] = useState(() => ids.map((id) => getEntity(id)).filter((e): e is Entity => !!e));
+  const [entities] = useState(() =>
+    ids.filter((id) => !isOverlayDeleted(id)).map((id) => getEntity(id)).filter((e): e is Entity => !!e),
+  );
   const [target, setTarget] = useState<string | null>(null);
   const plan: TemplateChangePlan | null = useMemo(
     () => (target ? planTemplateChange(entities, target, corpus, language) : null),

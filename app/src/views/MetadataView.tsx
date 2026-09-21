@@ -750,8 +750,10 @@ function EntityEditBody({
         if (!u) return f;
         // A multiselect's copy arrives as its display string; its set is
         // rebuilt from it so the list and the string agree.
+        // A multiselect copies its SET (labels and ids) — splitting the display
+        // string on ", " broke a label that contains one.
         return f.type === "multiselect"
-          ? withLabels(f, (u.row.sourceValue ?? "").split(", ").filter(Boolean))
+          ? withLabels(f, u.row.sourceValues ?? [], u.row.sourceValueIds)
           : { ...f, value: u.row.sourceValue ?? "" };
       }),
     );

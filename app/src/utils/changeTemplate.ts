@@ -72,6 +72,23 @@ export function planTemplateChange(
         dropValues += values;
         return { id: f.id, label: f.label, values, entities: ents };
       });
+    // A record can hold scalars its template doesn't declare (CEJIL records
+    // do); the rebuilt record drops them too, so they are counted too.
+    const declared = new Set(src.map((f) => f.id));
+    const undeclared = new Map<string, { id: string; label: string; values: number; entities: number }>();
+    for (const e of list)
+      for (const r of getEntityProfile(e.id).metadata[language] ?? []) {
+        if (r.type === "relationship" || declared.has(r.id) || r.id === "description" || !hasValue(r)) continue;
+        const d = undeclared.get(r.id) ?? { id: r.id, label: r.label, values: 0, entities: 0 };
+        d.values += Math.max(1, chosenLabels(r).length);
+        d.entities++;
+        hit.add(e.id);
+        undeclared.set(r.id, d);
+      }
+    for (const d of undeclared.values()) {
+      dropValues += d.values;
+      dropped.push(d);
+    }
     const added = targetFields.filter((g) => !src.some((f) => sameProperty(f, g))).map((g) => g.label);
     return { typeId, count: list.length, kept: kept.map((f) => f.label), dropped, added };
   });

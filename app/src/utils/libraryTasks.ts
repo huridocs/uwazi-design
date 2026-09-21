@@ -1,6 +1,6 @@
 import type { useStore } from "jotai";
 import { activitiesAtom, type Activity } from "../atoms/notifications";
-import { addUploadedDocumentsAtom, recordRestoreUndoAtom, writeBulkChunkAtom } from "../atoms/entityOverlay";
+import { addUploadedDocumentsAtom, recordRestoreUndoAtom, undoOpAtom, writeBulkChunkAtom } from "../atoms/entityOverlay";
 import { notificationsAtom } from "../atoms/notifications";
 import type { BulkPlan } from "./bulkEdit";
 import type { Corpus } from "../data/entityOverlay";
@@ -184,11 +184,35 @@ export function runBulkApply(
   ]);
   const entries: ReturnType<typeof writeBulkChunkAtom["write"]> = [];
   let done = 0;
-  const finish = (cancelled: boolean) => {
-    const ref = entries.length ? store.set(recordRestoreUndoAtom, { corpus, entries }) : null;
+  // The undo in force when the task started. If another undoable change
+  // lands while it runs (a delete, a second task), THAT is the user's latest
+  // action: the task must not replace its undo when it finishes.
+  const undoAtStart = store.get(undoOpAtom);
+  const finish = (cancelled: boolean, failed?: unknown) => {
+    const superseded = store.get(undoOpAtom) !== undoAtStart;
+    const ref = entries.length && !superseded ? store.set(recordRestoreUndoAtom, { corpus, entries }) : null;
     const action = ref ? { label: "Undo", kind: "undo" as const, ref } : undefined;
     const n = entries.length;
     const title = `${n.toLocaleString()} ${n === 1 ? "entity" : "entities"} updated.`;
+    if (failed) {
+      store.set(activitiesAtom, (prev) => prev.filter((a) => a.id !== id));
+      store.set(notificationsAtom, (prev) => [
+        {
+          id: `n-${id}`,
+          kind: "error",
+          title: `Stopped after ${done.toLocaleString()} of ${total.toLocaleString()} entities.`,
+          detail: `${n.toLocaleString()} ${n === 1 ? "entity was" : "entities were"} changed before the error and keep the change.${
+            ref ? " Undo restores them." : ""
+          }`,
+          details: String(failed),
+          time: Date.now(),
+          read: false,
+          ...(action ? { action } : {}),
+        },
+        ...prev,
+      ]);
+      return;
+    }
     if (cancelled) {
       // The activity is gone (Cancel removed it), so the Beacon won't turn it
       // into a notification: say what happened here.
@@ -197,7 +221,9 @@ export function runBulkApply(
           id: `n-${id}`,
           kind: "warning",
           title: `Cancelled after ${done.toLocaleString()} of ${total.toLocaleString()} entities.`,
-          detail: `${n.toLocaleString()} ${n === 1 ? "entity was" : "entities were"} changed before the cancel and keep the change. Undo restores them.`,
+          detail: `${n.toLocaleString()} ${n === 1 ? "entity was" : "entities were"} changed before the cancel and keep the change.${
+            ref ? " Undo restores them." : superseded ? " A later change holds the undo." : ""
+          }`,
           time: Date.now(),
           read: false,
           ...(action ? { action } : {}),
@@ -208,14 +234,25 @@ export function runBulkApply(
     }
     patch(store, id, {
       current: total,
-      done: { title, detail: "Undo restores their previous values until your next bulk change or delete.", action },
+      done: {
+        title,
+        detail: ref
+          ? "Undo restores their previous values until your next bulk change or delete."
+          : "A change made while this ran holds the undo.",
+        action,
+      },
     });
   };
   const step = () => {
     if (!alive(store, id)) return finish(true);
     const chunk = entities.slice(done, done + BULK_CHUNK) as Entity[];
-    const p = plan(chunk);
-    entries.push(...store.set(writeBulkChunkAtom, { corpus, records: p.records, patches: p.patches }));
+    try {
+      const p = plan(chunk);
+      entries.push(...store.set(writeBulkChunkAtom, { corpus, records: p.records, patches: p.patches }));
+    } catch (err) {
+      // What was written stays, with its undo; the task doesn't hang.
+      return finish(false, err);
+    }
     done += chunk.length;
     if (done >= total) return finish(false);
     patch(store, id, { current: done });

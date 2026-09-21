@@ -114,6 +114,10 @@ export interface CopyMatch {
    *  their value from it (see header). A commit layer switches on this. */
   copies: "value" | "connection";
   sourceValue?: string;
+  /** A multiselect's labels and value ids, as the SET — its display string
+   *  joins them with ", ", which a label can itself contain. */
+  sourceValues?: string[];
+  sourceValueIds?: string[];
   sourceConnectedEntityIds?: string[];
   /** What the target holds right now, so a caller can show incoming-vs-current
    *  per row instead of overwriting silently (weakness #3). */
@@ -366,6 +370,9 @@ export function planCopy(
       type: t.type,
       copies: relationship ? "connection" : "value",
       sourceValue,
+      ...(s.type === "multiselect"
+        ? { sourceValues: s.values ?? (s.value ? [s.value] : []), sourceValueIds: s.valueIds }
+        : {}),
       sourceConnectedEntityIds: sourceIds,
       targetValue,
       targetConnectedEntityIds: targetIds,

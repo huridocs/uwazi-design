@@ -15,6 +15,7 @@ import {
   thesaurusBindingsAtom,
 } from "../../atoms/thesauri";
 import { entityCorpusOf, getEntity, type Entity } from "../../data/entities";
+import { isOverlayDeleted } from "../../data/entityOverlay";
 import type { ThesaurusValue } from "../../data/settings";
 import { useRegisterDirtyForm } from "../../hooks/useDirtyGuard";
 import {
@@ -62,7 +63,12 @@ export function BulkEditBody({
 }) {
   const store = useStore();
   const language = useAtomValue(languageAtom);
-  const entities = useMemo(() => ids.map((id) => getEntity(id)).filter((e): e is Entity => !!e), [ids]);
+  // `getEntity` still resolves a deleted id (by design, for undo and stale
+  // links); a deleted entity is no longer one this form edits.
+  const entities = useMemo(
+    () => ids.filter((id) => !isOverlayDeleted(id)).map((id) => getEntity(id)).filter((e): e is Entity => !!e),
+    [ids],
+  );
   const corpus = entities[0] ? entityCorpusOf(entities[0].id) : "mock";
   const fields = useMemo(() => commonFields(entities, corpus, language), [entities, corpus, language]);
   const thesauri = useAtomValue(thesauriAtom(corpus));
