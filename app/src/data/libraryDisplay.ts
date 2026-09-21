@@ -71,6 +71,10 @@ export interface ChoiceOption {
  *  the columns the current corpus can actually offer. */
 export interface DisplayContext {
   isMobile: boolean;
+  /** The toolbar's Sort select has stepped aside — on a phone, or because the
+   *  Library pane is too narrow for it (a drawer beside a tablet-width
+   *  window) — so Sort lives in this menu instead. */
+  sortInMenu: boolean;
   hasQuery: boolean;
   /** The list's column toggles — built-ins plus one per metadata property the
    *  corpus carries. Supplied by `components/library/listColumns`, so a new
@@ -131,7 +135,7 @@ const SORT: DisplaySection = {
   id: "sort",
   label: "Sort by",
   kind: "choice",
-  visible: (ctx) => ctx.isMobile,
+  visible: (ctx) => ctx.sortInMenu,
   separator: true,
   option: { id: "sort", scope: "external", default: "recent", choices: LIBRARY_SORTS },
 };
