@@ -8,13 +8,14 @@ import {
   librarySelectionAtom,
   librarySelectionDialogAtom,
   openBulkEditAtom,
+  whenBulkCleanAtom,
 } from "../../atoms/library";
 import { deleteWithUndoAtom } from "../../atoms/entityOverlay";
 import { notificationsAtom } from "../../atoms/notifications";
 import { languageAtom } from "../../atoms/language";
 import { libraryTypesAtom } from "../../atoms/dataSource";
 import type { Corpus } from "../../data/entityOverlay";
-import { getEntity, type Entity } from "../../data/entities";
+import { entityCorpusOf, getEntity, type Entity } from "../../data/entities";
 import { runCsvExport } from "../../utils/libraryTasks";
 import { ConfirmDialog } from "../shared/ConfirmDialog";
 import { ShareEntityModal } from "../share/ShareEntityModal";
@@ -113,8 +114,17 @@ export function SelectionDialogs({ corpus, notInView }: { corpus: Corpus; notInV
 
   const doDelete = () => {
     close();
-    const ids = [...selection];
-    const ref = store.set(deleteWithUndoAtom, { corpus, ids });
+    // Behind the bulk form's guard BEFORE anything is deleted: with a dirty
+    // form, "Keep editing" must leave the entities where they are, not
+    // deleted-but-still-selected in the form's frozen set.
+    store.set(whenBulkCleanAtom, deleteSelection);
+  };
+  const deleteSelection = () => {
+    const ids = [...store.get(librarySelectionAtom)];
+    if (!ids.length) return;
+    // The entities' own corpus, not the collection on screen.
+    const own = entityCorpusOf(ids[0]);
+    const ref = store.set(deleteWithUndoAtom, { corpus: own, ids });
     deselect(ids);
     // A deleted entity left open in the preview would go on offering Edit.
     const previewed = store.get(librarySelectedEntityIdAtom);

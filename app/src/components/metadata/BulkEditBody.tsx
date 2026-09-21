@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { languageAtom, languageName, type Language } from "../../atoms/language";
 import { applyBulkEditAtom } from "../../atoms/entityOverlay";
@@ -6,19 +6,25 @@ import { notificationsAtom } from "../../atoms/notifications";
 import {
   addThesaurusValueAtom,
   bindingKey,
+  fieldKeys,
+  foldLabel,
   localizeValues,
+  pseudoKey,
   selectableLabels,
   thesauriAtom,
   thesaurusBindingsAtom,
 } from "../../atoms/thesauri";
 import { entityCorpusOf, getEntity, type Entity } from "../../data/entities";
+import { isOverlayDeleted } from "../../data/entityOverlay";
 import type { ThesaurusValue } from "../../data/settings";
 import { useRegisterDirtyForm } from "../../hooks/useDirtyGuard";
 import {
   commonFields,
-  coverageOf,
   planBulkEdit,
-  scalarSummary,
+  scalarOf,
+  summarizeInto,
+  type BulkCtx,
+  type FieldSummary,
   type BulkEdits,
   type BulkField,
   type BulkPlan,
@@ -57,7 +63,12 @@ export function BulkEditBody({
 }) {
   const store = useStore();
   const language = useAtomValue(languageAtom);
-  const entities = useMemo(() => ids.map((id) => getEntity(id)).filter((e): e is Entity => !!e), [ids]);
+  // `getEntity` still resolves a deleted id (by design, for undo and stale
+  // links); a deleted entity is no longer one this form edits.
+  const entities = useMemo(
+    () => ids.filter((id) => !isOverlayDeleted(id)).map((id) => getEntity(id)).filter((e): e is Entity => !!e),
+    [ids],
+  );
   const corpus = entities[0] ? entityCorpusOf(entities[0].id) : "mock";
   const fields = useMemo(() => commonFields(entities, corpus, language), [entities, corpus, language]);
   const thesauri = useAtomValue(thesauriAtom(corpus));
@@ -75,10 +86,17 @@ export function BulkEditBody({
   const n = entities.length;
   // A property is bound per template; a common select shares its thesaurus
   // by construction, so the first entity's template answers for all.
-  const thesaurusOf = (f: BulkField): ThesaurusValue[] | null => {
-    const id = bindings[bindingKey(entities[0]?.typeId ?? "", f.id)] ?? f.thesaurus;
-    return thesauri.find((t) => t.id === id)?.values ?? null;
-  };
+  const thesaurusOf = useCallback(
+    (f: BulkField): ThesaurusValue[] | null => {
+      const id = bindings[bindingKey(entities[0]?.typeId ?? "", f.id)] ?? f.thesaurus;
+      return thesauri.find((t) => t.id === id)?.values ?? null;
+    },
+    [bindings, entities, thesauri],
+  );
+  const ctx = useMemo<BulkCtx>(() => ({ corpus, thesaurusOf }), [corpus, thesaurusOf]);
+  // What the entities hold, per field — once per (set, fields, language), not
+  // per render, and chunked for a large set (see useBulkSummaries).
+  const summaries = useBulkSummaries(ids, fields, language, ctx);
   const shownValues = (f: BulkField) => {
     const v = thesaurusOf(f);
     return v ? localizeValues(v, corpus, language) : null;
@@ -116,7 +134,7 @@ export function BulkEditBody({
   // its counts; the records are built chunk by chunk by the task.
   const asTask = n > BULK_TASK_THRESHOLD;
   const openReview = () => {
-    if (!dirty) return;
+    if (!dirty || !summaries) return;
     setReview(planBulkEdit({ entities, fields, edits, language, corpus, thesaurusOf, withRecords: !asTask }));
   };
 
@@ -232,10 +250,15 @@ export function BulkEditBody({
   return (
     <>
       <div data-part="fields" className="bleed flex-1 overflow-auto body-top pb-8 space-y-3">
+        {!summaries && fields.length > 0 && (
+          <p role="status" className="text-xs text-ink-tertiary py-6 text-center tabular-nums">
+            Reading the values of {n.toLocaleString()} entities…
+          </p>
+        )}
         {fields.length === 0 && (
           <p className="text-xs text-ink-tertiary py-6 text-center">These templates share no editable properties.</p>
         )}
-        {fields.map((f) => {
+        {summaries && fields.map((f) => {
           const e = edits[f.id];
           const inputId = `bulk-${f.id}`;
           if (f.kind === "multi" || f.kind === "connection") {
@@ -243,9 +266,8 @@ export function BulkEditBody({
               <MultiField
                 key={f.id}
                 field={f}
-                ids={ids}
                 n={n}
-                language={language}
+                cov={summaries[f.id]?.counts ?? {}}
                 edit={e?.kind === "multi" ? e : undefined}
                 values={f.kind === "multi" ? shownValues(f) : undefined}
                 fresh={fresh}
@@ -255,7 +277,7 @@ export function BulkEditBody({
               />
             );
           }
-          const sum = scalarSummary(ids, f, language);
+          const sum = scalarOf(summaries[f.id] ?? { distinct: new Set(), counts: {} });
           const touched = e?.kind === "scalar";
           const value = touched ? e.value : sum.shared ? sum.value : "";
           const state = touched ? "changed" : sum.shared ? "shared" : "mixed";
@@ -341,21 +363,28 @@ export function BulkEditBody({
           existing={selectableLabels(shownValues(adding) ?? [])}
           onClose={() => setAdding(null)}
           onSave={(label) => {
-            const shown = selectableLabels(shownValues(adding) ?? []);
-            const match = shown.find((l) => l.toLowerCase() === label.toLowerCase());
-            let pick = match;
+            // A label the reader's language already shows IS that value — by
+            // the same fold the modal names the match with.
+            const match = selectableLabels(shownValues(adding) ?? []).find((l) => foldLabel(l) === foldLabel(label));
+            let pick = match
+              ? fieldKeys({ type: "select", value: match }, thesaurusOf(adding), corpus, language)[0]
+              : undefined;
             if (!pick) {
               const tid = bindings[bindingKey(entities[0]?.typeId ?? "", adding.id)] ?? adding.thesaurus;
               const saved = tid ? addValue({ corpus, thesaurusId: tid, label }) : { id: null, label };
-              pick = saved.label;
-              setFresh((p) => new Set([...p, saved.label]));
+              // The id it returns, not its label: a label is one language's.
+              pick = saved.id ?? pseudoKey(saved.label);
+              const existed = (thesaurusOf(adding) ?? []).some(
+                (v) => v.id === saved.id || v.values?.some((c) => c.id === saved.id),
+              );
+              if (!existed) setFresh((p) => new Set([...p, pick!]));
             }
             // A new value is on nobody yet: ticking it adds it to all.
             const e = edits[adding.id];
             const add = new Set(e?.kind === "multi" ? e.add : []);
             const remove = new Set(e?.kind === "multi" ? e.remove : []);
             remove.delete(pick);
-            if ((coverageOf(ids, adding, language)[pick] ?? 0) < n) add.add(pick);
+            if ((summaries?.[adding.id]?.counts[pick] ?? 0) < n) add.add(pick);
             setEdit(adding.id, add.size || remove.size ? { kind: "multi", add: [...add], remove: [...remove] } : null);
             setAdding(null);
           }}
@@ -370,9 +399,8 @@ export function BulkEditBody({
  *  through the pending edit, so a ticked row reads "12 of 12". */
 function MultiField({
   field,
-  ids,
   n,
-  language,
+  cov,
   edit,
   values,
   fresh,
@@ -381,9 +409,9 @@ function MultiField({
   onAddValue,
 }: {
   field: BulkField;
-  ids: string[];
   n: number;
-  language: Language;
+  /** How many entities hold each value (key or connected id). */
+  cov: Record<string, number>;
   edit?: { add: string[]; remove: string[] };
   values?: ThesaurusValue[] | null;
   fresh: ReadonlySet<string>;
@@ -391,7 +419,6 @@ function MultiField({
   onRevert: () => void;
   onAddValue?: () => void;
 }) {
-  const cov = useMemo(() => coverageOf(ids, field, language), [ids, field, language]);
   const add = new Set(edit?.add ?? []);
   const remove = new Set(edit?.remove ?? []);
   const projected = (v: string) => (add.has(v) ? n : remove.has(v) ? 0 : cov[v] ?? 0);
@@ -452,4 +479,33 @@ function MultiField({
       </div>
     </BulkFieldRow>
   );
+}
+
+/** The per-field summaries of what `ids` hold. Up to the task threshold they
+ *  are computed at once; past it, in chunks between frames — reading a whole
+ *  CEJIL selection builds every profile, and doing that in one render froze
+ *  the page. `null` until complete. */
+function useBulkSummaries(ids: string[], fields: BulkField[], language: Language, ctx: BulkCtx) {
+  const small = ids.length <= BULK_TASK_THRESHOLD;
+  const now = useMemo(
+    () => (small ? summarizeInto({}, ids, fields, language, ctx) : null),
+    [small, ids, fields, language, ctx],
+  );
+  const [chunked, setChunked] = useState<Record<string, FieldSummary> | null>(null);
+  useEffect(() => {
+    if (small) return;
+    setChunked(null);
+    const acc: Record<string, FieldSummary> = {};
+    let at = 0;
+    let timer = 0;
+    const step = () => {
+      summarizeInto(acc, ids.slice(at, at + 200), fields, language, ctx);
+      at += 200;
+      if (at >= ids.length) setChunked({ ...acc });
+      else timer = window.setTimeout(step, 0);
+    };
+    timer = window.setTimeout(step, 0);
+    return () => window.clearTimeout(timer);
+  }, [small, ids, fields, language, ctx]);
+  return small ? now : chunked;
 }

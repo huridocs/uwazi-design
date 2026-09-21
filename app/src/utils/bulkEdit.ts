@@ -1,5 +1,5 @@
 import type { Language } from "../atoms/language";
-import { choiceByLanguage } from "../atoms/thesauri";
+import { fieldKeys, isPseudoKey, labelForKey } from "../atoms/thesauri";
 import { getEntity, type Entity } from "../data/entities";
 import { getEntityProfile } from "../data/entityProfiles";
 import type { Corpus, EntityRecord } from "../data/entityOverlay";
@@ -52,16 +52,10 @@ export function commonFields(entities: Entity[], corpus: Corpus, language: Langu
   const scalars: BulkField[] = perTemplate[0]
     .filter((f) => !EXCLUDED.has(f.type) && !f.list && f.id !== "title" && f.id !== "geolocation")
     .filter((f) => perTemplate.every((list) => list.some((g) => same(f, g))))
-    // A property whose RECORD is a different kind from its template's blank
-    // field is one the form can't write faithfully: CEJIL's multidates are
-    // text in the template table and a list of dates on the record, and one
-    // box for all of them would overwrite every list with one string.
-    .filter((f) =>
-      entities.every((e) => {
-        const r = (getEntityProfile(e.id).metadata[language] ?? []).find((x) => x.id === f.id);
-        return !r || r.type === f.type;
-      }),
-    )
+    // Read off the TEMPLATE only — never every entity's record: opening the
+    // form on a whole corpus built every CEJIL profile in one render. The one
+    // template/record mismatch that matters (multidates, a list printed as
+    // one string) is marked on the template's own field as `list`.
     .map((f) => ({ id: f.id, label: f.label, type: f.type, kind: kindOf(f.type), thesaurus: f.thesaurus }));
 
   const relOf = (id: string) =>
@@ -69,13 +63,17 @@ export function commonFields(entities: Entity[], corpus: Corpus, language: Langu
       (f): f is RelationshipMetadataField =>
         f.type === "relationship" && !f.readOnly && !f.inheritProperty && !f.inheritPath?.length,
     );
+  // Lazily, with an early exit: only when the first entity HAS an editable
+  // connection are the others read, and each only until one lacks it. Reading
+  // every entity's connections up front built 4,398 profiles to find none.
   const firstRels = relOf(entities[0].id);
-  const others = entities.slice(1).map((e) => relOf(e.id));
   const connections: BulkField[] = firstRels
     .filter((f) =>
-      others.every((list) =>
-        list.some((g) => g.id === f.id && g.relationType === f.relationType && g.targetTypeId === f.targetTypeId),
-      ),
+      entities
+        .slice(1)
+        .every((e) =>
+          relOf(e.id).some((g) => g.id === f.id && g.relationType === f.relationType && g.targetTypeId === f.targetTypeId),
+        ),
     )
     .map((f) => ({
       id: f.id,
@@ -88,13 +86,25 @@ export function commonFields(entities: Entity[], corpus: Corpus, language: Langu
   return [...scalars, ...connections];
 }
 
+/** What reading a thesaurus value needs: the corpus (for its translations)
+ *  and the thesaurus a field is bound to. */
+export interface BulkCtx {
+  corpus: Corpus;
+  thesaurusOf: (field: BulkField) => ThesaurusValue[] | null;
+}
+
 /** One entity's value for a field, as the form compares it: a string for a
- *  scalar or select, the set of labels / connected ids for a multi. */
-export function valueOf(entityId: string, field: BulkField, language: Language): string | string[] {
+ *  scalar, the value KEY for a select, the keys / connected ids for a multi.
+ *  Thesaurus values compare by id (`fieldKeys`), never by label — two values
+ *  can share one. */
+export function valueOf(entityId: string, field: BulkField, language: Language, ctx: BulkCtx): string | string[] {
   const f = (getEntityProfile(entityId).metadata[language] ?? []).find((x) => x.id === field.id);
   if (field.kind === "connection") return f?.type === "relationship" ? f.connectedEntityIds : [];
   if (!f || f.type === "relationship") return field.kind === "multi" ? [] : "";
-  if (field.kind === "multi") return chosenLabels(f);
+  if (field.kind === "multi" || field.kind === "select") {
+    const keys = fieldKeys(f, ctx.thesaurusOf(field), ctx.corpus, language);
+    return field.kind === "multi" ? keys : keys[0] ?? "";
+  }
   return f.value ?? "";
 }
 
@@ -104,20 +114,58 @@ export interface ScalarSummary {
   distinct: number;
 }
 
-export function scalarSummary(ids: string[], field: BulkField, language: Language): ScalarSummary {
-  const values = ids.map((id) => valueOf(id, field, language) as string);
+export function scalarSummary(ids: string[], field: BulkField, language: Language, ctx: BulkCtx): ScalarSummary {
+  const values = ids.map((id) => valueOf(id, field, language, ctx) as string);
   const distinct = new Set(values).size;
   return { shared: distinct <= 1, value: values[0] ?? "", distinct };
 }
 
 /** How many of the entities hold each label (or connected id). */
-export function coverageOf(ids: string[], field: BulkField, language: Language): Record<string, number> {
+export function coverageOf(ids: string[], field: BulkField, language: Language, ctx: BulkCtx): Record<string, number> {
   const counts: Record<string, number> = {};
-  for (const id of ids) for (const v of new Set(valueOf(id, field, language) as string[])) counts[v] = (counts[v] ?? 0) + 1;
+  for (const id of ids)
+    for (const v of new Set(valueOf(id, field, language, ctx) as string[])) counts[v] = (counts[v] ?? 0) + 1;
   return counts;
 }
 
-/** An edit to one field. A scalar is its new value (a select's is its label);
+/** What the selected entities hold for one field, accumulated: the distinct
+ *  values of a scalar (and the first), and per-value counts of a multi. */
+export interface FieldSummary {
+  distinct: Set<string>;
+  first?: string;
+  counts: Record<string, number>;
+}
+
+/** Add `ids` to the running summaries — called on the whole set for a small
+ *  selection, or chunk by chunk for a large one. */
+export function summarizeInto(
+  acc: Record<string, FieldSummary>,
+  ids: string[],
+  fields: BulkField[],
+  language: Language,
+  ctx: BulkCtx,
+): Record<string, FieldSummary> {
+  for (const f of fields) acc[f.id] ??= { distinct: new Set(), counts: {} };
+  for (const id of ids)
+    for (const f of fields) {
+      const v = valueOf(id, f, language, ctx);
+      const s = acc[f.id];
+      if (Array.isArray(v)) for (const x of new Set(v)) s.counts[x] = (s.counts[x] ?? 0) + 1;
+      else {
+        if (s.first === undefined) s.first = v;
+        s.distinct.add(v);
+      }
+    }
+  return acc;
+}
+
+export const scalarOf = (s: FieldSummary): ScalarSummary => ({
+  shared: s.distinct.size <= 1,
+  value: s.first ?? "",
+  distinct: s.distinct.size,
+});
+
+/** An edit to one field. A scalar is its new value (a select's is its KEY);
  *  a multi is what to add to all and what to remove from all — a row left
  *  mixed is in neither and is not written. */
 export type BulkEdit = { kind: "scalar"; value: string } | { kind: "multi"; add: string[]; remove: string[] };
@@ -175,37 +223,25 @@ export function planBulkEdit({
   let removes = 0;
   const editedFields = fields.filter((f) => edits[f.id]);
 
-  // Per field, the per-language form of each value the edit names.
-  const labelForms = new Map<string, Map<string, { id: string | null; byLang: Record<Language, string> }>>();
-  for (const f of editedFields) {
-    if (f.kind !== "select" && f.kind !== "multi") continue;
-    const e = edits[f.id];
-    const labels = e.kind === "scalar" ? (e.value ? [e.value] : []) : [...e.add, ...e.remove];
-    const m = new Map<string, { id: string | null; byLang: Record<Language, string> }>();
-    for (const l of labels) {
-      const { byLang, ids: vids } = choiceByLanguage([l], language, thesaurusOf(f), corpus);
-      m.set(l, {
-        id: vids[0],
-        byLang: Object.fromEntries(LANGS.map((x) => [x, byLang[x][0]])) as Record<Language, string>,
-      });
-    }
-    labelForms.set(f.id, m);
-  }
+  const ctx: BulkCtx = { corpus, thesaurusOf };
+  const labelOf = (f: BulkField, key: string) =>
+    f.kind === "connection" ? getEntity(key)?.title ?? key : labelForKey(key, thesaurusOf(f), corpus, language);
 
   // Review lines.
   for (const f of editedFields) {
     const e = edits[f.id];
     if (e.kind === "scalar") {
-      const changing = ids.filter((id) => valueOf(id, f, language) !== e.value).length;
-      lines.push({ fieldId: f.id, label: f.label, change: `→ ${e.value || "(empty)"}`, entities: changing });
+      const changing = ids.filter((id) => valueOf(id, f, language, ctx) !== e.value).length;
+      const shown = f.kind === "select" && e.value ? labelOf(f, e.value) : e.value;
+      lines.push({ fieldId: f.id, label: f.label, change: `→ ${shown || "(empty)"}`, entities: changing });
     } else {
-      const cov = coverageOf(ids, f, language);
+      const cov = coverageOf(ids, f, language, ctx);
       for (const v of e.add) {
         const have = cov[v] ?? 0;
         lines.push({
           fieldId: f.id,
           label: f.label,
-          change: `+ ${displayOf(f, v)}`,
+          change: `+ ${labelOf(f, v)}`,
           entities: ids.length - have,
           note: have ? `${have} already have it` : undefined,
         });
@@ -213,7 +249,7 @@ export function planBulkEdit({
       for (const v of e.remove) {
         const have = cov[v] ?? 0;
         removes += have;
-        lines.push({ fieldId: f.id, label: f.label, change: `− ${displayOf(f, v)}`, entities: have, removes: have });
+        lines.push({ fieldId: f.id, label: f.label, change: `− ${labelOf(f, v)}`, entities: have, removes: have });
       }
     }
   }
@@ -225,7 +261,7 @@ export function planBulkEdit({
     for (const id of ids) {
       const hit = editedFields.some((f) => {
         const e = edits[f.id];
-        const v = valueOf(id, f, language);
+        const v = valueOf(id, f, language, ctx);
         if (e.kind === "scalar") return v !== e.value;
         const held = new Set(v as string[]);
         return e.add.some((x) => !held.has(x)) || e.remove.some((x) => held.has(x));
@@ -255,32 +291,28 @@ export function planBulkEdit({
             if (l !== language && f.type !== "link") continue;
             list = upsert(list, f, blank[l], (x) => ({ ...x, value: e.value }));
           } else if (f.kind === "select" && e.kind === "scalar") {
-            const form = e.value ? labelForms.get(f.id)?.get(e.value) : undefined;
+            const thes = thesaurusOf(f);
             list = upsert(list, f, blank[l], (x) => ({
               ...x,
-              value: form ? form.byLang[l] : "",
-              valueIds: form?.id ? [form.id] : undefined,
+              value: e.value ? labelForKey(e.value, thes, corpus, l) : "",
+              valueIds: e.value && !isPseudoKey(e.value) ? [e.value] : undefined,
             }));
           } else if (f.kind === "multi" && e.kind === "multi") {
-            const forms = labelForms.get(f.id)!;
+            const thes = thesaurusOf(f);
             list = upsert(list, f, blank[l], (x) => {
+              // Each held value as its KEY in this language, beside its label.
+              let keys = fieldKeys(x, thes, corpus, l);
               let labels = [...chosenLabels(x)];
-              let vids = [...(x.valueIds ?? labels.map(() => ""))];
-              const matches = (i: number, v: string) => {
-                const form = forms.get(v)!;
-                return (form.id && vids[i] === form.id) || labels[i] === form.byLang[l];
-              };
-              for (const v of e.remove) {
-                const keep = labels.map((_, i) => !matches(i, v));
-                labels = labels.filter((_, i) => keep[i]);
-                vids = vids.filter((_, i) => keep[i]);
+              const drop = new Set(e.remove);
+              const keep = keys.map((k) => !drop.has(k));
+              keys = keys.filter((_, i) => keep[i]);
+              labels = labels.filter((_, i) => keep[i]);
+              for (const k of e.add) {
+                if (keys.includes(k)) continue;
+                keys.push(k);
+                labels.push(labelForKey(k, thes, corpus, l));
               }
-              for (const v of e.add) {
-                if (labels.some((_, i) => matches(i, v))) continue;
-                const form = forms.get(v)!;
-                labels.push(form.byLang[l]);
-                vids.push(form.id ?? "");
-              }
+              const vids = keys.map((k) => (isPseudoKey(k) ? "" : k));
               return {
                 ...x,
                 values: labels,
@@ -314,9 +346,6 @@ export function planBulkEdit({
 
   return { records, patches, lines, removes, touched: Object.keys(records).length };
 }
-
-/** A connection row's label is the connected entity's title; a value's is itself. */
-const displayOf = (f: BulkField, v: string) => (f.kind === "connection" ? getEntity(v)?.title ?? v : v);
 
 function connectionMoved(before: AnyMetadataField[] = [], after: AnyMetadataField[] = [], id: string) {
   const a = before.find((f) => f.id === id);

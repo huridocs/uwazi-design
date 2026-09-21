@@ -77,6 +77,8 @@ import {
   currentSelectionOrder,
   selectionIntent,
   useSelectionOrder,
+  useTouchSelection,
+  lastPointerWasTouch,
 } from "../components/library/EntitySelectBox";
 import { SelectAllBox } from "../components/library/SelectAllBox";
 import { LibrarySelectionBar } from "../components/library/LibrarySelectionBar";
@@ -792,6 +794,9 @@ export function LibraryView() {
     (id: string, e?: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => {
       const intent = e ? selectionIntent(e) : null;
       if (intent === "toggle") return toggleSelection(id);
+      // Touch, with a selection going: a tap adds or removes (a long press
+      // starts one — see useTouchSelection).
+      if (e && selectionActive && lastPointerWasTouch()) return toggleSelection(id);
       if (intent === "range") return rangeSelection({ order: currentSelectionOrder(), id });
       if (isMobile) {
         openEntity(id);
@@ -800,8 +805,9 @@ export function LibraryView() {
         setSelectedId(id);
       }
     },
-    [isMobile, openEntity, focusForPreview, setSelectedId, toggleSelection, rangeSelection],
+    [isMobile, openEntity, focusForPreview, setSelectedId, toggleSelection, rangeSelection, selectionActive],
   );
+  useTouchSelection(toggleSelection);
 
   // Results-tab full-text snippet: select the entity, then jump the preview's
   // document to the hit page (DocumentViewer consumes scrollToPageAtom). On
@@ -1239,6 +1245,7 @@ export function LibraryView() {
             onRowClick={(row, ev) => handleSelect(row.id, ev)}
             rowAriaLabel={(e) => `Preview ${e.title}`}
             isRowSelected={(e) => selectedId === e.id}
+            selectedStyle="outline"
             sort={{ key: sort, dir: sortDir }}
             onSort={(key) => setSortKey(key as typeof sort)}
             minWidthRem={34}

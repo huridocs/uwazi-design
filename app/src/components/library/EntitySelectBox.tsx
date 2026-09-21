@@ -124,5 +124,99 @@ export function EntitySelectBox({ id, title }: { id: string; title: string }) {
 
 /** The row's focus ring while its hidden selection checkbox has focus — the
  *  one visible sign of where a keyboard user is. Put on every host row. */
-export const FOCUS_RING_ON_SELECT =
-  "has-[[data-part=select]_input:focus-visible]:ring-2 has-[[data-part=select]_input:focus-visible]:ring-carbon/30";
+export const FOCUS_RING_ON_SELECT = [
+  "has-[[data-part=select]_input:focus-visible]:ring-2 has-[[data-part=select]_input:focus-visible]:ring-carbon/30",
+  // Forced colors (Windows High Contrast) drop box-shadows AND backgrounds,
+  // which were both signals — the ring and the parchment. Outlines survive:
+  // SELECTED is a solid system-colour outline, FOCUS a dashed one outside it.
+  "forced-colors:has-[[data-part=select]_input:checked]:outline-2 forced-colors:has-[[data-part=select]_input:checked]:outline-[SelectedItem]",
+  "forced-colors:has-[[data-part=select]_input:focus-visible]:outline-3 forced-colors:has-[[data-part=select]_input:focus-visible]:outline-dashed",
+  "forced-colors:has-[[data-part=select]_input:focus-visible]:outline-offset-2 forced-colors:has-[[data-part=select]_input:focus-visible]:outline-[Highlight]",
+].join(" ");
+
+/** The PREVIEWED item — the one open in the drawer. Selected owns
+ *  bg-parchment; a previewed item that looked the same made the selection
+ *  unreadable (four parchment cards, "3 selected"). The preview is an ink
+ *  hairline instead: no new colour, and it survives forced colors. */
+export const PREVIEWED_EDGE = "border-ink";
+
+/* ── Touch ──────────────────────────────────────────────────────────────
+   Selection is modifier-click, and a touch screen has no modifiers — so on
+   touch a LONG PRESS (500ms, without moving) toggles the item under the
+   finger, and while a selection exists a plain tap toggles too (the
+   convention of every touch file manager). The item is whatever carries a
+   hidden selection box: `[data-select-id]` inside the pressed card or row. */
+let lastPointerType = "mouse";
+/** The pointer that started the latest interaction — a click event doesn't
+ *  say (Safari's `click` has no `pointerType`). */
+export const lastPointerWasTouch = () => lastPointerType === "touch";
+
+const LONG_PRESS_MS = 500;
+const SLOP_PX = 10;
+
+function itemIdAt(target: EventTarget | null): string | null {
+  let el = target instanceof Element ? target : null;
+  while (el) {
+    const box = el.querySelector?.(":scope > [data-select-id], :scope > * > [data-select-id]") as HTMLElement | null;
+    if (box?.dataset.selectId) return box.dataset.selectId;
+    if (el.matches("[data-select-scope], [data-gutter-host]")) return null;
+    el = el.parentElement;
+  }
+  return null;
+}
+
+/** Install the long-press (while mounted). `toggle` is the selection toggle. */
+export function useTouchSelection(toggle: (id: string) => void) {
+  useEffect(() => {
+    let timer = 0;
+    let start: { x: number; y: number } | null = null;
+    let fired = false;
+    const cancel = () => {
+      window.clearTimeout(timer);
+      start = null;
+    };
+    const onDown = (e: PointerEvent) => {
+      lastPointerType = e.pointerType;
+      fired = false;
+      if (e.pointerType !== "touch") return;
+      const id = itemIdAt(e.target);
+      if (!id) return;
+      start = { x: e.clientX, y: e.clientY };
+      timer = window.setTimeout(() => {
+        fired = true;
+        start = null;
+        toggle(id);
+        navigator.vibrate?.(10);
+      }, LONG_PRESS_MS);
+    };
+    const onMove = (e: PointerEvent) => {
+      if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > SLOP_PX) cancel();
+    };
+    // The click that ends a long press is not also a tap (a preview).
+    const onClick = (e: Event) => {
+      if (!fired) return;
+      fired = false;
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    // Mobile browsers open a context menu on a long press; not on an item.
+    const onContext = (e: Event) => {
+      if (lastPointerType === "touch" && itemIdAt(e.target)) e.preventDefault();
+    };
+    document.addEventListener("pointerdown", onDown, true);
+    document.addEventListener("pointermove", onMove, true);
+    document.addEventListener("pointerup", cancel, true);
+    document.addEventListener("pointercancel", cancel, true);
+    document.addEventListener("click", onClick, true);
+    document.addEventListener("contextmenu", onContext, true);
+    return () => {
+      cancel();
+      document.removeEventListener("pointerdown", onDown, true);
+      document.removeEventListener("pointermove", onMove, true);
+      document.removeEventListener("pointerup", cancel, true);
+      document.removeEventListener("pointercancel", cancel, true);
+      document.removeEventListener("click", onClick, true);
+      document.removeEventListener("contextmenu", onContext, true);
+    };
+  }, [toggle]);
+}

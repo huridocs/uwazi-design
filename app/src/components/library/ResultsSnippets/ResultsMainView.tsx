@@ -456,7 +456,7 @@ function GroupedBody({
             data-part="result"
             data-state={selected ? "selected" : undefined}
             className={`group relative rounded-md border transition-colors ${
-              selected ? "bg-parchment border-border" : "bg-paper border-border/60"
+              selected ? "bg-paper border-ink" : "bg-paper border-border/60"
             } has-[[data-part=select]_input:checked]:bg-parchment has-[[data-part=select]_input:checked]:border-border ${FOCUS_RING_ON_SELECT}`}
           >
             {/* The visually hidden selection checkbox (see EntitySelectBox). A

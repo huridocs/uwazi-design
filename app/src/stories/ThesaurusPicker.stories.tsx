@@ -14,7 +14,7 @@ const meta = {
     label: "Violations",
     values: seedThesaurusValues.t1,
     multiple: true,
-    chosen: ["Torture"],
+    chosen: ["t1-3"],
     onToggle: () => {},
   },
   decorators: [(Story) => <div className="max-w-md">{Story()}</div>],
@@ -25,7 +25,7 @@ type Story = StoryObj<typeof meta>;
 
 /** A single-value property: the same list as a radio group. */
 export const Default: Story = {
-  args: { label: "Status", values: seedThesaurusValues.t3, multiple: false, chosen: ["Decided"] },
+  args: { label: "Status", values: seedThesaurusValues.t3, multiple: false, chosen: ["t3-4"] },
 };
 
 /** Multiselect with nested groups; the chosen value floats to the top. */
@@ -46,9 +46,9 @@ export const Multi: Story = {
 export const Mixed: Story = {
   args: {
     values: seedThesaurusValues.t2,
-    chosen: ["American Convention on Human Rights"],
-    mixed: ["ICCPR"],
-    coverage: { counts: { "American Convention on Human Rights": 12, ICCPR: 4 }, of: 12 },
+    chosen: ["t2-1"],
+    mixed: ["t2-4"],
+    coverage: { counts: { "t2-1": 12, "t2-4": 4 }, of: 12 },
   },
 };
 
@@ -57,8 +57,8 @@ export const WithNewValue: Story = {
   args: {
     values: [...seedThesaurusValues.t3, { id: "x", label: "Withdrawn" }],
     multiple: false,
-    chosen: ["Withdrawn"],
-    fresh: new Set(["Withdrawn"]),
+    chosen: ["x"],
+    fresh: new Set(["x"]),
   },
 };
 

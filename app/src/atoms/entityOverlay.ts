@@ -392,9 +392,15 @@ export const saveEntityEditAtom = atom(
     // (MetadataEditBody's `initialTitles`), so a title is a change only when it
     // differs from THAT — comparing with the entity's title renamed every
     // entity whose document is called something else.
-    const opened = profile.document?.[language]?.title ?? entity.title;
-    const title = result.titles[language]?.trim();
-    if (title && title !== opened.trim()) patch.title = title;
+    // The entity keeps ONE title (the prototype has no per-language titles
+    // off the document), so the one to keep is the one the user changed: the
+    // Save language's if it moved, else the first other language that did —
+    // edited in the FR row while reading in EN was dropped without a word.
+    const openedIn = (l: Language) => (profile.document?.[l]?.title ?? entity.title).trim();
+    const changedIn = [language, ...(Object.keys(result.titles) as Language[]).filter((l) => l !== language)].find(
+      (l) => result.titles[l]?.trim() && result.titles[l].trim() !== openedIn(l),
+    );
+    if (changedIn) patch.title = result.titles[changedIn].trim();
     // Nothing moved: write nothing, so an untouched Save leaves no record
     // behind (a record is a new object, and every per-entity cache keys on it).
     const touched = (Object.keys(metadata) as Language[]).some(

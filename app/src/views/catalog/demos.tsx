@@ -918,7 +918,8 @@ export function IsolatedCopyFromPicker({ step = "source" }: { step?: "source" | 
 export function IsolatedThesaurusPicker() {
   const values = seedThesaurusValues.t1;
   const [extra, setExtra] = useState<string[]>([]);
-  const [chosen, setChosen] = useState<string[]>(["Torture"]);
+  // Keys are value ids; the extras made here get ids of their own.
+  const [chosen, setChosen] = useState<string[]>(["t1-3"]);
   const [adding, setAdding] = useState(false);
   const all: ThesaurusValue[] = [...values, ...extra.map((label, i) => ({ id: `demo-${i}`, label }))];
   return (
@@ -938,7 +939,7 @@ export function IsolatedThesaurusPicker() {
         values={all}
         multiple
         chosen={chosen}
-        fresh={new Set(extra)}
+        fresh={new Set(extra.map((_, i) => `demo-${i}`))}
         onToggle={(l) => setChosen((p) => (p.includes(l) ? p.filter((x) => x !== l) : [...p, l]))}
       />
       {adding && (
@@ -947,8 +948,10 @@ export function IsolatedThesaurusPicker() {
           existing={selectableLabels(all)}
           onClose={() => setAdding(false)}
           onSave={(label) => {
-            setExtra((p) => (p.includes(label) ? p : [...p, label]));
-            setChosen((p) => (p.includes(label) ? p : [...p, label]));
+            const i = extra.indexOf(label);
+            const key = i >= 0 ? `demo-${i}` : `demo-${extra.length}`;
+            if (i < 0) setExtra((p) => [...p, label]);
+            setChosen((p) => (p.includes(key) ? p : [...p, key]));
             setAdding(false);
           }}
         />
@@ -962,10 +965,10 @@ export function IsolatedThesaurusPicker() {
 export function IsolatedBulkFieldRows() {
   const [text, setText] = useState<string | null>(null);
   const [edit, setEdit] = useState<{ add: string[]; remove: string[] }>({ add: [], remove: [] });
-  const base: Record<string, number> = { "American Convention on Human Rights": 12, ICCPR: 4 };
+  const base: Record<string, number> = { "t2-1": 12, "t2-4": 4 };
   const of = 12;
   const projected = (v: string) => (edit.add.includes(v) ? of : edit.remove.includes(v) ? 0 : base[v] ?? 0);
-  const labels = seedThesaurusValues.t2.map((v) => v.label);
+  const labels = seedThesaurusValues.t2.map((v) => v.id);
   const cycle = (v: string) =>
     setEdit((e) => {
       const add = e.add.filter((x) => x !== v);
