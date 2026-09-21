@@ -7,6 +7,7 @@ import type { Language } from "../../../atoms/language";
 import type { DataSource } from "../../../utils/libraryFacets";
 import {
   buildSnippetsFor,
+  compareEvidence,
   contextWordsFor,
   evidenceBadge,
   MAX_FULLTEXT,
@@ -111,9 +112,10 @@ function excerptBudget(layout: ResultsLayout, w: number): { ctx: number; twoCol:
     const col = w - 34 - 16;
     return { ctx: contextWordsFor(col, 3), twoCol: false };
   }
-  // Spine: one passage in a fixed row on a time axis — its measure is the axis's,
-  // not the pane's, so it keeps the floor.
-  return { ctx: contextWordsFor(0), twoCol: false };
+  // Spine: the passage takes its own line across the row (`SPINE_ROW_H`),
+  // which runs from the pane's inline-start to the axis — the axis column and
+  // the row's padding off the pane's width.
+  return { ctx: contextWordsFor(w - 96, 1), twoCol: false };
 }
 
 interface Props {
@@ -774,6 +776,8 @@ interface FlatPassage {
   /** Document page hit, or a matched metadata field — one row shape for both. */
   page: number | null;
   hits: number;
+  /** AND groups the passage satisfies — with `hits`, its rank (`compareEvidence`). */
+  groupsMet: number;
   field: string | null;
   fieldKey: string | null;
   text: string;
@@ -834,7 +838,8 @@ function PassagesBody({
           rows.push({
             entity,
             page: null,
-            hits: 1,
+            hits: m.hits,
+            groupsMet: m.groupsMet,
             field: m.field,
             fieldKey: m.fieldKey,
             text: t,
@@ -877,6 +882,7 @@ function PassagesBody({
           entity,
           page: s.page,
           hits: s.hits,
+          groupsMet: s.groupsMet,
           field: null,
           fieldKey: null,
           text: s.text,
@@ -891,8 +897,11 @@ function PassagesBody({
     }
     // Pages counted but not excerpted — said out loud rather than dropped.
     for (const { total, shown } of byDoc.values()) notShown += Math.max(0, total - shown);
-    // Densest passages first; ties keep the relevance order the entities arrived in.
-    rows.sort((a, b) => b.hits - a.hits);
+    // Best passages first, by the SAME rank that chose each entity's pages
+    // (`compareEvidence`: AND groups met, then occurrences) — raw hits let a
+    // page that misses the AND outrank one that meets it. The sort is stable,
+    // so ties keep the relevance order the entities arrived in.
+    rows.sort(compareEvidence);
     return { rows, notShown, titleOnly };
   }, [results]);
 
@@ -926,11 +935,16 @@ function PassagesBody({
             else if (isDoc) onSelect(row.entity.id);
             else onFocusProperty(row.entity.id, row.fieldKey!);
           };
-          const primaryName = !isDoc
-            ? `Go to ${row.field} in ${row.entity.title}`
-            : row.page !== null
-              ? `Go to page ${row.page} in ${row.entity.title}`
-              : `Open the document of ${row.entity.title}`;
+          // The count rides the row's NAME: the "N matches" text beside the
+          // page tag is passive, so its hover hint is out of a keyboard's reach
+          // and a tab stop just to read a number would be one too many.
+          const matchCount = row.hits > 1 ? `, ${row.hits} matches` : "";
+          const primaryName =
+            (!isDoc
+              ? `Go to ${row.field} in ${row.entity.title}`
+              : row.page !== null
+                ? `Go to page ${row.page} in ${row.entity.title}`
+                : `Open the document of ${row.entity.title}`) + matchCount;
           return (
             // A CLICKABLE row (CLAUDE.md a11y patterns): clicking the passage
             // goes to it. The keyboard and screen-reader path is a stretched
@@ -1097,6 +1111,12 @@ const FOOTER_TARGET = `rounded-sm hover:underline cursor-pointer focus-visible:o
  *     neither the card list nor the passage list can.
  * ------------------------------------------------------------------ */
 
+/** The Results spine's row: a line of facts and a line of passage. Within
+ *  `TimeSpine`'s `GAP_H + rowHeight ≤ MAX_GAP` invariant (its own notes name 44
+ *  as the denser height that still leaves slack), so breaks and elisions lay
+ *  out as they do at the default. */
+const SPINE_ROW_H = 44;
+
 function SpineBody({
   results,
   query,
@@ -1129,28 +1149,26 @@ function SpineBody({
 
   return (
     <div data-part="spine" className="pb-2">
-      {/* The SAME spine the Timeline view draws, at the SAME row height. The
-          geometry — axis inset, adaptive scale, year marks, elided silences,
-          leader lines, date gutter — is all `TimeSpine`'s; this passes no
-          `rowHeight` at all, so it inherits `EVENT_H` and the two chronologies
-          are literally the same axis with different words on it.
+      {/* The SAME spine the Timeline view draws. The geometry — axis inset,
+          adaptive scale, year marks, elided silences, leader lines, date gutter
+          — is all `TimeSpine`'s; this passes only a row height.
 
-          A taller row was a mistake, not a feature: `TimeSpine` derives its scale
-          from `rowHeight`, so a 104px row stretched the axis 4.7× — and once rows
-          are taller than `MAX_GAP` (88), no silence can ever be long enough to
-          elide, which is what turned a chronology into a column of whitespace.
-          One event, one line. The passage rides the line as a continuation, not
-          as a block underneath it. */}
+          That height is a budget, not a styling knob: `TimeSpine` derives its
+          scale from it, so a 104px row once stretched the axis 4.7× and, being
+          taller than `MAX_GAP` (88), stopped any silence from eliding. The row is
+          two lines at `SPINE_ROW_H` (44) — the facts, then the passage across
+          the row — inside the invariant `TimeSpine` documents. */}
       <TimeSpine
         rows={dated}
+        rowHeight={SPINE_ROW_H}
         dotColor={({ entity }) => getEntityType(entity.typeId)?.color ?? "#6B7280"}
         dotActive={({ entity }) => selectedId === entity.id}
         renderRow={({ entity, snippets }, { t }) => {
           const selected = selectedId === entity.id;
           const color = getEntityType(entity.typeId)?.color ?? "#6B7280";
-          // The strongest passage: the densest page, else the first matched
-          // property. One passage per result — the spine is a chronology, not a
-          // second results list.
+          // The strongest passage by `compareEvidence`, page or property. One
+          // passage per result — the spine is a chronology, not a second
+          // results list.
           const best = bestPassage(snippets);
           return (
             <button
@@ -1160,12 +1178,17 @@ function SpineBody({
               onClick={() =>
                 best?.page != null ? onSelectSnippet(entity.id, best.page) : onSelect(entity.id)
               }
-              className={`w-full flex items-center gap-2 h-[22px] px-2 rounded-md text-start
+              style={{ height: SPINE_ROW_H }}
+              className={`w-full flex flex-col justify-center px-2 rounded-md text-start
                 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1
                 focus-visible:ring-inset focus-visible:ring-ink/20 ${
                   selected ? "bg-parchment" : "hover:bg-warm"
                 }`}
             >
+              {/* Line 1: the facts. Line 2: the passage, at the row's full
+                  width — squeezed onto the facts' line it was a few words cut
+                  mid-sentence. */}
+              <span className="flex items-center gap-2 min-w-0 h-4">
               <span
                 aria-hidden
                 className="shrink-0 w-1.5 h-1.5 rounded-[2px]"
@@ -1178,11 +1201,7 @@ function SpineBody({
                 <HighlightedText text={entity.title} query={query} />
               </span>
               <CountBadge {...evidenceBadge(snippets)} />
-              {best && (
-                <span className="flex-1 min-w-0 truncate text-xs text-ink-secondary">
-                  <HighlightedText text={best.text} query={query} />
-                </span>
-              )}
+              <span className="flex-1" />
               {/* The trailing slot the timeline spends on a type name — spent
                   here on where the passage came from: the page tag, and the
                   connected document it was quoted from. `<bdi>` keeps "Document ·
@@ -1191,13 +1210,22 @@ function SpineBody({
                   attribution, so a borrowed document appearing on one row can't
                   pull that row's passage shorter than its neighbours'. */}
               {best && (
-                <span className="hidden md:flex shrink-0 w-[14rem] items-center justify-end gap-1.5 overflow-hidden text-meta text-ink-muted">
+                <span className="hidden md:flex shrink-0 w-[14rem] items-center gap-1.5 overflow-hidden text-meta text-ink-muted">
                   <bdi dir="ltr" className="shrink-0">
                     {best.label}
                   </bdi>
+                  {/* Start-aligned and fading at the slot's end: justified to
+                      the end of an overflow-hidden box, a long title was cut
+                      at its START, which is the part that names it. */}
                   {best.isDocument && (
-                    <BorrowedDocLine from={snippets.borrowedFrom} className="min-w-0" />
+                    <BorrowedDocLine from={snippets.borrowedFrom} className="min-w-0" fade />
                   )}
+                </span>
+              )}
+              </span>
+              {best && (
+                <span className="block min-w-0 truncate ps-3.5 text-xs text-ink-secondary leading-4">
+                  <HighlightedText text={best.text} query={query} />
                 </span>
               )}
             </button>
@@ -1214,26 +1242,30 @@ function SpineBody({
   );
 }
 
-/** The passage that best represents a result: the densest document page, else
- *  the first matched property. Its label never claims a page the data can't back. */
+/** The passage that best represents a result: the best-ranked of its pages
+ *  and its properties by `compareEvidence` — the same rank every other surface
+ *  orders evidence by — a page winning a tie. Never the title: the row already
+ *  prints it, marked. Its label never claims a page the data can't back. */
 function bestPassage(
   s: EntitySnippets,
 ): { text: string; page: number | null; label: string; isDocument: boolean } | null {
   const top = s.fullText.reduce<FullTextSnippet | null>(
-    (best, cur) => (!best || cur.hits > best.hits ? cur : best),
+    (best, cur) => (!best || compareEvidence(cur, best) < 0 ? cur : best),
     null,
   );
-  if (top) {
+  const prop = properties(s).reduce<MetadataSnippet | null>(
+    (best, cur) => (!best || compareEvidence(cur, best) < 0 ? cur : best),
+    null,
+  );
+  if (top && (!prop || compareEvidence(prop, top) >= 0)) {
     const parts = [documentLabel(s.borrowedFrom)];
     if (top.page !== null) parts.push(`p.${top.page}`);
     if (top.hits > 1) parts.push(`${top.hits}×`);
     return { text: top.text, page: top.page, label: parts.join(" · "), isDocument: true };
   }
-  // Never the title: the row above already prints it, marked.
-  const m = properties(s)[0];
   // `isDocument` gates the borrowed-document attribution: a property hit came
   // from the entity itself, however its document was resolved.
-  if (m?.texts[0]) return { text: m.texts[0], page: null, label: m.field, isDocument: false };
+  if (prop?.texts[0]) return { text: prop.texts[0], page: null, label: prop.field, isDocument: false };
   return null;
 }
 
