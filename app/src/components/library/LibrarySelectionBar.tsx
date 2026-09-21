@@ -9,7 +9,7 @@ import {
   librarySelectionDrawerOpenAtom,
   selectIdsAtom,
 } from "../../atoms/library";
-import { deleteEntitiesAtom, snapshotForUndoAtom } from "../../atoms/entityOverlay";
+import { deleteWithUndoAtom } from "../../atoms/entityOverlay";
 import { notificationsAtom } from "../../atoms/notifications";
 import { languageAtom } from "../../atoms/language";
 import type { Corpus } from "../../data/entityOverlay";
@@ -76,15 +76,14 @@ export function LibrarySelectionBar({
   const doDelete = () => {
     setConfirmDelete(false);
     const ids = [...selection];
-    const ref = store.set(snapshotForUndoAtom);
-    store.set(deleteEntitiesAtom, { corpus, ids });
+    const ref = store.set(deleteWithUndoAtom, { corpus, ids });
     deselect(ids);
     store.set(notificationsAtom, (prev) => [
       {
         id: `n-${ref}`,
         kind: "success",
         title: `${ids.length.toLocaleString()} ${ids.length === 1 ? "entity" : "entities"} deleted.`,
-        detail: "Undo restores them until your next change.",
+        detail: "Undo restores them until you delete something else.",
         time: Date.now(),
         read: false,
         action: { label: "Undo", kind: "undo", ref },
@@ -151,8 +150,8 @@ export function LibrarySelectionBar({
         title={`Delete ${n.toLocaleString()} ${n === 1 ? "entity" : "entities"}?`}
         message={
           notInView > 0
-            ? `${notInView.toLocaleString()} of them are not in the current results. Undo restores them until your next change.`
-            : "Undo restores them until your next change."
+            ? `${notInView.toLocaleString()} of them are not in the current results. Undo restores them until you delete something else.`
+            : "Undo restores them until you delete something else."
         }
         confirmLabel="Delete"
         variant="danger"

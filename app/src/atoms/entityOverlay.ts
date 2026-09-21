@@ -41,28 +41,48 @@ export const libraryEntityOverlayAtom = atom(
 );
 
 /* ── Undo ───────────────────────────────────────────────────────────────
-   ONE level: the overlay as it was before the last undoable change, under a
-   ref the change's notification carries. The next undoable change replaces
-   it, and the older notification's Undo goes disabled. Undo writes the
-   snapshot back — the overlay is immutable, so that is the whole of it. */
-export const undoSnapshotAtom = atom<{ ref: string; overlay: EntityOverlay } | null>(null);
+   Undo is the INVERSE of the one operation it names, never a snapshot of the
+   whole overlay: writing an old overlay back also erased every upload,
+   created entity and saved edit that landed after it. A delete records the
+   ids IT removed (not ones already deleted), and undoing it takes exactly
+   those back out of `deleted` — whatever else has changed since stays.
+
+   ONE level: the next undoable operation replaces this one, and the older
+   notification's Undo goes disabled, saying why. */
+export interface UndoOp {
+  ref: string;
+  kind: "undelete";
+  corpus: Corpus;
+  ids: string[];
+}
+export const undoOpAtom = atom<UndoOp | null>(null);
 
 let undoSeq = 0;
-/** Keep the overlay as it is now, for the change about to be made. Returns
- *  the ref its notification's Undo names. */
-export const snapshotForUndoAtom = atom(null, (get, set): string => {
-  undoSeq += 1;
-  const ref = `undo-${Date.now().toString(36)}-${undoSeq}`;
-  set(undoSnapshotAtom, { ref, overlay: get(overlayValueAtom) });
-  return ref;
-});
 
-/** Undo the change `ref` names — only while it is still the latest. */
+/** Delete `ids` from the library AND record the inverse. Returns the ref its
+ *  notification's Undo names. */
+export const deleteWithUndoAtom = atom(
+  null,
+  (get, set, { corpus, ids }: { corpus: Corpus; ids: string[] }): string => {
+    const already = new Set(get(overlayValueAtom)[corpus].deleted);
+    const removed = ids.filter((id) => !already.has(id));
+    undoSeq += 1;
+    const ref = `undo-${Date.now().toString(36)}-${undoSeq}`;
+    set(deleteEntitiesAtom, { corpus, ids });
+    set(undoOpAtom, { ref, kind: "undelete", corpus, ids: removed });
+    return ref;
+  },
+);
+
+/** Undo the operation `ref` names — only while it is still the latest. */
 export const undoAtom = atom(null, (get, set, ref: string): boolean => {
-  const snap = get(undoSnapshotAtom);
-  if (!snap || snap.ref !== ref) return false;
-  set(libraryEntityOverlayAtom, snap.overlay);
-  set(undoSnapshotAtom, null);
+  const op = get(undoOpAtom);
+  if (!op || op.ref !== ref) return false;
+  const back = new Set(op.ids);
+  set(libraryEntityOverlayAtom, (prev) =>
+    updateCorpus(prev, op.corpus, (o) => ({ ...o, deleted: o.deleted.filter((id) => !back.has(id)) })),
+  );
+  set(undoOpAtom, null);
   return true;
 });
 

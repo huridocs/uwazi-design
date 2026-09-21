@@ -23,7 +23,7 @@ import {
   type NotificationKind,
   type NotificationAction,
 } from "../../atoms/notifications";
-import { undoAtom, undoSnapshotAtom } from "../../atoms/entityOverlay";
+import { undoAtom, undoOpAtom } from "../../atoms/entityOverlay";
 import { UwaziLoader } from "../shared/UwaziLoader";
 import { SectionLabel } from "../shared/SectionLabel";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
@@ -461,9 +461,9 @@ function NotifCard({
  *  undoes has been replaced — disabled, saying why — so the card doesn't
  *  change shape under the reader. */
 function NotifAction({ action }: { action: NotificationAction }) {
-  const snapshot = useAtomValue(undoSnapshotAtom);
+  const op = useAtomValue(undoOpAtom);
   const undo = useSetAtom(undoAtom);
-  const live = snapshot?.ref === action.ref;
+  const live = op?.ref === action.ref;
   return (
     <button
       type="button"
