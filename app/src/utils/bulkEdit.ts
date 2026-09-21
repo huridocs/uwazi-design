@@ -32,8 +32,9 @@ export interface BulkField {
 }
 
 /** What never goes in a bulk form: files and recordings are per entity, a
- *  place is a map, and the title is the entity's own. */
-const EXCLUDED = new Set<MetadataField["type"]>(["file-list", "media"]);
+ *  place is a map, the title is the entity's own, and a country is a name
+ *  AND a flag per language that a text box can't keep in step. */
+const EXCLUDED = new Set<MetadataField["type"]>(["file-list", "media", "country"]);
 
 const kindOf = (t: MetadataField["type"]): BulkFieldKind =>
   t === "select" ? "select" : t === "multiselect" ? "multi" : "scalar";
@@ -145,10 +146,11 @@ export interface BulkPlan {
 /** What applying `edits` to `entities` writes: a record and (adapter corpora)
  *  an entity patch per entity that changes, and the review's lines.
  *
- *  Text is written in the language being edited — Uwazi keeps prose per
- *  language. A date, a link, a select and a multiselect are the same value in
- *  every language, so they are written into all four; a thesaurus choice goes
- *  in by value id, in each language's label (see `choiceByLanguage`). */
+ *  Scalars — text, dates — are written in the language being edited only:
+ *  the records hold them localised, and copying one language's string over
+ *  another's is how "29 de julio de 1988" became "May 3, 1990". A link is the
+ *  same address in every language. A select and a multiselect go into all
+ *  four BY VALUE ID, each in its own language's label (`choiceByLanguage`). */
 export function planBulkEdit({
   entities,
   fields,
@@ -246,8 +248,11 @@ export function planBulkEdit({
         for (const f of editedFields) {
           const e = edits[f.id];
           if (f.kind === "scalar" && e.kind === "scalar") {
-            const everyLanguage = f.type !== "text" && f.type !== "multiline";
-            if (l !== language && !everyLanguage) continue;
+            // Text, dates and every other scalar are LOCALISED on the record
+            // ("July 29, 1988" / "29 de julio de 1988"), so they are written
+            // in the edited language only — a value in one language is never
+            // copied over another's. A link is an address, the same in all.
+            if (l !== language && f.type !== "link") continue;
             list = upsert(list, f, blank[l], (x) => ({ ...x, value: e.value }));
           } else if (f.kind === "select" && e.kind === "scalar") {
             const form = e.value ? labelForms.get(f.id)?.get(e.value) : undefined;
