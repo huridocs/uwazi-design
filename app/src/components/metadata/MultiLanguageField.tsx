@@ -70,7 +70,7 @@ export function MultiLanguageField({
   const [open, setOpen] = useState(false);
   const [working, setWorking] = useState<Language[]>([]);
   // Every stream in flight, so unmounting mid-translation doesn't setState on a
-  // dead form — the trap `copyPreviewAtom` fell into (CLAUDE.md, click-to-fill).
+  // dead form — the trap the since-removed `copyPreviewAtom` fell into (CLAUDE.md, click-to-fill).
   const timers = useRef<number[]>([]);
   useEffect(() => () => { timers.current.forEach(window.clearTimeout); }, []);
 

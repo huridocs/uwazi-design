@@ -1,15 +1,27 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAtomValue } from "jotai";
-import { Search, X } from "lucide-react";
+import { ArrowLeft, Ban, Search, X } from "lucide-react";
 import { cejilReadyAtom, entityCorpusPool } from "../../atoms/dataSource";
 import { entitiesAtom } from "../../atoms/entities";
-import { languageAtom } from "../../atoms/language";
+import { languageAtom, type Language } from "../../atoms/language";
 import { getEntityType, type Entity } from "../../data/entities";
-import { buildCopyIndex, countCopyMatchesFor, entityCopyFields } from "../../utils/copyFrom";
+import {
+  buildCopyIndex,
+  countCopyMatchesFor,
+  entityCopyFields,
+  planCopyFrom,
+  type CopyMatch,
+  type CopyPlan,
+  type CopySkipReason,
+  type CopyUnit,
+} from "../../utils/copyFrom";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { EntityPill } from "../shared/EntityPill";
 import { CountBadge } from "../shared/CountBadge";
 import { SegmentedControl } from "../shared/SegmentedControl";
+import { Checkbox } from "../shared/Checkbox";
+import { SectionLabel } from "../shared/SectionLabel";
+import { CopyFieldRow } from "./CopyFieldRow";
 
 /** How many candidates are scored and listed. The badge costs one map lookup per
  *  source field (see `countCopyMatches`), but obtaining those fields builds a
@@ -30,15 +42,33 @@ const LIMIT = 40;
  *
  *  · Every candidate is badged with how many fields it would actually bring
  *    across, before it is chosen (#6). A source with nothing to give says so in
- *    the list rather than after two clicks and an empty preview. */
+ *    the list rather than after two clicks and an empty preview.
+ *
+ *  TWO STEPS IN ONE MODAL. Choosing a source turns the same panel into the
+ *  property list: what copies (source value against current value, each
+ *  deselectable), what doesn't and why, and "Copy N properties", which writes
+ *  exactly the ticked set into the edit form. Nothing is saved; Save stays the
+ *  user's. The selection used to happen in the entity overlay beside the form,
+ *  through an atom holding the form's closures — the hazard CLAUDE.md records
+ *  under click-to-fill. The panel keeps one size across both steps, so the
+ *  switch moves nothing, and focus goes to the step's heading. */
 export function CopyFromPicker({
   target,
-  onPreview,
+  resolveUnits,
+  onCopy,
   onClose,
+  initialSource,
 }: {
   target: Entity;
-  /** A candidate was chosen — the caller opens the preview. */
-  onPreview: (source: Entity) => void;
+  /** Open straight on step 2 for this source — for the catalog and stories,
+   *  which have no list to pick from first. */
+  initialSource?: Entity;
+  /** What the host FORM can apply of a plan. The form owns that rule (a field
+   *  with no controlled editor can't take a copy); the picker lists its answer,
+   *  so the ticked rows are exactly what gets written. */
+  resolveUnits: (plan: CopyPlan) => { units: CopyUnit[]; unstageable: CopyMatch[] };
+  /** Write these units into the form. Called once, with the ticked set. */
+  onCopy: (source: Entity, units: CopyUnit[]) => void;
   onClose: () => void;
 }) {
   const mockEntities = useAtomValue(entitiesAtom);
@@ -49,6 +79,26 @@ export function CopyFromPicker({
   const [scope, setScope] = useState<"type" | "any">("type");
   const [query, setQuery] = useState("");
   const panelRef = useFocusTrap<HTMLDivElement>(true);
+  /** Step 2: the chosen source, its plan resolved against the form, and the
+   *  ticked set. Null on step 1. */
+  const [step, setStep] = useState<PropertyStepState | null>(() =>
+    initialSource ? stepFor(target, initialSource, language, resolveUnits) : null,
+  );
+  /* Focus follows the step: to the step's heading, so a screen reader announces
+     where it now is and Tab continues from the top of the new content. Not on
+     the first render — step 1 opens on its search box. */
+  const headingRef = useRef<HTMLHeadingElement | null>(null);
+  const stepKey = step?.source.id ?? null;
+  const firstRender = useRef(true);
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    headingRef.current?.focus();
+  }, [stepKey]);
+
+  const choose = (source: Entity) => setStep(stepFor(target, source, language, resolveUnits));
   const typeName = getEntityType(target.typeId)?.name ?? "this type";
   // The TARGET's own corpus, never the Library's current one — an entity's peers
   // are the corpus it came from (see `entityCorpusPool`).
@@ -107,12 +157,21 @@ export function CopyFromPicker({
         onKeyDown={(e) => {
           if (e.key === "Escape") onClose();
         }}
-        className="w-full max-w-[32rem] max-h-full flex flex-col bg-paper rounded-lg border border-border shadow-lg overflow-hidden"
+        // ONE size for both steps — a fixed height, capped by the host — so
+        // choosing a source swaps the content and moves nothing.
+        className="w-full max-w-[32rem] h-[min(34rem,100%)] flex flex-col bg-paper rounded-lg border border-border shadow-lg overflow-hidden"
       >
         <header data-part="header" className="shrink-0 flex items-center gap-2 h-11 px-3 border-b border-border">
-          <h2 data-part="title" className="text-xs font-semibold text-ink">Copy from</h2>
+          <h2
+            ref={headingRef}
+            tabIndex={-1}
+            data-part="title"
+            className="text-xs font-semibold text-ink rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"
+          >
+            {step ? "Choose properties to copy" : "Copy from"}
+          </h2>
           <span data-part="subtitle" className="text-meta text-ink-tertiary">
-            values are staged, not saved
+            {step ? "nothing is saved until you save" : "values are staged, not saved"}
           </span>
           <button
             type="button"
@@ -126,6 +185,22 @@ export function CopyFromPicker({
           </button>
         </header>
 
+        {step ? (
+          <PropertyStep
+            step={step}
+            onToggle={(key, v) =>
+              setStep((st) => (st ? { ...st, checked: { ...st.checked, [key]: v } } : st))
+            }
+            onAll={(v) =>
+              setStep((st) =>
+                st ? { ...st, checked: Object.fromEntries(st.units.map((u) => [u.key, v])) } : st,
+              )
+            }
+            onBack={() => setStep(null)}
+            onCopy={() => onCopy(step.source, step.units.filter((u) => step.checked[u.key]))}
+          />
+        ) : (
+          <>
         <div data-part="controls" className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-border">
           <div className="flex-1 flex items-center gap-1.5 h-8 px-2 bg-warm rounded-md">
             <Search size={13} className="text-ink-muted shrink-0" />
@@ -167,7 +242,7 @@ export function CopyFromPicker({
             <li key={entity.id} data-part="candidate">
               <button
                 type="button"
-                onClick={() => onPreview(entity)}
+                onClick={() => choose(entity)}
                 disabled={matches === 0}
                 className={`group w-full flex items-center gap-2 px-3 py-2 text-start transition-colors
                   focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset
@@ -202,13 +277,15 @@ export function CopyFromPicker({
         {/* Always mounted, contents toggling — the list is capped, and a footer
             that only appears once the cap bites would move the list under the
             user's cursor the moment they typed. */}
-        <footer data-part="footer" className="shrink-0 h-7 flex items-center px-3 border-t border-border text-meta text-ink-tertiary">
+        <footer data-part="footer" className="shrink-0 h-12 flex items-center px-3 border-t border-border text-meta text-ink-tertiary">
           {total > LIMIT
             ? `Showing the first ${LIMIT} of ${total.toLocaleString()} — search by title to reach the rest.`
             : total > 0
               ? `${total} ${total === 1 ? "candidate" : "candidates"}`
               : ""}
         </footer>
+          </>
+        )}
       </div>
     </div>
   );
@@ -241,4 +318,190 @@ function emptyMessage({
   return scope === "type"
     ? "Nothing else of this type to copy from."
     : "There is no other entity to copy from.";
+}
+
+interface PropertyStepState {
+  source: Entity;
+  plan: CopyPlan;
+  units: CopyUnit[];
+  unstageable: CopyMatch[];
+  checked: Record<string, boolean>;
+}
+
+/** Step 2's state for a chosen source: the plan, resolved against the form. */
+function stepFor(
+  target: Entity,
+  source: Entity,
+  language: Language,
+  resolveUnits: (plan: CopyPlan) => { units: CopyUnit[]; unstageable: CopyMatch[] },
+): PropertyStepState {
+  const plan = planCopyFrom(target, source, language);
+  const { units, unstageable } = resolveUnits(plan);
+  return {
+    source,
+    plan,
+    units,
+    unstageable,
+    // Defaulted to the matched set — except the ones that would CLEAR a value,
+    // which is a destructive default nobody expects from "copy".
+    checked: Object.fromEntries(units.map((u) => [u.key, !u.row.emptyOnSource])),
+  };
+}
+
+/** Step 2 — the chosen source's properties. The same three bands as step 1
+ *  (identity/back row, scrolling list, h-12 footer), so the panel doesn't
+ *  change shape between them. */
+function PropertyStep({
+  step,
+  onToggle,
+  onAll,
+  onBack,
+  onCopy,
+}: {
+  step: PropertyStepState;
+  onToggle: (key: string, checked: boolean) => void;
+  onAll: (checked: boolean) => void;
+  onBack: () => void;
+  onCopy: () => void;
+}) {
+  const { source, plan, units, unstageable, checked } = step;
+  const n = units.filter((u) => checked[u.key]).length;
+  const all = units.length > 0 && n === units.length;
+  // A field the target simply doesn't have is the source's own business. What
+  // is listed is every near miss, plus the matches this form has no editor for.
+  const nearMisses = plan.skipped.filter((sk) => sk.reason !== "not-on-source-template");
+  const notCopied: { id: string; label: string; reason: string; detail?: string }[] = [
+    ...unstageable.map((m) => ({
+      id: `u:${m.id}`,
+      label: m.label,
+      reason: "no editor for it in this form",
+    })),
+    ...nearMisses.map((sk) => ({
+      id: `s:${sk.id}`,
+      label: sk.label,
+      reason: reasonLabel(sk.reason),
+      detail: sk.detail,
+    })),
+  ];
+
+  return (
+    <>
+      <div data-part="source" className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-border">
+        <button
+          type="button"
+          onClick={onBack}
+          data-part="back"
+          className="shrink-0 inline-flex items-center gap-1 h-8 px-2 text-xs font-medium text-ink-secondary
+            bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer
+            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"
+        >
+          <ArrowLeft size={13} aria-hidden /> Back
+        </button>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-xs font-medium text-ink">{source.title}</span>
+          <span className="mt-0.5 block">
+            <EntityPill typeId={source.typeId} />
+          </span>
+        </span>
+      </div>
+
+      <div data-part="properties" className="flex-1 overflow-auto px-3 py-2">
+        {units.length > 0 ? (
+          <>
+            <label data-part="all" className="flex items-center gap-2 h-6 px-2 text-meta text-ink-secondary cursor-pointer">
+              <Checkbox
+                checked={all}
+                onChange={(e) => onAll(e.target.checked)}
+                ariaLabel={all ? "Select none" : "Select all"}
+              />
+              {all ? "Select none" : "Select all"}
+              <span className="text-ink-tertiary">
+                · {units.length} {units.length === 1 ? "property" : "properties"} match
+              </span>
+            </label>
+            <ul data-part="matches">
+              {units.map((u) => (
+                <li key={u.key}>
+                  <CopyFieldRow
+                    match={u.row}
+                    label={u.label}
+                    checked={!!checked[u.key]}
+                    onChange={(v) => onToggle(u.key, v)}
+                  />
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <p data-part="empty" className="px-2 py-4 text-center text-xs text-ink-muted">
+            Nothing on this entity lines up with the one you are editing.
+          </p>
+        )}
+
+        {notCopied.length > 0 && (
+          <section data-part="not-copied" className="mt-3 pt-2" style={{ borderTop: "1px solid var(--border-soft)" }}>
+            <SectionLabel as="h3" className="px-2">
+              Not copied
+            </SectionLabel>
+            <ul className="mt-1 space-y-1">
+              {notCopied.map((row) => (
+                // Listed, disabled, with the reason: a field that vanishes
+                // teaches nothing.
+                <li
+                  key={row.id}
+                  aria-disabled="true"
+                  className="flex items-start gap-2 px-2 py-1 text-meta text-ink-tertiary"
+                >
+                  <Ban size={12} className="shrink-0 mt-px text-ink-muted" aria-hidden />
+                  <span className="min-w-0 flex-1">
+                    <span className="font-medium">{row.label}</span> — {row.reason}
+                    {row.detail && <span className="mt-0.5 block">{row.detail}</span>}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </div>
+
+      <footer data-part="footer" className="shrink-0 h-12 flex items-center gap-2 px-3 border-t border-border">
+        <span className="me-auto text-meta text-ink-tertiary">
+          {n} of {units.length} selected
+        </span>
+        <button
+          type="button"
+          onClick={onCopy}
+          disabled={n === 0}
+          data-part="copy"
+          className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+            n === 0
+              ? "bg-vellum text-ink-muted cursor-not-allowed"
+              : "bg-ink text-paper hover:bg-ink/90 cursor-pointer"
+          } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30`}
+        >
+          Copy {n} {n === 1 ? "property" : "properties"}
+        </button>
+      </footer>
+    </>
+  );
+}
+
+/** The short form of a skip; the matching layer's `detail` carries the sentence. */
+function reasonLabel(reason: CopySkipReason): string {
+  switch (reason) {
+    case "not-on-source-template":
+      return "not on this entity";
+    case "not-on-target-template":
+      return "not on the entity you are editing";
+    case "type-mismatch":
+      return "different field type";
+    case "different-thesaurus":
+      return "points somewhere else";
+    case "different-inherit-spec":
+      return "inherits a different value";
+    case "excluded-type":
+      return "files stay with their entity";
+    case "read-only-derived":
+      return "derived, not editable";
+  }
 }
