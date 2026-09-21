@@ -178,13 +178,16 @@ function BarButton({
 /** The selection's actions as a bottom sheet — the phone's version of the
  *  bar's buttons. Portalled, focus-trapped, Escape and the scrim close it; an
  *  action closes it too. Disabled actions stay listed, saying why. */
-function ActionsSheet({
+export function ActionsSheet({
   count,
+  heading,
   actions,
   onClose,
 }: {
-  count: number;
-  actions: SelectionAction[];
+  count?: number;
+  /** The sheet's first line; "N selected" by default. */
+  heading?: string;
+  actions: { label: string; icon: ReactNode; onClick?: () => void; disabledReason?: string; danger?: boolean }[];
   onClose: () => void;
 }) {
   const panelRef = useFocusTrap<HTMLDivElement>(true);
@@ -198,7 +201,7 @@ function ActionsSheet({
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        aria-label={`Actions for ${count} selected`}
+        aria-label={heading ?? `Actions for ${count} selected`}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
           if (e.key === "Escape") onClose();
@@ -206,7 +209,7 @@ function ActionsSheet({
         className="w-full rounded-t-lg bg-paper border-t border-border shadow-lg p-2 pb-4"
       >
         <p className="px-3 py-2 text-meta text-ink-tertiary tabular-nums">
-          {count.toLocaleString()} selected
+          {heading ?? `${(count ?? 0).toLocaleString()} selected`}
         </p>
         <ul className="flex flex-col">
           {actions.map((a) => (

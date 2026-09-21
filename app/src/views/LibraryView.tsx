@@ -7,6 +7,7 @@ import {
   Upload,
   FileUp,
   FileDown,
+  MoreHorizontal,
 } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom } from "../atoms/dataSource";
 import { startDraftAtom } from "../atoms/entityOverlay";
@@ -81,7 +82,7 @@ import {
   lastPointerWasTouch,
 } from "../components/library/EntitySelectBox";
 import { SelectAllBox } from "../components/library/SelectAllBox";
-import { LibrarySelectionBar } from "../components/library/LibrarySelectionBar";
+import { ActionsSheet, LibrarySelectionBar } from "../components/library/LibrarySelectionBar";
 import { LibrarySelectionDrawer } from "../components/library/LibrarySelectionDrawer";
 import { getEntityType, type Entity, type EntityImage } from "../data/entities";
 import { libraryInheritedDefs } from "../utils/libraryFacets";
@@ -283,6 +284,7 @@ export function LibraryView() {
   const startDraft = useSetAtom(startDraftAtom);
   const setOpenNewImport = useSetAtom(openNewImportOnArrivalAtom);
   const [createOpen, setCreateOpen] = useState(false);
+  const [phoneActionsOpen, setPhoneActionsOpen] = useState(false);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   /** Create entity: the chosen template opens as a draft in the drawer, on its
    *  edit form. Guarded — the drawer may be holding another entity's edit. */
@@ -1366,6 +1368,39 @@ export function LibraryView() {
             place the filters are reachable while the drawer shows an entity
             instead of the Filters panel. `ms-2` keeps it out of the run of
             footer actions, so a readout doesn't read as a fourth button. */}
+        {/* Phone: the four actions above are `hidden sm:flex`, so the bar
+            there was empty — the same actions, in the selection's sheet. */}
+        {!selectionActive && (
+          <button
+            type="button"
+            onClick={() => setPhoneActionsOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={phoneActionsOpen}
+            className={`sm:hidden shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md cursor-pointer`}
+          >
+            <MoreHorizontal size={13} className="text-ink-tertiary" aria-hidden /> Actions
+          </button>
+        )}
+        {phoneActionsOpen && (
+          <ActionsSheet
+            heading="Library"
+            onClose={() => setPhoneActionsOpen(false)}
+            actions={[
+              { label: "Create entity", icon: <Plus size={14} />, onClick: () => setCreateOpen(true) },
+              { label: "Upload PDF", icon: <Upload size={14} />, onClick: () => uploadInputRef.current?.click() },
+              {
+                label: "Import CSV",
+                icon: <FileUp size={14} />,
+                onClick: () =>
+                  guard(() => {
+                    setOpenNewImport(true);
+                    setAppView("import-csv");
+                  }),
+              },
+              { label: "Export CSV", icon: <FileDown size={14} />, onClick: handleExport },
+            ]}
+          />
+        )}
         <ActiveFiltersButton className="ms-2" />
       </div>
     </div>
