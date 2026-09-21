@@ -29,6 +29,7 @@ import { HighlightedText } from "../../shared/HighlightedText";
 import { EntityTypeChip } from "../../shared/EntityTypeChip";
 import { ListInfoRow } from "../../shared/ListInfoRow";
 import { BorrowedDocLine } from "../BorrowedDocLine";
+import { ProvenanceLine } from "../../shared/ProvenanceLine";
 import { ToggleChip } from "../../shared/ToggleChip";
 import { CountBadge } from "../../shared/CountBadge";
 import { MatchedTerms } from "../MatchedTerms";
@@ -74,51 +75,39 @@ const PASSAGES_PER_ENTITY = 8;
 /** Container width at which a tree field's snippets go two-up — the point where
  *  one column of short leaf lines stops filling the pane. */
 const TWO_COL_TREE = 1024; // 64rem
-/** …and where a passage can afford a second line of context. */
-const TWO_LINE_PASSAGE = 896; // 56rem
-
-/** The MEASURE a passage is set to, in characters, and in px at `text-sm`.
- *
- *  Prose has a readable measure, and a wide pane does not abolish it — but 74ch
- *  was the bottom of the comfortable range, chosen when the excerpt was one
- *  line. A ranked list of quotations reads perfectly well at 96, which is where
- *  newspapers and search engines sit, and it is the difference between a
- *  sentence ending halfway across the pane and one that reaches. Past 72rem the
- *  measure grows once, and then stops: the next step would be a wall of text.
- *  The container query below (`@[72rem]:max-w-[96ch]`) is the same threshold. */
-const MEASURE_WIDE = 1152; // 72rem
-const measurePx = (w: number) => (w >= MEASURE_WIDE ? 96 : 74) * 7.2;
+/** …and where a passage can afford a third line of context. */
+const THREE_LINE_PASSAGE = 896; // 56rem
 
 /** The excerpt budget each layout gets: the column the prose is set in, and how
  *  many lines of it the layout can afford.
  *
- *  WIDTH BUYS CONTENT, NOT LONGER LINES. The measure stays 74ch everywhere —
- *  160-character lines would be a worse result list, not a fuller one — so a
- *  wide pane spends its width on more context words, wrapped onto a second
- *  line, and on more columns where a layout can take them.
+ *  The column is the one the row actually has. Passages used to be capped at a
+ *  74ch/96ch measure with the context sized to that cap, so on a wide pane every
+ *  excerpt stopped two thirds of the way across and carried a dozen words a
+ *  side. Now the text runs to the row's edge and the context is sized to that
+ *  width, so a wider pane shows more of the sentence around the hit.
  *
- *  What it does NOT buy, in passages, is a meta column beside the quote. That
- *  was tried in this file and removed: a stretched `1fr_15rem` split left the
- *  passage stopping at its cap and the attribution pinned to the far edge, a
- *  hand's width from the sentence it names. Passage and attribution are one
- *  block; the empty margin beside them is a page's margin, which is what a sheet
- *  of ranked quotations should have. */
+ *  Passage and attribution are still one block (no meta column beside the
+ *  quote): a stretched `1fr_15rem` split parked the attribution a hand's width
+ *  from the sentence it names. */
 function excerptBudget(layout: ResultsLayout, w: number): { ctx: number; twoCol: boolean } {
   if (!w) return { ctx: contextWordsFor(0), twoCol: false };
-  const measure = measurePx(w);
   if (layout === "passages") {
-    return { ctx: contextWordsFor(measure, w >= TWO_LINE_PASSAGE ? 2 : 1), twoCol: false };
+    // The row's own padding (`px-3`).
+    return { ctx: contextWordsFor(w - 24, w >= THREE_LINE_PASSAGE ? 3 : 2), twoCol: false };
   }
   if (layout === "tree") {
     const twoCol = w >= TWO_COL_TREE;
-    const col = Math.min(measure, (w - 56) / (twoCol ? 2 : 1) - (twoCol ? 24 : 0));
+    const col = (w - 56) / (twoCol ? 2 : 1) - (twoCol ? 24 : 0);
     return { ctx: contextWordsFor(col, 2), twoCol };
   }
   if (layout === "grouped") {
     // `lg:grid-cols-[minmax(14rem,1fr)_2fr]` — the passages take two thirds of
-    // the card's inner width (2rem of padding, 1.5rem of gap), capped to measure.
-    const col = Math.min(measure, ((w - 32 - 24) * 2) / 3);
-    return { ctx: contextWordsFor(col, 2), twoCol: false };
+    // the card's inner width (2rem of padding, 1.5rem of gap). One budget covers
+    // every card, so it is sized to that narrower column; a document-only card
+    // spans the card and simply wraps sooner.
+    const col = ((w - 32 - 24) * 2) / 3;
+    return { ctx: contextWordsFor(col, 3), twoCol: false };
   }
   // Spine: one passage in a fixed row on a time axis — its measure is the axis's,
   // not the pane's, so it keeps the floor.
@@ -344,29 +333,31 @@ export function ResultsMainView({
               ))}
             </span>
           }
+          // Always mounted, contents hidden when nothing is excluded — this note
+          // appears and vanishes as facets are ticked, exactly while the results
+          // below are being read. It rides the chip row rather than a line of
+          // its own: an invisible reserved line under the chips doubled the gap
+          // above the first result.
+          rightSlot={
+            <span
+              data-part="hidden-by-filters"
+              aria-hidden={hiddenByFilters === 0}
+              className={hiddenByFilters === 0 ? "invisible" : ""}
+            >
+              {hiddenByFilters.toLocaleString()} more {hiddenByFilters === 1 ? "match" : "matches"}{" "}
+              hidden by filters
+              <span className="mx-1 text-ink-muted">·</span>
+              <button
+                type="button"
+                onClick={onClearFilters}
+                tabIndex={hiddenByFilters === 0 ? -1 : undefined}
+                className="font-medium text-carbon hover:underline cursor-pointer"
+              >
+                Clear filters
+              </button>
+            </span>
+          }
         />
-        {/* Always mounted, contents hidden when nothing is excluded — this line
-            appears and vanishes as facets are ticked, exactly while the results
-            below are being read. */}
-        <p
-          data-part="hidden-by-filters"
-          aria-hidden={hiddenByFilters === 0}
-          className={`pb-2 text-meta text-ink-tertiary ${
-            hiddenByFilters === 0 ? "invisible" : ""
-          }`}
-        >
-          {hiddenByFilters.toLocaleString()} more {hiddenByFilters === 1 ? "match" : "matches"}{" "}
-          hidden by filters
-          <span className="mx-1 text-ink-muted">·</span>
-          <button
-            type="button"
-            onClick={onClearFilters}
-            tabIndex={hiddenByFilters === 0 ? -1 : undefined}
-            className="font-medium text-carbon hover:underline cursor-pointer"
-          >
-            Clear filters
-          </button>
-        </p>
       </header>
 
       {/* Hosted by the Library main pane (a gutter host): the card lane is a
@@ -528,8 +519,7 @@ function GroupedBody({
 
             {/* Two columns from `lg` up when there ARE two — properties read as a
                 short list and take a third, the passages are prose and take the
-                rest. One section alone spans the card (capped to a readable
-                measure rather than stretched); neither means a header-only card,
+                rest. One section alone spans the card to its edge; neither means a header-only card,
                 which is the honest shape of a title-only match. */}
             {(hasMeta || hasText) && (
               <div
@@ -538,7 +528,7 @@ function GroupedBody({
                 }`}
               >
                 {hasMeta && (
-                  <section data-part="properties" className={hasText ? "" : "max-w-[70ch]"}>
+                  <section data-part="properties">
                     <SectionLabel icon={<Tag size={11} />}>Properties</SectionLabel>
                     <ul className="mt-1.5 flex flex-col gap-1">
                       {props.map((group) => (
@@ -555,7 +545,7 @@ function GroupedBody({
                 )}
 
                 {hasText && (
-                  <section data-part="document" className={hasMeta ? "" : "max-w-[80ch]"}>
+                  <section data-part="document">
                     <SectionLabel icon={<FileText size={11} />}>
                       {documentLabel(snippets.borrowedFrom)}
                       <PageCount shown={snippets.fullText.length} total={snippets.fullTextTotal} />
@@ -814,6 +804,9 @@ interface FlatPassage {
    *  flattening loses the entity's snippets, and this list is exactly where the
    *  same judgment shows up under a dozen different case names. */
   from: BorrowedDoc | null;
+  /** Other results whose document has this same passage on the same page. The
+   *  row is listed once, under `entity`; these are counted in its attribution. */
+  also: Entity[];
 }
 
 function PassagesBody({
@@ -844,6 +837,7 @@ function PassagesBody({
     const rows: FlatPassage[] = [];
     let notShown = 0;
     let titleOnly = 0;
+    const byPassage = new Map<string, FlatPassage>();
     for (const { entity, snippets } of results) {
       const props = properties(snippets);
       // A title-only result has no passage to list here — counted and reported
@@ -860,11 +854,32 @@ function PassagesBody({
             fieldKey: m.fieldKey,
             text: t,
             from: null,
+            also: [],
           });
         }
       }
       for (const s of snippets.fullText) {
-        rows.push({
+        // One passage is one row, however many results read it. A Causa with
+        // no PDF of its own quotes a connected document, and the corpus's
+        // documents share six stand-in files, so the same page used to be
+        // listed once per result — five identical rows in a list that ranks
+        // passages. Keyed on page + text, not on the document entity: the
+        // repeats come from DIFFERENT document entities serving the same file.
+        const key = `${s.page ?? "-"}|${s.text}`;
+        const seen = byPassage.get(key);
+        if (seen) {
+          // A result reading its OWN document heads the row; otherwise the
+          // best-ranked result that quotes the passage does.
+          if (!snippets.borrowedFrom && seen.from) {
+            seen.also.unshift(seen.entity);
+            seen.entity = entity;
+            seen.from = null;
+          } else {
+            seen.also.push(entity);
+          }
+          continue;
+        }
+        const row: FlatPassage = {
           entity,
           page: s.page,
           hits: s.hits,
@@ -872,7 +887,10 @@ function PassagesBody({
           fieldKey: null,
           text: s.text,
           from: snippets.borrowedFrom,
-        });
+          also: [],
+        };
+        byPassage.set(key, row);
+        rows.push(row);
       }
       // Pages counted but not excerpted — said out loud rather than dropped.
       notShown += Math.max(0, snippets.fullTextTotal - snippets.fullText.length);
@@ -900,8 +918,9 @@ function PassagesBody({
           const selected =
             activeKey === rowKey ||
             (row.page !== null &&
-              activePage?.entityId === row.entity.id &&
-              activePage.page === row.page);
+              activePage?.page === row.page &&
+              (activePage.entityId === row.entity.id ||
+                row.also.some((e) => e.id === activePage.entityId)));
           return (
             // The hairline rides the ITEM: `last:` has to see the last row of
             // the sheet, and the button is now the only child of its item.
@@ -927,14 +946,11 @@ function PassagesBody({
                   selected ? "bg-parchment" : "hover:bg-warm"
                 }`}
             >
-              {/* Passage and attribution share ONE measure, so they read as a
-                  single block wherever the pane ends. They used to sit in a
-                  stretched `1fr_15rem` grid: the passage stopped at its 62ch cap
-                  and the meta stayed pinned to the far edge, leaving a hand's
-                  width of nothing between a sentence and the name of the thing
-                  it came from. `text-sm` here so `ch` is measured in the
-                  passage's own type size, not the inherited one. */}
-              <span className="block max-w-[74ch] @[72rem]:max-w-[96ch] text-sm">
+              {/* Passage and attribution are ONE block that runs to the row's
+                  edge. They used to sit in a stretched `1fr_15rem` grid: the
+                  meta stayed pinned to the far edge, a hand's width from the
+                  sentence it names. The attribution now sits under the quote. */}
+              <span className="block text-sm">
                 <span data-part="excerpt" className="block leading-relaxed text-ink">
                   <HighlightedText text={row.text} query={query} />
                 </span>
@@ -991,6 +1007,20 @@ function PassagesBody({
                       is what turns a run of identical passages under a dozen
                       case names into a dozen cases citing one judgment. */}
                   <BorrowedDocLine from={row.from} className="min-w-0" />
+                  {/* The results folded into this row, in the same `↳` idiom.
+                      Rides the mounted attribution line, so it moves nothing. */}
+                  {row.also.length > 0 && (
+                    <ProvenanceLine inline label="also under" className="shrink-0">
+                      <span
+                        data-part="also"
+                        title={row.also.map((e) => e.title).join("\n")}
+                        className="tabular-nums"
+                      >
+                        {row.also.length.toLocaleString()}{" "}
+                        {row.also.length === 1 ? "entity" : "entities"}
+                      </span>
+                    </ProvenanceLine>
+                  )}
                 </span>
               </span>
             </button>
@@ -1226,13 +1256,12 @@ function PassageRow({
   // width from the sentence it annotates, next to whichever passage happened to
   // end nearest. Inline, it is a citation — it costs no line of its own, so a
   // page-less passage sits at exactly the same height as a tagged one. The
-  // measure cap keeps the prose readable at any pane width (same 74ch as the
-  // passages layout). `bdi dir="ltr"` holds "p.15 · 2×" in order under RTL
+  // body runs to the row's edge, like the passages layout. `bdi dir="ltr"` holds "p.15 · 2×" in order under RTL
   // without forcing the passage's own direction.
   const body = (
     // A block <span>, not <p>: this body is also the content of a <button>,
     // where a paragraph isn't phrasing content.
-    <span className="block max-w-[74ch] @[72rem]:max-w-[96ch] text-sm text-ink leading-relaxed">
+    <span className="block text-sm text-ink leading-relaxed">
       <HighlightedText text={snippet.text} query={query} />
       {tag && (
         <bdi
