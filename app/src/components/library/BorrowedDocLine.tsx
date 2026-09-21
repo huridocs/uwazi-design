@@ -22,14 +22,27 @@ import { ProvenanceLine } from "../shared/ProvenanceLine";
 export function BorrowedDocLine({
   from,
   className = "",
+  fade = false,
 }: {
   from: BorrowedDoc | null;
   className?: string;
+  /** Fade the title out at the slot's end instead of cutting it with an
+   *  ellipsis — for a fixed slot where the title is routinely longer than the
+   *  room (the Spine's attribution column). */
+  fade?: boolean;
 }) {
   if (!from) return null;
   return (
     <ProvenanceLine inline label="from" className={className}>
-      <span data-part="document" className="truncate" title={`Passage from ${from.title}, a connected document`}>
+      <span
+        data-part="document"
+        className={
+          fade
+            ? "min-w-0 overflow-hidden whitespace-nowrap [mask-image:linear-gradient(to_right,#000_75%,transparent)] rtl:[mask-image:linear-gradient(to_left,#000_75%,transparent)]"
+            : "truncate"
+        }
+        title={`Passage from ${from.title}, a connected document`}
+      >
         {from.title}
       </span>
     </ProvenanceLine>
