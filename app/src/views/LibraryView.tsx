@@ -323,12 +323,17 @@ export function LibraryView() {
 
      The thresholds are the row's parts at their natural widths (measured:
      Sort 113px, View 89, Display 32, Language 56, the readout slot 240, 8px
-     gaps) with the search box held at a usable 11rem, plus the mobile drawer
-     trigger where there is one. Past each one, in order:
-       - the readout leaves the row for its own line under it (always mounted
-         at that width, so typing a query never adds the line);
+     gaps) with the search box held at 16rem, plus the mobile drawer trigger
+     where there is one. The floor was 11rem, and at 11rem the search box was
+     the control that yielded first: at a 1024px window with the default drawer
+     it sat at 210px, its query cut mid-word, while Sort kept all 113px beside
+     it. The box is the row's primary control and Sort and Language both have
+     a second home in the Display menu, so they give before it does. Past
+     each threshold, in order:
        - Sort steps into the Display menu (`librarySortInMenuAtom`), as it
          already does on a phone;
+       - the readout leaves the row for its own line under it (always mounted
+         at that width, so typing a query never adds the line);
        - Language steps aside, as it already does on a phone.
      A tier changes when the WIDTH changes — a drawer drag, a window resize —
      never on typing or on the number the readout prints. */
@@ -353,9 +358,21 @@ export function LibraryView() {
   // Unmeasured (the first render) counts as wide; the observer corrects it
   // before paint.
   const fits = (w: number) => mastheadW === 0 || mastheadW >= w + mastheadExtra;
-  const readoutInline = fits(746);
-  const sortInline = fits(498);
-  const langInline = fits(377);
+  const SEARCH_FLOOR = 256; // 16rem
+  const GAP = 8, SORT = 113, VIEW = 89, DISPLAY = 32, LANG = 56, READOUT = 240;
+  const rowWithout = (...gone: number[]) =>
+    // +5: the hairline (1 + its 8px gap) less the two 6px gaps inside the groups.
+    SEARCH_FLOOR + 5 + [READOUT, SORT, VIEW, DISPLAY, LANG]
+      .filter((w) => !gone.includes(w))
+      .reduce((sum, w) => sum + GAP + w, 0);
+  // ORDER: Sort, then the readout, then Language. Sort goes first because it is
+  // the one part with a second home already (the Display menu) and it buys the
+  // readout 121px: the row stays ONE line, 49px, down to a 705px pane instead
+  // of wrapping at 826. A tier never comes back as the row narrows, so Sort does
+  // not reappear once the readout has taken its own line.
+  const sortInline = fits(rowWithout()); // 826
+  const readoutInline = fits(rowWithout(SORT)); // 705
+  const langInline = fits(rowWithout(READOUT, SORT)); // 457
   const setSortInMenu = useSetAtom(librarySortInMenuAtom);
   const setLanguageInMenu = useSetAtom(libraryLanguageInMenuAtom);
   useEffect(() => {
@@ -821,7 +838,7 @@ export function LibraryView() {
       <div data-part="masthead-row" className="flex items-center gap-2">
         <div
           ref={searchBoxRef}
-          className="relative flex-1 min-w-0 flex items-center gap-1.5 h-8 py-1 pl-2 pr-2 bg-paper border border-border rounded-md
+          className="relative flex-1 min-w-0 flex items-center gap-1.5 h-8 py-1 ps-2 pe-2 bg-paper border border-border rounded-md
             focus-within:ring-2 focus-within:ring-ink/25 focus-within:border-ink/30 transition-all"
         >
           <Search size={14} className="text-ink-tertiary shrink-0" />
@@ -944,53 +961,67 @@ export function LibraryView() {
             it costs no width. The VIEW switcher does not: cards / list / map /
             timeline are the point of the Library, and they were unreachable on
             mobile because this whole cluster was `hidden sm:block`. */}
-        {sortInline && (
-        <div>
-          <Select
-            value={sort}
-            onChange={(v) => {
-              const key = v as typeof sort;
-              setSort(key);
-              setSortDir(defaultSortDir(key));
-            }}
-            ariaLabel={t("System", "Sort")}
-            // Same rows, chrome-language labels; values stay the sort keys.
-            // Relevance only exists while a query runs (`librarySortAtom`).
-            options={SORTS.filter((s) => q || s.value !== "relevance").map((s) => ({ ...s, label: t("System", s.label) }))}
-            // Same row, same reason as the switcher: this trigger swung 47px
-            // between "Title" and "Connections", shoving View, Display and
-            // Language sideways on every sort change.
-            steady
-          />
+        {/* ARRANGE: which order, which shape. One group, a tighter gap inside it. */}
+        <div data-part="arrange" className="flex items-center gap-1.5">
+          {sortInline && (
+          <div>
+            <Select
+              value={sort}
+              onChange={(v) => {
+                const key = v as typeof sort;
+                setSort(key);
+                setSortDir(defaultSortDir(key));
+              }}
+              ariaLabel={t("System", "Sort")}
+              // Same rows, chrome-language labels; values stay the sort keys.
+              // Relevance only exists while a query runs (`librarySortAtom`).
+              options={SORTS.filter((s) => q || s.value !== "relevance").map((s) => ({ ...s, label: t("System", s.label) }))}
+              // Same row, same reason as the switcher: this trigger swung 47px
+              // between "Title" and "Connections", shoving View, Display and
+              // Language sideways on every sort change.
+              steady
+            />
+          </div>
+          )}
+          {/* The switcher is a dropdown, like Sort and Language either side of it,
+              so this row reads as three of one control rather than two dropdowns
+              and a segmented widget. It is also the narrowest the switcher has
+              been: five segments cost a fixed 156px whatever they show, while one
+              trigger costs the widest label once. `steady` is what makes that
+              safe — see Select. The trade is real and deliberate: every view is
+              still reachable, but at two clicks rather than one, and the trigger
+              names the active view where five icons couldn't. */}
+          <ViewSwitcher value={viewMode} onChange={(v) => setViewMode(v as typeof viewMode)} />
         </div>
-        )}
-        {/* The switcher is a dropdown, like Sort and Language either side of it,
-            so this row reads as three of one control rather than two dropdowns
-            and a segmented widget. It is also the narrowest the switcher has
-            been: five segments cost a fixed 156px whatever they show, while one
-            trigger costs the widest label once. `steady` is what makes that
-            safe — see Select. The trade is real and deliberate: every view is
-            still reachable, but at two clicks rather than one, and the trigger
-            names the active view where five icons couldn't. */}
-        <ViewSwitcher value={viewMode} onChange={(v) => setViewMode(v as typeof viewMode)} />
-        {/* Display is icon-only and ALWAYS mounted; the view-specific modifiers
-            (timeline layout) live inside its popover. Anything that appears and
-            disappears from this row shoves every other control sideways when you
-            change view — which is exactly what it used to do. */}
-        <LibraryDisplayMenu />
-        {/* Languages: one dropdown of fixed width (codes, not names — a "Français"
-            label would resize the trigger and shift the row again). */}
+        {/* One hairline, between the controls that change WHAT is listed and how
+            it is ordered, and the two that change how it is drawn and read. A gap
+            step alone did not separate four look-alike triggers; a rule per
+            control would be chrome. It goes with Language: past that fold each
+            side is one control, and a rule between two lone buttons costs a
+            phone's search box 9px for nothing. Width decides it, never state. */}
         {langInline && (
-        <div>
-          <Select
-            value={language}
-            onChange={(v) => setLanguage(v as Language)}
-            ariaLabel="Language"
-            align="end"
-            options={LANGUAGES.map((l) => ({ value: l, label: l }))}
-          />
-        </div>
+          <span aria-hidden="true" data-part="rule" className="shrink-0 w-px h-4 bg-border" />
         )}
+        <div data-part="display" className="flex items-center gap-1.5">
+          {/* Display is icon-only and ALWAYS mounted; the view-specific modifiers
+              (timeline layout) live inside its popover. Anything that appears and
+              disappears from this row shoves every other control sideways when you
+              change view — which is exactly what it used to do. */}
+          <LibraryDisplayMenu />
+          {/* Languages: one dropdown of fixed width (codes, not names — a "Français"
+              label would resize the trigger and shift the row again). */}
+          {langInline && (
+          <div>
+            <Select
+              value={language}
+              onChange={(v) => setLanguage(v as Language)}
+              ariaLabel="Language"
+              align="end"
+              options={LANGUAGES.map((l) => ({ value: l, label: l }))}
+            />
+          </div>
+          )}
+        </div>
         {menuTrigger}
       </div>
       {/* The readout's own line, when the row can't hold it. Mounted for as
