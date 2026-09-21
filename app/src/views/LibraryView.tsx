@@ -57,6 +57,7 @@ import {
   defaultSortDir,
   librarySelectedEntityIdAtom,
   librarySortInMenuAtom,
+  libraryLanguageInMenuAtom,
   librarySelectedClusterAtom,
   resultsActivePageAtom,
   requestMetadataFocusAtom,
@@ -356,6 +357,10 @@ export function LibraryView() {
   const sortInline = fits(498);
   const langInline = fits(377);
   const setSortInMenu = useSetAtom(librarySortInMenuAtom);
+  const setLanguageInMenu = useSetAtom(libraryLanguageInMenuAtom);
+  useEffect(() => {
+    setLanguageInMenu(!langInline);
+  }, [langInline, setLanguageInMenu]);
   useEffect(() => {
     setSortInMenu(!sortInline);
   }, [sortInline, setSortInMenu]);
@@ -859,7 +864,7 @@ export function LibraryView() {
               <X size={12} />
             </button>
           )}
-          <SearchTipsPopover />
+          <SearchTipsPopover compact={!readoutInline} />
           {/* Follows FOCUS; the tips popover follows a click on its chip — which
               blurs the input, so the two can never be open at once without any
               shared state to arbitrate. */}
