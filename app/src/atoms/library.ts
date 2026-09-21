@@ -287,6 +287,12 @@ function selectionWrite(get: Getter, set: Setter, run: () => void) {
   if (get(libraryBulkEditOpenAtom)) set(libraryBulkEditIdsAtom, [...get(librarySelectionAtom)]);
 }
 
+/** Which selection dialog is open — the footer bar, the phone sheet and the
+ *  selection drawer's Actions menu all open the SAME dialogs, hosted once by
+ *  `SelectionDialogs`. */
+export type SelectionDialog = "delete" | "change-template" | "share" | "permissions";
+export const librarySelectionDialogAtom = atom<SelectionDialog | null>(null);
+
 /** An entity whose preview should open straight on its edit form — Edit with
  *  exactly one entity selected is that entity's ordinary edit. Spent by the
  *  entity panel once it has opened the form. */

@@ -1,26 +1,18 @@
 import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { useAtomValue, useSetAtom, useStore } from "jotai";
-import { FileDown, LayoutTemplate, Lock, MoreHorizontal, PenLine, Share2, Trash2, X } from "lucide-react";
+import { useAtomValue, useSetAtom } from "jotai";
+import { MoreHorizontal, X } from "lucide-react";
 import { breakpointAtom } from "../../atoms/viewport";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import {
   clearSelectionAtom,
-  deselectIdsAtom,
-  libraryEditRequestAtom,
-  openBulkEditAtom,
   librarySelectedEntityIdAtom,
   librarySelectionAtom,
   librarySelectionDrawerOpenAtom,
   selectIdsAtom,
 } from "../../atoms/library";
-import { deleteWithUndoAtom } from "../../atoms/entityOverlay";
-import { notificationsAtom } from "../../atoms/notifications";
-import { languageAtom } from "../../atoms/language";
 import type { Corpus } from "../../data/entityOverlay";
-import { getEntity, type Entity } from "../../data/entities";
-import { runCsvExport } from "../../utils/libraryTasks";
-import { ConfirmDialog } from "../shared/ConfirmDialog";
+import { SelectionDialogs, useSelectionActions, type SelectionAction } from "./selectionActions";
 import { WARM_BUTTON } from "../shared/warmButton";
 import { Hint } from "../shared/Hint";
 
@@ -29,10 +21,9 @@ import { Hint } from "../shared/Hint";
  *
  *  Order: the readout (a live region, fixed width, so 9 → 10 → 100 moves no
  *  button), "N not in view", the offer to select the rest of the results,
- *  then the actions and Clear. Edit, Change template, Share and Permissions
- *  are the bulk-actions spec's later steps: here they are disabled, still
- *  focusable, saying so. Export CSV and Delete work. Below a 56rem bar every
- *  action keeps only its icon and its name.
+ *  then the actions (`useSelectionActions` — the same list the phone sheet and
+ *  the selection drawer's menu show) and Clear. Below a 56rem bar every action
+ *  keeps only its icon and its name.
  *
  *  This component subscribes to the selection; the view around it does not. */
 export function LibrarySelectionBar({
@@ -46,15 +37,11 @@ export function LibrarySelectionBar({
   loadedIds: readonly string[];
   corpus: Corpus;
 }) {
-  const store = useStore();
   const selection = useAtomValue(librarySelectionAtom);
-  const language = useAtomValue(languageAtom);
   const clear = useSetAtom(clearSelectionAtom);
   const selectIds = useSetAtom(selectIdsAtom);
-  const deselect = useSetAtom(deselectIdsAtom);
   const openDrawer = useSetAtom(librarySelectionDrawerOpenAtom);
   const setPreview = useSetAtom(librarySelectedEntityIdAtom);
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   // On a phone the bar's action buttons don't fit (they are `hidden sm:flex`),
   // and the selection drawer isn't rendered — so the bar there is the count,
@@ -73,57 +60,7 @@ export function LibrarySelectionBar({
     setPreview(null);
     openDrawer(true);
   };
-  // In the order the results are drawn, then the ones not in view — not the
-  // order they happened to be clicked in.
-  const selectedEntities = (): Entity[] => {
-    const ordered = filteredIds.filter((id) => selection.has(id));
-    const shown = new Set(ordered);
-    for (const id of selection) if (!shown.has(id)) ordered.push(id);
-    return ordered.map((id) => getEntity(id)).filter((e): e is Entity => !!e);
-  };
-
-  /* Edit: one entity is its ordinary edit, in its preview; two or more is the
-     bulk form, in the selection drawer. The phone has no drawer for a form
-     that long, so there it stays a single-entity action. */
-  const edit = () => {
-    if (n === 1) {
-      const [id] = selection;
-      store.set(libraryEditRequestAtom, id);
-      setPreview(id);
-      return;
-    }
-    store.set(openBulkEditAtom);
-  };
-
-  const exportSelection = () =>
-    void runCsvExport(
-      store,
-      selectedEntities(),
-      language,
-      `uwazi-${corpus}-selection-${new Date().toISOString().slice(0, 10)}.csv`,
-    );
-
-  const doDelete = () => {
-    setConfirmDelete(false);
-    const ids = [...selection];
-    const ref = store.set(deleteWithUndoAtom, { corpus, ids });
-    deselect(ids);
-    // A deleted entity left open in the preview would go on offering Edit.
-    const previewed = store.get(librarySelectedEntityIdAtom);
-    if (previewed && ids.includes(previewed)) setPreview(null);
-    store.set(notificationsAtom, (prev) => [
-      {
-        id: `n-${ref}`,
-        kind: "success",
-        title: `${ids.length.toLocaleString()} ${ids.length === 1 ? "entity" : "entities"} deleted.`,
-        detail: "Undo restores them until your next delete or bulk change.",
-        time: Date.now(),
-        read: false,
-        action: { label: "Undo", kind: "undo", ref },
-      },
-      ...prev,
-    ]);
-  };
+  const actions = useSelectionActions({ order: filteredIds, corpus, isMobile });
 
   return (
     <>
@@ -141,16 +78,9 @@ export function LibrarySelectionBar({
           {n.toLocaleString()} selected
         </button>
       </span>
-      <BarButton icon={<PenLine size={13} />} label="Edit" onClick={edit} />
-      <BarButton
-        icon={<LayoutTemplate size={13} />}
-        label="Change template"
-        disabledReason="Change template comes in a later step"
-      />
-      <BarButton icon={<FileDown size={13} />} label="Export CSV" onClick={exportSelection} />
-      <BarButton icon={<Share2 size={13} />} label="Share" disabledReason="Sharing a selection comes in a later step" />
-      <BarButton icon={<Lock size={13} />} label="Permissions" disabledReason="Permissions come in a later step" />
-      <BarButton icon={<Trash2 size={13} />} label="Delete" onClick={() => setConfirmDelete(true)} />
+      {actions.map((a) => (
+        <BarButton key={a.id} icon={a.icon} label={a.label} onClick={a.onClick} disabledReason={a.disabledReason} />
+      ))}
       <BarButton icon={<X size={13} />} label="Clear" onClick={() => clear()} />
       <span aria-live="polite" className="hidden sm:flex min-w-0 items-center gap-1.5 text-xs tabular-nums">
         {notInView > 0 && (
@@ -201,31 +131,10 @@ export function LibrarySelectionBar({
         <ActionsSheet
           count={n}
           onClose={() => setSheetOpen(false)}
-          actions={[
-            { label: "Export CSV", icon: <FileDown size={14} />, onClick: exportSelection },
-            { label: "Delete", icon: <Trash2 size={14} />, onClick: () => setConfirmDelete(true) },
-            n === 1
-              ? { label: "Edit", icon: <PenLine size={14} />, onClick: edit }
-              : { label: "Edit", icon: <PenLine size={14} />, disabledReason: "Bulk edit needs a wider screen" },
-            { label: "Change template", icon: <LayoutTemplate size={14} />, disabledReason: "Change template comes in a later step" },
-            { label: "Share", icon: <Share2 size={14} />, disabledReason: "Sharing a selection comes in a later step" },
-            { label: "Permissions", icon: <Lock size={14} />, disabledReason: "Permissions come in a later step" },
-          ]}
+          actions={actions}
         />
       )}
-      <ConfirmDialog
-        open={confirmDelete}
-        title={`Delete ${n.toLocaleString()} ${n === 1 ? "entity" : "entities"}?`}
-        message={
-          notInView > 0
-            ? `${notInView.toLocaleString()} of them are not in the current results. Undo restores them until your next delete or bulk change.`
-            : "Undo restores them until your next delete or bulk change."
-        }
-        confirmLabel="Delete"
-        variant="danger"
-        onConfirm={doDelete}
-        onCancel={() => setConfirmDelete(false)}
-      />
+      <SelectionDialogs corpus={corpus} notInView={notInView} />
     </>
   );
 }
@@ -275,7 +184,7 @@ function ActionsSheet({
   onClose,
 }: {
   count: number;
-  actions: { label: string; icon: ReactNode; onClick?: () => void; disabledReason?: string }[];
+  actions: SelectionAction[];
   onClose: () => void;
 }) {
   const panelRef = useFocusTrap<HTMLDivElement>(true);
@@ -317,7 +226,7 @@ function ActionsSheet({
                 <span className="text-ink-tertiary" aria-hidden>
                   {a.icon}
                 </span>
-                <span className="flex-1">{a.label}</span>
+                <span className={`flex-1 ${a.danger && !a.disabledReason ? "text-seal-label" : ""}`}>{a.label}</span>
                 {a.disabledReason && <span className="text-meta text-ink-muted">{a.disabledReason}</span>}
               </button>
             </li>

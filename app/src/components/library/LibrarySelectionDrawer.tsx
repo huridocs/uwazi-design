@@ -9,6 +9,10 @@ import {
   librarySelectionDrawerOpenAtom,
 } from "../../atoms/library";
 import { LibraryBulkEditDrawer } from "./LibraryBulkEditDrawer";
+import { SelectionActionsMenu } from "./SelectionActionsMenu";
+import { useSelectionActions } from "./selectionActions";
+import { dataSourceAtom } from "../../atoms/dataSource";
+import { WARM_BUTTON } from "../shared/warmButton";
 import { EntityListDrawer } from "./EntityListDrawer";
 
 /** The multi-selection, listed in the Library drawer by the same body a map
@@ -49,6 +53,10 @@ export function LibrarySelectionDrawer({
   }
   const ids = missing.length ? [...listed.ids, ...missing] : listed.ids;
   const bulkEdit = useAtomValue(libraryBulkEditOpenAtom);
+  const corpus = useAtomValue(dataSourceAtom);
+  // The bar's actions; an export here writes rows in THIS list's order.
+  const actions = useSelectionActions({ order: ids, corpus });
+  const editAction = actions.find((a) => a.id === "edit")!;
   // The bulk form edits the set FROZEN when it opened (see
   // `libraryBulkEditIdsAtom`), in the order the list shows it.
   const frozen = useAtomValue(libraryBulkEditIdsAtom);
@@ -80,6 +88,29 @@ export function LibrarySelectionDrawer({
       query={query}
       rowClassName={(id) => (selection.has(id) ? "" : "opacity-60")}
       onRemove={{ remove: (id) => deselect([id]), can: (id) => selection.has(id) }}
+      footer={
+        <>
+          {/* The same footer every Library drawer body has: Close at the
+              start, the work at the end. Close leaves the selection. */}
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className={`px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+          >
+            Close
+          </button>
+          <span className="flex-1" />
+          <button
+            type="button"
+            onClick={editAction.onClick}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+          >
+            <span className="text-ink-tertiary">{editAction.icon}</span>
+            Edit
+          </button>
+          <SelectionActionsMenu actions={actions.filter((a) => a.id !== "edit")} />
+        </>
+      }
     />
   );
 }
