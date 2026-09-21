@@ -922,24 +922,53 @@ function PassagesBody({
               activePage?.page === row.page &&
               (activePage.entityId === row.entity.id ||
                 row.also.some((e) => e.id === activePage.entityId)));
+          // What the row did before it lost its click: a page jump where the
+          // page is real, the entity's document where it isn't, the field for
+          // a property row.
+          const goTo = () => {
+            setActiveKey(rowKey);
+            if (isDoc && row.page !== null) onSelectSnippet(row.entity.id, row.page);
+            else if (isDoc) onSelect(row.entity.id);
+            else onFocusProperty(row.entity.id, row.fieldKey!);
+          };
+          const primaryName = !isDoc
+            ? `Go to ${row.field} in ${row.entity.title}`
+            : row.page !== null
+              ? `Go to page ${row.page} in ${row.entity.title}`
+              : `Open the document of ${row.entity.title}`;
           return (
-            // The row is CHROME, not a control (CLAUDE.md a11y patterns): every
-            // action in it is a visible control on the attribution line, each
-            // naming itself, so a row-wide target would only be a third route
-            // to what the entity name and the source label already do. Hover
-            // and the selected fill stay on the row.
+            // A CLICKABLE row (CLAUDE.md a11y patterns): clicking the passage
+            // goes to it. The keyboard and screen-reader path is a stretched
+            // invisible primary-action button, first child; the content sits
+            // above it in a `relative` wrapper so the footer's controls stay
+            // clickable, and the item keeps a plain `onClick` for the mouse.
+            // Footer controls stop propagation, so nothing fires twice.
             <li
               key={`${row.entity.id}-${i}`}
               data-part="passage"
               data-state={selected ? "selected" : undefined}
-              className={`border-b border-border/50 last:border-b-0 px-3 py-2.5 text-sm transition-colors ${
+              onClick={goTo}
+              className={`relative cursor-pointer border-b border-border/50 last:border-b-0 px-3 py-2.5 text-sm transition-colors ${
                 selected ? "bg-parchment" : "hover:bg-warm"
               }`}
             >
+              <button
+                type="button"
+                data-part="primary-action"
+                aria-pressed={selected}
+                aria-label={primaryName}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goTo();
+                }}
+                className="absolute inset-0 w-full cursor-pointer focus:outline-none
+                  focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-carbon/30"
+              />
               {/* Passage and attribution are ONE block that runs to the row's
                   edge. They used to sit in a stretched `1fr_15rem` grid: the
                   meta stayed pinned to the far edge, a hand's width from the
                   sentence it names. The attribution now sits under the quote. */}
+              <div className="relative">
               <p data-part="excerpt" className="leading-relaxed text-ink">
                 <HighlightedText text={row.text} query={query} />
               </p>
@@ -984,22 +1013,12 @@ function PassagesBody({
                     direction — forcing ltr on it is how a translated label
                     ends up mis-ordered. */}
                 <bdi dir={isDoc ? "ltr" : "auto"} className="shrink-0 flex items-center gap-1">
-                  <SourceTarget
-                    label={isDoc ? documentLabel(row.from) : row.field!}
-                    hint={
-                      !isDoc
-                        ? `Go to ${row.field}`
-                        : row.page !== null
-                          ? `Go to page ${row.page}`
-                          : `Open the document of ${row.entity.title}`
-                    }
-                    onActivate={() => {
-                      setActiveKey(rowKey);
-                      if (isDoc && row.page !== null) onSelectSnippet(row.entity.id, row.page);
-                      else if (isDoc) onSelect(row.entity.id);
-                      else onFocusProperty(row.entity.id, row.fieldKey!);
-                    }}
-                  />
+                  {/* Plain text: going to the evidence is the row's own action
+                      (the primary button above), so a second button here would
+                      be the same control announced twice. */}
+                  <span data-part="source" className="uppercase tracking-wide text-ink-tertiary">
+                    {isDoc ? documentLabel(row.from) : row.field}
+                  </span>
                   {/* No invented page numbers: the tag exists only where the
                       corpus is genuinely page-mapped. */}
                   {isDoc && row.page !== null && (
@@ -1046,6 +1065,7 @@ function PassagesBody({
                     Rides the mounted attribution line, so it moves nothing. */}
                 {row.also.length > 0 && <AlsoUnder entities={row.also} onOpenEntity={onSelect} />}
               </div>
+              </div>
             </li>
           );
         })}
@@ -1075,38 +1095,6 @@ function PassagesBody({
  *  underline on hover, a ring on focus. */
 const FOOTER_TARGET = `rounded-sm hover:underline cursor-pointer focus-visible:outline-none
   focus-visible:ring-1 focus-visible:ring-carbon/40`;
-
-/** The row's source label — DOCUMENT, BORROWED DOCUMENT, or the field's name —
- *  as the way to the evidence: the page, the document, or the field. */
-function SourceTarget({
-  label,
-  hint,
-  onActivate,
-}: {
-  label: string;
-  hint: string;
-  onActivate: () => void;
-}) {
-  return (
-    <Hint text={hint} describe={false}>
-      {(h) => (
-        <button
-          {...h}
-          type="button"
-          data-part="source"
-          aria-label={hint}
-          onClick={(e) => {
-            e.stopPropagation();
-            onActivate();
-          }}
-          className={`${FOOTER_TARGET} uppercase tracking-wide text-ink-tertiary`}
-        >
-          {label}
-        </button>
-      )}
-    </Hint>
-  );
-}
 
 /* ------------------------------------------------------------------ *
  * 4 — SPINE: the results on a proportional time axis, each carrying its
