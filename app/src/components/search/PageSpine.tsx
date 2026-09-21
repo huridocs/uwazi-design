@@ -48,7 +48,7 @@ export function PageSpine({ entityId, fullText, query, onSelect }: Props) {
               <li key={i} data-part="row" data-variant="passive" className="w-full rounded-md px-2 py-1.5">
                 <p data-part="excerpt" className="text-sm text-ink leading-relaxed">
                   <HighlightedText text={snippet.text} query={query} />
-                  {snippet.hits > 1 && <PageTag>{snippet.hits}×</PageTag>}
+                  {snippet.hits > 1 && <SpineTag part="hits">{snippet.hits}×</SpineTag>}
                 </p>
               </li>
             );
@@ -71,10 +71,10 @@ export function PageSpine({ entityId, fullText, query, onSelect }: Props) {
               >
                 <span data-part="excerpt" className="block text-sm text-ink leading-relaxed">
                   <HighlightedText text={snippet.text} query={query} />
-                  <PageTag>
+                  <SpineTag>
                     p.{page}
                     {snippet.hits > 1 ? ` · ${snippet.hits}×` : ""}
-                  </PageTag>
+                  </SpineTag>
                 </span>
               </button>
             </li>
@@ -88,11 +88,11 @@ export function PageSpine({ entityId, fullText, query, onSelect }: Props) {
 /** The citation after the excerpt's last word. `bdi dir="ltr"` holds "p.15 · 2×"
  *  in order under RTL without forcing the excerpt's own direction; `nowrap`
  *  keeps the tag in one piece when it lands at a line end. */
-function PageTag({ children }: { children: ReactNode }) {
+function SpineTag({ children, part = "page" }: { children: ReactNode; part?: "page" | "hits" }) {
   return (
     <bdi
       dir="ltr"
-      data-part="page"
+      data-part={part}
       className="ms-1.5 whitespace-nowrap text-meta font-semibold text-ink-tertiary tabular-nums"
     >
       {children}

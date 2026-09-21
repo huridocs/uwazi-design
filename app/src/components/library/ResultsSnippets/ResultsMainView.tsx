@@ -1,4 +1,4 @@
-import { Children, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Children, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue } from "jotai";
 import { Search, ChevronDown, FileText, Tag } from "lucide-react";
 import type { Entity } from "../../../data/entities";
@@ -33,6 +33,7 @@ import { BorrowedDocLine } from "../BorrowedDocLine";
 import { Hint } from "../../shared/Hint";
 import { PageTag } from "../../shared/PageTag";
 import { AlsoUnder } from "./AlsoUnder";
+import { useSettledWidth } from "../../../hooks/useSettledWidth";
 import { ToggleChip } from "../../shared/ToggleChip";
 import { CountBadge } from "../../shared/CountBadge";
 import { MatchedTerms } from "../MatchedTerms";
@@ -182,37 +183,11 @@ export function ResultsMainView({
   const layout = useAtomValue(libraryResultsLayoutAtom);
   const [activeTypes, setActiveTypes] = useAtom(matchTypeFiltersAtom);
   const [visible, setVisible] = useState(STEP);
-  /* THE PANE'S OWN WIDTH, quantised to 64px.
-     Quantised because this feeds a memo that re-snippets the visible page: an
-     exact pixel would rebuild every excerpt on every frame of a drawer drag,
-     and the drawer width now persists (`drawerWidthAtom`), so a wide drawer is
-     a lasting condition rather than a moment. To the nearest 64px the budget
-     changes a handful of times across the whole range and never mid-drag. */
-  /* A CALLBACK REF, not `useRef` + `useLayoutEffect([])`. This body is not
-     mounted on the first render — the view returns a loading or no-query branch
-     before it — so an effect with an empty dependency list ran once against a
-     null ref and never again, and the budget stayed at its floor forever. A
-     callback ref fires when the node actually arrives, and again if it is
-     remounted by a layout switch. */
-  const [paneW, setPaneW] = useState(0);
-  const roRef = useRef<ResizeObserver | null>(null);
-  const bodyRef = useCallback((el: HTMLDivElement | null) => {
-    roRef.current?.disconnect();
-    roRef.current = null;
-    if (!el) return;
-    const measure = () => {
-      const w = el.getBoundingClientRect().width;
-      setPaneW((prev) => {
-        const next = Math.round(w / 64) * 64;
-        return next === prev ? prev : next;
-      });
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    roRef.current = ro;
-  }, []);
-  useEffect(() => () => roRef.current?.disconnect(), []);
+  /* THE PANE'S OWN WIDTH, quantised to 64px and held while the drawer divider
+     is dragged (`useSettledWidth`). It feeds a memo that re-snippets the
+     visible page, so following a drag rebuilt and re-wrapped every excerpt at
+     each 64px step; the width now changes once, on release. */
+  const [bodyRef, paneW] = useSettledWidth();
   // Per-entity "show every page-snippet", owned here so the capped `results`
   // memo stays cheap and only the expanded cards pay for the extra windowing.
   const [showAll, setShowAll] = useState<Record<string, boolean>>({});
@@ -225,9 +200,11 @@ export function ResultsMainView({
 
   const budget = excerptBudget(layout, paneW);
 
+  // Nothing is built until the pane is measured — see ResultsBody.
+  const measured = paneW > 0;
   const cappedResults = useMemo<Result[]>(
     () =>
-      entities
+      (measured ? entities : [])
         .slice(0, visible)
         .map((e) => ({
           entity: e,
@@ -237,7 +214,7 @@ export function ResultsMainView({
           }),
         }))
         .filter((r) => r.snippets.count > 0),
-    [entities, visible, trimmed, language, source, layout, budget.ctx],
+    [measured, entities, visible, trimmed, language, source, layout, budget.ctx],
   );
 
   // Only the cards the user expanded are re-derived uncapped — the windowing
@@ -807,6 +784,10 @@ interface FlatPassage {
   /** Other results whose document has this same passage on the same page. The
    *  row is listed once, under `entity`; these are counted in its attribution. */
   also: Entity[];
+  /** The row's identity, stable while the fold changes which result heads it
+   *  (a "Show more" can bring in the document's owner) — so a selection made
+   *  on the row doesn't go dark when its head swaps. */
+  key: string;
 }
 
 function PassagesBody({
@@ -838,6 +819,10 @@ function PassagesBody({
     let notShown = 0;
     let titleOnly = 0;
     const byPassage = new Map<string, FlatPassage>();
+    // Per DOCUMENT, not per result: the note counts matched pages the list
+    // doesn't excerpt, and twelve results reading one judgment fold into that
+    // judgment's rows — summing per result counted its pages twelve times.
+    const byDoc = new Map<string, { total: number; shown: number }>();
     for (const { entity, snippets } of results) {
       const props = properties(snippets);
       // A title-only result has no passage to list here — counted and reported
@@ -855,6 +840,7 @@ function PassagesBody({
             text: t,
             from: null,
             also: [],
+            key: `${entity.id}|${m.fieldKey}|${t}`,
           });
         }
       }
@@ -866,7 +852,14 @@ function PassagesBody({
         // passages. Keyed on `docKey` (the text a document resolves to), not
         // on the document entity: the repeats come from DIFFERENT document
         // entities serving the same file. A page-less corpus keys on the text.
-        const key = `${snippets.docKey ?? entity.id}|${s.page ?? s.text}`;
+        const docId = snippets.docKey ?? entity.id;
+        const key = `${docId}|${s.page ?? s.text}`;
+        let doc = byDoc.get(docId);
+        if (!doc) {
+          doc = { total: 0, shown: 0 };
+          byDoc.set(docId, doc);
+        }
+        doc.total = Math.max(doc.total, snippets.fullTextTotal);
         const seen = byPassage.get(key);
         if (seen) {
           // A result reading its OWN document heads the row; otherwise the
@@ -889,13 +882,15 @@ function PassagesBody({
           text: s.text,
           from: snippets.borrowedFrom,
           also: [],
+          key,
         };
         byPassage.set(key, row);
         rows.push(row);
+        doc.shown++;
       }
-      // Pages counted but not excerpted — said out loud rather than dropped.
-      notShown += Math.max(0, snippets.fullTextTotal - snippets.fullText.length);
     }
+    // Pages counted but not excerpted — said out loud rather than dropped.
+    for (const { total, shown } of byDoc.values()) notShown += Math.max(0, total - shown);
     // Densest passages first; ties keep the relevance order the entities arrived in.
     rows.sort((a, b) => b.hits - a.hits);
     return { rows, notShown, titleOnly };
@@ -915,31 +910,60 @@ function PassagesBody({
           // Keyed by CONTENT, not by index: "Show more" splices new rows into a
           // list ranked by hit density, so an index would quietly slide the lit
           // state onto whatever passage inherited the slot.
-          const rowKey = `${row.entity.id}|${row.fieldKey ?? "doc"}|${row.page ?? "-"}|${row.text}`;
+          const rowKey = row.key;
           const selected =
             activeKey === rowKey ||
             (row.page !== null &&
               activePage?.page === row.page &&
               (activePage.entityId === row.entity.id ||
                 row.also.some((e) => e.id === activePage.entityId)));
+          // What the row did before it lost its click: a page jump where the
+          // page is real, the entity's document where it isn't, the field for
+          // a property row.
+          const goTo = () => {
+            setActiveKey(rowKey);
+            if (isDoc && row.page !== null) onSelectSnippet(row.entity.id, row.page);
+            else if (isDoc) onSelect(row.entity.id);
+            else onFocusProperty(row.entity.id, row.fieldKey!);
+          };
+          const primaryName = !isDoc
+            ? `Go to ${row.field} in ${row.entity.title}`
+            : row.page !== null
+              ? `Go to page ${row.page} in ${row.entity.title}`
+              : `Open the document of ${row.entity.title}`;
           return (
-            // The row is CHROME, not a control (CLAUDE.md a11y patterns): every
-            // action in it is a visible control on the attribution line, each
-            // naming itself, so a row-wide target would only be a third route
-            // to what the entity name and the source label already do. Hover
-            // and the selected fill stay on the row.
+            // A CLICKABLE row (CLAUDE.md a11y patterns): clicking the passage
+            // goes to it. The keyboard and screen-reader path is a stretched
+            // invisible primary-action button, first child; the content sits
+            // above it in a `relative` wrapper so the footer's controls stay
+            // clickable, and the item keeps a plain `onClick` for the mouse.
+            // Footer controls stop propagation, so nothing fires twice.
             <li
               key={`${row.entity.id}-${i}`}
               data-part="passage"
               data-state={selected ? "selected" : undefined}
-              className={`border-b border-border/50 last:border-b-0 px-3 py-2.5 text-sm transition-colors ${
+              onClick={goTo}
+              className={`relative cursor-pointer border-b border-border/50 last:border-b-0 px-3 py-2.5 text-sm transition-colors ${
                 selected ? "bg-parchment" : "hover:bg-warm"
               }`}
             >
+              <button
+                type="button"
+                data-part="primary-action"
+                aria-pressed={selected}
+                aria-label={primaryName}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goTo();
+                }}
+                className="absolute inset-0 w-full cursor-pointer focus:outline-none
+                  focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-carbon/30"
+              />
               {/* Passage and attribution are ONE block that runs to the row's
                   edge. They used to sit in a stretched `1fr_15rem` grid: the
                   meta stayed pinned to the far edge, a hand's width from the
                   sentence it names. The attribution now sits under the quote. */}
+              <div className="relative">
               <p data-part="excerpt" className="leading-relaxed text-ink">
                 <HighlightedText text={row.text} query={query} />
               </p>
@@ -984,22 +1008,12 @@ function PassagesBody({
                     direction — forcing ltr on it is how a translated label
                     ends up mis-ordered. */}
                 <bdi dir={isDoc ? "ltr" : "auto"} className="shrink-0 flex items-center gap-1">
-                  <SourceTarget
-                    label={isDoc ? documentLabel(row.from) : row.field!}
-                    hint={
-                      !isDoc
-                        ? `Go to ${row.field}`
-                        : row.page !== null
-                          ? `Go to page ${row.page}`
-                          : `Open the document of ${row.entity.title}`
-                    }
-                    onActivate={() => {
-                      setActiveKey(rowKey);
-                      if (isDoc && row.page !== null) onSelectSnippet(row.entity.id, row.page);
-                      else if (isDoc) onSelect(row.entity.id);
-                      else onFocusProperty(row.entity.id, row.fieldKey!);
-                    }}
-                  />
+                  {/* Plain text: going to the evidence is the row's own action
+                      (the primary button above), so a second button here would
+                      be the same control announced twice. */}
+                  <span data-part="source" className="uppercase tracking-wide text-ink-tertiary">
+                    {isDoc ? documentLabel(row.from) : row.field}
+                  </span>
                   {/* No invented page numbers: the tag exists only where the
                       corpus is genuinely page-mapped. */}
                   {isDoc && row.page !== null && (
@@ -1046,6 +1060,7 @@ function PassagesBody({
                     Rides the mounted attribution line, so it moves nothing. */}
                 {row.also.length > 0 && <AlsoUnder entities={row.also} onOpenEntity={onSelect} />}
               </div>
+              </div>
             </li>
           );
         })}
@@ -1075,38 +1090,6 @@ function PassagesBody({
  *  underline on hover, a ring on focus. */
 const FOOTER_TARGET = `rounded-sm hover:underline cursor-pointer focus-visible:outline-none
   focus-visible:ring-1 focus-visible:ring-carbon/40`;
-
-/** The row's source label — DOCUMENT, BORROWED DOCUMENT, or the field's name —
- *  as the way to the evidence: the page, the document, or the field. */
-function SourceTarget({
-  label,
-  hint,
-  onActivate,
-}: {
-  label: string;
-  hint: string;
-  onActivate: () => void;
-}) {
-  return (
-    <Hint text={hint} describe={false}>
-      {(h) => (
-        <button
-          {...h}
-          type="button"
-          data-part="source"
-          aria-label={hint}
-          onClick={(e) => {
-            e.stopPropagation();
-            onActivate();
-          }}
-          className={`${FOOTER_TARGET} uppercase tracking-wide text-ink-tertiary`}
-        >
-          {label}
-        </button>
-      )}
-    </Hint>
-  );
-}
 
 /* ------------------------------------------------------------------ *
  * 4 — SPINE: the results on a proportional time axis, each carrying its

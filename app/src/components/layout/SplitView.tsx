@@ -1,5 +1,10 @@
 import { ReactNode, useState, useCallback, useRef } from "react";
-import { DrawerWidthProvider, SplitWidthProvider, useDrawerWidth } from "../../hooks/useDrawerWidth";
+import {
+  DrawerWidthProvider,
+  SplitDraggingProvider,
+  SplitWidthProvider,
+  useDrawerWidth,
+} from "../../hooks/useDrawerWidth";
 
 interface SplitViewProps {
   left: ReactNode;
@@ -108,6 +113,7 @@ export function SplitView({
 
   return (
     <SplitWidthProvider value={rightWidth}>
+    <SplitDraggingProvider value={dragging}>
     <div ref={containerRef} data-component="SplitView" className="flex flex-1 overflow-hidden">
       {/* Both panes wait for the container's first measure — see `measured`. */}
       <div data-part="content" className="flex-1 overflow-hidden">{measured && left}</div>
@@ -174,6 +180,7 @@ export function SplitView({
         <DrawerWidthProvider value={rightWidth}>{measured && right}</DrawerWidthProvider>
       </aside>
     </div>
+    </SplitDraggingProvider>
     </SplitWidthProvider>
   );
 }

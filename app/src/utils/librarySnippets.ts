@@ -61,8 +61,8 @@ export interface FullTextSnippet {
   /** How many times the query occurs on this page — drives the spine's
    *  counted-ring node (>1 → a counted ring, 1 → a plain dot). */
   hits: number;
-  /** How many DISTINCT query terms occur on this page — the first key of the
-   *  best-first page order (see `buildSnippetsFor`). */
+  /** How many DISTINCT query terms occur on this page. (The best-first order
+   *  ranks on AND groups met, not on this — see `buildSnippetsFor`.) */
   termsHit: number;
 }
 
@@ -112,12 +112,17 @@ export interface EntitySnippets {
 
 /** The count badge's wording: matched pages as passages when the document
  *  matched, else matched fields. `count` used to add the two into one unitless
- *  number (2 fields + 81 pages printed as 83). */
+ *  number (2 fields + 81 pages printed as 83).
+ *
+ *  The TITLE is not a field here: every Results layout drops its snippet (the
+ *  heading already prints it marked), so counting it put "1 field" on a
+ *  header-only card. A title-only match says so. */
 export function evidenceBadge(s: EntitySnippets): { count: number; unit: string } {
   if (s.fullTextTotal > 0) {
     return { count: s.fullTextTotal, unit: s.fullTextTotal === 1 ? "passage" : "passages" };
   }
-  const n = s.metadata.length;
+  const n = s.metadata.filter((m) => m.fieldKey !== "title").length;
+  if (n === 0) return { count: 1, unit: "title match" };
   return { count: n, unit: n === 1 ? "field" : "fields" };
 }
 
@@ -562,8 +567,8 @@ function paginate(text: string, pageCount: number): string[] {
  *  the extra work is the windowing pass, so it stays off the default path.
  *
  *  WHICH pages get excerpted is `order`. `"best"` (the default) ranks every
- *  matching page by distinct query terms on it, then occurrences, then page
- *  order, and excerpts the top `maxFullText` in that order: an AND query shows
+ *  matching page by how many of the query's AND groups it satisfies (a group is
+ *  met by any of its OR terms), then occurrences, then page order, and excerpts the top `maxFullText` in that order: an AND query shows
  *  the pages where the terms meet, and an 81-page match stops opening on its
  *  front matter. `"page"` keeps reading order — the entity drawer's Search tab,
  *  which reads through one document. Either way the ranking reuses the counts
@@ -607,7 +612,10 @@ export function buildSnippetsFor(
       docKey: null,
     };
   }
-  const termsHit: TermHit[] = terms.map((term) => ({
+  // One entry per DISTINCT term: `a b OR a` flattens to [a, b, a], and counting
+  // `a` twice doubled its occurrences in every total built from these.
+  const uniqueTerms = [...new Set(terms)];
+  const termsHit: TermHit[] = uniqueTerms.map((term) => ({
     term,
     title: false,
     properties: false,
@@ -636,27 +644,33 @@ export function buildSnippetsFor(
   let fullTextHits = 0;
   // Every matching page, in page order, with the counts the ranking needs. The
   // per-term counts are the ones `hits` was already summed from.
-  const matched: { i: number; hits: number; termsHit: number }[] = [];
+  const matched: { i: number; hits: number; termsHit: number; groupsMet: number }[] = [];
+  const onPage = new Set<string>();
   // Folded ONCE per document (see `foldedPages`), not per entity per keystroke.
   const lowerPages = foldedPages(pages);
   for (let i = 0; i < pages.length; i++) {
     const lower = lowerPages[i];
     if (!passes(lower)) continue;
     let hits = 0;
-    let distinct = 0;
+    onPage.clear();
     for (const th of termsHit) {
       const n = countOccurrences(lower, th.term);
       if (n === 0) continue;
       hits += n;
-      distinct++;
+      onPage.add(th.term);
       th.documentHits += n;
     }
     if (hits === 0) continue;
     fullTextHits += hits;
-    matched.push({ i, hits, termsHit: distinct }); // counted whether or not it gets excerpted below
+    // The query's AND groups this page satisfies — what "best" ranks on first.
+    // Distinct terms would score `a OR b c`'s a-and-b page (OR side only, no
+    // `c`) level with an a-and-c page that meets the AND.
+    const groupsMet = groups.reduce((n, g) => (g.some((t) => onPage.has(t)) ? n + 1 : n), 0);
+    // counted whether or not it gets excerpted below
+    matched.push({ i, hits, termsHit: onPage.size, groupsMet });
   }
   if (order === "best") {
-    matched.sort((a, b) => b.termsHit - a.termsHit || b.hits - a.hits || a.i - b.i);
+    matched.sort((a, b) => b.groupsMet - a.groupsMet || b.hits - a.hits || a.i - b.i);
   }
   for (const m of matched) {
     if (fullText.length >= maxFullText) break;
