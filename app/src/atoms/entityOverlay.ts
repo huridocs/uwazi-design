@@ -64,7 +64,14 @@ export type UndoOp =
       /** Per entity: what its record and patch were before the change, and
        *  the record the change wrote — undo restores an entity only while that
        *  record is still the one there, so a later edit is never clobbered. */
-      entries: { id: string; record?: EntityRecord; patch?: Partial<Entity>; wrote: EntityRecord }[];
+      entries: {
+        id: string;
+        record?: EntityRecord;
+        patch?: Partial<Entity>;
+        /** The record and patch objects as STORED after the write. */
+        wrote: EntityRecord;
+        wrotePatch?: Partial<Entity>;
+      }[];
     }
   | {
       ref: string;
@@ -99,10 +106,30 @@ export const deleteWithUndoAtom = atom(
   },
 );
 
-/** Undo the operation `ref` names — only while it is still the latest. */
+/** How many of the current undo's entities a LATER write has touched — a
+ *  single-entity Save, Share or publish writes no undo of its own, so it does
+ *  not replace this one, but undoing over it would silently revert it. While
+ *  this is above 0 the Undo is refused, and its button says why. Identity is
+ *  the test: every write stores new record / patch / member objects. */
+export const undoConflictsAtom = atom((get) => {
+  const op = get(undoOpAtom);
+  if (!op || op.kind === "undelete") return 0;
+  const o = get(overlayValueAtom)[op.corpus];
+  if (op.kind === "restore")
+    return op.entries.filter((e) => o.records[e.id] !== e.wrote || o.patched[e.id] !== e.wrotePatch).length;
+  const access = get(entityAccessAtom);
+  return op.entries.filter(
+    (e) =>
+      (e.wrotePatch && o.patched[e.id] !== e.wrotePatch) || (e.wroteMembers && access[e.id] !== e.wroteMembers),
+  ).length;
+});
+
+/** Undo the operation `ref` names — only while it is still the latest, and
+ *  only while nothing written since touches the same entities. */
 export const undoAtom = atom(null, (get, set, ref: string): boolean => {
   const op = get(undoOpAtom);
   if (!op || op.ref !== ref) return false;
+  if (get(undoConflictsAtom) > 0) return false;
   if (op.kind === "share") {
     const current = get(overlayValueAtom)[op.corpus].patched;
     const patchBack = op.entries.filter((e) => e.wrotePatch && current[e.id] === e.wrotePatch);
@@ -133,7 +160,6 @@ export const undoAtom = atom(null, (get, set, ref: string): boolean => {
         const records = { ...o.records };
         const patched = { ...o.patched };
         for (const e of op.entries) {
-          if (records[e.id] !== e.wrote) continue;
           if (e.record) records[e.id] = e.record;
           else delete records[e.id];
           // A new object even when restoring the same patch: the cards are
@@ -276,7 +302,14 @@ export const patchEntitiesAtom = atom(
           ...o.patched,
           ...Object.fromEntries(Object.entries(patches).map(([id, p]) => [id, { ...o.patched[id], ...p }])),
         },
-        records: { ...o.records, ...records },
+        // MERGED over the stored record: a writer replaces the keys it
+        // gives and cannot drop the ones it doesn't. An uploaded entity's
+        // PDF lives only on its record (`documentGroups`, `files`), and a
+        // bulk write that rebuilt `{ typeId, metadata }` deleted it.
+        records: {
+          ...o.records,
+          ...Object.fromEntries(Object.entries(records).map(([id, r]) => [id, { ...o.records[id], ...r }])),
+        },
       })),
     );
   },
@@ -300,16 +333,19 @@ export const writeBulkChunkAtom = atom(
     }: { corpus: Corpus; records: Record<string, EntityRecord>; patches: Record<string, Partial<Entity>> },
   ): RestoreEntry[] => {
     const before = get(overlayValueAtom)[corpus];
-    const entries = Object.keys(records).map((id) => ({
-      id,
-      record: before.records[id],
-      patch: before.patched[id],
-      wrote: records[id],
-    }));
     // Every edited entity gets a patch, empty or not — see `saveEntityEditAtom`.
     const allPatches = Object.fromEntries(Object.keys(records).map((id) => [id, patches[id] ?? {}]));
     set(patchEntitiesAtom, { corpus, patches: allPatches, records });
-    return entries;
+    // What is stored now (merged, so not the objects passed in) — the
+    // identities Undo checks.
+    const after = get(overlayValueAtom)[corpus];
+    return Object.keys(records).map((id) => ({
+      id,
+      record: before.records[id],
+      patch: before.patched[id],
+      wrote: after.records[id],
+      wrotePatch: after.patched[id],
+    }));
   },
 );
 

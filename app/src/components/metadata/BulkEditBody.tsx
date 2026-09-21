@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
-import { languageAtom, type Language } from "../../atoms/language";
+import { languageAtom, languageName, type Language } from "../../atoms/language";
 import { applyBulkEditAtom } from "../../atoms/entityOverlay";
 import { notificationsAtom } from "../../atoms/notifications";
 import {
@@ -179,6 +179,13 @@ export function BulkEditBody({
               ))}
             </tbody>
           </table>
+          {/* Scalars are localised on the record, so they go in the edited
+              language only; the reader has to know the others stay. */}
+          {fields.some((f) => edits[f.id] && f.kind === "scalar" && f.type !== "link") && (
+            <p data-part="language-note" className="text-meta text-ink-tertiary">
+              {`Text and dates are written in ${languageName(language)} only; the other languages keep their values.`}
+            </p>
+          )}
           {danger && (
             <p className="text-meta text-seal-label">
               Removes {review.removes.toLocaleString()} {review.removes === 1 ? "value" : "values"}.

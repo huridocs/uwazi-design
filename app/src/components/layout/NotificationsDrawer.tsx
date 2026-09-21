@@ -23,7 +23,7 @@ import {
   type NotificationKind,
   type NotificationAction,
 } from "../../atoms/notifications";
-import { undoAtom, undoOpAtom } from "../../atoms/entityOverlay";
+import { undoAtom, undoConflictsAtom, undoOpAtom } from "../../atoms/entityOverlay";
 import { UwaziLoader } from "../shared/UwaziLoader";
 import { Hint } from "../shared/Hint";
 import { SectionLabel } from "../shared/SectionLabel";
@@ -463,11 +463,16 @@ function NotifCard({
  *  change shape under the reader. */
 function NotifAction({ action }: { action: NotificationAction }) {
   const op = useAtomValue(undoOpAtom);
+  const conflicts = useAtomValue(undoConflictsAtom);
   const undo = useSetAtom(undoAtom);
-  const live = op?.ref === action.ref;
+  const current = op?.ref === action.ref;
+  const live = current && conflicts === 0;
   // Why it is off, on hover AND focus (a `title` never shows on focus).
+  const reason = !current
+    ? "A later change replaced this undo"
+    : `${conflicts.toLocaleString()} of these entities ${conflicts === 1 ? "was" : "were"} changed since; undoing would overwrite that`;
   return (
-    <Hint text={live ? action.label : "A later change replaced this undo"} describe={!live}>
+    <Hint text={live ? action.label : reason} describe={!live}>
       {(hint) => (
         <button
           {...hint}
