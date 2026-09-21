@@ -411,10 +411,16 @@ export const libraryFieldLabelsAtom = atom((get) =>
 /** What the registry needs to know that it can't: the viewport, whether a query
  *  is running, and the columns this corpus can offer. One atom, so the menu, the
  *  dot and the table all resolve the same option list. */
+/** Set by the Library toolbar from its own width: true while the Sort select
+ *  has no room in the row (see the masthead fold in `LibraryView`). */
+export const librarySortInMenuAtom = atom(false);
+
 export const libraryDisplayContextAtom = atom<DisplayContext>((get) => {
   const hasQuery = get(libraryQueryAtom).trim().length > 0;
+  const isMobile = get(breakpointAtom) === "mobile";
   return {
-    isMobile: get(breakpointAtom) === "mobile",
+    isMobile,
+    sortInMenu: isMobile || get(librarySortInMenuAtom),
     hasQuery,
     listColumns: listColumnOptions({ hasQuery, fieldLabels: get(libraryFieldLabelsAtom) }),
   };

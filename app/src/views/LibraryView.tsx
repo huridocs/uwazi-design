@@ -56,6 +56,7 @@ import {
   librarySortDirAtom,
   defaultSortDir,
   librarySelectedEntityIdAtom,
+  librarySortInMenuAtom,
   librarySelectedClusterAtom,
   resultsActivePageAtom,
   requestMetadataFocusAtom,
@@ -311,6 +312,53 @@ export function LibraryView() {
   }
 
   const isMobile = breakpoint === "mobile";
+
+  /* ── Masthead fold ──────────────────────────────────────────────────────
+     The toolbar row folds on ITS OWN width, not the viewport's: the Library
+     pane is whatever a drawer leaves of the window, so a tablet-width window
+     with the drawer open gave the row ~380px and viewport breakpoints still
+     laid it out for 768 — the search box collapsed to a sliver, the readout
+     painted over it and Sort and View ran past the drawer's edge.
+
+     The thresholds are the row's parts at their natural widths (measured:
+     Sort 113px, View 89, Display 32, Language 56, the readout slot 240, 8px
+     gaps) with the search box held at a usable 11rem, plus the mobile drawer
+     trigger where there is one. Past each one, in order:
+       - the readout leaves the row for its own line under it (always mounted
+         at that width, so typing a query never adds the line);
+       - Sort steps into the Display menu (`librarySortInMenuAtom`), as it
+         already does on a phone;
+       - Language steps aside, as it already does on a phone.
+     A tier changes when the WIDTH changes — a drawer drag, a window resize —
+     never on typing or on the number the readout prints. */
+  const [mastheadW, setMastheadW] = useState(0);
+  const mastheadRO = useRef<ResizeObserver | null>(null);
+  const mastheadRef = useCallback((el: HTMLDivElement | null) => {
+    mastheadRO.current?.disconnect();
+    mastheadRO.current = null;
+    if (!el) return;
+    const measure = () => {
+      const cs = getComputedStyle(el);
+      const w = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      setMastheadW((prev) => (Math.round(w) === prev ? prev : Math.round(w)));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    mastheadRO.current = ro;
+  }, []);
+  useEffect(() => () => mastheadRO.current?.disconnect(), []);
+  const mastheadExtra = isMobile ? 40 : 0;
+  // Unmeasured (the first render) counts as wide; the observer corrects it
+  // before paint.
+  const fits = (w: number) => mastheadW === 0 || mastheadW >= w + mastheadExtra;
+  const readoutInline = fits(746);
+  const sortInline = fits(498);
+  const langInline = fits(377);
+  const setSortInMenu = useSetAtom(librarySortInMenuAtom);
+  useEffect(() => {
+    setSortInMenu(!sortInline);
+  }, [sortInline, setSortInMenu]);
 
   const countByEntity = useMemo(() => {
     const m = new Map<string, number>();
@@ -727,16 +775,45 @@ export function LibraryView() {
     ),
   });
 
+  /** The masthead readout's sentence — in the row's fixed slot where the row
+   *  can hold it, on its own line under the row where it can't. */
+  const readoutContent =
+    !cejilLoading &&
+    (hasQuery ? (
+        <>
+          <span dir="ltr" className="shrink-0 whitespace-nowrap">
+            {filtered.length.toLocaleString()}
+            {filtered.length !== matchTypeBase.length && (
+              <> of {matchTypeBase.length.toLocaleString()}</>
+            )}{" "}
+            {matchTypeBase.length === 1 ? "result" : "results"} for
+          </span>
+          <ActiveSearchChip className="min-w-0" />
+        </>
+      ) : (
+        <span dir="ltr" className="truncate">
+          {filtered.length.toLocaleString()}
+          {filtered.length !== entities.length && (
+            <> of {entities.length.toLocaleString()}</>
+          )}{" "}
+          {entities.length === 1 ? "entity" : "entities"}
+        </span>
+      ));
+
   const renderLeft = (menuTrigger?: ReactNode) => (
     // The narrow-tier gutter host (12px). The toolbar, the view lane, the time
     // brush and the footer are `bleed` bands: their grounds and rules reach the
     // pane edge and their content sits on the gutter.
     <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0 bg-paper">
-      {/* Toolbar */}
+      {/* Toolbar — a row of controls, and under it (when the row can't hold
+          it) the readout's own line. See "Masthead fold" above. */}
       <div
-        className="bleed shrink-0 flex items-center gap-2 py-2 bg-parchment"
+        ref={mastheadRef}
+        data-part="masthead"
+        className="bleed shrink-0 py-2 bg-parchment"
         style={{ borderBottom: "1px solid var(--border-primary)" }}
       >
+      <div data-part="masthead-row" className="flex items-center gap-2">
         <div
           ref={searchBoxRef}
           className="relative flex-1 min-w-0 flex items-center gap-1.5 h-8 py-1 pl-2 pr-2 bg-paper border border-border rounded-md
@@ -765,7 +842,10 @@ export function LibraryView() {
             }}
             placeholder="Search title & metadata"
             aria-label="Search entities"
-            className="flex-1 min-w-[60px] bg-transparent text-xs font-medium placeholder:text-ink-tertiary focus:outline-none"
+            // `min-w-0`, not a pixel floor: the BOX is what yields, and an
+            // input holding its own minimum spilled out of a narrowed box and
+            // under whatever sat beside it.
+            className="flex-1 min-w-0 w-0 bg-transparent text-xs font-medium placeholder:text-ink-tertiary focus:outline-none"
           />
           {searchDraft && (
             <button
@@ -819,10 +899,9 @@ export function LibraryView() {
             ALWAYS MOUNTED. While a collection is still loading there is no
             honest number to print, so the slot holds and its contents are
             empty — it never appears or disappears under the controls beside
-            it. Hidden below `md` is a viewport rule, not a state one: the row
-            has no room there, the same reason Sort and Language step aside
-            (on a phone the Results sheet's section label still carries the
-            count).
+            it. Where the row is too narrow for the slot it moves to its own
+            line under the row — a WIDTH rule, never a state one (see "Masthead
+            fold").
 
             `aria-busy` + a dim carry staleness instead of the footer's
             "updating…" word: the counts describe the set ON SCREEN, which
@@ -840,44 +919,28 @@ export function LibraryView() {
             the words attached to it. It is one sentence and now looks like one;
             `tabular-nums` stays, because what the figure actually needs is to
             not reflow while it changes, and that was never the weight's job. */}
-        <span
-          aria-busy={searchPending}
-          // `pe-3` is INSIDE the fixed slot: it guarantees a gap before Sort in
-          // the long state too, where the chip otherwise truncates flush to the
-          // slot's edge and reads as a second control pill beside "Date added".
-          // The slot's outer width is untouched, so the controls still never move.
-          className={`hidden md:flex items-center justify-start gap-1.5 shrink-0 w-[15rem] pe-3
-            text-meta tabular-nums text-ink-tertiary transition-opacity ${
-              searchPending ? "opacity-60" : "opacity-100"
-            }`}
-        >
-          {!cejilLoading &&
-            (hasQuery ? (
-              <>
-                <span dir="ltr" className="shrink-0 whitespace-nowrap">
-                  {filtered.length.toLocaleString()}
-                  {filtered.length !== matchTypeBase.length && (
-                    <> of {matchTypeBase.length.toLocaleString()}</>
-                  )}{" "}
-                  {matchTypeBase.length === 1 ? "result" : "results"} for
-                </span>
-                <ActiveSearchChip className="min-w-0" />
-              </>
-            ) : (
-              <span dir="ltr" className="truncate">
-                {filtered.length.toLocaleString()}
-                {filtered.length !== entities.length && (
-                  <> of {entities.length.toLocaleString()}</>
-                )}{" "}
-                {entities.length === 1 ? "entity" : "entities"}
-              </span>
-            ))}
-        </span>
+        {readoutInline && (
+          <span
+            data-part="readout"
+            aria-busy={searchPending}
+            // `pe-3` is INSIDE the fixed slot: it guarantees a gap before Sort in
+            // the long state too, where the chip otherwise truncates flush to the
+            // slot's edge and reads as a second control pill beside "Date added".
+            // The slot's outer width is untouched, so the controls still never move.
+            className={`flex items-center justify-start gap-1.5 shrink-0 w-[15rem] pe-3
+              text-meta tabular-nums text-ink-tertiary transition-opacity ${
+                searchPending ? "opacity-60" : "opacity-100"
+              }`}
+          >
+            {readoutContent}
+          </span>
+        )}
         {/* Sort steps aside on a phone — it moves into the Display popover, where
             it costs no width. The VIEW switcher does not: cards / list / map /
             timeline are the point of the Library, and they were unreachable on
             mobile because this whole cluster was `hidden sm:block`. */}
-        <div className="hidden sm:block">
+        {sortInline && (
+        <div>
           <Select
             value={sort}
             onChange={(v) => {
@@ -895,6 +958,7 @@ export function LibraryView() {
             steady
           />
         </div>
+        )}
         {/* The switcher is a dropdown, like Sort and Language either side of it,
             so this row reads as three of one control rather than two dropdowns
             and a segmented widget. It is also the narrowest the switcher has
@@ -911,7 +975,8 @@ export function LibraryView() {
         <LibraryDisplayMenu />
         {/* Languages: one dropdown of fixed width (codes, not names — a "Français"
             label would resize the trigger and shift the row again). */}
-        <div className="hidden md:block">
+        {langInline && (
+        <div>
           <Select
             value={language}
             onChange={(v) => setLanguage(v as Language)}
@@ -920,7 +985,23 @@ export function LibraryView() {
             options={LANGUAGES.map((l) => ({ value: l, label: l }))}
           />
         </div>
+        )}
         {menuTrigger}
+      </div>
+      {/* The readout's own line, when the row can't hold it. Mounted for as
+          long as the row is this narrow — with or without a query — so a
+          search never adds a line and shoves the results down. The sentence
+          is `shrink-0` and the chip yields (`min-w-0`), as in the row. */}
+      {!readoutInline && (
+        <p
+          data-part="readout"
+          aria-busy={searchPending}
+          className={`mt-1.5 h-5 flex items-center gap-1.5 min-w-0 text-meta tabular-nums text-ink-tertiary
+            transition-opacity ${searchPending ? "opacity-60" : "opacity-100"}`}
+        >
+          {readoutContent}
+        </p>
+      )}
       </div>
 
       {/* Results */}

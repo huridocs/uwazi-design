@@ -93,7 +93,7 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
       data-component="DocMeta"
       /* Rendered inside a gutter host: no side padding of its own, and `bleed`
          so its bottom rule spans the pane. */
-      className="bleed flex items-center gap-2 min-h-11 pt-1 pb-2 shrink-0"
+      className="@container bleed flex items-center gap-2 min-h-11 pt-1 pb-2 shrink-0"
       style={{ borderBottom: "1px solid var(--border-primary)" }}
     >
       {/* Stacked, like the drawer: tag over title. Side by side, a long template
@@ -102,13 +102,16 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
       <EntityIdentity entity={entity} />
 
       {showPdfSelector && docName && (
-        // Quiet, and only on the tab that actually shows a document. Hidden on
-        // a phone, where the strip has room for the entity and the picker and
-        // nothing else; the Files tab names the document there.
+        // Quiet, and only on the tab that actually shows a document. Shown only
+        // where the STRIP is at least 40rem — its own width, not the viewport's:
+        // beside a drawer at a tablet width the pane is ~380px, and an 18rem
+        // name held its width while the entity's own title shrank to nothing.
+        // Below that the strip has room for the entity and the picker; the
+        // Files tab names the document.
         <span
           title={docName}
           data-part="document-name"
-          className="hidden md:block shrink max-w-[18rem] truncate text-meta text-ink-tertiary"
+          className="hidden @[40rem]:block min-w-0 shrink max-w-[18rem] truncate text-meta text-ink-tertiary"
         >
           {docName}
         </span>
