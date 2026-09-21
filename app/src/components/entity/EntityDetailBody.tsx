@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { X, ArrowRight } from "lucide-react";
 import { referencesAtom } from "../../atoms/references";
 import { activeFilterCountAtom } from "../../atoms/filters";
-import { focusMetadataFieldAtom } from "../../atoms/library";
+import { focusMetadataFieldAtom, libraryEditRequestAtom } from "../../atoms/library";
 import { getEntity, getEntityType } from "../../data/entities";
 import { languageAtom } from "../../atoms/language";
 import { commitDraftAtom, discardDraftAtom, draftEntityIdAtom, saveEntityEditAtom } from "../../atoms/entityOverlay";
@@ -186,6 +186,18 @@ export function EntityDetailBody({
   useEffect(() => {
     if (activeTab !== "metadata") setEditing(false);
   }, [activeTab]);
+
+  // Edit with ONE entity selected opens its preview straight on the form. After
+  // the two resets above (effects run in order, so theirs would undo this on
+  // the mount it arrives with), and only once the focus is this entity's — the
+  // form edits the FOCUSED entity.
+  const [editRequest, setEditRequest] = useAtom(libraryEditRequestAtom);
+  useEffect(() => {
+    if (editRequest !== entityId || !focused || !focusArrived) return;
+    setActiveTab("metadata");
+    setEditing(true);
+    setEditRequest(null);
+  }, [editRequest, entityId, focused, focusArrived, setEditRequest]);
 
   /* The Filters slide-over covers THE PANEL, header to footer — the geometry
      the entity view's pane gives it for free, because there the positioned box

@@ -467,7 +467,7 @@ function NotifAction({ action }: { action: NotificationAction }) {
   const live = op?.ref === action.ref;
   // Why it is off, on hover AND focus (a `title` never shows on focus).
   return (
-    <Hint text={live ? action.label : "A later delete replaced this undo"} describe={!live}>
+    <Hint text={live ? action.label : "A later change replaced this undo"} describe={!live}>
       {(hint) => (
         <button
           {...hint}

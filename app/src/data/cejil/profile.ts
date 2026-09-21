@@ -129,7 +129,13 @@ export function cejilBlankFields(templateId: string): MetadataField[] {
           : p.type === "media"
             ? "media"
             : "text";
-    out.push({ id: p.name, label: p.label, type, value: "" });
+    out.push({
+      id: p.name,
+      label: p.label,
+      type,
+      value: "",
+      ...(p.type === "multidate" || p.type === "multidaterange" ? { list: true } : {}),
+    });
   }
   return out;
 }

@@ -88,6 +88,7 @@ import {
   IsolatedInheritedValueChip,
   IsolatedRelationshipFieldEditor,
   IsolatedThesaurusPicker,
+  IsolatedBulkFieldRows,
   IsolatedRadioGroup,
   IsolatedDataTable,
 } from "./catalog/demos";
@@ -902,6 +903,18 @@ sendFill(selection.text);                                    // commits, then di
 <AddThesaurusValueModal thesaurusName={t.name} existing={labels} onSave={add} onClose={close} />`}
                 >
                   <IsolatedThesaurusPicker />
+                </CatalogEntry>
+              </div>
+
+              <div id="ev-bulk-field-row" ref={reg("ev-bulk-field-row")}>
+                <CatalogEntry
+                  name="BulkFieldRow · bulk edit"
+                  description="One property in the bulk edit form (MetadataEditBody with a bulk subject, in the Library's selection drawer). The label row says whether the selected entities agree: shared (the value is prefilled), mixed ('Mixed · 4 values', the editor starts empty), or will change (carbon dot, 'Will change', Revert). Only a field the user changed is written, with the same value for all. A multiselect or a connection is a list of tri-state rows with coverage: tick = add to all, untick = remove from all, mixed = untouched. The row order is fixed when the list opens, so a ticked row never jumps."
+                  code={`<BulkFieldRow label={f.label} state={touched ? "changed" : shared ? "shared" : "mixed"} distinct={n} onRevert={revert}>
+  <ThesaurusPicker multiple chosen={all} mixed={some} coverage={{ counts, of: ids.length }} onToggle={cycle} />
+</BulkFieldRow>`}
+                >
+                  <IsolatedBulkFieldRows />
                 </CatalogEntry>
               </div>
             </div>

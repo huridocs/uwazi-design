@@ -63,10 +63,15 @@ export function ThesaurusPicker({
   canEditThesauri = true,
 }: ThesaurusPickerProps) {
   const [creating, setCreating] = useState(false);
+  // The order is decided ONCE, from what the entity held when the list
+  // opened: re-sorting on every click moved the row just ticked to the top,
+  // out from under the pointer. Values created while it is open join the top.
+  const [pinned] = useState(() => new Set([...chosen, ...mixed]));
 
   // Rows keyed by LABEL: that is what the records store (see utils/thesauri).
   const { entries, groupOf, display } = useMemo(() => {
-    const chosenSet = new Set([...chosen, ...mixed]);
+    const held = new Set([...chosen, ...mixed]);
+    const chosenSet = new Set([...pinned, ...(fresh ?? [])]);
     const parent = new Map<string, string>();
     const all: string[] = [];
     for (const v of values ?? []) {
@@ -77,7 +82,8 @@ export function ThesaurusPicker({
       else all.push(v.label);
     }
     const known = new Set(all);
-    const extra = [...chosenSet].filter((l) => !known.has(l));
+    // A held label the thesaurus doesn't list is shown wherever it came from.
+    const extra = [...new Set([...chosenSet, ...held])].filter((l) => !known.has(l));
     const top = [...extra, ...all.filter((l) => chosenSet.has(l))];
     const rest = all.filter((l) => !chosenSet.has(l));
     const entries = [...top, ...rest].map((l) => [l, coverage?.counts[l] ?? 0] as [string, number]);
@@ -87,7 +93,7 @@ export function ThesaurusPicker({
       groupOf: (l: string) => (chosenSet.has(l) ? undefined : parent.get(l)),
       display: (l: string) => (chosenSet.has(l) && parent.get(l) ? `${parent.get(l)} › ${l}` : l),
     };
-  }, [values, chosen, mixed, coverage]);
+  }, [values, chosen, mixed, coverage, pinned, fresh]);
 
   const selected = useMemo(() => Object.fromEntries(chosen.map((l) => [l, true])), [chosen]);
   const mixedMap = useMemo(

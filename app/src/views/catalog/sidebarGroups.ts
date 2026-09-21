@@ -71,6 +71,7 @@ export const sidebarGroups: SidebarGroup[] = [
       { id: "ev-inherited-value-chip", label: "InheritedValueChip" },
       { id: "ev-relationship-field-editor", label: "RelationshipFieldEditor" },
       { id: "ev-thesaurus-picker", label: "ThesaurusPicker · add value" },
+      { id: "ev-bulk-field-row", label: "BulkFieldRow · bulk edit" },
     ],
   },
   {

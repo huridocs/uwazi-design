@@ -17,6 +17,10 @@ export interface MetadataField {
   /** `multiselect`: the chosen labels, in order. Kept apart from `value`
    *  because a label can itself contain ", ". Read with `chosenLabels`. */
   values?: string[];
+  /** A property that holds a LIST the record prints as one string (CEJIL's
+   *  multidate and multidaterange). The bulk form leaves it out: one box for
+   *  every entity would overwrite each list with a single value. */
+  list?: boolean;
   /** The thesaurus value ids behind the labels, where the corpus stores them
    *  (CEJIL). Labels are per language; an id is the same in all of them. */
   valueIds?: string[];

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { CheckSquare } from "lucide-react";
-import { librarySelectionAtom, librarySelectionDrawerOpenAtom } from "../../atoms/library";
+import { libraryBulkEditOpenAtom, librarySelectionAtom, librarySelectionDrawerOpenAtom } from "../../atoms/library";
+import { LibraryBulkEditDrawer } from "./LibraryBulkEditDrawer";
 import { EntityListDrawer } from "./EntityListDrawer";
 
 /** The multi-selection, listed in the Library drawer by the same body a map
@@ -40,6 +41,18 @@ export function LibrarySelectionDrawer({
     });
   }
   const ids = missing.length ? [...listed.ids, ...missing] : listed.ids;
+  const bulkEdit = useAtomValue(libraryBulkEditOpenAtom);
+  // The bulk form edits the live selection, in the order it was listed.
+  const selected = useMemo(() => ids.filter((id) => selection.has(id)), [ids, selection]);
+
+  // Down to one: the bulk form has ended (the list shows), and it does not
+  // reopen by itself when a second entity is ticked.
+  const endBulk = useSetAtom(libraryBulkEditOpenAtom);
+  useEffect(() => {
+    if (bulkEdit && selection.size < 2) endBulk(false);
+  }, [bulkEdit, selection.size, endBulk]);
+
+  if (bulkEdit && selection.size >= 2) return <LibraryBulkEditDrawer ids={selected} />;
 
   return (
     <EntityListDrawer

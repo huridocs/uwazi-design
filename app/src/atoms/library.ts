@@ -252,6 +252,16 @@ export const entitySelectedAtom = atomFamily((id: string) =>
  *  clearing it, and any new tick opens it again. */
 export const librarySelectionDrawerOpenAtom = atom(true);
 
+/** The selection drawer shows the bulk edit form instead of the list. Set by
+ *  the footer's and the phone sheet's Edit with 2 or more selected; Cancel,
+ *  Apply and clearing the selection end it. */
+export const libraryBulkEditOpenAtom = atom(false);
+
+/** An entity whose preview should open straight on its edit form — Edit with
+ *  exactly one entity selected is that entity's ordinary edit. Spent by the
+ *  entity panel once it has opened the form. */
+export const libraryEditRequestAtom = atom<string | null>(null);
+
 /** The ids the VISIBLE view actually draws — the grid's loaded page, the
  *  timeline's plotted rows, the Results page, the map's located entities.
  *  "Select all loaded" means these, in every view; each view writes its own. */
@@ -325,6 +335,7 @@ export const clearSelectionAtom = atom(null, (_get, set) => {
   set(librarySelectionAtom, new Set<string>());
   set(librarySelectionAnchorAtom, null);
   set(lastRangeAtom, []);
+  set(libraryBulkEditOpenAtom, false);
 });
 
 /** Keyword-style Countries facet: selected country names + match mode. */

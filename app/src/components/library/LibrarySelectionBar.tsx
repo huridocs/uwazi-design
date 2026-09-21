@@ -7,6 +7,8 @@ import { useFocusTrap } from "../../hooks/useFocusTrap";
 import {
   clearSelectionAtom,
   deselectIdsAtom,
+  libraryBulkEditOpenAtom,
+  libraryEditRequestAtom,
   librarySelectedEntityIdAtom,
   librarySelectionAtom,
   librarySelectionDrawerOpenAtom,
@@ -80,6 +82,21 @@ export function LibrarySelectionBar({
     return ordered.map((id) => getEntity(id)).filter((e): e is Entity => !!e);
   };
 
+  /* Edit: one entity is its ordinary edit, in its preview; two or more is the
+     bulk form, in the selection drawer. The phone has no drawer for a form
+     that long, so there it stays a single-entity action. */
+  const edit = () => {
+    if (n === 1) {
+      const [id] = selection;
+      store.set(libraryEditRequestAtom, id);
+      setPreview(id);
+      return;
+    }
+    setPreview(null);
+    store.set(libraryBulkEditOpenAtom, true);
+    openDrawer(true);
+  };
+
   const exportSelection = () =>
     void runCsvExport(
       store,
@@ -101,7 +118,7 @@ export function LibrarySelectionBar({
         id: `n-${ref}`,
         kind: "success",
         title: `${ids.length.toLocaleString()} ${ids.length === 1 ? "entity" : "entities"} deleted.`,
-        detail: "Undo restores them until you delete something else.",
+        detail: "Undo restores them until your next delete or bulk change.",
         time: Date.now(),
         read: false,
         action: { label: "Undo", kind: "undo", ref },
@@ -126,7 +143,7 @@ export function LibrarySelectionBar({
           {n.toLocaleString()} selected
         </button>
       </span>
-      <BarButton icon={<PenLine size={13} />} label="Edit" disabledReason="Bulk edit comes in a later step" />
+      <BarButton icon={<PenLine size={13} />} label="Edit" onClick={edit} />
       <BarButton
         icon={<LayoutTemplate size={13} />}
         label="Change template"
@@ -189,7 +206,9 @@ export function LibrarySelectionBar({
           actions={[
             { label: "Export CSV", icon: <FileDown size={14} />, onClick: exportSelection },
             { label: "Delete", icon: <Trash2 size={14} />, onClick: () => setConfirmDelete(true) },
-            { label: "Edit", icon: <PenLine size={14} />, disabledReason: "Bulk edit comes in a later step" },
+            n === 1
+              ? { label: "Edit", icon: <PenLine size={14} />, onClick: edit }
+              : { label: "Edit", icon: <PenLine size={14} />, disabledReason: "Bulk edit needs a wider screen" },
             { label: "Change template", icon: <LayoutTemplate size={14} />, disabledReason: "Change template comes in a later step" },
             { label: "Share", icon: <Share2 size={14} />, disabledReason: "Sharing a selection comes in a later step" },
             { label: "Permissions", icon: <Lock size={14} />, disabledReason: "Permissions come in a later step" },
@@ -201,8 +220,8 @@ export function LibrarySelectionBar({
         title={`Delete ${n.toLocaleString()} ${n === 1 ? "entity" : "entities"}?`}
         message={
           notInView > 0
-            ? `${notInView.toLocaleString()} of them are not in the current results. Undo restores them until you delete something else.`
-            : "Undo restores them until you delete something else."
+            ? `${notInView.toLocaleString()} of them are not in the current results. Undo restores them until your next delete or bulk change.`
+            : "Undo restores them until your next delete or bulk change."
         }
         confirmLabel="Delete"
         variant="danger"
