@@ -8,6 +8,7 @@ import type { DataSource } from "../../../utils/libraryFacets";
 import {
   buildSnippetsFor,
   contextWordsFor,
+  evidenceBadge,
   MAX_FULLTEXT,
   type BorrowedDoc,
   type EntitySnippets,
@@ -102,11 +103,9 @@ function excerptBudget(layout: ResultsLayout, w: number): { ctx: number; twoCol:
     return { ctx: contextWordsFor(col, 2), twoCol };
   }
   if (layout === "grouped") {
-    // `lg:grid-cols-[minmax(14rem,1fr)_2fr]` — the passages take two thirds of
-    // the card's inner width (2rem of padding, 1.5rem of gap). One budget covers
-    // every card, so it is sized to that narrower column; a document-only card
-    // spans the card and simply wraps sooner.
-    const col = ((w - 32 - 24) * 2) / 3;
+    // Properties and Document stack, each the card's full inner width: the
+    // card's padding and border (34) and the passage row's own padding (16).
+    const col = w - 34 - 16;
     return { ctx: contextWordsFor(col, 3), twoCol: false };
   }
   // Spine: one passage in a fixed row on a time axis — its measure is the axis's,
@@ -492,7 +491,7 @@ function GroupedBody({
                 <HighlightedText text={entity.title} query={query} />
               </button>
               </h2>
-              <CountBadge count={snippets.count} />
+              <CountBadge {...evidenceBadge(snippets)} />
               <span data-part="facts" className="ms-auto shrink-0 flex items-center gap-2 text-meta text-ink-tertiary">
                 {type && <span>{type.name}</span>}
                 {entity.country && (
@@ -517,16 +516,14 @@ function GroupedBody({
               <MatchedTerms relevance={relevanceOf(entity)} query={query} className="mt-1" />
             </header>
 
-            {/* Two columns from `lg` up when there ARE two — properties read as a
-                short list and take a third, the passages are prose and take the
-                rest. One section alone spans the card to its edge; neither means a header-only card,
-                which is the honest shape of a title-only match. */}
+            {/* Properties, then Document, one above the other at the card's
+                full width, at every pane width. Side by side, the properties
+                column left the passages two thirds of the card and a short
+                property list beside a long column of prose. Neither section
+                means a header-only card, which is the honest shape of a
+                title-only match. */}
             {(hasMeta || hasText) && (
-              <div
-                className={`grid gap-x-6 gap-y-3 px-4 py-3 ${
-                  hasMeta && hasText ? "lg:grid-cols-[minmax(14rem,1fr)_2fr]" : ""
-                }`}
-              >
+              <div className="flex flex-col gap-stack px-4 py-3">
                 {hasMeta && (
                   <section data-part="properties">
                     <SectionLabel icon={<Tag size={11} />}>Properties</SectionLabel>
@@ -638,7 +635,8 @@ function TreeBody({
             title={entity.title}
             highlight={query}
             color={color}
-            count={snippets.count}
+            count={evidenceBadge(snippets).count}
+            countUnit={evidenceBadge(snippets).unit}
             standalone
             defaultExpanded
           >
@@ -863,9 +861,10 @@ function PassagesBody({
         // no PDF of its own quotes a connected document, and the corpus's
         // documents share six stand-in files, so the same page used to be
         // listed once per result — five identical rows in a list that ranks
-        // passages. Keyed on page + text, not on the document entity: the
-        // repeats come from DIFFERENT document entities serving the same file.
-        const key = `${s.page ?? "-"}|${s.text}`;
+        // passages. Keyed on `docKey` (the text a document resolves to), not
+        // on the document entity: the repeats come from DIFFERENT document
+        // entities serving the same file. A page-less corpus keys on the text.
+        const key = `${snippets.docKey ?? entity.id}|${s.page ?? s.text}`;
         const seen = byPassage.get(key);
         if (seen) {
           // A result reading its OWN document heads the row; otherwise the
@@ -1135,7 +1134,7 @@ function SpineBody({
               <span className="shrink-0 max-w-[18rem] truncate text-xs font-medium text-ink">
                 <HighlightedText text={entity.title} query={query} />
               </span>
-              <CountBadge count={snippets.count} />
+              <CountBadge {...evidenceBadge(snippets)} />
               {best && (
                 <span className="flex-1 min-w-0 truncate text-xs text-ink-secondary">
                   <HighlightedText text={best.text} query={query} />

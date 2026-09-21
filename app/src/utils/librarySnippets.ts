@@ -61,6 +61,21 @@ export interface FullTextSnippet {
   /** How many times the query occurs on this page — drives the spine's
    *  counted-ring node (>1 → a counted ring, 1 → a plain dot). */
   hits: number;
+  /** How many DISTINCT query terms occur on this page — the first key of the
+   *  best-first page order (see `buildSnippetsFor`). */
+  termsHit: number;
+}
+
+/** Where one query term matched an entity. `term` is the folded token
+ *  (`highlightTerms`: lowercase, accents stripped, a quoted phrase as one unit). */
+export interface TermHit {
+  term: string;
+  title: boolean;
+  /** The term hit a non-title metadata field. */
+  properties: boolean;
+  /** Occurrences on every matched page of the document, not only the excerpted
+   *  ones. 0 = not in the document. */
+  documentHits: number;
 }
 
 export type { BorrowedDoc };
@@ -72,6 +87,11 @@ export interface EntitySnippets {
    *  the DOCUMENT, not the match, so it's set whether or not `fullText` is
    *  empty; surfaces render it beside document passages. */
   borrowedFrom: BorrowedDoc | null;
+  /** Which text the document passages were cut from: a CEJIL file `_id`, the
+   *  stand-in filename a record still resolves through, or the mock corpus's
+   *  shared rendition. Equal keys mean the same text, so `docKey` + page names a
+   *  passage across every result that reads it. Null with no document. */
+  docKey: string | null;
   /** metadata groups + **every** matched page — NOT `fullText.length`. The
    *  excerpt list is capped (`MAX_FULLTEXT`); this count isn't, so a card can say
    *  "5 of 23" instead of quietly presenting 5 as the whole story. */
@@ -83,6 +103,22 @@ export interface EntitySnippets {
    *  greater means the rest were counted but not excerpted (see
    *  `buildSnippetsFor`'s `maxFullText`). */
   fullTextTotal: number;
+  /** Query occurrences summed over every matched page — the document's hit
+   *  count, where `fullTextTotal` is its matched-PAGE count. */
+  fullTextHits: number;
+  /** One entry per query term, in query order: where it matched. */
+  termsHit: TermHit[];
+}
+
+/** The count badge's wording: matched pages as passages when the document
+ *  matched, else matched fields. `count` used to add the two into one unitless
+ *  number (2 fields + 81 pages printed as 83). */
+export function evidenceBadge(s: EntitySnippets): { count: number; unit: string } {
+  if (s.fullTextTotal > 0) {
+    return { count: s.fullTextTotal, unit: s.fullTextTotal === 1 ? "passage" : "passages" };
+  }
+  const n = s.metadata.length;
+  return { count: n, unit: n === 1 ? "field" : "fields" };
 }
 
 /** Words of context on each side of a hit — the FLOOR, and what a narrow column
@@ -313,11 +349,13 @@ interface DocPages {
    *  so it stays null rather than inventing an attribution. Its snippets already
    *  carry no page for the same reason. */
   borrowedFrom: BorrowedDoc | null;
+  /** See `EntitySnippets.docKey`. */
+  docKey: string | null;
 }
 
 /** No document. ONE instance, so the page-keyed caches below don't accumulate a
  *  distinct entry per document-less entity (and `[] !== []` doesn't defeat them). */
-const NO_PAGES: DocPages = { pages: [], paged: false, borrowedFrom: null };
+const NO_PAGES: DocPages = { pages: [], paged: false, borrowedFrom: null, docKey: null };
 
 /** `paginate` is deterministic in (rendition, pageCount), so the mock corpus's
  *  chunking is done once per language rather than per entity per keystroke —
@@ -344,10 +382,10 @@ function documentPages(e: Entity, language: Language, source: DataSource): DocPa
       if (!hit) {
         // The file the VIEWER renders, and whether it came from a connected
         // document — one resolver, one relationship walk (see `cejilRenderedDoc`).
-        const { pages, borrowedFrom } = cejilRenderedDoc(e.id);
+        const { pages, borrowedFrom, docKey } = cejilRenderedDoc(e.id);
         // Entities that borrow the SAME file get the same array instance back, so
         // the per-document fold cache below is shared across all of them.
-        hit = pages.length ? { pages, paged: true, borrowedFrom } : NO_PAGES;
+        hit = pages.length ? { pages, paged: true, borrowedFrom, docKey } : NO_PAGES;
         docPagesCache.set(key, hit);
       }
       return hit;
@@ -361,7 +399,12 @@ function documentPages(e: Entity, language: Language, source: DataSource): DocPa
       if (!hit) {
         const rendition = renditionsByLanguage[language] ?? renditionsByLanguage.EN;
         const pageCount = (documentsByLanguage[language] ?? documentsByLanguage.EN).pages;
-        hit = { pages: paginate(rendition.plainText, pageCount), paged: false, borrowedFrom: null };
+        hit = {
+          pages: paginate(rendition.plainText, pageCount),
+          paged: false,
+          borrowedFrom: null,
+          docKey: `mock-rendition:${language}`,
+        };
         mockPagesCache.set(language, hit);
       }
       return hit;
@@ -516,7 +559,15 @@ function paginate(text: string, pageCount: number): string[] {
  *  BUILT — pages past the cap are still counted into `fullTextTotal`, which is
  *  what lets a card offer "5 of 23 · Show all" instead of implying 5 is all
  *  there is. Pass `Infinity` to excerpt them all (what Show-all re-builds with);
- *  the extra work is the windowing pass, so it stays off the default path. */
+ *  the extra work is the windowing pass, so it stays off the default path.
+ *
+ *  WHICH pages get excerpted is `order`. `"best"` (the default) ranks every
+ *  matching page by distinct query terms on it, then occurrences, then page
+ *  order, and excerpts the top `maxFullText` in that order: an AND query shows
+ *  the pages where the terms meet, and an 81-page match stops opening on its
+ *  front matter. `"page"` keeps reading order — the entity drawer's Search tab,
+ *  which reads through one document. Either way the ranking reuses the counts
+ *  the scan already makes; only the excerpted pages are windowed. */
 export function buildSnippetsFor(
   entity: Entity,
   q: string,
@@ -526,7 +577,13 @@ export function buildSnippetsFor(
     maxFullText = MAX_FULLTEXT,
     contextWords = CONTEXT_WORDS,
     perPassage = false,
-  }: { maxFullText?: number; contextWords?: number; perPassage?: boolean } = {},
+    order = "best",
+  }: {
+    maxFullText?: number;
+    contextWords?: number;
+    perPassage?: boolean;
+    order?: "best" | "page";
+  } = {},
 ): EntitySnippets {
   const terms = highlightTerms(q); // already folded (lowercase + de-accented)
   const { groups, exclude } = parseSearchQuery(q);
@@ -539,38 +596,87 @@ export function buildSnippetsFor(
   const metadata: MetadataSnippet[] = [];
   const fullText: FullTextSnippet[] = [];
   if (terms.length === 0) {
-    return { count: 0, metadata, fullText, fullTextTotal: 0, borrowedFrom: null };
+    return {
+      count: 0,
+      metadata,
+      fullText,
+      fullTextTotal: 0,
+      fullTextHits: 0,
+      termsHit: [],
+      borrowedFrom: null,
+      docKey: null,
+    };
   }
+  const termsHit: TermHit[] = terms.map((term) => ({
+    term,
+    title: false,
+    properties: false,
+    documentHits: 0,
+  }));
 
   // `foldedFields`, not `entitySearchFields`: the same per-entity fold the categoriser
   // uses, so a card that is both ranked and excerpted folds its fields once, not
   // twice — and not again on the next keystroke.
   for (const { field, fieldKey, text, folded } of foldedFields(entity, language)) {
     if (!passes(folded)) continue;
+    for (const th of termsHit) {
+      if (!termIn(folded, th.term)) continue;
+      if (fieldKey === "title") th.title = true;
+      else th.properties = true;
+    }
     const excerpt = excerptAroundTerms(text, terms, contextWords);
     if (excerpt) metadata.push({ field, fieldKey, texts: [excerpt] });
   }
 
-  const { pages, paged, borrowedFrom } = documentPages(entity, language, source);
+  const { pages, paged, borrowedFrom, docKey } = documentPages(entity, language, source);
   // No early break: the loop used to stop at the cap, which is exactly why the
   // total was unknowable. Folding every page is the same work the search filter
   // already does for this entity (`entityFullTextBlob` folds the whole doc), so
   // the honest count costs the windowing pass, not a second scan.
-  let fullTextTotal = 0;
+  let fullTextHits = 0;
+  // Every matching page, in page order, with the counts the ranking needs. The
+  // per-term counts are the ones `hits` was already summed from.
+  const matched: { i: number; hits: number; termsHit: number }[] = [];
   // Folded ONCE per document (see `foldedPages`), not per entity per keystroke.
   const lowerPages = foldedPages(pages);
   for (let i = 0; i < pages.length; i++) {
     const lower = lowerPages[i];
     if (!passes(lower)) continue;
-    const hits = terms.reduce((n, t) => n + countOccurrences(lower, t), 0);
+    let hits = 0;
+    let distinct = 0;
+    for (const th of termsHit) {
+      const n = countOccurrences(lower, th.term);
+      if (n === 0) continue;
+      hits += n;
+      distinct++;
+      th.documentHits += n;
+    }
     if (hits === 0) continue;
-    fullTextTotal++; // counted whether or not it gets excerpted below
-    if (fullText.length >= maxFullText) continue;
-    const excerpt = excerptAroundTerms(pages[i], terms, contextWords, pageFoldWithMap(pages, i));
-    if (excerpt) fullText.push({ page: paged ? i + 1 : null, text: excerpt, hits });
+    fullTextHits += hits;
+    matched.push({ i, hits, termsHit: distinct }); // counted whether or not it gets excerpted below
   }
+  if (order === "best") {
+    matched.sort((a, b) => b.termsHit - a.termsHit || b.hits - a.hits || a.i - b.i);
+  }
+  for (const m of matched) {
+    if (fullText.length >= maxFullText) break;
+    const excerpt = excerptAroundTerms(pages[m.i], terms, contextWords, pageFoldWithMap(pages, m.i));
+    if (excerpt) {
+      fullText.push({ page: paged ? m.i + 1 : null, text: excerpt, hits: m.hits, termsHit: m.termsHit });
+    }
+  }
+  const fullTextTotal = matched.length;
 
-  return { count: metadata.length + fullTextTotal, metadata, fullText, fullTextTotal, borrowedFrom };
+  return {
+    count: metadata.length + fullTextTotal,
+    metadata,
+    fullText,
+    fullTextTotal,
+    fullTextHits,
+    termsHit,
+    borrowedFrom,
+    docKey,
+  };
 }
 
 export interface MatchCategories {
