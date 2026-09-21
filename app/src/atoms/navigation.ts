@@ -1,3 +1,4 @@
+import { atom } from "jotai";
 import { atomWithStorage, createJSONStorage } from "jotai/utils";
 
 export type AppView = "entity" | "library" | "catalog" | "import-csv" | "settings";
@@ -15,3 +16,7 @@ const sessionJSON = createJSONStorage<AppView>(() => sessionStorage);
 export const appViewAtom = atomWithStorage<AppView>("uwazi:appView", "library", sessionJSON, {
   getOnInit: true,
 });
+
+/** One-shot: the Import CSV view opens its New Import dialog on arrival. Set by
+ *  the Library's "Import CSV" action, consumed (and cleared) by the view. */
+export const openNewImportOnArrivalAtom = atom(false);

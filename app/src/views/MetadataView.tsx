@@ -25,6 +25,7 @@ import { fillTargetAtom, fillRequestAtom } from "../atoms/fillTarget";
 import { ListeningChip } from "../components/metadata/ListeningChip";
 import { MultiLanguageField } from "../components/metadata/MultiLanguageField";
 import type { CopyMatch, CopyPlan, CopyUnit } from "../utils/copyFrom";
+import type { EditResult } from "../utils/createEntity";
 import { TemplateStructure } from "../components/relationships/TemplateStructure";
 import { EntityOverlay } from "../components/relationships/EntityOverlay";
 import { groupConnections, relationLabel, specInherits } from "../utils/inheritance";
@@ -175,7 +176,10 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
 
 export interface MetadataEditBodyProps {
   onCancel: () => void;
-  onSave: () => void;
+  /** Called once the (mocked) save succeeds, with the form's values — every
+   *  language's title and scalar fields. Hosts that only close the form ignore
+   *  it; creating an entity is what reads it. */
+  onSave: (result: EditResult) => void;
   menuSlot?: ReactNode;
   /** Identifies this edit SESSION, and must be distinct per mounted instance.
    *  Two are mountable at once — the full Metadata view and the Library drawer
@@ -372,7 +376,7 @@ export function MetadataEditBody({
     window.setTimeout(() => {
       if (!aliveRef.current) return;
       if (title.includes("[fail]")) setSaveState("failed");
-      else onSave();
+      else onSave({ titles, fieldsByLang });
     }, 800);
   };
   const saveBlocked = saveAttempted && errorCount > 0;
