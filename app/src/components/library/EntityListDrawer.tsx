@@ -38,6 +38,7 @@ export function EntityListDrawer({
   rowClassName,
   query,
   onRemove,
+  footer,
 }: {
   icon: ReactNode;
   title: string;
@@ -59,6 +60,8 @@ export function EntityListDrawer({
    *  the row can still be removed (an already-removed row keeps its slot and
    *  shows no X). Absent: no remove slot at all (the cluster drawer). */
   onRemove?: { remove: (id: string) => void; can: (id: string) => boolean };
+  /** A footer bar under the list (the selection drawer's Close + actions). */
+  footer?: ReactNode;
 }) {
   const openEntity = useSetAtom(openEntityAtom);
   const range = useSetAtom(rangeSelectionAtom);
@@ -140,6 +143,15 @@ export function EntityListDrawer({
           </div>
         )}
       </div>
+      {footer && (
+        <div
+          data-part="footer"
+          className="bleed shrink-0 flex items-center gap-2 h-12 bg-paper"
+          style={{ borderTop: "1px solid var(--border-primary)" }}
+        >
+          {footer}
+        </div>
+      )}
     </div>
   );
 }
