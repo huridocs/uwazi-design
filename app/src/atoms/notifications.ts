@@ -37,6 +37,13 @@ export interface Activity {
   detail?: string;
   current: number;
   total: number;
+  /** The task reports its own progress (an upload, an export): the beacon
+   *  does not tick it toward completion. It finishes when `current` reaches
+   *  `total`, as every task does. */
+  driven?: boolean;
+  /** What the completion notification says, when the generic "<label>
+   *  complete. N items processed." would be wrong or vague. */
+  done?: { title: string; detail?: string };
 }
 
 const now = Date.now();

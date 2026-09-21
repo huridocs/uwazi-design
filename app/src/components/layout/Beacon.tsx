@@ -136,7 +136,7 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
       setActivities((prev) => {
         let changed = false;
         const next = prev.map((a) => {
-          if (a.current >= a.total) return a;
+          if (a.driven || a.current >= a.total) return a;
           changed = true;
           const step = Math.ceil((a.total - a.current) * 0.18) + 1;
           return { ...a, current: Math.min(a.total, a.current + step) };
@@ -158,8 +158,8 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
             {
               id: `n-done-${a.id}`,
               kind: "success",
-              title: `${a.label} complete.`,
-              detail: `${a.total} items processed.`,
+              title: a.done?.title ?? `${a.label} complete.`,
+              detail: a.done ? a.done.detail : `${a.total} items processed.`,
               time: Date.now(),
               read: false,
             },

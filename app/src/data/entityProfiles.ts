@@ -12,6 +12,7 @@ import { getEntityProps } from "./entityMetadata";
 import { isCejilEntity, buildCejilProfile } from "./cejil/profile";
 import { isArtworkEntity, buildArtworkProfile } from "./artworks/profile";
 import type { EntityImage } from "./entities";
+import { createdProfile } from "./createdEntities";
 
 const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -192,6 +193,17 @@ const TYPE_FIELDS: Record<string, { prop: string; type: MetadataField["type"] }[
   ],
 };
 
+/** A type's fields, EMPTY and in template order, per language — what a new
+ *  entity's edit form opens on. `synthFields` emits only populated props, which
+ *  is right for a record and useless for a form that has nothing yet. */
+export function blankTypeFields(typeId: string): Record<Language, MetadataField[]> {
+  const spec = TYPE_FIELDS[typeId] ?? [];
+  return LANGS.reduce((acc, lang) => {
+    acc[lang] = spec.map(({ prop, type }) => field(prop, prop, type, "", lang));
+    return acc;
+  }, {} as Record<Language, MetadataField[]>);
+}
+
 /** Type-appropriate scalar fields from the entity's populated native props.
  *  Only props that have a value are rendered (no em-dash placeholders). */
 function synthFields(entity: Entity, lang: Language): AnyMetadataField[] {
@@ -288,6 +300,9 @@ const lightweightCache = new Map<string, EntityProfile>();
 const FALLBACK_ENTITY: Entity = { id: "unknown", title: "Unknown entity", typeId: "document" };
 
 export function getEntityProfile(id: string): EntityProfile {
+  // Created at runtime: its profile was built when it was created.
+  const created = createdProfile(id);
+  if (created) return created;
   const authored = PROFILES[id];
   if (authored) return authored;
   const cached = lightweightCache.get(id);

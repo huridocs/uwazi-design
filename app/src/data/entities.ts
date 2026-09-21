@@ -17,6 +17,7 @@ import { artworkTypeById } from "./artworks/typesAdapter";
 import { artworks, ARTWORK_IMAGE_BASE } from "./artworks/artworks";
 import { asset } from "../utils/asset";
 import { docPageAssets, DOC_PAGE_BASE, type DocPageAsset } from "./docPages";
+import { createdCorpus, createdEntity } from "./createdEntities";
 
 /** One property as a CARD shows it: the key that names it to the record, the
  *  kind that says how to draw it, the label, the display value, and the "+N"
@@ -461,7 +462,12 @@ function cejilEntityById(): Map<string, Entity> {
 }
 
 export function getEntity(id: string): Entity | undefined {
-  return entities.find((e) => e.id === id) ?? cejilEntityById().get(id) ?? artworkEntityById().get(id);
+  return (
+    createdEntity(id) ??
+    entities.find((e) => e.id === id) ??
+    cejilEntityById().get(id) ??
+    artworkEntityById().get(id)
+  );
 }
 
 /** Which corpus an entity BELONGS to — resolved from the id, in the same order
@@ -474,6 +480,8 @@ export function getEntity(id: string): Entity | undefined {
  *  the three corpora (asserted when the artworks seed landed), so this is a
  *  lookup, not a guess. */
 export function entityCorpusOf(id: string): "mock" | "cejil" | "artworks" {
+  const created = createdCorpus(id);
+  if (created) return created;
   if (entities.some((e) => e.id === id)) return "mock";
   if (cejilEntityById().has(id)) return "cejil";
   if (artworkEntityById().has(id)) return "artworks";

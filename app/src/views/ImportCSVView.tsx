@@ -6,7 +6,8 @@ import { NewImportModal } from "../components/import-csv/NewImportModal";
 import { ToolsActionBar } from "../components/layout/ToolsActionBar";
 import { ConfirmDialog } from "../components/shared/ConfirmDialog";
 import { defaultImports, type ImportEntry } from "../data/imports";
-import type { AppView } from "../atoms/navigation";
+import { useAtom } from "jotai";
+import { openNewImportOnArrivalAtom, type AppView } from "../atoms/navigation";
 
 type Screen = "list" | "detail";
 
@@ -14,7 +15,12 @@ export function ImportCSVView({ onNavigate }: { onNavigate?: (view: AppView) => 
   const [screen, setScreen] = useState<Screen>("list");
   const [imports, setImports] = useState<ImportEntry[]>(defaultImports);
   const [activeImportId, setActiveImportId] = useState<string | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  // Arriving from the Library's "Import CSV" opens New Import straight away.
+  const [openNewOnArrival, setOpenNewOnArrival] = useAtom(openNewImportOnArrivalAtom);
+  const [modalOpen, setModalOpen] = useState(openNewOnArrival);
+  useEffect(() => {
+    if (openNewOnArrival) setOpenNewOnArrival(false);
+  }, [openNewOnArrival, setOpenNewOnArrival]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteCurrentConfirmOpen, setDeleteCurrentConfirmOpen] = useState(false);
