@@ -62,7 +62,12 @@ const PROSE_CLASS = "min-w-0 text-meta leading-snug text-ink-secondary";
  *  (which live-runs the search) and closes the popover. */
 export function SearchTipsPopover({
   onInsert,
+  compact = false,
 }: {
+  /** Icon only. For a search box on a narrow pane, where the word costs the
+   *  input a third of its width. Set from the host's WIDTH, never from whether
+   *  the box holds text, so typing cannot resize the input. */
+  compact?: boolean;
   /** Where a clicked example goes. Defaults to the Library search box; the
    *  entity drawer's Search tab passes its own setter. */
   onInsert?: (example: string) => void;
@@ -143,7 +148,7 @@ export function SearchTipsPopover({
           cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20"
       >
         <Lightbulb size={11} aria-hidden="true" />
-        tips
+        {compact ? <span className="sr-only">tips</span> : "tips"}
       </button>
 
       {open &&

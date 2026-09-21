@@ -411,10 +411,37 @@ export const libraryFieldLabelsAtom = atom((get) =>
 /** What the registry needs to know that it can't: the viewport, whether a query
  *  is running, and the columns this corpus can offer. One atom, so the menu, the
  *  dot and the table all resolve the same option list. */
+/** How much of the Library toolbar fits on one row, measured on the TOOLBAR (a
+ *  ResizeObserver in `LibraryView`), never on the viewport. The pane is what
+ *  narrows: a 1024px window with the drawer open leaves the toolbar 540px, and
+ *  viewport breakpoints kept every control mounted there, so the search box
+ *  collapsed to its icon and the readout printed over it.
+ *
+ *  ONE fold order, each tier a superset of the one before:
+ *    full     ≥ 50rem   search · readout · Sort · View · Display · Language
+ *    wrap     ≥ 37rem   the readout takes its own line under the row
+ *    no-sort  ≥ 29rem   Sort moves into the Display menu
+ *    compact  < 29rem   Language moves into the Display menu too
+ *  Search, View and Display never fold. The tier changes with width only, never
+ *  with a query or a selection, so no state change can move the row. */
+export type ToolbarTier = "full" | "wrap" | "no-sort" | "compact";
+export const TOOLBAR_TIERS: { tier: ToolbarTier; min: number }[] = [
+  { tier: "full", min: 800 },
+  { tier: "wrap", min: 592 },
+  { tier: "no-sort", min: 464 },
+  { tier: "compact", min: 0 },
+];
+export const toolbarTierFor = (w: number): ToolbarTier =>
+  TOOLBAR_TIERS.find((t) => w >= t.min)!.tier;
+export const libraryToolbarTierAtom = atom<ToolbarTier>("full");
+
 export const libraryDisplayContextAtom = atom<DisplayContext>((get) => {
   const hasQuery = get(libraryQueryAtom).trim().length > 0;
+  const tier = get(libraryToolbarTierAtom);
   return {
     isMobile: get(breakpointAtom) === "mobile",
+    sortFolded: tier === "no-sort" || tier === "compact",
+    languageFolded: tier === "compact",
     hasQuery,
     listColumns: listColumnOptions({ hasQuery, fieldLabels: get(libraryFieldLabelsAtom) }),
   };

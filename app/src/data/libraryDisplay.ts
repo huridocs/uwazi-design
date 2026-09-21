@@ -71,6 +71,11 @@ export interface ChoiceOption {
  *  the columns the current corpus can actually offer. */
 export interface DisplayContext {
   isMobile: boolean;
+  /** The toolbar has no room for its Sort / Language selects (`libraryToolbarTierAtom`),
+   *  so the menu carries them. Keyed to the PANE's width, not the viewport: an
+   *  open drawer narrows the toolbar on a desktop exactly as a phone does. */
+  sortFolded: boolean;
+  languageFolded: boolean;
   hasQuery: boolean;
   /** The list's column toggles — built-ins plus one per metadata property the
    *  corpus carries. Supplied by `components/library/listColumns`, so a new
@@ -131,9 +136,30 @@ const SORT: DisplaySection = {
   id: "sort",
   label: "Sort by",
   kind: "choice",
-  visible: (ctx) => ctx.isMobile,
+  visible: (ctx) => ctx.isMobile || ctx.sortFolded,
   separator: true,
   option: { id: "sort", scope: "external", default: "recent", choices: LIBRARY_SORTS },
+};
+
+/** The reading language, when the toolbar's own select has folded away. Same
+ *  `external` binding as Sort: the toolbar Select writes the same atom. */
+const LANGUAGE: DisplaySection = {
+  id: "language",
+  label: "Language",
+  kind: "choice",
+  visible: (ctx) => ctx.languageFolded,
+  separator: true,
+  option: {
+    id: "language",
+    scope: "external",
+    default: "EN",
+    choices: [
+      { id: "EN", label: "English" },
+      { id: "ES", label: "Español" },
+      { id: "FR", label: "Français" },
+      { id: "AR", label: "العربية" },
+    ],
+  },
 };
 
 /** What a CARD carries.
@@ -237,7 +263,7 @@ const thumbSections = (): DisplaySection[] => {
 // ── The registry ─────────────────────────────────────────────────────────────
 
 export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
-  cards: [CHART, SORT, CARD_INFO, CARD_FIELDS, ...thumbSections()],
+  cards: [CHART, SORT, LANGUAGE, CARD_INFO, CARD_FIELDS, ...thumbSections()],
 
   /** The list's options are its COLUMNS, one per track the table can draw —
    *  including the corpus's own metadata properties, which no other view can
@@ -247,6 +273,7 @@ export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
   list: [
     CHART,
     SORT,
+    LANGUAGE,
     {
       id: "columns",
       label: "Columns",
@@ -273,6 +300,7 @@ export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
   timeline: [
     CHART,
     SORT,
+    LANGUAGE,
     {
       id: "timelineLayout",
       label: "Timeline layout",
@@ -297,6 +325,7 @@ export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
   results: [
     CHART,
     SORT,
+    LANGUAGE,
     {
       id: "resultsLayout",
       label: "Results layout",
@@ -318,7 +347,7 @@ export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
   /** The map draws neither cards nor rows, so it offers the chart and the phone's
    *  sort and nothing else. An empty-feeling menu is the honest answer; a menu
    *  full of controls that act on nothing is not. */
-  map: [CHART, SORT],
+  map: [CHART, SORT, LANGUAGE],
 };
 
 // ── Reading the registry ─────────────────────────────────────────────────────

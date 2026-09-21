@@ -1,3 +1,4 @@
+import { languageAtom, type Language } from "../../atoms/language";
 import { useEffect, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { SlidersHorizontal, Check, RotateCcw } from "lucide-react";
@@ -43,6 +44,7 @@ export function LibraryDisplayMenu() {
   const modified = useAtomValue(libraryDisplayModifiedAtom);
   const reset = useSetAtom(resetLibraryDisplayAtom);
   const [sort, setSort] = useAtom(librarySortAtom);
+  const [language, setLanguage] = useAtom(languageAtom);
   const setSortDir = useSetAtom(librarySortDirAtom);
   const searching = useAtomValue(libraryActiveSearchAtom) !== null;
   const [open, setOpen] = useState(false);
@@ -88,6 +90,8 @@ export function LibraryDisplayMenu() {
         setSortDir(defaultSortDir(v as typeof sort));
       },
     },
+    // The toolbar's Language select folds into this menu on a narrow pane.
+    language: { value: language, set: (v) => setLanguage(v as Language) },
   };
 
   const renderSection = (section: DisplaySection) => {

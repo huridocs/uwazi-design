@@ -46,6 +46,8 @@ import {
   libraryThumbSizeAtom,
   libraryTimeHubAtom,
   librarySortAtom,
+  libraryToolbarTierAtom,
+  toolbarTierFor,
   librarySortDirAtom,
   defaultSortDir,
   librarySelectedEntityIdAtom,
@@ -181,6 +183,31 @@ export function LibraryView() {
   const clearSearch = useSetAtom(clearLibrarySearchAtom);
   const recordSearch = useSetAtom(recordSearchAtom);
   const searchBoxRef = useRef<HTMLDivElement>(null);
+  // The toolbar's fold tier, measured on the toolbar. A callback ref, because
+  // `renderLeft` mounts this node in two hosts (split view, mobile sheet) and an
+  // effect with no dependencies would keep observing the first one.
+  const [tier, setTier] = useAtom(libraryToolbarTierAtom);
+  const toolbarRO = useRef<ResizeObserver | null>(null);
+  const toolbarRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      toolbarRO.current?.disconnect();
+      toolbarRO.current = null;
+      if (!el) return;
+      const measure = () => {
+        const cs = getComputedStyle(el);
+        const w = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+        // 0 = hidden host (a backgrounded sheet): keep the last tier.
+        if (w > 0) setTier(toolbarTierFor(w));
+      };
+      measure();
+      toolbarRO.current = new ResizeObserver(measure);
+      toolbarRO.current.observe(el);
+    },
+    [setTier],
+  );
+  useEffect(() => () => toolbarRO.current?.disconnect(), []);
+  const sortFolded = tier === "no-sort" || tier === "compact";
+  const languageFolded = tier === "compact";
   const [searchFocused, setSearchFocused] = useState(false);
   // Filters / Results drawer tabs. Results auto-activates while the search box
   // carries a query and falls back to Filters when it's cleared; between those
@@ -673,13 +700,21 @@ export function LibraryView() {
     // pane edge and their content sits on the gutter.
     <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0 bg-paper">
       {/* Toolbar */}
+      {/* THE FOLD follows this row's own width (`libraryToolbarTierAtom`), not
+          the viewport. `flex-wrap` exists for one child: below the `full` tier
+          the readout takes the line under the row (`order-last basis-full`).
+          Nothing else wraps; Sort and Language leave the row for the Display
+          menu instead. The search box keeps a 10rem floor in every tier. */}
       <div
-        className="bleed shrink-0 flex items-center gap-2 py-2 bg-parchment"
+        ref={toolbarRef}
+        data-part="toolbar"
+        data-tier={tier}
+        className="bleed shrink-0 flex flex-wrap items-center gap-x-2 gap-y-1.5 py-2 bg-parchment"
         style={{ borderBottom: "1px solid var(--border-primary)" }}
       >
         <div
           ref={searchBoxRef}
-          className="relative flex-1 min-w-0 flex items-center gap-1.5 h-8 py-1 pl-2 pr-2 bg-paper border border-border rounded-md
+          className="relative flex-1 min-w-[10rem] flex items-center gap-1.5 h-8 py-1 pl-2 pr-2 bg-paper border border-border rounded-md
             focus-within:ring-2 focus-within:ring-ink/25 focus-within:border-ink/30 transition-all"
         >
           <Search size={14} className="text-ink-tertiary shrink-0" />
@@ -719,7 +754,7 @@ export function LibraryView() {
               <X size={12} />
             </button>
           )}
-          <SearchTipsPopover />
+          <SearchTipsPopover compact={tier === "compact"} />
           {/* Follows FOCUS; the tips popover follows a click on its chip — which
               blurs the input, so the two can never be open at once without any
               shared state to arbitrate. */}
@@ -786,8 +821,10 @@ export function LibraryView() {
           // the long state too, where the chip otherwise truncates flush to the
           // slot's edge and reads as a second control pill beside "Date added".
           // The slot's outer width is untouched, so the controls still never move.
-          className={`hidden md:flex items-center justify-start gap-1.5 shrink-0 w-[15rem] pe-3
-            text-meta tabular-nums text-ink-tertiary transition-opacity ${
+          data-part="readout"
+          className={`flex items-center justify-start gap-1.5 min-w-0 ${
+            tier === "full" ? "shrink-0 w-[15rem] pe-3" : "order-last basis-full h-5"
+          } text-meta tabular-nums text-ink-tertiary transition-opacity ${
               searchPending ? "opacity-60" : "opacity-100"
             }`}
         >
@@ -817,7 +854,8 @@ export function LibraryView() {
             it costs no width. The VIEW switcher does not: cards / list / map /
             timeline are the point of the Library, and they were unreachable on
             mobile because this whole cluster was `hidden sm:block`. */}
-        <div className="hidden sm:block">
+        {!sortFolded && (
+        <div>
           <Select
             value={sort}
             onChange={(v) => {
@@ -835,6 +873,7 @@ export function LibraryView() {
             steady
           />
         </div>
+        )}
         {/* The switcher is a dropdown, like Sort and Language either side of it,
             so this row reads as three of one control rather than two dropdowns
             and a segmented widget. It is also the narrowest the switcher has
@@ -851,7 +890,8 @@ export function LibraryView() {
         <LibraryDisplayMenu />
         {/* Languages: one dropdown of fixed width (codes, not names — a "Français"
             label would resize the trigger and shift the row again). */}
-        <div className="hidden md:block">
+        {!languageFolded && (
+        <div>
           <Select
             value={language}
             onChange={(v) => setLanguage(v as Language)}
@@ -860,6 +900,7 @@ export function LibraryView() {
             options={LANGUAGES.map((l) => ({ value: l, label: l }))}
           />
         </div>
+        )}
         {menuTrigger}
       </div>
 
