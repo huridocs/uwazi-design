@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { CheckSquare } from "lucide-react";
-import { deselectIdsAtom, libraryBulkEditOpenAtom, librarySelectionAtom, librarySelectionDrawerOpenAtom } from "../../atoms/library";
+import {
+  deselectIdsAtom,
+  libraryBulkEditIdsAtom,
+  libraryBulkEditOpenAtom,
+  librarySelectionAtom,
+  librarySelectionDrawerOpenAtom,
+} from "../../atoms/library";
 import { LibraryBulkEditDrawer } from "./LibraryBulkEditDrawer";
 import { EntityListDrawer } from "./EntityListDrawer";
 
@@ -43,8 +49,15 @@ export function LibrarySelectionDrawer({
   }
   const ids = missing.length ? [...listed.ids, ...missing] : listed.ids;
   const bulkEdit = useAtomValue(libraryBulkEditOpenAtom);
-  // The bulk form edits the live selection, in the order it was listed.
-  const selected = useMemo(() => ids.filter((id) => selection.has(id)), [ids, selection]);
+  // The bulk form edits the set FROZEN when it opened (see
+  // `libraryBulkEditIdsAtom`), in the order the list shows it.
+  const frozen = useAtomValue(libraryBulkEditIdsAtom);
+  const selected = useMemo(() => {
+    const has = new Set(frozen);
+    const ordered = ids.filter((id) => has.has(id));
+    const seen = new Set(ordered);
+    return [...ordered, ...frozen.filter((id) => !seen.has(id))];
+  }, [ids, frozen]);
 
   // Down to one: the bulk form has ended (the list shows), and it does not
   // reopen by itself when a second entity is ticked.

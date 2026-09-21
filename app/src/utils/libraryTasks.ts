@@ -1,6 +1,8 @@
 import type { useStore } from "jotai";
 import { activitiesAtom, type Activity } from "../atoms/notifications";
-import { addUploadedDocumentsAtom } from "../atoms/entityOverlay";
+import { addUploadedDocumentsAtom, recordRestoreUndoAtom, writeBulkChunkAtom } from "../atoms/entityOverlay";
+import { notificationsAtom } from "../atoms/notifications";
+import type { BulkPlan } from "./bulkEdit";
 import type { Corpus } from "../data/entityOverlay";
 import type { Entity } from "../data/entities";
 import type { Language } from "../atoms/language";
@@ -148,4 +150,76 @@ export async function runCsvExport(
       detail: `${columns.length} columns · ${filename}`,
     },
   });
+}
+
+/** A bulk change is written at once up to this many entities; past it, it
+ *  runs as a Beacon task. */
+export const BULK_TASK_THRESHOLD = 200;
+const BULK_CHUNK = 100;
+
+/** Apply a bulk change as ONE Beacon task, chunk by chunk, with a working
+ *  Cancel. `plan` builds one chunk's records (planBulkEdit over those
+ *  entities). What was applied before a cancel STAYS applied — the
+ *  notification says how many — and one Undo covers every chunk written. */
+export function runBulkApply(
+  store: Store,
+  {
+    corpus,
+    entities,
+    plan,
+    verb,
+  }: {
+    corpus: Corpus;
+    entities: readonly Entity[];
+    plan: (chunk: Entity[]) => BulkPlan;
+    /** "Editing", "Changing template of" — the activity's label. */
+    verb: string;
+  },
+): void {
+  const id = taskId("bulk");
+  const total = entities.length;
+  store.set(activitiesAtom, (prev) => [
+    ...prev,
+    { id, label: `${verb} ${total.toLocaleString()} entities`, current: 0, total, driven: true },
+  ]);
+  const entries: ReturnType<typeof writeBulkChunkAtom["write"]> = [];
+  let done = 0;
+  const finish = (cancelled: boolean) => {
+    const ref = entries.length ? store.set(recordRestoreUndoAtom, { corpus, entries }) : null;
+    const action = ref ? { label: "Undo", kind: "undo" as const, ref } : undefined;
+    const n = entries.length;
+    const title = `${n.toLocaleString()} ${n === 1 ? "entity" : "entities"} updated.`;
+    if (cancelled) {
+      // The activity is gone (Cancel removed it), so the Beacon won't turn it
+      // into a notification: say what happened here.
+      store.set(notificationsAtom, (prev) => [
+        {
+          id: `n-${id}`,
+          kind: "warning",
+          title: `Cancelled after ${done.toLocaleString()} of ${total.toLocaleString()} entities.`,
+          detail: `${n.toLocaleString()} ${n === 1 ? "entity was" : "entities were"} changed before the cancel and keep the change. Undo restores them.`,
+          time: Date.now(),
+          read: false,
+          ...(action ? { action } : {}),
+        },
+        ...prev,
+      ]);
+      return;
+    }
+    patch(store, id, {
+      current: total,
+      done: { title, detail: "Undo restores their previous values until your next bulk change or delete.", action },
+    });
+  };
+  const step = () => {
+    if (!alive(store, id)) return finish(true);
+    const chunk = entities.slice(done, done + BULK_CHUNK) as Entity[];
+    const p = plan(chunk);
+    entries.push(...store.set(writeBulkChunkAtom, { corpus, records: p.records, patches: p.patches }));
+    done += chunk.length;
+    if (done >= total) return finish(false);
+    patch(store, id, { current: done });
+    window.setTimeout(step, 60);
+  };
+  window.setTimeout(step, 60);
 }

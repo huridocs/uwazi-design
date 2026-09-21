@@ -24,6 +24,7 @@ import {
   type BulkPlan,
 } from "../../utils/bulkEdit";
 import { fromDateInputValue, toDateInputValue } from "../../utils/dateValue";
+import { BULK_TASK_THRESHOLD, runBulkApply } from "../../utils/libraryTasks";
 import { FacetSection } from "../shared/FacetSection";
 import { WARM_BUTTON } from "../shared/warmButton";
 import { BulkFieldRow } from "./BulkFieldRow";
@@ -111,13 +112,26 @@ export function BulkEditBody({
     setEdit(f.id, add.size || remove.size ? { kind: "multi", add: [...add], remove: [...remove] } : null);
   };
 
+  // Past the threshold Apply runs as a Beacon task, so the review builds only
+  // its counts; the records are built chunk by chunk by the task.
+  const asTask = n > BULK_TASK_THRESHOLD;
   const openReview = () => {
     if (!dirty) return;
-    setReview(planBulkEdit({ entities, fields, edits, language, corpus, thesaurusOf }));
+    setReview(planBulkEdit({ entities, fields, edits, language, corpus, thesaurusOf, withRecords: !asTask }));
   };
 
   const apply = () => {
     if (!review) return;
+    if (asTask) {
+      runBulkApply(store, {
+        corpus,
+        entities,
+        verb: "Editing",
+        plan: (chunk) => planBulkEdit({ entities: chunk, fields, edits, language, corpus, thesaurusOf }),
+      });
+      onApplied();
+      return;
+    }
     const ref = applyBulk({ corpus, records: review.records, patches: review.patches });
     const touched = review.touched;
     store.set(notificationsAtom, (prev) => [
@@ -145,6 +159,12 @@ export function BulkEditBody({
             Change {props} {props === 1 ? "property" : "properties"} on {review.touched.toLocaleString()}{" "}
             {review.touched === 1 ? "entity" : "entities"}?
           </h3>
+          {/* The set Apply writes to — the one frozen when the form opened. */}
+          <p data-part="applies-to" className="text-meta text-ink-tertiary">
+            Applies to {entities.slice(0, 3).map((e) => e.title).join(", ")}
+            {n > 3 ? ` and ${(n - 3).toLocaleString()} more` : ""}.
+            {asTask ? " Runs in the background; you can cancel it from the notifications." : ""}
+          </p>
           <table className="w-full text-xs">
             <tbody>
               {review.lines.map((l, i) => (

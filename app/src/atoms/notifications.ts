@@ -54,7 +54,7 @@ export interface Activity {
   driven?: boolean;
   /** What the completion notification says, when the generic "<label>
    *  complete. N items processed." would be wrong or vague. */
-  done?: { title: string; detail?: string };
+  done?: { title: string; detail?: string; action?: NotificationAction };
 }
 
 const now = Date.now();

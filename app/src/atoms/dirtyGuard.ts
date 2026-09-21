@@ -43,6 +43,14 @@ export const dirtyFormAtom = atom((get) => get(dirtyFormsAtom).find((f) => f.isD
  *  is: leaving discards the form. */
 export const editSessionOpenAtom = atom((get) => get(dirtyFormsAtom).length > 0);
 
+/** The bulk edit form is open AND holds changes. A selection change then has
+ *  to ask first: the form's set was frozen when it opened, and changing the
+ *  selection under it would make Apply write to entities the reader no longer
+ *  sees selected (or not write to ones they do). */
+export const bulkEditDirtyAtom = atom((get) =>
+  get(dirtyFormsAtom).some((f) => f.id === "bulk-edit" && f.isDirty),
+);
+
 /** A navigation held back by the guard, waiting on the user's verdict.
  *  Non-null = the confirm dialog is open. */
 export const pendingNavigationAtom = atom<{ label: string; run: () => void } | null>(null);
