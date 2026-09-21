@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import { Search, ClipboardCopy, ChevronDown } from "lucide-react";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { MainTabs } from "../components/layout/MainTabs";
@@ -40,15 +40,18 @@ import { BulkEditBody } from "../components/metadata/BulkEditBody";
 import {
   addThesaurusValueAtom,
   bindingKey,
-  choiceByLanguage,
   createThesaurusAtom,
+  fieldKeys,
   foldLabel,
+  labelsForKeys,
   localizeValues,
+  pseudoKey,
   selectableLabels,
   thesauriAtom,
   thesaurusBindingsAtom,
 } from "../atoms/thesauri";
 import type { Corpus } from "../data/entityOverlay";
+import type { ThesaurusValue } from "../data/settings";
 import { focusedEntityIdAtom } from "../atoms/focusedEntity";
 import { saveEntityEditAtom } from "../atoms/entityOverlay";
 import { entityCorpusOf, getEntity, getEntityType, type Entity } from "../data/entities";
@@ -1304,31 +1307,26 @@ function ThesaurusFieldEditor({
   const thesauri = useAtomValue(thesauriAtom(corpus));
   const bindings = useAtomValue(thesaurusBindingsAtom(corpus));
   const addValue = useSetAtom(addThesaurusValueAtom);
+  const store = useStore();
   const createThesaurus = useSetAtom(createThesaurusAtom);
   const [adding, setAdding] = useState(false);
   const thesaurusId = bindings[bindingKey(typeId, field.id)] ?? field.thesaurus;
   const thesaurus = thesauri.find((t) => t.id === thesaurusId) ?? null;
   const multiple = field.type === "multiselect";
-  const chosen = chosenLabels(field);
   // The list in the language being written: CEJIL's records hold translated
-  // labels, its thesauri the Spanish ones. Ids the record already holds place
-  // labels the list can't (see `choiceByLanguage`).
+  // labels, its thesauri the Spanish ones. A choice is its VALUE IDS (see
+  // `fieldKeys`), written into every language in that language's label.
   const shown = useMemo(
     () => (thesaurus ? localizeValues(thesaurus.values, corpus, language) : null),
     [thesaurus, corpus, language],
   );
-  const knownIds = Object.fromEntries(
-    chosen.map((l, i) => [l, field.valueIds?.[i]]).filter(([, id]) => id),
-  ) as Record<string, string>;
-  const onChange = (labels: string[], extra: Record<string, string> = {}) => {
-    const { byLang, ids } = choiceByLanguage(labels, language, thesaurus?.values ?? null, corpus, {
-      ...knownIds,
-      ...extra,
-    });
+  const chosen = fieldKeys(field, thesaurus?.values ?? null, corpus, language);
+  const onChange = (keys: string[], values: ThesaurusValue[] | null = thesaurus?.values ?? null) => {
+    const { byLang, ids } = labelsForKeys(keys, values, corpus);
     onChoice(byLang, ids);
   };
-  const choose = (label: string) =>
-    onChange(multiple ? (chosen.includes(label) ? chosen.filter((l) => l !== label) : [...chosen, label]) : [label]);
+  const choose = (key: string) =>
+    onChange(multiple ? (chosen.includes(key) ? chosen.filter((k) => k !== key) : [...chosen, key]) : [key]);
 
   const quiet =
     "text-meta font-medium text-ink-tertiary hover:text-ink-secondary transition-colors cursor-pointer";
@@ -1359,10 +1357,13 @@ function ThesaurusFieldEditor({
         fresh={fresh}
         templateName={getEntityType(typeId)?.name}
         onCreateThesaurus={(name, labels) => {
-          createThesaurus({ corpus, name, labels, bind: { typeId, propertyId: field.id } });
-          if (labels.length) {
-            onChange(multiple ? labels : [labels[0]]);
-            onFresh(labels);
+          const id = createThesaurus({ corpus, name, labels, bind: { typeId, propertyId: field.id } });
+          // The new values' ids, read back from the store it was written to.
+          const values = store.get(thesauriAtom(corpus)).find((t) => t.id === id)?.values ?? [];
+          const keys = values.map((v) => v.id);
+          if (keys.length) {
+            onChange(multiple ? keys : [keys[0]], values);
+            onFresh(keys);
           }
         }}
       />
@@ -1373,18 +1374,22 @@ function ThesaurusFieldEditor({
           existing={selectableLabels(shown ?? [])}
           onClose={() => setAdding(false)}
           onSave={(label) => {
-            // A label the reader's language already shows is that value: pick
-            // it rather than adding a second one in another language.
-            const shownMatch = selectableLabels(shown ?? []).find((l) => foldLabel(l) === foldLabel(label));
-            let pick = shownMatch;
-            let extra: Record<string, string> = {};
-            if (!pick) {
+            // A label the reader's language already shows IS that value.
+            let key = fieldKeys(
+              { type: "select", value: selectableLabels(shown ?? []).find((l) => foldLabel(l) === foldLabel(label)) ?? "" },
+              thesaurus.values,
+              corpus,
+              language,
+            )[0];
+            let values = thesaurus.values;
+            if (!key) {
               const saved = addValue({ corpus, thesaurusId: thesaurus.id, label });
-              pick = saved.label;
-              if (saved.id) extra = { [saved.label]: saved.id };
-              if (!selectableLabels(thesaurus.values).includes(saved.label)) onFresh([saved.label]);
+              key = saved.id ?? pseudoKey(saved.label);
+              values = store.get(thesauriAtom(corpus)).find((t) => t.id === thesaurus.id)?.values ?? values;
+              if (!thesaurus.values.some((v) => v.id === saved.id || v.values?.some((c) => c.id === saved.id)))
+                onFresh([key]);
             }
-            if (!chosen.includes(pick)) onChange(multiple ? [...chosen, pick] : [pick], extra);
+            if (!chosen.includes(key)) onChange(multiple ? [...chosen, key] : [key], values);
             setAdding(false);
           }}
         />

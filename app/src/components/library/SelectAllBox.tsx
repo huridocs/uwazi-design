@@ -37,7 +37,7 @@ export function SelectAllBox({ loadedIds, disabled = false }: { loadedIds: reado
   }, [mixed]);
 
   return (
-    <Hint text={`Select all loaded. ${MOD} or Shift + click selects several.`} describe={false}>
+    <Hint text={`Select all loaded. ${MOD} or Shift + click selects several; on touch, long-press.`} describe={false}>
       {(hint) => (
         <span {...hint} className="inline-flex items-center">
           <input

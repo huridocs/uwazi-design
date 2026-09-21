@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import { FacetSection } from "../shared/FacetSection";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { WARM_BUTTON } from "../shared/warmButton";
-import { foldLabel } from "../../atoms/thesauri";
+import { foldLabel, isPseudoKey } from "../../atoms/thesauri";
 import type { ThesaurusValue } from "../../data/settings";
 
 /** The editor for a `select` / `multiselect` property: the thesaurus's values
@@ -29,13 +29,14 @@ export interface ThesaurusPickerProps {
   /** The thesaurus's values; `null` when the property has no thesaurus. */
   values: ThesaurusValue[] | null;
   multiple: boolean;
+  /** Keys (value ids, or `label:` pseudo-keys) of the chosen values. */
   chosen: string[];
-  /** Labels some of the edited entities hold and others don't (bulk). */
+  /** Keys some of the edited entities hold and others don't (bulk). */
   mixed?: string[];
   /** Bulk coverage: how many of `of` entities hold each label. */
   coverage?: { counts: Record<string, number>; of: number };
-  onToggle: (label: string) => void;
-  /** Labels created in this edit, tagged "New". */
+  onToggle: (key: string) => void;
+  /** Keys of values created in this edit, tagged "New". */
   fresh?: ReadonlySet<string>;
   /** The empty state's "Create thesaurus" — a property bound to nothing. Absent
    *  = no way to create one here. */
@@ -68,30 +69,44 @@ export function ThesaurusPicker({
   // out from under the pointer. Values created while it is open join the top.
   const [pinned] = useState(() => new Set([...chosen, ...mixed]));
 
-  // Rows keyed by LABEL: that is what the records store (see utils/thesauri).
+  // Rows keyed by VALUE ID (a pseudo-key for a label the thesaurus doesn't
+  // hold — see atoms/thesauri), so two values that share a label stay two.
   const { entries, groupOf, display } = useMemo(() => {
     const held = new Set([...chosen, ...mixed]);
     const chosenSet = new Set([...pinned, ...(fresh ?? [])]);
     const parent = new Map<string, string>();
+    const labelOf = new Map<string, string>();
     const all: string[] = [];
     for (const v of values ?? []) {
-      if (v.values) for (const c of v.values) {
-        parent.set(c.label, v.label);
-        all.push(c.label);
+      if (v.values)
+        for (const c of v.values) {
+          parent.set(c.id, v.label);
+          labelOf.set(c.id, c.label);
+          all.push(c.id);
+        }
+      else {
+        labelOf.set(v.id, v.label);
+        all.push(v.id);
       }
-      else all.push(v.label);
     }
+    // A label two values share is shown with its group, in every row.
+    const seen = new Map<string, number>();
+    for (const l of labelOf.values()) seen.set(l, (seen.get(l) ?? 0) + 1);
     const known = new Set(all);
-    // A held label the thesaurus doesn't list is shown wherever it came from.
-    const extra = [...new Set([...chosenSet, ...held])].filter((l) => !known.has(l));
-    const top = [...extra, ...all.filter((l) => chosenSet.has(l))];
-    const rest = all.filter((l) => !chosenSet.has(l));
-    const entries = [...top, ...rest].map((l) => [l, coverage?.counts[l] ?? 0] as [string, number]);
+    // A held key the list doesn't have is shown wherever it came from.
+    // Only what is HELD now: a pinned key the field no longer holds (a free
+    // label replaced by a new thesaurus's value) must not linger as a row.
+    const extra = [...held].filter((k) => !known.has(k));
+    const top = [...extra, ...all.filter((k) => chosenSet.has(k))];
+    const rest = all.filter((k) => !chosenSet.has(k));
+    const entries = [...top, ...rest].map((k) => [k, coverage?.counts[k] ?? 0] as [string, number]);
+    const text = (k: string) => labelOf.get(k) ?? (isPseudoKey(k) ? k.slice(6) : k);
     return {
       entries,
       // A chosen child floats to the top ungrouped, carrying its group in its label.
-      groupOf: (l: string) => (chosenSet.has(l) ? undefined : parent.get(l)),
-      display: (l: string) => (chosenSet.has(l) && parent.get(l) ? `${parent.get(l)} › ${l}` : l),
+      groupOf: (k: string) => (chosenSet.has(k) ? undefined : parent.get(k)),
+      display: (k: string) =>
+        (chosenSet.has(k) || (seen.get(text(k)) ?? 0) > 1) && parent.get(k) ? `${parent.get(k)} › ${text(k)}` : text(k),
     };
   }, [values, chosen, mixed, coverage, pinned, fresh]);
 

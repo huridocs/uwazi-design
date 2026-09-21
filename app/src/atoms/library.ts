@@ -834,7 +834,28 @@ export const defaultSortDir = (key: LibrarySort): LibrarySortDir =>
  *  every facet and the open preview have to go with it — this lives in an atom
  *  (not in the view) because the collection picker now sits in the navbar, and
  *  two call-sites clearing "most of" the facets would drift. */
-export const selectDataSourceAtom = atom(null, (_get, set, source: DataSource) => {
+export const selectDataSourceAtom = atom(null, (get, set, source: DataSource) =>
+  // The WHOLE switch is guarded, not just its selection clear: held
+  // half-way, "Keep editing" left the new collection on screen with the old
+  // one's selection and bulk form still up (and a Delete from there filed old
+  // ids under the new corpus).
+  whenBulkClean(get, set, () => switchDataSource(set, source)),
+);
+
+/** Run `run` now, or — while the bulk form holds changes — behind the
+ *  discard-confirm, closing the form first on Discard. */
+export function whenBulkClean(get: Getter, set: Setter, run: () => void) {
+  if (!get(bulkEditDirtyAtom)) return run();
+  set(guardNavigationAtom, () => {
+    set(libraryBulkEditOpenAtom, false);
+    run();
+  });
+}
+
+/** `whenBulkClean`, for callers outside an atom (the selection's Delete). */
+export const whenBulkCleanAtom = atom(null, (get, set, run: () => void) => whenBulkClean(get, set, run));
+
+function switchDataSource(set: Setter, source: DataSource) {
   set(dataSourceAtom, source);
   set(libraryTypeFiltersAtom, {});
   set(libraryCountryFiltersAtom, {});
@@ -848,7 +869,7 @@ export const selectDataSourceAtom = atom(null, (_get, set, source: DataSource) =
   set(librarySelectedClusterAtom, null);
   // A selection belongs to the collection it was made in.
   set(clearSelectionAtom);
-});
+}
 
 /** Clear every filter. ONE definition: the Filters panel and the view each had
  *  their own, and they had already drifted — the panel's forgot the search box,

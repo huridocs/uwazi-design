@@ -217,15 +217,24 @@ export const deleteThesaurusAtom = atom(null, (_get, set, { corpus, id }: { corp
 
 const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
 
-/** The thesaurus's values with labels in `lang`, where the corpus knows them. */
+/** The thesaurus's values with labels in `lang`, where the corpus knows them.
+ *  Cached per (list, language): every picker row and every entity a bulk
+ *  plan reads asks, and the list only changes when the store does. */
+const localizedCache = new WeakMap<ThesaurusValue[], Map<Language, ThesaurusValue[]>>();
 export function localizeValues(values: ThesaurusValue[], corpus: Corpus, lang: Language): ThesaurusValue[] {
   if (corpus !== "cejil") return values;
+  let byLang = localizedCache.get(values);
+  const hit = byLang?.get(lang);
+  if (hit) return hit;
   const map = cejilValueLabels(lang);
   if (!map.size) return values;
   const tr = (v: { id: string; label: string }) => map.get(v.id) ?? v.label;
-  return values.map((v) =>
+  const out = values.map((v) =>
     v.values ? { ...v, label: tr(v), values: v.values.map((c) => ({ ...c, label: tr(c) })) } : { ...v, label: tr(v) },
   );
+  if (!byLang) localizedCache.set(values, (byLang = new Map()));
+  byLang.set(lang, out);
+  return out;
 }
 
 /** id → label, for every selectable value in a list. */
@@ -238,26 +247,47 @@ function labelIndex(values: ThesaurusValue[]): Map<string, string> {
   return m;
 }
 
-/** A choice made in `lang`, as labels in every language. `labels` are the
- *  chosen rows as the form showed them; `knownIds` are ids the record already
- *  held for labels the thesaurus list can't place (a label outside it keeps
- *  its id, or is written as it is). Returns the ids beside the labels. */
-export function choiceByLanguage(
-  labels: string[],
-  lang: Language,
+/* ── Keys ─────────────────────────────────────────────────────────────────
+   A chosen value is addressed by its thesaurus VALUE ID, never by its label:
+   two values can share a label ("Otros" under two groups), and a label is
+   one language's. A label the thesaurus doesn't hold (free text from before
+   a thesaurus was bound, a value of a deleted thesaurus) gets a pseudo-key,
+   "label:<text>", and is written back as it is. */
+export const pseudoKey = (label: string) => `label:${label}`;
+export const isPseudoKey = (key: string) => key.startsWith("label:");
+
+/** The keys of the values a select / multiselect field holds, in `lang`. Ids
+ *  the record stores win; a label without one is placed by the FIRST value
+ *  carrying it in that language (the Sample stores labels only). */
+export function fieldKeys(
+  f: { type: string; value: string; values?: string[]; valueIds?: string[] },
   thesaurus: ThesaurusValue[] | null,
   corpus: Corpus,
-  knownIds: Record<string, string> = {},
+  lang: Language,
+): string[] {
+  const labels = f.values ?? (f.value ? [f.value] : []);
+  const first = new Map<string, string>();
+  if (thesaurus)
+    for (const [id, label] of labelIndex(localizeValues(thesaurus, corpus, lang)))
+      if (!first.has(label)) first.set(label, id);
+  return labels.map((l, i) => f.valueIds?.[i] || first.get(l) || pseudoKey(l));
+}
+
+/** A key's label in `lang`. */
+export function labelForKey(key: string, thesaurus: ThesaurusValue[] | null, corpus: Corpus, lang: Language): string {
+  if (isPseudoKey(key)) return key.slice(6);
+  const local = thesaurus ? labelIndex(localizeValues(thesaurus, corpus, lang)).get(key) : undefined;
+  return local ?? (corpus === "cejil" ? cejilValueLabels(lang).get(key) : undefined) ?? key;
+}
+
+/** Keys as labels in every language, and the ids to store beside them. */
+export function labelsForKeys(
+  keys: string[],
+  thesaurus: ThesaurusValue[] | null,
+  corpus: Corpus,
 ): { byLang: Record<Language, string[]>; ids: (string | null)[] } {
-  const shown = labelIndex(thesaurus ? localizeValues(thesaurus, corpus, lang) : []);
-  const idOf = new Map([...shown].map(([id, l]) => [l, id]));
-  const ids = labels.map((l) => idOf.get(l) ?? knownIds[l] ?? null);
   const byLang = Object.fromEntries(
-    LANGS.map((l) => {
-      const index = labelIndex(thesaurus ? localizeValues(thesaurus, corpus, l) : []);
-      const tr = corpus === "cejil" ? cejilValueLabels(l) : undefined;
-      return [l, labels.map((label, i) => (ids[i] ? index.get(ids[i]!) ?? tr?.get(ids[i]!) ?? label : label))];
-    }),
+    LANGS.map((l) => [l, keys.map((k) => labelForKey(k, thesaurus, corpus, l))]),
   ) as Record<Language, string[]>;
-  return { byLang, ids };
+  return { byLang, ids: keys.map((k) => (isPseudoKey(k) ? null : k)) };
 }

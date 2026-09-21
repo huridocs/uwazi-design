@@ -59,6 +59,10 @@ interface DataTableProps<T> {
    *  primary action's cell, so it costs no grid track. The Library puts its
    *  visually hidden selection checkbox here. Clickable rows only. */
   rowAccessory?: (row: T) => ReactNode;
+  /** How `isRowSelected` shows: a parchment fill (default), or an ink hairline
+   *  — for a table whose fill already means something else (the Library,
+   *  where parchment is the multi-selection and this is the preview). */
+  selectedStyle?: "fill" | "outline";
 }
 
 const alignClass = {
@@ -89,6 +93,7 @@ export function DataTable<T>({
   rowAriaLabel,
   density = "comfortable",
   rowAccessory,
+  selectedStyle = "fill",
 }: DataTableProps<T>) {
   const gridTemplateColumns = columns.map((c) => c.width ?? "1fr").join(" ");
   const box = DENSITY[density];
@@ -187,10 +192,20 @@ export function DataTable<T>({
                     onMouseDown={onRowClick ? (e) => e.shiftKey && e.preventDefault() : undefined}
                     className={`group relative grid items-center gap-3 px-4 ${box.row} text-sm transition-colors ${
                       clickable ? "cursor-pointer" : ""
-                    } ${selected ? "bg-parchment" : "hover:bg-warm"}
+                    } ${
+                      selected
+                        ? selectedStyle === "outline"
+                          ? "shadow-[inset_0_0_0_1px_var(--text-primary)] hover:bg-warm"
+                          : "bg-parchment"
+                        : "hover:bg-warm"
+                    }
                       has-[[data-part=select]_input:checked]:bg-parchment
                       has-[[data-part=select]_input:focus-visible]:ring-2 has-[[data-part=select]_input:focus-visible]:ring-inset
-                      has-[[data-part=select]_input:focus-visible]:ring-carbon/30 ${extraClass ?? ""}`}
+                      has-[[data-part=select]_input:focus-visible]:ring-carbon/30
+                      forced-colors:has-[[data-part=select]_input:checked]:outline-2 forced-colors:has-[[data-part=select]_input:checked]:-outline-offset-2
+                      forced-colors:has-[[data-part=select]_input:checked]:outline-[SelectedItem]
+                      forced-colors:has-[[data-part=select]_input:focus-visible]:outline-dashed forced-colors:has-[[data-part=select]_input:focus-visible]:outline-2
+                      forced-colors:has-[[data-part=select]_input:focus-visible]:-outline-offset-4 forced-colors:has-[[data-part=select]_input:focus-visible]:outline-[Highlight] ${extraClass ?? ""}`}
                     style={{ gridTemplateColumns, borderBottom: "1px solid var(--border-primary)", ...extraStyle }}
                   >
                     {/* The row itself is not focusable (a focusable row wrapping

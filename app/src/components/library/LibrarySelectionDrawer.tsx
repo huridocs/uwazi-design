@@ -58,14 +58,10 @@ export function LibrarySelectionDrawer({
   const actions = useSelectionActions({ order: ids, corpus });
   const editAction = actions.find((a) => a.id === "edit")!;
   // The bulk form edits the set FROZEN when it opened (see
-  // `libraryBulkEditIdsAtom`), in the order the list shows it.
+  // `libraryBulkEditIdsAtom`) — passed as that array itself, so its identity
+  // changes only when the set does and the form's field and value summaries
+  // aren't recomputed each time the list beside it grows.
   const frozen = useAtomValue(libraryBulkEditIdsAtom);
-  const selected = useMemo(() => {
-    const has = new Set(frozen);
-    const ordered = ids.filter((id) => has.has(id));
-    const seen = new Set(ordered);
-    return [...ordered, ...frozen.filter((id) => !seen.has(id))];
-  }, [ids, frozen]);
 
   // Down to one: the bulk form has ended (the list shows), and it does not
   // reopen by itself when a second entity is ticked.
@@ -74,7 +70,7 @@ export function LibrarySelectionDrawer({
     if (bulkEdit && selection.size < 2) endBulk(false);
   }, [bulkEdit, selection.size, endBulk]);
 
-  if (bulkEdit && selection.size >= 2) return <LibraryBulkEditDrawer ids={selected} />;
+  if (bulkEdit && selection.size >= 2) return <LibraryBulkEditDrawer ids={frozen} />;
 
   return (
     <EntityListDrawer

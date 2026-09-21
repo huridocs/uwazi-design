@@ -38,16 +38,16 @@ export const AllStates: Story = {
         <input id="story-bulk-b" className={input} placeholder="Mixed" />
       </BulkFieldRow>
       <BulkFieldRow label="Status" state="changed" onRevert={() => {}}>
-        <ThesaurusPicker label="Status" values={seedThesaurusValues.t3} multiple={false} chosen={["Archived"]} onToggle={() => {}} />
+        <ThesaurusPicker label="Status" values={seedThesaurusValues.t3} multiple={false} chosen={["t3-5"]} onToggle={() => {}} />
       </BulkFieldRow>
       <BulkFieldRow label="Legal instruments" state="mixed" onRevert={() => {}}>
         <ThesaurusPicker
           label="Legal instruments"
           values={seedThesaurusValues.t2}
           multiple
-          chosen={["American Convention on Human Rights"]}
-          mixed={["ICCPR"]}
-          coverage={{ counts: { "American Convention on Human Rights": 12, ICCPR: 4 }, of: 12 }}
+          chosen={["t2-1"]}
+          mixed={["t2-4"]}
+          coverage={{ counts: { "t2-1": 12, "t2-4": 4 }, of: 12 }}
           onToggle={() => {}}
         />
       </BulkFieldRow>
