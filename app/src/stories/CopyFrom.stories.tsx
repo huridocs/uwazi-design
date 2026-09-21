@@ -3,13 +3,12 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { CopyFieldRow } from "../components/metadata/CopyFieldRow";
 import { CopyFromPicker } from "../components/metadata/CopyFromPicker";
 import { entities } from "../data/entities";
-import { CopyPreviewSection } from "../components/metadata/CopyPreviewSection";
-import type { CopyMatch, CopyPlan } from "../utils/copyFrom";
+import { copyUnitsOneToOne, type CopyMatch } from "../utils/copyFrom";
 
-/** Copy From stages metadata off another entity into an open edit form. Two
- *  pieces carry the interaction: the preview (what would and would NOT come
- *  across, with a reason for every rejection) and the per-field row (incoming
- *  beside current, individually deselectable). Neither writes anything. */
+/** Copy From writes metadata off another entity into an open edit form (never
+ *  saves). One modal carries it in two steps: pick a source, then pick its
+ *  properties — each a row of incoming beside current, deselectable, with the
+ *  ones that won't copy listed with their reason. */
 const meta = {
   title: "Metadata/CopyFrom",
   parameters: { layout: "padded" },
@@ -17,6 +16,10 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+const countries = entities.filter((e) => e.typeId === "country");
+const countryA = countries[0] ?? entities[0];
+const countryB = countries[1] ?? entities[1];
 
 const match = (over: Partial<CopyMatch> = {}): CopyMatch => ({
   id: "region",
@@ -100,59 +103,6 @@ export const AllStates: Story = {
   ),
 };
 
-const plan = (over: Partial<CopyPlan> = {}): CopyPlan => ({
-  matches: [match(), match({ id: "b", label: "Ratified" })],
-  skipped: [
-    {
-      id: "portrait",
-      label: "Attachments",
-      reason: "excluded-type",
-      detail: "Files belong to the entity that holds them.",
-      side: "both",
-    },
-    {
-      id: "category",
-      label: "Category",
-      reason: "different-thesaurus",
-      detail: "Both define Category, but they point at different vocabularies.",
-      side: "both",
-    },
-    {
-      id: "signed",
-      label: "Signed by",
-      reason: "different-inherit-spec",
-      detail: "This one inherits Country; the field you are editing inherits Role.",
-      side: "both",
-    },
-  ],
-  matchCount: 2,
-  ...over,
-});
-
-/** The preview: matches marked, near-misses greyed with the reason they were
- *  refused — the half Uwazi's version leaves blank. */
-export const Preview: Story = {
-  render: () => (
-    <div className="max-w-md">
-      <CopyPreviewSection plan={plan()} onUse={() => {}} onBack={() => {}} />
-    </div>
-  ),
-};
-
-/** A source with nothing to give still explains itself rather than showing an
- *  empty panel. */
-export const Empty: Story = {
-  render: () => (
-    <div className="max-w-md">
-      <CopyPreviewSection
-        plan={plan({ matches: [], matchCount: 0 })}
-        onUse={() => {}}
-        onBack={() => {}}
-      />
-    </div>
-  ),
-};
-
 /** The source picker.
  *
  *  Two things here answer Uwazi's version directly. It defaults to the target's
@@ -169,8 +119,27 @@ export const Picker: Story = {
   render: () => (
     <div className="relative h-[26rem] w-full max-w-2xl overflow-hidden rounded-lg bg-vellum">
       <CopyFromPicker
-        target={entities.find((e) => e.typeId === "country") ?? entities[0]}
-        onPreview={() => {}}
+        target={countryA}
+        resolveUnits={copyUnitsOneToOne}
+        onCopy={() => {}}
+        onClose={() => {}}
+      />
+    </div>
+  ),
+};
+
+/** Step 2, in the same panel at the same size: the chosen source's identity and
+ *  Back, the matched properties as ticked rows (current struck, incoming beside
+ *  it; a copy that would CLEAR a value starts unticked), select all/none, the
+ *  properties that won't copy listed with the reason, and "Copy N properties". */
+export const Properties: Story = {
+  render: () => (
+    <div className="relative h-[34rem] w-full max-w-2xl overflow-hidden rounded-lg bg-vellum">
+      <CopyFromPicker
+        target={countryA}
+        initialSource={countryB}
+        resolveUnits={copyUnitsOneToOne}
+        onCopy={() => {}}
         onClose={() => {}}
       />
     </div>

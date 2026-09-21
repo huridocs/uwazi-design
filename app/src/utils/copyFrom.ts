@@ -146,6 +146,34 @@ export interface CopyPlan {
   matchCount: number;
 }
 
+/** One thing a copy can actually do to a FORM: a scalar the form has a
+ *  controlled editor for, or a whole connection. What a form can apply is the
+ *  form's rule (see `MetadataEditBody`'s `copyUnitsFor`); this is the shape it
+ *  hands the picker, so the list the user ticks is exactly what will be written. */
+export interface CopyUnit {
+  /** The field id for a value; the connection def key for a connection — so
+   *  multi-inheritance siblings collapse into a single decision. */
+  key: string;
+  kind: "value" | "connection";
+  /** The form's label for the thing being overwritten (a connection's title,
+   *  not one of its inherited columns). */
+  label: string;
+  /** The match the row compares — for a grouped connection, the first sibling;
+   *  they all carry the same `connectedEntityIds`, which is what copies. */
+  row: CopyMatch;
+  /** Every match folded into this unit. */
+  matches: CopyMatch[];
+}
+
+/** A plan's matches as units one-to-one — for a host with no form rules of its
+ *  own (the catalog demo, stories). */
+export function copyUnitsOneToOne(plan: CopyPlan): { units: CopyUnit[]; unstageable: CopyMatch[] } {
+  return {
+    units: plan.matches.map((m) => ({ key: m.id, kind: m.copies, label: m.label, row: m, matches: [m] })),
+    unstageable: [],
+  };
+}
+
 /** Our `media`/`image` equivalent — see the header — and, now that the record
  *  carries one, `media` itself: another entity's recording is never this
  *  entity's. Exported so a UI can explain the exclusion without hardcoding the
