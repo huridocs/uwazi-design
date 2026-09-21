@@ -14,6 +14,7 @@ import { languageAtom } from "../../atoms/language";
 import { EntityTypeTag } from "../shared/EntityTypeTag";
 import { HighlightedText } from "../shared/HighlightedText";
 import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
+import { EntitySelectBox } from "./EntitySelectBox";
 import { EntityThumbnail, QuietMark } from "./EntityThumbnail";
 import { CardValue, ownsItsRemainder } from "./CardValue";
 import { LIBRARY_SORTS } from "../../data/libraryDisplay";
@@ -154,6 +155,8 @@ export const EntityCard = memo(function EntityCard({
   onFocusProperty,
   onOpenImage,
   metadataTrack = true,
+  selectable = false,
+  className = "",
   as: Root = "article",
 }: {
   entity: Entity;
@@ -167,8 +170,17 @@ export const EntityCard = memo(function EntityCard({
   query: string;
   selected: boolean;
   connections?: number;
-  onSelect: (id: string) => void;
+  /** The card's own click — a preview, or (with Cmd/Ctrl or Shift held) a
+   *  selection gesture: the event is passed up so the host can tell. */
+  onSelect: (id: string, e?: React.MouseEvent) => void;
   onView: (id: string) => void;
+  /** Draw the multi-selection checkbox (`EntitySelectBox`) in its reserved
+   *  slot. Hosts that don't offer bulk actions (the template preview) leave
+   *  it off. */
+  selectable?: boolean;
+  /** Extra classes on the card's own element (the selection drawer dims a
+   *  row that was unticked). */
+  className?: string;
   /** Open the entity in the drawer WITH one property focused — the record
    *  scrolls to it and flashes it. Optional: the layouts that don't offer a
    *  property trigger simply don't pass it. */
@@ -276,7 +288,12 @@ export const EntityCard = memo(function EntityCard({
 
   const base =
     "group relative text-start rounded-md border transition-colors cursor-pointer";
-  const surface = selected ? "bg-parchment border-border" : "bg-paper border-border/60 hover:bg-parchment";
+  // Previewed OR ticked is bg-parchment — the same ground, one rule; the
+  // checkbox is what tells them apart. The ticked case is CSS off the checkbox
+  // itself, so a tick re-renders nothing but the box.
+  const surface = `${selected ? "bg-parchment border-border" : "bg-paper border-border/60 hover:bg-parchment"}
+    has-[[data-part=select]_input:checked]:bg-parchment has-[[data-part=select]_input:checked]:border-border`;
+  const selectBox = selectable ? <EntitySelectBox id={entity.id} title={entity.title} /> : null;
 
   // The card container is NOT a button — it hosts nested controls (Open,
   // connection badge), so a stretched invisible primary-action button carries
@@ -286,10 +303,10 @@ export const EntityCard = memo(function EntityCard({
     <button
       type="button"
       aria-pressed={selected}
-      aria-label={`Select ${entity.title}`}
+      aria-label={`Preview ${entity.title}`}
       onClick={(e) => {
         e.stopPropagation();
-        onSelect(entity.id);
+        onSelect(entity.id, e);
       }}
       data-part="primary-action"
       className="absolute inset-0 w-full cursor-pointer rounded-[inherit] focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"
@@ -308,11 +325,12 @@ export const EntityCard = memo(function EntityCard({
       <Root
         data-component="EntityCard"
         data-layout="list"
-        onClick={() => onSelect(entity.id)}
-        className={`${base} ${surface} w-full`}
+        onClick={(e) => onSelect(entity.id, e)}
+        className={`${base} ${surface} w-full ${className}`}
       >
         {primaryAction}
         <div className="relative px-3 py-2 flex items-center gap-3">
+          {selectBox}
           {showPreview &&
             (entity.preview ? (
               <EntityThumbnail
@@ -396,10 +414,15 @@ export const EntityCard = memo(function EntityCard({
     <Root
       data-component="EntityCard"
       data-layout="cards"
-      onClick={() => onSelect(entity.id)}
+      onClick={(e) => onSelect(entity.id, e)}
       className={`${base} ${surface} ${minHeight} grid grid-rows-subgrid ${ROW_SPAN[rowCount]} gap-y-2.5 p-3`}
     >
       {primaryAction}
+      {/* With no preview slot to sit on, the box takes the card's top-end
+          corner, and the title reserves its width below. */}
+      {selectBox && !showPreview && (
+        <span className="absolute top-3 end-3 z-[1] flex">{selectBox}</span>
+      )}
       {/* The preview slot is ALWAYS filled when previews are on: an entity with
           no thumbnail gets a quiet vellum well carrying its type colour (the
           same idiom the list layout uses). Rendering the thumbnail only when one
@@ -411,6 +434,12 @@ export const EntityCard = memo(function EntityCard({
           slots and pictures agree on both height and position. */}
       {showPreview && (
         <span data-part="preview" className={`relative min-w-0 shrink-0 w-full ${slotShape}`}>
+          {/* The box overlays the slot's top-start corner on a paper plate —
+              the slot is a definite box with or without a picture, so the box
+              sits at the same place on every card and takes no room. */}
+          {selectBox && (
+            <span className="absolute top-2 start-2 z-[1] flex p-1 rounded-sm bg-paper">{selectBox}</span>
+          )}
           {entity.preview ? (
             enlargeable ? (
               /* The picture opens full size, WITHOUT becoming the card's main
@@ -496,8 +525,8 @@ export const EntityCard = memo(function EntityCard({
           thing holding a row level. */}
       <span
         data-part="title"
-        className="relative min-w-0 text-sm font-semibold text-ink leading-snug line-clamp-2
-          not-supports-[grid-template-rows:subgrid]:min-h-[2.375rem]"
+        className={`relative min-w-0 text-sm font-semibold text-ink leading-snug line-clamp-2
+          not-supports-[grid-template-rows:subgrid]:min-h-[2.375rem] ${selectBox && !showPreview ? "pe-6" : ""}`}
       >
         <span
           className={sortMark(sort === "title")}

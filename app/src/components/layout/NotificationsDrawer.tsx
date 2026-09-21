@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   X,
   Check,
@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   Info,
   ChevronDown,
+  Undo2,
 } from "lucide-react";
 import {
   notificationsAtom,
@@ -20,7 +21,9 @@ import {
   type Activity,
   type Notification,
   type NotificationKind,
+  type NotificationAction,
 } from "../../atoms/notifications";
+import { undoAtom, undoSnapshotAtom } from "../../atoms/entityOverlay";
 import { UwaziLoader } from "../shared/UwaziLoader";
 import { SectionLabel } from "../shared/SectionLabel";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
@@ -417,6 +420,7 @@ function NotifCard({
           <div className="mt-1.5 flex items-center gap-2">
             <time data-part="time" dateTime={new Date(n.time).toISOString()} className="text-meta text-ink-tertiary">{fmtTime(n.time, now)}</time>
             <div className="ms-auto flex items-center gap-1">
+              {n.action && <NotifAction action={n.action} />}
               {n.kind === "error" && (
                 <button
                   type="button"
@@ -450,5 +454,31 @@ function NotifCard({
         </div>
       </div>
     </article>
+  );
+}
+
+/** A notification's action (today: Undo). Stays mounted once the change it
+ *  undoes has been replaced — disabled, saying why — so the card doesn't
+ *  change shape under the reader. */
+function NotifAction({ action }: { action: NotificationAction }) {
+  const snapshot = useAtomValue(undoSnapshotAtom);
+  const undo = useSetAtom(undoAtom);
+  const live = snapshot?.ref === action.ref;
+  return (
+    <button
+      type="button"
+      data-part="action"
+      aria-disabled={!live || undefined}
+      title={live ? undefined : "A later change replaced this undo"}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (live) undo(action.ref);
+      }}
+      className={`flex items-center gap-1 px-2 h-6 text-meta font-medium text-ink-secondary bg-paper/70 border border-border-soft rounded-md transition-colors ${
+        live ? "hover:bg-paper cursor-pointer" : "opacity-50 cursor-not-allowed"
+      }`}
+    >
+      <Undo2 size={11} aria-hidden /> {action.label}
+    </button>
   );
 }

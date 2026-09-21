@@ -40,6 +40,32 @@ export const libraryEntityOverlayAtom = atom(
   },
 );
 
+/* ── Undo ───────────────────────────────────────────────────────────────
+   ONE level: the overlay as it was before the last undoable change, under a
+   ref the change's notification carries. The next undoable change replaces
+   it, and the older notification's Undo goes disabled. Undo writes the
+   snapshot back — the overlay is immutable, so that is the whole of it. */
+export const undoSnapshotAtom = atom<{ ref: string; overlay: EntityOverlay } | null>(null);
+
+let undoSeq = 0;
+/** Keep the overlay as it is now, for the change about to be made. Returns
+ *  the ref its notification's Undo names. */
+export const snapshotForUndoAtom = atom(null, (get, set): string => {
+  undoSeq += 1;
+  const ref = `undo-${Date.now().toString(36)}-${undoSeq}`;
+  set(undoSnapshotAtom, { ref, overlay: get(overlayValueAtom) });
+  return ref;
+});
+
+/** Undo the change `ref` names — only while it is still the latest. */
+export const undoAtom = atom(null, (get, set, ref: string): boolean => {
+  const snap = get(undoSnapshotAtom);
+  if (!snap || snap.ref !== ref) return false;
+  set(libraryEntityOverlayAtom, snap.overlay);
+  set(undoSnapshotAtom, null);
+  return true;
+});
+
 /** Change one corpus's overlay, leaving the others as they are. */
 function updateCorpus(
   prev: EntityOverlay,

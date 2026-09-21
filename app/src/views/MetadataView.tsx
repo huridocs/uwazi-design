@@ -34,7 +34,8 @@ import {
   type RelationshipMetadataField,
 } from "../data/metadata";
 import { focusedEntityIdAtom } from "../atoms/focusedEntity";
-import { getEntity, type Entity } from "../data/entities";
+import { entityCorpusOf, getEntity, type Entity } from "../data/entities";
+import { corpusTypes } from "../atoms/dataSource";
 import { entityTypesAtom } from "../atoms/entities";
 import { typeLabelColor } from "../utils/typeColor";
 import { getEntityProfile } from "../data/entityProfiles";
@@ -1247,7 +1248,11 @@ function TemplatePicker({
   value: string;
   onChange: (id: string) => void;
 }) {
-  const types = useAtomValue(entityTypesAtom);
+  // The EDITED entity's corpus, not the Sample list: a CEJIL record's
+  // template is a CEJIL template, and the Sample list made every CEJIL form
+  // open on "Select template…".
+  const focusedId = useAtomValue(focusedEntityIdAtom);
+  const types = corpusTypes(entityCorpusOf(focusedId), useAtomValue(entityTypesAtom));
   const [open, setOpen] = useState(false);
   const current = types.find((t) => t.id === value);
 
