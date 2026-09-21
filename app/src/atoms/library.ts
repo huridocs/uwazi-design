@@ -414,6 +414,9 @@ export const libraryFieldLabelsAtom = atom((get) =>
 /** Set by the Library toolbar from its own width: true while the Sort select
  *  has no room in the row (see the masthead fold in `LibraryView`). */
 export const librarySortInMenuAtom = atom(false);
+/** The same, for the Language select: past the last fold it had nowhere to go
+ *  on a desktop pane, so the reading language was unreachable there. */
+export const libraryLanguageInMenuAtom = atom(false);
 
 export const libraryDisplayContextAtom = atom<DisplayContext>((get) => {
   const hasQuery = get(libraryQueryAtom).trim().length > 0;
@@ -421,6 +424,7 @@ export const libraryDisplayContextAtom = atom<DisplayContext>((get) => {
   return {
     isMobile,
     sortInMenu: isMobile || get(librarySortInMenuAtom),
+    languageInMenu: get(libraryLanguageInMenuAtom),
     hasQuery,
     listColumns: listColumnOptions({ hasQuery, fieldLabels: get(libraryFieldLabelsAtom) }),
   };
