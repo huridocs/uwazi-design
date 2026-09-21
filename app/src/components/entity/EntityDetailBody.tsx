@@ -20,6 +20,7 @@ import { DrawerFilesBody } from "../files/DrawerFilesBody";
 import { EntityMetadataSummary } from "../metadata/EntityMetadataSummary";
 import { MetadataEditBody } from "../../views/MetadataView";
 import { WARM_BUTTON } from "../shared/warmButton";
+import { editSessionOpenAtom } from "../../atoms/dirtyGuard";
 
 export interface EntityDetailBodyProps {
   entityId: string;
@@ -125,6 +126,8 @@ export function EntityDetailBody({
      It edits the FOCUSED entity, so it is offered only where this panel and the
      focus agree on which entity that is. */
   const [editing, setEditing] = useState(false);
+  // Any edit session anywhere, this panel's own included — see the footer.
+  const editSessionOpen = useAtomValue(editSessionOpenAtom);
 
   // A different entity is a different record: end the session rather than carry
   // one entity's unsaved edits into another's form. The registration tears down
@@ -256,9 +259,20 @@ export function EntityDetailBody({
             >
               Close
             </button>
+            {/* HIDDEN while any edit form is open — this panel over a Metadata
+                edit's "Source" row, a click-to-fill hunt, the drawer preview's
+                own edit: opening an entity navigates, and navigating discards
+                the form. Hidden, not disabled (a disabled route still reads as
+                one), and `invisible` rather than unmounted, so Close keeps its
+                x and the bar its height. Outside edit mode it is there. */}
             <button
               onClick={onOpen}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer"
+              aria-hidden={editSessionOpen || undefined}
+              tabIndex={editSessionOpen ? -1 : undefined}
+              data-part="open-entity"
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                editSessionOpen ? "invisible" : ""
+              }`}
               style={{ backgroundColor: "var(--text-primary)", color: "var(--bg-surface)" }}
             >
               {openLabel} <ArrowRight size={13} />

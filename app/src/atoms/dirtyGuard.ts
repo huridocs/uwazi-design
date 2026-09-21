@@ -38,6 +38,11 @@ export const unregisterDirtyFormAtom = atom(null, (get, set, id: string) => {
  *  drives the beforeunload listener in `UnsavedChangesGuard`. */
 export const dirtyFormAtom = atom((get) => get(dirtyFormsAtom).find((f) => f.isDirty) ?? null);
 
+/** Whether ANY edit session is mounted, dirty or not. Surfaces that can
+ *  navigate away (the entity panel's "Open entity") hide that route while one
+ *  is: leaving discards the form. */
+export const editSessionOpenAtom = atom((get) => get(dirtyFormsAtom).length > 0);
+
 /** A navigation held back by the guard, waiting on the user's verdict.
  *  Non-null = the confirm dialog is open. */
 export const pendingNavigationAtom = atom<{ label: string; run: () => void } | null>(null);
