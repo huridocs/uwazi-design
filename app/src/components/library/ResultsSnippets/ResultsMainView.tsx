@@ -8,6 +8,7 @@ import type { DataSource } from "../../../utils/libraryFacets";
 import {
   buildSnippetsFor,
   contextWordsFor,
+  evidenceBadge,
   MAX_FULLTEXT,
   type BorrowedDoc,
   type EntitySnippets,
@@ -492,7 +493,7 @@ function GroupedBody({
                 <HighlightedText text={entity.title} query={query} />
               </button>
               </h2>
-              <CountBadge count={snippets.count} />
+              <CountBadge {...evidenceBadge(snippets)} />
               <span data-part="facts" className="ms-auto shrink-0 flex items-center gap-2 text-meta text-ink-tertiary">
                 {type && <span>{type.name}</span>}
                 {entity.country && (
@@ -638,7 +639,8 @@ function TreeBody({
             title={entity.title}
             highlight={query}
             color={color}
-            count={snippets.count}
+            count={evidenceBadge(snippets).count}
+            countUnit={evidenceBadge(snippets).unit}
             standalone
             defaultExpanded
           >
@@ -863,9 +865,10 @@ function PassagesBody({
         // no PDF of its own quotes a connected document, and the corpus's
         // documents share six stand-in files, so the same page used to be
         // listed once per result — five identical rows in a list that ranks
-        // passages. Keyed on page + text, not on the document entity: the
-        // repeats come from DIFFERENT document entities serving the same file.
-        const key = `${s.page ?? "-"}|${s.text}`;
+        // passages. Keyed on `docKey` (the text a document resolves to), not
+        // on the document entity: the repeats come from DIFFERENT document
+        // entities serving the same file. A page-less corpus keys on the text.
+        const key = `${snippets.docKey ?? entity.id}|${s.page ?? s.text}`;
         const seen = byPassage.get(key);
         if (seen) {
           // A result reading its OWN document heads the row; otherwise the
@@ -1135,7 +1138,7 @@ function SpineBody({
               <span className="shrink-0 max-w-[18rem] truncate text-xs font-medium text-ink">
                 <HighlightedText text={entity.title} query={query} />
               </span>
-              <CountBadge count={snippets.count} />
+              <CountBadge {...evidenceBadge(snippets)} />
               {best && (
                 <span className="flex-1 min-w-0 truncate text-xs text-ink-secondary">
                   <HighlightedText text={best.text} query={query} />

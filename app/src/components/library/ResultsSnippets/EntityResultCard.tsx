@@ -1,6 +1,6 @@
 import type { Entity } from "../../../data/entities";
 import { getEntityType } from "../../../data/entities";
-import type { EntitySnippets } from "../../../utils/librarySnippets";
+import { evidenceBadge, type EntitySnippets } from "../../../utils/librarySnippets";
 import { RelationshipGroupedCard } from "../../relationships/RelationshipGroupedCard";
 import { HighlightedText } from "../../shared/HighlightedText";
 import { SectionLabel } from "../../shared/SectionLabel";
@@ -48,6 +48,7 @@ export function EntityResultCard({
   relevance,
 }: Props) {
   const color = getEntityType(entity.typeId)?.color ?? "#6B7280";
+  const badge = evidenceBadge(snippets);
   const hasMeta = snippets.metadata.length > 0;
   const hasFullText = snippets.fullText.length > 0;
   const shown = snippets.fullText.length;
@@ -64,7 +65,8 @@ export function EntityResultCard({
     <RelationshipGroupedCard
       title={entity.title}
       color={color}
-      count={snippets.count}
+      count={badge.count}
+      countUnit={badge.unit}
       standalone
       expanded={expanded}
       onToggle={onToggle}

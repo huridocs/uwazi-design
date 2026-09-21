@@ -49,10 +49,11 @@ export function DocumentSearchBody() {
 
   const snippets = useMemo(
     // `perPassage`: the results here are passages, so the query's AND / OR / NOT
-    // is judged per field and per page — see `buildSnippetsFor`.
+    // is judged per field and per page — see `buildSnippetsFor`. `order: "page"`:
+    // this tab reads through one document, so its hits stay in reading order.
     () =>
       entity && trimmed
-        ? buildSnippetsFor(entity, trimmed, language, source, { perPassage: true })
+        ? buildSnippetsFor(entity, trimmed, language, source, { perPassage: true, order: "page" })
         : null,
     [entity, trimmed, language, source],
   );

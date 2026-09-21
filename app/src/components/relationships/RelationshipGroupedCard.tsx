@@ -12,6 +12,8 @@ interface Props {
   highlight?: string;
   color?: string;
   count: number;
+  /** Printed after `count` in the badge — see `CountBadge`. */
+  countUnit?: string;
   defaultExpanded?: boolean;
   /** Reference IDs this group hosts. When a highlight is clicked in the document
    *  viewer, the corresponding group auto-expands. Leave empty for aggregate
@@ -38,6 +40,7 @@ export function RelationshipGroupedCard({
   highlight = "",
   color,
   count,
+  countUnit,
   defaultExpanded = false,
   refIdsToWatch,
   standalone = false,
@@ -93,7 +96,7 @@ export function RelationshipGroupedCard({
           <span data-part="title" className="text-sm font-medium text-ink truncate">
             <HighlightedText text={title} query={highlight} />
           </span>
-          <CountBadge count={count} />
+          <CountBadge count={count} unit={countUnit} />
         </button>
       </h3>
       {expanded && (

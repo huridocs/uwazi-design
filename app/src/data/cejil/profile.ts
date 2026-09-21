@@ -243,12 +243,18 @@ export interface BorrowedDoc {
  *  Both answers come off ONE `docFilesFor` walk on purpose: the fallback scans the
  *  entity's relationships, and a País hub has thousands of edges — asking twice is
  *  not free. */
-export function cejilRenderedDoc(sharedId: string): { pages: string[]; borrowedFrom: BorrowedDoc | null } {
+export function cejilRenderedDoc(sharedId: string): {
+  pages: string[];
+  borrowedFrom: BorrowedDoc | null;
+  /** The key the TEXT was resolved by — see `docKeyOf`. Null with no document. */
+  docKey: string | null;
+} {
   const { files, titleSid } = docFilesFor(sharedId);
   const primary = files[0];
-  if (!primary) return { pages: [], borrowedFrom: null };
+  if (!primary) return { pages: [], borrowedFrom: null, docKey: null };
   return {
     pages: docPagesOf(primary),
+    docKey: docKeyOf(primary),
     borrowedFrom:
       titleSid === sharedId
         ? null
@@ -273,6 +279,18 @@ export function cejilRenderedDoc(sharedId: string): { pages: string[]; borrowedF
 function docPagesOf(file: CejilFile): string[] {
   const byKey = cejilFullText();
   return byKey[file._id] ?? byKey[file.filename] ?? [];
+}
+
+/** The `cejilFullText` key `docPagesOf` resolves this file's text by: its `_id`
+ *  when the document was recovered, else the stand-in filename it still points
+ *  at. Two records with the same key show the same text, which is what a
+ *  "same passage" test needs; the `_id` alone would call the six stand-ins
+ *  5,000 different documents. */
+function docKeyOf(file: CejilFile): string | null {
+  const byKey = cejilFullText();
+  if (byKey[file._id]) return file._id;
+  if (byKey[file.filename]) return file.filename;
+  return null;
 }
 
 function docFilesFor(sharedId: string): { files: CejilFile[]; titleSid: string } {
