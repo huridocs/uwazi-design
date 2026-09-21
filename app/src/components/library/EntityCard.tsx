@@ -8,13 +8,14 @@ import {
   Maximize2,
   Pilcrow,
   Table2,
+  X,
 } from "lucide-react";
 import { useAtomValue } from "jotai";
 import { languageAtom } from "../../atoms/language";
 import { EntityTypeTag } from "../shared/EntityTypeTag";
 import { HighlightedText } from "../shared/HighlightedText";
 import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
-import { EntitySelectBox, holdTextSelection } from "./EntitySelectBox";
+import { EntitySelectBox, FOCUS_RING_ON_SELECT, holdTextSelection } from "./EntitySelectBox";
 import { EntityThumbnail, QuietMark } from "./EntityThumbnail";
 import { CardValue, ownsItsRemainder } from "./CardValue";
 import { LIBRARY_SORTS } from "../../data/libraryDisplay";
@@ -156,6 +157,7 @@ export const EntityCard = memo(function EntityCard({
   onOpenImage,
   metadataTrack = true,
   selectable = false,
+  onRemove,
   className = "",
   as: Root = "article",
 }: {
@@ -174,10 +176,14 @@ export const EntityCard = memo(function EntityCard({
    *  selection gesture: the event is passed up so the host can tell. */
   onSelect: (id: string, e?: React.MouseEvent) => void;
   onView: (id: string) => void;
-  /** Draw the multi-selection checkbox (`EntitySelectBox`) in its reserved
-   *  slot. Hosts that don't offer bulk actions (the template preview) leave
-   *  it off. */
+  /** Carry the (visually hidden) selection checkbox — `EntitySelectBox`. Hosts
+   *  that don't offer bulk actions (the template preview) leave it off. */
   selectable?: boolean;
+  /** The selection drawer's "Remove from selection" — a hover / focus X at the
+   *  row's end, in place of the checkbox the drawer used to show. Its slot is
+   *  reserved on every row, so it appearing moves nothing. List layout only;
+   *  `null` keeps the slot empty (a row already removed). */
+  onRemove?: ((id: string) => void) | null;
   /** Extra classes on the card's own element (the selection drawer dims a
    *  row that was unticked). */
   className?: string;
@@ -286,11 +292,10 @@ export const EntityCard = memo(function EntityCard({
     </button>
   );
 
-  const base =
-    "group relative text-start rounded-md border transition-colors cursor-pointer";
-  // Previewed OR ticked is bg-parchment — the same ground, one rule; the
-  // checkbox is what tells them apart. The ticked case is CSS off the checkbox
-  // itself, so a tick re-renders nothing but the box.
+  const base = `group relative text-start rounded-md border transition-colors cursor-pointer ${FOCUS_RING_ON_SELECT}`;
+  // Previewed OR selected is bg-parchment — the same ground, one rule. The
+  // selected case is CSS off the hidden checkbox itself, so a selection
+  // change re-renders nothing but the box.
   const surface = `${selected ? "bg-parchment border-border" : "bg-paper border-border/60 hover:bg-parchment"}
     has-[[data-part=select]_input:checked]:bg-parchment has-[[data-part=select]_input:checked]:border-border`;
   const selectBox = selectable ? <EntitySelectBox id={entity.id} title={entity.title} /> : null;
@@ -330,8 +335,8 @@ export const EntityCard = memo(function EntityCard({
         className={`${base} ${surface} w-full ${className}`}
       >
         {primaryAction}
+        {selectBox}
         <div className="relative px-3 py-2 flex items-center gap-3">
-          {selectBox}
           {showPreview &&
             (entity.preview ? (
               <EntityThumbnail
@@ -372,6 +377,26 @@ export const EntityCard = memo(function EntityCard({
           <div className="flex items-center gap-2 shrink-0">
             {connectionBadge}
             {viewButton}
+            {onRemove !== undefined && (
+              <span className="w-6 h-6 shrink-0 flex">
+                {onRemove && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemove(entity.id);
+                    }}
+                    aria-label={`Remove ${entity.title} from selection`}
+                    title="Remove from selection"
+                    className="w-6 h-6 flex items-center justify-center rounded-md text-ink-muted hover:text-ink hover:bg-warm
+                      opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 transition-opacity cursor-pointer
+                      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"
+                  >
+                    <X size={13} />
+                  </button>
+                )}
+              </span>
+            )}
           </div>
         </div>
       </Root>
@@ -420,11 +445,7 @@ export const EntityCard = memo(function EntityCard({
       className={`${base} ${surface} ${minHeight} grid grid-rows-subgrid ${ROW_SPAN[rowCount]} gap-y-2.5 p-3`}
     >
       {primaryAction}
-      {/* With no preview slot to sit on, the box takes the card's top-end
-          corner, and the title reserves its width below. */}
-      {selectBox && !showPreview && (
-        <span className="absolute top-3 end-3 z-[1] flex">{selectBox}</span>
-      )}
+      {selectBox}
       {/* The preview slot is ALWAYS filled when previews are on: an entity with
           no thumbnail gets a quiet vellum well carrying its type colour (the
           same idiom the list layout uses). Rendering the thumbnail only when one
@@ -436,12 +457,6 @@ export const EntityCard = memo(function EntityCard({
           slots and pictures agree on both height and position. */}
       {showPreview && (
         <span data-part="preview" className={`relative min-w-0 shrink-0 w-full ${slotShape}`}>
-          {/* The box overlays the slot's top-start corner on a paper plate —
-              the slot is a definite box with or without a picture, so the box
-              sits at the same place on every card and takes no room. */}
-          {selectBox && (
-            <span className="absolute top-2 start-2 z-[1] flex p-1 rounded-sm bg-paper">{selectBox}</span>
-          )}
           {entity.preview ? (
             enlargeable ? (
               /* The picture opens full size, WITHOUT becoming the card's main
@@ -528,7 +543,7 @@ export const EntityCard = memo(function EntityCard({
       <span
         data-part="title"
         className={`relative min-w-0 text-sm font-semibold text-ink leading-snug line-clamp-2
-          not-supports-[grid-template-rows:subgrid]:min-h-[2.375rem] ${selectBox && !showPreview ? "pe-6" : ""}`}
+          not-supports-[grid-template-rows:subgrid]:min-h-[2.375rem]`}
       >
         <span
           className={sortMark(sort === "title")}

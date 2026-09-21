@@ -1229,17 +1229,11 @@ export function LibraryView() {
           </div>
         ) : (
           <DataTable
-            columns={[
-              // The selection column is always mounted — from first paint, so
-              // the first tick doesn't push the table sideways.
-              {
-                id: "select",
-                header: <SelectAllBox loadedIds={shownIds} />,
-                width: "1rem",
-                cell: (e) => <EntitySelectBox id={e.id} title={e.title} />,
-              },
-              ...tableColumns,
-            ]}
+            columns={tableColumns}
+            // No selection column: the Library selects by modifier click. The
+            // row carries the visually hidden checkbox for keyboards and
+            // screen readers, beside its primary action.
+            rowAccessory={(e) => <EntitySelectBox id={e.id} title={e.title} />}
             data={shown}
             getRowId={(e) => e.id}
             onRowClick={(row, ev) => handleSelect(row.id, ev)}

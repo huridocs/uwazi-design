@@ -34,7 +34,7 @@ import { BorrowedDocLine } from "../BorrowedDocLine";
 import { Hint } from "../../shared/Hint";
 import { PageTag } from "../../shared/PageTag";
 import { AlsoUnder } from "./AlsoUnder";
-import { EntitySelectBox, holdTextSelection, useDrawnIds, useSelectionOrder } from "../EntitySelectBox";
+import { EntitySelectBox, FOCUS_RING_ON_SELECT, holdTextSelection, useDrawnIds, useSelectionOrder } from "../EntitySelectBox";
 import { useSettledWidth } from "../../../hooks/useSettledWidth";
 import { ToggleChip } from "../../shared/ToggleChip";
 import { CountBadge } from "../../shared/CountBadge";
@@ -457,17 +457,17 @@ function GroupedBody({
             data-state={selected ? "selected" : undefined}
             className={`group relative rounded-md border transition-colors ${
               selected ? "bg-parchment border-border" : "bg-paper border-border/60"
-            } has-[[data-part=select]_input:checked]:bg-parchment has-[[data-part=select]_input:checked]:border-border`}
+            } has-[[data-part=select]_input:checked]:bg-parchment has-[[data-part=select]_input:checked]:border-border ${FOCUS_RING_ON_SELECT}`}
           >
+            {/* The visually hidden selection checkbox (see EntitySelectBox). A
+                passage row is evidence, not an entity, so only the entity's
+                card carries one. */}
+            <EntitySelectBox id={entity.id} title={entity.title} />
             <header
               data-part="result-header"
               className={`px-4 py-2.5 ${hasMeta || hasText ? "border-b border-border/40" : ""}`}
             >
               <div className="flex items-center gap-2">
-              {/* The selection checkbox, in a slot of its own before the
-                  type chip. A passage row is evidence, not an entity, so only
-                  the entity's card is selectable. */}
-              <EntitySelectBox id={entity.id} title={entity.title} />
               <EntityTypeChip typeId={entity.typeId} />
               {/* The heading is a flex box so the button inside it keeps
                   shrinking and truncating exactly as it did as a direct child. */}
