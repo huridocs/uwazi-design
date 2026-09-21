@@ -1,4 +1,4 @@
-import { Children, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Children, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue } from "jotai";
 import { Search, ChevronDown, FileText, Tag } from "lucide-react";
 import type { Entity } from "../../../data/entities";
@@ -33,6 +33,7 @@ import { BorrowedDocLine } from "../BorrowedDocLine";
 import { Hint } from "../../shared/Hint";
 import { PageTag } from "../../shared/PageTag";
 import { AlsoUnder } from "./AlsoUnder";
+import { useSettledWidth } from "../../../hooks/useSettledWidth";
 import { ToggleChip } from "../../shared/ToggleChip";
 import { CountBadge } from "../../shared/CountBadge";
 import { MatchedTerms } from "../MatchedTerms";
@@ -182,37 +183,11 @@ export function ResultsMainView({
   const layout = useAtomValue(libraryResultsLayoutAtom);
   const [activeTypes, setActiveTypes] = useAtom(matchTypeFiltersAtom);
   const [visible, setVisible] = useState(STEP);
-  /* THE PANE'S OWN WIDTH, quantised to 64px.
-     Quantised because this feeds a memo that re-snippets the visible page: an
-     exact pixel would rebuild every excerpt on every frame of a drawer drag,
-     and the drawer width now persists (`drawerWidthAtom`), so a wide drawer is
-     a lasting condition rather than a moment. To the nearest 64px the budget
-     changes a handful of times across the whole range and never mid-drag. */
-  /* A CALLBACK REF, not `useRef` + `useLayoutEffect([])`. This body is not
-     mounted on the first render — the view returns a loading or no-query branch
-     before it — so an effect with an empty dependency list ran once against a
-     null ref and never again, and the budget stayed at its floor forever. A
-     callback ref fires when the node actually arrives, and again if it is
-     remounted by a layout switch. */
-  const [paneW, setPaneW] = useState(0);
-  const roRef = useRef<ResizeObserver | null>(null);
-  const bodyRef = useCallback((el: HTMLDivElement | null) => {
-    roRef.current?.disconnect();
-    roRef.current = null;
-    if (!el) return;
-    const measure = () => {
-      const w = el.getBoundingClientRect().width;
-      setPaneW((prev) => {
-        const next = Math.round(w / 64) * 64;
-        return next === prev ? prev : next;
-      });
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    roRef.current = ro;
-  }, []);
-  useEffect(() => () => roRef.current?.disconnect(), []);
+  /* THE PANE'S OWN WIDTH, quantised to 64px and held while the drawer divider
+     is dragged (`useSettledWidth`). It feeds a memo that re-snippets the
+     visible page, so following a drag rebuilt and re-wrapped every excerpt at
+     each 64px step; the width now changes once, on release. */
+  const [bodyRef, paneW] = useSettledWidth();
   // Per-entity "show every page-snippet", owned here so the capped `results`
   // memo stays cheap and only the expanded cards pay for the extra windowing.
   const [showAll, setShowAll] = useState<Record<string, boolean>>({});
@@ -225,9 +200,11 @@ export function ResultsMainView({
 
   const budget = excerptBudget(layout, paneW);
 
+  // Nothing is built until the pane is measured — see ResultsBody.
+  const measured = paneW > 0;
   const cappedResults = useMemo<Result[]>(
     () =>
-      entities
+      (measured ? entities : [])
         .slice(0, visible)
         .map((e) => ({
           entity: e,
@@ -237,7 +214,7 @@ export function ResultsMainView({
           }),
         }))
         .filter((r) => r.snippets.count > 0),
-    [entities, visible, trimmed, language, source, layout, budget.ctx],
+    [measured, entities, visible, trimmed, language, source, layout, budget.ctx],
   );
 
   // Only the cards the user expanded are re-derived uncapped — the windowing

@@ -1,6 +1,6 @@
 import type { Entity } from "../../../data/entities";
 import { getEntityType } from "../../../data/entities";
-import { evidenceBadge, type EntitySnippets } from "../../../utils/librarySnippets";
+import { evidenceBadge, type EntitySnippets, type FullTextSnippet } from "../../../utils/librarySnippets";
 import { RelationshipGroupedCard } from "../../relationships/RelationshipGroupedCard";
 import { HighlightedText } from "../../shared/HighlightedText";
 import { SectionLabel } from "../../shared/SectionLabel";
@@ -110,9 +110,12 @@ export function EntityResultCard({
               {snippets.borrowedFrom ? "Borrowed document" : "Document"}
               <BorrowedDocLine from={snippets.borrowedFrom} className="min-w-0" />
             </SectionLabel>
+            {/* The BEST pages were picked (`buildSnippetsFor`'s default order);
+                the spine then reads them in page order, as a rail down a
+                document should. Ranked, it listed p.47, p.3, p.112. */}
             <PageSpine
               entityId={entity.id}
-              fullText={snippets.fullText}
+              fullText={inPageOrder(snippets.fullText)}
               query={query}
               onSelect={onSelectSnippet}
             />
@@ -143,4 +146,10 @@ export function EntityResultCard({
       </div>
     </RelationshipGroupedCard>
   );
+}
+
+/** Page order for a spine. A null page (a corpus with no real pages) keeps its
+ *  place: those excerpts have no order to restore. */
+function inPageOrder(fullText: FullTextSnippet[]): FullTextSnippet[] {
+  return [...fullText].sort((a, b) => (a.page ?? 0) - (b.page ?? 0));
 }

@@ -106,3 +106,16 @@ export const SplitWidthProvider = SplitWidthContext.Provider;
 export function useSplitWidth() {
   return useContext(SplitWidthContext);
 }
+
+/** Whether a `SplitView` divider is being dragged right now. `false` outside a
+ *  split. Both panes read it: a pane that sizes its content to its own width
+ *  (the Results excerpt budget) holds its last settled width while this is
+ *  true and applies the new one once, on release, so the content under the
+ *  reader doesn't re-wrap at every step of the drag. */
+const SplitDraggingContext = createContext(false);
+
+export const SplitDraggingProvider = SplitDraggingContext.Provider;
+
+export function useSplitDragging() {
+  return useContext(SplitDraggingContext);
+}

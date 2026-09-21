@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { memo, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Search } from "lucide-react";
 import type { Entity } from "../../../data/entities";
 import type { Language } from "../../../atoms/language";
@@ -10,6 +10,7 @@ import { ListInfoRow } from "../../shared/ListInfoRow";
 import { ToggleChip } from "../../shared/ToggleChip";
 import { CollapseControls } from "../../relationships/CollapseControls";
 import { EntityResultCard } from "./EntityResultCard";
+import { useSettledWidth } from "../../../hooks/useSettledWidth";
 import type { RelevanceBreakdown } from "../../../utils/relevance";
 
 type MatchType = keyof MatchTypeFilters;
@@ -95,27 +96,11 @@ export const ResultsBody = memo(function ResultsBody({
   // ride the relationships panel's expand/collapse atoms.
   const [showAllMap, setShowAllMap] = useState<Record<string, boolean>>({});
   const trimmed = query.trim();
-  /* The lane's width, quantised to 64px, sets how much context each excerpt
-     carries: about three lines of the passage column. Quantised because it
-     feeds the snippet memo — an exact pixel would re-snippet every card on each
-     frame of a drawer drag. A callback ref, because the lane is not mounted on
-     the blank-state renders (same reasoning as ResultsMainView). */
-  const [laneW, setLaneW] = useState(0);
-  const roRef = useRef<ResizeObserver | null>(null);
-  const laneRef = useCallback((el: HTMLDivElement | null) => {
-    roRef.current?.disconnect();
-    roRef.current = null;
-    if (!el) return;
-    const measure = () => {
-      const next = Math.round(el.getBoundingClientRect().width / 64) * 64;
-      setLaneW((prev) => (next === prev ? prev : next));
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    roRef.current = ro;
-  }, []);
-  useEffect(() => () => roRef.current?.disconnect(), []);
+  /* The lane's width sets how much context each excerpt carries: about three
+     lines of the passage column. Held while the drawer divider is dragged and
+     applied once on release (`useSettledWidth`), so a drag doesn't re-snippet
+     and re-wrap every card under the reader. */
+  const [laneRef, laneW] = useSettledWidth();
   const ctx = contextWordsFor(laneW ? laneW - PASSAGE_INSET : 0, 3);
 
   // `entities` is the already-filtered set. The left-pane filter and
@@ -123,16 +108,20 @@ export const ResultsBody = memo(function ResultsBody({
   // guaranteed ≥1 metadata snippet — the match count is just `entities.length`,
   // and we only compute snippets for the visible slice, not the whole (thousands-
   // strong CEJIL) set.
+  // Nothing is built until the lane is measured: the measure lands in the same
+  // commit, before paint, and building at the floor budget first paid for a
+  // second full pass the moment it did.
+  const measured = laneW > 0;
   const capped = useMemo(
     () =>
-      entities
+      (measured ? entities : [])
         .slice(0, visible)
         .map((e) => ({
           entity: e,
           snippets: buildSnippetsFor(e, trimmed, language, source, { contextWords: ctx }),
         }))
         .filter((x) => x.snippets.count > 0),
-    [entities, visible, trimmed, language, source, ctx],
+    [measured, entities, visible, trimmed, language, source, ctx],
   );
 
   // Only the cards the user actually expanded are rebuilt uncapped — the excerpt
