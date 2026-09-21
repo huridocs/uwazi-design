@@ -1,6 +1,6 @@
 import type { Language } from "../atoms/language";
 import type { Entity } from "./entities";
-import type { MetadataField } from "./metadata";
+import type { AnyMetadataField } from "./metadata";
 import type { DocumentGroup, FileEntry } from "./files";
 
 /** The entity OVERLAY — every change made to the library in this session,
@@ -32,7 +32,10 @@ export type Corpus = "mock" | "cejil" | "artworks";
 
 export interface EntityRecord {
   typeId: string;
-  metadata: Record<Language, MetadataField[]>;
+  /** The whole metadata, relationship fields included: a record REPLACES the
+   *  entity's profile metadata, so an edited entity's record carries its
+   *  connections along with the values that changed. */
+  metadata: Record<Language, AnyMetadataField[]>;
   documentGroups?: DocumentGroup[];
   files?: FileEntry[];
 }

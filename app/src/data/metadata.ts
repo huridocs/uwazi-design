@@ -7,8 +7,19 @@ export interface MetadataField {
   label: string;
   /** `media`: the raw Uwazi media value — a URL, optionally a comma and a JSON
    *  config of chapter timelinks. Read with `parseMediaValue`. */
-  type: "text" | "date" | "link" | "country" | "multiline" | "file-list" | "media";
+  type: "text" | "date" | "link" | "country" | "multiline" | "file-list" | "media" | "select" | "multiselect";
+  /** For `multiselect`, the chosen labels joined with ", " — the string every
+   *  reader that wants one string already reads. The set itself is `values`. */
   value: string;
+  /** `select` / `multiselect`: the thesaurus the template binds the property
+   *  to. Absent = the template names none (the form offers to create one). */
+  thesaurus?: string;
+  /** `multiselect`: the chosen labels, in order. Kept apart from `value`
+   *  because a label can itself contain ", ". Read with `chosenLabels`. */
+  values?: string[];
+  /** The thesaurus value ids behind the labels, where the corpus stores them
+   *  (CEJIL). Labels are per language; an id is the same in all of them. */
+  valueIds?: string[];
   flag?: string;
   items?: { label?: string; value: string }[];
   columns?: { label: string; value: string }[];
@@ -84,6 +95,22 @@ export interface RelationshipMetadataField {
 }
 
 export type AnyMetadataField = MetadataField | RelationshipMetadataField;
+
+/** The labels a select or multiselect field holds. A record written before
+ *  `values` existed (or a single select) holds its one label in `value`. */
+export function chosenLabels(f: Pick<MetadataField, "type" | "value" | "values">): string[] {
+  if (f.values) return f.values;
+  return f.value ? [f.value] : [];
+}
+
+/** The same field holding `labels` — `value` kept as their display string. */
+export function withLabels<F extends MetadataField>(f: F, labels: string[], ids?: (string | null)[]): F {
+  const next: F =
+    f.type === "multiselect" ? { ...f, values: labels, value: labels.join(", ") } : { ...f, value: labels[0] ?? "" };
+  if (ids) next.valueIds = (f.type === "multiselect" ? ids : ids.slice(0, 1)).map((id) => id ?? "");
+  else delete next.valueIds;
+  return next;
+}
 
 // Metadata for the default primary entity: Velásquez-Rodríguez v. Honduras —
 // Merits Judgment of the Inter-American Court of Human Rights, July 29, 1988

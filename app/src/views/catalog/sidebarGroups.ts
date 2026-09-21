@@ -70,6 +70,7 @@ export const sidebarGroups: SidebarGroup[] = [
       { id: "ev-relationship-field-card", label: "RelationshipFieldCard · single + link" },
       { id: "ev-inherited-value-chip", label: "InheritedValueChip" },
       { id: "ev-relationship-field-editor", label: "RelationshipFieldEditor" },
+      { id: "ev-thesaurus-picker", label: "ThesaurusPicker · add value" },
     ],
   },
   {

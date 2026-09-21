@@ -1,5 +1,7 @@
 import { atom } from "jotai";
-import type { Entity } from "../data/entities";
+import { entityCorpusOf, getEntity, type Entity } from "../data/entities";
+import { getEntityProfile } from "../data/entityProfiles";
+import { adapterPatch, changedFieldIds, mergeScalarsByLang } from "../utils/entityEdit";
 import {
   overlayMirror,
   setDraftMirror,
@@ -136,6 +138,47 @@ export const patchEntitiesAtom = atom(
         records: { ...o.records, ...records },
       })),
     );
+  },
+);
+
+/** Save a single edit of an EXISTING entity: the form's scalar values become
+ *  its record (over the corpus profile, connections kept), and an adapter
+ *  corpus's card, search text and descriptor facet follow. Until this, Save on
+ *  an existing entity only closed the form — the edit went nowhere. */
+export const saveEntityEditAtom = atom(
+  null,
+  (_get, set, { id, result, language }: { id: string; result: EditResult; language: Language }) => {
+    const entity = getEntity(id);
+    if (!entity) return;
+    const corpus = entityCorpusOf(id);
+    const profile = getEntityProfile(id);
+    const metadata = mergeScalarsByLang(profile.metadata, result.fieldsByLang);
+    // An adapter card is built from ONE language's record — CEJIL's from the
+    // Spanish one, the corpus's own — so it is patched from that slice.
+    const cardLang: Language = corpus === "cejil" ? "ES" : language;
+    const changed = changedFieldIds(profile.metadata[cardLang] ?? [], metadata[cardLang]);
+    const patch: Partial<Entity> = corpus === "mock" ? {} : adapterPatch(entity, metadata[cardLang], changed);
+    // The form opens its title on the DOCUMENT's title where there is one
+    // (MetadataEditBody's `initialTitles`), so a title is a change only when it
+    // differs from THAT — comparing with the entity's title renamed every
+    // entity whose document is called something else.
+    const opened = profile.document?.[language]?.title ?? entity.title;
+    const title = result.titles[language]?.trim();
+    if (title && title !== opened.trim()) patch.title = title;
+    // Nothing moved: write nothing, so an untouched Save leaves no record
+    // behind (a record is a new object, and every per-entity cache keys on it).
+    const touched = (Object.keys(metadata) as Language[]).some(
+      (l) => changedFieldIds(profile.metadata[l] ?? [], metadata[l]).size > 0,
+    );
+    if (!touched && !patch.title) return;
+    set(patchEntitiesAtom, {
+      corpus,
+      // A patch even when empty: it is what gives the entity a NEW object, and
+      // the cards are memoised on that identity — a Sample card, which reads
+      // the record, otherwise kept printing the old value.
+      patches: { [id]: patch },
+      records: { [id]: { ...overlayRecord(id), typeId: profile.typeId, metadata } },
+    });
   },
 );
 
