@@ -34,7 +34,7 @@ import { BorrowedDocLine } from "../BorrowedDocLine";
 import { Hint } from "../../shared/Hint";
 import { PageTag } from "../../shared/PageTag";
 import { AlsoUnder } from "./AlsoUnder";
-import { EntitySelectBox, useSelectionOrder } from "../EntitySelectBox";
+import { EntitySelectBox, useDrawnIds, useSelectionOrder } from "../EntitySelectBox";
 import { useSettledWidth } from "../../../hooks/useSettledWidth";
 import { ToggleChip } from "../../shared/ToggleChip";
 import { CountBadge } from "../../shared/CountBadge";
@@ -189,6 +189,9 @@ export function ResultsMainView({
   useSelectionOrder(rankedIds);
   const [activeTypes, setActiveTypes] = useAtom(matchTypeFiltersAtom);
   const [visible, setVisible] = useState(STEP);
+  // The page this view draws, for "select all loaded".
+  const drawnIds = useMemo(() => rankedIds.slice(0, visible), [rankedIds, visible]);
+  useDrawnIds(drawnIds);
   /* THE PANE'S OWN WIDTH, quantised to 64px and held while the drawer divider
      is dragged (`useSettledWidth`). It feeds a memo that re-snippets the
      visible page, so following a drag rebuilt and re-wrapped every excerpt at

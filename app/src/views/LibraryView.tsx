@@ -70,6 +70,7 @@ import {
   clearSelectionAtom,
   librarySelectionActiveAtom,
   librarySelectionDrawerOpenAtom,
+  libraryDrawnIdsAtom,
 } from "../atoms/library";
 import {
   EntitySelectBox,
@@ -754,6 +755,18 @@ export function LibraryView() {
   const filteredIds = useMemo(() => filtered.map((e) => e.id), [filtered]);
   // The grid's and the table's order — Timeline and Results register their own.
   useSelectionOrder(shownIds);
+  // What the visible view DRAWS, for "select all loaded". The grid, the table
+  // and the map are drawn here; Timeline and Results publish their own.
+  const setDrawnIds = useSetAtom(libraryDrawnIdsAtom);
+  const drawnIds = useAtomValue(libraryDrawnIdsAtom);
+  const mapIds = useMemo(
+    () => (viewMode === "map" ? filtered.filter((e) => e.geo).map((e) => e.id) : null),
+    [viewMode, filtered],
+  );
+  useEffect(() => {
+    if (viewMode === "cards" || viewMode === "list") setDrawnIds(shownIds);
+    else if (mapIds) setDrawnIds(mapIds);
+  }, [viewMode, shownIds, mapIds, setDrawnIds]);
 
   // Escape clears — except where Escape already means something: a text field,
   // a dialog, an open menu.
@@ -763,6 +776,11 @@ export function LibraryView() {
       if (e.key !== "Escape" || e.defaultPrevented) return;
       const t = e.target as HTMLElement | null;
       if (t?.closest("input:not([type=checkbox]), textarea, select, [role=dialog], [role=menu], [role=listbox]")) return;
+      // A popup open anywhere — the Display menu, a Select, the search tips —
+      // takes this Escape to close itself. Those popups leave focus on their
+      // trigger, so the target check above can't see them; their open
+      // trigger can: an `aria-haspopup` control with `aria-expanded="true"`.
+      if (document.querySelector('[aria-haspopup][aria-expanded="true"]')) return;
       clearSelection();
     };
     window.addEventListener("keydown", onKey);
@@ -1263,10 +1281,10 @@ export function LibraryView() {
             the loaded entities. The rest of the bar swaps IN PLACE between
             the baseline actions and the selection's — same bar, same height. */}
         <span className="hidden sm:inline-flex shrink-0 me-1">
-          <SelectAllBox loadedIds={shownIds} disabled={cejilLoading} />
+          <SelectAllBox loadedIds={drawnIds} disabled={cejilLoading} />
         </span>
         {selectionActive && (
-          <LibrarySelectionBar filteredIds={filteredIds} loadedIds={shownIds} corpus={dataSource} />
+          <LibrarySelectionBar filteredIds={filteredIds} loadedIds={drawnIds} corpus={dataSource} />
         )}
         {!selectionActive && (
           <FooterButton

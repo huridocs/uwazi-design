@@ -1,6 +1,9 @@
 import { useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
-import { FileDown, LayoutTemplate, Lock, PenLine, Share2, Trash2, X } from "lucide-react";
+import { FileDown, LayoutTemplate, Lock, MoreHorizontal, PenLine, Share2, Trash2, X } from "lucide-react";
+import { breakpointAtom } from "../../atoms/viewport";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 import {
   clearSelectionAtom,
   deselectIdsAtom,
@@ -50,6 +53,11 @@ export function LibrarySelectionBar({
   const openDrawer = useSetAtom(librarySelectionDrawerOpenAtom);
   const setPreview = useSetAtom(librarySelectedEntityIdAtom);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  // On a phone the bar's action buttons don't fit (they are `hidden sm:flex`),
+  // and the selection drawer isn't rendered — so the bar there is the count,
+  // an Actions button opening a sheet of the same actions, and Clear.
+  const isMobile = useAtomValue(breakpointAtom) === "mobile";
 
   const n = selection.size;
   const inView = new Set(filteredIds);
@@ -59,6 +67,7 @@ export function LibrarySelectionBar({
   const moreToSelect = allLoaded && filteredIds.length > loadedIds.length && filteredIds.some((id) => !selection.has(id));
 
   const showList = () => {
+    if (isMobile) return setSheetOpen(true);
     setPreview(null);
     openDrawer(true);
   };
@@ -145,6 +154,37 @@ export function LibrarySelectionBar({
       <BarButton icon={<Lock size={13} />} label="Permissions" disabledReason="Permissions come in a later step" />
       <BarButton icon={<Trash2 size={13} />} label="Delete" onClick={() => setConfirmDelete(true)} />
       <BarButton icon={<X size={13} />} label="Clear" onClick={() => clear()} />
+      {/* Phone: the same actions, reachable. */}
+      <button
+        type="button"
+        onClick={() => setSheetOpen(true)}
+        aria-haspopup="dialog"
+        aria-expanded={sheetOpen}
+        className={`sm:hidden shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md cursor-pointer`}
+      >
+        <MoreHorizontal size={13} className="text-ink-tertiary" aria-hidden /> Actions
+      </button>
+      <button
+        type="button"
+        onClick={() => clear()}
+        className={`sm:hidden shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md cursor-pointer`}
+      >
+        <X size={13} className="text-ink-tertiary" aria-hidden /> Clear
+      </button>
+      {sheetOpen && (
+        <ActionsSheet
+          count={n}
+          onClose={() => setSheetOpen(false)}
+          actions={[
+            { label: "Export CSV", icon: <FileDown size={14} />, onClick: exportSelection },
+            { label: "Delete", icon: <Trash2 size={14} />, onClick: () => setConfirmDelete(true) },
+            { label: "Edit", icon: <PenLine size={14} />, disabledReason: "Bulk edit comes in a later step" },
+            { label: "Change template", icon: <LayoutTemplate size={14} />, disabledReason: "Change template comes in a later step" },
+            { label: "Share", icon: <Share2 size={14} />, disabledReason: "Sharing a selection comes in a later step" },
+            { label: "Permissions", icon: <Lock size={14} />, disabledReason: "Permissions come in a later step" },
+          ]}
+        />
+      )}
       <ConfirmDialog
         open={confirmDelete}
         title={`Delete ${n.toLocaleString()} ${n === 1 ? "entity" : "entities"}?`}
@@ -195,5 +235,68 @@ function BarButton({
         </button>
       )}
     </Hint>
+  );
+}
+
+/** The selection's actions as a bottom sheet — the phone's version of the
+ *  bar's buttons. Portalled, focus-trapped, Escape and the scrim close it; an
+ *  action closes it too. Disabled actions stay listed, saying why. */
+function ActionsSheet({
+  count,
+  actions,
+  onClose,
+}: {
+  count: number;
+  actions: { label: string; icon: ReactNode; onClick?: () => void; disabledReason?: string }[];
+  onClose: () => void;
+}) {
+  const panelRef = useFocusTrap<HTMLDivElement>(true);
+  return createPortal(
+    <div
+      data-component="SelectionActionsSheet"
+      className="fixed inset-0 z-50 flex items-end bg-ink/20"
+      onClick={onClose}
+    >
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Actions for ${count} selected`}
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") onClose();
+        }}
+        className="w-full rounded-t-lg bg-paper border-t border-border shadow-lg p-2 pb-4"
+      >
+        <p className="px-3 py-2 text-meta text-ink-tertiary tabular-nums">
+          {count.toLocaleString()} selected
+        </p>
+        <ul className="flex flex-col">
+          {actions.map((a) => (
+            <li key={a.label}>
+              <button
+                type="button"
+                aria-disabled={a.disabledReason ? true : undefined}
+                onClick={() => {
+                  if (a.disabledReason) return;
+                  onClose();
+                  a.onClick?.();
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-3 text-start text-sm rounded-md ${
+                  a.disabledReason ? "text-ink-muted cursor-not-allowed" : "text-ink hover:bg-warm cursor-pointer"
+                }`}
+              >
+                <span className="text-ink-tertiary" aria-hidden>
+                  {a.icon}
+                </span>
+                <span className="flex-1">{a.label}</span>
+                {a.disabledReason && <span className="text-meta text-ink-muted">{a.disabledReason}</span>}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>,
+    document.body,
   );
 }

@@ -251,6 +251,11 @@ export const entitySelectedAtom = atomFamily((id: string) =>
  *  clearing it, and any new tick opens it again. */
 export const librarySelectionDrawerOpenAtom = atom(true);
 
+/** The ids the VISIBLE view actually draws — the grid's loaded page, the
+ *  timeline's plotted rows, the Results page, the map's located entities.
+ *  "Select all loaded" means these, in every view; each view writes its own. */
+export const libraryDrawnIdsAtom = atom<readonly string[]>([]);
+
 /** Toggle one id. Sets the anchor, ends any range, and — like every selection
  *  gesture — drops the preview so the drawer shows the selection being built. */
 export const toggleSelectionAtom = atom(null, (get, set, id: string) => {
@@ -278,11 +283,14 @@ export const rangeSelectionAtom = atom(null, (get, set, { order, id }: { order: 
   const range = order.slice(Math.min(a, b), Math.max(a, b) + 1);
   const next = new Set(get(librarySelectionAtom));
   for (const x of get(lastRangeAtom)) next.delete(x);
-  for (const x of range) next.add(x);
+  // What THIS range adds — not the whole span: an id inside it that was
+  // already selected (ticked on its own) must survive the next re-span.
+  const added = range.filter((x) => !next.has(x));
+  for (const x of added) next.add(x);
   // The anchor itself was picked on its own; re-spanning must not drop it.
   if (anchor) next.add(anchor);
   set(librarySelectionAtom, next);
-  set(lastRangeAtom, range);
+  set(lastRangeAtom, added.filter((x) => x !== anchor));
   set(librarySelectedEntityIdAtom, null);
   set(librarySelectionDrawerOpenAtom, true);
 });

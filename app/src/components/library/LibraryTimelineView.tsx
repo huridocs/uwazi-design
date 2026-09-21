@@ -28,7 +28,7 @@ import {
 } from "../../utils/timeline";
 import { breakpointAtom } from "../../atoms/viewport";
 import { BucketBreakdown, ChartTip } from "./BucketBreakdown";
-import { EntitySelectBox, useSelectionOrder } from "./EntitySelectBox";
+import { EntitySelectBox, useDrawnIds, useSelectionOrder } from "./EntitySelectBox";
 import { EntityCard } from "./EntityCard";
 import { HighlightedText } from "../shared/HighlightedText";
 import { MatchOrigin } from "./MatchOrigin";
@@ -72,6 +72,13 @@ export function LibraryTimelineView(props: Props) {
   // A Shift range runs in the order this view draws: by date.
   const datedIds = useMemo(() => dated.map((e) => e.id), [dated]);
   useSelectionOrder(datedIds);
+  // What this layout DRAWS, for "select all loaded": the spine plots the first
+  // SPINE_CAP, the lanes grid draws no entity rows, the list draws them all.
+  const drawnIds = useMemo(
+    () => (layout === "lanes" ? [] : layout === "spine" ? datedIds.slice(0, SPINE_CAP) : datedIds),
+    [layout, datedIds],
+  );
+  useDrawnIds(drawnIds);
 
   if (!dated.length) {
     return (
@@ -700,7 +707,7 @@ function SpineLayout({ dated, query, selectedId, onSelect }: LayoutProps) {
               <button
                 type="button"
                 aria-pressed={sel}
-                aria-label={`Select ${e.title}`}
+                aria-label={`Preview ${e.title}`}
                 onClick={(ev) => {
                   ev.stopPropagation();
                   onSelect(e.id, ev);

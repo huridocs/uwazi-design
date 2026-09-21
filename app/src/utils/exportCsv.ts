@@ -83,12 +83,12 @@ function rowOf(
           const title = getEntity(id)?.title ?? id;
           const inherited =
             inherits && includeInherited ? resolveInheritedValue(id, f, language, getEntityProp) : undefined;
-          return inherited ? `${title} (${inherited})` : title;
+          return part(inherited ? `${title} (${inherited})` : title);
         })
         .filter(Boolean)
         .join("|");
     } else {
-      value = multi.get(f.id)?.join("|") ?? f.value ?? "";
+      value = multi.get(f.id)?.map(part).join("|") ?? f.value ?? "";
       if (f.type === "date") value = isoDay(value);
     }
     if (!value || value === "—") continue;
@@ -104,23 +104,34 @@ function rowOf(
 }
 
 /** RFC 4180: quote a cell holding a comma, a quote or a line break; double any
- *  quote inside it. */
+ *  quote inside it. And neutralise a cell a spreadsheet would run as a
+ *  FORMULA — one starting `=`, `+`, `-`, `@`, a tab or a carriage return — by
+ *  prefixing `'`, the convention Excel, Sheets and Numbers all honour. Titles
+ *  are free text now (Create entity, Upload), so "=HYPERLINK(…)" is a title
+ *  anyone can type. */
 function cell(v: string): string {
-  return /[",\r\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+  const safe = /^[=+\-@\t\r]/.test(v) ? `'${v}` : v;
+  return /[",\r\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
 }
+
+/** One value of a multi-value cell. "|" separates the values, so a "|" INSIDE
+ *  one is escaped as "\|" — or a title containing it would come back from
+ *  Import CSV as two values. */
+const part = (v: string) => v.replace(/\|/g, "\\|");
 
 export async function exportEntitiesCsv(
   entities: readonly Entity[],
   language: Language,
-  onProgress?: (done: number, total: number) => void,
+  /** Progress; returning `false` stops the export (it resolves to null). */
+  onProgress?: (done: number, total: number) => boolean | void,
   { includeInherited = false }: { includeInherited?: boolean } = {},
-): Promise<CsvExport> {
+): Promise<CsvExport | null> {
   const columns = [...FIXED];
   const seen = new Set(FIXED);
   const rows: Record<string, string>[] = [];
   for (let i = 0; i < entities.length; i += CHUNK) {
     for (const e of entities.slice(i, i + CHUNK)) rows.push(rowOf(e, language, columns, seen, includeInherited));
-    onProgress?.(Math.min(i + CHUNK, entities.length), entities.length);
+    if (onProgress?.(Math.min(i + CHUNK, entities.length), entities.length) === false) return null;
     // Yield, so the progress is painted and the page stays usable.
     await new Promise((r) => setTimeout(r, 0));
   }

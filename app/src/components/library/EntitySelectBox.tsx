@@ -1,6 +1,7 @@
-import { createContext, useContext, type KeyboardEvent, type MouseEvent } from "react";
+import { createContext, useContext, useEffect, type KeyboardEvent, type MouseEvent } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import {
+  libraryDrawnIdsAtom,
   entitySelectedAtom,
   librarySelectionActiveAtom,
   rangeSelectionAtom,
@@ -20,6 +21,15 @@ let viewOrder: readonly string[] = [];
  *  render; the view that renders last (the one on screen) wins. */
 export function useSelectionOrder(ids: readonly string[]): void {
   viewOrder = ids;
+}
+
+/** Publish the ids the visible view draws, for "select all loaded" (see
+ *  `libraryDrawnIdsAtom`). An effect, so only a committed render counts. */
+export function useDrawnIds(ids: readonly string[]): void {
+  const set = useSetAtom(libraryDrawnIdsAtom);
+  useEffect(() => {
+    set(ids);
+  }, [ids, set]);
 }
 
 /** The current view's order, for a click handled outside a checkbox. */

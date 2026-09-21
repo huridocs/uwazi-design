@@ -17,6 +17,11 @@ type Store = ReturnType<typeof useStore>;
 let seq = 0;
 const taskId = (kind: string) => `${kind}-${Date.now().toString(36)}-${++seq}`;
 
+/** The task is still in the Beacon — not cancelled. Its Cancel only removes
+ *  the activity, so every step past a wait checks this before doing anything
+ *  a cancelled task must not (create entities, hand over a file). */
+const alive = (store: Store, id: string) => store.get(activitiesAtom).some((a) => a.id === id);
+
 function patch(store: Store, id: string, change: Partial<Activity>) {
   store.set(activitiesAtom, (prev) => prev.map((a) => (a.id === id ? { ...a, ...change } : a)));
 }
@@ -60,6 +65,8 @@ export function runPdfUploadBatch(
   const processMs = 1000 + 300 * n;
   const started = performance.now();
   const tick = () => {
+    // Cancelled from the Beacon: stop here, and create nothing.
+    if (!alive(store, id)) return;
     const t = performance.now() - started;
     if (t < uploadMs) {
       patch(store, id, { current: Math.round((t / uploadMs) * 60) });
@@ -118,9 +125,21 @@ export async function runCsvExport(
       driven: true,
     },
   ]);
-  const { csv, rows, columns } = await exportEntitiesCsv(entities, language, (done) =>
-    patch(store, id, { current: done }),
-  );
+  let result: Awaited<ReturnType<typeof exportEntitiesCsv>>;
+  try {
+    result = await exportEntitiesCsv(entities, language, (done) => {
+      patch(store, id, { current: done });
+      // Stop building rows for a task nobody is waiting on.
+      return alive(store, id);
+    });
+  } catch (err) {
+    // A task stuck part-way in the Beacon is worse than a failed one.
+    store.set(activitiesAtom, (prev) => prev.filter((a) => a.id !== id));
+    throw err;
+  }
+  // Cancelled from the Beacon: no download.
+  if (!result || !alive(store, id)) return;
+  const { csv, rows, columns } = result;
   downloadCsv(csv, filename);
   patch(store, id, {
     current: total,

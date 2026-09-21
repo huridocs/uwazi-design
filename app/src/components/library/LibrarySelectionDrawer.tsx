@@ -17,11 +17,22 @@ import { EntityListDrawer } from "./EntityListDrawer";
 export function LibrarySelectionDrawer({ onSelect }: { onSelect: (id: string, e?: React.MouseEvent) => void }) {
   const selection = useAtomValue(librarySelectionAtom);
   const setOpen = useSetAtom(librarySelectionDrawerOpenAtom);
-  // Every id listed since the drawer opened, in the order it arrived.
-  const [listed, setListed] = useState<string[]>(() => [...selection]);
-  const missing = [...selection].filter((id) => !listed.includes(id));
-  if (missing.length) setListed((prev) => [...prev, ...missing.filter((id) => !prev.includes(id))]);
-  const ids = missing.length ? [...listed, ...missing] : listed;
+  // Every id listed since the drawer opened, in the order it arrived. A Set
+  // beside the array for membership: a selection can be the whole corpus, and
+  // `includes` over it per render was ~19M comparisons at 4,398.
+  const [listed, setListed] = useState<{ ids: string[]; has: Set<string> }>(() => ({
+    ids: [...selection],
+    has: new Set(selection),
+  }));
+  const missing: string[] = [];
+  for (const id of selection) if (!listed.has.has(id)) missing.push(id);
+  if (missing.length) {
+    setListed((prev) => {
+      const add = missing.filter((id) => !prev.has.has(id));
+      return { ids: [...prev.ids, ...add], has: new Set([...prev.has, ...add]) };
+    });
+  }
+  const ids = missing.length ? [...listed.ids, ...missing] : listed.ids;
 
   return (
     <EntityListDrawer
