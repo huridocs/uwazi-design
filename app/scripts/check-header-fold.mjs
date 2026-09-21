@@ -4,7 +4,7 @@ import { chromium } from "playwright";
  *  Fails on overlapping controls, a control outside its host, a search input under
  *  88px, horizontal page scroll, or a control that moves when a query is typed.
  *  Usage: PORT=1431 node scripts/check-header-fold.mjs <screenshot-dir> [tag] [widths] */
-const BASE = `http://localhost:${process.env.PORT || 5173}/`;
+const BASE = `http://localhost:${process.env.PORT || 5173}/${process.env.QUERY || ""}`;
 const out = process.argv[2], tag = process.argv[3] || "after";
 const widths = (process.argv[4] || "1440,1024,900,768,600,390").split(",").map(Number);
 const b = await chromium.launch();
@@ -56,6 +56,10 @@ for (const dir of ["ltr", "rtl"]) for (const w of widths) for (const drawer of w
   const target = (await open.count()) ? open : p.getByRole("button", { name: /View entity/ }).first();
   await target.click({ timeout: 3000 }).catch(() => console.log(label, "could not open entity"));
   await p.waitForTimeout(1800);
+  // Pane strip vs drawer strip: reported, and a failure only with STRIPS=1 (the
+  // variant that promises to keep them on one line).
+  const dy = await p.evaluate(() => { const a = document.querySelector('[data-component="MainTabs"] [data-part="tabs"]'), d = document.querySelector('[data-component="DrawerTabs"]'); if (!a || !d) return null; const f = (e) => (e.querySelector('[role="tab"],button') || e).getBoundingClientRect().top; return Math.round(f(a) - f(d)); });
+  if (dy !== null && w >= 768) { if (dir === "ltr") console.log(label, "pane strip − drawer strip:", dy + "px"); if (process.env.STRIPS && Math.abs(dy) > 1 && w >= 1024) { fails++; console.log(label, "STRIPS MISALIGNED", dy); } }
   for (const sel of ['[data-component="MainTabs"]', '[data-component="DocMeta"]']) report("entity " + sel, await p.evaluate(probe, sel));
   await p.screenshot({ path: `${out}/${tag}-ent-${dir}-${w}-${drawer}.png`, clip: { x: 0, y: 0, width: w, height: 240 } });
   await ctx.close();

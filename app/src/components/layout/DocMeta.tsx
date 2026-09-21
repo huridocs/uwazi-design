@@ -14,6 +14,9 @@ interface DocMetaProps {
   /** Show the format picker (PDF / Plain text / HTML). Only the Document tab
    *  wants it; the metadata/files headers pass false. */
   showPdfSelector?: boolean;
+  /** False inside a `PaneHeader`, which owns the rule under both rows and is
+   *  the `<header>`; this is then its identity row. */
+  ruled?: boolean;
 }
 
 const FORMATS: { id: DocumentFormat; label: string; icon: typeof FileText }[] = [
@@ -25,7 +28,8 @@ const FORMATS: { id: DocumentFormat; label: string; icon: typeof FileText }[] = 
 /** Entity header strip. Names the ENTITY (type tag + its own title) and — on the
  *  Document tab — the document on screen plus a picker that switches between
  *  that document's renditions (PDF, plain text, HTML). */
-export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
+export function DocMeta({ showPdfSelector = true, ruled = true }: DocMetaProps) {
+  const Root = ruled ? "header" : "div";
   const groups = useAtomValue(documentGroupsAtom);
   const activeGroupId = useAtomValue(activePrimaryGroupIdAtom);
   const [format, setFormat] = useAtom(documentFormatAtom);
@@ -89,12 +93,14 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
   const ActiveIcon = activeFormat.icon;
 
   return (
-    <header
+    <Root
       data-component="DocMeta"
       /* Rendered inside a gutter host: no side padding of its own, and `bleed`
          so its bottom rule spans the pane. */
-      className="@container bleed flex items-center gap-2 min-h-11 pt-1 pb-2 shrink-0"
-      style={{ borderBottom: "1px solid var(--border-primary)" }}
+      className={`@container flex items-center gap-2 shrink-0 ${
+        ruled ? "bleed min-h-11 pt-1 pb-2" : "min-h-9"
+      }`}
+      style={ruled ? { borderBottom: "1px solid var(--border-primary)" } : undefined}
     >
       {/* Stacked, like the drawer: tag over title. Side by side, a long template
           name ("Resolución de Presidencia de la CorteIDH") ran halfway across the
@@ -170,6 +176,6 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
           )}
         </div>
       )}
-    </header>
+    </Root>
   );
 }

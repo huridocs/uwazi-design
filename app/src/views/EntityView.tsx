@@ -11,6 +11,7 @@ import { tabsForType } from "../utils/entityTabs";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DocMeta } from "../components/layout/DocMeta";
+import { EntityHeader } from "../components/layout/EntityHeader";
 import { DocumentViewer } from "../components/viewer/DocumentViewer";
 import { ReferencePanel } from "../components/relationships/ReferencePanel";
 import { MetadataDrawerContent } from "../components/relationships/MetadataDrawerContent";
@@ -96,7 +97,7 @@ export function EntityView() {
     // The narrow-tier gutter host: tabs, DocMeta and the viewer's action bar take
     // their side inset from this padding (see `gutter-host`).
     <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0 bg-paper">
-      <MainTabs
+      <EntityHeader
         tabs={tabs}
         activeId={activeTab}
         onChange={handleTabChange}
@@ -106,7 +107,6 @@ export function EntityView() {
         activeLanguage={language}
         onLanguageChange={(lang) => setLanguage(lang as Language)}
       />
-      <DocMeta />
       <DocumentViewer actionBarMenu={menuTrigger} />
     </div>
   );

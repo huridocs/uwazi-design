@@ -37,6 +37,7 @@ export const sidebarGroups: SidebarGroup[] = [
   {
     label: "Entity View — Layout",
     items: [
+      { id: "ev-pane-header", label: "PaneHeader" },
       { id: "ev-main-tabs", label: "MainTabs" },
       { id: "ev-segmented-tabs", label: "SegmentedTabs" },
       { id: "ev-drawer-tabs", label: "DrawerTabs" },
