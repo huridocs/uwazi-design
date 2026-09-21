@@ -1,5 +1,6 @@
 import { atom } from "jotai";
 import { entityCorpusOf, getEntity, type Entity } from "../data/entities";
+import { seedUsers } from "../data/settings";
 import { getEntityProfile } from "../data/entityProfiles";
 import { adapterPatch, changedFieldIds, mergeScalarsByLang } from "../utils/entityEdit";
 import {
@@ -64,6 +65,20 @@ export type UndoOp =
        *  the record the change wrote — undo restores an entity only while that
        *  record is still the one there, so a later edit is never clobbered. */
       entries: { id: string; record?: EntityRecord; patch?: Partial<Entity>; wrote: EntityRecord }[];
+    }
+  | {
+      ref: string;
+      kind: "share";
+      corpus: Corpus;
+      /** Per entity: its patch and member list before, and what the change
+       *  wrote — each restored only while it is still the one there. */
+      entries: {
+        id: string;
+        patch?: Partial<Entity>;
+        wrotePatch?: Partial<Entity>;
+        members?: AccessMember[];
+        wroteMembers?: AccessMember[];
+      }[];
     };
 export const undoOpAtom = atom<UndoOp | null>(null);
 
@@ -88,7 +103,26 @@ export const deleteWithUndoAtom = atom(
 export const undoAtom = atom(null, (get, set, ref: string): boolean => {
   const op = get(undoOpAtom);
   if (!op || op.ref !== ref) return false;
-  if (op.kind === "undelete") {
+  if (op.kind === "share") {
+    const current = get(overlayValueAtom)[op.corpus].patched;
+    const patchBack = op.entries.filter((e) => e.wrotePatch && current[e.id] === e.wrotePatch);
+    if (patchBack.length)
+      set(libraryEntityOverlayAtom, (prev) =>
+        updateCorpus(prev, op.corpus, (o) => ({
+          ...o,
+          patched: { ...o.patched, ...Object.fromEntries(patchBack.map((e) => [e.id, { ...(e.patch ?? {}) }])) },
+        })),
+      );
+    set(entityAccessAtom, (prev) => {
+      const next = { ...prev };
+      for (const e of op.entries) {
+        if (!e.wroteMembers || next[e.id] !== e.wroteMembers) continue;
+        if (e.members) next[e.id] = e.members;
+        else delete next[e.id];
+      }
+      return next;
+    });
+  } else if (op.kind === "undelete") {
     const back = new Set(op.ids);
     set(libraryEntityOverlayAtom, (prev) =>
       updateCorpus(prev, op.corpus, (o) => ({ ...o, deleted: o.deleted.filter((id) => !back.has(id)) })),
@@ -113,6 +147,90 @@ export const undoAtom = atom(null, (get, set, ref: string): boolean => {
   set(undoOpAtom, null);
   return true;
 });
+
+/* ── Access (Share / Permissions) ─────────────────────────────────────────
+   Who can see or edit each entity, beside the rest of the session's changes.
+   Visibility is not here: it IS the entity's `published`, patched through the
+   overlay, so the Status facet, the Restricted lock and the counts follow. An
+   entity with no entry has the seed's members (the one collaborator the
+   Share modal has always opened with). */
+export type AccessLevel = "read" | "write";
+export interface AccessMember {
+  id: string;
+  label: string;
+  level: AccessLevel;
+}
+export const DEFAULT_MEMBERS: AccessMember[] = seedUsers
+  .slice(0, 1)
+  .map((u) => ({ id: u.id, label: u.username, level: "read" as AccessLevel }));
+
+export const entityAccessAtom = atom<Record<string, AccessMember[]>>({});
+
+/** One member's change across a set: given a level (added where missing,
+ *  set where present) or removed from every entity that has them. Members
+ *  with no change are not written. */
+export type MemberChange = { kind: "set"; label: string; level: AccessLevel } | { kind: "remove" };
+
+/** Write a sharing change to `ids` and, with `undoable`, record its exact
+ *  inverse. Returns the undo ref (or null). */
+export const applyShareAtom = atom(
+  null,
+  (
+    get,
+    set,
+    {
+      corpus,
+      ids,
+      visibility,
+      members: changes,
+      undoable = true,
+    }: {
+      corpus: Corpus;
+      ids: string[];
+      visibility: "private" | "published" | null;
+      members: Record<string, MemberChange>;
+      undoable?: boolean;
+    },
+  ): string | null => {
+    const access = get(entityAccessAtom);
+    const before = get(overlayValueAtom)[corpus].patched;
+    const patches: Record<string, Partial<Entity>> = {};
+    const nextMembers: Record<string, AccessMember[]> = {};
+    for (const id of ids) {
+      const e = getEntity(id);
+      if (!e) continue;
+      if (visibility && !!e.published !== (visibility === "published"))
+        patches[id] = { published: visibility === "published" };
+      if (Object.keys(changes).length) {
+        let list = [...(access[id] ?? DEFAULT_MEMBERS)];
+        for (const [mid, c] of Object.entries(changes)) {
+          if (c.kind === "remove") list = list.filter((m) => m.id !== mid);
+          else if (list.some((m) => m.id === mid))
+            list = list.map((m) => (m.id === mid ? { ...m, level: c.level } : m));
+          else list.push({ id: mid, label: c.label, level: c.level });
+        }
+        nextMembers[id] = list;
+      }
+    }
+    if (Object.keys(patches).length) set(patchEntitiesAtom, { corpus, patches });
+    if (Object.keys(nextMembers).length) set(entityAccessAtom, (prev) => ({ ...prev, ...nextMembers }));
+    if (!undoable) return null;
+    const after = get(overlayValueAtom)[corpus].patched;
+    const entries = ids
+      .filter((id) => patches[id] || nextMembers[id])
+      .map((id) => ({
+        id,
+        patch: before[id],
+        wrotePatch: patches[id] ? after[id] : undefined,
+        members: access[id],
+        wroteMembers: nextMembers[id],
+      }));
+    undoSeq += 1;
+    const ref = `undo-${Date.now().toString(36)}-${undoSeq}`;
+    set(undoOpAtom, { ref, kind: "share", corpus, entries });
+    return ref;
+  },
+);
 
 /** Change one corpus's overlay, leaving the others as they are. */
 function updateCorpus(

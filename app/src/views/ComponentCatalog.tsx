@@ -88,6 +88,9 @@ import {
   IsolatedInheritedValueChip,
   IsolatedRelationshipFieldEditor,
   IsolatedThesaurusPicker,
+  IsolatedSelectionActionsMenu,
+  IsolatedChangeTemplate,
+  IsolatedShareSelection,
   IsolatedBulkFieldRows,
   IsolatedRadioGroup,
   IsolatedDataTable,
@@ -1325,6 +1328,38 @@ sendFill(selection.text);                                    // commits, then di
 />`}
                 >
                   <IsolatedSelectControls />
+                </CatalogEntry>
+              </div>
+
+              <div id="fl-selection-actions-menu" ref={reg("fl-selection-actions-menu")}>
+                <CatalogEntry
+                  name="SelectionActionsMenu"
+                  description="The selection drawer's Actions: the footer bar's actions that don't fit a 24rem footer — Change template, Export CSV, Share, Permissions, and Delete last after a separator, in seal. The same list the bar and the phone sheet show (useSelectionActions), firing the same dialogs. role=menu: arrows move, Escape closes and returns focus. Opens upward; disabled items stay, saying why."
+                  code={`const actions = useSelectionActions({ order: ids, corpus });
+<SelectionActionsMenu actions={actions.filter((a) => a.id !== "edit")} />`}
+                >
+                  <IsolatedSelectionActionsMenu />
+                </CatalogEntry>
+              </div>
+
+              <div id="fl-change-template" ref={reg("fl-change-template")}>
+                <CatalogEntry
+                  name="ChangeTemplateDialog"
+                  description="Change the template of a selection. One decision with a consequence list: pick the target, and per source template it lists what is KEPT (same property name, type and thesaurus), DROPPED (with how many values go, amber) and NEW (empty). Entities already on the target are skipped and counted. The warning line is always mounted; the confirm is seal when values are deleted. Undo restores templates and values; over 200 entities it runs as a Beacon task."
+                  code={`<ChangeTemplateDialog ids={[...selection]} corpus={corpus} types={types} onClose={close} />`}
+                >
+                  <IsolatedChangeTemplate />
+                </CatalogEntry>
+              </div>
+
+              <div id="fl-share-bulk" ref={reg("fl-share-bulk")}>
+                <CatalogEntry
+                  name="ShareEntityModal · selection"
+                  description="Share and Permissions over a selection — the one Share modal, given ids. Share focuses general access, Permissions the people lookup. Where the entities disagree it says so: 'Mixed access · 7 published, 5 private' with neither option checked; member rows carry coverage ('4 of 12') and 'Mixed access' for differing levels. A fixed first row, Administrators and Editors, can always edit. Only changed rows are written ('Will change · added to 8', with revert); Save opens a review in the same panel, and Apply records Undo. Publishing patches the entity, so the Status facet follows."
+                  code={`<ShareEntityModal open onClose={close} ids={[...selection]} initialFocus="access" />   // Share
+<ShareEntityModal open onClose={close} ids={[...selection]} initialFocus="people" />   // Permissions`}
+                >
+                  <IsolatedShareSelection />
                 </CatalogEntry>
               </div>
 

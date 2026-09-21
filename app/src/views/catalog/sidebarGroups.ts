@@ -114,6 +114,9 @@ export const sidebarGroups: SidebarGroup[] = [
       { id: "fl-zoom-control", label: "ZoomControl" },
       { id: "fl-fade-truncate", label: "FadeTruncate" },
       { id: "fl-select-controls", label: "SelectControls" },
+      { id: "fl-selection-actions-menu", label: "SelectionActionsMenu" },
+      { id: "fl-change-template", label: "ChangeTemplateDialog" },
+      { id: "fl-share-bulk", label: "ShareEntityModal · selection" },
     ],
   },
   {

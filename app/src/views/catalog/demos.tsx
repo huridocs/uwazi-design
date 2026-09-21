@@ -3,6 +3,11 @@ import { createStore, Provider, useSetAtom } from "jotai";
 import { ChevronDown } from "lucide-react";
 import { AddThesaurusValueModal, ThesaurusPicker } from "../../components/metadata/ThesaurusPicker";
 import { BulkFieldRow } from "../../components/metadata/BulkFieldRow";
+import { SelectionActionsMenu } from "../../components/library/SelectionActionsMenu";
+import { ChangeTemplateDialog } from "../../components/library/ChangeTemplateDialog";
+import { ShareEntityModal } from "../../components/share/ShareEntityModal";
+import { entityTypes } from "../../data/entities";
+import { FileDown, LayoutTemplate, Lock, Share2, Trash2 } from "lucide-react";
 import { seedThesaurusValues, type ThesaurusValue } from "../../data/settings";
 import { selectableLabels } from "../../atoms/thesauri";
 
@@ -1004,5 +1009,54 @@ export function IsolatedBulkFieldRows() {
         />
       </BulkFieldRow>
     </div>
+  );
+}
+
+/** SelectionActionsMenu with the selection's actions (inert here). */
+export function IsolatedSelectionActionsMenu() {
+  return (
+    <div className="pt-48">
+      <SelectionActionsMenu
+        actions={[
+          { id: "change-template", label: "Change template", icon: <LayoutTemplate size={13} />, onClick: () => {} },
+          { id: "export", label: "Export CSV", icon: <FileDown size={13} />, onClick: () => {} },
+          { id: "share", label: "Share", icon: <Share2 size={13} />, onClick: () => {} },
+          { id: "permissions", label: "Permissions", icon: <Lock size={13} />, onClick: () => {} },
+          { id: "delete", label: "Delete", icon: <Trash2 size={13} />, onClick: () => {}, danger: true },
+        ]}
+      />
+    </div>
+  );
+}
+
+/** ChangeTemplateDialog over three Sample entities (a Country and two Court
+ *  Cases). Opens a live dialog; confirming writes to the catalog's session. */
+export function IsolatedChangeTemplate() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)} className="px-3 py-1.5 text-xs font-medium bg-warm rounded-md cursor-pointer">
+        Open Change template
+      </button>
+      {open && <ChangeTemplateDialog ids={["e2", "e13", "e31"]} corpus="mock" types={entityTypes} onClose={() => setOpen(false)} />}
+    </>
+  );
+}
+
+/** ShareEntityModal over three Sample entities, as Share and as Permissions. */
+export function IsolatedShareSelection() {
+  const [focus, setFocus] = useState<"access" | "people" | null>(null);
+  return (
+    <>
+      <div className="flex gap-2">
+        <button type="button" onClick={() => setFocus("access")} className="px-3 py-1.5 text-xs font-medium bg-warm rounded-md cursor-pointer">
+          Share 3 entities
+        </button>
+        <button type="button" onClick={() => setFocus("people")} className="px-3 py-1.5 text-xs font-medium bg-warm rounded-md cursor-pointer">
+          Permissions
+        </button>
+      </div>
+      <ShareEntityModal open={focus !== null} onClose={() => setFocus(null)} ids={["e2", "e13", "e31"]} initialFocus={focus ?? "access"} />
+    </>
   );
 }
