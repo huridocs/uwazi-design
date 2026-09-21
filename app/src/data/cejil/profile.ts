@@ -79,6 +79,34 @@ const propsByTemplate = new Map(
 
 const SKIP = new Set(["preview", "image", "link", "nested", "generatedtoc", "relationship"]);
 
+/** A template's editable scalar properties, EMPTY and in template order — what
+ *  a new entity's edit form opens on. `mdFields` emits only the properties a
+ *  record holds values for; a form for a record that doesn't exist yet needs
+ *  every one. Relationship properties are left out, as `mdFields` leaves them
+ *  out: a new entity has no connections to edit. */
+export function cejilBlankFields(templateId: string): MetadataField[] {
+  const out: MetadataField[] = [];
+  for (const p of propsByTemplate.get(templateId) || []) {
+    if (p.name === "title" || p.name === "creationDate" || p.name === "editDate") continue;
+    if (SKIP.has(p.type) || p.type === "geolocation") continue;
+    const type: MetadataField["type"] =
+      p.type === "date" || p.type === "datasection"
+        ? "date"
+        : p.type === "markdown"
+          ? "multiline"
+          : p.type === "media"
+            ? "media"
+            : "text";
+    out.push({ id: p.name, label: p.label, type, value: "" });
+  }
+  return out;
+}
+
+/** The template Uwazi gives an uploaded document: the one flagged `default`. */
+export function cejilDefaultTemplateId(): string | undefined {
+  return cejilTemplates.find((t) => t.default)?._id;
+}
+
 /** The relation type NAME a template inherits a geolocation through — the
  *  `inherit: {type: "geolocation"}` spec, read at last. Mirrors the adapter's
  *  copy so the record and the card resolve the same connection. */

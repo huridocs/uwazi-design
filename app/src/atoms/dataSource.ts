@@ -1,4 +1,4 @@
-import { atom } from "jotai";
+import { atom, type Getter } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { entitiesAtom, entityTypesAtom } from "./entities";
 import { entityCorpusOf, entityTypes, type Entity, type EntityType } from "../data/entities";
@@ -6,6 +6,8 @@ import { cejilEntityTypes } from "../data/cejil/typesAdapter";
 import { cejilLibraryEntities } from "../data/cejil/adapt";
 import { artworkEntityTypes } from "../data/artworks/typesAdapter";
 import { artworkLibraryEntities } from "../data/artworks/adapt";
+import { libraryEntityOverlayAtom } from "./entityOverlay";
+import { applyOverlay } from "../data/entityOverlay";
 
 export type DataSource = "mock" | "cejil" | "artworks";
 
@@ -24,6 +26,14 @@ export const cejilReadyAtom = atom(false);
  *  this is [] until `cejilReadyAtom` flips (the Library shows a loading state). */
 export const libraryEntitiesAtom = atom<Entity[]>((get) => {
   const source = get(dataSourceAtom);
+  // The session's changes over the corpus (`data/entityOverlay.ts`): created
+  // entities first, deleted ones out, patched ones as new objects so every
+  // per-entity cache recomputes. With none, the corpus's own array comes back
+  // as is — its identity keys caches too.
+  return applyOverlay(get(libraryEntityOverlayAtom)[source], seedFor(source, get));
+});
+
+function seedFor(source: DataSource, get: Getter): Entity[] {
   switch (source) {
     case "artworks":
       // Bundled TS — present the moment the app is, so no ready gate (see
@@ -43,7 +53,7 @@ export const libraryEntitiesAtom = atom<Entity[]>((get) => {
       return get(entitiesAtom);
     }
   }
-});
+}
 
 /** Every entity of ONE entity's own corpus — the pool a feature draws from when
  *  it offers peers of a given entity rather than "whatever the Library is

@@ -12,6 +12,7 @@ import { getEntityProps } from "./entityMetadata";
 import { isCejilEntity, buildCejilProfile } from "./cejil/profile";
 import { isArtworkEntity, buildArtworkProfile } from "./artworks/profile";
 import type { EntityImage } from "./entities";
+import { overlayCreated, overlayRecord, type EntityRecord } from "./entityOverlay";
 
 const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -192,6 +193,17 @@ const TYPE_FIELDS: Record<string, { prop: string; type: MetadataField["type"] }[
   ],
 };
 
+/** A type's fields, EMPTY and in template order, per language — what a new
+ *  entity's edit form opens on. `synthFields` emits only populated props, which
+ *  is right for a record and useless for a form that has nothing yet. */
+export function blankTypeFields(typeId: string): Record<Language, MetadataField[]> {
+  const spec = TYPE_FIELDS[typeId] ?? [];
+  return LANGS.reduce((acc, lang) => {
+    acc[lang] = spec.map(({ prop, type }) => field(prop, prop, type, "", lang));
+    return acc;
+  }, {} as Record<Language, MetadataField[]>);
+}
+
 /** Type-appropriate scalar fields from the entity's populated native props.
  *  Only props that have a value are rendered (no em-dash placeholders). */
 function synthFields(entity: Entity, lang: Language): AnyMetadataField[] {
@@ -288,6 +300,37 @@ const lightweightCache = new Map<string, EntityProfile>();
 const FALLBACK_ENTITY: Entity = { id: "unknown", title: "Unknown entity", typeId: "document" };
 
 export function getEntityProfile(id: string): EntityProfile {
+  // An entity whose record the session wrote (created, or edited): its
+  // profile is that record over whatever the corpus had.
+  const record = overlayRecord(id);
+  if (record) return profileFromRecord(id, record);
+  return baseProfile(id);
+}
+
+/** Record-built profiles, per record object — records are immutable, so a new
+ *  write is a new key and a stale profile is never found again. */
+const recordProfiles = new WeakMap<EntityRecord, EntityProfile>();
+function profileFromRecord(id: string, record: EntityRecord): EntityProfile {
+  const hit = recordProfiles.get(record);
+  if (hit) return hit;
+  // A created entity has no corpus profile underneath; an edited one does,
+  // and keeps whatever the record doesn't replace (its document, relationships).
+  const base = overlayCreated(id) ? undefined : baseProfile(id);
+  const files = record.files ?? base?.files ?? [];
+  const profile: EntityProfile = {
+    ...(base ?? { relationships: { kind: "references" as const } }),
+    id,
+    typeId: record.typeId,
+    hasDocument: files.length > 0 || !!base?.hasDocument,
+    metadata: record.metadata as Record<Language, AnyMetadataField[]>,
+    documentGroups: record.documentGroups ?? base?.documentGroups ?? [],
+    files,
+  };
+  recordProfiles.set(record, profile);
+  return profile;
+}
+
+function baseProfile(id: string): EntityProfile {
   const authored = PROFILES[id];
   if (authored) return authored;
   const cached = lightweightCache.get(id);
