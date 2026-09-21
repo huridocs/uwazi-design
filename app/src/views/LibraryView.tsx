@@ -323,12 +323,17 @@ export function LibraryView() {
 
      The thresholds are the row's parts at their natural widths (measured:
      Sort 113px, View 89, Display 32, Language 56, the readout slot 240, 8px
-     gaps) with the search box held at a usable 11rem, plus the mobile drawer
-     trigger where there is one. Past each one, in order:
-       - the readout leaves the row for its own line under it (always mounted
-         at that width, so typing a query never adds the line);
+     gaps) with the search box held at 16rem, plus the mobile drawer trigger
+     where there is one. The floor was 11rem, and at 11rem the search box was
+     the control that yielded first: at a 1024px window with the default drawer
+     it sat at 210px, its query cut mid-word, while Sort kept all 113px beside
+     it. The box is the row's primary control and Sort and Language both have
+     a second home in the Display menu, so they give before it does. Past
+     each threshold, in order:
        - Sort steps into the Display menu (`librarySortInMenuAtom`), as it
          already does on a phone;
+       - the readout leaves the row for its own line under it (always mounted
+         at that width, so typing a query never adds the line);
        - Language steps aside, as it already does on a phone.
      A tier changes when the WIDTH changes — a drawer drag, a window resize —
      never on typing or on the number the readout prints. */
@@ -353,9 +358,20 @@ export function LibraryView() {
   // Unmeasured (the first render) counts as wide; the observer corrects it
   // before paint.
   const fits = (w: number) => mastheadW === 0 || mastheadW >= w + mastheadExtra;
-  const readoutInline = fits(746);
-  const sortInline = fits(498);
-  const langInline = fits(377);
+  const SEARCH_FLOOR = 256; // 16rem
+  const GAP = 8, SORT = 113, VIEW = 89, DISPLAY = 32, LANG = 56, READOUT = 240;
+  const rowWithout = (...gone: number[]) =>
+    SEARCH_FLOOR + [READOUT, SORT, VIEW, DISPLAY, LANG]
+      .filter((w) => !gone.includes(w))
+      .reduce((sum, w) => sum + GAP + w, 0);
+  // ORDER: Sort, then the readout, then Language. Sort goes first because it is
+  // the one part with a second home already (the Display menu) and it buys the
+  // readout 121px: the row stays ONE line, 49px, down to a 705px pane instead
+  // of wrapping at 826. A tier never comes back as the row narrows, so Sort does
+  // not reappear once the readout has taken its own line.
+  const sortInline = fits(rowWithout()); // 826
+  const readoutInline = fits(rowWithout(SORT)); // 705
+  const langInline = fits(rowWithout(READOUT, SORT)); // 457
   const setSortInMenu = useSetAtom(librarySortInMenuAtom);
   const setLanguageInMenu = useSetAtom(libraryLanguageInMenuAtom);
   useEffect(() => {
@@ -821,7 +837,7 @@ export function LibraryView() {
       <div data-part="masthead-row" className="flex items-center gap-2">
         <div
           ref={searchBoxRef}
-          className="relative flex-1 min-w-0 flex items-center gap-1.5 h-8 py-1 pl-2 pr-2 bg-paper border border-border rounded-md
+          className="relative flex-1 min-w-0 flex items-center gap-1.5 h-8 py-1 ps-2 pe-2 bg-paper border border-border rounded-md
             focus-within:ring-2 focus-within:ring-ink/25 focus-within:border-ink/30 transition-all"
         >
           <Search size={14} className="text-ink-tertiary shrink-0" />
