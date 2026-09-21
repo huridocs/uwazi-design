@@ -11,6 +11,7 @@ import {
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom } from "../atoms/dataSource";
 import { startDraftAtom } from "../atoms/entityOverlay";
 import { openNewImportOnArrivalAtom } from "../atoms/navigation";
+import { editSessionOpenAtom } from "../atoms/dirtyGuard";
 import { CreateEntityDialog } from "../components/library/CreateEntityDialog";
 import { isPdf, runCsvExport, runPdfUploadBatch } from "../utils/libraryTasks";
 import { defaultTemplateId, uploadTemplateId } from "../utils/createEntity";
@@ -308,7 +309,14 @@ export function LibraryView() {
     runPdfUploadBatch(store, { corpus, ...batch }, (ids) => {
       // Only while the library still shows that corpus: an upload that lands
       // after the user moved elsewhere shouldn't pull them back.
-      if (ids.length === 1 && store.get(dataSourceAtom) === corpus) setSelectedId(ids[0]);
+      if (ids.length !== 1 || store.get(dataSourceAtom) !== corpus) return;
+      // It lands seconds after Upload was pressed, when the reader may be in a
+      // form — a new entity's draft, an edit. Switching the drawer then would
+      // unmount it and lose what they typed, with nothing done by them at that
+      // moment. So it never takes the drawer from an open form; the
+      // notification says where the document is instead.
+      if (store.get(editSessionOpenAtom)) return "Not opened while a form is open; it is in the library.";
+      guard(() => setSelectedId(ids[0]));
     });
   }
   /** Export CSV: the CURRENT result set — facets, query and match types

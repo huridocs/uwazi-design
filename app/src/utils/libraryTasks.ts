@@ -36,7 +36,9 @@ export function runPdfUploadBatch(
     typeId,
     uploads,
   }: { corpus: Corpus; typeId: string; uploads: { file: File; title: string }[] },
-  onCreated?: (entityIds: string[]) => void,
+  /** Called once the entities exist. May return a sentence for the
+   *  notification — why a finished upload was NOT opened, for instance. */
+  onCreated?: (entityIds: string[]) => string | void,
 ): void {
   const id = taskId("upload");
   const n = uploads.length;
@@ -80,14 +82,14 @@ export function runPdfUploadBatch(
         file: { name: file.name, size: file.size, url: URL.createObjectURL(file) },
       })),
     });
+    const note = onCreated?.(ids);
     patch(store, id, {
       current: 100,
       done: {
         title: `${n} ${noun} uploaded.`,
-        detail: uploads.map((u) => u.title).join(" · "),
+        detail: [uploads.map((u) => u.title).join(" · "), note].filter(Boolean).join(" — "),
       },
     });
-    onCreated?.(ids);
   };
   window.setTimeout(tick, 150);
 }
