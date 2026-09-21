@@ -361,7 +361,8 @@ export function LibraryView() {
   const SEARCH_FLOOR = 256; // 16rem
   const GAP = 8, SORT = 113, VIEW = 89, DISPLAY = 32, LANG = 56, READOUT = 240;
   const rowWithout = (...gone: number[]) =>
-    SEARCH_FLOOR + [READOUT, SORT, VIEW, DISPLAY, LANG]
+    // +5: the hairline (1 + its 8px gap) less the two 6px gaps inside the groups.
+    SEARCH_FLOOR + 5 + [READOUT, SORT, VIEW, DISPLAY, LANG]
       .filter((w) => !gone.includes(w))
       .reduce((sum, w) => sum + GAP + w, 0);
   // ORDER: Sort, then the readout, then Language. Sort goes first because it is
@@ -960,53 +961,67 @@ export function LibraryView() {
             it costs no width. The VIEW switcher does not: cards / list / map /
             timeline are the point of the Library, and they were unreachable on
             mobile because this whole cluster was `hidden sm:block`. */}
-        {sortInline && (
-        <div>
-          <Select
-            value={sort}
-            onChange={(v) => {
-              const key = v as typeof sort;
-              setSort(key);
-              setSortDir(defaultSortDir(key));
-            }}
-            ariaLabel={t("System", "Sort")}
-            // Same rows, chrome-language labels; values stay the sort keys.
-            // Relevance only exists while a query runs (`librarySortAtom`).
-            options={SORTS.filter((s) => q || s.value !== "relevance").map((s) => ({ ...s, label: t("System", s.label) }))}
-            // Same row, same reason as the switcher: this trigger swung 47px
-            // between "Title" and "Connections", shoving View, Display and
-            // Language sideways on every sort change.
-            steady
-          />
+        {/* ARRANGE: which order, which shape. One group, a tighter gap inside it. */}
+        <div data-part="arrange" className="flex items-center gap-1.5">
+          {sortInline && (
+          <div>
+            <Select
+              value={sort}
+              onChange={(v) => {
+                const key = v as typeof sort;
+                setSort(key);
+                setSortDir(defaultSortDir(key));
+              }}
+              ariaLabel={t("System", "Sort")}
+              // Same rows, chrome-language labels; values stay the sort keys.
+              // Relevance only exists while a query runs (`librarySortAtom`).
+              options={SORTS.filter((s) => q || s.value !== "relevance").map((s) => ({ ...s, label: t("System", s.label) }))}
+              // Same row, same reason as the switcher: this trigger swung 47px
+              // between "Title" and "Connections", shoving View, Display and
+              // Language sideways on every sort change.
+              steady
+            />
+          </div>
+          )}
+          {/* The switcher is a dropdown, like Sort and Language either side of it,
+              so this row reads as three of one control rather than two dropdowns
+              and a segmented widget. It is also the narrowest the switcher has
+              been: five segments cost a fixed 156px whatever they show, while one
+              trigger costs the widest label once. `steady` is what makes that
+              safe — see Select. The trade is real and deliberate: every view is
+              still reachable, but at two clicks rather than one, and the trigger
+              names the active view where five icons couldn't. */}
+          <ViewSwitcher value={viewMode} onChange={(v) => setViewMode(v as typeof viewMode)} />
         </div>
-        )}
-        {/* The switcher is a dropdown, like Sort and Language either side of it,
-            so this row reads as three of one control rather than two dropdowns
-            and a segmented widget. It is also the narrowest the switcher has
-            been: five segments cost a fixed 156px whatever they show, while one
-            trigger costs the widest label once. `steady` is what makes that
-            safe — see Select. The trade is real and deliberate: every view is
-            still reachable, but at two clicks rather than one, and the trigger
-            names the active view where five icons couldn't. */}
-        <ViewSwitcher value={viewMode} onChange={(v) => setViewMode(v as typeof viewMode)} />
-        {/* Display is icon-only and ALWAYS mounted; the view-specific modifiers
-            (timeline layout) live inside its popover. Anything that appears and
-            disappears from this row shoves every other control sideways when you
-            change view — which is exactly what it used to do. */}
-        <LibraryDisplayMenu />
-        {/* Languages: one dropdown of fixed width (codes, not names — a "Français"
-            label would resize the trigger and shift the row again). */}
+        {/* One hairline, between the controls that change WHAT is listed and how
+            it is ordered, and the two that change how it is drawn and read. A gap
+            step alone did not separate four look-alike triggers; a rule per
+            control would be chrome. It goes with Language: past that fold each
+            side is one control, and a rule between two lone buttons costs a
+            phone's search box 9px for nothing. Width decides it, never state. */}
         {langInline && (
-        <div>
-          <Select
-            value={language}
-            onChange={(v) => setLanguage(v as Language)}
-            ariaLabel="Language"
-            align="end"
-            options={LANGUAGES.map((l) => ({ value: l, label: l }))}
-          />
-        </div>
+          <span aria-hidden="true" data-part="rule" className="shrink-0 w-px h-4 bg-border" />
         )}
+        <div data-part="display" className="flex items-center gap-1.5">
+          {/* Display is icon-only and ALWAYS mounted; the view-specific modifiers
+              (timeline layout) live inside its popover. Anything that appears and
+              disappears from this row shoves every other control sideways when you
+              change view — which is exactly what it used to do. */}
+          <LibraryDisplayMenu />
+          {/* Languages: one dropdown of fixed width (codes, not names — a "Français"
+              label would resize the trigger and shift the row again). */}
+          {langInline && (
+          <div>
+            <Select
+              value={language}
+              onChange={(v) => setLanguage(v as Language)}
+              ariaLabel="Language"
+              align="end"
+              options={LANGUAGES.map((l) => ({ value: l, label: l }))}
+            />
+          </div>
+          )}
+        </div>
         {menuTrigger}
       </div>
       {/* The readout's own line, when the row can't hold it. Mounted for as
