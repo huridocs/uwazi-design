@@ -29,6 +29,7 @@ export const sidebarGroups: SidebarGroup[] = [
     items: [
       { id: "el-entity-pill", label: "EntityPill" },
       { id: "el-page-tag", label: "PageTag" },
+      { id: "el-hint", label: "Hint" },
       { id: "el-count-badge", label: "CountBadge" },
       { id: "el-buttons", label: "Buttons" },
     ],

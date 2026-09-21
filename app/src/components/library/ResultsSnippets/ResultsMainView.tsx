@@ -30,7 +30,9 @@ import { HighlightedText } from "../../shared/HighlightedText";
 import { EntityTypeChip } from "../../shared/EntityTypeChip";
 import { ListInfoRow } from "../../shared/ListInfoRow";
 import { BorrowedDocLine } from "../BorrowedDocLine";
-import { ProvenanceLine } from "../../shared/ProvenanceLine";
+import { Hint } from "../../shared/Hint";
+import { PageTag } from "../../shared/PageTag";
+import { AlsoUnder } from "./AlsoUnder";
 import { ToggleChip } from "../../shared/ToggleChip";
 import { CountBadge } from "../../shared/CountBadge";
 import { MatchedTerms } from "../MatchedTerms";
@@ -921,108 +923,129 @@ function PassagesBody({
               (activePage.entityId === row.entity.id ||
                 row.also.some((e) => e.id === activePage.entityId)));
           return (
-            // The hairline rides the ITEM: `last:` has to see the last row of
-            // the sheet, and the button is now the only child of its item.
+            // The row is CHROME, not a control (CLAUDE.md a11y patterns): every
+            // action in it is a visible control on the attribution line, each
+            // naming itself, so a row-wide target would only be a third route
+            // to what the entity name and the source label already do. Hover
+            // and the selected fill stay on the row.
             <li
               key={`${row.entity.id}-${i}`}
               data-part="passage"
-              className="border-b border-border/50 last:border-b-0"
-            >
-            <button
-              type="button"
-              aria-pressed={selected}
-              onClick={() => {
-                setActiveKey(rowKey);
-                if (isDoc && row.page !== null) onSelectSnippet(row.entity.id, row.page);
-                else if (isDoc) onSelect(row.entity.id);
-                else onFocusProperty(row.entity.id, row.fieldKey!);
-              }}
-              // The WHOLE entry is the target — passage and attribution were two
-              // halves of one thought, and only one of them used to be clickable.
-              className={`w-full text-start px-3 py-2.5
-                transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1
-                focus-visible:ring-inset focus-visible:ring-ink/20 ${
-                  selected ? "bg-parchment" : "hover:bg-warm"
-                }`}
+              data-state={selected ? "selected" : undefined}
+              className={`border-b border-border/50 last:border-b-0 px-3 py-2.5 text-sm transition-colors ${
+                selected ? "bg-parchment" : "hover:bg-warm"
+              }`}
             >
               {/* Passage and attribution are ONE block that runs to the row's
                   edge. They used to sit in a stretched `1fr_15rem` grid: the
                   meta stayed pinned to the far edge, a hand's width from the
                   sentence it names. The attribution now sits under the quote. */}
-              <span className="block text-sm">
-                <span data-part="excerpt" className="block leading-relaxed text-ink">
-                  <HighlightedText text={row.text} query={query} />
-                </span>
-                {/* The attribution, under the quote it belongs to. Small and
-                    quiet: this layout ranks passages, so the entity stays
-                    secondary — but it now has the row's width to be legible in
-                    rather than a 15rem track that truncated most case names. */}
-                <span data-part="attribution" className="mt-1 flex items-center gap-1.5 min-w-0 text-meta">
-                  <span
-                    aria-hidden
-                    className="w-1.5 h-1.5 rounded-[2px] shrink-0"
-                    style={{ backgroundColor: color }}
-                  />
-                  <span className="truncate text-ink-secondary">
-                    <HighlightedText text={row.entity.title} query={query} />
-                  </span>
-                  <span className="shrink-0 text-ink-muted" aria-hidden="true">
-                    ·
-                  </span>
-                  {/* `<bdi dir="ltr">` keeps the ASSEMBLED "Document · p.15 ·
-                      2×" in order under RTL without flipping the line's
-                      alignment. A field name is the field's OWN translation
-                      ("الصك المصدر"), so it takes `auto` and reads in its own
-                      direction — forcing ltr on it is how a translated label
-                      ends up mis-ordered. */}
-                  <bdi
-                    dir={isDoc ? "ltr" : "auto"}
-                    className="shrink-0 text-meta uppercase tracking-wide text-ink-tertiary"
-                  >
-                    {isDoc ? (
-                      <>
-                        {documentLabel(row.from)}
-                        {/* No invented page numbers: the tag exists only where
-                            the corpus is genuinely page-mapped. */}
-                        {row.page !== null && (
-                          <>
-                            <span className="mx-1 text-ink-muted">·</span>
-                            <span className="tabular-nums">p.{row.page}</span>
-                          </>
-                        )}
-                        {row.hits > 1 && (
-                          <>
-                            <span className="mx-1 text-ink-muted">·</span>
-                            <span className="tabular-nums">{row.hits}×</span>
-                          </>
-                        )}
-                      </>
-                    ) : (
-                      row.field
-                    )}
-                  </bdi>
-                  {/* The attribution line is mounted for every row, so naming the
-                      source document here costs no height and moves nothing. It
-                      is what turns a run of identical passages under a dozen
-                      case names into a dozen cases citing one judgment. */}
-                  <BorrowedDocLine from={row.from} className="min-w-0" />
-                  {/* The results folded into this row, in the same `↳` idiom.
-                      Rides the mounted attribution line, so it moves nothing. */}
-                  {row.also.length > 0 && (
-                    <ProvenanceLine inline label="also under" className="shrink-0">
+              <p data-part="excerpt" className="leading-relaxed text-ink">
+                <HighlightedText text={row.text} query={query} />
+              </p>
+              {/* The attribution, under the quote it belongs to — and every
+                  part of it a way in: the entity, the evidence, the page, the
+                  other results that read the same passage. One line at one
+                  height (`min-h-5` holds the page tag's box on rows without
+                  one), so no row grows when it carries more. */}
+              <div data-part="attribution" className="mt-1 flex items-center gap-1.5 min-w-0 min-h-5 text-meta">
+                <Hint text={`Open ${row.entity.title}`} describe={false}>
+                  {(hint) => (
+                    <button
+                      {...hint}
+                      type="button"
+                      data-part="entity"
+                      aria-label={`Open ${row.entity.title}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveKey(rowKey);
+                        onSelect(row.entity.id);
+                      }}
+                      className={`${FOOTER_TARGET} min-w-0 flex items-center gap-1.5 text-ink-secondary`}
+                    >
                       <span
-                        data-part="also"
-                        title={row.also.map((e) => e.title).join("\n")}
-                        className="tabular-nums"
-                      >
-                        {row.also.length.toLocaleString()}{" "}
-                        {row.also.length === 1 ? "entity" : "entities"}
+                        aria-hidden
+                        className="w-1.5 h-1.5 rounded-[2px] shrink-0"
+                        style={{ backgroundColor: color }}
+                      />
+                      <span className="truncate">
+                        <HighlightedText text={row.entity.title} query={query} />
                       </span>
-                    </ProvenanceLine>
+                    </button>
                   )}
+                </Hint>
+                <span className="shrink-0 text-ink-muted" aria-hidden="true">
+                  ·
                 </span>
-              </span>
-            </button>
+                {/* `<bdi dir="ltr">` keeps the ASSEMBLED "Document · p.15 ·
+                    2 matches" in order under RTL without flipping the line's
+                    alignment. A field name is the field's OWN translation
+                    ("الصك المصدر"), so it takes `auto` and reads in its own
+                    direction — forcing ltr on it is how a translated label
+                    ends up mis-ordered. */}
+                <bdi dir={isDoc ? "ltr" : "auto"} className="shrink-0 flex items-center gap-1">
+                  <SourceTarget
+                    label={isDoc ? documentLabel(row.from) : row.field!}
+                    hint={
+                      !isDoc
+                        ? `Go to ${row.field}`
+                        : row.page !== null
+                          ? `Go to page ${row.page}`
+                          : `Open the document of ${row.entity.title}`
+                    }
+                    onActivate={() => {
+                      setActiveKey(rowKey);
+                      if (isDoc && row.page !== null) onSelectSnippet(row.entity.id, row.page);
+                      else if (isDoc) onSelect(row.entity.id);
+                      else onFocusProperty(row.entity.id, row.fieldKey!);
+                    }}
+                  />
+                  {/* No invented page numbers: the tag exists only where the
+                      corpus is genuinely page-mapped. */}
+                  {isDoc && row.page !== null && (
+                    <>
+                    <Sep />
+                    <Hint text={`Go to page ${row.page}`} describe={false}>
+                      {(hint) => (
+                        <span {...hint} className="inline-flex">
+                          <PageTag
+                            page={row.page!}
+                            onClick={() => {
+                              setActiveKey(rowKey);
+                              onSelectSnippet(row.entity.id, row.page!);
+                            }}
+                          />
+                        </span>
+                      )}
+                    </Hint>
+                    </>
+                  )}
+                  {/* A count, not a control — so it is spelled out rather than
+                      left as "4×" for a screen reader to guess at. */}
+                  {row.hits > 1 && (
+                    <>
+                    <Sep />
+                    <Hint
+                      text={`${row.hits} matches ${row.page !== null ? "on this page" : "in this passage"}`}
+                    >
+                      {(hint) => (
+                        <span {...hint} data-part="hits" className="tabular-nums text-ink-tertiary">
+                          {row.hits} matches
+                        </span>
+                      )}
+                    </Hint>
+                    </>
+                  )}
+                </bdi>
+                {/* The attribution line is mounted for every row, so naming the
+                    source document here costs no height and moves nothing. It
+                    is what turns a run of identical passages under a dozen
+                    case names into a dozen cases citing one judgment. */}
+                <BorrowedDocLine from={row.from} className="min-w-0" />
+                {/* The results folded into this row, in the same `↳` idiom.
+                    Rides the mounted attribution line, so it moves nothing. */}
+                {row.also.length > 0 && <AlsoUnder entities={row.also} onOpenEntity={onSelect} />}
+              </div>
             </li>
           );
         })}
@@ -1045,6 +1068,43 @@ function PassagesBody({
         </p>
       )}
     </div>
+  );
+}
+
+/** A control on a passage row's attribution line: text-sized, no box of its own,
+ *  underline on hover, a ring on focus. */
+const FOOTER_TARGET = `rounded-sm hover:underline cursor-pointer focus-visible:outline-none
+  focus-visible:ring-1 focus-visible:ring-carbon/40`;
+
+/** The row's source label — DOCUMENT, BORROWED DOCUMENT, or the field's name —
+ *  as the way to the evidence: the page, the document, or the field. */
+function SourceTarget({
+  label,
+  hint,
+  onActivate,
+}: {
+  label: string;
+  hint: string;
+  onActivate: () => void;
+}) {
+  return (
+    <Hint text={hint} describe={false}>
+      {(h) => (
+        <button
+          {...h}
+          type="button"
+          data-part="source"
+          aria-label={hint}
+          onClick={(e) => {
+            e.stopPropagation();
+            onActivate();
+          }}
+          className={`${FOOTER_TARGET} uppercase tracking-wide text-ink-tertiary`}
+        >
+          {label}
+        </button>
+      )}
+    </Hint>
   );
 }
 
@@ -1303,6 +1363,15 @@ function PageCount({ shown, total }: { shown: number; total: number }) {
         {shown < total ? `${shown} of ${total.toLocaleString()}` : total.toLocaleString()}
       </span>{" "}
       {total === 1 ? "page" : "pages"}
+    </span>
+  );
+}
+
+/** The "·" between the parts of a passage row's attribution. */
+function Sep() {
+  return (
+    <span aria-hidden className="text-ink-muted">
+      ·
     </span>
   );
 }
