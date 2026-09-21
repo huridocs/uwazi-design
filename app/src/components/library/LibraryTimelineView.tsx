@@ -28,7 +28,7 @@ import {
 } from "../../utils/timeline";
 import { breakpointAtom } from "../../atoms/viewport";
 import { BucketBreakdown, ChartTip } from "./BucketBreakdown";
-import { EntitySelectBox, useSelectionOrder } from "./EntitySelectBox";
+import { EntitySelectBox, holdTextSelection, useDrawnIds, useSelectionOrder } from "./EntitySelectBox";
 import { EntityCard } from "./EntityCard";
 import { HighlightedText } from "../shared/HighlightedText";
 import { MatchOrigin } from "./MatchOrigin";
@@ -72,6 +72,13 @@ export function LibraryTimelineView(props: Props) {
   // A Shift range runs in the order this view draws: by date.
   const datedIds = useMemo(() => dated.map((e) => e.id), [dated]);
   useSelectionOrder(datedIds);
+  // What this layout DRAWS, for "select all loaded": the spine plots the first
+  // SPINE_CAP, the lanes grid draws no entity rows, the list draws them all.
+  const drawnIds = useMemo(
+    () => (layout === "lanes" ? [] : layout === "spine" ? datedIds.slice(0, SPINE_CAP) : datedIds),
+    [layout, datedIds],
+  );
+  useDrawnIds(drawnIds);
 
   if (!dated.length) {
     return (
@@ -693,6 +700,7 @@ function SpineLayout({ dated, query, selectedId, onSelect }: LayoutProps) {
             // AT (and invalid HTML). Same keyboard behaviour, one level down.
             <div
               onClick={(ev) => onSelect(e.id, ev)}
+              onMouseDown={holdTextSelection}
               className={`group relative flex items-center h-[22px] px-2 rounded-md cursor-pointer
                 transition-colors ${sel ? "bg-parchment" : "hover:bg-parchment"}
                 has-[[data-part=select]_input:checked]:bg-parchment`}
@@ -700,7 +708,7 @@ function SpineLayout({ dated, query, selectedId, onSelect }: LayoutProps) {
               <button
                 type="button"
                 aria-pressed={sel}
-                aria-label={`Select ${e.title}`}
+                aria-label={`Preview ${e.title}`}
                 onClick={(ev) => {
                   ev.stopPropagation();
                   onSelect(e.id, ev);
@@ -714,7 +722,9 @@ function SpineLayout({ dated, query, selectedId, onSelect }: LayoutProps) {
                     checked, or anything selected). Nothing moves either way. */}
                 <span className="relative shrink-0 w-4 h-4 flex items-center justify-center">
                   <span className="w-1.5 h-1.5 rounded-[2px]" style={{ backgroundColor: color }} />
-                  <EntitySelectBox id={e.id} title={e.title} className="absolute inset-0" />
+                  {/* Centred over the slot: the box's 24px target is larger than the
+                      slot, and auto margins over inset-0 centre it exactly. */}
+                  <EntitySelectBox id={e.id} title={e.title} className="absolute inset-0 m-auto!" />
                 </span>
                 <SpineDate t={t} />
                 <span

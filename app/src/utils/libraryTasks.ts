@@ -17,6 +17,11 @@ type Store = ReturnType<typeof useStore>;
 let seq = 0;
 const taskId = (kind: string) => `${kind}-${Date.now().toString(36)}-${++seq}`;
 
+/** The task is still in the Beacon — not cancelled. Its Cancel only removes
+ *  the activity, so every step past a wait checks this before doing anything
+ *  a cancelled task must not (create entities, hand over a file). */
+const alive = (store: Store, id: string) => store.get(activitiesAtom).some((a) => a.id === id);
+
 function patch(store: Store, id: string, change: Partial<Activity>) {
   store.set(activitiesAtom, (prev) => prev.map((a) => (a.id === id ? { ...a, ...change } : a)));
 }
@@ -36,7 +41,9 @@ export function runPdfUploadBatch(
     typeId,
     uploads,
   }: { corpus: Corpus; typeId: string; uploads: { file: File; title: string }[] },
-  onCreated?: (entityIds: string[]) => void,
+  /** Called once the entities exist. May return a sentence for the
+   *  notification — why a finished upload was NOT opened, for instance. */
+  onCreated?: (entityIds: string[]) => string | void,
 ): void {
   const id = taskId("upload");
   const n = uploads.length;
@@ -58,6 +65,8 @@ export function runPdfUploadBatch(
   const processMs = 1000 + 300 * n;
   const started = performance.now();
   const tick = () => {
+    // Cancelled from the Beacon: stop here, and create nothing.
+    if (!alive(store, id)) return;
     const t = performance.now() - started;
     if (t < uploadMs) {
       patch(store, id, { current: Math.round((t / uploadMs) * 60) });
@@ -80,14 +89,14 @@ export function runPdfUploadBatch(
         file: { name: file.name, size: file.size, url: URL.createObjectURL(file) },
       })),
     });
+    const note = onCreated?.(ids);
     patch(store, id, {
       current: 100,
       done: {
         title: `${n} ${noun} uploaded.`,
-        detail: uploads.map((u) => u.title).join(" · "),
+        detail: [uploads.map((u) => u.title).join(" · "), note].filter(Boolean).join(" — "),
       },
     });
-    onCreated?.(ids);
   };
   window.setTimeout(tick, 150);
 }
@@ -116,9 +125,21 @@ export async function runCsvExport(
       driven: true,
     },
   ]);
-  const { csv, rows, columns } = await exportEntitiesCsv(entities, language, (done) =>
-    patch(store, id, { current: done }),
-  );
+  let result: Awaited<ReturnType<typeof exportEntitiesCsv>>;
+  try {
+    result = await exportEntitiesCsv(entities, language, (done) => {
+      patch(store, id, { current: done });
+      // Stop building rows for a task nobody is waiting on.
+      return alive(store, id);
+    });
+  } catch (err) {
+    // A task stuck part-way in the Beacon is worse than a failed one.
+    store.set(activitiesAtom, (prev) => prev.filter((a) => a.id !== id));
+    throw err;
+  }
+  // Cancelled from the Beacon: no download.
+  if (!result || !alive(store, id)) return;
+  const { csv, rows, columns } = result;
   downloadCsv(csv, filename);
   patch(store, id, {
     current: total,

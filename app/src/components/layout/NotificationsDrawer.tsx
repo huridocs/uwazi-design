@@ -23,8 +23,9 @@ import {
   type NotificationKind,
   type NotificationAction,
 } from "../../atoms/notifications";
-import { undoAtom, undoSnapshotAtom } from "../../atoms/entityOverlay";
+import { undoAtom, undoOpAtom } from "../../atoms/entityOverlay";
 import { UwaziLoader } from "../shared/UwaziLoader";
+import { Hint } from "../shared/Hint";
 import { SectionLabel } from "../shared/SectionLabel";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 
@@ -461,24 +462,29 @@ function NotifCard({
  *  undoes has been replaced — disabled, saying why — so the card doesn't
  *  change shape under the reader. */
 function NotifAction({ action }: { action: NotificationAction }) {
-  const snapshot = useAtomValue(undoSnapshotAtom);
+  const op = useAtomValue(undoOpAtom);
   const undo = useSetAtom(undoAtom);
-  const live = snapshot?.ref === action.ref;
+  const live = op?.ref === action.ref;
+  // Why it is off, on hover AND focus (a `title` never shows on focus).
   return (
-    <button
-      type="button"
-      data-part="action"
-      aria-disabled={!live || undefined}
-      title={live ? undefined : "A later change replaced this undo"}
-      onClick={(e) => {
-        e.stopPropagation();
-        if (live) undo(action.ref);
-      }}
-      className={`flex items-center gap-1 px-2 h-6 text-meta font-medium text-ink-secondary bg-paper/70 border border-border-soft rounded-md transition-colors ${
-        live ? "hover:bg-paper cursor-pointer" : "opacity-50 cursor-not-allowed"
-      }`}
-    >
-      <Undo2 size={11} aria-hidden /> {action.label}
-    </button>
+    <Hint text={live ? action.label : "A later delete replaced this undo"} describe={!live}>
+      {(hint) => (
+        <button
+          {...hint}
+          type="button"
+          data-part="action"
+          aria-disabled={!live || undefined}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (live) undo(action.ref);
+          }}
+          className={`flex items-center gap-1 px-2 h-6 text-meta font-medium text-ink-secondary bg-paper/70 border border-border-soft rounded-md transition-colors ${
+            live ? "hover:bg-paper cursor-pointer" : "opacity-50 cursor-not-allowed"
+          }`}
+        >
+          <Undo2 size={11} aria-hidden /> {action.label}
+        </button>
+      )}
+    </Hint>
   );
 }

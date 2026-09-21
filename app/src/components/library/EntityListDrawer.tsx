@@ -1,11 +1,11 @@
-import { useState, type ReactNode } from "react";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useCallback, useState, type ReactNode } from "react";
+import { useSetAtom } from "jotai";
 import { X } from "lucide-react";
-import { libraryQueryAtom } from "../../atoms/library";
+import { rangeSelectionAtom } from "../../atoms/library";
 import { openEntityAtom } from "../../atoms/focusedEntity";
 import { getEntity, type Entity } from "../../data/entities";
 import { EntityCard } from "./EntityCard";
-import { SelectionOrderScope } from "./EntitySelectBox";
+import { SelectionOrderScope, selectionIntent } from "./EntitySelectBox";
 
 /** Rows mounted before "Show more" — the Library grid's step. A selection can
  *  be the whole corpus; mounting 4,398 cards to list it would be the grid's
@@ -35,6 +35,7 @@ export function EntityListDrawer({
   headerAction,
   onSelect,
   rowClassName,
+  query,
 }: {
   icon: ReactNode;
   title: string;
@@ -48,11 +49,24 @@ export function EntityListDrawer({
   onSelect: (id: string, e?: React.MouseEvent) => void;
   /** Per-row class — the selection drawer dims a row that was unticked. */
   rowClassName?: (id: string) => string;
+  /** The query to mark — the host's DEFERRED query, never the raw atom: a
+   *  selection survives searching and its drawer stays open, so reading the
+   *  raw query re-rendered every row on every keystroke (see `EntityCard`). */
+  query: string;
 }) {
-  // Read here and passed down: the cards don't subscribe (see `EntityCard`).
-  // A drawer list is never on the keystroke path, so the committed query is fine.
-  const query = useAtomValue(libraryQueryAtom);
   const openEntity = useSetAtom(openEntityAtom);
+  const range = useSetAtom(rangeSelectionAtom);
+  // Stable, so the rows' memo holds.
+  const onView = useCallback((id: string) => openEntity(id), [openEntity]);
+  // A Shift+click on a row's BODY ranges over THIS list, as its checkbox does
+  // — the host's handler would range over the view behind the drawer.
+  const onRow = useCallback(
+    (id: string, e?: React.MouseEvent) => {
+      if (e && selectionIntent(e) === "range") range({ order: ids, id });
+      else onSelect(id, e);
+    },
+    [ids, onSelect, range],
+  );
   const [visible, setVisible] = useState(STEP);
   const ents = ids
     .slice(0, visible)
@@ -88,7 +102,7 @@ export function EntityListDrawer({
         </span>
       </div>
 
-      <div data-part="rows" className="bleed flex-1 min-h-0 overflow-auto py-3">
+      <div data-part="rows" data-select-scope className="bleed flex-1 min-h-0 overflow-auto py-3">
         <SelectionOrderScope value={ids}>
           <ul className="flex flex-col gap-2">
             {ents.map((e) => (
@@ -99,8 +113,8 @@ export function EntityListDrawer({
                 layout="list"
                 query={query}
                 selected={false}
-                onSelect={onSelect}
-                onView={(id) => openEntity(id)}
+                onSelect={onRow}
+                onView={onView}
                 selectable
                 className={rowClassName?.(e.id) ?? ""}
               />

@@ -177,6 +177,9 @@ export function DataTable<T>({
                     role="row"
                     data-part="row"
                     onClick={onRowClick ? (e) => onRowClick(row, e) : undefined}
+                    // A Shift+click on a clickable row is the host's (a range);
+                    // don't also extend the page's text selection to it.
+                    onMouseDown={onRowClick ? (e) => e.shiftKey && e.preventDefault() : undefined}
                     className={`group relative grid items-center gap-3 px-4 ${box.row} text-sm transition-colors ${
                       clickable ? "cursor-pointer" : ""
                     } ${selected ? "bg-parchment" : "hover:bg-warm"}

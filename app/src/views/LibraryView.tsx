@@ -11,6 +11,7 @@ import {
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom } from "../atoms/dataSource";
 import { startDraftAtom } from "../atoms/entityOverlay";
 import { openNewImportOnArrivalAtom } from "../atoms/navigation";
+import { editSessionOpenAtom } from "../atoms/dirtyGuard";
 import { CreateEntityDialog } from "../components/library/CreateEntityDialog";
 import { isPdf, runCsvExport, runPdfUploadBatch } from "../utils/libraryTasks";
 import { defaultTemplateId, uploadTemplateId } from "../utils/createEntity";
@@ -69,6 +70,7 @@ import {
   clearSelectionAtom,
   librarySelectionActiveAtom,
   librarySelectionDrawerOpenAtom,
+  libraryDrawnIdsAtom,
 } from "../atoms/library";
 import {
   EntitySelectBox,
@@ -308,7 +310,14 @@ export function LibraryView() {
     runPdfUploadBatch(store, { corpus, ...batch }, (ids) => {
       // Only while the library still shows that corpus: an upload that lands
       // after the user moved elsewhere shouldn't pull them back.
-      if (ids.length === 1 && store.get(dataSourceAtom) === corpus) setSelectedId(ids[0]);
+      if (ids.length !== 1 || store.get(dataSourceAtom) !== corpus) return;
+      // It lands seconds after Upload was pressed, when the reader may be in a
+      // form — a new entity's draft, an edit. Switching the drawer then would
+      // unmount it and lose what they typed, with nothing done by them at that
+      // moment. So it never takes the drawer from an open form; the
+      // notification says where the document is instead.
+      if (store.get(editSessionOpenAtom)) return "Not opened while a form is open; it is in the library.";
+      guard(() => setSelectedId(ids[0]));
     });
   }
   /** Export CSV: the CURRENT result set — facets, query and match types
@@ -744,8 +753,21 @@ export function LibraryView() {
   const selectionDrawerOpen = useAtomValue(librarySelectionDrawerOpenAtom);
   const shownIds = useMemo(() => shown.map((e) => e.id), [shown]);
   const filteredIds = useMemo(() => filtered.map((e) => e.id), [filtered]);
-  // The grid's and the table's order — Timeline and Results register their own.
-  useSelectionOrder(shownIds);
+  // The grid's and the table's order — Timeline and Results register their own,
+  // so this one stands down while they draw (see `useSelectionOrder`).
+  useSelectionOrder(viewMode === "timeline" || viewMode === "results" ? null : shownIds);
+  // What the visible view DRAWS, for "select all loaded". The grid, the table
+  // and the map are drawn here; Timeline and Results publish their own.
+  const setDrawnIds = useSetAtom(libraryDrawnIdsAtom);
+  const drawnIds = useAtomValue(libraryDrawnIdsAtom);
+  const mapIds = useMemo(
+    () => (viewMode === "map" ? filtered.filter((e) => e.geo).map((e) => e.id) : null),
+    [viewMode, filtered],
+  );
+  useEffect(() => {
+    if (viewMode === "cards" || viewMode === "list") setDrawnIds(shownIds);
+    else if (mapIds) setDrawnIds(mapIds);
+  }, [viewMode, shownIds, mapIds, setDrawnIds]);
 
   // Escape clears — except where Escape already means something: a text field,
   // a dialog, an open menu.
@@ -755,6 +777,11 @@ export function LibraryView() {
       if (e.key !== "Escape" || e.defaultPrevented) return;
       const t = e.target as HTMLElement | null;
       if (t?.closest("input:not([type=checkbox]), textarea, select, [role=dialog], [role=menu], [role=listbox]")) return;
+      // A popup open anywhere — the Display menu, a Select, the search tips —
+      // takes this Escape to close itself. Those popups leave focus on their
+      // trigger, so the target check above can't see them; their open
+      // trigger can: an `aria-haspopup` control with `aria-expanded="true"`.
+      if (document.querySelector('[aria-haspopup][aria-expanded="true"]')) return;
       clearSelection();
     };
     window.addEventListener("keydown", onKey);
@@ -1255,10 +1282,10 @@ export function LibraryView() {
             the loaded entities. The rest of the bar swaps IN PLACE between
             the baseline actions and the selection's — same bar, same height. */}
         <span className="hidden sm:inline-flex shrink-0 me-1">
-          <SelectAllBox loadedIds={shownIds} disabled={cejilLoading} />
+          <SelectAllBox loadedIds={drawnIds} disabled={cejilLoading} />
         </span>
         {selectionActive && (
-          <LibrarySelectionBar filteredIds={filteredIds} loadedIds={shownIds} corpus={dataSource} />
+          <LibrarySelectionBar filteredIds={filteredIds} loadedIds={drawnIds} corpus={dataSource} />
         )}
         {!selectionActive && (
           <FooterButton
@@ -1408,9 +1435,9 @@ export function LibraryView() {
   const drawer = selectedId ? (
     <EntityDrawerPreview entityId={selectedId} />
   ) : selectionActive && selectionDrawerOpen ? (
-    <LibrarySelectionDrawer onSelect={handleSelect} />
+    <LibrarySelectionDrawer onSelect={handleSelect} query={query} />
   ) : selectedCluster && viewMode === "map" ? (
-    <LibraryClusterDrawer onSelect={handleSelect} />
+    <LibraryClusterDrawer onSelect={handleSelect} query={query} />
   ) : (
     filtersDrawer
   );

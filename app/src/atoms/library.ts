@@ -1,5 +1,6 @@
 import { startTransition } from "react";
-import { atom } from "jotai";
+import { atom, type Getter, type Setter } from "jotai";
+import { editSessionOpenAtom } from "./dirtyGuard";
 import { atomFamily, atomWithStorage, createJSONStorage } from "jotai/utils";
 import { dataSourceAtom, libraryEntitiesAtom, type DataSource } from "./dataSource";
 import { languageAtom } from "./language";
@@ -251,6 +252,20 @@ export const entitySelectedAtom = atomFamily((id: string) =>
  *  clearing it, and any new tick opens it again. */
 export const librarySelectionDrawerOpenAtom = atom(true);
 
+/** The ids the VISIBLE view actually draws — the grid's loaded page, the
+ *  timeline's plotted rows, the Results page, the map's located entities.
+ *  "Select all loaded" means these, in every view; each view writes its own. */
+export const libraryDrawnIdsAtom = atom<readonly string[]>([]);
+
+/** Show the selection list in the drawer — by dropping the preview, unless
+ *  the preview is holding an open form (a draft, an edit): ticking a box
+ *  must not unmount it and lose what was typed. The list shows once the form
+ *  is closed. */
+function showSelectionList(get: Getter, set: Setter) {
+  if (!get(editSessionOpenAtom)) set(librarySelectedEntityIdAtom, null);
+  set(librarySelectionDrawerOpenAtom, true);
+}
+
 /** Toggle one id. Sets the anchor, ends any range, and — like every selection
  *  gesture — drops the preview so the drawer shows the selection being built. */
 export const toggleSelectionAtom = atom(null, (get, set, id: string) => {
@@ -260,8 +275,7 @@ export const toggleSelectionAtom = atom(null, (get, set, id: string) => {
   set(librarySelectionAtom, next);
   set(librarySelectionAnchorAtom, id);
   set(lastRangeAtom, []);
-  set(librarySelectedEntityIdAtom, null);
-  set(librarySelectionDrawerOpenAtom, true);
+  showSelectionList(get, set);
 });
 
 /** Shift+click: select from the anchor to `id` over `order` — the order the
@@ -278,13 +292,15 @@ export const rangeSelectionAtom = atom(null, (get, set, { order, id }: { order: 
   const range = order.slice(Math.min(a, b), Math.max(a, b) + 1);
   const next = new Set(get(librarySelectionAtom));
   for (const x of get(lastRangeAtom)) next.delete(x);
-  for (const x of range) next.add(x);
+  // What THIS range adds — not the whole span: an id inside it that was
+  // already selected (ticked on its own) must survive the next re-span.
+  const added = range.filter((x) => !next.has(x));
+  for (const x of added) next.add(x);
   // The anchor itself was picked on its own; re-spanning must not drop it.
   if (anchor) next.add(anchor);
   set(librarySelectionAtom, next);
-  set(lastRangeAtom, range);
-  set(librarySelectedEntityIdAtom, null);
-  set(librarySelectionDrawerOpenAtom, true);
+  set(lastRangeAtom, added.filter((x) => x !== anchor));
+  showSelectionList(get, set);
 });
 
 /** Add ids (select all loaded, select all results, a map cluster). */
@@ -293,8 +309,7 @@ export const selectIdsAtom = atom(null, (get, set, ids: readonly string[]) => {
   for (const id of ids) next.add(id);
   set(librarySelectionAtom, next);
   set(lastRangeAtom, []);
-  set(librarySelectedEntityIdAtom, null);
-  set(librarySelectionDrawerOpenAtom, true);
+  showSelectionList(get, set);
 });
 
 /** Remove ids (a row unticked in the selection drawer, deleted entities). */

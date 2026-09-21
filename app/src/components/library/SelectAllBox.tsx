@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { clearSelectionAtom, librarySelectionAtom, selectIdsAtom } from "../../atoms/library";
+import { deselectIdsAtom, librarySelectionAtom, selectIdsAtom } from "../../atoms/library";
 import { Hint } from "../shared/Hint";
 
 /** The tri-state "select all" for the Library — the footer's and the list
@@ -8,16 +8,21 @@ import { Hint } from "../shared/Hint";
  *
  *  Its state is over the LOADED entities (what "Show more" has mounted): none
  *  of them selected = unchecked, some = mixed, all = checked. Unchecked, a
- *  click selects every loaded entity; mixed or checked, it clears. Selecting
+ *  click selects every loaded entity; mixed or checked, it deselects the
+ *  loaded ones — and only those (see the click). Selecting
  *  the rest of a larger result set is the footer readout's own offer, so this
  *  box never reaches past what the reader can see.
  *
  *  The hint carries the gestures Uwazi prints under its grid, because a
  *  checkbox is not where anyone expects to learn them. */
+/** The modifier this platform calls Cmd — Ctrl everywhere but Apple's. */
+const MOD =
+  typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? "Cmd" : "Ctrl";
+
 export function SelectAllBox({ loadedIds, disabled = false }: { loadedIds: readonly string[]; disabled?: boolean }) {
   const selection = useAtomValue(librarySelectionAtom);
   const selectIds = useSetAtom(selectIdsAtom);
-  const clear = useSetAtom(clearSelectionAtom);
+  const deselect = useSetAtom(deselectIdsAtom);
   const ref = useRef<HTMLInputElement | null>(null);
 
   let picked = 0;
@@ -32,7 +37,7 @@ export function SelectAllBox({ loadedIds, disabled = false }: { loadedIds: reado
   }, [mixed]);
 
   return (
-    <Hint text="Select all loaded. Cmd or Shift + click selects several." describe={false}>
+    <Hint text={`Select all loaded. ${MOD} or Shift + click selects several.`} describe={false}>
       {(hint) => (
         <span {...hint} className="inline-flex items-center">
           <input
@@ -43,7 +48,7 @@ export function SelectAllBox({ loadedIds, disabled = false }: { loadedIds: reado
             checked={all}
             aria-checked={mixed ? "mixed" : all}
             aria-disabled={off || undefined}
-            aria-label="Select all loaded entities"
+            aria-label={picked > 0 ? "Deselect the loaded entities" : "Select all loaded entities"}
             onChange={() => {}}
             onClick={(e) => {
               e.stopPropagation();
@@ -51,7 +56,10 @@ export function SelectAllBox({ loadedIds, disabled = false }: { loadedIds: reado
                 e.preventDefault();
                 return;
               }
-              if (picked > 0) clear();
+              // Clears only what it can see: the loaded ids. Entities picked
+              // under another filter (counted "not in view") stay — Clear, in
+              // the bar, is the one that ends a whole selection.
+              if (picked > 0) deselect(loadedIds);
               else selectIds(loadedIds);
             }}
             className={`w-3.5 h-3.5 rounded shrink-0 accent-ink ${off ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}

@@ -14,7 +14,7 @@ import { languageAtom } from "../../atoms/language";
 import { EntityTypeTag } from "../shared/EntityTypeTag";
 import { HighlightedText } from "../shared/HighlightedText";
 import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
-import { EntitySelectBox } from "./EntitySelectBox";
+import { EntitySelectBox, holdTextSelection } from "./EntitySelectBox";
 import { EntityThumbnail, QuietMark } from "./EntityThumbnail";
 import { CardValue, ownsItsRemainder } from "./CardValue";
 import { LIBRARY_SORTS } from "../../data/libraryDisplay";
@@ -326,6 +326,7 @@ export const EntityCard = memo(function EntityCard({
         data-component="EntityCard"
         data-layout="list"
         onClick={(e) => onSelect(entity.id, e)}
+        onMouseDown={holdTextSelection}
         className={`${base} ${surface} w-full ${className}`}
       >
         {primaryAction}
@@ -415,6 +416,7 @@ export const EntityCard = memo(function EntityCard({
       data-component="EntityCard"
       data-layout="cards"
       onClick={(e) => onSelect(entity.id, e)}
+      onMouseDown={holdTextSelection}
       className={`${base} ${surface} ${minHeight} grid grid-rows-subgrid ${ROW_SPAN[rowCount]} gap-y-2.5 p-3`}
     >
       {primaryAction}

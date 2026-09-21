@@ -8,7 +8,14 @@ import { EntityListDrawer } from "./EntityListDrawer";
  *  drawer to Filters; clicking a row opens its preview on top. A thin host of
  *  `EntityListDrawer`, which the selection drawer shares — so a cluster's rows
  *  are selectable, and "Select all N" adds the whole cluster. */
-export function LibraryClusterDrawer({ onSelect }: { onSelect: (id: string, e?: React.MouseEvent) => void }) {
+export function LibraryClusterDrawer({
+  onSelect,
+  query,
+}: {
+  onSelect: (id: string, e?: React.MouseEvent) => void;
+  /** The host's deferred query, to mark. */
+  query: string;
+}) {
   const cluster = useAtomValue(librarySelectedClusterAtom);
   const setCluster = useSetAtom(librarySelectedClusterAtom);
   const selectIds = useSetAtom(selectIdsAtom);
@@ -21,6 +28,7 @@ export function LibraryClusterDrawer({ onSelect }: { onSelect: (id: string, e?: 
       onClose={() => setCluster(null)}
       closeLabel="Back to filters"
       onSelect={onSelect}
+      query={query}
       headerAction={
         <button
           type="button"

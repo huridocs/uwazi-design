@@ -139,6 +139,7 @@ export function SearchTipsPopover({
         ref={chipRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
+        aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={PANEL_ID}
         data-component="SearchTipsPopover"
