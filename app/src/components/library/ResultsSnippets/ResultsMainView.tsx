@@ -34,7 +34,14 @@ import { BorrowedDocLine } from "../BorrowedDocLine";
 import { Hint } from "../../shared/Hint";
 import { PageTag } from "../../shared/PageTag";
 import { AlsoUnder } from "./AlsoUnder";
-import { EntitySelectBox, FOCUS_RING_ON_SELECT, holdTextSelection, useDrawnIds, useSelectionOrder } from "../EntitySelectBox";
+import {
+  EntitySelectBox,
+  FOCUS_RING_ON_SELECT,
+  holdTextSelection,
+  selectionIntent,
+  useDrawnIds,
+  useSelectionOrder,
+} from "../EntitySelectBox";
 import { useSettledWidth } from "../../../hooks/useSettledWidth";
 import { ToggleChip } from "../../shared/ToggleChip";
 import { CountBadge } from "../../shared/CountBadge";
@@ -1008,9 +1015,13 @@ function PassagesBody({
                       aria-label={`Open ${row.entity.title}`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setActiveKey(rowKey);
-                        onSelect(row.entity.id);
+                        // Cmd/Ctrl or Shift: the passage's ENTITY joins the
+                        // selection (the handler reads the modifiers); a
+                        // passage row itself is evidence, not an entity.
+                        if (!selectionIntent(e)) setActiveKey(rowKey);
+                        onSelect(row.entity.id, e);
                       }}
+                      onMouseDown={holdTextSelection}
                       className={`${FOOTER_TARGET} min-w-0 flex items-center gap-1.5 text-ink-secondary`}
                     >
                       <span
@@ -1187,9 +1198,16 @@ function SpineBody({
               type="button"
               data-part="spine-row"
               aria-pressed={selected}
-              onClick={() =>
-                best?.page != null ? onSelectSnippet(entity.id, best.page) : onSelect(entity.id)
+              onClick={(e) =>
+                // A selection gesture selects the entity; otherwise the row
+                // jumps to its best passage, as before.
+                selectionIntent(e)
+                  ? onSelect(entity.id, e)
+                  : best?.page != null
+                    ? onSelectSnippet(entity.id, best.page)
+                    : onSelect(entity.id)
               }
+              onMouseDown={holdTextSelection}
               style={{ height: SPINE_ROW_H }}
               className={`w-full flex flex-col justify-center px-2 rounded-md text-start
                 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1
