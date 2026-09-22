@@ -18,7 +18,7 @@ import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
 import {
   EntitySelectBox,
   FOCUS_RING_ON_SELECT,
-  PREVIEWED_EDGE,
+  PREVIEWED_RING,
   SELECTED_LOOK,
   holdTextSelection,
   lastPointerWasTouch,
@@ -306,7 +306,7 @@ export const EntityCard = memo(function EntityCard({
   // Previewed OR selected is bg-parchment — the same ground, one rule. The
   // selected case is CSS off the hidden checkbox itself, so a selection
   // change re-renders nothing but the box.
-  const surface = `${selected ? `bg-paper ${PREVIEWED_EDGE}` : "bg-paper border-border/60 hover:bg-parchment"}
+  const surface = `${selected ? `bg-paper border-border/60 ${PREVIEWED_RING}` : "bg-paper border-border/60 hover:bg-parchment"}
     ${SELECTED_LOOK}`;
   const selectBox = selectable ? <EntitySelectBox id={entity.id} title={entity.title} /> : null;
 

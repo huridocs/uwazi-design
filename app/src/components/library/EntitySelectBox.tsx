@@ -149,11 +149,16 @@ export const SELECTED_LOOK = [
 /** The same, drawn inside the box — for rows, whose neighbours touch them. */
 export const SELECTED_LOOK_INSET = `${SELECTED_LOOK} has-[[data-part=select]_input:checked]:ring-inset`;
 
-/** The PREVIEWED item — the one open in the drawer. Selected owns
- *  bg-parchment; a previewed item that looked the same made the selection
- *  unreadable (four parchment cards, "3 selected"). The preview is an ink
- *  hairline instead: no new colour, and it survives forced colors. */
-export const PREVIEWED_EDGE = "border-ink";
+/** The PREVIEWED item — the one open in the drawer: the carbon ring on its
+ *  own fill, the same look as keyboard focus on an unselected item. So the
+ *  Library has ONE accent: ring = focus or preview, ring + parchment =
+ *  selected (the ink hairline it replaces made the first card clicked look
+ *  unlike every card picked after it). Forced colors drop rings, so there it
+ *  is a thin system-colour outline — thinner than selected's. */
+export const PREVIEWED_RING =
+  "ring-2 ring-[var(--selected-ring)] forced-colors:outline forced-colors:outline-1 forced-colors:outline-[CanvasText]";
+/** The same, drawn inside the box — for rows. */
+export const PREVIEWED_RING_INSET = `${PREVIEWED_RING} ring-inset forced-colors:-outline-offset-1`;
 
 /* ── Touch ──────────────────────────────────────────────────────────────
    Selection is modifier-click, and a touch screen has no modifiers — so on
