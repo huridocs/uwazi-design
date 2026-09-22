@@ -68,7 +68,7 @@ export function AdaptiveSplitView({
               zIndex: 60,
             }}
           >
-            <MobileActionMenu items={menuItems} />
+            <MobileActionMenu items={menuItems} floating />
           </div>
         )}
         <MobileBottomSheet

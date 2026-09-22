@@ -124,7 +124,7 @@ import { HighlightedText } from "../components/shared/HighlightedText";
 import { Select } from "../components/shared/Select";
 import { ViewSwitcher } from "../components/library/ViewSwitcher";
 import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
-import { BAR_GHOST, WARM_BUTTON } from "../components/shared/warmButton";
+import { BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
 import { BarDivider } from "../components/shared/BarDivider";
 
 const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
@@ -1413,7 +1413,7 @@ export function LibraryView() {
             onClick={() => setPhoneActionsOpen(true)}
             aria-haspopup="dialog"
             aria-expanded={phoneActionsOpen}
-            className={`sm:hidden shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md cursor-pointer`}
+            className={`sm:hidden shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium ${BAR_LEAD} rounded-md cursor-pointer`}
           >
             <MoreHorizontal size={13} className="text-ink-tertiary" aria-hidden /> Actions
           </button>
@@ -1583,7 +1583,7 @@ function FooterButton({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className={`hidden sm:flex shrink-0 items-center gap-1.5 px-2.5 @[44rem]:px-3 py-1.5 text-xs font-medium ${lead ? WARM_BUTTON : BAR_GHOST} rounded-md transition-colors cursor-pointer`}
+      className={`hidden sm:flex shrink-0 items-center gap-1.5 px-2.5 @[44rem]:px-3 py-1.5 text-xs font-medium ${lead ? BAR_LEAD : BAR_GHOST} rounded-md transition-colors cursor-pointer`}
     >
       {icon}
       <span className="hidden @[44rem]:inline">{label}</span>

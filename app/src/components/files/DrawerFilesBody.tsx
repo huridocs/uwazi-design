@@ -15,7 +15,7 @@ import { AddFileModal } from "./AddFileModal";
 import { FileViewerBody, resolveFileUrl } from "./FileViewerModal";
 import { DocumentViewer } from "../viewer/DocumentViewer";
 import { ViewButton } from "../shared/ViewButton";
-import { BAR_GHOST, WARM_BUTTON } from "../shared/warmButton";
+import { BAR_GHOST, BAR_LEAD } from "../shared/warmButton";
 
 const KNOWN_LANGUAGES = ["EN", "ES", "FR", "AR", "PT", "DE", "—"];
 
@@ -204,7 +204,7 @@ export function DrawerFilesBody({
             type="button"
             data-part="add-file"
             onClick={() => setAddFileTarget({ mode: "new" })}
-            className={`px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+            className={`px-3 py-1.5 text-xs font-medium ${BAR_LEAD} rounded-md transition-colors cursor-pointer`}
           >
             Add file
           </button>

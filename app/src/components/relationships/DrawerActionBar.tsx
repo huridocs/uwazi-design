@@ -5,7 +5,7 @@ import { ShareEntityModal } from "../share/ShareEntityModal";
 import { SearchTipsPopover } from "../library/SearchTipsPopover";
 import { docSearchQueryAtom } from "../../atoms/references";
 import { useSetAtom } from "jotai";
-import { BAR_DANGER, BAR_GHOST, WARM_BUTTON } from "../shared/warmButton";
+import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../shared/warmButton";
 
 interface DrawerActionBarProps {
   activeTab: string;
@@ -24,7 +24,7 @@ function ActionPill({
   variant?: "lead" | "default" | "danger";
   onClick?: () => void;
 }) {
-  const tone = variant === "danger" ? BAR_DANGER : variant === "lead" ? WARM_BUTTON : BAR_GHOST;
+  const tone = variant === "danger" ? BAR_DANGER : variant === "lead" ? BAR_LEAD : BAR_GHOST;
   return (
     <button
       type="button"

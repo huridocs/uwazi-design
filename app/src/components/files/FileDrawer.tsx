@@ -26,7 +26,7 @@ import { AddFileDropArea } from "./AddFileDropArea";
 import { FileViewerBody, resolveFileUrl } from "./FileViewerModal";
 import { DocumentViewer } from "../viewer/DocumentViewer";
 import { TabCount } from "../shared/TabCount";
-import { BAR_DANGER, BAR_GHOST, WARM_BUTTON } from "../shared/warmButton";
+import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../shared/warmButton";
 
 const typeIcons: Record<FileEntry["type"], typeof FileText> = {
   pdf: FileText,
@@ -223,7 +223,7 @@ export function FileDrawer({
                       type="button"
                       data-part="view"
                       onClick={() => setViewerFileId(selectedFiles[0].id)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${BAR_LEAD} rounded-md transition-colors cursor-pointer`}
                     >
                       <Eye size={12} className="text-ink-tertiary" aria-hidden /> View
                     </button>
@@ -259,7 +259,7 @@ export function FileDrawer({
                 type="button"
                 data-part="download"
                 onClick={() => notify(`Downloading ${selectedFiles.length} files`, "success")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${BAR_LEAD} rounded-md transition-colors cursor-pointer`}
               >
                 <Download size={12} className="text-ink-tertiary" /> Download all
               </button>

@@ -32,7 +32,7 @@ import {
 import { fromDateInputValue, toDateInputValue } from "../../utils/dateValue";
 import { BULK_TASK_THRESHOLD, runBulkApply } from "../../utils/libraryTasks";
 import { FacetSection } from "../shared/FacetSection";
-import { WARM_BUTTON } from "../shared/warmButton";
+import { BAR_GHOST } from "../shared/warmButton";
 import { BulkFieldRow } from "./BulkFieldRow";
 import { AddThesaurusValueModal, ThesaurusPicker } from "./ThesaurusPicker";
 
@@ -220,7 +220,8 @@ export function BulkEditBody({
           <button
             type="button"
             onClick={() => setReview(null)}
-            className={`me-auto px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+            data-gutter-align="box"
+            className={`me-auto px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
           >
             Back
           </button>
@@ -340,7 +341,7 @@ export function BulkEditBody({
         <button
           type="button"
           onClick={onCancel}
-          className={`px-4 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+          className={`px-4 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
         >
           Cancel
         </button>

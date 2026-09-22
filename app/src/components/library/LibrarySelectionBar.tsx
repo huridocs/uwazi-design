@@ -13,7 +13,7 @@ import {
 } from "../../atoms/library";
 import type { Corpus } from "../../data/entityOverlay";
 import { SelectionDialogs, useSelectionActions, type SelectionAction } from "./selectionActions";
-import { BAR_DANGER, BAR_GHOST, WARM_BUTTON } from "../shared/warmButton";
+import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../shared/warmButton";
 import { BarDivider } from "../shared/BarDivider";
 import { Hint } from "../shared/Hint";
 
@@ -135,14 +135,14 @@ export function LibrarySelectionBar({
         onClick={() => setSheetOpen(true)}
         aria-haspopup="dialog"
         aria-expanded={sheetOpen}
-        className={`sm:hidden shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md cursor-pointer`}
+        className={`sm:hidden shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium ${BAR_LEAD} rounded-md cursor-pointer`}
       >
         <MoreHorizontal size={13} className="text-ink-tertiary" aria-hidden /> Actions
       </button>
       <button
         type="button"
         onClick={() => clear()}
-        className={`sm:hidden shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md cursor-pointer`}
+        className={`sm:hidden shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md cursor-pointer`}
       >
         <X size={13} className="text-ink-tertiary" aria-hidden /> Clear
       </button>
@@ -186,7 +186,7 @@ function BarButton({
           aria-disabled={disabled || undefined}
           onClick={disabled ? undefined : onClick}
           className={`hidden sm:flex shrink-0 items-center gap-1.5 px-2.5 @[56rem]:px-3 py-1.5 text-xs font-medium ${
-            tone === "lead" ? WARM_BUTTON : tone === "danger" ? BAR_DANGER : BAR_GHOST
+            tone === "lead" ? BAR_LEAD : tone === "danger" ? BAR_DANGER : BAR_GHOST
           } rounded-md transition-colors ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
         >
           <span className={tone === "danger" ? "" : "text-ink-tertiary"}>{icon}</span>

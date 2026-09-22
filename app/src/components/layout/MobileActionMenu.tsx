@@ -15,7 +15,12 @@ interface MobileActionMenuProps {
 
 const MENU_MIN_WIDTH = 180;
 
-export function MobileActionMenu({ items }: MobileActionMenuProps) {
+export function MobileActionMenu({ items, floating = false }: MobileActionMenuProps & {
+  /** Floating over content, not hosted in a bar. Only then does the trigger
+   *  draw a border: a bar button carries none, but a bare kebab over a page
+   *  would have nothing to separate it from what is under it. */
+  floating?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   // Which edge of the trigger the menu hangs from. Picked on open so the menu
   // grows into the viewport instead of off whichever edge the kebab sits near.
@@ -120,7 +125,9 @@ export function MobileActionMenu({ items }: MobileActionMenuProps) {
         onKeyDown={onTriggerKeyDown}
         data-part="trigger"
         aria-haspopup="menu"
-        className="flex items-center justify-center rounded-md border border-border hover:bg-warm transition-colors w-9 h-9"
+        className={`flex items-center justify-center rounded-md hover:bg-warm aria-expanded:bg-warm transition-colors w-9 h-9 ${
+          floating ? "border border-border bg-paper" : ""
+        }`}
         style={{ color: "var(--text-secondary)" }}
         aria-label="More options"
         aria-expanded={open}

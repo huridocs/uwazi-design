@@ -47,7 +47,7 @@ import { StatusPill } from "../components/settings/StatusPill";
 
 // Icons
 import { ArrowLeft, FileText, Pencil, Download, Trash2, Share2, Plus, Tag } from "lucide-react";
-import { BAR_DANGER, BAR_GHOST, WARM_BUTTON } from "../components/shared/warmButton";
+import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
 import { BarDivider } from "../components/shared/BarDivider";
 
 // Data
@@ -1227,8 +1227,8 @@ sendFill(selection.text);                                    // commits, then di
               <div id="fl-action-bar" ref={reg("fl-action-bar")}>
                 <CatalogEntry
                   name="Action bar weight"
-                  description="One filled lead (WARM_BUTTON) or one ink commit per bar; every other action is a ghost (BAR_GHOST), Delete is seal text (BAR_DANGER), and groups split on a BarDivider."
-                  code={`<button className={WARM_BUTTON}>Edit</button>
+                  description="One lead (BAR_LEAD, vellum) or one ink commit per bar, no borders on any bar button; every other action is a ghost (BAR_GHOST), Delete is seal text (BAR_DANGER), and groups split on a BarDivider."
+                  code={`<button className={BAR_LEAD}>Edit</button>
 <button className={BAR_GHOST}>Share</button>
 <BarDivider />
 <button className={BAR_DANGER}>Delete</button>`}
@@ -1241,7 +1241,7 @@ sendFill(selection.text);                                    // commits, then di
                       <span className="text-xs font-semibold text-ink tabular-nums me-2">3 selected</span>
                       <button type="button" className={`px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md`}>Clear</button>
                       <BarDivider />
-                      <button type="button" className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md`}>
+                      <button type="button" className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${BAR_LEAD} rounded-md`}>
                         <Pencil size={13} className="text-ink-tertiary" /> Edit
                       </button>
                       <button type="button" className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md`}>
