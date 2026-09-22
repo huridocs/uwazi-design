@@ -30,6 +30,13 @@ export function SelectAllBox({ loadedIds, disabled = false }: { loadedIds: reado
   const all = loadedIds.length > 0 && picked === loadedIds.length;
   const mixed = picked > 0 && !all;
   const off = disabled || loadedIds.length === 0;
+  // Selected beyond what is loaded: the box won't touch those, and says so
+  // before the click (the bar's "N not shown" says so after).
+  const beyond = selection.size - picked;
+  const text =
+    picked > 0 && beyond > 0
+      ? `Deselect the ${picked.toLocaleString()} loaded; ${beyond.toLocaleString()} more stay selected (Clear ends the selection).`
+      : `Select all loaded. ${MOD} or Shift + click selects several; on touch, long-press.`;
 
   // `indeterminate` is a DOM property with no attribute.
   useEffect(() => {
@@ -37,7 +44,7 @@ export function SelectAllBox({ loadedIds, disabled = false }: { loadedIds: reado
   }, [mixed]);
 
   return (
-    <Hint text={`Select all loaded. ${MOD} or Shift + click selects several; on touch, long-press.`} describe={false}>
+    <Hint text={text} describe={false}>
       {(hint) => (
         <span {...hint} className="inline-flex items-center">
           <input
@@ -48,7 +55,13 @@ export function SelectAllBox({ loadedIds, disabled = false }: { loadedIds: reado
             checked={all}
             aria-checked={mixed ? "mixed" : all}
             aria-disabled={off || undefined}
-            aria-label={picked > 0 ? "Deselect the loaded entities" : "Select all loaded entities"}
+            aria-label={
+              picked > 0
+                ? beyond > 0
+                  ? `Deselect the ${picked.toLocaleString()} loaded entities; ${beyond.toLocaleString()} more stay selected`
+                  : "Deselect the loaded entities"
+                : "Select all loaded entities"
+            }
             onChange={() => {}}
             onClick={(e) => {
               e.stopPropagation();

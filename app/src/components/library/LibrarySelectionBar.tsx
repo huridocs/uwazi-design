@@ -21,7 +21,7 @@ import { Hint } from "../shared/Hint";
  *
  *  Order: one fixed slot holding the readout (a live region, so 9 → 10 → 100
  *  moves no button) and, under it, its one offer ("Select all N", else "N not
- *  in view"), then the actions (`useSelectionActions` — the same list the phone sheet and
+ *  shown"), then the actions (`useSelectionActions` — the same list the phone sheet and
  *  the selection drawer's menu show) and Clear. Below a 56rem bar every action
  *  keeps only its icon and its name.
  *
@@ -52,6 +52,12 @@ export function LibrarySelectionBar({
   const inView = new Set(filteredIds);
   let notInView = 0;
   for (const id of selection) if (!inView.has(id)) notInView++;
+  // Selected but not DRAWN — filtered out, or past what "Show more" has
+  // loaded. After "Select all 4,398" and the box unticked, 4,278 stay
+  // selected; this is where that is said, not left silent.
+  const drawn = new Set(loadedIds);
+  let notShown = 0;
+  for (const id of selection) if (!drawn.has(id)) notShown++;
   const allLoaded = loadedIds.length > 0 && loadedIds.every((id) => selection.has(id));
   const moreToSelect = allLoaded && filteredIds.length > loadedIds.length && filteredIds.some((id) => !selection.has(id));
 
@@ -65,7 +71,7 @@ export function LibrarySelectionBar({
   return (
     <>
       {/* The count and its one offer share a FIXED slot, stacked: the
-          offer ("Select all 1,084", else "3 not in view") used to flow after
+          offer ("Select all 1,084", else "3 not shown") used to flow after
           Clear and, short of room, painted under the "1 filter" button (the
           click hit the filter at 1440) or truncated to nothing. In the slot it
           has its own line at every width, and nothing else moves when it
@@ -91,14 +97,14 @@ export function LibrarySelectionBar({
             >
               Select all {filteredIds.length.toLocaleString()}
             </button>
-          ) : notInView > 0 ? (
+          ) : notShown > 0 ? (
             <button
               type="button"
               onClick={showList}
               className="text-carbon hover:underline cursor-pointer rounded-sm whitespace-nowrap
                 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
             >
-              {notInView.toLocaleString()} not in view
+              {notShown.toLocaleString()} not shown
             </button>
           ) : null}
         </span>
