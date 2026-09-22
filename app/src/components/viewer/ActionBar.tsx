@@ -3,7 +3,7 @@ import { useAtom } from "jotai";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { currentPageAtom } from "../../atoms/selection";
 import { useNotify } from "../../hooks/useNotify";
-import { WARM_BUTTON } from "../shared/warmButton";
+import { BAR_GHOST } from "../shared/warmButton";
 
 /** Prev/next stepping through the search matches marked in the document. */
 export interface MatchNav {
@@ -53,7 +53,8 @@ export function ActionBar({ numPages, onScrollToPage, leftSlot, rightSlot, showP
           type="button"
           data-part="ocr"
           onClick={() => notify("OCR queued")}
-          className={`px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+          data-gutter-align="box"
+          className={`px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
         >
           OCR PDF
         </button>

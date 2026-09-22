@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { Fragment, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useAtomValue, useSetAtom } from "jotai";
 import { MoreHorizontal, X } from "lucide-react";
@@ -13,7 +13,8 @@ import {
 } from "../../atoms/library";
 import type { Corpus } from "../../data/entityOverlay";
 import { SelectionDialogs, useSelectionActions, type SelectionAction } from "./selectionActions";
-import { WARM_BUTTON } from "../shared/warmButton";
+import { BAR_DANGER, BAR_GHOST, WARM_BUTTON } from "../shared/warmButton";
+import { BarDivider } from "../shared/BarDivider";
 import { Hint } from "../shared/Hint";
 
 /** The Library footer's SELECTED state — swapped in place of the four
@@ -70,14 +71,15 @@ export function LibrarySelectionBar({
 
   return (
     <>
-      {/* The count and its one offer share a FIXED slot, stacked: the
-          offer ("Select all 1,084", else "3 not shown") used to flow after
-          Clear and, short of room, painted under the "1 filter" button (the
-          click hit the filter at 1440) or truncated to nothing. In the slot it
-          has its own line at every width, and nothing else moves when it
-          comes and goes. */}
-      <span className="shrink-0 w-[7.5rem] flex flex-col justify-center text-xs tabular-nums leading-tight">
-        <span role="status" aria-live="polite" className="flex">
+      {/* The count and its one offer share a FIXED slot. The count sits on
+          the bar's midline, level with the select-all box and the buttons;
+          the offer ("Select all 1,084", else "3 not shown") hangs under it,
+          out of flow, so it comes and goes without moving the count. The
+          offer used to flow after Clear and, short of room, painted under the
+          "1 filter" button (the click hit the filter at 1440); in the slot it
+          has its own line at every width, and nothing else moves. */}
+      <span className="relative shrink-0 w-[7.5rem] flex items-center text-xs tabular-nums leading-tight">
+        <span role="status" aria-live="polite" className="flex min-w-0">
           <button
             type="button"
             onClick={showList}
@@ -87,7 +89,7 @@ export function LibrarySelectionBar({
             {n.toLocaleString()} selected
           </button>
         </span>
-        <span aria-live="polite" className="hidden sm:flex min-h-4 text-meta">
+        <span aria-live="polite" className="hidden sm:flex absolute start-0 top-full -mt-0.5 text-meta leading-none">
           {moreToSelect ? (
             <button
               type="button"
@@ -109,10 +111,24 @@ export function LibrarySelectionBar({
           ) : null}
         </span>
       </span>
-      {actions.map((a) => (
-        <BarButton key={a.id} icon={a.icon} label={a.label} onClick={a.onClick} disabledReason={a.disabledReason} />
-      ))}
+      {/* Three groups, split by hairlines: the selection (count, Clear), the
+          work on it (Edit leads, filled; the rest are ghosts), and Delete on
+          its own. Only Edit carries a fill, so the bar keeps the idle bar's
+          weight when a selection starts. */}
       <BarButton icon={<X size={13} />} label="Clear" onClick={() => clear()} />
+      <BarDivider className="hidden sm:block" />
+      {actions.map((a) => (
+        <Fragment key={a.id}>
+          {a.danger && <BarDivider className="hidden sm:block" />}
+          <BarButton
+            icon={a.icon}
+            label={a.label}
+            onClick={a.onClick}
+            disabledReason={a.disabledReason}
+            tone={a.id === "edit" ? "lead" : a.danger ? "danger" : "ghost"}
+          />
+        </Fragment>
+      ))}
       {/* Phone: the same actions, reachable. */}
       <button
         type="button"
@@ -150,11 +166,14 @@ function BarButton({
   label,
   onClick,
   disabledReason,
+  tone = "ghost",
 }: {
   icon: ReactNode;
   label: string;
   onClick?: () => void;
   disabledReason?: string;
+  /** Weight on the bar's ladder (`warmButton.ts`). */
+  tone?: "lead" | "ghost" | "danger";
 }) {
   const disabled = !!disabledReason;
   return (
@@ -166,11 +185,11 @@ function BarButton({
           aria-label={label}
           aria-disabled={disabled || undefined}
           onClick={disabled ? undefined : onClick}
-          className={`hidden sm:flex shrink-0 items-center gap-1.5 px-2.5 @[56rem]:px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors ${
-            disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-          }`}
+          className={`hidden sm:flex shrink-0 items-center gap-1.5 px-2.5 @[56rem]:px-3 py-1.5 text-xs font-medium ${
+            tone === "lead" ? WARM_BUTTON : tone === "danger" ? BAR_DANGER : BAR_GHOST
+          } rounded-md transition-colors ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
         >
-          <span className="text-ink-tertiary">{icon}</span>
+          <span className={tone === "danger" ? "" : "text-ink-tertiary"}>{icon}</span>
           <span className="hidden @[56rem]:inline">{label}</span>
         </button>
       )}

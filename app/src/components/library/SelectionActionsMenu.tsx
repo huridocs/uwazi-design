@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { WARM_BUTTON } from "../shared/warmButton";
+import { BAR_GHOST } from "../shared/warmButton";
 import type { SelectionAction } from "./selectionActions";
 
 /** The selection drawer's "Actions" — the footer bar's actions that don't fit
@@ -89,7 +89,8 @@ export function SelectionActionsMenu({ actions }: { actions: SelectionAction[] }
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+        data-gutter-align="box"
+        className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${BAR_GHOST} aria-expanded:bg-warm aria-expanded:text-ink rounded-md transition-colors cursor-pointer`}
       >
         Actions
         <ChevronDown size={12} className="text-ink-tertiary" aria-hidden />

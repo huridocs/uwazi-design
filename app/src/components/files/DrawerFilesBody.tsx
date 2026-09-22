@@ -15,7 +15,7 @@ import { AddFileModal } from "./AddFileModal";
 import { FileViewerBody, resolveFileUrl } from "./FileViewerModal";
 import { DocumentViewer } from "../viewer/DocumentViewer";
 import { ViewButton } from "../shared/ViewButton";
-import { WARM_BUTTON } from "../shared/warmButton";
+import { BAR_GHOST, WARM_BUTTON } from "../shared/warmButton";
 
 const KNOWN_LANGUAGES = ["EN", "ES", "FR", "AR", "PT", "DE", "—"];
 
@@ -94,7 +94,8 @@ export function DrawerFilesBody({
             type="button"
             data-part="back"
             onClick={() => setViewerFileId(null)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+            data-gutter-align="box"
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
           >
             <ArrowLeft size={12} className="text-ink-tertiary" aria-hidden /> Back to files
           </button>
@@ -105,7 +106,8 @@ export function DrawerFilesBody({
               data-part="download"
               target="_blank"
               rel="noreferrer"
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+              data-gutter-align="box"
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
             >
               <Download size={12} className="text-ink-tertiary" aria-hidden /> Download
             </a>

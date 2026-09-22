@@ -22,7 +22,7 @@ import { RelationshipsCollapseControls } from "../relationships/CollapseControls
 import { DrawerFilesBody } from "../files/DrawerFilesBody";
 import { EntityMetadataSummary } from "../metadata/EntityMetadataSummary";
 import { MetadataEditBody } from "../../views/MetadataView";
-import { WARM_BUTTON } from "../shared/warmButton";
+import { BAR_GHOST } from "../shared/warmButton";
 import { editSessionOpenAtom } from "../../atoms/dirtyGuard";
 
 export interface EntityDetailBodyProps {
@@ -320,15 +320,18 @@ export function EntityDetailBody({
             {focused && activeTab === "metadata" && (
               <button
                 onClick={() => setEditing(true)}
-                className={`px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+                data-gutter-align="box"
+                className={`px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
               >
                 Edit
               </button>
             )}
             <div className="flex-1" />
+            {/* Ghost: the ink "Open entity" beside it is this bar's one filled
+                button (the ladder in `warmButton.ts`). */}
             <button
               onClick={onClose}
-              className={`px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+              className={`px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
             >
               Close
             </button>

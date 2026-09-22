@@ -15,3 +15,21 @@
 export const WARM_EDGE = "inset-ring inset-ring-border-soft";
 
 export const WARM_BUTTON = `text-ink-secondary bg-warm hover:bg-parchment hover:text-ink ${WARM_EDGE}`;
+
+/** Action-bar weight, one ladder for every bar at the foot of a pane:
+ *
+ *  1. Solid ink: the one commit a bar may carry (Save, Open entity, New
+ *     Import). Not defined here; those buttons own it.
+ *  2. `WARM_BUTTON`: the bar's lead action when it has no ink commit (Create
+ *     entity, Edit, Add file). At most one per bar.
+ *  3. `BAR_GHOST`: everything else. No fill and no edge at rest; the warm fill
+ *     comes on hover. Seven filled, ringed buttons in a row is what made the
+ *     selection bar read heavy.
+ *  4. `BAR_DANGER`: Delete. Seal text at rest so it reads as danger without a
+ *     fill; the seal tint comes on hover.
+ *
+ *  Groups within a bar are split by `BarDivider`, not by giving each button
+ *  its own border. */
+export const BAR_GHOST = "text-ink-secondary hover:bg-warm hover:text-ink";
+
+export const BAR_DANGER = "text-seal-label hover:bg-seal-tint/40";

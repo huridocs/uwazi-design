@@ -124,7 +124,8 @@ import { HighlightedText } from "../components/shared/HighlightedText";
 import { Select } from "../components/shared/Select";
 import { ViewSwitcher } from "../components/library/ViewSwitcher";
 import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
-import { WARM_BUTTON } from "../components/shared/warmButton";
+import { BAR_GHOST, WARM_BUTTON } from "../components/shared/warmButton";
+import { BarDivider } from "../components/shared/BarDivider";
 
 const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -1311,13 +1312,13 @@ export function LibraryView() {
           labels — a drawer open beside the library, a small window — instead
           of wrapping onto a second line inside a fixed-height bar. */}
       <div
-        className="@container bleed shrink-0 flex items-center gap-2 h-12 bg-paper"
+        className="@container bleed shrink-0 flex items-center gap-1 h-12 bg-paper"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
         {/* Always mounted, at the bar's start: the tri-state select-all over
             the loaded entities. The rest of the bar swaps IN PLACE between
             the baseline actions and the selection's — same bar, same height. */}
-        <span className="hidden sm:inline-flex shrink-0 me-1">
+        <span className="hidden sm:inline-flex shrink-0 me-2">
           <SelectAllBox loadedIds={drawnIds} disabled={cejilLoading} />
         </span>
         {selectionActive && (
@@ -1328,6 +1329,7 @@ export function LibraryView() {
             icon={<Plus size={13} className="text-ink-tertiary" />}
             label="Create entity"
             onClick={() => setCreateOpen(true)}
+            lead
           />
         )}
         {pendingUploads && (
@@ -1380,7 +1382,9 @@ export function LibraryView() {
               }
             />
             {/* With a selection, the bar's own Export CSV exports the
-                selection; without one, this exports the current results. */}
+                selection; without one, this exports the current results.
+                Divided from the three that bring entities IN. */}
+            <BarDivider className="hidden sm:block" />
             <FooterButton
               icon={<FileDown size={13} className="text-ink-tertiary" />}
               label="Export CSV"
@@ -1564,10 +1568,13 @@ function FooterButton({
   icon,
   label,
   onClick,
+  lead = false,
 }: {
   icon: ReactNode;
   label: string;
   onClick?: () => void;
+  /** The bar's one filled button; the rest are ghosts (`warmButton.ts`). */
+  lead?: boolean;
 }) {
   // The label hides below a 44rem bar (the bar is the container), and the
   // button keeps its name through `aria-label`.
@@ -1576,7 +1583,7 @@ function FooterButton({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className={`hidden sm:flex shrink-0 items-center gap-1.5 px-2.5 @[44rem]:px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+      className={`hidden sm:flex shrink-0 items-center gap-1.5 px-2.5 @[44rem]:px-3 py-1.5 text-xs font-medium ${lead ? WARM_BUTTON : BAR_GHOST} rounded-md transition-colors cursor-pointer`}
     >
       {icon}
       <span className="hidden @[44rem]:inline">{label}</span>

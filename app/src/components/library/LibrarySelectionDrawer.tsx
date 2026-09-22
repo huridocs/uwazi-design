@@ -12,7 +12,7 @@ import { LibraryBulkEditDrawer } from "./LibraryBulkEditDrawer";
 import { SelectionActionsMenu } from "./SelectionActionsMenu";
 import { useSelectionActions } from "./selectionActions";
 import { dataSourceAtom } from "../../atoms/dataSource";
-import { WARM_BUTTON } from "../shared/warmButton";
+import { BAR_GHOST, WARM_BUTTON } from "../shared/warmButton";
 import { EntityListDrawer } from "./EntityListDrawer";
 
 /** The multi-selection, listed in the Library drawer by the same body a map
@@ -91,7 +91,8 @@ export function LibrarySelectionDrawer({
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className={`px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+            data-gutter-align="box"
+            className={`px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
           >
             Close
           </button>

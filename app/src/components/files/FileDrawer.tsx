@@ -26,7 +26,7 @@ import { AddFileDropArea } from "./AddFileDropArea";
 import { FileViewerBody, resolveFileUrl } from "./FileViewerModal";
 import { DocumentViewer } from "../viewer/DocumentViewer";
 import { TabCount } from "../shared/TabCount";
-import { WARM_BUTTON } from "../shared/warmButton";
+import { BAR_DANGER, BAR_GHOST, WARM_BUTTON } from "../shared/warmButton";
 
 const typeIcons: Record<FileEntry["type"], typeof FileText> = {
   pdf: FileText,
@@ -192,7 +192,8 @@ export function FileDrawer({
                     type="button"
                     data-part="back"
                     onClick={() => setViewerFileId(null)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+                    data-gutter-align="box"
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
                   >
                     <ArrowLeft size={12} className="text-ink-tertiary" aria-hidden /> Back to details
                   </button>
@@ -205,7 +206,8 @@ export function FileDrawer({
                         data-part="download"
                         target="_blank"
                         rel="noreferrer"
-                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+                        data-gutter-align="box"
+                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
                       >
                         <Download size={12} className="text-ink-tertiary" /> Download
                       </a>
@@ -229,7 +231,7 @@ export function FileDrawer({
                       type="button"
                       data-part="download"
                       onClick={() => notify("File downloaded", "success")}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
                     >
                       <Download size={12} className="text-ink-tertiary" /> Download
                     </button>
@@ -238,7 +240,8 @@ export function FileDrawer({
                     type="button"
                     data-part="delete"
                     onClick={() => onRequestDelete?.([selectedFiles[0].id])}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-seal-label bg-seal-tint/40 hover:bg-seal-tint rounded-md transition-colors cursor-pointer"
+                    data-gutter-align="box"
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${BAR_DANGER} rounded-md transition-colors cursor-pointer`}
                   >
                     <Trash2 size={12} aria-hidden /> Delete
                   </button>
@@ -264,7 +267,8 @@ export function FileDrawer({
                 type="button"
                 data-part="delete"
                 onClick={() => onRequestDelete?.(selectedFiles.map((f) => f.id))}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-seal-label bg-seal-tint/40 hover:bg-seal-tint rounded-md transition-colors cursor-pointer"
+                data-gutter-align="box"
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${BAR_DANGER} rounded-md transition-colors cursor-pointer`}
               >
                 <Trash2 size={12} aria-hidden /> Delete {selectedFiles.length}
               </button>

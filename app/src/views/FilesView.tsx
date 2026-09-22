@@ -18,7 +18,8 @@ import { LANGUAGES, languageAtom, type Language } from "../atoms/language";
 import { ConfirmDialog } from "../components/shared/ConfirmDialog";
 import { SelectControls } from "../components/shared/SelectControls";
 import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
-import { WARM_BUTTON } from "../components/shared/warmButton";
+import { BAR_DANGER, WARM_BUTTON } from "../components/shared/warmButton";
+import { BarDivider } from "../components/shared/BarDivider";
 
 interface FilesViewProps {
   tabs: { id: string; label: string; count?: number }[];
@@ -284,9 +285,9 @@ function FilesActionBar({
 
   return (
     <div
-      className={`flex items-center justify-between h-12 bleed shrink-0 transition-colors ${
-        hasSelection ? "bg-selected" : "bg-paper"
-      }`}
+      /* No selection tint: the count and the Delete beside it are the
+         signal, as on the Library bar. */
+      className="flex items-center justify-between h-12 bleed shrink-0 bg-paper"
       style={{ borderTop: "1px solid var(--border-primary)" }}
     >
       <div className="flex items-center gap-3">
@@ -311,9 +312,11 @@ function FilesActionBar({
             <span className="text-xs text-ink-secondary">
               Selected {selectedCount} of {totalCount}
             </span>
+            <BarDivider className="-mx-1.5" />
             <button
               onClick={onDelete}
-              className="px-3 py-1.5 text-xs font-medium text-white bg-seal-fill rounded-md hover:bg-seal-fill/90 transition-colors cursor-pointer"
+              data-gutter-align="box"
+              className={`px-3 py-1.5 text-xs font-medium ${BAR_DANGER} rounded-md transition-colors cursor-pointer`}
             >
               Delete
             </button>
