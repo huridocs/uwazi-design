@@ -67,6 +67,7 @@ import {
   matchTypeFiltersAtom,
   ALL_MATCH_TYPES,
   toggleSelectionAtom,
+  setSelectionAnchorAtom,
   rangeSelectionAtom,
   clearSelectionAtom,
   librarySelectionActiveAtom,
@@ -751,6 +752,7 @@ export function LibraryView() {
      preview. This component never reads the selection Set: the cards read
      their own flag, and the footer and drawer subscribe on their own. */
   const toggleSelection = useSetAtom(toggleSelectionAtom);
+  const setAnchor = useSetAtom(setSelectionAnchorAtom);
   const rangeSelection = useSetAtom(rangeSelectionAtom);
   const clearSelection = useSetAtom(clearSelectionAtom);
   const selectionActive = useAtomValue(librarySelectionActiveAtom);
@@ -800,6 +802,8 @@ export function LibraryView() {
       // starts one — see useTouchSelection).
       if (e && selectionActive && lastPointerWasTouch()) return toggleSelection(id);
       if (intent === "range") return rangeSelection({ order: currentSelectionOrder(), id });
+      // A plain click anchors the next Shift range here (see setSelectionAnchorAtom).
+      setAnchor(id);
       if (isMobile) {
         openEntity(id);
       } else {
@@ -807,7 +811,7 @@ export function LibraryView() {
         setSelectedId(id);
       }
     },
-    [isMobile, openEntity, focusForPreview, setSelectedId, toggleSelection, rangeSelection, selectionActive],
+    [isMobile, openEntity, focusForPreview, setSelectedId, toggleSelection, rangeSelection, selectionActive, setAnchor],
   );
   useTouchSelection(toggleSelection);
 

@@ -235,8 +235,19 @@ export const librarySelectedClusterAtom = atom<LibraryCluster | null>(null);
    paint the selected ground in CSS off the checkbox itself, so nothing
    above the cards subscribes at all. */
 export const librarySelectionAtom = atom<ReadonlySet<string>>(new Set<string>());
-/** Where the next Shift range starts: the last id toggled on its own. */
+/** Where the next Shift range starts: the last item clicked on its own —
+ *  a plain click (a preview), a Cmd/Ctrl click, Space, or a long press. */
 export const librarySelectionAnchorAtom = atom<string | null>(null);
+
+/** A plain click on an item: it previews, and it becomes the anchor, so the
+ *  next Shift+click ranges from IT. The preview used to stand in for a
+ *  missing anchor only when a range began — and a preview left over from
+ *  earlier (a card opened long before, often near the top) made the range
+ *  start there. */
+export const setSelectionAnchorAtom = atom(null, (_get, set, id: string) => {
+  set(librarySelectionAnchorAtom, id);
+  set(lastRangeAtom, []);
+});
 /** The ids the last Shift range added. A second Shift+click RE-SPANS from the
  *  same anchor: these come out and the new range goes in, while ids picked one
  *  by one outside the range stay. */
@@ -327,17 +338,24 @@ export const toggleSelectionAtom = atom(null, (get, set, id: string) =>
 );
 
 /** Shift+click: select from the anchor to `id` over `order` — the order the
- *  current view draws. With no anchor, the previewed entity is the anchor;
- *  with neither (or an anchor this view doesn't draw), it toggles `id`. */
+ *  current view draws. The anchor is ONLY the last item clicked on its own;
+ *  with none (or one this view doesn't draw), the click selects just `id`
+ *  and anchors it — never a range from somewhere else. */
 export const rangeSelectionAtom = atom(null, (get, set, { order, id }: { order: readonly string[]; id: string }) =>
   selectionWrite(get, set, () => rangeSelect(get, set, order, id)),
 );
 function rangeSelect(get: Getter, set: Setter, order: readonly string[], id: string) {
-  const anchor = get(librarySelectionAnchorAtom) ?? get(librarySelectedEntityIdAtom);
+  const anchor = get(librarySelectionAnchorAtom);
   const a = anchor ? order.indexOf(anchor) : -1;
   const b = order.indexOf(id);
   if (a < 0 || b < 0) {
-    set(toggleSelectionAtom, id);
+    // Select it (not toggle: a Shift+click never deselects) and anchor it.
+    const next = new Set(get(librarySelectionAtom));
+    next.add(id);
+    set(librarySelectionAtom, next);
+    set(librarySelectionAnchorAtom, id);
+    set(lastRangeAtom, []);
+    showSelectionList(get, set);
     return;
   }
   const range = order.slice(Math.min(a, b), Math.max(a, b) + 1);
