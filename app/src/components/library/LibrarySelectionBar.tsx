@@ -16,6 +16,7 @@ import { SelectionDialogs, useSelectionActions, type SelectionAction } from "./s
 import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../shared/warmButton";
 import { BarDivider } from "../shared/BarDivider";
 import { Hint } from "../shared/Hint";
+import { SelectAllBox } from "./SelectAllBox";
 
 /** The Library footer's SELECTED state — swapped in place of the four
  *  baseline actions, in the same bar at the same height.
@@ -31,12 +32,16 @@ export function LibrarySelectionBar({
   filteredIds,
   loadedIds,
   corpus,
+  filtersSlot,
 }: {
   /** Every id the current results hold (filters, query, match types). */
   filteredIds: readonly string[];
   /** The ids "Show more" has loaded. */
   loadedIds: readonly string[];
   corpus: Corpus;
+  /** The active-filters readout, placed after the actions and before the
+   *  end group. */
+  filtersSlot?: ReactNode;
 }) {
   const selection = useAtomValue(librarySelectionAtom);
   const clear = useSetAtom(clearSelectionAtom);
@@ -71,52 +76,9 @@ export function LibrarySelectionBar({
 
   return (
     <>
-      {/* The count and its one offer share a FIXED slot. The count sits on
-          the bar's midline, level with the select-all box and the buttons;
-          the offer ("Select all 1,084", else "3 not shown") hangs under it,
-          out of flow, so it comes and goes without moving the count. The
-          offer used to flow after Clear and, short of room, painted under the
-          "1 filter" button (the click hit the filter at 1440); in the slot it
-          has its own line at every width, and nothing else moves. */}
-      <span className="relative shrink-0 w-[7.5rem] flex items-center text-xs tabular-nums leading-tight">
-        <span role="status" aria-live="polite" className="flex min-w-0">
-          <button
-            type="button"
-            onClick={showList}
-            className="font-semibold text-ink hover:underline cursor-pointer rounded-sm truncate
-              focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
-          >
-            {n.toLocaleString()} selected
-          </button>
-        </span>
-        <span aria-live="polite" className="hidden sm:flex absolute start-0 top-full -mt-0.5 text-meta leading-none">
-          {moreToSelect ? (
-            <button
-              type="button"
-              onClick={() => selectIds(filteredIds)}
-              className="text-carbon hover:underline cursor-pointer rounded-sm whitespace-nowrap
-                focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
-            >
-              Select all {filteredIds.length.toLocaleString()}
-            </button>
-          ) : notShown > 0 ? (
-            <button
-              type="button"
-              onClick={showList}
-              className="text-carbon hover:underline cursor-pointer rounded-sm whitespace-nowrap
-                focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
-            >
-              {notShown.toLocaleString()} not shown
-            </button>
-          ) : null}
-        </span>
-      </span>
-      {/* Three groups, split by hairlines: the selection (count, Clear), the
-          work on it (Edit leads, filled; the rest are ghosts), and Delete on
-          its own. Only Edit carries a fill, so the bar keeps the idle bar's
-          weight when a selection starts. */}
-      <BarButton icon={<X size={13} />} label="Clear" onClick={() => clear()} />
-      <BarDivider className="hidden sm:block" />
+      {/* The work on the selection first, at the bar's START where the idle
+          bar keeps its own actions: Edit leads, the rest are ghosts, Delete
+          sits past a hairline. */}
       {actions.map((a) => (
         <Fragment key={a.id}>
           {a.danger && <BarDivider className="hidden sm:block" />}
@@ -129,6 +91,61 @@ export function LibrarySelectionBar({
           />
         </Fragment>
       ))}
+      {filtersSlot}
+      {/* The selection itself at the bar's logical END (it flips under RTL):
+          the select-all box, the count with its one offer, and Clear. The box
+          is there only for a MULTIPLE selection; below two it keeps its slot
+          `invisible` (out of the tab order and the accessibility tree), so
+          the count doesn't move when the second item joins. `ms-auto` pins
+          the group to the end, so nothing at the start moves either.
+
+          The count and its offer share a FIXED slot. The count sits on the
+          bar's midline; the offer ("Select all 1,084", else "3 not shown")
+          hangs under it, out of flow, so it comes and goes without moving
+          anything. */}
+      <span data-part="selection-end" className="hidden sm:flex ms-auto shrink-0 items-center gap-1">
+        <span className={`inline-flex shrink-0 me-2 ${n >= 2 ? "" : "invisible"}`}>
+          <SelectAllBox loadedIds={loadedIds} />
+        </span>
+        <span className="relative shrink-0 w-[7.5rem] flex items-center text-xs tabular-nums leading-tight">
+          <span role="status" aria-live="polite" className="flex min-w-0">
+            <button
+              type="button"
+              onClick={showList}
+              className="font-semibold text-ink hover:underline cursor-pointer rounded-sm truncate
+                focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
+            >
+              {n.toLocaleString()} selected
+            </button>
+          </span>
+          <span aria-live="polite" className="hidden sm:flex absolute start-0 top-full -mt-0.5 text-meta leading-none">
+            {moreToSelect ? (
+              <button
+                type="button"
+                onClick={() => selectIds(filteredIds)}
+                className="text-carbon hover:underline cursor-pointer rounded-sm whitespace-nowrap
+                  focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
+              >
+                Select all {filteredIds.length.toLocaleString()}
+              </button>
+            ) : notShown > 0 ? (
+              <button
+                type="button"
+                onClick={showList}
+                className="text-carbon hover:underline cursor-pointer rounded-sm whitespace-nowrap
+                  focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
+              >
+                {notShown.toLocaleString()} not shown
+              </button>
+            ) : null}
+          </span>
+        </span>
+        <BarButton icon={<X size={13} />} label="Clear" onClick={() => clear()} />
+      </span>
+      {/* Phone: the count alone (the box and the offer need a wider bar). */}
+      <span role="status" aria-live="polite" className="sm:hidden shrink-0 me-auto text-xs font-semibold text-ink tabular-nums">
+        {n.toLocaleString()} selected
+      </span>
       {/* Phone: the same actions, reachable. */}
       <button
         type="button"

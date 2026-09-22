@@ -82,7 +82,6 @@ import {
   useTouchSelection,
   lastPointerWasTouch,
 } from "../components/library/EntitySelectBox";
-import { SelectAllBox } from "../components/library/SelectAllBox";
 import { ActionsSheet, LibrarySelectionBar } from "../components/library/LibrarySelectionBar";
 import { LibrarySelectionDrawer } from "../components/library/LibrarySelectionDrawer";
 import { getEntityType, type Entity, type EntityImage } from "../data/entities";
@@ -1315,14 +1314,17 @@ export function LibraryView() {
         className="@container bleed shrink-0 flex items-center gap-1 h-12 bg-paper"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
-        {/* Always mounted, at the bar's start: the tri-state select-all over
-            the loaded entities. The rest of the bar swaps IN PLACE between
-            the baseline actions and the selection's — same bar, same height. */}
-        <span className="hidden sm:inline-flex shrink-0 me-2">
-          <SelectAllBox loadedIds={drawnIds} disabled={cejilLoading} />
-        </span>
+        {/* The bar swaps IN PLACE between the baseline actions and the
+            selection's — same bar, same height. The selection's readout, Clear
+            and the tri-state select-all sit at the bar's END, in
+            LibrarySelectionBar; the idle bar carries no checkbox. */}
         {selectionActive && (
-          <LibrarySelectionBar filteredIds={filteredIds} loadedIds={drawnIds} corpus={dataSource} />
+          <LibrarySelectionBar
+            filteredIds={filteredIds}
+            loadedIds={drawnIds}
+            corpus={dataSource}
+            filtersSlot={<ActiveFiltersButton className="ms-2 shrink-0" />}
+          />
         )}
         {!selectionActive && (
           <FooterButton
@@ -1438,7 +1440,8 @@ export function LibraryView() {
             ]}
           />
         )}
-        <ActiveFiltersButton className="ms-2 shrink-0" />
+        {/* With a selection the bar places it, before its end group. */}
+        {!selectionActive && <ActiveFiltersButton className="ms-2 shrink-0" />}
       </div>
     </div>
   );
