@@ -83,7 +83,12 @@ export function Select({
       if (!ref.current?.contains(e.target as Node)) setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      // Consumed: the Escape that closes this list must not also reach a
+      // window-level Escape (the Library's clear-selection) after it.
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setOpen(false);
+      }
     };
     document.addEventListener("mousedown", onClick);
     document.addEventListener("keydown", onKey);

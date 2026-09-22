@@ -67,6 +67,7 @@ import {
   matchTypeFiltersAtom,
   ALL_MATCH_TYPES,
   toggleSelectionAtom,
+  setSelectionAnchorAtom,
   rangeSelectionAtom,
   clearSelectionAtom,
   librarySelectionActiveAtom,
@@ -751,9 +752,37 @@ export function LibraryView() {
      preview. This component never reads the selection Set: the cards read
      their own flag, and the footer and drawer subscribe on their own. */
   const toggleSelection = useSetAtom(toggleSelectionAtom);
+  const setAnchor = useSetAtom(setSelectionAnchorAtom);
   const rangeSelection = useSetAtom(rangeSelectionAtom);
   const clearSelection = useSetAtom(clearSelectionAtom);
   const selectionActive = useAtomValue(librarySelectionActiveAtom);
+  /* A plain click on the EMPTY GROUND of the results — the lane, the gap
+     between cards, the margin — clears the selection, as Escape does, and
+     through the same guard (a dirty bulk form asks first). Not a click on an
+     item or any control, not one with a modifier, not the end of a drag (a
+     text selection, or a press that moved), and not on the map, whose ground
+     is the map. */
+  const groundDown = useRef<{ x: number; y: number } | null>(null);
+  const clearOnGround = useCallback(
+    (e: React.MouseEvent) => {
+      if (!selectionActive || viewMode === "map") return;
+      if (e.shiftKey || e.metaKey || e.ctrlKey || e.altKey || e.button !== 0) return;
+      const t = e.target as Element;
+      if (
+        t.closest(
+          'button, a, input, select, textarea, label, summary, [role="button"], [role="menu"], [role="dialog"], ' +
+            '[role="listbox"], [role="slider"], [tabindex], [data-select-id], [data-select-host], ' +
+            '[data-component="EntityCard"], [data-part="row"], [data-part="result"], [data-part="header"]',
+        )
+      )
+        return;
+      const d = groundDown.current;
+      if (d && Math.hypot(e.clientX - d.x, e.clientY - d.y) > 4) return;
+      if (String(window.getSelection() ?? "").length > 0) return;
+      clearSelection();
+    },
+    [selectionActive, viewMode, clearSelection],
+  );
   const selectionDrawerOpen = useAtomValue(librarySelectionDrawerOpenAtom);
   const shownIds = useMemo(() => shown.map((e) => e.id), [shown]);
   const filteredIds = useMemo(() => filtered.map((e) => e.id), [filtered]);
@@ -800,6 +829,8 @@ export function LibraryView() {
       // starts one — see useTouchSelection).
       if (e && selectionActive && lastPointerWasTouch()) return toggleSelection(id);
       if (intent === "range") return rangeSelection({ order: currentSelectionOrder(), id });
+      // A plain click anchors the next Shift range here (see setSelectionAnchorAtom).
+      setAnchor(id);
       if (isMobile) {
         openEntity(id);
       } else {
@@ -807,7 +838,7 @@ export function LibraryView() {
         setSelectedId(id);
       }
     },
-    [isMobile, openEntity, focusForPreview, setSelectedId, toggleSelection, rangeSelection, selectionActive],
+    [isMobile, openEntity, focusForPreview, setSelectedId, toggleSelection, rangeSelection, selectionActive, setAnchor],
   );
   useTouchSelection(toggleSelection);
 
@@ -1127,7 +1158,9 @@ export function LibraryView() {
         // A Shift+click is a range, not a text selection across the grid.
         onMouseDown={(e) => {
           if (e.shiftKey) e.preventDefault();
+          groundDown.current = { x: e.clientX, y: e.clientY };
         }}
+        onClick={clearOnGround}
         // A `bleed` lane: warm ground and scrollbar at the pane edge, content on
         // the gutter. Every view mode sits on it, Results included — its header
         // row and card lane carry no side padding of their own.

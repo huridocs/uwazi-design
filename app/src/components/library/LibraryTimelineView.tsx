@@ -699,6 +699,7 @@ function SpineLayout({ dated, query, selectedId, onSelect }: LayoutProps) {
             // shell, not a `<button>` — a control inside a button is invalid for
             // AT (and invalid HTML). Same keyboard behaviour, one level down.
             <div
+              data-select-host
               onClick={(ev) => onSelect(e.id, ev)}
               onMouseDown={holdTextSelection}
               className={`group relative flex items-center h-[22px] px-2 rounded-md cursor-pointer
