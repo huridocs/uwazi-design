@@ -125,7 +125,7 @@ export function EntitySelectBox({ id, title }: { id: string; title: string }) {
 /** The row's focus ring while its hidden selection checkbox has focus — the
  *  one visible sign of where a keyboard user is. Put on every host row. */
 export const FOCUS_RING_ON_SELECT = [
-  "has-[[data-part=select]_input:focus-visible]:ring-2 has-[[data-part=select]_input:focus-visible]:ring-carbon/30",
+  "has-[[data-part=select]_input:focus-visible]:ring-2 has-[[data-part=select]_input:focus-visible]:ring-[var(--selected-ring)]",
   // Forced colors (Windows High Contrast) drop box-shadows AND backgrounds,
   // which were both signals — the ring and the parchment. Outlines survive:
   // SELECTED is a solid system-colour outline, FOCUS a dashed one outside it.
@@ -133,6 +133,21 @@ export const FOCUS_RING_ON_SELECT = [
   "forced-colors:has-[[data-part=select]_input:focus-visible]:outline-3 forced-colors:has-[[data-part=select]_input:focus-visible]:outline-dashed",
   "forced-colors:has-[[data-part=select]_input:focus-visible]:outline-offset-2 forced-colors:has-[[data-part=select]_input:focus-visible]:outline-[Highlight]",
 ].join(" ");
+
+/** SELECTED — ONE look, whatever else is true of the item: the parchment
+ *  fill AND a steady 2px carbon ring (a box-shadow, so no layout shift),
+ *  focused or not. It wins over the preview's ink hairline (the border goes
+ *  back to the resting one, and the inset hairline a table row draws is
+ *  dropped). Before, one gesture gave three looks — ink outline, then fill,
+ *  then fill + ring only while the hidden box had focus. Keyboard focus on an
+ *  UNSELECTED item is still the same carbon ring, without the fill, so the
+ *  two stay apart; on a selected item focus adds nothing. */
+export const SELECTED_LOOK = [
+  "has-[[data-part=select]_input:checked]:bg-parchment has-[[data-part=select]_input:checked]:border-border",
+  "has-[[data-part=select]_input:checked]:ring-2 has-[[data-part=select]_input:checked]:ring-[var(--selected-ring)] has-[[data-part=select]_input:checked]:shadow-none",
+].join(" ");
+/** The same, drawn inside the box — for rows, whose neighbours touch them. */
+export const SELECTED_LOOK_INSET = `${SELECTED_LOOK} has-[[data-part=select]_input:checked]:ring-inset`;
 
 /** The PREVIEWED item — the one open in the drawer. Selected owns
  *  bg-parchment; a previewed item that looked the same made the selection

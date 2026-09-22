@@ -19,6 +19,7 @@ import {
   EntitySelectBox,
   FOCUS_RING_ON_SELECT,
   PREVIEWED_EDGE,
+  SELECTED_LOOK,
   holdTextSelection,
   lastPointerWasTouch,
   selectionIntent,
@@ -306,7 +307,7 @@ export const EntityCard = memo(function EntityCard({
   // selected case is CSS off the hidden checkbox itself, so a selection
   // change re-renders nothing but the box.
   const surface = `${selected ? `bg-paper ${PREVIEWED_EDGE}` : "bg-paper border-border/60 hover:bg-parchment"}
-    has-[[data-part=select]_input:checked]:bg-parchment has-[[data-part=select]_input:checked]:border-border`;
+    ${SELECTED_LOOK}`;
   const selectBox = selectable ? <EntitySelectBox id={entity.id} title={entity.title} /> : null;
 
   // The card container is NOT a button — it hosts nested controls (Open,
