@@ -10,12 +10,20 @@ import {
   Table2,
   X,
 } from "lucide-react";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useStore } from "jotai";
 import { languageAtom } from "../../atoms/language";
 import { EntityTypeTag } from "../shared/EntityTypeTag";
 import { HighlightedText } from "../shared/HighlightedText";
 import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
-import { EntitySelectBox, FOCUS_RING_ON_SELECT, PREVIEWED_EDGE, holdTextSelection } from "./EntitySelectBox";
+import {
+  EntitySelectBox,
+  FOCUS_RING_ON_SELECT,
+  PREVIEWED_EDGE,
+  holdTextSelection,
+  lastPointerWasTouch,
+  selectionIntent,
+} from "./EntitySelectBox";
+import { librarySelectionActiveAtom } from "../../atoms/library";
 import { EntityThumbnail, QuietMark } from "./EntityThumbnail";
 import { CardValue, ownsItsRemainder } from "./CardValue";
 import { LIBRARY_SORTS } from "../../data/libraryDisplay";
@@ -205,6 +213,7 @@ export const EntityCard = memo(function EntityCard({
    *  a lone inert card and keeps the default. */
   as?: "article" | "li";
 }) {
+  const store = useStore();
   const language = useAtomValue(languageAtom);
   const sort = useAtomValue(librarySortAtom);
   const info = useAtomValue(libraryCardInfoAtom);
@@ -477,6 +486,17 @@ export const EntityCard = memo(function EntityCard({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
+                  // A selection gesture on the picture is a selection, never
+                  // the lightbox: Cmd/Ctrl or Shift held, or a tap on touch
+                  // while a selection is going (read at click time, so no
+                  // card subscribes to the selection).
+                  if (
+                    selectionIntent(e) ||
+                    (lastPointerWasTouch() && store.get(librarySelectionActiveAtom))
+                  ) {
+                    onSelect(entity.id, e);
+                    return;
+                  }
                   onOpenImage!(entity.image!);
                 }}
                 aria-label={`Open ${entity.image!.filename ?? entity.title} full size`}

@@ -19,9 +19,9 @@ import { Hint } from "../shared/Hint";
 /** The Library footer's SELECTED state — swapped in place of the four
  *  baseline actions, in the same bar at the same height.
  *
- *  Order: the readout (a live region, fixed width, so 9 → 10 → 100 moves no
- *  button), "N not in view", the offer to select the rest of the results,
- *  then the actions (`useSelectionActions` — the same list the phone sheet and
+ *  Order: one fixed slot holding the readout (a live region, so 9 → 10 → 100
+ *  moves no button) and, under it, its one offer ("Select all N", else "N not
+ *  shown"), then the actions (`useSelectionActions` — the same list the phone sheet and
  *  the selection drawer's menu show) and Clear. Below a 56rem bar every action
  *  keeps only its icon and its name.
  *
@@ -52,6 +52,12 @@ export function LibrarySelectionBar({
   const inView = new Set(filteredIds);
   let notInView = 0;
   for (const id of selection) if (!inView.has(id)) notInView++;
+  // Selected but not DRAWN — filtered out, or past what "Show more" has
+  // loaded. After "Select all 4,398" and the box unticked, 4,278 stay
+  // selected; this is where that is said, not left silent.
+  const drawn = new Set(loadedIds);
+  let notShown = 0;
+  for (const id of selection) if (!drawn.has(id)) notShown++;
   const allLoaded = loadedIds.length > 0 && loadedIds.every((id) => selection.has(id));
   const moreToSelect = allLoaded && filteredIds.length > loadedIds.length && filteredIds.some((id) => !selection.has(id));
 
@@ -64,52 +70,49 @@ export function LibrarySelectionBar({
 
   return (
     <>
-      {/* The count, in a FIXED slot (up to "4,398 selected" in tabular
-          figures), so 9 → 10 → 100 moves no button. What varies more — "N not
-          in view", "Select all N" — rides after Clear, where appearing and
-          disappearing moves nothing but the empty space before the filters. */}
-      <span role="status" aria-live="polite" className="shrink-0 w-[7rem] flex items-center text-xs tabular-nums">
-        <button
-          type="button"
-          onClick={showList}
-          className="font-semibold text-ink hover:underline cursor-pointer rounded-sm truncate
-            focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
-        >
-          {n.toLocaleString()} selected
-        </button>
+      {/* The count and its one offer share a FIXED slot, stacked: the
+          offer ("Select all 1,084", else "3 not shown") used to flow after
+          Clear and, short of room, painted under the "1 filter" button (the
+          click hit the filter at 1440) or truncated to nothing. In the slot it
+          has its own line at every width, and nothing else moves when it
+          comes and goes. */}
+      <span className="shrink-0 w-[7.5rem] flex flex-col justify-center text-xs tabular-nums leading-tight">
+        <span role="status" aria-live="polite" className="flex">
+          <button
+            type="button"
+            onClick={showList}
+            className="font-semibold text-ink hover:underline cursor-pointer rounded-sm truncate
+              focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
+          >
+            {n.toLocaleString()} selected
+          </button>
+        </span>
+        <span aria-live="polite" className="hidden sm:flex min-h-4 text-meta">
+          {moreToSelect ? (
+            <button
+              type="button"
+              onClick={() => selectIds(filteredIds)}
+              className="text-carbon hover:underline cursor-pointer rounded-sm whitespace-nowrap
+                focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
+            >
+              Select all {filteredIds.length.toLocaleString()}
+            </button>
+          ) : notShown > 0 ? (
+            <button
+              type="button"
+              onClick={showList}
+              className="text-carbon hover:underline cursor-pointer rounded-sm whitespace-nowrap
+                focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
+            >
+              {notShown.toLocaleString()} not shown
+            </button>
+          ) : null}
+        </span>
       </span>
       {actions.map((a) => (
         <BarButton key={a.id} icon={a.icon} label={a.label} onClick={a.onClick} disabledReason={a.disabledReason} />
       ))}
       <BarButton icon={<X size={13} />} label="Clear" onClick={() => clear()} />
-      <span aria-live="polite" className="hidden sm:flex min-w-0 items-center gap-1.5 text-xs tabular-nums">
-        {notInView > 0 && (
-            <>
-              <span aria-hidden className="text-ink-muted">·</span>
-              <button
-                type="button"
-                onClick={showList}
-                className="text-carbon hover:underline cursor-pointer rounded-sm whitespace-nowrap
-                  focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
-              >
-                {notInView.toLocaleString()} not in view
-              </button>
-            </>
-          )}
-          {moreToSelect && (
-            <>
-              <span aria-hidden className="text-ink-muted">·</span>
-              <button
-                type="button"
-                onClick={() => selectIds(filteredIds)}
-                className="text-carbon hover:underline cursor-pointer rounded-sm whitespace-nowrap
-                  focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
-              >
-                Select all {filteredIds.length.toLocaleString()}
-              </button>
-            </>
-          )}
-      </span>
       {/* Phone: the same actions, reachable. */}
       <button
         type="button"
@@ -178,13 +181,16 @@ function BarButton({
 /** The selection's actions as a bottom sheet — the phone's version of the
  *  bar's buttons. Portalled, focus-trapped, Escape and the scrim close it; an
  *  action closes it too. Disabled actions stay listed, saying why. */
-function ActionsSheet({
+export function ActionsSheet({
   count,
+  heading,
   actions,
   onClose,
 }: {
-  count: number;
-  actions: SelectionAction[];
+  count?: number;
+  /** The sheet's first line; "N selected" by default. */
+  heading?: string;
+  actions: { label: string; icon: ReactNode; onClick?: () => void; disabledReason?: string; danger?: boolean }[];
   onClose: () => void;
 }) {
   const panelRef = useFocusTrap<HTMLDivElement>(true);
@@ -198,7 +204,7 @@ function ActionsSheet({
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        aria-label={`Actions for ${count} selected`}
+        aria-label={heading ?? `Actions for ${count} selected`}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
           if (e.key === "Escape") onClose();
@@ -206,7 +212,7 @@ function ActionsSheet({
         className="w-full rounded-t-lg bg-paper border-t border-border shadow-lg p-2 pb-4"
       >
         <p className="px-3 py-2 text-meta text-ink-tertiary tabular-nums">
-          {count.toLocaleString()} selected
+          {heading ?? `${(count ?? 0).toLocaleString()} selected`}
         </p>
         <ul className="flex flex-col">
           {actions.map((a) => (
