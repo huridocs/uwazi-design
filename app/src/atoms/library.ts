@@ -328,6 +328,13 @@ function showSelectionList(get: Getter, set: Setter) {
 export const toggleSelectionAtom = atom(null, (get, set, id: string) =>
   selectionWrite(get, set, () => {
     const next = new Set(get(librarySelectionAtom));
+    // Finder: the gesture that STARTS a selection takes the card already
+    // open in the preview (the anchor, set by its plain click) along with
+    // it — the first card clicked is part of what the reader is picking,
+    // and it shouldn't be the one card that looks different.
+    const previewed = get(librarySelectedEntityIdAtom);
+    if (next.size === 0 && previewed && previewed === get(librarySelectionAnchorAtom) && previewed !== id)
+      next.add(previewed);
     if (next.has(id)) next.delete(id);
     else next.add(id);
     set(librarySelectionAtom, next);

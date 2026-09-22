@@ -59,7 +59,7 @@ interface DataTableProps<T> {
    *  primary action's cell, so it costs no grid track. The Library puts its
    *  visually hidden selection checkbox here. Clickable rows only. */
   rowAccessory?: (row: T) => ReactNode;
-  /** How `isRowSelected` shows: a parchment fill (default), or an ink hairline
+  /** How `isRowSelected` shows: a parchment fill (default), or a carbon ring
    *  — for a table whose fill already means something else (the Library,
    *  where parchment is the multi-selection and this is the preview). */
   selectedStyle?: "fill" | "outline";
@@ -195,7 +195,7 @@ export function DataTable<T>({
                     } ${
                       selected
                         ? selectedStyle === "outline"
-                          ? "shadow-[inset_0_0_0_1px_var(--text-primary)] hover:bg-warm"
+                          ? "ring-2 ring-inset ring-[var(--selected-ring)] hover:bg-warm forced-colors:outline forced-colors:outline-1 forced-colors:-outline-offset-1 forced-colors:outline-[CanvasText]"
                           : "bg-parchment"
                         : "hover:bg-warm"
                     }
