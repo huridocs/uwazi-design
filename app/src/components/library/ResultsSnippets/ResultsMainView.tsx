@@ -37,6 +37,7 @@ import { AlsoUnder } from "./AlsoUnder";
 import {
   EntitySelectBox,
   FOCUS_RING_ON_SELECT,
+  SELECTED_LOOK,
   holdTextSelection,
   selectionIntent,
   useDrawnIds,
@@ -464,7 +465,7 @@ function GroupedBody({
             data-state={selected ? "selected" : undefined}
             className={`group relative rounded-md border transition-colors ${
               selected ? "bg-paper border-ink" : "bg-paper border-border/60"
-            } has-[[data-part=select]_input:checked]:bg-parchment has-[[data-part=select]_input:checked]:border-border ${FOCUS_RING_ON_SELECT}`}
+            } ${SELECTED_LOOK} ${FOCUS_RING_ON_SELECT}`}
           >
             {/* The visually hidden selection checkbox (see EntitySelectBox). A
                 passage row is evidence, not an entity, so only the entity's

@@ -28,7 +28,14 @@ import {
 } from "../../utils/timeline";
 import { breakpointAtom } from "../../atoms/viewport";
 import { BucketBreakdown, ChartTip } from "./BucketBreakdown";
-import { EntitySelectBox, FOCUS_RING_ON_SELECT, holdTextSelection, useDrawnIds, useSelectionOrder } from "./EntitySelectBox";
+import {
+  EntitySelectBox,
+  FOCUS_RING_ON_SELECT,
+  SELECTED_LOOK_INSET,
+  holdTextSelection,
+  useDrawnIds,
+  useSelectionOrder,
+} from "./EntitySelectBox";
 import { EntityCard } from "./EntityCard";
 import { HighlightedText } from "../shared/HighlightedText";
 import { MatchOrigin } from "./MatchOrigin";
@@ -704,7 +711,7 @@ function SpineLayout({ dated, query, selectedId, onSelect }: LayoutProps) {
               onMouseDown={holdTextSelection}
               className={`group relative flex items-center h-[22px] px-2 rounded-md cursor-pointer
                 transition-colors ${sel ? "ring-1 ring-inset ring-ink" : "hover:bg-parchment"}
-                has-[[data-part=select]_input:checked]:bg-parchment ${FOCUS_RING_ON_SELECT}`}
+                ${SELECTED_LOOK_INSET} ${FOCUS_RING_ON_SELECT}`}
             >
               <button
                 type="button"

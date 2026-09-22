@@ -199,9 +199,10 @@ export function DataTable<T>({
                           : "bg-parchment"
                         : "hover:bg-warm"
                     }
-                      has-[[data-part=select]_input:checked]:bg-parchment
+                      has-[[data-part=select]_input:checked]:bg-parchment has-[[data-part=select]_input:checked]:ring-2 has-[[data-part=select]_input:checked]:ring-inset
+                      has-[[data-part=select]_input:checked]:ring-[var(--selected-ring)] has-[[data-part=select]_input:checked]:shadow-none
                       has-[[data-part=select]_input:focus-visible]:ring-2 has-[[data-part=select]_input:focus-visible]:ring-inset
-                      has-[[data-part=select]_input:focus-visible]:ring-carbon/30
+                      has-[[data-part=select]_input:focus-visible]:ring-[var(--selected-ring)]
                       forced-colors:has-[[data-part=select]_input:checked]:outline-2 forced-colors:has-[[data-part=select]_input:checked]:-outline-offset-2
                       forced-colors:has-[[data-part=select]_input:checked]:outline-[SelectedItem]
                       forced-colors:has-[[data-part=select]_input:focus-visible]:outline-dashed forced-colors:has-[[data-part=select]_input:focus-visible]:outline-2
