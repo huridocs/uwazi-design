@@ -1401,7 +1401,7 @@ export function LibraryView() {
             ]}
           />
         )}
-        <ActiveFiltersButton className="ms-2" />
+        <ActiveFiltersButton className="ms-2 shrink-0" />
       </div>
     </div>
   );

@@ -19,9 +19,9 @@ import { Hint } from "../shared/Hint";
 /** The Library footer's SELECTED state — swapped in place of the four
  *  baseline actions, in the same bar at the same height.
  *
- *  Order: the readout (a live region, fixed width, so 9 → 10 → 100 moves no
- *  button), "N not in view", the offer to select the rest of the results,
- *  then the actions (`useSelectionActions` — the same list the phone sheet and
+ *  Order: one fixed slot holding the readout (a live region, so 9 → 10 → 100
+ *  moves no button) and, under it, its one offer ("Select all N", else "N not
+ *  in view"), then the actions (`useSelectionActions` — the same list the phone sheet and
  *  the selection drawer's menu show) and Clear. Below a 56rem bar every action
  *  keeps only its icon and its name.
  *
@@ -64,52 +64,49 @@ export function LibrarySelectionBar({
 
   return (
     <>
-      {/* The count, in a FIXED slot (up to "4,398 selected" in tabular
-          figures), so 9 → 10 → 100 moves no button. What varies more — "N not
-          in view", "Select all N" — rides after Clear, where appearing and
-          disappearing moves nothing but the empty space before the filters. */}
-      <span role="status" aria-live="polite" className="shrink-0 w-[7rem] flex items-center text-xs tabular-nums">
-        <button
-          type="button"
-          onClick={showList}
-          className="font-semibold text-ink hover:underline cursor-pointer rounded-sm truncate
-            focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
-        >
-          {n.toLocaleString()} selected
-        </button>
+      {/* The count and its one offer share a FIXED slot, stacked: the
+          offer ("Select all 1,084", else "3 not in view") used to flow after
+          Clear and, short of room, painted under the "1 filter" button (the
+          click hit the filter at 1440) or truncated to nothing. In the slot it
+          has its own line at every width, and nothing else moves when it
+          comes and goes. */}
+      <span className="shrink-0 w-[7.5rem] flex flex-col justify-center text-xs tabular-nums leading-tight">
+        <span role="status" aria-live="polite" className="flex">
+          <button
+            type="button"
+            onClick={showList}
+            className="font-semibold text-ink hover:underline cursor-pointer rounded-sm truncate
+              focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
+          >
+            {n.toLocaleString()} selected
+          </button>
+        </span>
+        <span aria-live="polite" className="hidden sm:flex min-h-4 text-meta">
+          {moreToSelect ? (
+            <button
+              type="button"
+              onClick={() => selectIds(filteredIds)}
+              className="text-carbon hover:underline cursor-pointer rounded-sm whitespace-nowrap
+                focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
+            >
+              Select all {filteredIds.length.toLocaleString()}
+            </button>
+          ) : notInView > 0 ? (
+            <button
+              type="button"
+              onClick={showList}
+              className="text-carbon hover:underline cursor-pointer rounded-sm whitespace-nowrap
+                focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
+            >
+              {notInView.toLocaleString()} not in view
+            </button>
+          ) : null}
+        </span>
       </span>
       {actions.map((a) => (
         <BarButton key={a.id} icon={a.icon} label={a.label} onClick={a.onClick} disabledReason={a.disabledReason} />
       ))}
       <BarButton icon={<X size={13} />} label="Clear" onClick={() => clear()} />
-      <span aria-live="polite" className="hidden sm:flex min-w-0 items-center gap-1.5 text-xs tabular-nums">
-        {notInView > 0 && (
-            <>
-              <span aria-hidden className="text-ink-muted">·</span>
-              <button
-                type="button"
-                onClick={showList}
-                className="text-carbon hover:underline cursor-pointer rounded-sm whitespace-nowrap
-                  focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
-              >
-                {notInView.toLocaleString()} not in view
-              </button>
-            </>
-          )}
-          {moreToSelect && (
-            <>
-              <span aria-hidden className="text-ink-muted">·</span>
-              <button
-                type="button"
-                onClick={() => selectIds(filteredIds)}
-                className="text-carbon hover:underline cursor-pointer rounded-sm whitespace-nowrap
-                  focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
-              >
-                Select all {filteredIds.length.toLocaleString()}
-              </button>
-            </>
-          )}
-      </span>
       {/* Phone: the same actions, reachable. */}
       <button
         type="button"
