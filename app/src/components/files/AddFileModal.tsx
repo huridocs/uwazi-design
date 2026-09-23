@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { X, CloudUpload, FileText, Music, Video, Image, Link2, Check, Plus, ChevronDown } from "lucide-react";
+import { CloudUpload, FileText, Music, Video, Image, Link2, Check, Plus, ChevronDown } from "lucide-react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   addFileTargetAtom,
@@ -9,7 +9,8 @@ import {
 import { languageAtom, languageName } from "../../atoms/language";
 import { FileEntry, FileKind, DocumentGroup } from "../../data/files";
 import { asset } from "../../utils/asset";
-import { WARM_BUTTON } from "../shared/warmButton";
+import { BAR_GHOST } from "../shared/warmButton";
+import { Modal, MODAL_BUTTON } from "../shared/Modal";
 
 interface PendingFile {
   id: string;
@@ -93,16 +94,6 @@ export function AddFileModal() {
   useEffect(() => {
     if (!open) setEntries([]);
   }, [open]);
-
-  // Escape closes — same convention as the drawers/dialogs.
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setTarget(null);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, setTarget]);
 
   // Simulate upload progress for queued entries.
   useEffect(() => {
@@ -232,231 +223,29 @@ export function AddFileModal() {
   const primaryGroups = groups.filter((g) => g.isPrimary);
 
   return (
-    <div
-      data-component="AddFileModal"
-      data-mode={lockedGroupId ? "translation" : "new"}
-      className="fixed inset-0 z-50 flex md:items-center md:justify-center md:p-4 bg-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="add-file-modal-title"
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={handleDrop}
-    >
-      <div data-part="panel" className="bg-paper shadow-xl w-full md:max-w-[36rem] md:rounded-xl md:animate-fade-in-up h-full md:h-auto md:max-h-[90vh] flex flex-col">
-        <div
-          data-part="header"
-          className="flex items-center justify-between px-6 py-4"
-          style={{ borderBottom: "1px solid var(--border-primary)" }}
-        >
-          <h2 id="add-file-modal-title" data-part="title" className="text-base font-semibold text-ink">
-            {lockedGroup
-              ? `Add translation to "${lockedGroup.title}"`
-              : "Add file"}
-          </h2>
-          <button
-            type="button"
-            data-part="close"
-            onClick={() => setTarget(null)}
-            aria-label="Close"
-            className="p-1 rounded-md hover:bg-parchment transition-colors cursor-pointer"
-          >
-            <X size={18} className="text-ink-muted" aria-hidden />
-          </button>
-        </div>
-
-        <div data-part="body" className="flex-1 overflow-auto px-6 py-5 space-y-4">
-          {/* Dropzone — large when empty, compact "add more" when not. */}
-          {entries.length === 0 ? (
-            <button
-              type="button"
-              data-part="dropzone"
-              data-variant="large"
-              onClick={simulatePick}
-              className="flex flex-col items-center justify-center w-full py-6 rounded-lg bg-warm hover:bg-parchment transition-colors cursor-pointer"
-              style={{ border: "2px dashed var(--border-soft)" }}
-            >
-              <CloudUpload size={28} className="text-ink-tertiary/50 mb-1.5" aria-hidden />
-              <span className="text-sm font-medium text-ink-secondary">
-                Click to select files
-              </span>
-              <span className="text-xs text-ink-muted mt-0.5">
-                or drag and drop here
-              </span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              data-part="dropzone"
-              data-variant="compact"
-              onClick={simulatePick}
-              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-md bg-warm hover:bg-parchment transition-colors cursor-pointer"
-              style={{ border: "1.5px dashed var(--border-soft)" }}
-            >
-              <Plus size={14} className="text-ink-tertiary" aria-hidden />
-              <span className="text-xs font-medium text-ink-secondary">
-                Add another file
-              </span>
-              <span className="text-xs text-ink-muted">
-                or drag &amp; drop
-              </span>
-            </button>
-          )}
-
-          {/* Queued entries */}
-          {entries.length > 0 && (
-            <ul data-part="rows" className="space-y-2.5">
-              {entries.map((entry) => {
-                const Icon = typeIcons[entry.kind];
-                return (
-                  <li
-                    key={entry.id}
-                    data-part="row"
-                    data-state={entry.progress >= 1 ? "ready" : "uploading"}
-                    className="rounded-md bg-warm border border-border/50 p-3 space-y-2.5"
-                  >
-                    <div className="flex items-start gap-2">
-                      <Icon size={16} className="text-ink-muted mt-1 shrink-0" aria-hidden />
-                      <input
-                        type="text"
-                        data-part="name"
-                        value={entry.name}
-                        onChange={(e) => updateEntry(entry.id, { name: e.target.value })}
-                        className="flex-1 min-w-0 px-2 py-1 text-sm text-ink bg-paper border border-border rounded focus:outline-none focus:ring-1 focus:ring-carbon/30"
-                        aria-label="Filename"
-                      />
-                      <button
-                        type="button"
-                        data-part="remove"
-                        aria-label={`Remove ${entry.name}`}
-                        onClick={() => removeEntry(entry.id)}
-                        className="text-xs text-ink-tertiary hover:text-ink transition-colors cursor-pointer shrink-0 pt-1"
-                      >
-                        Remove
-                      </button>
-                    </div>
-
-                    <div data-part="fields" className="grid grid-cols-2 gap-3">
-                      <label data-part="language" className="space-y-1">
-                        <span className="text-meta font-medium text-ink-muted uppercase tracking-wide">
-                          Language
-                        </span>
-                        <div className="relative">
-                          <select
-                            value={entry.language}
-                            onChange={(e) =>
-                              updateEntry(entry.id, { language: e.target.value })
-                            }
-                            className="appearance-none w-full pl-2 pr-7 py-1 text-xs text-ink bg-paper border border-border rounded focus:outline-none focus:ring-1 focus:ring-ink/20 cursor-pointer"
-                            aria-label="Language"
-                          >
-                            {Array.from(new Set([...knownLanguages, entry.language])).map((l) => (
-                              <option key={l} value={l}>
-                                {languageName(l)}
-                              </option>
-                            ))}
-                          </select>
-                          <ChevronDown
-                            size={12}
-                            aria-hidden
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-ink-tertiary pointer-events-none"
-                          />
-                        </div>
-                      </label>
-
-                      <label data-part="add-as" className="space-y-1">
-                        <span className="text-meta font-medium text-ink-muted uppercase tracking-wide">
-                          Add as
-                        </span>
-                        <div className="relative">
-                          <select
-                            value={
-                              entry.addAs.type === "translation"
-                                ? `t:${entry.addAs.groupId}`
-                                : entry.addAs.type
-                            }
-                            disabled={!!lockedGroupId}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              if (v === "primary") {
-                                updateEntry(entry.id, { addAs: { type: "primary" } });
-                              } else if (v === "supporting") {
-                                updateEntry(entry.id, { addAs: { type: "supporting" } });
-                              } else if (v.startsWith("t:")) {
-                                updateEntry(entry.id, {
-                                  addAs: { type: "translation", groupId: v.slice(2) },
-                                });
-                              }
-                            }}
-                            className="appearance-none w-full pl-2 pr-7 py-1 text-xs text-ink bg-paper border border-border rounded focus:outline-none focus:ring-1 focus:ring-ink/20 disabled:opacity-70 cursor-pointer truncate"
-                            aria-label="Add as"
-                          >
-                            <option value="primary">New primary doc</option>
-                            <option value="supporting">Supporting file</option>
-                            {primaryGroups.map((g) => (
-                              <option key={g.id} value={`t:${g.id}`}>
-                                Translation of {g.title}
-                              </option>
-                            ))}
-                          </select>
-                          <ChevronDown
-                            size={12}
-                            aria-hidden
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-ink-tertiary pointer-events-none"
-                          />
-                        </div>
-                      </label>
-                    </div>
-
-                    {/* Progress */}
-                    <div data-part="progress" className="flex items-center gap-2">
-                      <div
-                        role="progressbar"
-                        aria-label={`Uploading ${entry.name}`}
-                        aria-valuemin={0}
-                        aria-valuemax={100}
-                        aria-valuenow={Math.round(entry.progress * 100)}
-                        className="flex-1 h-1 rounded bg-vellum overflow-hidden"
-                      >
-                        <div
-                          className={`h-full transition-[width] duration-200 ${
-                            entry.progress >= 1 ? "bg-success" : "bg-ink/40"
-                          }`}
-                          style={{ width: `${Math.round(entry.progress * 100)}%` }}
-                        />
-                      </div>
-                      {entry.progress >= 1 ? (
-                        <span className="flex items-center gap-1 text-meta font-medium text-success">
-                          <Check size={11} aria-hidden /> Ready
-                        </span>
-                      ) : (
-                        <span className="text-meta text-ink-tertiary tabular-nums">
-                          {Math.round(entry.progress * 100)}%
-                        </span>
-                      )}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-
-          {entries.length === 0 && (
-            <p data-part="empty" className="text-xs text-ink-tertiary text-center">
-              No files queued yet.
-            </p>
-          )}
-        </div>
-
-        <div
-          data-part="footer"
-          className="flex justify-end gap-3 px-6 py-4"
-          style={{ borderTop: "1px solid var(--border-primary)" }}
-        >
+    <Modal
+      component="AddFileModal"
+      size="lg"
+      // Rendered in place: it opens inside drawers and the entity overlay,
+      // whose outside-click checks must still count it as inside.
+      portal={false}
+      dismissOnScrim={false}
+      scrimProps={{
+        "data-mode": lockedGroupId ? "translation" : "new",
+        onDragOver: (e) => e.preventDefault(),
+        onDrop: handleDrop,
+      }}
+      onClose={() => setTarget(null)}
+      title={lockedGroup ? `Add translation to "${lockedGroup.title}"` : "Add file"}
+      titleId="add-file-modal-title"
+      bodyClassName="py-4 space-y-4"
+      footer={
+        <>
           <button
             type="button"
             data-part="cancel"
             onClick={() => setTarget(null)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md ${WARM_BUTTON} transition-colors cursor-pointer`}
+            className={`${MODAL_BUTTON} ${BAR_GHOST} cursor-pointer`}
           >
             Cancel
           </button>
@@ -465,7 +254,7 @@ export function AddFileModal() {
             data-part="confirm"
             onClick={confirmAll}
             disabled={!allReady}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+            className={`${MODAL_BUTTON} ${
               allReady
                 ? "bg-ink text-parchment hover:bg-ink/90 cursor-pointer"
                 : "bg-warm text-ink-muted cursor-not-allowed"
@@ -473,9 +262,190 @@ export function AddFileModal() {
           >
             {entries.length > 1 ? `Add ${entries.length} files` : "Add file"}
           </button>
-        </div>
-      </div>
-    </div>
+        </>
+      }
+    >
+      {/* Dropzone — large when empty, compact "add more" when not. */}
+      {entries.length === 0 ? (
+        <button
+          type="button"
+          data-part="dropzone"
+          data-variant="large"
+          onClick={simulatePick}
+          className="flex flex-col items-center justify-center w-full py-6 rounded-lg bg-warm hover:bg-parchment transition-colors cursor-pointer"
+          style={{ border: "2px dashed var(--border-soft)" }}
+        >
+          <CloudUpload size={28} className="text-ink-tertiary/50 mb-1.5" aria-hidden />
+          <span className="text-sm font-medium text-ink-secondary">
+            Click to select files
+          </span>
+          <span className="text-xs text-ink-muted mt-0.5">
+            or drag and drop here
+          </span>
+        </button>
+      ) : (
+        <button
+          type="button"
+          data-part="dropzone"
+          data-variant="compact"
+          onClick={simulatePick}
+          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-md bg-warm hover:bg-parchment transition-colors cursor-pointer"
+          style={{ border: "1.5px dashed var(--border-soft)" }}
+        >
+          <Plus size={14} className="text-ink-tertiary" aria-hidden />
+          <span className="text-xs font-medium text-ink-secondary">
+            Add another file
+          </span>
+          <span className="text-xs text-ink-muted">
+            or drag &amp; drop
+          </span>
+        </button>
+      )}
+
+      {/* Queued entries */}
+      {entries.length > 0 && (
+        <ul data-part="rows" className="space-y-2.5">
+          {entries.map((entry) => {
+            const Icon = typeIcons[entry.kind];
+            return (
+              <li
+                key={entry.id}
+                data-part="row"
+                data-state={entry.progress >= 1 ? "ready" : "uploading"}
+                className="rounded-md bg-warm border border-border/50 p-3 space-y-2.5"
+              >
+                <div className="flex items-start gap-2">
+                  <Icon size={16} className="text-ink-muted mt-1 shrink-0" aria-hidden />
+                  <input
+                    type="text"
+                    data-part="name"
+                    value={entry.name}
+                    onChange={(e) => updateEntry(entry.id, { name: e.target.value })}
+                    className="flex-1 min-w-0 px-2 py-1 text-sm text-ink bg-paper border border-border rounded focus:outline-none focus:ring-1 focus:ring-carbon/30"
+                    aria-label="Filename"
+                  />
+                  <button
+                    type="button"
+                    data-part="remove"
+                    aria-label={`Remove ${entry.name}`}
+                    onClick={() => removeEntry(entry.id)}
+                    className="text-xs text-ink-tertiary hover:text-ink transition-colors cursor-pointer shrink-0 pt-1"
+                  >
+                    Remove
+                  </button>
+                </div>
+
+                <div data-part="fields" className="grid grid-cols-2 gap-3">
+                  <label data-part="language" className="space-y-1">
+                    <span className="text-meta font-medium text-ink-muted uppercase tracking-wide">
+                      Language
+                    </span>
+                    <div className="relative">
+                      <select
+                        value={entry.language}
+                        onChange={(e) =>
+                          updateEntry(entry.id, { language: e.target.value })
+                        }
+                        className="appearance-none w-full pl-2 pr-7 py-1 text-xs text-ink bg-paper border border-border rounded focus:outline-none focus:ring-1 focus:ring-ink/20 cursor-pointer"
+                        aria-label="Language"
+                      >
+                        {Array.from(new Set([...knownLanguages, entry.language])).map((l) => (
+                          <option key={l} value={l}>
+                            {languageName(l)}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown
+                        size={12}
+                        aria-hidden
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-ink-tertiary pointer-events-none"
+                      />
+                    </div>
+                  </label>
+
+                  <label data-part="add-as" className="space-y-1">
+                    <span className="text-meta font-medium text-ink-muted uppercase tracking-wide">
+                      Add as
+                    </span>
+                    <div className="relative">
+                      <select
+                        value={
+                          entry.addAs.type === "translation"
+                            ? `t:${entry.addAs.groupId}`
+                            : entry.addAs.type
+                        }
+                        disabled={!!lockedGroupId}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          if (v === "primary") {
+                            updateEntry(entry.id, { addAs: { type: "primary" } });
+                          } else if (v === "supporting") {
+                            updateEntry(entry.id, { addAs: { type: "supporting" } });
+                          } else if (v.startsWith("t:")) {
+                            updateEntry(entry.id, {
+                              addAs: { type: "translation", groupId: v.slice(2) },
+                            });
+                          }
+                        }}
+                        className="appearance-none w-full pl-2 pr-7 py-1 text-xs text-ink bg-paper border border-border rounded focus:outline-none focus:ring-1 focus:ring-ink/20 disabled:opacity-70 cursor-pointer truncate"
+                        aria-label="Add as"
+                      >
+                        <option value="primary">New primary doc</option>
+                        <option value="supporting">Supporting file</option>
+                        {primaryGroups.map((g) => (
+                          <option key={g.id} value={`t:${g.id}`}>
+                            Translation of {g.title}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown
+                        size={12}
+                        aria-hidden
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-ink-tertiary pointer-events-none"
+                      />
+                    </div>
+                  </label>
+                </div>
+
+                {/* Progress */}
+                <div data-part="progress" className="flex items-center gap-2">
+                  <div
+                    role="progressbar"
+                    aria-label={`Uploading ${entry.name}`}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={Math.round(entry.progress * 100)}
+                    className="flex-1 h-1 rounded bg-vellum overflow-hidden"
+                  >
+                    <div
+                      className={`h-full transition-[width] duration-200 ${
+                        entry.progress >= 1 ? "bg-success" : "bg-ink/40"
+                      }`}
+                      style={{ width: `${Math.round(entry.progress * 100)}%` }}
+                    />
+                  </div>
+                  {entry.progress >= 1 ? (
+                    <span className="flex items-center gap-1 text-meta font-medium text-success">
+                      <Check size={11} aria-hidden /> Ready
+                    </span>
+                  ) : (
+                    <span className="text-meta text-ink-tertiary tabular-nums">
+                      {Math.round(entry.progress * 100)}%
+                    </span>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {entries.length === 0 && (
+        <p data-part="empty" className="text-xs text-ink-tertiary text-center">
+          No files queued yet.
+        </p>
+      )}
+    </Modal>
   );
 }
 

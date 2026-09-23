@@ -145,6 +145,11 @@ function stretches(el: Element, frame: Box) {
 function isCentred(cs: CSSStyleDeclaration) {
   if (cs.textAlign === "center") return true;
   if (!cs.display.includes("flex")) return false;
+  // An end-packed row (a modal footer's buttons) likewise cannot sit off the
+  // start gutter: the layout put its start at the frame's start and packed the
+  // content against the end, which is still asserted.
+  if (!cs.flexDirection.startsWith("column") && (cs.justifyContent === "flex-end" || cs.justifyContent === "end"))
+    return true;
   return cs.flexDirection.startsWith("column")
     ? cs.alignItems === "center"
     : cs.justifyContent === "center";

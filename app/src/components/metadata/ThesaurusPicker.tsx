@@ -1,9 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { createPortal } from "react-dom";
-import { X } from "lucide-react";
 import { FacetSection } from "../shared/FacetSection";
-import { useFocusTrap } from "../../hooks/useFocusTrap";
-import { WARM_BUTTON } from "../shared/warmButton";
+import { BAR_GHOST, WARM_BUTTON } from "../shared/warmButton";
+import { Modal, MODAL_BUTTON } from "../shared/Modal";
 import { foldLabel, isPseudoKey } from "../../atoms/thesauri";
 import type { ThesaurusValue } from "../../data/settings";
 
@@ -269,8 +267,8 @@ function NewThesaurusForm({
   );
 }
 
-/** "Add thesaurus value": one field, Cancel / Save. Portalled and fixed (the
- *  drawer is `overflow-hidden`), traps focus, closes on Escape or the scrim.
+/** "Add thesaurus value": one field, Cancel / Save. The shared `Modal`
+ *  (portalled: the drawer is `overflow-hidden`).
  *
  *  A label that folds to an existing value (case and accents ignored) is named
  *  under the field before Save, so a duplicate is a deliberate act — and Save
@@ -287,7 +285,6 @@ export function AddThesaurusValueModal({
   onSave: (label: string) => void;
   onClose: () => void;
 }) {
-  const panelRef = useFocusTrap<HTMLDivElement>(true);
   const [value, setValue] = useState("");
   const clean = value.trim();
   const match = clean ? existing.find((l) => foldLabel(l) === foldLabel(clean)) : undefined;
@@ -295,87 +292,56 @@ export function AddThesaurusValueModal({
     if (clean) onSave(clean);
   };
 
-  return createPortal(
-    <div
-      data-component="AddThesaurusValueModal"
-      data-part="scrim"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/20 p-4"
-      onClick={onClose}
-    >
-      <div
-        ref={panelRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="add-thesaurus-value-title"
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => {
-          if (e.key === "Escape") {
-            e.stopPropagation();
-            onClose();
-          }
-        }}
-        className="w-full max-w-[24rem] flex flex-col bg-paper rounded-lg border border-border shadow-lg overflow-hidden"
-      >
-        <header className="shrink-0 flex items-center gap-2 h-11 px-4 border-b border-border">
-          <h2 id="add-thesaurus-value-title" className="text-xs font-semibold text-ink">
-            Add thesaurus value
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="ms-auto p-1 rounded-md text-ink-muted hover:bg-warm hover:text-ink cursor-pointer
-              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"
-          >
-            <X size={14} />
-          </button>
-        </header>
-        <form
-          className="p-4 space-y-1.5"
-          onSubmit={(e) => {
-            e.preventDefault();
-            save();
-          }}
-        >
-          <label htmlFor="add-thesaurus-value" className="text-xs font-medium text-ink-secondary">
-            New value in {thesaurusName}
-          </label>
-          <input
-            id="add-thesaurus-value"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            autoFocus
-            aria-describedby="add-thesaurus-value-note"
-            className="w-full px-3 py-2 text-sm text-ink bg-paper rounded-md border border-border
-              focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40"
-          />
-          {/* Always mounted: a note that appears on the first matching keystroke
-              must not push the buttons down. */}
-          <p id="add-thesaurus-value-note" className="min-h-4 text-meta text-ink-tertiary">
-            {match ? `“${match}” already exists. Save selects it.` : "Added at the top level of the thesaurus."}
-          </p>
-        </form>
-        <footer className="flex items-center justify-end gap-2 h-12 px-4 border-t border-border">
-          <button
-            type="button"
-            onClick={onClose}
-            className={`px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
-          >
+  return (
+    <Modal
+      component="AddThesaurusValueModal"
+      size="sm"
+      onClose={onClose}
+      title="Add thesaurus value"
+      titleId="add-thesaurus-value-title"
+      footer={
+        <>
+          <button type="button" onClick={onClose} className={`${MODAL_BUTTON} ${BAR_GHOST} cursor-pointer`}>
             Cancel
           </button>
           <button
             type="button"
             onClick={save}
             aria-disabled={!clean || undefined}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md text-white bg-success transition-colors ${
+            className={`${MODAL_BUTTON} text-white bg-success ${
               clean ? "hover:bg-success/90 cursor-pointer" : "opacity-50 cursor-not-allowed"
             }`}
           >
             Save
           </button>
-        </footer>
-      </div>
-    </div>,
-    document.body,
+        </>
+      }
+    >
+      <form
+        className="space-y-1.5"
+        onSubmit={(e) => {
+          e.preventDefault();
+          save();
+        }}
+      >
+        <label htmlFor="add-thesaurus-value" className="text-xs font-medium text-ink-secondary">
+          New value in {thesaurusName}
+        </label>
+        <input
+          id="add-thesaurus-value"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          autoFocus
+          aria-describedby="add-thesaurus-value-note"
+          className="w-full px-3 py-2 text-sm text-ink bg-paper rounded-md border border-border
+            focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40"
+        />
+        {/* Always mounted: a note that appears on the first matching keystroke
+            must not push the buttons down. */}
+        <p id="add-thesaurus-value-note" className="min-h-4 text-meta text-ink-tertiary">
+          {match ? `“${match}” already exists. Save selects it.` : "Added at the top level of the thesaurus."}
+        </p>
+      </form>
+    </Modal>
   );
 }

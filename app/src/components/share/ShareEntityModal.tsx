@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
-import { AlertTriangle, Eye, Globe, Info, Lock, Pencil, RotateCcw, Trash2, X } from "lucide-react";
+import { AlertTriangle, Eye, Globe, Info, Lock, Pencil, RotateCcw, Trash2 } from "lucide-react";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import {
   applyShareAtom,
@@ -12,7 +12,8 @@ import {
 import { notificationsAtom } from "../../atoms/notifications";
 import { entityCorpusOf, getEntity, getEntityType } from "../../data/entities";
 import { seedGroups, seedUsers } from "../../data/settings";
-import { useFocusTrap } from "../../hooks/useFocusTrap";
+import { Modal, MODAL_BUTTON, MODAL_COMMIT } from "../shared/Modal";
+import { BAR_GHOST } from "../shared/warmButton";
 import { t } from "../../utils/i18n";
 import { typeLabelColor } from "../../utils/typeColor";
 
@@ -92,7 +93,8 @@ export function ShareEntityModal({ open, onClose, ids: idsProp, initialFocus = "
   const [review, setReview] = useState(false);
   const generalAccessRef = useRef<HTMLDivElement>(null);
   const lookupInputRef = useRef<HTMLInputElement>(null);
-  const panelRef = useFocusTrap<HTMLDivElement>(open);
+  // The panel (the shared `Modal` traps focus in it); read to place first focus.
+  const panelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!open) {
@@ -115,15 +117,6 @@ export function ShareEntityModal({ open, onClose, ids: idsProp, initialFocus = "
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- a new opening, not a new focus
   }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
 
   useEffect(() => {
     if (!showPublicTip) return;
@@ -243,300 +236,281 @@ export function ShareEntityModal({ open, onClose, ids: idsProp, initialFocus = "
   const titleId = review ? "share-entity-review-title" : "share-entity-modal-title";
 
   return (
-    <div
-      data-component="ShareEntityModal"
-      className="fixed inset-0 z-50 flex md:items-center md:justify-center md:p-4 bg-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={titleId}
-    >
-      <div
-        ref={panelRef}
-        data-part="panel"
-        className="bg-paper shadow-xl w-full md:max-w-lg md:rounded-lg md:max-h-[80vh] h-full md:h-auto flex flex-col md:animate-fade-in-up"
-      >
-        <div data-part="header" className="flex items-start justify-between gap-3 px-5 py-3 border-b border-border">
-          <div className="min-w-0">
-            <h2 id="share-entity-modal-title" data-part="title" className={`text-base font-semibold text-ink ${review ? "sr-only" : ""}`}>
-              {bulk ? `Share ${ids.length.toLocaleString()} entities` : t("System", "Share")}
-            </h2>
-            {review && (
-              <h2 id="share-entity-review-title" className="text-base font-semibold text-ink">
-                Review changes
-              </h2>
-            )}
-            {bulk ? (
-              <p data-part="subtitle" className="mt-0.5 flex flex-wrap gap-x-3 text-xs">
-                {byTemplate.map(([tid, c]) => {
-                  const type = getEntityType(tid);
-                  const color = type?.color ?? "#6B7280";
-                  return (
-                    <span key={tid} className="inline-flex items-center gap-1.5">
-                      <span className="w-[0.4375rem] h-[0.4375rem] rounded-[2px]" style={{ backgroundColor: color }} aria-hidden />
-                      <span className="font-medium" style={{ color: typeLabelColor(color) }}>{type?.name ?? tid}</span>
-                      <span className="text-meta text-ink-tertiary tabular-nums">{c.toLocaleString()}</span>
-                    </span>
-                  );
-                })}
-              </p>
-            ) : (
-              <p data-part="subtitle" className="mt-0.5 truncate text-xs text-ink-muted">
-                {(ids[0] && getEntity(ids[0])?.title) || "Entity"}
-              </p>
-            )}
-          </div>
-          <button
-            type="button"
-            data-part="close"
-            onClick={onClose}
-            className="p-1.5 rounded-md hover:bg-parchment transition-colors cursor-pointer"
-            aria-label={t("System", "Close")}
-          >
-            <X size={18} className="text-ink-muted" aria-hidden />
-          </button>
-        </div>
-
-        {review ? (
-          <div data-part="review" className="flex-1 overflow-auto px-5 py-3 space-y-1">
-            {lines.map((l, i) => (
-              <div
-                key={i}
-                className={`flex items-baseline justify-between gap-3 px-2 py-1.5 rounded-md text-xs ${l.warn ? "bg-warning-light" : ""}`}
-              >
-                <span className="text-ink font-medium">{l.text}</span>
-                <span className="text-ink-tertiary tabular-nums text-end">{l.count}</span>
-              </div>
-            ))}
-          </div>
+    <Modal
+      component="ShareEntityModal"
+      size="md"
+      maxHeight="md:max-h-[80vh]"
+      portal={false}
+      dismissOnScrim={false}
+      panelRef={panelRef}
+      onClose={onClose}
+      titleId={titleId}
+      title={review ? "Review changes" : bulk ? `Share ${ids.length.toLocaleString()} entities` : t("System", "Share")}
+      subtitle={
+        bulk ? (
+          <span data-part="subtitle-types" className="inline-flex gap-x-3 text-xs">
+            {byTemplate.map(([tid, c]) => {
+              const type = getEntityType(tid);
+              const color = type?.color ?? "#6B7280";
+              return (
+                <span key={tid} className="inline-flex items-center gap-1.5">
+                  <span className="w-[0.4375rem] h-[0.4375rem] rounded-[2px]" style={{ backgroundColor: color }} aria-hidden />
+                  <span className="font-medium" style={{ color: typeLabelColor(color) }}>{type?.name ?? tid}</span>
+                  <span className="text-meta text-ink-tertiary tabular-nums">{c.toLocaleString()}</span>
+                </span>
+              );
+            })}
+          </span>
         ) : (
-        <div data-part="body" className="flex-1 overflow-auto">
-          {skipped > 0 && (
-            <p className="px-5 pt-3 text-meta text-ink-tertiary">
-              {skipped.toLocaleString()} of {ids.length.toLocaleString()} skipped: you cannot share them.
-            </p>
-          )}
-          <section data-part="general-access" aria-labelledby="share-general-access-title" className="space-y-2 border-b border-border/50 px-5 pt-3 pb-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 id="share-general-access-title" className="text-xs font-medium text-ink-secondary">
-                {t("System", "General access")}
-              </h3>
-              <div ref={generalAccessRef} className="relative">
-                <div
-                  role="radiogroup"
-                  aria-label={t("System", "General access")}
-                  className="inline-flex w-fit items-center rounded-md overflow-hidden h-8"
-                  style={{ border: "1px solid var(--border-primary)" }}
-                >
-                  <AccessSegment
-                    active={effectiveVisibility === "private"}
-                    label={t("System", "Private")}
-                    onClick={() => setGeneralAccess("private")}
-                    first
-                  >
-                    <Lock size={12} aria-hidden />
-                    <span className="text-xs font-medium whitespace-nowrap">{t("System", "Private")}</span>
-                  </AccessSegment>
-                  <AccessSegment
-                    active={isPublished}
-                    label={t("System", "Published")}
-                    onClick={() => setGeneralAccess("published")}
-                    published
-                  >
-                    <Globe size={12} aria-hidden />
-                    <span className="text-xs font-medium whitespace-nowrap">{t("System", "Published")}</span>
-                  </AccessSegment>
-                </div>
-                {showPublicTip ? (
-                  <div
-                    role="tooltip"
-                    data-part="public-tip"
-                    className={`pointer-events-none absolute inset-e-0 top-full z-20 mt-1.5 w-56 ${hintClass}`}
-                  >
-                    {t(
-                      "System",
-                      "Public entities description",
-                      "Caution: the selected entities will be public. Anyone will be able to see them.",
-                    )}
-                  </div>
-                ) : null}
-              </div>
-            </div>
-            {/* The state line is always mounted: Mixed, Will change, or the
-                published caution — so choosing moves nothing below it. */}
-            <div data-part="access-state" className="min-h-4 flex items-center gap-2">
-              {visibility !== null && bulk ? (
-                <ChangedMark label="general access" onRevert={() => setVisibility(null)} />
-              ) : effectiveVisibility === null ? (
-                <span className="text-meta text-ink-tertiary tabular-nums">
-                  Mixed access · {published.toLocaleString()} published, {(n - published).toLocaleString()} private
-                </span>
-              ) : isPublished && !showPublicTip ? (
-                <span className={noticeClass}>
-                  <AlertTriangle size={12} className="shrink-0 text-warning" aria-hidden />
-                  {bulk ? "Anyone can see these entities" : t("System", "Anyone can see this entity")}
-                </span>
-              ) : null}
-            </div>
-          </section>
-
-          <section data-part="lookup" aria-labelledby="share-people-title" className="space-y-3 px-5 pt-3">
-            <div className="flex items-center gap-1.5">
-              <h3 id="share-people-title" className="text-xs font-medium text-ink-secondary">
-                {t("System", "People and groups")}
-              </h3>
-              <button
-                type="button"
-                aria-label={t("System", "Lookup help")}
-                aria-expanded={showLookupHint}
-                className="inline-flex h-5 w-5 items-center justify-center rounded-full text-ink-tertiary transition-colors hover:bg-warm hover:text-ink-secondary cursor-pointer"
-                onClick={() => setShowLookupHint((openHint) => !openHint)}
-              >
-                <Info size={14} aria-hidden />
-              </button>
-            </div>
-            <form
-              className="flex items-center gap-2"
-              onSubmit={(event) => {
-                event.preventDefault();
-                handleAdd();
-              }}
+          <>{(ids[0] && getEntity(ids[0])?.title) || "Entity"}</>
+        )
+      }
+      closeLabel={t("System", "Close")}
+      flush
+      footer={
+        <>
+        {review ? (
+          <>
+            <button
+              type="button"
+              onClick={() => setReview(false)}
+              data-gutter-align="box"
+              className={`me-auto ${MODAL_BUTTON} ${BAR_GHOST} cursor-pointer`}
             >
-              <div className="min-w-0 flex-1">
-                <input
-                  ref={lookupInputRef}
-                  id="share-collaborator-lookup"
-                  value={lookupTerm}
-                  onChange={(event) => {
-                    setLookupTerm(event.target.value);
-                    if (lookupError) setLookupError("");
-                  }}
-                  placeholder={t("System", "Username, email or group")}
-                  aria-label={t("System", "Username, email or group")}
-                  autoComplete="off"
-                  aria-invalid={Boolean(lookupError)}
-                  className={`w-full rounded-md border bg-paper px-3 py-2 text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-carbon/20 ${
-                    lookupError ? "border-seal" : "border-border"
-                  }`}
-                />
-                {lookupError ? <p className="mt-1 text-meta text-seal-label">{lookupError}</p> : null}
-              </div>
-              <button
-                type="submit"
-                disabled={!lookupTerm.trim()}
-                className="px-3 py-2 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {t("System", "Add")}
-              </button>
-            </form>
-            {showLookupHint ? (
-              <p className="text-meta text-ink-tertiary">
-                {t(
-                  "System",
-                  "Lookup hint",
-                  "Enter the full username, email, or group name from Settings. Suggestions are not shown.",
-                )}
-              </p>
-            ) : null}
-          </section>
-
-          <section data-part="members" aria-labelledby="share-people-title" className="px-5 py-3">
-            <ul data-part="rows" className="divide-y divide-border/50">
-              {/* Fixed first row, as in Uwazi: why no entity can be left
-                  without an editor. Not removable. */}
-              <li data-component="MemberRow" data-fixed className="flex items-center gap-3 px-1 py-2.5">
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm text-ink">{t("System", "Administrators and Editors")}</span>
-                  <span className="block text-meta text-ink-tertiary">Always</span>
-                </span>
-                <span className="inline-flex items-center gap-1 text-meta text-ink-secondary">
-                  <Pencil size={13} aria-hidden /> {t("System", "Can edit")}
-                </span>
-              </li>
-              {members.map((m) => (
-                <MemberRow
-                  key={m.id}
-                  label={m.label}
-                  coverage={bulk ? `${m.count.toLocaleString()} of ${n.toLocaleString()}` : undefined}
-                  current={m.levels.size === 1 ? [...m.levels][0] : null}
-                  change={changes[m.id]}
-                  addedTo={n - m.count}
-                  bulk={bulk}
-                  showCanSee={bulk || !isPublished}
-                  onLevel={(level) => {
-                    const same = m.count === n && m.levels.size === 1 && m.levels.has(level);
-                    setChange(m.id, same ? null : { kind: "set", label: m.label, level });
-                  }}
-                  onRemove={() => setChange(m.id, { kind: "remove" })}
-                  onRevert={() => setChange(m.id, null)}
-                />
-              ))}
-              {added.map(([id, c]) => (
-                <MemberRow
-                  key={id}
-                  label={c.label}
-                  current={c.level}
-                  change={c}
-                  addedTo={n}
-                  isNew
-                  bulk={bulk}
-                  showCanSee={bulk || !isPublished}
-                  onLevel={(level) => setChange(id, { kind: "set", label: c.label, level })}
-                  onRemove={() => setChange(id, null)}
-                  onRevert={() => setChange(id, null)}
-                />
-              ))}
-            </ul>
-          </section>
-        </div>
-        )}
-
-        <div data-part="footer" className="flex items-center justify-end gap-2 px-5 py-3 border-t border-border">
-          {review ? (
-            <>
-              <button
-                type="button"
-                onClick={() => setReview(false)}
-                className="me-auto px-3 py-1.5 text-xs font-medium text-ink bg-paper border border-border rounded-md hover:bg-warm transition-colors cursor-pointer"
-              >
-                Back
-              </button>
-              <button
-                type="button"
-                onClick={apply}
-                className="px-3 py-1.5 text-xs font-medium rounded-md bg-ink text-parchment hover:bg-ink/90 transition-colors cursor-pointer"
-              >
-                Apply to {n.toLocaleString()} entities
-              </button>
-            </>
-          ) : dirty ? (
-            <>
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-3 py-1.5 text-xs font-medium text-ink bg-paper border border-border rounded-md hover:bg-warm transition-colors cursor-pointer"
-              >
-                {t("System", "Discard changes")}
-              </button>
-              <button
-                type="button"
-                onClick={() => (bulk ? setReview(true) : apply())}
-                className="px-3 py-1.5 text-xs font-medium rounded-md bg-ink text-parchment hover:bg-ink/90 transition-colors cursor-pointer"
-              >
-                {t("System", "Save changes")}
-              </button>
-            </>
-          ) : (
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={apply}
+              className={MODAL_COMMIT}
+            >
+              Apply to {n.toLocaleString()} entities
+            </button>
+          </>
+        ) : dirty ? (
+          <>
             <button
               type="button"
               onClick={onClose}
-              className="px-3 py-1.5 text-xs font-medium text-ink bg-paper border border-border rounded-md hover:bg-warm transition-colors cursor-pointer"
+              className={`${MODAL_BUTTON} ${BAR_GHOST} cursor-pointer`}
             >
-              {t("System", "Close")}
+              {t("System", "Discard changes")}
             </button>
-          )}
-        </div>
+            <button
+              type="button"
+              onClick={() => (bulk ? setReview(true) : apply())}
+              className={MODAL_COMMIT}
+            >
+              {t("System", "Save changes")}
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={onClose}
+            className={`${MODAL_BUTTON} ${BAR_GHOST} cursor-pointer`}
+          >
+            {t("System", "Close")}
+          </button>
+        )}
+        </>
+      }
+    >
+    {review ? (
+      <div data-part="review" className="bleed flex-1 overflow-auto py-3 space-y-1">
+        {lines.map((l, i) => (
+          <div
+            key={i}
+            data-gutter-align="box"
+                  className={`flex items-baseline justify-between gap-3 px-2 py-1.5 rounded-md text-xs ${l.warn ? "bg-warning-light" : ""}`}
+          >
+            <span className="text-ink font-medium">{l.text}</span>
+            <span className="text-ink-tertiary tabular-nums text-end">{l.count}</span>
+          </div>
+        ))}
       </div>
+    ) : (
+    <div data-part="share-body" className="bleed flex-1 overflow-auto">
+      {skipped > 0 && (
+        <p className="pt-3 text-meta text-ink-tertiary">
+          {skipped.toLocaleString()} of {ids.length.toLocaleString()} skipped: you cannot share them.
+        </p>
+      )}
+      <section data-part="general-access" aria-labelledby="share-general-access-title" className="bleed space-y-2 border-b border-border/50 pt-3 pb-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 id="share-general-access-title" className="text-xs font-medium text-ink-secondary">
+            {t("System", "General access")}
+          </h3>
+          <div ref={generalAccessRef} className="relative">
+            <div
+              role="radiogroup"
+              aria-label={t("System", "General access")}
+              className="inline-flex w-fit items-center rounded-md overflow-hidden h-8"
+              style={{ border: "1px solid var(--border-primary)" }}
+            >
+              <AccessSegment
+                active={effectiveVisibility === "private"}
+                label={t("System", "Private")}
+                onClick={() => setGeneralAccess("private")}
+                first
+              >
+                <Lock size={12} aria-hidden />
+                <span className="text-xs font-medium whitespace-nowrap">{t("System", "Private")}</span>
+              </AccessSegment>
+              <AccessSegment
+                active={isPublished}
+                label={t("System", "Published")}
+                onClick={() => setGeneralAccess("published")}
+                published
+              >
+                <Globe size={12} aria-hidden />
+                <span className="text-xs font-medium whitespace-nowrap">{t("System", "Published")}</span>
+              </AccessSegment>
+            </div>
+            {showPublicTip ? (
+              <div
+                role="tooltip"
+                data-part="public-tip"
+                className={`pointer-events-none absolute inset-e-0 top-full z-20 mt-1.5 w-56 ${hintClass}`}
+              >
+                {t(
+                  "System",
+                  "Public entities description",
+                  "Caution: the selected entities will be public. Anyone will be able to see them.",
+                )}
+              </div>
+            ) : null}
+          </div>
+        </div>
+        {/* The state line is always mounted: Mixed, Will change, or the
+            published caution — so choosing moves nothing below it. */}
+        <div data-part="access-state" className="min-h-4 flex items-center gap-2">
+          {visibility !== null && bulk ? (
+            <ChangedMark label="general access" onRevert={() => setVisibility(null)} />
+          ) : effectiveVisibility === null ? (
+            <span className="text-meta text-ink-tertiary tabular-nums">
+              Mixed access · {published.toLocaleString()} published, {(n - published).toLocaleString()} private
+            </span>
+          ) : isPublished && !showPublicTip ? (
+            <span className={noticeClass}>
+              <AlertTriangle size={12} className="shrink-0 text-warning" aria-hidden />
+              {bulk ? "Anyone can see these entities" : t("System", "Anyone can see this entity")}
+            </span>
+          ) : null}
+        </div>
+      </section>
+
+      <section data-part="lookup" aria-labelledby="share-people-title" className="space-y-3 pt-3">
+        <div className="flex items-center gap-1.5">
+          <h3 id="share-people-title" className="text-xs font-medium text-ink-secondary">
+            {t("System", "People and groups")}
+          </h3>
+          <button
+            type="button"
+            aria-label={t("System", "Lookup help")}
+            aria-expanded={showLookupHint}
+            className="inline-flex h-5 w-5 items-center justify-center rounded-full text-ink-tertiary transition-colors hover:bg-warm hover:text-ink-secondary cursor-pointer"
+            onClick={() => setShowLookupHint((openHint) => !openHint)}
+          >
+            <Info size={14} aria-hidden />
+          </button>
+        </div>
+        <form
+          className="flex items-center gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            handleAdd();
+          }}
+        >
+          <div className="min-w-0 flex-1">
+            <input
+              ref={lookupInputRef}
+              id="share-collaborator-lookup"
+              value={lookupTerm}
+              onChange={(event) => {
+                setLookupTerm(event.target.value);
+                if (lookupError) setLookupError("");
+              }}
+              placeholder={t("System", "Username, email or group")}
+              aria-label={t("System", "Username, email or group")}
+              autoComplete="off"
+              aria-invalid={Boolean(lookupError)}
+              className={`w-full rounded-md border bg-paper px-3 py-2 text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-carbon/20 ${
+                lookupError ? "border-seal" : "border-border"
+              }`}
+            />
+            {lookupError ? <p className="mt-1 text-meta text-seal-label">{lookupError}</p> : null}
+          </div>
+          <button
+            type="submit"
+            disabled={!lookupTerm.trim()}
+            className="px-3 py-2 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {t("System", "Add")}
+          </button>
+        </form>
+        {showLookupHint ? (
+          <p className="text-meta text-ink-tertiary">
+            {t(
+              "System",
+              "Lookup hint",
+              "Enter the full username, email, or group name from Settings. Suggestions are not shown.",
+            )}
+          </p>
+        ) : null}
+      </section>
+
+      <section data-part="members" aria-labelledby="share-people-title" className="py-3">
+        <ul data-part="rows" className="divide-y divide-border/50">
+          {/* Fixed first row, as in Uwazi: why no entity can be left
+              without an editor. Not removable. */}
+          <li data-component="MemberRow" data-fixed className="flex items-center gap-3 py-2.5">
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm text-ink">{t("System", "Administrators and Editors")}</span>
+              <span className="block text-meta text-ink-tertiary">Always</span>
+            </span>
+            <span className="inline-flex items-center gap-1 text-meta text-ink-secondary">
+              <Pencil size={13} aria-hidden /> {t("System", "Can edit")}
+            </span>
+          </li>
+          {members.map((m) => (
+            <MemberRow
+              key={m.id}
+              label={m.label}
+              coverage={bulk ? `${m.count.toLocaleString()} of ${n.toLocaleString()}` : undefined}
+              current={m.levels.size === 1 ? [...m.levels][0] : null}
+              change={changes[m.id]}
+              addedTo={n - m.count}
+              bulk={bulk}
+              showCanSee={bulk || !isPublished}
+              onLevel={(level) => {
+                const same = m.count === n && m.levels.size === 1 && m.levels.has(level);
+                setChange(m.id, same ? null : { kind: "set", label: m.label, level });
+              }}
+              onRemove={() => setChange(m.id, { kind: "remove" })}
+              onRevert={() => setChange(m.id, null)}
+            />
+          ))}
+          {added.map(([id, c]) => (
+            <MemberRow
+              key={id}
+              label={c.label}
+              current={c.level}
+              change={c}
+              addedTo={n}
+              isNew
+              bulk={bulk}
+              showCanSee={bulk || !isPublished}
+              onLevel={(level) => setChange(id, { kind: "set", label: c.label, level })}
+              onRemove={() => setChange(id, null)}
+              onRevert={() => setChange(id, null)}
+            />
+          ))}
+        </ul>
+      </section>
     </div>
+    )}
+    </Modal>
   );
 }
 
@@ -598,7 +572,7 @@ function MemberRow({
         ? `Will change${addedTo > 0 ? ` · added to ${addedTo.toLocaleString()}` : ""}`
         : undefined;
   return (
-    <li data-component="MemberRow" data-level={level ?? "mixed"} className="flex items-center gap-3 px-1 py-2.5">
+    <li data-component="MemberRow" data-level={level ?? "mixed"} className="flex items-center gap-3 py-2.5">
       <span className="min-w-0 flex-1">
         <span data-part="name" className={`block truncate text-sm ${removed ? "text-ink-tertiary line-through" : "text-ink"}`}>
           {label}

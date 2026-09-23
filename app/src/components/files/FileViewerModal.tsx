@@ -1,4 +1,6 @@
-import { X, Download, ExternalLink } from "lucide-react";
+import { Download, ExternalLink } from "lucide-react";
+import { Modal, MODAL_BUTTON } from "../shared/Modal";
+import { BAR_GHOST } from "../shared/warmButton";
 import { languageName } from "../../atoms/language";
 import { useAtom, useAtomValue } from "jotai";
 import { filesAtom, viewerFileIdAtom } from "../../atoms/files";
@@ -32,71 +34,45 @@ export function FileViewerModal() {
   const url = file.url ?? SAMPLE_URLS[file.type];
 
   return (
-    <div
-      data-component="FileViewerModal"
-      className="fixed inset-0 z-50 flex md:items-center md:justify-center md:p-6 bg-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-label={`View ${file.name}`}
-      onClick={close}
+    <Modal
+      component="FileViewerModal"
+      size="xl"
+      portal={false}
+      onClose={close}
+      closeLabel="Close viewer"
+      title={file.name}
+      subtitle={
+        <span data-part="meta" className="inline-flex items-center gap-2">
+          <span
+            data-part="language"
+            className="text-meta font-semibold text-ink-secondary bg-vellum px-1.5 py-px rounded"
+            title={languageName(file.language)}
+            aria-label={languageName(file.language)}
+          >
+            {file.language}
+          </span>
+          <span data-part="kind" className="uppercase">{file.type}</span>
+          <span data-part="size">{file.size}</span>
+        </span>
+      }
+      headerActions={
+        url && file.type !== "link" ? (
+          <a
+            href={url}
+            download
+            data-part="download"
+            target="_blank"
+            rel="noreferrer"
+            className={`flex items-center gap-1.5 ${MODAL_BUTTON} ${BAR_GHOST} cursor-pointer`}
+          >
+            <Download size={12} className="text-ink-tertiary" aria-hidden /> Download
+          </a>
+        ) : undefined
+      }
+      bodyClassName="py-6 bg-warm/40 flex items-center justify-center"
     >
-      <div
-        data-part="panel"
-        className="bg-paper shadow-xl w-full md:max-w-3xl md:rounded-lg md:max-h-[90vh] h-full md:h-auto flex flex-col md:animate-fade-in-up"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div
-          data-part="header"
-          className="flex items-center justify-between gap-3 px-5 py-3 shrink-0"
-          style={{ borderBottom: "1px solid var(--border-primary)" }}
-        >
-          <div className="min-w-0">
-            <h2 data-part="title" className="text-sm font-semibold text-ink truncate">{file.name}</h2>
-            <div data-part="meta" className="flex items-center gap-2 mt-0.5">
-              <span
-                data-part="language"
-                className="text-meta font-semibold text-ink-secondary bg-vellum px-1.5 py-px rounded"
-                title={languageName(file.language)}
-                aria-label={languageName(file.language)}
-              >
-                {file.language}
-              </span>
-              <span data-part="kind" className="text-meta text-ink-tertiary uppercase">{file.type}</span>
-              <span data-part="size" className="text-meta text-ink-tertiary">{file.size}</span>
-            </div>
-          </div>
-          <div data-part="actions" className="flex items-center gap-2 shrink-0">
-            {url && file.type !== "link" && (
-              <a
-                href={url}
-                download
-                data-part="download"
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
-              >
-                <Download size={12} className="text-ink-tertiary" aria-hidden /> Download
-              </a>
-            )}
-            <button
-              type="button"
-              data-part="close"
-              onClick={close}
-              aria-label="Close viewer"
-              className="p-1.5 rounded-md hover:bg-parchment transition-colors cursor-pointer"
-            >
-              <X size={18} className="text-ink-muted" aria-hidden />
-            </button>
-          </div>
-        </div>
-
-        {/* Body */}
-        <div data-part="body" className="flex-1 min-h-0 overflow-auto bg-warm/40 flex items-center justify-center p-6">
-          <FileViewerBody file={file} url={url} />
-        </div>
-      </div>
-    </div>
+      <FileViewerBody file={file} url={url} />
+    </Modal>
   );
 }
 
