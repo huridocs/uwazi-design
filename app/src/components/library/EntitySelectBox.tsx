@@ -149,11 +149,10 @@ export const SELECTED_LOOK = [
 /** The same, drawn inside the box — for rows, whose neighbours touch them. */
 export const SELECTED_LOOK_INSET = `${SELECTED_LOOK} has-[[data-part=select]_input:checked]:ring-inset`;
 
-/** The PREVIEWED item — the one open in the drawer: the carbon ring on its
- *  own fill, the same look as keyboard focus on an unselected item. So the
- *  Library has ONE accent: ring = focus or preview, ring + parchment =
- *  selected (the ink hairline it replaces made the first card clicked look
- *  unlike every card picked after it). Forced colors drop rings, so there it
+/** The PREVIEWED item — the one open in the drawer. Callers pair this ring
+ *  with `bg-parchment`, so a single previewed item looks exactly like a
+ *  selected one: one look for "this is the item you picked", however many
+ *  are picked. Forced colors drop rings, so there it
  *  is a thin system-colour outline — thinner than selected's. */
 export const PREVIEWED_RING =
   "ring-2 ring-[var(--selected-ring)] forced-colors:outline forced-colors:outline-1 forced-colors:outline-[CanvasText]";

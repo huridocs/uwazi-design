@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom } from "../atoms/dataSource";
 import { startDraftAtom } from "../atoms/entityOverlay";
-import { openNewImportOnArrivalAtom } from "../atoms/navigation";
+import { activitiesAtom } from "../atoms/notifications";
+import { NewImportModal } from "../components/import-csv/NewImportModal";
 import { editSessionOpenAtom } from "../atoms/dirtyGuard";
 import { CreateEntityDialog } from "../components/library/CreateEntityDialog";
 import { isPdf, runCsvExport, runPdfUploadBatch } from "../utils/libraryTasks";
@@ -23,7 +24,6 @@ import { referencesAtom } from "../atoms/references";
 import { languageAtom, type Language } from "../atoms/language";
 import { uiLanguageAtom } from "../atoms/uiLanguage";
 import { t } from "../utils/i18n";
-import { appViewAtom } from "../atoms/navigation";
 import { breakpointAtom } from "../atoms/viewport";
 import { openEntityAtom, focusEntityForPreviewAtom } from "../atoms/focusedEntity";
 import { scrollToPageAtom } from "../atoms/selection";
@@ -276,7 +276,6 @@ export function LibraryView() {
   const setFocusMetadataField = useSetAtom(requestMetadataFocusAtom);
   const clearFacets = useSetAtom(clearLibraryFacetsAtom);
   const [matchTypes, setMatchTypes] = useAtom(matchTypeFiltersAtom);
-  const setAppView = useSetAtom(appViewAtom);
   const notify = useNotify();
   const guard = useDirtyGuard();
 
@@ -284,7 +283,20 @@ export function LibraryView() {
   const store = useStore();
   const libraryTypes = useAtomValue(libraryTypesAtom);
   const startDraft = useSetAtom(startDraftAtom);
-  const setOpenNewImport = useSetAtom(openNewImportOnArrivalAtom);
+  // Import CSV opens its modal over the Library; the import then runs as a
+  // Beacon task instead of taking the reader to the Import CSV screen.
+  const [importOpen, setImportOpen] = useState(false);
+  const setImportActivities = useSetAtom(activitiesAtom);
+  const handleImportCsv = useCallback(
+    (filename: string, template: string) => {
+      setImportOpen(false);
+      setImportActivities((prev) => [
+        ...prev,
+        { id: `imp-${Date.now()}`, label: "Importing CSV", detail: `${filename} → ${template}`, current: 0, total: 100 },
+      ]);
+    },
+    [setImportActivities],
+  );
   const [createOpen, setCreateOpen] = useState(false);
   const [phoneActionsOpen, setPhoneActionsOpen] = useState(false);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
@@ -1372,6 +1384,7 @@ export function LibraryView() {
             onClose={() => setPendingUploads(null)}
           />
         )}
+        <NewImportModal open={importOpen} onClose={() => setImportOpen(false)} onImport={handleImportCsv} />
         {createOpen && (
           <CreateEntityDialog
             types={libraryTypes}
@@ -1406,16 +1419,11 @@ export function LibraryView() {
               icon={<FileUp size={13} className="text-ink-tertiary" />}
               label="Import CSV"
               onClick={() =>
-                guard(() => {
-                  setOpenNewImport(true);
-                  setAppView("import-csv");
-                })
+                guard(() => setImportOpen(true))
               }
             />
             {/* With a selection, the bar's own Export CSV exports the
-                selection; without one, this exports the current results.
-                Divided from the three that bring entities IN. */}
-            <BarDivider className="hidden sm:block" />
+                selection; without one, this exports the current results. */}
             <FooterButton
               icon={<FileDown size={13} className="text-ink-tertiary" />}
               label="Export CSV"
@@ -1460,10 +1468,7 @@ export function LibraryView() {
                 label: "Import CSV",
                 icon: <FileUp size={14} />,
                 onClick: () =>
-                  guard(() => {
-                    setOpenNewImport(true);
-                    setAppView("import-csv");
-                  }),
+                  guard(() => setImportOpen(true)),
               },
               { label: "Export CSV", icon: <FileDown size={14} />, onClick: handleExport },
             ]}

@@ -121,15 +121,17 @@ Keep it in sync when tokens.css or the style rules change.
   conditional mount inside a scrollable column shoves everything below it the
   moment a user ticks a box. Reserve the space; don't grow into it.
 - **Active sidebar items**: `bg-warm text-ink` with the *same* icon colour as inactive. Background change alone signals state.
-- **Warm buttons on a paper bar or footer use `WARM_BUTTON` / `WARM_EDGE`** from
-  `components/shared/warmButton.ts`, never a hand-rolled `bg-warm` string. The
-  edge is an inset ring, so the button's box size never changes. Buttons on a
-  warm, parchment or vellum ground, in the navbar, and the Beacon pill take no
-  edge.
-- **Action bars carry at most ONE filled button** (2026-09-22). The ladder, in
-  `warmButton.ts`: solid ink for the bar's commit (Save, Open entity, New
-  Import); else `WARM_BUTTON` for its lead action (Create entity, Edit, Add
-  file); every other action is `BAR_GHOST` (no fill, no edge, warm on hover);
+- **Warm buttons in a dialog or modal footer use `WARM_BUTTON`** (fill plus the
+  `WARM_EDGE` inset ring) from `components/shared/warmButton.ts`, never a
+  hand-rolled `bg-warm` string. Action bars at the foot of a pane do not use
+  it; see the next rule. Buttons on a warm, parchment or vellum ground, in the
+  navbar, and the Beacon pill take no edge.
+- **Action-bar buttons carry no border, ring or edge, and at rest the only
+  fill is the ink commit.** The ladder, in `warmButton.ts`: solid ink for the
+  bar's commit (Save, Open entity, New Import); else `BAR_LEAD` for its lead
+  action (Create entity, Edit, Add file): no fill, ink text at medium weight,
+  because a filled button at rest reads as pressed; every other action is
+  `BAR_GHOST` (no fill, warm on hover);
   Delete is `BAR_DANGER` (seal text, tint on hover), never a seal fill in a bar.
   Groups (selection count / bulk actions / danger) are split by `BarDivider`,
   not by per-button borders. No whole-bar `bg-selected` tint while a selection
@@ -237,7 +239,6 @@ src/components/shared/
 
 `View = "list" | "tree" | "graph"` (`viewAtom`); grouping is orthogonal via `groupByAtom`/`subGroupByAtom`. The zoom toggle (`detail` / `compact` / `overview`) applies to grouped + tree, hidden in list + graph. **Never re-implement filtering in a view body — consume `useFilteredReferences` so facets can't silently drop in one mode.**
 
-Atom rename history: `relationshipTypeFiltersAtom` → `relTypeFiltersAtom`, `relationshipEntityTypeFiltersAtom` → `entityTypeFiltersAtom`, `relationshipsZoomAtom` → `zoomAtom`, `relationshipsActiveFilterCountAtom`/`referencesActiveFilterCountAtom` → `activeFilterCountAtom`. Removed: `viewModeAtom`'s `density` and `by-document` variants, `DensityCard`.
 
 Toolbar pattern (main view):
 ```tsx
@@ -417,7 +418,7 @@ HURIDOCS tribute** — surface the name, keep the code identifiers (`agent*`).
 ## Metadata view
 - Drawer tabs: **Document → Connections → Files → Template** (Document is first by request).
 - Files tab maps over real `files[]` from `data/files.ts` — *not* hardcoded.
-- Connections tab inside the drawer renders `<ConnectionsDrawerSection />`; default panel mode is `tree`.
+- Connections tab inside the drawer renders `<RelationshipsDrawerSection />`; default panel mode is `tree`.
 
 ### Click-to-fill (edit mode)
 A focused metadata input LISTENS for a value from elsewhere on screen — a passage
@@ -658,16 +659,9 @@ an inline `() => clearSearch()` there silently undoes the memo. Together: settle
 the raw `libraryQueryAtom`, which re-rendered every mounted card on the urgent
 render each keystroke fires, for a query whose results hadn't been computed yet.
 `LibraryView` passes the DEFERRED query, so a card re-renders for a query that
-has actually settled. Re-measured 2026-09-07 by A/B-ing a temporary re-subscribing
-card against the shipped one in ONE page session (CEJIL, cards view, 120 mounted
-cards, six keystrokes at 120ms): **1,756 card renders subscribing vs 1,585 with
-the prop — the subscription is ~11% of card renders, not all of them.** The
-headline "2,594 renders per query" was the TOTAL, and most of it survives the
-fix: the cards re-render because the RESULT SET changes on every keystroke (a new
-`shown` slice, different entities, different `connections`), which no amount of
-query-plumbing touches. If that number needs to come down, the target is prop
-identity across keystrokes, and it is its own task. What the growth did cost was
-memory, and the
+has actually settled. Most card re-renders come from the result set changing on
+each keystroke, not from the query; reducing them means stable prop identity,
+which is separate work. Memory: the
 **worker no longer primes folded→original index maps** — those are per-excerpt,
 `pageFoldWithMap` builds them lazily, and priming them held 20.4MB of live
 `Int32Array` for pages no excerpt cuts (heap after prime 434.8MB → 326.2MB).
@@ -768,7 +762,7 @@ big, what shape, how the picture sits in it.
   need no shared state. Both portal to `body` and position from the box's rect.
 
 ## Component catalog
-Logo click toggles in/out of `ComponentCatalog`. Sidebar groups: Style Guide, Elements, Entity View — Layout / Document / References / Metadata / Files / Drawer / Relationships, Import CSV — Layout / Components, **Filters & Lists**, Shared. Add new shared/connections components here as a `CatalogEntry` with a live `Isolated…` demo. Note: the Entity View → References + Relationships groups now both showcase `ConnectionRow` (reference and aggregate variants) and `ConnectionGroupedCard`.
+Logo click toggles in/out of `ComponentCatalog`. Sidebar groups: Style Guide, Elements, Entity View — Layout / Document / References / Metadata / Files / Drawer / Relationships, Import CSV — Layout / Components, **Filters & Lists**, Shared. Add new shared/connections components here as a `CatalogEntry` with a live `Isolated…` demo. The Entity View → References and Relationships groups showcase `RelationshipRow` (reference and aggregate variants) and `RelationshipGroupedCard`.
 
 ## Mobile
 Breakpoints: mobile `<768`, tablet `768-1023`, desktop `≥1024` (`atoms/viewport.ts`). `AdaptiveSplitView` swaps to `MobileBottomSheet` on mobile. Outstanding mobile follow-ups in `~/.claude/projects/-Users-juanmnl-Developer-huridocs-uwazi-app/memory/pending.md` — read before touching mobile.

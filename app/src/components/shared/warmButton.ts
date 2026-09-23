@@ -23,16 +23,16 @@ export const WARM_BUTTON = `text-ink-secondary bg-warm hover:bg-parchment hover:
  *     carry (Save, Open entity, New Import). Not defined here; those buttons
  *     own it.
  *  2. `BAR_LEAD`: the bar's lead action when it has no commit (Create entity,
- *     Edit, Add file). At most one per bar. It takes the vellum fill, not
- *     warm: warm on paper is 1.04:1 and needed `WARM_EDGE` to show at all,
- *     and bars take no edge. Vellum shows on its own in both themes.
+ *     Edit, Add file). At most one per bar. No fill at rest: a filled button
+ *     at rest reads as a pressed or active state. It leads by weight, ink
+ *     text at medium weight, and takes the ghosts' warm hover.
  *  3. `BAR_GHOST`: everything else. No fill at rest; warm on hover.
  *  4. `BAR_DANGER`: Delete. Seal text at rest so it reads as danger without a
  *     fill; the seal tint comes on hover.
  *
  *  Groups within a bar are split by `BarDivider`, not by giving each button
  *  its own border. `WARM_BUTTON` stays for dialog and modal footers. */
-export const BAR_LEAD = "text-ink bg-vellum hover:bg-parchment";
+export const BAR_LEAD = "text-ink font-medium hover:bg-warm";
 
 export const BAR_GHOST = "text-ink-secondary hover:bg-warm hover:text-ink";
 
