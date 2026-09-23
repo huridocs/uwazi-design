@@ -510,8 +510,9 @@ function displayOption<T extends DisplayValue>(
 }
 
 export const DEFAULT_RESULTS_LAYOUT: ResultsLayout = "grouped";
-/* `main`'s default: the small preview. */
+/* `main`'s defaults: the small preview, in the landscape band. */
 export const DEFAULT_THUMB_SIZE: ThumbSize = "s";
+export const DEFAULT_THUMB_FRAME: ThumbFrame = "landscape";
 export const DEFAULT_LIST_DENSITY: ListDensity = "comfortable";
 
 export const libraryResultsLayoutAtom = displayOption<ResultsLayout>(
@@ -520,6 +521,11 @@ export const libraryResultsLayoutAtom = displayOption<ResultsLayout>(
   DEFAULT_RESULTS_LAYOUT,
 );
 const thumbSizeStateAtom = displayOption<ThumbSize>("thumbSize", "mode", DEFAULT_THUMB_SIZE);
+/** The slot's SHAPE, for the whole grid (never per card). Portrait is the
+ *  card's full width at 3:4, and the GRID keeps it from becoming a poster:
+ *  LibraryView re-hangs portrait cards in narrower columns, Size stepping the
+ *  count. Fit stays `auto` on main, which is already the match-the-frame rule. */
+export const libraryThumbFrameAtom = displayOption<ThumbFrame>("thumbFrame", "mode", DEFAULT_THUMB_FRAME);
 /** Reads through a validity check: the stored value can outlive the option
  *  list, and an unknown key would index the size tables to `undefined` — a
  *  card with no preview height at all. */

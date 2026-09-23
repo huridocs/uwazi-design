@@ -12,6 +12,7 @@ import type { Entity } from "../../data/entities";
 import {
   libraryCardInfoAtom,
   libraryThumbSizeAtom,
+  libraryThumbFrameAtom,
   type LibraryViewMode,
   type ThumbSize,
 } from "../../atoms/library";
@@ -115,6 +116,7 @@ export const EntityCard = memo(function EntityCard({
   const language = useAtomValue(languageAtom);
   const info = useAtomValue(libraryCardInfoAtom);
   const thumbSize = useAtomValue(libraryThumbSizeAtom);
+  const thumbFrame = useAtomValue(libraryThumbFrameAtom);
   const showPreview = info.preview;
   const showMetadata = info.metadata;
   const showConnections = info.connections;
@@ -280,7 +282,11 @@ export const EntityCard = memo(function EntityCard({
   // slot + title + footer, already equal everywhere, and in PORTRAIT the aspect
   // slot plus the grid row's own stretch keeps neighbours level — a rem floor
   // sized for one column width is wrong at every other.
-  const minHeight = showPreview && showMetadata ? CARD_FLOOR[thumbSize] : "";
+  // Landscape only: in portrait the aspect slot plus the grid row's own stretch
+  // keeps neighbours level, and a rem floor sized for one column width would be
+  // wrong at every other.
+  const minHeight =
+    showPreview && showMetadata && thumbFrame === "landscape" ? CARD_FLOOR[thumbSize] : "";
 
   /** One track per row this card draws. Both toggles are global, so every card
    *  on screen agrees — see ROW_SPAN. */
@@ -288,7 +294,10 @@ export const EntityCard = memo(function EntityCard({
 
   /** Slot class: the landscape band. The picture fills it — a landscape image
    *  covers, anything else mats (ImageThumb's object-fit owns that call). */
-  const slotShape = `w-full ${COVER_H[thumbSize]}`;
+  /** Landscape: the band, its height by Size. Portrait: the card's full width at
+   *  3:4, its height set by the column width, which Size steps in LibraryView.
+   *  Both are definite before an image loads. */
+  const slotShape = `w-full ${thumbFrame === "portrait" ? "aspect-[3/4]" : COVER_H[thumbSize]}`;
 
   return (
     // A SUBGRID, not a flex column. The card's rows — slot, title, metadata,
@@ -329,7 +338,7 @@ export const EntityCard = memo(function EntityCard({
               entityId={entity.id}
               image={entity.image}
               fit="auto"
-              frame="landscape"
+              frame={thumbFrame}
               tint={getEntityType(entity.typeId)?.color}
               className="h-full w-full rounded overflow-hidden border border-border/60"
             />
