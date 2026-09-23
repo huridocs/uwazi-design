@@ -69,7 +69,7 @@ import { scopedReferencesAtom } from "../atoms/references";
 import { RelationshipsDrawerSection } from "../components/relationships/RelationshipsDrawerSection";
 import { useNotify } from "../hooks/useNotify";
 import { useRegisterDirtyForm } from "../hooks/useDirtyGuard";
-import { ShareEntityModal } from "../components/share/ShareEntityModal";
+import { EntityBarActions } from "../components/entity/EntityBarActions";
 import { ModalHostProvider } from "../components/shared/Modal";
 import { fromDateInputValue, toDateInputValue } from "../utils/dateValue";
 import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
@@ -128,7 +128,7 @@ export function MetadataView({ tabs, activeTab, onTabChange, onBack }: MetadataV
           menuSlot={menuTrigger}
         />
       ) : (
-        <MetadataReadBody onEdit={() => setEditing(true)} menuSlot={menuTrigger} />
+        <MetadataReadBody onEdit={() => setEditing(true)} onDeleted={onBack} menuSlot={menuTrigger} />
       )}
     </div>
     </ModalHostProvider>
@@ -150,18 +150,25 @@ export function MetadataView({ tabs, activeTab, onTabChange, onBack }: MetadataV
 
 /* ── Read Mode ── */
 
-function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?: ReactNode }) {
+function MetadataReadBody({
+  onEdit,
+  onDeleted,
+  menuSlot,
+}: {
+  onEdit: () => void;
+  /** After Delete: the entity is gone, so the view leaves it. */
+  onDeleted?: () => void;
+  menuSlot?: ReactNode;
+}) {
   const language = useAtom(languageAtom)[0];
-  const profile = getEntityProfile(useAtomValue(focusedEntityIdAtom));
+  const focusedId = useAtomValue(focusedEntityIdAtom);
+  const profile = getEntityProfile(focusedId);
   const allFields = profile.metadata[language];
   const fields = allFields.filter((f): f is MetadataField => f.type !== "relationship");
-  const notify = useNotify();
-  const [shareOpen, setShareOpen] = useState(false);
 
   return (
     <>
       <DocMeta showPdfSelector={false} />
-      <ShareEntityModal open={shareOpen} onClose={() => setShareOpen(false)} />
 
       <div className="bleed flex-1 overflow-auto body-top pb-8">
         {/* Full width — no 56rem cap. The label|value table sizes its label column
@@ -185,20 +192,10 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
         >
           Edit
         </button>
-        <button
-          onClick={() => setShareOpen(true)}
-          className={`px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
-        >
-          Share
-        </button>
+        {/* Share, Permissions | Delete — the selection's dialogs, for this one
+            entity. */}
+        <EntityBarActions entityId={focusedId} onDeleted={onDeleted} />
         <div className="flex-1" />
-        <button
-          onClick={() => notify("Entity deleted", "success")}
-          data-gutter-align="box"
-          className={`px-3 py-1.5 text-xs font-medium ${BAR_DANGER} rounded-md transition-colors cursor-pointer`}
-        >
-          Delete
-        </button>
         {menuSlot}
       </div>
     </>
