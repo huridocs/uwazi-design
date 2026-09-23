@@ -1545,7 +1545,11 @@ function TemplatePicker({
   value: string;
   onChange: (id: string) => void;
 }) {
-  const types = useAtomValue(entityTypesAtom);
+  // The EDITED entity's corpus, not the Sample list: a CEJIL record's
+  // template is a CEJIL template, and the Sample list made every CEJIL form
+  // open on "Select template…".
+  const focusedId = useAtomValue(focusedEntityIdAtom);
+  const types = corpusTypes(entityCorpusOf(focusedId), useAtomValue(entityTypesAtom));
   const [open, setOpen] = useState(false);
   const current = types.find((t) => t.id === value);
 

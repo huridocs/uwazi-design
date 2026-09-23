@@ -1,4 +1,6 @@
 import { useCallback, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { FileDown, X } from "lucide-react";
 import {
@@ -159,5 +161,71 @@ export function LibrarySelectionBar({
         <X size={13} className="text-ink-tertiary" aria-hidden /> Clear
       </button>
     </>
+  );
+}
+
+/** The selection's actions as a bottom sheet — the phone's version of the
+ *  bar's buttons. Portalled, focus-trapped, Escape and the scrim close it; an
+ *  action closes it too. Disabled actions stay listed, saying why. */
+export function ActionsSheet({
+  count,
+  heading,
+  actions,
+  onClose,
+}: {
+  count?: number;
+  /** The sheet's first line; "N selected" by default. */
+  heading?: string;
+  actions: { label: string; icon: ReactNode; onClick?: () => void; disabledReason?: string; danger?: boolean }[];
+  onClose: () => void;
+}) {
+  const panelRef = useFocusTrap<HTMLDivElement>(true);
+  return createPortal(
+    <div
+      data-component="SelectionActionsSheet"
+      className="fixed inset-0 z-50 flex items-end bg-ink/20"
+      onClick={onClose}
+    >
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={heading ?? `Actions for ${count} selected`}
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") onClose();
+        }}
+        className="w-full rounded-t-lg bg-paper border-t border-border shadow-lg p-2 pb-4"
+      >
+        <p className="px-3 py-2 text-meta text-ink-tertiary tabular-nums">
+          {heading ?? `${(count ?? 0).toLocaleString()} selected`}
+        </p>
+        <ul className="flex flex-col">
+          {actions.map((a) => (
+            <li key={a.label}>
+              <button
+                type="button"
+                aria-disabled={a.disabledReason ? true : undefined}
+                onClick={() => {
+                  if (a.disabledReason) return;
+                  onClose();
+                  a.onClick?.();
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-3 text-start text-sm rounded-md ${
+                  a.disabledReason ? "text-ink-muted cursor-not-allowed" : "text-ink hover:bg-warm cursor-pointer"
+                }`}
+              >
+                <span className="text-ink-tertiary" aria-hidden>
+                  {a.icon}
+                </span>
+                <span className={`flex-1 ${a.danger && !a.disabledReason ? "text-seal-label" : ""}`}>{a.label}</span>
+                {a.disabledReason && <span className="text-meta text-ink-muted">{a.disabledReason}</span>}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>,
+    document.body,
   );
 }
