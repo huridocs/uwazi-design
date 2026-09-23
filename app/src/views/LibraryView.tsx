@@ -39,7 +39,6 @@ import {
   libraryActiveFilterCountAtom,
   libraryViewModeAtom,
   libraryCardInfoAtom,
-  libraryCardSideAtom,
   libraryListColumnsAtom,
   libraryListDensityAtom,
   libraryFieldLabelsAtom,
@@ -196,16 +195,10 @@ export function LibraryView() {
   const listColumnOn = useAtomValue(libraryListColumnsAtom);
   const listDensity = useAtomValue(libraryListDensityAtom);
   const fieldLabels = useAtomValue(libraryFieldLabelsAtom);
-  // Columns grow with the display, on two breakpoints both layouts share: a
-  // 1920px viewport (120rem) and a 2560px one (160rem). Stacked: 1 / 2 / 3 as
-  // before, 4 at 1920, 5 at 2560. Side cards carry the preview beside the
-  // text, so they want fewer, wider columns: 1 below lg, 2 from lg, 3 at 1920,
-  // 4 at 2560. Not 3 at 2xl: a laptop's scaled resolution already reaches 1536
-  // and three side cards there fold the field grid.
-  const cardSide = useAtomValue(libraryCardSideAtom);
-  const cardGridCols = cardSide
-    ? "grid-cols-1 lg:grid-cols-2 min-[120rem]:grid-cols-3 min-[160rem]:grid-cols-4"
-    : "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 min-[120rem]:grid-cols-4 min-[160rem]:grid-cols-5";
+  // One hang, growing with the display: 1 / sm 2 / xl 3 as before, then 4 at a
+  // 1920px viewport (120rem) and 5 at 2560px (160rem).
+  const cardGridCols =
+    "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 min-[120rem]:grid-cols-4 min-[160rem]:grid-cols-5";
   const [sort, setSort] = useAtom(librarySortAtom);
   const [sortDir, setSortDir] = useAtom(librarySortDirAtom);
   const setSortKey = useCallback(

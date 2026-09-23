@@ -137,30 +137,16 @@ const CARD_INFO: DisplaySection = {
   ],
 };
 
-/** Where the preview sits, then how big it is. Both are dead while the Thumbnail
- *  toggle is off, and they say so by dimming rather than by leaving. (Frame and
- *  fit are `playground`'s; the card here is landscape / auto.) */
+/** How big the preview band is. Dead while the Thumbnail toggle is off, and it
+ *  says so by dimming rather than by leaving. (Frame and fit are
+ *  `playground`'s; the card here is landscape / auto.) */
 const previewOn = (v: DisplayValues) => v.preview !== false;
 const CARD_PREVIEW: DisplaySection[] = [
-  {
-    id: "cardLayout",
-    label: "Card layout",
-    kind: "choice",
-    separator: true,
-    enabled: previewOn,
-    option: {
-      id: "cardLayout",
-      default: "side",
-      choices: [
-        { id: "stacked", label: "Stacked", detail: "Preview above the text" },
-        { id: "side", label: "Side", detail: "Preview beside the text, in wider columns" },
-      ],
-    },
-  },
   {
     id: "thumbSize",
     label: "Thumbnail size",
     kind: "choice",
+    separator: true,
     enabled: previewOn,
     option: {
       id: "thumbSize",

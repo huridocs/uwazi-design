@@ -11,7 +11,6 @@ import { entityScalarFields } from "../../utils/entityFields";
 import type { Entity } from "../../data/entities";
 import {
   libraryCardInfoAtom,
-  libraryCardSideAtom,
   libraryThumbSizeAtom,
   type LibraryViewMode,
   type ThumbSize,
@@ -50,15 +49,6 @@ const CARD_FLOOR: Record<ThumbSize, string> = {
 /** The list row's chip is square — see EntityThumbnail. */
 const CHIP_BOX: Record<ThumbSize, string> = { s: "w-7 h-7", m: "w-9 h-9", l: "w-12 h-12" };
 
-/** The SIDE layout's slot, landscape (this branch has no frame control). Small
- *  is defined by its height, 3.75rem at 4:3 (5rem wide); M and L by a width at
- *  4:3. Either way the box is definite before an image loads. The slot spans
- *  the text rows at the card's logical start, so no `CARD_FLOOR` applies. */
-const SIDE_SLOT: Record<ThumbSize, string> = {
-  s: "h-[3.75rem] w-[5rem]",
-  m: "w-40 aspect-[4/3]",
-  l: "w-52 aspect-[4/3]",
-};
 
 /** How many of the parent grid's row tracks one card claims — one per row it
  *  draws (slot? · title · metadata? · footer).
@@ -103,9 +93,6 @@ export const EntityCard = memo(function EntityCard({
   const language = useAtomValue(languageAtom);
   const info = useAtomValue(libraryCardInfoAtom);
   const thumbSize = useAtomValue(libraryThumbSizeAtom);
-  // Side only in the grid; the atom already falls back on phones and with
-  // previews off.
-  const side = useAtomValue(libraryCardSideAtom) && layout === "cards";
   const showPreview = info.preview;
   const showMetadata = info.metadata;
   const showConnections = info.connections;
@@ -228,19 +215,15 @@ export const EntityCard = memo(function EntityCard({
   // slot + title + footer, already equal everywhere, and in PORTRAIT the aspect
   // slot plus the grid row's own stretch keeps neighbours level — a rem floor
   // sized for one column width is wrong at every other.
-  const minHeight = showPreview && showMetadata && !side ? CARD_FLOOR[thumbSize] : "";
+  const minHeight = showPreview && showMetadata ? CARD_FLOOR[thumbSize] : "";
 
   /** One track per row this card draws. Both toggles are global, so every card
    *  on screen agrees — see ROW_SPAN. */
-  const rowCount = 2 + (showPreview && !side ? 1 : 0) + (showMetadata ? 1 : 0);
+  const rowCount = 2 + (showPreview ? 1 : 0) + (showMetadata ? 1 : 0);
 
   /** Slot class: the landscape band. The picture fills it — a landscape image
    *  covers, anything else mats (ImageThumb's object-fit owns that call). */
-  const slotShape = side
-    ? `${SIDE_SLOT[thumbSize]} row-span-full col-start-1 self-start`
-    : `w-full ${COVER_H[thumbSize]}`;
-  /** Side: every text row sits in the second column, beside the slot. */
-  const textCol = side ? "col-start-2" : "";
+  const slotShape = `w-full ${COVER_H[thumbSize]}`;
 
   return (
     // A SUBGRID, not a flex column. The card's rows — slot, title, metadata,
@@ -258,10 +241,7 @@ export const EntityCard = memo(function EntityCard({
     // `z-index: auto` paint in DOM order, and the rows come after.
     <div
       onClick={() => onSelect(entity.id)}
-      data-card-layout={side ? "side" : "stacked"}
-      className={`${base} ${surface} ${minHeight} grid grid-rows-subgrid ${ROW_SPAN[rowCount]} gap-y-2.5 p-3 ${
-        side ? "grid-cols-[auto_minmax(0,1fr)] gap-x-3" : ""
-      }`}
+      className={`${base} ${surface} ${minHeight} grid grid-rows-subgrid ${ROW_SPAN[rowCount]} gap-y-2.5 p-3`}
     >
       {primaryAction}
       {/* The preview slot is ALWAYS filled when previews are on: an entity with
@@ -304,44 +284,28 @@ export const EntityCard = memo(function EntityCard({
           each card is back to sizing itself and a reserved line is the only
           thing holding a row level. */}
       {/* `self-start`: the title's box is its own two clamped lines, never the
-          TRACK's height. A taller track (the side slot spanning title and
-          footer, a neighbour's longer title) stretched the box, and
+          TRACK's height. A track taller than two lines stretched the box, and
           `line-clamp` then showed a third line cut mid-glyph under it. */}
       <span
         data-part="title"
-        className={`relative min-w-0 ${textCol} self-start text-sm font-semibold text-ink leading-snug line-clamp-2
+        className={`relative min-w-0 self-start text-sm font-semibold text-ink leading-snug line-clamp-2
           not-supports-[grid-template-rows:subgrid]:min-h-[2.375rem]`}
       >
         <HighlightedText text={entity.title} query={query} />
       </span>
 
       {showMetadata && (
-        /* Side: a label column and a value column, one line per field. The
-           label column takes its natural width up to 42% (`fit-content`), so a
-           long label ends in an ellipsis instead of wrapping and the value
-           keeps at least 58% of the row. `contents` puts each pair straight
-           into the grid. */
-        <div
-          data-part="metadata"
-          className={`relative min-w-0 ${textCol} ${
-            side ? "self-start grid grid-cols-[fit-content(42%)_minmax(0,1fr)] gap-x-3 gap-y-1" : "space-y-1.5"
-          }`}
-        >
+        <div className="relative min-w-0 space-y-1.5">
           {fields.map((f) => (
-            <div key={f.id} className={side ? "contents" : "min-w-0"}>
-              <span
-                className={`block text-meta text-ink-tertiary leading-tight ${side ? "min-w-0 truncate self-baseline leading-snug" : ""}`}
-                title={side ? f.label : undefined}
-              >
-                {f.label}
-              </span>
+            <div key={f.id} className="min-w-0">
+              <span className="block text-meta text-ink-tertiary leading-tight">{f.label}</span>
               {/* Exactly ONE line per field, always. `truncate` rather than
                   `line-clamp-1` because the old `block line-clamp-1` pair fought
                   over `display` (block won) and the clamp silently never
                   applied — which is how three-line values reached the grid. The
                   "+N more" is a shrink-0 sibling, so it survives the ellipsis
                   instead of being cut off inside it. */}
-              <span className={`flex items-baseline gap-1 min-w-0 text-xs text-ink leading-snug ${side ? "self-baseline" : ""}`}>
+              <span className="flex items-baseline gap-1 min-w-0 text-xs text-ink leading-snug">
                 <span className="truncate" title={f.value}>
                   <ThesaurusValueLabel value={f.value}>
                     <HighlightedText text={f.value} query={query} />
@@ -360,7 +324,7 @@ export const EntityCard = memo(function EntityCard({
           whole grid row without `mt-auto` pushing it there — and `self-end`
           keeps it on the track's bottom edge in the fallback, where the track
           may be taller than the footer. */}
-      <div className={`relative min-w-0 ${textCol} self-end flex items-center justify-between gap-2 pt-1`}>
+      <div className="relative min-w-0 self-end flex items-center justify-between gap-2 pt-1">
         <EntityTypeTag typeId={entity.typeId} />
         <div className="shrink-0 flex items-center gap-2">
           {connectionBadge}
