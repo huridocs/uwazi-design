@@ -245,10 +245,11 @@ export function LibraryView() {
   // columns; Size steps the count down the way it does for portrait.
   const cardSide = useAtomValue(libraryCardSideAtom);
   const cardGridCols = cardSide
-    ? // One below lg, two from lg (a ~1440 screen), three from 2xl, at both
-      // sizes: the text side has to stay WIDE, or the field grid folds. Size
-      // grows the slot, not the count.
-      "grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3"
+    ? // One below lg, two from lg, three only from a 1920px viewport: at
+      // 2xl (1536) a laptop's scaled resolution already gets three, and the
+      // text side has to stay WIDE, or the field grid folds. Size grows the
+      // slot, not the count.
+      "grid-cols-1 lg:grid-cols-2 min-[120rem]:grid-cols-3"
     : thumbFrame === "portrait" && cardInfo.preview
       ? {
           s: "grid-cols-2 sm:grid-cols-4 xl:grid-cols-5",
