@@ -5,14 +5,14 @@ import { ShareEntityModal } from "../share/ShareEntityModal";
 import { SearchTipsPopover } from "../library/SearchTipsPopover";
 import { docSearchQueryAtom } from "../../atoms/references";
 import { useSetAtom } from "jotai";
-import { WARM_BUTTON } from "../shared/warmButton";
+import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../shared/warmButton";
 
 interface DrawerActionBarProps {
   activeTab: string;
 }
 
-/** Soft pill button used across the drawer action bar: the warm action-bar
- *  button, with the paper-ground edge from `WARM_BUTTON`. */
+/** The drawer action bar's button, on the bar ladder (`warmButton.ts`):
+ *  `lead` is the one filled button, `default` a ghost, `danger` seal text. */
 function ActionPill({
   icon: Icon,
   label,
@@ -21,22 +21,22 @@ function ActionPill({
 }: {
   icon?: typeof Pencil;
   label: string;
-  variant?: "default" | "danger";
+  variant?: "lead" | "default" | "danger";
   onClick?: () => void;
 }) {
-  const tone =
-    variant === "danger"
-      ? "text-seal-label bg-seal-tint/40 hover:bg-seal-tint"
-      : WARM_BUTTON;
+  const tone = variant === "danger" ? BAR_DANGER : variant === "lead" ? BAR_LEAD : BAR_GHOST;
   return (
     <button
       type="button"
       onClick={onClick}
+      data-part="action"
+      data-gutter-align="box"
       className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${tone}`}
     >
       {Icon && (
         <Icon
           size={12}
+          aria-hidden
           className={variant === "danger" ? "" : "text-ink-tertiary"}
         />
       )}
@@ -52,6 +52,8 @@ export function DrawerActionBar({ activeTab }: DrawerActionBarProps) {
 
   return (
     <div
+      data-component="DrawerActionBar"
+      data-tab={activeTab}
       // `bleed`: the rule spans the panel, the pills sit on the host's gutter.
       className="bleed flex items-center justify-between h-12 bg-paper shrink-0"
       style={{ borderTop: "1px solid var(--border-primary)" }}
@@ -60,7 +62,7 @@ export function DrawerActionBar({ activeTab }: DrawerActionBarProps) {
       {activeTab === "metadata" && (
         <>
           <div className="flex items-center gap-2">
-            <ActionPill icon={Pencil} label="Edit" onClick={() => notify("Editing metadata")} />
+            <ActionPill icon={Pencil} label="Edit" variant="lead" onClick={() => notify("Editing metadata")} />
             <ActionPill icon={Share2} label="Share" onClick={() => setShareOpen(true)} />
           </div>
           <ActionPill icon={Trash2} label="Delete" variant="danger" onClick={() => notify("Entity deleted", "success")} />
@@ -80,21 +82,21 @@ export function DrawerActionBar({ activeTab }: DrawerActionBarProps) {
             </button>
           </div>
           <button type="button" onClick={() => notify("Opening references guide")} aria-label="Help">
-            <HelpCircle size={18} className="text-carbon" />
+            <HelpCircle size={18} aria-hidden className="text-carbon" />
           </button>
         </>
       )}
 
       {activeTab === "toc" && (
         <>
-          <ActionPill label="Edit" onClick={() => notify("Editing table of contents")} />
+          <ActionPill label="Edit" variant="lead" onClick={() => notify("Editing table of contents")} />
           <ActionPill label="Mark as reviewed" onClick={() => notify("Marked as reviewed", "success")} />
         </>
       )}
 
       {activeTab === "relationships" && (
         <>
-          <ActionPill label="Add relationship" onClick={() => notify("Relationship added", "success")} />
+          <ActionPill label="Add relationship" variant="lead" onClick={() => notify("Relationship added", "success")} />
           <div />
         </>
       )}

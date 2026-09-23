@@ -47,6 +47,8 @@ import { StatusPill } from "../components/settings/StatusPill";
 
 // Icons
 import { ArrowLeft, FileText, Pencil, Download, Trash2, Share2, Plus, Tag } from "lucide-react";
+import { BarDivider } from "../components/shared/BarDivider";
+import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
 
 // Data
 import { references } from "../data/references";
@@ -1145,6 +1147,35 @@ sendFill(selection.text);                                    // commits, then di
                   code={`<ToggleChip label="Document" count={658} active={on} onToggle={...} />`}
                 >
                   <ToggleChipDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="fl-action-bar" ref={reg("fl-action-bar")}>
+                <CatalogEntry
+                  name="Action bar weight"
+                  description="One borderless lead (BAR_LEAD) or one ink commit per bar, no borders on any bar button; every other action is a ghost (BAR_GHOST), Delete is seal text (BAR_DANGER), and groups split on a BarDivider."
+                  code={`<button className={BAR_LEAD}>Edit</button>
+<button className={BAR_GHOST}>Share</button>
+<BarDivider />
+<button className={BAR_DANGER}>Delete</button>`}
+                >
+                  <div data-gutter-host className="gutter-host">
+                    <div
+                      className="bleed flex items-center gap-1 h-12 bg-paper"
+                      style={{ borderTop: "1px solid var(--border-primary)" }}
+                    >
+                      <button type="button" className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${BAR_LEAD} rounded-md`}>
+                        <Pencil size={13} className="text-ink-tertiary" /> Edit
+                      </button>
+                      <button type="button" className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md`}>
+                        <Share2 size={13} className="text-ink-tertiary" /> Share
+                      </button>
+                      <BarDivider />
+                      <button type="button" className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${BAR_DANGER} rounded-md`}>
+                        <Trash2 size={13} /> Delete
+                      </button>
+                    </div>
+                  </div>
                 </CatalogEntry>
               </div>
 

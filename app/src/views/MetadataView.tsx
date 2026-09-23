@@ -52,7 +52,7 @@ import { useRegisterDirtyForm } from "../hooks/useDirtyGuard";
 import { ShareEntityModal } from "../components/share/ShareEntityModal";
 import { fromDateInputValue, toDateInputValue } from "../utils/dateValue";
 import { DRAWER_MIN_WIDTH } from "../components/layout/SplitView";
-import { WARM_BUTTON, WARM_EDGE } from "../components/shared/warmButton";
+import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
 import { flashElement } from "../utils/flash";
 
 interface MetadataViewProps {
@@ -149,20 +149,22 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
       >
         <button
           onClick={onEdit}
-          className={`px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+          data-gutter-align="box"
+          className={`px-3 py-1.5 text-xs font-medium ${BAR_LEAD} rounded-md transition-colors cursor-pointer`}
         >
           Edit
         </button>
         <button
           onClick={() => setShareOpen(true)}
-          className={`px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+          className={`px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
         >
           Share
         </button>
         <div className="flex-1" />
         <button
           onClick={() => notify("Entity deleted", "success")}
-          className="px-3 py-1.5 text-xs font-medium text-seal-label bg-seal-tint/40 hover:bg-seal-tint rounded-md transition-colors cursor-pointer"
+          data-gutter-align="box"
+          className={`px-3 py-1.5 text-xs font-medium ${BAR_DANGER} rounded-md transition-colors cursor-pointer`}
         >
           Delete
         </button>
@@ -1172,7 +1174,7 @@ export function MetadataEditBody({
             </span>
             <button
               onClick={cancelCopy}
-              className={`px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+              className={`px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
             >
               Discard copy
             </button>
@@ -1180,9 +1182,8 @@ export function MetadataEditBody({
               onClick={commitCopy}
               disabled={checkedCount === 0}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                checkedCount === 0
-                  ? "bg-vellum text-ink-muted cursor-not-allowed"
-                  : "bg-ink text-paper hover:bg-ink/90 cursor-pointer"
+                // Lead, not filled: Save is this bar's one commit.
+                checkedCount === 0 ? "text-ink-muted cursor-not-allowed" : `${BAR_LEAD} cursor-pointer`
               }`}
             >
               Copy {checkedCount} {checkedCount === 1 ? "field" : "fields"}
@@ -1192,7 +1193,7 @@ export function MetadataEditBody({
           <button
             onClick={() => setPickerOpen(true)}
             className={`me-auto inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium
-              ${WARM_BUTTON} rounded-md transition-colors cursor-pointer
+              ${BAR_GHOST} rounded-md transition-colors cursor-pointer
               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30`}
           >
             <ClipboardCopy size={13} className="text-ink-tertiary" />
@@ -1204,10 +1205,8 @@ export function MetadataEditBody({
             if (!saving) onCancel();
           }}
           aria-disabled={saving || undefined}
-          className={`px-4 py-1.5 text-xs font-medium text-ink-secondary bg-warm ${WARM_EDGE} rounded-md transition-colors ${
-            saving
-              ? "opacity-50 cursor-not-allowed"
-              : "hover:bg-parchment hover:text-ink cursor-pointer"
+          className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${
+            saving ? "text-ink-secondary opacity-50 cursor-not-allowed" : `${BAR_GHOST} cursor-pointer`
           }`}
         >
           Cancel

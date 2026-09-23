@@ -6,7 +6,7 @@ import {
   librarySelectionAtom,
   librarySelectionDrawerOpenAtom,
 } from "../../atoms/library";
-import { BAR_GHOST, WARM_BUTTON } from "../shared/warmButton";
+import { BAR_GHOST } from "../shared/warmButton";
 import { EntityListDrawer } from "./EntityListDrawer";
 import { useExportSelection } from "./LibrarySelectionBar";
 
@@ -60,7 +60,7 @@ export function LibrarySelectionDrawer({
           <button
             type="button"
             onClick={() => void exportSelection()}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
           >
             <FileDown size={13} className="text-ink-tertiary" aria-hidden />
             Export CSV
