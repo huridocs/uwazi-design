@@ -136,7 +136,7 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
       setActivities((prev) => {
         let changed = false;
         const next = prev.map((a) => {
-          if (a.current >= a.total) return a;
+          if (a.driven || a.current >= a.total) return a;
           changed = true;
           const step = Math.ceil((a.total - a.current) * 0.18) + 1;
           return { ...a, current: Math.min(a.total, a.current + step) };
@@ -158,10 +158,11 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
             {
               id: `n-done-${a.id}`,
               kind: "success",
-              title: `${a.label} complete.`,
-              detail: `${a.total} items processed.`,
+              title: a.done?.title ?? `${a.label} complete.`,
+              detail: a.done ? a.done.detail : `${a.total} items processed.`,
               time: Date.now(),
               read: false,
+              ...(a.done?.action ? { action: a.done.action } : {}),
             },
             ...prev,
           ]);
@@ -186,11 +187,13 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
     <>
       {/* Visually-hidden live region — announces flashes (action feedback /
           new arrivals) to screen readers; the pill itself is purely visual. */}
-      <span aria-live="polite" className="sr-only">
+      <span aria-live="polite" data-component="Beacon" data-part="announcer" className="sr-only">
         {flash?.message ?? ""}
       </span>
       <div
         dir="ltr"
+        data-component="Beacon"
+        data-state={flash ? "flash" : isExpanded ? "expanded" : "collapsed"}
         className="relative shrink-0"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -208,7 +211,9 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
           {/* Clip wrapper keeps rail content rounded through the width morph. */}
           <div className="overflow-hidden" style={{ borderRadius: "inherit" }}>
             <button
+              type="button"
               onClick={() => { setOpen(true); setFlash(null); }}
+              data-part="trigger"
               className="relative flex items-center w-full h-7 px-2.5 hover:bg-parchment transition-colors"
               aria-label={`Notifications${unread > 0 ? `, ${unread} unread` : ""}`}
               aria-haspopup="dialog"

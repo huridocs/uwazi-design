@@ -27,6 +27,17 @@ export interface Notification {
   /** epoch ms */
   time: number;
   read: boolean;
+  /** One action the notification offers, by REFERENCE — a value naming what
+   *  to act on (`ref` names an undo snapshot), never a callback: an atom
+   *  holding closures owned by a component is how the Copy From preview came
+   *  to set state on an unmounted form. */
+  action?: NotificationAction;
+}
+
+export interface NotificationAction {
+  label: string;
+  kind: "undo";
+  ref: string;
 }
 
 export interface Activity {
@@ -37,6 +48,13 @@ export interface Activity {
   detail?: string;
   current: number;
   total: number;
+  /** The task reports its own progress (an upload, an export): the beacon
+   *  does not tick it toward completion. It finishes when `current` reaches
+   *  `total`, as every task does. */
+  driven?: boolean;
+  /** What the completion notification says, when the generic "<label>
+   *  complete. N items processed." would be wrong or vague. */
+  done?: { title: string; detail?: string; action?: NotificationAction };
 }
 
 const now = Date.now();
