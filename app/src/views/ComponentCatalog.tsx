@@ -49,6 +49,7 @@ import { StatusPill } from "../components/settings/StatusPill";
 import { ArrowLeft, FileText, Pencil, Download, Trash2, Share2, Plus, Tag } from "lucide-react";
 import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
 import { BarDivider } from "../components/shared/BarDivider";
+import { ModalDemo } from "../components/catalog/ModalDemo";
 
 // Data
 import { references } from "../data/references";
@@ -1221,6 +1222,19 @@ sendFill(selection.text);                                    // commits, then di
                   code={`<ToggleChip label="Document" count={658} active={on} onToggle={...} />`}
                 >
                   <ToggleChipDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="fl-modal" ref={reg("fl-modal")}>
+                <CatalogEntry
+                  name="Modal"
+                  description="The one modal shell: bg-overlay scrim, bordered paper panel (sm 28 / md 32 / lg 40 / xl 48rem; full screen below md except sm), 3rem header with inline subtitle and close, body on the main gutter, 3rem footer with one commit and ghosts. Focus trap, Escape and aria built in."
+                  code={`<Modal size="md" title="Upload 2 documents" onClose={close}
+  footer={<><button className={ghost}>Cancel</button><button className={MODAL_COMMIT}>Upload</button></>}>
+  …body…
+</Modal>`}
+                >
+                  <ModalDemo />
                 </CatalogEntry>
               </div>
 

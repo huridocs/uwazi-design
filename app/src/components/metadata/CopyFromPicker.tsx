@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAtomValue } from "jotai";
-import { ArrowLeft, Ban, Search, X } from "lucide-react";
+import { ArrowLeft, Ban, Search } from "lucide-react";
 import { cejilReadyAtom, entityCorpusPool } from "../../atoms/dataSource";
 import { entitiesAtom } from "../../atoms/entities";
 import { languageAtom, type Language } from "../../atoms/language";
@@ -15,7 +15,8 @@ import {
   type CopySkipReason,
   type CopyUnit,
 } from "../../utils/copyFrom";
-import { useFocusTrap } from "../../hooks/useFocusTrap";
+import { Modal, MODAL_BUTTON } from "../shared/Modal";
+import { BAR_GHOST } from "../shared/warmButton";
 import { EntityPill } from "../shared/EntityPill";
 import { CountBadge } from "../shared/CountBadge";
 import { SegmentedControl } from "../shared/SegmentedControl";
@@ -78,7 +79,6 @@ export function CopyFromPicker({
   const language = useAtomValue(languageAtom);
   const [scope, setScope] = useState<"type" | "any">("type");
   const [query, setQuery] = useState("");
-  const panelRef = useFocusTrap<HTMLDivElement>(true);
   /** Step 2: the chosen source, its plan resolved against the form, and the
    *  ticked set. Null on step 1. */
   const [step, setStep] = useState<PropertyStepState | null>(() =>
@@ -141,50 +141,21 @@ export function CopyFromPicker({
   }, [entities, target, scope, query, index, language, targetHasNoFields]);
 
   return (
-    <div
-      data-component="CopyFromPicker"
-      data-part="scrim"
-      className="absolute inset-0 z-30 flex items-center justify-center bg-ink/20 p-4"
-      onClick={onClose}
+    <Modal
+      component="CopyFromPicker"
+      // Fills the metadata pane, not the viewport: it sits over the form it
+      // writes into. ONE size for both steps — a fixed height, capped by the
+      // host — so choosing a source swaps the content and moves nothing.
+      scope="pane"
+      z="z-30"
+      size="md"
+      height="md:h-[min(34rem,100%)]"
+      onClose={onClose}
+      titleRef={headingRef}
+      title={step ? "Choose properties to copy" : "Copy from"}
+      subtitle={step ? "nothing is saved until you save" : "values are staged, not saved"}
+      flush
     >
-      <div
-        ref={panelRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Copy metadata from another entity"
-        data-part="panel"
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => {
-          if (e.key === "Escape") onClose();
-        }}
-        // ONE size for both steps — a fixed height, capped by the host — so
-        // choosing a source swaps the content and moves nothing.
-        className="w-full max-w-[32rem] h-[min(34rem,100%)] flex flex-col bg-paper rounded-lg border border-border shadow-lg overflow-hidden"
-      >
-        <header data-part="header" className="shrink-0 flex items-center gap-2 h-11 px-3 border-b border-border">
-          <h2
-            ref={headingRef}
-            tabIndex={-1}
-            data-part="title"
-            className="text-xs font-semibold text-ink rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"
-          >
-            {step ? "Choose properties to copy" : "Copy from"}
-          </h2>
-          <span data-part="subtitle" className="text-meta text-ink-tertiary">
-            {step ? "nothing is saved until you save" : "values are staged, not saved"}
-          </span>
-          <button
-            type="button"
-            onClick={onClose}
-            data-part="close"
-            aria-label="Close"
-            className="ms-auto p-1 rounded-md text-ink-muted hover:bg-warm hover:text-ink cursor-pointer
-              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"
-          >
-            <X size={14} />
-          </button>
-        </header>
-
         {step ? (
           <PropertyStep
             step={step}
@@ -201,7 +172,7 @@ export function CopyFromPicker({
           />
         ) : (
           <>
-        <div data-part="controls" className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-border">
+        <div data-part="controls" className="bleed shrink-0 flex items-center gap-2 py-2 border-b border-border">
           <div className="flex-1 flex items-center gap-1.5 h-8 px-2 bg-warm rounded-md">
             <Search size={13} className="text-ink-muted shrink-0" />
             <input
@@ -226,9 +197,9 @@ export function CopyFromPicker({
           />
         </div>
 
-        <ul data-part="candidates" className="flex-1 overflow-auto py-1">
+        <ul data-part="candidates" className="bleed-flush flex-1 overflow-auto py-1">
           {candidates.length === 0 && (
-            <li data-part="empty" className="px-3 py-6 text-center text-xs text-ink-muted">
+            <li data-part="empty" className="bleed py-6 text-center text-xs text-ink-muted">
               {emptyMessage({
                 targetHasNoFields,
                 loading,
@@ -239,12 +210,12 @@ export function CopyFromPicker({
             </li>
           )}
           {candidates.map(({ entity, matches }) => (
-            <li key={entity.id} data-part="candidate">
+            <li key={entity.id} data-part="candidate" className="flex flex-col">
               <button
                 type="button"
                 onClick={() => choose(entity)}
                 disabled={matches === 0}
-                className={`group w-full flex items-center gap-2 px-3 py-2 text-start transition-colors
+                className={`bleed group flex items-center gap-2 py-2 text-start transition-colors
                   focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset
                   focus-visible:ring-carbon/40 ${
                     matches === 0
@@ -277,7 +248,7 @@ export function CopyFromPicker({
         {/* Always mounted, contents toggling — the list is capped, and a footer
             that only appears once the cap bites would move the list under the
             user's cursor the moment they typed. */}
-        <footer data-part="footer" className="shrink-0 h-12 flex items-center px-3 border-t border-border text-meta text-ink-tertiary">
+        <footer data-part="footer" className="bleed shrink-0 h-12 flex items-center border-t border-border text-meta text-ink-tertiary">
           {total > LIMIT
             ? `Showing the first ${LIMIT} of ${total.toLocaleString()} — search by title to reach the rest.`
             : total > 0
@@ -286,8 +257,7 @@ export function CopyFromPicker({
         </footer>
           </>
         )}
-      </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -386,14 +356,14 @@ function PropertyStep({
 
   return (
     <>
-      <div data-part="source" className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-border">
+      <div data-part="source" className="bleed shrink-0 flex items-center gap-2 py-2 border-b border-border">
         <button
           type="button"
           onClick={onBack}
           data-part="back"
-          className="shrink-0 inline-flex items-center gap-1 h-8 px-2 text-xs font-medium text-ink-secondary
-            bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer
-            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"
+          data-gutter-align="box"
+          className={`shrink-0 inline-flex items-center gap-1 h-8 px-2 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer
+            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30`}
         >
           <ArrowLeft size={13} aria-hidden /> Back
         </button>
@@ -405,10 +375,10 @@ function PropertyStep({
         </span>
       </div>
 
-      <div data-part="properties" className="flex-1 overflow-auto px-3 py-2">
+      <div data-part="properties" className="bleed flex-1 overflow-auto py-2">
         {units.length > 0 ? (
           <>
-            <label data-part="all" className="flex items-center gap-2 h-6 px-2 text-meta text-ink-secondary cursor-pointer">
+            <label data-part="all" data-gutter-align="box" className="flex items-center gap-2 h-6 px-2 text-meta text-ink-secondary cursor-pointer">
               <Checkbox
                 checked={all}
                 onChange={(e) => onAll(e.target.checked)}
@@ -433,7 +403,7 @@ function PropertyStep({
             </ul>
           </>
         ) : (
-          <p data-part="empty" className="px-2 py-4 text-center text-xs text-ink-muted">
+          <p data-part="empty" className="py-4 text-center text-xs text-ink-muted">
             Nothing on this entity lines up with the one you are editing.
           </p>
         )}
@@ -450,6 +420,7 @@ function PropertyStep({
                 <li
                   key={row.id}
                   aria-disabled="true"
+                  data-gutter-align="box"
                   className="flex items-start gap-2 px-2 py-1 text-meta text-ink-tertiary"
                 >
                   <Ban size={12} className="shrink-0 mt-px text-ink-muted" aria-hidden />
@@ -464,7 +435,7 @@ function PropertyStep({
         )}
       </div>
 
-      <footer data-part="footer" className="shrink-0 h-12 flex items-center gap-2 px-3 border-t border-border">
+      <footer data-part="footer" className="bleed shrink-0 h-12 flex items-center gap-2 border-t border-border">
         <span className="me-auto text-meta text-ink-tertiary">
           {n} of {units.length} selected
         </span>
@@ -473,7 +444,7 @@ function PropertyStep({
           onClick={onCopy}
           disabled={n === 0}
           data-part="copy"
-          className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+          className={`${MODAL_BUTTON} ${
             n === 0
               ? "bg-vellum text-ink-muted cursor-not-allowed"
               : "bg-ink text-paper hover:bg-ink/90 cursor-pointer"
