@@ -12,6 +12,7 @@ import { getEntityProps } from "./entityMetadata";
 import { isCejilEntity, buildCejilProfile } from "./cejil/profile";
 import { isArtworkEntity, buildArtworkProfile } from "./artworks/profile";
 import type { EntityImage } from "./entities";
+import { overlayCreated, overlayRecord, type EntityRecord } from "./entityOverlay";
 
 const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -46,6 +47,10 @@ export interface EntityProfile {
    *  the record can lead with it instead of a document card that has no
    *  document to draw. */
   image?: EntityImage;
+  /** Every image, `image` first — see `Entity.images`. The record draws one card
+   *  per entry, each keyed on its property, which is what a card's filename
+   *  link scrolls to. */
+  images?: EntityImage[];
   metadata: Record<Language, AnyMetadataField[]>;
   pdfMetadata?: PdfMetaByLang;
   relationships: RelationshipSource;
@@ -128,8 +133,20 @@ function lbl(key: string, lang: Language): string {
   return FIELD_LABELS[key]?.[lang] ?? ENGLISH_LABELS[key] ?? key;
 }
 
-function field(id: string, labelKey: string, type: MetadataField["type"], value: string, lang: Language): MetadataField {
-  return { id, label: lbl(labelKey, lang), type, value };
+function field(
+  id: string,
+  labelKey: string,
+  type: MetadataField["type"],
+  value: string,
+  lang: Language,
+  thesaurus?: string,
+): MetadataField {
+  const f: MetadataField = { id, label: lbl(labelKey, lang), type, value };
+  if (type === "select" || type === "multiselect") {
+    if (thesaurus) f.thesaurus = thesaurus;
+    if (type === "multiselect") f.values = value ? [value] : [];
+  }
+  return f;
 }
 
 /** Per-type property order + field type for the Library/Metadata display.
@@ -141,7 +158,11 @@ function field(id: string, labelKey: string, type: MetadataField["type"], value:
  *  right, judgment or violation opened already invalid and could never be
  *  saved — the only way out was Cancel or Discard. They are names; they are
  *  `text`. Type a prop `link` only when its values really are addresses. */
-const TYPE_FIELDS: Record<string, { prop: string; type: MetadataField["type"] }[]> = {
+/*  `select` / `multiselect` name their thesaurus (`data/settings` seed ids):
+ *  Case status t3, Regions t5, Document types t4, Legal instruments t2. The
+ *  organisation type is a select the template binds to NO thesaurus, the case
+ *  the form's "New thesaurus" exists for. */
+const TYPE_FIELDS: Record<string, { prop: string; type: MetadataField["type"]; thesaurus?: string }[]> = {
   person: [
     { prop: "country", type: "text" },
     { prop: "role", type: "text" },
@@ -149,7 +170,7 @@ const TYPE_FIELDS: Record<string, { prop: string; type: MetadataField["type"] }[
     { prop: "born", type: "text" },
   ],
   country: [
-    { prop: "region", type: "text" },
+    { prop: "region", type: "select", thesaurus: "t5" },
     { prop: "achrRatified", type: "text" },
     { prop: "courtJurisdiction", type: "text" },
   ],
@@ -157,11 +178,11 @@ const TYPE_FIELDS: Record<string, { prop: string; type: MetadataField["type"] }[
     { prop: "caseNumber", type: "text" },
     { prop: "dateFiled", type: "text" },
     { prop: "respondent", type: "text" },
-    { prop: "status", type: "text" },
-    { prop: "region", type: "text" },
+    { prop: "status", type: "select", thesaurus: "t3" },
+    { prop: "region", type: "select", thesaurus: "t5" },
   ],
   right: [
-    { prop: "instrument", type: "text" },
+    { prop: "instrument", type: "multiselect", thesaurus: "t2" },
     { prop: "article", type: "text" },
     { prop: "category", type: "text" },
   ],
@@ -172,7 +193,7 @@ const TYPE_FIELDS: Record<string, { prop: string; type: MetadataField["type"] }[
     { prop: "outcome", type: "text" },
   ],
   organization: [
-    { prop: "orgType", type: "text" },
+    { prop: "orgType", type: "select" },
     { prop: "founded", type: "text" },
     { prop: "headquarters", type: "text" },
   ],
@@ -182,11 +203,22 @@ const TYPE_FIELDS: Record<string, { prop: string; type: MetadataField["type"] }[
     { prop: "definition", type: "multiline" },
   ],
   document: [
-    { prop: "docType", type: "text" },
+    { prop: "docType", type: "select", thesaurus: "t4" },
     { prop: "adopted", type: "text" },
     { prop: "source", type: "text" },
   ],
 };
+
+/** A type's fields, EMPTY and in template order, per language — what a new
+ *  entity's edit form opens on. `synthFields` emits only populated props, which
+ *  is right for a record and useless for a form that has nothing yet. */
+export function blankTypeFields(typeId: string): Record<Language, MetadataField[]> {
+  const spec = TYPE_FIELDS[typeId] ?? [];
+  return LANGS.reduce((acc, lang) => {
+    acc[lang] = spec.map(({ prop, type, thesaurus }) => field(prop, prop, type, "", lang, thesaurus));
+    return acc;
+  }, {} as Record<Language, MetadataField[]>);
+}
 
 /** Type-appropriate scalar fields from the entity's populated native props.
  *  Only props that have a value are rendered (no em-dash placeholders). */
@@ -194,9 +226,9 @@ function synthFields(entity: Entity, lang: Language): AnyMetadataField[] {
   const props = getEntityProps(entity.id, lang);
   const spec = TYPE_FIELDS[entity.typeId] ?? [];
   const out: AnyMetadataField[] = [];
-  for (const { prop, type } of spec) {
+  for (const { prop, type, thesaurus } of spec) {
     const value = props[prop];
-    if (value) out.push(field(prop, prop, type, value, lang));
+    if (value) out.push(field(prop, prop, type, value, lang, thesaurus));
   }
   return out;
 }
@@ -248,6 +280,10 @@ function buildLightweightProfile(entity: Entity): EntityProfile {
     id: entity.id,
     typeId: entity.typeId,
     hasDocument,
+    // Carried through so the record can draw a card per image — which is what a
+    // filename link on the Library card scrolls to.
+    image: entity.image,
+    images: entity.images,
     metadata,
     documentGroups: doc ? [doc.group] : [],
     files: doc ? doc.files : [],
@@ -280,6 +316,37 @@ const lightweightCache = new Map<string, EntityProfile>();
 const FALLBACK_ENTITY: Entity = { id: "unknown", title: "Unknown entity", typeId: "document" };
 
 export function getEntityProfile(id: string): EntityProfile {
+  // An entity whose record the session wrote (created, or edited): its
+  // profile is that record over whatever the corpus had.
+  const record = overlayRecord(id);
+  if (record) return profileFromRecord(id, record);
+  return baseProfile(id);
+}
+
+/** Record-built profiles, per record object — records are immutable, so a new
+ *  write is a new key and a stale profile is never found again. */
+const recordProfiles = new WeakMap<EntityRecord, EntityProfile>();
+function profileFromRecord(id: string, record: EntityRecord): EntityProfile {
+  const hit = recordProfiles.get(record);
+  if (hit) return hit;
+  // A created entity has no corpus profile underneath; an edited one does,
+  // and keeps whatever the record doesn't replace (its document, relationships).
+  const base = overlayCreated(id) ? undefined : baseProfile(id);
+  const files = record.files ?? base?.files ?? [];
+  const profile: EntityProfile = {
+    ...(base ?? { relationships: { kind: "references" as const } }),
+    id,
+    typeId: record.typeId,
+    hasDocument: files.length > 0 || !!base?.hasDocument,
+    metadata: record.metadata as Record<Language, AnyMetadataField[]>,
+    documentGroups: record.documentGroups ?? base?.documentGroups ?? [],
+    files,
+  };
+  recordProfiles.set(record, profile);
+  return profile;
+}
+
+function baseProfile(id: string): EntityProfile {
   const authored = PROFILES[id];
   if (authored) return authored;
   const cached = lightweightCache.get(id);

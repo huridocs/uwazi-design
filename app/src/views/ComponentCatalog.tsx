@@ -19,7 +19,6 @@ import { PageTag } from "../components/shared/PageTag";
 import { SectionLabel } from "../components/shared/SectionLabel";
 import { MatchModeToggle, type MatchMode } from "../components/shared/MatchModeToggle";
 import { CountBadge } from "../components/shared/CountBadge";
-import { CopyPreviewSection } from "../components/metadata/CopyPreviewSection";
 import { CopyFieldRow } from "../components/metadata/CopyFieldRow";
 import { ListeningChip } from "../components/metadata/ListeningChip";
 import type { CopyPlan } from "../utils/copyFrom";
@@ -735,8 +734,13 @@ export function ComponentCatalog({ onReturn }: Props) {
               <div id="ev-copy-from-picker" ref={reg("ev-copy-from-picker")}>
                 <CatalogEntry
                   name="CopyFromPicker"
-                  description="Picks the entity to copy metadata FROM. Defaults to the target's OWN type with 'Any type' beside it — Uwazi searches the whole library title-only with no filter, so editors pick sources sharing zero properties and find out afterwards. Every candidate is badged with how many fields it would actually bring across, before it is chosen; a source with nothing to give says so in the list rather than after two clicks and an empty preview. Traps focus, closes on Escape."
-                  code={`<CopyFromPicker target={entity} onPreview={openPreview} onClose={close} />
+                  description="Step 1 of the Copy From modal: the entity to copy metadata FROM. Defaults to the target's OWN type with 'Any type' beside it — Uwazi searches the whole library title-only with no filter, so editors pick sources sharing zero properties and find out afterwards. Every candidate is badged with how many fields it would actually bring across, before it is chosen. Choosing one turns the same panel, at the same size, into step 2. Traps focus, closes on Escape, moves focus to the step heading."
+                  code={`<CopyFromPicker
+  target={entity}
+  resolveUnits={copyUnitsFor}   // what THIS form can apply of a plan
+  onCopy={applyCopy}            // (source, tickedUnits) — writes the form, never saves
+  onClose={close}
+/>
 
 {/* Badge = countCopyMatchesFor(index, candidate, language) */}`}
                 >
@@ -781,14 +785,13 @@ sendFill(selection.text);                                    // commits, then di
 
               <div id="ev-copy-from" ref={reg("ev-copy-from")}>
                 <CatalogEntry
-                  name="CopyFrom · preview + field rows"
-                  description="Stages metadata off another entity into an open edit form — never saves. The preview lists what would copy AND what would not, with the reason for each refusal (Uwazi's shows only the matches, so a field that silently failed to match leaves nothing to read). Each staged field is deselectable and shows incoming beside current, so an overwrite is never silent; committing stamps every copied field with `↳ copied from`."
-                  code={`const plan = planCopyFrom(target, source, language);
-<CopyPreviewSection plan={plan} onUse={stage} onBack={reopenPicker} />
+                  name="CopyFrom · properties step + field rows"
+                  description="Step 2 of the Copy From modal, and the row it is built from. The chosen source's properties: what would copy, each deselectable with incoming beside current so an overwrite is never silent (a copy that would CLEAR a value starts unticked), select all/none, and what would NOT copy with the reason for each refusal (Uwazi's shows only the matches). 'Copy N properties' writes exactly the ticked set into the edit form — never saves — and stamps each copied field with `↳ copied from`."
+                  code={`<CopyFromPicker target={entity} initialSource={source} resolveUnits={copyUnitsFor} onCopy={applyCopy} onClose={close} />
 <CopyFieldRow match={plan.matches[0]} checked={checked} onChange={setChecked} />`}
                 >
                   <div className="w-full max-w-md space-y-3">
-                    <CopyPreviewSection plan={CATALOG_COPY_PLAN} onUse={() => {}} onBack={() => {}} />
+                    <IsolatedCopyFromPicker step="properties" />
                     <CopyFieldRow match={CATALOG_COPY_PLAN.matches[0]} checked onChange={() => {}} />
                     <CopyFieldRow
                       match={CATALOG_COPY_PLAN.matches[1]}

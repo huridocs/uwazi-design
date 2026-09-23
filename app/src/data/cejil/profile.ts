@@ -36,6 +36,27 @@ const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
 // App language → CEJIL language code (es/en/pt). FR/AR fall back to es (canonical).
 const LANG_CODE: Record<Language, string> = { EN: "en", ES: "es", FR: "es", AR: "es" };
 
+/** Thesaurus value id → its label in `lang`, read off the corpus's own
+ *  per-language records: the dump carries no thesaurus translations, but every
+ *  record stores each chosen value as `{ value: id, label }` in its language.
+ *  FR and AR read the Spanish records (see LANG_CODE), so only English differs.
+ *  Built once per language, after the corpus has loaded. */
+const valueLabelCache = new Map<string, Map<string, string>>();
+export function cejilValueLabels(lang: Language): Map<string, string> {
+  const code = LANG_CODE[lang];
+  const hit = valueLabelCache.get(code);
+  if (hit) return hit;
+  const m = new Map<string, string>();
+  for (const [key, doc] of cejilBySidLang()) {
+    if (!key.endsWith(`::${code}`)) continue;
+    for (const vals of Object.values(doc.metadata ?? {}))
+      for (const v of vals ?? [])
+        if (typeof v.value === "string" && typeof v.label === "string" && !m.has(v.value)) m.set(v.value, v.label);
+  }
+  if (m.size) valueLabelCache.set(code, m);
+  return m;
+}
+
 /** True once the corpus is loaded and this id is one of its shared entities. */
 export const isCejilEntity = (id: string) => cejilSharedIdSet().has(id);
 
@@ -75,6 +96,45 @@ const propsByTemplate = new Map(
 
 const SKIP = new Set(["preview", "geolocation", "image", "link", "media", "nested", "generatedtoc", "relationship"]);
 
+/** A template's editable scalar properties, EMPTY and in template order — what
+ *  a new entity's edit form opens on. `mdFields` emits only the properties a
+ *  record holds values for; a form for a record that doesn't exist yet needs
+ *  every one. Relationship properties are left out, as `mdFields` leaves them
+ *  out: a new entity has no connections to edit. */
+export function cejilBlankFields(templateId: string): MetadataField[] {
+  const out: MetadataField[] = [];
+  for (const p of propsByTemplate.get(templateId) || []) {
+    if (p.name === "title" || p.name === "creationDate" || p.name === "editDate") continue;
+    if (SKIP.has(p.type)) continue;
+    if ((p.type === "select" || p.type === "multiselect") && p.content) {
+      out.push({
+        id: p.name,
+        label: p.label,
+        type: p.type,
+        thesaurus: p.content,
+        value: "",
+        ...(p.type === "multiselect" ? { values: [] } : {}),
+      });
+      continue;
+    }
+    const type: MetadataField["type"] =
+      p.type === "date" || p.type === "datasection" ? "date" : p.type === "markdown" ? "multiline" : "text";
+    out.push({
+      id: p.name,
+      label: p.label,
+      type,
+      value: "",
+      ...(p.type === "multidate" || p.type === "multidaterange" ? { list: true } : {}),
+    });
+  }
+  return out;
+}
+
+/** The template Uwazi gives an uploaded document: the one flagged `default`. */
+export function cejilDefaultTemplateId(): string | undefined {
+  return cejilTemplates.find((t) => t.default)?._id;
+}
+
 function fmtDate(v: unknown): string {
   if (typeof v !== "number" || v <= 0) return "";
   const d = new Date(v * 1000);
@@ -89,6 +149,28 @@ function mdFields(e: CejilEntity): MetadataField[] {
   for (const p of props) {
     if (p.name === "title" || SKIP.has(p.type)) continue;
     const vals = e.metadata?.[p.name];
+
+    /* A THESAURUS property, bound to its thesaurus (`content`) so the edit form
+       can offer the vocabulary rather than a free-text box. Emitted even when
+       EMPTY: the form needs the editor to add a first value, and the read
+       record skips empty values. */
+    if ((p.type === "select" || p.type === "multiselect") && p.content) {
+      const chosen = (vals ?? []).filter((v) => typeof v.label === "string" && v.label);
+      const labels = chosen.map((v) => v.label as string);
+      out.push({
+        id: p.name,
+        label: p.label,
+        type: p.type,
+        thesaurus: p.content,
+        value: labels.join(", "),
+        // The labels are this LANGUAGE's; the ids are the thesaurus's, the same
+        // in every language — what lets the form tick the right row in English.
+        valueIds: chosen.map((v) => (typeof v.value === "string" ? v.value : "")),
+        ...(p.type === "multiselect" ? { values: labels } : {}),
+      });
+      continue;
+    }
+
     if (!vals || !vals.length) continue;
 
     if (p.type === "date" || p.type === "datasection") {

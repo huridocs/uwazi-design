@@ -1,13 +1,23 @@
 import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import {
   Search,
   X,
   Plus,
   Upload,
-  FileSpreadsheet,
+  FileUp,
+  FileDown,
+  MoreHorizontal,
 } from "lucide-react";
-import { dataSourceAtom, libraryEntitiesAtom, cejilReadyAtom } from "../atoms/dataSource";
+import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom } from "../atoms/dataSource";
+import { startDraftAtom } from "../atoms/entityOverlay";
+import { activitiesAtom } from "../atoms/notifications";
+import { editSessionOpenAtom } from "../atoms/dirtyGuard";
+import { isPdf, runCsvExport, runPdfUploadBatch } from "../utils/libraryTasks";
+import { defaultTemplateId, uploadTemplateId } from "../utils/createEntity";
+import { CreateEntityDialog } from "../components/library/CreateEntityDialog";
+import { UploadDocumentsModal } from "../components/library/UploadDocumentsModal";
+import { NewImportModal } from "../components/import-csv/NewImportModal";
 import { loadCejilData, cejilRelsByEntity } from "../data/cejil/load";
 import { warmSearchScan } from "../utils/warmSearchScan";
 import { referencesAtom } from "../atoms/references";
@@ -81,7 +91,7 @@ import {
   useSelectionOrder,
   useTouchSelection,
 } from "../components/library/EntitySelectBox";
-import { LibrarySelectionBar } from "../components/library/LibrarySelectionBar";
+import { ActionsSheet, LibrarySelectionBar } from "../components/library/LibrarySelectionBar";
 import { LibrarySelectionDrawer } from "../components/library/LibrarySelectionDrawer";
 import { MatchOrigin } from "../components/library/MatchOrigin";
 import { listColumnSpecs, buildListColumns } from "../components/library/listColumns";
@@ -552,6 +562,74 @@ export function LibraryView() {
   // Previewing focuses the entity so the drawer's tabbed bodies (Relationships /
   // Files / Document read the focused + scoped atoms) reflect it immediately.
   // Stable so memoized EntityCards don't re-render on every selection/hover.
+  /* ── Footer actions ───────────────────────────────────────────────────── */
+  const store = useStore();
+  const libraryTypes = useAtomValue(libraryTypesAtom);
+  const startDraft = useSetAtom(startDraftAtom);
+  // Import CSV opens its modal over the Library; the import then runs as a
+  // Beacon task instead of taking the reader to the Import CSV screen.
+  const [importOpen, setImportOpen] = useState(false);
+  const setImportActivities = useSetAtom(activitiesAtom);
+  const handleImportCsv = useCallback(
+    (filename: string, template: string) => {
+      setImportOpen(false);
+      setImportActivities((prev) => [
+        ...prev,
+        { id: `imp-${Date.now()}`, label: "Importing CSV", detail: `${filename} → ${template}`, current: 0, total: 100 },
+      ]);
+    },
+    [setImportActivities],
+  );
+  const [createOpen, setCreateOpen] = useState(false);
+  const [phoneActionsOpen, setPhoneActionsOpen] = useState(false);
+  const uploadInputRef = useRef<HTMLInputElement | null>(null);
+  /** Create entity: the chosen template opens as a draft in the drawer, on its
+   *  edit form. Guarded — the drawer may be holding another entity's edit. */
+  const handleCreate = (typeId: string) => {
+    setCreateOpen(false);
+    guard(() => setSelectedId(startDraft({ typeId, corpus: dataSource })));
+  };
+  /** Upload PDF: the picked PDFs open `UploadDocumentsModal` (a title each,
+   *  one template), and Upload runs the batch as ONE Beacon task. A single
+   *  document opens in the drawer when it lands; a batch doesn't pick one. */
+  const [pendingUploads, setPendingUploads] = useState<File[] | null>(null);
+  function handleUpload(files: FileList | null) {
+    const list = Array.from(files ?? []);
+    const pdfs = list.filter(isPdf);
+    const skipped = list.length - pdfs.length;
+    if (skipped > 0) {
+      notify(
+        `${skipped} ${skipped === 1 ? "file isn't a PDF and was" : "files aren't PDFs and were"} skipped`,
+        "error",
+      );
+    }
+    if (pdfs.length) setPendingUploads(pdfs);
+  }
+  function startUpload(batch: { typeId: string; uploads: { file: File; title: string }[] }) {
+    setPendingUploads(null);
+    const corpus = dataSource;
+    runPdfUploadBatch(store, { corpus, ...batch }, (ids) => {
+      // Only while the library still shows that corpus: an upload that lands
+      // after the user moved elsewhere shouldn't pull them back.
+      if (ids.length !== 1 || store.get(dataSourceAtom) !== corpus) return;
+      // It lands seconds after Upload was pressed, when the reader may be in a
+      // form. Switching the drawer then would unmount it and lose what they
+      // typed, so it never takes the drawer from an open form; the
+      // notification says where the document is instead.
+      if (store.get(editSessionOpenAtom)) return "Not opened while a form is open; it is in the library.";
+      guard(() => setSelectedId(ids[0]));
+    });
+  }
+  /** Export CSV: the CURRENT result set — facets, query and match types
+   *  applied — which is `filtered`, the list every view mode draws. */
+  function handleExport() {
+    if (filtered.length === 0) {
+      notify("Nothing to export — no entity matches the current filters", "info");
+      return;
+    }
+    void runCsvExport(store, filtered, language, `uwazi-${dataSource}-${new Date().toISOString().slice(0, 10)}.csv`);
+  }
+
   /* Multi-selection is modifier-click: Cmd/Ctrl+click toggles an entity in
      the selection and Shift+click spans from the anchor over the order the
      visible view draws (`currentSelectionOrder`) — without a preview. This
@@ -1057,9 +1135,11 @@ export function LibraryView() {
         )}
       </div>
 
-      {/* Footer action bar */}
+      {/* Footer action bar. A container, so the selection's actions fold to
+          their icons (each keeps its name) when the pane is too narrow for
+          their labels, instead of wrapping inside a fixed-height bar. */}
       <div
-        className="bleed shrink-0 flex items-center gap-2 h-12 bg-paper"
+        className="@container bleed shrink-0 flex items-center gap-1 h-12 bg-paper"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
         {/* The bar swaps IN PLACE between the baseline actions and the
@@ -1070,6 +1150,7 @@ export function LibraryView() {
           <LibrarySelectionBar
             filteredIds={filteredIds}
             loadedIds={drawnIds}
+            corpus={dataSource}
             filtersSlot={<ActiveFiltersButton className="ms-2 shrink-0" />}
           />
         ) : (
@@ -1077,34 +1158,83 @@ export function LibraryView() {
             <FooterButton
               icon={<Plus size={13} className="text-ink-tertiary" />}
               label="Create entity"
-              onClick={() => notify("Create entity isn't available in the prototype")}
+              onClick={() => setCreateOpen(true)}
               lead
             />
             <FooterButton
               icon={<Upload size={13} className="text-ink-tertiary" />}
               label="Upload PDF"
-              onClick={() => notify("Upload started")}
+              onClick={() => uploadInputRef.current?.click()}
             />
+            {/* No divider between Import and Export: one group, the CSV pair. */}
             <FooterButton
-              icon={<FileSpreadsheet size={13} className="text-ink-tertiary" />}
-              label="Import / Export CSV"
-              onClick={() => guard(() => setAppView("import-csv"))}
+              icon={<FileUp size={13} className="text-ink-tertiary" />}
+              label="Import CSV"
+              onClick={() => guard(() => setImportOpen(true))}
             />
-            {/* The count used to be printed here too ("Showing N of M", with an
-                "updating…" beside it while the query settled). It is the masthead
-                readout's number — same set, same two figures — and the toolbar slot
-                is where it belongs, beside the search box that changes it. Two
-                copies of one number on one screen is the thing every other row on
-                this surface already gave up (the Results headers, the info rows,
-                the Relationships toolbar); the footer was the last holdout.
-                Staleness went with it: the masthead carries `aria-busy` and dims,
-                so the word had nothing left to say. What survives here is the
-                active-filter readout, which is NOT a duplicate — it is the only
-                place the filters are reachable while the drawer shows an entity
-                instead of the Filters panel. `ms-2` keeps it out of the run of
-                footer actions, so a readout doesn't read as a fourth button. */}
+            {/* With a selection, the bar's own Export CSV exports the
+                selection; without one, this exports the current results. */}
+            <FooterButton
+              icon={<FileDown size={13} className="text-ink-tertiary" />}
+              label="Export CSV"
+              onClick={handleExport}
+            />
+            {/* Phone: the four actions above are `hidden sm:flex`, so the bar
+                there was empty — the same actions, in a sheet. */}
+            <button
+              type="button"
+              onClick={() => setPhoneActionsOpen(true)}
+              aria-haspopup="dialog"
+              aria-expanded={phoneActionsOpen}
+              className={`sm:hidden shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium ${BAR_LEAD} rounded-md cursor-pointer`}
+            >
+              <MoreHorizontal size={13} className="text-ink-tertiary" aria-hidden /> Actions
+            </button>
             <ActiveFiltersButton className="ms-2" />
           </>
+        )}
+        {/* Not rendered: the file input Upload PDF opens. */}
+        <input
+          ref={uploadInputRef}
+          type="file"
+          accept="application/pdf,.pdf"
+          multiple
+          hidden
+          onChange={(e) => {
+            handleUpload(e.target.files);
+            // Cleared so choosing the same file again still fires a change.
+            e.target.value = "";
+          }}
+        />
+        {pendingUploads && (
+          <UploadDocumentsModal
+            files={pendingUploads}
+            types={libraryTypes}
+            defaultTypeId={uploadTemplateId(dataSource)}
+            onUpload={startUpload}
+            onClose={() => setPendingUploads(null)}
+          />
+        )}
+        <NewImportModal open={importOpen} onClose={() => setImportOpen(false)} onImport={handleImportCsv} />
+        {createOpen && (
+          <CreateEntityDialog
+            types={libraryTypes}
+            defaultTypeId={defaultTemplateId(dataSource)}
+            onChoose={handleCreate}
+            onClose={() => setCreateOpen(false)}
+          />
+        )}
+        {phoneActionsOpen && (
+          <ActionsSheet
+            heading="Library"
+            onClose={() => setPhoneActionsOpen(false)}
+            actions={[
+              { label: "Create entity", icon: <Plus size={14} />, onClick: () => setCreateOpen(true) },
+              { label: "Upload PDF", icon: <Upload size={14} />, onClick: () => uploadInputRef.current?.click() },
+              { label: "Import CSV", icon: <FileUp size={14} />, onClick: () => guard(() => setImportOpen(true)) },
+              { label: "Export CSV", icon: <FileDown size={14} />, onClick: handleExport },
+            ]}
+          />
         )}
       </div>
     </div>

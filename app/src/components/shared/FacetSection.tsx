@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { ChevronDown, Search, X } from "lucide-react";
 import { Checkbox } from "./Checkbox";
 import { MatchModeToggle } from "./MatchModeToggle";
@@ -41,6 +41,63 @@ interface FacetSectionProps {
    *  under a non-selectable group label, slightly indented; ungrouped entries
    *  keep their order ahead of the groups. */
   groupOf?: (id: string) => string | undefined;
+
+  /* ── Opt-ins for a FORM list (the thesaurus picker) ── a facet and a
+     property's value list are the same shape — search, rows, "N more" — so the
+     picker is this component, not a copy of it. Every prop below defaults to
+     the facet's behaviour. */
+  /** No collapsible header and no pane rule: a list inside a form field, whose
+   *  label is the field's own. Rows keep their fill inside the list's box
+   *  instead of bleeding to the pane edge. */
+  bare?: boolean;
+  /** `radio` for a single-value property. The rows become one radio group. */
+  control?: "checkbox" | "radio";
+  /** Rows shown MIXED (indeterminate): some of the entities being edited hold
+   *  the value and some don't. Reported as `aria-checked="mixed"`. */
+  mixed?: Record<string, boolean>;
+  /** What sits where the facet prints its count — the bulk form's coverage
+   *  ("4 of 12"), or nothing. */
+  renderCount?: (id: string, count: number) => ReactNode;
+  /** The row's accessible name, when it says more than the label ("Amnistía,
+   *  on 4 of 12"). */
+  ariaLabelOf?: (id: string) => string;
+  /** Tag drawn after a row's label (the picker's "New"). */
+  renderBadge?: (id: string) => ReactNode;
+  /** The search box's placeholder. Default "Search <title>". */
+  searchPlaceholder?: string;
+  /** Shown instead of the rows when there are none at all (not "no matches"). */
+  emptyState?: ReactNode;
+}
+
+/** A native checkbox that can also be MIXED — `indeterminate` is a DOM
+ *  property with no attribute, so it is set from an effect. */
+function MixedCheckbox({
+  checked,
+  mixed,
+  onChange,
+  ariaLabel,
+}: {
+  checked: boolean;
+  mixed: boolean;
+  onChange: () => void;
+  ariaLabel: string;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (ref.current) ref.current.indeterminate = mixed;
+  }, [mixed]);
+  return (
+    <input
+      ref={ref}
+      type="checkbox"
+      data-component="Checkbox"
+      checked={checked}
+      aria-checked={mixed ? "mixed" : checked}
+      onChange={onChange}
+      aria-label={ariaLabel}
+      className="w-3.5 h-3.5 rounded cursor-pointer shrink-0 accent-ink"
+    />
+  );
 }
 
 export function FacetSection({
@@ -61,8 +118,17 @@ export function FacetSection({
   onModeChange,
   onClear,
   groupOf,
+  bare = false,
+  control = "checkbox",
+  mixed,
+  renderCount,
+  ariaLabelOf,
+  renderBadge,
+  searchPlaceholder,
+  emptyState,
 }: FacetSectionProps) {
-  const [open, setOpen] = useState(defaultExpanded);
+  const radioName = useId();
+  const [open, setOpen] = useState(defaultExpanded || bare);
   const [query, setQuery] = useState("");
   const [showAll, setShowAll] = useState(false);
 
@@ -118,7 +184,15 @@ export function FacetSection({
     /* Rows carry no side padding: the host's gutter places the content, and
        `bleed` runs the divider and each row's hover / selected fill to the pane
        edge. Group children indent by 0.75rem PAST the gutter. */
-    <div className="bleed" style={{ borderBottom: "1px solid var(--border-soft)" }}>
+    <div
+      data-component="FacetSection"
+      data-variant={bare ? "bare" : undefined}
+      className={bare ? "" : "bleed"}
+      style={bare ? undefined : { borderBottom: "1px solid var(--border-soft)" }}
+      role={bare ? "group" : undefined}
+      aria-label={bare ? title : undefined}
+    >
+      {!bare && (
       <div
         className={`bleed flex items-center gap-2 py-2.5 transition-colors ${
           open ? "" : "hover:bg-warm"
@@ -157,8 +231,9 @@ export function FacetSection({
           </span>
         )}
       </div>
+      )}
       {open && (
-        <div className="pb-2">
+        <div data-part="body" className={bare ? "" : "pb-2"}>
           {(showSearch || mode) && (
             <div className="pt-0.5 pb-2 space-y-2">
               {mode && onModeChange && (
@@ -170,7 +245,7 @@ export function FacetSection({
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder={`Search ${title.toLowerCase()}`}
+                    placeholder={searchPlaceholder ?? `Search ${title.toLowerCase()}`}
                     aria-label={`Search ${title}`}
                     className="flex-1 min-w-0 bg-transparent text-xs placeholder:text-ink-muted focus:outline-none"
                   />
@@ -189,8 +264,14 @@ export function FacetSection({
               )}
             </div>
           )}
-          {matched.length === 0 && (
-            <p className="py-1.5 text-xs text-ink-muted">No matches.</p>
+          {allRegular.length === 0 && emptyState ? (
+            emptyState
+          ) : (
+            matched.length === 0 && (
+              <p data-part="empty" className={`${bare ? "px-2 " : ""}py-1.5 text-xs text-ink-muted`}>
+                No matches.
+              </p>
+            )
           )}
           {regularRows.map((row, idx) => {
             const [id, count] = row.entry;
@@ -206,30 +287,54 @@ export function FacetSection({
                   </SectionLabel>
                 )}
                 <label
-                  className={`bleed flex items-center gap-2 py-1.5 cursor-pointer transition-colors ${
+                  data-part="option"
+                  className={`${bare ? "px-2 rounded-md" : "bleed"} flex items-center gap-2 py-1.5 cursor-pointer transition-colors ${
                     checked ? "bg-carbon/[0.04] hover:bg-carbon/[0.07]" : "hover:bg-warm"
                   }`}
                   style={
                     row.group
-                      ? { paddingInlineStart: "calc(var(--gutter, 0px) + 0.75rem)" }
+                      ? {
+                          paddingInlineStart: bare
+                            ? "1.25rem"
+                            : "calc(var(--gutter, 0px) + 0.75rem)",
+                        }
                       : undefined
                   }
                 >
-                  <Checkbox
-                    checked={checked}
-                    onChange={() => onToggle(id)}
-                    ariaLabel={row.group ? `${label(id)} (${row.group})` : label(id)}
-                  />
+                  {control === "radio" ? (
+                    <input
+                      type="radio"
+                      name={radioName}
+                      checked={checked}
+                      onChange={() => onToggle(id)}
+                      aria-label={ariaLabelOf?.(id) ?? (row.group ? `${label(id)} (${row.group})` : label(id))}
+                      className="w-3.5 h-3.5 cursor-pointer shrink-0 accent-ink"
+                    />
+                  ) : mixed ? (
+                    <MixedCheckbox
+                      checked={checked}
+                      mixed={!!mixed[id]}
+                      onChange={() => onToggle(id)}
+                      ariaLabel={ariaLabelOf?.(id) ?? (row.group ? `${label(id)} (${row.group})` : label(id))}
+                    />
+                  ) : (
+                    <Checkbox
+                      checked={checked}
+                      onChange={() => onToggle(id)}
+                      ariaLabel={ariaLabelOf?.(id) ?? (row.group ? `${label(id)} (${row.group})` : label(id))}
+                    />
+                  )}
                   {renderMarker?.(id)}
                   <span
-                    className={`text-tab truncate flex-1 ${
-                      checked ? "text-ink font-medium" : "text-ink-secondary"
+                    className={`text-tab truncate ${renderBadge ? "min-w-0" : "flex-1"} ${
+                      checked || mixed?.[id] ? "text-ink font-medium" : "text-ink-secondary"
                     }`}
                   >
                     {label(id)}
                   </span>
+                  {renderBadge && <span className="flex-1 min-w-0 flex items-center">{renderBadge(id)}</span>}
                   <span className="text-meta text-ink-tertiary tabular-nums shrink-0">
-                    {count}
+                    {renderCount ? renderCount(id, count) : count}
                   </span>
                 </label>
               </Fragment>
@@ -238,7 +343,7 @@ export function FacetSection({
           {hiddenCount > 0 && (
             <button
               onClick={() => setShowAll(true)}
-              className="py-1.5 text-xs font-medium text-ink-secondary underline underline-offset-2 hover:text-ink transition-colors cursor-pointer"
+              className={`${bare ? "px-2 " : ""}py-1.5 text-xs font-medium text-ink-secondary underline underline-offset-2 hover:text-ink transition-colors cursor-pointer`}
             >
               Load {hiddenCount} more
             </button>
@@ -246,7 +351,7 @@ export function FacetSection({
           {showAll && !q && matched.length > collapsedCount && (
             <button
               onClick={() => setShowAll(false)}
-              className="py-1.5 text-xs font-medium text-ink-tertiary underline underline-offset-2 hover:text-ink transition-colors cursor-pointer"
+              className={`${bare ? "px-2 " : ""}py-1.5 text-xs font-medium text-ink-tertiary underline underline-offset-2 hover:text-ink transition-colors cursor-pointer`}
             >
               Show less
             </button>

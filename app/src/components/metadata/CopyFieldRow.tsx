@@ -67,6 +67,8 @@ export function CopyFieldRow({
 
   return (
     <div
+      data-component="CopyFieldRow"
+      data-state={checked ? "checked" : "unchecked"}
       className={`mt-1.5 grid grid-cols-[1.25rem_7rem_minmax(0,1fr)_0.75rem_minmax(0,1fr)]
         grid-rows-[1rem_1rem] items-center gap-x-2 rounded-md px-2 py-1.5 transition-colors ${
           checked ? "bg-parchment" : "bg-warm"
@@ -74,7 +76,7 @@ export function CopyFieldRow({
     >
       {/* Every first-row cell shares a 1rem line box, so the checkbox centres on
           the values it belongs to instead of being nudged onto them. */}
-      <span className={`row-start-1 ${line} h-4 flex items-center justify-center`}>
+      <span data-part="select" className={`row-start-1 ${line} h-4 flex items-center justify-center`}>
         <Checkbox
           checked={checked}
           onChange={(e) => onChange(e.target.checked)}
@@ -87,6 +89,7 @@ export function CopyFieldRow({
           with no idea which field was being overwritten, and got strictly less
           than a screen-reader user did. */}
       <span
+        data-part="label"
         className={`row-start-1 ${line} h-4 leading-4 truncate text-meta font-medium text-ink-secondary`}
         title={label}
       >
@@ -103,25 +106,28 @@ export function CopyFieldRow({
           a fade (FadeTruncate, the app's idiom for PROSE blocks) reads as "more
           text below", which in a one-line comparison cell is a lie. The ellipsis
           cuts at the column edge and the whole value is on the title. */}
-      <span
+      <del
+        data-part="current"
         className={`row-start-1 ${line} h-4 leading-4 truncate text-meta text-ink-tertiary
           line-through decoration-ink-muted/60`}
         title={current}
       >
         {current}
-      </span>
+      </del>
       <ArrowRight size={10} className={`row-start-1 ${line} text-ink-muted`} aria-hidden />
-      <span
-        className={`row-start-1 ${line} h-4 leading-4 truncate text-meta font-medium text-ink`}
+      <ins
+        data-part="incoming"
+        className={`row-start-1 ${line} h-4 leading-4 truncate text-meta font-medium text-ink no-underline`}
         title={incoming}
       >
         {incoming}
-      </span>
+      </ins>
 
       {/* The second track is reserved by the row template, not by this element,
           so it holds its 1rem whether or not a note is rendered into it. */}
       {note && (
         <span
+          data-part="note"
           className="row-start-2 col-start-2 col-span-4 h-4 leading-4 truncate text-meta text-ink-tertiary"
           title={note}
         >

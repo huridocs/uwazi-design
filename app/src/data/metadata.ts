@@ -5,8 +5,25 @@ import type { ChainSegment, ProvenanceStep } from "../utils/chainTraversal";
 export interface MetadataField {
   id: string;
   label: string;
-  type: "text" | "date" | "link" | "country" | "multiline" | "file-list";
+  /** `media`: the raw Uwazi media value — a URL, optionally a comma and a JSON
+   *  config of chapter timelinks. Read with `parseMediaValue`. */
+  type: "text" | "date" | "link" | "country" | "multiline" | "file-list" | "media" | "select" | "multiselect";
+  /** For `multiselect`, the chosen labels joined with ", " — the string every
+   *  reader that wants one string already reads. The set itself is `values`. */
   value: string;
+  /** `select` / `multiselect`: the thesaurus the template binds the property
+   *  to. Absent = the template names none (the form offers to create one). */
+  thesaurus?: string;
+  /** `multiselect`: the chosen labels, in order. Kept apart from `value`
+   *  because a label can itself contain ", ". Read with `chosenLabels`. */
+  values?: string[];
+  /** A property that holds a LIST the record prints as one string (CEJIL's
+   *  multidate and multidaterange). The bulk form leaves it out: one box for
+   *  every entity would overwrite each list with a single value. */
+  list?: boolean;
+  /** The thesaurus value ids behind the labels, where the corpus stores them
+   *  (CEJIL). Labels are per language; an id is the same in all of them. */
+  valueIds?: string[];
   flag?: string;
   items?: { label?: string; value: string }[];
   columns?: { label: string; value: string }[];
@@ -37,6 +54,15 @@ export interface MetadataField {
 export type InheritReduce = "list" | "distinct" | "count" | "min" | "max" | "first";
 
 export interface RelationshipMetadataField {
+  /** OTHER names this same field answers to, for deep focus.
+   *
+   *  A card addresses a property by the TEMPLATE's property name; this record
+   *  groups relationships by RELATION TYPE, taken from the graph, so one field
+   *  here can be what several template properties point at and its `id` is
+   *  neither of their names. Rather than have the card guess this id, the field
+   *  says which property names it covers and the record's focus query matches
+   *  any of them. One field, several names. */
+  keyAliases?: string[];
   id: string;
   label: string;
   type: "relationship";
@@ -73,6 +99,22 @@ export interface RelationshipMetadataField {
 }
 
 export type AnyMetadataField = MetadataField | RelationshipMetadataField;
+
+/** The labels a select or multiselect field holds. A record written before
+ *  `values` existed (or a single select) holds its one label in `value`. */
+export function chosenLabels(f: Pick<MetadataField, "type" | "value" | "values">): string[] {
+  if (f.values) return f.values;
+  return f.value ? [f.value] : [];
+}
+
+/** The same field holding `labels` — `value` kept as their display string. */
+export function withLabels<F extends MetadataField>(f: F, labels: string[], ids?: (string | null)[]): F {
+  const next: F =
+    f.type === "multiselect" ? { ...f, values: labels, value: labels.join(", ") } : { ...f, value: labels[0] ?? "" };
+  if (ids) next.valueIds = (f.type === "multiselect" ? ids : ids.slice(0, 1)).map((id) => id ?? "");
+  else delete next.valueIds;
+  return next;
+}
 
 // Metadata for the default primary entity: Velásquez-Rodríguez v. Honduras —
 // Merits Judgment of the Inter-American Court of Human Rights, July 29, 1988

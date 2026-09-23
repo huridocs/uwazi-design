@@ -9,7 +9,7 @@ import { atom } from "jotai";
  *  it. What ends it: a fill, Escape, arming a different field, or the edit form
  *  unmounting (Save / Cancel).
  *
- *  That last one is not optional. `copyPreviewAtom` had the same shape — state
+ *  That last one is not optional. The since-removed `copyPreviewAtom` had the same shape — state
  *  outliving the form that owns it — and left a dead Copy From panel rendering
  *  over a read-mode pane. Anything that arms this must clear it on unmount. */
 export interface FillTarget {

@@ -1,10 +1,13 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { X, ArrowRight } from "lucide-react";
 import { referencesAtom } from "../../atoms/references";
 import { activeFilterCountAtom } from "../../atoms/filters";
-import { focusMetadataFieldAtom } from "../../atoms/library";
-import { getEntity } from "../../data/entities";
+import { focusMetadataFieldAtom, libraryEditRequestAtom } from "../../atoms/library";
+import { getEntity, getEntityType } from "../../data/entities";
+import { languageAtom } from "../../atoms/language";
+import { commitDraftAtom, discardDraftAtom, draftEntityIdAtom, saveEntityEditAtom } from "../../atoms/entityOverlay";
+import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { getEntityProfile } from "../../data/entityProfiles";
 import { isCejilEntity, cejilReferencesFor } from "../../data/cejil/profile";
 import { uiLanguageAtom } from "../../atoms/uiLanguage";
@@ -15,11 +18,14 @@ import { MainTabs } from "../layout/MainTabs";
 import { DocumentViewer } from "../viewer/DocumentViewer";
 import { RelationshipsDrawerSection } from "../relationships/RelationshipsDrawerSection";
 import { FiltersHostProvider } from "../shared/FiltersDrawer";
+import { ModalHostProvider } from "../shared/Modal";
 import { RelationshipsCollapseControls } from "../relationships/FiltersRow";
 import { DrawerFilesBody } from "../files/DrawerFilesBody";
 import { EntityMetadataSummary } from "../metadata/EntityMetadataSummary";
 import { MetadataEditBody } from "../../views/MetadataView";
+import { EntityBarActions } from "./EntityBarActions";
 import { BAR_GHOST } from "../shared/warmButton";
+import { editSessionOpenAtom } from "../../atoms/dirtyGuard";
 
 export interface EntityDetailBodyProps {
   entityId: string;
@@ -50,6 +56,9 @@ export interface EntityDetailBodyProps {
   editDirtyLabel?: string;
 }
 
+/** Draft discards waiting a tick — see the draft cleanup in the body. */
+const pendingDraftDiscard = new Map<string, number>();
+
 /** The side-panel entity detail: identity header, the entity view's own main
  *  tabs (Document / Metadata / Relationships / Files) with drawer-flavoured
  *  bodies, and a Close / open-entity footer.
@@ -74,7 +83,45 @@ export function EntityDetailBody({
   editDirtyLabel = "Metadata edits (preview)",
 }: EntityDetailBodyProps) {
   const references = useAtomValue(referencesAtom);
-  const entity = getEntity(entityId);
+  const language = useAtomValue(languageAtom);
+  /* An entity being CREATED (Create entity): it opens straight into its form,
+     offers no other tab — it has no connections or files yet — and its
+     Cancel discards it and its Save is what adds it to the library. */
+  const isDraft = useAtomValue(draftEntityIdAtom) === entityId;
+  const commitDraft = useSetAtom(commitDraftAtom);
+  const saveEdit = useSetAtom(saveEntityEditAtom);
+  /* The edit form edits the FOCUSED entity, and a host focuses this one in an
+     effect — after the first render. A draft opens straight into its form, so
+     on that first render the form would seed itself from whatever was focused
+     before. It waits for the focus to arrive. */
+  const focusArrived = useAtomValue(focusedEntityIdAtom) === entityId;
+  const discardDraft = useSetAtom(discardDraftAtom);
+  // Leaving a draft any other way — the drawer's X, another entity selected —
+  // discards it too; a draft nothing is showing is a record nobody can reach.
+  const isDraftRef = useRef(isDraft);
+  isDraftRef.current = isDraft;
+  // Deferred a tick, and cancelled by a remount of the same entity: StrictMode
+  // mounts, cleans up and mounts again, and an immediate discard there dropped
+  // every new draft the moment it opened.
+  useEffect(() => {
+    window.clearTimeout(pendingDraftDiscard.get(entityId));
+    return () => {
+      if (!isDraftRef.current) return;
+      pendingDraftDiscard.set(
+        entityId,
+        window.setTimeout(() => {
+          pendingDraftDiscard.delete(entityId);
+          discardDraft(entityId);
+        }, 0),
+      );
+    };
+  }, [entityId, discardDraft]);
+  const stored = getEntity(entityId);
+  // Its title is the form's to fill; until then the header names the template.
+  const entity =
+    stored && isDraft && !stored.title
+      ? { ...stored, title: `New ${getEntityType(stored.typeId)?.name ?? "entity"}` }
+      : stored;
   const profile = getEntityProfile(entityId);
 
   // Connection count for the tab strip (matches the scoped Relationships body,
@@ -98,6 +145,7 @@ export function EntityDetailBody({
     // Files reads the globally seeded file atoms, so it only tells the truth
     // about the entity the app has focused.
     .filter((tab) => (tab.id === "files" ? focused : true))
+    .filter((tab) => (isDraft ? tab.id === "metadata" : true))
     .map((tab) => {
       if (tab.id === "relationships")
         return { ...tab, count: connectionCount, dot: relFilterCount > 0 };
@@ -124,19 +172,34 @@ export function EntityDetailBody({
      The SAME MetadataEditBody the full view renders, in its compact flavour.
      It edits the FOCUSED entity, so it is offered only where this panel and the
      focus agree on which entity that is. */
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(isDraft);
+  // Any edit session anywhere, this panel's own included — see the footer.
+  const editSessionOpen = useAtomValue(editSessionOpenAtom);
 
   // A different entity is a different record: end the session rather than carry
   // one entity's unsaved edits into another's form. The registration tears down
   // with the body, so nothing is left registered.
   useEffect(() => {
-    setEditing(false);
+    setEditing(isDraft);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- a new entity, not a new draft flag
   }, [entityId]);
 
   // Only the Metadata tab has an editor; leaving that tab ends the session.
   useEffect(() => {
     if (activeTab !== "metadata") setEditing(false);
   }, [activeTab]);
+
+  // Edit with ONE entity selected opens its preview straight on the form. After
+  // the two resets above (effects run in order, so theirs would undo this on
+  // the mount it arrives with), and only once the focus is this entity's — the
+  // form edits the FOCUSED entity.
+  const [editRequest, setEditRequest] = useAtom(libraryEditRequestAtom);
+  useEffect(() => {
+    if (editRequest !== entityId || !focused || !focusArrived) return;
+    setActiveTab("metadata");
+    setEditing(true);
+    setEditRequest(null);
+  }, [editRequest, entityId, focused, focusArrived, setEditRequest]);
 
   /* The Filters slide-over covers THE PANEL, header to footer — the geometry
      the entity view's pane gives it for free, because there the positioned box
@@ -146,12 +209,14 @@ export function EntityDetailBody({
      the footer. Making the root positioned is not enough on its own — the tab
      wrapper's `overflow-hidden` clips the drawer wherever it is positioned
      from — so the root names itself the drawer's host and the drawer portals
-     out to it. See FiltersHostProvider. */
+     out to it. See FiltersHostProvider. A pane modal (Copy From) takes the
+     same root for the same reason: its scrim covers header, tabs and footer. */
   const [panelEl, setPanelEl] = useState<HTMLDivElement | null>(null);
 
   return (
     <EntityScopeProvider entityId={entityId}>
       <FiltersHostProvider host={panelEl}>
+      <ModalHostProvider host={panelEl}>
       {/* THE GUTTER HOST. The side gutter is this box's padding and nothing
           else's: the header, tabs, toolbar, cards and footer below carry no side
           padding of their own, so they cannot disagree about where the content
@@ -201,15 +266,30 @@ export function EntityDetailBody({
             <RelationshipsDrawerSection hideActionBar />
           ) : activeTab === "files" ? (
             <DrawerFilesBody hideActionBar />
-          ) : editing ? (
+          ) : editing && (!isDraft || focusArrived) ? (
             <>
               {editOverlay}
               <MetadataEditBody
+                key={entityId}
                 compact
-                sessionId={editSessionId}
-                dirtyLabel={editDirtyLabel}
-                onCancel={() => setEditing(false)}
-                onSave={() => setEditing(false)}
+                sessionId={isDraft ? "create-entity" : editSessionId}
+                dirtyLabel={isDraft ? "New entity" : editDirtyLabel}
+                onCancel={() => {
+                  setEditing(false);
+                  if (!isDraft) return;
+                  // Close first — on the next tick, once the form has unmounted
+                  // and left the dirty registry, so Cancel doesn't ask whether to
+                  // discard what it is discarding — then drop the draft.
+                  window.setTimeout(() => {
+                    onClose();
+                    discardDraft(entityId);
+                  }, 0);
+                }}
+                onSave={(result) => {
+                  if (isDraft) commitDraft({ id: entityId, result, language });
+                  else saveEdit({ id: entityId, result, language });
+                  setEditing(false);
+                }}
               />
             </>
           ) : (
@@ -244,21 +324,40 @@ export function EntityDetailBody({
             {focused && activeTab === "metadata" && (
               <button
                 onClick={() => setEditing(true)}
+                data-gutter-align="box"
                 className={`px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
               >
                 Edit
               </button>
             )}
+            {/* Share, Permissions | Delete for this entity — icons here, the
+                footer also carries Close and the open-entity commit. */}
+            {focused && !isDraft && activeTab === "metadata" && (
+              <EntityBarActions entityId={entityId} onDeleted={onClose} compact />
+            )}
             <div className="flex-1" />
+            {/* Ghost: the ink "Open entity" beside it is this bar's one filled
+                button (the ladder in `warmButton.ts`). */}
             <button
               onClick={onClose}
               className={`px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
             >
               Close
             </button>
+            {/* HIDDEN while any edit form is open — this panel over a Metadata
+                edit's "Source" row, a click-to-fill hunt, the drawer preview's
+                own edit: opening an entity navigates, and navigating discards
+                the form. Hidden, not disabled (a disabled route still reads as
+                one), and `invisible` rather than unmounted, so Close keeps its
+                x and the bar its height. Outside edit mode it is there. */}
             <button
               onClick={onOpen}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer"
+              aria-hidden={editSessionOpen || undefined}
+              tabIndex={editSessionOpen ? -1 : undefined}
+              data-part="open-entity"
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                editSessionOpen ? "invisible" : ""
+              }`}
               style={{ backgroundColor: "var(--text-primary)", color: "var(--bg-surface)" }}
             >
               {openLabel} <ArrowRight size={13} />
@@ -266,6 +365,7 @@ export function EntityDetailBody({
           </div>
         )}
       </div>
+      </ModalHostProvider>
       </FiltersHostProvider>
     </EntityScopeProvider>
   );

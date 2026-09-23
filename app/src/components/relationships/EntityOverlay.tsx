@@ -1,8 +1,6 @@
 import { useAtom, useSetAtom } from "jotai";
 import { useEffect, useState } from "react";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
-import { copyPreviewAtom } from "../../atoms/copyFrom";
-import { CopyPreviewSection } from "../metadata/CopyPreviewSection";
 import { activeAggregateIdAtom, overlayEntityIdAtom } from "../../atoms/references";
 import { languageAtom } from "../../atoms/language";
 import { openEntityAtom } from "../../atoms/focusedEntity";
@@ -22,7 +20,6 @@ import { EntityDetailBody } from "../entity/EntityDetailBody";
  *  atoms — aren't offered here; "Open entity" is the route to those. */
 export function EntityOverlay() {
   const [entityId, setEntityId] = useAtom(overlayEntityIdAtom);
-  const [copyPreview, setCopyPreview] = useAtom(copyPreviewAtom);
   const setActiveAggregateId = useSetAtom(activeAggregateIdAtom);
   const lang = useAtom(languageAtom)[0];
   const rtl = lang === "AR";
@@ -55,15 +52,6 @@ export function EntityOverlay() {
   useEffect(() => {
     if (entityId === null) setActiveAggregateId(null);
   }, [entityId, setActiveAggregateId]);
-
-  // And the Copy From preview with it. This panel is the ONLY thing that renders
-  // a preview, so closing it — by any of the four exits, not just the two
-  // buttons inside the block — ends that preview. Left set, it reappeared the
-  // next time this entity was opened from anywhere, wired to an edit form that
-  // had since been cancelled (see `copyPreviewAtom`).
-  useEffect(() => {
-    if (entityId === null) setCopyPreview(null);
-  }, [entityId, setCopyPreview]);
 
   const entity = entityId ? getEntity(entityId) : undefined;
   const isOpen = entityId !== null && entity !== undefined;
@@ -142,18 +130,6 @@ export function EntityOverlay() {
               setEntityId(null);
             }}
             openLabel="Open entity"
-            /* Copy From stages its source through this panel — the preview only
-               belongs to the entity that was actually staged, so opening the
-               same entity from anywhere else is unaffected. */
-            banner={
-              copyPreview && copyPreview.sourceId === bodyId ? (
-                <CopyPreviewSection
-                  plan={copyPreview.plan}
-                  onUse={() => copyPreview.onUse()}
-                  onBack={() => copyPreview.onBack()}
-                />
-              ) : undefined
-            }
           />
         )}
       </div>

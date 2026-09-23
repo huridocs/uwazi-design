@@ -64,6 +64,9 @@ function rowOf(
     "Date added": e.createdAt ?? "",
   };
   const connections = new Set<string>();
+  const multi = new Map(
+    (e.fields ?? []).filter((f) => f.key && f.values?.length).map((f) => [f.key!, f.values!]),
+  );
   for (const f of getEntityProfile(e.id).metadata[language] ?? []) {
     if (SKIP_TYPES.has(f.type)) continue;
     let value: string;
@@ -85,9 +88,7 @@ function rowOf(
         .filter(Boolean)
         .join("|");
     } else {
-      // Main's records carry each property as one display string (no
-      // multi-value list), so a multi-value property exports as it reads.
-      value = f.value ?? "";
+      value = multi.get(f.id)?.map(part).join("|") ?? f.value ?? "";
       if (f.type === "date") value = isoDay(value);
     }
     if (!value || value === "—") continue;
