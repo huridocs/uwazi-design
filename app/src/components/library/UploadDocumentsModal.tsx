@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { FileText } from "lucide-react";
 import type { EntityType } from "../../data/entities";
 import { Modal, MODAL_BUTTON } from "../shared/Modal";
+import { MODAL_INPUT } from "../shared/ModalParts";
 import { BAR_GHOST } from "../shared/warmButton";
 
 const kb = (n: number) =>
@@ -77,8 +78,7 @@ export function UploadDocumentsModal({
           id={selectId}
           value={typeId}
           onChange={(e) => setTypeId(e.target.value)}
-          className="flex-1 min-w-0 h-8 px-2 text-xs text-ink bg-warm rounded-md cursor-pointer
-            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"
+          className={`flex-1 min-w-0 ${MODAL_INPUT} cursor-pointer`}
         >
           {types.map((t) => (
             <option key={t.id} value={t.id}>
@@ -105,8 +105,7 @@ export function UploadDocumentsModal({
               onChange={(e) => setTitles((prev) => prev.map((t, j) => (j === i ? e.target.value : t)))}
               aria-label={`Title for ${f.name}`}
               autoFocus={i === 0}
-              className="h-8 px-2 text-xs text-ink bg-paper rounded-md border border-border
-                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"
+              className={MODAL_INPUT}
             />
           </li>
         ))}

@@ -1,5 +1,5 @@
-import { useId, useState, useMemo } from "react";
-import { X, Search, Plus } from "lucide-react";
+import { Fragment, useId, useState, useMemo } from "react";
+import { Plus } from "lucide-react";
 import { useAtom, useSetAtom, useAtomValue } from "jotai";
 import { entityPickerOpenAtom, textSelectionAtom } from "../../atoms/selection";
 import {
@@ -15,6 +15,16 @@ import { EntityPill } from "../shared/EntityPill";
 import { t } from "../../utils/i18n";
 import { BAR_GHOST } from "../shared/warmButton";
 import { Modal, MODAL_BUTTON, MODAL_COMMIT } from "../shared/Modal";
+import {
+  MODAL_INPUT,
+  ModalField,
+  ModalList,
+  ModalListRow,
+  ModalSearchRow,
+  ModalSectionLabel,
+  ModalStatus,
+  ModalTypeDot,
+} from "../shared/ModalParts";
 
 type Step = "entity" | "new-entity" | "relation";
 
@@ -215,193 +225,120 @@ export function CreateRelationshipModal() {
     >
     {step === "entity" && (
       <>
-        {/* Search */}
-        <div data-part="search" role="search" className="bleed shrink-0 py-3 border-b border-border/50">
-          <div className="relative">
-            <Search
-              size={14}
-              aria-hidden
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted"
-            />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t("System", "Search entities...")}
-              aria-label={t("System", "Search entities")}
-              className="w-full pl-8 pr-8 py-2 text-sm bg-warm border border-border rounded-md
-                placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-carbon/20"
-              autoFocus
-            />
-            {search && (
-              <button
-                type="button"
-                onClick={() => setSearch("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-parchment text-ink-muted hover:text-ink cursor-pointer transition-colors"
-                aria-label={t("System", "Clear search")}
-              >
-                <X size={12} />
-              </button>
-            )}
-          </div>
-        </div>
+        <ModalSearchRow
+          value={search}
+          onChange={setSearch}
+          placeholder={t("System", "Search entities...")}
+          ariaLabel={t("System", "Search entities")}
+          clearLabel={t("System", "Clear search")}
+          autoFocus
+        />
 
-        {/* Entity list */}
-        <div data-part="entities" className="bleed flex-1 overflow-auto py-3 space-y-4">
+        <ModalList data-part="entities">
           {/* Create-new affordance pinned at the top */}
-          <button
-            type="button"
-            data-part="create-entity"
-            data-gutter-align="box"
+          <ModalListRow
+            part="create-entity"
             onClick={handleStartNewEntity}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left
-              border border-dashed border-border hover:bg-warm hover:border-ink/30 transition-colors cursor-pointer"
-          >
-            <Plus size={14} aria-hidden className="text-ink-muted shrink-0" />
-            <span className="text-sm text-ink-secondary">
-              {t("System", "Create new entity from selection")}
-            </span>
-          </button>
+            leading={<Plus size={13} aria-hidden className="text-ink-muted shrink-0" />}
+            title={t("System", "Create new entity from selection")}
+            titleClassName="text-ink-secondary"
+          />
 
           {Array.from(grouped.entries()).map(([typeId, ents]) => {
             const type = getEntityType(typeId);
             return (
-              <section key={typeId} data-part="entity-group">
-                <h4 className="text-meta font-medium text-ink-muted uppercase tracking-wider mb-2">
+              <Fragment key={typeId}>
+                <ModalSectionLabel as="h4" row>
                   {type?.name}
-                </h4>
-                <ul className="space-y-1">
-                  {ents.map((entity) => (
-                    <li key={entity.id}>
-                      <button
-                        type="button"
-                        data-part="entity"
-                        data-gutter-align="box"
-                        onClick={() => {
-                          setSelectedEntity(entity);
-                          setStep("relation");
-                        }}
-                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md
-                          text-left hover:bg-warm transition-colors ${
-                            selectedEntity?.id === entity.id
-                              ? "bg-warm ring-1 ring-carbon/20"
-                              : ""
-                          }`}
-                      >
-                        <span
-                          aria-hidden
-                          className="w-2 h-2 rounded-[2px] shrink-0"
-                          style={{ backgroundColor: type?.color }}
-                        />
-                        <span className="text-sm text-ink">{entity.title}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </section>
+                </ModalSectionLabel>
+                {ents.map((entity) => (
+                  <ModalListRow
+                    key={entity.id}
+                    part="entity"
+                    onClick={() => {
+                      setSelectedEntity(entity);
+                      setStep("relation");
+                    }}
+                    selected={selectedEntity?.id === entity.id}
+                    leading={<ModalTypeDot color={type?.color} />}
+                    title={entity.title}
+                  />
+                ))}
+              </Fragment>
             );
           })}
           {filtered.length === 0 && (
-            <p data-part="empty" className="text-sm text-ink-muted text-center py-8">
+            <ModalStatus as="li">
               {t("System", "No entities match")} "{search}"
-            </p>
+            </ModalStatus>
           )}
-        </div>
+        </ModalList>
       </>
     )}
 
     {step === "new-entity" && (
       <>
-        <div data-part="new-entity" className="bleed flex-1 overflow-auto py-4 space-y-4">
-          <div>
-            <label
-              htmlFor={titleId}
-              className="block text-xs font-medium text-ink-secondary mb-1.5"
-            >
-              {t("System", "Title")}
-            </label>
+        <div data-part="new-entity" className="bleed shrink-0 py-4">
+          <ModalField
+            label={t("System", "Title")}
+            htmlFor={titleId}
+            hint={t("System", "Pre-filled from your selection. Edit as needed.")}
+          >
             <input
               id={titleId}
               type="text"
               value={newEntityTitle}
               onChange={(e) => setNewEntityTitle(e.target.value)}
-              className="w-full px-3 py-2 text-sm bg-warm border border-border rounded-md
-                focus:outline-none focus:ring-2 focus:ring-carbon/20"
+              className={MODAL_INPUT}
               autoFocus
             />
-            <p className="text-meta text-ink-tertiary mt-1">
-              {t("System", "Pre-filled from your selection. Edit as needed.")}
-            </p>
-          </div>
-
-          <div role="group" aria-labelledby={typeLabelId}>
-            <span
-              id={typeLabelId}
-              className="block text-xs font-medium text-ink-secondary mb-1.5"
-            >
+          </ModalField>
+        </div>
+        <div role="group" aria-labelledby={typeLabelId} className="bleed-flush flex-1 min-h-0 flex flex-col">
+          <div className="bleed pb-1">
+            <ModalSectionLabel as="span" id={typeLabelId}>
               {t("System", "Entity type")}
-            </span>
-            <div className="grid grid-cols-2 gap-1.5">
-              {entityTypes.map((type) => (
-                <button
-                  key={type.id}
-                  type="button"
-                  data-part="entity-type"
-                  onClick={() => setNewEntityTypeId(type.id)}
-                  aria-pressed={newEntityTypeId === type.id}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-left text-sm transition-colors cursor-pointer ${
-                    newEntityTypeId === type.id
-                      ? "bg-warm ring-1 ring-carbon/30"
-                      : "hover:bg-warm"
-                  }`}
-                >
-                  <span
-                    aria-hidden
-                    className="w-2 h-2 rounded-[2px] shrink-0"
-                    style={{ backgroundColor: type.color }}
-                  />
-                  <span className="text-ink-secondary">{type.name}</span>
-                </button>
-              ))}
-            </div>
+            </ModalSectionLabel>
           </div>
+          <ModalList atEdge>
+            {entityTypes.map((type) => (
+              <ModalListRow
+                key={type.id}
+                part="entity-type"
+                onClick={() => setNewEntityTypeId(type.id)}
+                pressed={newEntityTypeId === type.id}
+                selected={newEntityTypeId === type.id}
+                leading={<ModalTypeDot color={type.color} />}
+                title={type.name}
+              />
+            ))}
+          </ModalList>
         </div>
       </>
     )}
 
     {step === "relation" && (
       <>
-        <div className="bleed shrink-0 py-4 border-b border-border/50">
-          <div data-part="target" className="flex items-center gap-2 mb-3">
-            <span className="text-xs text-ink-muted">{t("System", "Target:")}</span>
-            <EntityPill
-              typeId={selectedEntity?.typeId ?? ""}
-              label={selectedEntity?.title}
-              size="md"
-            />
-          </div>
+        <div data-part="target" className="bleed shrink-0 flex items-center gap-2 py-2 border-b border-border">
+          <span className="text-xs text-ink-muted">{t("System", "Target:")}</span>
+          <EntityPill
+            typeId={selectedEntity?.typeId ?? ""}
+            label={selectedEntity?.title}
+            size="md"
+          />
         </div>
-        <ul data-part="relation-types" className="bleed flex-1 overflow-auto py-3 space-y-1">
+        <ModalList data-part="relation-types">
           {relationTypes.map((rel) => (
-            <li key={rel.id}>
-              <button
-                type="button"
-                data-part="relation-type"
-                data-gutter-align="box"
-                onClick={() => setSelectedRelation(rel.id)}
-                aria-pressed={selectedRelation === rel.id}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-left
-                  transition-colors cursor-pointer ${
-                    selectedRelation === rel.id
-                      ? "bg-carbon-tint ring-1 ring-carbon/30"
-                      : "hover:bg-warm"
-                  }`}
-              >
-                <span className="text-sm text-ink">{rel.label}</span>
-              </button>
-            </li>
+            <ModalListRow
+              key={rel.id}
+              part="relation-type"
+              onClick={() => setSelectedRelation(rel.id)}
+              pressed={selectedRelation === rel.id}
+              selected={selectedRelation === rel.id}
+              title={rel.label}
+            />
           ))}
-        </ul>
+        </ModalList>
       </>
     )}
     </Modal>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAtomValue } from "jotai";
-import { ArrowLeft, Ban, Search } from "lucide-react";
+import { ArrowLeft, Ban } from "lucide-react";
 import { cejilReadyAtom, entityCorpusPool } from "../../atoms/dataSource";
 import { entitiesAtom } from "../../atoms/entities";
 import { languageAtom, type Language } from "../../atoms/language";
@@ -20,6 +20,7 @@ import { BAR_GHOST } from "../shared/warmButton";
 import { EntityPill } from "../shared/EntityPill";
 import { CountBadge } from "../shared/CountBadge";
 import { SegmentedControl } from "../shared/SegmentedControl";
+import { ModalList, ModalListRow, ModalSearchRow, ModalStatus } from "../shared/ModalParts";
 import { Checkbox } from "../shared/Checkbox";
 import { SectionLabel } from "../shared/SectionLabel";
 import { CopyFieldRow } from "./CopyFieldRow";
@@ -172,34 +173,30 @@ export function CopyFromPicker({
           />
         ) : (
           <>
-        <div data-part="controls" className="bleed shrink-0 flex items-center gap-2 py-2 border-b border-border">
-          <div className="flex-1 flex items-center gap-1.5 h-8 px-2 bg-warm rounded-md">
-            <Search size={13} className="text-ink-muted shrink-0" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by title"
-              aria-label="Search entities"
-              autoFocus
-              className="flex-1 min-w-0 bg-transparent text-xs text-ink placeholder:text-ink-muted focus:outline-none"
+        <ModalSearchRow
+          value={query}
+          onChange={setQuery}
+          placeholder="Search by title"
+          ariaLabel="Search entities"
+          autoFocus
+          trailing={
+            /* The escape hatch, not the default. */
+            <SegmentedControl
+              size="sm"
+              ariaLabel="Which entities to offer"
+              value={scope}
+              onChange={(v) => setScope(v as "type" | "any")}
+              options={[
+                { id: "type", label: typeName },
+                { id: "any", label: "Any type" },
+              ]}
             />
-          </div>
-          {/* The escape hatch, not the default. */}
-          <SegmentedControl
-            size="sm"
-            ariaLabel="Which entities to offer"
-            value={scope}
-            onChange={(v) => setScope(v as "type" | "any")}
-            options={[
-              { id: "type", label: typeName },
-              { id: "any", label: "Any type" },
-            ]}
-          />
-        </div>
+          }
+        />
 
-        <ul data-part="candidates" className="bleed-flush flex-1 overflow-auto py-1">
+        <ModalList data-part="candidates">
           {candidates.length === 0 && (
-            <li data-part="empty" className="bleed py-6 text-center text-xs text-ink-muted">
+            <ModalStatus as="li">
               {emptyMessage({
                 targetHasNoFields,
                 loading,
@@ -207,43 +204,30 @@ export function CopyFromPicker({
                 scope,
                 typeName,
               })}
-            </li>
+            </ModalStatus>
           )}
           {candidates.map(({ entity, matches }) => (
-            <li key={entity.id} data-part="candidate" className="flex flex-col">
-              <button
-                type="button"
-                onClick={() => choose(entity)}
-                disabled={matches === 0}
-                className={`bleed group flex items-center gap-2 py-2 text-start transition-colors
-                  focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset
-                  focus-visible:ring-carbon/40 ${
-                    matches === 0
-                      ? "opacity-55 cursor-not-allowed"
-                      : "hover:bg-parchment cursor-pointer"
-                  }`}
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-xs font-medium text-ink">{entity.title}</span>
-                  <span className="mt-0.5 block">
-                    <EntityPill typeId={entity.typeId} />
-                  </span>
-                </span>
-                {/* The number Uwazi makes you click to find out. */}
-                <span data-part="match-count" className="shrink-0 flex items-center gap-1.5 text-meta text-ink-tertiary">
-                  {matches === 0 ? (
-                    <span>no shared fields</span>
-                  ) : (
-                    <>
-                      <CountBadge count={matches} />
-                      <span>{matches === 1 ? "field" : "fields"}</span>
-                    </>
-                  )}
-                </span>
-              </button>
-            </li>
+            <ModalListRow
+              key={entity.id}
+              part="candidate"
+              onClick={() => choose(entity)}
+              disabled={matches === 0}
+              title={entity.title}
+              chip={<EntityPill typeId={entity.typeId} />}
+              meta={
+                /* The number Uwazi makes you click to find out. */
+                matches === 0 ? (
+                  <span>no shared fields</span>
+                ) : (
+                  <>
+                    <CountBadge count={matches} />
+                    <span>{matches === 1 ? "field" : "fields"}</span>
+                  </>
+                )
+              }
+            />
           ))}
-        </ul>
+        </ModalList>
 
         {/* Always mounted, contents toggling — the list is capped, and a footer
             that only appears once the cap bites would move the list under the

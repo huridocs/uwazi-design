@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, type KeyboardEvent } from "react";
-import { X, CloudUpload, FileSpreadsheet, ChevronDown, Search } from "lucide-react";
+import { CloudUpload, FileSpreadsheet, ChevronDown } from "lucide-react";
 import { templates } from "../../data/imports";
 import { BAR_GHOST } from "../shared/warmButton";
 import { Modal, MODAL_BUTTON } from "../shared/Modal";
+import { MODAL_LABEL, ModalSearchField } from "../shared/ModalParts";
 
 interface NewImportModalProps {
   open: boolean;
@@ -103,7 +104,7 @@ export function NewImportModal({ open, onClose, onImport }: NewImportModalProps)
       {/* Dropzone */}
       {/* The title names the group, not a control: the picker is a button. */}
       <div data-part="file" role="group" aria-labelledby="import-modal-file-label">
-        <span id="import-modal-file-label" className="text-xs font-medium text-ink-secondary mb-2 block">CSV File</span>
+        <span id="import-modal-file-label" className={`${MODAL_LABEL} mb-1`}>CSV File</span>
         {file ? (
           <div
             data-part="selected-file"
@@ -141,7 +142,7 @@ export function NewImportModal({ open, onClose, onImport }: NewImportModalProps)
 
       {/* Template Select */}
       <div ref={dropdownRef} data-part="template" data-state={dropdownOpen ? "open" : "closed"} onKeyDown={onListKeyDown}>
-        <span id="import-modal-template-label" className="text-xs font-medium text-ink-secondary mb-2 block">Template</span>
+        <span id="import-modal-template-label" className={`${MODAL_LABEL} mb-1`}>Template</span>
         {/* A DISCLOSURE, not a listbox: the popup is a search field and a
             list of pressed buttons, with no `listbox` / `option` roles and no
             arrow-key selection. `aria-haspopup="listbox"` would promise that
@@ -154,10 +155,10 @@ export function NewImportModal({ open, onClose, onImport }: NewImportModalProps)
           aria-expanded={dropdownOpen}
           aria-controls={dropdownOpen ? "import-modal-template-list" : undefined}
           onClick={() => setDropdownOpen((o) => !o)}
-          className={`flex items-center justify-between w-full px-3 py-2.5 rounded-lg text-sm transition-colors ${
-            template ? "text-ink font-medium" : "text-ink-muted"
+          className={`flex items-center justify-between w-full h-8 px-2.5 rounded-md border border-border bg-paper text-xs transition-colors cursor-pointer
+            focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 ${
+            template ? "text-ink" : "text-ink-muted"
           }`}
-          style={{ border: "1px solid var(--border-primary)", backgroundColor: "var(--bg-warm)" }}
         >
           <span id="import-modal-template-value">{template || "Select a template..."}</span>
           <ChevronDown size={14} aria-hidden className={`text-ink-tertiary transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
@@ -169,29 +170,14 @@ export function NewImportModal({ open, onClose, onImport }: NewImportModalProps)
             data-part="template-popover"
             className="mt-1 w-full bg-paper border border-border rounded-lg shadow-lg overflow-hidden z-50"
           >
-            <div data-part="search" className="px-3 py-2" style={{ borderBottom: "1px solid var(--border-primary)" }}>
-              <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-warm" style={{ border: "1px solid var(--border-primary)" }}>
-                <Search size={13} className="text-ink-muted shrink-0" aria-hidden />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search templates..."
-                  aria-label="Search templates"
-                  className="flex-1 text-xs bg-transparent outline-none text-ink placeholder:text-ink-muted"
-                  autoFocus
-                />
-                {search && (
-                  <button
-                    type="button"
-                    onClick={() => setSearch("")}
-                    aria-label="Clear search"
-                    className="p-0.5 rounded-full hover:bg-parchment text-ink-muted hover:text-ink cursor-pointer transition-colors shrink-0"
-                  >
-                    <X size={12} aria-hidden />
-                  </button>
-                )}
-              </div>
+            <div data-part="search" role="search" className="flex px-2 py-2 border-b border-border">
+              <ModalSearchField
+                value={search}
+                onChange={setSearch}
+                placeholder="Search templates..."
+                ariaLabel="Search templates"
+                autoFocus
+              />
             </div>
             <div data-part="options" className="max-h-48 overflow-y-auto py-1">
               {filtered.length > 0 && (
@@ -206,10 +192,9 @@ export function NewImportModal({ open, onClose, onImport }: NewImportModalProps)
                           setDropdownOpen(false);
                           setSearch("");
                         }}
-                        className={`flex items-center w-full px-4 py-2 text-xs font-medium transition-colors ${
-                          template === t.name
-                            ? "text-ink bg-vellum"
-                            : "text-ink-secondary hover:bg-warm"
+                        className={`flex items-center w-full h-9 px-3 text-start text-xs text-ink transition-colors cursor-pointer
+                          focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-carbon/40 ${
+                          template === t.name ? "bg-parchment" : "hover:bg-parchment"
                         }`}
                       >
                         {t.name}
@@ -219,7 +204,7 @@ export function NewImportModal({ open, onClose, onImport }: NewImportModalProps)
                 </ul>
               )}
               {filtered.length === 0 && (
-                <p data-part="empty" className="px-4 py-3 text-xs text-ink-muted">No templates found</p>
+                <p data-part="empty" className="px-3 py-6 text-center text-xs text-ink-muted">No templates found</p>
               )}
             </div>
           </div>

@@ -2,6 +2,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { FacetSection } from "../shared/FacetSection";
 import { BAR_GHOST, WARM_BUTTON } from "../shared/warmButton";
 import { Modal, MODAL_BUTTON } from "../shared/Modal";
+import { MODAL_INPUT, ModalField } from "../shared/ModalParts";
 import { foldLabel, isPseudoKey } from "../../atoms/thesauri";
 import type { ThesaurusValue } from "../../data/settings";
 
@@ -318,29 +319,28 @@ export function AddThesaurusValueModal({
       }
     >
       <form
-        className="space-y-1.5"
         onSubmit={(e) => {
           e.preventDefault();
           save();
         }}
       >
-        <label htmlFor="add-thesaurus-value" className="text-xs font-medium text-ink-secondary">
-          New value in {thesaurusName}
-        </label>
-        <input
-          id="add-thesaurus-value"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          autoFocus
-          aria-describedby="add-thesaurus-value-note"
-          className="w-full px-3 py-2 text-sm text-ink bg-paper rounded-md border border-border
-            focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40"
-        />
-        {/* Always mounted: a note that appears on the first matching keystroke
-            must not push the buttons down. */}
-        <p id="add-thesaurus-value-note" className="min-h-4 text-meta text-ink-tertiary">
-          {match ? `“${match}” already exists. Save selects it.` : "Added at the top level of the thesaurus."}
-        </p>
+        {/* The hint is always mounted (ModalField): a note that appears on the
+            first matching keystroke must not push the buttons down. */}
+        <ModalField
+          label={`New value in ${thesaurusName}`}
+          htmlFor="add-thesaurus-value"
+          hintId="add-thesaurus-value-note"
+          hint={match ? `“${match}” already exists. Save selects it.` : "Added at the top level of the thesaurus."}
+        >
+          <input
+            id="add-thesaurus-value"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            autoFocus
+            aria-describedby="add-thesaurus-value-note"
+            className={MODAL_INPUT}
+          />
+        </ModalField>
       </form>
     </Modal>
   );
