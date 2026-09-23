@@ -410,6 +410,23 @@ export const clearSelectionAtom = atom(null, (get, set) =>
   }),
 );
 
+/** A plain click on an item while 2 or more are selected: the selection
+ *  collapses to that item, as in a file manager — the multi-selection ends
+ *  and `then` previews the item (which, as the anchor, is the one a next
+ *  Cmd/Ctrl click takes along). Through the dirty-form guard like any other
+ *  selection write, so a held Discard holds the preview too. */
+export const collapseSelectionAtom = atom(null, (get, set, then: () => void) => {
+  // Read at click time, so the view that calls this never subscribes to the
+  // selection. Below 2 there is nothing to collapse: the preview alone.
+  if (get(librarySelectionAtom).size < 2) return then();
+  selectionWrite(get, set, () => {
+    set(librarySelectionAtom, new Set<string>());
+    set(lastRangeAtom, []);
+    set(libraryBulkEditOpenAtom, false);
+    then();
+  });
+});
+
 /** Keyword-style Countries facet: selected country names + match mode. */
 export const libraryCountryFiltersAtom = atom<Record<string, boolean>>({});
 export type FacetMode = "AND" | "OR";

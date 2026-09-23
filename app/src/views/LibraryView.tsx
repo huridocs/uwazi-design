@@ -70,6 +70,7 @@ import {
   setSelectionAnchorAtom,
   rangeSelectionAtom,
   clearSelectionAtom,
+  collapseSelectionAtom,
   librarySelectionActiveAtom,
   librarySelectionDrawerOpenAtom,
   libraryDrawnIdsAtom,
@@ -755,6 +756,7 @@ export function LibraryView() {
   const setAnchor = useSetAtom(setSelectionAnchorAtom);
   const rangeSelection = useSetAtom(rangeSelectionAtom);
   const clearSelection = useSetAtom(clearSelectionAtom);
+  const collapseSelection = useSetAtom(collapseSelectionAtom);
   const selectionActive = useAtomValue(librarySelectionActiveAtom);
   /* A plain click on the EMPTY GROUND of the results — the lane, the gap
      between cards, the margin — clears the selection, as Escape does, and
@@ -821,24 +823,51 @@ export function LibraryView() {
     return () => window.removeEventListener("keydown", onKey);
   }, [selectionActive, clearSelection]);
 
-  const handleSelect = useCallback(
-    (id: string, e?: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => {
+  /* `collapse`: a plain click in the VIEW with 2 or more selected ends the
+     multi-selection and makes that item the one previewed, as a file manager
+     does. The selection and cluster drawers pass false — their rows ARE the
+     selection (or a map cluster), and clicking one previews it without
+     dropping the rest. */
+  const selectFrom = useCallback(
+    (collapse: boolean, id: string, e?: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => {
       const intent = e ? selectionIntent(e) : null;
       if (intent === "toggle") return toggleSelection(id);
       // Touch, with a selection going: a tap adds or removes (a long press
       // starts one — see useTouchSelection).
       if (e && selectionActive && lastPointerWasTouch()) return toggleSelection(id);
       if (intent === "range") return rangeSelection({ order: currentSelectionOrder(), id });
-      // A plain click anchors the next Shift range here (see setSelectionAnchorAtom).
-      setAnchor(id);
-      if (isMobile) {
-        openEntity(id);
-      } else {
-        focusForPreview(id);
-        setSelectedId(id);
-      }
+      const preview = () => {
+        // A plain click anchors the next Shift range here (see setSelectionAnchorAtom).
+        setAnchor(id);
+        if (isMobile) {
+          openEntity(id);
+        } else {
+          focusForPreview(id);
+          setSelectedId(id);
+        }
+      };
+      if (collapse) collapseSelection(preview);
+      else preview();
     },
-    [isMobile, openEntity, focusForPreview, setSelectedId, toggleSelection, rangeSelection, selectionActive, setAnchor],
+    [
+      isMobile,
+      openEntity,
+      focusForPreview,
+      setSelectedId,
+      toggleSelection,
+      rangeSelection,
+      selectionActive,
+      collapseSelection,
+      setAnchor,
+    ],
+  );
+  const handleSelect = useCallback(
+    (id: string, e?: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => selectFrom(true, id, e),
+    [selectFrom],
+  );
+  const handleDrawerSelect = useCallback(
+    (id: string, e?: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => selectFrom(false, id, e),
+    [selectFrom],
   );
   useTouchSelection(toggleSelection);
 
@@ -1511,9 +1540,9 @@ export function LibraryView() {
   const drawer = selectedId ? (
     <EntityDrawerPreview entityId={selectedId} />
   ) : selectionActive && selectionDrawerOpen ? (
-    <LibrarySelectionDrawer onSelect={handleSelect} query={query} />
+    <LibrarySelectionDrawer onSelect={handleDrawerSelect} query={query} />
   ) : selectedCluster && viewMode === "map" ? (
-    <LibraryClusterDrawer onSelect={handleSelect} query={query} />
+    <LibraryClusterDrawer onSelect={handleDrawerSelect} query={query} />
   ) : (
     filtersDrawer
   );
