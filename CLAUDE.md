@@ -154,6 +154,13 @@ Keep it in sync when tokens.css or the style rules change.
   covers a pane (Copy From); `portal={false}` when it opens inside a host whose
   outside-click check must see it as inside (drawers, EntityOverlay). Bert's
   AgentModal is the one exception.
+  Bodies are built from `components/shared/ModalParts.tsx`, never hand-rolled:
+  `ModalSearchRow`/`ModalSearchField` (search plus optional scope toggle),
+  `ModalList` + `ModalListRow` (one h-9 row: leading, title, chip, meta),
+  `ModalSectionLabel`, `ModalField`, `ModalStatus`, and the `MODAL_INPUT` /
+  `MODAL_LABEL` / `MODAL_TEXTAREA` classes. A `scope="pane"` modal renders into
+  the pane root through `ModalHostProvider`, so its scrim covers the pane's
+  header, tabs and footer too.
 
 ## CSS tokens — use real names
 
