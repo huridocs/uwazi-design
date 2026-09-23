@@ -26,6 +26,8 @@
   --accent-seal: #E8432A;
   --accent-primary: #1A1A1A;
   --accent-blue-tint: #DDF3FD;
+  /* The Library's selected / keyboard-focus ring: carbon, soft on paper. */
+  --selected-ring: color-mix(in oklab, var(--accent-blue) 30%, transparent);
   --accent-seal-tint: #FEE2E2;
 
   /* How far a saturated accent travels toward the text colour before it is
@@ -87,6 +89,8 @@
 }
 
 :root.dark {
+  /* Stronger in dark: at 30% the ring disappeared on the dark fill. */
+  --selected-ring: color-mix(in oklab, var(--accent-blue) 60%, transparent);
   --bg-primary: #1A1A1A;
   --bg-surface: #242424;
   --bg-warm: #2A2A2A;

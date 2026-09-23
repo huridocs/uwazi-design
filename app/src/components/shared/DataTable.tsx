@@ -32,7 +32,9 @@ interface DataTableProps<T> {
   columns: Column<T>[];
   data: T[];
   getRowId: (row: T) => string;
-  onRowClick?: (row: T) => void;
+  /** The row's click — passed the event so a host can read modifier keys
+   *  (the Library's Cmd/Ctrl and Shift selection gestures). */
+  onRowClick?: (row: T, e?: React.MouseEvent) => void;
   /** Highlight predicate (bg-parchment). Use for focus/selection. */
   isRowSelected?: (row: T) => boolean;
   emptyState?: ReactNode;
@@ -53,6 +55,14 @@ interface DataTableProps<T> {
   rowAriaLabel?: (row: T) => string;
   /** Row height and padding. Defaults to `comfortable` — today's table. */
   density?: TableDensity;
+  /** A control that belongs to the row but to no column — rendered in the
+   *  primary action's cell, so it costs no grid track. The Library puts its
+   *  visually hidden selection checkbox here. Clickable rows only. */
+  rowAccessory?: (row: T) => ReactNode;
+  /** How `isRowSelected` shows: a parchment fill (default), or the fill plus
+   *  the carbon ring — the Library's one look for the previewed and the
+   *  multi-selected item. */
+  selectedStyle?: "fill" | "ring";
 }
 
 const alignClass = {
@@ -82,6 +92,8 @@ export function DataTable<T>({
   onSort,
   rowAriaLabel,
   density = "comfortable",
+  rowAccessory,
+  selectedStyle = "fill",
 }: DataTableProps<T>) {
   const gridTemplateColumns = columns.map((c) => c.width ?? "1fr").join(" ");
   const box = DENSITY[density];
@@ -166,10 +178,27 @@ export function DataTable<T>({
                 key={id}
                 {...extra}
                 role="row"
-                onClick={onRowClick ? () => onRowClick(row) : undefined}
+                onClick={onRowClick ? (e) => onRowClick(row, e) : undefined}
+                // A Shift+click on a clickable row is the host's (a range);
+                // don't also extend the page's text selection to it.
+                onMouseDown={onRowClick ? (e) => e.shiftKey && e.preventDefault() : undefined}
                 className={`group relative grid items-center gap-3 px-4 ${box.row} text-sm transition-colors ${
                   clickable ? "cursor-pointer" : ""
-                } ${selected ? "bg-parchment" : "hover:bg-warm"} ${extraClass ?? ""}`}
+                } ${
+                  selected
+                    ? selectedStyle === "ring"
+                      ? "bg-parchment ring-2 ring-inset ring-[var(--selected-ring)] forced-colors:outline forced-colors:outline-1 forced-colors:-outline-offset-1 forced-colors:outline-[CanvasText]"
+                      : "bg-parchment"
+                    : "hover:bg-warm"
+                }
+                  has-[[data-part=select]_input:checked]:bg-parchment has-[[data-part=select]_input:checked]:ring-2 has-[[data-part=select]_input:checked]:ring-inset
+                  has-[[data-part=select]_input:checked]:ring-[var(--selected-ring)] has-[[data-part=select]_input:checked]:shadow-none
+                  has-[[data-part=select]_input:focus-visible]:ring-2 has-[[data-part=select]_input:focus-visible]:ring-inset
+                  has-[[data-part=select]_input:focus-visible]:ring-[var(--selected-ring)]
+                  forced-colors:has-[[data-part=select]_input:checked]:outline-2 forced-colors:has-[[data-part=select]_input:checked]:-outline-offset-2
+                  forced-colors:has-[[data-part=select]_input:checked]:outline-[SelectedItem]
+                  forced-colors:has-[[data-part=select]_input:focus-visible]:outline-dashed forced-colors:has-[[data-part=select]_input:focus-visible]:outline-2
+                  forced-colors:has-[[data-part=select]_input:focus-visible]:-outline-offset-4 forced-colors:has-[[data-part=select]_input:focus-visible]:outline-[Highlight] ${extraClass ?? ""}`}
                 style={{ gridTemplateColumns, borderBottom: "1px solid var(--border-primary)", ...extraStyle }}
               >
                 {/* The row itself is not focusable (a focusable row wrapping
@@ -188,10 +217,11 @@ export function DataTable<T>({
                       aria-label={rowAriaLabel?.(row) ?? "Open row"}
                       onClick={(e) => {
                         e.stopPropagation();
-                        onRowClick!(row);
+                        onRowClick!(row, e);
                       }}
                       className="absolute inset-0 w-full cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20"
                     />
+                    {rowAccessory?.(row)}
                   </div>
                 )}
                 {columns.map((col) => (

@@ -1,5 +1,5 @@
 import { Fragment, memo } from "react";
-import { Link2 } from "lucide-react";
+import { Link2, X } from "lucide-react";
 import { useAtomValue } from "jotai";
 import { languageAtom } from "../../atoms/language";
 import { EntityTypeTag } from "../shared/EntityTypeTag";
@@ -15,6 +15,13 @@ import {
   type LibraryViewMode,
   type ThumbSize,
 } from "../../atoms/library";
+import {
+  EntitySelectBox,
+  FOCUS_RING_ON_SELECT,
+  PREVIEWED_RING,
+  SELECTED_LOOK,
+  holdTextSelection,
+} from "./EntitySelectBox";
 
 /** The card's ONE preview treatment.
  *
@@ -75,6 +82,10 @@ export const EntityCard = memo(function EntityCard({
   connections = 0,
   onSelect,
   onView,
+  selectable = false,
+  onRemove,
+  className = "",
+  as: Root = "div",
 }: {
   entity: Entity;
   layout: LibraryViewMode;
@@ -87,8 +98,19 @@ export const EntityCard = memo(function EntityCard({
   query: string;
   selected: boolean;
   connections?: number;
-  onSelect: (id: string) => void;
+  /** A plain click previews; a Cmd/Ctrl or Shift click (or a touch tap while
+   *  a selection is going) is a selection gesture: the event is passed up so
+   *  the host can tell. */
+  onSelect: (id: string, e?: React.MouseEvent) => void;
   onView: (id: string) => void;
+  /** Carry the (visually hidden) selection checkbox — `EntitySelectBox`. */
+  selectable?: boolean;
+  /** The selection drawer's "Remove from selection" — a hover / focus X at the
+   *  row's end (list layout). `null` keeps the slot empty. */
+  onRemove?: ((id: string) => void) | null;
+  className?: string;
+  /** The element: `li` when the host is a list. */
+  as?: "div" | "li";
 }) {
   const language = useAtomValue(languageAtom);
   const info = useAtomValue(libraryCardInfoAtom);
@@ -126,9 +148,13 @@ export const EntityCard = memo(function EntityCard({
     </button>
   );
 
-  const base =
-    "group relative text-start rounded-md border transition-colors cursor-pointer";
-  const surface = selected ? "bg-parchment border-border" : "bg-paper border-border/60 hover:bg-parchment";
+  const base = `group relative text-start rounded-md border transition-colors cursor-pointer ${FOCUS_RING_ON_SELECT}`;
+  // Previewed OR selected: the parchment ground and the carbon ring — one
+  // look. The selected case is CSS off the hidden checkbox itself, so a
+  // selection change re-renders nothing but the box.
+  const surface = `${selected ? `bg-parchment border-border ${PREVIEWED_RING}` : "bg-paper border-border/60 hover:bg-parchment"}
+    ${SELECTED_LOOK}`;
+  const selectBox = selectable ? <EntitySelectBox id={entity.id} title={entity.title} /> : null;
 
   // The card container is NOT a button — it hosts nested controls (View,
   // connection badge), so a stretched invisible primary-action button carries
@@ -138,10 +164,10 @@ export const EntityCard = memo(function EntityCard({
     <button
       type="button"
       aria-pressed={selected}
-      aria-label={`Select ${entity.title}`}
+      aria-label={`Preview ${entity.title}`}
       onClick={(e) => {
         e.stopPropagation();
-        onSelect(entity.id);
+        onSelect(entity.id, e);
       }}
       className="absolute inset-0 w-full cursor-pointer rounded-[inherit] focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"
     />
@@ -156,8 +182,14 @@ export const EntityCard = memo(function EntityCard({
     // dot — so rows always align and carry the entity colour without
     // repeating a pill per row.
     return (
-      <div onClick={() => onSelect(entity.id)} className={`${base} ${surface} w-full`}>
+      <Root
+        data-component="EntityCard"
+        onClick={(e) => onSelect(entity.id, e)}
+        onMouseDown={holdTextSelection}
+        className={`${base} ${surface} w-full ${className}`}
+      >
         {primaryAction}
+        {selectBox}
         <div className="relative px-3 py-2 flex items-center gap-3">
           {showPreview &&
             (entity.preview ? (
@@ -203,9 +235,42 @@ export const EntityCard = memo(function EntityCard({
           <div className="flex items-center gap-2 shrink-0">
             {connectionBadge}
             {viewButton}
+            {onRemove !== undefined && (
+              <span className="w-6 h-6 shrink-0 flex">
+                {onRemove && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // The row leaves the list with its X. From the keyboard
+                      // (`detail` 0), hand focus to the neighbour's X so the
+                      // next Enter removes the next row instead of landing on
+                      // the page.
+                      const li = e.currentTarget.closest("li");
+                      const next =
+                        e.detail === 0
+                          ? (li?.nextElementSibling ?? li?.previousElementSibling)?.querySelector<HTMLButtonElement>(
+                              "[data-part=remove]",
+                            )
+                          : null;
+                      onRemove(entity.id);
+                      next?.focus();
+                    }}
+                    data-part="remove"
+                    aria-label={`Remove ${entity.title} from selection`}
+                    title="Remove from selection"
+                    className="w-6 h-6 flex items-center justify-center rounded-md text-ink-muted hover:text-ink hover:bg-warm
+                      opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 transition-opacity cursor-pointer
+                      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"
+                  >
+                    <X size={13} />
+                  </button>
+                )}
+              </span>
+            )}
           </div>
         </div>
-      </div>
+      </Root>
     );
   }
 
@@ -239,11 +304,14 @@ export const EntityCard = memo(function EntityCard({
     // positioned layer, so a STATIC sibling would paint underneath it and the
     // nested View button would stop taking clicks. Positioned siblings at
     // `z-index: auto` paint in DOM order, and the rows come after.
-    <div
-      onClick={() => onSelect(entity.id)}
-      className={`${base} ${surface} ${minHeight} grid grid-rows-subgrid ${ROW_SPAN[rowCount]} gap-y-2.5 p-3`}
+    <Root
+      data-component="EntityCard"
+      onClick={(e) => onSelect(entity.id, e)}
+      onMouseDown={holdTextSelection}
+      className={`${base} ${surface} ${minHeight} grid grid-rows-subgrid ${ROW_SPAN[rowCount]} gap-y-2.5 p-3 ${className}`}
     >
       {primaryAction}
+      {selectBox}
       {/* The preview slot is ALWAYS filled when previews are on: an entity with
           no thumbnail gets a quiet vellum well carrying its type colour (the
           same idiom the list layout uses). Rendering the thumbnail only when one
@@ -331,6 +399,6 @@ export const EntityCard = memo(function EntityCard({
           {viewButton}
         </div>
       </div>
-    </div>
+    </Root>
   );
 });

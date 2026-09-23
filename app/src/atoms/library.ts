@@ -1,6 +1,7 @@
 import { startTransition } from "react";
-import { atom } from "jotai";
-import { atomWithStorage, createJSONStorage } from "jotai/utils";
+import { atom, type Getter, type Setter } from "jotai";
+import { atomFamily, atomWithStorage, createJSONStorage } from "jotai/utils";
+import { editSessionOpenAtom } from "./dirtyGuard";
 import { dataSourceAtom, libraryEntitiesAtom, type DataSource } from "./dataSource";
 import { languageAtom } from "./language";
 import { breakpointAtom } from "./viewport";
@@ -32,7 +33,7 @@ export const libraryQueryAtom = atom("");
 const searchDraftStateAtom = atom("");
 export const librarySearchDraftAtom = atom(
   (get) => get(searchDraftStateAtom),
-  (get, set, next: string) => {
+  (_get, set, next: string) => {
     // The DRAFT is urgent: it is the text in the box, and a character that
     // appears a frame after you typed it is the one thing search must never do.
     set(searchDraftStateAtom, next);
@@ -41,30 +42,21 @@ export const librarySearchDraftAtom = atom(
     // what put 2.6s tasks on the main thread. As a transition React can abandon
     // it when the next keystroke arrives, and keeps showing the previous results
     // until the new ones are ready — see `useDeferredValue` in `LibraryView`.
+    // A search does NOT change the main view: the evidence opens in the
+    // drawer's Results tab (see LibraryView), and the view you were reading
+    // stays under it.
     if (next.trim())
       startTransition(() => {
-        // Becoming active is the moment the FIRST character commits — from here
-        // on the query is only being refined, and a view that jumped on every
-        // keystroke would be a view you can't leave.
-        const becomingActive = !get(libraryQueryAtom).trim();
         set(libraryQueryAtom, next);
-        if (becomingActive) set(enterSearchResultsAtom);
       });
   },
 );
 
-/** Drop the search for real: empties the box AND the committed query, and puts
- *  the library back in the view the search took it out of. The only route back
- *  to "no search" — the box's own X clears just the text. */
-export const clearLibrarySearchAtom = atom(null, (get, set) => {
+/** Drop the search for real: empties the box AND the committed query. The only
+ *  route back to "no search" — the box's own X clears just the text. */
+export const clearLibrarySearchAtom = atom(null, (_get, set) => {
   set(searchDraftStateAtom, "");
   set(libraryQueryAtom, "");
-  const prior = get(preSearchViewModeAtom);
-  // Only if the search is still where it put you: having walked to another view
-  // yourself, you are not returned from it.
-  if (prior && get(viewModeStateAtom) === "results") set(viewModeStateAtom, prior);
-  set(preSearchViewModeAtom, null);
-  set(searchModeOverriddenAtom, false);
 });
 
 /** The running search, or `null` — the search as its OWN state, deliberately not
@@ -194,6 +186,143 @@ export interface LibraryCluster {
 }
 export const librarySelectedClusterAtom = atom<LibraryCluster | null>(null);
 
+/* ── Multi-selection ──────────────────────────────────────────────────────
+   A SET of entity ids the user has picked — apart from
+   `librarySelectedEntityIdAtom`, which stays "the one entity the drawer
+   previews". A plain click previews; Cmd/Ctrl+click toggles, Shift+click
+   ranges, a long press toggles on touch.
+
+   Explicit ids, always: "select all" writes every id, so every rule below is
+   one rule. It survives view-mode switches, sorting, "Show more" and filter
+   or search changes; a collection switch and Clear end it.
+
+   PERFORMANCE. A card never reads the Set. It reads `entitySelectedAtom(id)`,
+   a boolean derived per id, so ticking one of 4,398 re-renders that one card
+   — and the grids paint the selected ground in CSS off the hidden checkbox
+   itself, so nothing above the cards subscribes at all. */
+export const librarySelectionAtom = atom<ReadonlySet<string>>(new Set<string>());
+/** Where the next Shift range starts: the last item clicked on its own —
+ *  a plain click (a preview), a Cmd/Ctrl click, Space, or a long press. */
+export const librarySelectionAnchorAtom = atom<string | null>(null);
+
+/** A plain click on an item: it previews, and it becomes the anchor, so the
+ *  next Shift+click ranges from IT. */
+export const setSelectionAnchorAtom = atom(null, (_get, set, id: string) => {
+  set(librarySelectionAnchorAtom, id);
+  set(lastRangeAtom, []);
+});
+/** The ids the last Shift range added. A second Shift+click RE-SPANS from the
+ *  same anchor: these come out and the new range goes in, while ids picked one
+ *  by one outside the range stay. */
+const lastRangeAtom = atom<readonly string[]>([]);
+export const librarySelectionCountAtom = atom((get) => get(librarySelectionAtom).size);
+/** Anything selected — flips only at 0↔1, so it is cheap to read. */
+export const librarySelectionActiveAtom = atom((get) => get(librarySelectionAtom).size > 0);
+export const entitySelectedAtom = atomFamily((id: string) =>
+  atom((get) => get(librarySelectionAtom).has(id)),
+);
+/** The selection drawer lists the selection; its X closes the list without
+ *  clearing it, and any new tick opens it again. */
+export const librarySelectionDrawerOpenAtom = atom(true);
+
+/** The ids the VISIBLE view actually draws — the grid's loaded page, the
+ *  Results page. "Select all loaded" means these; each view writes its own. */
+export const libraryDrawnIdsAtom = atom<readonly string[]>([]);
+
+/** Show the selection list in the drawer — by dropping the preview, unless
+ *  the preview is holding an open form: ticking a box must not unmount it and
+ *  lose what was typed. The list shows once the form is closed. */
+function showSelectionList(get: Getter, set: Setter) {
+  if (!get(editSessionOpenAtom)) set(librarySelectedEntityIdAtom, null);
+  set(librarySelectionDrawerOpenAtom, true);
+}
+
+/** Toggle one id. Sets the anchor, ends any range, and — like every selection
+ *  gesture — drops the preview so the drawer shows the selection being built. */
+export const toggleSelectionAtom = atom(null, (get, set, id: string) => {
+  const next = new Set(get(librarySelectionAtom));
+  // Finder: the gesture that STARTS a selection takes the card already open
+  // in the preview (the anchor, set by its plain click) along with it — the
+  // first card clicked is part of what the reader is picking.
+  const previewed = get(librarySelectedEntityIdAtom);
+  if (next.size === 0 && previewed && previewed === get(librarySelectionAnchorAtom) && previewed !== id)
+    next.add(previewed);
+  if (next.has(id)) next.delete(id);
+  else next.add(id);
+  set(librarySelectionAtom, next);
+  set(librarySelectionAnchorAtom, id);
+  set(lastRangeAtom, []);
+  showSelectionList(get, set);
+});
+
+/** Shift+click: select from the anchor to `id` over `order` — the order the
+ *  current view draws. The anchor is ONLY the last item clicked on its own;
+ *  with none (or one this view doesn't draw), the click selects just `id`
+ *  and anchors it — never a range from somewhere else. */
+export const rangeSelectionAtom = atom(null, (get, set, { order, id }: { order: readonly string[]; id: string }) => {
+  const anchor = get(librarySelectionAnchorAtom);
+  const a = anchor ? order.indexOf(anchor) : -1;
+  const b = order.indexOf(id);
+  const next = new Set(get(librarySelectionAtom));
+  if (a < 0 || b < 0) {
+    // Select it (not toggle: a Shift+click never deselects) and anchor it.
+    next.add(id);
+    set(librarySelectionAtom, next);
+    set(librarySelectionAnchorAtom, id);
+    set(lastRangeAtom, []);
+    showSelectionList(get, set);
+    return;
+  }
+  const range = order.slice(Math.min(a, b), Math.max(a, b) + 1);
+  for (const x of get(lastRangeAtom)) next.delete(x);
+  // What THIS range adds — not the whole span: an id inside it that was
+  // already selected (ticked on its own) must survive the next re-span.
+  const added = range.filter((x) => !next.has(x));
+  for (const x of added) next.add(x);
+  // The anchor itself was picked on its own; re-spanning must not drop it.
+  if (anchor) next.add(anchor);
+  set(librarySelectionAtom, next);
+  set(lastRangeAtom, added.filter((x) => x !== anchor));
+  showSelectionList(get, set);
+});
+
+/** Add ids (select all loaded, select all results). */
+export const selectIdsAtom = atom(null, (get, set, ids: readonly string[]) => {
+  const next = new Set(get(librarySelectionAtom));
+  for (const id of ids) next.add(id);
+  set(librarySelectionAtom, next);
+  set(lastRangeAtom, []);
+  showSelectionList(get, set);
+});
+
+/** Remove ids (a row removed in the selection drawer, "select none"). */
+export const deselectIdsAtom = atom(null, (get, set, ids: readonly string[]) => {
+  const next = new Set(get(librarySelectionAtom));
+  for (const id of ids) next.delete(id);
+  set(librarySelectionAtom, next);
+  set(lastRangeAtom, (prev) => prev.filter((x) => !ids.includes(x)));
+});
+
+/** Clear — the ONE control that ends a selection (Escape routes here too). */
+export const clearSelectionAtom = atom(null, (_get, set) => {
+  set(librarySelectionAtom, new Set<string>());
+  set(librarySelectionAnchorAtom, null);
+  set(lastRangeAtom, []);
+});
+
+/** A plain click on an item while 2 or more are selected: the selection
+ *  collapses to that item, as in a file manager — the multi-selection ends
+ *  and `then` previews the item (which, as the anchor, is the one a next
+ *  Cmd/Ctrl click takes along). Read at click time, so the view that calls
+ *  this never subscribes to the selection. */
+export const collapseSelectionAtom = atom(null, (get, set, then: () => void) => {
+  if (get(librarySelectionAtom).size >= 2) {
+    set(librarySelectionAtom, new Set<string>());
+    set(lastRangeAtom, []);
+  }
+  then();
+});
+
 /** Keyword-style Countries facet: selected country names + match mode. */
 export const libraryCountryFiltersAtom = atom<Record<string, boolean>>({});
 export type FacetMode = "AND" | "OR";
@@ -236,48 +365,9 @@ export const libraryChainFiltersAtom = atom<
  *  be a mode with no options and no way to notice. */
 export type { LibraryViewMode };
 
-/** Where the library was before a search took it to Results, and whether the
- *  reader has overruled that for the current query. Both are cleared when the
- *  search is dismissed, so the next search starts the behaviour over. */
-const preSearchViewModeAtom = atom<LibraryViewMode | null>(null);
-const searchModeOverriddenAtom = atom(false);
-
-const viewModeStateAtom = atom<LibraryViewMode>("cards");
-
-/** The library's view mode.
- *
- *  Writing it is also how the reader overrules the search's own choice of view:
- *  leaving Results while a query is running says "not for this search", so the
- *  query stops steering AND stops restoring at the end of it — being returned to
- *  a mode you had already walked away from is the same interruption in reverse.
- *  A search that starts again after a dismissal steers again. */
-export const libraryViewModeAtom = atom(
-  (get) => get(viewModeStateAtom),
-  (get, set, next: LibraryViewMode) => {
-    if (next !== "results" && get(libraryQueryAtom).trim()) {
-      set(searchModeOverriddenAtom, true);
-      set(preSearchViewModeAtom, null);
-    }
-    set(viewModeStateAtom, next);
-  },
-);
-
-/** A query has become active: show the evidence.
- *
- *  Results answers "why is this row here?", which is the question a search just
- *  asked — so a search opens it instead of leaving it as a mode you have to know
- *  about. It remembers the mode it displaced, and `clearLibrarySearchAtom` puts
- *  it back; the view keeps its own no-query state, because it stays selectable
- *  with nothing typed. It lives here, in the atom that commits the query, rather
- *  than in an effect watching the query from a component: the switch is part of
- *  the search starting, not a consequence some mounted view happens to notice. */
-const enterSearchResultsAtom = atom(null, (get, set) => {
-  if (get(searchModeOverriddenAtom)) return;
-  const mode = get(viewModeStateAtom);
-  if (mode === "results") return;
-  set(preSearchViewModeAtom, mode);
-  set(viewModeStateAtom, "results");
-});
+/** The library's view mode. A search does not write it (see
+ *  `librarySearchDraftAtom`); Results is a mode you pick. */
+export const libraryViewModeAtom = atom<LibraryViewMode>("cards");
 
 /** Results body flavour — four readings of the same snippets:
  *  - `grouped`   one wide card per entity: its matched properties beside its
@@ -286,6 +376,14 @@ const enterSearchResultsAtom = atom(null, (get, set) => {
  *  - `passages`  every matching passage as one flat ranked list, entity secondary
  *                — the reading view */
 export type ResultsLayout = "grouped" | "tree" | "passages";
+
+/** The drawer's Results tab reads two of those layouts: `grouped` (a card per
+ *  entity, its properties stacked above its passages at drawer width) and
+ *  `passages`. Its own choice, apart from the Results view's: the drawer sits
+ *  beside whatever the main pane shows, and the two are read at different
+ *  widths. */
+export type DrawerResultsLayout = Extract<ResultsLayout, "grouped" | "passages">;
+export const libraryDrawerResultsLayoutAtom = atom<DrawerResultsLayout>("grouped");
 
 /** Thumbnail rendering — how tall the preview slot is drawn and how an image
  *  sits inside it. */
@@ -533,6 +631,7 @@ export const selectDataSourceAtom = atom(null, (_get, set, source: DataSource) =
   set(libraryDateToAtom, "");
   set(librarySelectedEntityIdAtom, null);
   set(librarySelectedClusterAtom, null);
+  set(clearSelectionAtom);
 });
 
 /** Clear every filter. ONE definition: the Filters panel and the view each had

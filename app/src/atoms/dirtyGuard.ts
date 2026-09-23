@@ -34,6 +34,11 @@ export const unregisterDirtyFormAtom = atom(null, (get, set, id: string) => {
   );
 });
 
+/** Whether ANY edit session is mounted, dirty or not. Starting a selection
+ *  drops the preview to show the selection list — unless the preview is
+ *  holding an open form, which must not unmount under what was typed. */
+export const editSessionOpenAtom = atom((get) => get(dirtyFormsAtom).length > 0);
+
 /** The first dirty form, if any — what the guard would be protecting. Also
  *  drives the beforeunload listener in `UnsavedChangesGuard`. */
 export const dirtyFormAtom = atom((get) => get(dirtyFormsAtom).find((f) => f.isDirty) ?? null);
