@@ -23,6 +23,7 @@ import { RelationshipsCollapseControls } from "../relationships/FiltersRow";
 import { DrawerFilesBody } from "../files/DrawerFilesBody";
 import { EntityMetadataSummary } from "../metadata/EntityMetadataSummary";
 import { MetadataEditBody } from "../../views/MetadataView";
+import { EntityBarActions } from "./EntityBarActions";
 import { BAR_GHOST } from "../shared/warmButton";
 import { editSessionOpenAtom } from "../../atoms/dirtyGuard";
 
@@ -328,6 +329,11 @@ export function EntityDetailBody({
               >
                 Edit
               </button>
+            )}
+            {/* Share, Permissions | Delete for this entity — icons here, the
+                footer also carries Close and the open-entity commit. */}
+            {focused && !isDraft && activeTab === "metadata" && (
+              <EntityBarActions entityId={entityId} onDeleted={onClose} compact />
             )}
             <div className="flex-1" />
             {/* Ghost: the ink "Open entity" beside it is this bar's one filled
