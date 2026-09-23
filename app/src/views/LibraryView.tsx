@@ -52,6 +52,8 @@ import {
   clearLibraryFacetsAtom,
   matchTypeFiltersAtom,
   ALL_MATCH_TYPES,
+  libraryDrawerResultsLayoutAtom,
+  type DrawerResultsLayout,
 } from "../atoms/library";
 import { getEntityType, type Entity } from "../data/entities";
 import { libraryInheritedDefs } from "../utils/libraryFacets";
@@ -74,7 +76,7 @@ import { LibraryFilters } from "../components/library/LibraryFilters";
 import { LibraryClusterDrawer } from "../components/library/LibraryClusterDrawer";
 import { EntityDrawerPreview } from "../components/library/EntityDrawerPreview";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
-import { ResultsBody } from "../components/library/ResultsSnippets/ResultsBody";
+import { SegmentedControl } from "../components/shared/SegmentedControl";
 import { ResultsMainView } from "../components/library/ResultsSnippets/ResultsMainView";
 import { SearchTipsPopover } from "../components/library/SearchTipsPopover";
 import { RecentSearches } from "../components/library/RecentSearches";
@@ -287,6 +289,7 @@ export function LibraryView() {
     return () => window.clearTimeout(id);
   }, [committedQuery, recordSearch]);
 
+  const [drawerResultsLayout, setDrawerResultsLayout] = useAtom(libraryDrawerResultsLayoutAtom);
   const showResultsTab = viewMode !== "results";
   useEffect(() => {
     setDrawerTab(hasQuery && showResultsTab ? "results" : "filters");
@@ -944,9 +947,11 @@ export function LibraryView() {
     </div>
   );
 
-  // Results tab body — the per-entity evidence view (where each term hit).
+  // Results tab body — the evidence for the running search, where a search
+  // opens it (the main view stays as it was). The Results view's own body at
+  // drawer width, in the two layouts that read at that width.
   const resultsBody = (
-    <ResultsBody
+    <ResultsMainView
       query={query}
       entities={filtered}
       source={dataSource}
@@ -956,14 +961,27 @@ export function LibraryView() {
       onRetry={handleCejilRetry}
       onFocusProperty={handleFocusProperty}
       onSelectSnippet={handleSnippetSelect}
-      // Stable identities, or the memo on ResultsBody is decorative: a fresh
-      // arrow per render is a changed prop, and this list re-snippets its whole
-      // visible page when it re-renders.
+      onSelect={handleSelect}
+      selectedId={selectedId}
       onClearSearch={handleClearSearch}
       hiddenByFilters={Math.max(0, searchMatchCount - matchTypeBase.length)}
       onClearFilters={handleClearFacets}
       matchTypeCounts={matchTypeCounts}
       totalMatches={matchTypeBase.length}
+      layout={drawerResultsLayout}
+      narrow
+      headerSlot={
+        <SegmentedControl
+          size="sm"
+          ariaLabel="Results layout"
+          value={drawerResultsLayout}
+          onChange={(v) => setDrawerResultsLayout(v as DrawerResultsLayout)}
+          options={[
+            { id: "grouped", label: "Grouped" },
+            { id: "passages", label: "Passages" },
+          ]}
+        />
+      }
     />
   );
 

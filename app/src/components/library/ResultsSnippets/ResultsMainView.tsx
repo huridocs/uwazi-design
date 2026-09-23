@@ -18,6 +18,7 @@ import {
   libraryResultsLayoutAtom,
   resultsActivePageAtom,
   type MatchTypeFilters,
+  type ResultsLayout,
 } from "../../../atoms/library";
 import { RelationshipGroupedCard } from "../../relationships/RelationshipGroupedCard";
 import { SectionLabel } from "../../shared/SectionLabel";
@@ -85,6 +86,12 @@ interface Props {
   onClearFilters: () => void;
   matchTypeCounts: Record<MatchType, number>;
   totalMatches: number;
+  /** A layout chosen by the host instead of the Display menu's (the drawer). */
+  layout?: ResultsLayout;
+  /** Hosted at drawer width: grouped cards stack properties above passages. */
+  narrow?: boolean;
+  /** A control at the end of the header row (the drawer's layout switch). */
+  headerSlot?: ReactNode;
 }
 
 interface Result {
@@ -118,8 +125,12 @@ export function ResultsMainView({
   onClearFilters,
   matchTypeCounts,
   totalMatches,
+  layout: layoutProp,
+  narrow = false,
+  headerSlot,
 }: Props) {
-  const layout = useAtomValue(libraryResultsLayoutAtom);
+  const menuLayout = useAtomValue(libraryResultsLayoutAtom);
+  const layout = layoutProp ?? menuLayout;
   const [activeTypes, setActiveTypes] = useAtom(matchTypeFiltersAtom);
   const [visible, setVisible] = useState(STEP);
   // Per-entity "show every page-snippet", owned here so the capped `results`
@@ -222,6 +233,7 @@ export function ResultsMainView({
           count={null}
           activeFilterCount={0}
           showFilterChips={false}
+          rightSlot={headerSlot}
           // The chips' widths never change (`matchTypeCounts` comes from
           // `matchTypeBase`, which the toggles don't narrow), so this row keeps
           // a fixed height with fixed contents — toggling a chip rewrites the
@@ -273,6 +285,7 @@ export function ResultsMainView({
         ) : layout === "grouped" ? (
           <GroupedBody
             results={results}
+            narrow={narrow}
             query={trimmed}
             selectedId={selectedId}
             onSelect={onSelect}
@@ -325,6 +338,7 @@ export function ResultsMainView({
 
 function GroupedBody({
   results,
+  narrow,
   query,
   selectedId,
   onSelect,
@@ -334,6 +348,7 @@ function GroupedBody({
   onToggleShowAll,
 }: {
   results: Result[];
+  narrow: boolean;
   query: string;
   selectedId: string | null;
   onSelect: (id: string) => void;
@@ -360,7 +375,7 @@ function GroupedBody({
             }`}
           >
             <header
-              className={`flex items-center gap-2 px-4 py-2.5 ${
+              className={`flex items-center gap-2 px-4 py-2.5 ${narrow ? "flex-wrap gap-y-0.5" : ""} ${
                 hasMeta || hasText ? "border-b border-border/40" : ""
               }`}
             >
@@ -369,14 +384,20 @@ function GroupedBody({
                 type="button"
                 onClick={() => onSelect(entity.id)}
                 aria-pressed={selected}
-                className="min-w-0 text-start text-sm font-semibold text-ink truncate hover:underline
+                className={`min-w-0 ${narrow ? "flex-1 basis-0" : ""} text-start text-sm font-semibold text-ink truncate hover:underline
                   cursor-pointer focus-visible:outline-none focus-visible:ring-1
-                  focus-visible:ring-carbon/40 rounded-sm"
+                  focus-visible:ring-carbon/40 rounded-sm`}
               >
                 <HighlightedText text={entity.title} query={query} />
               </button>
               <CountBadge count={snippets.count} />
-              <span className="ms-auto shrink-0 flex items-center gap-2 text-meta text-ink-tertiary">
+              {/* At drawer width the meta takes its own line, or it leaves the
+                  title a few letters. */}
+              <span
+                className={`shrink-0 flex items-center gap-2 text-meta text-ink-tertiary ${
+                  narrow ? "basis-full" : "ms-auto"
+                }`}
+              >
                 {type && <span>{type.name}</span>}
                 {entity.country && (
                   <>
@@ -403,7 +424,7 @@ function GroupedBody({
             {(hasMeta || hasText) && (
               <div
                 className={`grid gap-x-6 gap-y-3 px-4 py-3 ${
-                  hasMeta && hasText ? "lg:grid-cols-[minmax(14rem,1fr)_2fr]" : ""
+                  hasMeta && hasText && !narrow ? "lg:grid-cols-[minmax(14rem,1fr)_2fr]" : ""
                 }`}
               >
                 {hasMeta && (
