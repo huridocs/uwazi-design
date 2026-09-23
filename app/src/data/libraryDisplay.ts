@@ -137,9 +137,9 @@ const CARD_INFO: DisplaySection = {
   ],
 };
 
-/** How big the preview band is. Dead while the Thumbnail toggle is off, and it
- *  says so by dimming rather than by leaving. (Frame and fit are
- *  `playground`'s; the card here is landscape / auto.) */
+/** Size, then frame: how big, what shape. Both are dead while the Thumbnail
+ *  toggle is off, and they say so by dimming rather than by leaving. (Fit is
+ *  `playground`'s; the card here is `auto`, the match-the-frame rule.) */
 const previewOn = (v: DisplayValues) => v.preview !== false;
 const CARD_PREVIEW: DisplaySection[] = [
   {
@@ -155,6 +155,20 @@ const CARD_PREVIEW: DisplaySection[] = [
         { id: "s", label: "Small" },
         { id: "m", label: "Medium" },
         { id: "l", label: "Large" },
+      ],
+    },
+  },
+  {
+    id: "thumbFrame",
+    label: "Thumbnail frame",
+    kind: "choice",
+    enabled: previewOn,
+    option: {
+      id: "thumbFrame",
+      default: "landscape",
+      choices: [
+        { id: "landscape", label: "Landscape", detail: "A wide band across the card" },
+        { id: "portrait", label: "Portrait", detail: "3:4 cards in narrower columns" },
       ],
     },
   },
