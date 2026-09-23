@@ -44,6 +44,7 @@ import { groupConnections, resolveRelationshipField } from "../../utils/inherita
 import { relationshipFieldsByLanguage } from "../../data/metadata";
 import { ViewSwitcher } from "../../components/library/ViewSwitcher";
 import { CopyFromPicker } from "../../components/metadata/CopyFromPicker";
+import { copyUnitsOneToOne } from "../../utils/copyFrom";
 import { entities } from "../../data/entities";
 
 // Re-export so the catalog can use it directly without re-importing.
@@ -887,12 +888,15 @@ export function IsolatedViewSwitcher() {
 /** The Copy From source picker, in a bounded box (it fills its positioned
  *  parent — in the app, the metadata pane). Live: the type/any toggle and the
  *  match-count badges are computed from real entities. */
-export function IsolatedCopyFromPicker() {
+export function IsolatedCopyFromPicker({ step = "source" }: { step?: "source" | "properties" }) {
+  const countries = entities.filter((e) => e.typeId === "country");
   return (
-    <div className="relative h-[24rem] w-full overflow-hidden rounded-lg bg-vellum">
+    <div className="relative h-[34rem] w-full overflow-hidden rounded-lg bg-vellum">
       <CopyFromPicker
-        target={entities.find((e) => e.typeId === "country") ?? entities[0]}
-        onPreview={() => {}}
+        target={countries[0] ?? entities[0]}
+        initialSource={step === "properties" ? (countries[1] ?? entities[1]) : undefined}
+        resolveUnits={copyUnitsOneToOne}
+        onCopy={() => {}}
         onClose={() => {}}
       />
     </div>

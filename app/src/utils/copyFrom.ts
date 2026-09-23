@@ -114,6 +114,10 @@ export interface CopyMatch {
    *  their value from it (see header). A commit layer switches on this. */
   copies: "value" | "connection";
   sourceValue?: string;
+  /** A multiselect's labels and value ids, as the SET — its display string
+   *  joins them with ", ", which a label can itself contain. */
+  sourceValues?: string[];
+  sourceValueIds?: string[];
   sourceConnectedEntityIds?: string[];
   /** What the target holds right now, so a caller can show incoming-vs-current
    *  per row instead of overwriting silently (weakness #3). */
@@ -146,9 +150,39 @@ export interface CopyPlan {
   matchCount: number;
 }
 
-/** Our `media`/`image` equivalent — see the header. Exported so a UI can explain
- *  the exclusion without hardcoding the same list a second time. */
-export const COPY_EXCLUDED_TYPES: ReadonlySet<AnyMetadataField["type"]> = new Set(["file-list"]);
+/** One thing a copy can actually do to a FORM: a scalar the form has a
+ *  controlled editor for, or a whole connection. What a form can apply is the
+ *  form's rule (see `MetadataEditBody`'s `copyUnitsFor`); this is the shape it
+ *  hands the picker, so the list the user ticks is exactly what will be written. */
+export interface CopyUnit {
+  /** The field id for a value; the connection def key for a connection — so
+   *  multi-inheritance siblings collapse into a single decision. */
+  key: string;
+  kind: "value" | "connection";
+  /** The form's label for the thing being overwritten (a connection's title,
+   *  not one of its inherited columns). */
+  label: string;
+  /** The match the row compares — for a grouped connection, the first sibling;
+   *  they all carry the same `connectedEntityIds`, which is what copies. */
+  row: CopyMatch;
+  /** Every match folded into this unit. */
+  matches: CopyMatch[];
+}
+
+/** A plan's matches as units one-to-one — for a host with no form rules of its
+ *  own (the catalog demo, stories). */
+export function copyUnitsOneToOne(plan: CopyPlan): { units: CopyUnit[]; unstageable: CopyMatch[] } {
+  return {
+    units: plan.matches.map((m) => ({ key: m.id, kind: m.copies, label: m.label, row: m, matches: [m] })),
+    unstageable: [],
+  };
+}
+
+/** Our `media`/`image` equivalent — see the header — and, now that the record
+ *  carries one, `media` itself: another entity's recording is never this
+ *  entity's. Exported so a UI can explain the exclusion without hardcoding the
+ *  same list a second time. */
+export const COPY_EXCLUDED_TYPES: ReadonlySet<AnyMetadataField["type"]> = new Set(["file-list", "media"]);
 
 const isRelationship = (f: AnyMetadataField): f is RelationshipMetadataField =>
   f.type === "relationship";
@@ -336,6 +370,9 @@ export function planCopy(
       type: t.type,
       copies: relationship ? "connection" : "value",
       sourceValue,
+      ...(s.type === "multiselect"
+        ? { sourceValues: s.values ?? (s.value ? [s.value] : []), sourceValueIds: s.valueIds }
+        : {}),
       sourceConnectedEntityIds: sourceIds,
       targetValue,
       targetConnectedEntityIds: targetIds,

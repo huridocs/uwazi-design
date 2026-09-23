@@ -10,7 +10,6 @@ import { ConnectionGroupCard } from "../components/metadata/ConnectionGroupCard"
 import { RelationshipFieldCard } from "../components/metadata/RelationshipFieldCard";
 import { RelationshipFieldEditor } from "../components/metadata/RelationshipFieldEditor";
 import { CopyFromPicker } from "../components/metadata/CopyFromPicker";
-import { CopyFieldRow, COPY_ROW_SLOT } from "../components/metadata/CopyFieldRow";
 import { ProvenanceLine } from "../components/shared/ProvenanceLine";
 import { EntityPill } from "../components/shared/EntityPill";
 import { FieldMessage, issueBorderClass } from "../components/shared/FieldMessage";
@@ -22,12 +21,11 @@ import {
   type ValidationIssue,
   type ValueKind,
 } from "../utils/validation";
-import { copyPreviewAtom } from "../atoms/copyFrom";
 import { fillTargetAtom, fillRequestAtom } from "../atoms/fillTarget";
 import { ListeningChip } from "../components/metadata/ListeningChip";
 import { MultiLanguageField } from "../components/metadata/MultiLanguageField";
 import { overlayEntityIdAtom } from "../atoms/references";
-import { planCopyFrom, type CopyMatch } from "../utils/copyFrom";
+import { planCopyFrom, type CopyMatch, type CopyPlan, type CopyUnit } from "../utils/copyFrom";
 import { EntityOverlay } from "../components/relationships/EntityOverlay";
 import { groupConnections, relationLabel, specInherits } from "../utils/inheritance";
 import {
@@ -72,6 +70,7 @@ import { RelationshipsDrawerSection } from "../components/relationships/Relation
 import { useNotify } from "../hooks/useNotify";
 import { useRegisterDirtyForm } from "../hooks/useDirtyGuard";
 import { EntityBarActions } from "../components/entity/EntityBarActions";
+import { ModalHostProvider } from "../components/shared/Modal";
 import { fromDateInputValue, toDateInputValue } from "../utils/dateValue";
 import { DRAWER_MIN_WIDTH } from "../components/layout/SplitView";
 import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
@@ -90,12 +89,16 @@ export function MetadataView({ tabs, activeTab, onTabChange, onBack }: MetadataV
   const focusedId = useAtomValue(focusedEntityIdAtom);
   const saveEdit = useSetAtom(saveEntityEditAtom);
 
+  // The pane Copy From covers, tab strip included (see ModalHostProvider).
+  const [paneEl, setPaneEl] = useState<HTMLDivElement | null>(null);
+
   const renderLeft = (menuTrigger?: ReactNode) => (
     // The narrow-tier gutter host: tabs, DocMeta, the card lane and the action bar
     // all take their side inset from this padding (see `gutter-host`). Narrow,
     // like the Document and Relationships tabs: all four tabs share the tab
     // strip, so a different gutter here moved the strip 4px when switching.
-    <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0 bg-paper">
+    <ModalHostProvider host={paneEl}>
+    <div ref={setPaneEl} data-gutter-host className="gutter-host relative flex flex-col h-full min-h-0 bg-paper">
       <MainTabs
         tabs={tabs}
         activeId={activeTab}
@@ -127,6 +130,7 @@ export function MetadataView({ tabs, activeTab, onTabChange, onBack }: MetadataV
         <MetadataReadBody onEdit={() => setEditing(true)} onDeleted={onBack} menuSlot={menuTrigger} />
       )}
     </div>
+    </ModalHostProvider>
   );
 
   return (
@@ -199,24 +203,6 @@ function MetadataReadBody({
 }
 
 /* ── Edit Mode ── */
-
-/** One thing a staged copy can actually do to THIS form: a scalar the form has a
- *  controlled editor for, or a whole connection. Built by `stagedUnits`, which
- *  is where the rule lives. */
-interface StagedUnit {
-  /** The field id for a value; the connection def key for a connection — so
-   *  multi-inheritance siblings collapse into a single decision. */
-  key: string;
-  kind: "value" | "connection";
-  /** The form's label for the thing being overwritten (a connection's title,
-   *  not one of its inherited columns). */
-  label: string;
-  /** The match the row compares — for a grouped connection, the first sibling;
-   *  they all carry the same `connectedEntityIds`, which is what copies. */
-  row: CopyMatch;
-  /** Every match folded into this unit. */
-  matches: CopyMatch[];
-}
 
 export interface MetadataEditBodyProps {
   onCancel: () => void;
@@ -677,29 +663,14 @@ function EntityEditBody({
   editUnits.push({ kind: "geolocation" });
 
   /* ── Copy From ────────────────────────────────────────────────────────────
-     Staged in two steps, and NEITHER writes the entity: picking a source opens
-     a preview, staging fills this form's local state, and the user still presses
-     Save. Cancelling the edit throws all of it away with everything else, which
-     is why none of it lives in an atom except the preview the overlay reads. */
+     The picker modal does the choosing — source, then which properties — and
+     hands back the ticked set, which lands in THIS form's state. Nothing is
+     saved; the user still presses Save, and Cancel throws the copy away with
+     everything else. None of it lives in an atom: the preview atom that used
+     to carry this form's closures to the entity overlay is gone. */
   const [pickerOpen, setPickerOpen] = useState(false);
-  const setPreview = useSetAtom(copyPreviewAtom);
-  const setOverlayEntity = useSetAtom(overlayEntityIdAtom);
-  /** The staged set: what would copy, and which of it the user still wants. */
-  const [stage, setStage] = useState<{
-    source: Entity;
-    units: StagedUnit[];
-    /** Matches this FORM can't apply — see `stagedUnits`. Carried so the footer
-     *  can say they exist rather than the count quietly disagreeing with the
-     *  preview the user just read. */
-    unstageable: CopyMatch[];
-    checked: Record<string, boolean>;
-  } | null>(null);
   /** unit key → the entity it was copied from. Survives until the edit ends. */
   const [copiedFrom, setCopiedFrom] = useState<Record<string, string>>({});
-  /** Every unit key that has had a row during this edit. Only grows: the slot a
-   *  row occupied stays reserved after commit, so swapping the row for its
-   *  provenance line doesn't shorten the form (PATTERNS §3). */
-  const [rowReserved, setRowReserved] = useState<ReadonlySet<string>>(new Set());
   const target = getEntity(focusedId);
 
   /** The plan's matches, resolved into what THIS FORM can stage and show.
@@ -721,9 +692,10 @@ function EntityEditBody({
    *     fix: sibling columns over one `connectionKey` are ONE connection, and
    *     counting them separately made "1 of 3" out of a single copy.
    *  Anything left over is `unstageable` and says so. */
-  const stagedUnits = (matches: CopyMatch[]) => {
-    const units: StagedUnit[] = [];
-    const byKey = new Map<string, StagedUnit>();
+  const copyUnitsFor = (plan: CopyPlan) => {
+    const matches = plan.matches;
+    const units: CopyUnit[] = [];
+    const byKey = new Map<string, CopyUnit>();
     const unstageable: CopyMatch[] = [];
     for (const m of matches) {
       if (m.copies === "connection") {
@@ -741,7 +713,7 @@ function EntityEditBody({
           open.matches.push(m);
           continue;
         }
-        const unit: StagedUnit = {
+        const unit: CopyUnit = {
           key: def.key,
           kind: "connection",
           label: def.title,
@@ -757,49 +729,16 @@ function EntityEditBody({
         unstageable.push(m);
         continue;
       }
-      const unit: StagedUnit = { key: m.id, kind: "value", label: m.label, row: m, matches: [m] };
+      const unit: CopyUnit = { key: m.id, kind: "value", label: m.label, row: m, matches: [m] };
       byKey.set(m.id, unit);
       units.push(unit);
     }
     return { units, unstageable };
   };
 
-  const preview = (source: Entity) => {
-    if (!target) return;
-    const plan = planCopyFrom(target, source, language);
-    setPickerOpen(false);
-    setPreview({
-      sourceId: source.id,
-      plan,
-      onUse: () => {
-        const { units, unstageable } = stagedUnits(plan.matches);
-        setStage({
-          source,
-          units,
-          unstageable,
-          // Defaulted to the matched set, as asked — except the ones that would
-          // CLEAR a value, which is a destructive default nobody expects from a
-          // button labelled "copy".
-          checked: Object.fromEntries(units.map((u) => [u.key, !u.row.emptyOnSource])),
-        });
-        setRowReserved((prev) => new Set([...prev, ...units.map((u) => u.key)]));
-        setPreview(null);
-        setOverlayEntity(null);
-      },
-      onBack: () => {
-        setPreview(null);
-        setOverlayEntity(null);
-        setPickerOpen(true);
-      },
-    });
-    setOverlayEntity(source.id);
-  };
-
-  /** Commit: write ONLY the checked units into this form's state, and remember
-   *  where each came from. Still nothing saved. */
-  const commitCopy = () => {
-    if (!stage) return;
-    const taking = stage.units.filter((u) => stage.checked[u.key]);
+  /** Write the ticked units into this form's state and remember where each
+   *  came from. Still nothing saved. */
+  const applyCopy = (source: Entity, taking: CopyUnit[]) => {
     setFields((prev) =>
       prev.map((f) => {
         const u = taking.find((x) => x.kind === "value" && x.key === f.id);
@@ -820,38 +759,16 @@ function EntityEditBody({
     });
     setCopiedFrom((prev) => ({
       ...prev,
-      ...Object.fromEntries(taking.map((u) => [u.key, stage.source.id])),
+      ...Object.fromEntries(taking.map((u) => [u.key, source.id])),
     }));
-    setStage(null);
-  };
-
-  const cancelCopy = () => {
-    setStage(null);
-    setPreview(null);
-    setOverlayEntity(null);
     setPickerOpen(false);
   };
 
-  /* The preview atom outlives this form — Cancel and Save both unmount it — and
-     what it holds are THIS form's closures. Clearing it here is the other half
-     of the rule `copyPreviewAtom` documents; without it the overlay went on
-     offering "Stage N fields" against a form that no longer existed. */
-  useEffect(() => () => setPreview(null), [setPreview]);
-
-  const stagedByKey = useMemo(
-    () => new Map((stage?.units ?? []).map((u) => [u.key, u])),
-    [stage],
-  );
-  const checkedCount = stage
-    ? stage.units.filter((u) => stage.checked[u.key]).length
-    : 0;
-  /** Tick one unit. Grouped connection siblings share a key, so this is one
-   *  decision per connection, not per inherited column. */
-  const setChecked = (key: string, v: boolean) =>
-    setStage((prev) => (prev ? { ...prev, checked: { ...prev.checked, [key]: v } } : prev));
-  /* Once a copy is in play, EVERY field reserves its provenance slot, so the
-     line landing on commit cannot shove the fields below it (PATTERNS §3). */
-  const copyActive = stage !== null || Object.keys(copiedFrom).length > 0;
+  /* Once a copy has landed, EVERY field carries its provenance slot, so a
+     later copy's lines cannot shove the fields below them (PATTERNS §3). The
+     first copy mounts them all at once, in the same commit that rewrites the
+     values — the one moment the form is expected to change. */
+  const copyActive = Object.keys(copiedFrom).length > 0;
 
   /* ── Dirty guard ── the edit session registers itself while mounted, so the
      navigation choke points (view switch, tab strip, focal hops, settings)
@@ -875,7 +792,12 @@ function EntityEditBody({
   return (
     <>
       {pickerOpen && target && (
-        <CopyFromPicker target={target} onPreview={preview} onClose={() => setPickerOpen(false)} />
+        <CopyFromPicker
+          target={target}
+          resolveUnits={copyUnitsFor}
+          onCopy={applyCopy}
+          onClose={() => setPickerOpen(false)}
+        />
       )}
       <div
         ref={bodyRef}
@@ -1004,10 +926,6 @@ function EntityEditBody({
               one field the staged-row loop below never reached. */}
           <CopyFieldSlot
             active={copyActive}
-            reserved={rowReserved.has("description")}
-            unit={stagedByKey.get("description")}
-            checked={!!stage?.checked["description"]}
-            onChange={(v) => setChecked("description", v)}
             sourceId={copiedFrom["description"]}
           />
         </EditSection>
@@ -1056,10 +974,6 @@ function EntityEditBody({
                     happens. One row per connection, not per inherited column. */}
                 <CopyFieldSlot
                   active={copyActive}
-                  reserved={rowReserved.has(d.key)}
-                  unit={stagedByKey.get(d.key)}
-                  checked={!!stage?.checked[d.key]}
-                  onChange={(v) => setChecked(d.key, v)}
                   sourceId={copiedFrom[d.key]}
                 />
               </div>
@@ -1105,16 +1019,7 @@ function EntityEditBody({
                 fresh={freshLabels}
                 onChange={(byLang, ids) => setLabels(field.id, byLang, ids)}
                 onFresh={(labels) => setFreshLabels((prev) => new Set([...prev, ...labels]))}
-                copySlot={
-                  <CopyFieldSlot
-                    active={copyActive}
-                    reserved={rowReserved.has(field.id)}
-                    unit={stagedByKey.get(field.id)}
-                    checked={!!stage?.checked[field.id]}
-                    onChange={(v) => setChecked(field.id, v)}
-                    sourceId={copiedFrom[field.id]}
-                  />
-                }
+                copySlot={<CopyFieldSlot active={copyActive} sourceId={copiedFrom[field.id]} />}
               />
             );
           }
@@ -1195,10 +1100,6 @@ function EntityEditBody({
               )}
               <CopyFieldSlot
                 active={copyActive}
-                reserved={rowReserved.has(field.id)}
-                unit={stagedByKey.get(field.id)}
-                checked={!!stage?.checked[field.id]}
-                onChange={(v) => setChecked(field.id, v)}
                 sourceId={copiedFrom[field.id]}
               />
             </EditSection>
@@ -1235,44 +1136,6 @@ function EntityEditBody({
       >
         {/* EDIT MODE ONLY — this whole bar exists only while editing, which is
             the same rule Uwazi's `.copy-from-btn` follows. */}
-        {stage ? (
-          <>
-            <span className="me-auto text-meta text-ink-tertiary">
-              {checkedCount} of {stage.units.length} staged from
-              <span className="ms-1 align-middle">
-                <EntityPill typeId={stage.source.typeId} label={stage.source.title} />
-              </span>
-              {/* The plan can match a property this form has no editor for
-                  (`country`'s picker isn't bound to the field state). Those used
-                  to be counted here and applied invisibly; now they're named
-                  here and applied nowhere. */}
-              {stage.unstageable.length > 0 && (
-                <span
-                  className="ms-1"
-                  title={stage.unstageable.map((m) => m.label).join(", ")}
-                >
-                  · {stage.unstageable.length} not editable here
-                </span>
-              )}
-            </span>
-            <button
-              onClick={cancelCopy}
-              className={`px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
-            >
-              Discard copy
-            </button>
-            <button
-              onClick={commitCopy}
-              disabled={checkedCount === 0}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                // Lead, not filled: Save is this bar's one commit.
-                checkedCount === 0 ? "text-ink-muted cursor-not-allowed" : `${BAR_LEAD} cursor-pointer`
-              }`}
-            >
-              Copy {checkedCount} {checkedCount === 1 ? "field" : "fields"}
-            </button>
-          </>
-        ) : (
           <button
             onClick={() => setPickerOpen(true)}
             className={`me-auto inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium
@@ -1282,7 +1145,7 @@ function EntityEditBody({
             <ClipboardCopy size={13} className="text-ink-tertiary" />
             Copy from…
           </button>
-        )}
+
         <button
           onClick={() => {
             if (!saving) onCancel();
@@ -1708,59 +1571,25 @@ function MetadataDrawer() {
   );
 }
 
-/** The "↳ copied from …" stamp, in a slot that is reserved the moment a copy is
- *  in play rather than created when the line lands — otherwise committing a copy
- *  would push every field below it down (PATTERNS §3).
+/** The "↳ copied from …" stamp under a field, in a slot mounted for EVERY
+ *  field once any copy has landed (`active`), so a later copy's line can't push
+ *  the fields below it down (PATTERNS §3).
  *
  *  This is the undo-adjacent affordance Uwazi has no answer for (research
  *  weakness #4): their copy is irreversible except by discarding the entire edit
  *  session, because after the values land nothing records which fields moved or
  *  where they came from. Naming the source per field means a user can put one
- *  back by hand, and knows what to put back. */
-/** The one slot under a field that a copy ever writes into: the staged
- *  comparison row while a copy is in play, its "copied from" line afterwards.
- *
- *  ONE box, because they are the same space. Mounted for every field the moment
- *  any copy starts (`active`), so the provenance line can't shove the fields
- *  below it when it lands; and once a field has carried a row, the box keeps the
- *  row's full height for the rest of the edit (`reserved`) — otherwise
- *  committing unmounted every row at once and the form jumped upward by a row
- *  per copied field, which is the same rule read the other way round. */
-function CopyFieldSlot({
-  active,
-  reserved,
-  unit,
-  checked,
-  onChange,
-  sourceId,
-}: {
-  active: boolean;
-  reserved: boolean;
-  unit?: StagedUnit;
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-  sourceId?: string;
-}) {
+ *  back by hand, and knows what to put back. The choosing happens in the picker
+ *  modal (`CopyFromPicker`); this slot only records the result. */
+function CopyFieldSlot({ active, sourceId }: { active: boolean; sourceId?: string }) {
   if (!active) return null;
   const source = sourceId ? getEntity(sourceId) : undefined;
   return (
-    <div
-      className={reserved ? "flex flex-col justify-center" : "h-5 flex items-center"}
-      style={reserved ? { minHeight: COPY_ROW_SLOT } : undefined}
-    >
-      {unit ? (
-        <CopyFieldRow
-          match={unit.row}
-          label={unit.label}
-          checked={checked}
-          onChange={onChange}
-        />
-      ) : (
-        source && (
-          <ProvenanceLine label="copied from">
-            <EntityPill typeId={source.typeId} label={source.title} />
-          </ProvenanceLine>
-        )
+    <div className="h-5 flex items-center">
+      {source && (
+        <ProvenanceLine label="copied from">
+          <EntityPill typeId={source.typeId} label={source.title} />
+        </ProvenanceLine>
       )}
     </div>
   );
