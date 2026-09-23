@@ -35,6 +35,7 @@ import type { CardMark, MediaMark } from "../../data/entities";
 import type { Entity } from "../../data/entities";
 import {
   libraryCardInfoAtom,
+  libraryCardSideAtom,
   cardFieldLimit,
   librarySortAtom,
   libraryThumbSizeAtom,
@@ -76,6 +77,15 @@ const CARD_FLOOR: Record<ThumbSize, string> = {
  *  NOT follow the band: a row is two lines of text tall, so the chip is sized
  *  against the row and the old m/l pair is the whole useful range there. */
 const CHIP_BOX: Record<ThumbSize, string> = { m: "w-9 h-9", l: "w-12 h-12" };
+
+/** The SIDE layout's slot: a fixed WIDTH per size, and the frame's ratio
+ *  against it — 4:3 for landscape, 3:4 for portrait. Width plus aspect is a
+ *  definite box before any image loads, the same no-shift contract as the
+ *  stacked slot. The slot spans the card's rows at the logical start, so its
+ *  height is also the card's floor: no `CARD_FLOOR` here, and a one-field card
+ *  is as tall as its neighbours because the subgrid shares the rows. */
+const SIDE_W: Record<ThumbSize, string> = { m: "w-32", l: "w-44" };
+const SIDE_SHAPE: Record<ThumbFrame, string> = { landscape: "aspect-[4/3]", portrait: "aspect-[3/4]" };
 
 /** What the sort key is READING on this card, so the card can mark it.
  *
@@ -221,6 +231,9 @@ export const EntityCard = memo(function EntityCard({
   const thumbSize = useAtomValue(libraryThumbSizeAtom);
   const thumbFit = useAtomValue(libraryThumbFitAtom);
   const thumbFrame = useAtomValue(libraryThumbFrameAtom);
+  // Side only in the grid; the atom already falls back on phones and with
+  // previews off.
+  const side = useAtomValue(libraryCardSideAtom) && layout === "cards";
   const showPreview = info.preview;
   const showMetadata = info.metadata;
   const showConnections = info.connections;
@@ -420,18 +433,24 @@ export const EntityCard = memo(function EntityCard({
   // slot plus the grid row's own stretch keeps neighbours level — a rem floor
   // sized for one column width is wrong at every other.
   const minHeight =
-    showPreview && showMetadata && metadataTrack && thumbFrame === "landscape"
+    showPreview && showMetadata && metadataTrack && thumbFrame === "landscape" && !side
       ? CARD_FLOOR[thumbSize]
       : "";
 
   /** One track per row this card draws. Both toggles are global, so every card
    *  on screen agrees — see ROW_SPAN. */
-  const rowCount = 2 + (showPreview ? 1 : 0) + (showMetadata && metadataTrack ? 1 : 0);
+  const rowCount = 2 + (showPreview && !side ? 1 : 0) + (showMetadata && metadataTrack ? 1 : 0);
 
   /** Slot class: landscape = the fixed band; portrait = the card's width at
    *  3:4. The picture fills the slot either way — Cover crops to fill it,
    *  auto/contain mat within it (ImageThumb's object-fit owns that call). */
-  const slotShape = thumbFrame === "portrait" ? "aspect-[3/4]" : COVER_H[thumbSize];
+  const slotShape = side
+    ? `${SIDE_W[thumbSize]} ${SIDE_SHAPE[thumbFrame]} row-span-full col-start-1 self-start`
+    : `w-full ${thumbFrame === "portrait" ? "aspect-[3/4]" : COVER_H[thumbSize]}`;
+  /** In the side layout every text row sits in the second column, beside the
+   *  slot. Explicit rather than left to auto-placement, so the order of the
+   *  children can never put a row under the slot. */
+  const textCol = side ? "col-start-2" : "";
 
   return (
     // A SUBGRID, not a flex column. The card's rows — slot, title, metadata,
@@ -450,9 +469,12 @@ export const EntityCard = memo(function EntityCard({
     <Root
       data-component="EntityCard"
       data-layout="cards"
+      data-card-layout={side ? "side" : "stacked"}
       onClick={(e) => onSelect(entity.id, e)}
       onMouseDown={holdTextSelection}
-      className={`${base} ${surface} ${minHeight} grid grid-rows-subgrid ${ROW_SPAN[rowCount]} gap-y-2.5 p-3`}
+      className={`${base} ${surface} ${minHeight} grid grid-rows-subgrid ${ROW_SPAN[rowCount]} gap-y-2.5 p-3 ${
+        side ? "grid-cols-[auto_minmax(0,1fr)] gap-x-3" : ""
+      }`}
     >
       {primaryAction}
       {selectBox}
@@ -466,7 +488,7 @@ export const EntityCard = memo(function EntityCard({
           picture fills it. The no-preview well takes the same box, so empty
           slots and pictures agree on both height and position. */}
       {showPreview && (
-        <span data-part="preview" className={`relative min-w-0 shrink-0 w-full ${slotShape}`}>
+        <span data-part="preview" className={`relative min-w-0 shrink-0 ${slotShape}`}>
           {entity.preview ? (
             enlargeable ? (
               /* The picture opens full size, WITHOUT becoming the card's main
@@ -563,7 +585,7 @@ export const EntityCard = memo(function EntityCard({
           thing holding a row level. */}
       <span
         data-part="title"
-        className={`relative min-w-0 text-sm font-semibold text-ink leading-snug line-clamp-2
+        className={`relative min-w-0 ${textCol} text-sm font-semibold text-ink leading-snug line-clamp-2
           not-supports-[grid-template-rows:subgrid]:min-h-[2.375rem]`}
       >
         <span
@@ -602,7 +624,7 @@ export const EntityCard = memo(function EntityCard({
            `dt`/`dd` per property, so the pairing is in the markup and not only
            in the spacing. The `div` wrapper per pair is valid inside a `dl` and
            is what keeps label and value locked together. */
-        <dl data-part="metadata" className="relative min-w-0 space-y-2">
+        <dl data-part="metadata" className={`relative min-w-0 ${textCol} space-y-2`}>
           {fields.map((f) => (
             <div key={f.id} className="min-w-0">
               <dt className="block text-meta font-semibold uppercase tracking-wider text-ink-tertiary leading-tight">
@@ -692,7 +714,7 @@ export const EntityCard = memo(function EntityCard({
           may be taller than the footer. */}
       <div
         data-part="footer"
-        className="relative min-w-0 self-end flex items-center justify-between gap-2 pt-1"
+        className={`relative min-w-0 ${textCol} self-end flex items-center justify-between gap-2 pt-1`}
       >
         {/* `min-w-0` on the wrapper, not just on the tag: the tag already says
             it may shrink (`min-w-0 max-w-full`, truncating label), but a flex

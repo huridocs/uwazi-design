@@ -52,6 +52,7 @@ import {
   libraryListDensityAtom,
   libraryFieldLabelsAtom,
   libraryThumbFrameAtom,
+  libraryCardSideAtom,
   libraryThumbSizeAtom,
   libraryTimeHubAtom,
   librarySortAtom,
@@ -240,8 +241,15 @@ export function LibraryView() {
   // column count (S hangs five across, L three) instead of a slot-height table.
   // Landscape keeps the classic three-column hang; previews off means the frame
   // control isn't in play at all.
-  const cardGridCols =
-    thumbFrame === "portrait" && cardInfo.preview
+  // Side cards carry the slot beside the text, so they want FEWER, WIDER
+  // columns; Size steps the count down the way it does for portrait.
+  const cardSide = useAtomValue(libraryCardSideAtom);
+  const cardGridCols = cardSide
+    ? {
+        m: "grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3",
+        l: "grid-cols-1 xl:grid-cols-2",
+      }[thumbSize]
+    : thumbFrame === "portrait" && cardInfo.preview
       ? {
           m: "grid-cols-2 sm:grid-cols-3 xl:grid-cols-4",
           l: "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3",

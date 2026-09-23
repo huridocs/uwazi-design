@@ -264,7 +264,29 @@ const thumbSections = (): DisplaySection[] => {
 // ── The registry ─────────────────────────────────────────────────────────────
 
 export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
-  cards: [CHART, SORT, LANGUAGE, CARD_INFO, CARD_FIELDS, ...thumbSections()],
+  cards: [
+    CHART,
+    SORT,
+    LANGUAGE,
+    CARD_INFO,
+    CARD_FIELDS,
+    {
+      id: "cardLayout",
+      label: "Card layout",
+      kind: "choice",
+      separator: true,
+      enabled: (v) => v.preview !== false,
+      option: {
+        id: "cardLayout",
+        default: "stacked",
+        choices: [
+          { id: "stacked", label: "Stacked", detail: "Preview above the text" },
+          { id: "side", label: "Side", detail: "Preview beside the text, in wider columns" },
+        ],
+      },
+    },
+    ...thumbSections(),
+  ],
 
   /** The list's options are its COLUMNS, one per track the table can draw —
    *  including the corpus's own metadata properties, which no other view can
