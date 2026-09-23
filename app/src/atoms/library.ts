@@ -289,10 +289,17 @@ export type ResultsLayout = "grouped" | "tree" | "passages";
 
 /** Thumbnail rendering — how tall the preview slot is drawn and how an image
  *  sits inside it. */
-/** Retained for the shapes `EntityThumbnail` still switches on — the CONTROLS
- *  that let a reader choose between them left `main` with the Playground Split
- *  and live on `playground`. The card hardcodes landscape / auto. */
+/** How tall the card's preview is drawn. A Display-menu control again on
+ *  `main` (2026-09-23), with the side card layout below; the FRAME and FIT
+ *  controls stay on `playground`, and the card keeps landscape / auto. Small is
+ *  a 60px preview, the default here: the page identifies the entity, the text
+ *  beside it does the work. */
 export type ThumbSize = "s" | "m" | "l";
+
+/** Where the preview sits on a card: above the text (`stacked`) or at the
+ *  card's logical start with the text beside it (`side`), in fewer, wider
+ *  columns. One choice for the whole grid. */
+export type CardLayout = "stacked" | "side";
 
 /** The SHAPE of the slot, for the whole grid at once — never per card, or rows
  *  stop lining up and the grid ragged-edges the way it did before the slot was
@@ -411,12 +418,36 @@ function displayOption<T extends DisplayValue>(
 }
 
 export const DEFAULT_RESULTS_LAYOUT: ResultsLayout = "grouped";
+/* `main`'s defaults: side cards with the small preview. */
+export const DEFAULT_CARD_LAYOUT: CardLayout = "side";
+export const DEFAULT_THUMB_SIZE: ThumbSize = "s";
 export const DEFAULT_LIST_DENSITY: ListDensity = "comfortable";
 
 export const libraryResultsLayoutAtom = displayOption<ResultsLayout>(
   "resultsLayout",
   "mode",
   DEFAULT_RESULTS_LAYOUT,
+);
+export const libraryCardLayoutAtom = displayOption<CardLayout>("cardLayout", "mode", DEFAULT_CARD_LAYOUT);
+const thumbSizeStateAtom = displayOption<ThumbSize>("thumbSize", "mode", DEFAULT_THUMB_SIZE);
+/** Reads through a validity check: the stored value can outlive the option
+ *  list, and an unknown key would index the size tables to `undefined` — a
+ *  card with no preview height at all. */
+export const libraryThumbSizeAtom = atom(
+  (get) => {
+    const v = get(thumbSizeStateAtom);
+    return v === "s" || v === "m" || v === "l" ? v : DEFAULT_THUMB_SIZE;
+  },
+  (_get, set, next: ThumbSize) => set(thumbSizeStateAtom, next),
+);
+/** The layout the cards actually DRAW: side needs a preview to put at the side
+ *  and room beside it, so with previews off, or on a phone, it is the stacked
+ *  card. The stored choice is kept. */
+export const libraryCardSideAtom = atom(
+  (get) =>
+    get(libraryCardLayoutAtom) === "side" &&
+    get(libraryCardInfoAtom).preview &&
+    get(breakpointAtom) !== "mobile",
 );
 export const libraryListDensityAtom = displayOption<ListDensity>(
   "density",
