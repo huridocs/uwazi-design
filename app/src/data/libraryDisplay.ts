@@ -220,6 +220,7 @@ const thumbSections = (): DisplaySection[] => {
         id: "thumbSize",
         default: "m",
         choices: [
+          { id: "s", label: "Small" },
           { id: "m", label: "Medium" },
           { id: "l", label: "Large" },
         ],

@@ -556,7 +556,7 @@ export function cardFieldLimit(v: CardFields): number | null {
  *  the BASE now (`m`, the default) and `l` is the one step above it. The old
  *  small was cut rather than renamed: a control whose first option nobody should
  *  pick is a control with a wrong default. */
-export type ThumbSize = "m" | "l";
+export type ThumbSize = "s" | "m" | "l";
 
 /** The SHAPE of the slot, for the whole grid at once — never per card, or rows
  *  stop lining up and the grid ragged-edges the way it did before the slot was
@@ -716,13 +716,14 @@ export const libraryTimelineLayoutAtom = displayOption<TimelineLayout>(
 );
 const thumbSizeStateAtom = displayOption<ThumbSize>("thumbSize", "mode", DEFAULT_THUMB_SIZE);
 /** Reads through a validity check, because the stored value outlives the option
- *  list: a session that had picked the old Small still holds `"s"`, and an
- *  unknown key indexes the size tables to `undefined` — a card with no band
- *  height at all. Anything not on the current list reads as the default. */
+ *  list: an unknown key indexes the size tables to `undefined` — a card with no
+ *  band height at all. Anything not on the current list reads as the default.
+ *  (Small was cut once, c8e52fbc, and is back; the check stays for the next
+ *  change to the list.) */
 export const libraryThumbSizeAtom = atom(
   (get) => {
     const v = get(thumbSizeStateAtom);
-    return v === "m" || v === "l" ? v : DEFAULT_THUMB_SIZE;
+    return v === "s" || v === "m" || v === "l" ? v : DEFAULT_THUMB_SIZE;
   },
   (_get, set, next: ThumbSize) => set(thumbSizeStateAtom, next),
 );

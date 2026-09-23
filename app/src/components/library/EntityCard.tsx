@@ -68,15 +68,22 @@ import {
 
     The floors move with the band, one for one (+3rem each), so the 1–3 metadata
     field spread they absorb is unchanged. */
-const COVER_H: Record<ThumbSize, string> = { m: "h-36", l: "h-48" };
+/*  SMALL IS BACK (2026-09-23), for the side layout first: a 60px preview
+    (3.75rem) makes a short card with a wide text side. Cut once (c8e52fbc)
+    because a 96px band made a first page a smudge; at 60 it is smaller still,
+    and deliberately — Small is the choice for a reader who wants the text, and
+    the page is an identifier there, not a preview to read. Medium stays the
+    default. The floor keeps the same offset from the band as the other two. */
+const COVER_H: Record<ThumbSize, string> = { s: "h-[3.75rem]", m: "h-36", l: "h-48" };
 const CARD_FLOOR: Record<ThumbSize, string> = {
+  s: "min-h-[13.25rem]",
   m: "min-h-[18.5rem]",
   l: "min-h-[21.5rem]",
 };
 /** The list row's chip is square at every frame — see EntityThumbnail. It does
  *  NOT follow the band: a row is two lines of text tall, so the chip is sized
  *  against the row and the old m/l pair is the whole useful range there. */
-const CHIP_BOX: Record<ThumbSize, string> = { m: "w-9 h-9", l: "w-12 h-12" };
+const CHIP_BOX: Record<ThumbSize, string> = { s: "w-7 h-7", m: "w-9 h-9", l: "w-12 h-12" };
 
 /** The SIDE layout's slot: a fixed WIDTH per size, and the frame's ratio
  *  against it — 4:3 for landscape, 3:4 for portrait. Width plus aspect is a
@@ -84,7 +91,7 @@ const CHIP_BOX: Record<ThumbSize, string> = { m: "w-9 h-9", l: "w-12 h-12" };
  *  stacked slot. The slot spans the card's rows at the logical start, so its
  *  height is also the card's floor: no `CARD_FLOOR` here, and a one-field card
  *  is as tall as its neighbours because the subgrid shares the rows. */
-const SIDE_W: Record<ThumbSize, string> = { m: "w-40", l: "w-52" };
+const SIDE_W: Record<ThumbSize, string> = { s: "", m: "w-40", l: "w-52" };
 /** How many properties a SIDE card shows, whatever the Display menu's count:
  *  three lines of the label/value grid. The side card's height is meant to
  *  sit near its slot's (the metadata-off look), not to stack a record beside a
@@ -92,6 +99,14 @@ const SIDE_W: Record<ThumbSize, string> = { m: "w-40", l: "w-52" };
  *  in the drawer. */
 const SIDE_FIELD_CAP = 3;
 const SIDE_SHAPE: Record<ThumbFrame, string> = { landscape: "aspect-[4/3]", portrait: "aspect-[3/4]" };
+/** Small is defined by its HEIGHT (60px, 3.75rem) at the frame's ratio, with
+ *  both sides written out so the box is definite before any image loads:
+ *  4:3 → 5rem wide, 3:4 → 2.8125rem wide. The side card at Small is then as
+ *  tall as its text (title and up to three fields), not its slot. */
+const SIDE_SMALL: Record<ThumbFrame, string> = {
+  landscape: "h-[3.75rem] w-[5rem]",
+  portrait: "h-[3.75rem] w-[2.8125rem]",
+};
 
 /** What the sort key is READING on this card, so the card can mark it.
  *
@@ -452,7 +467,7 @@ export const EntityCard = memo(function EntityCard({
    *  3:4. The picture fills the slot either way — Cover crops to fill it,
    *  auto/contain mat within it (ImageThumb's object-fit owns that call). */
   const slotShape = side
-    ? `${SIDE_W[thumbSize]} ${SIDE_SHAPE[thumbFrame]} row-span-full col-start-1 self-start`
+    ? `${thumbSize === "s" ? SIDE_SMALL[thumbFrame] : `${SIDE_W[thumbSize]} ${SIDE_SHAPE[thumbFrame]}`} row-span-full col-start-1 self-start`
     : `w-full ${thumbFrame === "portrait" ? "aspect-[3/4]" : COVER_H[thumbSize]}`;
   /** In the side layout every text row sits in the second column, beside the
    *  slot. Explicit rather than left to auto-placement, so the order of the
