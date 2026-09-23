@@ -11,6 +11,7 @@ import { BULK_TASK_THRESHOLD, runBulkApply } from "../../utils/libraryTasks";
 import { typeLabelColor } from "../../utils/typeColor";
 import { BAR_GHOST } from "../shared/warmButton";
 import { Modal, MODAL_BUTTON } from "../shared/Modal";
+import { ModalList, ModalListRow, ModalSectionLabel, ModalTypeDot } from "../shared/ModalParts";
 
 /** Change template — a dialog, not the drawer: it is one decision with a
  *  consequence list. Pick the target; for each source template the list says
@@ -111,29 +112,27 @@ export function ChangeTemplateDialog({
       }
     >
       <div data-gutter-bleed className="bleed-flush flex-1 min-h-0 flex">
-        <fieldset className="w-[13rem] shrink-0 overflow-auto border-e border-border py-1">
+        <fieldset className="w-[13rem] shrink-0 min-h-0 flex flex-col border-e border-border">
           <legend className="sr-only">Target template</legend>
-          {types.map((t) => {
-            const color = t.color ?? "#6B7280";
-            return (
-              <label
+          <ModalList atEdge>
+            {types.map((t) => (
+              <ModalListRow
                 key={t.id}
-                className={`bleed flex items-center gap-2 py-1.5 text-xs cursor-pointer ${
-                  target === t.id ? "bg-parchment text-ink" : "text-ink-secondary hover:bg-warm"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="change-template-target"
-                  checked={target === t.id}
-                  onChange={() => setTarget(t.id)}
-                  className="w-3.5 h-3.5 accent-ink shrink-0"
-                />
-                <span className="w-[0.4375rem] h-[0.4375rem] rounded-[2px] shrink-0" style={{ backgroundColor: color }} aria-hidden />
-                <span className="truncate">{t.name}</span>
-              </label>
-            );
-          })}
+                selected={target === t.id}
+                control={
+                  <input
+                    type="radio"
+                    name="change-template-target"
+                    checked={target === t.id}
+                    onChange={() => setTarget(t.id)}
+                    className="w-3.5 h-3.5 accent-ink shrink-0"
+                  />
+                }
+                leading={<ModalTypeDot color={t.color} />}
+                title={t.name}
+              />
+            ))}
+          </ModalList>
         </fieldset>
         <div className="bleed flex-1 min-w-0 overflow-auto py-4 space-y-4 text-xs" aria-live="polite">
           {!plan ? (
@@ -196,7 +195,9 @@ function Group({ title, items, warn = false }: { title: string; items: string[];
   if (!items.length) return null;
   return (
     <div className="flex gap-3">
-      <span className="w-14 shrink-0 text-meta uppercase tracking-wide text-ink-tertiary pt-0.5">{title}</span>
+      <span className="w-14 shrink-0 pt-0.5">
+        <ModalSectionLabel as="span">{title}</ModalSectionLabel>
+      </span>
       <ul className="flex flex-wrap gap-x-3 gap-y-1">
         {items.map((i) => (
           <li key={i} className={warn && /deleted$/.test(i) ? "text-warning" : "text-ink"}>

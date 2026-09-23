@@ -1,4 +1,4 @@
-import { useId, type HTMLAttributes, type KeyboardEvent, type MutableRefObject, type ReactNode } from "react";
+import { createContext, useContext, useId, type HTMLAttributes, type KeyboardEvent, type MutableRefObject, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
@@ -13,6 +13,22 @@ const WIDTH: Record<ModalSize, string> = {
   lg: "md:max-w-[40rem]",
   xl: "md:max-w-[48rem]",
 };
+
+/** The element a `scope="pane"` modal covers, when it is called from deeper
+ *  than the pane it belongs to.
+ *
+ *  A pane modal is `absolute inset-0`: it covers its nearest positioned
+ *  ancestor. Copy From is called from the metadata edit body, which sits
+ *  BELOW the pane's header and tab strip, so the scrim stopped at the tabs
+ *  and left the entity's title, its close X and the tab strip live above it.
+ *  A pane that must be covered top to bottom names its root here and the
+ *  modal portals into it (the `FiltersHostProvider` idiom). No provider: the
+ *  nearest positioned ancestor, as before. */
+const ModalHostContext = createContext<HTMLElement | null>(null);
+
+export function ModalHostProvider({ host, children }: { host: HTMLElement | null; children: ReactNode }) {
+  return <ModalHostContext.Provider value={host}>{children}</ModalHostContext.Provider>;
+}
 
 /** The app's one modal: scrim, panel, header, body, footer.
  *
@@ -108,7 +124,10 @@ export function Modal({
   /** The panel element, for a modal that places its own first focus. */
   panelRef?: MutableRefObject<HTMLDivElement | null>;
   /** The title, for a modal that moves focus to it (a step change). The
-   *  title is then focusable programmatically (`tabIndex={-1}`). */
+   *  title is then focusable programmatically (`tabIndex={-1}`), and paints
+   *  no ring: it is where a screen reader starts reading, not a control, and
+   *  Chrome matches `:focus-visible` on a scripted focus after a keypress, so
+   *  the ring showed on every open from the keyboard. */
   titleRef?: MutableRefObject<HTMLHeadingElement | null>;
   z?: string;
 }) {
@@ -116,6 +135,7 @@ export function Modal({
   const titleId = titleIdProp ?? `modal-${autoId}`;
   const panelRef = useFocusTrap<HTMLDivElement>(true);
   const fullOnPhone = size !== "sm";
+  const paneHost = useContext(ModalHostContext);
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key !== "Escape" || e.defaultPrevented) return;
@@ -167,7 +187,7 @@ export function Modal({
               className={
                 hideTitle
                   ? "sr-only"
-                  : "shrink-0 max-w-full text-sm font-semibold text-ink truncate rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"
+                  : "shrink-0 max-w-full text-sm font-semibold text-ink truncate focus:outline-none"
               }
             >
               {title}
@@ -212,7 +232,8 @@ export function Modal({
     </div>
   );
 
-  return portal && scope === "viewport" ? createPortal(node, document.body) : node;
+  if (scope === "pane") return paneHost ? createPortal(node, paneHost) : node;
+  return portal ? createPortal(node, document.body) : node;
 }
 
 /** Footer buttons: the modal's commit and its ghosts. Same metrics as the

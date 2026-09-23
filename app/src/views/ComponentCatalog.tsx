@@ -49,7 +49,7 @@ import { StatusPill } from "../components/settings/StatusPill";
 import { ArrowLeft, FileText, Pencil, Download, Trash2, Share2, Plus, Tag } from "lucide-react";
 import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
 import { BarDivider } from "../components/shared/BarDivider";
-import { ModalDemo } from "../components/catalog/ModalDemo";
+import { ModalDemo, ModalPartsDemo } from "../components/catalog/ModalDemo";
 
 // Data
 import { references } from "../data/references";
@@ -1235,6 +1235,19 @@ sendFill(selection.text);                                    // commits, then di
 </Modal>`}
                 >
                   <ModalDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="fl-modal-parts" ref={reg("fl-modal-parts")}>
+                <CatalogEntry
+                  name="ModalParts"
+                  description="What goes inside a modal body, so every picker reads the same: ModalSearchRow (search field + optional trailing scope control), ModalList + ModalListRow (one 2.25rem row: leading mark, title, chip, trailing meta; button, label-around-control or static), ModalSectionLabel, ModalField (label, control, always-mounted hint), ModalStatus (the empty line), and MODAL_INPUT / MODAL_LABEL for controls."
+                  code={`<ModalSearchRow value={q} onChange={setQ} placeholder="Search templates" ariaLabel="Search templates" />
+<ModalList>
+  <ModalListRow onClick={choose} leading={<ModalTypeDot color={c} />} title="Person" meta="Default" />
+</ModalList>`}
+                >
+                  <ModalPartsDemo />
                 </CatalogEntry>
               </div>
 

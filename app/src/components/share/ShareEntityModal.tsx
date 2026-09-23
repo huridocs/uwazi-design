@@ -13,6 +13,7 @@ import { notificationsAtom } from "../../atoms/notifications";
 import { entityCorpusOf, getEntity, getEntityType } from "../../data/entities";
 import { seedGroups, seedUsers } from "../../data/settings";
 import { Modal, MODAL_BUTTON, MODAL_COMMIT } from "../shared/Modal";
+import { MODAL_INPUT, ModalSectionLabel } from "../shared/ModalParts";
 import { BAR_GHOST } from "../shared/warmButton";
 import { t } from "../../utils/i18n";
 import { typeLabelColor } from "../../utils/typeColor";
@@ -338,9 +339,9 @@ export function ShareEntityModal({ open, onClose, ids: idsProp, initialFocus = "
       )}
       <section data-part="general-access" aria-labelledby="share-general-access-title" className="bleed space-y-2 border-b border-border/50 pt-3 pb-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 id="share-general-access-title" className="text-xs font-medium text-ink-secondary">
+          <ModalSectionLabel id="share-general-access-title">
             {t("System", "General access")}
-          </h3>
+          </ModalSectionLabel>
           <div ref={generalAccessRef} className="relative">
             <div
               role="radiogroup"
@@ -402,9 +403,9 @@ export function ShareEntityModal({ open, onClose, ids: idsProp, initialFocus = "
 
       <section data-part="lookup" aria-labelledby="share-people-title" className="space-y-3 pt-3">
         <div className="flex items-center gap-1.5">
-          <h3 id="share-people-title" className="text-xs font-medium text-ink-secondary">
+          <ModalSectionLabel id="share-people-title">
             {t("System", "People and groups")}
-          </h3>
+          </ModalSectionLabel>
           <button
             type="button"
             aria-label={t("System", "Lookup help")}
@@ -435,16 +436,14 @@ export function ShareEntityModal({ open, onClose, ids: idsProp, initialFocus = "
               aria-label={t("System", "Username, email or group")}
               autoComplete="off"
               aria-invalid={Boolean(lookupError)}
-              className={`w-full rounded-md border bg-paper px-3 py-2 text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-carbon/20 ${
-                lookupError ? "border-seal" : "border-border"
-              }`}
+              className={lookupError ? MODAL_INPUT.replace("border-border", "border-seal") : MODAL_INPUT}
             />
             {lookupError ? <p className="mt-1 text-meta text-seal-label">{lookupError}</p> : null}
           </div>
           <button
             type="submit"
             disabled={!lookupTerm.trim()}
-            className="px-3 py-2 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            className="h-8 px-3 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {t("System", "Add")}
           </button>
@@ -466,7 +465,7 @@ export function ShareEntityModal({ open, onClose, ids: idsProp, initialFocus = "
               without an editor. Not removable. */}
           <li data-component="MemberRow" data-fixed className="flex items-center gap-3 py-2.5">
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm text-ink">{t("System", "Administrators and Editors")}</span>
+              <span className="block truncate text-xs text-ink">{t("System", "Administrators and Editors")}</span>
               <span className="block text-meta text-ink-tertiary">Always</span>
             </span>
             <span className="inline-flex items-center gap-1 text-meta text-ink-secondary">
@@ -574,7 +573,7 @@ function MemberRow({
   return (
     <li data-component="MemberRow" data-level={level ?? "mixed"} className="flex items-center gap-3 py-2.5">
       <span className="min-w-0 flex-1">
-        <span data-part="name" className={`block truncate text-sm ${removed ? "text-ink-tertiary line-through" : "text-ink"}`}>
+        <span data-part="name" className={`block truncate text-xs ${removed ? "text-ink-tertiary line-through" : "text-ink"}`}>
           {label}
         </span>
         {/* The meta line is always mounted (coverage, or the change), so a

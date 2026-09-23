@@ -70,6 +70,7 @@ import { RelationshipsDrawerSection } from "../components/relationships/Relation
 import { useNotify } from "../hooks/useNotify";
 import { useRegisterDirtyForm } from "../hooks/useDirtyGuard";
 import { ShareEntityModal } from "../components/share/ShareEntityModal";
+import { ModalHostProvider } from "../components/shared/Modal";
 import { fromDateInputValue, toDateInputValue } from "../utils/dateValue";
 import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
 import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
@@ -89,12 +90,16 @@ export function MetadataView({ tabs, activeTab, onTabChange, onBack }: MetadataV
   const focusedId = useAtomValue(focusedEntityIdAtom);
   const saveEdit = useSetAtom(saveEntityEditAtom);
 
+  // The pane Copy From covers, tab strip included (see ModalHostProvider).
+  const [paneEl, setPaneEl] = useState<HTMLDivElement | null>(null);
+
   const renderLeft = (menuTrigger?: ReactNode) => (
     // The narrow-tier gutter host: tabs, DocMeta, the card lane and the action bar
     // all take their side inset from this padding (see `gutter-host`). Narrow,
     // like the Document and Relationships tabs: all four tabs share the tab
     // strip, so a different gutter here moved the strip 4px when switching.
-    <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0 bg-paper">
+    <ModalHostProvider host={paneEl}>
+    <div ref={setPaneEl} data-gutter-host className="gutter-host relative flex flex-col h-full min-h-0 bg-paper">
       <MainTabs
         tabs={tabs}
         activeId={activeTab}
@@ -126,6 +131,7 @@ export function MetadataView({ tabs, activeTab, onTabChange, onBack }: MetadataV
         <MetadataReadBody onEdit={() => setEditing(true)} menuSlot={menuTrigger} />
       )}
     </div>
+    </ModalHostProvider>
   );
 
   return (

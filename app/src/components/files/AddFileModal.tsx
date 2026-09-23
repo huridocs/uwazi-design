@@ -11,6 +11,7 @@ import { FileEntry, FileKind, DocumentGroup } from "../../data/files";
 import { asset } from "../../utils/asset";
 import { BAR_GHOST } from "../shared/warmButton";
 import { Modal, MODAL_BUTTON } from "../shared/Modal";
+import { MODAL_INPUT, MODAL_LABEL, ModalStatus } from "../shared/ModalParts";
 
 interface PendingFile {
   id: string;
@@ -315,13 +316,13 @@ export function AddFileModal() {
                 className="rounded-md bg-warm border border-border/50 p-3 space-y-2.5"
               >
                 <div className="flex items-start gap-2">
-                  <Icon size={16} className="text-ink-muted mt-1 shrink-0" aria-hidden />
+                  <Icon size={16} className="text-ink-muted mt-2 shrink-0" aria-hidden />
                   <input
                     type="text"
                     data-part="name"
                     value={entry.name}
                     onChange={(e) => updateEntry(entry.id, { name: e.target.value })}
-                    className="flex-1 min-w-0 px-2 py-1 text-sm text-ink bg-paper border border-border rounded focus:outline-none focus:ring-1 focus:ring-carbon/30"
+                    className={`flex-1 min-w-0 ${MODAL_INPUT}`}
                     aria-label="Filename"
                   />
                   <button
@@ -329,7 +330,7 @@ export function AddFileModal() {
                     data-part="remove"
                     aria-label={`Remove ${entry.name}`}
                     onClick={() => removeEntry(entry.id)}
-                    className="text-xs text-ink-tertiary hover:text-ink transition-colors cursor-pointer shrink-0 pt-1"
+                    className="h-8 text-xs text-ink-tertiary hover:text-ink transition-colors cursor-pointer shrink-0"
                   >
                     Remove
                   </button>
@@ -337,16 +338,14 @@ export function AddFileModal() {
 
                 <div data-part="fields" className="grid grid-cols-2 gap-3">
                   <label data-part="language" className="space-y-1">
-                    <span className="text-meta font-medium text-ink-muted uppercase tracking-wide">
-                      Language
-                    </span>
+                    <span className={MODAL_LABEL}>Language</span>
                     <div className="relative">
                       <select
                         value={entry.language}
                         onChange={(e) =>
                           updateEntry(entry.id, { language: e.target.value })
                         }
-                        className="appearance-none w-full pl-2 pr-7 py-1 text-xs text-ink bg-paper border border-border rounded focus:outline-none focus:ring-1 focus:ring-ink/20 cursor-pointer"
+                        className={`${MODAL_INPUT} appearance-none pe-7 cursor-pointer`}
                         aria-label="Language"
                       >
                         {Array.from(new Set([...knownLanguages, entry.language])).map((l) => (
@@ -364,9 +363,7 @@ export function AddFileModal() {
                   </label>
 
                   <label data-part="add-as" className="space-y-1">
-                    <span className="text-meta font-medium text-ink-muted uppercase tracking-wide">
-                      Add as
-                    </span>
+                    <span className={MODAL_LABEL}>Add as</span>
                     <div className="relative">
                       <select
                         value={
@@ -387,7 +384,7 @@ export function AddFileModal() {
                             });
                           }
                         }}
-                        className="appearance-none w-full pl-2 pr-7 py-1 text-xs text-ink bg-paper border border-border rounded focus:outline-none focus:ring-1 focus:ring-ink/20 disabled:opacity-70 cursor-pointer truncate"
+                        className={`${MODAL_INPUT} appearance-none pe-7 cursor-pointer truncate`}
                         aria-label="Add as"
                       >
                         <option value="primary">New primary doc</option>
@@ -441,9 +438,7 @@ export function AddFileModal() {
       )}
 
       {entries.length === 0 && (
-        <p data-part="empty" className="text-xs text-ink-tertiary text-center">
-          No files queued yet.
-        </p>
+        <ModalStatus>No files queued yet.</ModalStatus>
       )}
     </Modal>
   );

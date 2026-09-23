@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Modal } from "../shared/Modal";
+import { MODAL_INPUT, ModalList, ModalListRow } from "../shared/ModalParts";
 import { Plus, Trash2 } from "lucide-react";
 import { useAtom, useSetAtom } from "jotai";
 import {
@@ -122,7 +123,7 @@ export function ManageRelationTypesModal() {
       title={t("System", "Manage relationship types")}
       subtitle={t("System", "Add or remove the relation labels available across this entity.")}
       closeLabel={t("System", "Close")}
-      bodyClassName=""
+      flush
       footer={
         <div data-part="add" className="flex-1 flex items-center gap-2">
           <input
@@ -134,8 +135,7 @@ export function ManageRelationTypesModal() {
             }}
             placeholder={t("System", "New relation type label…")}
             aria-label={t("System", "New relation type label")}
-            className="flex-1 px-3 py-1.5 text-sm bg-warm border border-border rounded-md
-              placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-carbon/20"
+            className={`flex-1 ${MODAL_INPUT}`}
           />
           <button
             type="button"
@@ -149,70 +149,69 @@ export function ManageRelationTypesModal() {
         </div>
       }
     >
-      <ul data-part="types" className="py-3 space-y-1">
+      <ModalList data-part="types">
         {types.map((tdef) => {
           const usage = refCountByType.get(tdef.id) ?? 0;
           const isNoLabel = tdef.id === NO_LABEL_RELATION_TYPE;
           const confirming = pendingDelete === tdef.id;
           return (
-            <li
+            <ModalListRow
               key={tdef.id}
-              data-part="type"
-              data-gutter-align="box"
-              className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-warm transition-colors"
-            >
-              <span data-part="label" className="text-sm text-ink flex-1 truncate">
-                {tdef.label}
-              </span>
-              <span data-part="usage" className="text-meta text-ink-tertiary tabular-nums shrink-0">
-                {usage} {usage === 1 ? "ref" : "refs"}
-              </span>
-              {isNoLabel ? (
-                <span
-                  className="text-meta uppercase tracking-wide text-ink-tertiary px-1.5 py-0.5 bg-vellum rounded shrink-0"
-                  title={t(
-                    "System",
-                    "Fallback type — orphaned references land here",
+              part="type"
+              title={<span data-part="label">{tdef.label}</span>}
+              meta={
+                <>
+                  <span data-part="usage" className="tabular-nums">
+                    {usage} {usage === 1 ? "ref" : "refs"}
+                  </span>
+                  {isNoLabel ? (
+                    <span
+                      className="text-meta uppercase tracking-wide text-ink-tertiary px-1.5 py-0.5 bg-vellum rounded shrink-0"
+                      title={t(
+                        "System",
+                        "Fallback type — orphaned references land here",
+                      )}
+                    >
+                      {t("System", "Fallback")}
+                    </span>
+                  ) : confirming ? (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        data-part="confirm-delete"
+                        onClick={() => handleDelete(tdef.id)}
+                        className="px-2 py-1 text-meta font-medium text-white bg-seal-fill rounded-md hover:bg-seal-fill/90 transition-colors cursor-pointer"
+                      >
+                        {usage > 0
+                          ? t("System", "Delete & reassign")
+                          : t("System", "Delete")}
+                      </button>
+                      <button
+                        type="button"
+                        data-part="cancel-delete"
+                        onClick={() => setPendingDelete(null)}
+                        className="px-2 py-1 text-meta font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
+                      >
+                        {t("System", "Cancel")}
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      data-part="delete"
+                      onClick={() => setPendingDelete(tdef.id)}
+                      aria-label={`Delete ${tdef.label}`}
+                      className="p-1 rounded text-ink-tertiary hover:bg-seal-tint hover:text-seal-label transition-colors cursor-pointer shrink-0"
+                    >
+                      <Trash2 size={13} />
+                    </button>
                   )}
-                >
-                  {t("System", "Fallback")}
-                </span>
-              ) : confirming ? (
-                <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    type="button"
-                    data-part="confirm-delete"
-                    onClick={() => handleDelete(tdef.id)}
-                    className="px-2 py-1 text-meta font-medium text-white bg-seal-fill rounded-md hover:bg-seal-fill/90 transition-colors cursor-pointer"
-                  >
-                    {usage > 0
-                      ? t("System", "Delete & reassign")
-                      : t("System", "Delete")}
-                  </button>
-                  <button
-                    type="button"
-                    data-part="cancel-delete"
-                    onClick={() => setPendingDelete(null)}
-                    className="px-2 py-1 text-meta font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
-                  >
-                    {t("System", "Cancel")}
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  data-part="delete"
-                  onClick={() => setPendingDelete(tdef.id)}
-                  aria-label={`Delete ${tdef.label}`}
-                  className="p-1 rounded text-ink-tertiary hover:bg-seal-tint hover:text-seal-label transition-colors cursor-pointer shrink-0"
-                >
-                  <Trash2 size={13} />
-                </button>
-              )}
-            </li>
+                </>
+              }
+            />
           );
         })}
-      </ul>
+      </ModalList>
     </Modal>
   );
 }
