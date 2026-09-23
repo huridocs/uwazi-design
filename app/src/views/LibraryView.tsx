@@ -107,7 +107,7 @@ import { HighlightedText } from "../components/shared/HighlightedText";
 import { Select } from "../components/shared/Select";
 import { ViewSwitcher } from "../components/library/ViewSwitcher";
 import { DRAWER_MIN_WIDTH } from "../components/layout/SplitView";
-import { WARM_BUTTON } from "../components/shared/warmButton";
+import { BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
 
 const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -1064,6 +1064,7 @@ export function LibraryView() {
               icon={<Plus size={13} className="text-ink-tertiary" />}
               label="Create entity"
               onClick={() => notify("Create entity isn't available in the prototype")}
+              lead
             />
             <FooterButton
               icon={<Upload size={13} className="text-ink-tertiary" />}
@@ -1227,15 +1228,18 @@ function FooterButton({
   icon,
   label,
   onClick,
+  lead = false,
 }: {
   icon: ReactNode;
   label: string;
   onClick?: () => void;
+  /** The bar's lead action (at most one); the rest are ghosts. */
+  lead?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
-      className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+      className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${lead ? BAR_LEAD : BAR_GHOST} rounded-md transition-colors cursor-pointer`}
     >
       {icon}
       {label}

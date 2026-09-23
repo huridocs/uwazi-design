@@ -3,7 +3,7 @@ import { useAtom } from "jotai";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { currentPageAtom } from "../../atoms/selection";
 import { useNotify } from "../../hooks/useNotify";
-import { WARM_BUTTON } from "../shared/warmButton";
+import { BAR_GHOST } from "../shared/warmButton";
 
 /** Prev/next stepping through the search matches marked in the document. */
 export interface MatchNav {
@@ -41,6 +41,7 @@ export function ActionBar({ numPages, onScrollToPage, leftSlot, rightSlot, showP
 
   return (
     <div
+      data-component="ActionBar"
       // No baked side padding: `bleed` takes the host pane's gutter (12 under the
       // entity and relationships views), and the rule still spans the pane.
       className="bleed flex items-center justify-between h-12 bg-paper shrink-0"
@@ -49,18 +50,23 @@ export function ActionBar({ numPages, onScrollToPage, leftSlot, rightSlot, showP
       {/* Left: optional slot or default OCR button (PDF only) */}
       {leftSlot ?? (showPager ? (
         <button
+          type="button"
+          data-part="ocr"
           onClick={() => notify("OCR queued")}
-          className={`px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+          data-gutter-align="box"
+          className={`px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
         >
           OCR PDF
         </button>
       ) : <span />)}
 
       {/* Right: match stepper + pager (PDF only) + optional trailing menu slot */}
-      <div className="flex items-center gap-4">
+      <div data-part="actions" className="flex items-center gap-4">
         {matchNav && (
-          <div className="flex items-center gap-1" role="group" aria-label="Search matches">
+          <div data-part="match-nav" className="flex items-center gap-1" role="group" aria-label="Search matches">
             <button
+              type="button"
+              data-part="match-prev"
               onClick={matchNav.onPrev}
               disabled={matchNav.count === 0}
               aria-label="Previous match"
@@ -74,12 +80,15 @@ export function ActionBar({ numPages, onScrollToPage, leftSlot, rightSlot, showP
                 min-width keeps the pager still as the digits grow. */}
             <span
               role="status"
+              data-part="match-count"
               dir="ltr"
               className="min-w-[3.25rem] text-center text-tab font-semibold text-ink tabular-nums"
             >
               {matchNav.index} / {matchNav.count}
             </span>
             <button
+              type="button"
+              data-part="match-next"
               onClick={matchNav.onNext}
               disabled={matchNav.count === 0}
               aria-label="Next match"
@@ -94,16 +103,20 @@ export function ActionBar({ numPages, onScrollToPage, leftSlot, rightSlot, showP
         {showPager && (
           <>
             <button
+              type="button"
+              data-part="page-prev"
               onClick={() => goTo(Math.max(1, currentPage - 1))}
               disabled={currentPage <= 1}
               className="text-tab font-medium text-ink-secondary disabled:opacity-30 disabled:cursor-not-allowed hover:text-ink hover:underline transition-colors"
             >
               Previous
             </button>
-            <span dir="ltr" className="text-tab font-semibold text-ink tabular-nums">
+            <span data-part="page-count" dir="ltr" className="text-tab font-semibold text-ink tabular-nums">
               {currentPage} / {numPages || "..."}
             </span>
             <button
+              type="button"
+              data-part="page-next"
               onClick={() => goTo(Math.min(numPages, currentPage + 1))}
               disabled={currentPage >= numPages}
               className="text-tab font-medium text-ink-secondary disabled:opacity-30 disabled:cursor-not-allowed hover:text-ink hover:underline transition-colors"
