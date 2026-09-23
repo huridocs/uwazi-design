@@ -251,6 +251,7 @@ export function LibraryView() {
       "grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3"
     : thumbFrame === "portrait" && cardInfo.preview
       ? {
+          s: "grid-cols-2 sm:grid-cols-4 xl:grid-cols-5",
           m: "grid-cols-2 sm:grid-cols-3 xl:grid-cols-4",
           l: "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3",
         }[thumbSize]
