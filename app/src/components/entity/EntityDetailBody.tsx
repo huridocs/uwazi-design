@@ -18,6 +18,7 @@ import { MainTabs } from "../layout/MainTabs";
 import { DocumentViewer } from "../viewer/DocumentViewer";
 import { RelationshipsDrawerSection } from "../relationships/RelationshipsDrawerSection";
 import { FiltersHostProvider } from "../shared/FiltersDrawer";
+import { ModalHostProvider } from "../shared/Modal";
 import { RelationshipsCollapseControls } from "../relationships/CollapseControls";
 import { DrawerFilesBody } from "../files/DrawerFilesBody";
 import { EntityMetadataSummary } from "../metadata/EntityMetadataSummary";
@@ -207,12 +208,14 @@ export function EntityDetailBody({
      the footer. Making the root positioned is not enough on its own — the tab
      wrapper's `overflow-hidden` clips the drawer wherever it is positioned
      from — so the root names itself the drawer's host and the drawer portals
-     out to it. See FiltersHostProvider. */
+     out to it. See FiltersHostProvider. A pane modal (Copy From) takes the
+     same root for the same reason: its scrim covers header, tabs and footer. */
   const [panelEl, setPanelEl] = useState<HTMLDivElement | null>(null);
 
   return (
     <EntityScopeProvider entityId={entityId}>
       <FiltersHostProvider host={panelEl}>
+      <ModalHostProvider host={panelEl}>
       {/* THE GUTTER HOST. The side gutter is this box's padding and nothing
           else's: the header, tabs, toolbar, cards and footer below carry no side
           padding of their own, so they cannot disagree about where the content
@@ -356,6 +359,7 @@ export function EntityDetailBody({
           </div>
         )}
       </div>
+      </ModalHostProvider>
       </FiltersHostProvider>
     </EntityScopeProvider>
   );

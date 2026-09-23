@@ -144,13 +144,12 @@ export function CopyFromPicker({
     <Modal
       component="CopyFromPicker"
       // Fills the metadata pane, not the viewport: it sits over the form it
-      // writes into. ONE size for both steps — the full height of the pane, set by the
+      // writes into. ONE size for both steps — a fixed height, capped by the
       // host — so choosing a source swaps the content and moves nothing.
       scope="pane"
       z="z-30"
       size="md"
-      height="md:h-full"
-      maxHeight="md:max-h-full"
+      height="md:h-[min(34rem,100%)]"
       onClose={onClose}
       titleRef={headingRef}
       title={step ? "Choose properties to copy" : "Copy from"}
