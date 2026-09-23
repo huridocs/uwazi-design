@@ -126,6 +126,17 @@ Keep it in sync when tokens.css or the style rules change.
   edge is an inset ring, so the button's box size never changes. Buttons on a
   warm, parchment or vellum ground, in the navbar, and the Beacon pill take no
   edge.
+- **Action bars carry at most ONE filled button** (2026-09-22). The ladder, in
+  `warmButton.ts`: solid ink for the bar's commit (Save, Open entity, New
+  Import); else `WARM_BUTTON` for its lead action (Create entity, Edit, Add
+  file); every other action is `BAR_GHOST` (no fill, no edge, warm on hover);
+  Delete is `BAR_DANGER` (seal text, tint on hover), never a seal fill in a bar.
+  Groups (selection count / bulk actions / danger) are split by `BarDivider`,
+  not by per-button borders. No whole-bar `bg-selected` tint while a selection
+  is on: the count is the signal. Ghosts at a bar's edge take
+  `data-gutter-align="box"`. The selection readout keeps its fixed slot; the
+  "Select all N" offer hangs under the count out of flow, so the count sits on
+  the bar's midline.
 
 ## CSS tokens — use real names
 

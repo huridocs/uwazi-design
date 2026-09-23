@@ -3,13 +3,16 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { deselectIdsAtom, librarySelectionAtom, selectIdsAtom } from "../../atoms/library";
 import { Hint } from "../shared/Hint";
 
-/** The tri-state "select all" for the Library — the footer's and the list
- *  table's header cell, one action.
+/** The tri-state "select all" for the Library footer. It shows only while a
+ *  MULTIPLE selection is on (the bar's end group), so it is never seen
+ *  unchecked in practice.
  *
  *  Its state is over the LOADED entities (what "Show more" has mounted): none
- *  of them selected = unchecked, some = mixed, all = checked. Unchecked, a
- *  click selects every loaded entity; mixed or checked, it deselects the
- *  loaded ones — and only those (see the click). Selecting
+ *  of them selected = unchecked, some = mixed, all = checked. Unchecked or
+ *  mixed, a click selects every loaded entity; checked, it deselects the
+ *  loaded ones — and only those (see the click). Mixed used to deselect, which
+ *  made sense while the box sat in the idle bar; shown only with a selection,
+ *  it left the box no way to select at all. Selecting
  *  the rest of a larger result set is the footer readout's own offer, so this
  *  box never reaches past what the reader can see.
  *
@@ -34,9 +37,11 @@ export function SelectAllBox({ loadedIds, disabled = false }: { loadedIds: reado
   // before the click (the bar's "N not shown" says so after).
   const beyond = selection.size - picked;
   const text =
-    picked > 0 && beyond > 0
+    all && beyond > 0
       ? `Deselect the ${picked.toLocaleString()} loaded; ${beyond.toLocaleString()} more stay selected (Clear ends the selection).`
-      : `Select all loaded. ${MOD} or Shift + click selects several; on touch, long-press.`;
+      : all
+        ? "Deselect the loaded entities."
+        : `Select all ${loadedIds.length.toLocaleString()} loaded. ${MOD} or Shift + click selects several; on touch, long-press.`;
 
   // `indeterminate` is a DOM property with no attribute.
   useEffect(() => {
@@ -56,7 +61,7 @@ export function SelectAllBox({ loadedIds, disabled = false }: { loadedIds: reado
             aria-checked={mixed ? "mixed" : all}
             aria-disabled={off || undefined}
             aria-label={
-              picked > 0
+              all
                 ? beyond > 0
                   ? `Deselect the ${picked.toLocaleString()} loaded entities; ${beyond.toLocaleString()} more stay selected`
                   : "Deselect the loaded entities"
@@ -72,7 +77,7 @@ export function SelectAllBox({ loadedIds, disabled = false }: { loadedIds: reado
               // Clears only what it can see: the loaded ids. Entities picked
               // under another filter (counted "not in view") stay — Clear, in
               // the bar, is the one that ends a whole selection.
-              if (picked > 0) deselect(loadedIds);
+              if (all) deselect(loadedIds);
               else selectIds(loadedIds);
             }}
             className={`w-3.5 h-3.5 rounded shrink-0 accent-ink ${off ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}

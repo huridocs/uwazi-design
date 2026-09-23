@@ -46,7 +46,7 @@ import {
 import { highlightTerms, parseSearchQuery } from "../../utils/queryTokens";
 import { Checkbox } from "../shared/Checkbox";
 import { ActiveFiltersSheet } from "./ActiveFiltersSheet";
-import { WARM_BUTTON } from "../shared/warmButton";
+import { BAR_GHOST } from "../shared/warmButton";
 
 /** Carded, grouped facets matching the Uwazi library filters: a "Filters" pill,
  *  bordered facet cards, an expandable Documents group, a keyword-style
@@ -480,11 +480,12 @@ export function LibraryFilters() {
         className="bleed shrink-0 flex items-center gap-2 h-12 bg-paper"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
-        {/* The warm fill alone does not show on paper; `WARM_BUTTON` carries
-            the edge every warm button on a paper bar shares. */}
+        {/* Ghosts (`BAR_GHOST`): nothing here commits, so nothing is filled.
+            The end boxes meet the gutter, so the hover fill stays inside. */}
         <button
           type="button"
           data-part="collapse-all"
+          data-gutter-align="box"
           onClick={collapseAll}
           className={FOOTER_BUTTON}
         >
@@ -501,9 +502,10 @@ export function LibraryFilters() {
         <button
           type="button"
           data-part="clear"
+          data-gutter-align="box"
           onClick={clearAll}
           disabled={activeFilterCount === 0}
-          className={`ms-auto ${FOOTER_BUTTON} disabled:opacity-40 disabled:cursor-default disabled:hover:bg-warm disabled:hover:text-ink-secondary`}
+          className={`ms-auto ${FOOTER_BUTTON} disabled:opacity-40 disabled:cursor-default disabled:hover:bg-transparent disabled:hover:text-ink-secondary`}
         >
           Clear
         </button>
@@ -512,7 +514,7 @@ export function LibraryFilters() {
   );
 }
 
-const FOOTER_BUTTON = `px-3 py-1.5 text-xs font-medium rounded-md ${WARM_BUTTON} transition-colors cursor-pointer`;
+const FOOTER_BUTTON = `px-3 py-1.5 text-xs font-medium rounded-md ${BAR_GHOST} transition-colors cursor-pointer`;
 
 /* ── Cards & rows ── */
 

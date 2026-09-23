@@ -70,6 +70,7 @@ import {
   setSelectionAnchorAtom,
   rangeSelectionAtom,
   clearSelectionAtom,
+  collapseSelectionAtom,
   librarySelectionActiveAtom,
   librarySelectionDrawerOpenAtom,
   libraryDrawnIdsAtom,
@@ -82,7 +83,6 @@ import {
   useTouchSelection,
   lastPointerWasTouch,
 } from "../components/library/EntitySelectBox";
-import { SelectAllBox } from "../components/library/SelectAllBox";
 import { ActionsSheet, LibrarySelectionBar } from "../components/library/LibrarySelectionBar";
 import { LibrarySelectionDrawer } from "../components/library/LibrarySelectionDrawer";
 import { getEntityType, type Entity, type EntityImage } from "../data/entities";
@@ -124,7 +124,8 @@ import { HighlightedText } from "../components/shared/HighlightedText";
 import { Select } from "../components/shared/Select";
 import { ViewSwitcher } from "../components/library/ViewSwitcher";
 import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
-import { WARM_BUTTON } from "../components/shared/warmButton";
+import { BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
+import { BarDivider } from "../components/shared/BarDivider";
 
 const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -755,6 +756,7 @@ export function LibraryView() {
   const setAnchor = useSetAtom(setSelectionAnchorAtom);
   const rangeSelection = useSetAtom(rangeSelectionAtom);
   const clearSelection = useSetAtom(clearSelectionAtom);
+  const collapseSelection = useSetAtom(collapseSelectionAtom);
   const selectionActive = useAtomValue(librarySelectionActiveAtom);
   /* A plain click on the EMPTY GROUND of the results — the lane, the gap
      between cards, the margin — clears the selection, as Escape does, and
@@ -821,24 +823,51 @@ export function LibraryView() {
     return () => window.removeEventListener("keydown", onKey);
   }, [selectionActive, clearSelection]);
 
-  const handleSelect = useCallback(
-    (id: string, e?: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => {
+  /* `collapse`: a plain click in the VIEW with 2 or more selected ends the
+     multi-selection and makes that item the one previewed, as a file manager
+     does. The selection and cluster drawers pass false — their rows ARE the
+     selection (or a map cluster), and clicking one previews it without
+     dropping the rest. */
+  const selectFrom = useCallback(
+    (collapse: boolean, id: string, e?: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => {
       const intent = e ? selectionIntent(e) : null;
       if (intent === "toggle") return toggleSelection(id);
       // Touch, with a selection going: a tap adds or removes (a long press
       // starts one — see useTouchSelection).
       if (e && selectionActive && lastPointerWasTouch()) return toggleSelection(id);
       if (intent === "range") return rangeSelection({ order: currentSelectionOrder(), id });
-      // A plain click anchors the next Shift range here (see setSelectionAnchorAtom).
-      setAnchor(id);
-      if (isMobile) {
-        openEntity(id);
-      } else {
-        focusForPreview(id);
-        setSelectedId(id);
-      }
+      const preview = () => {
+        // A plain click anchors the next Shift range here (see setSelectionAnchorAtom).
+        setAnchor(id);
+        if (isMobile) {
+          openEntity(id);
+        } else {
+          focusForPreview(id);
+          setSelectedId(id);
+        }
+      };
+      if (collapse) collapseSelection(preview);
+      else preview();
     },
-    [isMobile, openEntity, focusForPreview, setSelectedId, toggleSelection, rangeSelection, selectionActive, setAnchor],
+    [
+      isMobile,
+      openEntity,
+      focusForPreview,
+      setSelectedId,
+      toggleSelection,
+      rangeSelection,
+      selectionActive,
+      collapseSelection,
+      setAnchor,
+    ],
+  );
+  const handleSelect = useCallback(
+    (id: string, e?: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => selectFrom(true, id, e),
+    [selectFrom],
+  );
+  const handleDrawerSelect = useCallback(
+    (id: string, e?: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => selectFrom(false, id, e),
+    [selectFrom],
   );
   useTouchSelection(toggleSelection);
 
@@ -1311,23 +1340,27 @@ export function LibraryView() {
           labels — a drawer open beside the library, a small window — instead
           of wrapping onto a second line inside a fixed-height bar. */}
       <div
-        className="@container bleed shrink-0 flex items-center gap-2 h-12 bg-paper"
+        className="@container bleed shrink-0 flex items-center gap-1 h-12 bg-paper"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
-        {/* Always mounted, at the bar's start: the tri-state select-all over
-            the loaded entities. The rest of the bar swaps IN PLACE between
-            the baseline actions and the selection's — same bar, same height. */}
-        <span className="hidden sm:inline-flex shrink-0 me-1">
-          <SelectAllBox loadedIds={drawnIds} disabled={cejilLoading} />
-        </span>
+        {/* The bar swaps IN PLACE between the baseline actions and the
+            selection's — same bar, same height. The selection's readout, Clear
+            and the tri-state select-all sit at the bar's END, in
+            LibrarySelectionBar; the idle bar carries no checkbox. */}
         {selectionActive && (
-          <LibrarySelectionBar filteredIds={filteredIds} loadedIds={drawnIds} corpus={dataSource} />
+          <LibrarySelectionBar
+            filteredIds={filteredIds}
+            loadedIds={drawnIds}
+            corpus={dataSource}
+            filtersSlot={<ActiveFiltersButton className="ms-2 shrink-0" />}
+          />
         )}
         {!selectionActive && (
           <FooterButton
             icon={<Plus size={13} className="text-ink-tertiary" />}
             label="Create entity"
             onClick={() => setCreateOpen(true)}
+            lead
           />
         )}
         {pendingUploads && (
@@ -1380,7 +1413,9 @@ export function LibraryView() {
               }
             />
             {/* With a selection, the bar's own Export CSV exports the
-                selection; without one, this exports the current results. */}
+                selection; without one, this exports the current results.
+                Divided from the three that bring entities IN. */}
+            <BarDivider className="hidden sm:block" />
             <FooterButton
               icon={<FileDown size={13} className="text-ink-tertiary" />}
               label="Export CSV"
@@ -1409,7 +1444,7 @@ export function LibraryView() {
             onClick={() => setPhoneActionsOpen(true)}
             aria-haspopup="dialog"
             aria-expanded={phoneActionsOpen}
-            className={`sm:hidden shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md cursor-pointer`}
+            className={`sm:hidden shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium ${BAR_LEAD} rounded-md cursor-pointer`}
           >
             <MoreHorizontal size={13} className="text-ink-tertiary" aria-hidden /> Actions
           </button>
@@ -1434,7 +1469,8 @@ export function LibraryView() {
             ]}
           />
         )}
-        <ActiveFiltersButton className="ms-2 shrink-0" />
+        {/* With a selection the bar places it, before its end group. */}
+        {!selectionActive && <ActiveFiltersButton className="ms-2 shrink-0" />}
       </div>
     </div>
   );
@@ -1504,9 +1540,9 @@ export function LibraryView() {
   const drawer = selectedId ? (
     <EntityDrawerPreview entityId={selectedId} />
   ) : selectionActive && selectionDrawerOpen ? (
-    <LibrarySelectionDrawer onSelect={handleSelect} query={query} />
+    <LibrarySelectionDrawer onSelect={handleDrawerSelect} query={query} />
   ) : selectedCluster && viewMode === "map" ? (
-    <LibraryClusterDrawer onSelect={handleSelect} query={query} />
+    <LibraryClusterDrawer onSelect={handleDrawerSelect} query={query} />
   ) : (
     filtersDrawer
   );
@@ -1564,10 +1600,13 @@ function FooterButton({
   icon,
   label,
   onClick,
+  lead = false,
 }: {
   icon: ReactNode;
   label: string;
   onClick?: () => void;
+  /** The bar's one filled button; the rest are ghosts (`warmButton.ts`). */
+  lead?: boolean;
 }) {
   // The label hides below a 44rem bar (the bar is the container), and the
   // button keeps its name through `aria-label`.
@@ -1576,7 +1615,7 @@ function FooterButton({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className={`hidden sm:flex shrink-0 items-center gap-1.5 px-2.5 @[44rem]:px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+      className={`hidden sm:flex shrink-0 items-center gap-1.5 px-2.5 @[44rem]:px-3 py-1.5 text-xs font-medium ${lead ? BAR_LEAD : BAR_GHOST} rounded-md transition-colors cursor-pointer`}
     >
       {icon}
       <span className="hidden @[44rem]:inline">{label}</span>

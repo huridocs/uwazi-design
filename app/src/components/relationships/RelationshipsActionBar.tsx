@@ -11,7 +11,8 @@ import { editModeAtom, selectedRefIdsAtom } from "../../atoms/filters";
 import { ConfirmDialog } from "../shared/ConfirmDialog";
 import { SelectControls } from "../shared/SelectControls";
 import { RelationshipsCollapseControls } from "./CollapseControls";
-import { WARM_BUTTON } from "../shared/warmButton";
+import { BarDivider } from "../shared/BarDivider";
+import { BAR_DANGER, BAR_GHOST } from "../shared/warmButton";
 
 interface RelationshipsActionBarProps {
   /** Compact (drawer) flavour. Drops Create relationship + Manage types +
@@ -92,7 +93,7 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
       /* Ghost with a hover fill: its BOX meets the gutter, so the fill never
          crosses the panel edge. */
       data-gutter-align="box"
-      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary hover:bg-warm hover:text-ink rounded-md transition-colors cursor-pointer"
+      className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
     >
       <Pencil size={12} className="text-ink-tertiary" /> Edit
     </button>
@@ -106,9 +107,7 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
         /* Every host is a gutter host (the Relationships pane, the drawers):
            `bleed` runs the rule and the selection tint to the pane edge and
            puts the buttons back on the host's gutter. */
-        className={`bleed flex items-center justify-between h-12 shrink-0 transition-colors ${
-          editMode && hasSelection ? "bg-selected" : "bg-paper"
-        }`}
+        className="bleed flex items-center justify-between h-12 shrink-0 bg-paper"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
         <div data-part="start" className="flex items-center gap-2">
@@ -126,7 +125,10 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
                 type="button"
                 data-part="create"
                 onClick={handleCreate}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+                /* Ghost: Save (ink) is this bar's one filled button while
+                   editing. Its box meets the gutter, like Edit's. */
+                data-gutter-align="box"
+                className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
               >
                 <Plus size={12} className="text-ink-tertiary" /> Create relationship
               </button>
@@ -134,7 +136,7 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
                 type="button"
                 data-part="manage-types"
                 onClick={() => setManageOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-secondary hover:bg-warm hover:text-ink rounded-md transition-colors cursor-pointer"
+                className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
               >
                 <Settings2 size={12} className="text-ink-tertiary" /> Manage types
               </button>
@@ -163,19 +165,21 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
           {editMode ? (
             <>
               {hasSelection && (
-                <>
-                  <span data-part="selection" className="text-xs text-ink-secondary">
+                <span data-part="selection-group" className="flex items-center gap-1 whitespace-nowrap">
+                  <span data-part="selection" className="text-xs text-ink-secondary tabular-nums">
                     Selected {selectedCount} of {totalCount}
                   </span>
+                  <BarDivider />
                   <button
                     type="button"
                     data-part="delete"
                     onClick={() => setConfirmDelete(true)}
-                    className="px-3 py-1.5 text-xs font-medium text-white bg-seal-fill rounded-md hover:bg-seal-fill/90 transition-colors cursor-pointer"
+                    className={`px-3 py-1.5 text-xs font-medium ${BAR_DANGER} rounded-md transition-colors cursor-pointer`}
                   >
                     Delete
                   </button>
-                </>
+                  <BarDivider />
+                </span>
               )}
               <button
                 type="button"

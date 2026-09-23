@@ -72,7 +72,7 @@ import { useRegisterDirtyForm } from "../hooks/useDirtyGuard";
 import { ShareEntityModal } from "../components/share/ShareEntityModal";
 import { fromDateInputValue, toDateInputValue } from "../utils/dateValue";
 import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
-import { WARM_BUTTON, WARM_EDGE } from "../components/shared/warmButton";
+import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
 import { flashElement } from "../utils/flash";
 import { MediaFieldEditor } from "../components/metadata/MediaFieldEditor";
 
@@ -175,20 +175,21 @@ function MetadataReadBody({ onEdit, menuSlot }: { onEdit: () => void; menuSlot?:
       >
         <button
           onClick={onEdit}
-          className={`px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+          className={`px-3 py-1.5 text-xs font-medium ${BAR_LEAD} rounded-md transition-colors cursor-pointer`}
         >
           Edit
         </button>
         <button
           onClick={() => setShareOpen(true)}
-          className={`px-3 py-1.5 text-xs font-medium ${WARM_BUTTON} rounded-md transition-colors cursor-pointer`}
+          className={`px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
         >
           Share
         </button>
         <div className="flex-1" />
         <button
           onClick={() => notify("Entity deleted", "success")}
-          className="px-3 py-1.5 text-xs font-medium text-seal-label bg-seal-tint/40 hover:bg-seal-tint rounded-md transition-colors cursor-pointer"
+          data-gutter-align="box"
+          className={`px-3 py-1.5 text-xs font-medium ${BAR_DANGER} rounded-md transition-colors cursor-pointer`}
         >
           Delete
         </button>
@@ -1163,8 +1164,9 @@ function EntityEditBody({
             the same rule Uwazi's `.copy-from-btn` follows. */}
           <button
             onClick={() => setPickerOpen(true)}
+            data-gutter-align="box"
             className={`me-auto inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium
-              ${WARM_BUTTON} rounded-md transition-colors cursor-pointer
+              ${BAR_GHOST} rounded-md transition-colors cursor-pointer
               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30`}
           >
             <ClipboardCopy size={13} className="text-ink-tertiary" />
@@ -1176,10 +1178,8 @@ function EntityEditBody({
             if (!saving) onCancel();
           }}
           aria-disabled={saving || undefined}
-          className={`px-4 py-1.5 text-xs font-medium text-ink-secondary bg-warm ${WARM_EDGE} rounded-md transition-colors ${
-            saving
-              ? "opacity-50 cursor-not-allowed"
-              : "hover:bg-parchment hover:text-ink cursor-pointer"
+          className={`px-4 py-1.5 text-xs font-medium text-ink-secondary rounded-md transition-colors ${
+            saving ? "opacity-50 cursor-not-allowed" : "hover:bg-warm hover:text-ink cursor-pointer"
           }`}
         >
           Cancel
@@ -1188,19 +1188,20 @@ function EntityEditBody({
             itself — re-validate, alert via the summary line, focus the first
             invalid field. aria-disabled + the alert carry the state. While
             saving, the label goes transparent under a centred loader so the
-            button keeps its width (never-shift rule); the border is always
-            painted (transparent until failure) for the same reason. Failure
-            is danger-family, so it wears seal — border/text on tint, not a
-            new red. */}
+            button keeps its width (never-shift rule). Failure is
+            danger-family, so it wears seal — seal text on the seal tint, not a
+            new red. No border in any state: bar buttons carry none, and a
+            border that appears only on failure would be the one outline in
+            the bar. */}
         <button
           onClick={handleSave}
           aria-disabled={saving || saveBlocked || undefined}
-          className={`relative px-4 py-1.5 text-xs font-medium rounded-md border transition-colors cursor-pointer ${
+          className={`relative px-4 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
             saveState === "failed"
-              ? "bg-seal-tint text-seal-label border-seal/40 hover:bg-seal-tint/70"
+              ? "bg-seal-tint text-seal-label hover:bg-seal-tint/70"
               : saveBlocked
-                ? "bg-success/50 text-white border-transparent"
-                : "bg-success hover:bg-success/90 text-white border-transparent"
+                ? "bg-success/50 text-white"
+                : "bg-success hover:bg-success/90 text-white"
           }`}
         >
           <span className={saving ? "opacity-0" : undefined}>
