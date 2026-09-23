@@ -1118,6 +1118,7 @@ export function LibraryView() {
       totalMatches={matchTypeBase.length}
       layout={drawerResultsLayout}
       narrow
+      collapseBar
       headerSlot={
         <SegmentedControl
           size="sm"
