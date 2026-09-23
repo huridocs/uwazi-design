@@ -52,6 +52,7 @@ import {
 } from "../atoms/thesauri";
 import type { Corpus } from "../data/entityOverlay";
 import type { EditResult } from "../utils/createEntity";
+import { BulkEditBody } from "../components/metadata/BulkEditBody";
 import type { ThesaurusValue } from "../data/settings";
 import { focusedEntityIdAtom } from "../atoms/focusedEntity";
 import { saveEntityEditAtom } from "../atoms/entityOverlay";
@@ -237,13 +238,29 @@ export interface MetadataEditBodyProps {
   /** Drawer flavour: tighter gutters and no side-by-side field pairs. A
    *  460px pane is one column wide. */
   compact?: boolean;
+  /** What the form edits: the focused entity (the default), or a BULK set —
+   *  one form over many entities, see `BulkEditBody`. */
+  subject?: { kind: "entity" } | { kind: "bulk"; ids: string[] };
 }
 
 /** The metadata edit form. Exported because the Library's entity drawer renders
  *  THIS component rather than a drawer-sized copy of it — a second
  *  implementation of a form carrying validation, click-to-fill, Copy From and
- *  the dirty guard is how the type-label colour shipped wrong twice. */
-export function MetadataEditBody({
+ *  the dirty guard is how the type-label colour shipped wrong twice.
+ *
+ *  A bulk subject renders `BulkEditBody`: the same field vocabulary (the
+ *  thesaurus picker, the label-row recipe, the bars), but a form whose every
+ *  field has to say whether the entities agree, which the single form's
+ *  per-field machinery (per-language titles, click-to-fill, Copy From)
+ *  doesn't. Split here so neither form's hooks run for the other. */
+export function MetadataEditBody(props: MetadataEditBodyProps) {
+  const subject = props.subject;
+  if (subject?.kind === "bulk")
+    return <BulkEditBody ids={subject.ids} onCancel={props.onCancel} onApplied={() => props.onCancel()} />;
+  return <EntityEditBody {...props} />;
+}
+
+function EntityEditBody({
   onCancel,
   onSave,
   menuSlot,

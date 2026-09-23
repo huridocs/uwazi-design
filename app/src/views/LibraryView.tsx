@@ -1121,9 +1121,11 @@ export function LibraryView() {
         )}
       </div>
 
-      {/* Footer action bar */}
+      {/* Footer action bar. A container, so the selection's actions fold to
+          their icons (each keeps its name) when the pane is too narrow for
+          their labels, instead of wrapping inside a fixed-height bar. */}
       <div
-        className="bleed shrink-0 flex items-center gap-2 h-12 bg-paper"
+        className="@container bleed shrink-0 flex items-center gap-1 h-12 bg-paper"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
         {/* The bar swaps IN PLACE between the baseline actions and the
@@ -1134,6 +1136,7 @@ export function LibraryView() {
           <LibrarySelectionBar
             filteredIds={filteredIds}
             loadedIds={drawnIds}
+            corpus={dataSource}
             filtersSlot={<ActiveFiltersButton className="ms-2 shrink-0" />}
           />
         ) : (

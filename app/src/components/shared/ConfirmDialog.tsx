@@ -1,7 +1,6 @@
-import { useEffect } from "react";
-import { AlertTriangle, X } from "lucide-react";
-import { useFocusTrap } from "../../hooks/useFocusTrap";
-import { WARM_BUTTON } from "./warmButton";
+import { AlertTriangle } from "lucide-react";
+import { BAR_GHOST } from "./warmButton";
+import { Modal, MODAL_BUTTON, MODAL_COMMIT, MODAL_DANGER } from "./Modal";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -26,59 +25,48 @@ export function ConfirmDialog({
   onCancel,
   variant = "default",
 }: ConfirmDialogProps) {
-  const trapRef = useFocusTrap<HTMLDivElement>(open);
-  // Escape cancels — same convention as the drawers/modals.
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onCancel();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onCancel]);
-
   if (!open) return null;
 
+  // The shared `Modal`: scrim, focus trap, Escape (cancels), header and the
+  // footer ladder. A destructive confirm is the seal commit; the way out is a
+  // ghost.
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
-      <div ref={trapRef} className="bg-paper rounded-lg shadow-xl w-full max-w-md p-6 animate-fade-in-up">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
-            {variant === "danger" && (
-              <div className="w-10 h-10 rounded-md bg-seal-tint flex items-center justify-center">
-                <AlertTriangle size={20} className="text-seal-label" />
-              </div>
-            )}
-            <h3 id="confirm-dialog-title" className="text-base font-semibold text-ink">{title}</h3>
+    <Modal
+      component="ConfirmDialog"
+      size="sm"
+      // Never dismissed by a stray click: a confirm is answered with a button.
+      dismissOnScrim={false}
+      onClose={onCancel}
+      title={title}
+      titleId="confirm-dialog-title"
+      describedBy="confirm-dialog-message"
+      panelProps={{ "data-variant": variant }}
+      leading={
+        variant === "danger" ? (
+          <div data-part="icon" aria-hidden className="shrink-0 w-8 h-8 rounded-md bg-seal-tint flex items-center justify-center">
+            <AlertTriangle size={16} className="text-seal-label" />
           </div>
-          <button
-            onClick={onCancel}
-            aria-label="Close"
-            className="p-1 rounded-md hover:bg-parchment transition-colors"
-          >
-            <X size={18} className="text-ink-muted" />
-          </button>
-        </div>
-        <p className="text-sm text-ink-secondary mb-6">{message}</p>
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={onCancel}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md ${WARM_BUTTON} transition-colors cursor-pointer`}
-          >
+        ) : undefined
+      }
+      footer={
+        <>
+          <button type="button" data-part="cancel" onClick={onCancel} className={`${MODAL_BUTTON} ${BAR_GHOST} cursor-pointer`}>
             {cancelLabel}
           </button>
           <button
+            type="button"
+            data-part="confirm"
             onClick={onConfirm}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-              variant === "danger"
-                ? "bg-seal-fill text-white hover:bg-seal-fill/90"
-                : "bg-ink text-parchment hover:bg-ink/90"
-            }`}
+            className={variant === "danger" ? MODAL_DANGER : MODAL_COMMIT}
           >
             {confirmLabel}
           </button>
-        </div>
-      </div>
-    </div>
+        </>
+      }
+    >
+      <p id="confirm-dialog-message" data-part="message" className="text-sm text-ink-secondary">
+        {message}
+      </p>
+    </Modal>
   );
 }

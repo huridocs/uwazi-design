@@ -1,8 +1,9 @@
-import { useCallback, type ReactNode } from "react";
+import { Fragment, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { useAtomValue, useSetAtom } from "jotai";
+import { MoreHorizontal, X } from "lucide-react";
+import { breakpointAtom } from "../../atoms/viewport";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
-import { useAtomValue, useSetAtom, useStore } from "jotai";
-import { FileDown, X } from "lucide-react";
 import {
   clearSelectionAtom,
   librarySelectedEntityIdAtom,
@@ -10,57 +11,36 @@ import {
   librarySelectionDrawerOpenAtom,
   selectIdsAtom,
 } from "../../atoms/library";
-import { dataSourceAtom } from "../../atoms/dataSource";
-import { languageAtom } from "../../atoms/language";
-import { getEntity, type Entity } from "../../data/entities";
-import { downloadCsv, exportEntitiesCsv } from "../../utils/exportCsv";
-import { useNotify } from "../../hooks/useNotify";
-import { BAR_GHOST } from "../shared/warmButton";
+import type { Corpus } from "../../data/entityOverlay";
+import { SelectionDialogs, useSelectionActions, type SelectionAction } from "./selectionActions";
+import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../shared/warmButton";
+import { BarDivider } from "../shared/BarDivider";
+import { Hint } from "../shared/Hint";
 import { SelectAllBox } from "./SelectAllBox";
 
-/** Export the selection as a CSV download — in `order` (the results', or the
- *  selection drawer's), then any selected ids that order doesn't hold. The one
- *  bulk action `main` runs: the others (edit, change template, share,
- *  permissions, delete) write through `playground`'s entity edit layer. */
-export function useExportSelection(order: readonly string[]) {
-  const store = useStore();
-  const notify = useNotify();
-  return useCallback(async () => {
-    const selection = store.get(librarySelectionAtom);
-    const ordered = order.filter((id) => selection.has(id));
-    const shown = new Set(ordered);
-    for (const id of selection) if (!shown.has(id)) ordered.push(id);
-    const entities = ordered.map((id) => getEntity(id)).filter((e): e is Entity => !!e);
-    const result = await exportEntitiesCsv(entities, store.get(languageAtom));
-    if (!result) return;
-    const filename = `uwazi-${store.get(dataSourceAtom)}-selection-${new Date().toISOString().slice(0, 10)}.csv`;
-    downloadCsv(result.csv, filename);
-    notify(
-      `CSV exported — ${result.rows.toLocaleString()} ${result.rows === 1 ? "row" : "rows"}.`,
-      "success",
-    );
-  }, [order, store, notify]);
-}
-
-/** The Library footer's SELECTED state — swapped in place of the baseline
- *  actions, in the same bar at the same height.
+/** The Library footer's SELECTED state — swapped in place of the four
+ *  baseline actions, in the same bar at the same height.
  *
- *  The work on the selection first, at the bar's start where the idle bar
- *  keeps its own actions; then the active-filters readout; then the selection
- *  itself at the bar's logical END: the select-all box (only at 2 or more),
- *  the count with its one offer under it, and Clear.
+ *  Order: one fixed slot holding the readout (a live region, so 9 → 10 → 100
+ *  moves no button) and, under it, its one offer ("Select all N", else "N not
+ *  shown"), then the actions (`useSelectionActions` — the same list the phone sheet and
+ *  the selection drawer's menu show) and Clear. Below a 56rem bar every action
+ *  keeps only its icon and its name.
  *
  *  This component subscribes to the selection; the view around it does not. */
 export function LibrarySelectionBar({
   filteredIds,
   loadedIds,
+  corpus,
   filtersSlot,
 }: {
   /** Every id the current results hold (filters, query, match types). */
   filteredIds: readonly string[];
-  /** The ids the visible view draws ("Show more" has loaded). */
+  /** The ids "Show more" has loaded. */
   loadedIds: readonly string[];
-  /** The active-filters readout, placed after the actions. */
+  corpus: Corpus;
+  /** The active-filters readout, placed after the actions and before the
+   *  end group. */
   filtersSlot?: ReactNode;
 }) {
   const selection = useAtomValue(librarySelectionAtom);
@@ -68,39 +48,61 @@ export function LibrarySelectionBar({
   const selectIds = useSetAtom(selectIdsAtom);
   const openDrawer = useSetAtom(librarySelectionDrawerOpenAtom);
   const setPreview = useSetAtom(librarySelectedEntityIdAtom);
-  const exportSelection = useExportSelection(filteredIds);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  // On a phone the bar's action buttons don't fit (they are `hidden sm:flex`),
+  // and the selection drawer isn't rendered — so the bar there is the count,
+  // an Actions button opening a sheet of the same actions, and Clear.
+  const isMobile = useAtomValue(breakpointAtom) === "mobile";
 
   const n = selection.size;
+  const inView = new Set(filteredIds);
+  let notInView = 0;
+  for (const id of selection) if (!inView.has(id)) notInView++;
   // Selected but not DRAWN — filtered out, or past what "Show more" has
-  // loaded. This is where that is said, not left silent.
+  // loaded. After "Select all 4,398" and the box unticked, 4,278 stay
+  // selected; this is where that is said, not left silent.
   const drawn = new Set(loadedIds);
   let notShown = 0;
   for (const id of selection) if (!drawn.has(id)) notShown++;
   const allLoaded = loadedIds.length > 0 && loadedIds.every((id) => selection.has(id));
-  const moreToSelect =
-    allLoaded && filteredIds.length > loadedIds.length && filteredIds.some((id) => !selection.has(id));
+  const moreToSelect = allLoaded && filteredIds.length > loadedIds.length && filteredIds.some((id) => !selection.has(id));
 
   const showList = () => {
+    if (isMobile) return setSheetOpen(true);
     setPreview(null);
     openDrawer(true);
   };
+  const actions = useSelectionActions({ order: filteredIds, corpus, isMobile });
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => void exportSelection()}
-        className={`hidden sm:flex shrink-0 items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
-      >
-        <FileDown size={13} className="text-ink-tertiary" aria-hidden />
-        Export CSV
-      </button>
+      {/* The work on the selection first, at the bar's START where the idle
+          bar keeps its own actions: Edit leads, the rest are ghosts, Delete
+          sits past a hairline. */}
+      {actions.map((a) => (
+        <Fragment key={a.id}>
+          {a.danger && <BarDivider className="hidden sm:block" />}
+          <BarButton
+            icon={a.icon}
+            label={a.label}
+            onClick={a.onClick}
+            disabledReason={a.disabledReason}
+            tone={a.id === "edit" ? "lead" : a.danger ? "danger" : "ghost"}
+          />
+        </Fragment>
+      ))}
       {filtersSlot}
-      {/* The box is there only for a MULTIPLE selection; below two it keeps
-          its slot `invisible` (out of the tab order and the accessibility
-          tree), so the count doesn't move when the second item joins. The
-          count and its offer share a FIXED slot: the count sits on the bar's
-          midline, the offer hangs under it out of flow. */}
+      {/* The selection itself at the bar's logical END (it flips under RTL):
+          the select-all box, the count with its one offer, and Clear. The box
+          is there only for a MULTIPLE selection; below two it keeps its slot
+          `invisible` (out of the tab order and the accessibility tree), so
+          the count doesn't move when the second item joins. `ms-auto` pins
+          the group to the end, so nothing at the start moves either.
+
+          The count and its offer share a FIXED slot. The count sits on the
+          bar's midline; the offer ("Select all 1,084", else "3 not shown")
+          hangs under it, out of flow, so it comes and goes without moving
+          anything. */}
       <span data-part="selection-end" className="hidden sm:flex ms-auto shrink-0 items-center gap-1">
         <span className={`inline-flex shrink-0 me-2 ${n >= 2 ? "" : "invisible"}`}>
           <SelectAllBox loadedIds={loadedIds} />
@@ -116,7 +118,7 @@ export function LibrarySelectionBar({
               {n.toLocaleString()} selected
             </button>
           </span>
-          <span aria-live="polite" className="flex absolute start-0 top-full -mt-0.5 text-meta leading-none">
+          <span aria-live="polite" className="hidden sm:flex absolute start-0 top-full -mt-0.5 text-meta leading-none">
             {moreToSelect ? (
               <button
                 type="button"
@@ -138,21 +140,22 @@ export function LibrarySelectionBar({
             ) : null}
           </span>
         </span>
-        <button
-          type="button"
-          onClick={() => clear()}
-          data-gutter-align="box"
-          className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
-        >
-          <X size={13} className="text-ink-tertiary" aria-hidden />
-          Clear
-        </button>
+        <BarButton icon={<X size={13} />} label="Clear" onClick={() => clear()} />
       </span>
-      {/* Phone: the count and Clear (the drawer and the export need a wider
-          screen). */}
+      {/* Phone: the count alone (the box and the offer need a wider bar). */}
       <span role="status" aria-live="polite" className="sm:hidden shrink-0 me-auto text-xs font-semibold text-ink tabular-nums">
         {n.toLocaleString()} selected
       </span>
+      {/* Phone: the same actions, reachable. */}
+      <button
+        type="button"
+        onClick={() => setSheetOpen(true)}
+        aria-haspopup="dialog"
+        aria-expanded={sheetOpen}
+        className={`sm:hidden shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium ${BAR_LEAD} rounded-md cursor-pointer`}
+      >
+        <MoreHorizontal size={13} className="text-ink-tertiary" aria-hidden /> Actions
+      </button>
       <button
         type="button"
         onClick={() => clear()}
@@ -160,7 +163,54 @@ export function LibrarySelectionBar({
       >
         <X size={13} className="text-ink-tertiary" aria-hidden /> Clear
       </button>
+      {sheetOpen && (
+        <ActionsSheet
+          count={n}
+          onClose={() => setSheetOpen(false)}
+          actions={actions}
+        />
+      )}
+      <SelectionDialogs corpus={corpus} notInView={notInView} />
     </>
+  );
+}
+
+/** A footer action. Disabled ones stay focusable (`aria-disabled`) and keep
+ *  their width, and say why. Below a 56rem bar the label hides and the name
+ *  stays as `aria-label`. */
+function BarButton({
+  icon,
+  label,
+  onClick,
+  disabledReason,
+  tone = "ghost",
+}: {
+  icon: ReactNode;
+  label: string;
+  onClick?: () => void;
+  disabledReason?: string;
+  /** Weight on the bar's ladder (`warmButton.ts`). */
+  tone?: "lead" | "ghost" | "danger";
+}) {
+  const disabled = !!disabledReason;
+  return (
+    <Hint text={disabledReason ?? label} describe={disabled}>
+      {(hint) => (
+        <button
+          {...hint}
+          type="button"
+          aria-label={label}
+          aria-disabled={disabled || undefined}
+          onClick={disabled ? undefined : onClick}
+          className={`hidden sm:flex shrink-0 items-center gap-1.5 px-2.5 @[56rem]:px-3 py-1.5 text-xs font-medium ${
+            tone === "lead" ? BAR_LEAD : tone === "danger" ? BAR_DANGER : BAR_GHOST
+          } rounded-md transition-colors ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+        >
+          <span className={tone === "danger" ? "" : "text-ink-tertiary"}>{icon}</span>
+          <span className="hidden @[56rem]:inline">{label}</span>
+        </button>
+      )}
+    </Hint>
   );
 }
 
