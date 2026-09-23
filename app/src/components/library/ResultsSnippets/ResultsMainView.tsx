@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Search, ChevronDown, FileText, Tag } from "lucide-react";
+import { Search, ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, FileText, Tag } from "lucide-react";
 import type { Entity } from "../../../data/entities";
 import { getEntityType } from "../../../data/entities";
 import type { Language } from "../../../atoms/language";
@@ -36,6 +36,7 @@ import { RelationshipGroupedCard } from "../../relationships/RelationshipGrouped
 import { SectionLabel } from "../../shared/SectionLabel";
 import { HighlightedText } from "../../shared/HighlightedText";
 import { EntityTypeChip } from "../../shared/EntityTypeChip";
+import { BAR_GHOST } from "../../shared/warmButton";
 import { ListInfoRow } from "../../shared/ListInfoRow";
 import { BorrowedDocLine } from "../BorrowedDocLine";
 import { ToggleChip } from "../../shared/ToggleChip";
@@ -105,6 +106,8 @@ interface Props {
   narrow?: boolean;
   /** A control at the end of the header row (the drawer's layout switch). */
   headerSlot?: ReactNode;
+  /** Draw the Collapse all / Expand all footer bar (the drawer). */
+  collapseBar?: boolean;
 }
 
 interface Result {
@@ -141,6 +144,7 @@ export function ResultsMainView({
   layout: layoutProp,
   narrow = false,
   headerSlot,
+  collapseBar = false,
 }: Props) {
   const menuLayout = useAtomValue(libraryResultsLayoutAtom);
   const layout = layoutProp ?? menuLayout;
@@ -163,11 +167,22 @@ export function ResultsMainView({
   // Per-entity "show every page-snippet", owned here so the capped `results`
   // memo stays cheap and only the expanded cards pay for the extra windowing.
   const [showAll, setShowAll] = useState<Record<string, boolean>>({});
+  /* What the footer's Collapse all / Expand all fold. Local, not the
+     Relationships panel's expand/collapse signal atoms: those count and drive
+     that panel's groups, and a Library control writing them would fold a
+     surface it can't see (see `useGroupExpansion`'s `standalone`).
+     - grouped: the entity cards whose body (properties, passages) is folded
+       down to the header;
+     - passages: the list is flat — no groups — so folding clamps every
+       excerpt to one line, and the attribution under it stays whole. */
+  const [collapsedIds, setCollapsedIds] = useState<ReadonlySet<string>>(() => new Set());
+  const [passagesFolded, setPassagesFolded] = useState(false);
   const trimmed = query.trim();
 
   useEffect(() => {
     setVisible(STEP);
     setShowAll({});
+    setCollapsedIds(new Set());
   }, [entities, trimmed, language, source, layout]);
 
   const cappedResults = useMemo<Result[]>(
@@ -202,8 +217,39 @@ export function ResultsMainView({
     [cappedResults, showAll, trimmed, language, source],
   );
 
+  // The groups the grouped layout can fold: cards with a body under the header.
+  const foldable = results.filter((r) => properties(r.snippets).length > 0 || r.snippets.fullText.length > 0);
+  const live = !!trimmed && totalMatches > 0 && !(source === "cejil" && cejilLoading) && entities.length > 0;
+  const canCollapse =
+    live && (layout === "passages" ? !passagesFolded : layout === "grouped" && foldable.some((r) => !collapsedIds.has(r.entity.id)));
+  const canExpand =
+    live && (layout === "passages" ? passagesFolded : layout === "grouped" && foldable.some((r) => collapsedIds.has(r.entity.id)));
+  const collapseAll = () =>
+    layout === "passages" ? setPassagesFolded(true) : setCollapsedIds(new Set(foldable.map((r) => r.entity.id)));
+  const expandAll = () => (layout === "passages" ? setPassagesFolded(false) : setCollapsedIds(new Set()));
+  /* The footer bar, like every Library drawer body's: 3rem, a rule above,
+     ghost buttons. MOUNTED in every state — no query, loading, no match —
+     with its buttons disabled there, so the list above never changes height
+     as a search starts or ends. */
+  const withBar = (content: ReactNode) =>
+    collapseBar ? (
+      <div className="flex flex-col h-full min-h-0">
+        <div className="flex-1 min-h-0 flex flex-col">{content}</div>
+        <div
+          data-part="results-footer"
+          className="bleed shrink-0 flex items-center gap-1 h-12 bg-paper"
+          style={{ borderTop: "1px solid var(--border-primary)" }}
+        >
+          <FooterGhost icon={<ChevronsDownUp size={13} />} label="Collapse all" onClick={collapseAll} disabled={!canCollapse} edge />
+          <FooterGhost icon={<ChevronsUpDown size={13} />} label="Expand all" onClick={expandAll} disabled={!canExpand} />
+        </div>
+      </div>
+    ) : (
+      content
+    );
+
   if (source === "cejil" && cejilLoading) {
-    return (
+    return withBar(
       <Centered>
         {cejilError ? (
           <>
@@ -223,7 +269,7 @@ export function ResultsMainView({
   // The switcher keeps this segment whether or not a query exists (removing it
   // would shift every control beside it), so the view owns the no-query state.
   if (!trimmed) {
-    return (
+    return withBar(
       <Centered>
         <Search size={22} className="text-ink-muted" aria-hidden="true" />
         <span className="text-sm text-ink-tertiary">Search to see where terms match</span>
@@ -235,7 +281,7 @@ export function ResultsMainView({
   }
 
   if (totalMatches === 0) {
-    return (
+    return withBar(
       <Centered>
         <span dir="ltr" className="text-sm text-ink-tertiary">
           No matches for <span className="font-medium text-ink-secondary">“{trimmed}”</span>
@@ -247,7 +293,7 @@ export function ResultsMainView({
 
   const capped = entities.length > results.length + (entities.length - visible);
 
-  return (
+  return withBar(
     <div className="flex flex-col h-full min-h-0">
       {/* Header strip — always mounted; only its contents change. Match-type
           chips and the cap note ride the shared list-header shape so this
@@ -323,6 +369,15 @@ export function ResultsMainView({
             onToggleShowAll={(id) =>
               setShowAll((m2) => ({ ...m2, [id]: !m2[id] }))
             }
+            collapsedIds={collapseBar ? collapsedIds : null}
+            onToggleCollapsed={(id) =>
+              setCollapsedIds((prev) => {
+                const next = new Set(prev);
+                if (next.has(id)) next.delete(id);
+                else next.add(id);
+                return next;
+              })
+            }
           />
         ) : layout === "tree" ? (
           <TreeBody
@@ -334,6 +389,7 @@ export function ResultsMainView({
         ) : (
           <PassagesBody
             results={results}
+            folded={collapseBar && passagesFolded}
             query={trimmed}
             onSelect={onSelect}
             onFocusProperty={onFocusProperty}
@@ -375,6 +431,8 @@ function GroupedBody({
   onSelectSnippet,
   showAll,
   onToggleShowAll,
+  collapsedIds,
+  onToggleCollapsed,
 }: {
   results: Result[];
   narrow: boolean;
@@ -386,6 +444,10 @@ function GroupedBody({
   /** Entities currently showing every page-snippet rather than the capped few. */
   showAll: Record<string, boolean>;
   onToggleShowAll: (id: string) => void;
+  /** Cards folded to their header, with a chevron on each (the drawer's
+   *  collapse bar). `null`: the host has no bar, and cards don't fold. */
+  collapsedIds: ReadonlySet<string> | null;
+  onToggleCollapsed: (id: string) => void;
 }) {
   return (
     <div className="flex flex-col gap-2.5 pb-2">
@@ -396,6 +458,8 @@ function GroupedBody({
         const hasMeta = props.length > 0;
         const hasText = snippets.fullText.length > 0;
         const expanded = !!showAll[entity.id];
+        const hasBody = hasMeta || hasText;
+        const folded = !!collapsedIds?.has(entity.id);
         return (
           <article
             key={entity.id}
@@ -409,9 +473,26 @@ function GroupedBody({
             <EntitySelectBox id={entity.id} title={entity.title} />
             <header
               className={`flex items-center gap-2 px-4 py-2.5 ${narrow ? "flex-wrap gap-y-0.5" : ""} ${
-                hasMeta || hasText ? "border-b border-border/40" : ""
+                hasBody && !folded ? "border-b border-border/40" : ""
               }`}
             >
+              {collapsedIds &&
+                (hasBody ? (
+                  <button
+                    type="button"
+                    onClick={() => onToggleCollapsed(entity.id)}
+                    aria-expanded={!folded}
+                    aria-label={`${folded ? "Show" : "Hide"} the matches in ${entity.title}`}
+                    className="relative shrink-0 -ms-1 w-5 h-5 flex items-center justify-center rounded-sm text-ink-muted
+                      hover:text-ink cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
+                  >
+                    <ChevronRight size={13} aria-hidden className={`transition-transform ${folded ? "" : "rotate-90"}`} />
+                  </button>
+                ) : (
+                  // A title-only card has nothing to fold; its slot keeps the
+                  // titles in one column.
+                  <span aria-hidden className="shrink-0 -ms-1 w-5 h-5" />
+                ))}
               <EntityTypeChip typeId={entity.typeId} />
               <button
                 type="button"
@@ -455,7 +536,7 @@ function GroupedBody({
                 rest. One section alone spans the card (capped to a readable
                 measure rather than stretched); neither means a header-only card,
                 which is the honest shape of a title-only match. */}
-            {(hasMeta || hasText) && (
+            {hasBody && !folded && (
               <div
                 className={`grid gap-x-6 gap-y-3 px-4 py-3 ${
                   hasMeta && hasText && !narrow ? "lg:grid-cols-[minmax(14rem,1fr)_2fr]" : ""
@@ -704,12 +785,15 @@ interface FlatPassage {
 
 function PassagesBody({
   results,
+  folded,
   query,
   onSelect,
   onFocusProperty,
   onSelectSnippet,
 }: {
   results: Result[];
+  /** Every excerpt clamped to one line (the drawer's Collapse all). */
+  folded: boolean;
   query: string;
   onSelect: (id: string) => void;
   onFocusProperty: (id: string, fieldKey: string) => void;
@@ -815,7 +899,7 @@ function PassagesBody({
                   it came from. `text-sm` here so `ch` is measured in the
                   passage's own type size, not the inherited one. */}
               <span className="block max-w-[74ch] text-sm">
-                <span className="block leading-relaxed text-ink">
+                <span className={`${folded ? "line-clamp-1" : "block"} leading-relaxed text-ink`}>
                   <HighlightedText text={row.text} query={query} />
                 </span>
                 {/* The attribution, under the quote it belongs to. Small and
@@ -1031,5 +1115,39 @@ function Centered({ children }: { children: ReactNode }) {
     <div className="flex-1 h-full flex flex-col items-center justify-center gap-2 px-6 text-center">
       {children}
     </div>
+  );
+}
+
+/** A footer bar button on the bar ladder: ghost, no border. Disabled ones
+ *  stay focusable and in place (`aria-disabled`), so the bar never reflows. */
+function FooterGhost({
+  icon,
+  label,
+  onClick,
+  disabled,
+  edge = false,
+}: {
+  icon: ReactNode;
+  label: string;
+  onClick: () => void;
+  disabled: boolean;
+  /** At the bar's start edge: the box, not the text, meets the gutter. */
+  edge?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={disabled ? undefined : onClick}
+      aria-disabled={disabled || undefined}
+      data-gutter-align={edge ? "box" : undefined}
+      className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+        disabled ? "text-ink-muted cursor-default" : `${BAR_GHOST} cursor-pointer`
+      }`}
+    >
+      <span className="text-ink-tertiary" aria-hidden>
+        {icon}
+      </span>
+      {label}
+    </button>
   );
 }
