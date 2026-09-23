@@ -121,11 +121,12 @@ Keep it in sync when tokens.css or the style rules change.
   conditional mount inside a scrollable column shoves everything below it the
   moment a user ticks a box. Reserve the space; don't grow into it.
 - **Active sidebar items**: `bg-warm text-ink` with the *same* icon colour as inactive. Background change alone signals state.
-- **Warm buttons in a dialog or modal footer use `WARM_BUTTON`** (fill plus the
-  `WARM_EDGE` inset ring) from `components/shared/warmButton.ts`, never a
-  hand-rolled `bg-warm` string. Action bars at the foot of a pane do not use
-  it; see the next rule. Buttons on a warm, parchment or vellum ground, in the
-  navbar, and the Beacon pill take no edge.
+- **A warm button on a paper ground outside bars and dialogs uses `WARM_BUTTON`**
+  (fill plus the `WARM_EDGE` inset ring) from `components/shared/warmButton.ts`,
+  never a hand-rolled `bg-warm` string (Settings buttons, the thesaurus picker).
+  Action bars and modal footers do not use it; see the next two rules. Buttons
+  on a warm, parchment or vellum ground, in the navbar, and the Beacon pill take
+  no edge.
 - **Action-bar buttons carry no border, ring or edge, and at rest the only
   fill is the ink commit.** The ladder, in `warmButton.ts`: solid ink for the
   bar's commit (Save, Open entity, New Import); else `BAR_LEAD` for its lead
@@ -139,6 +140,20 @@ Keep it in sync when tokens.css or the style rules change.
   `data-gutter-align="box"`. The selection readout keeps its fixed slot; the
   "Select all N" offer hangs under the count out of flow, so the count sits on
   the bar's midline.
+- **Every dialog is the shared `Modal`** (`components/shared/Modal.tsx`). Never
+  hand-roll a scrim, panel, header or footer. Widths are four tiers: `sm` 28rem
+  (stays a centred card on phones), `md` 32, `lg` 40, `xl` 48 (full screen below
+  md). The header is 3rem: `text-sm` title, subtitle inline after it. The panel
+  is a `gutter-host-main` host, so strips and rows inside use `bleed` /
+  `bleed-flush`, carry no `px-*`, and `__gutter()` must pass. The footer is a
+  3rem bar on the bar ladder: one commit (`MODAL_COMMIT` ink, `MODAL_DANGER` for
+  a destructive confirm, success for a Save) and `BAR_GHOST` for the rest; no
+  bordered or warm-filled Cancel. Focus trap, Escape and aria come from the
+  shell; a control that handles Escape itself calls `preventDefault()`. A list
+  or step modal passes a fixed `height` so it never resizes. `scope="pane"`
+  covers a pane (Copy From); `portal={false}` when it opens inside a host whose
+  outside-click check must see it as inside (drawers, EntityOverlay). Bert's
+  AgentModal is the one exception.
 
 ## CSS tokens — use real names
 
