@@ -84,7 +84,13 @@ const CHIP_BOX: Record<ThumbSize, string> = { m: "w-9 h-9", l: "w-12 h-12" };
  *  stacked slot. The slot spans the card's rows at the logical start, so its
  *  height is also the card's floor: no `CARD_FLOOR` here, and a one-field card
  *  is as tall as its neighbours because the subgrid shares the rows. */
-const SIDE_W: Record<ThumbSize, string> = { m: "w-32", l: "w-44" };
+const SIDE_W: Record<ThumbSize, string> = { m: "w-40", l: "w-52" };
+/** How many properties a SIDE card shows, whatever the Display menu's count:
+ *  three lines of the label/value grid. The side card's height is meant to
+ *  sit near its slot's (the metadata-off look), not to stack a record beside a
+ *  small picture; the rest is counted in the footer (`+N`) and one click away
+ *  in the drawer. */
+const SIDE_FIELD_CAP = 3;
 const SIDE_SHAPE: Record<ThumbFrame, string> = { landscape: "aspect-[4/3]", portrait: "aspect-[3/4]" };
 
 /** What the sort key is READING on this card, so the card can mark it.
@@ -271,7 +277,8 @@ export const EntityCard = memo(function EntityCard({
      properties: None / First 3 / First 5 / All", defaulting to All. It replaced
      a Metadata on/off switch, which answered only "all or nothing" while the
      interesting number sat in this file as a constant nobody could see. */
-  const limit = cardFieldLimit(info.fields);
+  const menuLimit = cardFieldLimit(info.fields);
+  const limit = side ? Math.min(menuLimit ?? Infinity, SIDE_FIELD_CAP) : menuLimit;
   const fields = limit === null ? scalarFields : scalarFields.slice(0, limit);
   /* What the choice left behind, so a card showing three of nine says so. At
      "All" it is always 0. At "None" it is suppressed rather than accurate: the
@@ -585,7 +592,11 @@ export const EntityCard = memo(function EntityCard({
           thing holding a row level. */}
       <span
         data-part="title"
-        className={`relative min-w-0 ${textCol} text-sm font-semibold text-ink leading-snug line-clamp-2
+        /* `self-start`: the title's box is its own two clamped lines, never the
+           TRACK's height. A track taller than two lines (the side slot spanning
+           a title and a footer, a neighbour's longer title) stretched the box,
+           and `line-clamp` then showed a third line cut mid-glyph under it. */
+        className={`relative min-w-0 ${textCol} self-start text-sm font-semibold text-ink leading-snug line-clamp-2
           not-supports-[grid-template-rows:subgrid]:min-h-[2.375rem]`}
       >
         <span
@@ -624,10 +635,26 @@ export const EntityCard = memo(function EntityCard({
            `dt`/`dd` per property, so the pairing is in the markup and not only
            in the spacing. The `div` wrapper per pair is valid inside a `dl` and
            is what keeps label and value locked together. */
-        <dl data-part="metadata" className={`relative min-w-0 ${textCol} space-y-2`}>
+        <dl
+          data-part="metadata"
+          className={`relative min-w-0 ${textCol} ${
+            side ? "self-start grid grid-cols-[fit-content(42%)_minmax(0,1fr)] gap-x-3 gap-y-1" : "space-y-2"
+          }`}
+        >
           {fields.map((f) => (
-            <div key={f.id} className="min-w-0">
-              <dt className="block text-meta font-semibold uppercase tracking-wider text-ink-tertiary leading-tight">
+            /* Side: a label column and a value column, like the record, one
+               line per field. The label column takes its natural width up to
+               42% (`fit-content`), so a short label costs only itself and a long
+               one ("Documentos de la CorteIDH") keeps the value at least 58% of
+               the row; neither wraps, each ends in an ellipsis past its column.
+               `contents` puts label and value straight into the grid. */
+            <div key={f.id} className={side ? "contents" : "min-w-0"}>
+              <dt
+                className={`block text-meta font-semibold uppercase tracking-wider text-ink-tertiary leading-tight ${
+                  side ? "min-w-0 truncate self-baseline leading-snug" : ""
+                }`}
+                title={side ? f.label : undefined}
+              >
                 {f.label}
               </dt>
               {/* Exactly ONE line per field, always. `truncate` rather than
@@ -637,7 +664,7 @@ export const EntityCard = memo(function EntityCard({
                   "+N more" is a shrink-0 sibling, so it survives the ellipsis
                   instead of being cut off inside it. */}
               <dd
-                className={`flex items-baseline gap-1 min-w-0 text-xs text-ink leading-snug ${sortMark(f.id === sortedId)}`}
+                className={`flex items-baseline gap-1 min-w-0 text-xs text-ink leading-snug ${side ? "self-baseline" : ""} ${sortMark(f.id === sortedId)}`}
                 title={f.id === sortedId ? sortedNote : undefined}
               >
                 {inspectable(f) && onFocusProperty ? (
@@ -658,12 +685,12 @@ export const EntityCard = memo(function EntityCard({
                       underline decoration-transparent hover:decoration-current underline-offset-2
                       transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
                   >
-                    <CardValue field={f} query={query} />
+                    <CardValue field={f} query={query} compact={side} />
                   </button>
                 ) : (
-                  <CardValue field={f} query={query} />
+                  <CardValue field={f} query={query} compact={side} />
                 )}
-                {!!f.more && !ownsItsRemainder(f) && (
+                {!!f.more && !ownsItsRemainder(f, side) && (
                   <span className="shrink-0 text-meta text-ink-tertiary">+{f.more} more</span>
                 )}
               </dd>
@@ -680,7 +707,7 @@ export const EntityCard = memo(function EntityCard({
               grid stays level. Only from the second image on; the first is the
               picture above. */}
           {extraImages.length > 0 && onFocusProperty && (
-            <div className="min-w-0 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+            <div className={`min-w-0 flex flex-wrap items-center gap-x-2 gap-y-0.5 ${side ? "col-span-2" : ""}`}>
               <span className="block text-meta font-semibold uppercase tracking-wider text-ink-tertiary leading-tight w-full">
                 {extraImages.length === 1 ? "1 more image" : `${extraImages.length} more images`}
               </span>
