@@ -576,6 +576,13 @@ export type ThumbFrame = "landscape" | "portrait";
  *  force one treatment for every ratio. */
 export type ThumbFit = "auto" | "cover" | "contain";
 
+/** Where the preview sits on a card. `stacked` puts the slot above the text, the
+ *  way cards always have. `side` puts it at the card's logical START (left in
+ *  LTR, right in RTL) and the text beside it, so the card runs wider than tall
+ *  and the grid hangs fewer, wider columns. One choice for the whole grid, like
+ *  the frame. */
+export type CardLayout = "stacked" | "side";
+
 /** How much air a list row gets. Height and padding ONLY — the type never
  *  shrinks, so compact stays on the 11px floor the rest of the app keeps. */
 export type ListDensity = "comfortable" | "compact";
@@ -725,6 +732,19 @@ export const libraryThumbFrameAtom = displayOption<ThumbFrame>(
   DEFAULT_THUMB_FRAME,
 );
 export const libraryThumbFitAtom = displayOption<ThumbFit>("thumbFit", "mode", DEFAULT_THUMB_FIT);
+export const DEFAULT_CARD_LAYOUT: CardLayout = "stacked";
+export const libraryCardLayoutAtom = displayOption<CardLayout>("cardLayout", "mode", DEFAULT_CARD_LAYOUT);
+/** The layout the cards actually DRAW. Side needs a preview to put at the side
+ *  and room for a slot beside the text: with previews off it is the stacked card
+ *  (there is no slot), and on a phone a 128px slot beside the text leaves the
+ *  title about 200px, so the card falls back to stacked there. The stored
+ *  choice is kept, so widening the window brings the side layout back. */
+export const libraryCardSideAtom = atom(
+  (get) =>
+    get(libraryCardLayoutAtom) === "side" &&
+    get(libraryCardInfoAtom).preview &&
+    get(breakpointAtom) !== "mobile",
+);
 export const libraryListDensityAtom = displayOption<ListDensity>(
   "density",
   "mode",

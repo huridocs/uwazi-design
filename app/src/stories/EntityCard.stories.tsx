@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { Provider, createStore } from "jotai";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { libraryCardLayoutAtom, libraryThumbFrameAtom, type ThumbFrame } from "../atoms/library";
 import { EntityCard } from "../components/library/EntityCard";
 import { entities } from "../data/entities";
 
@@ -26,6 +28,37 @@ function CardsDemo() {
         />
       ))}
     </div>
+  );
+}
+
+/** The SIDE layout: the preview at the card's logical start, the text beside it,
+ *  in fewer, wider columns. One store per story so the Display choice doesn't
+ *  leak into the other stories. `query` marks matches the way a search does. */
+function SideDemo({ frame, query = "", dir }: { frame: ThumbFrame; query?: string; dir?: "rtl" }) {
+  const [store] = useState(() => {
+    const st = createStore();
+    st.set(libraryCardLayoutAtom, "side");
+    st.set(libraryThumbFrameAtom, frame);
+    return st;
+  });
+  const [selectedId, setSelectedId] = useState(entities[2]?.id ?? "");
+  return (
+    <Provider store={store}>
+      <div dir={dir} className="grid grid-cols-1 lg:grid-cols-2 gap-3 max-w-5xl">
+        {entities.slice(1, 5).map((e, i) => (
+          <EntityCard
+            key={e.id}
+            entity={e}
+            layout="cards"
+            query={query}
+            selected={selectedId === e.id}
+            connections={3 + i * 5}
+            onSelect={setSelectedId}
+            onView={() => {}}
+          />
+        ))}
+      </div>
+    </Provider>
   );
 }
 
@@ -81,3 +114,24 @@ export const ListRows: Story = {
   },
   render: () => <ListDemo />,
 };
+
+const sideArgs = {
+  entity: entities[1],
+  layout: "cards" as const,
+  query: "",
+  selected: false,
+  onSelect: () => {},
+  onView: () => {},
+};
+
+/** Side layout, landscape frame: a 4:3 slot at the start of every card. */
+export const Side: Story = { args: sideArgs, render: () => <SideDemo frame="landscape" /> };
+
+/** Side layout, portrait frame: a 3:4 slot, where a document's first page fills. */
+export const SidePortrait: Story = { args: sideArgs, render: () => <SideDemo frame="portrait" /> };
+
+/** Side layout with a query: titles and values mark their matches. */
+export const SideSearch: Story = { args: sideArgs, render: () => <SideDemo frame="landscape" query="case" /> };
+
+/** Side layout under RTL: the slot moves to the right, the logical start. */
+export const SideRtl: Story = { args: sideArgs, render: () => <SideDemo frame="landscape" dir="rtl" /> };
