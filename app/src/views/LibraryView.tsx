@@ -54,6 +54,14 @@ import {
   ALL_MATCH_TYPES,
   libraryDrawerResultsLayoutAtom,
   type DrawerResultsLayout,
+  toggleSelectionAtom,
+  setSelectionAnchorAtom,
+  rangeSelectionAtom,
+  clearSelectionAtom,
+  collapseSelectionAtom,
+  librarySelectionActiveAtom,
+  librarySelectionDrawerOpenAtom,
+  libraryDrawnIdsAtom,
 } from "../atoms/library";
 import { getEntityType, type Entity } from "../data/entities";
 import { libraryInheritedDefs } from "../utils/libraryFacets";
@@ -63,6 +71,16 @@ import { highlightTerms, fold } from "../utils/queryTokens";
 import { matchCategoriesWithTerms, type MatchCategories } from "../utils/librarySnippets";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { EntityCard } from "../components/library/EntityCard";
+import {
+  EntitySelectBox,
+  currentSelectionOrder,
+  lastPointerWasTouch,
+  selectionIntent,
+  useSelectionOrder,
+  useTouchSelection,
+} from "../components/library/EntitySelectBox";
+import { LibrarySelectionBar } from "../components/library/LibrarySelectionBar";
+import { LibrarySelectionDrawer } from "../components/library/LibrarySelectionDrawer";
 import { MatchOrigin } from "../components/library/MatchOrigin";
 import { listColumnSpecs, buildListColumns } from "../components/library/listColumns";
 import { LIBRARY_SORTS } from "../data/libraryDisplay";
@@ -520,17 +538,121 @@ export function LibraryView() {
   // Previewing focuses the entity so the drawer's tabbed bodies (Relationships /
   // Files / Document read the focused + scoped atoms) reflect it immediately.
   // Stable so memoized EntityCards don't re-render on every selection/hover.
-  const handleSelect = useCallback(
-    (id: string) => {
-      if (isMobile) {
-        openEntity(id);
-      } else {
-        focusForPreview(id);
-        setSelectedId(id);
-      }
+  /* Multi-selection is modifier-click: Cmd/Ctrl+click toggles an entity in
+     the selection and Shift+click spans from the anchor over the order the
+     visible view draws (`currentSelectionOrder`) — without a preview. This
+     component never reads the selection Set: the cards read their own flag,
+     and the footer and drawer subscribe on their own. */
+  const toggleSelection = useSetAtom(toggleSelectionAtom);
+  const setAnchor = useSetAtom(setSelectionAnchorAtom);
+  const rangeSelection = useSetAtom(rangeSelectionAtom);
+  const clearSelection = useSetAtom(clearSelectionAtom);
+  const collapseSelection = useSetAtom(collapseSelectionAtom);
+  const selectionActive = useAtomValue(librarySelectionActiveAtom);
+  const selectionDrawerOpen = useAtomValue(librarySelectionDrawerOpenAtom);
+  /* A plain click on the EMPTY GROUND of the results — the lane, the gap
+     between cards, the margin — clears the selection, as Escape does. Not a
+     click on an item or any control, not one with a modifier, not the end of a
+     drag (a text selection, or a press that moved), and not on the map, whose
+     ground is the map. */
+  const groundDown = useRef<{ x: number; y: number } | null>(null);
+  const clearOnGround = useCallback(
+    (e: React.MouseEvent) => {
+      if (!selectionActive || viewMode === "map") return;
+      if (e.shiftKey || e.metaKey || e.ctrlKey || e.altKey || e.button !== 0) return;
+      const t = e.target as Element;
+      if (
+        t.closest(
+          'button, a, input, select, textarea, label, summary, [role="button"], [role="menu"], [role="dialog"], ' +
+            '[role="listbox"], [role="slider"], [tabindex], [data-select-id], ' +
+            '[data-component="EntityCard"], [role="row"], [data-part="result"], [data-part="header"]',
+        )
+      )
+        return;
+      const d = groundDown.current;
+      if (d && Math.hypot(e.clientX - d.x, e.clientY - d.y) > 4) return;
+      if (String(window.getSelection() ?? "").length > 0) return;
+      clearSelection();
     },
-    [isMobile, openEntity, focusForPreview, setSelectedId],
+    [selectionActive, viewMode, clearSelection],
   );
+  const shownIds = useMemo(() => shown.map((e) => e.id), [shown]);
+  const filteredIds = useMemo(() => filtered.map((e) => e.id), [filtered]);
+  // The grid's and the table's order — Results registers its own, so this one
+  // stands down while it draws (see `useSelectionOrder`).
+  useSelectionOrder(viewMode === "results" ? null : shownIds);
+  // What the visible view DRAWS, for "select all loaded". The grid and the
+  // table are drawn here; Results publishes its own.
+  const setDrawnIds = useSetAtom(libraryDrawnIdsAtom);
+  const drawnIds = useAtomValue(libraryDrawnIdsAtom);
+  useEffect(() => {
+    if (viewMode === "cards" || viewMode === "list") setDrawnIds(shownIds);
+    else if (viewMode === "map") setDrawnIds([]);
+  }, [viewMode, shownIds, setDrawnIds]);
+
+  // Escape clears — except where Escape already means something: a text field,
+  // a dialog, an open menu.
+  useEffect(() => {
+    if (!selectionActive) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      const t = e.target as HTMLElement | null;
+      if (t?.closest("input:not([type=checkbox]), textarea, select, [role=dialog], [role=menu], [role=listbox]")) return;
+      // A popup open anywhere (the Display menu, a Select, the search tips)
+      // takes this Escape to close itself; its trigger says so.
+      if (document.querySelector('[aria-haspopup][aria-expanded="true"]')) return;
+      clearSelection();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selectionActive, clearSelection]);
+
+  /* `collapse`: a plain click in the VIEW with 2 or more selected ends the
+     multi-selection and makes that item the one previewed, as a file manager
+     does. The selection drawer passes false — its rows ARE the selection, and
+     clicking one previews it without dropping the rest. */
+  const selectFrom = useCallback(
+    (collapse: boolean, id: string, e?: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => {
+      const intent = e ? selectionIntent(e) : null;
+      if (intent === "toggle") return toggleSelection(id);
+      // Touch, with a selection going: a tap adds or removes (a long press
+      // starts one — see useTouchSelection).
+      if (e && selectionActive && lastPointerWasTouch()) return toggleSelection(id);
+      if (intent === "range") return rangeSelection({ order: currentSelectionOrder(), id });
+      const preview = () => {
+        // A plain click anchors the next Shift range here (see setSelectionAnchorAtom).
+        setAnchor(id);
+        if (isMobile) {
+          openEntity(id);
+        } else {
+          focusForPreview(id);
+          setSelectedId(id);
+        }
+      };
+      if (collapse) collapseSelection(preview);
+      else preview();
+    },
+    [
+      isMobile,
+      openEntity,
+      focusForPreview,
+      setSelectedId,
+      toggleSelection,
+      rangeSelection,
+      selectionActive,
+      collapseSelection,
+      setAnchor,
+    ],
+  );
+  const handleSelect = useCallback(
+    (id: string, e?: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => selectFrom(true, id, e),
+    [selectFrom],
+  );
+  const handleDrawerSelect = useCallback(
+    (id: string, e?: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => selectFrom(false, id, e),
+    [selectFrom],
+  );
+  useTouchSelection(toggleSelection);
 
   // Results-tab full-text snippet: select the entity, then jump the preview's
   // document to the hit page (DocumentViewer consumes scrollToPageAtom). On
@@ -791,6 +913,12 @@ export function LibraryView() {
 
       {/* Results */}
       <div
+        // A Shift+click is a range, not a text selection across the grid.
+        onMouseDown={(e) => {
+          if (e.shiftKey) e.preventDefault();
+          groundDown.current = { x: e.clientX, y: e.clientY };
+        }}
+        onClick={clearOnGround}
         // A `bleed` lane: warm ground and scrollbar at the pane edge, content on
         // the gutter. Every view mode sits on it, Results included — its header
         // row and card lane carry no side padding of their own.
@@ -869,6 +997,7 @@ export function LibraryView() {
                 connections={countByEntity.get(e.id) ?? 0}
                 onSelect={handleSelect}
                 onView={openEntity}
+                selectable
               />
             ))}
           </div>
@@ -882,11 +1011,16 @@ export function LibraryView() {
         ) : (
           <DataTable
             columns={tableColumns}
+            // No selection column: the Library selects by modifier click. The
+            // row carries the visually hidden checkbox for keyboards and
+            // screen readers, beside its primary action.
+            rowAccessory={(e) => <EntitySelectBox id={e.id} title={e.title} />}
             data={shown}
             getRowId={(e) => e.id}
-            onRowClick={(e) => handleSelect(e.id)}
-            rowAriaLabel={(e) => `Select ${e.title}`}
+            onRowClick={(row, ev) => handleSelect(row.id, ev)}
+            rowAriaLabel={(e) => `Preview ${e.title}`}
             isRowSelected={(e) => selectedId === e.id}
+            selectedStyle="ring"
             sort={{ key: sort, dir: sortDir }}
             onSort={(key) => setSortKey(key as typeof sort)}
             minWidthRem={34}
@@ -914,35 +1048,49 @@ export function LibraryView() {
         className="bleed shrink-0 flex items-center gap-2 h-12 bg-paper"
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
-        <FooterButton
-          icon={<Plus size={13} className="text-ink-tertiary" />}
-          label="Create entity"
-          onClick={() => notify("Create entity isn't available in the prototype")}
-        />
-        <FooterButton
-          icon={<Upload size={13} className="text-ink-tertiary" />}
-          label="Upload PDF"
-          onClick={() => notify("Upload started")}
-        />
-        <FooterButton
-          icon={<FileSpreadsheet size={13} className="text-ink-tertiary" />}
-          label="Import / Export CSV"
-          onClick={() => guard(() => setAppView("import-csv"))}
-        />
-        {/* The count used to be printed here too ("Showing N of M", with an
-            "updating…" beside it while the query settled). It is the masthead
-            readout's number — same set, same two figures — and the toolbar slot
-            is where it belongs, beside the search box that changes it. Two
-            copies of one number on one screen is the thing every other row on
-            this surface already gave up (the Results headers, the info rows,
-            the Relationships toolbar); the footer was the last holdout.
-            Staleness went with it: the masthead carries `aria-busy` and dims,
-            so the word had nothing left to say. What survives here is the
-            active-filter readout, which is NOT a duplicate — it is the only
-            place the filters are reachable while the drawer shows an entity
-            instead of the Filters panel. `ms-2` keeps it out of the run of
-            footer actions, so a readout doesn't read as a fourth button. */}
-        <ActiveFiltersButton className="ms-2" />
+        {/* The bar swaps IN PLACE between the baseline actions and the
+            selection's — same bar, same height. The selection's readout, Clear
+            and the tri-state select-all sit at the bar's END, in
+            LibrarySelectionBar. */}
+        {selectionActive ? (
+          <LibrarySelectionBar
+            filteredIds={filteredIds}
+            loadedIds={drawnIds}
+            filtersSlot={<ActiveFiltersButton className="ms-2 shrink-0" />}
+          />
+        ) : (
+          <>
+            <FooterButton
+              icon={<Plus size={13} className="text-ink-tertiary" />}
+              label="Create entity"
+              onClick={() => notify("Create entity isn't available in the prototype")}
+            />
+            <FooterButton
+              icon={<Upload size={13} className="text-ink-tertiary" />}
+              label="Upload PDF"
+              onClick={() => notify("Upload started")}
+            />
+            <FooterButton
+              icon={<FileSpreadsheet size={13} className="text-ink-tertiary" />}
+              label="Import / Export CSV"
+              onClick={() => guard(() => setAppView("import-csv"))}
+            />
+            {/* The count used to be printed here too ("Showing N of M", with an
+                "updating…" beside it while the query settled). It is the masthead
+                readout's number — same set, same two figures — and the toolbar slot
+                is where it belongs, beside the search box that changes it. Two
+                copies of one number on one screen is the thing every other row on
+                this surface already gave up (the Results headers, the info rows,
+                the Relationships toolbar); the footer was the last holdout.
+                Staleness went with it: the masthead carries `aria-busy` and dims,
+                so the word had nothing left to say. What survives here is the
+                active-filter readout, which is NOT a duplicate — it is the only
+                place the filters are reachable while the drawer shows an entity
+                instead of the Filters panel. `ms-2` keeps it out of the run of
+                footer actions, so a readout doesn't read as a fourth button. */}
+            <ActiveFiltersButton className="ms-2" />
+          </>
+        )}
       </div>
     </div>
   );
@@ -1020,8 +1168,12 @@ export function LibraryView() {
     </div>
   );
 
+  // Preview, else the selection (1 or more, unless its list was closed), else
+  // a map cluster, else Filters.
   const drawer = selectedId ? (
     <EntityDrawerPreview entityId={selectedId} />
+  ) : selectionActive && selectionDrawerOpen ? (
+    <LibrarySelectionDrawer onSelect={handleDrawerSelect} query={query} />
   ) : selectedCluster && viewMode === "map" ? (
     <LibraryClusterDrawer />
   ) : (

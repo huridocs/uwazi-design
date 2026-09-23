@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Search, ChevronDown, FileText, Tag } from "lucide-react";
 import type { Entity } from "../../../data/entities";
 import { getEntityType } from "../../../data/entities";
@@ -19,7 +19,19 @@ import {
   resultsActivePageAtom,
   type MatchTypeFilters,
   type ResultsLayout,
+  libraryDrawnIdsAtom,
+  rangeSelectionAtom,
 } from "../../../atoms/library";
+import {
+  EntitySelectBox,
+  FOCUS_RING_ON_SELECT,
+  PREVIEWED_RING,
+  SELECTED_LOOK,
+  SelectionOrderScope,
+  holdTextSelection,
+  selectionIntent,
+  useSelectionOrder,
+} from "../EntitySelectBox";
 import { RelationshipGroupedCard } from "../../relationships/RelationshipGroupedCard";
 import { SectionLabel } from "../../shared/SectionLabel";
 import { HighlightedText } from "../../shared/HighlightedText";
@@ -78,8 +90,9 @@ interface Props {
   onFocusProperty: (id: string, fieldKey: string) => void;
   /** Select + jump the preview's document to a page. */
   onSelectSnippet: (id: string, page: number) => void;
-  /** Select for preview (no page jump). */
-  onSelect: (id: string) => void;
+  /** Select for preview (no page jump), or — with the event's modifiers — a
+   *  selection gesture. */
+  onSelect: (id: string, e?: React.MouseEvent) => void;
   selectedId: string | null;
   onClearSearch: () => void;
   hiddenByFilters: number;
@@ -133,6 +146,20 @@ export function ResultsMainView({
   const layout = layoutProp ?? menuLayout;
   const [activeTypes, setActiveTypes] = useAtom(matchTypeFiltersAtom);
   const [visible, setVisible] = useState(STEP);
+  // A Shift range runs in the ranked order these results are drawn in. The
+  // main-pane view registers it as the view's order; the drawer's copy sits
+  // beside a view that registers its own, so it only scopes its own boxes —
+  // and a Shift+click on its cards ranges here, over this list.
+  const rankedIds = useMemo(() => entities.map((e) => e.id), [entities]);
+  useSelectionOrder(narrow ? null : rankedIds);
+  // The page this view draws, for "select all loaded" — the main pane's only.
+  const setDrawnIds = useSetAtom(libraryDrawnIdsAtom);
+  useEffect(() => {
+    if (!narrow) setDrawnIds(rankedIds.slice(0, visible));
+  }, [narrow, rankedIds, visible, setDrawnIds]);
+  const range = useSetAtom(rangeSelectionAtom);
+  const selectEntity = (id: string, e?: React.MouseEvent) =>
+    e && selectionIntent(e) === "range" ? range({ order: rankedIds, id }) : onSelect(id, e);
   // Per-entity "show every page-snippet", owned here so the capped `results`
   // memo stays cheap and only the expanded cards pay for the extra windowing.
   const [showAll, setShowAll] = useState<Record<string, boolean>>({});
@@ -277,7 +304,8 @@ export function ResultsMainView({
 
       {/* Hosted by the Library main pane (a gutter host): the card lane is a
           `bleed` scroll lane, so its scrollbar sits at the pane edge. */}
-      <div className="bleed flex-1 min-h-0 overflow-auto">
+      <div data-select-scope className="bleed flex-1 min-h-0 overflow-auto">
+        <SelectionOrderScope value={rankedIds}>
         {entities.length === 0 ? (
           <p className="pt-6 text-center text-xs text-ink-tertiary">
             No results for the selected match types.
@@ -288,7 +316,7 @@ export function ResultsMainView({
             narrow={narrow}
             query={trimmed}
             selectedId={selectedId}
-            onSelect={onSelect}
+            onSelect={selectEntity}
             onFocusProperty={onFocusProperty}
             onSelectSnippet={onSelectSnippet}
             showAll={showAll}
@@ -325,6 +353,7 @@ export function ResultsMainView({
             Showing every result for this query.
           </p>
         )}
+        </SelectionOrderScope>
       </div>
     </div>
   );
@@ -351,7 +380,7 @@ function GroupedBody({
   narrow: boolean;
   query: string;
   selectedId: string | null;
-  onSelect: (id: string) => void;
+  onSelect: (id: string, e?: React.MouseEvent) => void;
   onFocusProperty: (id: string, fieldKey: string) => void;
   onSelectSnippet: (id: string, page: number) => void;
   /** Entities currently showing every page-snippet rather than the capped few. */
@@ -370,10 +399,14 @@ function GroupedBody({
         return (
           <article
             key={entity.id}
-            className={`relative rounded-md border transition-colors ${
-              selected ? "bg-parchment border-border" : "bg-paper border-border/60"
-            }`}
+            data-part="result"
+            className={`group relative rounded-md border transition-colors ${
+              selected ? `bg-parchment border-border ${PREVIEWED_RING}` : "bg-paper border-border/60"
+            } ${SELECTED_LOOK} ${FOCUS_RING_ON_SELECT}`}
           >
+            {/* The visually hidden selection checkbox (see EntitySelectBox). A
+                passage is evidence, not an entity, so only the card carries one. */}
+            <EntitySelectBox id={entity.id} title={entity.title} />
             <header
               className={`flex items-center gap-2 px-4 py-2.5 ${narrow ? "flex-wrap gap-y-0.5" : ""} ${
                 hasMeta || hasText ? "border-b border-border/40" : ""
@@ -382,7 +415,8 @@ function GroupedBody({
               <EntityTypeChip typeId={entity.typeId} />
               <button
                 type="button"
-                onClick={() => onSelect(entity.id)}
+                onClick={(e) => onSelect(entity.id, e)}
+                onMouseDown={holdTextSelection}
                 aria-pressed={selected}
                 className={`min-w-0 ${narrow ? "flex-1 basis-0" : ""} text-start text-sm font-semibold text-ink truncate hover:underline
                   cursor-pointer focus-visible:outline-none focus-visible:ring-1

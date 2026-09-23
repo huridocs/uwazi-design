@@ -1,6 +1,7 @@
 import { startTransition } from "react";
-import { atom } from "jotai";
-import { atomWithStorage, createJSONStorage } from "jotai/utils";
+import { atom, type Getter, type Setter } from "jotai";
+import { atomFamily, atomWithStorage, createJSONStorage } from "jotai/utils";
+import { editSessionOpenAtom } from "./dirtyGuard";
 import { dataSourceAtom, libraryEntitiesAtom, type DataSource } from "./dataSource";
 import { languageAtom } from "./language";
 import { breakpointAtom } from "./viewport";
@@ -184,6 +185,143 @@ export interface LibraryCluster {
   ids: string[];
 }
 export const librarySelectedClusterAtom = atom<LibraryCluster | null>(null);
+
+/* ── Multi-selection ──────────────────────────────────────────────────────
+   A SET of entity ids the user has picked — apart from
+   `librarySelectedEntityIdAtom`, which stays "the one entity the drawer
+   previews". A plain click previews; Cmd/Ctrl+click toggles, Shift+click
+   ranges, a long press toggles on touch.
+
+   Explicit ids, always: "select all" writes every id, so every rule below is
+   one rule. It survives view-mode switches, sorting, "Show more" and filter
+   or search changes; a collection switch and Clear end it.
+
+   PERFORMANCE. A card never reads the Set. It reads `entitySelectedAtom(id)`,
+   a boolean derived per id, so ticking one of 4,398 re-renders that one card
+   — and the grids paint the selected ground in CSS off the hidden checkbox
+   itself, so nothing above the cards subscribes at all. */
+export const librarySelectionAtom = atom<ReadonlySet<string>>(new Set<string>());
+/** Where the next Shift range starts: the last item clicked on its own —
+ *  a plain click (a preview), a Cmd/Ctrl click, Space, or a long press. */
+export const librarySelectionAnchorAtom = atom<string | null>(null);
+
+/** A plain click on an item: it previews, and it becomes the anchor, so the
+ *  next Shift+click ranges from IT. */
+export const setSelectionAnchorAtom = atom(null, (_get, set, id: string) => {
+  set(librarySelectionAnchorAtom, id);
+  set(lastRangeAtom, []);
+});
+/** The ids the last Shift range added. A second Shift+click RE-SPANS from the
+ *  same anchor: these come out and the new range goes in, while ids picked one
+ *  by one outside the range stay. */
+const lastRangeAtom = atom<readonly string[]>([]);
+export const librarySelectionCountAtom = atom((get) => get(librarySelectionAtom).size);
+/** Anything selected — flips only at 0↔1, so it is cheap to read. */
+export const librarySelectionActiveAtom = atom((get) => get(librarySelectionAtom).size > 0);
+export const entitySelectedAtom = atomFamily((id: string) =>
+  atom((get) => get(librarySelectionAtom).has(id)),
+);
+/** The selection drawer lists the selection; its X closes the list without
+ *  clearing it, and any new tick opens it again. */
+export const librarySelectionDrawerOpenAtom = atom(true);
+
+/** The ids the VISIBLE view actually draws — the grid's loaded page, the
+ *  Results page. "Select all loaded" means these; each view writes its own. */
+export const libraryDrawnIdsAtom = atom<readonly string[]>([]);
+
+/** Show the selection list in the drawer — by dropping the preview, unless
+ *  the preview is holding an open form: ticking a box must not unmount it and
+ *  lose what was typed. The list shows once the form is closed. */
+function showSelectionList(get: Getter, set: Setter) {
+  if (!get(editSessionOpenAtom)) set(librarySelectedEntityIdAtom, null);
+  set(librarySelectionDrawerOpenAtom, true);
+}
+
+/** Toggle one id. Sets the anchor, ends any range, and — like every selection
+ *  gesture — drops the preview so the drawer shows the selection being built. */
+export const toggleSelectionAtom = atom(null, (get, set, id: string) => {
+  const next = new Set(get(librarySelectionAtom));
+  // Finder: the gesture that STARTS a selection takes the card already open
+  // in the preview (the anchor, set by its plain click) along with it — the
+  // first card clicked is part of what the reader is picking.
+  const previewed = get(librarySelectedEntityIdAtom);
+  if (next.size === 0 && previewed && previewed === get(librarySelectionAnchorAtom) && previewed !== id)
+    next.add(previewed);
+  if (next.has(id)) next.delete(id);
+  else next.add(id);
+  set(librarySelectionAtom, next);
+  set(librarySelectionAnchorAtom, id);
+  set(lastRangeAtom, []);
+  showSelectionList(get, set);
+});
+
+/** Shift+click: select from the anchor to `id` over `order` — the order the
+ *  current view draws. The anchor is ONLY the last item clicked on its own;
+ *  with none (or one this view doesn't draw), the click selects just `id`
+ *  and anchors it — never a range from somewhere else. */
+export const rangeSelectionAtom = atom(null, (get, set, { order, id }: { order: readonly string[]; id: string }) => {
+  const anchor = get(librarySelectionAnchorAtom);
+  const a = anchor ? order.indexOf(anchor) : -1;
+  const b = order.indexOf(id);
+  const next = new Set(get(librarySelectionAtom));
+  if (a < 0 || b < 0) {
+    // Select it (not toggle: a Shift+click never deselects) and anchor it.
+    next.add(id);
+    set(librarySelectionAtom, next);
+    set(librarySelectionAnchorAtom, id);
+    set(lastRangeAtom, []);
+    showSelectionList(get, set);
+    return;
+  }
+  const range = order.slice(Math.min(a, b), Math.max(a, b) + 1);
+  for (const x of get(lastRangeAtom)) next.delete(x);
+  // What THIS range adds — not the whole span: an id inside it that was
+  // already selected (ticked on its own) must survive the next re-span.
+  const added = range.filter((x) => !next.has(x));
+  for (const x of added) next.add(x);
+  // The anchor itself was picked on its own; re-spanning must not drop it.
+  if (anchor) next.add(anchor);
+  set(librarySelectionAtom, next);
+  set(lastRangeAtom, added.filter((x) => x !== anchor));
+  showSelectionList(get, set);
+});
+
+/** Add ids (select all loaded, select all results). */
+export const selectIdsAtom = atom(null, (get, set, ids: readonly string[]) => {
+  const next = new Set(get(librarySelectionAtom));
+  for (const id of ids) next.add(id);
+  set(librarySelectionAtom, next);
+  set(lastRangeAtom, []);
+  showSelectionList(get, set);
+});
+
+/** Remove ids (a row removed in the selection drawer, "select none"). */
+export const deselectIdsAtom = atom(null, (get, set, ids: readonly string[]) => {
+  const next = new Set(get(librarySelectionAtom));
+  for (const id of ids) next.delete(id);
+  set(librarySelectionAtom, next);
+  set(lastRangeAtom, (prev) => prev.filter((x) => !ids.includes(x)));
+});
+
+/** Clear — the ONE control that ends a selection (Escape routes here too). */
+export const clearSelectionAtom = atom(null, (_get, set) => {
+  set(librarySelectionAtom, new Set<string>());
+  set(librarySelectionAnchorAtom, null);
+  set(lastRangeAtom, []);
+});
+
+/** A plain click on an item while 2 or more are selected: the selection
+ *  collapses to that item, as in a file manager — the multi-selection ends
+ *  and `then` previews the item (which, as the anchor, is the one a next
+ *  Cmd/Ctrl click takes along). Read at click time, so the view that calls
+ *  this never subscribes to the selection. */
+export const collapseSelectionAtom = atom(null, (get, set, then: () => void) => {
+  if (get(librarySelectionAtom).size >= 2) {
+    set(librarySelectionAtom, new Set<string>());
+    set(lastRangeAtom, []);
+  }
+  then();
+});
 
 /** Keyword-style Countries facet: selected country names + match mode. */
 export const libraryCountryFiltersAtom = atom<Record<string, boolean>>({});
@@ -479,6 +617,7 @@ export const selectDataSourceAtom = atom(null, (_get, set, source: DataSource) =
   set(libraryDateToAtom, "");
   set(librarySelectedEntityIdAtom, null);
   set(librarySelectedClusterAtom, null);
+  set(clearSelectionAtom);
 });
 
 /** Clear every filter. ONE definition: the Filters panel and the view each had

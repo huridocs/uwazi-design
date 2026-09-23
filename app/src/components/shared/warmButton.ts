@@ -15,3 +15,6 @@
 export const WARM_EDGE = "inset-ring inset-ring-border-soft";
 
 export const WARM_BUTTON = `text-ink-secondary bg-warm hover:bg-parchment hover:text-ink ${WARM_EDGE}`;
+
+/** A quiet bar action: no fill, no edge, warm on hover. */
+export const BAR_GHOST = "text-ink-secondary hover:bg-warm hover:text-ink";
