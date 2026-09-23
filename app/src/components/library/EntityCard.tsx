@@ -429,8 +429,21 @@ export const EntityCard = memo(function EntityCard({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
+                      // The row leaves the list with its X. From the keyboard
+                      // (`detail` 0), hand focus to the neighbour's X so the
+                      // next Enter removes the next row instead of landing on
+                      // the page.
+                      const li = e.currentTarget.closest("li");
+                      const next =
+                        e.detail === 0
+                          ? (li?.nextElementSibling ?? li?.previousElementSibling)?.querySelector<HTMLButtonElement>(
+                              "[data-part=remove]",
+                            )
+                          : null;
                       onRemove(entity.id);
+                      next?.focus();
                     }}
+                    data-part="remove"
                     aria-label={`Remove ${entity.title} from selection`}
                     title="Remove from selection"
                     className="w-6 h-6 flex items-center justify-center rounded-md text-ink-muted hover:text-ink hover:bg-warm
