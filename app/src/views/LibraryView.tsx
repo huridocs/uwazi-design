@@ -249,14 +249,16 @@ export function LibraryView() {
       // 2xl (1536) a laptop's scaled resolution already gets three, and the
       // text side has to stay WIDE, or the field grid folds. Size grows the
       // slot, not the count.
-      "grid-cols-1 lg:grid-cols-2 min-[120rem]:grid-cols-3"
+      "grid-cols-1 lg:grid-cols-2 min-[120rem]:grid-cols-3 min-[160rem]:grid-cols-4"
     : thumbFrame === "portrait" && cardInfo.preview
       ? {
           s: "grid-cols-2 sm:grid-cols-4 xl:grid-cols-5",
           m: "grid-cols-2 sm:grid-cols-3 xl:grid-cols-4",
           l: "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3",
         }[thumbSize]
-      : "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3";
+      : // Stacked landscape grows with the display: 4 at a 1920px viewport
+        // (120rem), 5 at 2560px (160rem), the same two steps as side cards.
+        "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 min-[120rem]:grid-cols-4 min-[160rem]:grid-cols-5";
   /* ONE lightbox for the whole grid — see `EntityCard.onOpenImage`. */
   const [lightbox, setLightbox] = useState<EntityImage | null>(null);
 
