@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { Plus, FolderOpen } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { Button } from "../Button";
@@ -7,9 +7,10 @@ import { RowActions } from "../RowActions";
 import { DragGrip } from "../DragGrip";
 import { useReorder } from "../../../hooks/useReorder";
 import { Field, TextInput } from "../Field";
-import { seedThesaurusValues, type SettingsThesaurus } from "../../../data/settings";
-import { cejilThesaurusValues } from "../../../data/cejil/settingsAdapt";
+import type { SettingsThesaurus, ThesaurusValue } from "../../../data/settings";
 import { toastsAtom } from "../../../atoms/references";
+import { dataSourceAtom } from "../../../atoms/dataSource";
+import { saveThesaurusAtom, thesauriAtom } from "../../../atoms/thesauri";
 
 interface Item {
   id: string;
@@ -25,7 +26,22 @@ const serialize = (items: Item[]): string =>
   JSON.stringify(items.map((it) => (it.children ? { g: it.label, c: it.children.map((c) => c.label) } : it.label)));
 
 let uid = 0;
-const newId = () => `n${++uid}`;
+const newId = () => `tv-${Date.now().toString(36)}-${++uid}`;
+
+/** The editor's items back into Uwazi's value shape. Blank rows are dropped:
+ *  an empty label is a row someone added and never filled. */
+const toValues = (items: Item[]): ThesaurusValue[] =>
+  items
+    .filter((it) => it.label.trim())
+    .map((it) =>
+      it.children
+        ? {
+            id: it.id,
+            label: it.label.trim(),
+            values: it.children.filter((c) => c.label.trim()).map((c) => ({ id: c.id, label: c.label.trim() })),
+          }
+        : { id: it.id, label: it.label.trim() },
+    );
 
 const move = <T,>(arr: T[], from: number, to: number): T[] => {
   const next = [...arr];
@@ -45,18 +61,23 @@ export function ThesaurusEditor({
   onClose: () => void;
 }) {
   const setToasts = useSetAtom(toastsAtom);
+  const corpus = useAtomValue(dataSourceAtom);
+  const saveThesaurus = useSetAtom(saveThesaurusAtom);
   const isNew = thesaurus === "new";
   const base = isNew ? undefined : thesaurus;
 
-  // Nested seed values (Uwazi's { id, label, values? } shape) map straight onto
-  // the editor's Item/group model: a value carrying `values` becomes a group
-  // whose children render indented beneath it.
-  const seedVals = isNew ? [] : cejilThesaurusValues[base!.id] ?? seedThesaurusValues[base!.id] ?? [];
+  // The values come from the shared store, so a value the edit form added is
+  // here too. Uwazi's { id, label, values? } shape maps straight onto the
+  // editor's Item/group model: a value carrying `values` becomes a group whose
+  // children render indented beneath it. Ids are kept, so a save writes the
+  // same values back rather than renamed copies.
+  const stored = useAtomValue(thesauriAtom(corpus)).find((t) => t.id === base?.id);
+  const seedVals = stored?.values ?? [];
   const seedItems = (): Item[] =>
-    seedVals.map((v, i) => ({
-      id: `i${i}`,
+    seedVals.map((v) => ({
+      id: v.id,
       label: v.label,
-      ...(v.values ? { children: v.values.map((c, ci) => ({ id: `i${i}c${ci}`, label: c.label })) } : {}),
+      ...(v.values ? { children: v.values.map((c) => ({ id: c.id, label: c.label })) } : {}),
     }));
 
   const [name, setName] = useState(base?.name ?? "");
@@ -108,6 +129,7 @@ export function ThesaurusEditor({
   };
 
   const save = () => {
+    saveThesaurus({ corpus, id: base?.id ?? null, name: name.trim() || base?.name || "Untitled", values: toValues(items) });
     setToasts((p) => [
       ...p,
       { id: Date.now().toString(), message: isNew ? "Thesaurus created" : `${name || "Thesaurus"} saved`, type: "success" as const },

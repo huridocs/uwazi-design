@@ -4,6 +4,19 @@ import { cejilTypeById } from "./cejil/typesAdapter";
 import { cejilLibraryEntities } from "./cejil/adapt";
 import { artworkEntityById } from "./artworks/adapt";
 import { artworkTypeById } from "./artworks/typesAdapter";
+import { overlayCreated, overlayPatch, patchedEntity } from "./entityOverlay";
+
+/** One property as a CARD shows it. `key` is the TEMPLATE's own property
+ *  name — the same id the metadata record gives the field — so an edited
+ *  record can rewrite the card line it feeds (`adapterPatch`). */
+export interface CardField {
+  key?: string;
+  label: string;
+  value: string;
+  /** The first few values of a MULTI-valued property. */
+  values?: string[];
+  more?: number;
+}
 
 export interface EntityType {
   id: string;
@@ -45,6 +58,9 @@ export interface Entity {
   /** The actual asset behind `preview: "image"`. Adapter-supplied, like `geo`
    *  and `fields` — see {@link EntityImage}. */
   image?: EntityImage;
+  /** Every image the entity carries, `image` first (set only where a corpus
+   *  has several; the record draws one card per entry). */
+  images?: EntityImage[];
   /** Optional geolocation (from the entity's country) for the Library map view. */
   geo?: LatLng;
   /** Optional country name (for the Countries facet) — set by adapters whose
@@ -57,7 +73,7 @@ export interface Entity {
    *  multi-valued field (three document titles, say) renders as "first title
    *  +2 more", never as a comma-joined dump — joining two long titles was what
    *  turned the card grid into a wall of prose. */
-  fields?: { label: string; value: string; more?: number }[];
+  fields?: CardField[];
   /** Adapter-supplied FULL metadata projection, for SEARCH — every non-empty
    *  property, every value, untruncated.
    *
@@ -274,7 +290,15 @@ function cejilEntityById(): Map<string, Entity> {
 }
 
 export function getEntity(id: string): Entity | undefined {
-  return entities.find((e) => e.id === id) ?? cejilEntityById().get(id) ?? artworkEntityById().get(id);
+  // The overlay first (`data/entityOverlay.ts`): a created entity exists only
+  // there, and a seed entity may carry a patch — resolved to the same object
+  // for as long as neither changes.
+  const created = overlayCreated(id);
+  if (created) return created.entity;
+  const base = entities.find((e) => e.id === id) ?? cejilEntityById().get(id) ?? artworkEntityById().get(id);
+  if (!base) return undefined;
+  const patch = overlayPatch(id);
+  return patch ? patchedEntity(base, patch) : base;
 }
 
 /** Which corpus an entity BELONGS to — resolved from the id, in the same order
@@ -287,6 +311,8 @@ export function getEntity(id: string): Entity | undefined {
  *  the three corpora (asserted when the artworks seed landed), so this is a
  *  lookup, not a guess. */
 export function entityCorpusOf(id: string): "mock" | "cejil" | "artworks" {
+  const created = overlayCreated(id);
+  if (created) return created.corpus;
   if (entities.some((e) => e.id === id)) return "mock";
   if (cejilEntityById().has(id)) return "cejil";
   if (artworkEntityById().has(id)) return "artworks";

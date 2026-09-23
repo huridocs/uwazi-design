@@ -7,17 +7,19 @@ import { Table, type Column } from "../Table";
 import { RowActions } from "../RowActions";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { ThesaurusEditor } from "./ThesaurusEditor";
-import { seedThesauri, type SettingsThesaurus } from "../../../data/settings";
+import type { SettingsThesaurus } from "../../../data/settings";
 import { dataSourceAtom } from "../../../atoms/dataSource";
-import { cejilSettingsThesauri } from "../../../data/cejil/settingsAdapt";
 import { toastsAtom } from "../../../atoms/references";
+import { deleteThesaurusAtom, thesauriAtom } from "../../../atoms/thesauri";
 
 export function ThesauriPage() {
   const setToasts = useSetAtom(toastsAtom);
   const dataSource = useAtomValue(dataSourceAtom);
-  const [thesauri, setThesauri] = useState<SettingsThesaurus[]>(
-    dataSource === "cejil" ? cejilSettingsThesauri : seedThesauri,
-  );
+  // The shared store (`atoms/thesauri`), not local state: a value or thesaurus
+  // created from the edit form is listed here, and this page's own changes
+  // reach the form.
+  const thesauri = useAtomValue(thesauriAtom(dataSource));
+  const deleteThesaurus = useSetAtom(deleteThesaurusAtom);
   const [confirm, setConfirm] = useState<SettingsThesaurus | null>(null);
   const [editing, setEditing] = useState<SettingsThesaurus | "new" | null>(null);
 
@@ -72,7 +74,7 @@ export function ThesauriPage() {
         variant="danger"
         onConfirm={() => {
           if (confirm) {
-            setThesauri((prev) => prev.filter((t) => t.id !== confirm.id));
+            deleteThesaurus({ corpus: dataSource, id: confirm.id });
             setToasts((p) => [...p, { id: Date.now().toString(), message: `${confirm.name} deleted`, type: "success" as const }]);
           }
           setConfirm(null);

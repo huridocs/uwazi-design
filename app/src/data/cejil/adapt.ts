@@ -1,6 +1,6 @@
 // Heavy adapter: maps CEJIL entities → the prototype's `Entity` shape for the
 // Library. Imported only by the library-data atom (pulls the full entity list).
-import type { Entity } from "../entities";
+import type { CardField, Entity } from "../entities";
 import type { CejilEntity } from "./types";
 import type { LatLng } from "../geo";
 import { cejilTemplates } from "./templates";
@@ -50,14 +50,15 @@ function formatVals(
 /** First few non-empty metadata fields (label + display value), in template order. */
 function fieldsOf(e: { template: string; metadata?: Record<string, { value?: unknown; label?: unknown }[]> }) {
   const props = propsByTemplate.get(e.template) || [];
-  const out: { label: string; value: string; more?: number }[] = [];
+  const out: CardField[] = [];
   for (const p of props) {
     if (p.name === "title") continue;
     const vals = e.metadata?.[p.name];
     if (!vals || !vals.length) continue;
     const { value, more } = formatVals(p.type, vals);
     if (!value) continue;
-    out.push(more > 0 ? { label: p.label, value, more } : { label: p.label, value });
+    // `key`: the template property name, the id the record's field carries.
+    out.push(more > 0 ? { key: p.name, label: p.label, value, more } : { key: p.name, label: p.label, value });
     if (out.length >= 3) break;
   }
   return out.length ? out : undefined;

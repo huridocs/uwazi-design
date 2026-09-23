@@ -39,6 +39,14 @@ export const unregisterDirtyFormAtom = atom(null, (get, set, id: string) => {
  *  holding an open form, which must not unmount under what was typed. */
 export const editSessionOpenAtom = atom((get) => get(dirtyFormsAtom).length > 0);
 
+/** The bulk edit form is open AND holds changes. A selection change then has
+ *  to ask first: the form's set was frozen when it opened, and changing the
+ *  selection under it would make Apply write to entities the reader no longer
+ *  sees selected (or not write to ones they do). */
+export const bulkEditDirtyAtom = atom((get) =>
+  get(dirtyFormsAtom).some((f) => f.id === "bulk-edit" && f.isDirty),
+);
+
 /** The first dirty form, if any — what the guard would be protecting. Also
  *  drives the beforeunload listener in `UnsavedChangesGuard`. */
 export const dirtyFormAtom = atom((get) => get(dirtyFormsAtom).find((f) => f.isDirty) ?? null);
