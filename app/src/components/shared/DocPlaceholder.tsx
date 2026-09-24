@@ -26,16 +26,19 @@ export function DocPlaceholder({
    *  earns its keep in the wide band, where a page CAN'T fill the box and the
    *  inset is what stops it reading as a crop; here it is just a smaller page. */
   fill?: boolean;
-  /** On hover (or keyboard focus inside) of the nearest `group` — the library
-   *  card — the sheet slides UP to show more of the page, as if pulled out of a
-   *  folder, and settles back on leave. Stack frame only (never with `fill`).
+  /** On hover (or keyboard focus inside) of the library card, the sheet is
+   *  pulled UP out of the band like a page out of a folder: it rises past the
+   *  card's top edge over whatever is above, with a lifted shadow, and settles
+   *  back on leave. Stack frame only (never with `fill`). The motion lives in
+   *  `index.css` (`.doc-peek-sheet`), because it is a clip-path and a translate
+   *  moving in step, which no utility pair expresses.
    *
-   *  The sheet is then TALLER than the band (170% of it) so there is page below
-   *  the fold to reveal, and it moves by a transform, so the band and the card
-   *  never change size. The travel is 30% of the SHEET, which is about half the
-   *  band at every size — the move scales with the band without a size table.
-   *  The page bitmap is the whole first page at the sheet's width, so what the
-   *  reveal uncovers is already painted. Off under reduced motion. */
+   *  In this mode the band does NOT clip (no `overflow-hidden`): the sheet
+   *  carries its own clip-path, whose bottom edge sits exactly on the band's
+   *  bottom at rest and stays there while the sheet rises — the part below it
+   *  is still "in the folder". The sheet is 170% of the band tall, so there is
+   *  page to pull out; the page bitmap is the whole first page at the sheet's
+   *  width, so everything the rise uncovers is already painted. */
   peek?: boolean;
   /** Page content. Absent → a blank sheet. */
   children?: ReactNode;
@@ -43,7 +46,7 @@ export function DocPlaceholder({
   return (
     <div
       data-component="DocPlaceholder"
-      className="group relative w-full h-full overflow-hidden bg-vellum"
+      className={`group relative w-full h-full bg-vellum ${peek && !fill ? "rounded-[inherit]" : "overflow-hidden"}`}
     >
       {/* Inset at the sides, pinned near the top, running PAST the bottom so the
           frame crops it. Rounded on the top corners only — the bottom is
@@ -62,9 +65,7 @@ export function DocPlaceholder({
           fill
             ? "absolute inset-0 bg-paper overflow-hidden"
             : peek
-              ? `absolute inset-x-[6%] top-[10%] h-[170%] bg-paper rounded-t-[3px] shadow-sm overflow-hidden
-                 transition-transform duration-300 ease-out will-change-transform
-                 motion-safe:group-hover:-translate-y-[30%] motion-safe:group-focus-within:-translate-y-[30%]`
+              ? "doc-peek-sheet absolute inset-x-[6%] top-[10%] h-[170%] bg-paper rounded-t-[3px] shadow-sm overflow-hidden"
               : "absolute inset-x-[6%] top-[10%] -bottom-[15%] bg-paper rounded-t-[3px] shadow-sm overflow-hidden"
         }
         style={fill ? undefined : { border: "1px solid var(--border-soft)" }}

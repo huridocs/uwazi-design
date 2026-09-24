@@ -222,6 +222,43 @@ body {
   opacity: 1;
 }
 
+/* A document's page pulled out of its card like a sheet out of a folder
+   (`DocPlaceholder` with `peek`, library cards in the landscape frame).
+
+   The sheet is 170% of the band tall and starts 10% down it, so 80% of the band
+   (47.06% of the sheet) hangs below the band's bottom edge. The clip-path hides
+   exactly that part, so at rest the page is cropped by the band as it always
+   was. On hover it rises by `--peek-rise` AND the clip's bottom inset shrinks
+   by the same amount, on the same curve, so the clip edge never leaves the
+   band's bottom: the page comes out of the top, the rest stays in the folder.
+   The side and top insets are negative, so the lifted shadow shows.
+
+   `--peek-rise` is 38% of the sheet (about two thirds of the band, at every
+   size), capped by `--peek-room`: the space above the sheet inside the scroll
+   container, set by the card on hover, so a first-row card rises only as far
+   as it can be seen instead of being cut off. Percentages in both `translate`
+   and `inset()` are of the sheet's own height, so the two stay in step.
+
+   Transform and clip only: the band and the card never change size. Still
+   under reduced motion. */
+.doc-peek-sheet {
+  --peek-rise: min(38%, var(--peek-room, 100vh));
+  clip-path: inset(-3rem -3rem 47.06% -3rem);
+  transition:
+    translate 300ms ease-out,
+    clip-path 300ms ease-out,
+    box-shadow 300ms ease-out;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .group:is(:hover, :focus-within) .doc-peek-sheet {
+    translate: 0 calc(-1 * var(--peek-rise));
+    clip-path: inset(-3rem -3rem calc(47.06% - var(--peek-rise)) -3rem);
+    box-shadow:
+      0 14px 28px -8px rgb(0 0 0 / 0.22),
+      0 4px 10px -4px rgb(0 0 0 / 0.14);
+  }
+}
+
 /* Buttons should always show pointer cursor */
 button:not(:disabled) {
   cursor: pointer;
