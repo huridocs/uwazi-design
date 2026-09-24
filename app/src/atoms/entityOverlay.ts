@@ -23,6 +23,7 @@ import {
   type EditResult,
 } from "../utils/createEntity";
 import type { Language } from "./language";
+import type { MetadataField } from "../data/metadata";
 
 /** The session's changes to the library — see `data/entityOverlay.ts` for the
  *  shape and why it is kept apart from the corpora.
@@ -438,6 +439,31 @@ export function newEntityId(): string {
 /** The entity being created — resolvable while its form is open, in the
  *  library only once saved. The entity panel opens this id on its edit form. */
 export const draftEntityIdAtom = atom<string | null>(null);
+/** Bumped when the open draft is rewritten in place (its template changed),
+ *  so the panel re-reads it: the draft lives in the mirror, not in an atom. */
+export const draftVersionAtom = atom(0);
+
+/** The open draft's template changed on its form: it becomes an entity of
+ *  `typeId`, holding `fieldsByLang` — the new template's properties with the
+ *  values the form carried over — and the title typed so far. Nothing is
+ *  saved; the draft is still only a draft. */
+export const retypeDraftAtom = atom(
+  null,
+  (
+    get,
+    set,
+    { id, typeId, fieldsByLang, title }: { id: string; typeId: string; fieldsByLang: Record<Language, MetadataField[]>; title: string },
+  ) => {
+    const hit = overlayCreated(id);
+    if (!hit || get(draftEntityIdAtom) !== id) return;
+    setDraftMirror({
+      entity: { ...hit.entity, typeId, title },
+      corpus: hit.corpus,
+      record: buildRecord({ id, typeId, fieldsByLang }),
+    });
+    set(draftVersionAtom, (v) => v + 1);
+  },
+);
 
 /** Begin creating an entity of `typeId` in `corpus`: an empty record of that
  *  template, held as the draft. Returns its id for the caller to open. */
