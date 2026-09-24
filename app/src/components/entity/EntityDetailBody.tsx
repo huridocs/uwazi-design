@@ -14,6 +14,7 @@ import type { Language } from "../../atoms/language";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { getEntityProfile } from "../../data/entityProfiles";
 import { isCejilEntity, cejilReferencesFor } from "../../data/cejil/profile";
+import { isTravesiaEntity, travesiaReferencesFor } from "../../data/travesia/profile";
 import { uiLanguageAtom } from "../../atoms/uiLanguage";
 import { tabsForType } from "../../utils/entityTabs";
 import { EntityScopeProvider } from "../../hooks/useEntityScope";
@@ -139,7 +140,9 @@ export function EntityDetailBody({
     () =>
       isCejilEntity(entityId)
         ? cejilReferencesFor(entityId).length
-        : references.filter(
+        : isTravesiaEntity(entityId)
+          ? travesiaReferencesFor(entityId).length
+          : references.filter(
             (r) => r.sourceEntityId === entityId || r.targetEntityId === entityId,
           ).length,
     [references, entityId],

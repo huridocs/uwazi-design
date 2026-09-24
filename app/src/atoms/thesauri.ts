@@ -3,7 +3,8 @@ import { atomFamily } from "jotai/utils";
 import { seedThesauri, seedThesaurusValues, type SettingsThesaurus, type ThesaurusValue } from "../data/settings";
 import { cejilSettingsThesauri, cejilThesaurusValues } from "../data/cejil/settingsAdapt";
 import type { Corpus } from "../data/entityOverlay";
-import { dataSourceAtom } from "./dataSource";
+import { dataSourceAtom, travesiaReadyAtom } from "./dataSource";
+import { travesiaSettingsThesauri } from "../data/travesia/load";
 import { cejilValueLabels } from "../data/cejil/profile";
 import type { Language } from "./language";
 
@@ -37,7 +38,7 @@ interface CorpusThesauri {
 
 const EMPTY: CorpusThesauri = { created: [], values: {}, renamed: {}, deleted: [], bindings: {} };
 
-const overlayAtom = atom<Record<Corpus, CorpusThesauri>>({ mock: EMPTY, cejil: EMPTY, artworks: EMPTY });
+const overlayAtom = atom<Record<Corpus, CorpusThesauri>>({ mock: EMPTY, cejil: EMPTY, artworks: EMPTY, travesia: EMPTY });
 
 /** Values a list holds, groups counted beside their children — the count
  *  Settings has always shown ("Groups count as items alongside their
@@ -48,9 +49,10 @@ export const countValues = (values: ThesaurusValue[]) =>
 /** The seed a corpus starts from. The artworks corpus has no thesauri of its
  *  own and has always shown the Sample's in Settings. */
 function seedOf(corpus: Corpus): { list: SettingsThesaurus[]; values: Record<string, ThesaurusValue[]> } {
-  return corpus === "cejil"
-    ? { list: cejilSettingsThesauri, values: cejilThesaurusValues }
-    : { list: seedThesauri, values: seedThesaurusValues };
+  if (corpus === "cejil") return { list: cejilSettingsThesauri, values: cejilThesaurusValues };
+  // Travesía's thesauri arrive with its entities (empty until then).
+  if (corpus === "travesia") return travesiaSettingsThesauri();
+  return { list: seedThesauri, values: seedThesaurusValues };
 }
 
 /** A corpus's thesauri, seed plus the session's changes. The Sample seed's
@@ -58,6 +60,8 @@ function seedOf(corpus: Corpus): { list: SettingsThesaurus[]; values: Record<str
  *  thesaurus's count moves by what was added rather than being recounted. */
 export const thesauriAtom = atomFamily((corpus: Corpus) =>
   atom<ThesaurusRecord[]>((get) => {
+    // A lazily loaded corpus's seed appears on load: recompute then.
+    if (corpus === "travesia") get(travesiaReadyAtom);
     const o = get(overlayAtom)[corpus];
     const seed = seedOf(corpus);
     const deleted = new Set(o.deleted);

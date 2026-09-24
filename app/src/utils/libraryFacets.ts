@@ -4,6 +4,7 @@ import { getEntityProp } from "../data/entityMetadata";
 import type { Entity } from "../data/entities";
 import { inheritedFilterProps } from "../data/metadata";
 import { cejilInheritedDefs } from "../data/cejil/adapt";
+import { travesiaFacetDefs } from "../data/travesia/adapt";
 
 // ONE declaration, in atoms/dataSource.ts. This module used to carry its own
 // copy of the union, which is how "artworks" got added without any branch on
@@ -31,6 +32,8 @@ export function libraryInheritedDefs(
       return cejilInheritedDefs;
     case "mock":
       return inheritedFilterProps(lang);
+    case "travesia":
+      return travesiaFacetDefs;
     case "artworks":
       return [];
     default: {
@@ -53,6 +56,7 @@ export function entityInheritedValues(
 ): string[] {
   switch (source) {
     case "cejil":
+    case "travesia":
       return e.inherited?.[def.propId] ?? [];
     case "mock": {
       if (def.targetTypeId && e.typeId !== def.targetTypeId) return [];

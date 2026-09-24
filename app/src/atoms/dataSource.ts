@@ -6,14 +6,18 @@ import { cejilEntityTypes } from "../data/cejil/typesAdapter";
 import { cejilLibraryEntities } from "../data/cejil/adapt";
 import { artworkEntityTypes } from "../data/artworks/typesAdapter";
 import { artworkLibraryEntities } from "../data/artworks/adapt";
+import { travesiaEntityTypes } from "../data/travesia/typesAdapter";
+import { travesiaLibraryEntities } from "../data/travesia/adapt";
 import { libraryEntityOverlayAtom } from "./entityOverlay";
 import { applyOverlay, overlayMirror, type Corpus, type CorpusOverlay } from "../data/entityOverlay";
 
-export type DataSource = "mock" | "cejil" | "artworks";
+export type DataSource = "mock" | "cejil" | "artworks" | "travesia";
 
 /** Which dataset the Library renders. Persisted. `mock` keeps the curated demo
  *  (Velásquez etc.); `cejil` shows the real public summa.cejil.org sample;
- *  `artworks` is the bundled image corpus (see `data/artworks/adapt.ts`).
+ *  `artworks` is the bundled image corpus (see `data/artworks/adapt.ts`);
+ *  `travesia` is a fictional shelter network generated over a real schema
+ *  (see `data/travesia/`), loaded on demand like CEJIL.
  *  Scoped to the Library — EntityView/Relationships stay on the mock seed. */
 export const dataSourceAtom = atomWithStorage<DataSource>("uwazi:dataSource", "mock");
 
@@ -21,6 +25,8 @@ export const dataSourceAtom = atomWithStorage<DataSource>("uwazi:dataSource", "m
  *  fetched. LibraryView triggers the load and sets this; the entity atom below
  *  re-evaluates when it changes. */
 export const cejilReadyAtom = atom(false);
+/** The same, for the Travesía corpus (public/travesia-data/*.json). */
+export const travesiaReadyAtom = atom(false);
 
 /** One corpus's slice of the overlay. A derived atom per corpus: a write to
  *  one corpus leaves the others' slices the same object, so the list below
@@ -52,6 +58,9 @@ function seedFor(source: DataSource, get: Getter): Entity[] {
     case "cejil":
       get(cejilReadyAtom); // subscribe: recompute once the corpus is present
       return cejilLibraryEntities();
+    case "travesia":
+      get(travesiaReadyAtom);
+      return travesiaLibraryEntities();
     default: {
       // Compile-time: widening DataSource without answering here is a type
       // error. Runtime: `dataSourceAtom` is storage-backed, so a stale
@@ -89,6 +98,10 @@ export function entityCorpusPool(
     const entities = cejilLibraryEntities();
     return { corpus, entities: applyOverlay(overlay, entities), loading: entities.length === 0 };
   }
+  if (corpus === "travesia") {
+    const entities = travesiaLibraryEntities();
+    return { corpus, entities: applyOverlay(overlay, entities), loading: entities.length === 0 };
+  }
   return { corpus, entities: applyOverlay(overlay, mock), loading: false };
 }
 
@@ -99,6 +112,7 @@ export function entityCorpusPool(
 export function corpusTypes(corpus: DataSource, mockTypes: EntityType[]): EntityType[] {
   if (corpus === "cejil") return cejilEntityTypes;
   if (corpus === "artworks") return artworkEntityTypes;
+  if (corpus === "travesia") return travesiaEntityTypes;
   return mockTypes ?? entityTypes;
 }
 
@@ -110,6 +124,8 @@ export const libraryTypesAtom = atom<EntityType[]>((get) => {
       return artworkEntityTypes;
     case "cejil":
       return cejilEntityTypes;
+    case "travesia":
+      return travesiaEntityTypes;
     case "mock":
       return get(entityTypesAtom) ?? entityTypes;
     default: {
