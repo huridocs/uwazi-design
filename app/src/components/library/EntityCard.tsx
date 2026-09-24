@@ -682,7 +682,7 @@ export const EntityCard = memo(function EntityCard({
         <dl
           data-part="metadata"
           className={`relative min-w-0 ${textCol} ${
-            side ? "self-start grid grid-cols-[fit-content(42%)_minmax(0,1fr)] gap-x-3 gap-y-1" : "space-y-2"
+            side ? "self-start grid grid-cols-[fit-content(42%)_minmax(0,1fr)] gap-x-2 gap-y-1" : "space-y-2"
           }`}
         >
           {fields.map((f) => (
@@ -694,8 +694,12 @@ export const EntityCard = memo(function EntityCard({
                `contents` puts label and value straight into the grid. */
             <div key={f.id} className={side ? "contents" : "min-w-0"}>
               <dt
-                className={`block text-meta font-semibold uppercase tracking-wider text-ink-tertiary leading-tight ${
-                  side ? "min-w-0 truncate self-baseline leading-snug" : ""
+                className={`block text-meta font-semibold uppercase text-ink-tertiary leading-tight ${
+                  // Side: a ~270px text column at two columns per 980px pane,
+                  // so the label runs at the tighter tracking and the pair at
+                  // an 8px gap — measured over the Sample's 158 side fields,
+                  // cut labels 31 → 25 and cut values 27 → 22.
+                  side ? "min-w-0 truncate self-baseline leading-snug tracking-wide" : "tracking-wider"
                 }`}
                 title={side ? f.label : undefined}
               >

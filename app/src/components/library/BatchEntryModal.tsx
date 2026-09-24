@@ -661,7 +661,9 @@ export function BatchEntryModal({
         </div>
       ) : (
         <>
-          <div ref={gridRef} className="bleed-flush flex-1 min-h-0 overflow-auto">
+          {/* A scroll lane edge to edge on purpose: the grid is as wide as its
+              columns and scrolls sideways inside it (`data-gutter-bleed`). */}
+          <div ref={gridRef} data-gutter-bleed className="bleed-flush flex-1 min-h-0 overflow-auto">
             <table
               role="grid"
               aria-label={`New ${typeName} entities`}

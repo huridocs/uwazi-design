@@ -55,6 +55,10 @@ export function CreateEntityButton({
 
   const pick = (fn: () => void) => {
     setOpen(false);
+    // The menu item is about to unmount. Focus goes back to the chevron
+    // FIRST, so a dialog the item opens (Batch entry) captures the chevron as
+    // its trigger and returns focus there on close, not to <body>.
+    triggerRef.current?.focus();
     fn();
   };
 

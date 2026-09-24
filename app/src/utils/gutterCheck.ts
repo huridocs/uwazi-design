@@ -158,6 +158,11 @@ function isCentred(cs: CSSStyleDeclaration) {
 /** A `bleed` box: its negative inline margin is given back as padding. It spans
  *  the pane on purpose, so its own fill is ground, not an edge. */
 function isLane(el: Element) {
+  // Inside a `bleed-flush` box `--gutter-reach` is 0, so a `bleed` row there
+  // has no negative margin to give back — it is already at the edge and only
+  // takes the gutter as padding. It is a lane all the same (a list row in a
+  // modal, whose selected fill spans the panel).
+  if (el.classList.contains("bleed")) return true;
   const cs = getComputedStyle(el);
   const ml = parseFloat(cs.marginLeft);
   return ml < 0 && Math.abs(ml + parseFloat(cs.paddingLeft)) < EPS;
