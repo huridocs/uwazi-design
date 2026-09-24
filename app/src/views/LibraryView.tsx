@@ -1170,7 +1170,6 @@ export function LibraryView() {
               recent={recentTemplates[dataSource] ?? []}
               types={libraryTypes}
               onCreate={handleCreate}
-              onAll={() => setCreateOpen(true)}
             />
             <FooterButton
               icon={<Upload size={13} className="text-ink-tertiary" />}

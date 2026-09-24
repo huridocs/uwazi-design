@@ -11,7 +11,9 @@ import { BAR_GHOST, BAR_LEAD } from "../shared/warmButton";
  *  in the form itself, as its first field — there is no dialog step.
  *
  *  The chevron opens the recent templates, for readers who switch between two
- *  or three, and "All templates…" for the searchable list. When the preset
+ *  or three; any other template is chosen in the form's own searchable
+ *  Template field, so the menu does not repeat it. With no recents and no
+ *  extra entries the chevron is not drawn. When the preset
  *  comes from a filter, the label says so ("Create Audiencia"). */
 export function CreateEntityButton({
   preset,
@@ -19,7 +21,6 @@ export function CreateEntityButton({
   recent,
   types,
   onCreate,
-  onAll,
   extra,
 }: {
   /** The template the main half creates. */
@@ -30,7 +31,6 @@ export function CreateEntityButton({
   recent: string[];
   types: EntityType[];
   onCreate: (typeId: string) => void;
-  onAll: () => void;
   /** More entries at the end of the menu (the batch entry). */
   extra?: { label: string; onSelect: () => void }[];
 }) {
@@ -42,6 +42,7 @@ export function CreateEntityButton({
   const presetName = typeOf(preset)?.name ?? "entity";
   const label = named ? `Create ${presetName}` : "Create entity";
   const listed = recent.filter((id) => typeOf(id));
+  const hasMenu = listed.length > 0 || (extra?.length ?? 0) > 0;
 
   useEffect(() => {
     if (!open) return;
@@ -65,11 +66,12 @@ export function CreateEntityButton({
         onClick={() => onCreate(preset)}
         aria-label={label}
         title={named ? undefined : `New ${presetName}`}
-        className={`flex items-center gap-1.5 ps-2.5 @[44rem]:ps-3 pe-1.5 py-1.5 text-xs font-medium ${BAR_LEAD} rounded-s-md transition-colors cursor-pointer`}
+        className={`flex items-center gap-1.5 ps-2.5 @[44rem]:ps-3 py-1.5 text-xs font-medium ${BAR_LEAD} ${hasMenu ? "pe-1.5 rounded-s-md" : "pe-2.5 rounded-md"} transition-colors cursor-pointer`}
       >
         <Plus size={13} className="text-ink-tertiary" aria-hidden />
         <span className="hidden @[44rem]:inline">{label}</span>
       </button>
+      {hasMenu && (
       <button
         ref={triggerRef}
         type="button"
@@ -81,6 +83,7 @@ export function CreateEntityButton({
       >
         <ChevronDown size={12} className="text-ink-tertiary" aria-hidden />
       </button>
+      )}
       {open && (
         <div
           ref={menuRef}
@@ -119,15 +122,7 @@ export function CreateEntityButton({
               </button>
             );
           })}
-          {listed.length > 0 && <div className="my-1 h-px bg-border-soft" aria-hidden />}
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => pick(onAll)}
-            className="w-full flex items-center px-2.5 py-1.5 text-start text-xs text-ink rounded-sm hover:bg-parchment focus:bg-parchment focus:outline-none cursor-pointer"
-          >
-            All templates…
-          </button>
+          {listed.length > 0 && extra && extra.length > 0 && <div className="my-1 h-px bg-border-soft" aria-hidden />}
           {extra?.map((x) => (
             <button
               key={x.label}
