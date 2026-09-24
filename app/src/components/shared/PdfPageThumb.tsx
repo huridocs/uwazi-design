@@ -27,6 +27,7 @@ export function PdfPageThumb({
   ext,
   size = "md",
   fill = false,
+  peek = false,
   className = "",
   style,
 }: {
@@ -36,6 +37,8 @@ export function PdfPageThumb({
   size?: "sm" | "md" | "lg";
   /** The page fills the box instead of sitting in the inset stack frame. */
   fill?: boolean;
+  /** Slide the sheet up on the card's hover — see `DocPlaceholder`. */
+  peek?: boolean;
   className?: string;
   style?: React.CSSProperties;
 }) {
@@ -129,7 +132,7 @@ export function PdfPageThumb({
 
   return (
     <div data-component="PdfPageThumb" className={className} style={style}>
-      <DocPlaceholder ext={ext} size={size} fill={fill}>
+      <DocPlaceholder ext={ext} size={size} fill={fill} peek={peek && !fill}>
         {/* The ref is on the SHEET, not the frame: its width is what the page gets
             rendered at, and it's what has to come on screen. */}
         {/* `data-thumb-w` is the width the page was actually RASTERISED at, in
