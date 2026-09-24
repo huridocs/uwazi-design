@@ -417,7 +417,8 @@ function documentPages(e: Entity, language: Language, source: DataSource): DocPa
       return hit;
     }
     case "artworks":
-      // Images, no document bodies — nothing for full-text search to scan.
+    case "travesia":
+      // No document bodies — nothing for full-text search to scan.
       return NO_PAGES;
     case "mock": {
       if (!typeHasDocument(e.typeId)) return NO_PAGES;

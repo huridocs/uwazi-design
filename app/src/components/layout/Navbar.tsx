@@ -106,6 +106,8 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
     // The dataset's own name, not its slug — "artworks" tells a reader nothing,
     // and this is the row that has to be recognisable at a glance.
     { id: "artworks", label: "Best Artworks", detail: "60 paintings · 22 artists" },
+    // A fictional shelter network: generated records, synthetic portraits.
+    { id: "travesia", label: "Red Travesía", detail: "Fictional · synthetic portraits" },
   ];
   const collection = COLLECTIONS.find((c) => c.id === dataSource) ?? COLLECTIONS[0];
 

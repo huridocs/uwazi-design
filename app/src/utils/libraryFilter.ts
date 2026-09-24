@@ -100,6 +100,9 @@ export function entityIsDoc(e: Entity, source: DataSource): boolean {
   switch (source) {
     case "cejil":
       return e.preview === "document";
+    case "travesia":
+      // Records, not documents: the schema carries no files.
+      return false;
     case "artworks":
       // An image corpus: nothing carries a document. Previously this fell
       // through to the mock branch and was right only because "artwork" and

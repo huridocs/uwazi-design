@@ -11,6 +11,7 @@ import { getEntity, type Entity } from "./entities";
 import { getEntityProps } from "./entityMetadata";
 import { isCejilEntity, buildCejilProfile } from "./cejil/profile";
 import { isArtworkEntity, buildArtworkProfile } from "./artworks/profile";
+import { isTravesiaEntity, buildTravesiaProfile } from "./travesia/profile";
 import type { EntityImage } from "./entities";
 import { overlayCreated, overlayRecord, type EntityRecord } from "./entityOverlay";
 
@@ -360,7 +361,9 @@ function baseProfile(id: string): EntityProfile {
     ? buildCejilProfile(id)
     : isArtworkEntity(id)
       ? buildArtworkProfile(id)
-      : buildLightweightProfile(getEntity(id) ?? { ...FALLBACK_ENTITY, id });
+      : isTravesiaEntity(id)
+        ? buildTravesiaProfile(id)
+        : buildLightweightProfile(getEntity(id) ?? { ...FALLBACK_ENTITY, id });
   lightweightCache.set(id, built);
   return built;
 }

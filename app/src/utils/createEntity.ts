@@ -7,6 +7,8 @@ import type { Corpus, EntityRecord } from "../data/entityOverlay";
 import { cejilBlankFields, cejilDefaultTemplateId } from "../data/cejil/profile";
 import { artworkLibraryEntities } from "../data/artworks/adapt";
 import { ARTWORK_TYPE_ID } from "../data/artworks/typesAdapter";
+import { travesiaBlankFields } from "../data/travesia/profile";
+import { travesiaDefaultTemplateId, travesiaTemplates } from "../data/travesia/schema";
 
 const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -23,11 +25,12 @@ export interface EditResult {
  *   - the Sample corpus in the mock type table (`blankTypeFields`);
  *   - CEJIL in its real templates (`cejilBlankFields`), one set for every
  *     language, since a template's properties don't change with the language;
+ *   - Travesía in its imported templates (`travesiaBlankFields`), likewise;
  *   - artworks in no table at all, so the fields of an existing entity of the
  *     type are read and emptied — the same template, by construction. */
 export function templateFields(typeId: string, corpus: Corpus): Record<Language, MetadataField[]> {
-  if (corpus === "cejil") {
-    const fields = cejilBlankFields(typeId);
+  if (corpus === "cejil" || corpus === "travesia") {
+    const fields = corpus === "cejil" ? cejilBlankFields(typeId) : travesiaBlankFields(typeId);
     return Object.fromEntries(LANGS.map((l) => [l, fields.map((f) => ({ ...f }))])) as Record<
       Language,
       MetadataField[]
@@ -49,8 +52,9 @@ export function templateFields(typeId: string, corpus: Corpus): Record<Language,
 }
 
 /** The template a corpus flags as its default, if it flags one — Create entity
- *  lists it first. Only CEJIL's dump carries the flag. */
+ *  lists it first. CEJIL's and Travesía's dumps carry the flag. */
 export function defaultTemplateId(corpus: Corpus): string | undefined {
+  if (corpus === "travesia") return travesiaDefaultTemplateId;
   return corpus === "cejil" ? cejilDefaultTemplateId() : undefined;
 }
 
@@ -61,6 +65,8 @@ export function defaultTemplateId(corpus: Corpus): string | undefined {
 export function uploadTemplateId(corpus: Corpus): string {
   if (corpus === "cejil") return cejilDefaultTemplateId() ?? "document";
   if (corpus === "artworks") return ARTWORK_TYPE_ID;
+  // No document template in this schema: an upload takes the default one.
+  if (corpus === "travesia") return travesiaDefaultTemplateId ?? travesiaTemplates[0]._id;
   return "document";
 }
 

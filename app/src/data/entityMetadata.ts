@@ -143,7 +143,27 @@ export const entityMetadataByLanguage: Record<Language, EntityMetadata> = Object
  *  (multi-hop) inheritance is NOT resolved here — it flows through
  *  `resolveInheritedValue` (utils/inheritance), which traverses the graph live. */
 export function getEntityProp(entityId: string, propId: string, lang: Language): string | undefined {
-  return entityMetadataByLanguage[lang]?.[entityId]?.[propId];
+  const own = entityMetadataByLanguage[lang]?.[entityId]?.[propId];
+  if (own !== undefined) return own;
+  return readRegisteredProp(entityId, propId, lang);
+}
+
+/** Another corpus's native properties, for the inheritance resolver: a corpus
+ *  whose records are not in the table above registers how to read one (the
+ *  Travesía corpus does, see data/travesia/profile.ts). Registration, not an
+ *  import, so this module never depends on a corpus. */
+type EntityPropReader = (entityId: string, propId: string, lang: Language) => string | undefined;
+const propReaders: EntityPropReader[] = [];
+export function registerEntityPropReader(read: EntityPropReader): void {
+  propReaders.push(read);
+}
+/** A property through the registered corpus readers only. */
+export function readRegisteredProp(entityId: string, propId: string, lang: Language): string | undefined {
+  for (const read of propReaders) {
+    const v = read(entityId, propId, lang);
+    if (v !== undefined) return v;
+  }
+  return undefined;
 }
 
 /** All native props of an entity in the given language. */

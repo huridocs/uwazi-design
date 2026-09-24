@@ -9,7 +9,7 @@ import {
   FileDown,
   MoreHorizontal,
 } from "lucide-react";
-import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom } from "../atoms/dataSource";
+import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom, travesiaReadyAtom } from "../atoms/dataSource";
 import { recentTemplatesAtom, startDraftAtom } from "../atoms/entityOverlay";
 import { activitiesAtom } from "../atoms/notifications";
 import { NewImportModal } from "../components/import-csv/NewImportModal";
@@ -21,6 +21,7 @@ import { isPdf, runCsvExport, runPdfUploadBatch } from "../utils/libraryTasks";
 import { defaultTemplateId, uploadTemplateId } from "../utils/createEntity";
 import { UploadDocumentsModal } from "../components/library/UploadDocumentsModal";
 import { loadCejilData, cejilRelsByEntity } from "../data/cejil/load";
+import { loadTravesiaData, travesiaRelsByEntity } from "../data/travesia/load";
 import { warmSearchScan } from "../utils/warmSearchScan";
 import { referencesAtom } from "../atoms/references";
 import { languageAtom, type Language } from "../atoms/language";
@@ -183,7 +184,27 @@ export function LibraryView() {
       };
     }
   }, [dataSource, cejilReady, setCejilReady, cejilRetry]);
-  const cejilLoading = dataSource === "cejil" && !cejilReady;
+  // Travesía loads the same way: on first pick, sharing the error/retry state
+  // (only one lazy source is ever selected at a time).
+  const [travesiaReady, setTravesiaReady] = useAtom(travesiaReadyAtom);
+  useEffect(() => {
+    if (dataSource === "travesia" && !travesiaReady) {
+      let alive = true;
+      setCejilError(false);
+      loadTravesiaData().then(
+        () => alive && setTravesiaReady(true),
+        () => alive && setCejilError(true),
+      );
+      return () => {
+        alive = false;
+      };
+    }
+  }, [dataSource, travesiaReady, setTravesiaReady, cejilRetry]);
+  // "cejilLoading" predates the second lazy source: it means "the selected
+  // corpus is still arriving", whichever one that is.
+  const cejilLoading =
+    (dataSource === "cejil" && !cejilReady) || (dataSource === "travesia" && !travesiaReady);
+  const lazyName = dataSource === "travesia" ? "Red Travesía" : "CEJIL";
   const references = useAtomValue(referencesAtom);
   // `query` is the COMMITTED search — everything below (filtering, ranking,
   // match categories, highlighting) reads it. Only the input binds to the draft.
@@ -447,12 +468,16 @@ export function LibraryView() {
       if (cejilReady) for (const [sid, arr] of cejilRelsByEntity()) m.set(sid, arr.length);
       return m;
     }
+    if (dataSource === "travesia") {
+      if (travesiaReady) for (const [sid, arr] of travesiaRelsByEntity()) m.set(sid, arr.length);
+      return m;
+    }
     for (const r of references) {
       m.set(r.sourceEntityId, (m.get(r.sourceEntityId) ?? 0) + 1);
       m.set(r.targetEntityId, (m.get(r.targetEntityId) ?? 0) + 1);
     }
     return m;
-  }, [references, dataSource, cejilReady]);
+  }, [references, dataSource, cejilReady, travesiaReady]);
 
   // Precomputed lowercase searchable text per entity (title + country + the
   // displayed metadata field values + descriptors), so search matches real
@@ -1238,7 +1263,7 @@ export function LibraryView() {
         {cejilLoading ? (
           cejilError ? (
             <div className="flex flex-col items-center justify-center h-40 gap-3 text-sm text-ink-muted">
-              <span>Couldn’t load the CEJIL collection.</span>
+              <span>Couldn’t load the {lazyName} collection.</span>
               <button
                 onClick={() => setCejilRetry((n) => n + 1)}
                 className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer"
@@ -1249,7 +1274,7 @@ export function LibraryView() {
           ) : (
             <div className="flex flex-col items-center justify-center h-40 gap-3 text-sm text-ink-muted">
               <span className="w-5 h-5 rounded-full border-2 border-border border-t-carbon animate-spin" />
-              Loading the full CEJIL collection…
+              Loading the full {lazyName} collection…
             </div>
           )
         ) : viewMode === "map" ? (

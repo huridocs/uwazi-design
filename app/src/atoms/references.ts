@@ -8,6 +8,7 @@ import {
 import { focusedEntityIdAtom } from "./focusedEntity";
 import { MAIN_ENTITY_ID } from "../data/entityProfiles";
 import { isCejilEntity, cejilReferencesFor } from "../data/cejil/profile";
+import { isTravesiaEntity, travesiaReferencesFor } from "../data/travesia/profile";
 import { libraryQueryAtom } from "./library";
 import { filtersDrawerBase, overlayEntityBase } from "./rightPane";
 import { scopedFiltersOpenAtom } from "./filters";
@@ -59,6 +60,7 @@ export function referencesFor(id: string, all: Reference[]): Reference[] {
   if (id === MAIN_ENTITY_ID) return all;
   // CEJIL entities derive their connections from the real CEJIL relationships.
   if (isCejilEntity(id)) return cejilReferencesFor(id);
+  if (isTravesiaEntity(id)) return travesiaReferencesFor(id);
   return all.filter((r) => involvesEntity(r, id)).map((r) => fromPerspective(r, id));
 }
 
@@ -74,7 +76,7 @@ export function writeReferencesFor(
 ): Reference[] {
   // CEJIL relationships are read-only in the prototype — never write them back
   // into the mock corpus.
-  if (isCejilEntity(id)) return all;
+  if (isCejilEntity(id) || isTravesiaEntity(id)) return all;
   if (id === MAIN_ENTITY_ID) return typeof update === "function" ? update(all) : update;
   const origInScope = all.filter((r) => involvesEntity(r, id));
   const outOfScope = all.filter((r) => !involvesEntity(r, id));

@@ -14,6 +14,8 @@ import { cejilTypeById } from "./cejil/typesAdapter";
 import { cejilLibraryEntities } from "./cejil/adapt";
 import { artworkEntityById } from "./artworks/adapt";
 import { artworkTypeById } from "./artworks/typesAdapter";
+import { travesiaTypeById } from "./travesia/typesAdapter";
+import { travesiaEntityById } from "./travesia/adapt";
 import { artworks, ARTWORK_IMAGE_BASE } from "./artworks/artworks";
 import { asset } from "../utils/asset";
 import { docPageAssets, DOC_PAGE_BASE, type DocPageAsset } from "./docPages";
@@ -444,6 +446,7 @@ export function getEntityType(typeId: string): EntityType | undefined {
     entityTypes.find((t) => t.id === typeId) ??
     cejilTypeById.get(typeId) ??
     artworkTypeById.get(typeId) ??
+    travesiaTypeById.get(typeId) ??
     previewTypes.get(typeId)
   );
 }
@@ -467,7 +470,11 @@ export function getEntity(id: string): Entity | undefined {
   // for as long as neither changes.
   const created = overlayCreated(id);
   if (created) return created.entity;
-  const base = entities.find((e) => e.id === id) ?? cejilEntityById().get(id) ?? artworkEntityById().get(id);
+  const base =
+    entities.find((e) => e.id === id) ??
+    cejilEntityById().get(id) ??
+    artworkEntityById().get(id) ??
+    travesiaEntityById().get(id);
   if (!base) return undefined;
   const patch = overlayPatch(id);
   return patch ? patchedEntity(base, patch) : base;
@@ -482,12 +489,13 @@ export function getEntity(id: string): Entity | undefined {
  *  from, whatever the Library happens to be displaying. Ids are disjoint across
  *  the three corpora (asserted when the artworks seed landed), so this is a
  *  lookup, not a guess. */
-export function entityCorpusOf(id: string): "mock" | "cejil" | "artworks" {
+export function entityCorpusOf(id: string): "mock" | "cejil" | "artworks" | "travesia" {
   const created = overlayCreated(id);
   if (created) return created.corpus;
   if (entities.some((e) => e.id === id)) return "mock";
   if (cejilEntityById().has(id)) return "cejil";
   if (artworkEntityById().has(id)) return "artworks";
+  if (travesiaEntityById().has(id)) return "travesia";
   // Unknown ids (a runtime-created entity not yet in the seed, a stale
   // persisted id) belong to the seed, which is the only corpus this app writes.
   return "mock";
