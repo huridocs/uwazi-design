@@ -58,6 +58,8 @@ export const libraryEntityOverlayAtom = atom(
    notification's Undo goes disabled, saying why. */
 export type UndoOp =
   | { ref: string; kind: "undelete"; corpus: Corpus; ids: string[] }
+  /** A batch just created (Batch entry): undo takes the entities back out. */
+  | { ref: string; kind: "uncreate"; corpus: Corpus; ids: string[] }
   | {
       ref: string;
       kind: "restore";
@@ -115,6 +117,11 @@ export const deleteWithUndoAtom = atom(
 export const undoConflictsAtom = atom((get) => {
   const op = get(undoOpAtom);
   if (!op || op.kind === "undelete") return 0;
+  if (op.kind === "uncreate") {
+    // Edited since (a record or patch now exists that the batch didn't write)?
+    const o = get(overlayValueAtom)[op.corpus];
+    return op.ids.filter((id) => !!o.patched[id]).length;
+  }
   const o = get(overlayValueAtom)[op.corpus];
   if (op.kind === "restore")
     return op.entries.filter((e) => o.records[e.id] !== e.wrote || o.patched[e.id] !== e.wrotePatch).length;
@@ -150,6 +157,15 @@ export const undoAtom = atom(null, (get, set, ref: string): boolean => {
       }
       return next;
     });
+  } else if (op.kind === "uncreate") {
+    const gone = new Set(op.ids);
+    set(libraryEntityOverlayAtom, (prev) =>
+      updateCorpus(prev, op.corpus, (o) => {
+        const records = { ...o.records };
+        for (const id of op.ids) delete records[id];
+        return { ...o, created: o.created.filter((e) => !gone.has(e.id)), records };
+      }),
+    );
   } else if (op.kind === "undelete") {
     const back = new Set(op.ids);
     set(libraryEntityOverlayAtom, (prev) =>
@@ -573,7 +589,8 @@ export const commitDraftAtom = atom(
 /** Batch entry: many entities of one template at once, from the grid. Each row
  *  is a title (in every language) and the template's fields with the row's
  *  values. The entities join the library the way a saved draft does, and the
- *  template leads the corpus's recents. Returns how many were created. */
+ *  template leads the corpus's recents. Returns the new ids and the undo ref
+ *  their notification's Undo names (one level, like every other undo). */
 export const createBatchAtom = atom(
   null,
   (
@@ -590,7 +607,7 @@ export const createBatchAtom = atom(
       rows: { title: string; fieldsByLang: Record<Language, MetadataField[]> }[];
       language: Language;
     },
-  ): number => {
+  ): { ids: string[]; ref: string | null } => {
     const entries = rows.map((row) => {
       const id = newEntityId();
       const entity: Entity = { id, title: row.title, typeId, createdAt: today(), published: false };
@@ -601,13 +618,17 @@ export const createBatchAtom = atom(
       }
       return { entity, record: buildRecord({ id, typeId, fieldsByLang: row.fieldsByLang }) };
     });
-    if (!entries.length) return 0;
+    if (!entries.length) return { ids: [], ref: null };
     set(createEntitiesAtom, { corpus, entries });
+    const ids = entries.map((e) => e.entity.id);
+    undoSeq += 1;
+    const ref = `undo-${Date.now().toString(36)}-${undoSeq}`;
+    set(undoOpAtom, { ref, kind: "uncreate", corpus, ids });
     set(recentTemplatesAtom, (prev) => ({
       ...prev,
       [corpus]: [typeId, ...(prev[corpus] ?? []).filter((t) => t !== typeId)].slice(0, 3),
     }));
-    return entries.length;
+    return { ids, ref };
   },
 );
 
