@@ -1167,7 +1167,9 @@ export function LibraryView() {
             <CreateEntityButton
               preset={createPreset}
               named={createNamed}
-              recent={recentTemplates[dataSource] ?? []}
+              // No template menu on main: Create entity is one button, and the
+              // form's searchable Template field (recents on top) picks any other.
+              recent={[]}
               types={libraryTypes}
               onCreate={handleCreate}
             />
