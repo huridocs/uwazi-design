@@ -259,29 +259,36 @@ export function LibraryView() {
   const fieldLabels = useAtomValue(libraryFieldLabelsAtom);
   const thumbFrame = useAtomValue(libraryThumbFrameAtom);
   const thumbSize = useAtomValue(libraryThumbSizeAtom);
-  // Portrait cards are made portrait by the GRID: the 3:4 slot spans the card's
-  // width, so the column width is what sets the frame's height — Size steps the
-  // column count (S hangs five across, L three) instead of a slot-height table.
-  // Landscape keeps the classic three-column hang; previews off means the frame
-  // control isn't in play at all.
-  // Side cards carry the slot beside the text, so they want FEWER, WIDER
-  // columns; Size steps the count down the way it does for portrait.
   const cardSide = useAtomValue(libraryCardSideAtom);
+  /* The column count follows the PANE, not the viewport. Every hang is
+     `auto-fill` with a minimum card width per mode and size: a pane narrowed by
+     the drawer drops a column instead of shrinking cards below readable, and a
+     wide pane (a big screen, a narrow drawer) gains columns. The viewport
+     breakpoints this replaced gave a 975px pane five portrait columns at 1440
+     with the drawer open — 190px cards, one-word titles, ten-line labels.
+
+     Minimums: a landscape card needs room for a two-line title and a label/value
+     pair; a portrait card is narrower by design (the grid is what keeps the 3:4
+     slot from becoming a poster); a side card carries the slot beside the text,
+     so its text side sets the floor. Size steps the minimum, which steps the
+     count. Static strings: Tailwind reads class names, not expressions. */
   const cardGridCols = cardSide
-    ? // One below lg, two from lg, three only from a 1920px viewport: at
-      // 2xl (1536) a laptop's scaled resolution already gets three, and the
-      // text side has to stay WIDE, or the field grid folds. Size grows the
-      // slot, not the count.
-      "grid-cols-1 lg:grid-cols-2 min-[120rem]:grid-cols-3 min-[160rem]:grid-cols-4"
+    ? {
+        s: "grid-cols-[repeat(auto-fill,minmax(min(24rem,100%),1fr))]",
+        m: "grid-cols-[repeat(auto-fill,minmax(min(29rem,100%),1fr))]",
+        l: "grid-cols-[repeat(auto-fill,minmax(min(33rem,100%),1fr))]",
+      }[thumbSize]
     : thumbFrame === "portrait" && cardInfo.preview
       ? {
-          s: "grid-cols-2 sm:grid-cols-4 xl:grid-cols-5",
-          m: "grid-cols-2 sm:grid-cols-3 xl:grid-cols-4",
-          l: "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3",
+          s: "grid-cols-[repeat(auto-fill,minmax(min(11.5rem,100%),1fr))]",
+          m: "grid-cols-[repeat(auto-fill,minmax(min(13.5rem,100%),1fr))]",
+          l: "grid-cols-[repeat(auto-fill,minmax(min(17rem,100%),1fr))]",
         }[thumbSize]
-      : // Stacked landscape grows with the display: 4 at a 1920px viewport
-        // (120rem), 5 at 2560px (160rem), the same two steps as side cards.
-        "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 min-[120rem]:grid-cols-4 min-[160rem]:grid-cols-5";
+      : {
+          s: "grid-cols-[repeat(auto-fill,minmax(min(13.5rem,100%),1fr))]",
+          m: "grid-cols-[repeat(auto-fill,minmax(min(15.5rem,100%),1fr))]",
+          l: "grid-cols-[repeat(auto-fill,minmax(min(19rem,100%),1fr))]",
+        }[thumbSize];
   /* ONE lightbox for the whole grid — see `EntityCard.onOpenImage`. */
   const [lightbox, setLightbox] = useState<EntityImage | null>(null);
 
