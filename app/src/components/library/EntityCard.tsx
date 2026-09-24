@@ -26,6 +26,7 @@ import {
 } from "./EntitySelectBox";
 import { librarySelectionActiveAtom } from "../../atoms/library";
 import { EntityThumbnail, QuietMark } from "./EntityThumbnail";
+import { measurePeekRoom, peekEnter, peekLeave } from "./docPeek";
 import { CardValue, ownsItsRemainder } from "./CardValue";
 import { LIBRARY_SORTS } from "../../data/libraryDisplay";
 import { getEntityType, imageFocusKey, type EntityImage } from "../../data/entities";
@@ -337,7 +338,7 @@ export const EntityCard = memo(function EntityCard({
     </button>
   );
 
-  const base = `group relative text-start rounded-md border transition-colors cursor-pointer hover:z-10 focus-within:z-10 ${FOCUS_RING_ON_SELECT}`;
+  const base = `group relative text-start rounded-md border transition-colors cursor-pointer data-[peek]:z-10 has-[:focus-visible]:z-10 ${FOCUS_RING_ON_SELECT}`;
   // Previewed OR selected is bg-parchment — the same ground, one rule. The
   // selected case is CSS off the hidden checkbox itself, so a selection
   // change re-renders nothing but the box.
@@ -486,27 +487,10 @@ export const EntityCard = memo(function EntityCard({
    *  slot. Explicit rather than left to auto-placement, so the order of the
    *  children can never put a row under the slot. */
   const textCol = side ? "col-start-2" : "";
-  /** A document in the landscape frame is pulled out of its band on hover
-   *  (`.doc-peek-sheet`), so its wrapper must not clip. */
+  /** A document in the landscape frame is pulled out of its band when the
+   *  pointer rests on the thumbnail (`docPeek.ts`, `.doc-peek-sheet`), so its
+   *  wrapper must not clip. */
   const peekDoc = entity.preview === "document" && thumbFrame === "landscape";
-  /** How far the sheet may rise and still be seen: the space between its rest
-   *  top and the top of the scroll container it sits in (less a small margin).
-   *  Read on hover / focus, at the REST position, so a re-entry mid-animation
-   *  measures the same room. A first-row card rises only this far. */
-  const measurePeekRoom = (card: HTMLElement) => {
-    if (!peekDoc) return;
-    const slot = card.querySelector<HTMLElement>('[data-part="preview"]');
-    if (!slot) return;
-    let scroller = card.parentElement;
-    while (scroller && !/(auto|scroll|hidden)/.test(getComputedStyle(scroller).overflowY)) {
-      scroller = scroller.parentElement;
-    }
-    const s = slot.getBoundingClientRect();
-    const restTop = s.top + s.height * 0.1;
-    const top = scroller ? scroller.getBoundingClientRect().top : 0;
-    card.style.setProperty("--peek-room", `${Math.max(0, restTop - top - 8)}px`);
-  };
-
   return (
     // A SUBGRID, not a flex column. The card's rows — slot, title, metadata,
     // footer — are the parent grid's row tracks, so every card in a visual row
@@ -525,8 +509,9 @@ export const EntityCard = memo(function EntityCard({
       data-component="EntityCard"
       data-layout="cards"
       data-card-layout={side ? "side" : "stacked"}
-      onMouseEnter={(e) => measurePeekRoom(e.currentTarget)}
-      onFocus={(e) => measurePeekRoom(e.currentTarget)}
+      // Keyboard rise is CSS (`:focus-visible` in the card); it still needs the
+      // room above it measured.
+      onFocus={peekDoc ? (e) => measurePeekRoom(e.currentTarget) : undefined}
       onClick={(e) => onSelect(entity.id, e)}
       onMouseDown={holdTextSelection}
       className={`${base} ${surface} ${minHeight} grid grid-rows-subgrid ${ROW_SPAN[rowCount]} gap-y-2.5 p-3 ${
@@ -545,7 +530,14 @@ export const EntityCard = memo(function EntityCard({
           picture fills it. The no-preview well takes the same box, so empty
           slots and pictures agree on both height and position. */}
       {showPreview && (
-        <span data-part="preview" className={`relative min-w-0 shrink-0 ${slotShape}`}>
+        <span
+          data-part="preview"
+          className={`relative min-w-0 shrink-0 ${slotShape}`}
+          // The page peek answers to the THUMBNAIL, not the card, and only
+          // after the pointer rests on it — see `docPeek.ts`.
+          onPointerEnter={peekDoc ? peekEnter : undefined}
+          onPointerLeave={peekDoc ? peekLeave : undefined}
+        >
           {entity.preview ? (
             enlargeable ? (
               /* The picture opens full size, WITHOUT becoming the card's main
