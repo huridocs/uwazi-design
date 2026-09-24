@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
-import { Search, ClipboardCopy, ChevronDown } from "lucide-react";
+import { Search, ClipboardCopy, ChevronDown, Pin } from "lucide-react";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
@@ -53,7 +53,7 @@ import {
 import type { Corpus } from "../data/entityOverlay";
 import type { ThesaurusValue } from "../data/settings";
 import { focusedEntityIdAtom } from "../atoms/focusedEntity";
-import { draftEntityIdAtom, retypeDraftAtom, saveEntityEditAtom } from "../atoms/entityOverlay";
+import { draftEntityIdAtom, draftPinsAtom, pinKey, retypeDraftAtom, saveEntityEditAtom } from "../atoms/entityOverlay";
 import { entityCorpusOf, getEntity, getEntityType, type Entity } from "../data/entities";
 import { corpusTypes } from "../atoms/dataSource";
 import { entityTypesAtom } from "../atoms/entities";
@@ -74,6 +74,7 @@ import { ModalHostProvider } from "../components/shared/Modal";
 import { fromDateInputValue, toDateInputValue } from "../utils/dateValue";
 import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
 import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
+import { ConfirmDialog } from "../components/shared/ConfirmDialog";
 import { flashElement } from "../utils/flash";
 import { MediaFieldEditor } from "../components/metadata/MediaFieldEditor";
 
@@ -227,6 +228,10 @@ export interface MetadataEditBodyProps {
   /** What the form edits: the focused entity (the default), or a BULK set —
    *  one form over many entities, see `BulkEditBody`. */
   subject?: { kind: "entity" } | { kind: "bulk"; ids: string[] };
+  /** The form is creating an entity (a draft). Template leads the form, the
+   *  properties take pins, and the bar offers "Save and create another", which
+   *  saves and hands back the values for the next draft. */
+  draft?: { onSaveAndNew: (result: EditResult, pinned: ReadonlySet<string>) => void };
 }
 
 /** The metadata edit form. Exported because the Library's entity drawer renders
@@ -249,6 +254,7 @@ export function MetadataEditBody(props: MetadataEditBodyProps) {
 function EntityEditBody({
   onCancel,
   onSave,
+  draft,
   menuSlot,
   sessionId = "metadata-edit",
   dirtyLabel = "Metadata edits",
@@ -338,6 +344,25 @@ function EntityEditBody({
   const [templateId, setTemplateId] = useState(profile.typeId);
   const draftId = useAtomValue(draftEntityIdAtom);
   const retypeDraft = useSetAtom(retypeDraftAtom);
+  /** Asked for before a template change that would DROP values: the ones the
+   *  new template has no property for (same key, same type). Named in the
+   *  confirm, so nothing typed disappears unannounced. */
+  const [pendingTemplate, setPendingTemplate] = useState<{ typeId: string; labels: string[] } | null>(null);
+  const requestTemplate = (typeId: string) => {
+    if (draftId !== focusedId || typeId === profile.typeId) return changeTemplate(typeId);
+    const next = templateFields(typeId, entityCorpusOf(focusedId));
+    const labels = new Set<string>();
+    for (const l of LANGUAGES) {
+      const keep = new Map(next[l].map((f) => [f.id, f.type]));
+      for (const f of fieldsByLang[l]) {
+        if (f.id === "description") continue;
+        const filled = !!(f.value?.trim() || f.values?.length);
+        if (filled && keep.get(f.id) !== f.type) labels.add(f.label);
+      }
+    }
+    if (labels.size) setPendingTemplate({ typeId, labels: [...labels] });
+    else changeTemplate(typeId);
+  };
   const changeTemplate = (typeId: string) => {
     setTemplateId(typeId);
     if (draftId !== focusedId || typeId === profile.typeId) return;
@@ -364,6 +389,23 @@ function EntityEditBody({
     retypeDraft({ id: focusedId, typeId, fieldsByLang: carried, title: titles[language] ?? "" });
   };
   const notify = useNotify();
+
+  /* ── Pins (drafts only) ── A pinned property's value carries into the next
+     draft on "Save and create another". Per corpus and template, for the
+     session (`draftPinsAtom`). Title, Description, files and connections
+     never pin: they are what makes a record this record. */
+  const [pinsByKey, setPinsByKey] = useAtom(draftPinsAtom);
+  const pinK = pinKey(entityCorpusOf(focusedId), profile.typeId);
+  const pinned = useMemo(() => new Set(pinsByKey[pinK] ?? []), [pinsByKey, pinK]);
+  const togglePin = (id: string) =>
+    setPinsByKey((prev) => {
+      const cur = new Set(prev[pinK] ?? []);
+      if (cur.has(id)) cur.delete(id);
+      else cur.add(id);
+      return { ...prev, [pinK]: [...cur] };
+    });
+  const pinFor = (id: string, label: string) =>
+    draft ? <PinToggle pinned={pinned.has(id)} label={label} onToggle={() => togglePin(id)} /> : undefined;
 
   /* ── Validation ──────────────────────────────────────────────────────────
      Errors block save (required missing, unparseable date, malformed link);
@@ -433,7 +475,7 @@ function EntityEditBody({
     return () => { aliveRef.current = false; };
   }, []);
 
-  const handleSave = () => {
+  const handleSave = (then: "close" | "another" = "close") => {
     if (saving) return; // aria-disabled — the working state explains the held click
     const next: Record<string, ValidationIssue | null> = {
       title: issueFor("title", title),
@@ -453,9 +495,37 @@ function EntityEditBody({
     window.setTimeout(() => {
       if (!aliveRef.current) return;
       if (title.includes("[fail]")) setSaveState("failed");
+      else if (then === "another" && draft) draft.onSaveAndNew({ titles, fieldsByLang }, pinned);
       else onSave({ titles, fieldsByLang });
     }, 800);
   };
+  const templateSection = (
+    <EditSection label="Template*">
+      <TemplatePicker value={templateId} onChange={requestTemplate} />
+      {draft && (
+        <p className="text-meta text-ink-tertiary">
+          Changing it keeps the values both templates share.
+        </p>
+      )}
+      <ConfirmDialog
+        open={!!pendingTemplate}
+        title={`Change to ${getEntityType(pendingTemplate?.typeId ?? "")?.name ?? "this template"}?`}
+        message={`${getEntityType(pendingTemplate?.typeId ?? "")?.name ?? "It"} has no ${
+          pendingTemplate && pendingTemplate.labels.length === 1 ? "property" : "properties"
+        } for ${pendingTemplate?.labels.join(", ")}, so ${
+          pendingTemplate && pendingTemplate.labels.length === 1 ? "that value is" : "those values are"
+        } dropped. The values both templates share are kept.`}
+        confirmLabel="Change template"
+        cancelLabel="Keep this template"
+        onConfirm={() => {
+          const t = pendingTemplate!.typeId;
+          setPendingTemplate(null);
+          changeTemplate(t);
+        }}
+        onCancel={() => setPendingTemplate(null)}
+      />
+    </EditSection>
+  );
   const saveBlocked = saveAttempted && errorCount > 0;
 
   const updateField = (id: string, value: string) => {
@@ -847,6 +917,10 @@ function EntityEditBody({
            narrow in the entity drawer, main in the full view. */
         className={`bleed flex-1 overflow-auto body-top pb-8 space-y-3`}
       >
+        {/* A new entity starts with its template: it decides which fields
+            there are, so it is the form's first question. */}
+        {draft && templateSection}
+
         {/* Title */}
         <EditSection
           label="Title*"
@@ -929,9 +1003,7 @@ function EntityEditBody({
             is this?" looks the same here as it does on a card, a pill or a row.
             (`typeLabelColor`, not the raw colour: small text on the tint has to
             clear AA in dark — see `utils/typeColor`.) */}
-        <EditSection label="Template*">
-          <TemplatePicker value={templateId} onChange={changeTemplate} />
-        </EditSection>
+        {!draft && templateSection}
 
         {/* Description */}
         <EditSection
@@ -1062,6 +1134,7 @@ function EntityEditBody({
                 onChange={(byLang, ids) => setLabels(field.id, byLang, ids)}
                 onFresh={(labels) => setFreshLabels((prev) => new Set([...prev, ...labels]))}
                 copySlot={<CopyFieldSlot active={copyActive} sourceId={copiedFrom[field.id]} />}
+                pinSlot={pinFor(field.id, field.label)}
               />
             );
           }
@@ -1072,6 +1145,7 @@ function EntityEditBody({
               htmlFor={`field-${field.id}`}
               listening={fillTarget?.fieldId === field.id}
               onStopListening={() => setFillTarget(null)}
+              action={pinFor(field.id, field.label)}
             >
               {field.type === "media" ? (
                 // A URL and chapter rows, not a one-line box around the raw
@@ -1199,12 +1273,16 @@ function EntityEditBody({
           <button
             onClick={() => setPickerOpen(true)}
             data-gutter-align="box"
-            className={`me-auto inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium
+            // A draft in the drawer carries four bar buttons in 460px; Copy
+            // from keeps its name as the accessible label and shows its icon.
+            aria-label="Copy from…"
+            title={draft && compact ? "Copy from…" : undefined}
+            className={`me-auto inline-flex items-center gap-1.5 ${draft && compact ? "px-2" : "px-3"} py-1.5 text-xs font-medium whitespace-nowrap
               ${BAR_GHOST} rounded-md transition-colors cursor-pointer
               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30`}
           >
-            <ClipboardCopy size={13} className="text-ink-tertiary" />
-            Copy from…
+            <ClipboardCopy size={13} className="text-ink-tertiary" aria-hidden />
+            {!(draft && compact) && "Copy from…"}
           </button>
 
         <button
@@ -1212,7 +1290,7 @@ function EntityEditBody({
             if (!saving) onCancel();
           }}
           aria-disabled={saving || undefined}
-          className={`px-4 py-1.5 text-xs font-medium text-ink-secondary rounded-md transition-colors ${
+          className={`${draft && compact ? "px-3" : "px-4"} py-1.5 text-xs font-medium whitespace-nowrap text-ink-secondary rounded-md transition-colors ${
             saving ? "opacity-50 cursor-not-allowed" : "hover:bg-warm hover:text-ink cursor-pointer"
           }`}
         >
@@ -1227,8 +1305,24 @@ function EntityEditBody({
             new red. No border in any state: bar buttons carry none, and a
             border that appears only on failure would be the one outline in
             the bar. */}
+        {draft && (
+          /* The run-of-records path: saves, then opens the next draft of this
+             template with the pinned values in it. The lead, not a second
+             commit: Save stays the one filled button. */
+          <button
+            type="button"
+            data-part="save-another"
+            onClick={() => handleSave("another")}
+            aria-disabled={saving || saveBlocked || undefined}
+            className={`px-3 py-1.5 text-xs font-medium whitespace-nowrap ${BAR_LEAD} rounded-md transition-colors ${
+              saving ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+            }`}
+          >
+            Save and create another
+          </button>
+        )}
         <button
-          onClick={handleSave}
+          onClick={() => handleSave()}
           aria-disabled={saving || saveBlocked || undefined}
           className={`relative px-4 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
             saveState === "failed"
@@ -1254,6 +1348,29 @@ function EntityEditBody({
 }
 
 /* ── Edit helpers ── */
+
+/** A property's pin, on its label row. Revealed on the field's hover or focus
+ *  (`.pin-host` / `.pin-toggle` in index.css, with keyboard focus included),
+ *  and always shown once pinned, so what will carry over is on screen. */
+function PinToggle({ pinned, label, onToggle }: { pinned: boolean; label: string; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={pinned}
+      aria-label={pinned ? `Unpin ${label}` : `Pin ${label} for the next entity`}
+      title={pinned ? "Pinned: this value carries into the next entity" : "Pin: carry this value into the next entity"}
+      onClick={onToggle}
+      data-part="pin"
+      className={`pin-toggle inline-flex items-center gap-1 h-4 px-1.5 rounded-sm text-meta font-medium transition-colors cursor-pointer
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30 ${
+          pinned ? "bg-carbon-tint text-carbon" : "text-ink-tertiary hover:text-ink-secondary"
+        }`}
+    >
+      <Pin size={10} aria-hidden className={pinned ? "fill-current" : ""} />
+      {pinned ? "Pinned" : "Pin"}
+    </button>
+  );
+}
 
 function EditSection({
   label,
@@ -1281,7 +1398,7 @@ function EditSection({
   onStopListening?: () => void;
 }) {
   return (
-    <div className="space-y-1.5">
+    <div className="pin-host space-y-1.5">
       {label && (
         // `text-xs font-medium text-ink-secondary` — the form-label recipe, the
         // one `settings/SettingsField.tsx` already gives every Settings page and both
@@ -1330,6 +1447,7 @@ function ThesaurusFieldEditor({
   onChange: onChoice,
   onFresh,
   copySlot,
+  pinSlot,
 }: {
   field: MetadataField;
   corpus: Corpus;
@@ -1340,6 +1458,8 @@ function ThesaurusFieldEditor({
   onChange: (byLang: Record<Language, string[]>, ids: (string | null)[]) => void;
   onFresh: (labels: string[]) => void;
   copySlot?: ReactNode;
+  /** The draft form's pin toggle, on the label row with Clear / Add value. */
+  pinSlot?: ReactNode;
 }) {
   const thesauri = useAtomValue(thesauriAtom(corpus));
   const bindings = useAtomValue(thesaurusBindingsAtom(corpus));
@@ -1382,6 +1502,7 @@ function ThesaurusFieldEditor({
               Add value
             </button>
           )}
+          {pinSlot}
         </span>
       }
     >

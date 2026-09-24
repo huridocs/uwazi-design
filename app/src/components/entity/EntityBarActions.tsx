@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSetAtom, useStore } from "jotai";
-import { Lock, Share2, Trash2 } from "lucide-react";
+import { CopyPlus, Lock, Share2, Trash2 } from "lucide-react";
 import { deleteWithUndoAtom } from "../../atoms/entityOverlay";
 import { deselectIdsAtom, whenBulkCleanAtom } from "../../atoms/library";
 import { notificationsAtom } from "../../atoms/notifications";
@@ -25,9 +25,13 @@ import { BAR_DANGER, BAR_GHOST } from "../shared/warmButton";
 export function EntityBarActions({
   entityId,
   onDeleted,
+  onDuplicate,
   compact = false,
 }: {
   entityId: string;
+  /** Duplicate: offered where a duplicate can open as a draft (the Library
+   *  drawer). Absent elsewhere. */
+  onDuplicate?: () => void;
   /** After the entity has left the library: close the preview, leave the view. */
   onDeleted?: () => void;
   compact?: boolean;
@@ -81,6 +85,7 @@ export function EntityBarActions({
 
   return (
     <>
+      {onDuplicate && button("Duplicate", <CopyPlus size={13} />, onDuplicate, BAR_GHOST, "duplicate")}
       {button("Share", <Share2 size={13} />, () => setDialog("share"), BAR_GHOST, "share")}
       {button("Permissions", <Lock size={13} />, () => setDialog("permissions"), BAR_GHOST, "permissions")}
       <BarDivider />

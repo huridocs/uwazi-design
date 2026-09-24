@@ -262,6 +262,21 @@ body {
   }
 }
 
+/* A draft form's property pin (`PinToggle` in MetadataView): quiet until the
+   field is hovered or holds focus, and always visible once pinned. Plain
+   classes rather than a Tailwind group variant, for the reason given at
+   `.thumb-zoom` above: a named group ties with `opacity-0` and loses. */
+.pin-toggle {
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+.pin-host:hover .pin-toggle,
+.pin-host:focus-within .pin-toggle,
+.pin-toggle:focus-visible,
+.pin-toggle[aria-pressed="true"] {
+  opacity: 1;
+}
+
 /* Buttons should always show pointer cursor */
 button:not(:disabled) {
   cursor: pointer;

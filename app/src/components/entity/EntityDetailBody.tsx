@@ -1,12 +1,16 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import { X, ArrowRight } from "lucide-react";
 import { referencesAtom } from "../../atoms/references";
 import { activeFilterCountAtom } from "../../atoms/filters";
-import { focusMetadataFieldAtom, libraryEditRequestAtom } from "../../atoms/library";
-import { getEntity, getEntityType } from "../../data/entities";
+import { focusMetadataFieldAtom, libraryEditRequestAtom, librarySelectedEntityIdAtom } from "../../atoms/library";
+import { entityCorpusOf, getEntity, getEntityType } from "../../data/entities";
 import { languageAtom } from "../../atoms/language";
-import { commitDraftAtom, discardDraftAtom, draftEntityIdAtom, draftVersionAtom, saveEntityEditAtom } from "../../atoms/entityOverlay";
+import { commitDraftAtom, discardDraftAtom, draftEntityIdAtom, draftVersionAtom, saveEntityEditAtom, startDraftAtom } from "../../atoms/entityOverlay";
+import { useNotify } from "../../hooks/useNotify";
+import type { EditResult } from "../../utils/createEntity";
+import type { MetadataField } from "../../data/metadata";
+import type { Language } from "../../atoms/language";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { getEntityProfile } from "../../data/entityProfiles";
 import { isCejilEntity, cejilReferencesFor } from "../../data/cejil/profile";
@@ -25,7 +29,7 @@ import { EntityMetadataSummary } from "../metadata/EntityMetadataSummary";
 import { MetadataEditBody } from "../../views/MetadataView";
 import { EntityBarActions } from "./EntityBarActions";
 import { BAR_GHOST } from "../shared/warmButton";
-import { editSessionOpenAtom } from "../../atoms/dirtyGuard";
+import { editSessionOpenAtom, guardNavigationAtom } from "../../atoms/dirtyGuard";
 
 export interface EntityDetailBodyProps {
   entityId: string;
@@ -91,6 +95,9 @@ export function EntityDetailBody({
   // Re-read when the draft is rewritten in place (its template changed).
   useAtomValue(draftVersionAtom);
   const commitDraft = useSetAtom(commitDraftAtom);
+  const startDraft = useSetAtom(startDraftAtom);
+  const store = useStore();
+  const notify = useNotify();
   const saveEdit = useSetAtom(saveEntityEditAtom);
   /* The edit form edits the FOCUSED entity, and a host focuses this one in an
      effect — after the first render. A draft opens straight into its form, so
@@ -215,6 +222,41 @@ export function EntityDetailBody({
      same root for the same reason: its scrim covers header, tabs and footer. */
   const [panelEl, setPanelEl] = useState<HTMLDivElement | null>(null);
 
+  /** "Save and create another": save this draft, then open the next one of
+   *  the same template in this drawer, its pinned properties filled from the
+   *  record just saved. The preview selection moves to the new draft. */
+  const saveAndNew = (result: EditResult, pinned: ReadonlySet<string>) => {
+    const typeId = entity?.typeId;
+    if (!typeId) return;
+    const corpus = entityCorpusOf(entityId);
+    const saved = result.titles[language]?.trim() || "Untitled";
+    commitDraft({ id: entityId, result, language });
+    const next = startDraft({ typeId, corpus, carry: result.fieldsByLang, only: pinned });
+    store.set(librarySelectedEntityIdAtom, next);
+    notify(
+      pinned.size
+        ? `Saved “${saved}”. The next one is open, ${pinned.size} pinned ${pinned.size === 1 ? "value" : "values"} filled in.`
+        : `Saved “${saved}”. The next one is open.`,
+      "success",
+    );
+  };
+  /** Duplicate: a draft of the same template holding this entity's property
+   *  values (not its title, files or connections), open for editing. */
+  const duplicate = () => {
+    const typeId = entity?.typeId;
+    if (!typeId) return;
+    const profile = getEntityProfile(entityId);
+    const carry = Object.fromEntries(
+      (Object.keys(profile.metadata) as Language[]).map((l) => [
+        l,
+        profile.metadata[l].filter((f): f is MetadataField => f.type !== "relationship"),
+      ]),
+    ) as Partial<Record<Language, MetadataField[]>>;
+    store.set(guardNavigationAtom, () =>
+      store.set(librarySelectedEntityIdAtom, startDraft({ typeId, corpus: entityCorpusOf(entityId), carry })),
+    );
+  };
+
   return (
     <EntityScopeProvider entityId={entityId}>
       <FiltersHostProvider host={panelEl}>
@@ -294,6 +336,7 @@ export function EntityDetailBody({
                   else saveEdit({ id: entityId, result, language });
                   setEditing(false);
                 }}
+                draft={isDraft ? { onSaveAndNew: saveAndNew } : undefined}
               />
             </>
           ) : (
@@ -337,7 +380,7 @@ export function EntityDetailBody({
             {/* Share, Permissions | Delete for this entity — icons here, the
                 footer also carries Close and the open-entity commit. */}
             {focused && !isDraft && activeTab === "metadata" && (
-              <EntityBarActions entityId={entityId} onDeleted={onClose} compact />
+              <EntityBarActions entityId={entityId} onDeleted={onClose} onDuplicate={duplicate} compact />
             )}
             <div className="flex-1" />
             {/* Ghost: the ink "Open entity" beside it is this bar's one filled
