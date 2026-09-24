@@ -10,11 +10,13 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom } from "../atoms/dataSource";
-import { startDraftAtom } from "../atoms/entityOverlay";
+import { recentTemplatesAtom, startDraftAtom } from "../atoms/entityOverlay";
 import { activitiesAtom } from "../atoms/notifications";
 import { NewImportModal } from "../components/import-csv/NewImportModal";
 import { editSessionOpenAtom } from "../atoms/dirtyGuard";
 import { CreateEntityDialog } from "../components/library/CreateEntityDialog";
+import { CreateEntityButton } from "../components/library/CreateEntityButton";
+import { BatchEntryModal } from "../components/library/BatchEntryModal";
 import { isPdf, runCsvExport, runPdfUploadBatch } from "../utils/libraryTasks";
 import { defaultTemplateId, uploadTemplateId } from "../utils/createEntity";
 import { UploadDocumentsModal } from "../components/library/UploadDocumentsModal";
@@ -310,10 +312,12 @@ export function LibraryView() {
     [setImportActivities],
   );
   const [createOpen, setCreateOpen] = useState(false);
+  const [batchOpen, setBatchOpen] = useState(false);
   const [phoneActionsOpen, setPhoneActionsOpen] = useState(false);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   /** Create entity: the chosen template opens as a draft in the drawer, on its
    *  edit form. Guarded — the drawer may be holding another entity's edit. */
+  const recentTemplates = useAtomValue(recentTemplatesAtom);
   const handleCreate = (typeId: string) => {
     setCreateOpen(false);
     guard(() => setSelectedId(startDraft({ typeId, corpus: dataSource })));
@@ -458,6 +462,14 @@ export function LibraryView() {
   const activeTypeIds = Object.entries(typeFilters)
     .filter(([, on]) => on)
     .map(([id]) => id);
+  /** Create entity's preset: the one template the Library is filtered to, else
+   *  the last used in this corpus, else the corpus default. */
+  const filteredType = activeTypeIds.length === 1 && libraryTypes.some((t) => t.id === activeTypeIds[0])
+    ? activeTypeIds[0]
+    : null;
+  const lastType = (recentTemplates[dataSource] ?? []).find((id) => libraryTypes.some((t) => t.id === id));
+  const createPreset = filteredType ?? lastType ?? defaultTemplateId(dataSource) ?? libraryTypes[0]?.id ?? "";
+  const createNamed = !!filteredType;
   const activeCountries = Object.entries(countryFilters)
     .filter(([, on]) => on)
     .map(([c]) => c);
@@ -1380,11 +1392,14 @@ export function LibraryView() {
           />
         )}
         {!selectionActive && (
-          <FooterButton
-            icon={<Plus size={13} className="text-ink-tertiary" />}
-            label="Create entity"
-            onClick={() => setCreateOpen(true)}
-            lead
+          <CreateEntityButton
+            preset={createPreset}
+            named={createNamed}
+            recent={recentTemplates[dataSource] ?? []}
+            types={libraryTypes}
+            onCreate={handleCreate}
+            onAll={() => setCreateOpen(true)}
+            extra={[{ label: "Batch entry…", onSelect: () => setBatchOpen(true) }]}
           />
         )}
         {pendingUploads && (
@@ -1397,6 +1412,15 @@ export function LibraryView() {
           />
         )}
         <NewImportModal open={importOpen} onClose={() => setImportOpen(false)} onImport={handleImportCsv} />
+        {batchOpen && (
+          <BatchEntryModal
+            corpus={dataSource}
+            types={libraryTypes}
+            initialTypeId={createPreset}
+            language={language}
+            onClose={() => setBatchOpen(false)}
+          />
+        )}
         {createOpen && (
           <CreateEntityDialog
             types={libraryTypes}
@@ -1474,7 +1498,7 @@ export function LibraryView() {
             heading="Library"
             onClose={() => setPhoneActionsOpen(false)}
             actions={[
-              { label: "Create entity", icon: <Plus size={14} />, onClick: () => setCreateOpen(true) },
+              { label: "Create entity", icon: <Plus size={14} />, onClick: () => handleCreate(createPreset) },
               { label: "Upload PDF", icon: <Upload size={14} />, onClick: () => uploadInputRef.current?.click() },
               {
                 label: "Import CSV",

@@ -465,18 +465,75 @@ export const retypeDraftAtom = atom(
   },
 );
 
+/** `into`'s fields, with the values of `from` written onto every field of
+ *  the same id AND type (a text value is not a date), in every language —
+ *  optionally only the ids in `only`. The one carry rule behind "Save and
+ *  create another" (pinned properties) and Duplicate (all of them). */
+export function carryValues(
+  into: Record<Language, MetadataField[]>,
+  from: Partial<Record<Language, MetadataField[]>>,
+  only?: ReadonlySet<string>,
+): Record<Language, MetadataField[]> {
+  return Object.fromEntries(
+    (Object.keys(into) as Language[]).map((l) => {
+      const had = new Map((from[l] ?? []).map((f) => [f.id, f]));
+      return [
+        l,
+        into[l].map((f) => {
+          const h = had.get(f.id);
+          if (!h || h.type !== f.type || (only && !only.has(f.id))) return f;
+          return {
+            ...f,
+            value: h.value,
+            ...(h.values ? { values: h.values } : {}),
+            ...(h.valueIds ? { valueIds: h.valueIds } : {}),
+          };
+        }),
+      ];
+    }),
+  ) as Record<Language, MetadataField[]>;
+}
+
 /** Begin creating an entity of `typeId` in `corpus`: an empty record of that
- *  template, held as the draft. Returns its id for the caller to open. */
+ *  template, held as the draft. Returns its id for the caller to open.
+ *  `carry` pre-fills it (see `carryValues`); `only` limits which ids carry. */
 export const startDraftAtom = atom(
   null,
-  (_get, set, { typeId, corpus }: { typeId: string; corpus: Corpus }): string => {
+  (
+    _get,
+    set,
+    {
+      typeId,
+      corpus,
+      carry,
+      only,
+    }: {
+      typeId: string;
+      corpus: Corpus;
+      carry?: Partial<Record<Language, MetadataField[]>>;
+      only?: ReadonlySet<string>;
+    },
+  ): string => {
     const id = newEntityId();
     const entity: Entity = { id, title: "", typeId, createdAt: today(), published: false };
-    setDraftMirror({ entity, corpus, record: buildRecord({ id, typeId, fieldsByLang: templateFields(typeId, corpus) }) });
+    const empty = templateFields(typeId, corpus);
+    const fieldsByLang = carry ? carryValues(empty, carry, only) : empty;
+    setDraftMirror({ entity, corpus, record: buildRecord({ id, typeId, fieldsByLang }) });
     set(draftEntityIdAtom, id);
     return id;
   },
 );
+
+/** The templates this session created entities in, per corpus, newest first
+ *  (three kept). Create entity presets the newest; the Create menu lists
+ *  them. Session memory only — a new visit starts at the corpus default. */
+export const recentTemplatesAtom = atom<Partial<Record<Corpus, string[]>>>({});
+
+/** Pinned properties, per corpus and template (`corpus:typeId` → field ids).
+ *  A pinned property's value carries into the next draft when the reader
+ *  saves with "Save and create another". Session memory, like the recents. */
+export const draftPinsAtom = atom<Record<string, string[]>>({});
+export const pinKey = (corpus: Corpus, typeId: string) => `${corpus}:${typeId}`;
 
 /** Save the draft: the form's values become its record, and it joins its
  *  corpus's library. `language` is the language the form was saved in — the
@@ -505,6 +562,52 @@ export const commitDraftAtom = atom(
       corpus: hit.corpus,
       entries: [{ entity, record: { ...record, metadata: result.fieldsByLang } }],
     });
+    // The template just used leads the corpus's recents.
+    set(recentTemplatesAtom, (prev) => ({
+      ...prev,
+      [hit.corpus]: [entity.typeId, ...(prev[hit.corpus] ?? []).filter((t) => t !== entity.typeId)].slice(0, 3),
+    }));
+  },
+);
+
+/** Batch entry: many entities of one template at once, from the grid. Each row
+ *  is a title (in every language) and the template's fields with the row's
+ *  values. The entities join the library the way a saved draft does, and the
+ *  template leads the corpus's recents. Returns how many were created. */
+export const createBatchAtom = atom(
+  null,
+  (
+    _get,
+    set,
+    {
+      corpus,
+      typeId,
+      rows,
+      language,
+    }: {
+      corpus: Corpus;
+      typeId: string;
+      rows: { title: string; fieldsByLang: Record<Language, MetadataField[]> }[];
+      language: Language;
+    },
+  ): number => {
+    const entries = rows.map((row) => {
+      const id = newEntityId();
+      const entity: Entity = { id, title: row.title, typeId, createdAt: today(), published: false };
+      if (corpus !== "mock") {
+        const fields = adapterFieldsOf(row.fieldsByLang[language] ?? []);
+        entity.fields = fields;
+        entity.searchFields = fields;
+      }
+      return { entity, record: buildRecord({ id, typeId, fieldsByLang: row.fieldsByLang }) };
+    });
+    if (!entries.length) return 0;
+    set(createEntitiesAtom, { corpus, entries });
+    set(recentTemplatesAtom, (prev) => ({
+      ...prev,
+      [corpus]: [typeId, ...(prev[corpus] ?? []).filter((t) => t !== typeId)].slice(0, 3),
+    }));
+    return entries.length;
   },
 );
 
