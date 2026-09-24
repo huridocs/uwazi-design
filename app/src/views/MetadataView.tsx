@@ -53,7 +53,7 @@ import { templateFields, type EditResult } from "../utils/createEntity";
 import { BulkEditBody } from "../components/metadata/BulkEditBody";
 import type { ThesaurusValue } from "../data/settings";
 import { focusedEntityIdAtom } from "../atoms/focusedEntity";
-import { draftEntityIdAtom, retypeDraftAtom, saveEntityEditAtom } from "../atoms/entityOverlay";
+import { draftEntityIdAtom, retypeDraftAtom, saveEntityEditAtom, recentTemplatesAtom } from "../atoms/entityOverlay";
 import { entityCorpusOf, getEntity, getEntityType, type Entity } from "../data/entities";
 import { corpusTypes } from "../atoms/dataSource";
 import { entityTypesAtom } from "../atoms/entities";
@@ -75,6 +75,7 @@ import { fromDateInputValue, toDateInputValue } from "../utils/dateValue";
 import { DRAWER_MIN_WIDTH } from "../components/layout/SplitView";
 import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
 import { ConfirmDialog } from "../components/shared/ConfirmDialog";
+import { TemplateSelect } from "../components/shared/TemplateSelect";
 import { flashElement } from "../utils/flash";
 
 interface MetadataViewProps {
@@ -1496,6 +1497,8 @@ const countries = [
  *  Presentational, like the icon picker beside it: the prototype keys an
  *  entity's profile off its seeded type, so choosing another shows the choice
  *  but doesn't re-shape the entity. */
+/** The form's Template field: `TemplateSelect` over the edited entity's
+ *  corpus, with the templates this session created in listed first. */
 function TemplatePicker({
   value,
   onChange,
@@ -1507,62 +1510,10 @@ function TemplatePicker({
   // template is a CEJIL template, and the Sample list made every CEJIL form
   // open on "Select template…".
   const focusedId = useAtomValue(focusedEntityIdAtom);
-  const types = corpusTypes(entityCorpusOf(focusedId), useAtomValue(entityTypesAtom));
-  const [open, setOpen] = useState(false);
-  const current = types.find((t) => t.id === value);
-
-  const row = (color: string, name: string) => (
-    <>
-      <span
-        className="rounded-[2px] shrink-0 ring-1 ring-inset ring-ink/20 w-[0.4375rem] h-[0.4375rem]"
-        style={{ backgroundColor: color }}
-      />
-      <span className="text-sm font-medium" style={{ color: typeLabelColor(color) }}>
-        {name}
-      </span>
-    </>
-  );
-
-  return (
-    <div className="space-y-2">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        className="w-full flex items-center gap-2 px-3 py-2 bg-paper border border-border rounded-md
-          text-left hover:bg-warm transition-colors cursor-pointer
-          focus:outline-none focus:ring-2 focus:ring-carbon/20"
-      >
-        {current ? (
-          row(current.color, current.name)
-        ) : (
-          <span className="text-sm text-ink-muted">Select template...</span>
-        )}
-        <ChevronDown
-          size={14}
-          className={`ms-auto text-ink-muted transition-transform ${open ? "rotate-180" : ""}`}
-        />
-      </button>
-      {open && (
-        <div className="border border-border rounded-md max-h-60 overflow-auto">
-          {types.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => {
-                onChange(t.id);
-                setOpen(false);
-              }}
-              className={`w-full flex items-center gap-2 px-3 py-2 text-left transition-colors cursor-pointer
-                ${t.id === value ? "bg-carbon-tint" : "hover:bg-warm"}`}
-            >
-              {row(t.color, t.name)}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+  const corpus = entityCorpusOf(focusedId);
+  const types = corpusTypes(corpus, useAtomValue(entityTypesAtom));
+  const recent = useAtomValue(recentTemplatesAtom)[corpus] ?? [];
+  return <TemplateSelect value={value} onChange={onChange} types={types} recent={recent} />;
 }
 
 function CountryPicker() {
