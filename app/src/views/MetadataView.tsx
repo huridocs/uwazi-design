@@ -25,7 +25,7 @@ import { fillTargetAtom, fillRequestAtom } from "../atoms/fillTarget";
 import { ListeningChip } from "../components/metadata/ListeningChip";
 import { MultiLanguageField } from "../components/metadata/MultiLanguageField";
 import type { CopyMatch, CopyPlan, CopyUnit } from "../utils/copyFrom";
-import type { EditResult } from "../utils/createEntity";
+import { templateFields, type EditResult } from "../utils/createEntity";
 import { TemplateStructure } from "../components/relationships/TemplateStructure";
 import { EntityOverlay } from "../components/relationships/EntityOverlay";
 import { groupConnections, relationLabel, specInherits } from "../utils/inheritance";
@@ -53,7 +53,7 @@ import {
 import type { Corpus } from "../data/entityOverlay";
 import type { ThesaurusValue } from "../data/settings";
 import { focusedEntityIdAtom } from "../atoms/focusedEntity";
-import { saveEntityEditAtom } from "../atoms/entityOverlay";
+import { draftEntityIdAtom, retypeDraftAtom, saveEntityEditAtom } from "../atoms/entityOverlay";
 import { entityCorpusOf, getEntity, getEntityType, type Entity } from "../data/entities";
 import { corpusTypes } from "../atoms/dataSource";
 import { entityTypesAtom } from "../atoms/entities";
@@ -329,9 +329,40 @@ function EntityEditBody({
   const [icon, setIcon] = useState<string | null>(null);
   const [iconOpen, setIconOpen] = useState(false);
   const iconShown = iconOpen || icon !== null;
-  /** The entity's template. Presentational: this prototype keys profiles off
-      the seeded type, so picking another does not re-shape the entity. */
+  /** The entity's template. On an entity being CREATED it re-shapes the form:
+      the draft becomes one of the picked template (`retypeDraftAtom`), with
+      the values whose property the new template also has (same key, same
+      type) carried over and the rest dropped, and the form remounts on it.
+      Nothing is saved. On an existing entity it is still presentational —
+      changing a saved entity's template is the Library's Change template. */
   const [templateId, setTemplateId] = useState(profile.typeId);
+  const draftId = useAtomValue(draftEntityIdAtom);
+  const retypeDraft = useSetAtom(retypeDraftAtom);
+  const changeTemplate = (typeId: string) => {
+    setTemplateId(typeId);
+    if (draftId !== focusedId || typeId === profile.typeId) return;
+    const next = templateFields(typeId, entityCorpusOf(focusedId));
+    const carried = Object.fromEntries(
+      LANGUAGES.map((l) => {
+        const had = new Map(fieldsByLang[l].map((f) => [f.id, f]));
+        const out: MetadataField[] = next[l].map((f) => {
+          const h = had.get(f.id);
+          if (!h || h.type !== f.type) return f;
+          return {
+            ...f,
+            value: h.value,
+            ...(h.values ? { values: h.values } : {}),
+            ...(h.valueIds ? { valueIds: h.valueIds } : {}),
+          };
+        });
+        // Description is the form's own box, not a template property.
+        const desc = had.get("description");
+        if (desc && !out.some((f) => f.id === "description")) out.push(desc);
+        return [l, out];
+      }),
+    ) as Record<Language, MetadataField[]>;
+    retypeDraft({ id: focusedId, typeId, fieldsByLang: carried, title: titles[language] ?? "" });
+  };
   const notify = useNotify();
 
   /* ── Validation ──────────────────────────────────────────────────────────
@@ -899,7 +930,7 @@ function EntityEditBody({
             (`typeLabelColor`, not the raw colour: small text on the tint has to
             clear AA in dark — see `utils/typeColor`.) */}
         <EditSection label="Template*">
-          <TemplatePicker value={templateId} onChange={setTemplateId} />
+          <TemplatePicker value={templateId} onChange={changeTemplate} />
         </EditSection>
 
         {/* Description */}
