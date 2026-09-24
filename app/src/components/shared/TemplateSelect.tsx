@@ -135,7 +135,7 @@ export function TemplateSelect({
     if (tid !== value) onChange(tid);
   };
 
-  const onSearchKey = (e: KeyboardEvent<HTMLInputElement>) => {
+  const onSearchKey = (e: KeyboardEvent<HTMLElement>) => {
     const i = flat.findIndex((t) => t.id === active);
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
@@ -193,7 +193,17 @@ export function TemplateSelect({
         aria-expanded={open}
         onClick={() => (open ? close(false) : openWith())}
         onKeyDown={(e) => {
-          if (open) return;
+          if (open) {
+            // The search takes focus a frame after the list opens (it is
+            // placed first). Keys typed in that frame land here: a character
+            // goes into the search, the rest act on the list as it would.
+            if (e.key.length === 1 && !e.metaKey && !e.ctrlKey && !e.altKey) {
+              e.preventDefault();
+              setQuery((q) => q + e.key);
+              searchRef.current?.focus();
+            } else onSearchKey(e);
+            return;
+          }
           if (e.key === "ArrowDown" || e.key === "ArrowUp") {
             e.preventDefault();
             openWith();
