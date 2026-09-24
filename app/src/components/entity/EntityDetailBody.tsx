@@ -6,7 +6,7 @@ import { activeFilterCountAtom } from "../../atoms/filters";
 import { focusMetadataFieldAtom, libraryEditRequestAtom } from "../../atoms/library";
 import { getEntity, getEntityType } from "../../data/entities";
 import { languageAtom } from "../../atoms/language";
-import { commitDraftAtom, discardDraftAtom, draftEntityIdAtom, saveEntityEditAtom } from "../../atoms/entityOverlay";
+import { commitDraftAtom, discardDraftAtom, draftEntityIdAtom, draftVersionAtom, saveEntityEditAtom } from "../../atoms/entityOverlay";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { getEntityProfile } from "../../data/entityProfiles";
 import { isCejilEntity, cejilReferencesFor } from "../../data/cejil/profile";
@@ -88,6 +88,8 @@ export function EntityDetailBody({
      offers no other tab — it has no connections or files yet — and its
      Cancel discards it and its Save is what adds it to the library. */
   const isDraft = useAtomValue(draftEntityIdAtom) === entityId;
+  // Re-read when the draft is rewritten in place (its template changed).
+  useAtomValue(draftVersionAtom);
   const commitDraft = useSetAtom(commitDraftAtom);
   const saveEdit = useSetAtom(saveEntityEditAtom);
   /* The edit form edits the FOCUSED entity, and a host focuses this one in an
@@ -270,7 +272,9 @@ export function EntityDetailBody({
             <>
               {editOverlay}
               <MetadataEditBody
-                key={entityId}
+                // A draft whose template changed is a new form over the new
+                // template's record (see `retypeDraftAtom`).
+                key={isDraft ? `${entityId}:${entity?.typeId}` : entityId}
                 compact
                 sessionId={isDraft ? "create-entity" : editSessionId}
                 dirtyLabel={isDraft ? "New entity" : editDirtyLabel}
