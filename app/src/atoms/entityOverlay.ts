@@ -458,6 +458,10 @@ export const draftEntityIdAtom = atom<string | null>(null);
 /** Bumped when the open draft is rewritten in place (its template changed),
  *  so the panel re-reads it: the draft lives in the mirror, not in an atom. */
 export const draftVersionAtom = atom(0);
+/** The titles a retyped draft's form held, per language — so the form that
+ *  remounts on the new template re-seeds each language's title as it was,
+ *  instead of copying the one the entity carries into all four. */
+export const draftTitlesAtom = atom<{ id: string; titles: Record<Language, string> } | null>(null);
 
 /** The open draft's template changed on its form: it becomes an entity of
  *  `typeId`, holding `fieldsByLang` — the new template's properties with the
@@ -468,7 +472,21 @@ export const retypeDraftAtom = atom(
   (
     get,
     set,
-    { id, typeId, fieldsByLang, title }: { id: string; typeId: string; fieldsByLang: Record<Language, MetadataField[]>; title: string },
+    {
+      id,
+      typeId,
+      fieldsByLang,
+      title,
+      titles,
+    }: {
+      id: string;
+      typeId: string;
+      fieldsByLang: Record<Language, MetadataField[]>;
+      /** The header's title: the form's current language. */
+      title: string;
+      /** Every language's title, as the form held them. */
+      titles: Record<Language, string>;
+    },
   ) => {
     const hit = overlayCreated(id);
     if (!hit || get(draftEntityIdAtom) !== id) return;
@@ -477,6 +495,7 @@ export const retypeDraftAtom = atom(
       corpus: hit.corpus,
       record: buildRecord({ id, typeId, fieldsByLang }),
     });
+    set(draftTitlesAtom, { id, titles });
     set(draftVersionAtom, (v) => v + 1);
   },
 );

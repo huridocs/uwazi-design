@@ -53,7 +53,7 @@ import {
 import type { Corpus } from "../data/entityOverlay";
 import type { ThesaurusValue } from "../data/settings";
 import { focusedEntityIdAtom } from "../atoms/focusedEntity";
-import { draftEntityIdAtom, draftPinsAtom, pinKey, recentTemplatesAtom, retypeDraftAtom, saveEntityEditAtom } from "../atoms/entityOverlay";
+import { draftEntityIdAtom, draftPinsAtom, draftTitlesAtom, pinKey, recentTemplatesAtom, retypeDraftAtom, saveEntityEditAtom } from "../atoms/entityOverlay";
 import { entityCorpusOf, getEntity, getEntityType, type Entity } from "../data/entities";
 import { corpusTypes } from "../atoms/dataSource";
 import { entityTypesAtom } from "../atoms/entities";
@@ -282,11 +282,15 @@ function EntityEditBody({
     ),
     [profile],
   );
+  // A retyped draft's form remounts with the titles it held, per language.
+  const draftTitles = useAtomValue(draftTitlesAtom);
   const initialTitles = useMemo(() => {
+    if (draftTitles?.id === focusedId) return draftTitles.titles;
     const fallback = getEntity(focusedId)?.title ?? "";
     return Object.fromEntries(
       LANGUAGES.map((l) => [l, profile.document?.[l]?.title ?? fallback]),
     ) as Record<Language, string>;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- read once, at mount
   }, [profile, focusedId]);
   /* Scalar fields edit inline here; relationship fields go through the
      connection editor. Like the title above, they are held PER LANGUAGE —
@@ -387,7 +391,7 @@ function EntityEditBody({
         return [l, out];
       }),
     ) as Record<Language, MetadataField[]>;
-    retypeDraft({ id: focusedId, typeId, fieldsByLang: carried, title: titles[language] ?? "" });
+    retypeDraft({ id: focusedId, typeId, fieldsByLang: carried, title: titles[language] ?? "", titles });
   };
   const notify = useNotify();
 
@@ -1262,9 +1266,12 @@ function EntityEditBody({
         ) : null}
       </div>
 
-      {/* Edit action bar */}
+      {/* Edit action bar. A container: at the drawer's 360px minimum a
+          draft's four buttons need ~440px, so below 27rem "Copy from…" keeps
+          only its icon (and its name) and "Save and create another" reads
+          "Save & new" — nothing is clipped at any width. */}
       <div
-        className={`flex items-center justify-end gap-3 h-12 bg-paper shrink-0 ${
+        className={`@container flex items-center justify-end gap-3 h-12 bg-paper shrink-0 ${
           compact ? "bleed gap-2" : "bleed"
         }`}
         style={{ borderTop: "1px solid var(--border-primary)" }}
@@ -1274,12 +1281,14 @@ function EntityEditBody({
           <button
             onClick={() => setPickerOpen(true)}
             data-gutter-align="box"
-            className={`me-auto inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium whitespace-nowrap
+            aria-label="Copy from…"
+            title="Copy from…"
+            className={`me-auto shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium whitespace-nowrap
               ${BAR_GHOST} rounded-md transition-colors cursor-pointer
               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30`}
           >
             <ClipboardCopy size={13} className="text-ink-tertiary" aria-hidden />
-            Copy from…
+            <span className="hidden @[27rem]:inline">Copy from…</span>
           </button>
 
         <button
@@ -1311,11 +1320,14 @@ function EntityEditBody({
             data-part="save-another"
             onClick={() => handleSave("another")}
             aria-disabled={saving || saveBlocked || undefined}
-            className={`px-3 py-1.5 text-xs font-medium whitespace-nowrap ${BAR_LEAD} rounded-md transition-colors ${
+            className={`shrink-0 px-3 py-1.5 text-xs font-medium whitespace-nowrap ${BAR_LEAD} rounded-md transition-colors ${
               saving ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
             }`}
           >
-            Save and create another
+            {/* One label shows at a time; the hidden one is out of the
+                accessibility tree, so the name is what is seen. */}
+            <span className="hidden @[27rem]:inline">Save and create another</span>
+            <span className="@[27rem]:hidden">Save &amp; new</span>
           </button>
         )}
         <button
