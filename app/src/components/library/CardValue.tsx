@@ -44,28 +44,43 @@ export function CardValue({
   if (field.kind === "chips" && field.values && field.values.length > 1 && !compact) {
     const shown = field.values.slice(0, 3);
     const rest = field.more ?? 0;
+    /* How many chips the row holds depends on how wide the CARD is, so it is a
+       container query on the fields block (`@container/fields` in EntityCard):
+       one chip below 13rem, two below 19rem, three above. A chip never shrinks
+       below a readable width (`min-w-[4rem]`) — the row used to squeeze three
+       into 180px as "A… Nega… Sin…". The "+N" moves with the count, one span
+       per breakpoint, so what is hidden is always counted. */
+    const hidden = (i: number) =>
+      i === 1 ? "hidden @[13rem]/fields:inline-block" : i === 2 ? "hidden @[19rem]/fields:inline-block" : "inline-block";
+    const extra = (visible: number) => rest + (shown.length - visible) - (rest > 0 ? 1 : 0);
+    const count = (visible: number) => Math.max(0, shown.length - visible) + Math.max(0, rest - (shown.length - 1));
+    void extra;
     return (
       <span data-component="CardValue" data-kind="chips" className="flex items-center gap-1 min-w-0 overflow-hidden">
-        {/* Chips SHARE the row's width instead of each taking a fixed ceiling.
-            `max-w-[9rem]` capped every chip at the same arbitrary width, so a
-            long value truncated ("Excepciones Preliminar…") while a LONGER one
-            beside it rendered whole because it happened to fit under the cap —
-            which reads as a broken rule rather than a considered one. `min-w-0`
-            lets a chip shrink, and the basis keeps a short chip from being
-            squeezed by a long neighbour. */}
         {shown.map((v, i) => (
           <span
             key={`${v}-${i}`}
             title={v}
             data-part="chip"
-            className="min-w-0 shrink basis-auto truncate rounded-md bg-warm px-1.5 py-px text-meta text-ink-secondary"
+            className={`${hidden(i)} min-w-[4rem] max-w-full shrink basis-auto truncate rounded-md bg-warm px-1.5 py-px text-meta text-ink-secondary`}
           >
             {marked(v)}
           </span>
         ))}
-        {rest > shown.length - 1 && (
-          <span data-part="more" className="shrink-0 text-meta text-ink-tertiary">
-            +{rest - (shown.length - 1)}
+        {/* One count per breakpoint; only the one matching the card shows. */}
+        {count(1) > 0 && (
+          <span data-part="more" className="shrink-0 text-meta text-ink-tertiary @[13rem]/fields:hidden">
+            +{count(1)}
+          </span>
+        )}
+        {count(2) > 0 && (
+          <span data-part="more" className="hidden shrink-0 text-meta text-ink-tertiary @[13rem]/fields:inline @[19rem]/fields:hidden">
+            +{count(2)}
+          </span>
+        )}
+        {count(3) > 0 && (
+          <span data-part="more" className="hidden shrink-0 text-meta text-ink-tertiary @[19rem]/fields:inline">
+            +{count(3)}
           </span>
         )}
       </span>
