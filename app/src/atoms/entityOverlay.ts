@@ -478,6 +478,11 @@ export const startDraftAtom = atom(
   },
 );
 
+/** The templates this session created entities in, per corpus, newest first
+ *  (three kept). Create entity presets the newest; its menu lists them.
+ *  Session memory only: a new visit starts at the corpus default. */
+export const recentTemplatesAtom = atom<Partial<Record<Corpus, string[]>>>({});
+
 /** Save the draft: the form's values become its record, and it joins its
  *  corpus's library. `language` is the language the form was saved in — the
  *  title and the card fields are read from it. */
@@ -505,6 +510,11 @@ export const commitDraftAtom = atom(
       corpus: hit.corpus,
       entries: [{ entity, record: { ...record, metadata: result.fieldsByLang } }],
     });
+    // The template just used leads the corpus's recents.
+    set(recentTemplatesAtom, (prev) => ({
+      ...prev,
+      [hit.corpus]: [entity.typeId, ...(prev[hit.corpus] ?? []).filter((t) => t !== entity.typeId)].slice(0, 3),
+    }));
   },
 );
 

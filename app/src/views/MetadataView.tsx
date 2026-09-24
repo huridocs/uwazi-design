@@ -74,6 +74,7 @@ import { ModalHostProvider } from "../components/shared/Modal";
 import { fromDateInputValue, toDateInputValue } from "../utils/dateValue";
 import { DRAWER_MIN_WIDTH } from "../components/layout/SplitView";
 import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
+import { ConfirmDialog } from "../components/shared/ConfirmDialog";
 import { flashElement } from "../utils/flash";
 
 interface MetadataViewProps {
@@ -335,6 +336,28 @@ function EntityEditBody({
   const [templateId, setTemplateId] = useState(profile.typeId);
   const draftId = useAtomValue(draftEntityIdAtom);
   const retypeDraft = useSetAtom(retypeDraftAtom);
+  /** The form is a new entity's draft: Template leads it, and a change that
+   *  would drop values asks first. */
+  const isDraft = draftId === focusedId;
+  /** Asked for before a template change that would DROP values (the ones the
+   *  new template has no property for, same key and type). Named in the
+   *  confirm, so nothing typed disappears unannounced. */
+  const [pendingTemplate, setPendingTemplate] = useState<{ typeId: string; labels: string[] } | null>(null);
+  const requestTemplate = (typeId: string) => {
+    if (!isDraft || typeId === profile.typeId) return changeTemplate(typeId);
+    const next = templateFields(typeId, entityCorpusOf(focusedId));
+    const labels = new Set<string>();
+    for (const l of LANGUAGES) {
+      const keep = new Map(next[l].map((f) => [f.id, f.type]));
+      for (const f of fieldsByLang[l]) {
+        if (f.id === "description") continue;
+        const filled = !!(f.value?.trim() || f.values?.length);
+        if (filled && keep.get(f.id) !== f.type) labels.add(f.label);
+      }
+    }
+    if (labels.size) setPendingTemplate({ typeId, labels: [...labels] });
+    else changeTemplate(typeId);
+  };
   const changeTemplate = (typeId: string) => {
     setTemplateId(typeId);
     if (draftId !== focusedId || typeId === profile.typeId) return;
@@ -447,6 +470,31 @@ function EntityEditBody({
       else onSave({ titles, fieldsByLang });
     }, 800);
   };
+  const templateSection = (
+    <EditSection label="Template*">
+      <TemplatePicker value={templateId} onChange={requestTemplate} />
+      {isDraft && (
+        <p className="text-meta text-ink-tertiary">Changing it keeps the values both templates share.</p>
+      )}
+      <ConfirmDialog
+        open={!!pendingTemplate}
+        title={`Change to ${getEntityType(pendingTemplate?.typeId ?? "")?.name ?? "this template"}?`}
+        message={`${getEntityType(pendingTemplate?.typeId ?? "")?.name ?? "It"} has no ${
+          pendingTemplate && pendingTemplate.labels.length === 1 ? "property" : "properties"
+        } for ${pendingTemplate?.labels.join(", ")}, so ${
+          pendingTemplate && pendingTemplate.labels.length === 1 ? "that value is" : "those values are"
+        } dropped. The values both templates share are kept.`}
+        confirmLabel="Change template"
+        cancelLabel="Keep this template"
+        onConfirm={() => {
+          const t = pendingTemplate!.typeId;
+          setPendingTemplate(null);
+          changeTemplate(t);
+        }}
+        onCancel={() => setPendingTemplate(null)}
+      />
+    </EditSection>
+  );
   const saveBlocked = saveAttempted && errorCount > 0;
 
   const updateField = (id: string, value: string) => {
@@ -836,6 +884,10 @@ function EntityEditBody({
            narrow in the entity drawer, main in the full view. */
         className={`bleed flex-1 overflow-auto body-top pb-8 space-y-3`}
       >
+        {/* A new entity starts with its template: it decides which fields
+            there are, so it is the form's first question. */}
+        {isDraft && templateSection}
+
         {/* Title */}
         <EditSection
           label="Title*"
@@ -918,9 +970,7 @@ function EntityEditBody({
             is this?" looks the same here as it does on a card, a pill or a row.
             (`typeLabelColor`, not the raw colour: small text on the tint has to
             clear AA in dark — see `utils/typeColor`.) */}
-        <EditSection label="Template*">
-          <TemplatePicker value={templateId} onChange={changeTemplate} />
-        </EditSection>
+        {!isDraft && templateSection}
 
         {/* Description */}
         <EditSection
