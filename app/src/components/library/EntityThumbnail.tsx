@@ -28,6 +28,7 @@ export function EntityThumbnail({
   fit = "auto",
   frame = "landscape",
   tint,
+  peek = false,
   className = "",
 }: {
   kind: PreviewKind;
@@ -46,6 +47,8 @@ export function EntityThumbnail({
    *  the empty well next door — carry it so a slot without a picture still says
    *  WHICH KIND of thing is missing, instead of being an anonymous grey box. */
   tint?: string;
+  /** A document's sheet slides up on the card's hover (landscape frame only). */
+  peek?: boolean;
   className?: string;
 }) {
   if (kind === "document") {
@@ -59,6 +62,7 @@ export function EntityThumbnail({
         ext={file?.type}
         size={size}
         fill={frame === "portrait"}
+        peek={peek}
         className={className}
       />
     );

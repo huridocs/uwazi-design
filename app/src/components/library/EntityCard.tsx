@@ -571,6 +571,7 @@ export const EntityCard = memo(function EntityCard({
                   image={entity.image}
                   fit={thumbFit}
                   frame={thumbFrame}
+                  peek={thumbFrame === "landscape"}
                   tint={getEntityType(entity.typeId)?.color}
                   className="h-full w-full rounded overflow-hidden border border-border/60"
                 />
@@ -596,6 +597,7 @@ export const EntityCard = memo(function EntityCard({
                 image={entity.image}
                 fit={thumbFit}
                 frame={thumbFrame}
+                peek={thumbFrame === "landscape"}
                 tint={getEntityType(entity.typeId)?.color}
                 className="h-full w-full rounded overflow-hidden border border-border/60"
               />
