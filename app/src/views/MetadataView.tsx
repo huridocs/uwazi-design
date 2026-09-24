@@ -1274,16 +1274,12 @@ function EntityEditBody({
           <button
             onClick={() => setPickerOpen(true)}
             data-gutter-align="box"
-            // A draft in the drawer carries four bar buttons in 460px; Copy
-            // from keeps its name as the accessible label and shows its icon.
-            aria-label="Copy from…"
-            title={draft && compact ? "Copy from…" : undefined}
-            className={`me-auto inline-flex items-center gap-1.5 ${draft && compact ? "px-2" : "px-3"} py-1.5 text-xs font-medium whitespace-nowrap
+            className={`me-auto inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium whitespace-nowrap
               ${BAR_GHOST} rounded-md transition-colors cursor-pointer
               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30`}
           >
             <ClipboardCopy size={13} className="text-ink-tertiary" aria-hidden />
-            {!(draft && compact) && "Copy from…"}
+            Copy from…
           </button>
 
         <button
