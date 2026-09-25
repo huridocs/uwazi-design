@@ -3,15 +3,17 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 
-/** Width tiers. A modal picks the narrowest that holds its content; there is
- *  no fifth width. */
-export type ModalSize = "sm" | "md" | "lg" | "xl";
+/** Width tiers. A modal picks the narrowest that holds its content. `grid` is
+ *  for a spreadsheet-like body (batch entry) and nothing else: it takes most of
+ *  a desktop window, up to 80rem. */
+export type ModalSize = "sm" | "md" | "lg" | "xl" | "grid";
 
 const WIDTH: Record<ModalSize, string> = {
   sm: "md:max-w-[28rem]",
   md: "md:max-w-[32rem]",
   lg: "md:max-w-[40rem]",
   xl: "md:max-w-[48rem]",
+  grid: "md:max-w-[48rem] lg:max-w-[min(80rem,calc(100vw-4rem))]",
 };
 
 /** The element a `scope="pane"` modal covers, when it is called from deeper

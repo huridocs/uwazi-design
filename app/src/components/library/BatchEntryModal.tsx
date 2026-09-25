@@ -514,7 +514,7 @@ export function BatchEntryModal({
   return (
     <Modal
       component="BatchEntryModal"
-      size="xl"
+      size="grid"
       height="md:h-[min(44rem,100%)]"
       onClose={onClose}
       dismissOnScrim={false}

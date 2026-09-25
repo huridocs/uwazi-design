@@ -143,7 +143,8 @@ Keep it in sync when tokens.css or the style rules change.
 - **Every dialog is the shared `Modal`** (`components/shared/Modal.tsx`). Never
   hand-roll a scrim, panel, header or footer. Widths are four tiers: `sm` 28rem
   (stays a centred card on phones), `md` 32, `lg` 40, `xl` 48 (full screen below
-  md). The header is 3rem: `text-sm` title, subtitle inline after it. The panel
+  md), and `grid` (up to 80rem from lg) for a spreadsheet-like body such as
+  batch entry only. The header is 3rem: `text-sm` title, subtitle inline after it. The panel
   is a `gutter-host-main` host, so strips and rows inside use `bleed` /
   `bleed-flush`, carry no `px-*`, and `__gutter()` must pass. The footer is a
   3rem bar on the bar ladder: one commit (`MODAL_COMMIT` ink, `MODAL_DANGER` for
