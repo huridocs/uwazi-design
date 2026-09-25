@@ -85,7 +85,13 @@ export function AgentModal() {
   // Resolve the enabled sources against the live app state. Everything Bert
   // says is grounded in the FOCUSED entity's real profile (CEJIL-aware), not
   // the static sample document.
-  const viewLabel = appView === "entity" ? "Library" : appView === "import-csv" ? "Import CSV" : "Component catalog";
+  const viewLabel = {
+    library: "Library",
+    entity: "Entity",
+    "import-csv": "Import CSV",
+    settings: "Settings",
+    catalog: "Component catalog",
+  }[appView];
   const focusedId = useAtomValue(focusedEntityIdAtom);
   const focusedEntity = getEntity(focusedId);
   const focusedProfile = getEntityProfile(focusedId);
