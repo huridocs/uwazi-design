@@ -141,7 +141,7 @@ Keep it in sync when tokens.css or the style rules change.
   "Select all N" offer hangs under the count out of flow, so the count sits on
   the bar's midline.
 - **Every dialog is the shared `Modal`** (`components/shared/Modal.tsx`). Never
-  hand-roll a scrim, panel, header or footer. Widths are four tiers: `sm` 28rem
+  hand-roll a scrim, panel, header or footer. Widths are five tiers: `sm` 28rem
   (stays a centred card on phones), `md` 32, `lg` 40, `xl` 48 (full screen below
   md), and `grid` (up to 80rem from lg) for a spreadsheet-like body such as
   batch entry only. The header is 3rem: `text-sm` title, subtitle inline after it. The panel
