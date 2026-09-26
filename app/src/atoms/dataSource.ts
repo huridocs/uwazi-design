@@ -15,7 +15,19 @@ export type DataSource = "mock" | "cejil" | "artworks";
  *  (Velásquez etc.); `cejil` shows the real public summa.cejil.org sample;
  *  `artworks` is the bundled image corpus (see `data/artworks/adapt.ts`).
  *  Scoped to the Library — EntityView/Relationships stay on the mock seed. */
-export const dataSourceAtom = atomWithStorage<DataSource>("uwazi:dataSource", "mock");
+const DATA_SOURCES: readonly DataSource[] = ["mock", "cejil", "artworks"];
+const storedDataSourceAtom = atomWithStorage<string>("uwazi:dataSource", "mock");
+/** The stored value is read through a check: main and playground share one
+ *  origin (huridocs.github.io), so storage can hold a source this build does
+ *  not have (playground's `travesia`), which blanked the Library. An unknown
+ *  value reads as `mock`. */
+export const dataSourceAtom = atom(
+  (get): DataSource => {
+    const v = get(storedDataSourceAtom);
+    return (DATA_SOURCES as readonly string[]).includes(v) ? (v as DataSource) : "mock";
+  },
+  (_get, set, next: DataSource) => set(storedDataSourceAtom, next),
+);
 
 /** Flipped true once the lazy CEJIL corpus (public/cejil-data/*.json) has been
  *  fetched. LibraryView triggers the load and sets this; the entity atom below
