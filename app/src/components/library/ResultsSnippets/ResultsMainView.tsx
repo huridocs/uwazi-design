@@ -662,7 +662,7 @@ function TreeBody({
                       type="button"
                       data-part="leaf"
                       onClick={() => onFocusProperty(entity.id, group.fieldKey)}
-                      className="w-full text-start rounded-md px-2 py-1 text-sm text-ink leading-relaxed
+                      className="w-full text-start rounded-md px-2 py-1 text-sm text-ink leading-relaxed wrap-anywhere
                         hover:bg-warm transition-colors cursor-pointer focus-visible:outline-none
                         focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20"
                     >
@@ -999,7 +999,7 @@ function PassagesBody({
                   meta stayed pinned to the far edge, a hand's width from the
                   sentence it names. The attribution now sits under the quote. */}
               <div className="relative">
-              <p data-part="excerpt" className="leading-relaxed text-ink">
+              <p data-part="excerpt" className="leading-relaxed text-ink wrap-anywhere">
                 <HighlightedText text={row.text} query={query} />
               </p>
               {/* The attribution, under the quote it belongs to — and every
@@ -1329,7 +1329,7 @@ function PropertyRow({
     >
       <SectionLabel as="span">{group.field}</SectionLabel>
       {group.texts.map((t, i) => (
-        <span key={i} data-part="excerpt" className="block text-sm text-ink leading-relaxed">
+        <span key={i} data-part="excerpt" className="block text-sm text-ink leading-relaxed wrap-anywhere">
           <HighlightedText text={t} query={query} />
         </span>
       ))}
@@ -1367,7 +1367,9 @@ function PassageRow({
   const body = (
     // A block <span>, not <p>: this body is also the content of a <button>,
     // where a paragraph isn't phrasing content.
-    <span className="block text-sm text-ink leading-relaxed">
+    // `wrap-anywhere`: extracted text carries unbreakable runs (a table of
+    // contents' dot leaders, a URL) wider than a narrow pane's line.
+    <span className="block text-sm text-ink leading-relaxed wrap-anywhere">
       <HighlightedText text={snippet.text} query={query} />
       {tag && (
         <bdi
