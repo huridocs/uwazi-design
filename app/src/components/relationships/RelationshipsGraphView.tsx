@@ -40,6 +40,14 @@ interface Spoke {
   color?: string;
   angle: number;
   targets: Relationship[];
+  /** What the pill prints (the label, or "label (N)" while collapsed). */
+  text: string;
+  /** The pill's width in user units, before the label floor's counter-scale. */
+  width: number;
+  /** Distance of the pill's centre from the source. */
+  dist: number;
+  /** No clear spot within PILL_MAX_PUSH: the spoke draws without its pill. */
+  hidden: boolean;
   labelX: number;
   labelY: number;
 }
@@ -62,6 +70,81 @@ const GRAPH_CAP = 150;
  *  the bottom of both, an 11-unit glyph painted 2.6px. `labelScale` below undoes
  *  exactly as much of that as the floor needs. */
 const LABEL_PX = 11;
+/** A spoke pill's height, and its width: the label's own width at LABEL_PX /
+ *  weight 500, plus padding. The fixed 110-unit pill it replaces held about 16
+ *  characters; a longer label ran out of both sides and over its neighbours.
+ *  SVG text can't be measured before it is laid out, but a canvas in the same
+ *  font can — glyph widths vary too much (5.5 units a character in lower case,
+ *  6.9 in capitals) for a per-character estimate to be both tight and safe. */
+const PILL_H = 22;
+let measureCtx: CanvasRenderingContext2D | null | undefined;
+function pillWidth(text: string): number {
+  if (measureCtx === undefined) {
+    measureCtx = typeof document !== "undefined" ? document.createElement("canvas").getContext("2d") : null;
+    if (measureCtx) measureCtx.font = `500 ${LABEL_PX}px ${getComputedStyle(document.body).fontFamily}`;
+  }
+  const w = measureCtx ? measureCtx.measureText(text).width : text.length * 7;
+  return Math.max(72, Math.ceil(w) + 24);
+}
+/** Longest label a pill prints; the rest is in the <title> and aria-label. */
+const PILL_MAX_CHARS = 40;
+/** Clearance kept between pills, the radial step a colliding pill moves out by,
+ *  and how far it may go before it stays put. */
+const PILL_GAP = 6;
+const PILL_STEP = 6;
+const PILL_MAX_PUSH = 240;
+
+interface Box {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+}
+const overlaps = (a: Box, b: Box) =>
+  a.x0 < b.x1 + PILL_GAP && b.x0 < a.x1 + PILL_GAP && a.y0 < b.y1 + PILL_GAP && b.y0 < a.y1 + PILL_GAP;
+
+/** Where each spoke's pill goes: out along its own spoke from `start`, one step
+ *  at a time, until it clears the source (circle and name pill) and every pill
+ *  already placed. Every pill sits at the same distance while they fit; the
+ *  ones that don't move OUT, never sideways, so a pill always stays on its
+ *  spoke line. `scale` is the label floor's counter-scale — a pill drawn 1.6×
+ *  larger needs 1.6× the room — so this runs again when that changes.
+ *
+ *  A pill with no clear spot within PILL_MAX_PUSH gets `null`: it is not drawn.
+ *  That is the dense case — grouped by target entity, every spoke is one entity
+ *  and there are up to GRAPH_CAP of them — where no placement fits them all and
+ *  a pile of pills hides every one of them. Its node still names itself. */
+function placePills(
+  spokes: { angle: number; width: number }[],
+  start: number[],
+  scale: number,
+  sourceLabelW: number,
+): (number | null)[] {
+  const halfH = (PILL_H / 2) * scale;
+  const placed: Box[] = [
+    { x0: CX - SOURCE_R, y0: CY - SOURCE_R, x1: CX + SOURCE_R, y1: CY + SOURCE_R },
+    {
+      x0: CX - (sourceLabelW / 2) * scale,
+      y0: CY + SOURCE_R,
+      x1: CX + (sourceLabelW / 2) * scale,
+      y1: CY + SOURCE_R + 36 * scale,
+    },
+  ];
+  return spokes.map((sp, i) => {
+    const halfW = (sp.width / 2) * scale;
+    const box = (d: number): Box => {
+      const x = CX + Math.cos(sp.angle) * d;
+      const y = CY + Math.sin(sp.angle) * d;
+      return { x0: x - halfW, y0: y - halfH, x1: x + halfW, y1: y + halfH };
+    };
+    for (let d = start[i]; d <= start[i] + PILL_MAX_PUSH; d += PILL_STEP) {
+      if (placed.some((b) => overlaps(b, box(d)))) continue;
+      placed.push(box(d));
+      return d;
+    }
+    return null;
+  });
+}
 
 /** Does `text` contain any query term? The graph's labels live in SVG `<text>`,
  *  which cannot host a `<mark>` — so where the list and tree mark the matched
@@ -111,6 +194,52 @@ export function RelationshipsGraphView() {
   // descriptor, inherited included). Sort is irrelevant to the radial layout.
   const filteredRefs = useFilteredReferences({ sort: false });
 
+  // The root is THIS entity — the one whose relationships these are. It was
+  // `currentDocument`, the hardcoded sample document, so every graph claimed a
+  // "Court Case" at its centre no matter whose page you were on: a Sentencia's
+  // own connections radiated from someone else's node.
+  const sourceEntity = getEntity(focusedId);
+  const sourceType = getEntityType(sourceEntity?.typeId ?? currentDocument.entityTypeId);
+  const sourceTitle = sourceEntity?.title ?? currentDocument.title;
+  const sourceLabel = truncate(sourceTitle, 26);
+  // SVG text can't be measured before layout, so the pill is sized from the glyph
+  // count — 5.6 units per char at fontSize 10 is a safe average for this face.
+  const sourceLabelW = Math.max(
+    72,
+    Math.max(sourceLabel.length, (sourceType?.name ?? "").length) * 5.6 + 18,
+  );
+
+  // The pane's size, because the viewBox fit is half of what a glyph's rendered
+  // size actually is. `preserveAspectRatio="xMidYMid meet"` makes that fit
+  // min(w/VIEW_W, h/VIEW_H) — measure it, don't assume 1.
+  const [pane, setPane] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      setPane((p) => (p.w === width && p.h === height ? p : { w: width, h: height }));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Rendered px per user unit = viewBox fit × zoom. Counter-scale the LABEL
+  // GROUPS (pill and text together, so the pill never has to hold type it has
+  // outgrown) by just enough to hold the floor — and by nothing at all once the
+  // graph is zoomed past it, where labels should grow with everything else.
+  const unitPx =
+    pane.w > 0 && pane.h > 0
+      ? Math.min(pane.w / VIEW_W, pane.h / VIEW_H) * transform.scale
+      : transform.scale;
+  const labelScale = Math.max(1, 1 / unitPx);
+
+  // The layout is computed at the scale the pills are DRAWN at: a pill the floor
+  // counter-scales 1.6× needs 1.6× the room, and pills placed at 1 met again
+  // once zoomed out. Quantised, so a zoom gesture re-lays the graph a few times
+  // rather than on every wheel tick, and not at all above the floor.
+  const pillScale = Math.round(labelScale * 10) / 10;
+
   const { spokes, nodes, truncated } = useMemo(() => {
     // Graph has no "hub container" node — every entity that participates
     // shows up as its own node, so let hub members through deriveRelationships.
@@ -150,11 +279,43 @@ export function RelationshipsGraphView() {
         ? Math.PI * 1.4
         : Math.max(0.05, (Math.PI * 2) / spokeCount - 0.12);
 
-    sorted.forEach(([key, targets], i) => {
+    // The pills first: where each one lands decides where its fan starts.
+    const pillMeta = sorted.map(([key, targets], i) => {
       const angle =
         spokeCount === 1
           ? -Math.PI / 2
           : (i / spokeCount) * Math.PI * 2 - Math.PI / 2;
+      const label = groupBy === "none" ? "Relationships" : getGroupLabel(key, groupBy);
+      const text = truncate(collapsed[key] ? `${label} (${targets.length})` : label, PILL_MAX_CHARS);
+      return { angle, label, text, width: pillWidth(text) };
+    });
+    // Ungrouped graphs draw no pills, so nothing can collide.
+    const grouped = groupBy !== "none";
+    const dists = grouped
+      ? placePills(pillMeta, pillMeta.map(() => LABEL_DIST), pillScale, sourceLabelW)
+      : pillMeta.map(() => LABEL_DIST);
+    // Every fan starts outside the ring the pills occupy — measured to each
+    // pill's farthest corner, since a wide pill reaches sideways into its
+    // neighbours' sectors. Otherwise a pill pushed out lands among another
+    // spoke's nodes, and the nodes paint over its text.
+    const pillsReach = Math.max(
+      0,
+      ...pillMeta.map(({ angle, width }, i) => {
+        const d = dists[i];
+        return !grouped || d === null
+          ? 0
+          : Math.hypot(
+              Math.abs(Math.cos(angle) * d) + (width / 2) * pillScale,
+              Math.abs(Math.sin(angle) * d) + (PILL_H / 2) * pillScale,
+            );
+      }),
+    );
+    const firstRing = Math.max(FIRST_RING_R, pillsReach + 24);
+
+    sorted.forEach(([key, targets], i) => {
+      const { angle, label, text, width } = pillMeta[i];
+      // A spoke without a pill still bends at the pill's usual spot.
+      const dist = dists[i] ?? LABEL_DIST;
       const isCollapsed = !!collapsed[key];
       const sortedTargets = [...targets].sort(
         (a, b) => b.evidenceCount - a.evidenceCount,
@@ -169,7 +330,7 @@ export function RelationshipsGraphView() {
       let placed = 0;
       let ring = 0;
       while (placed < shown.length) {
-        const R = FIRST_RING_R + ring * RING_GAP;
+        const R = firstRing + ring * RING_GAP;
         const arcLen = sectorSpan * R;
         const capacity = Math.max(1, Math.floor(arcLen / ARC_GAP));
         const toPlace = Math.min(capacity, shown.length - placed);
@@ -204,32 +365,21 @@ export function RelationshipsGraphView() {
 
       spokesArr.push({
         key,
-        label: groupBy === "none" ? "Relationships" : getGroupLabel(key, groupBy),
+        label,
         color: getGroupColor(key, groupBy),
         angle,
         targets: sortedTargets,
-        labelX: CX + dirX * LABEL_DIST,
-        labelY: CY + dirY * LABEL_DIST,
+        text,
+        width,
+        dist,
+        hidden: grouped && dists[i] === null,
+        labelX: CX + dirX * dist,
+        labelY: CY + dirY * dist,
       });
     });
 
     return { spokes: spokesArr, nodes, truncated };
-  }, [filteredRefs, collapsed, groupBy, activeRefId, overlayEntityId]);
-
-  // The root is THIS entity — the one whose relationships these are. It was
-  // `currentDocument`, the hardcoded sample document, so every graph claimed a
-  // "Court Case" at its centre no matter whose page you were on: a Sentencia's
-  // own connections radiated from someone else's node.
-  const sourceEntity = getEntity(focusedId);
-  const sourceType = getEntityType(sourceEntity?.typeId ?? currentDocument.entityTypeId);
-  const sourceTitle = sourceEntity?.title ?? currentDocument.title;
-  const sourceLabel = truncate(sourceTitle, 26);
-  // SVG text can't be measured before layout, so the pill is sized from the glyph
-  // count — 5.6 units per char at fontSize 10 is a safe average for this face.
-  const sourceLabelW = Math.max(
-    72,
-    Math.max(sourceLabel.length, (sourceType?.name ?? "").length) * 5.6 + 18,
-  );
+  }, [filteredRefs, collapsed, groupBy, activeRefId, overlayEntityId, sourceLabelW, pillScale]);
 
   // Did the open entity get opened FROM the graph? If it was selected elsewhere
   // (a list row, the overlay), no single node owns the click — so every node of
@@ -251,31 +401,6 @@ export function RelationshipsGraphView() {
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
   }, []);
-
-  // The pane's size, because the viewBox fit is half of what a glyph's rendered
-  // size actually is. `preserveAspectRatio="xMidYMid meet"` makes that fit
-  // min(w/VIEW_W, h/VIEW_H) — measure it, don't assume 1.
-  const [pane, setPane] = useState({ w: 0, h: 0 });
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(([entry]) => {
-      const { width, height } = entry.contentRect;
-      setPane((p) => (p.w === width && p.h === height ? p : { w: width, h: height }));
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  // Rendered px per user unit = viewBox fit × zoom. Counter-scale the LABEL
-  // GROUPS (pill and text together, so the pill never has to hold type it has
-  // outgrown) by just enough to hold the floor — and by nothing at all once the
-  // graph is zoomed past it, where labels should grow with everything else.
-  const unitPx =
-    pane.w > 0 && pane.h > 0
-      ? Math.min(pane.w / VIEW_W, pane.h / VIEW_H) * transform.scale
-      : transform.scale;
-  const labelScale = Math.max(1, 1 / unitPx);
 
   const onPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
     if ((e.target as SVGElement).dataset.node) return;
@@ -332,8 +457,9 @@ export function RelationshipsGraphView() {
     // Spoke labels are pills around their anchor — bound them generously, since a
     // clipped label is exactly the thing a "fit" is supposed to prevent.
     for (const s of spokes) {
-      minX = Math.min(minX, s.labelX - 60);
-      maxX = Math.max(maxX, s.labelX + 60);
+      if (s.hidden) continue;
+      minX = Math.min(minX, s.labelX - s.width / 2 - 5);
+      maxX = Math.max(maxX, s.labelX + s.width / 2 + 5);
       minY = Math.min(minY, s.labelY - 14);
       maxY = Math.max(maxY, s.labelY + 14);
     }
@@ -355,13 +481,38 @@ export function RelationshipsGraphView() {
   // render, or panning and zooming would snap back under your cursor.
   const fitKey = `${nodes.map((n) => n.id).join("|")}::${spokes.map((s) => s.key).join("|")}`;
   const lastFitKey = useRef<string | null>(null);
+  // The layout depends on the zoom (see `pillScale`) and the fit on the layout,
+  // so a fit can re-lay the graph larger than the fit allowed for. Follow it —
+  // but only while the view is still the one the fit set (a pan or a zoom makes
+  // a new transform object), and a bounded number of times per drawing. It
+  // converges: pills hold a constant ON-SCREEN size, so each pass shrinks the
+  // error by the share of the pane the pill ring takes — but only near the
+  // fixed point, so it takes a few passes, and quantised scales can alternate.
+  const layoutKey = `${Math.round(fitTransform.scale * 100)}:${Math.round(fitTransform.tx)}:${Math.round(fitTransform.ty)}`;
+  const lastLayoutKey = useRef<string | null>(null);
+  const fitApplied = useRef<typeof transform | null>(null);
+  const refits = useRef(0);
   useEffect(() => {
-    if (lastFitKey.current === fitKey) return;
-    lastFitKey.current = fitKey;
+    if (lastFitKey.current !== fitKey) {
+      lastFitKey.current = fitKey;
+      lastLayoutKey.current = layoutKey;
+      refits.current = 0;
+      fitApplied.current = fitTransform;
+      setTransform(fitTransform);
+      return;
+    }
+    if (lastLayoutKey.current === layoutKey) return;
+    lastLayoutKey.current = layoutKey;
+    if (transform !== fitApplied.current || refits.current >= 8) return;
+    refits.current++;
+    fitApplied.current = fitTransform;
     setTransform(fitTransform);
-  }, [fitKey, fitTransform]);
+  }, [fitKey, layoutKey, fitTransform, transform]);
 
-  const resetView = () => setTransform(fitTransform);
+  const resetView = () => {
+    fitApplied.current = fitTransform;
+    setTransform(fitTransform);
+  };
 
   if (nodes.length === 0) {
     return (
@@ -480,6 +631,7 @@ export function RelationshipsGraphView() {
           {/* Relation-type labels (midway). Skipped when ungrouped — no
               meaningful label to apply. */}
           {groupBy !== "none" && spokes.map((s) => {
+            if (s.hidden) return null;
             const isCollapsed = !!collapsed[s.key];
             const hit = matchesQuery(s.label, terms);
             return (
@@ -509,11 +661,14 @@ export function RelationshipsGraphView() {
                 <g
                   transform={`translate(${s.labelX} ${s.labelY}) scale(${labelScale}) translate(${-s.labelX} ${-s.labelY})`}
                 >
+                  {s.text !== (isCollapsed ? `${s.label} (${s.targets.length})` : s.label) && (
+                    <title>{s.label}</title>
+                  )}
                   <rect
-                    x={s.labelX - 55}
-                    y={s.labelY - 11}
-                    width={110}
-                    height={22}
+                    x={s.labelX - s.width / 2}
+                    y={s.labelY - PILL_H / 2}
+                    width={s.width}
+                    height={PILL_H}
                     rx={4}
                     // Matched branches take the highlight tint — the SVG stand-in
                     // for the <mark> the list and tree put on this same label.
@@ -534,7 +689,7 @@ export function RelationshipsGraphView() {
                     fontWeight={500}
                     fill="var(--text-secondary)"
                   >
-                    {isCollapsed ? `${s.label} (${s.targets.length})` : s.label}
+                    {s.text}
                   </text>
                 </g>
               </g>
