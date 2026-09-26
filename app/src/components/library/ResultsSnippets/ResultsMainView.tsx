@@ -535,11 +535,15 @@ function GroupedBody({
                 short list and take a third, the passages are prose and take the
                 rest. One section alone spans the card (capped to a readable
                 measure rather than stretched); neither means a header-only card,
-                which is the honest shape of a title-only match. */}
+                which is the honest shape of a title-only match.
+                Every track floors at 0, not at its content: an implicit or
+                bare `fr` track sizes to its min-content, and a truncated line
+                (the `↳ from` source) counts at its FULL width there, so the
+                card grew past the drawer and cut its passages mid-word. */}
             {hasBody && !folded && (
               <div
-                className={`grid gap-x-6 gap-y-3 px-4 py-3 ${
-                  hasMeta && hasText && !narrow ? "lg:grid-cols-[minmax(14rem,1fr)_2fr]" : ""
+                className={`grid grid-cols-[minmax(0,1fr)] gap-x-6 gap-y-3 px-4 py-3 ${
+                  hasMeta && hasText && !narrow ? "lg:grid-cols-[minmax(14rem,1fr)_minmax(0,2fr)]" : ""
                 }`}
               >
                 {hasMeta && (
@@ -667,7 +671,7 @@ function TreeBody({
                       key={i}
                       type="button"
                       onClick={() => onFocusProperty(entity.id, group.fieldKey)}
-                      className="w-full text-start rounded-md px-2 py-1 text-sm text-ink leading-relaxed
+                      className="w-full text-start rounded-md px-2 py-1 text-sm text-ink leading-relaxed wrap-anywhere
                         hover:bg-warm transition-colors cursor-pointer focus-visible:outline-none
                         focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20"
                     >
@@ -899,7 +903,7 @@ function PassagesBody({
                   it came from. `text-sm` here so `ch` is measured in the
                   passage's own type size, not the inherited one. */}
               <span className="block max-w-[74ch] text-sm">
-                <span className={`${folded ? "line-clamp-1" : "block"} leading-relaxed text-ink`}>
+                <span className={`${folded ? "line-clamp-1" : "block"} leading-relaxed text-ink wrap-anywhere`}>
                   <HighlightedText text={row.text} query={query} />
                 </span>
                 {/* The attribution, under the quote it belongs to. Small and
@@ -1008,7 +1012,7 @@ function PropertyRow({
     >
       <SectionLabel>{group.field}</SectionLabel>
       {group.texts.map((t, i) => (
-        <span key={i} className="block text-sm text-ink leading-relaxed">
+        <span key={i} className="block text-sm text-ink leading-relaxed wrap-anywhere">
           <HighlightedText text={t} query={query} />
         </span>
       ))}
@@ -1046,8 +1050,10 @@ function PassageRow({
   // without forcing the passage's own direction.
   const body = (
     // A block <span>, not <p>: this body is also the content of a <button>,
-    // where a paragraph isn't phrasing content.
-    <span className="block max-w-[74ch] text-sm text-ink leading-relaxed">
+    // where a paragraph isn't phrasing content. `wrap-anywhere`: extracted
+    // text carries unbreakable runs (a table of contents' dot leaders, a URL)
+    // wider than a narrow drawer's line.
+    <span className="block max-w-[74ch] text-sm text-ink leading-relaxed wrap-anywhere">
       <HighlightedText text={snippet.text} query={query} />
       {tag && (
         <bdi
@@ -1081,10 +1087,11 @@ function PassageRow({
 }
 
 /** "3 of 41 pages" — `total` is every matched page, so a capped card never
- *  passes its cap off as the whole document. */
+ *  passes its cap off as the whole document. One unit: the `↳ from` line
+ *  beside it is the part that yields in a narrow drawer. */
 function PageCount({ shown, total }: { shown: number; total: number }) {
   return (
-    <span dir="ltr" className="ms-1.5 font-normal normal-case tracking-normal text-ink-muted">
+    <span dir="ltr" className="ms-1.5 shrink-0 whitespace-nowrap font-normal normal-case tracking-normal text-ink-muted">
       <span className="tabular-nums">
         {shown < total ? `${shown} of ${total.toLocaleString()}` : total.toLocaleString()}
       </span>{" "}

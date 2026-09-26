@@ -79,7 +79,7 @@ export function EntityResultCard({
               >
                 <SectionLabel>{group.field}</SectionLabel>
                 {group.texts.map((t, i) => (
-                  <span key={i} className="block text-sm text-ink leading-relaxed">
+                  <span key={i} className="block text-sm text-ink leading-relaxed wrap-anywhere">
                     <HighlightedText text={t} query={query} />
                   </span>
                 ))}

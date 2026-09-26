@@ -299,7 +299,7 @@ function PropertyTip({
     <>
       <TipLabel>{origin.property?.field}</TipLabel>
       {group?.texts[0] && (
-        <span className="mt-0.5 block text-xs leading-relaxed text-ink">
+        <span className="mt-0.5 block text-xs leading-relaxed text-ink wrap-anywhere">
           <HighlightedText text={group.texts[0]} query={query} />
         </span>
       )}
@@ -340,7 +340,7 @@ function DocumentTip({
         </span>
       </TipLabel>
       {first && (
-        <span className="mt-0.5 block text-xs leading-relaxed text-ink">
+        <span className="mt-0.5 block text-xs leading-relaxed text-ink wrap-anywhere">
           <HighlightedText text={first.text} query={query} />
         </span>
       )}
