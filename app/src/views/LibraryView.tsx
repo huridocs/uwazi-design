@@ -89,13 +89,14 @@ import {
 } from "../components/library/EntitySelectBox";
 import { ActionsSheet, LibrarySelectionBar } from "../components/library/LibrarySelectionBar";
 import { LibrarySelectionDrawer } from "../components/library/LibrarySelectionDrawer";
-import { getEntityType, type Entity, type EntityImage } from "../data/entities";
+import { getEntity, getEntityType, type Entity, type EntityImage } from "../data/entities";
+import { passageFileIdAtom } from "../atoms/files";
 import { libraryInheritedDefs } from "../utils/libraryFacets";
 import { buildActiveChains, cejilChainGraph } from "../data/cejil/chainFacets";
 import { matchesAll, matchesSearch, passesMatchTypes, buildSearchIndex, type LibraryFilterState } from "../utils/libraryFilter";
 import { highlightTerms, parseSearchQuery } from "../utils/queryTokens";
 import { scoreRelevance, type RelevanceBreakdown } from "../utils/relevance";
-import { matchCategoriesWithTerms, type MatchCategories } from "../utils/librarySnippets";
+import { matchCategoriesWithTerms, passageFileId, type MatchCategories } from "../utils/librarySnippets";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { EntityCard } from "../components/library/EntityCard";
 import { ImageLightbox } from "../components/shared/ImageLightbox";
@@ -314,6 +315,7 @@ export function LibraryView() {
   const openEntity = useSetAtom(openEntityAtom);
   const focusForPreview = useSetAtom(focusEntityForPreviewAtom);
   const setScrollToPage = useSetAtom(scrollToPageAtom);
+  const setPassageFile = useSetAtom(passageFileIdAtom);
   const setResultsActivePage = useSetAtom(resultsActivePageAtom);
   const setFocusMetadataField = useSetAtom(requestMetadataFocusAtom);
   const clearFacets = useSetAtom(clearLibraryFacetsAtom);
@@ -929,26 +931,38 @@ export function LibraryView() {
       setAnchor,
     ],
   );
+  // A plain selection reads the entity's document in the reading language; only
+  // a passage jump pins the file its text came from (`handleSnippetSelect`).
   const handleSelect = useCallback(
-    (id: string, e?: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => selectFrom(true, id, e),
-    [selectFrom],
+    (id: string, e?: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => {
+      setPassageFile(null);
+      selectFrom(true, id, e);
+    },
+    [selectFrom, setPassageFile],
   );
   const handleDrawerSelect = useCallback(
-    (id: string, e?: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => selectFrom(false, id, e),
-    [selectFrom],
+    (id: string, e?: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => {
+      setPassageFile(null);
+      selectFrom(false, id, e);
+    },
+    [selectFrom, setPassageFile],
   );
   useTouchSelection(toggleSelection);
 
   // Results-tab full-text snippet: select the entity, then jump the preview's
   // document to the hit page (DocumentViewer consumes scrollToPageAtom). On
   // mobile handleSelect opens the full view; the page jump still applies.
+  // The page belongs to the file the passage was cut from, so that file is
+  // what opens — the reading language may pick another document entirely.
   const handleSnippetSelect = useCallback(
     (id: string, page: number) => {
       handleSelect(id);
+      const entity = getEntity(id);
+      setPassageFile(entity ? passageFileId(entity, language, dataSource) : null);
       setScrollToPage(page);
       setResultsActivePage({ entityId: id, page });
     },
-    [handleSelect, setScrollToPage, setResultsActivePage],
+    [handleSelect, setPassageFile, language, dataSource, setScrollToPage, setResultsActivePage],
   );
 
   // Results-tab Properties hit: open the entity preview and deep-focus the field

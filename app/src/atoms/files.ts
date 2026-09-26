@@ -47,6 +47,12 @@ export const drawerEditFocusAtom = atom<DrawerEditFocus | null>(null);
  *  modal. */
 export const viewerFileIdAtom = atom<string | null>(null);
 
+/** The file a search passage was found in, set by a Results / Match page jump
+ *  so the viewer opens THAT file at the passage's page. `DocumentViewer` renders
+ *  it only while the loaded entity owns a file with this id, and drops it when
+ *  the reading language changes. A plain selection clears it. */
+export const passageFileIdAtom = atom<string | null>(null);
+
 /** Drives `AddFileModal`. `null` = closed. A target descriptor opens the
  *  modal:
  *  - `{ mode: "new" }`           — generic flow; user picks Primary /

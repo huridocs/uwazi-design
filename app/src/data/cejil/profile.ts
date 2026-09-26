@@ -335,13 +335,18 @@ export function cejilRenderedDoc(sharedId: string): {
   borrowedFrom: BorrowedDoc | null;
   /** The key the TEXT was resolved by — see `docKeyOf`. Null with no document. */
   docKey: string | null;
+  /** The `_id` of the file the text was cut from. The viewer picks among an
+   *  entity's files by reading language, so a passage's page only means
+   *  something in THIS file — a page jump has to open it (`passageFileIdAtom`). */
+  fileId: string | null;
 } {
   const { files, titleSid } = docFilesFor(sharedId);
   const primary = files[0];
-  if (!primary) return { pages: [], borrowedFrom: null, docKey: null };
+  if (!primary) return { pages: [], borrowedFrom: null, docKey: null, fileId: null };
   return {
     pages: docPagesOf(primary),
     docKey: docKeyOf(primary),
+    fileId: primary._id,
     borrowedFrom:
       titleSid === sharedId
         ? null

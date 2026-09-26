@@ -377,11 +377,13 @@ interface DocPages {
   borrowedFrom: BorrowedDoc | null;
   /** See `EntitySnippets.docKey`. */
   docKey: string | null;
+  /** The file `_id` the pages were cut from (CEJIL only; see `cejilRenderedDoc`). */
+  fileId: string | null;
 }
 
 /** No document. ONE instance, so the page-keyed caches below don't accumulate a
  *  distinct entry per document-less entity (and `[] !== []` doesn't defeat them). */
-const NO_PAGES: DocPages = { pages: [], paged: false, borrowedFrom: null, docKey: null };
+const NO_PAGES: DocPages = { pages: [], paged: false, borrowedFrom: null, docKey: null, fileId: null };
 
 /** `paginate` is deterministic in (rendition, pageCount), so the mock corpus's
  *  chunking is done once per language rather than per entity per keystroke —
@@ -408,10 +410,10 @@ function documentPages(e: Entity, language: Language, source: DataSource): DocPa
       if (!hit) {
         // The file the VIEWER renders, and whether it came from a connected
         // document — one resolver, one relationship walk (see `cejilRenderedDoc`).
-        const { pages, borrowedFrom, docKey } = cejilRenderedDoc(e.id);
+        const { pages, borrowedFrom, docKey, fileId } = cejilRenderedDoc(e.id);
         // Entities that borrow the SAME file get the same array instance back, so
         // the per-document fold cache below is shared across all of them.
-        hit = pages.length ? { pages, paged: true, borrowedFrom, docKey } : NO_PAGES;
+        hit = pages.length ? { pages, paged: true, borrowedFrom, docKey, fileId } : NO_PAGES;
         docPagesCache.set(key, hit);
       }
       return hit;
@@ -431,6 +433,7 @@ function documentPages(e: Entity, language: Language, source: DataSource): DocPa
           paged: false,
           borrowedFrom: null,
           docKey: `mock-rendition:${language}`,
+          fileId: null,
         };
         mockPagesCache.set(language, hit);
       }
@@ -595,6 +598,14 @@ function paginate(text: string, pageCount: number): string[] {
  *  front matter. `"page"` keeps reading order — the entity drawer's Search tab,
  *  which reads through one document. Either way the ranking reuses the counts
  *  the scan already makes; only the excerpted pages are windowed. */
+/** The file a document passage's page number refers to: the one its text was
+ *  cut from. Null where passages carry no page (the mock corpus) or there is no
+ *  document. A page jump opens this file, not whichever file the reading
+ *  language would pick — for a CEJIL entity those can be different documents. */
+export function passageFileId(e: Entity, language: Language, source: DataSource): string | null {
+  return documentPages(e, language, source).fileId;
+}
+
 export function buildSnippetsFor(
   entity: Entity,
   q: string,

@@ -1,4 +1,5 @@
-import { useAtom, useAtomValue } from "jotai";
+import { useEffect, useState } from "react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { scopedReferencesAtom, activeDrawerTabAtom } from "../../atoms/references";
 import { filesAtom } from "../../atoms/files";
 import { DrawerTabs } from "../layout/DrawerTabs";
@@ -12,6 +13,10 @@ import { DocumentSearchBody } from "../search/DocumentSearchBody";
 import { t } from "../../utils/i18n";
 import { activeFilterCountAtom } from "../../atoms/filters";
 import { docSearchQueryAtom } from "../../atoms/references";
+import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
+import { saveEntityEditAtom } from "../../atoms/entityOverlay";
+import { languageAtom } from "../../atoms/language";
+import { MetadataEditBody } from "../../views/MetadataView";
 
 const baseDrawerTabs = [
   { id: "metadata", label: t("System", "Metadata") },
@@ -32,6 +37,20 @@ export function ReferencePanel() {
   // highlighted?" has no visible answer at all.
   const relFilterCount = useAtomValue(activeFilterCountAtom);
   const docQuery = useAtomValue(docSearchQueryAtom);
+
+  /* Edit opens the SAME MetadataEditBody the Metadata view renders, compact,
+     beside the document — the pairing click-to-fill exists for: arm a field
+     here, select the passage on the page, Fill. It edits the focused entity,
+     which is the document's. */
+  const [editing, setEditing] = useState(false);
+  const focusedId = useAtomValue(focusedEntityIdAtom);
+  const language = useAtomValue(languageAtom);
+  const saveEdit = useSetAtom(saveEntityEditAtom);
+  // Only the Metadata tab has an editor; leaving it, or the entity, ends the session.
+  useEffect(() => {
+    if (activeDrawerTab !== "metadata") setEditing(false);
+  }, [activeDrawerTab]);
+  useEffect(() => setEditing(false), [focusedId]);
 
   return (
     // The gutter host (see `gutter-host`): the tabs and every tab body below sit
@@ -55,7 +74,22 @@ export function ReferencePanel() {
         onChange={setActiveDrawerTab}
       />
 
-      {activeDrawerTab === "metadata" && <MetadataDrawerContent />}
+      {activeDrawerTab === "metadata" &&
+        (editing ? (
+          <MetadataEditBody
+            key={focusedId}
+            compact
+            sessionId="metadata-edit-document"
+            dirtyLabel="Metadata edits (document)"
+            onCancel={() => setEditing(false)}
+            onSave={(result) => {
+              saveEdit({ id: focusedId, result, language });
+              setEditing(false);
+            }}
+          />
+        ) : (
+          <MetadataDrawerContent />
+        ))}
       {activeDrawerTab === "toc" && <ToCPanel />}
       {activeDrawerTab === "connections" && <RelationshipsDrawerSection />}
       {activeDrawerTab === "files" && <DrawerFilesBody />}
@@ -72,9 +106,10 @@ export function ReferencePanel() {
       {/* Files + connections both carry their own footers (Files' "Add file"
           row, RelationshipsDrawerSection's bottom RelationshipsActionBar
           with Edit/Cancel/Save), so skip the shared bar for those tabs —
-          otherwise a redundant 48px bar stacks underneath. */}
-      {activeDrawerTab !== "files" && activeDrawerTab !== "connections" && (
-        <DrawerActionBar activeTab={activeDrawerTab} />
+          otherwise a redundant 48px bar stacks underneath. The edit form
+          carries its own Copy from / Cancel / Save bar, so it takes the slot. */}
+      {activeDrawerTab !== "files" && activeDrawerTab !== "connections" && !editing && (
+        <DrawerActionBar activeTab={activeDrawerTab} onEdit={() => setEditing(true)} />
       )}
     </div>
   );

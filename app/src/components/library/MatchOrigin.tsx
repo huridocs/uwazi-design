@@ -11,10 +11,12 @@ import {
   resultsActivePageAtom,
 } from "../../atoms/library";
 import { scrollToPageAtom } from "../../atoms/selection";
+import { passageFileIdAtom } from "../../atoms/files";
 import {
   buildSnippetsFor,
   entitySearchParts,
   hiddenMatchOrigin,
+  passageFileId,
   type BorrowedDoc,
 } from "../../utils/librarySnippets";
 import type { RelevanceBreakdown } from "../../utils/relevance";
@@ -90,6 +92,7 @@ export const MatchOrigin = memo(function MatchOrigin({
   const source = useAtomValue(dataSourceAtom);
   const setFocusField = useSetAtom(requestMetadataFocusAtom);
   const setScrollToPage = useSetAtom(scrollToPageAtom);
+  const setPassageFile = useSetAtom(passageFileIdAtom);
   const setResultsActivePage = useSetAtom(resultsActivePageAtom);
   const q = query.trim();
 
@@ -185,6 +188,7 @@ export const MatchOrigin = memo(function MatchOrigin({
       snippets ?? buildSnippetsFor(entity, q, language, source, { maxFullText: 1 })
     ).fullText[0]?.page;
     if (page != null) {
+      setPassageFile(passageFileId(entity, language, source));
       setScrollToPage(page);
       setResultsActivePage({ entityId: entity.id, page });
     }

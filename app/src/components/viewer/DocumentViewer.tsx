@@ -15,6 +15,7 @@ import {
   filesAtom,
   documentGroupsAtom,
   activePrimaryGroupIdAtom,
+  passageFileIdAtom,
 } from "../../atoms/files";
 import { MOCK_DOCUMENT_PDF } from "../../data/files";
 import { PageHighlights } from "./PageHighlights";
@@ -93,8 +94,24 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
     [groups],
   );
   const resolvedActiveId = activeGroupId ?? primaryGroups[0]?.id ?? null;
+  // A search passage's page refers to the file its text came from, which the
+  // language pick below may not choose (a CEJIL entity's EN file can be another
+  // judgment entirely). Honoured only while this entity has that file.
+  const [passageFileId, setPassageFileId] = useAtom(passageFileIdAtom);
+  const passageFile = useMemo(
+    () => (passageFileId ? files.find((f) => f.id === passageFileId) ?? null : null),
+    [files, passageFileId],
+  );
+  // Choosing a reading language is choosing the file again.
+  const langRef = useRef(language);
+  useEffect(() => {
+    if (langRef.current === language) return;
+    langRef.current = language;
+    setPassageFileId(null);
+  }, [language, setPassageFileId]);
   const activeFile = useMemo(() => {
     if (fileOverride) return fileOverride;
+    if (passageFile) return passageFile;
     if (!resolvedActiveId) return null;
     const exact = files.find(
       (f) => f.groupId === resolvedActiveId && f.language === language,
@@ -103,7 +120,7 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
     // No translation in this language — fall back to the first file in the
     // group so the viewer still renders something.
     return files.find((f) => f.groupId === resolvedActiveId) ?? null;
-  }, [files, resolvedActiveId, language, fileOverride]);
+  }, [files, resolvedActiveId, language, fileOverride, passageFile]);
   const filePath = activeFile?.url ?? MOCK_DOCUMENT_PDF;
   // Dismissable: it's a notice, not an alert — once you know this doc is in ES,
   // you don't need telling again while you read it. It comes back when the
@@ -430,7 +447,9 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
             className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 ps-3 pe-1.5 py-1.5 rounded-md bg-warning-light text-warning text-xs font-medium shadow-sm animate-fade-in-up"
             role="status"
           >
-            No translation in {language}. Showing {activeFile?.language}.
+            {passageFile
+              ? `Showing the ${activeFile?.language} file this passage was found in.`
+              : `No translation in ${language}. Showing ${activeFile?.language}.`}
             <button
               type="button"
               data-part="dismiss"

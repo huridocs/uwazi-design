@@ -9,6 +9,9 @@ import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../shared/warmButton";
 
 interface DrawerActionBarProps {
   activeTab: string;
+  /** Opens the metadata edit form in the host. Without it (the catalog demo)
+   *  Edit only announces itself. */
+  onEdit?: () => void;
 }
 
 /** The drawer action bar's button, on the bar ladder (`warmButton.ts`):
@@ -45,7 +48,7 @@ function ActionPill({
   );
 }
 
-export function DrawerActionBar({ activeTab }: DrawerActionBarProps) {
+export function DrawerActionBar({ activeTab, onEdit }: DrawerActionBarProps) {
   const setDocSearchQuery = useSetAtom(docSearchQueryAtom);
   const notify = useNotify();
   const [shareOpen, setShareOpen] = useState(false);
@@ -62,7 +65,7 @@ export function DrawerActionBar({ activeTab }: DrawerActionBarProps) {
       {activeTab === "metadata" && (
         <>
           <div className="flex items-center gap-2">
-            <ActionPill icon={Pencil} label="Edit" variant="lead" onClick={() => notify("Editing metadata")} />
+            <ActionPill icon={Pencil} label="Edit" variant="lead" onClick={onEdit ?? (() => notify("Editing metadata"))} />
             <ActionPill icon={Share2} label="Share" onClick={() => setShareOpen(true)} />
           </div>
           <ActionPill icon={Trash2} label="Delete" variant="danger" onClick={() => notify("Entity deleted", "success")} />
