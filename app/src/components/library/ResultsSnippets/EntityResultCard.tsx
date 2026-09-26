@@ -90,7 +90,7 @@ export function EntityResultCard({
               >
                 <SectionLabel as="span">{group.field}</SectionLabel>
                 {group.texts.map((t, i) => (
-                  <span key={i} data-part="excerpt" className="block text-sm text-ink leading-relaxed">
+                  <span key={i} data-part="excerpt" className="block text-sm text-ink leading-relaxed wrap-anywhere">
                     <HighlightedText text={t} query={query} />
                   </span>
                 ))}
