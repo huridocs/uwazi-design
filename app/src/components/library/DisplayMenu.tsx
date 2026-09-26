@@ -88,7 +88,7 @@ export function DisplayMenu() {
     },
   };
 
-  const renderSection = (section: DisplaySection) => {
+  const renderSection = (section: DisplaySection, index: number) => {
     // Values-only, and it DIMS rather than unmounts: turning Thumbnail off must
     // not make three sections vanish from under a pointer already travelling
     // toward them.
@@ -113,7 +113,9 @@ export function DisplayMenu() {
 
     return (
       <div key={section.id}>
-        {section.separator && (
+        {/* Between sections only: whichever section a mode (or a `visible`
+            filter) puts first has nothing above it to separate from. */}
+        {section.separator && index > 0 && (
           <div className="my-1 h-px" style={{ backgroundColor: "var(--border-soft)" }} />
         )}
         <SectionLabel as="p" className={`px-2 pt-1 pb-1 ${live ? "" : "opacity-40"}`}>

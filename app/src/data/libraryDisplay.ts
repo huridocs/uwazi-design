@@ -81,7 +81,7 @@ interface SectionBase {
   visible?: (ctx: DisplayContext) => boolean;
   /** Dims the section's controls in place. Values only, never context. */
   enabled?: (values: DisplayValues) => boolean;
-  /** Draw a hairline above this section. */
+  /** Draw a hairline above this section — never above the menu's first. */
   separator?: boolean;
 }
 
