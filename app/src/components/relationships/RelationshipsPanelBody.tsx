@@ -16,6 +16,7 @@ import {
 import { RelationshipsTreeView } from "./RelationshipsTreeView";
 import { RelationshipsGraphView } from "./RelationshipsGraphView";
 import { RelationshipRow } from "./RelationshipRow";
+import { countOf } from "../../utils/relationships";
 import { RelationshipGroupedCard } from "./RelationshipGroupedCard";
 import { RowStack } from "./rows/RowShell";
 
@@ -106,6 +107,7 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
               highlight={query}
               color={getGroupColor(key, groupBy)}
               count={refs.length}
+              countLabel={countOf(refs.length, "reference")}
               refIdsToWatch={refs.map((r) => r.id)}
             >
               {subGroupBy === "none"
@@ -117,6 +119,7 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
                         kind="reference"
                         reference={ref}
                         onDelete={onDelete}
+                        hideRelLabel={groupBy === "relation-type"}
                       />
                     ))}
                   </RowStack>
@@ -130,6 +133,7 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
                           highlight={query}
                           color={getGroupColor(subKey, subGroupBy)}
                           count={subRefs.length}
+                          countLabel={countOf(subRefs.length, "reference")}
                           refIdsToWatch={subRefs.map((r) => r.id)}
                         >
                           <RowStack>
@@ -139,6 +143,7 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
                                 kind="reference"
                                 reference={ref}
                                 onDelete={onDelete}
+                                hideRelLabel={groupBy === "relation-type" || subGroupBy === "relation-type"}
                               />
                             ))}
                           </RowStack>

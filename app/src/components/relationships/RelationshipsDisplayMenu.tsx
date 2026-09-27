@@ -10,8 +10,8 @@ import {
   zoomAtom,
   DEFAULT_GROUP_BY,
   DEFAULT_SUB_GROUP_BY,
-  DEFAULT_SORT_ORDER,
   DEFAULT_ZOOM,
+  defaultSortFor,
   type GroupBy,
   type SortOrder,
 } from "../../atoms/filters";
@@ -21,6 +21,7 @@ import { ZoomControl } from "./ZoomControl";
 
 const SORTS: { id: SortOrder; label: string }[] = [
   { id: "appearance", label: "Appearance" },
+  { id: "evidence", label: "Most evidence" },
   { id: "asc", label: "A → Z" },
   { id: "desc", label: "Z → A" },
   { id: "none", label: "None" },
@@ -53,7 +54,8 @@ export function RelationshipsDisplayMenu({ size = "md" }: { size?: "sm" | "md" }
   const view = useRelAtomValue(viewAtom);
   const [groupBy, setGroupBy] = useRelAtom(groupByAtom);
   const [subGroupBy, setSubGroupBy] = useRelAtom(subGroupByAtom);
-  const [sortOrder, setSortOrder] = useRelAtom(sortOrderAtom);
+  const [chosenSort, setSortOrder] = useRelAtom(sortOrderAtom);
+  const sortOrder = chosenSort ?? defaultSortFor(view);
   const zoom = useAtomValue(zoomAtom);
   const [open, setOpen] = useState(false);
 
@@ -71,7 +73,7 @@ export function RelationshipsDisplayMenu({ size = "md" }: { size?: "sm" | "md" }
   const modified =
     groupBy !== DEFAULT_GROUP_BY ||
     (showThenBy && subGroupBy !== DEFAULT_SUB_GROUP_BY) ||
-    sortOrder !== DEFAULT_SORT_ORDER ||
+    sortOrder !== defaultSortFor(view) ||
     (showDensity && zoom !== DEFAULT_ZOOM);
 
   const box = size === "sm" ? "w-6 h-6" : "w-8 h-8";

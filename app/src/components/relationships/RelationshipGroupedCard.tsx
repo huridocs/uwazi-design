@@ -14,6 +14,8 @@ interface Props {
   count: number;
   /** Printed after `count` in the badge — see `CountBadge`. */
   countUnit?: string;
+  /** The count in words ("123 references"): tooltip and accessible name. */
+  countLabel?: string;
   defaultExpanded?: boolean;
   /** Reference IDs this group hosts. When a highlight is clicked in the document
    *  viewer, the corresponding group auto-expands. Leave empty for aggregate
@@ -41,6 +43,7 @@ export function RelationshipGroupedCard({
   color,
   count,
   countUnit,
+  countLabel,
   defaultExpanded = false,
   refIdsToWatch,
   standalone = false,
@@ -96,7 +99,7 @@ export function RelationshipGroupedCard({
           <span data-part="title" className="text-sm font-medium text-ink truncate">
             <HighlightedText text={title} query={highlight} />
           </span>
-          <CountBadge count={count} unit={countUnit} />
+          <CountBadge count={count} unit={countUnit} label={countLabel} />
         </button>
       </h3>
       {expanded && (

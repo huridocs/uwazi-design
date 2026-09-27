@@ -77,7 +77,7 @@ export function ActiveFilterChips({ omitSearch = false }: ActiveFilterChipsProps
       {sorted && (
         <ActiveFilterChip
           label={sort === "asc" ? "A → Z" : "Z → A"}
-          onRemove={() => setSort("appearance")}
+          onRemove={() => setSort(null)}
         />
       )}
       {activeRelTypes.map((id) => (

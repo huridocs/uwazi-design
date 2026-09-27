@@ -4,6 +4,8 @@ import { useRelAtomValue, useScopedReferences } from "../../hooks/useEntityScope
 import {
   searchQueryAtom,
   sortOrderAtom,
+  viewAtom,
+  defaultSortFor,
   activeClusterRefIdsAtom,
   relTypeFiltersAtom,
   entityTypeFiltersAtom,
@@ -28,7 +30,8 @@ import { buildMatcher } from "../../utils/searchQuery";
 export function useFilteredReferences({ sort = true }: { sort?: boolean } = {}): Reference[] {
   const references = useScopedReferences();
   const searchQuery = useRelAtomValue(searchQueryAtom);
-  const sortOrder = useRelAtomValue(sortOrderAtom);
+  const view = useRelAtomValue(viewAtom);
+  const sortOrder = useRelAtomValue(sortOrderAtom) ?? defaultSortFor(view);
   const activeClusterRefIds = useRelAtomValue(activeClusterRefIdsAtom);
   const relTypeFilters = useRelAtomValue(relTypeFiltersAtom);
   const entityTypeFilters = useRelAtomValue(entityTypeFiltersAtom);
@@ -125,6 +128,21 @@ export function useFilteredReferences({ sort = true }: { sort?: boolean } = {}):
         const topB = b.sourceSelection?.top ?? 0;
         return topA - topB;
       });
+    }
+    if (sortOrder === "evidence") {
+      // Weight = references behind the row's (target, relation type) aggregate,
+      // the same key `deriveRelationships` collapses on, so aggregates come out
+      // heaviest first. Ties keep document order.
+      const weight = new Map<string, number>();
+      const keyOf = (r: Reference) => `${r.targetEntityId}::${r.relationType}`;
+      for (const r of result) weight.set(keyOf(r), (weight.get(keyOf(r)) ?? 0) + 1);
+      const order = new Map(result.map((r, i) => [r.id, i]));
+      return [...result].sort(
+        (a, b) =>
+          weight.get(keyOf(b))! - weight.get(keyOf(a))! ||
+          (a.sourceSelection?.page ?? -1) - (b.sourceSelection?.page ?? -1) ||
+          order.get(a.id)! - order.get(b.id)!,
+      );
     }
     const dir = sortOrder === "asc" ? 1 : -1;
     return [...result].sort((a, b) => {

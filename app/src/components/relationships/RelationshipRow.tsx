@@ -12,6 +12,8 @@ interface ReferenceKind {
    *  Used inside an aggregate's inline-expand, where the aggregate header
    *  above already establishes all of those — only page + snippet vary. */
   nested?: boolean;
+  /** Hide the relation-type label; the enclosing group keys on it. */
+  hideRelLabel?: boolean;
 }
 
 interface AggregateKind {
@@ -52,8 +54,10 @@ type Props = ReferenceKind | AggregateKind | HubKind;
  *  `./rows/`. */
 export function RelationshipRow(props: Props) {
   if (props.kind === "reference") {
-    const { reference, onDelete, nested } = props;
-    return <ReferenceRow reference={reference} onDelete={onDelete} nested={nested} />;
+    const { reference, onDelete, nested, hideRelLabel } = props;
+    return (
+      <ReferenceRow reference={reference} onDelete={onDelete} nested={nested} hideRelLabel={hideRelLabel} />
+    );
   }
   if (props.kind === "hub") {
     const { hub, expanded, onToggleExpand, hideRelLabel } = props;

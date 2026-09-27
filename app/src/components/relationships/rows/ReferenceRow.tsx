@@ -27,11 +27,14 @@ export interface ReferenceRowProps {
    *  Used inside an aggregate's inline-expand, where the aggregate header
    *  above already establishes all of those — only page + snippet vary. */
   nested?: boolean;
+  /** Drop the relation-type label: the enclosing group already keys on it.
+   *  The direction glyph moves onto the pill line and the footer goes. */
+  hideRelLabel?: boolean;
 }
 
 /** Single text-anchored (or entity-level) reference row. Reads `zoomAtom` to
  *  switch between detail / compact / overview densities. */
-export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps) {
+export function ReferenceRow({ reference, onDelete, nested, hideRelLabel }: ReferenceRowProps) {
   const entity = getEntity(reference.targetEntityId);
   const type = entity ? getEntityType(entity.typeId) : undefined;
   // The row marks the SAME query that filtered it in (`useFilteredReferences`
@@ -75,6 +78,23 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
     }
   };
 
+  // Hover-revealed, because it is destructive. It lives in the footer, or in
+  // the header when the footer is dropped (see `hideRelLabel`).
+  const deleteButton = onDelete ? (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        onDelete(reference.id);
+      }}
+      type="button"
+      aria-label="Delete reference"
+      data-part="delete"
+      className="p-1 rounded opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-seal-tint text-ink-muted hover:text-seal-label transition-all cursor-pointer"
+    >
+      <Trash2 size={12} />
+    </button>
+  ) : null;
+
   // Overview: single-line, entity pill + page tag only.
   const overview = (
     <div className="flex items-center justify-between gap-2">
@@ -103,9 +123,11 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
           highlight={query}
         />
         <DirectionGlyph direction={direction} />
-        <span data-part="relation" className="text-meta text-ink-tertiary truncate capitalize">
-          <HighlightedText text={relLabel} query={query} />
-        </span>
+        {!hideRelLabel && (
+          <span data-part="relation" className="text-meta text-ink-tertiary truncate capitalize">
+            <HighlightedText text={relLabel} query={query} />
+          </span>
+        )}
       </div>
       {selection && <PageTag page={selection.page} onClick={jumpToPassage} />}
     </div>
@@ -119,7 +141,12 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
   const detail = (
     <>
       {!nested && (
-        <div data-part="header" className="flex items-start justify-between gap-2 mb-1.5">
+        <div
+          data-part="header"
+          className={`flex items-start justify-between gap-2 ${
+            hideRelLabel && !selection && !reference.targetSelection ? "" : "mb-1.5"
+          }`}
+        >
           <div className="flex items-center gap-1.5 min-w-0">
             <RowCheckbox refIds={[reference.id]} />
             <RowEntityPill
@@ -128,8 +155,10 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
               label={entity?.title}
               highlight={query}
             />
+            {hideRelLabel && <DirectionGlyph direction={direction} />}
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
+            {hideRelLabel && deleteButton}
             <span data-part="type" className="text-meta text-ink-tertiary">
               {type?.name ?? ""}
             </span>
@@ -193,6 +222,7 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
           </span>
         </div>
       )}
+      {!(hideRelLabel && !nested) && (
       <div data-part="footer" className="flex items-center justify-between mt-1 text-meta text-ink-tertiary">
         {nested ? (
           <span />
@@ -209,22 +239,10 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
             keyboard alike. Delete stays: it is destructive and belongs behind
             the deliberate reach of a hover, not on the row's face. */}
         <div data-part="actions" className="flex items-center gap-0.5">
-          {onDelete && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(reference.id);
-              }}
-              type="button"
-              aria-label="Delete reference"
-              data-part="delete"
-              className="p-1 rounded opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-seal-tint text-ink-muted hover:text-seal-label transition-all cursor-pointer"
-            >
-              <Trash2 size={12} />
-            </button>
-          )}
+          {deleteButton}
         </div>
       </div>
+      )}
     </>
   );
 

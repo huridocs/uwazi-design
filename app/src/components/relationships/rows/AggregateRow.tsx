@@ -223,19 +223,20 @@ export function AggregateRow({
                 >
                   <HighlightedText text={entity?.title ?? ""} query={query} />
                 </button>
+                {/* The group already names the relation type, so the caption
+                    would hold the glyph alone: it moves up here, one line. */}
+                {hideRelLabel && <DirectionGlyph direction={glyphDirection} />}
               </>
             )}
           </div>
           <div className="flex items-center gap-1.5 shrink-0">{countBadge}</div>
         </div>
-        {!hidePill && (
+        {!hidePill && !hideRelLabel && (
           <div data-part="caption" className="flex items-center gap-1 mt-1 text-meta text-ink-tertiary">
             <DirectionGlyph direction={glyphDirection} />
-            {!hideRelLabel && (
-              <span data-part="relation" className="capitalize">
-                <HighlightedText text={relLabel} query={query} />
-              </span>
-            )}
+            <span data-part="relation" className="capitalize">
+              <HighlightedText text={relLabel} query={query} />
+            </span>
           </div>
         )}
       </div>

@@ -182,3 +182,11 @@ export function deriveHubs(refs: Reference[]): Hub[] {
   hubCache.set(refs, value);
   return value;
 }
+
+/** "1 reference", "123 connections": what a group header's number counts.
+ *  The list counts references (one row each); the tree counts connections
+ *  (aggregates plus hubs), so the same group reads 123 in one and 51 in the
+ *  other, and the unit is what says so. */
+export function countOf(n: number, unit: "reference" | "connection"): string {
+  return `${n.toLocaleString()} ${unit}${n === 1 ? "" : "s"}`;
+}

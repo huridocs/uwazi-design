@@ -34,10 +34,20 @@ export const searchQueryAtom = atom("");
 export const expandAllSignalAtom = atom(0);
 export const collapseAllSignalAtom = atom(0);
 
-/** Sort order for references */
-export type SortOrder = "none" | "appearance" | "asc" | "desc";
-export const DEFAULT_SORT_ORDER: SortOrder = "appearance";
-export const sortOrderAtom = atom<SortOrder>(DEFAULT_SORT_ORDER);
+/** Sort order for references. `evidence` puts the targets with the most
+ *  backing references first — the first question for an entity with hundreds
+ *  of connections. */
+export type SortOrder = "none" | "appearance" | "evidence" | "asc" | "desc";
+/** The sort a view uses until the reader picks one. List rows are single
+ *  references, read in document order; tree and graph rows are aggregates,
+ *  read by weight. */
+export function defaultSortFor(view: View): SortOrder {
+  return view === "list" ? "appearance" : "evidence";
+}
+/** The reader's explicit sort, or null for the view's default
+ *  ({@link defaultSortFor}) — so switching views follows the default until a
+ *  sort is actually chosen. */
+export const sortOrderAtom = atom<SortOrder | null>(null);
 
 /** Track expanded group count for greying out collapse/expand buttons */
 export const expandedGroupCountAtom = atom(0);
@@ -146,7 +156,7 @@ export const resetRelFacetsAtom = atom(null, (_get, set, scope: string | null = 
 export const clearRelFiltersAtom = atom(null, (_get, set, scope: string | null = null) => {
   set(resetRelFacetsAtom, scope);
   set(relAtomFor(searchQueryAtom, scope), "");
-  set(relAtomFor(sortOrderAtom, scope), DEFAULT_SORT_ORDER);
+  set(relAtomFor(sortOrderAtom, scope), null);
 });
 
 /** Whether the toggleable filters slide-over is open (single shared flag).

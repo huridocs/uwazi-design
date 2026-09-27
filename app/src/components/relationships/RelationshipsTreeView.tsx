@@ -12,7 +12,7 @@ import { useFilteredReferences } from "./useFilteredReferences";
 import { useAutoExpandOnRefJump } from "../../hooks/useGroupExpansion";
 import { getEntity } from "../../data/entities";
 import { Reference } from "../../data/references";
-import { Hub, Relationship, deriveHubs, deriveRelationships } from "../../utils/relationships";
+import { Hub, Relationship, countOf, deriveHubs, deriveRelationships } from "../../utils/relationships";
 import {
   getGroupColor,
   getGroupLabel,
@@ -97,6 +97,7 @@ export function RelationshipsTreeView() {
                   highlight={query}
                   color={getGroupColor(key, groupBy)}
                   count={deriveRelationships(refs).length + deriveHubs(refs).length}
+                  countLabel={countOf(deriveRelationships(refs).length + deriveHubs(refs).length, "connection")}
                   refIdsToWatch={refs.map((r) => r.id)}
                   defaultExpanded
                 >
@@ -113,6 +114,7 @@ export function RelationshipsTreeView() {
                           highlight={query}
                           color={getGroupColor(subKey, subGroupBy)}
                           count={deriveRelationships(subRefs).length + deriveHubs(subRefs).length}
+                          countLabel={countOf(deriveRelationships(subRefs).length + deriveHubs(subRefs).length, "connection")}
                           refIdsToWatch={subRefs.map((r) => r.id)}
                           defaultExpanded
                         >

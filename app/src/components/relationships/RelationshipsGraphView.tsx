@@ -191,8 +191,9 @@ export function RelationshipsGraphView() {
   }>({ active: false, startX: 0, startY: 0, initTx: 0, initTy: 0, moved: false });
 
   // Shared pipeline — applies every facet the list view applies (country,
-  // descriptor, inherited included). Sort is irrelevant to the radial layout.
-  const filteredRefs = useFilteredReferences({ sort: false });
+  // descriptor, inherited included). Its sort sets the order nodes take around
+  // each sector (by default the most-evidenced first).
+  const filteredRefs = useFilteredReferences();
 
   // The root is THIS entity — the one whose relationships these are. It was
   // `currentDocument`, the hardcoded sample document, so every graph claimed a

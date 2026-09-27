@@ -12,6 +12,8 @@ interface Props {
   highlight?: string;
   color?: string;
   count: number;
+  /** The count in words ("51 connections"): tooltip and accessible name. */
+  countLabel?: string;
   defaultExpanded?: boolean;
   /** Reference IDs this branch hosts (directly or transitively). When the
    *  document viewer's minimap highlights a ref, the branch containing it
@@ -30,6 +32,7 @@ export function TreeBranch({
   highlight = "",
   color,
   count,
+  countLabel,
   defaultExpanded = true,
   refIdsToWatch,
   children,
@@ -75,8 +78,9 @@ export function TreeBranch({
         <span data-part="title" className="text-sm font-medium text-ink truncate">
           <HighlightedText text={title} query={highlight} />
         </span>
-        <span data-part="count" className="ms-auto text-meta text-ink-tertiary tabular-nums shrink-0">
-          {count}
+        <span data-part="count" title={countLabel} className="ms-auto text-meta text-ink-tertiary tabular-nums shrink-0">
+          <span aria-hidden={countLabel ? true : undefined}>{count}</span>
+          {countLabel && <span className="sr-only">{countLabel}</span>}
         </span>
       </button>
       {expanded && items.length > 0 && (
