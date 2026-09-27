@@ -84,6 +84,15 @@ export const relInheritedFiltersAtom = atom<
   Record<string, Record<string, boolean>>
 >({});
 
+/** Anchoring facet: `anchored` = the reference quotes a passage (either end
+ *  has a text selection), `entity` = an entity-to-entity link with no text. */
+export const relAnchoringFiltersAtom = atom<Record<string, boolean>>({});
+
+/** Direction facet: `outgoing`, `incoming`, or `both` — a (target, relation
+ *  type) pair that has references in each direction, the aggregate the tree
+ *  shows with the two-way glyph. See `directionClassifier`. */
+export const relDirectionFiltersAtom = atom<Record<string, boolean>>({});
+
 /* ── Scoped panel state ───────────────────────────────────────────────────────
    The atoms above are ONE panel's state, and two panels can be on screen at
    once: the host's Relationships surface and a connected entity's, in the
@@ -140,6 +149,8 @@ export const resetRelFacetsAtom = atom(null, (_get, set, scope: string | null = 
   set(relAtomFor(relTargetDescriptorFiltersAtom, scope), {});
   set(relAtomFor(relTargetDescriptorModeAtom, scope), "OR");
   set(relAtomFor(relInheritedFiltersAtom, scope), {});
+  set(relAtomFor(relAnchoringFiltersAtom, scope), {});
+  set(relAtomFor(relDirectionFiltersAtom, scope), {});
   set(relAtomFor(activeClusterRefIdsAtom, scope), null);
 });
 
@@ -228,6 +239,8 @@ function countFilters(get: <T>(base: Scopable<T>) => T): number {
   n += Object.values(get(entityTypeFiltersAtom)).filter(Boolean).length;
   n += Object.values(get(relTargetCountryFiltersAtom)).filter(Boolean).length;
   n += Object.values(get(relTargetDescriptorFiltersAtom)).filter(Boolean).length;
+  n += Object.values(get(relAnchoringFiltersAtom)).filter(Boolean).length;
+  n += Object.values(get(relDirectionFiltersAtom)).filter(Boolean).length;
   for (const vals of Object.values(get(relInheritedFiltersAtom)))
     n += Object.values(vals).filter(Boolean).length;
   if (get(activeClusterRefIdsAtom)) n++;

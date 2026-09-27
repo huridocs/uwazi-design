@@ -8,7 +8,18 @@ import {
   relTargetDescriptorFiltersAtom,
   relTargetDescriptorModeAtom,
   relInheritedFiltersAtom,
+  relAnchoringFiltersAtom,
+  relDirectionFiltersAtom,
 } from "../../atoms/filters";
+import {
+  ANCHORING_LABEL,
+  DIRECTION_LABEL,
+  anchoringOf,
+  directionClassifier,
+  type Anchoring,
+  type DirectionFacet,
+} from "../../utils/relationships";
+import { DirectionGlyph } from "./DirectionGlyph";
 import { languageAtom } from "../../atoms/language";
 import { getEntity, getEntityType } from "../../data/entities";
 import { getEntityProp } from "../../data/entityMetadata";
@@ -28,6 +39,18 @@ import { t } from "../../utils/i18n";
  * descriptors (mirrors the Library facets). They self-hide when no target
  * carries that data (e.g. the mock seed), so the mock surface is unchanged.
  */
+/** A fixed-vocabulary facet's options, in vocabulary order: the values present
+ *  here, plus any ticked one (at 0, so it stays deselectable). */
+function facetEntries(
+  labels: Record<string, string>,
+  counts: Map<string, number>,
+  selected: Record<string, boolean>,
+): [string, number][] {
+  return Object.keys(labels)
+    .map((id) => [id, counts.get(id) ?? 0] as [string, number])
+    .filter(([id, n]) => n > 0 || selected[id]);
+}
+
 export function RelationshipsFilterDrawer() {
   const references = useScopedReferences();
   const [language] = useAtom(languageAtom);
@@ -47,6 +70,10 @@ export function RelationshipsFilterDrawer() {
   const [inheritedFilters, setInheritedFilters] = useRelAtom(
     relInheritedFiltersAtom,
   );
+  const [anchoringFilters, setAnchoringFilters] = useRelAtom(relAnchoringFiltersAtom);
+  const [directionFilters, setDirectionFilters] = useRelAtom(relDirectionFiltersAtom);
+  // Against the unfiltered set, like the pipeline: see `directionClassifier`.
+  const directionOf = useMemo(() => directionClassifier(references), [references]);
 
   // The focal entity's inherited relationship properties (e.g. Role, Region) —
   // each becomes a dynamic facet of the value inherited from the connected
@@ -75,7 +102,7 @@ export function RelationshipsFilterDrawer() {
   // Faceted counts: each facet's numbers reflect the OTHER active facets, so the
   // counts stay trustworthy as you narrow (a facet never counts against its own
   // selection, so its options don't vanish). Mirrors the Library's faceted counts.
-  const { byRelType, byEntityType, byCountry, byDescriptor, totalRels } =
+  const { byRelType, byEntityType, byCountry, byDescriptor, byAnchoring, byDirection, totalRels } =
     useMemo(() => {
       const ids = (rec: Record<string, boolean>) =>
         new Set(Object.entries(rec).filter(([, v]) => v).map(([k]) => k));
@@ -83,6 +110,12 @@ export function RelationshipsFilterDrawer() {
       const selEnt = ids(entityTypeFilters);
       const selCty = ids(countryFilters);
       const selDsc = ids(descriptorFilters);
+      const selAnc = ids(anchoringFilters);
+      const selDir = ids(directionFilters);
+      const ancOk = (r: (typeof references)[number]) =>
+        selAnc.size === 0 || selAnc.has(anchoringOf(r));
+      const dirOk = (r: (typeof references)[number]) =>
+        selDir.size === 0 || selDir.has(directionOf(r));
 
       const relOk = (r: (typeof references)[number]) =>
         selRel.size === 0 || selRel.has(r.relationType);
@@ -112,8 +145,21 @@ export function RelationshipsFilterDrawer() {
       const descriptor = new Map<string, number>();
       const seenC = new Set<string>();
       const seenD = new Set<string>();
+      const anchoring = new Map<string, number>();
+      const direction = new Map<string, number>();
       for (const ref of references) {
         const entity = getEntity(ref.targetEntityId);
+        const rest = relOk(ref) && entOk(ref) && ctyOk(ref) && dscOk(ref);
+        if (rest && dirOk(ref)) {
+          const a = anchoringOf(ref);
+          anchoring.set(a, (anchoring.get(a) ?? 0) + 1);
+        }
+        if (rest && ancOk(ref)) {
+          const d = directionOf(ref);
+          direction.set(d, (direction.get(d) ?? 0) + 1);
+        }
+        // The two reference-shape facets narrow every count below.
+        if (!ancOk(ref) || !dirOk(ref)) continue;
         // Per-facet: count over refs passing every OTHER facet.
         if (entOk(ref) && ctyOk(ref) && dscOk(ref))
           rel.set(ref.relationType, (rel.get(ref.relationType) ?? 0) + 1);
@@ -139,7 +185,11 @@ export function RelationshipsFilterDrawer() {
       for (const id of selEnt) if (!ent.has(id)) ent.set(id, 0);
       for (const id of selCty) if (!country.has(id)) country.set(id, 0);
       for (const id of selDsc) if (!descriptor.has(id)) descriptor.set(id, 0);
+      for (const id of selAnc) if (!anchoring.has(id)) anchoring.set(id, 0);
+      for (const id of selDir) if (!direction.has(id)) direction.set(id, 0);
       return {
+        byAnchoring: anchoring,
+        byDirection: direction,
         byRelType: rel,
         byEntityType: ent,
         byCountry: country,
@@ -154,7 +204,21 @@ export function RelationshipsFilterDrawer() {
       countryFilters,
       descriptorFilters,
       descriptorMode,
+      anchoringFilters,
+      directionFilters,
+      directionOf,
     ]);
+
+  // Self-hiding, like the target facets: a facet whose every reference falls in
+  // one value can't narrow anything (nearly every CEJIL entity is entity-level
+  // only). Kept while something in it is ticked, so it stays clearable.
+  const anchoringKinds = useMemo(() => new Set(references.map(anchoringOf)).size, [references]);
+  const directionKinds = useMemo(
+    () => new Set(references.map(directionOf)).size,
+    [references, directionOf],
+  );
+  const showAnchoring = anchoringKinds > 1 || Object.values(anchoringFilters).some(Boolean);
+  const showDirection = directionKinds > 1 || Object.values(directionFilters).some(Boolean);
 
   const countryEntries = useMemo(
     () =>
@@ -177,6 +241,36 @@ export function RelationshipsFilterDrawer() {
 
   return (
     <>
+      {showAnchoring && (
+        <FacetSection
+          title={t("System", "Anchoring")}
+          total={totalRels}
+          entries={facetEntries(ANCHORING_LABEL, byAnchoring, anchoringFilters)}
+          selected={anchoringFilters}
+          onToggle={(id) => setAnchoringFilters((s) => ({ ...s, [id]: !s[id] }))}
+          onClear={() => setAnchoringFilters({})}
+          label={(id) => ANCHORING_LABEL[id as Anchoring] ?? id}
+          defaultExpanded
+        />
+      )}
+      {showDirection && (
+        <FacetSection
+          title={t("System", "Direction")}
+          total={totalRels}
+          entries={facetEntries(DIRECTION_LABEL, byDirection, directionFilters)}
+          selected={directionFilters}
+          onToggle={(id) => setDirectionFilters((s) => ({ ...s, [id]: !s[id] }))}
+          onClear={() => setDirectionFilters({})}
+          label={(id) => DIRECTION_LABEL[id as DirectionFacet] ?? id}
+          // The label already says the direction; the glyph names itself too.
+          renderMarker={(id) => (
+            <span aria-hidden className="inline-flex">
+              <DirectionGlyph direction={id as DirectionFacet} />
+            </span>
+          )}
+          defaultExpanded
+        />
+      )}
       <FacetSection
         title={t("System", "Relation type")}
         total={totalRels}

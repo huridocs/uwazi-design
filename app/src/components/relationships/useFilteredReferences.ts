@@ -13,7 +13,10 @@ import {
   relTargetDescriptorFiltersAtom,
   relTargetDescriptorModeAtom,
   relInheritedFiltersAtom,
+  relAnchoringFiltersAtom,
+  relDirectionFiltersAtom,
 } from "../../atoms/filters";
+import { anchoringOf, directionClassifier } from "../../utils/relationships";
 import { languageAtom } from "../../atoms/language";
 import { getEntity } from "../../data/entities";
 import { getEntityProp } from "../../data/entityMetadata";
@@ -39,6 +42,8 @@ export function useFilteredReferences({ sort = true }: { sort?: boolean } = {}):
   const descriptorFilters = useRelAtomValue(relTargetDescriptorFiltersAtom);
   const descriptorMode = useRelAtomValue(relTargetDescriptorModeAtom);
   const inheritedFilters = useRelAtomValue(relInheritedFiltersAtom);
+  const anchoringFilters = useRelAtomValue(relAnchoringFiltersAtom);
+  const directionFilters = useRelAtomValue(relDirectionFiltersAtom);
   const language = useAtomValue(languageAtom);
 
   return useMemo<Reference[]>(() => {
@@ -53,6 +58,21 @@ export function useFilteredReferences({ sort = true }: { sort?: boolean } = {}):
     if (activeRelTypes.length > 0) {
       const set = new Set(activeRelTypes);
       result = result.filter((r) => set.has(r.relationType));
+    }
+    const activeAnchoring = Object.entries(anchoringFilters)
+      .filter(([, v]) => v)
+      .map(([k]) => k);
+    if (activeAnchoring.length > 0) {
+      const set = new Set(activeAnchoring);
+      result = result.filter((r) => set.has(anchoringOf(r)));
+    }
+    const activeDirections = Object.entries(directionFilters)
+      .filter(([, v]) => v)
+      .map(([k]) => k);
+    if (activeDirections.length > 0) {
+      const set = new Set(activeDirections);
+      const directionOf = directionClassifier(references);
+      result = result.filter((r) => set.has(directionOf(r)));
     }
     const activeEntityTypes = Object.entries(entityTypeFilters)
       .filter(([, v]) => v)
@@ -162,6 +182,8 @@ export function useFilteredReferences({ sort = true }: { sort?: boolean } = {}):
     descriptorFilters,
     descriptorMode,
     inheritedFilters,
+    anchoringFilters,
+    directionFilters,
     language,
   ]);
 }

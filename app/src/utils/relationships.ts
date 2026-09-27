@@ -190,3 +190,37 @@ export function deriveHubs(refs: Reference[]): Hub[] {
 export function countOf(n: number, unit: "reference" | "connection"): string {
   return `${n.toLocaleString()} ${unit}${n === 1 ? "" : "s"}`;
 }
+
+export type Anchoring = "anchored" | "entity";
+/** Whether a reference quotes a passage (either end) or links entities only. */
+export function anchoringOf(ref: Reference): Anchoring {
+  return ref.sourceSelection || ref.targetSelection ? "anchored" : "entity";
+}
+
+/** Facet and chip labels, in facet order. */
+export const ANCHORING_LABEL: Record<Anchoring, string> = {
+  anchored: "Anchored in text",
+  entity: "Entity-level",
+};
+
+export type DirectionFacet = Direction | "both";
+export const DIRECTION_LABEL: Record<DirectionFacet, string> = {
+  outgoing: "Outgoing",
+  incoming: "Incoming",
+  both: "Both",
+};
+/** A reference's direction as the Direction facet reads it: `both` when its
+ *  (target, relation type) pair has references in each direction in `refs` —
+ *  the pair the tree draws as one two-way aggregate — else its own direction.
+ *  Classify against the UNFILTERED set, so ticking a facet can't reclassify
+ *  the rows it leaves. */
+export function directionClassifier(refs: Reference[]): (ref: Reference) => DirectionFacet {
+  const seen = new Map<string, Set<Direction>>();
+  const keyOf = (r: Reference) => `${r.targetEntityId}::${r.relationType}`;
+  for (const r of refs) {
+    let set = seen.get(keyOf(r));
+    if (!set) seen.set(keyOf(r), (set = new Set()));
+    set.add(r.direction ?? "outgoing");
+  }
+  return (r) => (seen.get(keyOf(r))!.size > 1 ? "both" : (r.direction ?? "outgoing"));
+}

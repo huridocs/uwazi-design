@@ -8,7 +8,10 @@ import {
   relTargetDescriptorFiltersAtom,
   relInheritedFiltersAtom,
   activeClusterRefIdsAtom,
+  relAnchoringFiltersAtom,
+  relDirectionFiltersAtom,
 } from "../../atoms/filters";
+import { ANCHORING_LABEL, DIRECTION_LABEL, type Anchoring, type DirectionFacet } from "../../utils/relationships";
 import { getEntityType } from "../../data/entities";
 import { relationTypes } from "../../data/references";
 import { ActiveFilterChip } from "../shared/ActiveFilterChip";
@@ -31,11 +34,15 @@ export function ActiveFilterChips({ omitSearch = false }: ActiveFilterChipsProps
   const [descriptorFilters, setDescriptorFilters] = useRelAtom(relTargetDescriptorFiltersAtom);
   const [inheritedFilters, setInheritedFilters] = useRelAtom(relInheritedFiltersAtom);
   const [cluster, setCluster] = useRelAtom(activeClusterRefIdsAtom);
+  const [anchoringFilters, setAnchoringFilters] = useRelAtom(relAnchoringFiltersAtom);
+  const [directionFilters, setDirectionFilters] = useRelAtom(relDirectionFiltersAtom);
 
   const activeRelTypes = Object.entries(relTypeFilters).filter(([, v]) => v).map(([k]) => k);
   const activeEntityTypes = Object.entries(entityTypeFilters).filter(([, v]) => v).map(([k]) => k);
   const activeCountries = Object.entries(countryFilters).filter(([, v]) => v).map(([k]) => k);
   const activeDescriptors = Object.entries(descriptorFilters).filter(([, v]) => v).map(([k]) => k);
+  const activeAnchoring = Object.entries(anchoringFilters).filter(([, v]) => v).map(([k]) => k);
+  const activeDirections = Object.entries(directionFilters).filter(([, v]) => v).map(([k]) => k);
   const activeInherited = Object.entries(inheritedFilters).flatMap(([propId, vals]) =>
     Object.entries(vals).filter(([, v]) => v).map(([value]) => ({ propId, value })),
   );
@@ -62,6 +69,8 @@ export function ActiveFilterChips({ omitSearch = false }: ActiveFilterChipsProps
     activeCountries.length > 0 ||
     activeDescriptors.length > 0 ||
     activeInherited.length > 0 ||
+    activeAnchoring.length > 0 ||
+    activeDirections.length > 0 ||
     !!cluster;
 
   if (!hasAny) return null;
@@ -80,6 +89,20 @@ export function ActiveFilterChips({ omitSearch = false }: ActiveFilterChipsProps
           onRemove={() => setSort(null)}
         />
       )}
+      {activeAnchoring.map((id) => (
+        <ActiveFilterChip
+          key={`anc-${id}`}
+          label={ANCHORING_LABEL[id as Anchoring] ?? id}
+          onRemove={() => setAnchoringFilters(dropKey(id))}
+        />
+      ))}
+      {activeDirections.map((id) => (
+        <ActiveFilterChip
+          key={`dir-${id}`}
+          label={DIRECTION_LABEL[id as DirectionFacet] ?? id}
+          onRemove={() => setDirectionFilters(dropKey(id))}
+        />
+      ))}
       {activeRelTypes.map((id) => (
         <ActiveFilterChip
           key={`rel-${id}`}
