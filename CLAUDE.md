@@ -289,6 +289,13 @@ In tree mode, target cards are aggregate rows with inline-expand revealing their
 
 **Row targets**: the entity pill opens the overlay (`overlayEntityIdAtom`; on an aggregate it also marks that aggregate), the `p.N` page tag jumps to the passage (`activeRefIdAtom` + `currentPageAtom` + `scrollToHighlightAtom`). At compact and detail an aggregate has no pill, so the entity TITLE is the button instead. A hub's every member pill opens that member — a hub has no single entity, which is also why its row has no open at all; its chevron and evidence badge do the expanding. The row itself is not clickable in any of the three kinds.
 
+**Panel state is per scope (2026-09-27).** Facets, search, view, groupBy/subGroupBy and sort are read through `useRelAtom*` / `relAtomFor` (`hooks/useEntityScope.tsx`, `atoms/filters.ts`). With no `EntityScopeProvider` override they ARE the global atoms (the entity view panel and the drawer section share them). A scoped surface (EntityOverlay, Library drawer preview) gets its own variants, starting at each atom's default, and the overlay drops its scope's state on open, so it always opens on list with no filters. New panel state goes through `relAtomFor`, never a bare global atom. Clear with `useClearRelFilters()`; counts from `useActiveFilterCount()` / `activeFilterCountFor(scope)`.
+- `referencesFor` projects every entity, `MAIN_ENTITY_ID` included; refs with both ends on the entity are dropped. A hub id with one member is a plain aggregate: Hub rows are 2+ members.
+- Sort: `sortOrderAtom` null = `defaultSortFor(view)` (list = appearance, tree/graph = "Most evidence"). The graph orders nodes by the sort.
+- Grouped by relation type, rows drop their relation label: the direction glyph follows the pill, one line.
+- Group header counts name their unit in the tooltip and an sr-only span (`countOf`): list = references, tree = connections. Still no count in the toolbar.
+- Anchoring and Direction facets run in `useFilteredReferences`, classify via `anchoringOf` / `directionClassifier` (against the unfiltered set) and self-hide when every ref shares one value.
+
 ## The entity preview panel — one body, two hosts
 
 Both panels that show an entity beside something else render ONE component,
