@@ -6,7 +6,7 @@ import {
   activeRefIdAtom,
 } from "../../atoms/references";
 import { groupByAtom, searchQueryAtom } from "../../atoms/filters";
-import { useEntityScopeId } from "../../hooks/useEntityScope";
+import { useEntityScopeId, useRelAtom, useRelAtomValue } from "../../hooks/useEntityScope";
 import { HighlightedText } from "../shared/HighlightedText";
 import { fold, highlightTerms, termIn } from "../../utils/queryTokens";
 import { useFilteredReferences } from "./useFilteredReferences";
@@ -160,8 +160,8 @@ function matchesQuery(text: string, terms: string[]): boolean {
 }
 
 export function RelationshipsGraphView() {
-  const [groupBy] = useAtom(groupByAtom);
-  const query = useAtomValue(searchQueryAtom);
+  const [groupBy] = useRelAtom(groupByAtom);
+  const query = useRelAtomValue(searchQueryAtom);
   const terms = useMemo(() => highlightTerms(query), [query]);
   const focusedId = useEntityScopeId();
   const [overlayEntityId, setOverlayEntityId] = useAtom(overlayEntityIdAtom);

@@ -1,4 +1,4 @@
-import { useAtomValue } from "jotai";
+import { useRelAtomValue } from "../../../hooks/useEntityScope";
 import { searchQueryAtom } from "../../../atoms/filters";
 import { getEntity } from "../../../data/entities";
 import { relationTypes } from "../../../data/references";
@@ -23,7 +23,7 @@ export interface HubRowProps {
 export function HubRow({ hub, expanded, onToggleExpand, hideRelLabel }: HubRowProps) {
   // Same query that filtered the hub in — marked on the member pills and the
   // relation label, the two things the filter actually reads.
-  const query = useAtomValue(searchQueryAtom);
+  const query = useRelAtomValue(searchQueryAtom);
   const relLabel =
     relationTypes.find((r) => r.id === hub.relationType)?.label ??
     hub.relationType.replace("_", " ");

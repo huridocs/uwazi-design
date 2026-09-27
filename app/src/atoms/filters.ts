@@ -1,4 +1,4 @@
-import { atom } from "jotai";
+import { atom, type Atom, type PrimitiveAtom, type SetStateAction, type WritableAtom } from "jotai";
 import { filtersDrawerBase, overlayEntityBase } from "./rightPane";
 
 /** Presentation mode in the merged Relationships panel: how the connections
@@ -74,18 +74,63 @@ export const relInheritedFiltersAtom = atom<
   Record<string, Record<string, boolean>>
 >({});
 
+/* ── Scoped panel state ───────────────────────────────────────────────────────
+   The atoms above are ONE panel's state, and two panels can be on screen at
+   once: the host's Relationships surface and a connected entity's, in the
+   overlay (or the Library drawer preview). Shared, a CorteIDH filter set on a
+   Causa hid 8 of a Sentencia's 9 relationships in its overlay — the signing
+   judges, the next hop the reader opened it for — and clearing the chip there
+   cleared the host's.
+
+   So each atom above is the state of the UN-scoped surfaces (the entity view's
+   panel and its drawer section, which show the same entity), and a subtree that
+   declares its own entity (`EntityScopeProvider`) reads a variant keyed by that
+   entity: `relAtomFor(base, scope)`, through the `useRelAtom*` hooks. A variant
+   holds nothing until written and reads its base's INITIAL value, so a scoped
+   panel opens on the defaults, never on the host's choices. All variants live in
+   one record, which is what lets the overlay drop its own entries on open. */
+
+type Scopable<T> = PrimitiveAtom<T> & { init: T };
+
+/** scope id → base atom key → value. Only written values are stored. */
+export const scopedRelStateAtom = atom<Record<string, Record<string, unknown>>>({});
+
+const variantCache = new Map<string, WritableAtom<unknown, [SetStateAction<unknown>], void>>();
+
+/** The atom a surface in `scope` reads for `base`: the base itself with no
+ *  scope, else a per-scope variant that starts at `base.init`. */
+export function relAtomFor<T>(base: Scopable<T>, scope: string | null): PrimitiveAtom<T> {
+  if (!scope) return base;
+  const key = base.toString();
+  const cacheKey = `${scope}\u0000${key}`;
+  let variant = variantCache.get(cacheKey);
+  if (!variant) {
+    const read = (get: <V>(a: Atom<V>) => V): T => {
+      const stored = get(scopedRelStateAtom)[scope];
+      return (stored && key in stored ? stored[key] : base.init) as T;
+    };
+    variant = atom(read, (get, set, next: SetStateAction<unknown>) => {
+      const value = typeof next === "function" ? (next as (prev: T) => T)(read(get)) : next;
+      set(scopedRelStateAtom, (prev) => ({ ...prev, [scope]: { ...prev[scope], [key]: value } }));
+    });
+    variantCache.set(cacheKey, variant);
+  }
+  return variant as unknown as PrimitiveAtom<T>;
+}
+
 /** Write-only: clear the per-entity relationship facets. Fired on focal-entity
  *  change — facet values derive from the previous entity's targets, so a
  *  leftover selection can silently filter the new entity's rows to nothing
- *  while the facet UI self-hides (no visible control left to clear it). */
-export const resetRelFacetsAtom = atom(null, (_get, set) => {
-  set(relTypeFiltersAtom, {});
-  set(entityTypeFiltersAtom, {});
-  set(relTargetCountryFiltersAtom, {});
-  set(relTargetDescriptorFiltersAtom, {});
-  set(relTargetDescriptorModeAtom, "OR");
-  set(relInheritedFiltersAtom, {});
-  set(activeClusterRefIdsAtom, null);
+ *  while the facet UI self-hides (no visible control left to clear it).
+ *  Pass a scope to clear that scoped surface's facets instead of the host's. */
+export const resetRelFacetsAtom = atom(null, (_get, set, scope: string | null = null) => {
+  set(relAtomFor(relTypeFiltersAtom, scope), {});
+  set(relAtomFor(entityTypeFiltersAtom, scope), {});
+  set(relAtomFor(relTargetCountryFiltersAtom, scope), {});
+  set(relAtomFor(relTargetDescriptorFiltersAtom, scope), {});
+  set(relAtomFor(relTargetDescriptorModeAtom, scope), "OR");
+  set(relAtomFor(relInheritedFiltersAtom, scope), {});
+  set(relAtomFor(activeClusterRefIdsAtom, scope), null);
 });
 
 /** "Clear all filters" — the facets above plus the two things the Filters badge
@@ -98,10 +143,10 @@ export const resetRelFacetsAtom = atom(null, (_get, set) => {
  *  focal-change reset. They already disagreed — only the hand-rolled pair reset
  *  the descriptor AND/OR mode — which is the drift the Library's two `clearAll`s
  *  went through once already (PATTERNS §4.3). One list now. */
-export const clearRelFiltersAtom = atom(null, (_get, set) => {
-  set(resetRelFacetsAtom);
-  set(searchQueryAtom, "");
-  set(sortOrderAtom, DEFAULT_SORT_ORDER);
+export const clearRelFiltersAtom = atom(null, (_get, set, scope: string | null = null) => {
+  set(resetRelFacetsAtom, scope);
+  set(relAtomFor(searchQueryAtom, scope), "");
+  set(relAtomFor(sortOrderAtom, scope), DEFAULT_SORT_ORDER);
 });
 
 /** Whether the toggleable filters slide-over is open (single shared flag).
@@ -149,8 +194,20 @@ export type RelationshipsViewMode = "tree" | "graph";
 export const relationshipsViewModeAtom = atom<RelationshipsViewMode>("tree");
 
 /** Derived: active filter count across refs + rels surfaces. Counts facets +
- *  search + sort + cluster — view-mode toggles are not filters. */
-export const activeFilterCountAtom = atom((get) => {
+ *  search + sort + cluster — view-mode toggles are not filters. One per scope;
+ *  `activeFilterCountAtom` is the un-scoped surfaces'. */
+const filterCountCache = new Map<string, Atom<number>>();
+export function activeFilterCountFor(scope: string | null): Atom<number> {
+  const key = scope ?? "";
+  let hit = filterCountCache.get(key);
+  if (!hit) {
+    hit = atom((get) => countFilters(<T,>(base: Scopable<T>) => get(relAtomFor(base, scope))));
+    filterCountCache.set(key, hit);
+  }
+  return hit;
+}
+
+function countFilters(get: <T>(base: Scopable<T>) => T): number {
   let n = 0;
   if (get(searchQueryAtom).trim()) n++;
   // Sort is NOT a filter — it changes the order, not what's in the set — and it
@@ -165,4 +222,6 @@ export const activeFilterCountAtom = atom((get) => {
     n += Object.values(vals).filter(Boolean).length;
   if (get(activeClusterRefIdsAtom)) n++;
   return n;
-});
+}
+
+export const activeFilterCountAtom = activeFilterCountFor(null);

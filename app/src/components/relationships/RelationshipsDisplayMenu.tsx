@@ -1,5 +1,6 @@
+import { useRelAtom, useRelAtomValue } from "../../hooks/useEntityScope";
 import { useState, type ReactNode } from "react";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import { SlidersHorizontal } from "lucide-react";
 import {
   viewAtom,
@@ -49,10 +50,10 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
  *  costing the toolbar a pixel of shift. The trigger carries a dot when anything
  *  is off its default, so a collapsed control is never a hidden one. */
 export function RelationshipsDisplayMenu({ size = "md" }: { size?: "sm" | "md" }) {
-  const view = useAtomValue(viewAtom);
-  const [groupBy, setGroupBy] = useAtom(groupByAtom);
-  const [subGroupBy, setSubGroupBy] = useAtom(subGroupByAtom);
-  const [sortOrder, setSortOrder] = useAtom(sortOrderAtom);
+  const view = useRelAtomValue(viewAtom);
+  const [groupBy, setGroupBy] = useRelAtom(groupByAtom);
+  const [subGroupBy, setSubGroupBy] = useRelAtom(subGroupByAtom);
+  const [sortOrder, setSortOrder] = useRelAtom(sortOrderAtom);
   const zoom = useAtomValue(zoomAtom);
   const [open, setOpen] = useState(false);
 

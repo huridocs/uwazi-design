@@ -1,3 +1,4 @@
+import { useRelAtom } from "../hooks/useEntityScope";
 import { type ReactNode } from "react";
 import { useAtom } from "jotai";
 import { LANGUAGES, languageAtom, type Language } from "../atoms/language";
@@ -34,7 +35,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
   const [focusedId] = useAtom(focusedEntityIdAtom);
   const profile = getEntityProfile(focusedId);
   const [language, setLanguage] = useAtom(languageAtom);
-  const [view] = useAtom(viewAtom);
+  const [view] = useRelAtom(viewAtom);
   const { handleDelete, dialog: deleteDialog } = useReferenceDelete();
 
   const hideMinimap = view === "graph";

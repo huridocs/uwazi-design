@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useAtomValue } from "jotai";
-import { useScopedReferences } from "../../hooks/useEntityScope";
+import { useRelAtomValue, useScopedReferences } from "../../hooks/useEntityScope";
 import {
   searchQueryAtom,
   sortOrderAtom,
@@ -27,15 +27,15 @@ import { buildMatcher } from "../../utils/searchQuery";
  *  Filters badge counts them all via `activeFilterCountAtom`). */
 export function useFilteredReferences({ sort = true }: { sort?: boolean } = {}): Reference[] {
   const references = useScopedReferences();
-  const searchQuery = useAtomValue(searchQueryAtom);
-  const sortOrder = useAtomValue(sortOrderAtom);
-  const activeClusterRefIds = useAtomValue(activeClusterRefIdsAtom);
-  const relTypeFilters = useAtomValue(relTypeFiltersAtom);
-  const entityTypeFilters = useAtomValue(entityTypeFiltersAtom);
-  const countryFilters = useAtomValue(relTargetCountryFiltersAtom);
-  const descriptorFilters = useAtomValue(relTargetDescriptorFiltersAtom);
-  const descriptorMode = useAtomValue(relTargetDescriptorModeAtom);
-  const inheritedFilters = useAtomValue(relInheritedFiltersAtom);
+  const searchQuery = useRelAtomValue(searchQueryAtom);
+  const sortOrder = useRelAtomValue(sortOrderAtom);
+  const activeClusterRefIds = useRelAtomValue(activeClusterRefIdsAtom);
+  const relTypeFilters = useRelAtomValue(relTypeFiltersAtom);
+  const entityTypeFilters = useRelAtomValue(entityTypeFiltersAtom);
+  const countryFilters = useRelAtomValue(relTargetCountryFiltersAtom);
+  const descriptorFilters = useRelAtomValue(relTargetDescriptorFiltersAtom);
+  const descriptorMode = useRelAtomValue(relTargetDescriptorModeAtom);
+  const inheritedFilters = useRelAtomValue(relInheritedFiltersAtom);
   const language = useAtomValue(languageAtom);
 
   return useMemo<Reference[]>(() => {

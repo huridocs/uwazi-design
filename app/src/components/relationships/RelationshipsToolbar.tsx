@@ -1,11 +1,7 @@
 import { useCallback, useState } from "react";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useSetAtom } from "jotai";
 import { toastsAtom } from "../../atoms/references";
-import {
-  activeFilterCountAtom,
-  clearRelFiltersAtom,
-} from "../../atoms/filters";
-import { useFiltersDrawerOpen, useSetScopedReferences } from "../../hooks/useEntityScope";
+import { useActiveFilterCount, useClearRelFilters, useFiltersDrawerOpen, useSetScopedReferences } from "../../hooks/useEntityScope";
 import { SearchBar } from "./SearchBar";
 import { RelationshipsDisplayMenu } from "./RelationshipsDisplayMenu";
 import { ActiveFilterChips } from "./ActiveFilterChips";
@@ -27,7 +23,7 @@ import { ConfirmDialog } from "../shared/ConfirmDialog";
  *  same idiom as the Library, and the row no longer reflows when you change
  *  view. */
 export function RelationshipsToolbar() {
-  const activeFilterCount = useAtomValue(activeFilterCountAtom);
+  const activeFilterCount = useActiveFilterCount();
   const [, setFiltersOpen] = useFiltersDrawerOpen();
 
   return (
@@ -54,8 +50,8 @@ export function RelationshipsToolbar() {
  *  main view's wider pane; the drawer flavour takes the default. */
 export function RelationshipsFiltersPanel({ width }: { width?: number }) {
   const [filtersOpen, setFiltersOpen] = useFiltersDrawerOpen();
-  const activeFilterCount = useAtomValue(activeFilterCountAtom);
-  const clearAllFilters = useSetAtom(clearRelFiltersAtom);
+  const activeFilterCount = useActiveFilterCount();
+  const clearAllFilters = useClearRelFilters();
 
   return (
     <FiltersDrawer

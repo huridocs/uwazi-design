@@ -10,7 +10,7 @@ import { isCejilEntity, cejilReferencesFor } from "../data/cejil/profile";
 import { isTravesiaEntity, travesiaReferencesFor } from "../data/travesia/profile";
 import { libraryQueryAtom } from "./library";
 import { filtersDrawerBase, overlayEntityBase } from "./rightPane";
-import { scopedFiltersOpenAtom } from "./filters";
+import { scopedFiltersOpenAtom, scopedRelStateAtom } from "./filters";
 
 export const referencesAtom = atom<Reference[]>(initialRefs);
 
@@ -145,7 +145,8 @@ export const expandGroupForRefAtom = atom<string | null>(null);
 /** Entity overlay — shows target entity preview when "View" is clicked on a ref */
 export const overlayEntityIdAtom = atom(
   (get) => get(overlayEntityBase),
-  (_get, set, id: string | null) => {
+  (get, set, id: string | null) => {
+    const prev = get(overlayEntityBase);
     set(overlayEntityBase, id);
     // Opening the overlay closes the HOST's Filters: they dock into the same
     // region, and side by side neither one is usable. Closing it (id === null)
@@ -156,6 +157,14 @@ export const overlayEntityIdAtom = atom(
     // left open on the last previewed entity must not be waiting inside the
     // next one.
     set(scopedFiltersOpenAtom, {});
+    // Same for its facets, search and view: the overlay opens on the defaults
+    // every time, not on what the reader left in the last preview of it.
+    set(scopedRelStateAtom, (state) => {
+      const next = { ...state };
+      if (prev) delete next[prev];
+      if (id) delete next[id];
+      return next;
+    });
   },
 );
 

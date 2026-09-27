@@ -1,3 +1,4 @@
+import { useRelAtomValue, useSetRelAtom } from "../../../hooks/useEntityScope";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   activeAggregateIdAtom,
@@ -52,12 +53,12 @@ export function AggregateRow({
   const type = entity ? getEntityType(entity.typeId) : undefined;
   // Mark the query that filtered this row in — same query, same tokenizer as
   // the snippet/PDF marks (`utils/queryTokens.ts`, PATTERNS 4.3).
-  const query = useAtomValue(searchQueryAtom);
+  const query = useRelAtomValue(searchQueryAtom);
   const setOverlayEntityId = useSetAtom(overlayEntityIdAtom);
   const [activeAggregateId, setActiveAggregateId] = useAtom(activeAggregateIdAtom);
   const activeRefId = useAtomValue(activeRefIdAtom);
   const setActiveDrawerTab = useSetAtom(activeDrawerTabAtom);
-  const setActiveClusterRefIds = useSetAtom(activeClusterRefIdsAtom);
+  const setActiveClusterRefIds = useSetRelAtom(activeClusterRefIdsAtom);
 
   const relLabel =
     relationTypes.find((r) => r.id === rel.relationType)?.label ??

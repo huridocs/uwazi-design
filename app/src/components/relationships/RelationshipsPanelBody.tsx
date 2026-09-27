@@ -1,5 +1,5 @@
+import { useRelAtom } from "../../hooks/useEntityScope";
 import { useEffect, useState, type ReactNode } from "react";
-import { useAtom } from "jotai";
 import { Link2 } from "lucide-react";
 import {
   viewAtom,
@@ -29,12 +29,12 @@ const LIST_CAP = 100;
 
 /** Body of the merged Relationships panel — toolbar lives above. */
 export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
-  const [view] = useAtom(viewAtom);
-  const [groupBy] = useAtom(groupByAtom);
-  const [subGroupBy] = useAtom(subGroupByAtom);
+  const [view] = useRelAtom(viewAtom);
+  const [groupBy] = useRelAtom(groupByAtom);
+  const [subGroupBy] = useRelAtom(subGroupByAtom);
   // Marked on the group headers — where a relation-type match shows once the
   // rows beneath stop repeating that label.
-  const [query] = useAtom(searchQueryAtom);
+  const [query] = useRelAtom(searchQueryAtom);
 
   // The one shared pipeline (cluster → facets → search → sort) — List, Tree,
   // and Graph all filter through it. See useFilteredReferences.

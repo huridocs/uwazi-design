@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useAtom } from "jotai";
-import { useScopedReferences } from "../../hooks/useEntityScope";
+import { useRelAtom, useScopedReferences } from "../../hooks/useEntityScope";
 import {
   relTypeFiltersAtom,
   entityTypeFiltersAtom,
@@ -31,20 +31,20 @@ import { t } from "../../utils/i18n";
 export function RelationshipsFilterDrawer() {
   const references = useScopedReferences();
   const [language] = useAtom(languageAtom);
-  const [relTypeFilters, setRelTypeFilters] = useAtom(relTypeFiltersAtom);
-  const [entityTypeFilters, setEntityTypeFilters] = useAtom(
+  const [relTypeFilters, setRelTypeFilters] = useRelAtom(relTypeFiltersAtom);
+  const [entityTypeFilters, setEntityTypeFilters] = useRelAtom(
     entityTypeFiltersAtom,
   );
-  const [countryFilters, setCountryFilters] = useAtom(
+  const [countryFilters, setCountryFilters] = useRelAtom(
     relTargetCountryFiltersAtom,
   );
-  const [descriptorFilters, setDescriptorFilters] = useAtom(
+  const [descriptorFilters, setDescriptorFilters] = useRelAtom(
     relTargetDescriptorFiltersAtom,
   );
-  const [descriptorMode, setDescriptorMode] = useAtom(
+  const [descriptorMode, setDescriptorMode] = useRelAtom(
     relTargetDescriptorModeAtom,
   );
-  const [inheritedFilters, setInheritedFilters] = useAtom(
+  const [inheritedFilters, setInheritedFilters] = useRelAtom(
     relInheritedFiltersAtom,
   );
 

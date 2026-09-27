@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import { X, ArrowRight } from "lucide-react";
-import { referencesAtom } from "../../atoms/references";
-import { activeFilterCountAtom } from "../../atoms/filters";
+import { referencesAtom, referencesFor } from "../../atoms/references";
+import { activeFilterCountFor } from "../../atoms/filters";
 import { focusMetadataFieldAtom, libraryEditRequestAtom, librarySelectedEntityIdAtom } from "../../atoms/library";
 import { entityCorpusOf, getEntity, getEntityType } from "../../data/entities";
 import { languageAtom } from "../../atoms/language";
@@ -13,8 +13,6 @@ import type { MetadataField } from "../../data/metadata";
 import type { Language } from "../../atoms/language";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { getEntityProfile } from "../../data/entityProfiles";
-import { isCejilEntity, cejilReferencesFor } from "../../data/cejil/profile";
-import { isTravesiaEntity, travesiaReferencesFor } from "../../data/travesia/profile";
 import { uiLanguageAtom } from "../../atoms/uiLanguage";
 import { tabsForType } from "../../utils/entityTabs";
 import { EntityScopeProvider } from "../../hooks/useEntityScope";
@@ -134,22 +132,16 @@ export function EntityDetailBody({
       : stored;
   const profile = getEntityProfile(entityId);
 
-  // Connection count for the tab strip (matches the scoped Relationships body,
-  // since both count refs touching this entity).
+  // Connection count for the tab strip: the same slice the scoped
+  // Relationships body lists.
   const connectionCount = useMemo(
-    () =>
-      isCejilEntity(entityId)
-        ? cejilReferencesFor(entityId).length
-        : isTravesiaEntity(entityId)
-          ? travesiaReferencesFor(entityId).length
-          : references.filter(
-            (r) => r.sourceEntityId === entityId || r.targetEntityId === entityId,
-          ).length,
+    () => referencesFor(entityId, references).length,
     [references, entityId],
   );
   const filesCount = profile.files?.length ?? 0;
 
-  const relFilterCount = useAtomValue(activeFilterCountAtom);
+  // This panel's own filters (its body is scoped to `entityId`), not the host's.
+  const relFilterCount = useAtomValue(activeFilterCountFor(entityId));
   // Chrome language: re-render the t()-built tab labels when it changes.
   useAtomValue(uiLanguageAtom);
   const showDocument = focused && profile.hasDocument;

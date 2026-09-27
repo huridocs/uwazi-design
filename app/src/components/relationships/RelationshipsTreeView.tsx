@@ -1,3 +1,4 @@
+import { useIsScopedSurface, useRelAtom } from "../../hooks/useEntityScope";
 import { useEffect, useMemo } from "react";
 import { useAtom } from "jotai";
 import { Link2 } from "lucide-react";
@@ -24,11 +25,11 @@ import { TreeBranch, TreeNode } from "./TreeBranch";
  *  list view, but the leaves are aggregate `RelationshipRow kind="aggregate"`
  *  cards with inline-expand into their underlying refs. */
 export function RelationshipsTreeView() {
-  const [groupBy] = useAtom(groupByAtom);
-  const [subGroupBy] = useAtom(subGroupByAtom);
+  const [groupBy] = useRelAtom(groupByAtom);
+  const [subGroupBy] = useRelAtom(subGroupByAtom);
   // Group headers carry the match when the leaves suppress that label (a
   // relation-type group hides `relLabel` on every row beneath it).
-  const [query] = useAtom(searchQueryAtom);
+  const [query] = useRelAtom(searchQueryAtom);
   const [, setOverlayEntityId] = useAtom(overlayEntityIdAtom);
   const [, setActiveRefId] = useAtom(activeRefIdAtom);
 
@@ -54,11 +55,15 @@ export function RelationshipsTreeView() {
   );
 
   // Clear the row selection whenever the filtered set changes — the selected
-  // ref/entity may no longer be visible.
+  // ref/entity may no longer be visible. The host's only: inside the overlay
+  // this tree IS the overlay's body, and clearing the overlay closed it the
+  // moment the tree mounted.
+  const scoped = useIsScopedSurface();
   useEffect(() => {
+    if (scoped) return;
     setActiveRefId(null);
     setOverlayEntityId(null);
-  }, [filtered, setActiveRefId, setOverlayEntityId]);
+  }, [filtered, scoped, setActiveRefId, setOverlayEntityId]);
 
   return (
     <div data-component="RelationshipsTreeView" className="flex flex-col flex-1 min-h-0">

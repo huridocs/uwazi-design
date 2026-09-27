@@ -1,5 +1,6 @@
+import { useRelAtomValue } from "../../../hooks/useEntityScope";
 import { useEffect, useRef } from "react";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { Trash2 } from "lucide-react";
 import {
   activeRefIdAtom,
@@ -36,7 +37,7 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
   // The row marks the SAME query that filtered it in (`useFilteredReferences`
   // matches snippet text + target title + relation type), so the user can see
   // WHY a row is here instead of re-reading it to find the term.
-  const query = useAtomValue(searchQueryAtom);
+  const query = useRelAtomValue(searchQueryAtom);
   const setScrollToHighlight = useSetAtom(scrollToHighlightAtom);
   const [scrollToRef, setScrollToRef] = useAtom(scrollToRefAtom);
   const [activeRefId, setActiveRefId] = useAtom(activeRefIdAtom);

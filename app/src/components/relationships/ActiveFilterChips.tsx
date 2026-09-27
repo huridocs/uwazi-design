@@ -1,4 +1,4 @@
-import { useAtom } from "jotai";
+import { useRelAtom } from "../../hooks/useEntityScope";
 import {
   searchQueryAtom,
   sortOrderAtom,
@@ -23,14 +23,14 @@ interface ActiveFilterChipsProps {
 }
 
 export function ActiveFilterChips({ omitSearch = false }: ActiveFilterChipsProps = {}) {
-  const [search, setSearch] = useAtom(searchQueryAtom);
-  const [sort, setSort] = useAtom(sortOrderAtom);
-  const [relTypeFilters, setRelTypeFilters] = useAtom(relTypeFiltersAtom);
-  const [entityTypeFilters, setEntityTypeFilters] = useAtom(entityTypeFiltersAtom);
-  const [countryFilters, setCountryFilters] = useAtom(relTargetCountryFiltersAtom);
-  const [descriptorFilters, setDescriptorFilters] = useAtom(relTargetDescriptorFiltersAtom);
-  const [inheritedFilters, setInheritedFilters] = useAtom(relInheritedFiltersAtom);
-  const [cluster, setCluster] = useAtom(activeClusterRefIdsAtom);
+  const [search, setSearch] = useRelAtom(searchQueryAtom);
+  const [sort, setSort] = useRelAtom(sortOrderAtom);
+  const [relTypeFilters, setRelTypeFilters] = useRelAtom(relTypeFiltersAtom);
+  const [entityTypeFilters, setEntityTypeFilters] = useRelAtom(entityTypeFiltersAtom);
+  const [countryFilters, setCountryFilters] = useRelAtom(relTargetCountryFiltersAtom);
+  const [descriptorFilters, setDescriptorFilters] = useRelAtom(relTargetDescriptorFiltersAtom);
+  const [inheritedFilters, setInheritedFilters] = useRelAtom(relInheritedFiltersAtom);
+  const [cluster, setCluster] = useRelAtom(activeClusterRefIdsAtom);
 
   const activeRelTypes = Object.entries(relTypeFilters).filter(([, v]) => v).map(([k]) => k);
   const activeEntityTypes = Object.entries(entityTypeFilters).filter(([, v]) => v).map(([k]) => k);

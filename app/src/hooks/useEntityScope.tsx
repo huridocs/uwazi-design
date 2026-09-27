@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, type ReactNode } from "react";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom, type PrimitiveAtom } from "jotai";
 import {
   referencesAtom,
   referencesFor,
@@ -7,7 +7,13 @@ import {
   writeReferencesFor,
 } from "../atoms/references";
 import { focusedEntityIdAtom } from "../atoms/focusedEntity";
-import { filtersDrawerOpenAtom, scopedFiltersOpenAtom } from "../atoms/filters";
+import {
+  activeFilterCountFor,
+  clearRelFiltersAtom,
+  filtersDrawerOpenAtom,
+  relAtomFor,
+  scopedFiltersOpenAtom,
+} from "../atoms/filters";
 import type { Reference } from "../data/references";
 
 /** The entity a subtree's connection surfaces belong to, when that is NOT the
@@ -42,6 +48,12 @@ export function useEntityScopeId(): string {
   const override = useContext(EntityScopeContext);
   const focused = useAtomValue(focusedEntityIdAtom);
   return override ?? focused;
+}
+
+/** Whether this subtree declared its own entity (the overlay, the Library
+ *  drawer preview) rather than following the focused one. */
+export function useIsScopedSurface(): boolean {
+  return useContext(EntityScopeContext) !== null;
 }
 
 /** `scopedReferencesAtom` as a hook, honouring the scope override. Without an
@@ -101,4 +113,31 @@ export function useFiltersDrawerOpen(): [boolean, (open: boolean) => void] {
   );
   if (!override) return [hostOpen, setHostOpen];
   return [!!scoped[override], setScopedOpen];
+}
+
+/** This surface's copy of a Relationships panel atom (facets, search, view,
+ *  grouping, sort — see `relAtomFor`). With no scope override it IS the atom,
+ *  so the entity view's panel and its drawer section keep sharing one state; a
+ *  scoped surface (the overlay, the Library drawer preview) gets its own,
+ *  starting from the atom's default. */
+export function useRelAtom<T>(base: PrimitiveAtom<T> & { init: T }) {
+  return useAtom(relAtomFor(base, useContext(EntityScopeContext)));
+}
+export function useRelAtomValue<T>(base: PrimitiveAtom<T> & { init: T }): T {
+  return useAtomValue(relAtomFor(base, useContext(EntityScopeContext)));
+}
+export function useSetRelAtom<T>(base: PrimitiveAtom<T> & { init: T }) {
+  return useSetAtom(relAtomFor(base, useContext(EntityScopeContext)));
+}
+
+/** The active-filter count for this surface's scope. */
+export function useActiveFilterCount(): number {
+  return useAtomValue(activeFilterCountFor(useContext(EntityScopeContext)));
+}
+
+/** "Clear all filters" for this surface's scope only. */
+export function useClearRelFilters(): () => void {
+  const scope = useContext(EntityScopeContext);
+  const clear = useSetAtom(clearRelFiltersAtom);
+  return useCallback(() => clear(scope), [clear, scope]);
 }
