@@ -22,6 +22,23 @@ export interface Relationship {
   refIds: string[];
 }
 
+/** Hub ids that have two or more distinct member entities in `refs`. A hub
+ *  with one member is an ordinary relationship: in CEJIL every edge carries a
+ *  hub id and 10,608 of 12,087 hubs have a single member, which rendered as
+ *  "HUB · 1 parties". Those refs aggregate like any other. */
+function multiMemberHubIds(refs: Reference[]): Set<string> {
+  const members = new Map<string, Set<string>>();
+  for (const ref of refs) {
+    if (!ref.hubId) continue;
+    let set = members.get(ref.hubId);
+    if (!set) members.set(ref.hubId, (set = new Set()));
+    set.add(ref.targetEntityId);
+  }
+  const ids = new Set<string>();
+  for (const [id, set] of members) if (set.size > 1) ids.add(id);
+  return ids;
+}
+
 /** Dedupe references by (targetEntityId, relationType) to produce a
  *  relationship view. Incoming and outgoing edges with the same target +
  *  type collapse into a single bidirectional aggregate; the row surfaces
@@ -34,8 +51,9 @@ function computeRelationships(
   opts: { includeHubMembers?: boolean } = {},
 ): Relationship[] {
   const map = new Map<string, Relationship>();
+  const hubs = opts.includeHubMembers ? null : multiMemberHubIds(refs);
   for (const ref of refs) {
-    if (ref.hubId && !opts.includeHubMembers) continue;
+    if (hubs && ref.hubId && hubs.has(ref.hubId)) continue;
     const direction: Direction = ref.direction ?? "outgoing";
     const key = `${ref.targetEntityId}::${ref.relationType}`;
     const page = ref.sourceSelection?.page;
@@ -119,7 +137,8 @@ export interface Hub {
 }
 
 /** Collapse refs sharing a `hubId` into Hub records. Uwazi calls these n-ary
- *  relationships — a single container with 2+ entity members. The relType is
+ *  relationships — a single container with 2+ entity members; a hub id with
+ *  one member is left to {@link deriveRelationships} as a plain aggregate. The relType is
  *  taken from the first ref of the group; in real Uwazi each member can have
  *  its own role, but the prototype uses a single shared label. */
 function computeHubs(refs: Reference[]): Hub[] {
@@ -152,7 +171,7 @@ function computeHubs(refs: Reference[]): Hub[] {
       });
     }
   }
-  return Array.from(map.values());
+  return Array.from(map.values()).filter((hub) => hub.members.length > 1);
 }
 
 /** Cached {@link computeHubs} — see the derivation-cache note above. */

@@ -124,7 +124,7 @@ export function HubRow({ hub, expanded, onToggleExpand, hideRelLabel }: HubRowPr
                 <span aria-hidden>·</span>
               </>
             )}
-            <span>{hub.members.length} parties</span>
+            <span>{hub.members.length} {hub.members.length === 1 ? "party" : "parties"}</span>
           </div>
         )}
       </div>

@@ -6,7 +6,6 @@ import {
   RelationType,
 } from "../data/references";
 import { focusedEntityIdAtom } from "./focusedEntity";
-import { MAIN_ENTITY_ID } from "../data/entityProfiles";
 import { isCejilEntity, cejilReferencesFor } from "../data/cejil/profile";
 import { isTravesiaEntity, travesiaReferencesFor } from "../data/travesia/profile";
 import { libraryQueryAtom } from "./library";
@@ -43,9 +42,9 @@ function fromPerspective(r: Reference, id: string): Reference {
  * The focused entity's slice of the corpus. Every entity-scoped surface
  * (Relationships panel/tree/graph, ReferencePanel, the document highlights, the
  * Metadata drawer count) reads THIS so navigating into an entity shows its own
- * connections — not e3's whole corpus. The main entity (`MAIN_ENTITY_ID`) sees
- * the full corpus unchanged; other entities see their refs re-expressed from
- * their own perspective (see {@link fromPerspective}).
+ * connections — not e3's whole corpus. Every entity, the main one
+ * (`MAIN_ENTITY_ID`) included, sees its refs re-expressed from its own
+ * perspective (see {@link fromPerspective}).
  *
  * Reads are filtered + perspective-normalized; **writes reconcile against the
  * full corpus by ref id** so deletes drop the right corpus rows and brand-new
@@ -57,11 +56,16 @@ function fromPerspective(r: Reference, id: string): Reference {
  *  to the focused entity, reusable for ANY id (e.g. Bert grounding replies on
  *  an entity attached to its context chain). */
 export function referencesFor(id: string, all: Reference[]): Reference[] {
-  if (id === MAIN_ENTITY_ID) return all;
   // CEJIL entities derive their connections from the real CEJIL relationships.
   if (isCejilEntity(id)) return cejilReferencesFor(id);
   if (isTravesiaEntity(id)) return travesiaReferencesFor(id);
-  return all.filter((r) => involvesEntity(r, id)).map((r) => fromPerspective(r, id));
+  // The main entity goes through the same projection: the corpus is mostly
+  // sourced from it, but the cross-entity rows (`ref-xs-*`) point AT it, and
+  // returned unchanged they rendered it related to itself. A ref whose two
+  // endpoints are this entity has no other side to show.
+  return all
+    .filter((r) => involvesEntity(r, id) && !(r.sourceEntityId === id && r.targetEntityId === id))
+    .map((r) => fromPerspective(r, id));
 }
 
 /** Pure counterpart of `referencesFor` for WRITES: fold an update expressed in
@@ -77,7 +81,6 @@ export function writeReferencesFor(
   // CEJIL relationships are read-only in the prototype — never write them back
   // into the mock corpus.
   if (isCejilEntity(id) || isTravesiaEntity(id)) return all;
-  if (id === MAIN_ENTITY_ID) return typeof update === "function" ? update(all) : update;
   const origInScope = all.filter((r) => involvesEntity(r, id));
   const outOfScope = all.filter((r) => !involvesEntity(r, id));
   const prevScoped = origInScope.map((r) => fromPerspective(r, id));
