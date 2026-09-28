@@ -121,7 +121,7 @@ export function EntityView() {
         minRightWidth={DRAWER_MIN_WIDTH}
         mobileSections={[
           {
-            id: "connections",
+            id: "relationships",
             label: t("System", "Relationships"),
             count: relCount,
             content: <ReferencePanel />,

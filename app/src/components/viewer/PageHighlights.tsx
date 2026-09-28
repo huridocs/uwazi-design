@@ -96,7 +96,7 @@ export function PageHighlights({ page }: PageHighlightsProps) {
   if (visibleRefs.length === 0 && pageHighlights.length === 0) return null;
 
   const handleHighlightClick = (refId: string) => {
-    setActiveDrawerTab("connections");
+    setActiveDrawerTab("relationships");
     setCollapseSignal((s) => s + 1);
     setExpandGroupForRef(refId);
     setScrollToRef(refId);

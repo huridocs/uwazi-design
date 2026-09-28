@@ -83,7 +83,7 @@ export function AggregateRow({
       return;
     }
     setActiveClusterRefIds(rel.refIds);
-    setActiveDrawerTab("connections");
+    setActiveDrawerTab("relationships");
   };
 
   // Always a control here — without an inline expand it still routes to the

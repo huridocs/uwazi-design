@@ -1502,7 +1502,7 @@ function MetadataDrawer() {
   const relFilterCount = useAtomValue(activeFilterCountAtom);
   const drawerTabs = [
     {
-      id: "connections",
+      id: "relationships",
       label: "Relationships",
       count: references.length,
       dot: relFilterCount > 0,
@@ -1511,7 +1511,7 @@ function MetadataDrawer() {
     { id: "template", label: "Template" },
   ];
 
-  const [activeDrawerTab, setActiveDrawerTab] = useState("connections");
+  const [activeDrawerTab, setActiveDrawerTab] = useState("relationships");
 
   return (
     // The gutter host (see `gutter-host`): tabs and tab bodies carry no side padding.
@@ -1528,7 +1528,7 @@ function MetadataDrawer() {
         <TemplateStructure />
       ) : activeDrawerTab === "files" ? (
         <DrawerFilesBody />
-      ) : activeDrawerTab === "connections" ? (
+      ) : activeDrawerTab === "relationships" ? (
         <RelationshipsDrawerSection />
       ) : (
         <div className="flex-1 flex items-center justify-center">

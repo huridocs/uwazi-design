@@ -21,7 +21,7 @@ import { MetadataEditBody } from "../../views/MetadataView";
 const baseDrawerTabs = [
   { id: "metadata", label: t("System", "Metadata") },
   { id: "toc", label: t("System", "ToC") },
-  { id: "connections", label: t("System", "Relationships") },
+  { id: "relationships", label: t("System", "Relationships") },
   { id: "files", label: t("System", "Files") },
   { id: "search", label: t("System", "Search") },
 ];
@@ -64,7 +64,7 @@ export function ReferencePanel() {
 
       <DrawerTabs
         tabs={baseDrawerTabs.map((tab) => {
-          if (tab.id === "connections")
+          if (tab.id === "relationships")
             return { ...tab, count: references.length, dot: relFilterCount > 0 };
           if (tab.id === "files") return { ...tab, count: files.length };
           if (tab.id === "search") return { ...tab, dot: docQuery.trim().length > 0 };
@@ -91,11 +91,11 @@ export function ReferencePanel() {
           <MetadataDrawerContent />
         ))}
       {activeDrawerTab === "toc" && <ToCPanel />}
-      {activeDrawerTab === "connections" && <RelationshipsDrawerSection />}
+      {activeDrawerTab === "relationships" && <RelationshipsDrawerSection />}
       {activeDrawerTab === "files" && <DrawerFilesBody />}
       {activeDrawerTab === "search" && <DocumentSearchBody />}
 
-      {!["metadata", "toc", "connections", "files", "search"].includes(activeDrawerTab) && (
+      {!["metadata", "toc", "relationships", "files", "search"].includes(activeDrawerTab) && (
         <div data-part="empty" className="flex-1 flex items-center justify-center">
           <p className="text-sm text-ink-muted capitalize">
             {activeDrawerTab} content
@@ -108,7 +108,7 @@ export function ReferencePanel() {
           with Edit/Cancel/Save), so skip the shared bar for those tabs —
           otherwise a redundant 48px bar stacks underneath. The edit form
           carries its own Copy from / Cancel / Save bar, so it takes the slot. */}
-      {activeDrawerTab !== "files" && activeDrawerTab !== "connections" && !editing && (
+      {activeDrawerTab !== "files" && activeDrawerTab !== "relationships" && !editing && (
         <DrawerActionBar activeTab={activeDrawerTab} onEdit={() => setEditing(true)} />
       )}
     </div>
