@@ -33,10 +33,22 @@ export function EventRow({ event, selected }: { event: WhenEvent<string>; select
           <span className="min-w-0 shrink flex">
             <RowEntityPill entityId={event.entityId} typeId={entity?.typeId ?? ""} label={entity?.title} />
           </span>
-          <span className="hidden md:inline min-w-0 truncate text-meta text-ink-tertiary" dir="auto">
-            {date.label}
-            {event.via.length > 0 && ` · ${event.via[0]}`}
-            {event.via.length > 1 && <bdi>{` +${event.via.length - 1}`}</bdi>}
+          {/* Each run isolated: a label in one script and a relation in another
+              must not reorder each other, and "+2" must stay "+2". */}
+          <span className="hidden md:inline min-w-0 truncate text-meta text-ink-tertiary">
+            <bdi>{date.label}</bdi>
+            {event.via.length > 0 && (
+              <>
+                {" · "}
+                <bdi>{event.via[0]}</bdi>
+              </>
+            )}
+            {event.via.length > 1 && (
+              <>
+                {" "}
+                <bdi dir="ltr">{`+${event.via.length - 1}`}</bdi>
+              </>
+            )}
           </span>
         </>
       )}

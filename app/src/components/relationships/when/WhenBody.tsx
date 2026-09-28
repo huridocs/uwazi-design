@@ -86,7 +86,7 @@ export function WhenBody() {
       {shown.length > 0 && (
         <section className="border border-border/60 rounded-md bg-paper">
           <header className="flex items-baseline gap-2 px-3 py-2 border-b border-border/60">
-            <h3 className="text-sm font-medium text-ink">
+            <h3 className="text-sm font-medium text-ink" dir="auto">
               {shown.length.toLocaleString("en-US")} dated event{shown.length === 1 ? "" : "s"}
             </h3>
             <span className="text-meta text-ink-tertiary min-w-0 truncate" dir="auto">
@@ -139,7 +139,7 @@ export function WhenBody() {
         <section className="border border-border/60 rounded-md bg-paper">
           <header className="flex items-baseline gap-2 px-3 py-2 border-b border-border/60">
             <h3 className="text-sm font-medium text-ink">Without a date</h3>
-            <span className="text-meta text-ink-tertiary">
+            <span className="text-meta text-ink-tertiary" dir="auto">
               {undated.length} connected, nothing on either end is dated
             </span>
           </header>
