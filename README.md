@@ -78,7 +78,7 @@ All components are bound to variables — switching a frame to Dark mode updates
 │   │   │                          # libraryFilter, deriveRelationships, inheritance + chainTraversal,
 │   │   │                          # connectionGrouping, i18n shim)
 │   │   └── views/                 # Page-level orchestrators (LibraryView, EntityView, RelationshipsView,
-│   │   │                          # FilesView, MetadataView, SettingsView, ImportCSVView, CreateRefView,
+│   │   │                          # FilesView, MetadataView, SettingsView, ImportCSVView,
 │   │   │                          # ComponentCatalog, ToastContainer; catalog/ demos)
 │   └── public/                    # Static assets (sample PDFs, logos, cejil-data/ JSON corpus)
 ├── handoff/                       # Migration kit for huridocs/uwazi (see below)
