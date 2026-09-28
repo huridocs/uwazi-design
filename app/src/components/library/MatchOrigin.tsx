@@ -8,7 +8,7 @@ import { languageAtom } from "../../atoms/language";
 import { dataSourceAtom } from "../../atoms/dataSource";
 import {
   requestMetadataFocusAtom,
-  resultsActivePageAtom,
+  resultsCurrentPageAtom,
 } from "../../atoms/library";
 import { scrollToPageAtom } from "../../atoms/selection";
 import { passageFileIdAtom } from "../../atoms/files";
@@ -93,7 +93,7 @@ export const MatchOrigin = memo(function MatchOrigin({
   const setFocusField = useSetAtom(requestMetadataFocusAtom);
   const setScrollToPage = useSetAtom(scrollToPageAtom);
   const setPassageFile = useSetAtom(passageFileIdAtom);
-  const setResultsActivePage = useSetAtom(resultsActivePageAtom);
+  const setResultsActivePage = useSetAtom(resultsCurrentPageAtom);
   const q = query.trim();
 
   const visibleKey = visibleFieldKeys.join(",");

@@ -6,7 +6,7 @@ import { activeDrawerTabAtom, docSearchQueryAtom } from "../../atoms/references"
 import { languageAtom } from "../../atoms/language";
 import { dataSourceAtom } from "../../atoms/dataSource";
 import { scrollToPageAtom } from "../../atoms/selection";
-import { resultsActivePageAtom, requestMetadataFocusAtom } from "../../atoms/library";
+import { resultsCurrentPageAtom, requestMetadataFocusAtom } from "../../atoms/library";
 import { getEntity } from "../../data/entities";
 import { buildSnippetsFor } from "../../utils/librarySnippets";
 import { parseSearchQuery } from "../../utils/queryTokens";
@@ -30,7 +30,7 @@ function Centered({ children }: { children: ReactNode }) {
  *  No new engine — this is the Library's Results machinery pointed at one
  *  entity: `buildSnippetsFor` for the same per-page snippets, `HighlightedText`
  *  for the same marks, and the same `PageSpine` rows ("p.N · N×"). Clicking a
- *  page hit scrolls the viewer and records `resultsActivePageAtom`, so the row
+ *  page hit scrolls the viewer and records `resultsCurrentPageAtom`, so the row
  *  stays lit exactly as it does in the Library. Property hits group above the
  *  document hits and deep-focus the Metadata tab, reusing
  *  `requestMetadataFocusAtom`. */
@@ -39,7 +39,7 @@ export function DocumentSearchBody() {
   const language = useAtomValue(languageAtom);
   const source = useAtomValue(dataSourceAtom);
   const setScrollToPage = useSetAtom(scrollToPageAtom);
-  const setActivePage = useSetAtom(resultsActivePageAtom);
+  const setActivePage = useSetAtom(resultsCurrentPageAtom);
   const setFocusField = useSetAtom(requestMetadataFocusAtom);
   const setDrawerTab = useSetAtom(activeDrawerTabAtom);
 

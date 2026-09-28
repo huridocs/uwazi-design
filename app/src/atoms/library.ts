@@ -128,7 +128,7 @@ export interface ResultsActivePage {
   entityId: string;
   page: number;
 }
-export const resultsActivePageAtom = atom<ResultsActivePage | null>(null);
+export const resultsCurrentPageAtom = atom<ResultsActivePage | null>(null);
 
 /** Which kinds of match the results keep (the title / properties / document
  *  chips). A real filter, not a panel toggle: it narrows the main pane too, so

@@ -72,7 +72,7 @@ import {
   rangeSelectionAtom,
   recordSearchAtom,
   requestMetadataFocusAtom,
-  resultsActivePageAtom,
+  resultsCurrentPageAtom,
   setSelectionAnchorAtom,
   submitLibrarySearchAtom,
   toggleSelectionAtom,
@@ -307,7 +307,7 @@ export function LibraryView() {
   const focusForPreview = useSetAtom(focusEntityForPreviewAtom);
   const setScrollToPage = useSetAtom(scrollToPageAtom);
   const setPassageFile = useSetAtom(passageFileIdAtom);
-  const setResultsActivePage = useSetAtom(resultsActivePageAtom);
+  const setResultsActivePage = useSetAtom(resultsCurrentPageAtom);
   const setFocusMetadataField = useSetAtom(requestMetadataFocusAtom);
   const clearFacets = useSetAtom(clearLibraryFacetsAtom);
   const [matchTypes, setMatchTypes] = useAtom(matchTypeFiltersAtom);

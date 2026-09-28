@@ -6,7 +6,7 @@ import "react-pdf/dist/Page/TextLayer.css";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { currentPageAtom, scrollToPageAtom, textSelectionAtom, documentFormatAtom } from "../../atoms/selection";
 import { scrollToHighlightAtom, scopedReferencesAtom, activeRefIdAtom, docHighlightQueryAtom } from "../../atoms/references";
-import { resultsActivePageAtom } from "../../atoms/library";
+import { resultsCurrentPageAtom } from "../../atoms/library";
 import { highlightTerms } from "../../utils/queryTokens";
 import { markSearchHits } from "../../utils/pdfTextHighlight";
 import { breakpointAtom } from "../../atoms/viewport";
@@ -64,7 +64,7 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
   // a single rect. Terms come from the shared tokenizer, so what's marked here
   // is exactly what the snippet rows marked.
   const highlightQuery = useAtomValue(docHighlightQueryAtom);
-  const activeJump = useAtomValue(resultsActivePageAtom);
+  const activeJump = useAtomValue(resultsCurrentPageAtom);
   const searchTerms = useMemo(() => highlightTerms(highlightQuery), [highlightQuery]);
   const termsKey = searchTerms.join("\u0000");
   const activeJumpPage = activeJump?.page ?? null;

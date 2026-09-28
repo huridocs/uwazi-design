@@ -19,7 +19,7 @@ import {
 import {
   matchTypeFiltersAtom,
   libraryResultsLayoutAtom,
-  resultsActivePageAtom,
+  resultsCurrentPageAtom,
   type MatchTypeFilters,
   type ResultsLayout,
 } from "../../../atoms/library";
@@ -769,7 +769,7 @@ function PassagesBody({
 }) {
   // Shared with the grouped/tree rows and `MatchOrigin`, so a page opened from
   // any of them stays selected here (`handleSnippetSelect` writes it).
-  const activePage = useAtomValue(resultsActivePageAtom);
+  const activePage = useAtomValue(resultsCurrentPageAtom);
   // That atom only covers rows with a page. Page-less rows (Sample full text,
   // property hits) are tracked here by key; falling back to `selectedId` would
   // select every row of that entity at once.
@@ -1237,7 +1237,7 @@ function PassageRow({
   entityId: string;
   onSelectSnippet: (id: string, page: number) => void;
 }) {
-  const active = useAtomValue(resultsActivePageAtom);
+  const active = useAtomValue(resultsCurrentPageAtom);
   const tag = [
     snippet.page !== null ? `p.${snippet.page}` : null,
     snippet.hits > 1 ? `${snippet.hits}×` : null,

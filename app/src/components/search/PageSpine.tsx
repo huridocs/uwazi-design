@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { useAtomValue } from "jotai";
 import type { FullTextSnippet } from "../../utils/librarySnippets";
-import { resultsActivePageAtom } from "../../atoms/library";
+import { resultsCurrentPageAtom } from "../../atoms/library";
 import { HighlightedText } from "../shared/HighlightedText";
 
 interface Props {
@@ -20,11 +20,11 @@ interface Props {
  *  of its own, right-aligned, it cost every row a line and sat apart from the
  *  sentence it cites. No node markers on the
  *  rail — the rail is just quiet structure. Clicking a row jumps the doc to that
- *  page (§8) and records it in `resultsActivePageAtom`, so the row returns lit +
+ *  page (§8) and records it in `resultsCurrentPageAtom`, so the row returns lit +
  *  `aria-pressed` after the preview closes. RTL-safe: rail on the inline-start
  *  edge; the page tag stays `dir="ltr"`. */
 export function PageSpine({ entityId, fullText, query, onSelect }: Props) {
-  const active = useAtomValue(resultsActivePageAtom);
+  const active = useAtomValue(resultsCurrentPageAtom);
 
   return (
     <div data-component="PageSpine" className="relative ps-4">
