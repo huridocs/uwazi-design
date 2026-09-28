@@ -1,7 +1,7 @@
 import { ChevronRight, Link2 } from "lucide-react";
 import { useSetAtom } from "jotai";
-import { previewEntityIdAtom } from "../../../atoms/references";
 import { EntityPill } from "../../shared/EntityPill";
+import { previewEntityIdAtom } from "../../../atoms/entityPreview";
 
 /** The disclosure chevron on an expandable row.
  *

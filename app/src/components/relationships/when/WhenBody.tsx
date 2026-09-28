@@ -14,7 +14,6 @@ import { CalendarX } from "lucide-react";
 import { useEntityScopeId, useRelAtom } from "../../../hooks/useEntityScope";
 import { whenYearsAtom } from "../../../atoms/filters";
 import { languageAtom } from "../../../atoms/language";
-import { previewEntityIdAtom } from "../../../atoms/references";
 import { getEntity, getEntityType } from "../../../data/entities";
 import { datesOf } from "../../../data/entityDates";
 import { relationLabel } from "../../../utils/inheritance";
@@ -24,6 +23,7 @@ import { useFilteredReferences } from "../useFilteredReferences";
 import { RowEntityPill } from "../rows/RowParts";
 import { EventRow } from "./EventRow";
 import { YearStrip } from "./YearStrip";
+import { previewEntityIdAtom } from "../../../atoms/entityPreview";
 
 /** Above this many events the spine would be a wall: the body lists years
  *  instead, and a year opens its own spine. */

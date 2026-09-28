@@ -5,10 +5,10 @@ import { languageAtom } from "../../atoms/language";
 import { entitiesAtom } from "../../atoms/entities";
 import { getEntityType } from "../../data/entities";
 import { entityMetadataAtom, makeEntityPropReader } from "../../atoms/entityMetadata";
-import { previewEntityIdAtom } from "../../atoms/references";
 import { EntityPill } from "../shared/EntityPill";
 import { InheritedValueTag, MissingValue } from "./InheritedValue";
 import { resolveInheritedValue, type ConnectionColumn } from "../../utils/inheritance";
+import { previewEntityIdAtom } from "../../atoms/entityPreview";
 
 /**
  * Edits ONE connection. The connection (`entityIds`) is the editable part;

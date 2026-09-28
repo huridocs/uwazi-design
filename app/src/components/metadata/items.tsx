@@ -3,12 +3,12 @@ import { ExternalLink } from "lucide-react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { languageAtom } from "../../atoms/language";
 import { entityMetadataAtom, makeEntityPropReader } from "../../atoms/entityMetadata";
-import { previewEntityIdAtom } from "../../atoms/references";
 import { EntityPill } from "../shared/EntityPill";
 import { MediaFieldValue } from "./MediaFieldValue";
 import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
 import { resolveRelationshipField } from "../../utils/inheritance";
 import type { MetadataField, RelationshipMetadataField } from "../../data/metadata";
+import { previewEntityIdAtom } from "../../atoms/entityPreview";
 
 /** One row of an entity's record: a label and whatever renders as its value.
  *

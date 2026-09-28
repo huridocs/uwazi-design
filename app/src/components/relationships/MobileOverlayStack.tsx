@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { overlayStackBase } from "../../atoms/rightPane";
-import { closeAllOverlaysAtom, previewEntityIdAtom } from "../../atoms/references";
 import { openEntityAtom } from "../../atoms/focusedEntity";
 import { breakpointAtom } from "../../atoms/viewport";
 import { getEntity } from "../../data/entities";
 import { MobileBottomSheet } from "../layout/MobileBottomSheet";
 import { EntityDetailBody } from "../entity/EntityDetailBody";
+import { closeAllOverlaysAtom, previewEntityIdAtom } from "../../atoms/entityPreview";
 
 /** The connection overlay on a phone: one bottom sheet per entity on the
  *  overlay stack (`overlayStackBase`), each on the shared sheet stack, so a

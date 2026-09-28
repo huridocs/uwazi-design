@@ -1,10 +1,6 @@
 import { useRelAtomValue, useSetRelAtom } from "../../../hooks/useEntityScope";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import {
-  activeAggregateIdAtom,
-  activeRefIdAtom,
-  previewEntityIdAtom,
-} from "../../../atoms/references";
+import { activeAggregateIdAtom, activeRefIdAtom } from "../../../atoms/references";
 import { activeClusterRefIdsAtom, searchQueryAtom } from "../../../atoms/filters";
 import { getEntity, getEntityType } from "../../../data/entities";
 import { relationTypes } from "../../../data/references";
@@ -16,6 +12,7 @@ import { RowCheckbox } from "./RowCheckbox";
 import { RowShell } from "./RowShell";
 import { EvidenceBadge, RowChevron, RowEntityPill } from "./RowParts";
 import { activeDrawerTabAtom } from "../../../atoms/entityDrawer";
+import { previewEntityIdAtom } from "../../../atoms/entityPreview";
 
 export interface AggregateRowProps {
   rel: Relationship;

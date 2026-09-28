@@ -1,6 +1,5 @@
 import { useSetAtom } from "jotai";
 import { Link2 } from "lucide-react";
-import { previewEntityIdAtom } from "../../atoms/references";
 import { MetadataCard } from "./MetadataCard";
 import { spanClass, type CardSpan } from "./cardSpan";
 import { RelationCaption, InheritedValueTag, MissingValue, RollupChip } from "./InheritedValue";
@@ -9,6 +8,7 @@ import { getEntityType } from "../../data/entities";
 import { mergeConnectionRows, reduceInherited, type ConnectionGroup } from "../../utils/inheritance";
 import { ConnectionCardStack, type StackEntity } from "./ConnectionCardStack";
 import { TABLE_MIN } from "./tableBreakpoint";
+import { previewEntityIdAtom } from "../../atoms/entityPreview";
 
 /** Multi-inheritance, Section-2 "Option 1": several relationship fields sharing
  *  one connection rendered as a single table. Rows are sorted by the inherited

@@ -1,12 +1,12 @@
 import { Fragment } from "react";
 import { useSetAtom } from "jotai";
 import { Link2, Sigma } from "lucide-react";
-import { previewEntityIdAtom } from "../../atoms/references";
 import { EntityPill } from "../shared/EntityPill";
 import { ProvenanceLine } from "../shared/ProvenanceLine";
 import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
 import { countryFlag } from "../../utils/countryFlag";
 import type { InheritedValue, ProvenanceStep } from "../../utils/inheritance";
+import { previewEntityIdAtom } from "../../atoms/entityPreview";
 
 /** A single INHERITED value — visually distinct from a native value so it reads
  *  as "pulled from the connected entity": a carbon link glyph, an optional

@@ -2,7 +2,7 @@ import { useIsScopedSurface, useRelAtom } from "../../hooks/useEntityScope";
 import { useEffect, useMemo } from "react";
 import { useAtom } from "jotai";
 import { Link2 } from "lucide-react";
-import { previewEntityIdAtom, activeRefIdAtom } from "../../atoms/references";
+import { activeRefIdAtom } from "../../atoms/references";
 import {
   groupByAtom,
   searchQueryAtom,
@@ -20,6 +20,7 @@ import {
 } from "../../utils/connectionGrouping";
 import { RelationshipRow } from "./RelationshipRow";
 import { TreeBranch, TreeNode } from "./TreeBranch";
+import { previewEntityIdAtom } from "../../atoms/entityPreview";
 
 /** Tree view of the merged Relationships panel. Same grouping pipeline as the
  *  list view, but the leaves are aggregate `RelationshipRow kind="aggregate"`

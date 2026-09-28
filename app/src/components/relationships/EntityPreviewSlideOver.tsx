@@ -3,11 +3,12 @@ import { breakpointAtom } from "../../atoms/viewport";
 import { useEffect, useState } from "react";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { useHostDrawerWidth } from "../../hooks/useDrawerWidth";
-import { activeAggregateIdAtom, previewEntityIdAtom } from "../../atoms/references";
+import { activeAggregateIdAtom } from "../../atoms/references";
 import { languageAtom } from "../../atoms/language";
 import { openEntityAtom } from "../../atoms/focusedEntity";
 import { getEntity } from "../../data/entities";
 import { EntityDetailBody } from "../entity/EntityDetailBody";
+import { previewEntityIdAtom } from "../../atoms/entityPreview";
 
 /** The connected-entity preview: a slide-over inside whichever pane mounts it,
  *  opened by any row, pill or graph node that points at another entity.

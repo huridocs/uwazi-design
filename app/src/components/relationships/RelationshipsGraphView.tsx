@@ -1,10 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Link2 } from "lucide-react";
-import {
-  previewEntityIdAtom,
-  activeRefIdAtom,
-} from "../../atoms/references";
+import { activeRefIdAtom } from "../../atoms/references";
 import { groupByAtom, searchQueryAtom } from "../../atoms/filters";
 import { useEntityScopeId, useRelAtom, useRelAtomValue } from "../../hooks/useEntityScope";
 import { HighlightedText } from "../shared/HighlightedText";
@@ -19,6 +16,7 @@ import {
   getGroupLabel,
   getRelGroupKey,
 } from "../../utils/connectionGrouping";
+import { previewEntityIdAtom } from "../../atoms/entityPreview";
 
 interface GraphNode {
   id: string;

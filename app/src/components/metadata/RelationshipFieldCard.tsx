@@ -2,7 +2,6 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { Link2 } from "lucide-react";
 import { languageAtom } from "../../atoms/language";
 import { entityMetadataAtom, makeEntityPropReader } from "../../atoms/entityMetadata";
-import { previewEntityIdAtom } from "../../atoms/references";
 import { MetadataCard } from "./MetadataCard";
 import { spanClass, type CardSpan } from "./cardSpan";
 import { InheritedValueTag, MissingValue, ProvenanceTrail, RelationCaption, RollupChip } from "./InheritedValue";
@@ -12,6 +11,7 @@ import { reduceInherited, resolveRelationshipField, specInherits } from "../../u
 import type { RelationshipMetadataField } from "../../data/metadata";
 import { ConnectionCardStack, type StackEntity } from "./ConnectionCardStack";
 import { TABLE_MIN } from "./tableBreakpoint";
+import { previewEntityIdAtom } from "../../atoms/entityPreview";
 
 /** A standalone relationship field (no shared connection). Two shapes:
  *  - inherits a value → a compact bordered table (entity · inherited value), same

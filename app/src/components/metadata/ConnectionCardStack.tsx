@@ -1,8 +1,8 @@
 import { useSetAtom } from "jotai";
-import { previewEntityIdAtom } from "../../atoms/references";
 import { EntityPill } from "../shared/EntityPill";
 import { InheritedValueTag, MissingValue, ProvenanceTrail, RollupChip } from "./InheritedValue";
 import type { ProvenanceStep } from "../../utils/inheritance";
+import { previewEntityIdAtom } from "../../atoms/entityPreview";
 
 /** One connected entity, flattened — no merged cells, no shared rows. */
 export interface StackEntity {

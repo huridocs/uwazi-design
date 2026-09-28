@@ -18,7 +18,7 @@ import { isCejilEntity } from "../data/cejil/profile";
 import { focusCollectionDefaultAtom } from "../atoms/focusedEntity";
 import { loadTravesiaData, travesiaRelsByEntity } from "../data/travesia/load";
 import { warmSearchScan } from "../utils/warmSearchScan";
-import { previewEntityIdAtom, referencesAtom } from "../atoms/references";
+import { referencesAtom } from "../atoms/references";
 import { languageAtom, type Language } from "../atoms/language";
 import { uiLanguageAtom } from "../atoms/uiLanguage";
 import { t } from "../utils/i18n";
@@ -129,6 +129,7 @@ import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
 import { BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
 import { BarDivider } from "../components/shared/BarDivider";
 import { useTapGuard } from "../hooks/useTapGuard";
+import { previewEntityIdAtom } from "../atoms/entityPreview";
 
 const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
 

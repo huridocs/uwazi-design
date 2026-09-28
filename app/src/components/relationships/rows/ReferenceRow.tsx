@@ -2,12 +2,7 @@ import { useRelAtomValue } from "../../../hooks/useEntityScope";
 import { useEffect, useRef } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { Trash2 } from "lucide-react";
-import {
-  activeRefIdAtom,
-  previewEntityIdAtom,
-  scrollToHighlightAtom,
-  scrollToRefAtom,
-} from "../../../atoms/references";
+import { activeRefIdAtom, scrollToHighlightAtom, scrollToRefAtom } from "../../../atoms/references";
 import { searchQueryAtom } from "../../../atoms/filters";
 import { currentPageAtom } from "../../../atoms/selection";
 import { getEntity, getEntityType } from "../../../data/entities";
@@ -19,6 +14,7 @@ import { DirectionGlyph } from "../DirectionGlyph";
 import { RowCheckbox } from "./RowCheckbox";
 import { RowShell } from "./RowShell";
 import { RowEntityPill } from "./RowParts";
+import { previewEntityIdAtom } from "../../../atoms/entityPreview";
 
 export interface ReferenceRowProps {
   reference: Reference;
