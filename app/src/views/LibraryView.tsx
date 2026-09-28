@@ -56,7 +56,7 @@ import {
   librarySearchDraftAtom,
   librarySelectModeAtom,
   librarySelectedClusterAtom,
-  librarySelectedEntityIdAtom,
+  libraryOpenEntityIdAtom,
   librarySelectionActiveAtom,
   librarySelectionDrawerOpenAtom,
   librarySortAtom,
@@ -297,7 +297,7 @@ export function LibraryView() {
   );
   const [language, setLanguage] = useAtom(languageAtom);
   const breakpoint = useAtomValue(breakpointAtom);
-  const [selectedId, setSelectedId] = useAtom(librarySelectedEntityIdAtom);
+  const [selectedId, setSelectedId] = useAtom(libraryOpenEntityIdAtom);
   const selectedCluster = useAtomValue(librarySelectedClusterAtom);
   const openEntity = useSetAtom(openEntityAtom);
   const draftId = useAtomValue(draftEntityIdAtom);

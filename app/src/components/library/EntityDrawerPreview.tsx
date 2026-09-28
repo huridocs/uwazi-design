@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useSetAtom } from "jotai";
-import { librarySelectedEntityIdAtom } from "../../atoms/library";
+import { libraryOpenEntityIdAtom } from "../../atoms/library";
 import { openEntityAtom, focusEntityForPreviewAtom } from "../../atoms/focusedEntity";
 import { EntityDetailBody } from "../entity/EntityDetailBody";
 import { EntityOverlay } from "../relationships/EntityOverlay";
@@ -13,7 +13,7 @@ import { useDirtyGuard } from "../../hooks/useDirtyGuard";
  *  the connection overlay renders too. "View entity" navigates into the
  *  full-screen entity; Close returns the drawer to Filters. */
 export function EntityDrawerPreview({ entityId }: { entityId: string }) {
-  const setSelected = useSetAtom(librarySelectedEntityIdAtom);
+  const setSelected = useSetAtom(libraryOpenEntityIdAtom);
   const openEntity = useSetAtom(openEntityAtom);
   const focusForPreview = useSetAtom(focusEntityForPreviewAtom);
 

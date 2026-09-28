@@ -16,7 +16,7 @@ import {
   thesaurusBindingsAtom,
 } from "../../atoms/thesauri";
 import { notificationsAtom } from "../../atoms/notifications";
-import { librarySelectedEntityIdAtom, selectIdsAtom, clearSelectionAtom } from "../../atoms/library";
+import { libraryOpenEntityIdAtom, selectIdsAtom, clearSelectionAtom } from "../../atoms/library";
 import { templateFields } from "../../utils/createEntity";
 import { parseDateValue } from "../../utils/dateValue";
 import { Modal, MODAL_BUTTON, MODAL_COMMIT, MODAL_COMMIT_DISABLED } from "../shared/Modal";
@@ -396,7 +396,7 @@ export function BatchEntryModal({
     const { ids, ref } = createBatch({ corpus, typeId, rows: out, language });
     // The new entities, selected: the selection bar is what to do next with
     // them (bulk edit, share, export), and it says how many there are.
-    store.set(librarySelectedEntityIdAtom, null);
+    store.set(libraryOpenEntityIdAtom, null);
     store.set(clearSelectionAtom);
     store.set(selectIdsAtom, ids);
     store.set(notificationsAtom, (prev) => [

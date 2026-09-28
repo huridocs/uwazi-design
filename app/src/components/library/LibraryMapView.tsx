@@ -5,7 +5,7 @@ import worldData from "world-atlas/countries-110m.json";
 import { languageAtom } from "../../atoms/language";
 import {
   librarySelectedClusterAtom,
-  librarySelectedEntityIdAtom,
+  libraryOpenEntityIdAtom,
   libraryHasNarrowingAtom,
   clearLibraryFiltersAtom,
 } from "../../atoms/library";
@@ -55,7 +55,7 @@ interface Cluster {
 export function LibraryMapView({ entities }: { entities: Entity[] }) {
   const language = useAtomValue(languageAtom);
   const [selectedCluster, setSelectedCluster] = useAtom(librarySelectedClusterAtom);
-  const setSelectedId = useSetAtom(librarySelectedEntityIdAtom);
+  const setSelectedId = useSetAtom(libraryOpenEntityIdAtom);
   // Facets OR the search — this button clears both, and the empty screen it
   // rescues you from is most often a search that matched nothing.
   const hasNarrowing = useAtomValue(libraryHasNarrowingAtom);

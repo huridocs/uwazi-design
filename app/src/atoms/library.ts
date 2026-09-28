@@ -119,7 +119,7 @@ export const libraryStatusFiltersAtom = atom<Record<string, boolean>>({});
 export const libraryFiltersOpenAtom = atom(false);
 
 /** Entity previewed in the right drawer. null → the drawer shows Filters. */
-export const librarySelectedEntityIdAtom = atom<string | null>(null);
+export const libraryOpenEntityIdAtom = atom<string | null>(null);
 
 /** The Results-tab full-text page the user last jumped to. Kept here, not in the
  *  drawer subtree (which unmounts while a preview shows), so its spine node stays
@@ -178,7 +178,7 @@ export const librarySelectedClusterAtom = atom<LibraryCluster | null>(null);
 
 /* ── Multi-selection ──────────────────────────────────────────────────────
    Entity ids picked for a bulk action, separate from
-   `librarySelectedEntityIdAtom` (the one entity the drawer previews). A plain
+   `libraryOpenEntityIdAtom` (the one entity the drawer previews). A plain
    click previews; a checkbox, Cmd/Ctrl-click or Shift-click selects.
    Always explicit ids ("select all" writes every id). Survives view, sort,
    filter and search changes; a collection switch and Clear end it.
@@ -229,7 +229,7 @@ export const libraryBulkEditIdsAtom = atom<string[]>([]);
 export const openBulkEditAtom = atom(null, (get, set) => {
   set(libraryBulkEditIdsAtom, [...get(librarySelectionAtom)]);
   set(libraryBulkEditOpenAtom, true);
-  set(librarySelectedEntityIdAtom, null);
+  set(libraryOpenEntityIdAtom, null);
   set(librarySelectionDrawerOpenAtom, true);
 });
 
@@ -264,7 +264,7 @@ export const libraryDrawnIdsAtom = atom<readonly string[]>([]);
 /** Show the selection list in the drawer by dropping the preview, unless the
  *  preview holds an open form: ticking a box must not unmount it and lose input. */
 function showSelectionList(get: Getter, set: Setter) {
-  if (!get(editSessionOpenAtom)) set(librarySelectedEntityIdAtom, null);
+  if (!get(editSessionOpenAtom)) set(libraryOpenEntityIdAtom, null);
   set(librarySelectionDrawerOpenAtom, true);
 }
 
@@ -275,7 +275,7 @@ export const toggleSelectionAtom = atom(null, (get, set, id: string) =>
     const next = new Set(get(librarySelectionAtom));
     // As in Finder, the gesture that starts a selection includes the card already
     // open in the preview (the anchor from its plain click).
-    const previewed = get(librarySelectedEntityIdAtom);
+    const previewed = get(libraryOpenEntityIdAtom);
     if (next.size === 0 && previewed && previewed === get(librarySelectionAnchorAtom) && previewed !== id)
       next.add(previewed);
     if (next.has(id)) next.delete(id);
@@ -800,7 +800,7 @@ function switchDataSource(set: Setter, source: DataSource) {
   set(libraryChainFiltersAtom, {});
   set(libraryDateFromAtom, "");
   set(libraryDateToAtom, "");
-  set(librarySelectedEntityIdAtom, null);
+  set(libraryOpenEntityIdAtom, null);
   set(librarySelectedClusterAtom, null);
   // A selection belongs to the collection it was made in.
   set(clearSelectionAtom);

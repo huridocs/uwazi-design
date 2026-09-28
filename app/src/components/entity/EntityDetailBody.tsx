@@ -3,7 +3,7 @@ import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import { X, ArrowRight } from "lucide-react";
 import { referencesAtom, referencesFor } from "../../atoms/references";
 import { activeFilterCountFor } from "../../atoms/filters";
-import { focusMetadataFieldAtom, libraryEditRequestAtom, librarySelectedEntityIdAtom } from "../../atoms/library";
+import { focusMetadataFieldAtom, libraryEditRequestAtom, libraryOpenEntityIdAtom } from "../../atoms/library";
 import { entityCorpusOf, getEntity, getEntityType } from "../../data/entities";
 import { languageAtom } from "../../atoms/language";
 import { commitDraftAtom, discardDraftAtom, draftEntityIdAtom, draftVersionAtom, saveEntityEditAtom, startDraftAtom } from "../../atoms/entityOverlay";
@@ -230,7 +230,7 @@ export function EntityDetailBody({
     const saved = result.titles[language]?.trim() || "Untitled";
     commitDraft({ id: entityId, result, language });
     const next = startDraft({ typeId, corpus, carry: result.fieldsByLang, only: pinned });
-    store.set(librarySelectedEntityIdAtom, next);
+    store.set(libraryOpenEntityIdAtom, next);
     notify(
       pinned.size
         ? `Saved “${saved}”. The next one is open, ${pinned.size} pinned ${pinned.size === 1 ? "value" : "values"} filled in.`
@@ -251,7 +251,7 @@ export function EntityDetailBody({
       ]),
     ) as Partial<Record<Language, MetadataField[]>>;
     store.set(guardNavigationAtom, () =>
-      store.set(librarySelectedEntityIdAtom, startDraft({ typeId, corpus: entityCorpusOf(entityId), carry })),
+      store.set(libraryOpenEntityIdAtom, startDraft({ typeId, corpus: entityCorpusOf(entityId), carry })),
     );
   };
 

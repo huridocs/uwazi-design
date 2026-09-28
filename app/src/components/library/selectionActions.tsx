@@ -4,7 +4,7 @@ import { FileDown, LayoutTemplate, Lock, PenLine, Share2, Trash2 } from "lucide-
 import {
   deselectIdsAtom,
   libraryEditRequestAtom,
-  librarySelectedEntityIdAtom,
+  libraryOpenEntityIdAtom,
   librarySelectionAtom,
   librarySelectionDialogAtom,
   openBulkEditAtom,
@@ -47,7 +47,7 @@ export function useSelectionActions({
   const selection = useAtomValue(librarySelectionAtom);
   const language = useAtomValue(languageAtom);
   const types = useAtomValue(libraryTypesAtom);
-  const setPreview = useSetAtom(librarySelectedEntityIdAtom);
+  const setPreview = useSetAtom(libraryOpenEntityIdAtom);
   const open = useSetAtom(librarySelectionDialogAtom);
   const n = selection.size;
 
@@ -108,7 +108,7 @@ export function SelectionDialogs({ corpus, notInView }: { corpus: Corpus; notInV
   const selection = useAtomValue(librarySelectionAtom);
   const types = useAtomValue(libraryTypesAtom);
   const deselect = useSetAtom(deselectIdsAtom);
-  const setPreview = useSetAtom(librarySelectedEntityIdAtom);
+  const setPreview = useSetAtom(libraryOpenEntityIdAtom);
   const n = selection.size;
   const close = () => setDialog(null);
 
@@ -127,7 +127,7 @@ export function SelectionDialogs({ corpus, notInView }: { corpus: Corpus; notInV
     const ref = store.set(deleteWithUndoAtom, { corpus: own, ids });
     deselect(ids);
     // A deleted entity left open in the preview would go on offering Edit.
-    const previewed = store.get(librarySelectedEntityIdAtom);
+    const previewed = store.get(libraryOpenEntityIdAtom);
     if (previewed && ids.includes(previewed)) setPreview(null);
     store.set(notificationsAtom, (prev) => [
       {

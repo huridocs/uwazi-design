@@ -6,7 +6,7 @@ import { breakpointAtom } from "../../atoms/viewport";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import {
   clearSelectionAtom,
-  librarySelectedEntityIdAtom,
+  libraryOpenEntityIdAtom,
   librarySelectionAtom,
   librarySelectionDrawerOpenAtom,
   selectIdsAtom,
@@ -47,7 +47,7 @@ export function LibrarySelectionBar({
   const clear = useSetAtom(clearSelectionAtom);
   const selectIds = useSetAtom(selectIdsAtom);
   const openDrawer = useSetAtom(librarySelectionDrawerOpenAtom);
-  const setPreview = useSetAtom(librarySelectedEntityIdAtom);
+  const setPreview = useSetAtom(libraryOpenEntityIdAtom);
   const [sheetOpen, setSheetOpen] = useState(false);
   // On a phone the bar's action buttons don't fit (they are `hidden sm:flex`),
   // and the selection drawer isn't rendered — so the bar there is the count,

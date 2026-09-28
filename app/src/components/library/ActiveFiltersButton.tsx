@@ -4,7 +4,7 @@ import { X, SlidersHorizontal } from "lucide-react";
 import { SectionLabel } from "../shared/SectionLabel";
 import {
   clearLibraryFiltersAtom,
-  librarySelectedEntityIdAtom,
+  libraryOpenEntityIdAtom,
   librarySelectedClusterAtom,
 } from "../../atoms/library";
 import { useActiveFilters } from "../../hooks/useActiveFilters";
@@ -27,7 +27,7 @@ export function ActiveFiltersButton({ className = "" }: { className?: string } =
   const ref = useRef<HTMLDivElement>(null);
 
   const clearAll = useSetAtom(clearLibraryFiltersAtom);
-  const setSelectedId = useSetAtom(librarySelectedEntityIdAtom);
+  const setSelectedId = useSetAtom(libraryOpenEntityIdAtom);
   const setSelectedCluster = useSetAtom(librarySelectedClusterAtom);
   const items = useActiveFilters();
   // The readout counts what the popover LISTS — facets plus the search. The
