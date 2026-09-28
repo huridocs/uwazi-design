@@ -71,7 +71,7 @@ export const libraryActiveSearchAtom = atom(
 /** Recent searches, newest first. Session storage, as with `appViewAtom`: a
  *  reload keeps the list, a new visit starts clean, and a shared prototype does
  *  not show the previous visitor's queries. Only settled queries are recorded
- *  (`recordSearchAtom`), so the log does not fill with keystroke prefixes. */
+ *  (`logSearchAtom`), so the log does not fill with keystroke prefixes. */
 const searchHistoryJSON = createJSONStorage<string[]>(() => sessionStorage);
 export const librarySearchHistoryAtom = atomWithStorage<string[]>(
   "uwazi:searchHistory",
@@ -86,7 +86,7 @@ export const SEARCH_HISTORY_CAP = 8;
 export const MIN_LOGGED_QUERY = 2;
 
 /** Record a search. Deduped case-insensitively (a re-run moves to the top) and capped. */
-export const recordSearchAtom = atom(null, (get, set, raw: string) => {
+export const logSearchAtom = atom(null, (get, set, raw: string) => {
   const q = raw.trim();
   if (q.length < MIN_LOGGED_QUERY) return;
   const rest = get(librarySearchHistoryAtom).filter(

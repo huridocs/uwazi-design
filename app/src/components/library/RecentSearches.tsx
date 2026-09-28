@@ -29,7 +29,7 @@ interface Props {
  *  toolbar clips an absolutely-positioned child, and two panels dropping out of
  *  the same box should drop the same way.
  *
- *  Entries are recorded on SETTLE, not per keystroke (see `recordSearchAtom`),
+ *  Entries are recorded on SETTLE, not per keystroke (see `logSearchAtom`),
  *  so this lists searches rather than typing. */
 export function RecentSearches({ anchorRef, open, onPick, onClose }: Props) {
   const history = useAtomValue(librarySearchHistoryAtom);

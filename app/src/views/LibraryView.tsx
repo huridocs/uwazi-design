@@ -70,7 +70,7 @@ import {
   libraryViewModeAtom,
   matchTypeFiltersAtom,
   rangeSelectionAtom,
-  recordSearchAtom,
+  logSearchAtom,
   requestMetadataFocusAtom,
   resultsCurrentPageAtom,
   setSelectionAnchorAtom,
@@ -226,7 +226,7 @@ export function LibraryView() {
   const searchPending = query !== committedQuery;
   const [searchDraft, setSearchDraft] = useAtom(librarySearchDraftAtom);
   const clearSearch = useSetAtom(clearLibrarySearchAtom);
-  const recordSearch = useSetAtom(recordSearchAtom);
+  const recordSearch = useSetAtom(logSearchAtom);
   const submitSearch = useSetAtom(submitLibrarySearchAtom);
   const searchBoxRef = useRef<HTMLDivElement>(null);
   const [searchFocused, setSearchFocused] = useState(false);
