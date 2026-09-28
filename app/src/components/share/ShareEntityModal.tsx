@@ -410,7 +410,7 @@ export function ShareEntityModal({ open, onClose, ids: idsProp, initialFocus = "
             type="button"
             aria-label={t("System", "Lookup help")}
             aria-expanded={showLookupHint}
-            className="inline-flex h-5 w-5 items-center justify-center rounded-full text-ink-tertiary transition-colors hover:bg-warm hover:text-ink-secondary cursor-pointer"
+            className="hit-area inline-flex h-5 w-5 items-center justify-center rounded-full text-ink-tertiary transition-colors hover:bg-warm hover:text-ink-secondary cursor-pointer"
             onClick={() => setShowLookupHint((openHint) => !openHint)}
           >
             <Info size={14} aria-hidden />

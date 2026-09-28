@@ -137,7 +137,7 @@ export function SearchTipsPopover({
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls={PANEL_ID}
-        className="shrink-0 inline-flex items-center gap-1 h-5 px-1.5 rounded text-meta font-medium
+        className="hit-area-y min-w-6 justify-center shrink-0 inline-flex items-center gap-1 h-5 px-1.5 rounded text-meta font-medium
           text-ink-tertiary bg-warm hover:bg-parchment hover:text-ink-secondary transition-colors
           cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20"
       >

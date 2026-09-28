@@ -900,7 +900,7 @@ export function LibraryView() {
               // itself is the chip in Active filters, or Clear all.
               onClick={() => setSearchDraft("")}
               aria-label="Clear search text"
-              className="shrink-0 p-0.5 rounded-full hover:bg-parchment text-ink-tertiary hover:text-ink cursor-pointer transition-colors"
+              className="hit-area shrink-0 p-0.5 rounded-full hover:bg-parchment text-ink-tertiary hover:text-ink cursor-pointer transition-colors"
             >
               <X size={12} />
             </button>

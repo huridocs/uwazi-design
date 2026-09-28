@@ -29,7 +29,7 @@ export function ListeningChip({ label, onStop }: { label: string; onStop: () => 
         onClick={onStop}
         title={`Stop filling ${label} — Escape does the same`}
         aria-label={`Stop filling ${label}`}
-        className="flex items-center justify-center w-4 h-4 rounded text-ink-muted
+        className="hit-area flex items-center justify-center w-4 h-4 rounded text-ink-muted
           hover:text-ink hover:bg-parchment transition-colors cursor-pointer
           focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
       >

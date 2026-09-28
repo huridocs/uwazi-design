@@ -76,7 +76,7 @@ export function SearchBar({ rightSlot, inlineSlot }: SearchBarProps = {}) {
             onClick={(e) => { e.stopPropagation(); setHintOpen((o) => !o); }}
             aria-label="Search tips"
             aria-expanded={hintOpen}
-            className="flex p-0.5 rounded-full text-ink-muted hover:text-ink transition-colors cursor-pointer"
+            className="hit-area flex p-0.5 rounded-full text-ink-muted hover:text-ink transition-colors cursor-pointer"
           >
             <HelpCircle size={13} />
           </button>

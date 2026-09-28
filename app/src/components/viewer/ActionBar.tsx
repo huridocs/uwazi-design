@@ -70,7 +70,7 @@ export function ActionBar({ numPages, onScrollToPage, leftSlot, rightSlot, showP
               onClick={matchNav.onPrev}
               disabled={matchNav.count === 0}
               aria-label="Previous match"
-              className="p-1 rounded-md text-ink-secondary hover:bg-parchment hover:text-ink
+              className="hit-area p-1 rounded-md text-ink-secondary hover:bg-parchment hover:text-ink
                 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent
                 transition-colors cursor-pointer"
             >
@@ -92,7 +92,7 @@ export function ActionBar({ numPages, onScrollToPage, leftSlot, rightSlot, showP
               onClick={matchNav.onNext}
               disabled={matchNav.count === 0}
               aria-label="Next match"
-              className="p-1 rounded-md text-ink-secondary hover:bg-parchment hover:text-ink
+              className="hit-area p-1 rounded-md text-ink-secondary hover:bg-parchment hover:text-ink
                 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent
                 transition-colors cursor-pointer"
             >
@@ -107,7 +107,7 @@ export function ActionBar({ numPages, onScrollToPage, leftSlot, rightSlot, showP
               data-part="page-prev"
               onClick={() => goTo(Math.max(1, currentPage - 1))}
               disabled={currentPage <= 1}
-              className="text-tab font-medium text-ink-secondary disabled:opacity-30 disabled:cursor-not-allowed hover:text-ink hover:underline transition-colors"
+              className="hit-area text-tab font-medium text-ink-secondary disabled:opacity-30 disabled:cursor-not-allowed hover:text-ink hover:underline transition-colors"
             >
               Previous
             </button>
@@ -119,7 +119,7 @@ export function ActionBar({ numPages, onScrollToPage, leftSlot, rightSlot, showP
               data-part="page-next"
               onClick={() => goTo(Math.min(numPages, currentPage + 1))}
               disabled={currentPage >= numPages}
-              className="text-tab font-medium text-ink-secondary disabled:opacity-30 disabled:cursor-not-allowed hover:text-ink hover:underline transition-colors"
+              className="hit-area text-tab font-medium text-ink-secondary disabled:opacity-30 disabled:cursor-not-allowed hover:text-ink hover:underline transition-colors"
             >
               Next
             </button>

@@ -99,7 +99,7 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
                 </div>
                 <button
                   onClick={(e) => { e.stopPropagation(); onView(entry.id); }}
-                  className="relative px-2.5 py-1 text-meta font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors shrink-0"
+                  className="hit-area relative px-2.5 py-1 text-meta font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors shrink-0"
                 >
                   View
                 </button>
