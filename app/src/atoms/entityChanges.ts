@@ -11,9 +11,9 @@ import {
   overlayRecord,
   type Corpus,
   type CorpusOverlay,
-  type EntityOverlay,
+  type ChangeLayer,
   type EntityRecord,
-} from "../data/entityOverlay";
+} from "../data/entityChanges";
 import {
   adapterFieldsOf,
   buildRecord,
@@ -25,7 +25,7 @@ import {
 import type { Language } from "./language";
 import type { MetadataField } from "../data/metadata";
 
-/** The session's changes to the library — see `data/entityOverlay.ts` for the
+/** The session's changes to the library — see `data/entityChanges.ts` for the
  *  shape and why it is kept apart from the corpora.
  *
  *  ONE write path: every setter below goes through `libraryEntityOverlayAtom`'s
@@ -36,11 +36,11 @@ import type { MetadataField } from "../data/metadata";
 // Seeded from the mirror, not EMPTY: a hot reload of this module recreates the
 // atom, and starting empty while the mirror kept the old value left getEntity
 // resolving entities the list no longer had (dev only).
-const overlayValueAtom = atom<EntityOverlay>(overlayMirror());
+const overlayValueAtom = atom<ChangeLayer>(overlayMirror());
 
 export const libraryEntityOverlayAtom = atom(
   (get) => get(overlayValueAtom),
-  (get, set, next: EntityOverlay | ((prev: EntityOverlay) => EntityOverlay)) => {
+  (get, set, next: ChangeLayer | ((prev: ChangeLayer) => ChangeLayer)) => {
     const value = typeof next === "function" ? next(get(overlayValueAtom)) : next;
     setOverlayMirror(value);
     set(overlayValueAtom, value);
@@ -277,10 +277,10 @@ export const applyShareAtom = atom(
 
 /** Change one corpus's overlay, leaving the others as they are. */
 function updateCorpus(
-  prev: EntityOverlay,
+  prev: ChangeLayer,
   corpus: Corpus,
   change: (o: CorpusOverlay) => CorpusOverlay,
-): EntityOverlay {
+): ChangeLayer {
   return { ...prev, [corpus]: change(prev[corpus]) };
 }
 

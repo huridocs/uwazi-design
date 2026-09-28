@@ -1,7 +1,7 @@
 import type { Language } from "../atoms/language";
 import type { Entity } from "../data/entities";
 import { getEntityProfile } from "../data/entityProfiles";
-import type { Corpus, EntityRecord } from "../data/entityOverlay";
+import type { Corpus, EntityRecord } from "../data/entityChanges";
 import { chosenLabels, type AnyMetadataField, type MetadataField } from "../data/metadata";
 import { templateFields } from "./createEntity";
 

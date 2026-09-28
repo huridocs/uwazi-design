@@ -14,7 +14,7 @@ import { t } from "../../utils/i18n";
 import { activeFilterCountAtom } from "../../atoms/filters";
 import { docSearchQueryAtom } from "../../atoms/references";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
-import { saveEntityEditAtom } from "../../atoms/entityOverlay";
+import { saveEntityEditAtom } from "../../atoms/entityChanges";
 import { languageAtom } from "../../atoms/language";
 import { MetadataEditBody } from "../../views/MetadataView";
 

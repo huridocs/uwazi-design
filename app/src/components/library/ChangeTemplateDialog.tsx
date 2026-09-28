@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { AlertTriangle } from "lucide-react";
-import { applyBulkEditAtom } from "../../atoms/entityOverlay";
+import { applyBulkEditAtom } from "../../atoms/entityChanges";
 import { languageAtom } from "../../atoms/language";
 import { notificationsAtom } from "../../atoms/notifications";
 import { getEntity, type Entity, type EntityType } from "../../data/entities";
-import { isOverlayDeleted, type Corpus } from "../../data/entityOverlay";
+import { isOverlayDeleted, type Corpus } from "../../data/entityChanges";
 import { planTemplateChange, templateChangeRecords, type TemplateChangePlan } from "../../utils/changeTemplate";
 import { BULK_TASK_THRESHOLD, runBulkApply } from "../../utils/libraryTasks";
 import { typeLabelColor } from "../../utils/typeColor";

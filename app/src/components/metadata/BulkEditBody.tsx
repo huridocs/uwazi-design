@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { languageAtom, languageName, type Language } from "../../atoms/language";
-import { applyBulkEditAtom } from "../../atoms/entityOverlay";
+import { applyBulkEditAtom } from "../../atoms/entityChanges";
 import { notificationsAtom } from "../../atoms/notifications";
 import {
   addThesaurusValueAtom,
@@ -15,7 +15,7 @@ import {
   thesaurusBindingsAtom,
 } from "../../atoms/thesauri";
 import { entityCorpusOf, getEntity, type Entity } from "../../data/entities";
-import { isOverlayDeleted } from "../../data/entityOverlay";
+import { isOverlayDeleted } from "../../data/entityChanges";
 import type { ThesaurusValue } from "../../data/settings";
 import { useRegisterDirtyForm } from "../../hooks/useDirtyGuard";
 import {

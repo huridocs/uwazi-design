@@ -3,7 +3,7 @@ import type { CardField, Entity } from "../data/entities";
 import { chosenLabels, type AnyMetadataField, type MetadataField } from "../data/metadata";
 
 /** Writing an edited record back — the pieces a single edit's Save and the
- *  bulk form's Apply share. Pure: the atoms in `atoms/entityOverlay.ts` call
+ *  bulk form's Apply share. Pure: the atoms in `atoms/entityChanges.ts` call
  *  these and write the result through the overlay. */
 
 const LANGS: Language[] = ["EN", "ES", "FR", "AR"];

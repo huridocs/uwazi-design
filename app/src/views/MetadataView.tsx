@@ -50,11 +50,11 @@ import {
   thesauriAtom,
   thesaurusBindingsAtom,
 } from "../atoms/thesauri";
-import type { Corpus } from "../data/entityOverlay";
+import type { Corpus } from "../data/entityChanges";
 import type { ThesaurusValue } from "../data/settings";
 import { focusedEntityIdAtom } from "../atoms/focusedEntity";
 import { breakpointAtom } from "../atoms/viewport";
-import { draftEntityIdAtom, draftPinsAtom, draftTitlesAtom, pinKey, recentTemplatesAtom, retypeDraftAtom, saveEntityEditAtom } from "../atoms/entityOverlay";
+import { draftEntityIdAtom, draftPinsAtom, draftTitlesAtom, pinKey, recentTemplatesAtom, retypeDraftAtom, saveEntityEditAtom } from "../atoms/entityChanges";
 import { entityCorpusOf, getEntity, getEntityType, type Entity } from "../data/entities";
 import { corpusTypes } from "../atoms/dataSource";
 import { entityTypesAtom } from "../atoms/entities";

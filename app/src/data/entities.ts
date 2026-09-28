@@ -19,7 +19,7 @@ import { travesiaEntityById } from "./travesia/adapt";
 import { artworks, ARTWORK_IMAGE_BASE } from "./artworks/artworks";
 import { asset } from "../utils/asset";
 import { docPageAssets, DOC_PAGE_BASE, type DocPageAsset } from "./docPages";
-import { overlayCreated, overlayPatch, patchedEntity } from "./entityOverlay";
+import { overlayCreated, overlayPatch, patchedEntity } from "./entityChanges";
 import { V4_ENTITIES, V4_ENTITY_IDS, V4_HEARING_TYPE } from "./sampleSeedV4";
 
 /** One property as a CARD shows it: the key that names it to the record, the
@@ -471,7 +471,7 @@ function cejilEntityById(): Map<string, Entity> {
 }
 
 export function getEntity(id: string): Entity | undefined {
-  // The overlay first (`data/entityOverlay.ts`): a created entity exists only
+  // The change layer first (`data/entityChanges.ts`): a created entity exists only
   // there, and a seed entity may carry a patch — resolved to the same object
   // for as long as neither changes.
   const created = overlayCreated(id);

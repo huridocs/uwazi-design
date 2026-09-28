@@ -48,10 +48,10 @@ export interface CorpusOverlay {
   deleted: string[];
 }
 
-export type EntityOverlay = Record<Corpus, CorpusOverlay>;
+export type ChangeLayer = Record<Corpus, CorpusOverlay>;
 
 const EMPTY_CORPUS: CorpusOverlay = { created: [], patched: {}, records: {}, deleted: [] };
-export const EMPTY_OVERLAY: EntityOverlay = {
+export const EMPTY_OVERLAY: ChangeLayer = {
   mock: EMPTY_CORPUS,
   cejil: EMPTY_CORPUS,
   artworks: EMPTY_CORPUS,
@@ -75,7 +75,7 @@ export interface DraftEntry {
   corpus: Corpus;
 }
 
-let mirror: EntityOverlay = EMPTY_OVERLAY;
+let mirror: ChangeLayer = EMPTY_OVERLAY;
 let draft: DraftEntry | null = null;
 /** id → where it lives, rebuilt on every write: the resolvers are called per
  *  entity per render, and a scan of three corpora each time is not free. */
@@ -84,7 +84,7 @@ let patchIndex = new Map<string, Partial<Entity>>();
 let recordIndex = new Map<string, EntityRecord>();
 let deletedIndex = new Set<string>();
 
-export function setOverlayMirror(next: EntityOverlay): void {
+export function setOverlayMirror(next: ChangeLayer): void {
   mirror = next;
   createdIndex = new Map();
   patchIndex = new Map();
@@ -103,7 +103,7 @@ export function setDraftMirror(next: DraftEntry | null): void {
   draft = next;
 }
 
-export const overlayMirror = (): EntityOverlay => mirror;
+export const overlayMirror = (): ChangeLayer => mirror;
 
 /** A created entity (or the open draft), with its patch applied. */
 export function overlayCreated(id: string): { entity: Entity; corpus: Corpus } | undefined {

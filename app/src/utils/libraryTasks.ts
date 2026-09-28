@@ -1,9 +1,9 @@
 import type { useStore } from "jotai";
 import { activitiesAtom, type Activity } from "../atoms/notifications";
-import { addUploadedDocumentsAtom, recordRestoreUndoAtom, undoOpAtom, writeBulkChunkAtom } from "../atoms/entityOverlay";
+import { addUploadedDocumentsAtom, recordRestoreUndoAtom, undoOpAtom, writeBulkChunkAtom } from "../atoms/entityChanges";
 import { notificationsAtom } from "../atoms/notifications";
 import type { BulkPlan } from "./bulkEdit";
-import type { Corpus } from "../data/entityOverlay";
+import type { Corpus } from "../data/entityChanges";
 import type { Entity } from "../data/entities";
 import type { Language } from "../atoms/language";
 import { downloadCsv, exportEntitiesCsv } from "./exportCsv";

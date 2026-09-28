@@ -3,7 +3,7 @@ import type { Entity } from "../data/entities";
 import { blankTypeFields, getEntityProfile } from "../data/entityProfiles";
 import type { MetadataField } from "../data/metadata";
 import type { DocumentGroup, FileEntry } from "../data/files";
-import type { Corpus, EntityRecord } from "../data/entityOverlay";
+import type { Corpus, EntityRecord } from "../data/entityChanges";
 import { cejilBlankFields, cejilDefaultTemplateId } from "../data/cejil/profile";
 import { artworkLibraryEntities } from "../data/artworks/adapt";
 import { ARTWORK_TYPE_ID } from "../data/artworks/typesAdapter";

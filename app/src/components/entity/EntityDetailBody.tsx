@@ -6,7 +6,7 @@ import { activeFilterCountFor } from "../../atoms/filters";
 import { focusMetadataFieldAtom, libraryEditRequestAtom, libraryOpenEntityIdAtom } from "../../atoms/library";
 import { entityCorpusOf, getEntity, getEntityType } from "../../data/entities";
 import { languageAtom } from "../../atoms/language";
-import { commitDraftAtom, discardDraftAtom, draftEntityIdAtom, draftVersionAtom, saveEntityEditAtom, startDraftAtom } from "../../atoms/entityOverlay";
+import { commitDraftAtom, discardDraftAtom, draftEntityIdAtom, draftVersionAtom, saveEntityEditAtom, startDraftAtom } from "../../atoms/entityChanges";
 import { useNotify } from "../../hooks/useNotify";
 import type { EditResult } from "../../utils/createEntity";
 import type { MetadataField } from "../../data/metadata";

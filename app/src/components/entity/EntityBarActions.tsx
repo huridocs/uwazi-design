@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSetAtom, useStore } from "jotai";
 import { CopyPlus, Lock, Share2, Trash2 } from "lucide-react";
-import { deleteWithUndoAtom } from "../../atoms/entityOverlay";
+import { deleteWithUndoAtom } from "../../atoms/entityChanges";
 import { deselectIdsAtom, whenBulkCleanAtom } from "../../atoms/library";
 import { notificationsAtom } from "../../atoms/notifications";
 import { entityCorpusOf, getEntity } from "../../data/entities";

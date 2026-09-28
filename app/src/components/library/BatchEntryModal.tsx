@@ -1,12 +1,12 @@
 import { useId, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { ArrowLeft, CopyPlus, Plus, Undo2, X } from "lucide-react";
-import type { Corpus } from "../../data/entityOverlay";
+import type { Corpus } from "../../data/entityChanges";
 import type { EntityType } from "../../data/entities";
 import type { MetadataField } from "../../data/metadata";
 import type { ThesaurusValue } from "../../data/settings";
 import { LANGUAGES, type Language } from "../../atoms/language";
-import { createBatchAtom } from "../../atoms/entityOverlay";
+import { createBatchAtom } from "../../atoms/entityChanges";
 import {
   addThesaurusValueAtom,
   bindingKey,

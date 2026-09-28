@@ -8,7 +8,7 @@ import {
   entityAccessAtom,
   type AccessLevel,
   type MemberChange,
-} from "../../atoms/entityOverlay";
+} from "../../atoms/entityChanges";
 import { notificationsAtom } from "../../atoms/notifications";
 import { entityCorpusOf, getEntity, getEntityType } from "../../data/entities";
 import { seedGroups, seedUsers } from "../../data/settings";

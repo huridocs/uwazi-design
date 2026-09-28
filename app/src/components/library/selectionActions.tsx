@@ -10,11 +10,11 @@ import {
   openBulkEditAtom,
   whenBulkCleanAtom,
 } from "../../atoms/library";
-import { deleteWithUndoAtom } from "../../atoms/entityOverlay";
+import { deleteWithUndoAtom } from "../../atoms/entityChanges";
 import { notificationsAtom } from "../../atoms/notifications";
 import { languageAtom } from "../../atoms/language";
 import { libraryTypesAtom } from "../../atoms/dataSource";
-import type { Corpus } from "../../data/entityOverlay";
+import type { Corpus } from "../../data/entityChanges";
 import { entityCorpusOf, getEntity, type Entity } from "../../data/entities";
 import { runCsvExport } from "../../utils/libraryTasks";
 import { ConfirmDialog } from "../shared/ConfirmDialog";

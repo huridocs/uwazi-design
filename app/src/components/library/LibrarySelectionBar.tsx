@@ -11,7 +11,7 @@ import {
   librarySelectionDrawerOpenAtom,
   selectIdsAtom,
 } from "../../atoms/library";
-import type { Corpus } from "../../data/entityOverlay";
+import type { Corpus } from "../../data/entityChanges";
 import { SelectionDialogs, useSelectionActions, type SelectionAction } from "./selectionActions";
 import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../shared/warmButton";
 import { BarDivider } from "../shared/BarDivider";

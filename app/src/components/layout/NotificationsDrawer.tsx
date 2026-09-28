@@ -23,7 +23,7 @@ import {
   type NotificationKind,
   type NotificationAction,
 } from "../../atoms/notifications";
-import { undoAtom, undoConflictsAtom, undoOpAtom } from "../../atoms/entityOverlay";
+import { undoAtom, undoConflictsAtom, undoOpAtom } from "../../atoms/entityChanges";
 import { UwaziLoader } from "../shared/UwaziLoader";
 import { Hint } from "../shared/Hint";
 import { SectionLabel } from "../shared/SectionLabel";

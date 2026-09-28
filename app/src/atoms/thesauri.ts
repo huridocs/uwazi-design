@@ -2,7 +2,7 @@ import { atom } from "jotai";
 import { atomFamily } from "jotai/utils";
 import { seedThesauri, seedThesaurusValues, type SettingsThesaurus, type ThesaurusValue } from "../data/settings";
 import { cejilSettingsThesauri, cejilThesaurusValues } from "../data/cejil/settingsAdapt";
-import type { Corpus } from "../data/entityOverlay";
+import type { Corpus } from "../data/entityChanges";
 import { dataSourceAtom, travesiaReadyAtom } from "./dataSource";
 import { travesiaSettingsThesauri } from "../data/travesia/load";
 import { cejilValueLabels } from "../data/cejil/profile";
@@ -13,7 +13,7 @@ import type { Language } from "./language";
  *  `ThesauriPage` held its list in local state, so a value added anywhere else
  *  could not reach Settings, and Settings' own saves reached nothing.
  *
- *  Kept the way the entity overlay is (`atoms/entityOverlay.ts`): the seeds
+ *  Kept the way the change layer is (`atoms/entityChanges.ts`): the seeds
  *  are static imports, so the session's CHANGES live here, per corpus, and the
  *  list every reader sees is the seed with them applied.
  *   - `created` — thesauri that did not exist (Settings' Add, the form's

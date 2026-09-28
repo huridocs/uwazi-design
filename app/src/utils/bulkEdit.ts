@@ -2,7 +2,7 @@ import type { Language } from "../atoms/language";
 import { fieldKeys, isPseudoKey, labelForKey } from "../atoms/thesauri";
 import { getEntity, type Entity } from "../data/entities";
 import { getEntityProfile } from "../data/entityProfiles";
-import type { Corpus, EntityRecord } from "../data/entityOverlay";
+import type { Corpus, EntityRecord } from "../data/entityChanges";
 import {
   chosenLabels,
   type AnyMetadataField,

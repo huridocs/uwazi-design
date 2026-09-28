@@ -8,8 +8,8 @@ import { artworkEntityTypes } from "../data/artworks/typesAdapter";
 import { artworkLibraryEntities } from "../data/artworks/adapt";
 import { travesiaEntityTypes } from "../data/travesia/typesAdapter";
 import { travesiaLibraryEntities } from "../data/travesia/adapt";
-import { libraryEntityOverlayAtom } from "./entityOverlay";
-import { applyOverlay, overlayMirror, type Corpus, type CorpusOverlay } from "../data/entityOverlay";
+import { libraryEntityOverlayAtom } from "./entityChanges";
+import { applyOverlay, overlayMirror, type Corpus, type CorpusOverlay } from "../data/entityChanges";
 
 export type DataSource = "mock" | "cejil" | "artworks" | "travesia";
 
@@ -40,7 +40,7 @@ const corpusOverlayAtom = atomFamily((corpus: Corpus) =>
  *  this is [] until `cejilReadyAtom` flips (the Library shows a loading state). */
 export const libraryEntitiesAtom = atom<Entity[]>((get) => {
   const source = get(dataSourceAtom);
-  // The session's changes over the corpus (`data/entityOverlay.ts`): created
+  // The session's changes over the corpus (`data/entityChanges.ts`): created
   // entities first, deleted ones out, patched ones as new objects so every
   // per-entity cache recomputes. With none, the corpus's own array comes back
   // as is — its identity keys caches too.

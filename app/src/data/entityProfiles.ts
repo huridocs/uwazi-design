@@ -13,7 +13,7 @@ import { isCejilEntity, buildCejilProfile } from "./cejil/profile";
 import { isArtworkEntity, buildArtworkProfile } from "./artworks/profile";
 import { isTravesiaEntity, buildTravesiaProfile } from "./travesia/profile";
 import type { EntityImage } from "./entities";
-import { overlayCreated, overlayRecord, type EntityRecord } from "./entityOverlay";
+import { overlayCreated, overlayRecord, type EntityRecord } from "./entityChanges";
 import { v4RelationshipFields } from "./sampleSeedV4Fields";
 import { V4_DATES } from "./sampleSeedV4";
 
