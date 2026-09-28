@@ -417,7 +417,7 @@ a split pane.
   `role="dialog"` + `aria-modal="true"` + `aria-label={title}`.
 
 The real `UI/Drawer` is a side panel already; the delta is confirming it carries
-*all three* of these, not just the slide animation. `ReferencePanel` /
+*all three* of these, not just the slide animation. `EntityDrawer` /
 `RelationshipsDrawerSection` compose this same shell across more files
 (inventory) — once the primitive is right, those follow.
 

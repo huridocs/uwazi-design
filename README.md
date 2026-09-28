@@ -40,7 +40,7 @@ All components are bound to variables — switching a frame to Dark mode updates
 │   │   │   │                      # ToolsActionBar,
 │   │   │   │                      # MobileBottomSheet, MobileActionMenu, MobileNavDrawer
 │   │   │   ├── viewer/            # DocumentViewer, PageHighlights, FloatingMenu, ActionBar, RefMinimap, HoverExpand
-│   │   │   ├── relationships/     # The merged Relationships surface: ReferencePanel, RelationshipsPanelBody,
+│   │   │   ├── relationships/     # The merged Relationships surface: EntityDrawer, RelationshipsPanelBody,
 │   │   │   │                      # RelationshipRow + rows/ (AggregateRow, HubRow, ReferenceRow, RowCheckbox),
 │   │   │   │                      # RelationshipGroupedCard, RelationshipsTreeView/TreeBranch,
 │   │   │   │                      # RelationshipsGraphView, RelationshipsActionBar, RelationshipsDrawerSection,

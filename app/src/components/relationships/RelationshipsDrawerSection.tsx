@@ -8,7 +8,7 @@ import {
 
 /** Drawer-style connections section: toolbar + body + scoped filters drawer.
  *  Used wherever the unified Relationships panel needs to render inside a
- *  drawer (ReferencePanel sub-tab, MetadataView's relationships tab, the entity
+ *  drawer (EntityDrawer sub-tab, MetadataView's relationships tab, the entity
  *  preview panel's Relationships tab). `hideActionBar` drops the bottom
  *  RelationshipsActionBar for hosts that supply their own footer (the entity
  *  preview panel's Close / open-entity bar).

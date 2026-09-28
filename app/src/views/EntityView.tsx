@@ -12,7 +12,7 @@ import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { MainTabs } from "../components/layout/MainTabs";
 import { DocMeta } from "../components/layout/DocMeta";
 import { DocumentViewer } from "../components/viewer/DocumentViewer";
-import { ReferencePanel } from "../components/relationships/ReferencePanel";
+import { EntityDrawer } from "../components/relationships/EntityDrawer";
 import { MetadataDrawerContent } from "../components/relationships/MetadataDrawerContent";
 import { ToCPanel } from "../components/relationships/ToCPanel";
 import { CreateRelationshipModal } from "../components/relationships/CreateRelationshipModal";
@@ -116,7 +116,7 @@ export function EntityView() {
       <AdaptiveSplitView
         left={renderLeft()}
         mobileLeft={(menuTrigger) => renderLeft(menuTrigger)}
-        right={<ReferencePanel />}
+        right={<EntityDrawer />}
         defaultRightWidth={560}
         minRightWidth={DRAWER_MIN_WIDTH}
         mobileSections={[
@@ -124,7 +124,7 @@ export function EntityView() {
             id: "relationships",
             label: t("System", "Relationships"),
             count: relCount,
-            content: <ReferencePanel />,
+            content: <EntityDrawer />,
           },
           {
             id: "metadata",

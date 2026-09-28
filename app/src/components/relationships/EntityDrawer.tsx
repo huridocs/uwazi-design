@@ -26,7 +26,7 @@ const baseDrawerTabs = [
   { id: "search", label: t("System", "Search") },
 ];
 
-export function ReferencePanel() {
+export function EntityDrawer() {
   const [references] = useAtom(scopedReferencesAtom);
   const files = useAtomValue(filesAtom);
   const [activeDrawerTab, setActiveDrawerTab] = useAtom(activeDrawerTabAtom);
@@ -56,7 +56,7 @@ export function ReferencePanel() {
     // The gutter host (see `gutter-host`): the tabs and every tab body below sit
     // in this padding and carry none of their own.
     <div
-      data-component="ReferencePanel"
+      data-component="EntityDrawer"
       data-gutter-host
       className="gutter-host flex flex-col h-full relative overflow-clip"
     >

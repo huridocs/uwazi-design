@@ -222,7 +222,7 @@ repo; update them when tokens or style rules change.
 ### Entity preview
 - One body, `components/entity/EntityDetailBody.tsx`, in two hosts: `EntityDrawerPreview` (Library
   drawer) and `EntityPreviewSlideOver` (slide-over, mounted by RelationshipsView, MetadataView,
-  ReferencePanel and the drawer preview while editing). The host owns only its chrome.
+  EntityDrawer and the drawer preview while editing). The host owns only its chrome.
 - The body wraps its content in `EntityScopeProvider`. The drawer preview may change the focused
   entity; the slide-over may not, because the view beneath it must keep its entity.
 - The slide-over shows Metadata and Relationships only. Document, Files and Edit read the focused

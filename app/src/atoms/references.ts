@@ -41,7 +41,7 @@ function fromPerspective(r: Reference, id: string): Reference {
 
 /**
  * The focused entity's slice of the corpus. Every entity-scoped surface
- * (Relationships panel/tree/graph, ReferencePanel, the document highlights, the
+ * (Relationships panel/tree/graph, EntityDrawer, the document highlights, the
  * Metadata drawer count) reads THIS so navigating into an entity shows its own
  * connections — not e3's whole corpus. Every entity, the main one
  * (`MAIN_ENTITY_ID`) included, sees its refs re-expressed from its own
