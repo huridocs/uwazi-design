@@ -184,6 +184,7 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
       rects: pageRelRects,
       screenX: rect.left + rect.width / 2,
       screenY: rect.top,
+      screenBottom: rect.bottom,
     });
   }, [currentPage, setSelection]);
 
@@ -535,6 +536,7 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
         <FloatingMenu
           x={selection.screenX}
           y={selection.screenY}
+          yBelow={selection.screenBottom}
           text={selection.text}
         />
       )}

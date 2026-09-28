@@ -19,6 +19,8 @@ export interface TextSelectionState {
   /** Screen coordinates for floating menu positioning */
   screenX: number;
   screenY: number;
+  /** The selection's bottom edge on screen; the menu sits below it on touch. */
+  screenBottom?: number;
 }
 
 export const textSelectionAtom = atom<TextSelectionState | null>(null);
