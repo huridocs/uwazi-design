@@ -186,3 +186,17 @@ export const Empty: Story = {
     </div>
   ),
 };
+
+/** Rows that carry an END (`tEnd`): terms of office. The row still sits at its
+ *  start; a thin bar runs down the axis to where the term ends, under the marks.
+ *  Rows without an end are unchanged. */
+export const Spans: Story = {
+  render: () =>
+    frame([
+      { ...row("1986-01-01", "Judge A · term", "Mandate", CARMINE), tEnd: Date.parse("1997-12-31") },
+      row("1988-07-29", "Judgment signed by A", "Judgment", OLIVE),
+      { ...row("1995-01-01", "Judge B · term", "Mandate", CARBON), tEnd: Date.parse("2003-12-31") },
+      row("1997-11-18", "Report adopted", "Report", OLIVE),
+      row("2000-11-25", "Judgment signed by B", "Judgment", OLIVE),
+    ]),
+};
