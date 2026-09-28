@@ -20,7 +20,7 @@ import { EntityIdentity } from "../shared/EntityIdentity";
 import { MainTabs } from "../layout/MainTabs";
 import { DocumentViewer } from "../viewer/DocumentViewer";
 import { RelationshipsDrawerSection } from "../relationships/RelationshipsDrawerSection";
-import { FiltersHostProvider } from "../shared/FiltersDrawer";
+import { FiltersHostProvider } from "../shared/FiltersSlideOver";
 import { ModalHostProvider } from "../shared/Modal";
 import { RelationshipsCollapseControls } from "../relationships/CollapseControls";
 import { DrawerFilesBody } from "../files/DrawerFilesBody";

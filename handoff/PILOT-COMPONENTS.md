@@ -25,7 +25,7 @@ blast radius is still small:
 | **Table** | `shared/DataTable.tsx` | `UI/DataTable/DataTable.tsx` | **M** | Data density + the clickable-row a11y pattern |
 | **Tabs** | `layout/{DrawerTabs,MainTabs}.tsx` | `UI/Tabs/Tabs.tsx` | **M** | Segmented navigation + state-by-bg |
 | **Beacon** | `layout/Beacon.tsx` | `UI/Notifications/ThemedBeacon.tsx` | **S** | Motion + live regions (the convergent feature) |
-| **Sidepanel** | `shared/FiltersDrawer.tsx` | `UI/FiltersDrawer.tsx` (on `UI/Drawer.tsx`) | **S→M** | Overlay contract: focus trap, `inert`, RTL |
+| **Sidepanel** | `shared/FiltersSlideOver.tsx` | `UI/FiltersDrawer.tsx` (on `UI/Drawer.tsx`) | **S→M** | Overlay contract: focus trap, `inert`, RTL |
 
 What the set is engineered to exercise:
 
@@ -371,9 +371,9 @@ reduced-motion states if they're not already covered. Keep story names generic.
 
 ---
 
-## 6 · Sidepanel — `FiltersDrawer` → `UI/FiltersDrawer` (on `UI/Drawer`)
+## 6 · Sidepanel — `FiltersSlideOver` → `UI/FiltersDrawer` (on `UI/Drawer`)
 
-**Rating S→M.** `FiltersDrawer` itself is **S** ("same header/close/footer shape,
+**Rating S→M.** `FiltersSlideOver` itself is **S** ("same header/close/footer shape,
 built on the shared Drawer"), but it's the pilot's job to prove the **overlay
 contract** the whole app's drawers depend on — so treat the underlying `Drawer`
 primitive as the real target and hold it to the full set of §1.2/§1.3 rules.
@@ -381,7 +381,7 @@ primitive as the real target and hold it to the full set of §1.2/§1.3 rules.
 **API**
 
 ```ts
-FiltersDrawer({ open; onClose; title?; children; footer?; width? })
+FiltersSlideOver({ open; onClose; title?; children; footer?; width? })
 ```
 
 Scoped to its `relative` parent (`absolute inset-0`), **not** `fixed` — the drawer
@@ -427,7 +427,7 @@ skips every drawer control), Escape closes and focus returns to the trigger,
 body with a sticky footer, `width` at `min(100%, …)` on a narrow pane (full-width,
 no overflow) }. The closed-state focus check is the one people skip — do it.
 
-**Ship** — the inventory notes `FiltersDrawer` has only a partial story (via a
+**Ship** — the inventory notes `FiltersSlideOver` has only a partial story (via a
 Relationships wrapper). A direct `Drawer`/`FiltersDrawer` story — `Open`,
 `WithFooter`, `RTL`, `Scrolling` — is part of this deliverable.
 

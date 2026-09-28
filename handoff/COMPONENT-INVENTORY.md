@@ -74,7 +74,7 @@ that don't exist as reusable components anywhere in `production` yet.
 | FacetSection.tsx | `UI/FacetSection.tsx` | Yes — `Components/UI/CollapsibleSectionHeader.stories.tsx` | None | M | Repo version lacks search box, AND/OR mode, show-more/clear — reduced feature set |
 | FadeTruncate.tsx | `UI/FadeTruncate.tsx` | Yes — `Components/UI/FadeTruncate.stories.tsx` | None | S | Near drop-in; repo adds `quoted` prop, uses line-clamp classes instead of measured px height |
 | FiltersButton.tsx | `UI/FilterDrawerButton.tsx` | Yes — `Components/UI/FilterDrawerButton.stories.tsx` | None | S | Same active/count-badge pattern; repo version drops the `size`/`label` props |
-| FiltersDrawer.tsx | `UI/FiltersDrawer.tsx` | Partial — via `Relationships.stories.tsx` wrapper, no direct story | None | S | Same header/close/footer shape; built on shared Drawer instead of custom RTL logic |
+| FiltersSlideOver.tsx | `UI/FiltersDrawer.tsx` | Partial — via `Relationships.stories.tsx` wrapper, no direct story | None | S | Same header/close/footer shape; built on shared Drawer instead of custom RTL logic |
 | ListCardRow.tsx | `UI/ListCardRow.tsx` | No | None | M | Repo row IS the interactive element (`role=button` on div); prototype's invisible-stretched-button a11y pattern is missing |
 | ListInfoRow.tsx | `Routes/Entity/.../RelationshipsListInfoRow.tsx` | Yes — `EntityViewer/Relationships.stories.tsx` | None | M | Repo version is relationships-specific (expand/collapse-all) not a generic count+chips row |
 | PageTag.tsx | `Routes/Entity/.../rows/PageTag.tsx` | Yes — `EntityViewer/Relationships.stories.tsx` | None | S | Near-identical button; reskin only |

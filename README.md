@@ -55,7 +55,7 @@ All components are bound to variables — switching a frame to Dark mode updates
 │   │   │   │                      # RelationshipFieldCard/Editor, InheritedValue (InheritedValueChip, ProvenanceTrail)
 │   │   │   ├── import-csv/        # ImportCSVLayout, ImportListView, ImportDetailView, ImportTable,
 │   │   │   │                      # EntitiesTable, IssuesTable, ImportEmptyState, NewImportModal
-│   │   │   ├── shared/            # List/filter primitives (ListInfoRow, ListCardRow, FiltersButton, FiltersDrawer,
+│   │   │   ├── shared/            # List/filter primitives (ListInfoRow, ListCardRow, FiltersButton, FiltersSlideOver,
 │   │   │   │                      # FacetSection, ActiveFilterChip, Checkbox, SelectControls, FadeTruncate);
 │   │   │   │                      # elements (EntityPill, PageTag, CountBadge, ViewButton); feedback (ConfirmDialog,
 │   │   │   │                      # UwaziLoader, StatusBadge, ProgressBar, StatsCard, Stepper, AlertBanner)
@@ -160,7 +160,7 @@ The in-app design system (`ComponentCatalog`, opened via the logo) is organised 
 - **Elements** — EntityPill, PageTag, CountBadge, Buttons
 - **Entity View — Layout / Document / References / Metadata / Files / Drawer / Relationships**
 - **Import CSV — Layout / Components**
-- **Filters & Lists** — the reusable surface primitives: FiltersButton, FiltersDrawer, FacetSection, ActiveFilterChip, ViewModeControls, CollapseControls, ListInfoRow, ListCardRow, Checkbox, ZoomControl, FadeTruncate, SelectControls
+- **Filters & Lists** — the reusable surface primitives: FiltersButton, FiltersSlideOver, FacetSection, ActiveFilterChip, ViewModeControls, CollapseControls, ListInfoRow, ListCardRow, Checkbox, ZoomControl, FadeTruncate, SelectControls
 - **Shared** — ConfirmDialog, Toast, UwaziLoader
 
 The **References** and **Relationships** groups both showcase `RelationshipRow` (reference / aggregate / hub variants) and `RelationshipGroupedCard` — the two projections of the same record.

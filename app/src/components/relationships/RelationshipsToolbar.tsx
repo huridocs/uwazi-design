@@ -8,7 +8,7 @@ import { ActiveFilterChips } from "./ActiveFilterChips";
 import { ViewControls } from "./ViewControls";
 import { RelationshipsFilterDrawer } from "./RelationshipsFilterDrawer";
 import { FiltersButton } from "../shared/FiltersButton";
-import { FiltersDrawer } from "../shared/FiltersDrawer";
+import { FiltersSlideOver } from "../shared/FiltersSlideOver";
 import { ConfirmDialog } from "../shared/ConfirmDialog";
 
 /** The single-row toolbar over the connections panel: search carrying the
@@ -54,7 +54,7 @@ export function RelationshipsFiltersPanel({ width }: { width?: number }) {
   const clearAllFilters = useClearRelFilters();
 
   return (
-    <FiltersDrawer
+    <FiltersSlideOver
       open={filtersOpen}
       onClose={() => setFiltersOpen(false)}
       width={width}
@@ -72,7 +72,7 @@ export function RelationshipsFiltersPanel({ width }: { width?: number }) {
       }
     >
       <RelationshipsFilterDrawer />
-    </FiltersDrawer>
+    </FiltersSlideOver>
   );
 }
 

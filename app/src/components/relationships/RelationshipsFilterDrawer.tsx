@@ -32,7 +32,7 @@ import { t } from "../../utils/i18n";
 
 /**
  * Body-only facet sections for Relationships. Designed to be wrapped by
- * FiltersDrawer chrome; it no longer renders a source summary or footer.
+ * FiltersSlideOver chrome; it no longer renders a source summary or footer.
  *
  * Beyond relation type + target entity type, two scale-axis facets slice a
  * heavily-connected entity's connections by the *target* entity's country and

@@ -14,7 +14,7 @@ import { useFocusTrap } from "../../hooks/useFocusTrap";
  *  It portals to `document.body` on purpose: the record it opens from is inside
  *  an `overflow-hidden` pane (the drawer, the preview overlay), and an
  *  `absolute inset-0` overlay there would be clipped to the pane rather than
- *  covering the screen — the same reason `FiltersDrawer` grew a host portal.
+ *  covering the screen — the same reason `FiltersSlideOver` grew a host portal.
  *
  *  The image is `object-contain` inside the viewport, never scaled UP: a 607px
  *  painting blown to 1600 is a blurrier picture than the one you clicked, and

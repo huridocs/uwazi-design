@@ -7,7 +7,7 @@ import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { breakpointAtom } from "../../atoms/viewport";
 import { MobileBottomSheet } from "../layout/MobileBottomSheet";
 
-/** The element a `FiltersDrawer` should render INTO, when it must escape the
+/** The element a `FiltersSlideOver` should render INTO, when it must escape the
  *  box it is called from.
  *
  *  The drawer is `absolute inset-0` — it covers its nearest positioned ancestor
@@ -35,7 +35,7 @@ export function FiltersHostProvider({
   return <FiltersHostContext.Provider value={host}>{children}</FiltersHostContext.Provider>;
 }
 
-interface FiltersDrawerProps {
+interface FiltersSlideOverProps {
   open: boolean;
   onClose: () => void;
   title?: string;
@@ -44,7 +44,7 @@ interface FiltersDrawerProps {
   width?: number;
 }
 
-export function FiltersDrawer(props: FiltersDrawerProps) {
+export function FiltersSlideOver(props: FiltersSlideOverProps) {
   // On a phone the slide-over is a bottom sheet on the shared stack, so Filters
   // opened from inside another sheet (a connected entity's Relationships)
   // stacks on it rather than covering a slice of it.
@@ -52,11 +52,11 @@ export function FiltersDrawer(props: FiltersDrawerProps) {
   return mobile ? <FiltersSheet {...props} /> : <PaneFiltersDrawer {...props} />;
 }
 
-function FiltersSheet({ open, onClose, title = "Filters", children, footer }: FiltersDrawerProps) {
+function FiltersSheet({ open, onClose, title = "Filters", children, footer }: FiltersSlideOverProps) {
   return (
     <MobileBottomSheet open={open} onClose={onClose} title={title}>
       {/* The same narrow gutter host the slide-over is. */}
-      <div data-gutter-host data-component="FiltersDrawer" className="gutter-host flex flex-col h-full min-h-0">
+      <div data-gutter-host data-component="FiltersSlideOver" className="gutter-host flex flex-col h-full min-h-0">
         <div data-part="body" className="bleed flex-1 min-h-0 overflow-auto">
           {children}
         </div>
@@ -81,7 +81,7 @@ function PaneFiltersDrawer({
   children,
   footer,
   width = 340,
-}: FiltersDrawerProps) {
+}: FiltersSlideOverProps) {
   // Slide from the inline end — flips to the left edge under RTL (Arabic).
   const rtl = useAtomValue(languageAtom) === "AR";
   const trapRef = useFocusTrap<HTMLElement>(open);
@@ -107,7 +107,7 @@ function PaneFiltersDrawer({
   const content = (
     <>
       <div
-        data-component="FiltersDrawer"
+        data-component="FiltersSlideOver"
         data-part="scrim"
         aria-hidden={!open}
         onClick={onClose}
@@ -121,7 +121,7 @@ function PaneFiltersDrawer({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        data-component="FiltersDrawer"
+        data-component="FiltersSlideOver"
         // A closed drawer occupies NO space its pane can scroll to.
         //
         // It used to park itself one width past the pane with

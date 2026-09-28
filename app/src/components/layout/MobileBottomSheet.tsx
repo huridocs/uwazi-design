@@ -64,7 +64,7 @@ export function MobileBottomSheet({
   const titleId = useId();
 
   /* A CLOSED sheet stays mounted, pushed below the viewport by translateY, so
-     without `inert` Tab walks into controls nobody can see — the FiltersDrawer
+     without `inert` Tab walks into controls nobody can see — the FiltersSlideOver
      defect, again. A layout effect, so the attribute is gone before the focus
      trap's effect looks for something to focus. */
   useLayoutEffect(() => {

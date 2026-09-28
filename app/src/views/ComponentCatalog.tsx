@@ -70,7 +70,7 @@ import {
   RelationshipRowReferenceDemo,
   ActionBarDemo,
   RefMinimapDemo,
-  FiltersDrawerDemo,
+  FiltersSlideOverDemo,
   FacetSectionDemo,
   ToggleChipDemo,
   CollapseControlsDemo,
@@ -1176,20 +1176,20 @@ sendFill(selection.text);                                    // commits, then di
 
               <div id="fl-filters-drawer" ref={reg("fl-filters-drawer")}>
                 <CatalogEntry
-                  name="FiltersDrawer"
+                  name="FiltersSlideOver"
                   description="Slide-over panel scoped to the nearest relative overflow-hidden parent"
-                  code={`<FiltersDrawer open={open} onClose={() => setOpen(false)}>
+                  code={`<FiltersSlideOver open={open} onClose={() => setOpen(false)}>
   {/* facet content */}
-</FiltersDrawer>`}
+</FiltersSlideOver>`}
                 >
-                  <FiltersDrawerDemo />
+                  <FiltersSlideOverDemo />
                 </CatalogEntry>
               </div>
 
               <div id="fl-facet-section" ref={reg("fl-facet-section")}>
                 <CatalogEntry
                   name="FacetSection"
-                  description="Collapsible facet block with checkbox options (used inside FiltersDrawer)"
+                  description="Collapsible facet block with checkbox options (used inside FiltersSlideOver)"
                   code={`<FacetSection
   title="Relation type"
   options={[{ id: "cites", label: "Cites" }, ...]}

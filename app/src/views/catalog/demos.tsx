@@ -21,7 +21,7 @@ import { Beacon } from "../../components/layout/Beacon";
 import { FileTable } from "../../components/files/FileTable";
 import { CollapseControls } from "../../components/relationships/CollapseControls";
 import { FiltersButton } from "../../components/shared/FiltersButton";
-import { FiltersDrawer } from "../../components/shared/FiltersDrawer";
+import { FiltersSlideOver } from "../../components/shared/FiltersSlideOver";
 import { FacetSection } from "../../components/shared/FacetSection";
 import { RadioGroup } from "../../components/shared/RadioGroup";
 import { DataTable } from "../../components/shared/DataTable";
@@ -397,7 +397,7 @@ const DESCRIPTOR_FACET: [string, number][] = [
   ["Circulación y residencia", 14],
 ];
 
-export function FiltersDrawerDemo() {
+export function FiltersSlideOverDemo() {
   const [open, setOpen] = useState(false);
   const [relSel, setRelSel] = useState<Record<string, boolean>>({ cites: true });
   const [descSel, setDescSel] = useState<Record<string, boolean>>({});
@@ -413,10 +413,10 @@ export function FiltersDrawerDemo() {
       <FiltersButton activeCount={activeCount} onClick={() => setOpen(true)} />
       <div className="relative overflow-hidden mt-3 h-72 border border-border/60 rounded-md bg-paper">
         <div className="px-3 py-2 text-xs text-ink-muted">
-          Demo container — FiltersDrawer is scoped to this pane. The descriptor
+          Demo container — FiltersSlideOver is scoped to this pane. The descriptor
           block is searchable, capped with “Show more”, and has an Any/All mode.
         </div>
-        <FiltersDrawer
+        <FiltersSlideOver
           open={open}
           onClose={() => setOpen(false)}
           footer={
@@ -459,7 +459,7 @@ export function FiltersDrawerDemo() {
             label={(id) => id}
             defaultExpanded
           />
-        </FiltersDrawer>
+        </FiltersSlideOver>
       </div>
     </div>
   );

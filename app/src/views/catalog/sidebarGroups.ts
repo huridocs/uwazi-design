@@ -103,7 +103,7 @@ export const sidebarGroups: SidebarGroup[] = [
     label: "Filters & Lists",
     items: [
       { id: "fl-filters-button", label: "FiltersButton" },
-      { id: "fl-filters-drawer", label: "FiltersDrawer" },
+      { id: "fl-filters-drawer", label: "FiltersSlideOver" },
       { id: "fl-facet-section", label: "FacetSection" },
       { id: "fl-active-filter-chip", label: "ActiveFilterChip" },
       { id: "fl-toggle-chip", label: "ToggleChip" },
