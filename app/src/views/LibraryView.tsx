@@ -10,7 +10,7 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom } from "../atoms/dataSource";
-import { startDraftAtom, recentTemplatesAtom } from "../atoms/entityOverlay";
+import { discardDraftAtom, draftEntityIdAtom, recentTemplatesAtom, startDraftAtom } from "../atoms/entityOverlay";
 import { activitiesAtom } from "../atoms/notifications";
 import { editSessionOpenAtom } from "../atoms/dirtyGuard";
 import { isPdf, runCsvExport, runPdfUploadBatch } from "../utils/libraryTasks";
@@ -108,6 +108,7 @@ const LibraryMapView = lazy(() =>
 import { LibraryFilters } from "../components/library/LibraryFilters";
 import { LibraryClusterDrawer } from "../components/library/LibraryClusterDrawer";
 import { EntityDrawerPreview } from "../components/library/EntityDrawerPreview";
+import { MobileBottomSheet } from "../components/layout/MobileBottomSheet";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { SegmentedControl } from "../components/shared/SegmentedControl";
 import { ResultsMainView } from "../components/library/ResultsSnippets/ResultsMainView";
@@ -266,6 +267,8 @@ export function LibraryView() {
   const [selectedId, setSelectedId] = useAtom(librarySelectedEntityIdAtom);
   const selectedCluster = useAtomValue(librarySelectedClusterAtom);
   const openEntity = useSetAtom(openEntityAtom);
+  const draftId = useAtomValue(draftEntityIdAtom);
+  const discardDraft = useSetAtom(discardDraftAtom);
   const setOverlayEntity = useSetAtom(overlayEntityIdAtom);
   const focusForPreview = useSetAtom(focusEntityForPreviewAtom);
   const setScrollToPage = useSetAtom(scrollToPageAtom);
@@ -1388,6 +1391,28 @@ export function LibraryView() {
   );
 
   return (
+    <>
+    {/* Phones have no right-hand drawer, so what the Library selects INTO it —
+        a new entity's draft (Create entity), a single uploaded PDF — opens as
+        a full-height sheet on the stack instead of somewhere nobody can see.
+        Dismissing it is a navigation (the dirty guard asks first) and an
+        untouched draft goes with it, so no empty entity is left behind. */}
+    {isMobile && (
+      <MobileBottomSheet
+        open={!!selectedId}
+        bare
+        defaultSnap="full"
+        ariaLabel="Entity"
+        onClose={() =>
+          guard(() => {
+            if (selectedId && selectedId === draftId) discardDraft(selectedId);
+            setSelectedId(null);
+          })
+        }
+      >
+        {selectedId && <EntityDrawerPreview entityId={selectedId} />}
+      </MobileBottomSheet>
+    )}
     <AdaptiveSplitView
       left={renderLeft()}
       mobileLeft={(menuTrigger) => renderLeft(menuTrigger)}
@@ -1431,6 +1456,7 @@ export function LibraryView() {
           : []),
       ]}
     />
+    </>
   );
 }
 
