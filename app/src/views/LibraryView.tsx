@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
-import { FileDown, FileUp, MoreHorizontal, Plus, Search, Upload, X } from "lucide-react";
+import { CheckSquare, FileDown, FileUp, MoreHorizontal, Plus, Search, Upload, X } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom, travesiaReadyAtom } from "../atoms/dataSource";
 import { discardDraftAtom, draftEntityIdAtom, recentTemplatesAtom, startDraftAtom } from "../atoms/entityOverlay";
 import { activitiesAtom } from "../atoms/notifications";
@@ -51,6 +51,7 @@ import {
   libraryQueryAtom,
   libraryResultsSheetOpenAtom,
   librarySearchDraftAtom,
+  librarySelectModeAtom,
   librarySelectedClusterAtom,
   librarySelectedEntityIdAtom,
   librarySelectionActiveAtom,
@@ -311,6 +312,7 @@ export function LibraryView() {
   const selectedCluster = useAtomValue(librarySelectedClusterAtom);
   const openEntity = useSetAtom(openEntityAtom);
   const draftId = useAtomValue(draftEntityIdAtom);
+  const setSelectMode = useSetAtom(librarySelectModeAtom);
   const discardDraft = useSetAtom(discardDraftAtom);
   const setOverlayEntity = useSetAtom(overlayEntityIdAtom);
   const focusForPreview = useSetAtom(focusEntityForPreviewAtom);
@@ -1584,6 +1586,10 @@ export function LibraryView() {
             heading="Library"
             onClose={() => setPhoneActionsOpen(false)}
             actions={[
+              // The visible way into bulk selection on a touch screen (a long
+              // press on an item still works): the selection bar shows and a
+              // tap toggles, until Clear.
+              { label: "Select", icon: <CheckSquare size={14} />, onClick: () => setSelectMode(true) },
               { label: "Create entity", icon: <Plus size={14} />, onClick: () => handleCreate(createPreset) },
               { label: "Upload PDF", icon: <Upload size={14} />, onClick: () => uploadInputRef.current?.click() },
               {
