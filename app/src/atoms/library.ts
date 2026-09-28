@@ -33,7 +33,7 @@ export const libraryQueryAtom = atom("");
 const searchDraftStateAtom = atom("");
 export const librarySearchDraftAtom = atom(
   (get) => get(searchDraftStateAtom),
-  (_get, set, next: string) => {
+  (get, set, next: string) => {
     // The DRAFT is urgent: it is the text in the box, and a character that
     // appears a frame after you typed it is the one thing search must never do.
     set(searchDraftStateAtom, next);
@@ -47,7 +47,11 @@ export const librarySearchDraftAtom = atom(
     // stays under it.
     if (next.trim())
       startTransition(() => {
+        // The moment a search becomes active: on a phone, arm its Results
+        // sheet, which opens on submit (`submitLibrarySearchAtom`).
+        const becomingActive = !get(libraryQueryAtom).trim();
         set(libraryQueryAtom, next);
+        if (becomingActive && get(breakpointAtom) === "mobile") set(resultsSheetArmedAtom, true);
       });
   },
 );
@@ -57,6 +61,8 @@ export const librarySearchDraftAtom = atom(
 export const clearLibrarySearchAtom = atom(null, (_get, set) => {
   set(searchDraftStateAtom, "");
   set(libraryQueryAtom, "");
+  set(libraryResultsSheetOpenAtom, false);
+  set(resultsSheetArmedAtom, false);
 });
 
 /** The running search, or `null` — the search as its OWN state, deliberately not
@@ -436,6 +442,25 @@ export const libraryChainFiltersAtom = atom<
  *  registry, so the registry is where a new mode has to be declared or it would
  *  be a mode with no options and no way to notice. */
 export type { LibraryViewMode };
+
+/** Phones: the Results sheet a search opened. Set once, when a query becomes
+ *  active (`librarySearchDraftAtom`), so refining the query never reopens a
+ *  sheet the reader closed; closing it keeps the query; clearing the search
+ *  (`clearLibrarySearchAtom`) closes it. */
+export const libraryResultsSheetOpenAtom = atom(false);
+
+/** A query became active on a phone and its Results sheet has not opened yet. */
+const resultsSheetArmedAtom = atom(false);
+
+/** The search box was submitted (Enter / the keyboard's Search key, leaving the
+ *  box, picking a recent search): on a phone, open the Results sheet the query
+ *  armed, once. Not at the first character: the sheet is a modal and takes
+ *  focus, so opening mid-word sent the rest of the word into the sheet. */
+export const submitLibrarySearchAtom = atom(null, (get, set) => {
+  if (!get(resultsSheetArmedAtom) || !get(libraryQueryAtom).trim()) return;
+  set(resultsSheetArmedAtom, false);
+  set(libraryResultsSheetOpenAtom, true);
+});
 
 /** The library's view mode. A search does not write it (see
  *  `librarySearchDraftAtom`); Results is a mode you pick. */

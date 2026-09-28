@@ -75,6 +75,8 @@ import {
   librarySelectionActiveAtom,
   librarySelectionDrawerOpenAtom,
   libraryDrawnIdsAtom,
+  libraryResultsSheetOpenAtom,
+  submitLibrarySearchAtom,
 } from "../atoms/library";
 import { getEntityType, type Entity } from "../data/entities";
 import { libraryInheritedDefs } from "../utils/libraryFacets";
@@ -205,6 +207,7 @@ export function LibraryView() {
   const [searchDraft, setSearchDraft] = useAtom(librarySearchDraftAtom);
   const clearSearch = useSetAtom(clearLibrarySearchAtom);
   const recordSearch = useSetAtom(recordSearchAtom);
+  const submitSearch = useSetAtom(submitLibrarySearchAtom);
   const searchBoxRef = useRef<HTMLDivElement>(null);
   const [searchFocused, setSearchFocused] = useState(false);
   // Filters / Results drawer tabs. Results auto-activates while the search box
@@ -334,6 +337,11 @@ export function LibraryView() {
 
   const [drawerResultsLayout, setDrawerResultsLayout] = useAtom(libraryDrawerResultsLayoutAtom);
   const showResultsTab = viewMode !== "results";
+  // Phones: the sheet a search opened (see `libraryResultsSheetOpenAtom`),
+  // folded into the split view's own open-section state.
+  const [resultsSheetOpen, setResultsSheetOpen] = useAtom(libraryResultsSheetOpenAtom);
+  const [openSection, setOpenSection] = useState<string | null>(null);
+  const sheetSection = resultsSheetOpen && showResultsTab ? "results" : openSection;
   useEffect(() => {
     setDrawerTab(hasQuery && showResultsTab ? "results" : "filters");
   }, [hasQuery, showResultsTab]);
@@ -846,11 +854,17 @@ export function LibraryView() {
             onBlur={() => {
               setSearchFocused(false);
               recordSearch(searchDraft);
+              submitSearch();
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
+                // Claimed: the Results sheet can open on this key and take
+                // focus, and the same Enter's keypress would then press the
+                // sheet's Close button.
+                e.preventDefault();
                 recordSearch(searchDraft);
                 setSearchFocused(false);
+                submitSearch();
               }
             }}
             placeholder="Search title & metadata"
@@ -880,6 +894,7 @@ export function LibraryView() {
               setSearchDraft(q);
               recordSearch(q);
               setSearchFocused(false);
+              submitSearch();
             }}
             onClose={() => setSearchFocused(false)}
           />
@@ -1361,6 +1376,12 @@ export function LibraryView() {
       right={drawer}
       defaultRightWidth={460}
       minRightWidth={DRAWER_MIN_WIDTH}
+      openSectionId={sheetSection}
+      onOpenSectionChange={(id) => {
+        // Closing (or swapping away from) the search's sheet keeps the query.
+        if (id !== "results") setResultsSheetOpen(false);
+        setOpenSection(id);
+      }}
       mobileSections={[
         {
           id: "filters",

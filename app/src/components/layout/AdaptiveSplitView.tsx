@@ -22,6 +22,10 @@ interface AdaptiveSplitViewProps {
   mobileSections?: MobileSection[];
   /** Render-prop: receives a node containing the action menu trigger to embed inside `left` */
   mobileLeft?: (menuTrigger: ReactNode) => ReactNode;
+  /** Mobile: which section's sheet is open, for a host that opens one itself
+   *  (the Library opens Results when a search starts). Uncontrolled without it. */
+  openSectionId?: string | null;
+  onOpenSectionChange?: (id: string | null) => void;
 }
 
 export function AdaptiveSplitView({
@@ -31,9 +35,16 @@ export function AdaptiveSplitView({
   minRightWidth,
   mobileSections,
   mobileLeft,
+  openSectionId: openSectionProp,
+  onOpenSectionChange,
 }: AdaptiveSplitViewProps) {
   const [breakpoint] = useAtom(breakpointAtom);
-  const [openSectionId, setOpenSectionId] = useState<string | null>(null);
+  const [ownOpenSectionId, setOwnOpenSectionId] = useState<string | null>(null);
+  const openSectionId = openSectionProp !== undefined ? openSectionProp : ownOpenSectionId;
+  const setOpenSectionId = (id: string | null) => {
+    setOwnOpenSectionId(id);
+    onOpenSectionChange?.(id);
+  };
 
   if (breakpoint === "mobile") {
     const sections = mobileSections ?? [
