@@ -14,6 +14,8 @@ import { isArtworkEntity, buildArtworkProfile } from "./artworks/profile";
 import { isTravesiaEntity, buildTravesiaProfile } from "./travesia/profile";
 import type { EntityImage } from "./entities";
 import { overlayCreated, overlayRecord, type EntityRecord } from "./entityOverlay";
+import { v4RelationshipFields } from "./sampleSeedV4Fields";
+import { V4_DATES } from "./sampleSeedV4";
 
 const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -77,12 +79,24 @@ const mainProfile: EntityProfile = {
   renditions: renditionsByLanguage,
   documentGroups,
   files,
-  metadata: metadataFieldsByLanguage,
+  metadata: LANGS.reduce((acc, lang) => {
+    acc[lang] = [...metadataFieldsByLanguage[lang], ...v4DateFields(MAIN_ENTITY_ID, lang), ...v4RelationshipFields(MAIN_ENTITY_ID, "court_case", lang)];
+    return acc;
+  }, {} as Record<Language, AnyMetadataField[]>),
   pdfMetadata: pdfMetadataByLanguage,
   relationships: { kind: "references" },
 };
 
 /* ── Lightweight profile synthesis ──────────────────────────────────────── */
+
+/** The v4 seed's dated properties as `date` fields (a range reads "from – to").
+ *  Props a type's scalar spec already renders (a judgment's `date`) are left to
+ *  it, so no date prints twice. */
+function v4DateFields(entityId: string, lang: Language, skip: Set<string> = new Set()): MetadataField[] {
+  return (V4_DATES[entityId] ?? [])
+    .filter((d) => !skip.has(d.prop))
+    .map((d) => ({ id: d.prop, label: d.label[lang], type: d.end ? "text" : "date", value: d.end ? `${d.value} – ${d.end}` : d.value }));
+}
 
 /** Localized labels for the handful of synthesized fields, so AR/RTL renders. */
 const FIELD_LABELS: Record<string, Record<Language, string>> = {
@@ -260,7 +274,12 @@ function entityDocDate(entity: Entity): string {
 function buildLightweightProfile(entity: Entity): EntityProfile {
   const hasDocument = typeHasDocument(entity.typeId);
   const metadata = LANGS.reduce((acc, lang) => {
-    acc[lang] = synthFields(entity, lang);
+    const own = synthFields(entity, lang);
+    acc[lang] = [
+      ...own,
+      ...v4DateFields(entity.id, lang, new Set(own.map((f) => f.id))),
+      ...v4RelationshipFields(entity.id, entity.typeId, lang),
+    ];
     return acc;
   }, {} as Record<Language, AnyMetadataField[]>);
 

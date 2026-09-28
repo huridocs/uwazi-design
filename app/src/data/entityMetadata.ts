@@ -1,4 +1,5 @@
 import type { Language } from "../atoms/language";
+import { V4_DATE_PROPS } from "./sampleSeedV4";
 
 /**
  * Native metadata properties per entity — the values the UI shows on cards, in
@@ -130,11 +131,19 @@ const localized: Partial<Record<Language, EntityMetadata>> = {
 
 const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
 
+/** The v4 seed's dates, as native props over the base ones (a document's
+ *  `adopted` becomes a full day where the base only had a year). */
+function withSeedDates(base: EntityMetadata): EntityMetadata {
+  const out: EntityMetadata = { ...base };
+  for (const [id, props] of Object.entries(V4_DATE_PROPS)) out[id] = { ...(out[id] ?? {}), ...props };
+  return out;
+}
+
 export const entityMetadataByLanguage: Record<Language, EntityMetadata> = Object.fromEntries(
   LANGS.map((lang) => [
     lang,
     Object.fromEntries(
-      Object.entries(baseProps).map(([id, props]) => [id, { ...props, ...(localized[lang]?.[id] ?? {}) }]),
+      Object.entries(withSeedDates(baseProps)).map(([id, props]) => [id, { ...props, ...(localized[lang]?.[id] ?? {}) }]),
     ),
   ]),
 ) as Record<Language, EntityMetadata>;

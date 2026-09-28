@@ -1,4 +1,5 @@
 import { documentsByLanguage } from "./document";
+import { V4_RELATION_TYPES, v4References } from "./sampleSeedV4";
 
 /** Free-form relation-type id. The seed set ships with mentions / relates_to /
  *  cites / refers_to / no_label, but `relationTypesAtom` is writable at runtime
@@ -898,6 +899,9 @@ export const references: Reference[] = [
   },
   // Generated bulk references for stress testing
   ...generateBulkReferences(),
+  // v4 showcase hubs: entity-level references between Sample entities other than
+  // La Tablada (victims, judgments, signatories, nationality, hearings …).
+  ...v4References(NO_LABEL_RELATION_TYPE),
 ];
 
 function generateBulkReferences(): Reference[] {
@@ -1082,6 +1086,7 @@ export const relationTypes: { id: RelationType; label: string }[] = [
   { id: "relates_to", label: "Relates to" },
   { id: "cites", label: "Cites" },
   { id: "refers_to", label: "Refers to" },
+  ...V4_RELATION_TYPES,
   { id: "no_label", label: "No label" },
 ];
 
