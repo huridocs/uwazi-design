@@ -1355,7 +1355,7 @@ sendFill(selection.text);                                    // commits, then di
                   description="Segmented detail/compact/overview + graph toggle for the Relationships view"
                   code={`<ZoomControl />
 
-{/* Bound to zoomAtom + relationshipsViewModeAtom */}`}
+{/* Bound to zoomAtom */}`}
                 >
                   <IsolatedZoomControl />
                 </CatalogEntry>

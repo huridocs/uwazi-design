@@ -184,9 +184,6 @@ export type Zoom = "detail" | "compact" | "overview";
 export const DEFAULT_ZOOM: Zoom = "detail";
 export const zoomAtom = atom<Zoom>(DEFAULT_ZOOM);
 
-export type RelationshipsViewMode = "tree" | "graph";
-export const relationshipsViewModeAtom = atom<RelationshipsViewMode>("tree");
-
 /** Active filter count per scope: facets, search and cluster. View, grouping
  *  and sort are not filters. `activeFilterCountAtom` is the un-scoped one. */
 const filterCountCache = new Map<string, Atom<number>>();
