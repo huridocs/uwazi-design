@@ -21,8 +21,8 @@ import {
   type TemplateProperty,
 } from "../../../data/settings";
 import { cejilTemplateProperties } from "../../../data/cejil/settingsAdapt";
-import { toastsAtom } from "../../../atoms/references";
 import { validateValue, blockingSummary, type ValidationIssue } from "../../../utils/validation";
+import { toastsAtom } from "../../../atoms/notifications";
 
 /** A distinct, calm palette (no duplicates) + a custom picker. */
 const PALETTE = [

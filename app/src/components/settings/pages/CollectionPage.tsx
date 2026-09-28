@@ -8,7 +8,7 @@ import { Checkbox } from "../../shared/Checkbox";
 import { LayoutGrid, Table2, Map } from "lucide-react";
 import { dataSourceAtom } from "../../../atoms/dataSource";
 import { cejilCollection } from "../../../data/cejil/settingsAdapt";
-import { toastsAtom } from "../../../atoms/references";
+import { toastsAtom } from "../../../atoms/notifications";
 
 interface ToggleRowProps {
   label: string;

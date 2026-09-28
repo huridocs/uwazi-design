@@ -9,7 +9,7 @@ import { DragGrip } from "../DragGrip";
 import { useReorder } from "../../../hooks/useReorder";
 import { SegmentedControl } from "../../shared/SegmentedControl";
 import { type SettingsMenuLink } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/references";
+import { toastsAtom } from "../../../atoms/notifications";
 
 /** A group's nested links. The shared SettingsMenuLink is flat, so the editable
  *  sub-link list lives locally. */

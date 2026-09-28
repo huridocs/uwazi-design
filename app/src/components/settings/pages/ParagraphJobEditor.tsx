@@ -8,7 +8,7 @@ import { Select } from "../../shared/Select";
 import { StatusPill } from "../StatusPill";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { seedTemplates, type SettingsParagraphJob } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/references";
+import { toastsAtom } from "../../../atoms/notifications";
 
 const TEMPLATE_OPTIONS = seedTemplates.map((t) => ({ value: t.name, label: t.name }));
 

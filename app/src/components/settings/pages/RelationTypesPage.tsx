@@ -10,7 +10,7 @@ import { RelationTypeEditor } from "./RelationTypeEditor";
 import { seedRelationTypes, type SettingsRelationType } from "../../../data/settings";
 import { dataSourceAtom } from "../../../atoms/dataSource";
 import { cejilSettingsRelationTypes } from "../../../data/cejil/settingsAdapt";
-import { toastsAtom } from "../../../atoms/references";
+import { toastsAtom } from "../../../atoms/notifications";
 
 export function RelationTypesPage() {
   const setToasts = useSetAtom(toastsAtom);

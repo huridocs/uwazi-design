@@ -8,9 +8,9 @@ import { DragGrip } from "../DragGrip";
 import { useReorder } from "../../../hooks/useReorder";
 import { SettingsField, TextInput } from "../SettingsField";
 import type { SettingsThesaurus, ThesaurusValue } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/references";
 import { dataSourceAtom } from "../../../atoms/dataSource";
 import { saveThesaurusAtom, thesauriAtom } from "../../../atoms/thesauri";
+import { toastsAtom } from "../../../atoms/notifications";
 
 interface Item {
   id: string;

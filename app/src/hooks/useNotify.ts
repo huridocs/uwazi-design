@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useSetAtom } from "jotai";
-import { toastsAtom, type Toast } from "../atoms/references";
+import { toastsAtom, type Toast } from "../atoms/notifications";
 
 let seq = 0;
 

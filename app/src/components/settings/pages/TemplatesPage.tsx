@@ -10,7 +10,7 @@ import { TemplateEditor } from "./TemplateEditor";
 import { seedTemplates, type SettingsTemplate } from "../../../data/settings";
 import { dataSourceAtom } from "../../../atoms/dataSource";
 import { cejilSettingsTemplates } from "../../../data/cejil/settingsAdapt";
-import { toastsAtom } from "../../../atoms/references";
+import { toastsAtom } from "../../../atoms/notifications";
 
 export function TemplatesPage() {
   const setToasts = useSetAtom(toastsAtom);

@@ -4,7 +4,7 @@ import { RotateCcw, AlertTriangle } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
 import { DrawerTabs } from "../../layout/DrawerTabs";
-import { toastsAtom } from "../../../atoms/references";
+import { toastsAtom } from "../../../atoms/notifications";
 
 const SAMPLE_CSS = `/* Global CSS — applied across the public collection */
 .home-banner {

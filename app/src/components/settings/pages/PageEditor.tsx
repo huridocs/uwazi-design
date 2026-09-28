@@ -6,7 +6,7 @@ import { SettingsField, TextInput } from "../SettingsField";
 import { Checkbox } from "../../shared/Checkbox";
 import { SegmentedControl } from "../../shared/SegmentedControl";
 import { type SettingsPage } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/references";
+import { toastsAtom } from "../../../atoms/notifications";
 
 const SAMPLE_BODY = `# About this collection
 

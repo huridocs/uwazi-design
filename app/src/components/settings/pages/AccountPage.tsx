@@ -6,7 +6,7 @@ import { SettingsButton } from "../SettingsButton";
 import { SettingsField, TextInput } from "../SettingsField";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { currentAccount } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/references";
+import { toastsAtom } from "../../../atoms/notifications";
 
 interface ApiKey {
   id: string;

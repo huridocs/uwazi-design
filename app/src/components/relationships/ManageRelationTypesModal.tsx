@@ -7,7 +7,6 @@ import {
   manageRelationTypesOpenAtom,
   referencesAtom,
   relationTypesAtom,
-  toastsAtom,
 } from "../../atoms/references";
 import {
   NO_LABEL_RELATION_TYPE,
@@ -15,6 +14,7 @@ import {
   unregisterRelationType,
 } from "../../data/references";
 import { t } from "../../utils/i18n";
+import { toastsAtom } from "../../atoms/notifications";
 
 /** CRUD for the relation-type registry. Add: label input → derived snake_case
  *  id; duplicates are blocked. Delete: orphaned references are reassigned to

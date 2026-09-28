@@ -9,7 +9,7 @@ import {
   type SettingsTranslationContext,
   type TranslationKey,
 } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/references";
+import { toastsAtom } from "../../../atoms/notifications";
 
 /** Build the editable rows for a context — seeded terms when we have them, else
  *  a representative set generated from the context's key count. */

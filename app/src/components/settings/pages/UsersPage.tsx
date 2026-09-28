@@ -15,7 +15,7 @@ import {
   type SettingsGroupRecord,
   type UserRole,
 } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/references";
+import { toastsAtom } from "../../../atoms/notifications";
 
 const roleStyle: Record<UserRole, string> = {
   admin: "bg-seal-tint text-seal-label",

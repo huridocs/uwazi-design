@@ -2,11 +2,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { MoreVertical, Pencil, Plus, Settings2, Trash2 } from "lucide-react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { entityPickerOpenAtom, textSelectionAtom } from "../../atoms/selection";
-import {
-  manageRelationTypesOpenAtom,
-  scopedReferencesAtom,
-  toastsAtom,
-} from "../../atoms/references";
+import { manageRelationTypesOpenAtom, scopedReferencesAtom } from "../../atoms/references";
 import {
   collapseAllSignalAtom,
   editModeAtom,
@@ -23,6 +19,7 @@ import { SelectControls } from "../shared/SelectControls";
 import { RelationshipsCollapseControls } from "./CollapseControls";
 import { BarDivider } from "../shared/BarDivider";
 import { BAR_DANGER, BAR_GHOST } from "../shared/warmButton";
+import { toastsAtom } from "../../atoms/notifications";
 
 interface RelationshipsActionBarProps {
   /** Compact (drawer) flavour. Drops Create relationship + Manage types +

@@ -9,8 +9,8 @@ import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { ThesaurusEditor } from "./ThesaurusEditor";
 import type { SettingsThesaurus } from "../../../data/settings";
 import { dataSourceAtom } from "../../../atoms/dataSource";
-import { toastsAtom } from "../../../atoms/references";
 import { deleteThesaurusAtom, thesauriAtom } from "../../../atoms/thesauri";
+import { toastsAtom } from "../../../atoms/notifications";
 
 export function ThesauriPage() {
   const setToasts = useSetAtom(toastsAtom);

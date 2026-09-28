@@ -4,8 +4,8 @@ import { entityPickerOpenAtom, textSelectionAtom } from "../../atoms/selection";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { highlightsAtom, HIGHLIGHT_COLOR } from "../../atoms/highlights";
 import { fillTargetAtom, fillRequestAtom } from "../../atoms/fillTarget";
-import { toastsAtom } from "../../atoms/references";
 import { t } from "../../utils/i18n";
+import { toastsAtom } from "../../atoms/notifications";
 
 interface FloatingMenuProps {
   x: number;

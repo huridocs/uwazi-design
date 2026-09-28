@@ -10,7 +10,7 @@ import { PageEditor } from "./PageEditor";
 import { seedPages, type SettingsPage } from "../../../data/settings";
 import { dataSourceAtom } from "../../../atoms/dataSource";
 import { cejilSettingsPages } from "../../../data/cejil/settingsAdapt";
-import { toastsAtom } from "../../../atoms/references";
+import { toastsAtom } from "../../../atoms/notifications";
 
 export function PagesPage() {
   const setToasts = useSetAtom(toastsAtom);

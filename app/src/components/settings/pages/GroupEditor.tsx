@@ -5,7 +5,7 @@ import { SettingsButton } from "../SettingsButton";
 import { SettingsField, TextInput } from "../SettingsField";
 import { Checkbox } from "../../shared/Checkbox";
 import { seedUsers, type SettingsGroupRecord } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/references";
+import { toastsAtom } from "../../../atoms/notifications";
 
 /** Group detail/editor — name + membership, opened from the Groups tab. */
 export function GroupEditor({

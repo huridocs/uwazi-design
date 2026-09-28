@@ -7,9 +7,10 @@ import {
   beaconOpenAtom,
   unreadCountAtom,
   type NotificationKind,
+  toastsAtom,
+  type Toast,
 } from "../../atoms/notifications";
 import { breakpointAtom } from "../../atoms/viewport";
-import { toastsAtom, type Toast } from "../../atoms/references";
 import { UwaziLoader } from "../shared/UwaziLoader";
 import { NotificationsSlideOver } from "./NotificationsSlideOver";
 

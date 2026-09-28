@@ -8,7 +8,7 @@ import { Select } from "../../shared/Select";
 import { RadioGroup } from "../../shared/RadioGroup";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { type SettingsPreserveToken } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/references";
+import { toastsAtom } from "../../../atoms/notifications";
 
 const AUTH_OPTIONS = [
   { value: "none", label: "None" },

@@ -134,3 +134,12 @@ export const beaconOpenAtom = atom(false);
 export const unreadCountAtom = atom(
   (get) => get(notificationsAtom).filter((n) => !n.read).length,
 );
+
+/** Transient action messages. The Beacon drains them into `notificationsAtom`
+ *  and flashes each one; only the catalog renders them as floating toasts. */
+export interface Toast {
+  id: string;
+  message: string;
+  type: "success" | "error" | "info";
+}
+export const toastsAtom = atom<Toast[]>([]);

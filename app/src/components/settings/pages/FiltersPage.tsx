@@ -17,7 +17,7 @@ import {
   cejilPropertyFilterRows,
   cejilPropertyFilterMeta,
 } from "../../../data/cejil/settingsAdapt";
-import { toastsAtom } from "../../../atoms/references";
+import { toastsAtom } from "../../../atoms/notifications";
 
 interface FilterGroup {
   id: string;

@@ -1,7 +1,7 @@
 import { useAtom } from "jotai";
-import { toastsAtom } from "../atoms/references";
 import { useEffect } from "react";
 import { CheckCircle2, XCircle, Info, X } from "lucide-react";
+import { toastsAtom } from "../atoms/notifications";
 
 export function ToastContainer() {
   const [toasts, setToasts] = useAtom(toastsAtom);

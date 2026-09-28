@@ -8,7 +8,7 @@ import { RowActions } from "../RowActions";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { PreserveTokenEditor } from "./PreserveTokenEditor";
 import { seedPreserveTokens, type SettingsPreserveToken } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/references";
+import { toastsAtom } from "../../../atoms/notifications";
 
 export function PreservePage() {
   const setToasts = useSetAtom(toastsAtom);

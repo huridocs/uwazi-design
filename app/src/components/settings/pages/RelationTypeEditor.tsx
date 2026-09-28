@@ -4,7 +4,7 @@ import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
 import { SettingsField, TextInput } from "../SettingsField";
 import { type SettingsRelationType } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/references";
+import { toastsAtom } from "../../../atoms/notifications";
 
 /** A relationship type may optionally carry a label for its reverse direction
  *  (forward "appealed to" / inverse "ruled on"). The shared SettingsRelationType

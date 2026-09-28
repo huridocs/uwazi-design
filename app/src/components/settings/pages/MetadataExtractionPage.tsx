@@ -9,7 +9,7 @@ import { StatusPill } from "../StatusPill";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { ExtractorEditor } from "./ExtractorEditor";
 import { seedExtractors, type SettingsExtractor } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/references";
+import { toastsAtom } from "../../../atoms/notifications";
 
 export function MetadataExtractionPage() {
   const setToasts = useSetAtom(toastsAtom);

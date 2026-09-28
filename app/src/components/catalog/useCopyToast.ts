@@ -1,5 +1,5 @@
 import { useSetAtom } from "jotai";
-import { toastsAtom } from "../../atoms/references";
+import { toastsAtom } from "../../atoms/notifications";
 
 export function useCopyToast() {
   const setToasts = useSetAtom(toastsAtom);

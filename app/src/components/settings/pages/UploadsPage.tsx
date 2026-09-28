@@ -9,7 +9,7 @@ import { Select } from "../../shared/Select";
 import { SegmentedControl } from "../../shared/SegmentedControl";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { seedUploads, type SettingsUpload } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/references";
+import { toastsAtom } from "../../../atoms/notifications";
 
 const typeIcon = { image: Image, pdf: FileText, font: Type, other: File };
 

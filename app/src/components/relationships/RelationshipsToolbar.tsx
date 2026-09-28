@@ -1,6 +1,5 @@
 import { useCallback, useState } from "react";
 import { useSetAtom } from "jotai";
-import { toastsAtom } from "../../atoms/references";
 import { useActiveFilterCount, useClearRelFilters, useFiltersDrawerOpen, useSetScopedReferences } from "../../hooks/useEntityScope";
 import { SearchBar } from "./SearchBar";
 import { RelationshipsDisplayMenu } from "./RelationshipsDisplayMenu";
@@ -10,6 +9,7 @@ import { RelationshipsFilterSlideOver } from "./RelationshipsFilterSlideOver";
 import { FiltersButton } from "../shared/FiltersButton";
 import { FiltersSlideOver } from "../shared/FiltersSlideOver";
 import { ConfirmDialog } from "../shared/ConfirmDialog";
+import { toastsAtom } from "../../atoms/notifications";
 
 /** The single-row toolbar over the connections panel: search carrying the
  *  active-filter chips, then the three things you steer with — WHICH projection

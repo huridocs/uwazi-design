@@ -199,11 +199,3 @@ export const closeAllOverlaysAtom = atom(null, (_get, set) => {
  *  highlighted every sibling row pointing at that entity. Cleared when the
  *  overlay closes. */
 export const activeAggregateIdAtom = atom<string | null>(null);
-
-/** Toast messages */
-export interface Toast {
-  id: string;
-  message: string;
-  type: "success" | "error" | "info";
-}
-export const toastsAtom = atom<Toast[]>([]);

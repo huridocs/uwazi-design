@@ -2,11 +2,7 @@ import { Fragment, useId, useState, useMemo } from "react";
 import { Plus } from "lucide-react";
 import { useAtom, useSetAtom, useAtomValue } from "jotai";
 import { entityPickerOpenAtom, textSelectionAtom } from "../../atoms/selection";
-import {
-  scopedReferencesAtom,
-  relationTypesAtom,
-  toastsAtom,
-} from "../../atoms/references";
+import { scopedReferencesAtom, relationTypesAtom } from "../../atoms/references";
 import { entitiesAtom, entityTypesAtom } from "../../atoms/entities";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { getEntityType, Entity, entities as seedEntities } from "../../data/entities";
@@ -25,6 +21,7 @@ import {
   ModalStatus,
   ModalTypeDot,
 } from "../shared/ModalParts";
+import { toastsAtom } from "../../atoms/notifications";
 
 type Step = "entity" | "new-entity" | "relation";
 

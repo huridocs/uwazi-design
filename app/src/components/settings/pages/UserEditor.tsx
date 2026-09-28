@@ -7,7 +7,7 @@ import { SettingsField, TextInput } from "../SettingsField";
 import { RadioGroup } from "../../shared/RadioGroup";
 import { Checkbox } from "../../shared/Checkbox";
 import { seedGroups, type SettingsUser, type UserRole } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/references";
+import { toastsAtom } from "../../../atoms/notifications";
 
 const ROLE_OPTIONS = [
   { id: "admin", label: "Admin", hint: "Full access to settings and content." },

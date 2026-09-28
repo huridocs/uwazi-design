@@ -10,7 +10,7 @@ import { ProgressBar } from "../../shared/ProgressBar";
 import { seedLanguages, type SettingsLanguage } from "../../../data/settings";
 import { dataSourceAtom } from "../../../atoms/dataSource";
 import { cejilSettingsLanguages } from "../../../data/cejil/settingsAdapt";
-import { toastsAtom } from "../../../atoms/references";
+import { toastsAtom } from "../../../atoms/notifications";
 
 type CatalogLanguage = { key: string; label: string; localizedLabel: string; ltr: boolean };
 

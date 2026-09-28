@@ -10,7 +10,7 @@ import { MenuLinkEditor } from "./MenuLinkEditor";
 import { seedMenuLinks, type SettingsMenuLink } from "../../../data/settings";
 import { dataSourceAtom } from "../../../atoms/dataSource";
 import { cejilSettingsMenu } from "../../../data/cejil/settingsAdapt";
-import { toastsAtom } from "../../../atoms/references";
+import { toastsAtom } from "../../../atoms/notifications";
 
 export function MenuPage() {
   const setToasts = useSetAtom(toastsAtom);
