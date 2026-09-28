@@ -1,16 +1,24 @@
+import { useAtomValue } from "jotai";
 import { Eye } from "lucide-react";
 import type { CreatedEntity } from "../../data/imports";
 import { useNotify } from "../../hooks/useNotify";
 import { formatShortDate } from "../../utils/dates";
+import { breakpointAtom } from "../../atoms/viewport";
 
 interface EntitiesTableProps {
   entities: CreatedEntity[];
 }
 
 const cols = "1fr 10rem 5.625rem 2.75rem";
+/** Phones: no Template column. Its fixed 10rem left the title about 14px of
+ *  a 360px screen and pushed View past the edge (M10); every entity in one
+ *  import shares the template the import names in its header anyway. */
+const colsMobile = "1fr 5.625rem 2.75rem";
 
 export function EntitiesTable({ entities }: EntitiesTableProps) {
   const notify = useNotify();
+  const mobile = useAtomValue(breakpointAtom) === "mobile";
+  const grid = mobile ? colsMobile : cols;
   if (entities.length === 0) return null;
 
   return (
@@ -31,13 +39,13 @@ export function EntitiesTable({ entities }: EntitiesTableProps) {
             role="row"
             className="grid items-center gap-3 px-4 h-10 text-meta font-semibold text-ink-tertiary uppercase tracking-wider"
             style={{
-              gridTemplateColumns: cols,
+              gridTemplateColumns: grid,
               backgroundColor: "var(--bg-warm)",
               borderBottom: "1px solid var(--border-primary)",
             }}
           >
             <th role="columnheader" scope="col" className="block font-semibold text-start">Title</th>
-            <th role="columnheader" scope="col" className="block font-semibold text-start">Template</th>
+            {!mobile && <th role="columnheader" scope="col" className="block font-semibold text-start">Template</th>}
             <th role="columnheader" scope="col" className="block font-semibold text-start">Created</th>
             <th role="columnheader" scope="col" className="block font-semibold text-center">View</th>
           </tr>
@@ -52,12 +60,12 @@ export function EntitiesTable({ entities }: EntitiesTableProps) {
               data-part="row"
               className="grid items-center gap-3 px-4 h-11 text-sm hover:bg-warm transition-colors"
               style={{
-                gridTemplateColumns: cols,
+                gridTemplateColumns: grid,
                 borderBottom: "1px solid var(--border-primary)",
               }}
             >
               <td role="cell" className="block text-xs font-medium text-ink truncate">{entity.title}</td>
-              <td role="cell" className="block text-xs text-ink-tertiary">{entity.template}</td>
+              {!mobile && <td role="cell" className="block text-xs text-ink-tertiary">{entity.template}</td>}
               <td role="cell" className="block text-xs text-ink-tertiary">{formatShortDate(entity.date)}</td>
               <td role="cell" className="flex items-center justify-center">
                 <button

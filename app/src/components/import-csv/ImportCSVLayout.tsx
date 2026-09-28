@@ -22,8 +22,11 @@ export function ImportCSVLayout({ children, actionBar, onNavigate }: ImportCSVLa
       {!isMobile && <SettingsNav onNavigate={onNavigate} activeId="import-csv" />}
       {/* The main-tier gutter host (16px): the list and detail views and the
           action bar take their side inset from it. */}
-      <div data-gutter-host data-part="content" className="gutter-host-main flex flex-col flex-1 min-h-0 bg-warm">
-        <div data-part="body" className="flex flex-col flex-1 min-h-0">
+      {/* `min-w-0` on both: as flex items they otherwise refuse to shrink below
+          their widest child's content, and on a phone that held the whole
+          column at ~400px and pushed every row off the screen's edge. */}
+      <div data-gutter-host data-part="content" className="gutter-host-main flex flex-col flex-1 min-w-0 min-h-0 bg-warm">
+        <div data-part="body" className="flex flex-col flex-1 min-w-0 min-h-0">
           {children}
         </div>
         {actionBar}
