@@ -162,7 +162,7 @@ export function MobileBottomSheet({
   const chrome: SheetChrome = {
     back,
     close: upper ? layer.closeAll : onClose,
-    closeLabel: upper ? "Close all" : "Close",
+    closeLabel: upper ? "Close all" : title ?? ariaLabel ? `Close ${title ?? ariaLabel}` : "Close",
   };
 
   /* Portalled to the body. A sheet opened from inside another sheet would

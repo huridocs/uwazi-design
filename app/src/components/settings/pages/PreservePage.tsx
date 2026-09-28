@@ -42,7 +42,7 @@ export function PreservePage() {
         <p className="text-xs text-ink-tertiary mb-4">
           Capture and archive web sources on a schedule. Each token authenticates one capture source.
         </p>
-        <Table columns={columns} data={tokens} getRowId={(t) => t.id} onRowClick={(t) => setEditing(t)} />
+        <Table columns={columns} data={tokens} getRowId={(t) => t.id} onRowClick={(t) => setEditing(t)} rowAriaLabel={(t) => `Edit ${t.name}`} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>

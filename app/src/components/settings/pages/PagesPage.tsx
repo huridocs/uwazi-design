@@ -65,7 +65,7 @@ export function PagesPage() {
         <p className="text-xs text-ink-tertiary mb-4">
           Custom pages for your collection — about pages, methodology, landing content.
         </p>
-        <Table columns={columns} data={pages} getRowId={(p) => p.id} onRowClick={(p) => setEditing(p)} />
+        <Table columns={columns} data={pages} getRowId={(p) => p.id} onRowClick={(p) => setEditing(p)} rowAriaLabel={(p) => `Edit ${p.title}`} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>

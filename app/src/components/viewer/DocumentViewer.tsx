@@ -435,7 +435,7 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
             </span>
             <button
               onClick={() => setLangNoticeDismissed(true)}
-              aria-label="Dismiss"
+              aria-label="Dismiss language notice"
               className="shrink-0 p-0.5 rounded hover:bg-warning/15 transition-colors cursor-pointer"
             >
               <X size={12} />

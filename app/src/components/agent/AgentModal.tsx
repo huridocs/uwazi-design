@@ -336,7 +336,7 @@ export function AgentModal() {
             <button
               onClick={() => setOpen(false)}
               className="ms-auto flex items-center justify-center w-7 h-7 rounded-md text-ink-muted hover:bg-warm hover:text-ink-secondary transition-colors"
-              aria-label="Close"
+              aria-label="Close Bert"
               data-gutter-align="box"
             >
               <X size={17} />

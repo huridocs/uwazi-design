@@ -58,7 +58,7 @@ export function ThesauriPage() {
         <p className="text-xs text-ink-tertiary mb-4">
           Controlled vocabularies you can attach to template properties.
         </p>
-        <Table columns={columns} data={thesauri} getRowId={(t) => t.id} onRowClick={(t) => setEditing(t)} />
+        <Table columns={columns} data={thesauri} getRowId={(t) => t.id} onRowClick={(t) => setEditing(t)} rowAriaLabel={(t) => `Edit ${t.name}`} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>

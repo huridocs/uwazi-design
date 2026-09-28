@@ -69,7 +69,7 @@ export function TranslationsPage() {
         <p className="text-xs text-ink-tertiary mb-4">
           Translate the interface and your collection's content across active languages.
         </p>
-        <Table columns={columns} data={seedTranslationContexts} getRowId={(c) => c.id} onRowClick={(c) => setEditing(c)} />
+        <Table columns={columns} data={seedTranslationContexts} getRowId={(c) => c.id} onRowClick={(c) => setEditing(c)} rowAriaLabel={(c) => `Edit ${c.name} translations`} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <Button

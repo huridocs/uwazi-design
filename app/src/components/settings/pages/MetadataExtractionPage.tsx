@@ -53,7 +53,7 @@ export function MetadataExtractionPage() {
         <p className="text-xs text-ink-tertiary mb-4">
           Train extractors to suggest property values from document text automatically.
         </p>
-        <Table columns={columns} data={extractors} getRowId={(x) => x.id} onRowClick={(x) => setEditing(x)} />
+        <Table columns={columns} data={extractors} getRowId={(x) => x.id} onRowClick={(x) => setEditing(x)} rowAriaLabel={(x) => `Edit ${x.property} extractor`} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>

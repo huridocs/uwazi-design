@@ -207,8 +207,8 @@ export function PreserveTokenEditor({
               <TextInput value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…" />
             </Field>
 
-            <Field label="Auth">
-              <Select value={auth} options={AUTH_OPTIONS} onChange={setAuth} ariaLabel="Auth" />
+            <Field label="Authentication">
+              <Select value={auth} options={AUTH_OPTIONS} onChange={setAuth} ariaLabel="Authentication" />
             </Field>
 
             <div>

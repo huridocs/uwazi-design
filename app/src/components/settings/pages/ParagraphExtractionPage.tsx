@@ -50,7 +50,7 @@ export function ParagraphExtractionPage() {
         <p className="text-xs text-ink-tertiary mb-4">
           Split documents into paragraph-level records for fine-grained search and analysis.
         </p>
-        <Table columns={mobile ? mobileColumns : columns} data={seedParagraphJobs} getRowId={(j) => j.id} onRowClick={(j) => setEditing(j)} />
+        <Table columns={mobile ? mobileColumns : columns} data={seedParagraphJobs} getRowId={(j) => j.id} onRowClick={(j) => setEditing(j)} rowAriaLabel={(j) => `Edit ${j.template} extraction`} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>

@@ -169,9 +169,9 @@ export function UsersPage() {
           />
         </div>
         {tab === "users" ? (
-          <Table columns={userColumns} data={users} getRowId={(u) => u.id} onRowClick={(u) => setEditingUser(u)} />
+          <Table columns={userColumns} data={users} getRowId={(u) => u.id} onRowClick={(u) => setEditingUser(u)} rowAriaLabel={(u) => `Edit ${u.username}`} />
         ) : (
-          <Table columns={groupColumns} data={groups} getRowId={(g) => g.id} onRowClick={(g) => setEditingGroup(g)} />
+          <Table columns={groupColumns} data={groups} getRowId={(g) => g.id} onRowClick={(g) => setEditingGroup(g)} rowAriaLabel={(g) => `Edit ${g.name}`} />
         )}
       </SettingsContent.Body>
       <SettingsContent.Footer>

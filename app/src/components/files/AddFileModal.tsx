@@ -252,7 +252,7 @@ export function AddFileModal() {
           </h2>
           <button
             onClick={() => setTarget(null)}
-            aria-label="Close"
+            aria-label={lockedGroup ? "Close add translation" : "Close add file"}
             className="p-1 rounded-md hover:bg-parchment transition-colors cursor-pointer"
           >
             <X size={18} className="text-ink-muted" />
