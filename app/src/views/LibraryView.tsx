@@ -1,16 +1,8 @@
 import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
-import {
-  Search,
-  X,
-  Plus,
-  Upload,
-  FileUp,
-  FileDown,
-  MoreHorizontal,
-} from "lucide-react";
+import { FileDown, FileUp, MoreHorizontal, Plus, Search, Upload, X } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom, travesiaReadyAtom } from "../atoms/dataSource";
-import { recentTemplatesAtom, startDraftAtom } from "../atoms/entityOverlay";
+import { discardDraftAtom, draftEntityIdAtom, recentTemplatesAtom, startDraftAtom } from "../atoms/entityOverlay";
 import { activitiesAtom } from "../atoms/notifications";
 import { NewImportModal } from "../components/import-csv/NewImportModal";
 import { editSessionOpenAtom } from "../atoms/dirtyGuard";
@@ -117,6 +109,7 @@ import { TimeBrush } from "../components/library/TimeBrush";
 import { LibraryFilters } from "../components/library/LibraryFilters";
 import { LibraryClusterDrawer } from "../components/library/LibraryClusterDrawer";
 import { EntityDrawerPreview } from "../components/library/EntityDrawerPreview";
+import { MobileBottomSheet } from "../components/layout/MobileBottomSheet";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { ResultsBody } from "../components/library/ResultsSnippets/ResultsBody";
 import { ResultsMainView } from "../components/library/ResultsSnippets/ResultsMainView";
@@ -317,6 +310,8 @@ export function LibraryView() {
   const [selectedId, setSelectedId] = useAtom(librarySelectedEntityIdAtom);
   const selectedCluster = useAtomValue(librarySelectedClusterAtom);
   const openEntity = useSetAtom(openEntityAtom);
+  const draftId = useAtomValue(draftEntityIdAtom);
+  const discardDraft = useSetAtom(discardDraftAtom);
   const setOverlayEntity = useSetAtom(overlayEntityIdAtom);
   const focusForPreview = useSetAtom(focusEntityForPreviewAtom);
   const setScrollToPage = useSetAtom(scrollToPageAtom);
@@ -1695,6 +1690,27 @@ export function LibraryView() {
         declared decides only who owns the state, and 120 cards each holding
         their own would be 120 components rendering nothing. */}
     <ImageLightbox image={lightbox} onClose={() => setLightbox(null)} />
+    {/* Phones have no right-hand drawer, so what the Library selects INTO it —
+        a new entity's draft (Create entity), a single uploaded PDF — opens as
+        a full-height sheet on the stack instead of somewhere nobody can see.
+        Dismissing it is a navigation (the dirty guard asks first) and an
+        untouched draft goes with it, so no empty entity is left behind. */}
+    {isMobile && (
+      <MobileBottomSheet
+        open={!!selectedId}
+        bare
+        defaultSnap="full"
+        ariaLabel="Entity"
+        onClose={() =>
+          guard(() => {
+            if (selectedId && selectedId === draftId) discardDraft(selectedId);
+            setSelectedId(null);
+          })
+        }
+      >
+        {selectedId && <EntityDrawerPreview entityId={selectedId} />}
+      </MobileBottomSheet>
+    )}
     <AdaptiveSplitView
       left={renderLeft()}
       mobileLeft={(menuTrigger) => renderLeft(menuTrigger)}
