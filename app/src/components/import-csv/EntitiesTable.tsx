@@ -40,7 +40,7 @@ export function EntitiesTable({ entities }: EntitiesTableProps) {
         <span>Title</span>
         {!mobile && <span>Template</span>}
         <span>Created</span>
-        <span className="text-center">View</span>
+        <span className="text-center">Open</span>
       </div>
 
       {/* Rows — fills available space, scrolls */}
@@ -58,7 +58,7 @@ export function EntitiesTable({ entities }: EntitiesTableProps) {
             {!mobile && <span className="text-xs text-ink-tertiary">{entity.template}</span>}
             <span className="text-xs text-ink-tertiary">{formatShortDate(entity.date)}</span>
             <button
-              aria-label={`View ${entity.title}`}
+              aria-label={`Open ${entity.title}`}
               onClick={() => notify(`Opening ${entity.title}`)}
               className="flex items-center justify-center p-1 rounded hover:bg-parchment transition-colors"
             >

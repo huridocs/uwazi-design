@@ -146,7 +146,7 @@ export function AgentModal() {
       case "page": return { label: "Page", value: `Page ${currentPage}` };
       case "selection": return { label: "Selection", value: `${selectedRefIds.size} ref${selectedRefIds.size !== 1 ? "s" : ""}` };
       case "template": return { label: "Template", value: "Structure" };
-      case "connections": return { label: "Connections", value: `${references.length}` };
+      case "connections": return { label: "Relationships", value: `${references.length}` };
       case "files": return { label: "Files", value: `${files.length}` };
       case "entity": return { label: "Entity", value: n.title ?? "Entity" };
       case "file": return { label: "File", value: n.title ?? "File" };
@@ -216,8 +216,8 @@ export function AgentModal() {
     if (/find|search|related|similar|cases?/i.test(q)) {
       const related = topRelated(3);
       if (related.length === 0)
-        return `Searching ${ctx}… ${entityLabel} has no connections yet — link an entity first and I'll trace outward from there.`;
-      return `Searching ${ctx}… the most-evidenced connections of ${entityLabel}:\n\n${related.join("\n")}\n\nOpen any of them, or refine the search?`;
+        return `Searching ${ctx}… ${entityLabel} has no relationships yet — link an entity first and I'll trace outward from there.`;
+      return `Searching ${ctx}… the most-evidenced relationships of ${entityLabel}:\n\n${related.join("\n")}\n\nOpen any of them, or refine the search?`;
     }
     if (/extract|metadata|fields?|fill/i.test(q)) {
       if (scalarFields.length === 0)
@@ -254,7 +254,7 @@ export function AgentModal() {
         .slice(0, 4)
         .map(([t, n]) => `${n} ${relationTypes.find((rt) => rt.id === t)?.label ?? t}`);
       const entityCount = new Set(scopedRefs.map((r) => r.targetEntityId)).size;
-      return `Tracing connections for ${entityLabel}: ${scopedRefs.length} reference${scopedRefs.length !== 1 ? "s" : ""} across ${entityCount} entit${entityCount === 1 ? "y" : "ies"}${parts.length ? ` — ${parts.join(", ")}` : ""}. The graph view has the full picture; want me to group it by relation type?`;
+      return `Tracing relationships for ${entityLabel}: ${scopedRefs.length} reference${scopedRefs.length !== 1 ? "s" : ""} across ${entityCount} entit${entityCount === 1 ? "y" : "ies"}${parts.length ? ` — ${parts.join(", ")}` : ""}. The graph view has the full picture; want me to group it by relationship type?`;
     }
     return `Working in context of ${ctx}. I'd ground my answer in the documents in scope and cite the passages as I go, then summarise what I find.`;
   };
@@ -619,7 +619,7 @@ function AddMenu({
       {hasSelection && !hasKind("selection") && item("Selection", () => { onAdd("selection"); close(); })}
       {groupLabel("Facets")}
       {!hasKind("template") && item("Template", () => { onAdd("template"); close(); })}
-      {!hasKind("connections") && item("Connections", () => { onAdd("connections"); close(); })}
+      {!hasKind("connections") && item("Relationships", () => { onAdd("connections"); close(); })}
       {!hasKind("files") && item("Files", () => { onAdd("files"); close(); })}
       {groupLabel("Attach")}
       {item("Entity…", () => setMode("entity"))}

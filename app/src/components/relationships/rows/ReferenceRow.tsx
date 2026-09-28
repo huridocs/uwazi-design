@@ -206,7 +206,7 @@ export function ReferenceRow({ reference, onDelete, nested }: ReferenceRowProps)
                 e.stopPropagation();
                 onDelete(reference.id);
               }}
-              aria-label="Delete reference"
+              aria-label="Delete relationship"
               className="hit-area p-1 rounded opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-seal-tint text-ink-muted hover:text-seal-label transition-all cursor-pointer"
             >
               <Trash2 size={12} />

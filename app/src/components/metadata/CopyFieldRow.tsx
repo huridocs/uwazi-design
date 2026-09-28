@@ -147,7 +147,7 @@ function describe(match: CopyMatch, side: "current" | "incoming"): string {
     const ids =
       side === "incoming" ? match.sourceConnectedEntityIds : match.targetConnectedEntityIds;
     const n = ids?.length ?? 0;
-    return n === 0 ? "no connections" : `${n} ${n === 1 ? "connection" : "connections"}`;
+    return n === 0 ? "no entities" : `${n} ${n === 1 ? "entity" : "entities"}`;
   }
   const value = side === "incoming" ? match.sourceValue : match.targetValue;
   return value?.trim() ? value : "empty";

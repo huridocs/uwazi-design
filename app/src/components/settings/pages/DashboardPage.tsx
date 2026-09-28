@@ -49,14 +49,14 @@ export function DashboardPage() {
           {cejil ? (
             <>
               <StatsCard label="Entities" value={cejilDashboardStats.entities} accent="blue" />
-              <StatsCard label="Connections" value={cejilDashboardStats.connections} accent="green" />
+              <StatsCard label="Relationships" value={cejilDashboardStats.connections} accent="green" />
               <StatsCard label="Templates" value={cejilDashboardStats.templates} />
               <StatsCard label="Languages" value={cejilDashboardStats.languages} accent="amber" />
             </>
           ) : (
             <>
               <StatsCard label="Entities" value={entities.length} accent="blue" />
-              <StatsCard label="Connections" value={connectionTotal} accent="green" />
+              <StatsCard label="Relationships" value={connectionTotal} accent="green" />
               <StatsCard label="Users" value={seedUsers.length} />
               <StatsCard label="Languages" value={seedLanguages.length} accent="amber" />
             </>

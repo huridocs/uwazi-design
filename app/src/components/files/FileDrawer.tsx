@@ -146,7 +146,7 @@ export function FileDrawer({
                       onClick={() => setViewerFileId(selectedFiles[0].id)}
                       className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${BAR_LEAD} rounded-md transition-colors cursor-pointer`}
                     >
-                      <Eye size={12} className="text-ink-tertiary" /> View
+                      <Eye size={12} className="text-ink-tertiary" /> Open
                     </button>
                     <button
                       onClick={() => notify("File downloaded", "success")}

@@ -1117,7 +1117,7 @@ sendFill(selection.text);                                    // commits, then di
                   name="FacetSection"
                   description="Collapsible facet block with checkbox options (used inside FiltersDrawer)"
                   code={`<FacetSection
-  title="Relation type"
+  title="Relationship type"
   options={[{ id: "cites", label: "Cites" }, ...]}
   selected={selected}
   onToggle={(id) => ...}

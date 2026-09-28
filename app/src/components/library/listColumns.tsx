@@ -125,7 +125,7 @@ export const LIST_COLUMNS: ListColumnSpec[] = [
   },
   {
     id: "connections",
-    label: "Connections",
+    label: "Relationships",
     default: true,
     width: "8rem",
     align: "right",

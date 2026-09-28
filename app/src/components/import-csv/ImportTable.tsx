@@ -101,7 +101,7 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
                   onClick={(e) => { e.stopPropagation(); onView(entry.id); }}
                   className="hit-area relative px-2.5 py-1 text-meta font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors shrink-0"
                 >
-                  View
+                  Open
                 </button>
               </div>
             );
@@ -195,7 +195,7 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
                   disabled={entry.status === "pending"}
                   className="px-2.5 py-1 text-meta font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors disabled:text-ink-muted disabled:hover:bg-transparent disabled:cursor-not-allowed"
                 >
-                  View
+                  Open
                 </button>
               </div>
             </div>

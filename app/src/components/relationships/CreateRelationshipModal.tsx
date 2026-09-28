@@ -160,7 +160,7 @@ export function CreateRelationshipModal() {
     step === "new-entity"
       ? t("System", "New entity")
       : step === "relation"
-        ? t("System", "Choose relation type")
+        ? t("System", "Choose relationship type")
         : t("System", "Select target entity");
 
   return (

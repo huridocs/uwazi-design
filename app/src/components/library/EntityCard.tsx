@@ -122,7 +122,7 @@ export const EntityCard = memo(function EntityCard({
   const showConnections = info.connections;
 
   const connectionBadge = showConnections && connections > 0 && (
-    <span className="inline-flex items-center gap-1 text-meta text-ink-tertiary tabular-nums" title={`${connections} connections`}>
+    <span className="inline-flex items-center gap-1 text-meta text-ink-tertiary tabular-nums" title={`${connections} relationships`}>
       <Link2 size={11} className="text-ink-muted" />
       {connections.toLocaleString()}
     </span>

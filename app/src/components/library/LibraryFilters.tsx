@@ -289,7 +289,7 @@ export function LibraryFilters() {
           <>
             {/* CEJIL: the curated summa.cejil.org filter config — top-level
                 templates + the expandable "Documentos" group. */}
-            <FacetCard title="Type">
+            <FacetCard title="Template">
               {cejilSettings.filters.map((node) => {
                 if (!node.items) {
                   return (
@@ -351,7 +351,7 @@ export function LibraryFilters() {
           </>
         ) : (
           <>
-            <FacetCard title="Type">
+            <FacetCard title="Template">
               {nonDocTypes.map((t) => (
                 <FacetRow
                   key={t.id}

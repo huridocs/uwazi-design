@@ -83,7 +83,7 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
       ...prev,
       {
         id: Date.now().toString(),
-        message: toDelete.size === 1 ? "Reference deleted" : `${toDelete.size} references deleted`,
+        message: toDelete.size === 1 ? "Relationship deleted" : `${toDelete.size} relationships deleted`,
         type: "success" as const,
       },
     ]);
@@ -122,12 +122,12 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
     <ConfirmDialog
       open={confirmDelete}
       title={
-        selectedCount === 1 ? "Delete reference?" : `Delete ${selectedCount} references?`
+        selectedCount === 1 ? "Delete relationship?" : `Delete ${selectedCount} relationships?`
       }
       message={
         selectedCount === 1
-          ? "The reference is removed from this entity. This can’t be undone."
-          : `${selectedCount} references are removed from this entity. This can’t be undone.`
+          ? "The relationship is removed from this entity. This can’t be undone."
+          : `${selectedCount} relationships are removed from this entity. This can’t be undone.`
       }
       confirmLabel="Delete"
       variant="danger"

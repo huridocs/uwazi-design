@@ -166,7 +166,7 @@ export function ChangeTemplateDialog({
                   </section>
                 );
               })}
-              <p className="text-meta text-ink-tertiary">Title, dates, files and connections are always kept.</p>
+              <p className="text-meta text-ink-tertiary">Title, dates, files and relationships are always kept.</p>
             </>
           )}
         </div>

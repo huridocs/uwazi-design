@@ -99,8 +99,8 @@ export type DisplaySection =
 export const LIBRARY_SORTS: Choice[] = [
   { id: "recent", label: "Date added" },
   { id: "title", label: "Title" },
-  { id: "connections", label: "Connections" },
-  { id: "type", label: "Type" },
+  { id: "connections", label: "Relationships" },
+  { id: "type", label: "Template" },
   { id: "country", label: "Country" },
 ];
 
@@ -133,7 +133,7 @@ const CARD_INFO: DisplaySection = {
   options: [
     { id: "preview", label: "Thumbnail", default: true },
     { id: "metadata", label: "Metadata", default: true },
-    { id: "connections", label: "Connections", default: true },
+    { id: "connections", label: "Relationships", default: true },
   ],
 };
 

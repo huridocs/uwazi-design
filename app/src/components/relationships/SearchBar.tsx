@@ -55,7 +55,7 @@ export function SearchBar({ rightSlot, inlineSlot }: SearchBarProps = {}) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search  •  AND, OR, NOT, &quot;exact&quot;, wild*"
-          aria-label="Search references"
+          aria-label="Search relationships"
           className="flex-1 min-w-[100px] h-6 bg-transparent text-xs font-medium placeholder:text-ink-muted focus:outline-none"
         />
 

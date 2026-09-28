@@ -100,7 +100,7 @@ export function CopyFromPicker({
   }, [stepKey]);
 
   const choose = (source: Entity) => setStep(stepFor(target, source, language, resolveUnits));
-  const typeName = getEntityType(target.typeId)?.name ?? "this type";
+  const typeName = getEntityType(target.typeId)?.name ?? "this template";
   // The TARGET's own corpus, never the Library's current one — an entity's peers
   // are the corpus it came from (see `entityCorpusPool`).
   const { entities, loading } = useMemo(
@@ -270,7 +270,7 @@ function emptyMessage({
       ? `No other ${typeName} matches that title.`
       : "No other entity matches that title.";
   return scope === "type"
-    ? "Nothing else of this type to copy from."
+    ? "Nothing else with this template to copy from."
     : "There is no other entity to copy from.";
 }
 
