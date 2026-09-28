@@ -66,6 +66,8 @@ export const clearLibrarySearchAtom = atom(null, (get, set) => {
   if (prior && get(viewModeStateAtom) === "results") set(viewModeStateAtom, prior);
   set(preSearchViewModeAtom, null);
   set(searchModeOverriddenAtom, false);
+  set(libraryResultsSheetOpenAtom, false);
+  set(resultsSheetArmedAtom, false);
   // The sort picked DURING the search was for the search; the one from before
   // it comes back (see `librarySortAtom`).
   set(searchSortOverrideAtom, null);
@@ -477,6 +479,25 @@ const searchModeOverriddenAtom = atom(false);
 
 const viewModeStateAtom = atom<LibraryViewMode>("cards");
 
+/** Phones: the Results sheet a search opened. Set once, when a query becomes
+ *  active (`enterSearchResultsAtom`), so refining the query never reopens a
+ *  sheet the reader closed; closing it keeps the query; clearing the search
+ *  (`clearLibrarySearchAtom`) closes it. */
+export const libraryResultsSheetOpenAtom = atom(false);
+
+/** A query became active on a phone and its Results sheet has not opened yet. */
+const resultsSheetArmedAtom = atom(false);
+
+/** The search box was submitted (Enter / the keyboard's Search key, leaving the
+ *  box, picking a recent search): on a phone, open the Results sheet the query
+ *  armed, once. Not at the first character: the sheet is a modal and takes
+ *  focus, so opening mid-word sent the rest of the word into the sheet. */
+export const submitLibrarySearchAtom = atom(null, (get, set) => {
+  if (!get(resultsSheetArmedAtom) || !get(libraryQueryAtom).trim()) return;
+  set(resultsSheetArmedAtom, false);
+  set(libraryResultsSheetOpenAtom, true);
+});
+
 /** The library's view mode.
  *
  *  Writing it is also how the reader overrules the search's own choice of view:
@@ -505,6 +526,14 @@ export const libraryViewModeAtom = atom(
  *  than in an effect watching the query from a component: the switch is part of
  *  the search starting, not a consequence some mounted view happens to notice. */
 const enterSearchResultsAtom = atom(null, (get, set) => {
+  // A phone keeps the view you were in and opens the Results SHEET over it
+  // instead: swapping the whole page under a thumb that is still typing is the
+  // bigger jump there, and the sheet closes back onto where you were. It is
+  // only ARMED here — see `submitLibrarySearchAtom`.
+  if (get(breakpointAtom) === "mobile") {
+    set(resultsSheetArmedAtom, true);
+    return;
+  }
   if (get(searchModeOverriddenAtom)) return;
   const mode = get(viewModeStateAtom);
   if (mode === "results") return;
