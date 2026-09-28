@@ -15,6 +15,7 @@ import {
 } from "../../utils/connectionGrouping";
 import { RelationshipsTreeView } from "./RelationshipsTreeView";
 import { RelationshipsGraphView } from "./RelationshipsGraphView";
+import { WhenBody } from "./when/WhenBody";
 import { RelationshipRow } from "./RelationshipRow";
 import { countOf } from "../../utils/relationships";
 import { RelationshipGroupedCard } from "./RelationshipGroupedCard";
@@ -48,6 +49,18 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
 
   if (view === "tree") {
     return <RelationshipsTreeView />;
+  }
+  if (view === "when") {
+    return (
+      // A scroll lane, like the list: the cards sit on the host's gutter.
+      <div
+        data-component="RelationshipsPanelBody"
+        data-view="when"
+        className={`bleed flex-1 overflow-auto pb-8 relative ${scrollBgClass ?? ""}`}
+      >
+        <WhenBody />
+      </div>
+    );
   }
   if (view === "graph") {
     return (

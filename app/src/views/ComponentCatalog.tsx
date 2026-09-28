@@ -85,6 +85,8 @@ import {
   IsolatedSelectControls,
   IsolatedRelationshipGroupedCardAggregate,
   IsolatedViewControls,
+  IsolatedYearStrip,
+  IsolatedEventRow,
   IsolatedDirectionGlyph,
   IsolatedConnectionGroupCard,
   IsolatedRelationshipFieldCard,
@@ -1480,10 +1482,30 @@ sendFill(selection.text);                                    // commits, then di
               <div id="view-controls" ref={reg("view-controls")}>
                 <CatalogEntry
                   name="ViewControls"
-                  description="Presentation toggle for the merged Relationships panel: list / tree / graph."
+                  description="Presentation toggle for the merged Relationships panel: list / tree / graph / when."
                   code={`<ViewControls />`}
                 >
                   <IsolatedViewControls />
+                </CatalogEntry>
+              </div>
+
+              <div id="year-strip" ref={reg("year-strip")}>
+                <CatalogEntry
+                  name="YearStrip"
+                  description="The When view's events per year — one bar per year across the span, empty years included. Click narrows to a year, Shift+click extends, the chip clears. The chip's line is always mounted, so choosing a range moves nothing."
+                  code={`<YearStrip years={[{ year: 1995, count: 3 }, …]} range={range} onChange={setRange} />`}
+                >
+                  <IsolatedYearStrip />
+                </CatalogEntry>
+              </div>
+
+              <div id="event-row" ref={reg("event-row")}>
+                <CatalogEntry
+                  name="EventRow"
+                  description="One line of the When spine. The entity's own dates print their label in ink; a connected entity's print its pill (opens the preview), the date's label and the relation that reached it (+N when several). A span prints its years."
+                  code={`<EventRow event={event} selected={event.entityId === previewing} />`}
+                >
+                  <IsolatedEventRow />
                 </CatalogEntry>
               </div>
 

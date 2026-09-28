@@ -6,7 +6,7 @@ import {
   viewAtom,
   groupByAtom,
   expandAllSignalAtom,
-  collapseAllSignalAtom,
+  collapseAllSignalAtom, isUngroupedView
 } from "../../atoms/filters";
 
 export function CollapseControls({
@@ -93,7 +93,7 @@ export function RelationshipsCollapseControls() {
 
   return (
     <CollapseControls
-      disabled={view === "graph" || groupBy === "none"}
+      disabled={isUngroupedView(view) || groupBy === "none"}
       onExpandAll={() => setExpandSignal((s) => s + 1)}
       onCollapseAll={() => setCollapseSignal((s) => s + 1)}
     />

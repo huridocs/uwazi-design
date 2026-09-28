@@ -1,813 +1,314 @@
-# Uwazi 2026 prototype — Claude handoff
+# Uwazi 2026 prototype
 
-> If you're picking this up in a fresh session, read this once. It captures decisions and patterns that aren't obvious from the code.
+Conventions and decisions that the code does not make obvious. Read this once per session.
+History, measurements and incident notes live in auto-memory (see "Where context lives").
 
-## Stack
-- **Vite + React 18 + TypeScript + Tailwind v4 + Jotai**, mock data only.
-- Dev: `cd app && npm run dev` → http://localhost:5173.
-- Type check: `cd app && npx tsc --noEmit`.
-- No backend, no router — `views/` are page-level orchestrators switched via top-level state.
-- **Storybook 10** (react-vite + a11y + docs): `cd app && npm run storybook` → :6006.
-  Stories in `app/src/stories/*.stories.tsx`; `.storybook/preview.tsx` imports
-  `src/index.css` (real tokens) and has a light/dark toolbar that flips `:root.dark`.
-  New shared primitives get BOTH a story and a CatalogEntry.
-  **Story names stay generic** (Default, Minimal, AllStates, Empty…) — never
-  domain-specific ("PersonEntity", case names). Domain strings are fine as
-  demo DATA, not as export/story names.
+## Stack and commands
+- Vite + React 18 + TypeScript + Tailwind v4 + Jotai. Mock data only, no backend, no router:
+  `views/` are pages switched by top-level state.
+- Dev: `cd app && npm run dev`. Default port 5173; under Operator, use the port the session reserves.
+- Gates before any push: `cd app && npx tsc --noEmit && npm run build`.
+- Storybook 10 (react-vite, a11y, docs): `cd app && npm run storybook` → :6006. Stories are in
+  `app/src/stories/`. `.storybook/preview.tsx` loads `src/index.css` and toggles `:root.dark`.
+  The a11y addon checks every story; new primitives ship with no violations.
+- A new shared primitive gets a story and a `CatalogEntry`. Story names are generic (Default,
+  Minimal, AllStates, Empty). Domain strings may appear as demo data, not as story names.
+- Branches: work lands on `playground`. `main` is reduced and takes only what Juan names.
 
-## Style handoff → huridocs/uwazi
-`handoff/` holds the migration kit for the real repo (branch `production`, also
-Tailwind v4 + Storybook 10): `uwazi-semantic-tokens.css` (PR-ready additive token
-layer, scoped to their `.tw-content`) and `TOKENS-MAPPING.md` (token map — e.g.
-carbon replaces their `primary-700 #2b56c1` —, the two-layer var rule, phase plan).
-Keep it in sync when tokens.css or the style rules change.
+## Working with Juan
+- Terse and directive; infer scope. Feedback is usually a screenshot.
+- Brand terms: ink (text), stamp/seal (red, danger only), parchment/vellum/paper/warm (neutrals),
+  carbon (blue, data accent). Ink is primary. Semantic amber/green/red stay as they are.
+- "Calm and editorial". He asks for changes, not design options: make the change and show it.
+  Commit when asked.
 
-## Working with the user
-- **Terse, directive**, expects you to infer scope. Iterates visually — image-driven feedback is the norm.
-- Communicates in brand terms: "ink" (text/black), "stamp" (seal/red), "parchment"/"vellum"/"paper"/"warm" (warm neutrals), "carbon" (data/blue accent).
-- "Calm and editorial" feel. Ink is primary; Seal is for danger only. Semantic colours (amber warning, green success, red danger) stay as-is.
-- Asks for changes, not designs — show, don't deliberate. After a non-trivial edit, prefer to commit on request rather than waiting.
+## Vocabulary
+One term per concept, in code, comments, docs and UI copy.
 
-## A11y patterns (post-audit, 2026-07 — don't regress these)
-- **Rows/cards with nested controls are NEVER `role="button"`.** A CLICKABLE row
-  (`EntityCard`, `DataTable` rows, `ImportTable` rows, and `ListCardRow` given an
-  `onClick`) renders a stretched invisible **primary-action button** as first
-  child (focus ring, `aria-pressed`, accessible name, native Enter/Space);
-  content sits above it in a `relative` wrapper so nested controls stay
-  clickable, and the container keeps a plain `onClick` for mouse. Copy this
-  pattern for any new clickable row.
-- **…but a row whose actions are all visible controls is CHROME, not a control.**
-  `ListCardRow`'s `onClick` is optional: without it there is no stretched button,
-  no tab stop and no pointer cursor, just hover and selected styling. The
-  relationships rows (`rows/RowShell.tsx`) are that shape — their targets are the
-  **entity pill** (opens the entity overlay) and the **`p.N` page tag** (goes to
-  the passage in the document), each a real button naming itself ("Open Case
-  12.045", "Go to page 14"). A row-wide target on top of those was a third route
-  to what the pill does, announced as "Open row", and it made pill and tag fire
-  twice. The hover **eye** icon is gone with it — the pill replaced it in the
-  open; **delete stays** behind the hover, because it is destructive.
-  `PageTag`/`RowEntityPill` stop propagation, so a host that DOES keep a row
-  click still can't fire twice.
-- **Always-mounted slide-overs get `inert` while closed** (FiltersDrawer,
-  NotificationsDrawer, EntityOverlay do this via `toggleAttribute("inert")`).
-  Without it, tabbing into the closed drawer's controls force-scrolls the
-  overflow-hidden pane and visually parks the drawer over the content.
-- **Overlays trap focus**: `hooks/useFocusTrap.ts` — attach to the PANEL, wraps
-  Tab, restores focus to the trigger on close. Used by ConfirmDialog, AgentModal,
-  NotificationsDrawer, FiltersDrawer, EntityOverlay. New modals get it + Escape.
-- **Hover-revealed actions** need `group-focus-within:opacity-100` next to
-  `opacity-0 group-hover:opacity-100`, or keyboard users focus invisible buttons.
-- **SVG interactive elements** (graph nodes/labels) get `tabIndex`, `role`,
-  `aria-label`, Enter/Space, and a drawn focus ring (carbon halo) — never rely on
-  default outlines inside the zoom transform.
-- **Type labels never use the raw type colour** — pale → ink, saturated →
-  `color-mix(… 55%, var(--text-primary))` so small text clears WCAG on the tint
-  in both themes. The dot keeps the true colour. ONE implementation:
-  `utils/typeColor.ts` (`typeLabelColor`), used by EntityPill AND EntityTypeChip
-  — the chip shipped the raw colour precisely because it carried its own copy.
-  **Measure new type colours against the 22-colour PALETTE in
-  `data/cejil/typesAdapter.ts`, not the eight base types, and in DARK** — dark is
-  the binding case (light clears 7:1 throughout). That assumption is why this
-  number moved 70 → 65 → 55: 70 missed #2563EB (4.34:1), and 65 was still tuned
-  on the eight, leaving four CEJIL colours under AA in dark (#BE123C 3.98,
-  #1D4ED8 4.22, #0369A1 4.45, #7C3AED 4.47). Worst case over all 22: 65 → 3.98,
-  60 → 4.38, 55 → 4.82.
-- Live updates (streams, toasts, task progress) get `aria-live="polite"` /
-  `role="status"`/`role="log"` — see Beacon/AgentModal/ToastContainer.
-- The Storybook a11y addon checks every story; keep new primitives violation-free.
+| Concept | Term |
+|---|---|
+| One stored edge, optionally anchored to text | reference |
+| Aggregate of references by (target, relationship type) | relationship |
+| The entity-view tab showing both | Relationships |
+| Metadata property linking to entities | relationship field |
+| An entity's schema | template |
+| Docked, resizable right pane | drawer |
+| Panel that slides over a pane | slide-over |
+| Phone bottom panel | sheet |
+| Entity shown beside other content | preview |
+| The entity a view is about / shown in a drawer / checkbox set / jump target | focused / open / selected / active |
+| Background job / log entry | task / notification |
+| The assistant | Bert in the UI, `agent*` in code |
 
-## Style rules that bite
-- **Layout in `rem`, never `px`.** Tailwind spacing utilities (`px-4`, `gap-3`) are fine. Reserve raw `px` for borders, shadows, sub-pixel details.
-- **The pane owns the side gutter, not the rows.** A pane sets it once with
-  `gutter-host` (narrow, 12px: drawers, side panels, the Library main pane,
-  every entity-view main pane: Document, Metadata, Relationships, Files),
-  `gutter-host-main` (16px: the Settings content pane, Import CSV, the
-  notifications drawer) or
-  `gutter-host-rail` (20px: `SettingsNav`, the Bert modal), plus
-  `data-gutter-host`. Views that share one tab strip share one tier: the four
-  entity tabs are separate views with separate hosts, and while Metadata and
-  Files sat at 16px the strip moved 4px and folded 8px earlier on every switch.
-  At a 1200px pane the difference is 2.7px per masonry column, and both tiers
-  cross into three columns within 8px of each other.
-  Rows inside carry NO `px-*`/`mx-*` of their own; a box
-  that must reach the pane edge (a header/footer rule, a scroll lane, a canvas)
-  uses `bleed` or `bleed-flush` (`index.css`). `MainTabs`, `DocMeta`,
-  `ListInfoRow`, `DrawerTabs` and `SearchBar` carry no side padding at all, so
-  they only sit right inside a host (the catalog demos wrap them in one). A
-  `bleed` button or link must be STRETCHED by a flex column to widen: `w-full`
-  plus negative margins only moves it.
-  Vertical rhythm is `stack` (8px): tabs → search → controls → first card →
-  card. The gap above a tab's body is the host's too: every host declares
-  `--body-top` (one step) and each body's first block takes it with `body-top`
-  (the metadata and files lanes, `SearchBar`, the document viewer's page scroll
-  and renditions). The main pane measures it from the DocMeta rule, a drawer
-  from its tab strip, so the first block sits at the same y in every tab. A
-  scroll lane takes it as padding inside the scroll. No tab is an exception:
-  the viewer's ground is the pane's own paper, so the page is its first block. A padded control declares its edge: `data-gutter-align="box"` (hover
-  fill stays inside — close X, tree/ToC rows) or `"text"` (the group title
-  field). Verify with `window.__gutter()` in the console — it asserts one start
-  and one end inset (logical, read in the host's `direction`, measured inside the
-  host's border) for the open host; don't eyeball it. `px-3.5` is retired: the
-  Library facet column and the Relationships/Files filter slide-over are both
-  narrow hosts (12px), and `DocumentViewer` is `bleed-flush` itself — inside it
-  `bleed` reaches nothing (`--gutter-reach: 0`), so its action bar takes the
-  gutter as padding.
-- **No thick left-border accents** on cards or sidebar items. Use a small dot, an icon colour, or a bg tint.
-- **Selected card state = `bg-parchment`** (#F5F0E8). Don't reach for inline `color-mix`, `bg-warm`, or `bg-vellum`.
-- **Badges are `w-fit`** so they don't stretch in flex/grid.
-- **Never shift layout on state change.** A row that appears only when it has
-  something to say (an "N active / Clear all" summary, a count line, a chip row)
-  must stay MOUNTED at a fixed height with only its contents toggling — a
-  conditional mount inside a scrollable column shoves everything below it the
-  moment a user ticks a box. Reserve the space; don't grow into it.
-- **Active sidebar items**: `bg-warm text-ink` with the *same* icon colour as inactive. Background change alone signals state.
-- **A warm button on a paper ground outside bars and dialogs uses `WARM_BUTTON`**
-  (fill plus the `WARM_EDGE` inset ring) from `components/shared/warmButton.ts`,
-  never a hand-rolled `bg-warm` string (Settings buttons, the thesaurus picker).
-  Action bars and modal footers do not use it; see the next two rules. Buttons
-  on a warm, parchment or vellum ground, in the navbar, and the Beacon pill take
-  no edge.
-- **Action-bar buttons carry no border, ring or edge, and at rest the only
-  fill is the ink commit.** The ladder, in `warmButton.ts`: solid ink for the
-  bar's commit (Save, Open entity, New Import); else `BAR_LEAD` for its lead
-  action (Create entity, Edit, Add file): no fill, ink text at medium weight,
-  because a filled button at rest reads as pressed; every other action is
-  `BAR_GHOST` (no fill, warm on hover);
-  Delete is `BAR_DANGER` (seal text, tint on hover), never a seal fill in a bar.
-  Groups (selection count / bulk actions / danger) are split by `BarDivider`,
-  not by per-button borders. No whole-bar `bg-selected` tint while a selection
-  is on: the count is the signal. Ghosts at a bar's edge take
-  `data-gutter-align="box"`. The selection readout keeps its fixed slot; the
-  "Select all N" offer hangs under the count out of flow, so the count sits on
-  the bar's midline.
-- **Every dialog is the shared `Modal`** (`components/shared/Modal.tsx`). Never
-  hand-roll a scrim, panel, header or footer. Widths are five tiers: `sm` 28rem
-  (stays a centred card on phones), `md` 32, `lg` 40, `xl` 48 (full screen below
-  md), and `grid` (up to 80rem from lg) for a spreadsheet-like body such as
-  batch entry only. The header is 3rem: `text-sm` title, subtitle inline after it. The panel
-  is a `gutter-host-main` host, so strips and rows inside use `bleed` /
-  `bleed-flush`, carry no `px-*`, and `__gutter()` must pass. The footer is a
-  3rem bar on the bar ladder: one commit (`MODAL_COMMIT` ink, `MODAL_DANGER` for
-  a destructive confirm, success for a Save) and `BAR_GHOST` for the rest; no
-  bordered or warm-filled Cancel. Focus trap, Escape and aria come from the
-  shell; a control that handles Escape itself calls `preventDefault()`. A list
-  or step modal passes a fixed `height` so it never resizes. `scope="pane"`
-  covers a pane (Copy From); `portal={false}` when it opens inside a host whose
-  outside-click check must see it as inside (drawers, EntityOverlay). Bert's
-  AgentModal is the one exception.
-  Bodies are built from `components/shared/ModalParts.tsx`, never hand-rolled:
-  `ModalSearchRow`/`ModalSearchField` (search plus optional scope toggle),
-  `ModalList` + `ModalListRow` (one h-9 row: leading, title, chip, meta),
-  `ModalSectionLabel`, `ModalField`, `ModalStatus`, and the `MODAL_INPUT` /
-  `MODAL_LABEL` / `MODAL_TEXTAREA` classes. A `scope="pane"` modal renders into
-  the pane root through `ModalHostProvider`, so its scrim covers the pane's
-  header, tabs and footer too.
+## Data model
 
-## CSS tokens — use real names
+### References and relationships
+Uwazi v2 stores one `Relationship { from, to, type }`; either end may carry a text anchor
+`{file, selections[], text}`. The prototype keeps a simpler shape:
 
-The Tailwind aliases (`--color-ink`, `--color-paper`, `--color-vellum`, `--color-warm`) are **bridges**, not the canonical raw vars. The actual vars (light/dark aware) are:
+- `data/references.ts`: each row is a `Reference` with `sourceEntityId`, `targetEntityId`,
+  `relationType`, `direction` (default `outgoing`), optional `sourceSelection` (the text anchor;
+  absent means an entity-to-entity link), optional `targetSelection`, optional `hubId`.
+- `utils/relationships.ts`: `deriveRelationships(refs)` groups by `(targetEntityId, relationType)`
+  at runtime. Direction is not in the key; incoming and outgoing to the same target and type merge
+  into one row with `directions[]` of length 2. A relationship exposes `refIds`, `evidenceCount`
+  (`refIds.length`) and `firstPage` (undefined when no backing reference is anchored).
+- A hub id with one member is a plain aggregate; hub rows have two or more members.
+- The list view renders references; the tree and graph render relationships.
+- Full write-up for the real repo: `handoff/DATA-SEAMS.md`.
+
+Known gaps, kept on purpose:
+- Target-side anchors exist only in `ref-tt-1..3`; there is no jump to the target passage and no
+  grouping or filtering by target text.
+- No inverse relationship-type labels (v2 stores one `type`).
+- No `createdBy`, source kind or confidence on references. Filters on those need data first.
+
+### Relationship fields and inheritance
+- `RelationshipMetadataField` (`type: "relationship"`) links to entities of `targetTypeId` via
+  `relationType`, with `connectedEntityIds`. Code that reads `.value` must filter these out
+  (`f.type !== "relationship"`).
+- Inheritance has one resolver, `resolveInherited` in `utils/inheritance.ts`, returning
+  `{ value, steps }`. `inheritProperty` reads a native property on the connected entity.
+  `inheritPath` + `inheritLeaf` walk several hops through `chains()` (`utils/chainTraversal.ts`).
+  The graph is injected with `registerInheritanceGraph`; `inheritance.ts` never imports CEJIL.
+  Values resolve at render; nothing is stored.
+- Fields sharing a `connectionKey` are one connection with several inherited columns, edited
+  together. `groupConnections` returns groups and singles.
+- `steps` render as a `↳ via …` trail (`ProvenanceTrail`), hoisted to one line when every row
+  shares it. `reduce` (`list|distinct|count|min|max|first`) renders a `Σ` `RollupChip`.
+- Record and edit form place relationship fields at their template position; there is no
+  "Relationships" heading. A multi-column group renders once, at its first member. CEJIL profiles
+  are put in template order by `orderByTemplate`; fields the template does not declare go last.
+- Edit mode: inherited values are read-only. `RelationshipFieldEditor` edits the connection,
+  with an entity picker filtered by `targetTypeId`. "Source" opens the entity in the slide-over.
+- Simplification: connections are explicit `connectedEntityIds`, not derived from references.
+
+### Documents
+- Files are addressed by `_id`, not filename. CEJIL `files.json` has 5,245 records but only six
+  filenames. `docPagesOf` reads `_id` first and falls back to the filename for unrecovered records;
+  removing the fallback empties full-text search for those records.
+- `scripts/recover-cejil-docs.cjs` calls a third party's production server. It is serial,
+  entity-capped (`CEJIL_RECOVER_LIMIT`) and byte-capped (`CEJIL_RECOVER_BUDGET_MB`), and stops on
+  429/5xx. Do not parallelise it or raise the caps.
+- A CEJIL entity without a PDF reads a connected one's (`cejilRenderedDoc`). The snippet path
+  carries that as `borrowedFrom`, printed as `↳ from <document>` by `BorrowedDocLine`, on a line
+  that is already mounted. `↳ via` and `↳ from` both render through `shared/ProvenanceLine.tsx`.
+- Document tab renditions: `documentFormatAtom` = `pdf | text | html` switches the rendition of the
+  default primary document. `DocumentViewer` keeps the PDF mounted and hidden, because remounting
+  leaves the canvases blank. Rendition text is `data/velasquez-judgment-{en,es,fr,ar}.txt`, parsed
+  by `data/documentRenditions.ts`. All four languages stay on the same judgment so references
+  line up; FR/AR use the EN PDF. AR renders RTL.
+
+## Layout and style
+
+### Units, gutter and rhythm
+- Layout in rem. Raw px only for borders, shadows and sub-pixel details.
+- The pane sets the side gutter once; rows carry no `px-*`/`mx-*`.
+
+  | Class | Width | Used by |
+  |---|---|---|
+  | `gutter-host` | 12px | drawers, side panels, Library main pane, all four entity-view panes |
+  | `gutter-host-main` | 16px | Settings content, Import CSV, notifications drawer, `Modal` |
+  | `gutter-host-rail` | 20px | `SettingsNav`, Bert |
+
+  Each host also sets `data-gutter-host`. Views that share a tab strip use the same tier, or the
+  strip moves when the tab changes.
+- A box that must reach the pane edge uses `bleed` or `bleed-flush` (`index.css`). A `bleed`
+  button widens only when a flex column stretches it. Inside `DocumentViewer` (itself
+  `bleed-flush`) `bleed` reaches nothing, so its action bar takes the gutter as padding.
+- `MainTabs`, `DocMeta`, `ListInfoRow`, `DrawerTabs` and `SearchBar` have no side padding and must
+  sit directly inside a host.
+- Vertical rhythm is `stack` (8px). Each host declares `--body-top`; the first block of every tab
+  body takes it with `body-top`, so first blocks line up across tabs.
+- A padded control declares its edge: `data-gutter-align="box"` or `"text"`.
+- Check with `window.__gutter()` in the console. Do not judge gutters by eye.
+
+### Tokens
+Use Tailwind utilities. When raw `var()` is needed (SVG `fill`/`stroke`, `style`), use these names
+with no fallback. `var(--ink, …)`, `var(--bg-paper, …)` and `var(--bg-vellum, …)` do not exist;
+only the fallback paints, and dark mode breaks.
 
 | Concept | Var | Tailwind |
 |---|---|---|
-| primary text | `--text-primary` | `text-ink` |
-| secondary text | `--text-secondary` | `text-ink-secondary` |
-| tertiary text | `--text-tertiary` | `text-ink-tertiary` |
-| muted text | `--text-muted` | `text-ink-muted` |
+| primary / secondary / tertiary / muted text | `--text-primary` / `-secondary` / `-tertiary` / `-muted` | `text-ink` / `text-ink-secondary` / `-tertiary` / `-muted` |
 | paper bg | `--bg-surface` | `bg-paper` |
 | warm bg | `--bg-warm` | `bg-warm` |
 | vellum bg | `--bg-muted` | `bg-vellum` |
 | parchment bg | `--bg-primary` | `bg-parchment` |
 | selected bg | `--bg-selected` | `bg-selected` |
-| border | `--border-primary` | `border-border` |
-| soft border | `--border-soft` | `border-border-soft` |
+| border / soft border | `--border-primary` / `--border-soft` | `border-border` / `border-border-soft` |
 
-**Never write `var(--ink, #1c1712)` / `var(--bg-paper, #fff)` / `var(--bg-vellum, …)`.** Those vars don't exist; only the fallback hex paints, which silently breaks dark mode. Default to Tailwind utilities; if you need raw `var(...)` (typically inside SVG `fill`/`stroke` or `style={{}}`), reference the real names above with no fallback.
+`handoff/uwazi-semantic-tokens.css` and `handoff/TOKENS-MAPPING.md` mirror these for the real
+repo; update them when tokens or style rules change.
 
-## SVG canvases (the Relationships graph)
-- **Wheel zoom**: React's `onWheel` is passive since v17. Attach a native listener with `{ passive: false }` or browser page-zoom kicks in past the clamp. See `RelationshipsGraphView.tsx` for the pattern.
-- **Tooltips**: render as HTML overlays positioned by `getBoundingClientRect`, not as SVG elements inside the zoom transform. SVG tooltips scale with the graph and clip at viewport edges.
-- **Layout**: branches occupy angular sectors, nodes fan out across concentric arcs (capacity scales with arc length). Edges are tree-style: source → label → fan to children.
+### Visual rules
+- Selected state is `bg-parchment`. No other selected colour.
+- No thick left-border or inset accents. Use a dot, an icon colour or a tint.
+- Active sidebar item: `bg-warm text-ink`, icon colour unchanged.
+- Badges are `w-fit`.
+- Layout does not shift on state change. A row that appears conditionally (a summary, a count, a
+  chip row) stays mounted at a fixed height and only its contents change.
+- Radii are overridden in `index.css` (`xs 2 … 4xl 16`). Entity dots are `rounded-[2px]`, track
+  dots `rounded-full`, pills and badges `rounded-md`.
 
-## Reference vs Relationship — one record, two projections
+### Buttons and dialogs
+- A warm button on paper outside bars and dialogs uses `WARM_BUTTON` from
+  `components/shared/warmButton.ts` (fill plus `WARM_EDGE`). Buttons on warm, parchment or vellum
+  grounds, in the navbar, and the Beacon take no edge.
+- Action bars and modal footers have no borders, rings or edges. The ladder, in `warmButton.ts`:
+  solid ink for the commit (Save, Open entity, New import); `BAR_LEAD` (no fill, ink, medium) for
+  the lead action when there is no commit; `BAR_GHOST` for the rest; `BAR_DANGER` (seal text) for
+  Delete. Groups are split by `BarDivider`. A selection shows its count in a fixed slot; the bar
+  is not tinted.
+- Every dialog is `components/shared/Modal.tsx`; the one exception is Bert's `AgentModal`.
+  - Widths: `sm` 28rem, `md` 32, `lg` 40, `xl` 48 (full screen below md), `grid` up to 80rem for
+    spreadsheet bodies.
+  - 3rem header (`text-sm` title, inline subtitle), 3rem footer on the bar ladder (`MODAL_COMMIT`,
+    `MODAL_DANGER`, `BAR_GHOST`).
+  - The panel is a `gutter-host-main` host. List or step modals pass a fixed `height`.
+  - `scope="pane"` covers one pane through `ModalHostProvider`. `portal={false}` when the host's
+    outside-click check must see the modal as inside (drawers, the entity slide-over).
+  - A control that handles Escape itself calls `preventDefault()`.
+  - Bodies use `components/shared/ModalParts.tsx` (`ModalSearchRow`, `ModalList`, `ModalListRow`,
+    `ModalSectionLabel`, `ModalField`, `ModalStatus`, `MODAL_INPUT`/`LABEL`/`TEXTAREA`).
 
-Uwazi v2's data model is a single `Relationship { from, to, type }` where each pointer may optionally carry a text anchor `{file, selections[], text}`. A row is "text-anchored" iff either endpoint has selections. There is no separate "References" collection — text references and entity-to-entity edges are the same record, viewed differently.
+## Accessibility
+- A clickable row or card is never `role="button"`. It renders a stretched invisible button as
+  its first child (focus ring, `aria-pressed`, accessible name); content sits above it in a
+  `relative` wrapper so nested controls work. Used by `EntityCard`, `DataTable`, `ImportTable`,
+  and `ListCardRow` with `onClick`. Give `DataTable` a `rowAriaLabel`; the fallback is "Open row".
+- A row whose actions are all visible controls has no row target. Relationship rows
+  (`rows/RowShell.tsx`) expose the entity pill ("Open Case 12.045") and the page tag ("Go to page
+  14"); delete stays behind hover. `PageTag` and `RowEntityPill` stop propagation.
+- Slide-overs that stay mounted get `inert` while closed. Without it, Tab reaches hidden controls
+  and scrolls the pane.
+- Overlays trap focus with `hooks/useFocusTrap.ts` on the panel and restore focus on close.
+  `Modal` does this for every dialog.
+- Hover-revealed actions add `group-focus-within:opacity-100`.
+- Interactive SVG elements get `tabIndex`, `role`, `aria-label`, Enter/Space and a drawn focus
+  ring.
+- Type labels never use the raw type colour. `typeLabelColor` (`utils/typeColor.ts`, the only
+  implementation) mixes saturated colours toward ink by `--label-mix` (55%, `tokens.css`). Check a
+  new colour against the 22-colour palette in `data/cejil/typesAdapter.ts`, in dark mode, which
+  is the stricter case.
+- Live updates use `aria-live="polite"`, `role="status"` or `role="log"`.
 
-The prototype keeps a simpler shape: every row in `data/references.ts` is a `Reference` with an **optional** `sourceSelection` (text anchor — absent = pure entity link) plus `sourceEntityId` (always the current doc), `targetEntityId`, `relationType`, `direction`, and optional `hubId`. What we call a `Relationship` (`utils/relationships.ts`) is **runtime aggregation** — `deriveRelationships(refs)` collapses by `(targetEntityId, relationType)` (direction is NOT in the key: incoming+outgoing to the same target/type merge into one bidirectional row via `directions[]`) and exposes `evidenceCount` + `refIds[]`. It is not stored. Full dev-facing writeup: `handoff/DATA-SEAMS.md`.
+## Surfaces
 
-**Property cheat sheet:**
+### Relationships panel
+- `views/RelationshipsView.tsx` (main tab) and `RelationshipsDrawerSection.tsx` (drawer) render
+  the same body, `RelationshipsPanelBody.tsx`, switched on `viewAtom` (`list | tree | graph`).
+- Filtering happens only in `useFilteredReferences.ts` (cluster → facets → search → sort). No view
+  body filters on its own.
+- Toolbar: `SearchBar` with `ActiveFilterChips` inline, then `ViewControls`,
+  `RelationshipsDisplayMenu` (zoom, group-by, sort) and `FiltersButton`. Zoom applies to grouped
+  and tree views.
+- `RelationshipRow` is a union: `kind="reference"` (prop `reference`), `"aggregate"` (prop
+  `rel`), `"hub"`. Highlight comes from `activeRefIdAtom` or `activeAggregateIdAtom`.
+- Row targets: the entity pill opens the slide-over (`overlayEntityIdAtom`); the page tag jumps to
+  the passage (`activeRefIdAtom`, `currentPageAtom`, `scrollToHighlightAtom`). At compact and
+  detail zoom an aggregate's title is the button. A hub's member pills each open their member.
+- Panel state is per scope: read through `useRelAtom*` / `relAtomFor` (`hooks/useEntityScope.tsx`).
+  Without an `EntityScopeProvider` these are the global atoms. The slide-over and the Library
+  preview get their own, and the slide-over resets its state on open. Add new panel state through
+  `relAtomFor`. Clear with `useClearRelFilters()`.
+- Default sort: list by appearance, tree and graph by most evidence.
+- The only number on this surface is the tab count (`references.length`). Toolbars and info rows
+  show none. Group headers give their unit in a tooltip and sr-only text.
+- Anchoring and Direction facets hide when every reference has the same value.
+- Graph (`RelationshipsGraphView.tsx`): wheel zoom needs a native `{ passive: false }` listener;
+  tooltips are HTML positioned from `getBoundingClientRect`, never SVG inside the zoom transform.
 
-| Property | `Reference` (per evidence) | `Relationship` (aggregate) |
-|---|---|---|
-| `id` | per ref | composite `target::type` |
-| `targetEntityId` | required | required |
-| `relationType` | required | required |
-| `direction` | optional, default `outgoing` | first seen; `directions[]` holds all (len 2 = bidirectional) |
-| `sourceSelection` (text+page+box) | optional — the text anchor | — |
-| `targetSelection` | optional (never populated today) | — |
-| `evidenceCount` | — | `refIds.length` |
-| `firstPage` | — | `min(ref.page)` |
-| `refIds` | — | backing references |
+### Entity preview
+- One body, `components/entity/EntityDetailBody.tsx`, in two hosts: `EntityDrawerPreview` (Library
+  drawer) and `EntityOverlay` (slide-over, mounted by RelationshipsView, MetadataView,
+  ReferencePanel and the drawer preview while editing). The host owns only its chrome.
+- The body wraps its content in `EntityScopeProvider`. The drawer preview may change the focused
+  entity; the slide-over may not, because the view beneath it must keep its entity.
+- The slide-over shows Metadata and Relationships only. Document, Files and Edit read the focused
+  entity's file atoms and would be wrong for another entity; "Open entity" leads to them.
+- "Open entity" is hidden (`invisible`) while any edit form is open (`editSessionOpenAtom`).
+- Copy From: `CopyFromPicker` chooses the source, then the properties to copy. The form receives
+  only the ticked `CopyUnit`s and does not save.
 
-**Where the seam shows up in the UI:**
-- List view rows = `Reference[]` (one per evidence, snippet + page tag).
-- Tree view leaves = `Relationship[]` (deduped aggregates) with inline-expand into their underlying refs.
-- Graph nodes = `Relationship[]`.
-- **The tab strip is the only place this surface prints a number** — the Relationships tab's `count` (`references.length`, `EntityView.tsx`). Neither toolbar carries a readout and the info rows pass `count={null}`, keeping only the collapse controls. Don't add a count to the toolbar or the info rows: it would be a second number for the same surface.
-- The aggregate row's "evidence count" badge is `relationship.evidenceCount`.
+### Metadata view
+- Drawer tabs: Document, Relationships, Files, Template.
+- Click-to-fill: focusing an input arms it (`fillTargetAtom`), and the arm survives blur. The
+  label row shows `ListeningChip`. A value is committed only by a click: "Fill <Field>" in
+  `FloatingMenu`, or a value row in the record. Selecting text alone never writes.
+- The signal is a value in `fillRequestAtom` (`{fieldId, value, nonce}`), like `scrollToPageAtom`,
+  never a callback owned by the form. `MetadataEditBody` clears `fillTargetAtom` on unmount.
+- Arming ends on fill, Escape (ignored inside a dialog), the chip's ×, or Save/Cancel. Date
+  inputs do not arm. A filled field scrolls into view and flashes.
 
-**Known gaps vs Uwazi v2 (intentional, don't paper over):**
-- ~~Target-side text anchors don't exist in seed data~~ **Partially closed
-  (2026-07-08):** `ref-tt-1..3` seed text↔text references (BOTH endpoints
-  anchored, mirroring v2's symmetric `from`/`to`); rows + the entity overlay
-  render the target quote as a second warm/italic snippet ("target p.N" /
-  "here p.N"). Still open: jump-to-target-passage navigation, and
-  grouping/filtering by target-side text.
-- No inverse relation labels — Uwazi v2 stores a single `type` per relationship; the "source rel type vs target rel type" pair from the mockup has no backing data.
-- No `createdBy`, `sourceKind` (manual / IX-suggested), or confidence on refs. If we add filters by source/author/confidence, the data layer has to grow first.
-- No-anchor relationships ARE representable now (`sourceSelection` is optional; `firstPage` stays undefined when no backing ref is anchored) — seed data just has few of them.
+### Library
+- Search evidence comes from one path, `buildSnippetsFor` / `matchCategories`
+  (`utils/librarySnippets.ts`, tokens from `utils/queryTokens.ts`), used by:
+  - `MatchOrigin`: a row mark in the List table and the timeline spine, shown only when the match
+    is in a field the row does not display.
+  - Results (`libraryViewModeAtom = "results"`): a search switches to it and remembers the
+    previous view; `clearLibrarySearchAtom` restores it. Leaving Results during a query cancels
+    both. Logic lives in `atoms/library.ts`. Layouts (`libraryResultsLayoutAtom`): grouped, tree,
+    passages, spine. None repeats the title snippet.
+  - `TimeSpine`: the one chronology for the timeline and the Results spine. Callers pass rows,
+    `rowHeight` and `renderRow`; never recompute its geometry. Marks sit on the axis; touching
+    marks share one capsule and brace with no count; the "N later" label sits at the row
+    columns' start.
+- Ending a search always goes through `clearLibrarySearchAtom`. The masthead readout beside the
+  search box holds the only count and `ActiveSearchChip`.
+- Recent searches: `librarySearchHistoryAtom`, recorded on settle (1.2s, Enter, blur), deduped,
+  capped at 8, in sessionStorage.
+- Tabs: `count` is inventory and sits in the flow. `dot` marks user-set state behind an unselected
+  tab and is absolutely positioned (filters, doc search, the Library drawer's tabs).
+- Thumbnails:
+  - Frame (`libraryThumbFrameAtom`) is one choice per grid. Portrait is `aspect-[3/4]` with
+    narrower columns (`cardGridCols`); Size sets the column count.
+  - Fit (`libraryThumbFitAtom`): `auto` covers when the image's orientation matches the frame
+    and mats otherwise; `cover` fills; `contain` mats.
+  - Every box has a definite size before load. The list chip is always square.
+  - A document shows its whole first page, filling the portrait slot from the top.
+  - `PdfPageThumb` rasterises at the live box width and records it in `data-thumb-w`.
+  - PDF thumbnails do not render in a background tab; use `scripts/check-thumbs.ts`.
 
-## Connections panel — refs and rels are one surface
+### Notifications and Bert
+- `Beacon` (navbar right cluster) is the indicator; `NotificationsDrawer` is the log.
+  - Beacon: a `rounded-md bg-warm` button with no edge, showing the `UwaziLoader` mark coloured by
+    the most urgent unread item (seal, amber, carbon, ink), animated only while a task runs. It
+    expands for a new task, on hover and on a flash, and collapses on phones.
+  - Drawer: Tasks (`activitiesAtom`) then notifications grouped New / Today / Earlier, cards
+    tinted by kind, Retry on errors, Mark read, dismiss, Clear all. Opening does not mark read.
+  - Toasts: the Beacon drains `toastsAtom` into notifications. `ToastContainer` renders only in
+    the catalog.
+- Bert (`components/agent/AgentModal.tsx`, `atoms/agent.ts`): "Ask Bert" or ⌘K / Ctrl K. The name
+  shows in the UI; code keeps `agent*`. Identity is `BertMark` (two squares); `UwaziLoader` means
+  working. Replies are mocked and streamed. Context is a narrowing chain (`agentScopeAtom`,
+  `agentChainAtom`). Dropdowns portal because the modal clips.
 
-The Relationships top tab is the single surface, hosting both the text-anchored (snippet + page) and aggregated (entity-level) projections of the same `references[]` array. Both the main view and the document-tab drawer route through the same body.
+### Other surfaces
+- Files view: `focusedId` (the open file) is separate from `selectedIds` (checkboxes). The drawer
+  shows the open file when nothing is ticked.
+- Import CSV: seed rows in `data/imports.ts` match `images/screens/import_csv/`. `pending` rows
+  are grey with a disabled View. `ToolsActionBar` has `list` and `detail` modes.
+- Catalog: the logo toggles `ComponentCatalog`. Add shared components as a `CatalogEntry` with a
+  live demo.
+- Mobile: `<768` / `768–1023` / `≥1024` (`atoms/viewport.ts`). On phones every nested view is a
+  bottom sheet, and sheets stack: `sheetStackAtom` (`atoms/sheetStack.ts`) holds the open layers
+  and `useSheetLayer` registers one. `MobileBottomSheet` and `Modal` both register, so a dialog
+  opened from a sheet is the next layer. Desktop never registers.
 
-```
-src/components/relationships/
-  RelationshipRow.tsx            // discriminated union: kind="reference" | "aggregate" | "hub"
-  RelationshipGroupedCard.tsx    // shared group shell (expand/collapse signal, refIdsToWatch)
-  RelationshipsPanelBody.tsx     // body switch on viewAtom; filters via useFilteredReferences
-  useFilteredReferences.ts       // THE filter pipeline (cluster→facets→search→sort) —
-                                 // List, Tree, AND Graph all consume this one hook
-  RelationshipsDrawerSection.tsx // drawer-flavour wrapper: toolbar + body + scoped drawer
-  ViewControls.tsx               // list | tree | graph pill driving viewAtom
-  GroupByControl.tsx             // grouping axis (+ subGroupBy "Then by")
-  DirectionGlyph.tsx             // shared arrow badge
-  SearchBar.tsx                  // has rightSlot AND inlineSlot
-  CollapseControls.tsx           // expand/collapse-all controls
-  ZoomControl.tsx                // detail / compact / overview
-  RelationshipsTreeView.tsx      // tree body — target cards use RelationshipRow kind="aggregate"
-  RelationshipsGraphView.tsx     // radial SVG body
-  RelationshipsFilterDrawer.tsx  // facet drawer (self-hides empty facets)
-src/views/
-  RelationshipsView.tsx          // the merged main-tab surface (Relationships tab)
-src/components/shared/
-  ListInfoRow.tsx                // count + chips + rightSlot
-  ListCardRow.tsx                // forwardRef shell, owns selected/hover/focus
-  Checkbox.tsx                   // single shared native checkbox
-  FiltersDrawer.tsx              // slide-over scoped to relative parent (RTL-aware)
-  FiltersButton.tsx              // size="sm" → h-6, size="md" → h-8
-  FacetSection.tsx               // checkbox group with counts
-  ActiveFilterChip.tsx
-  FadeTruncate.tsx
-```
+## Performance traps
+- `filterState` in `LibraryView` stays memoised and keyed on content (`activeTypeIds.join(",")`,
+  …). Four full-corpus memos depend on it.
+- `ResultsBody` is `memo`'d and its callbacks are `useCallback`'d at the call site; an inline
+  arrow there undoes the memo.
+- `EntityCard` receives the deferred query as a prop and does not subscribe to `libraryQueryAtom`.
+- Per-keystroke cost is React re-rendering, not the text scan. Do not optimise the scan.
 
-`View = "list" | "tree" | "graph"` (`viewAtom`); grouping is orthogonal via `groupByAtom`/`subGroupByAtom`. The zoom toggle (`detail` / `compact` / `overview`) applies to grouped + tree, hidden in list + graph. **Never re-implement filtering in a view body — consume `useFilteredReferences` so facets can't silently drop in one mode.**
-
-
-Toolbar pattern (main view):
-```tsx
-<SearchBar
-  inlineSlot={<ActiveFilterChips omitSearch />}
-  rightSlot={
-    <>
-      <ViewControls />
-      <RelationshipsDisplayMenu />   {/* holds ZoomControl, group-by, sort */}
-      <FiltersButton size="sm" activeCount={n} onClick={…} />
-    </>
-  }
-/>
-```
-
-Drawer flavour stacks the controls vertically and uses `size="sm"`.
-
-Card-row pattern:
-```tsx
-<RelationshipRow kind="reference" ref={ref} onDelete={…} />
-<RelationshipRow kind="aggregate" rel={rel} expanded={…} onToggleExpand={…} />
-```
-
-In tree mode, target cards are aggregate rows with inline-expand revealing their underlying ref rows. Selected state is read internally from `activeAggregateIdAtom` (aggregate — several aggregates can point at the same entity, so the highlight keys on WHICH one you opened) or `activeRefIdAtom` (reference, set by the page-tag jump).
-
-**Row targets**: the entity pill opens the overlay (`overlayEntityIdAtom`; on an aggregate it also marks that aggregate), the `p.N` page tag jumps to the passage (`activeRefIdAtom` + `currentPageAtom` + `scrollToHighlightAtom`). At compact and detail an aggregate has no pill, so the entity TITLE is the button instead. A hub's every member pill opens that member — a hub has no single entity, which is also why its row has no open at all; its chevron and evidence badge do the expanding. The row itself is not clickable in any of the three kinds.
-
-**Panel state is per scope (2026-09-27).** Facets, search, view, groupBy/subGroupBy and sort are read through `useRelAtom*` / `relAtomFor` (`hooks/useEntityScope.tsx`, `atoms/filters.ts`). With no `EntityScopeProvider` override they ARE the global atoms (the entity view panel and the drawer section share them). A scoped surface (EntityOverlay, Library drawer preview) gets its own variants, starting at each atom's default, and the overlay drops its scope's state on open, so it always opens on list with no filters. New panel state goes through `relAtomFor`, never a bare global atom. Clear with `useClearRelFilters()`; counts from `useActiveFilterCount()` / `activeFilterCountFor(scope)`.
-- `referencesFor` projects every entity, `MAIN_ENTITY_ID` included; refs with both ends on the entity are dropped. A hub id with one member is a plain aggregate: Hub rows are 2+ members.
-- Sort: `sortOrderAtom` null = `defaultSortFor(view)` (list = appearance, tree/graph = "Most evidence"). The graph orders nodes by the sort.
-- Grouped by relation type, rows drop their relation label: the direction glyph follows the pill, one line.
-- Group header counts name their unit in the tooltip and an sr-only span (`countOf`): list = references, tree = connections. Still no count in the toolbar.
-- Anchoring and Direction facets run in `useFilteredReferences`, classify via `anchoringOf` / `directionClassifier` (against the unfiltered set) and self-hide when every ref shares one value.
-
-## The entity preview panel — one body, two hosts
-
-Both panels that show an entity beside something else render ONE component,
-`components/entity/EntityDetailBody.tsx`: identity header, the entity view's own
-`MainTabs`, the drawer-flavoured body per tab, and a Close / open-entity footer.
-
-- Hosts: `components/library/EntityDrawerPreview.tsx` (the Library drawer) and
-  `components/relationships/EntityOverlay.tsx` (the connected-entity slide-over,
-  mounted by RelationshipsView, MetadataView, ReferencePanel and — while editing
-  — the drawer preview itself). The overlay owns only its chrome: backdrop,
-  slide-in, focus trap, `inert` while closed and Escape / outside-click.
-- **"Open entity" is hidden while any edit form is open** (`editSessionOpenAtom`;
-  `invisible`, not unmounted, so Close keeps its place and the footer its
-  height). Opening an entity navigates and discards the form. Both hosts.
-- **Copy From chooses its properties in the picker.** `CopyFromPicker` is two
-  steps in one fixed-size modal: the source list, then the matched properties as
-  a checkbox list (current → incoming, all/none, a disabled "Not copied" list
-  with reasons). The form receives only the ticked `CopyUnit`s
-  (`resolveUnits` / `onCopy`) and still never saves. The overlay's Copy From
-  banner, `CopyPreviewSection` and `atoms/copyFrom.ts` are removed.
-- **Scope is a context, not the app's focus.** Everything relationship-shaped
-  reads `scopedReferencesAtom`, keyed to `focusedEntityIdAtom`. The drawer
-  preview can focus its entity (`focusEntityForPreviewAtom`); the overlay CANNOT
-  — it sits on top of a view whose own entity must not change under the reader.
-  So the body wraps its content in `EntityScopeProvider`
-  (`hooks/useEntityScope.tsx`) and the relationships subtree reads through
-  `useScopedReferences` / `useSetScopedReferences` / `useEntityScopeId`
-  (useFilteredReferences, RelationshipsFilterDrawer, RelationshipsDrawerSection,
-  RelationshipsGraphView). With no override those hooks return the atom's own
-  value, so the un-overridden hosts still share one derivation.
-- **The overlay offers Metadata + Relationships only.** Document and Files read
-  the globally seeded file atoms (`filesAtom`, seeded by `focusEntity`), so they
-  can only tell the truth about the FOCUSED entity — as can `MetadataEditBody`,
-  which is why Edit is a focused-flavour affordance too. `focused` gates all
-  three; "Open entity" is the route to them.
-- The overlay mounts the body only while an entity is open, lagging the close by
-  the slide-out — it carries a whole relationships surface and four hosts mount
-  it.
-
-## Document tab — format renditions & language
-- The DocMeta header picker (`showPdfSelector`, Document tab only) switches the
-  **rendition** of the *one default primary document*, not between documents:
-  `documentFormatAtom` = `"pdf" | "text" | "html"` (`atoms/selection.ts`).
-- `DocumentViewer` keeps the PDF **mounted** and just hides it (`hidden`) behind
-  a rendition, so returning to PDF repaints instantly (don't unmount the
-  `<Document>` — remount leaves canvases blank). The ResizeObserver ignores the
-  0-width report while hidden.
-- `DocumentRendition` (text / HTML) fills the pane on `bg-paper` (no vellum
-  "desk" — that left a gap on wide panes) with a centred `max-w-[44rem]` column.
-  `ActionBar` takes `showPager` (false for non-paginated renditions) and
-  `rightSlot` (the mobile sheet trigger).
-- Rendition text lives in `data/velasquez-judgment-{en,es,fr,ar}.txt`, imported
-  `?raw` (needs `src/vite-env.d.ts`), parsed by `parse()` in
-  `data/documentRenditions.ts` (any `^N. ` line starts a paragraph; standalone
-  roman numerals are section heads). EN/ES are the real extracted judgments
-  (¶1–194); FR/AR are representative translations (no genuine source PDF). AR
-  renders RTL.
-- **Language = reading language of the *same* document.** All four languages
-  stay on the Velásquez judgment so references stay aligned; EN/ES have real
-  PDFs, FR/AR fall back to the EN PDF for the PDF view. Don't re-point FR/AR at
-  the Bámaca files — that's what made references "change" by language.
-
-## Notifications — the navbar Beacon + drawer
-Two pieces: the **pill** (`components/layout/Beacon.tsx`) is the indicator; the
-**drawer** (`components/layout/NotificationsDrawer.tsx`) is the history log.
-Modelled on the real Uwazi notification drawer (tasks + tinted severity cards +
-expandable stack traces + Clear).
-
-- **Pill** — lives in the navbar **right cluster** (with Settings/theme), an
-  inline `rounded-md bg-warm` button (the same fill as the bottom `ActionBar`
-  buttons, which sit on paper and carry the `WARM_EDGE` inset ring from
-  `components/shared/warmButton.ts`; the pill sits in the navbar and takes no
-  edge: **don't** give it a border or ring, or make it a pill/circle). It
-  animates `width` (`beacon-spring`). The icon is always the **`UwaziLoader` mark**
-  (not a bell), coloured by the most pressing state and animated **only** while a
-  task runs:
-  - colour ladder (`loaderColor`, derived from `topUnread`): seal = unread error,
-    amber (`warning`) = unread warning, carbon = unread info / **processing**,
-    black (`default`) = idle or "done" (only an unread success left). `UwaziLoader`
-    gained `color` tones (`muted`/`carbon`/`seal`/`warning`) + an `animate` prop.
-  - **collapse / expand** (desktop): collapsed = just the mark. A starting task
-    expands the rail for ~3s (`activityIntro`) showing label + `%`, then
-    auto-collapses; **hover** re-expands — to the live label+`%` if a task runs,
-    else to the top unread item (severity-sorted) with its kind icon + `+N`. Mobile
-    stays collapsed (tap → drawer).
-  - **flash** — action toasts briefly expand the rail with the message, then
-    collapse (see consolidation). A springy **`animate-beacon-pop`** fires when the
-    unread count rises. Respects `prefers-reduced-motion`. Click → `beaconOpenAtom`.
-- **Drawer** — right slide-over (`fixed`, flips to left under RTL), scrim +
-  Escape to close.
-  - **Header**: title + unread count chip + **Mark all read** (opening does not
-    mark anything read) + close. An **All / Unread** filter row (with counts).
-  - **TASKS** section lists every `activitiesAtom` entry (multi-task) — loader mark
-    + label + detail + Running/Finishing + cancel + progress + `%`.
-  - **NOTIFICATIONS** grouped into **New** (unread) / **Today** / **Earlier**
-    (read, by calendar day); sticky section labels. Unread filter shows only New.
-  - Cards tinted by kind via real semantic tokens: success `bg-success-light`, info
-    `bg-carbon-tint`, warning `bg-warning-light`, error `bg-seal-tint`. Read cards
-    dim to `opacity-75`; unread carry a carbon dot. **Per-card actions**: error →
-    **Retry** (marks read + pushes a fresh task), **Mark read** check, and a
-    hover **dismiss** (animated collapse). New arrivals enter via `animate-fade-in-up`.
-  - `Notification.details` (optional) → **Show/Hide details** monospace stack-trace.
-    Timestamps relative (`3 min ago`, `2 hours ago`, `1 day ago`) then absolute
-    (`dd/mm/yyyy, HH:MM`) past 7 days. Footer **Clear all** empties the log.
-- State in `atoms/notifications.ts`: `notificationsAtom` (log),
-  `activitiesAtom` (**`Activity[]`** — in-flight tasks; the beacon derives one
-  combined indicator + aggregate `%`), `beaconOpenAtom`, derived `unreadCountAtom`.
-  The beacon owns the task tick/completion sim; each finished task → a success
-  notification (finalised once via a ref guard).
-- **Toasts are consolidated into the beacon.** All the old `setToasts(...)`
-  call-sites are untouched — the beacon *drains* `toastsAtom`: each toast becomes a
-  persistent notification AND briefly flashes on the pill. The floating
-  `ToastContainer` renders **only** in the catalog view (App's `catalog` branch),
-  where the beacon isn't mounted and `useCopyToast` needs it.
-
-## Bert — the agent assistant
-A centered modal (`components/agent/AgentModal.tsx`, state in `atoms/agent.ts`)
-mounted in `App` (both branches) so it opens from anywhere. **Named "Bert" as a
-HURIDOCS tribute** — surface the name, keep the code identifiers (`agent*`).
-- **Open**: navbar **"Ask Bert"** button (right cluster, *right* of the Beacon) or
-  global **⌘K / Ctrl K** (handler binds meta+ctrl; `shortcutLabel` shows the right
-  glyph per platform). Escape / scrim closes.
-- **Identity = the two Uwazi squares** (Seal above Carbon) via the `BertMark`
-  component — header lockup (staggered drop-in on open), empty state, and chat
-  avatars. The 6-square `UwaziLoader` is reserved for the *working* indicator (send
-  button while thinking). Don't use a generic sparkle/grid for Bert.
-- **Replies are mocked** — streamed word-by-word, varied by intent
-  (summarize/find/extract/relationship/default). A task-y prompt ("re-process…")
-  pushes an `activitiesAtom` entry → tracked in the Beacon (close-and-keep-working).
-- **Context = a dynamic chain**: `agentScopeAtom` (`auto/document/view/library/none`)
-  sets the spine (Library › View › Document); `agentChainAtom` (`ChainNode[]`) appends
-  nodes via **"+ Add"** → Deepen (Page/Selection), Facets (Template/Connections/Files),
-  Attach (Entity…/File… via a search picker). Scope nodes follow the selector;
-  appended nodes are removable. **No contradictory combos** (it's a narrowing chain,
-  not arbitrary toggles). Context dropdowns render in a **viewport-clamped portal**
-  (`createPortal`) because the modal is `overflow-hidden`.
-- **Layout**: landscape on desktop (`max-w-[46rem]`, `max-h-[min(70vh,34rem)]`),
-  anchored to the **lower third** (`items-end`, `pb-[8vh]`), gentle rise + fading
-  scrim entrance (`animate-agent-modal` / `agent-scrim`, `index.css`), content on the rail gutter (`gutter-host-rail`, 20px).
-- Send button: arrow when idle (active = ink + white arrow on focus/text); the Uwazi
-  mark animates while thinking. Input auto-focuses on open.
-
-## Files view
-- `focusedId` (single click on row) is separate from `selectedIds` (checkboxes).
-- Default focus = `files.find(f => f.isDefault) ?? files[0]`.
-- Drawer shows focused file when no checkboxes are ticked.
-- Selected rows use `bg-parchment`. No inset blue accent.
-
-## Metadata view
-- Drawer tabs: **Document → Connections → Files → Template** (Document is first by request).
-- Files tab maps over real `files[]` from `data/files.ts` — *not* hardcoded.
-- Connections tab inside the drawer renders `<RelationshipsDrawerSection />`; default panel mode is `tree`.
-
-### Click-to-fill (edit mode)
-A focused metadata input LISTENS for a value from elsewhere on screen — a passage
-in the document, a property on a connected entity's preview.
-- **Arming is latched, not focus** (`atoms/fillTarget.ts` → `fillTargetAtom`).
-  Finding the value means leaving the field, so the arm has to survive blur. The
-  input keeps its focus ring while blurred (the focus treatment, latched — NOT a
-  new selected-state colour) and its label row grows a `ListeningChip`
-  (carbon dot + "select text or a value" + ×). The row is already mounted, so
-  arming shifts nothing.
-- **Committing is a click, never the selection itself.** `FloatingMenu` gains a
-  leading **Fill <Field>** while armed; a value row in the metadata record
-  (`MetadataItemsTable`'s `FillableValue`, so every surface that renders the
-  record — the entity preview panel included) becomes a `bg-parchment`-hover
-  button. A bare drag is how people READ — having it
-  overwrite a field would make the mode frightening to leave on.
-- **The signal is a VALUE, not a callback** (`fillRequestAtom`, `{fieldId, value,
-  nonce}` — the `pageJumpAtom` idiom). An atom holding closures owned by the edit
-  form can call setState after that form unmounts.
-  `MetadataEditBody` clears `fillTargetAtom` **on unmount** for the same reason.
-- Ends on: fill (which disarms — the field asked for one value), Escape (skipped
-  while focus is inside a `[role="dialog"]`, so closing the source preview
-  doesn't also forget the field), the chip's ×, or Save/Cancel.
-- Date inputs are NOT armed — a passage of prose is not a `yyyy-mm-dd`.
-- Filling scrolls the field into view and flashes it (`flash-highlight`); the user
-  is looking at the other pane when the write lands.
-- Two adjacent defects fixed in passing: `updateField` now CREATES a missing field
-  (a template without `description` silently swallowed every keystroke in the
-  fixed Description box), and `EditSection` labels are `htmlFor`-associated with
-  their inputs (they named nothing, so clicking a label didn't focus — a lost way
-  into a mode that arms on focus).
-
-### Relationship & inherited metadata
-Mirrors Uwazi's relationship properties: a field connects this entity to entities of
-a target template via a relation type and optionally **inherits** a value from each
-connected entity. Inheritance is now **one spec, two shapes** (the second
-generalises the first):
-- `inheritProperty` — a *native* scalar prop on the connected entity (the classic
-  single-hop lookup, Uwazi's model).
-- `inheritPath` (`ChainSegment[]`) + `inheritLeaf` — a **multi-hop** projection:
-  traverse the graph FROM each connected entity, project the leaf property.
-  `inheritProperty` is the degenerate zero-segment case of this. **We DO inherit
-  through hops now** (e.g. Causa's "Jueces firmantes" inherits each judge's País via
-  `[Juez → País]`) — the old "single-level only" rule is gone.
-
-Several fields sharing a `connectionKey` = **one connection, many inherited columns**
-(multi-inheritance), edited together.
-- **Data**: `RelationshipMetadataField` (`type: "relationship"`, `relationType`,
-  `targetTypeId`, `inheritProperty?`, `inheritPath?`, `inheritLeaf?`, `inheritLabel?`,
-  `connectedEntityIds`, `connectionKey?`, `reduce?`, `entityLabel?`,
-  `connectionProvenance?`, `totalConnected?`, `readOnly?`); union `AnyMetadataField`.
-  Scalar source values live in **`data/entityMetadata.ts`** (`entityMetadataByLanguage`,
-  `getEntityProp` — native props ONLY now). **Consumers that read `.value` must filter
-  relationship fields out** (`(f): f is MetadataField => f.type !== "relationship"`) —
-  done in `MetadataView` read+edit bodies and `MetadataDrawerContent`.
-- **Resolve (ONE path resolver)**: `utils/inheritance.ts` —
-  `resolveInherited(connectedEntityId, spec, lang, getProp)` returns `{ value, steps }`: single-hop reads the native prop;
-  multi-hop walks `chains()` (`utils/chainTraversal.ts`) and projects the leaf.
-  `resolveInheritedValue` is the string-only wrapper. The backing graph is **injected**
-  via `registerInheritanceGraph(provider)` (dependency inversion — inheritance.ts never
-  imports CEJIL; `data/cejil/profile.ts` registers `cejilChainGraph`). `resolveRelationshipField`
-  + `groupConnections` (buckets by `connectionKey` → `ConnectionGroup`s + `singles`) route
-  through it. **The old `data/cejil/inheritedRegistry.ts` (pre-baked chain values) is
-  DELETED** — chain-derived values resolve LIVE at render, not stored.
-- **Provenance** (`ProvenanceStep` in chainTraversal.ts): a derived value carries the
-  intermediary nodes it was reached through (the connection's hidden middleman, e.g. the
-  Sentencia a judge signed — `field.connectionProvenance[id]` — plus value-side hops).
-  Rendered as a clickable `↳ via …` `ProvenanceTrail`; when every row shares one
-  signature it's **hoisted** to a single `all inherited via …` line.
-- **Reduce/rollup**: `reduce?: InheritReduce` (`list|distinct|count|min|max|first`) →
-  `reduceInherited()` → a carbon `Σ` `RollupChip` (Notion/Airtable "calculation"). Shown
-  per-column on the grouped table and in the single card's value-column header.
-- **Template order, no Relationships section.** The record (`MetadataRecord`, every
-  host) and the edit form (`MetadataEditBody`) lay out relationship and inherited
-  fields at their template position among the scalars, read from
-  `deriveTemplateStructure(...).fields` / `profile.metadata[lang]` order. There is
-  no "Relationships" or "Derived relationships" heading in either mode. A
-  multi-inheritance group renders ONCE, at the position of its FIRST member field.
-  A connection table spans the full record width (`MasonryItem full`), like before.
-  CEJIL profiles are sorted into template order in `buildCejilProfile`
-  (`orderByTemplate`): a relationship group sits at the first template property of
-  its relation type (`keyAliases`), the inherited place at the geolocation-inheriting
-  relationship property, and fields the template doesn't declare (e.g. "Relacionado",
-  or "Jueces firmantes" on a Causa) go last in build order. The Template tab's
-  separate Inherited group is unchanged; it describes the template, not the record.
-  In edit mode Title, Template, Description, Geolocation and Country keep their
-  fixed controls at the top; everything else follows template order.
-- **Read UI** (`MetadataReadBody`): `ConnectionGroupCard` (a table, entities once ×
-  inherited columns, cell-merged) for shared connections; `RelationshipFieldCard` for
-  singletons — an **inheriting single now renders as the SAME bordered table** (entity
-  column + value column, `entityLabel` names the entity col) rather than a floating
-  2-col grid; link-only stays a pill list. `EntityPill` → source preview; missing value
-  → em-dash. `components/metadata/{InheritedValueChip,ConnectionGroupCard,RelationshipFieldCard}`.
-- **Edit UI** (`MetadataEditBody`): inherited values are **read-only** (derived/CEJIL
-  fields carry `readOnly` and render as read cards, not editors);
-  `RelationshipFieldEditor` (one per connection, keyed) edits the **connection** (entity
-  picker filtered by `targetTypeId`); state is `connections: Record<key, ids>` so
-  multi-inheritance siblings sync. Each row has **"Source"** → opens `EntityOverlay`
-  (the "edit at source" route). The Metadata left pane is wrapped `relative
-  overflow-hidden` with `<EntityOverlay />` mounted so the slide-in is contained.
-- `EntityOverlay` renders the shared `EntityDetailBody` (see "The entity preview
-  panel"), so a source entity's properties are the metadata record itself. It no
-  longer carries its own Properties editor — editing a source's native props is
-  now reached through "Open entity".
-- `TemplateStructure` derives its Inherited group from the real relationship fields.
-- Simplification vs. real Uwazi: connections are explicit `connectedEntityIds` on the
-  field (not derived from `references[]`), so direction/inverse is sidestepped.
-
-## Import CSV
-The 5 sample rows in `data/imports.ts` are seeded to match `images/screens/import_csv/*.png`. Status set: `completed`, `processing`, `failed`, `completed_warnings`, `completed_errors`, `uploading`, `pending`. `pending` rows render with a grey StatusBadge, grey ProgressBar, em-dashes for entities/failed, and a disabled View button.
-
-`ImportEntry` carries optional detail-view fields (`totalRows`, `createdBy`, `time`, `sourceKind`, `sourceSizeKb`, `thesauriTouched`, `relationshipsCreated`, `filesExtracted`, `thesauriObserved`, `thesauriCreated`). Progress label uses `totalRows` when present (gives the "412/634" style).
-
-`ToolsActionBar` has `mode: "list" | "detail"`. Detail mode = "Back to list" + "Delete Import" with its own confirm dialog. List-mode "New Import" is a solid `bg-ink` button.
-
-## Library search — where the evidence lives
-
-Search matches can hide in a property or a document body. Three surfaces answer
-"why is this row here?", all off ONE data path (`buildSnippetsFor` /
-`matchCategories` in `utils/librarySnippets.ts`, tokenized by `utils/queryTokens.ts`):
-
-- **`MatchOrigin`** (`components/library/MatchOrigin.tsx`) — the row-level mark for
-  layouts with no room for a snippet: the **List table** (a 3.5rem "Match" column,
-  mounted only while a query is active) and the **timeline Spine** (a fixed
-  2.25rem slot at the row's end). Renders ONLY where the evidence is off-row —
-  `hiddenMatchOrigin` takes the field keys the row already marks, **per row**
-  (a Country column showing an em-dash proves nothing). Carbon `Tag` = property,
-  `FileText` = document body; hover/focus builds that one entity's excerpt into a
-  portalled popover, click routes to the field or the page. No page tag or jump
-  where `page` is null.
-- **Results view** — the drawer's evidence list promoted to the main pane as a 5th
-  `libraryViewModeAtom` mode (`"results"`, always in the switcher — the segment
-  never appears and disappears as you type; with nothing typed it renders its own
-  no-query state). **A search opens it**: the first character to COMMIT switches
-  the library to Results and remembers the mode it displaced, and
-  `clearLibrarySearchAtom` puts that mode back. Leaving Results while a query
-  runs overrules both for the rest of that query — you are not steered again, and
-  not returned to a view you already walked away from. All of it lives in
-  `atoms/library.ts` (`libraryViewModeAtom` is a writable derived atom over
-  `viewModeStateAtom`, beside `preSearchViewModeAtom` / the override flag), not in
-  a component effect watching the query. Body:
-  `components/library/ResultsSnippets/ResultsMainView.tsx`, layout picked in the
-  Display menu via `libraryResultsLayoutAtom` — **grouped** (wide card, properties
-  beside passages) / **tree** (entity → field → snippets) / **passages** (flat
-  ranked passage list, entity secondary) / **spine** (best passage on a time axis).
-  Every layout drops the TITLE snippet — each already prints the title marked.
-  With the main pane in Results, a query does not open the drawer's Results tab
-  (that would be two copies of one list).
-- **`TimeSpine`** (`components/library/TimeSpine.tsx`) — ONE proportional
-  chronology, rendered by both `LibraryTimelineView`'s Spine layout and the
-  Results spine. It owns `useTrackGeom` (the axis inset the Rail and Density
-  tracks share), the adaptive scale, year/month marks, elided-silence breaks,
-  collision push, leader lines and `SpineDate`. Callers pass rows + `rowHeight` +
-  `renderRow` and nothing else — **don't re-derive spine geometry anywhere.**
-  Three things it settled in 2026-08 that dense data breaks, so don't undo them:
-  - **Marks are nodes ON the axis, not dots behind it** — `MARK_R` 3.5 with a
-    `--bg-surface` ring painted under the fill (`paintOrder: "stroke"`), at full
-    colour. The old 2.5px/0.7-opacity dot was cut in half by the axis hairline.
-  - **Clusters get ONE mark and ONE brace.** Rows whose marks would touch
-    (`CLUSTER_EPS`, measured on the mark's drawn footprint — so a compressed
-    fortnight clusters exactly like thirteen same-day filings) share a capsule
-    spanning their instants plus a curve/stem/tick brace, instead of a bead of
-    fused dots and a fan of identical curves. The capsule takes the members'
-    colour where they agree and `--text-tertiary` where they don't; a selected
-    member surfaces from it in its own colour. **No count badge** — the brace
-    enumerates, and the rows are right there.
-  - **The "N later" elision label reads at the row columns' START**, rule running
-    toward the axis and stopping at the row bodies' edge. Against the axis it sat
-    in the trailing type-name column (an italic phrase among thirteen
-    "Document"s) AND in the leader gutter, where a post-break row's leader
-    crosses it. Marks inside an elided band compress WITH the band (`at()`), or
-    the axis prints Jan, Jul, Apr.
-  Empty `rows` renders `null`, not an axis anchored to the epoch. Stories:
-  `stories/TimeSpine.stories.tsx` (Default / Clustered / ClusteredMixed /
-  ClusteredSelected / Elided / Minimal / Empty).
-
-Match-type chips (Title / Properties / Document) are `ToggleChip`
-(`components/shared/ToggleChip.tsx`) — `ActiveFilterChip`'s visual twin with
-`aria-pressed` instead of an X — and ride the header `ListInfoRow` (its
-`leadingSlot`), in both the drawer tab and the main view. That row carries no
-count: both Results surfaces pass `count={null}` — the number lives in
-the toolbar masthead readout (see "Ending a search").
-
-**Borrowed documents are named, not hidden.** A CEJIL entity with no PDF of its
-own reads a connected one's (`cejilRenderedDoc` → `docFilesFor`'s Sentencia
-fallback), so identical passages surface under a dozen case names.
-`EntitySnippets.borrowedFrom` carries that source through the one snippet path,
-and `components/library/BorrowedDocLine.tsx` prints it as `↳ from <document>` on
-all four Results layouts, the drawer's result card and the `MatchOrigin` popover.
-It rides an ALREADY-MOUNTED line (a section label, a row's attribution, the
-spine's fixed trailing slot) — never a line of its own that appears and
-disappears. Both it and metadata's `ProvenanceTrail` (`↳ via …`) render through
-`components/shared/ProvenanceLine.tsx`, so the app has ONE provenance idiom.
-**Documents are addressed by file `_id`, not filename.** `files.json` was
-rewritten after the import: 5,245 records, 6 distinct filenames, 6 urls — so an
-entity that owns its file still showed another judgment's text. The `_id`s
-survived (5,245 distinct) and are the public instance's own ids, so
-`scripts/recover-cejil-docs.cjs` can ask `summa.cejil.org/api/entities?sharedId=`
-for the real filename/totalPages/toc, fetch the PDF, extract per-page text with
-pdfjs, and key `fullText` by `_id`. `docPagesOf` (profile.ts) reads `_id` first
-and falls back to the legacy filename for records the recovery hasn't reached —
-drop that fallback and full-text search collapses to the recovered set.
-
-**The recovery script is CAPPED and hits a third party's production server.**
-Serial, delayed, entity-capped (`CEJIL_RECOVER_LIMIT`, default 50) AND
-byte-capped (`CEJIL_RECOVER_BUDGET_MB`, default 20), aborts on 429/5xx. Do not
-parallelise it or lift the caps to "just do the corpus". The byte cap is the one
-that matters: document size varies 40× (28KB–1.3MB), so an entity count doesn't
-bound anything.
-
-**Measured over a 50-entity / 102-document pilot: 733KB mean PDF (median 614KB),
-283KB mean text (median 219KB) — ~1MB per document, 101MB in total.** The full
-5,245 records project to ~3.8GB of PDF + ~1.4GB of text ≈ 5.2GB. The ~100MB
-budget buys ~100 documents; that is why the corpus shipped with 6. **Committed:
-26 documents across 16 entities, 19.9MB** — the rest of the pilot was discarded.
-
-**What the 30× `fullText.json` did NOT cost: the search scan.** 3,752 of 4,398
-entities already shared the 6 stand-in blobs, so bytes scanned per keystroke went
-103.9MB → 111.4MB (+7%) and a full-corpus `matchCategoriesWithTerms` pass 4.1ms →
-4.9ms. All the per-keystroke search JS sums to ~30-40ms (index 8.5 memoised,
-matchesSearch 4.4, categories ~5, title folds 4.6, 24× buildSnippets 14.6)
-against ~200-280ms of measured per-keystroke cost — the rest is React re-rendering
-the library, and a query matching NOTHING is slower than one matching 3,750. Don't
-optimise the scan; it isn't the cost.
-
-**`filterState` in `LibraryView` MUST stay memoised.** Four memos depend on it and
-between them they are every full-corpus pass the Library makes. As a plain object
-literal it got a new identity per render, so all four recomputed on the urgent
-render each keystroke fires while `useDeferredValue` is still serving the previous
-query — the deferral worked and the memos discarded it. Key it on CONTENT
-(`activeTypeIds.join(",")`, `inheritedKey`, …), never on the rebuilt arrays. Same
-trap, second instance: `ResultsBody` re-snippets its whole visible page on every
-render, so it is `memo`'d AND its callbacks are `useCallback`'d at the call site —
-an inline `() => clearSearch()` there silently undoes the memo. Together: settle
-5,379ms → ~2,990ms, long-task total 3,473ms → ~1,200ms, commits per query 43 → 22.
-**`EntityCard` takes the query as a PROP**, never subscribing to the raw
-`libraryQueryAtom`: that re-renders every mounted card on the urgent render each
-keystroke fires, for a query whose results haven't been computed yet.
-`LibraryView` passes the DEFERRED query, so a card re-renders for a query that
-has actually settled. Most card re-renders come from the result set changing on
-each keystroke, not from the query; reducing them means stable prop identity,
-which is separate work. Memory: the
-**worker no longer primes folded→original index maps** — those are per-excerpt,
-`pageFoldWithMap` builds them lazily, and priming them held 20.4MB of live
-`Int32Array` for pages no excerpt cuts (heap after prime 434.8MB → 326.2MB).
-
-## Library card thumbnails — size × frame × fit
-
-Three Display-menu controls over one slot, and they compose in that order: how
-big, what shape, how the picture sits in it.
-
-- **Frame** (`libraryThumbFrameAtom`, `landscape | portrait`) is **one choice for
-  the whole grid, never per card** — per-card orientation ragged-edges the rows
-  the reserved slot exists to keep level. Landscape is a full-width band (h-16 /
-  h-24 / h-36 by Size). **Portrait is the card's full width at `aspect-[3/4]` —
-  the SLOT is portrait-shaped, and the GRID is what keeps it from becoming a
-  poster**: `LibraryView` re-hangs portrait cards in narrower columns
-  (`cardGridCols`), and **Size steps the column count** (S = five across at xl,
-  M = four, L = three) instead of a slot-height table. Two earlier treatments —
-  a 3:4 picture centred in a wide band, then a merely-taller band — both read
-  as landscape at real column widths; don't reintroduce them.
-- **Fit** (`libraryThumbFitAtom`, `auto | cover | contain`) — `auto` is ONE rule
-  read against the frame: **an image whose orientation matches the frame covers
-  it, anything else is matted on vellum.** A square matches neither, so it mats
-  in both. **Explicit `cover` is FULL-BLEED** — it fills the slot edge to edge in
-  either frame; `contain` always mats. The call is `ImageThumb`'s object-fit
-  (`EntityThumbnail.tsx`), never a second box shape.
-- **Card floor** (`CARD_FLOOR`, landscape only, and only with metadata ON): it
-  absorbs the 1–3-field spread so a one-field card meets its neighbours. With
-  metadata off the card is slot + title + footer — already equal — and in
-  portrait the aspect slot plus the grid row's stretch keeps rows level; a rem
-  floor sized for one column width would be wrong at every other.
-- The **list row's chip stays square at every frame** — a 3:4 chip would outgrow
-  the two lines of text beside it, and a mat inside 2.25rem is almost all mat.
-- **No-shift holds by construction**: every box is definite before an image
-  loads (fixed height, or aspect against the column width), and the no-preview
-  vellum well uses the same box, so rows line up whatever a card is carrying.
-- Verified against the artworks corpus's real spread — 30 portrait / 22
-  landscape / 8 square. Stories: `Sizes` and `FitModes` render the full matrix
-  (3 ratios × 3 sizes/fits × both frames).
-
-
-### What fills the slot, per kind
-- **Document** — the real first page. In the **band** it keeps the inset stack
-  frame (`DocPlaceholder`); in the **portrait slot** it FILLS (`fill` prop): the
-  box is 3:4 and a page is ~0.77, so a second smaller sheet inside it was a
-  document floating in vellum. A page that runs the other way (landscape scans)
-  is matted rather than butchered — the same match-the-frame rule the pictures
-  keep — and the fill is anchored to the TOP so the ~3% trim comes off the
-  footer, not the masthead. **The whole first page is the treatment**; no crop.
-- `PdfPageThumb` rasterises at the box's **live** width (ResizeObserver,
-  quantised to 32px, monotonic) — switching frame or size re-hangs the grid under
-  a mounted card, and a mount-only measure left a 221px bitmap stretched across a
-  371px slot. Filling asks for `max(boxW, boxH × 0.8)`, since a covering page is
-  scaled until its HEIGHT covers and so draws ~7% wider than the box. The sheet
-  carries `data-thumb-w` = the width actually requested: "is this bitmap big
-  enough for its box" is the one question a screenshot cannot answer.
-- **Video / audio / no-preview** are sized as FRACTIONS OF THE BOX HEIGHT with
-  caps, not fixed rem: the two slots differ by ratio, not scale, and a width
-  fraction that reads right at 3:4 is half the height of the band. Video keeps
-  ink ground + paper puck; audio is a warm ground and a waveform in the entity's
-  own colour; a slot with no preview at all draws `QuietMark` — the type's square
-  dot on a plaque of the same colour at a sixth strength, which is the 10px dot
-  problem solved at the slot's scale.
-- `scripts/check-thumbs.ts --portrait` checks the fill geometry (288px request)
-  against every real PDF, beside the bare run's landscape 189px.
-- **PDF thumbnails do not render in a hidden tab** — pdf.js drives off rAF. A
-  blank sheet in an automation screenshot is the tab being backgrounded, not a
-  bug; that is what the headless checker is for.
-
-## Tab signals & recent searches
-
-- **`count` vs `dot`** (`components/layout/DrawerTabs.tsx`, `MainTabs.tsx`): count =
-  inventory, always present, in the flow (Relationships 10, Files 2). Dot = live
-  user-set state behind an UNSELECTED tab, absolutely positioned so it can toggle
-  without moving the strip. Wired to exactly two states — `activeFilterCountAtom`
-  (every Relationships tab, all strips) and `docSearchQueryAtom` (the entity
-  drawer's Search tab). Both strips dropped `overflow-hidden` so the dot isn't
-  clipped; end tabs round themselves logically instead. The Library drawer's
-  Filters/Results tabs use dots, NOT counts — the count mounted on first tick and
-  shoved the next tab sideways.
-- **Ending a search** — `clearLibrarySearchAtom` is THE dismiss, and every entry
-  point routes through it: the active-filters sheet + action-bar popover (via
-  `useActiveFilters`), the no-matches blank state, and
-  `components/library/ActiveSearchChip.tsx` — one component, owning the wiring,
-  rendered by the Library TOOLBAR MASTHEAD readout (the fixed slot beside the
-  search box, which toggles between "N entities" and "N results for
-  [“query” ×]"; the sentence is `shrink-0`, the chip yields via `min-w-0`). The
-  chip REPLACES the quoted query in that sentence rather than sitting beside it.
-  The Results surfaces' own header rows dropped their counts — the masthead is
-  the one place the number (and the chip) lives. Don't add a second clear: two
-  `clearAll`s over this state already drifted once (PATTERNS §4.3).
-- **Recent searches** (`atoms/library.ts` → `librarySearchHistoryAtom`,
-  `recordSearchAtom`; `components/library/RecentSearches.tsx`): committed queries
-  recorded on SETTLE (1.2s debounce, plus Enter/blur), deduped case-insensitively,
-  newest-first, capped at 8, in **sessionStorage** per `atoms/navigation.ts`'s
-  reasoning. The panel follows FOCUS while `SearchTipsPopover` follows a CLICK on
-  its chip — clicking the chip blurs the input, so the two can't both be open and
-  need no shared state. Both portal to `body` and position from the box's rect.
-
-## Component catalog
-Logo click toggles in/out of `ComponentCatalog`. Sidebar groups: Style Guide, Elements, Entity View — Layout / Document / References / Metadata / Files / Drawer / Relationships, Import CSV — Layout / Components, **Filters & Lists**, Shared. Add new shared/connections components here as a `CatalogEntry` with a live `Isolated…` demo. The Entity View → References and Relationships groups showcase `RelationshipRow` (reference and aggregate variants) and `RelationshipGroupedCard`.
-
-## Mobile
-Breakpoints: mobile `<768`, tablet `768-1023`, desktop `≥1024` (`atoms/viewport.ts`). `AdaptiveSplitView` swaps to `MobileBottomSheet` on mobile. Outstanding mobile follow-ups in `~/.claude/projects/-Users-juanmnl-Developer-huridocs-uwazi-app/memory/pending.md` — read before touching mobile.
-
-## Where the long-lived context lives
-- **Auto-memory**: `~/.claude/projects/-Users-juanmnl-Developer-huridocs-uwazi-app/memory/`
-  - `MEMORY.md` (index, always loaded)
-  - the current handoff is the file `MEMORY.md` marks CURRENT; older `operator-session-*` and `session-handoff*` files are history
-  - `feedback-list-primitives.md`, `feedback-tokens-and-svg.md`, `feedback-styles.md` (load when relevant)
-  - `prototype-state.md`, `text-references-feature.md`, `screens.md`, `figma-v3.md`, etc.
-- **Figma**: [Uwazi v3 — Screens](https://www.figma.com/design/5VSISGr1dSEKi1dGG5Noft) is the design source.
-- **Reference screenshots**: `images/screens/prototype/` (entity view) and `images/screens/import_csv/` (CSV flow). When the user says "match the screenshots", check these.
-
-## Don't
-- Don't introduce a new selected-state colour. It's `bg-parchment`.
-- Don't add inset-border accents.
-- Don't hand-roll a list info row or card shell — use the primitives.
-- Don't write `var(--ink, …)`, `var(--bg-paper, …)`, `var(--bg-vellum, …)`. They don't exist.
-- Don't put SVG tooltips inside the zoom transform.
-- Don't rely on React `onWheel` to `preventDefault` — attach a native non-passive listener.
-- Don't create planning/decision docs unless asked.
+## Where context lives
+- Auto-memory: `~/.claude/projects/-Users-juanmnl-Developer-huridocs-uwazi-app/memory/`.
+  `MEMORY.md` is the index and marks the current handoff.
+- `handoff/`: the migration kit for huridocs/uwazi (`production`); `PATTERNS.md` is the external
+  copy of the accessibility and interaction rules above.
+- Figma: [Uwazi v3 — Screens](https://www.figma.com/design/5VSISGr1dSEKi1dGG5Noft).
+- Screenshots: `images/screens/prototype/`, `images/screens/import_csv/`.
+- Do not create planning or decision docs unless asked.

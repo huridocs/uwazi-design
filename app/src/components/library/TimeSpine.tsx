@@ -81,6 +81,10 @@ export interface SpineRow<T> {
   key: string;
   /** The instant this row sits at (ms). */
   t: number;
+  /** Optional end of a SPAN that starts at `t` (a mandate, a term). The row still
+   *  sits at `t`; the span is a thin bar down the axis from there to its end,
+   *  clipped to the canvas. Rows without it draw exactly what they always drew. */
+  tEnd?: number;
   item: T;
 }
 
@@ -118,7 +122,7 @@ export function TimeSpine<T>({
   const AXIS_GUTTER = geom.AXIS;
   const rtl = useAtomValue(languageAtom) === "AR";
 
-  const { rows, clusters, height, years, gaps } = useMemo(() => {
+  const { rows, clusters, height, years, gaps, spans } = useMemo(() => {
     // Half a row of reserve at each end. Rows are centred on their instant and the
     // earliest y is 6, so without it the first row starts above the origin, where
     // scrollTop can't reach. Layout below is unpadded and shifted by PAD in one
@@ -248,12 +252,19 @@ export function TimeSpine<T>({
       }
     }
 
+    // Spans: from the row's own instant to where its end falls on the (elided)
+    // axis, never past the canvas.
+    const spans = laid
+      .filter((r) => r.row.tEnd !== undefined && r.row.tEnd > r.row.t)
+      .map((r) => ({ key: r.row.key, item: r.row.item, top: r.ideal, bottom: Math.min(at(r.row.tEnd!) + PAD, height - PAD) }));
+
     return {
       rows: laid,
       clusters,
       height,
       years: years.map((y) => ({ ...y, y: y.y + PAD })),
       gaps: gaps.map((g) => ({ ...g, y: g.y + PAD })),
+      spans,
     };
   }, [input, rowHeight]);
 
@@ -319,6 +330,24 @@ export function TimeSpine<T>({
             }}
           />
         </div>
+      ))}
+
+      {/* Spans run under the marks, so a mark always reads on top of its bar. */}
+      {spans.map((sp) => (
+        <div
+          key={`span-${sp.key}`}
+          data-part="span"
+          aria-hidden
+          className="absolute rounded-full pointer-events-none"
+          style={{
+            top: sp.top,
+            height: Math.max(sp.bottom - sp.top, 2),
+            insetInlineEnd: AXIS_GUTTER - 1,
+            width: 3,
+            backgroundColor: dotColor(sp.item),
+            opacity: 0.3,
+          }}
+        />
       ))}
 
       {/* Instants and leaders: one drawing per cluster, not per row. */}

@@ -25,12 +25,22 @@ export function relationLabel(type: RelationType): string {
  * the data layer (CEJIL) via dependency inversion — this module never imports it.
  * A field with no path resolves without any graph at all. */
 
-let graphProvider: (() => ChainGraph | null) | null = null;
+const graphProviders: (() => ChainGraph | null)[] = [];
 
-/** Register the graph backing multi-hop (`inheritPath`) inheritance. Called once
- *  by the data layer; keeps this util graph-source-agnostic. */
+/** Register a graph backing multi-hop (`inheritPath`) inheritance. Called once
+ *  per corpus by its data layer (CEJIL, the Sample seed); keeps this util
+ *  graph-source-agnostic. A path is walked on the first registered graph that
+ *  knows the entity it starts from. */
 export function registerInheritanceGraph(provider: () => ChainGraph | null): void {
-  graphProvider = provider;
+  if (!graphProviders.includes(provider)) graphProviders.push(provider);
+}
+
+function graphFor(entityId: string): ChainGraph | null {
+  for (const provider of graphProviders) {
+    const graph = provider();
+    if (graph && graph.templateOf(entityId) !== undefined) return graph;
+  }
+  return null;
 }
 
 /** Spec fields describing what a connection inherits (from a field or a column). */
@@ -93,7 +103,7 @@ export function resolveInherited(
   getProp: EntityPropReader,
 ): { value?: string; steps: ProvenanceStep[] } {
   if (spec.inheritPath && spec.inheritPath.length) {
-    const graph = graphProvider?.();
+    const graph = graphFor(connectedEntityId);
     if (!graph) return { steps: [] };
     const { tuples } = chains(graph, connectedEntityId, spec.inheritPath, { maxPaths: 200 });
     const seen = new Set<string>();

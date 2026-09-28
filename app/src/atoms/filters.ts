@@ -2,8 +2,11 @@ import { atom, type Atom, type PrimitiveAtom, type SetStateAction, type Writable
 import { filtersDrawerBase, overlayEntityBase, overlayStackBase } from "./rightPane";
 
 /** Relationships panel view. Orthogonal to {@link groupByAtom}, which only
- *  applies in list. */
-export type View = "list" | "tree" | "graph";
+ *  applies in list. `when` lays the connected entities on time (their dated
+ *  properties). */
+export type View = "list" | "tree" | "graph" | "when";
+/** Views that draw no groups: the collapse pair and grouping controls idle. */
+export const isUngroupedView = (view: View): boolean => view === "graph" || view === "when";
 export const viewAtom = atom<View>("list");
 
 /** Grouping axis applied within the list view. Tree has implicit structure
@@ -49,6 +52,10 @@ export const totalGroupCountAtom = atom(0);
 
 /** IDs of refs in the expanded minimap cluster. */
 export const activeClusterRefIdsAtom = atom<string[] | null>(null);
+
+/** The When view's year range (inclusive), set from its year strip. null = every
+ *  year. Scoped like the facets, so the overlay's range is its own. */
+export const whenYearsAtom = atom<[number, number] | null>(null);
 
 export const relTypeFiltersAtom = atom<Record<string, boolean>>({});
 
@@ -132,6 +139,7 @@ export const resetRelFacetsAtom = atom(null, (_get, set, scope: string | null = 
   set(relAtomFor(relAnchoringFiltersAtom, scope), {});
   set(relAtomFor(relDirectionFiltersAtom, scope), {});
   set(relAtomFor(activeClusterRefIdsAtom, scope), null);
+  set(relAtomFor(whenYearsAtom, scope), null);
 });
 
 /** "Clear all filters": the facets, the search box, and the sort order.

@@ -13,7 +13,7 @@ import {
   expandAllSignalAtom,
   groupByAtom,
   selectedRefIdsAtom,
-  viewAtom,
+  viewAtom, isUngroupedView
 } from "../../atoms/filters";
 import { breakpointAtom } from "../../atoms/viewport";
 import { useRelAtomValue } from "../../hooks/useEntityScope";
@@ -138,7 +138,7 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
   );
 
   if (mobile && !compact && editMode) {
-    const noGroups = view === "graph" || groupBy === "none";
+    const noGroups = isUngroupedView(view) || groupBy === "none";
     const icon = "inline-flex items-center justify-center w-8 h-8 rounded-md transition-colors cursor-pointer";
     return (
       <>
