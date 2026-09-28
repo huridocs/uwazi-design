@@ -6,16 +6,24 @@ export interface MobileMenuItem {
   label: string;
   icon?: ReactNode;
   count?: number;
+  /** A no-op right now (Select all with everything selected): listed, greyed. */
+  disabled?: boolean;
   onSelect: () => void;
 }
 
 interface MobileActionMenuProps {
   items: MobileMenuItem[];
+  /** The trigger's and menu's name. Defaults to the sheet menu's "More
+   *  options"; a bar's overflow of actions names itself differently so the two
+   *  kebabs side by side are not announced as the same control. */
+  label?: string;
+  /** The trigger glyph. Defaults to a horizontal ellipsis. */
+  icon?: ReactNode;
 }
 
 const MENU_MIN_WIDTH = 180;
 
-export function MobileActionMenu({ items, floating = false }: MobileActionMenuProps & {
+export function MobileActionMenu({ items, floating = false, label = "More options", icon }: MobileActionMenuProps & {
   /** Floating over content, not hosted in a bar. Only then does the trigger
    *  draw a border: a bar button carries none, but a bare kebab over a page
    *  would have nothing to separate it from what is under it. */
@@ -66,15 +74,16 @@ export function MobileActionMenu({ items, floating = false }: MobileActionMenuPr
           floating ? "border border-border bg-paper" : ""
         }`}
         style={{ color: "var(--text-secondary)" }}
-        aria-label="More options"
+        aria-label={label}
         aria-expanded={open}
       >
-        <MoreHorizontal size={16} />
+        {icon ?? <MoreHorizontal size={16} />}
       </button>
 
       {open && (
         <div
           role="menu"
+          aria-label={label}
           className="absolute bg-paper rounded-md overflow-hidden"
           style={{
             [side === "bottom" ? "top" : "bottom"]: "calc(100% + 6px)",
@@ -89,11 +98,14 @@ export function MobileActionMenu({ items, floating = false }: MobileActionMenuPr
             <button
               key={item.id}
               role="menuitem"
+              // aria-disabled, not disabled: the item stays in the menu, greyed.
+              aria-disabled={item.disabled || undefined}
               onClick={() => {
+                if (item.disabled) return;
                 item.onSelect();
                 setOpen(false);
               }}
-              className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors"
+              className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors aria-disabled:text-ink-muted aria-disabled:hover:bg-transparent aria-disabled:cursor-default"
             >
               <div className="flex items-center gap-2">
                 {item.icon && <span className="text-ink-tertiary">{item.icon}</span>}

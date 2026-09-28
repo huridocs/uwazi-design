@@ -1,13 +1,22 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { Pencil, Plus, Settings2 } from "lucide-react";
-import { useAtom, useSetAtom } from "jotai";
+import { MoreVertical, Pencil, Plus, Settings2, Trash2 } from "lucide-react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { entityPickerOpenAtom, textSelectionAtom } from "../../atoms/selection";
 import {
   manageRelationTypesOpenAtom,
   scopedReferencesAtom,
   toastsAtom,
 } from "../../atoms/references";
-import { editModeAtom, selectedRefIdsAtom } from "../../atoms/filters";
+import {
+  collapseAllSignalAtom,
+  editModeAtom,
+  expandAllSignalAtom,
+  groupByAtom,
+  selectedRefIdsAtom,
+  viewAtom,
+} from "../../atoms/filters";
+import { breakpointAtom } from "../../atoms/viewport";
+import { MobileActionMenu } from "../layout/MobileActionMenu";
 import { ConfirmDialog } from "../shared/ConfirmDialog";
 import { SelectControls } from "../shared/SelectControls";
 import { RelationshipsCollapseControls } from "./FiltersRow";
@@ -36,6 +45,16 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
   const setManageOpen = useSetAtom(manageRelationTypesOpenAtom);
   const setToasts = useSetAtom(toastsAtom);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  // Below 768px the full bar's edit mode does not fit (Create, Manage types,
+  // Select/Deselect all, the collapse pair, the selection, Delete, Cancel,
+  // Save and the sheet menu measured ~700px at 360). There it keeps Create and
+  // Delete as icons, Cancel and Save as words, and moves the rest into a More
+  // menu. Compact (drawer) already fits and is unchanged.
+  const mobile = useAtomValue(breakpointAtom) === "mobile";
+  const view = useAtomValue(viewAtom);
+  const groupBy = useAtomValue(groupByAtom);
+  const setExpandSignal = useSetAtom(expandAllSignalAtom);
+  const setCollapseSignal = useSetAtom(collapseAllSignalAtom);
 
   const totalCount = references.length;
   const selectedCount = selected.size;
@@ -98,6 +117,98 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
       <Pencil size={12} className="text-ink-tertiary" /> Edit
     </button>
   );
+
+  const confirmDialog = (
+    <ConfirmDialog
+      open={confirmDelete}
+      title={
+        selectedCount === 1 ? "Delete Reference" : "Delete References"
+      }
+      message={
+        selectedCount === 1
+          ? "Delete this reference? This cannot be undone."
+          : `Delete ${selectedCount} references? This cannot be undone.`
+      }
+      confirmLabel="Delete"
+      variant="danger"
+      onConfirm={performDelete}
+      onCancel={() => setConfirmDelete(false)}
+    />
+  );
+
+  if (mobile && !compact && editMode) {
+    const noGroups = view === "graph" || groupBy === "none";
+    const icon = "inline-flex items-center justify-center w-8 h-8 rounded-md transition-colors cursor-pointer";
+    return (
+      <>
+        <div
+          data-component="RelationshipsActionBar"
+          data-mode="edit"
+          data-layout="mobile"
+          className="bleed flex items-center justify-between gap-2 h-12 shrink-0 bg-paper"
+          style={{ borderTop: "1px solid var(--border-primary)" }}
+        >
+          <div data-part="start" className="flex items-center gap-1">
+            <button
+              type="button"
+              data-part="create"
+              onClick={handleCreate}
+              aria-label="Create relationship"
+              title="Create relationship"
+              data-gutter-align="box"
+              className={`${icon} ${BAR_GHOST}`}
+            >
+              <Plus size={14} className="text-ink-tertiary" aria-hidden />
+            </button>
+            {/* Mounted in both states so arriving at a selection shifts nothing:
+                only its count and enablement change. */}
+            <button
+              type="button"
+              data-part="delete"
+              onClick={() => setConfirmDelete(true)}
+              disabled={!hasSelection}
+              aria-label={hasSelection ? `Delete ${selectedCount} of ${totalCount} selected` : "Delete selected"}
+              className={`inline-flex items-center gap-1 h-8 px-2 rounded-md text-xs font-medium tabular-nums transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-default ${BAR_DANGER}`}
+            >
+              <Trash2 size={13} aria-hidden />
+              <span aria-hidden className="min-w-[1ch]">{hasSelection ? selectedCount : ""}</span>
+            </button>
+          </div>
+          <div data-part="end" className="flex items-center gap-1">
+            <button
+              type="button"
+              data-part="cancel"
+              onClick={cancelEdit}
+              className={`px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              data-part="save"
+              onClick={saveEdit}
+              className="px-3 py-1.5 text-xs font-medium text-parchment bg-ink hover:bg-ink/90 rounded-md transition-colors cursor-pointer"
+            >
+              Save
+            </button>
+            <MobileActionMenu
+              label="More actions"
+              icon={<MoreVertical size={16} aria-hidden />}
+              items={[
+                { id: "manage-types", label: "Manage types", icon: <Settings2 size={12} />, onSelect: () => setManageOpen(true) },
+                { id: "select-all", label: "Select all", disabled: totalCount === 0 || allSelected, onSelect: handleSelectAll },
+                { id: "deselect-all", label: "Deselect all", disabled: !hasSelection, onSelect: handleDeselectAll },
+                { id: "collapse-all", label: "Collapse all", disabled: noGroups, onSelect: () => setCollapseSignal((s) => s + 1) },
+                { id: "expand-all", label: "Expand all", disabled: noGroups, onSelect: () => setExpandSignal((s) => s + 1) },
+              ]}
+            />
+            {menuSlot}
+          </div>
+        </div>
+        {confirmDialog}
+      </>
+    );
+  }
 
   return (
     <>
@@ -205,21 +316,7 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
         </div>
       </div>
 
-      <ConfirmDialog
-        open={confirmDelete}
-        title={
-          selectedCount === 1 ? "Delete Reference" : "Delete References"
-        }
-        message={
-          selectedCount === 1
-            ? "Delete this reference? This cannot be undone."
-            : `Delete ${selectedCount} references? This cannot be undone.`
-        }
-        confirmLabel="Delete"
-        variant="danger"
-        onConfirm={performDelete}
-        onCancel={() => setConfirmDelete(false)}
-      />
+      {confirmDialog}
     </>
   );
 }

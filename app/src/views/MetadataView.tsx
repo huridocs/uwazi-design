@@ -54,6 +54,7 @@ import { BulkEditBody } from "../components/metadata/BulkEditBody";
 import type { ThesaurusValue } from "../data/settings";
 import { focusedEntityIdAtom } from "../atoms/focusedEntity";
 import { draftEntityIdAtom, retypeDraftAtom, saveEntityEditAtom, recentTemplatesAtom } from "../atoms/entityOverlay";
+import { breakpointAtom } from "../atoms/viewport";
 import { entityCorpusOf, getEntity, getEntityType, type Entity } from "../data/entities";
 import { corpusTypes } from "../atoms/dataSource";
 import { entityTypesAtom } from "../atoms/entities";
@@ -166,6 +167,7 @@ function MetadataReadBody({
   const profile = getEntityProfile(focusedId);
   const allFields = profile.metadata[language];
   const fields = allFields.filter((f): f is MetadataField => f.type !== "relationship");
+  const mobile = useAtomValue(breakpointAtom) === "mobile";
 
   return (
     <>
@@ -195,8 +197,10 @@ function MetadataReadBody({
           Edit
         </button>
         {/* Share, Permissions | Delete — the selection's dialogs, for this one
-            entity. */}
-        <EntityBarActions entityId={focusedId} onDeleted={onDeleted} />
+            entity. Icons (each keeping its name) below 768px: with their labels
+            the bar ran past the edge at every phone width and pushed the sheet
+            menu off screen. */}
+        <EntityBarActions entityId={focusedId} onDeleted={onDeleted} compact={mobile} />
         <div className="flex-1" />
         {menuSlot}
       </div>
