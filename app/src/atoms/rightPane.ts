@@ -26,5 +26,12 @@ import { atom } from "jotai";
 /** The entity whose connection overlay is open, or null. */
 export const overlayEntityBase = atom<string | null>(null);
 
+/** Every connection overlay open, bottom first; `overlayEntityBase` is its top.
+ *  On desktop it holds at most one (opening another replaces it). On a phone,
+ *  where each overlay is a bottom sheet, opening an entity from inside one
+ *  stacks a new sheet on top and closing pops back to the one below — see
+ *  `overlayEntityIdAtom`. */
+export const overlayStackBase = atom<string[]>([]);
+
 /** Whether the Relationships filters slide-over is open. */
 export const filtersDrawerBase = atom(false);

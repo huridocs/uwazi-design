@@ -104,6 +104,10 @@ export function useFocusTrap<T extends HTMLElement>(active: boolean, contentKey?
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Tab") return;
+      // A trap under another layer stands down: on a phone, stacked sheets are
+      // all "open" and the lower ones are inert. Wrapping Tab back into an
+      // inert panel would cancel the key and focus nothing.
+      if (container.closest("[inert]")) return;
       const els = focusables();
       if (els.length === 0) return;
       const first = els[0];

@@ -8,6 +8,7 @@ import { ImportCSVView } from "./views/ImportCSVView";
 import { SettingsView } from "./views/SettingsView";
 import { ToastContainer } from "./views/ToastContainer";
 import { AgentModal } from "./components/agent/AgentModal";
+import { MobileOverlayStack } from "./components/relationships/MobileOverlayStack";
 import { UnsavedChangesGuard } from "./components/shared/UnsavedChangesGuard";
 import { languageAtom } from "./atoms/language";
 import { appViewAtom, type AppView } from "./atoms/navigation";
@@ -81,6 +82,8 @@ export function App() {
           <EntityView />
         )}
       </main>
+      {/* Phones: the connection overlay's sheets, once for every view. */}
+      <MobileOverlayStack />
       <AgentModal />
       <UnsavedChangesGuard />
     </div>

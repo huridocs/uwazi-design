@@ -1,5 +1,5 @@
 import { atom, type Atom, type PrimitiveAtom, type SetStateAction, type WritableAtom } from "jotai";
-import { filtersDrawerBase, overlayEntityBase } from "./rightPane";
+import { filtersDrawerBase, overlayEntityBase, overlayStackBase } from "./rightPane";
 
 /** Presentation mode in the merged Relationships panel: how the connections
  *  are shown. Orthogonal to {@link groupByAtom}, which only matters in list. */
@@ -191,7 +191,10 @@ export const filtersDrawerOpenAtom = atom(
   (get, set, next: boolean | ((prev: boolean) => boolean)) => {
     const open = typeof next === "function" ? next(get(filtersDrawerBase)) : next;
     set(filtersDrawerBase, open);
-    if (open) set(overlayEntityBase, null);
+    if (open) {
+      set(overlayEntityBase, null);
+      set(overlayStackBase, []);
+    }
   },
 );
 
