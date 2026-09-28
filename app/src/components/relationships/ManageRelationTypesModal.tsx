@@ -101,8 +101,8 @@ export function ManageRelationTypesModal() {
         id: Date.now().toString(),
         message:
           usage > 0
-            ? `Deleted "${def.label}" — ${usage} reference${usage === 1 ? "" : "s"} reassigned to "No label"`
-            : `Deleted "${def.label}"`,
+            ? `“${def.label}” deleted; ${usage} reference${usage === 1 ? "" : "s"} reassigned to “No label”`
+            : `“${def.label}” deleted`,
         type: "success" as const,
       },
     ]);

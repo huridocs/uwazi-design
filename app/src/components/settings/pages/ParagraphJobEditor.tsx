@@ -177,7 +177,7 @@ export function ParagraphJobEditor({
 
   return (
     <SettingsContent>
-      <SettingsContent.Header path={["Paragraph Extraction"]} title={isNew ? "New extraction" : base!.template} onBack={onClose} />
+      <SettingsContent.Header path={["Paragraph extraction"]} title={isNew ? "New extraction" : base!.template} onBack={onClose} />
       <SettingsContent.Body>
         <div className="flex flex-col gap-6">
           <p className="text-xs text-ink-tertiary">

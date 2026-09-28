@@ -150,10 +150,10 @@ export function ImportDetailView({ entry, onBack }: ImportDetailViewProps) {
 
       {/* Big stats cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <StatBox label="Entities Created" value={entry.entities} />
-        <StatBox label="Rows Processed" value={processed} />
-        <StatBox label="Rows Failed" value={entry.failed} tone={entry.failed > 0 ? "seal" : "success"} />
-        <StatBox label="Thesauri Touched" value={entry.thesauriTouched ?? 0} />
+        <StatBox label="Entities created" value={entry.entities} />
+        <StatBox label="Rows processed" value={processed} />
+        <StatBox label="Rows failed" value={entry.failed} tone={entry.failed > 0 ? "seal" : "success"} />
+        <StatBox label="Thesauri touched" value={entry.thesauriTouched ?? 0} />
         <StatBox label="Relationships" value={entry.relationshipsCreated ?? 0} />
       </div>
 
@@ -168,13 +168,13 @@ export function ImportDetailView({ entry, onBack }: ImportDetailViewProps) {
 
       {/* Extraction details */}
       <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-ink">Extraction Details</h3>
+        <h3 className="text-sm font-semibold text-ink">Extraction details</h3>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-x-6 gap-y-2 text-xs">
-          <DetailField label="Source Type" value={source} />
-          <DetailField label="Upload Size" value={sizeLabel} />
-          <DetailField label="Files Extracted" value={(entry.filesExtracted ?? 1).toLocaleString()} />
-          <DetailField label="Thesauri Values Observed" value={(entry.thesauriObserved ?? 0).toLocaleString()} />
-          <DetailField label="Thesauri Values Created" value={(entry.thesauriCreated ?? 0).toLocaleString()} />
+          <DetailField label="Source type" value={source} />
+          <DetailField label="Upload size" value={sizeLabel} />
+          <DetailField label="Files extracted" value={(entry.filesExtracted ?? 1).toLocaleString()} />
+          <DetailField label="Thesauri values observed" value={(entry.thesauriObserved ?? 0).toLocaleString()} />
+          <DetailField label="Thesauri values created" value={(entry.thesauriCreated ?? 0).toLocaleString()} />
         </div>
       </div>
 

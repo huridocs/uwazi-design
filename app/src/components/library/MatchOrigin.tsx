@@ -307,8 +307,8 @@ function PropertyTip({
         {origin.moreProperties > 0
           ? `+${origin.moreProperties} more ${
               origin.moreProperties === 1 ? "property" : "properties"
-            } · click to open`
-          : "Click to open this property"}
+            } · select to open`
+          : "Open this property"}
       </TipHint>
     </>
   );
@@ -350,7 +350,7 @@ function DocumentTip({
       {snippets.borrowedFrom && (
         <BorrowedDocLine from={snippets.borrowedFrom} className="mt-1 max-w-full" />
       )}
-      <TipHint>{paged ? `Click to jump to p.${first!.page}` : "Click to open the document"}</TipHint>
+      <TipHint>{paged ? `Go to p.${first!.page}` : "Open the document"}</TipHint>
     </>
   );
 }

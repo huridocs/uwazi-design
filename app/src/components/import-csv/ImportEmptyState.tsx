@@ -17,7 +17,7 @@ export function ImportEmptyState({ onNewImport: _onNewImport }: ImportEmptyState
       <p className="text-xs text-ink-tertiary leading-relaxed max-w-[22rem]">
         Import CSV or ZIP files to create entities in bulk.
         <br />
-        Click &quot;New Import&quot; to get started.
+        Select “New import” to get started.
       </p>
     </div>
   );

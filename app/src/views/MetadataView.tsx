@@ -952,7 +952,7 @@ function EntityEditBody({
               onClick={() => notify("Icon picker isn't available in the prototype")}
               className="w-full px-3 py-2 text-sm text-ink-muted bg-paper border border-border rounded-md text-left"
             >
-              {icon ?? "Select icon..."}
+              {icon ?? "Select icon…"}
             </button>
             <div className="flex items-center justify-between mt-2">
               <Checkbox checked={showIcon} onChange={setShowIcon} label="Show icon" />
@@ -1031,7 +1031,7 @@ function EntityEditBody({
             return (
               <EditSection key="control:geolocation" label="Geolocation">
                 <div className="h-40 bg-warm rounded-md flex items-center justify-center overflow-hidden">
-                  <span className="text-xs text-ink-muted">Map Preview</span>
+                  <span className="text-xs text-ink-muted">Map preview</span>
                 </div>
                 {/* The only side-by-side pair in the form. In the drawer it stacks:
                     two number boxes across 460px leaves each of them narrower than

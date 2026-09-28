@@ -143,7 +143,7 @@ export function CreateRelationshipModal() {
         message: t(
           "System",
           "Relationship created",
-          `Relationship to "${selectedEntity.title}" created`,
+          `Relationship to “${selectedEntity.title}” created`,
         ),
         type: "success" as const,
       },
@@ -177,8 +177,8 @@ export function CreateRelationshipModal() {
             <h3 className="text-base font-semibold text-ink">{headerTitle}</h3>
             {selection && (
               <p className="text-xs text-ink-muted mt-0.5 truncate max-w-[350px]">
-                {t("System", "From:")} "{selection.text.slice(0, 60)}
-                {selection.text.length > 60 ? "..." : ""}"
+                {t("System", "From:")} “{selection.text.slice(0, 60)}
+                {selection.text.length > 60 ? "…" : ""}”
               </p>
             )}
           </div>
@@ -204,7 +204,7 @@ export function CreateRelationshipModal() {
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder={t("System", "Search entities...")}
+                  placeholder={t("System", "Search entities…")}
                   className="w-full pl-8 pr-8 py-2 text-sm bg-warm border border-border rounded-md
                     placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-carbon/20"
                   autoFocus

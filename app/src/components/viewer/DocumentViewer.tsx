@@ -459,7 +459,7 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
           onLoadSuccess={onDocumentLoadSuccess}
           loading={
             <div className="flex items-center justify-center h-[56.25rem] bg-paper rounded-md" style={{ width: "100%", maxWidth: "56.25rem" }}>
-              <p className="text-ink-muted text-sm">Loading document...</p>
+              <p className="text-ink-muted text-sm">Loading document…</p>
             </div>
           }
           error={

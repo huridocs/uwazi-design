@@ -247,7 +247,7 @@ export function AddFileModal() {
         >
           <h2 id="add-file-modal-title" className="text-base font-semibold text-ink">
             {lockedGroup
-              ? `Add translation to "${lockedGroup.title}"`
+              ? `Add translation to “${lockedGroup.title}”`
               : "Add file"}
           </h2>
           <button
@@ -270,7 +270,7 @@ export function AddFileModal() {
             >
               <CloudUpload size={28} className="text-ink-tertiary/50 mb-1.5" />
               <span className="text-sm font-medium text-ink-secondary">
-                Click to select files
+                Select files
               </span>
               <span className="text-xs text-ink-muted mt-0.5">
                 or drag and drop here

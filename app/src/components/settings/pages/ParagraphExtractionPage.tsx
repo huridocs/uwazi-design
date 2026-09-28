@@ -45,7 +45,7 @@ export function ParagraphExtractionPage() {
 
   return (
     <SettingsContent>
-      <SettingsContent.Header title="Paragraph Extraction" />
+      <SettingsContent.Header title="Paragraph extraction" />
       <SettingsContent.Body>
         <p className="text-xs text-ink-tertiary mb-4">
           Split documents into paragraph-level records for fine-grained search and analysis.

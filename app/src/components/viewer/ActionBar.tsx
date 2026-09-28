@@ -112,7 +112,7 @@ export function ActionBar({ numPages, onScrollToPage, leftSlot, rightSlot, showP
               Previous
             </button>
             <span data-part="page-count" dir="ltr" className="text-tab font-semibold text-ink tabular-nums">
-              {currentPage} / {numPages || "..."}
+              {currentPage} / {numPages || "…"}
             </span>
             <button
               type="button"

@@ -105,8 +105,8 @@ export function useReferenceDelete() {
   const dialog = (
     <ConfirmDialog
       open={deleteTarget !== null}
-      title="Delete Reference"
-      message="Are you sure you want to delete this reference? This action cannot be undone."
+      title="Delete reference?"
+      message="The reference is removed from this entity. This can’t be undone."
       confirmLabel="Delete"
       variant="danger"
       onConfirm={confirmDelete}

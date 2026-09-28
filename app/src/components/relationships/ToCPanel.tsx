@@ -63,9 +63,9 @@ export function ToCPanel() {
       <div className="flex-1 flex flex-col items-center justify-center text-center gap-3 px-4">
         <List size={32} className="text-ink-tertiary/40" />
         <div>
-          <p className="text-sm font-semibold text-ink-tertiary">{t("System", "No ToC")}</p>
+          <p className="text-sm font-semibold text-ink-tertiary">{t("System", "No table of contents")}</p>
           <p className="text-xs text-ink-tertiary mt-1">
-            {t("System", "Well, just a table of contents (ToC)")}
+            {t("System", "This document has no table of contents.")}
           </p>
         </div>
       </div>
@@ -86,13 +86,13 @@ export function ToCPanel() {
               onClick={collapseAll}
               className="hit-area-y text-xs text-ink-tertiary hover:text-ink-secondary transition-colors cursor-pointer"
             >
-              {t("System", "Collapse All")}
+              {t("System", "Collapse all")}
             </button>
             <button
               onClick={expandAll}
               className="hit-area-y text-xs font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
             >
-              {t("System", "Expand All")}
+              {t("System", "Expand all")}
             </button>
           </div>
         )}

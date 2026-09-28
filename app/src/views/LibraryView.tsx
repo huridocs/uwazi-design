@@ -899,7 +899,7 @@ export function LibraryView() {
               // the results stay usable while you retype. Dropping the search
               // itself is the chip in Active filters, or Clear all.
               onClick={() => setSearchDraft("")}
-              aria-label="Clear search text"
+              aria-label="Clear search"
               className="hit-area shrink-0 p-0.5 rounded-full hover:bg-parchment text-ink-tertiary hover:text-ink cursor-pointer transition-colors"
             >
               <X size={12} />
