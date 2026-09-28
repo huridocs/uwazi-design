@@ -119,6 +119,17 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
       onNavigate?.("settings");
     });
   };
+  /** Phones: open a settings GROUP's list (the rail, full width), not a page.
+   *  The rail lists the group of the current section, so this has to set one:
+   *  navigating to Settings alone left the section on Account, and User settings
+   *  and System settings both opened a list holding only Account. */
+  const openSettingsList = (groupId: string) => {
+    guard(() => {
+      setSettingsSection(settingsEntryOf(groupId));
+      setSettingsDrilled(false);
+      onNavigate?.("settings");
+    });
+  };
 
   return (
     // px-3 matches the content gutter below it — the Library toolbar, the card
@@ -578,14 +589,14 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
               />
             </div>
             <button
-              onClick={() => { onNavigate?.("settings"); setMobileMenuOpen(false); }}
+              onClick={() => { openSettingsList("user"); setMobileMenuOpen(false); }}
               className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
             >
               <User size={16} className="text-ink-tertiary" />
               {t("System", "User settings")}
             </button>
             <button
-              onClick={() => { onNavigate?.("settings"); setMobileMenuOpen(false); }}
+              onClick={() => { openSettingsList("system"); setMobileMenuOpen(false); }}
               className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
             >
               <Server size={16} className="text-ink-tertiary" />
