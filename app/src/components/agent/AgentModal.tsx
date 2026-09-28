@@ -638,7 +638,7 @@ function AddMenu({
       {hasSelection && !hasKind("selection") && item("Selection", () => { onAdd("selection"); close(); })}
       {groupLabel("Facets")}
       {!hasKind("template") && item("Template", () => { onAdd("template"); close(); })}
-      {!hasKind("connections") && item("Connections", () => { onAdd("connections"); close(); })}
+      {!hasKind("connections") && item("Relationships", () => { onAdd("connections"); close(); })}
       {!hasKind("files") && item("Files", () => { onAdd("files"); close(); })}
       {groupLabel("Attach")}
       {item("Entity…", () => setMode("entity"))}

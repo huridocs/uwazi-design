@@ -432,7 +432,7 @@ export function FiltersSlideOverDemo() {
           }
         >
           <FacetSection
-            title="Relation type"
+            title="Relationship type"
             total={50}
             entries={[
               ["cites", 31],
