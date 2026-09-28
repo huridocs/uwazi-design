@@ -61,7 +61,7 @@ export function RelationTypesPage() {
           The labels available when connecting entities. Deleting a type re-labels its connections as
           unlabeled.
         </p>
-        <SettingsTable columns={columns} data={types} getRowId={(r) => r.id} onRowClick={(r) => setEditing(r)} />
+        <SettingsTable columns={columns} data={types} getRowId={(r) => r.id} onRowClick={(r) => setEditing(r)} rowAriaLabel={(r) => `Edit ${r.name}`} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <SettingsButton variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>

@@ -391,7 +391,7 @@ export function ComponentCatalog({ onReturn }: Props) {
                   name="Hint"
                   description="One-line hint above an element on hover and keyboard focus, portalled to body. Replaces title attributes."
                   code={`<Hint text="Go to page 14" describe={false}>
-  {(hint) => <button {...hint} aria-label="Go to page 14">Document</button>}
+  {(hint) => <button {...hint} aria-label="Go to page 14">Page 14</button>}
 </Hint>`}
                   tailwind="fixed z-50 rounded-md bg-ink px-2 py-1 text-meta text-paper shadow-md"
                 >
@@ -405,7 +405,7 @@ export function ComponentCatalog({ onReturn }: Props) {
                           className="rounded-sm uppercase tracking-wide text-ink-tertiary hover:underline
                             focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40"
                         >
-                          Document
+                          Page 14
                         </button>
                       )}
                     </Hint>

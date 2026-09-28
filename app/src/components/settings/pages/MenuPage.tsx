@@ -64,7 +64,7 @@ export function MenuPage() {
         <p className="text-xs text-ink-tertiary mb-4">
           Links shown in the top navigation. Groups nest links into a dropdown.
         </p>
-        <SettingsTable columns={columns} data={links} getRowId={(m) => m.id} onRowClick={(m) => setEditing(m)} />
+        <SettingsTable columns={columns} data={links} getRowId={(m) => m.id} onRowClick={(m) => setEditing(m)} rowAriaLabel={(m) => `Edit ${m.title}`} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <SettingsButton variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>

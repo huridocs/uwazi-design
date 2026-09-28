@@ -41,7 +41,7 @@ export function ToastContainer() {
           <span className="text-sm text-ink">{toast.message}</span>
           <button
             onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
-            aria-label="Dismiss"
+            aria-label="Dismiss notification"
             className="hit-area ms-auto p-0.5 rounded hover:bg-parchment"
           >
             <X size={14} className="text-ink-muted" />

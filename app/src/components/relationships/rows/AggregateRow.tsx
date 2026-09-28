@@ -87,7 +87,7 @@ export function AggregateRow({
   };
 
   // Always a control here — without an inline expand it still routes to the
-  // evidence in References, which is why it takes a title either way.
+  // evidence in the Relationships drawer tab, which is why it takes a title either way.
   const countBadge = (
     <EvidenceBadge
       count={rel.evidenceCount}
@@ -95,7 +95,7 @@ export function AggregateRow({
       onActivate={handleEvidenceClick}
       ariaLabel={`${rel.evidenceCount} evidence references`}
       ariaExpanded={onToggleExpand ? !!expanded : undefined}
-      title={onToggleExpand ? "Toggle evidence" : "View evidence in References"}
+      title={onToggleExpand ? (expanded ? "Hide evidence" : "Show evidence") : "Show evidence in Relationships"}
     />
   );
 

@@ -84,7 +84,7 @@ export function DrawerActionBar({ activeTab, onEdit }: DrawerActionBarProps) {
               guide here.
             </button>
           </div>
-          <button type="button" onClick={() => notify("Opening references guide")} aria-label="Help">
+          <button type="button" onClick={() => notify("Opening references guide")} aria-label="Open references guide">
             <HelpCircle size={18} aria-hidden className="text-carbon" />
           </button>
         </>

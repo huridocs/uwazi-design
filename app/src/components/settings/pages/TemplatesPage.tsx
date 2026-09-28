@@ -91,7 +91,7 @@ export function TemplatesPage() {
         <p className="text-xs text-ink-tertiary mb-4">
           Templates define the metadata properties an entity of each type can carry.
         </p>
-        <SettingsTable columns={columns} data={templates} getRowId={(t) => t.id} onRowClick={(t) => setEditing(t)} />
+        <SettingsTable columns={columns} data={templates} getRowId={(t) => t.id} onRowClick={(t) => setEditing(t)} rowAriaLabel={(t) => `Edit ${t.name}`} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <SettingsButton variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>

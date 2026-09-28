@@ -186,7 +186,7 @@ export function TemplateStructure() {
             entities
           </button>
         </span>
-        <button type="button" onClick={() => notify("Opening entities guide")} aria-label="Help">
+        <button type="button" onClick={() => notify("Opening entities guide")} aria-label="Open entities guide">
           <HelpCircle size={18} aria-hidden className="text-ink-muted" />
         </button>
       </div>

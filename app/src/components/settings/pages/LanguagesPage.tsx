@@ -235,7 +235,7 @@ export function LanguagesPage() {
               <h2 className="text-sm font-semibold text-ink">Install predefined language</h2>
               <button
                 onClick={() => setInstallOpen(false)}
-                aria-label="Close"
+                aria-label="Close language list"
                 className="p-1.5 rounded-md text-ink-tertiary hover:bg-warm hover:text-ink transition-colors cursor-pointer"
               >
                 <X size={16} />

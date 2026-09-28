@@ -394,7 +394,7 @@ function PropertyDialog({
       >
         <div className="flex items-center justify-between h-12 px-4" style={{ borderBottom: "1px solid var(--border-soft)" }}>
           <h3 className="text-sm font-semibold text-ink">{isNew ? "New property" : "Edit property"}</h3>
-          <button onClick={onCancel} aria-label="Close" className="p-1.5 rounded-md hover:bg-warm text-ink-muted hover:text-ink transition-colors cursor-pointer">
+          <button onClick={onCancel} aria-label={isNew ? "Close new property" : "Close property editor"} className="p-1.5 rounded-md hover:bg-warm text-ink-muted hover:text-ink transition-colors cursor-pointer">
             <X size={16} />
           </button>
         </div>
