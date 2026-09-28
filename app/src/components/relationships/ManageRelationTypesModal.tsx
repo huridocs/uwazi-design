@@ -75,7 +75,7 @@ export function ManageRelationTypesModal() {
       ...prev,
       {
         id: Date.now().toString(),
-        message: `Added relation type "${label}"`,
+        message: `Relationship type “${label}” added`,
         type: "success" as const,
       },
     ]);
@@ -103,7 +103,7 @@ export function ManageRelationTypesModal() {
         id: Date.now().toString(),
         message:
           usage > 0
-            ? `“${def.label}” deleted; ${usage} reference${usage === 1 ? "" : "s"} reassigned to “No label”`
+            ? `“${def.label}” deleted; ${usage} relationship${usage === 1 ? "" : "s"} reassigned to “No label”`
             : `“${def.label}” deleted`,
         type: "success" as const,
       },
@@ -133,8 +133,8 @@ export function ManageRelationTypesModal() {
             onKeyDown={(e) => {
               if (e.key === "Enter") handleAdd();
             }}
-            placeholder={t("System", "New relation type label…")}
-            aria-label={t("System", "New relation type label")}
+            placeholder={t("System", "New relationship type label…")}
+            aria-label={t("System", "New relationship type label")}
             className={`flex-1 ${MODAL_INPUT}`}
           />
           <button
@@ -169,7 +169,7 @@ export function ManageRelationTypesModal() {
                       className="text-meta uppercase tracking-wide text-ink-tertiary px-1.5 py-0.5 bg-vellum rounded shrink-0"
                       title={t(
                         "System",
-                        "Fallback type — orphaned references land here",
+                        "Fallback type: relationships whose type is deleted move here",
                       )}
                     >
                       {t("System", "Fallback")}

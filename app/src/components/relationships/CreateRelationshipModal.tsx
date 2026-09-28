@@ -162,7 +162,7 @@ export function CreateRelationshipModal() {
     step === "new-entity"
       ? t("System", "New entity")
       : step === "relation"
-        ? t("System", "Choose relation type")
+        ? t("System", "Choose relationship type")
         : t("System", "Select target entity");
 
   // Back, then the step's commit. The entity step commits by picking a row,

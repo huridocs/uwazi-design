@@ -78,13 +78,13 @@ export function DrawerActionBar({ activeTab, onEdit }: DrawerActionBarProps) {
             <span className="text-meta text-ink-tertiary">To add references check this</span>
             <button
               type="button"
-              onClick={() => notify("Opening references guide")}
+              onClick={() => notify("Opening relationships guide")}
               className="text-meta font-medium text-carbon cursor-pointer hover:underline"
             >
               guide here.
             </button>
           </div>
-          <button type="button" onClick={() => notify("Opening references guide")} aria-label="Open references guide">
+          <button type="button" onClick={() => notify("Opening relationships guide")} aria-label="Open relationships guide">
             <HelpCircle size={18} aria-hidden className="text-carbon" />
           </button>
         </>
@@ -99,7 +99,7 @@ export function DrawerActionBar({ activeTab, onEdit }: DrawerActionBarProps) {
 
       {activeTab === "relationships" && (
         <>
-          <ActionPill label="Add relationship" variant="lead" onClick={() => notify("Relationship added", "success")} />
+          <ActionPill label="Create relationship" variant="lead" onClick={() => notify("Relationship created", "success")} />
           <div />
         </>
       )}

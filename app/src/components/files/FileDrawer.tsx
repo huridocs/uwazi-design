@@ -225,7 +225,7 @@ export function FileDrawer({
                       onClick={() => setViewerFileId(selectedFiles[0].id)}
                       className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${BAR_LEAD} rounded-md transition-colors cursor-pointer`}
                     >
-                      <Eye size={12} className="text-ink-tertiary" aria-hidden /> View
+                      <Eye size={12} className="text-ink-tertiary" aria-hidden /> Open
                     </button>
                     <button
                       type="button"
@@ -386,7 +386,7 @@ function TranslationCard({
           e.stopPropagation();
           onFocus();
         }}
-        aria-label={`View ${file.name}`}
+        aria-label={`Open ${file.name}`}
         className="relative p-1 rounded hover:bg-parchment transition-colors"
       >
         <Eye size={14} className="text-ink-tertiary" aria-hidden />

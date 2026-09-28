@@ -427,8 +427,8 @@ function PropertyDialog({
               <SettingsField label="Related template">
                 <Select value={targetTemplate} options={TEMPLATE_OPTIONS} onChange={setTargetTemplate} ariaLabel="Related template" />
               </SettingsField>
-              <SettingsField label="Relation type">
-                <Select value={relationType} options={RELATION_OPTIONS} onChange={setRelationType} ariaLabel="Relation type" />
+              <SettingsField label="Relationship type">
+                <Select value={relationType} options={RELATION_OPTIONS} onChange={setRelationType} ariaLabel="Relationship type" />
               </SettingsField>
             </div>
           )}

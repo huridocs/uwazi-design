@@ -74,7 +74,7 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
                 style={{ borderBottom: "1px solid var(--border-primary)" }}
               >
                 {/* Stretched primary action — the row hosts nested controls
-                    (checkbox, View), so the container itself is not a button. */}
+                    (checkbox, Open), so the container itself is not a button. */}
                 <button
                   type="button"
                   data-part="primary-action"
@@ -115,11 +115,11 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
                 <button
                   type="button"
                   data-part="view"
-                  aria-label={`View ${entry.filename}`}
+                  aria-label={`Open ${entry.filename}`}
                   onClick={(e) => { e.stopPropagation(); onView(entry.id); }}
                   className="hit-area relative px-2.5 py-1 text-meta font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors shrink-0"
                 >
-                  View
+                  Open
                 </button>
               </li>
             );
@@ -187,7 +187,7 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
                 onClick={() => onSelect(entry.id)}
               >
                 {/* Stretched primary action — the focusable path lives here, not
-                    on the row (a focusable row wrapping the checkbox/View button
+                    on the row (a focusable row wrapping the checkbox/Open button
                     is invalid nesting for AT). It sits in an absolutely
                     positioned cell, so the row holds only cells and the button
                     takes no grid track. */}
@@ -241,7 +241,7 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
                   <button
                     type="button"
                     data-part="view"
-                    aria-label={`View ${entry.filename}`}
+                    aria-label={`Open ${entry.filename}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       if (entry.status !== "pending") onView(entry.id);
@@ -249,7 +249,7 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
                     disabled={entry.status === "pending"}
                     className="px-2.5 py-1 text-meta font-medium text-ink rounded-md border border-border hover:bg-warm transition-colors disabled:text-ink-muted disabled:hover:bg-transparent disabled:cursor-not-allowed"
                   >
-                    View
+                    Open
                   </button>
                 </td>
               </tr>

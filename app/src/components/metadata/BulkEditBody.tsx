@@ -473,7 +473,7 @@ function MultiField({
               searchPlaceholder="Search connected entities"
               renderCount={(v) => `${counts[v] ?? 0} of ${n}`}
               ariaLabelOf={(v) => `${title(v)}, on ${counts[v] ?? 0} of ${n}`}
-              emptyState={<p className="px-2 py-2 text-xs text-ink-tertiary">No connections yet.</p>}
+              emptyState={<p className="px-2 py-2 text-xs text-ink-tertiary">No related entities yet.</p>}
             />
           </div>
         )}

@@ -272,7 +272,7 @@ export function RelationshipsFilterDrawer() {
         />
       )}
       <FacetSection
-        title={t("System", "Relation type")}
+        title={t("System", "Relationship type")}
         total={totalRels}
         entries={Array.from(byRelType.entries()).sort((a, b) => b[1] - a[1])}
         selected={relTypeFilters}

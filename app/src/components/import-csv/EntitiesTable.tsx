@@ -46,7 +46,7 @@ export function EntitiesTable({ entities }: EntitiesTableProps) {
             <th role="columnheader" scope="col" className="block font-semibold text-start">Title</th>
             {!mobile && <th role="columnheader" scope="col" className="block font-semibold text-start">Template</th>}
             <th role="columnheader" scope="col" className="block font-semibold text-start">Created</th>
-            <th role="columnheader" scope="col" className="block font-semibold text-center">View</th>
+            <th role="columnheader" scope="col" className="block font-semibold text-center">Open</th>
           </tr>
         </thead>
 
@@ -69,7 +69,7 @@ export function EntitiesTable({ entities }: EntitiesTableProps) {
                 <button
                   type="button"
                   data-part="view"
-                  aria-label={`View ${entity.title}`}
+                  aria-label={`Open ${entity.title}`}
                   onClick={() => notify(`Opening ${entity.title}`)}
                   className="flex items-center justify-center p-1 rounded hover:bg-parchment transition-colors"
                 >

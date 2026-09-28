@@ -211,7 +211,7 @@ export const EntityCard = memo(function EntityCard({
       className={`inline-flex items-center gap-1 text-meta text-ink-tertiary tabular-nums ${
         sort === "connections" ? "rounded-sm bg-vellum -mx-1 px-1 -my-px py-px" : ""
       }`}
-      title={sort === "connections" ? `Sorted by Connections — ${connections}` : `${connections} connections`}
+      title={sort === "connections" ? `Sorted by relationships: ${connections}` : `${connections} relationships`}
     >
       <Link2 size={11} className="text-ink-muted" />
       {connections.toLocaleString()}

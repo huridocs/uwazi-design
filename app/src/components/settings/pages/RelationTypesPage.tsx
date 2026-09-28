@@ -40,7 +40,7 @@ export function RelationTypesPage() {
       width: "9rem",
       cell: (r) => (
         <span className="text-ink-secondary tabular-nums">
-          {r.usageCount} <span className="text-ink-tertiary">connections</span>
+          {r.usageCount} <span className="text-ink-tertiary">relationships</span>
         </span>
       ),
     },
@@ -71,8 +71,8 @@ export function RelationTypesPage() {
 
       <ConfirmDialog
         open={confirm !== null}
-        title="Delete relationship type"
-        message={`Delete “${confirm?.name}”? Its ${confirm?.usageCount} connections will be re-labeled as unlabeled.`}
+        title="Delete relationship type?"
+        message={`Its ${confirm?.usageCount} relationships lose their type and become unlabeled. This can’t be undone.`}
         confirmLabel="Delete"
         variant="danger"
         onConfirm={() => {

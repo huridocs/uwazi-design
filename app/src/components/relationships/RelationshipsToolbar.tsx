@@ -94,7 +94,7 @@ export function useReferenceDelete() {
       ...prev,
       {
         id: Date.now().toString(),
-        message: "Reference deleted",
+        message: "Relationship deleted",
         type: "success" as const,
       },
     ]);
@@ -103,8 +103,8 @@ export function useReferenceDelete() {
   const dialog = (
     <ConfirmDialog
       open={deleteTarget !== null}
-      title="Delete reference?"
-      message="The reference is removed from this entity. This can’t be undone."
+      title="Delete relationship?"
+      message="The relationship is removed from this entity. This can’t be undone."
       confirmLabel="Delete"
       variant="danger"
       onConfirm={confirmDelete}

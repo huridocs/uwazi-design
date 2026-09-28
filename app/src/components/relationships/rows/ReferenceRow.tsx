@@ -87,7 +87,7 @@ export function ReferenceRow({ reference, onDelete, nested, hideRelLabel }: Refe
         onDelete(reference.id);
       }}
       type="button"
-      aria-label="Delete reference"
+      aria-label="Delete relationship"
       data-part="delete"
       className="hit-area p-1 rounded opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-seal-tint text-ink-muted hover:text-seal-label transition-all cursor-pointer"
     >
