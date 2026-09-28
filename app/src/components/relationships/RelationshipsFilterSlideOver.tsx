@@ -3,7 +3,7 @@ import { useAtom } from "jotai";
 import { useRelAtom, useScopedReferences } from "../../hooks/useEntityScope";
 import {
   relTypeFiltersAtom,
-  entityTypeFiltersAtom,
+  relEntityTypeFiltersAtom,
   relTargetCountryFiltersAtom,
   relTargetDescriptorFiltersAtom,
   relTargetDescriptorModeAtom,
@@ -56,7 +56,7 @@ export function RelationshipsFilterSlideOver() {
   const [language] = useAtom(languageAtom);
   const [relTypeFilters, setRelTypeFilters] = useRelAtom(relTypeFiltersAtom);
   const [entityTypeFilters, setEntityTypeFilters] = useRelAtom(
-    entityTypeFiltersAtom,
+    relEntityTypeFiltersAtom,
   );
   const [countryFilters, setCountryFilters] = useRelAtom(
     relTargetCountryFiltersAtom,

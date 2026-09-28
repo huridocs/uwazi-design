@@ -12,7 +12,7 @@ import { useMemo } from "react";
 import { useAtomValue } from "jotai";
 import { CalendarX } from "lucide-react";
 import { useEntityScopeId, useRelAtom } from "../../../hooks/useEntityScope";
-import { whenYearsAtom } from "../../../atoms/filters";
+import { relWhenYearsAtom } from "../../../atoms/filters";
 import { languageAtom } from "../../../atoms/language";
 import { getEntity, getEntityType } from "../../../data/entities";
 import { datesOf } from "../../../data/entityDates";
@@ -33,7 +33,7 @@ export function WhenBody() {
   const selfId = useEntityScopeId();
   const lang = useAtomValue(languageAtom);
   const filtered = useFilteredReferences({ sort: false });
-  const [range, setRange] = useRelAtom(whenYearsAtom);
+  const [range, setRange] = useRelAtom(relWhenYearsAtom);
   const previewing = useAtomValue(previewEntityIdAtom);
 
   const { events, undated } = useMemo(

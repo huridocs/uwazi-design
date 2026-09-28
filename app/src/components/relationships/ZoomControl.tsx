@@ -1,6 +1,6 @@
 import { useAtom } from "jotai";
 import { Rows3, LayoutList, CircleDot } from "lucide-react";
-import { zoomAtom, type Zoom } from "../../atoms/filters";
+import { relZoomAtom, type Zoom } from "../../atoms/filters";
 
 const zoomOrder: Zoom[] = ["detail", "compact", "overview"];
 
@@ -20,7 +20,7 @@ interface Props {
 /** Three-button density toggle. Used for the tree view and grouped list view;
  *  the view itself is now selected via ViewControls. */
 export function ZoomControl({ size = "md", disabled = false }: Props = {}) {
-  const [zoom, setZoom] = useAtom(zoomAtom);
+  const [zoom, setZoom] = useAtom(relZoomAtom);
   const h = size === "sm" ? "h-6" : "h-8";
   const iconSize = size === "sm" ? 11 : 12;
   const px = size === "sm" ? "px-2" : "px-2.5";

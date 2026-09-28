@@ -5,7 +5,7 @@ import { LANGUAGES, languageAtom, type Language } from "../atoms/language";
 import { focusedEntityIdAtom } from "../atoms/focusedEntity";
 import { getEntityProfile } from "../data/entityProfiles";
 import { MOCK_DOCUMENT_FILE } from "../data/files";
-import { viewAtom } from "../atoms/filters";
+import { relViewAtom } from "../atoms/filters";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
 import { MainTabs } from "../components/layout/MainTabs";
@@ -35,7 +35,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
   const [focusedId] = useAtom(focusedEntityIdAtom);
   const profile = getEntityProfile(focusedId);
   const [language, setLanguage] = useAtom(languageAtom);
-  const [view] = useRelAtom(viewAtom);
+  const [view] = useRelAtom(relViewAtom);
   const { handleDelete, dialog: deleteDialog } = useReferenceDelete();
 
   const hideMinimap = view === "graph";

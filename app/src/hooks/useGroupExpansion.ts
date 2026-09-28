@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import {
-  expandAllSignalAtom,
-  collapseAllSignalAtom,
-  expandedGroupCountAtom,
-  totalGroupCountAtom,
+  relExpandAllSignalAtom,
+  relCollapseAllSignalAtom,
+  relExpandedGroupCountAtom,
+  relTotalGroupCountAtom,
 } from "../atoms/filters";
 import { expandGroupForRefAtom } from "../atoms/references";
 
@@ -53,10 +53,10 @@ export function useGroupExpansion({
 }: GroupExpansionOptions = {}) {
   const [localExpanded, setLocalExpanded] = useState(defaultExpanded);
   const expanded = controlledExpanded ?? localExpanded;
-  const [expandSignal] = useAtom(expandAllSignalAtom);
-  const [collapseSignal] = useAtom(collapseAllSignalAtom);
-  const setExpandedCount = useSetAtom(expandedGroupCountAtom);
-  const setTotalCount = useSetAtom(totalGroupCountAtom);
+  const [expandSignal] = useAtom(relExpandAllSignalAtom);
+  const [collapseSignal] = useAtom(relCollapseAllSignalAtom);
+  const setExpandedCount = useSetAtom(relExpandedGroupCountAtom);
+  const setTotalCount = useSetAtom(relTotalGroupCountAtom);
   const [expandForRef, setExpandForRef] = useAtom(expandGroupForRefAtom);
 
   // Hooks stay unconditional; only the bodies gate on `standalone`.

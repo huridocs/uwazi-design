@@ -1,7 +1,7 @@
 import { Children, ReactNode } from "react";
 import { useAtomValue } from "jotai";
 import { ChevronRight } from "lucide-react";
-import { zoomAtom } from "../../atoms/filters";
+import { relZoomAtom } from "../../atoms/filters";
 import { useGroupExpansion } from "../../hooks/useGroupExpansion";
 import { HighlightedText } from "../shared/HighlightedText";
 
@@ -109,7 +109,7 @@ export function TreeBranch({
 export function TreeNode({ children }: { children: ReactNode }) {
   // Junction dots are an overview-zoom flourish — the airy, scannable tree.
   // Compact/detail keep plain connectors so the denser rows don't read busy.
-  const showDot = useAtomValue(zoomAtom) === "overview";
+  const showDot = useAtomValue(relZoomAtom) === "overview";
   return (
     <li
       data-component="TreeNode"

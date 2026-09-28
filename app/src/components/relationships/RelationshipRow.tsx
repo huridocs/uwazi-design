@@ -50,7 +50,7 @@ type Props = ReferenceKind | AggregateKind | HubKind;
  *  text-anchored reference (kind="reference", with snippet + page tag), a
  *  deduped aggregate relationship (kind="aggregate", entity-level with an
  *  evidence-count action), or a hub (kind="hub", n-ary multi-entity row).
- *  Each variant reads `zoomAtom` to vary row density. Implementations live in
+ *  Each variant reads `relZoomAtom` to vary row density. Implementations live in
  *  `./rows/`. */
 export function RelationshipRow(props: Props) {
   if (props.kind === "reference") {

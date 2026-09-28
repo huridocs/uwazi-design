@@ -1,6 +1,6 @@
 import { useRelAtom } from "../../hooks/useEntityScope";
 import { CalendarRange, LayoutList, ListTree, Network } from "lucide-react";
-import { viewAtom, type View } from "../../atoms/filters";
+import { relViewAtom, type View } from "../../atoms/filters";
 import { SegmentedControl, type Segment } from "../shared/SegmentedControl";
 
 const options: Segment[] = [
@@ -12,7 +12,7 @@ const options: Segment[] = [
 
 /** Presentation-mode toggle: list / tree / graph / when. Orthogonal to grouping. */
 export function ViewControls({ size = "md" }: { size?: "sm" | "md" }) {
-  const [view, setView] = useRelAtom(viewAtom);
+  const [view, setView] = useRelAtom(relViewAtom);
   return (
     <SegmentedControl
       ariaLabel="View"

@@ -4,9 +4,9 @@ import { useAtom } from "jotai";
 import { Link2 } from "lucide-react";
 import { activeRefIdAtom } from "../../atoms/references";
 import {
-  groupByAtom,
-  searchQueryAtom,
-  subGroupByAtom,
+  relGroupByAtom,
+  relSearchQueryAtom,
+  relSubGroupByAtom,
 } from "../../atoms/filters";
 import { useFilteredReferences } from "./useFilteredReferences";
 import { useAutoExpandOnRefJump } from "../../hooks/useGroupExpansion";
@@ -26,11 +26,11 @@ import { previewEntityIdAtom } from "../../atoms/entityPreview";
  *  list view, but the leaves are aggregate `RelationshipRow kind="aggregate"`
  *  cards with inline-expand into their underlying refs. */
 export function RelationshipsTreeView() {
-  const [groupBy] = useRelAtom(groupByAtom);
-  const [subGroupBy] = useRelAtom(subGroupByAtom);
+  const [groupBy] = useRelAtom(relGroupByAtom);
+  const [subGroupBy] = useRelAtom(relSubGroupByAtom);
   // Group headers carry the match when the leaves suppress that label (a
   // relation-type group hides `relLabel` on every row beneath it).
-  const [query] = useRelAtom(searchQueryAtom);
+  const [query] = useRelAtom(relSearchQueryAtom);
   const [, setPreviewEntityId] = useAtom(previewEntityIdAtom);
   const [, setActiveRefId] = useAtom(activeRefIdAtom);
 

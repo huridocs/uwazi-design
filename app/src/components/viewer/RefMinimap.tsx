@@ -6,7 +6,7 @@ import {
   activeRefIdAtom,
   expandGroupForRefAtom,
 } from "../../atoms/references";
-import { collapseAllSignalAtom, searchQueryAtom, activeClusterRefIdsAtom } from "../../atoms/filters";
+import { relCollapseAllSignalAtom, relSearchQueryAtom, activeClusterRefIdsAtom } from "../../atoms/filters";
 import { currentPageAtom } from "../../atoms/selection";
 import { activePrimaryGroupIdAtom } from "../../atoms/files";
 import { getEntity, getEntityType } from "../../data/entities";
@@ -40,12 +40,12 @@ export function RefMinimap({ numPages }: RefMinimapProps) {
   const setScrollToRef = useSetAtom(scrollToRefAtom);
   const setActiveDrawerTab = useSetAtom(activeDrawerTabAtom);
   const setExpandGroupForRef = useSetAtom(expandGroupForRefAtom);
-  const setCollapseSignal = useSetAtom(collapseAllSignalAtom);
+  const setCollapseSignal = useSetAtom(relCollapseAllSignalAtom);
   const [expandedCluster, setExpandedCluster] = useState<number | null>(null);
   const [hoveredDot, setHoveredDot] = useState<string | null>(null);
   const [mode, setMode] = useState<"global" | "page">("global");
   const [currentPage] = useAtom(currentPageAtom);
-  const [searchQuery] = useAtom(searchQueryAtom);
+  const [searchQuery] = useAtom(relSearchQueryAtom);
   const setActiveClusterRefIds = useSetAtom(activeClusterRefIdsAtom);
   const minimapRef = useRef<HTMLDivElement>(null);
   // Reset transient minimap state (expanded cluster, hovered dot) whenever

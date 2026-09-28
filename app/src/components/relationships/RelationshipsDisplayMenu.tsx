@@ -3,11 +3,11 @@ import { useState, type ReactNode } from "react";
 import { useAtomValue } from "jotai";
 import { SlidersHorizontal } from "lucide-react";
 import {
-  viewAtom,
-  groupByAtom,
-  subGroupByAtom,
-  sortOrderAtom,
-  zoomAtom,
+  relViewAtom,
+  relGroupByAtom,
+  relSubGroupByAtom,
+  relSortOrderAtom,
+  relZoomAtom,
   DEFAULT_GROUP_BY,
   DEFAULT_SUB_GROUP_BY,
   DEFAULT_ZOOM,
@@ -51,12 +51,12 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
  *  costing the toolbar a pixel of shift. The trigger carries a dot when anything
  *  is off its default, so a collapsed control is never a hidden one. */
 export function RelationshipsDisplayMenu({ size = "md" }: { size?: "sm" | "md" }) {
-  const view = useRelAtomValue(viewAtom);
-  const [groupBy, setGroupBy] = useRelAtom(groupByAtom);
-  const [subGroupBy, setSubGroupBy] = useRelAtom(subGroupByAtom);
-  const [chosenSort, setSortOrder] = useRelAtom(sortOrderAtom);
+  const view = useRelAtomValue(relViewAtom);
+  const [groupBy, setGroupBy] = useRelAtom(relGroupByAtom);
+  const [subGroupBy, setSubGroupBy] = useRelAtom(relSubGroupByAtom);
+  const [chosenSort, setSortOrder] = useRelAtom(relSortOrderAtom);
   const sortOrder = chosenSort ?? defaultSortFor(view);
-  const zoom = useAtomValue(zoomAtom);
+  const zoom = useAtomValue(relZoomAtom);
   const [open, setOpen] = useState(false);
 
   const isGraph = isUngroupedView(view);

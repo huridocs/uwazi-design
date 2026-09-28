@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { Trash2 } from "lucide-react";
 import { activeRefIdAtom, scrollToHighlightAtom, scrollToRefAtom } from "../../../atoms/references";
-import { searchQueryAtom } from "../../../atoms/filters";
+import { relSearchQueryAtom } from "../../../atoms/filters";
 import { currentPageAtom } from "../../../atoms/selection";
 import { getEntity, getEntityType } from "../../../data/entities";
 import { Reference, relationTypes } from "../../../data/references";
@@ -28,7 +28,7 @@ export interface ReferenceRowProps {
   hideRelLabel?: boolean;
 }
 
-/** Single text-anchored (or entity-level) reference row. Reads `zoomAtom` to
+/** Single text-anchored (or entity-level) reference row. Reads `relZoomAtom` to
  *  switch between detail / compact / overview densities. */
 export function ReferenceRow({ reference, onDelete, nested, hideRelLabel }: ReferenceRowProps) {
   const entity = getEntity(reference.targetEntityId);
@@ -36,7 +36,7 @@ export function ReferenceRow({ reference, onDelete, nested, hideRelLabel }: Refe
   // The row marks the SAME query that filtered it in (`useFilteredReferences`
   // matches snippet text + target title + relation type), so the user can see
   // WHY a row is here instead of re-reading it to find the term.
-  const query = useRelAtomValue(searchQueryAtom);
+  const query = useRelAtomValue(relSearchQueryAtom);
   const setScrollToHighlight = useSetAtom(scrollToHighlightAtom);
   const [scrollToRef, setScrollToRef] = useAtom(scrollToRefAtom);
   const [activeRefId, setActiveRefId] = useAtom(activeRefIdAtom);

@@ -197,7 +197,7 @@ repo; update them when tokens or style rules change.
 
 ### Relationships panel
 - `views/RelationshipsView.tsx` (main tab) and `RelationshipsDrawerSection.tsx` (drawer) render
-  the same body, `RelationshipsPanelBody.tsx`, switched on `viewAtom` (`list | tree | graph`).
+  the same body, `RelationshipsPanelBody.tsx`, switched on `relViewAtom` (`list | tree | graph`).
 - Filtering happens only in `useFilteredReferences.ts` (cluster → facets → search → sort). No view
   body filters on its own.
 - Toolbar: `SearchBar` with `ActiveFilterChips` inline, then `ViewControls`,

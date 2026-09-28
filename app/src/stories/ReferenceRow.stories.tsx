@@ -2,7 +2,7 @@ import { useMemo, type ReactNode } from "react";
 import { Provider, createStore } from "jotai";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { RelationshipRow } from "../components/relationships/RelationshipRow";
-import { editModeAtom, zoomAtom, type Zoom } from "../atoms/filters";
+import { relEditModeAtom, relZoomAtom, type Zoom } from "../atoms/filters";
 import { activeRefIdAtom } from "../atoms/references";
 import { references } from "../data/references";
 
@@ -10,7 +10,7 @@ import { references } from "../data/references";
  *  leaf of every connections surface: the list view's rows, and what an
  *  aggregate reveals when you expand it.
  *
- *  Three densities come from `zoomAtom`, and the shell that picks between them
+ *  Three densities come from `relZoomAtom`, and the shell that picks between them
  *  is shared with the aggregate and hub rows (`rows/RowShell.tsx`) so a tier
  *  means the same thing in all three. What varies per tier is what the row can
  *  afford to say: overview is a pill and a page, compact adds the direction and
@@ -47,8 +47,8 @@ function Frame({
 }) {
   const store = useMemo(() => {
     const s = createStore();
-    s.set(zoomAtom, zoom);
-    s.set(editModeAtom, editMode);
+    s.set(relZoomAtom, zoom);
+    s.set(relEditModeAtom, editMode);
     s.set(activeRefIdAtom, activeRefId);
     return s;
   }, [zoom, editMode, activeRefId]);

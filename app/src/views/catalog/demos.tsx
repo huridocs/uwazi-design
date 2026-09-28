@@ -42,7 +42,7 @@ import { RefMinimap } from "../../components/viewer/RefMinimap";
 
 // Atoms & data
 import { deriveHubs, deriveRelationships } from "../../utils/relationships";
-import { editModeAtom, selectedRefIdsAtom, zoomAtom, type Zoom, type GroupBy } from "../../atoms/filters";
+import { relEditModeAtom, selectedRefIdsAtom, relZoomAtom, type Zoom, type GroupBy } from "../../atoms/filters";
 import { manageRelationTypesOpenAtom } from "../../atoms/references";
 import { groupingOptions } from "../../utils/connectionGrouping";
 import { references } from "../../data/references";
@@ -234,7 +234,7 @@ export function RelationshipRowReferenceDemo() {
   );
 }
 
-/** Render `children` inside a fresh atom store with `zoomAtom` pre-set. The
+/** Render `children` inside a fresh atom store with `relZoomAtom` pre-set. The
  *  catalog uses this for showing rows at every density without leaking into
  *  the real surface. */
 function ZoomedRowDemo({
@@ -247,7 +247,7 @@ function ZoomedRowDemo({
   children: React.ReactNode;
 }) {
   const store = createStore();
-  store.set(zoomAtom, zoom);
+  store.set(relZoomAtom, zoom);
   return (
     <div>
       <p className="text-meta text-ink-muted uppercase tracking-wide mb-1.5">
@@ -690,7 +690,7 @@ function RowCheckboxDemoBody({
   preselectedRefIds: string[];
 }) {
   const store = createStore();
-  store.set(editModeAtom, editMode);
+  store.set(relEditModeAtom, editMode);
   store.set(selectedRefIdsAtom, new Set(preselectedRefIds));
   return (
     <Provider store={store}>

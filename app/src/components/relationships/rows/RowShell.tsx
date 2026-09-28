@@ -1,6 +1,6 @@
 import { createContext, useContext, type ReactNode, type Ref } from "react";
 import { useAtomValue } from "jotai";
-import { zoomAtom, type Zoom } from "../../../atoms/filters";
+import { relZoomAtom, type Zoom } from "../../../atoms/filters";
 import { ListCardRow } from "../../shared/ListCardRow";
 
 /** Per-tier padding. Overview and compact tighten the row; detail is the
@@ -71,7 +71,7 @@ export function RowShell({
   compact,
   detail,
 }: RowShellProps) {
-  const zoom = useAtomValue(zoomAtom);
+  const zoom = useAtomValue(relZoomAtom);
   const inStack = useContext(InRowStack);
   const tier = TIER_CLASS[zoom];
   const className =

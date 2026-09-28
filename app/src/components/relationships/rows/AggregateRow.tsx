@@ -1,7 +1,7 @@
 import { useRelAtomValue, useSetRelAtom } from "../../../hooks/useEntityScope";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { activeAggregateIdAtom, activeRefIdAtom } from "../../../atoms/references";
-import { activeClusterRefIdsAtom, searchQueryAtom } from "../../../atoms/filters";
+import { activeClusterRefIdsAtom, relSearchQueryAtom } from "../../../atoms/filters";
 import { getEntity, getEntityType } from "../../../data/entities";
 import { relationTypes } from "../../../data/references";
 import { Relationship } from "../../../utils/relationships";
@@ -50,7 +50,7 @@ export function AggregateRow({
   const type = entity ? getEntityType(entity.typeId) : undefined;
   // Mark the query that filtered this row in — same query, same tokenizer as
   // the snippet/PDF marks (`utils/queryTokens.ts`, PATTERNS 4.3).
-  const query = useRelAtomValue(searchQueryAtom);
+  const query = useRelAtomValue(relSearchQueryAtom);
   const setPreviewEntityId = useSetAtom(previewEntityIdAtom);
   const [activeAggregateId, setActiveAggregateId] = useAtom(activeAggregateIdAtom);
   const activeRefId = useAtomValue(activeRefIdAtom);

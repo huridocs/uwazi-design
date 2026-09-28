@@ -2,7 +2,7 @@ import { useMemo, type ReactNode } from "react";
 import { Provider, createStore } from "jotai";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { RelationshipRow } from "../components/relationships/RelationshipRow";
-import { editModeAtom, zoomAtom, type Zoom } from "../atoms/filters";
+import { relEditModeAtom, relZoomAtom, type Zoom } from "../atoms/filters";
 import { activeAggregateIdAtom } from "../atoms/references";
 import { references } from "../data/references";
 import { deriveRelationships } from "../utils/relationships";
@@ -44,8 +44,8 @@ function Frame({
 }) {
   const store = useMemo(() => {
     const s = createStore();
-    s.set(zoomAtom, zoom);
-    s.set(editModeAtom, editMode);
+    s.set(relZoomAtom, zoom);
+    s.set(relEditModeAtom, editMode);
     s.set(activeAggregateIdAtom, activeAggregateId);
     return s;
   }, [zoom, editMode, activeAggregateId]);

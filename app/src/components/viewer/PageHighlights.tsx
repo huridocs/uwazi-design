@@ -6,7 +6,7 @@ import {
   activeRefIdAtom,
   expandGroupForRefAtom,
 } from "../../atoms/references";
-import { collapseAllSignalAtom } from "../../atoms/filters";
+import { relCollapseAllSignalAtom } from "../../atoms/filters";
 import { highlightsAtom } from "../../atoms/highlights";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { getEntity, getEntityType } from "../../data/entities";
@@ -60,7 +60,7 @@ export function PageHighlights({ page }: PageHighlightsProps) {
   const setScrollToRef = useSetAtom(scrollToRefAtom);
   const setActiveDrawerTab = useSetAtom(activeDrawerTabAtom);
   const setExpandGroupForRef = useSetAtom(expandGroupForRefAtom);
-  const setCollapseSignal = useSetAtom(collapseAllSignalAtom);
+  const setCollapseSignal = useSetAtom(relCollapseAllSignalAtom);
   const [scrollToHighlight, setScrollToHighlight] = useAtom(scrollToHighlightAtom);
   const [highlights, setHighlights] = useAtom(highlightsAtom);
   const focusedEntityId = useAtomValue(focusedEntityIdAtom);

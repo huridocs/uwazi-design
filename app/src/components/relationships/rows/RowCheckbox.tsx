@@ -1,5 +1,5 @@
 import { useAtom, useAtomValue } from "jotai";
-import { editModeAtom, selectedRefIdsAtom } from "../../../atoms/filters";
+import { relEditModeAtom, selectedRefIdsAtom } from "../../../atoms/filters";
 import { Checkbox } from "../../shared/Checkbox";
 
 /** Checkbox surfaced on every row variant when the panel is in edit mode.
@@ -8,7 +8,7 @@ import { Checkbox } from "../../shared/Checkbox";
  *  / hub rows, `refIds` covers every backing reference — toggling adds or
  *  removes the whole set atomically. */
 export function RowCheckbox({ refIds }: { refIds: string[] }) {
-  const editMode = useAtomValue(editModeAtom);
+  const editMode = useAtomValue(relEditModeAtom);
   const [selected, setSelected] = useAtom(selectedRefIdsAtom);
   if (!editMode) return null;
   const allChecked = refIds.length > 0 && refIds.every((id) => selected.has(id));

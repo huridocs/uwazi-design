@@ -1,9 +1,9 @@
 import { useRelAtom } from "../../hooks/useEntityScope";
 import {
-  searchQueryAtom,
-  sortOrderAtom,
+  relSearchQueryAtom,
+  relSortOrderAtom,
   relTypeFiltersAtom,
-  entityTypeFiltersAtom,
+  relEntityTypeFiltersAtom,
   relTargetCountryFiltersAtom,
   relTargetDescriptorFiltersAtom,
   relInheritedFiltersAtom,
@@ -26,10 +26,10 @@ interface ActiveFilterChipsProps {
 }
 
 export function ActiveFilterChips({ omitSearch = false }: ActiveFilterChipsProps = {}) {
-  const [search, setSearch] = useRelAtom(searchQueryAtom);
-  const [sort, setSort] = useRelAtom(sortOrderAtom);
+  const [search, setSearch] = useRelAtom(relSearchQueryAtom);
+  const [sort, setSort] = useRelAtom(relSortOrderAtom);
   const [relTypeFilters, setRelTypeFilters] = useRelAtom(relTypeFiltersAtom);
-  const [entityTypeFilters, setEntityTypeFilters] = useRelAtom(entityTypeFiltersAtom);
+  const [entityTypeFilters, setEntityTypeFilters] = useRelAtom(relEntityTypeFiltersAtom);
   const [countryFilters, setCountryFilters] = useRelAtom(relTargetCountryFiltersAtom);
   const [descriptorFilters, setDescriptorFilters] = useRelAtom(relTargetDescriptorFiltersAtom);
   const [inheritedFilters, setInheritedFilters] = useRelAtom(relInheritedFiltersAtom);

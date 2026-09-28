@@ -1,6 +1,6 @@
 import { useRelAtom } from "../../hooks/useEntityScope";
 import { Search, X, HelpCircle } from "lucide-react";
-import { searchQueryAtom } from "../../atoms/filters";
+import { relSearchQueryAtom } from "../../atoms/filters";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 interface SearchBarProps {
@@ -10,7 +10,7 @@ interface SearchBarProps {
 }
 
 export function SearchBar({ rightSlot, inlineSlot }: SearchBarProps = {}) {
-  const [query, setQuery] = useRelAtom(searchQueryAtom);
+  const [query, setQuery] = useRelAtom(relSearchQueryAtom);
   const inputRef = useRef<HTMLInputElement>(null);
   const hintRef = useRef<HTMLDivElement>(null);
   const [hintOpen, setHintOpen] = useState(false);

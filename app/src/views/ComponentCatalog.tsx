@@ -670,7 +670,7 @@ export function ComponentCatalog({ onReturn }: Props) {
                   description="Search input with icon, connected to filter atoms"
                   code={`<SearchBar />
 
-{/* Uses searchQueryAtom from atoms/filters.ts */}`}
+{/* Uses relSearchQueryAtom from atoms/filters.ts */}`}
                 >
                   <SearchBarDemo />
                 </CatalogEntry>
@@ -1355,7 +1355,7 @@ sendFill(selection.text);                                    // commits, then di
                   description="Segmented detail/compact/overview + graph toggle for the Relationships view"
                   code={`<ZoomControl />
 
-{/* Bound to zoomAtom */}`}
+{/* Bound to relZoomAtom */}`}
                 >
                   <ZoomControlDemo />
                 </CatalogEntry>
@@ -1524,7 +1524,7 @@ sendFill(selection.text);                                    // commits, then di
               <div id="row-checkbox" ref={reg("row-checkbox")}>
                 <CatalogEntry
                   name="RowCheckbox"
-                  description="Per-row checkbox gated behind editModeAtom. Aggregate / hub rows pass every backing refId; toggling adds or removes the whole set atomically against selectedRefIdsAtom."
+                  description="Per-row checkbox gated behind relEditModeAtom. Aggregate / hub rows pass every backing refId; toggling adds or removes the whole set atomically against selectedRefIdsAtom."
                   code={`<RowCheckbox refIds={[reference.id]} />
 <RowCheckbox refIds={rel.refIds} />`}
                 >

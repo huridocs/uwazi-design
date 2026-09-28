@@ -1,13 +1,13 @@
 import { atom, type Atom, type PrimitiveAtom, type SetStateAction, type WritableAtom } from "jotai";
 import { filtersDrawerBase, overlayEntityBase, overlayStackBase } from "./rightPane";
 
-/** Relationships panel view. Orthogonal to {@link groupByAtom}, which only
+/** Relationships panel view. Orthogonal to {@link relGroupByAtom}, which only
  *  applies in list. `when` lays the connected entities on time (their dated
  *  properties). */
 export type View = "list" | "tree" | "graph" | "when";
 /** Views that draw no groups: the collapse pair and grouping controls idle. */
 export const isUngroupedView = (view: View): boolean => view === "graph" || view === "when";
-export const viewAtom = atom<View>("list");
+export const relViewAtom = atom<View>("list");
 
 /** Grouping axis applied within the list view. Tree has implicit structure
  *  (rel type → target → refs); graph has no grouping. */
@@ -23,17 +23,17 @@ export type GroupBy =
 /** Default is relation type, not "none". Exported so the Display menu's
  *  modified-dot compares against this value rather than `"none"`. */
 export const DEFAULT_GROUP_BY: GroupBy = "relation-type";
-export const groupByAtom = atom<GroupBy>(DEFAULT_GROUP_BY);
+export const relGroupByAtom = atom<GroupBy>(DEFAULT_GROUP_BY);
 
 /** Secondary grouping axis ("Then by"). Any pair of axes is allowed. */
 export const DEFAULT_SUB_GROUP_BY: GroupBy = "none";
-export const subGroupByAtom = atom<GroupBy>(DEFAULT_SUB_GROUP_BY);
+export const relSubGroupByAtom = atom<GroupBy>(DEFAULT_SUB_GROUP_BY);
 
-export const searchQueryAtom = atom("");
+export const relSearchQueryAtom = atom("");
 
 /** Counters: each increment expands or collapses every group. */
-export const expandAllSignalAtom = atom(0);
-export const collapseAllSignalAtom = atom(0);
+export const relExpandAllSignalAtom = atom(0);
+export const relCollapseAllSignalAtom = atom(0);
 
 /** `evidence` puts the targets with the most backing references first. */
 export type SortOrder = "none" | "appearance" | "evidence" | "asc" | "desc";
@@ -44,23 +44,23 @@ export function defaultSortFor(view: View): SortOrder {
 }
 /** Explicit sort, or null for {@link defaultSortFor}, so switching views
  *  follows each view's default until the user picks a sort. */
-export const sortOrderAtom = atom<SortOrder | null>(null);
+export const relSortOrderAtom = atom<SortOrder | null>(null);
 
 /** Group counts that disable the collapse/expand buttons. */
-export const expandedGroupCountAtom = atom(0);
-export const totalGroupCountAtom = atom(0);
+export const relExpandedGroupCountAtom = atom(0);
+export const relTotalGroupCountAtom = atom(0);
 
 /** IDs of refs in the expanded minimap cluster. */
 export const activeClusterRefIdsAtom = atom<string[] | null>(null);
 
 /** The When view's year range (inclusive), set from its year strip. null = every
  *  year. Scoped like the facets, so the overlay's range is its own. */
-export const whenYearsAtom = atom<[number, number] | null>(null);
+export const relWhenYearsAtom = atom<[number, number] | null>(null);
 
 export const relTypeFiltersAtom = atom<Record<string, boolean>>({});
 
 /** Target entity type facet. */
-export const entityTypeFiltersAtom = atom<Record<string, boolean>>({});
+export const relEntityTypeFiltersAtom = atom<Record<string, boolean>>({});
 
 /** Target entity country facet. Hidden when no target has a country. */
 export const relTargetCountryFiltersAtom = atom<Record<string, boolean>>({});
@@ -131,7 +131,7 @@ export function relAtomFor<T>(base: Scopable<T>, scope: string | null): Primitiv
  *  surface instead of the host. */
 export const resetRelFacetsAtom = atom(null, (_get, set, scope: string | null = null) => {
   set(relAtomFor(relTypeFiltersAtom, scope), {});
-  set(relAtomFor(entityTypeFiltersAtom, scope), {});
+  set(relAtomFor(relEntityTypeFiltersAtom, scope), {});
   set(relAtomFor(relTargetCountryFiltersAtom, scope), {});
   set(relAtomFor(relTargetDescriptorFiltersAtom, scope), {});
   set(relAtomFor(relTargetDescriptorModeAtom, scope), "OR");
@@ -139,7 +139,7 @@ export const resetRelFacetsAtom = atom(null, (_get, set, scope: string | null = 
   set(relAtomFor(relAnchoringFiltersAtom, scope), {});
   set(relAtomFor(relDirectionFiltersAtom, scope), {});
   set(relAtomFor(activeClusterRefIdsAtom, scope), null);
-  set(relAtomFor(whenYearsAtom, scope), null);
+  set(relAtomFor(relWhenYearsAtom, scope), null);
 });
 
 /** "Clear all filters": the facets, the search box, and the sort order.
@@ -147,8 +147,8 @@ export const resetRelFacetsAtom = atom(null, (_get, set, scope: string | null = 
  *  place; separate copies drift (PATTERNS §4.3). */
 export const clearRelFiltersAtom = atom(null, (_get, set, scope: string | null = null) => {
   set(resetRelFacetsAtom, scope);
-  set(relAtomFor(searchQueryAtom, scope), "");
-  set(relAtomFor(sortOrderAtom, scope), null);
+  set(relAtomFor(relSearchQueryAtom, scope), "");
+  set(relAtomFor(relSortOrderAtom, scope), null);
 });
 
 /** Filters-open for a subtree with its own entity scope (the connection
@@ -177,12 +177,12 @@ export const selectedRefIdsAtom = atom<Set<string>>(new Set<string>());
 
 /** Edit mode: per-row checkboxes plus bulk Delete and Select all. Leaving it
  *  clears the selection. */
-export const editModeAtom = atom(false);
+export const relEditModeAtom = atom(false);
 
 /** Zoom tier for grouped and tree modes. */
 export type Zoom = "detail" | "compact" | "overview";
 export const DEFAULT_ZOOM: Zoom = "detail";
-export const zoomAtom = atom<Zoom>(DEFAULT_ZOOM);
+export const relZoomAtom = atom<Zoom>(DEFAULT_ZOOM);
 
 /** Active filter count per scope: facets, search and cluster. View, grouping
  *  and sort are not filters. `activeFilterCountAtom` is the un-scoped one. */
@@ -199,11 +199,11 @@ export function activeFilterCountFor(scope: string | null): Atom<number> {
 
 function countFilters(get: <T>(base: Scopable<T>) => T): number {
   let n = 0;
-  if (get(searchQueryAtom).trim()) n++;
+  if (get(relSearchQueryAtom).trim()) n++;
   // Sort is not counted: it changes order, not membership, and its default
   // would put a permanent "1" on the Filters badge.
   n += Object.values(get(relTypeFiltersAtom)).filter(Boolean).length;
-  n += Object.values(get(entityTypeFiltersAtom)).filter(Boolean).length;
+  n += Object.values(get(relEntityTypeFiltersAtom)).filter(Boolean).length;
   n += Object.values(get(relTargetCountryFiltersAtom)).filter(Boolean).length;
   n += Object.values(get(relTargetDescriptorFiltersAtom)).filter(Boolean).length;
   n += Object.values(get(relAnchoringFiltersAtom)).filter(Boolean).length;

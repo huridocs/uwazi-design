@@ -4,12 +4,12 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { entityPickerOpenAtom, textSelectionAtom } from "../../atoms/selection";
 import { manageRelationTypesOpenAtom, scopedReferencesAtom } from "../../atoms/references";
 import {
-  collapseAllSignalAtom,
-  editModeAtom,
-  expandAllSignalAtom,
-  groupByAtom,
+  relCollapseAllSignalAtom,
+  relEditModeAtom,
+  relExpandAllSignalAtom,
+  relGroupByAtom,
   selectedRefIdsAtom,
-  viewAtom, isUngroupedView
+  relViewAtom, isUngroupedView
 } from "../../atoms/filters";
 import { breakpointAtom } from "../../atoms/viewport";
 import { useRelAtomValue } from "../../hooks/useEntityScope";
@@ -36,7 +36,7 @@ interface RelationshipsActionBarProps {
  *  Creates work without a text selection (entity-level relationship). */
 export function RelationshipsActionBar({ compact = false, menuSlot }: RelationshipsActionBarProps = {}) {
   const [selected, setSelected] = useAtom(selectedRefIdsAtom);
-  const [editMode, setEditMode] = useAtom(editModeAtom);
+  const [editMode, setEditMode] = useAtom(relEditModeAtom);
   const [references, setReferences] = useAtom(scopedReferencesAtom);
   const setEntityPickerOpen = useSetAtom(entityPickerOpenAtom);
   const setTextSelection = useSetAtom(textSelectionAtom);
@@ -49,10 +49,10 @@ export function RelationshipsActionBar({ compact = false, menuSlot }: Relationsh
   // Delete as icons, Cancel and Save as words, and moves the rest into a More
   // menu. Compact (drawer) already fits and is unchanged.
   const mobile = useAtomValue(breakpointAtom) === "mobile";
-  const view = useRelAtomValue(viewAtom);
-  const groupBy = useRelAtomValue(groupByAtom);
-  const setExpandSignal = useSetAtom(expandAllSignalAtom);
-  const setCollapseSignal = useSetAtom(collapseAllSignalAtom);
+  const view = useRelAtomValue(relViewAtom);
+  const groupBy = useRelAtomValue(relGroupByAtom);
+  const setExpandSignal = useSetAtom(relExpandAllSignalAtom);
+  const setCollapseSignal = useSetAtom(relCollapseAllSignalAtom);
 
   const totalCount = references.length;
   const selectedCount = selected.size;

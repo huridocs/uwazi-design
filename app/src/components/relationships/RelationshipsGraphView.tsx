@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Link2 } from "lucide-react";
 import { activeRefIdAtom } from "../../atoms/references";
-import { groupByAtom, searchQueryAtom } from "../../atoms/filters";
+import { relGroupByAtom, relSearchQueryAtom } from "../../atoms/filters";
 import { useEntityScopeId, useRelAtom, useRelAtomValue } from "../../hooks/useEntityScope";
 import { HighlightedText } from "../shared/HighlightedText";
 import { fold, highlightTerms, termIn } from "../../utils/queryTokens";
@@ -158,8 +158,8 @@ function matchesQuery(text: string, terms: string[]): boolean {
 }
 
 export function RelationshipsGraphView() {
-  const [groupBy] = useRelAtom(groupByAtom);
-  const query = useRelAtomValue(searchQueryAtom);
+  const [groupBy] = useRelAtom(relGroupByAtom);
+  const query = useRelAtomValue(relSearchQueryAtom);
   const terms = useMemo(() => highlightTerms(query), [query]);
   const focusedId = useEntityScopeId();
   const [previewEntityId, setPreviewEntityId] = useAtom(previewEntityIdAtom);

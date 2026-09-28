@@ -1,12 +1,12 @@
 import { useRelAtomValue } from "../../hooks/useEntityScope";
 import { useAtom, useSetAtom } from "jotai";
 import {
-  expandedGroupCountAtom,
-  totalGroupCountAtom,
-  viewAtom,
-  groupByAtom,
-  expandAllSignalAtom,
-  collapseAllSignalAtom, isUngroupedView
+  relExpandedGroupCountAtom,
+  relTotalGroupCountAtom,
+  relViewAtom,
+  relGroupByAtom,
+  relExpandAllSignalAtom,
+  relCollapseAllSignalAtom, isUngroupedView
 } from "../../atoms/filters";
 
 export function CollapseControls({
@@ -25,8 +25,8 @@ export function CollapseControls({
   expandedCount?: number;
   totalCount?: number;
 }) {
-  const [expandedAtom] = useAtom(expandedGroupCountAtom);
-  const [totalAtom] = useAtom(totalGroupCountAtom);
+  const [expandedAtom] = useAtom(relExpandedGroupCountAtom);
+  const [totalAtom] = useAtom(relTotalGroupCountAtom);
   const expandedCount = expandedProp ?? expandedAtom;
   const totalCount = totalProp ?? totalAtom;
 
@@ -86,10 +86,10 @@ export function CollapseControls({
  *  which reads as the bar losing a control rather than the view not having
  *  groups. */
 export function RelationshipsCollapseControls() {
-  const view = useRelAtomValue(viewAtom);
-  const groupBy = useRelAtomValue(groupByAtom);
-  const setExpandSignal = useSetAtom(expandAllSignalAtom);
-  const setCollapseSignal = useSetAtom(collapseAllSignalAtom);
+  const view = useRelAtomValue(relViewAtom);
+  const groupBy = useRelAtomValue(relGroupByAtom);
+  const setExpandSignal = useSetAtom(relExpandAllSignalAtom);
+  const setCollapseSignal = useSetAtom(relCollapseAllSignalAtom);
 
   return (
     <CollapseControls
