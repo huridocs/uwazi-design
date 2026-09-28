@@ -294,7 +294,9 @@ export function ResultsMainView({
   const capped = entities.length > results.length + (entities.length - visible);
 
   return withBar(
-    <div className="flex flex-col h-full min-h-0">
+    // `data-tap-guard`: a swipe through the results never opens one
+    // (useTapGuard) — here and in the phone's Results sheet, which renders this.
+    <div data-tap-guard className="flex flex-col h-full min-h-0">
       {/* Header strip — always mounted; only its contents change. Match-type
           chips and the cap note ride the shared list-header shape so this
           surface and the drawer's Results tab read as one component at two

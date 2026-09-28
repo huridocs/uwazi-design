@@ -21,7 +21,7 @@ import { UploadDocumentsModal } from "../components/library/UploadDocumentsModal
 import { NewImportModal } from "../components/import-csv/NewImportModal";
 import { loadCejilData, cejilRelsByEntity } from "../data/cejil/load";
 import { warmSearchScan } from "../utils/warmSearchScan";
-import { referencesAtom } from "../atoms/references";
+import { overlayEntityIdAtom, referencesAtom } from "../atoms/references";
 import { languageAtom, type Language } from "../atoms/language";
 import { uiLanguageAtom } from "../atoms/uiLanguage";
 import { t } from "../utils/i18n";
@@ -123,6 +123,7 @@ import { Select } from "../components/shared/Select";
 import { ViewSwitcher } from "../components/library/ViewSwitcher";
 import { DRAWER_MIN_WIDTH } from "../components/layout/SplitView";
 import { BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
+import { useTapGuard } from "../hooks/useTapGuard";
 
 const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -265,6 +266,7 @@ export function LibraryView() {
   const [selectedId, setSelectedId] = useAtom(librarySelectedEntityIdAtom);
   const selectedCluster = useAtomValue(librarySelectedClusterAtom);
   const openEntity = useSetAtom(openEntityAtom);
+  const setOverlayEntity = useSetAtom(overlayEntityIdAtom);
   const focusForPreview = useSetAtom(focusEntityForPreviewAtom);
   const setScrollToPage = useSetAtom(scrollToPageAtom);
   const setResultsActivePage = useSetAtom(resultsActivePageAtom);
@@ -721,7 +723,14 @@ export function LibraryView() {
      does. The selection drawer passes false — its rows ARE the selection, and
      clicking one previews it without dropping the rest. */
   const selectFrom = useCallback(
-    (collapse: boolean, id: string, e?: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => {
+    (
+      collapse: boolean,
+      id: string,
+      e?: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean },
+      /** Phones: go to the entity view rather than a sheet (a passage jump
+       *  needs the document, which a sheet doesn't carry). */
+      navigate = false,
+    ) => {
       const intent = e ? selectionIntent(e) : null;
       if (intent === "toggle") return toggleSelection(id);
       // Touch, with a selection going: a tap adds or removes (a long press
@@ -731,8 +740,13 @@ export function LibraryView() {
       const preview = () => {
         // A plain click anchors the next Shift range here (see setSelectionAnchorAtom).
         setAnchor(id);
-        if (isMobile) {
+        if (isMobile && navigate) {
           openEntity(id);
+        } else if (isMobile) {
+          // A phone opens the entity as a sheet on the stack (the connection
+          // overlay's, see MobileOverlayStack) over the list you are reading;
+          // its footer's "Open entity" is the route to the full view.
+          setOverlayEntity(id);
         } else {
           focusForPreview(id);
           setSelectedId(id);
@@ -744,6 +758,7 @@ export function LibraryView() {
     [
       isMobile,
       openEntity,
+      setOverlayEntity,
       focusForPreview,
       setSelectedId,
       toggleSelection,
@@ -762,17 +777,18 @@ export function LibraryView() {
     [selectFrom],
   );
   useTouchSelection(toggleSelection);
+  useTapGuard();
 
   // Results-tab full-text snippet: select the entity, then jump the preview's
   // document to the hit page (DocumentViewer consumes scrollToPageAtom). On
   // mobile handleSelect opens the full view; the page jump still applies.
   const handleSnippetSelect = useCallback(
     (id: string, page: number) => {
-      handleSelect(id);
+      selectFrom(true, id, undefined, true);
       setScrollToPage(page);
       setResultsActivePage({ entityId: id, page });
     },
-    [handleSelect, setScrollToPage, setResultsActivePage],
+    [selectFrom, setScrollToPage, setResultsActivePage],
   );
 
   // Results-tab Properties hit: open the entity preview and deep-focus the field
@@ -1034,6 +1050,8 @@ export function LibraryView() {
           groundDown.current = { x: e.clientX, y: e.clientY };
         }}
         onClick={clearOnGround}
+        // Only a real tap opens an item here, never the end of a scroll.
+        data-tap-guard
         // A `bleed` lane: warm ground and scrollbar at the pane edge, content on
         // the gutter. Every view mode sits on it, Results included — its header
         // row and card lane carry no side padding of their own.

@@ -305,7 +305,8 @@ export const ResultsBody = memo(function ResultsBody({
 });
 
 function Shell({ children }: { children: ReactNode }) {
-  return <div className="flex flex-col h-full min-h-0 bg-warm">{children}</div>;
+  // `data-tap-guard`: a swipe through the results never opens one (useTapGuard).
+  return <div data-tap-guard className="flex flex-col h-full min-h-0 bg-warm">{children}</div>;
 }
 
 function Centered({ children }: { children: ReactNode }) {
