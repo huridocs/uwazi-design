@@ -275,7 +275,7 @@ repo; update them when tokens or style rules change.
   - Beacon: a `rounded-md bg-warm` button with no edge, showing the `UwaziLoader` mark coloured by
     the most urgent unread item (seal, amber, carbon, ink), animated only while a task runs. It
     expands for a new task, on hover and on a flash, and collapses on phones.
-  - Drawer: Tasks (`activitiesAtom`) then notifications grouped New / Today / Earlier, cards
+  - Drawer: Tasks (`tasksAtom`) then notifications grouped New / Today / Earlier, cards
     tinted by kind, Retry on errors, Mark read, dismiss, Clear all. Opening does not mark read.
   - Toasts: the Beacon drains `toastsAtom` into notifications. `ToastContainer` renders only in
     the catalog.

@@ -35,7 +35,7 @@ import { currentPageAtom } from "../../atoms/selection";
 import { referencesAtom, referencesFor } from "../../atoms/references";
 import { filesAtom } from "../../atoms/files";
 import { entitiesAtom } from "../../atoms/entities";
-import { activitiesAtom } from "../../atoms/notifications";
+import { tasksAtom } from "../../atoms/notifications";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { getEntity, getEntityType } from "../../data/entities";
 import { getEntityProfile } from "../../data/entityProfiles";
@@ -62,7 +62,7 @@ export function AgentModal() {
   const references = useAtomValue(referencesAtom);
   const files = useAtomValue(filesAtom);
   const entities = useAtomValue(entitiesAtom);
-  const setActivities = useSetAtom(activitiesAtom);
+  const setTasks = useSetAtom(tasksAtom);
 
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
@@ -287,7 +287,7 @@ export function AgentModal() {
     const delay = 500 + Math.round(Math.random() * 500);
     window.setTimeout(() => {
       if (isTask) {
-        setActivities((prev) => [
+        setTasks((prev) => [
           ...prev,
           { id: `agent-${prev.length}-${docTitle.length}`, label: "Re-processing document", detail: docTitle, current: 0, total: 100 },
         ]);

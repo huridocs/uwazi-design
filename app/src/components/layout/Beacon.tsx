@@ -3,7 +3,7 @@ import { useAtom } from "jotai";
 import { CheckCircle2, XCircle, AlertTriangle, Info } from "lucide-react";
 import {
   notificationsAtom,
-  activitiesAtom,
+  tasksAtom,
   beaconOpenAtom,
   unreadCountAtom,
   type NotificationKind,
@@ -28,13 +28,13 @@ const kindColor: Record<NotificationKind, string> = {
 };
 
 /**
- * Navbar Beacon — a morphing pill that signals live activity (idle bell →
+ * Navbar Beacon — a morphing pill that signals live task (idle bell →
  * live-task pill → transient flash) and, on click, opens the notifications
  * drawer (the history log). The pill is the indicator; the drawer is the log.
  */
 export function Beacon({ rtl = false }: { rtl?: boolean }) {
   const [notifications, setNotifications] = useAtom(notificationsAtom);
-  const [activities, setActivities] = useAtom(activitiesAtom);
+  const [tasks, setTasks] = useAtom(tasksAtom);
   const [open, setOpen] = useAtom(beaconOpenAtom);
   const [unread] = useAtom(unreadCountAtom);
   const [toasts, setToasts] = useAtom(toastsAtom);
@@ -42,19 +42,19 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
   const isMobile = breakpoint === "mobile";
   const [hovered, setHovered] = useState(false);
   // Shows the expanded rail briefly when a task starts, then auto-collapses.
-  const [activityIntro, setActivityIntro] = useState(true);
+  const [taskIntro, setTaskIntro] = useState(true);
 
   // The beacon shows one combined live indicator for all in-flight tasks.
-  const hasActivity = activities.length > 0;
-  const runningCount = activities.filter((a) => a.current < a.total).length;
-  const totals = activities.reduce(
+  const hasTask = tasks.length > 0;
+  const runningCount = tasks.filter((a) => a.current < a.total).length;
+  const totals = tasks.reduce(
     (acc, a) => ({ cur: acc.cur + a.current, tot: acc.tot + a.total }),
     { cur: 0, tot: 0 },
   );
   const pct = totals.tot ? Math.round((totals.cur / totals.tot) * 100) : 0;
-  const activityLabel =
-    activities.length === 1 ? activities[0].label : `${activities.length} tasks running`;
-  const activityKey = activities.map((a) => a.id).join(",");
+  const taskLabel =
+    tasks.length === 1 ? tasks[0].label : `${tasks.length} tasks running`;
+  const taskKey = tasks.map((a) => a.id).join(",");
 
   // The most pressing unread item, surfaced when the idle pill is expanded.
   const severityRank: Record<NotificationKind, number> = { error: 3, warning: 2, info: 1, success: 0 };
@@ -72,7 +72,7 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
     info: "carbon",
     success: "default",
   };
-  const loaderColor = hasActivity ? "carbon" : topUnread ? kindTone[topUnread.kind] : "default";
+  const loaderColor = hasTask ? "carbon" : topUnread ? kindTone[topUnread.kind] : "default";
 
   // Transient message the beacon "speaks" inline (consolidated toasts).
   const [flash, setFlash] = useState<Toast | null>(null);
@@ -121,20 +121,20 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
   // A new task (the set of ids changes) expands the pill for a beat, then it
   // auto-collapses back to the mark.
   useEffect(() => {
-    if (!hasActivity) {
-      setActivityIntro(false);
+    if (!hasTask) {
+      setTaskIntro(false);
       return;
     }
-    setActivityIntro(true);
-    const t = setTimeout(() => setActivityIntro(false), 3000);
+    setTaskIntro(true);
+    const t = setTimeout(() => setTaskIntro(false), 3000);
     return () => clearTimeout(t);
-  }, [activityKey, hasActivity]);
+  }, [taskKey, hasTask]);
 
   // Running tasks tick toward completion so the beacon feels alive.
   useEffect(() => {
     if (runningCount === 0) return;
     const id = setInterval(() => {
-      setActivities((prev) => {
+      setTasks((prev) => {
         let changed = false;
         const next = prev.map((a) => {
           if (a.driven || a.current >= a.total) return a;
@@ -146,12 +146,12 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
       });
     }, 850);
     return () => clearInterval(id);
-  }, [runningCount, setActivities]);
+  }, [runningCount, setTasks]);
 
   // Each completed task converts into a success notification (once).
   const finalizingRef = useRef<Set<string>>(new Set());
   useEffect(() => {
-    activities.forEach((a) => {
+    tasks.forEach((a) => {
       if (a.current >= a.total && !finalizingRef.current.has(a.id)) {
         finalizingRef.current.add(a.id);
         window.setTimeout(() => {
@@ -167,17 +167,17 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
             },
             ...prev,
           ]);
-          setActivities((prev) => prev.filter((x) => x.id !== a.id));
+          setTasks((prev) => prev.filter((x) => x.id !== a.id));
           finalizingRef.current.delete(a.id);
         }, 1100);
       }
     });
-  }, [activities, setActivities, setNotifications]);
+  }, [tasks, setTasks, setNotifications]);
 
   // Expansion: a task intro, a flash, or hover opens the pill (desktop only).
   // It needs something to say — an active task or unread items.
-  const hasContent = !!flash || hasActivity || unread > 0;
-  const isExpanded = !isMobile && hasContent && (!!flash || hovered || (hasActivity && activityIntro));
+  const hasContent = !!flash || hasTask || unread > 0;
+  const isExpanded = !isMobile && hasContent && (!!flash || hovered || (hasTask && taskIntro));
 
   const width = !isMobile && flash ? "17rem" : isExpanded ? "15rem" : "1.75rem";
 
@@ -230,13 +230,13 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
                     </div>
                   );
                 })()
-              ) : isExpanded && hasActivity ? (
+              ) : isExpanded && hasTask ? (
                 // Processing — combined label + percentage.
                 <div key="live" className="flex items-center gap-2 w-full animate-beacon-rail">
                   <span className="shrink-0 flex items-center">
                     <UwaziLoader size="xs" color="carbon" animate />
                   </span>
-                  <span className="text-xs leading-normal font-medium text-ink truncate">{activityLabel}</span>
+                  <span className="text-xs leading-normal font-medium text-ink truncate">{taskLabel}</span>
                   <span className="ml-auto text-meta font-semibold text-ink-tertiary tabular-nums shrink-0">
                     {pct}%
                   </span>
@@ -255,7 +255,7 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
               ) : (
                 // Collapsed — just the loader mark, coloured by status.
                 <div key="idle" className="flex items-center justify-center w-full">
-                  <UwaziLoader size="xs" color={loaderColor} animate={hasActivity} />
+                  <UwaziLoader size="xs" color={loaderColor} animate={hasTask} />
                 </div>
               )}
             </button>

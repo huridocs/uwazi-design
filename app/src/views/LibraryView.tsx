@@ -3,7 +3,7 @@ import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import { CheckSquare, FileDown, FileUp, MoreHorizontal, Plus, Search, Upload, X } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom, travesiaReadyAtom } from "../atoms/dataSource";
 import { discardDraftAtom, draftEntityIdAtom, recentTemplatesAtom, startDraftAtom } from "../atoms/entityChanges";
-import { activitiesAtom } from "../atoms/notifications";
+import { tasksAtom } from "../atoms/notifications";
 import { NewImportModal } from "../components/import-csv/NewImportModal";
 import { editSessionOpenAtom } from "../atoms/dirtyGuard";
 import { CreateEntityDialog } from "../components/library/CreateEntityDialog";
@@ -321,16 +321,16 @@ export function LibraryView() {
   // Import CSV opens its modal over the Library; the import then runs as a
   // Beacon task instead of taking the reader to the Import CSV screen.
   const [importOpen, setImportOpen] = useState(false);
-  const setImportActivities = useSetAtom(activitiesAtom);
+  const setImportTasks = useSetAtom(tasksAtom);
   const handleImportCsv = useCallback(
     (filename: string, template: string) => {
       setImportOpen(false);
-      setImportActivities((prev) => [
+      setImportTasks((prev) => [
         ...prev,
         { id: `imp-${Date.now()}`, label: "Importing CSV", detail: `${filename} → ${template}`, current: 0, total: 100 },
       ]);
     },
-    [setImportActivities],
+    [setImportTasks],
   );
   const [createOpen, setCreateOpen] = useState(false);
   const [batchOpen, setBatchOpen] = useState(false);

@@ -1,5 +1,5 @@
 import type { useStore } from "jotai";
-import { activitiesAtom, type Activity } from "../atoms/notifications";
+import { tasksAtom, type Task } from "../atoms/notifications";
 import { addUploadedDocumentsAtom, recordRestoreUndoAtom, undoOpAtom, writeBulkChunkAtom } from "../atoms/entityChanges";
 import { notificationsAtom } from "../atoms/notifications";
 import type { BulkPlan } from "./bulkEdit";
@@ -11,7 +11,7 @@ import { downloadCsv, exportEntitiesCsv } from "./exportCsv";
 /** The Library footer's background tasks, run against the jotai STORE rather
  *  than from component state: a task outlives the view that started it (leave
  *  the Library mid-upload and it still finishes), which is the point of showing
- *  it in the Beacon. Each is a `driven` Beacon activity — it reports its own
+ *  it in the Beacon. Each is a `driven` Beacon task — it reports its own
  *  progress, and its completion notification says what actually happened. */
 
 type Store = ReturnType<typeof useStore>;
@@ -20,12 +20,12 @@ let seq = 0;
 const taskId = (kind: string) => `${kind}-${Date.now().toString(36)}-${++seq}`;
 
 /** The task is still in the Beacon — not cancelled. Its Cancel only removes
- *  the activity, so every step past a wait checks this before doing anything
+ *  the task, so every step past a wait checks this before doing anything
  *  a cancelled task must not (create entities, hand over a file). */
-const alive = (store: Store, id: string) => store.get(activitiesAtom).some((a) => a.id === id);
+const alive = (store: Store, id: string) => store.get(tasksAtom).some((a) => a.id === id);
 
-function patch(store: Store, id: string, change: Partial<Activity>) {
-  store.set(activitiesAtom, (prev) => prev.map((a) => (a.id === id ? { ...a, ...change } : a)));
+function patch(store: Store, id: string, change: Partial<Task>) {
+  store.set(tasksAtom, (prev) => prev.map((a) => (a.id === id ? { ...a, ...change } : a)));
 }
 
 export const isPdf = (f: File) => f.type === "application/pdf" || /\.pdf$/i.test(f.name);
@@ -50,7 +50,7 @@ export function runPdfUploadBatch(
   const id = taskId("upload");
   const n = uploads.length;
   const noun = n === 1 ? "document" : "documents";
-  store.set(activitiesAtom, (prev) => [
+  store.set(tasksAtom, (prev) => [
     ...prev,
     {
       id,
@@ -116,7 +116,7 @@ export async function runCsvExport(
   // One step past the rows: the task is complete when the file is handed over,
   // not when the last row is built.
   const total = entities.length + 1;
-  store.set(activitiesAtom, (prev) => [
+  store.set(tasksAtom, (prev) => [
     ...prev,
     {
       id,
@@ -136,7 +136,7 @@ export async function runCsvExport(
     });
   } catch (err) {
     // A task stuck part-way in the Beacon is worse than a failed one.
-    store.set(activitiesAtom, (prev) => prev.filter((a) => a.id !== id));
+    store.set(tasksAtom, (prev) => prev.filter((a) => a.id !== id));
     throw err;
   }
   // Cancelled from the Beacon: no download.
@@ -172,13 +172,13 @@ export function runBulkApply(
     corpus: Corpus;
     entities: readonly Entity[];
     plan: (chunk: Entity[]) => BulkPlan;
-    /** "Editing", "Changing template of" — the activity's label. */
+    /** "Editing", "Changing template of" — the task's label. */
     verb: string;
   },
 ): void {
   const id = taskId("bulk");
   const total = entities.length;
-  store.set(activitiesAtom, (prev) => [
+  store.set(tasksAtom, (prev) => [
     ...prev,
     { id, label: `${verb} ${total.toLocaleString()} entities`, current: 0, total, driven: true },
   ]);
@@ -195,7 +195,7 @@ export function runBulkApply(
     const n = entries.length;
     const title = `${n.toLocaleString()} ${n === 1 ? "entity" : "entities"} updated.`;
     if (failed) {
-      store.set(activitiesAtom, (prev) => prev.filter((a) => a.id !== id));
+      store.set(tasksAtom, (prev) => prev.filter((a) => a.id !== id));
       store.set(notificationsAtom, (prev) => [
         {
           id: `n-${id}`,
@@ -214,7 +214,7 @@ export function runBulkApply(
       return;
     }
     if (cancelled) {
-      // The activity is gone (Cancel removed it), so the Beacon won't turn it
+      // The task is gone (Cancel removed it), so the Beacon won't turn it
       // into a notification: say what happened here.
       store.set(notificationsAtom, (prev) => [
         {

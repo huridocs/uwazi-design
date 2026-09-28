@@ -577,7 +577,7 @@ export function ComponentCatalog({ onReturn }: Props) {
                   name="Beacon"
                   description="Navbar notification beacon — a colour-coded loader mark (seal/amber/carbon/black by severity, animated while processing) that expands on a new task or hover, and opens the notifications drawer on click"
                   code={`// State lives in atoms/notifications.ts
-//   activityAtom        — the in-flight task (animates the mark + TASKS)
+//   tasksAtom        — the in-flight task (animates the mark + TASKS)
 //   notificationsAtom   — past events (the drawer log)
 //   beaconOpenAtom      — drawer open?
 // Collapsed = the UwaziLoader mark; expands for a task intro / on hover.

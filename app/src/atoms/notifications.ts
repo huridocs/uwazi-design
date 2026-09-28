@@ -1,15 +1,15 @@
 import { atom } from "jotai";
 
 /**
- * Notification + live-activity state for the navbar Beacon.
+ * Notification + live-task state for the navbar Beacon.
  *
  * Two distinct things share the surface:
- *  - `Activity`      — an in-flight background task (upload, import, PDF
+ *  - `Task`      — an in-flight background task (upload, import, PDF
  *                      processing, …). Drives the live pill in the navbar and
  *                      the TASKS section of the drawer. Null when idle.
  *  - `Notification`  — a discrete past event (success / error / warning / info)
  *                      that lands in the drawer's NOTIFICATIONS log. Completed
- *                      activities convert into a notification.
+ *                      tasks convert into a notification.
  *
  * Mirrors Uwazi's notification surface (background tasks + outcome messages)
  * presented as one navbar beacon that opens a history drawer.
@@ -40,7 +40,7 @@ export interface NotificationAction {
   ref: string;
 }
 
-export interface Activity {
+export interface Task {
   id: string;
   /** verb phrase, e.g. "Uploading document batch" */
   label: string;
@@ -123,7 +123,7 @@ export const notificationsAtom = atom<Notification[]>([
 ]);
 
 /** In-flight tasks. Empty = idle beacon. */
-export const activitiesAtom = atom<Activity[]>([
+export const tasksAtom = atom<Task[]>([
   { id: "a-1", label: "Uploading document batch", detail: "velasquez-corpus.csv", current: 25, total: 100 },
   { id: "a-2", label: "Processing PDFs", detail: "12 files", current: 4, total: 12 },
 ]);

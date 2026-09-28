@@ -15,10 +15,10 @@ import {
 } from "lucide-react";
 import {
   notificationsAtom,
-  activitiesAtom,
+  tasksAtom,
   beaconOpenAtom,
   unreadCountAtom,
-  type Activity,
+  type Task,
   type Notification,
   type NotificationKind,
   type NotificationAction,
@@ -65,7 +65,7 @@ const bucketLabel: Record<Bucket, string> = { new: "New", today: "Today", earlie
 
 export function NotificationsSlideOver({ rtl = false }: { rtl?: boolean }) {
   const [notifications, setNotifications] = useAtom(notificationsAtom);
-  const [activities, setActivities] = useAtom(activitiesAtom);
+  const [tasks, setTasks] = useAtom(tasksAtom);
   const [open, setOpen] = useAtom(beaconOpenAtom);
   const trapRef = useFocusTrap<HTMLElement>(open);
   // Inert while closed — the drawer stays mounted off-screen and its controls
@@ -111,7 +111,7 @@ export function NotificationsSlideOver({ rtl = false }: { rtl?: boolean }) {
   // Retry an error → mark it read and kick off a fresh task.
   const retry = (n: Notification) => {
     markRead(n.id);
-    setActivities((prev) => [
+    setTasks((prev) => [
       ...prev,
       { id: `retry-${n.id}-${now}`, label: `Retrying: ${n.title.replace(/[.:]\s*$/, "")}`, current: 0, total: 100 },
     ]);
@@ -209,12 +209,12 @@ export function NotificationsSlideOver({ rtl = false }: { rtl?: boolean }) {
             and scrollbar at the panel edge. */}
         <div aria-live="polite" data-part="body" className="flex-1 overflow-y-auto bg-warm bleed">
           {/* Tasks */}
-          {activities.length > 0 && (
+          {tasks.length > 0 && (
             <section data-part="tasks">
-              <SectionLabel className={STICKY}>Tasks · {activities.length}</SectionLabel>
+              <SectionLabel className={STICKY}>Tasks · {tasks.length}</SectionLabel>
               <div className="pb-3 space-y-2">
-                {activities.map((a) => (
-                  <TaskCard key={a.id} a={a} onCancel={() => setActivities((p) => p.filter((x) => x.id !== a.id))} />
+                {tasks.map((a) => (
+                  <TaskCard key={a.id} a={a} onCancel={() => setTasks((p) => p.filter((x) => x.id !== a.id))} />
                 ))}
               </div>
             </section>
@@ -293,7 +293,7 @@ function FilterPill({
   );
 }
 
-function TaskCard({ a, onCancel }: { a: Activity; onCancel: () => void }) {
+function TaskCard({ a, onCancel }: { a: Task; onCancel: () => void }) {
   const pct = Math.round((a.current / a.total) * 100);
   const done = a.current >= a.total;
   return (
