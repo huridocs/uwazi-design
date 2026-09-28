@@ -49,7 +49,7 @@ export function useFocusTrap<T extends HTMLElement>(active: boolean, contentKey?
   wasActiveRef.current = active;
 
   /* Initial focus is its OWN effect, and it re-runs when `contentKey` changes.
-     A panel's content can arrive a tick after the trap activates — EntityOverlay
+     A panel's content can arrive a tick after the trap activates — EntityPreviewSlideOver
      mounts its body only once there is an entity to show — and on that first
      tick there is nothing focusable inside, so `focusables()[0]` was undefined
      and focus stayed out on the trigger. Keeping it separate from the trap

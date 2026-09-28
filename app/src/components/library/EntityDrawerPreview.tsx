@@ -3,7 +3,7 @@ import { useSetAtom } from "jotai";
 import { libraryOpenEntityIdAtom } from "../../atoms/library";
 import { openEntityAtom, focusEntityForPreviewAtom } from "../../atoms/focusedEntity";
 import { EntityDetailBody } from "../entity/EntityDetailBody";
-import { EntityOverlay } from "../relationships/EntityOverlay";
+import { EntityPreviewSlideOver } from "../relationships/EntityPreviewSlideOver";
 import { useDirtyGuard } from "../../hooks/useDirtyGuard";
 
 /** The right-drawer entity preview. Selecting a library entity focuses it (see
@@ -38,7 +38,7 @@ export function EntityDrawerPreview({ entityId }: { entityId: string }) {
       closeLabel="Back to filters"
       onOpen={() => openEntity(entityId)}
       openLabel="View entity"
-      editOverlay={<EntityOverlay />}
+      editOverlay={<EntityPreviewSlideOver />}
     />
   );
 }

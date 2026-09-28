@@ -16,7 +16,7 @@ import {
   RelationshipsFiltersPanel,
   useReferenceDelete,
 } from "../components/relationships/RelationshipsToolbar";
-import { EntityOverlay } from "../components/relationships/EntityOverlay";
+import { EntityPreviewSlideOver } from "../components/relationships/EntityPreviewSlideOver";
 import { RelationshipsPanelBody } from "../components/relationships/RelationshipsPanelBody";
 import { RelationshipsActionBar } from "../components/relationships/RelationshipsActionBar";
 import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
@@ -78,7 +78,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
           label: "Document",
           content: (
             <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0 relative overflow-clip">
-              <EntityOverlay />
+              <EntityPreviewSlideOver />
               <DocumentViewer />
             </div>
           ),
@@ -88,7 +88,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
       mobileLeft={(menuTrigger) => renderLeft(menuTrigger)}
       right={
         <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0 relative overflow-clip">
-          <EntityOverlay />
+          <EntityPreviewSlideOver />
           {/* The document projection only makes sense for document-bearing
               entities — otherwise the viewer falls back to the sample PDF. */}
           {profile.hasDocument && (

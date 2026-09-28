@@ -99,7 +99,7 @@ that don't exist as reusable components anywhere in `production` yet.
 | DirectionGlyph.tsx | `.../relationships/rows/DirectionGlyph.tsx` | Partial — rendered inside `Relationships.stories.tsx` rows, no dedicated story | None | S | Byte-for-byte same concept, heroicons vs lucide icon swap |
 | RelationshipsDisplayMenu.tsx | none — net-new | N/A | None | L | Real toolbar keeps Group/Sort/Zoom/View always visible; no consolidated popover exists to reskin |
 | DrawerActionBar.tsx | `Routes/Entity/Tabs/SideTabsFooters.tsx` + `footers/*TabFooter.tsx` | No | None | M | Same switch-by-tab footer idea, split across 7 footer components |
-| EntityOverlay.tsx | `.../relationships/overlay/EntityOverlay.tsx` | Yes — `EntityOverlay.stories.tsx` | None | M | Same focus-trap/escape pattern; real overlay is read-only, prototype adds inline editing |
+| EntityPreviewSlideOver.tsx | `.../relationships/overlay/EntityOverlay.tsx` | Yes — `EntityOverlay.stories.tsx` | None | M | Same focus-trap/escape pattern; real overlay is read-only, prototype adds inline editing |
 | CollapseControls.tsx | `.../relationships/panel/RelationshipsListInfoRow.tsx` | Yes — `Relationships.stories.tsx` (Panel) | None | M | Collapse/expand+count row matches; prototype's grouping-toggle half has no toolbar analog |
 | HighlightCard.tsx | folded into `.../relationships/rows/RelationshipRowVariants.tsx` (nested snippet) | Partial — nested row shown in `Relationships.stories.tsx` | None | M | Unused prototype catalog demo; not a standalone card in real repo |
 | IxSuggestionsCard.tsx | `Settings/IX/IXSuggestions.tsx` (admin review page only) | No | None | L | Real IX review lives in Settings, not an inline entity-panel triage card |

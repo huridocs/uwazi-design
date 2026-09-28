@@ -4,7 +4,7 @@ import {
   activeAggregateIdAtom,
   activeRefIdAtom,
   activeDrawerTabAtom,
-  overlayEntityIdAtom,
+  previewEntityIdAtom,
 } from "../../../atoms/references";
 import { activeClusterRefIdsAtom, searchQueryAtom } from "../../../atoms/filters";
 import { getEntity, getEntityType } from "../../../data/entities";
@@ -54,7 +54,7 @@ export function AggregateRow({
   // Mark the query that filtered this row in — same query, same tokenizer as
   // the snippet/PDF marks (`utils/queryTokens.ts`, PATTERNS 4.3).
   const query = useRelAtomValue(searchQueryAtom);
-  const setOverlayEntityId = useSetAtom(overlayEntityIdAtom);
+  const setPreviewEntityId = useSetAtom(previewEntityIdAtom);
   const [activeAggregateId, setActiveAggregateId] = useAtom(activeAggregateIdAtom);
   const activeRefId = useAtomValue(activeRefIdAtom);
   const setActiveDrawerTab = useSetAtom(activeDrawerTabAtom);
@@ -111,7 +111,7 @@ export function AggregateRow({
    *  entity — which is why the pill can't just take the default open. */
   const openEntity = () => {
     setActiveAggregateId(rel.id);
-    setOverlayEntityId(rel.targetEntityId);
+    setPreviewEntityId(rel.targetEntityId);
   };
 
   // Overview: pill + count only. When pill is suppressed, surface the

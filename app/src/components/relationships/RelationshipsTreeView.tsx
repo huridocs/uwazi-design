@@ -2,7 +2,7 @@ import { useIsScopedSurface, useRelAtom } from "../../hooks/useEntityScope";
 import { useEffect, useMemo } from "react";
 import { useAtom } from "jotai";
 import { Link2 } from "lucide-react";
-import { overlayEntityIdAtom, activeRefIdAtom } from "../../atoms/references";
+import { previewEntityIdAtom, activeRefIdAtom } from "../../atoms/references";
 import {
   groupByAtom,
   searchQueryAtom,
@@ -30,7 +30,7 @@ export function RelationshipsTreeView() {
   // Group headers carry the match when the leaves suppress that label (a
   // relation-type group hides `relLabel` on every row beneath it).
   const [query] = useRelAtom(searchQueryAtom);
-  const [, setOverlayEntityId] = useAtom(overlayEntityIdAtom);
+  const [, setPreviewEntityId] = useAtom(previewEntityIdAtom);
   const [, setActiveRefId] = useAtom(activeRefIdAtom);
 
   // Shared pipeline — applies every facet the list view applies (country,
@@ -62,8 +62,8 @@ export function RelationshipsTreeView() {
   useEffect(() => {
     if (scoped) return;
     setActiveRefId(null);
-    setOverlayEntityId(null);
-  }, [filtered, scoped, setActiveRefId, setOverlayEntityId]);
+    setPreviewEntityId(null);
+  }, [filtered, scoped, setActiveRefId, setPreviewEntityId]);
 
   return (
     <div data-component="RelationshipsTreeView" className="flex flex-col flex-1 min-h-0">

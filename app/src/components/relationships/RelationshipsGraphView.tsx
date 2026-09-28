@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Link2 } from "lucide-react";
 import {
-  overlayEntityIdAtom,
+  previewEntityIdAtom,
   activeRefIdAtom,
 } from "../../atoms/references";
 import { groupByAtom, searchQueryAtom } from "../../atoms/filters";
@@ -164,7 +164,7 @@ export function RelationshipsGraphView() {
   const query = useRelAtomValue(searchQueryAtom);
   const terms = useMemo(() => highlightTerms(query), [query]);
   const focusedId = useEntityScopeId();
-  const [overlayEntityId, setOverlayEntityId] = useAtom(overlayEntityIdAtom);
+  const [previewEntityId, setPreviewEntityId] = useAtom(previewEntityIdAtom);
   const activeRefId = useAtomValue(activeRefIdAtom);
 
   const svgRef = useRef<SVGSVGElement>(null);
@@ -173,7 +173,7 @@ export function RelationshipsGraphView() {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [hover, setHover] = useState<{ node: GraphNode; x: number; y: number } | null>(null);
   const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
-  // WHICH node you clicked. Selection is stored per ENTITY (overlayEntityIdAtom),
+  // WHICH node you clicked. Selection is stored per ENTITY (previewEntityIdAtom),
   // but a node is a relationship AGGREGATE — target × type × direction — so one
   // entity can own several nodes ("Cites", "Refers To", "Relates To"… all to the
   // same case). Keying the highlight off the entity alone lit every one of them
@@ -345,8 +345,8 @@ export function RelationshipsGraphView() {
           const type = entity ? getEntityType(entity.typeId) : undefined;
           const selected =
             (activeRefId !== null && rel.refIds.includes(activeRefId)) ||
-            (overlayEntityId !== null &&
-              rel.targetEntityId === overlayEntityId);
+            (previewEntityId !== null &&
+              rel.targetEntityId === previewEntityId);
           nodes.push({
             id: rel.id,
             title: entity?.title ?? "Unknown",
@@ -380,7 +380,7 @@ export function RelationshipsGraphView() {
     });
 
     return { spokes: spokesArr, nodes, truncated };
-  }, [filteredRefs, collapsed, groupBy, activeRefId, overlayEntityId, sourceLabelW, pillScale]);
+  }, [filteredRefs, collapsed, groupBy, activeRefId, previewEntityId, sourceLabelW, pillScale]);
 
   // Did the open entity get opened FROM the graph? If it was selected elsewhere
   // (a list row, the overlay), no single node owns the click — so every node of
@@ -778,7 +778,7 @@ export function RelationshipsGraphView() {
               e.stopPropagation();
               if (dragRef.current.moved) return;
               setClickedNodeId(n.id);
-              setOverlayEntityId(n.id.split("::")[0]);
+              setPreviewEntityId(n.id.split("::")[0]);
             };
             return (
             <g key={n.id}>
@@ -854,7 +854,7 @@ export function RelationshipsGraphView() {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
                     setClickedNodeId(n.id);
-                    setOverlayEntityId(n.id.split("::")[0]);
+                    setPreviewEntityId(n.id.split("::")[0]);
                   }
                 }}
                 onClick={onNodeClick}

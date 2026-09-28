@@ -1,5 +1,5 @@
 import { useSetAtom } from "jotai";
-import { overlayEntityIdAtom } from "../../atoms/references";
+import { previewEntityIdAtom } from "../../atoms/references";
 import { EntityPill } from "../shared/EntityPill";
 import { InheritedValueTag, MissingValue, ProvenanceTrail, RollupChip } from "./InheritedValue";
 import type { ProvenanceStep } from "../../utils/inheritance";
@@ -50,7 +50,7 @@ export function ConnectionCardStack({
    *  the cards then leave their own trails off, as the table does. */
   sharedProvenance?: boolean;
 }) {
-  const setOverlay = useSetAtom(overlayEntityIdAtom);
+  const setOverlay = useSetAtom(previewEntityIdAtom);
   const chips = (rollups ?? []).filter((r) => r.summary);
 
   return (

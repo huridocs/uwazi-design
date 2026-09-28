@@ -3,7 +3,7 @@ import { ExternalLink } from "lucide-react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { languageAtom } from "../../atoms/language";
 import { entityMetadataAtom, makeEntityPropReader } from "../../atoms/entityMetadata";
-import { overlayEntityIdAtom } from "../../atoms/references";
+import { previewEntityIdAtom } from "../../atoms/references";
 import { EntityPill } from "../shared/EntityPill";
 import { MediaFieldValue } from "./MediaFieldValue";
 import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
@@ -132,7 +132,7 @@ export function fieldItem(f: MetadataField): MetadataItem {
 function ConnectionPills({ field }: { field: RelationshipMetadataField }) {
   const lang = useAtomValue(languageAtom);
   const getProp = makeEntityPropReader(useAtomValue(entityMetadataAtom));
-  const setOverlay = useSetAtom(overlayEntityIdAtom);
+  const setOverlay = useSetAtom(previewEntityIdAtom);
   const resolved = resolveRelationshipField(field, lang, getProp);
 
   return (

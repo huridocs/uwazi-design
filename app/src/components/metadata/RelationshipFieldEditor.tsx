@@ -5,7 +5,7 @@ import { languageAtom } from "../../atoms/language";
 import { entitiesAtom } from "../../atoms/entities";
 import { getEntityType } from "../../data/entities";
 import { entityMetadataAtom, makeEntityPropReader } from "../../atoms/entityMetadata";
-import { overlayEntityIdAtom } from "../../atoms/references";
+import { previewEntityIdAtom } from "../../atoms/references";
 import { EntityPill } from "../shared/EntityPill";
 import { InheritedValueTag, MissingValue } from "./InheritedValue";
 import { resolveInheritedValue, type ConnectionColumn } from "../../utils/inheritance";
@@ -34,7 +34,7 @@ export function RelationshipFieldEditor({
   const lang = useAtomValue(languageAtom);
   const allEntities = useAtomValue(entitiesAtom);
   const getEntityProp = makeEntityPropReader(useAtomValue(entityMetadataAtom));
-  const setOverlay = useSetAtom(overlayEntityIdAtom);
+  const setOverlay = useSetAtom(previewEntityIdAtom);
   const [query, setQuery] = useState("");
   const [adding, setAdding] = useState(false);
   const titleId = useId();

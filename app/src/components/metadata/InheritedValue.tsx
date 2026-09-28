@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import { useSetAtom } from "jotai";
 import { Link2, Sigma } from "lucide-react";
-import { overlayEntityIdAtom } from "../../atoms/references";
+import { previewEntityIdAtom } from "../../atoms/references";
 import { EntityPill } from "../shared/EntityPill";
 import { ProvenanceLine } from "../shared/ProvenanceLine";
 import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
@@ -71,7 +71,7 @@ export function RollupChip({ summary }: { summary: { text: string; title: string
  *  the "how" of a derived value is inspectable rather than hidden. Renders
  *  nothing when there are no intermediaries (a plain single-hop inheritance). */
 export function ProvenanceTrail({ steps, sharedLabel }: { steps: ProvenanceStep[]; sharedLabel?: string }) {
-  const setOverlay = useSetAtom(overlayEntityIdAtom);
+  const setOverlay = useSetAtom(previewEntityIdAtom);
   if (!steps.length) return null;
   return (
     // The shared `↳ …` line — the library's borrowed-document attribution rides
@@ -150,7 +150,7 @@ export function InheritedValueChip({
   inherits: boolean;
   relationLabel: string;
 }) {
-  const setOverlay = useSetAtom(overlayEntityIdAtom);
+  const setOverlay = useSetAtom(previewEntityIdAtom);
   return (
     <div data-component="InheritedValueChip" className="flex items-center gap-2 min-w-0">
       <button

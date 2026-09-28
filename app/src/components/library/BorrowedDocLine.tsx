@@ -16,7 +16,7 @@ import { ProvenanceLine } from "../shared/ProvenanceLine";
  *  as a line of its own that appears and disappears under the reader (CLAUDE.md:
  *  never shift layout on state change). Hence `inline`.
  *
- *  Not a link: the library's main pane doesn't mount `EntityOverlay`, so a
+ *  Not a link: the library's main pane doesn't mount `EntityPreviewSlideOver`, so a
  *  clickable hop here would be a control that does nothing. It's an attribution,
  *  and the title is the whole of it. */
 export function BorrowedDocLine({

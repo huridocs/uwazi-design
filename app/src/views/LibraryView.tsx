@@ -18,7 +18,7 @@ import { isCejilEntity } from "../data/cejil/profile";
 import { focusCollectionDefaultAtom } from "../atoms/focusedEntity";
 import { loadTravesiaData, travesiaRelsByEntity } from "../data/travesia/load";
 import { warmSearchScan } from "../utils/warmSearchScan";
-import { overlayEntityIdAtom, referencesAtom } from "../atoms/references";
+import { previewEntityIdAtom, referencesAtom } from "../atoms/references";
 import { languageAtom, type Language } from "../atoms/language";
 import { uiLanguageAtom } from "../atoms/uiLanguage";
 import { t } from "../utils/i18n";
@@ -303,7 +303,7 @@ export function LibraryView() {
   const draftId = useAtomValue(draftEntityIdAtom);
   const setSelectMode = useSetAtom(librarySelectModeAtom);
   const discardDraft = useSetAtom(discardDraftAtom);
-  const setOverlayEntity = useSetAtom(overlayEntityIdAtom);
+  const setOverlayEntity = useSetAtom(previewEntityIdAtom);
   const focusForPreview = useSetAtom(focusEntityForPreviewAtom);
   const setScrollToPage = useSetAtom(scrollToPageAtom);
   const setPassageFile = useSetAtom(passageFileIdAtom);

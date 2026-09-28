@@ -1,6 +1,6 @@
 import { ChevronRight, Link2 } from "lucide-react";
 import { useSetAtom } from "jotai";
-import { overlayEntityIdAtom } from "../../../atoms/references";
+import { previewEntityIdAtom } from "../../../atoms/references";
 import { EntityPill } from "../../shared/EntityPill";
 
 /** The disclosure chevron on an expandable row.
@@ -129,14 +129,14 @@ export function RowEntityPill({
    *  not on which entity is showing). */
   onOpen?: () => void;
 }) {
-  const setOverlayEntityId = useSetAtom(overlayEntityIdAtom);
+  const setPreviewEntityId = useSetAtom(previewEntityIdAtom);
   return (
     <button
       type="button"
       onClick={(e) => {
         e.stopPropagation();
         if (onOpen) onOpen();
-        else setOverlayEntityId(entityId);
+        else setPreviewEntityId(entityId);
       }}
       aria-label={`Open ${label ?? "entity"}`}
       data-part="entity"

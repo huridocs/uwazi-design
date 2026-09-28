@@ -49,7 +49,7 @@ export interface EntityDetailBodyProps {
   openLabel: string;
   identitySize?: "sm" | "md";
   /** Rendered beside the editor, inside the (relative) content pane. The
-   *  Library preview passes an `EntityOverlay` there: the edit form's routes out
+   *  Library preview passes an `EntityPreviewSlideOver` there: the edit form's routes out
    *  to another entity (Copy from…'s source preview, a relationship row's
    *  "Source") open one, and the Library mounts none of its own. It is a SLOT
    *  rather than a mount of its own so this component and the overlay don't

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { overlayStackBase } from "../../atoms/rightPane";
-import { closeAllOverlaysAtom, overlayEntityIdAtom } from "../../atoms/references";
+import { closeAllOverlaysAtom, previewEntityIdAtom } from "../../atoms/references";
 import { openEntityAtom } from "../../atoms/focusedEntity";
 import { breakpointAtom } from "../../atoms/viewport";
 import { getEntity } from "../../data/entities";
@@ -13,13 +13,13 @@ import { EntityDetailBody } from "../entity/EntityDetailBody";
  *  connected entity opened from inside a preview lands on top of it and Back
  *  returns to it.
  *
- *  Mounted ONCE, in the app shell. On desktop `EntityOverlay` is a slide-over
+ *  Mounted ONCE, in the app shell. On desktop `EntityPreviewSlideOver` is a slide-over
  *  inside whichever pane mounts it (four do); on a phone those hosts render
  *  nothing and this draws the stack, so a sheet can't be drawn twice. */
 export function MobileOverlayStack() {
   const mobile = useAtomValue(breakpointAtom) === "mobile";
   const stack = useAtomValue(overlayStackBase);
-  const setOverlay = useSetAtom(overlayEntityIdAtom);
+  const setOverlay = useSetAtom(previewEntityIdAtom);
   const closeAll = useSetAtom(closeAllOverlaysAtom);
   const openEntity = useSetAtom(openEntityAtom);
 

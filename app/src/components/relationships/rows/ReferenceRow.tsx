@@ -4,7 +4,7 @@ import { useAtom, useSetAtom } from "jotai";
 import { Trash2 } from "lucide-react";
 import {
   activeRefIdAtom,
-  overlayEntityIdAtom,
+  previewEntityIdAtom,
   scrollToHighlightAtom,
   scrollToRefAtom,
 } from "../../../atoms/references";
@@ -45,7 +45,7 @@ export function ReferenceRow({ reference, onDelete, nested, hideRelLabel }: Refe
   const [scrollToRef, setScrollToRef] = useAtom(scrollToRefAtom);
   const [activeRefId, setActiveRefId] = useAtom(activeRefIdAtom);
   const setCurrentPage = useSetAtom(currentPageAtom);
-  const setOverlayEntityId = useSetAtom(overlayEntityIdAtom);
+  const setPreviewEntityId = useSetAtom(previewEntityIdAtom);
   const rowRef = useRef<HTMLDivElement>(null);
 
   // Only this exact row when the user picked it. Don't glow every ref that

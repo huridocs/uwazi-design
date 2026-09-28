@@ -2,7 +2,7 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { Link2 } from "lucide-react";
 import { languageAtom } from "../../atoms/language";
 import { entityMetadataAtom, makeEntityPropReader } from "../../atoms/entityMetadata";
-import { overlayEntityIdAtom } from "../../atoms/references";
+import { previewEntityIdAtom } from "../../atoms/references";
 import { MetadataCard } from "./MetadataCard";
 import { spanClass, type CardSpan } from "./cardSpan";
 import { InheritedValueTag, MissingValue, ProvenanceTrail, RelationCaption, RollupChip } from "./InheritedValue";
@@ -23,7 +23,7 @@ import { TABLE_MIN } from "./tableBreakpoint";
 export function RelationshipFieldCard({ field, span = "wide" }: { field: RelationshipMetadataField; span?: CardSpan }) {
   const lang = useAtomValue(languageAtom);
   const getProp = makeEntityPropReader(useAtomValue(entityMetadataAtom));
-  const setOverlay = useSetAtom(overlayEntityIdAtom);
+  const setOverlay = useSetAtom(previewEntityIdAtom);
   const resolved = resolveRelationshipField(field, lang, getProp);
   const inherits = specInherits(field);
   const rollup = reduceInherited(resolved.values.map((v) => v.inheritedValue), field.reduce);

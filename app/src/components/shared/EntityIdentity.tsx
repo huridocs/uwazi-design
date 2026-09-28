@@ -9,7 +9,7 @@ import { EntityTypeTag } from "./EntityTypeTag";
  *  the entity's name read as its caption. Now the type is a quiet tag and the
  *  title is a real heading. Same information, correct hierarchy.
  *
- *  Shared by the Library drawer preview, EntityOverlay and the entity view's own
+ *  Shared by the Library drawer preview, EntityPreviewSlideOver and the entity view's own
  *  header (`inline`, for a single-row strip) so the surfaces can't drift apart.
  *
  *  `typeId`/`title` override the entity for callers that have the parts but not

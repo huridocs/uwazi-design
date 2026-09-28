@@ -27,7 +27,7 @@ import { MultiLanguageField } from "../components/metadata/MultiLanguageField";
 import type { CopyMatch, CopyPlan, CopyUnit } from "../utils/copyFrom";
 import { templateFields, type EditResult } from "../utils/createEntity";
 import { TemplateStructure } from "../components/relationships/TemplateStructure";
-import { EntityOverlay } from "../components/relationships/EntityOverlay";
+import { EntityPreviewSlideOver } from "../components/relationships/EntityPreviewSlideOver";
 import { groupConnections, relationLabel, specInherits } from "../utils/inheritance";
 import {
   chosenLabels,
@@ -1517,7 +1517,7 @@ function MetadataDrawer() {
     // The gutter host (see `gutter-host`): tabs and tab bodies carry no side padding.
     <div data-gutter-host className="gutter-host relative flex flex-col h-full overflow-clip">
       {/* A connected entity in a relationship field opens its preview in this drawer. */}
-      <EntityOverlay />
+      <EntityPreviewSlideOver />
       <DrawerTabs
         tabs={drawerTabs}
         activeId={activeDrawerTab}

@@ -14,7 +14,7 @@ import { CalendarX } from "lucide-react";
 import { useEntityScopeId, useRelAtom } from "../../../hooks/useEntityScope";
 import { whenYearsAtom } from "../../../atoms/filters";
 import { languageAtom } from "../../../atoms/language";
-import { overlayEntityIdAtom } from "../../../atoms/references";
+import { previewEntityIdAtom } from "../../../atoms/references";
 import { getEntity, getEntityType } from "../../../data/entities";
 import { datesOf } from "../../../data/entityDates";
 import { relationLabel } from "../../../utils/inheritance";
@@ -34,7 +34,7 @@ export function WhenBody() {
   const lang = useAtomValue(languageAtom);
   const filtered = useFilteredReferences({ sort: false });
   const [range, setRange] = useRelAtom(whenYearsAtom);
-  const previewing = useAtomValue(overlayEntityIdAtom);
+  const previewing = useAtomValue(previewEntityIdAtom);
 
   const { events, undated } = useMemo(
     () =>

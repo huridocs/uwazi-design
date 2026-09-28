@@ -1,6 +1,6 @@
 import { useSetAtom } from "jotai";
 import { Link2 } from "lucide-react";
-import { overlayEntityIdAtom } from "../../atoms/references";
+import { previewEntityIdAtom } from "../../atoms/references";
 import { MetadataCard } from "./MetadataCard";
 import { spanClass, type CardSpan } from "./cardSpan";
 import { RelationCaption, InheritedValueTag, MissingValue, RollupChip } from "./InheritedValue";
@@ -16,7 +16,7 @@ import { TABLE_MIN } from "./tableBreakpoint";
  *  their entities together. The inherited columns lead; the connected entity
  *  (leaf) is the last column. */
 export function ConnectionGroupCard({ group, span = "full" }: { group: ConnectionGroup; span?: CardSpan }) {
-  const setOverlay = useSetAtom(overlayEntityIdAtom);
+  const setOverlay = useSetAtom(previewEntityIdAtom);
   const entityHeader = getEntityType(group.targetTypeId)?.name ?? "Entity";
   const rows = mergeConnectionRows(group);
   // Per-column rollups computed over the UNMERGED values (one per connected entity).

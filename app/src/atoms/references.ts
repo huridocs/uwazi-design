@@ -50,7 +50,7 @@ function fromPerspective(r: Reference, id: string): Reference {
  * Reads are filtered + perspective-normalized; **writes reconcile against the
  * full corpus by ref id** so deletes drop the right corpus rows and brand-new
  * refs are appended verbatim (never the normalized projection). Library-level
- * surfaces (LibraryView, EntityDrawerPreview, EntityOverlay, ManageRelationTypes)
+ * surfaces (LibraryView, EntityDrawerPreview, EntityPreviewSlideOver, ManageRelationTypes)
  * deliberately keep reading `referencesAtom`.
  */
 /** Pure per-entity slice — the same derivation `scopedReferencesAtom` applies
@@ -144,7 +144,7 @@ export const docHighlightQueryAtom = atom((get) =>
 export const expandGroupForRefAtom = atom<string | null>(null);
 
 /** Entity overlay — shows target entity preview when "View" is clicked on a ref */
-export const overlayEntityIdAtom = atom(
+export const previewEntityIdAtom = atom(
   (get) => get(overlayEntityBase),
   (get, set, id: string | null) => {
     // A phone stacks: an entity opened while a preview is open is a new sheet
@@ -194,7 +194,7 @@ export const closeAllOverlaysAtom = atom(null, (_get, set) => {
 });
 
 /** The specific aggregate-row id the user just clicked. Tracked separately
- *  from `overlayEntityIdAtom` because multiple aggregates can target the
+ *  from `previewEntityIdAtom` because multiple aggregates can target the
  *  same entity (one per relation type) — without this, opening the overlay
  *  highlighted every sibling row pointing at that entity. Cleared when the
  *  overlay closes. */

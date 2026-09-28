@@ -99,7 +99,7 @@ export function CreateRelationshipModal() {
       typeId: newEntityTypeId,
     };
     // Mirror into the seed array so getEntity() resolves the new id everywhere
-    // (RelationshipRow, EntityOverlay, RefMinimap, etc. all read through it).
+    // (RelationshipRow, EntityPreviewSlideOver, RefMinimap, etc. all read through it).
     seedEntities.push(newEntity);
     setEntities((prev) => [...prev, newEntity]);
     setSelectedEntity(newEntity);

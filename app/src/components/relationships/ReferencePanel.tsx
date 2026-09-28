@@ -6,7 +6,7 @@ import { DrawerTabs } from "../layout/DrawerTabs";
 import { DrawerActionBar } from "./DrawerActionBar";
 import { MetadataDrawerContent } from "./MetadataDrawerContent";
 import { ToCPanel } from "./ToCPanel";
-import { EntityOverlay } from "./EntityOverlay";
+import { EntityPreviewSlideOver } from "./EntityPreviewSlideOver";
 import { RelationshipsDrawerSection } from "./RelationshipsDrawerSection";
 import { DrawerFilesBody } from "../files/DrawerFilesBody";
 import { DocumentSearchBody } from "../search/DocumentSearchBody";
@@ -60,7 +60,7 @@ export function ReferencePanel() {
       data-gutter-host
       className="gutter-host flex flex-col h-full relative overflow-clip"
     >
-      <EntityOverlay />
+      <EntityPreviewSlideOver />
 
       <DrawerTabs
         tabs={baseDrawerTabs.map((tab) => {

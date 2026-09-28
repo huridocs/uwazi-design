@@ -3,7 +3,7 @@ import { breakpointAtom } from "../../atoms/viewport";
 import { useEffect, useState } from "react";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { useHostDrawerWidth } from "../../hooks/useDrawerWidth";
-import { activeAggregateIdAtom, overlayEntityIdAtom } from "../../atoms/references";
+import { activeAggregateIdAtom, previewEntityIdAtom } from "../../atoms/references";
 import { languageAtom } from "../../atoms/language";
 import { openEntityAtom } from "../../atoms/focusedEntity";
 import { getEntity } from "../../data/entities";
@@ -20,7 +20,7 @@ import { EntityDetailBody } from "../entity/EntityDetailBody";
  *  connection surfaces by context instead (see `EntityScopeProvider`), which is
  *  also why the Document and Files tabs — which read the globally seeded file
  *  atoms — aren't offered here; "Open entity" is the route to those. */
-export function EntityOverlay() {
+export function EntityPreviewSlideOver() {
   // On a phone the overlay is a bottom sheet on the shared stack, drawn once by
   // `MobileOverlayStack` in the app shell; the hosts that mount this draw nothing.
   const mobile = useAtomValue(breakpointAtom) === "mobile";
@@ -28,7 +28,7 @@ export function EntityOverlay() {
 }
 
 function PaneEntityOverlay() {
-  const [entityId, setEntityId] = useAtom(overlayEntityIdAtom);
+  const [entityId, setEntityId] = useAtom(previewEntityIdAtom);
   const setActiveAggregateId = useSetAtom(activeAggregateIdAtom);
   const lang = useAtom(languageAtom)[0];
   const rtl = lang === "AR";
@@ -93,7 +93,7 @@ function PaneEntityOverlay() {
     <>
       {/* Backdrop */}
       <div
-        data-component="EntityOverlay"
+        data-component="EntityPreviewSlideOver"
         data-part="scrim"
         className="absolute inset-0 transition-opacity duration-200"
         style={{
@@ -109,7 +109,7 @@ function PaneEntityOverlay() {
       <div
         ref={panelRef}
         role="dialog"
-        data-component="EntityOverlay"
+        data-component="EntityPreviewSlideOver"
         // Focusable as a fallback target: the panel takes focus on the opening
         // tick, before its body exists, and hands it to the first control once
         // it does.

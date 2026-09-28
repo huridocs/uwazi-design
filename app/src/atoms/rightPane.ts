@@ -13,7 +13,7 @@ import { atom } from "jotai";
  *  places that open the overlay — a reference row, an aggregate row, a tree
  *  node, a graph node, an inherited value chip, a connection pill, an editor's
  *  Source button, a card stack — and the ninth is the one someone adds next
- *  week. So these are the private bases, and `overlayEntityIdAtom`
+ *  week. So these are the private bases, and `previewEntityIdAtom`
  *  (atoms/references) and `filtersDrawerOpenAtom` (atoms/filters) are writable
  *  derived atoms over them that each close the other. Every existing call site
  *  keeps its import, its name and its signature, and gets the behaviour.
@@ -30,7 +30,7 @@ export const overlayEntityBase = atom<string | null>(null);
  *  On desktop it holds at most one (opening another replaces it). On a phone,
  *  where each overlay is a bottom sheet, opening an entity from inside one
  *  stacks a new sheet on top and closing pops back to the one below — see
- *  `overlayEntityIdAtom`. */
+ *  `previewEntityIdAtom`. */
 export const overlayStackBase = atom<string[]>([]);
 
 /** Whether the Relationships filters slide-over is open. */

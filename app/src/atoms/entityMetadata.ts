@@ -9,7 +9,7 @@ import { entityMetadataByLanguage, readRegisteredProp, type EntityMetadata } fro
 export type EntityPropReader = (entityId: string, propId: string, lang: Language) => string | undefined;
 
 /** Writable atom over the source entities' native metadata. Seeded from
- *  data/entityMetadata.ts. Editing a value here (via EntityOverlay) cascades to
+ *  data/entityMetadata.ts. Editing a value here (via EntityPreviewSlideOver) cascades to
  *  every inherited relationship value, which all resolve through this map. */
 export const entityMetadataAtom = atom<Record<Language, EntityMetadata>>(entityMetadataByLanguage);
 
