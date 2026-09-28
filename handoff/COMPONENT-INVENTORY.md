@@ -11,11 +11,11 @@ component, whether they're reskinning something that already exists or building 
 > and paired each of the 85 prototype components in `shared/`, `relationships/`,
 > `metadata/`, `layout/` against its closest counterpart by name and behavior.
 
-## Headline finding: the surfaces have converged more than `TOKENS-MAPPING.md` implied
+## Uwazi's own components are closer to the prototype than `TOKENS-MAPPING.md` suggests
 
 `TOKENS-MAPPING.md`'s "Where each side stands" table says Uwazi's components are
 "flowbite-react + own V2 components" vs. the prototype's "hand-rolled primitives."
-That's technically true but undersells how far apart they aren't:
+That is accurate, but most of Uwazi's components are its own V2 code, not flowbite:
 
 - **flowbite-react's actual footprint is 5 files, repo-wide**: `Forms/MultiSelect.tsx`
   (flowbite `Checkbox`), `Forms/RadioSelect.tsx` (flowbite `Radio`+`Label`),
@@ -101,7 +101,6 @@ that don't exist as reusable components anywhere in `production` yet.
 | DrawerActionBar.tsx | `Routes/Entity/Tabs/SideTabsFooters.tsx` + `footers/*TabFooter.tsx` | No | None | M | Same switch-by-tab footer idea, split across 7 footer components |
 | EntityOverlay.tsx | `.../relationships/overlay/EntityOverlay.tsx` | Yes — `EntityOverlay.stories.tsx` | None | M | Same focus-trap/escape pattern; real overlay is read-only, prototype adds inline editing |
 | CollapseControls.tsx | `.../relationships/panel/RelationshipsListInfoRow.tsx` | Yes — `Relationships.stories.tsx` (Panel) | None | M | Collapse/expand+count row matches; prototype's grouping-toggle half has no toolbar analog |
-| GroupByControl.tsx | `.../relationships/controls/RelationshipsGroupByControl.tsx` | Yes — `Relationships.stories.tsx` | None | S | Same primary/secondary axis dropdown, real uses shared DropdownListbox |
 | HighlightCard.tsx | folded into `.../relationships/rows/RelationshipRowVariants.tsx` (nested snippet) | Partial — nested row shown in `Relationships.stories.tsx` | None | M | Unused prototype catalog demo; not a standalone card in real repo |
 | IxSuggestionsCard.tsx | `Settings/IX/IXSuggestions.tsx` (admin review page only) | No | None | L | Real IX review lives in Settings, not an inline entity-panel triage card |
 | ManageRelationTypesModal.tsx | `Settings/RelationshipTypes/RelationshipTypes.tsx` + `components/Form.tsx` | No | None | L | Real is a full Settings table+sidepanel page, not an in-context modal |

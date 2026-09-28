@@ -14,7 +14,7 @@ Sources of truth in this repo: `app/src/index.css` (keyframes), `app/src/hooks/`
 
 ---
 
-## Part 1 — Accessibility (non-negotiable)
+## Part 1 — Accessibility
 
 ### 1.1 Clickable rows are never `role="button"`
 
@@ -33,7 +33,7 @@ nested controls stay clickable.
   <button
     type="button"
     aria-pressed={selected}
-    aria-label={ariaLabel ?? "Open row"}
+    aria-label={ariaLabel}   // names the row: "Open Case 12.045", never a generic "Open row"
     onClick={(e) => { e.stopPropagation(); onClick(); }}
     onKeyDown={onKeyDown}
     className="absolute inset-0 w-full cursor-pointer focus:outline-none
@@ -210,8 +210,12 @@ function luminance(hex: string): number {
 const isPale = luminance(color) > 0.6;
 const textColor = isPale
   ? "var(--text-primary)"
-  : `color-mix(in srgb, ${color} 70%, var(--text-primary))`;
+  : `color-mix(in srgb, ${color} var(--label-mix), var(--text-primary))`;
 ```
+
+`--label-mix` is 55% (`tokens.css`). It is set by dark mode, the harder case:
+at 55% every colour in the 22-colour CEJIL palette clears 4.5:1 on its own tint
+in both themes. Check new type colours against that palette, in dark mode.
 
 Mixing with `var(--text-primary)` is what makes it **theme-aware**: the same
 expression darkens labels in light mode and lightens them in dark. A hardcoded
@@ -240,7 +244,7 @@ All keyframes live in `app/src/index.css`. Copy the block wholesale — the dura
 and easings are tuned as a set, and mixing them with Tailwind's defaults reads as two
 different products.
 
-### 2.1 The easing vocabulary
+### 2.1 Easing curves
 
 | Curve | Value | Used for |
 |---|---|---|
