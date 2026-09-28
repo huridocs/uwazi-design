@@ -104,7 +104,7 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
           type="button"
           onClick={onBack}
           data-part="back"
-          className="md:hidden text-ink-tertiary hover:text-ink transition-colors shrink-0 cursor-pointer"
+          className="hit-area md:hidden text-ink-tertiary hover:text-ink transition-colors shrink-0 cursor-pointer"
           aria-label="Go back"
         >
           <ArrowLeft size={20} />

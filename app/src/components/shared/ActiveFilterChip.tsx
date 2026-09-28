@@ -43,7 +43,7 @@ export function ActiveFilterChip({ label, color, onRemove, removeLabel, classNam
         onClick={onRemove}
         aria-label={removeLabel ?? `Remove filter: ${label}`}
         data-part="remove"
-        className="shrink-0 flex items-center justify-center w-4 h-4 rounded-sm text-ink-tertiary
+        className="hit-area shrink-0 flex items-center justify-center w-4 h-4 rounded-sm text-ink-tertiary
           hover:text-ink transition-colors cursor-pointer focus-visible:outline-2
           focus-visible:outline-offset-1 focus-visible:outline-carbon"
       >

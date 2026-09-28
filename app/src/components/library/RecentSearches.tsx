@@ -105,7 +105,7 @@ export function RecentSearches({ anchorRef, open, onPick, onClose }: Props) {
               onClick={() => forget(q)}
               data-part="forget"
               aria-label={`Forget search: ${q}`}
-              className="absolute inset-y-0 end-1 my-auto w-5 h-5 flex items-center justify-center
+              className="hit-area absolute inset-y-0 end-1 my-auto w-5 h-5 flex items-center justify-center
                 rounded text-ink-muted opacity-0 group-hover:opacity-100 group-focus-within:opacity-100
                 hover:text-ink hover:bg-parchment transition-all cursor-pointer
                 focus:outline-none focus-visible:ring-1 focus-visible:ring-ink/20"

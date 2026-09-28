@@ -42,7 +42,7 @@ export function ToastContainer() {
           <button
             onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
             aria-label="Dismiss"
-            className="ms-auto p-0.5 rounded hover:bg-parchment"
+            className="hit-area ms-auto p-0.5 rounded hover:bg-parchment"
           >
             <X size={14} className="text-ink-muted" />
           </button>

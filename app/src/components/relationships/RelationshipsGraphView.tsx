@@ -759,8 +759,44 @@ export function RelationshipsGraphView() {
             // that entity — but only the clicked one gets the solid ring.
             const primary = n.selected && (pickedInGraph ? clickedNodeId === n.id : true);
             const sibling = n.selected && !primary;
+            // Pointer handlers, shared by the node and its hit circle (below).
+            const onNodeEnter = (e: React.PointerEvent) => {
+              const rect = containerRef.current?.getBoundingClientRect();
+              if (!rect) return;
+              setHover({ node: n, x: e.clientX - rect.left, y: e.clientY - rect.top });
+            };
+            const onNodeMove = (e: React.PointerEvent) => {
+              const rect = containerRef.current?.getBoundingClientRect();
+              if (!rect) return;
+              setHover((h) =>
+                h && h.node.id === n.id
+                  ? { ...h, x: e.clientX - rect.left, y: e.clientY - rect.top }
+                  : h,
+              );
+            };
+            const onNodeClick = (e: React.MouseEvent) => {
+              e.stopPropagation();
+              if (dragRef.current.moved) return;
+              setClickedNodeId(n.id);
+              setOverlayEntityId(n.id.split("::")[0]);
+            };
             return (
             <g key={n.id}>
+              {/* The hit area (M15): nodes draw at 6–7px, far below a finger. An
+                  invisible r=16 circle under each takes the same pointer
+                  events; focus and the keyboard stay on the drawn node. */}
+              <circle
+                cx={n.x}
+                cy={n.y}
+                r={Math.max(16, n.r)}
+                fill="transparent"
+                aria-hidden="true"
+                onPointerEnter={onNodeEnter}
+                onPointerMove={onNodeMove}
+                onPointerLeave={() => setHover(null)}
+                onClick={onNodeClick}
+                style={{ cursor: "pointer" }}
+              />
               {n.selected && (
                 <circle
                   cx={n.x}
@@ -796,20 +832,8 @@ export function RelationshipsGraphView() {
                 tabIndex={0}
                 role="button"
                 aria-label={`${n.title} — ${n.typeName}, ${n.evidenceCount} evidence`}
-                onPointerEnter={(e) => {
-                  const rect = containerRef.current?.getBoundingClientRect();
-                  if (!rect) return;
-                  setHover({ node: n, x: e.clientX - rect.left, y: e.clientY - rect.top });
-                }}
-                onPointerMove={(e) => {
-                  const rect = containerRef.current?.getBoundingClientRect();
-                  if (!rect) return;
-                  setHover((h) =>
-                    h && h.node.id === n.id
-                      ? { ...h, x: e.clientX - rect.left, y: e.clientY - rect.top }
-                      : h,
-                  );
-                }}
+                onPointerEnter={onNodeEnter}
+                onPointerMove={onNodeMove}
                 onPointerLeave={() => setHover(null)}
                 onFocus={(e) => {
                   setFocusedNodeId(n.id);
@@ -833,12 +857,7 @@ export function RelationshipsGraphView() {
                     setOverlayEntityId(n.id.split("::")[0]);
                   }
                 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (dragRef.current.moved) return;
-                  setClickedNodeId(n.id);
-                  setOverlayEntityId(n.id.split("::")[0]);
-                }}
+                onClick={onNodeClick}
                 style={{ cursor: "pointer", outline: "none" }}
               />
             </g>

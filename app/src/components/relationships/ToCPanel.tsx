@@ -96,7 +96,7 @@ export function ToCPanel() {
               type="button"
               data-part="collapse-all"
               onClick={collapseAll}
-              className="text-xs text-ink-tertiary hover:text-ink-secondary transition-colors cursor-pointer"
+              className="hit-area-y text-xs text-ink-tertiary hover:text-ink-secondary transition-colors cursor-pointer"
             >
               {t("System", "Collapse All")}
             </button>
@@ -104,7 +104,7 @@ export function ToCPanel() {
               type="button"
               data-part="expand-all"
               onClick={expandAll}
-              className="text-xs font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
+              className="hit-area-y text-xs font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer"
             >
               {t("System", "Expand All")}
             </button>

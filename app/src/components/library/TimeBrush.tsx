@@ -492,7 +492,8 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
               if (e.key === "ArrowLeft") (e.preventDefault(), nudge(which, -1));
               if (e.key === "ArrowRight") (e.preventDefault(), nudge(which, 1));
             }}
-            className="absolute top-0 bottom-0 w-3 -ml-1.5 flex items-center justify-center cursor-ew-resize
+            // `hit-area`: a 12px grip drawn, a 32px grip to drag (M15).
+            className="hit-area absolute top-0 bottom-0 w-3 -ml-1.5 flex items-center justify-center cursor-ew-resize
               focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40 rounded-sm"
             style={{ left: `${pct(which === "start" ? winFrom : winTo)}%` }}
           >

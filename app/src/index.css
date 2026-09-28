@@ -558,3 +558,25 @@ button:not(:disabled) {
     opacity: 1;
   }
 }
+
+/* Hit areas (M15). A small control keeps its drawing and gets a larger
+   target: an invisible ::after 10px past each edge, so a 20px icon button is
+   a 40px target. It never changes layout, which is why dense rows can use it
+   without growing. `hit-area-y` extends only up and down, for text links set
+   side by side (Collapse all / Expand all), where sideways extension would
+   overlap the neighbour. A control that is already positioned (absolute,
+   fixed, sticky) keeps its positioning; any other becomes the ::after's
+   containing block. */
+.hit-area:not(.absolute, .fixed, .sticky),
+.hit-area-y:not(.absolute, .fixed, .sticky) {
+  position: relative;
+}
+.hit-area::after,
+.hit-area-y::after {
+  content: "";
+  position: absolute;
+  inset: -10px;
+}
+.hit-area-y::after {
+  inset: -10px 0;
+}

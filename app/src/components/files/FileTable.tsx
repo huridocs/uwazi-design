@@ -438,7 +438,7 @@ function RowKebab({ items }: { items: KebabItem[] }) {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Row actions"
-        className="flex items-center justify-center p-1 rounded hover:bg-parchment transition-colors"
+        className="hit-area flex items-center justify-center p-1 rounded hover:bg-parchment transition-colors"
       >
         <MoreVertical size={14} className="text-ink-tertiary" aria-hidden />
       </button>
