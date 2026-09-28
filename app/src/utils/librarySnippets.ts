@@ -8,78 +8,46 @@ import { cejilLoaded, cejilFullText } from "../data/cejil/load";
 import { cejilRenderedDoc, type BorrowedDoc } from "../data/cejil/profile";
 import { highlightTerms, fold, foldWithMap, parseSearchQuery, termHit, termIn } from "./queryTokens";
 
-/** Synthesizes Uwazi's per-entity search-snippets shape from the data we already
- *  hold — no backend. Mirrors `SnippetsSearchResponse`
- *  (`{ count, metadata: [{ field, texts[] }], fullText: [{ page, text }] }`) so
- *  the Results-tab UI maps 1:1 onto what the real V2 sidepanel renders.
+/** Builds Uwazi's per-entity search-snippets shape (`SnippetsSearchResponse`:
+ *  `{ count, metadata: [{ field, texts[] }], fullText: [{ page, text }] }`) from local data.
  *
- *  Matching is **per-term, case- and diacritic-insensitive** — the SAME terms the
- *  Library filter reads (`parseSearchQuery` / `highlightTerms` in
- *  `utils/queryTokens.ts`) and that `HighlightedText` marks: quoted phrases as
- *  contiguous units, bare words separately, `*`/`?` as whole-word globs, `NOT`
- *  terms never marked. Filter, snippets, and marks therefore share ONE matching
- *  semantics — an entity that passed the filter is guaranteed a snippet here, so
- *  `count > 0` holds whenever the query has a positive term.
- *
- *  Excerpts are returned as PLAIN text (windowed, ellipsed) — NOT HTML with
- *  `<b>`. `HighlightedText` re-derives the marks from the query by string-split,
- *  so nothing renders `dangerouslySetInnerHTML`.
- *
- *  Full-text is IN the search (`entityFullTextBlob` + the filter's
- *  `fullTextSearch` guard), so an entity whose term appears only in its document
- *  body surfaces in both the left pane and here.
- *
- *  PAGE NUMBERS ARE ONLY CLAIMED WHERE THEY'RE REAL. CEJIL carries genuine
- *  per-page text, so its snippets get a page and a jump. The mock corpus shares
- *  one Velásquez rendition across every doc-bearing entity — text that isn't
- *  page-mapped and isn't even the PDF rendered next to it — so its snippets
- *  carry `page: null`: excerpt only, no "p.N", no jump. Beside the actual
- *  document a made-up page number is plainly wrong, and it was only invisible in
- *  the Library because nothing was there to contradict it. Residual limit:
- *  full-text is gated behind `q.length ≥ 3` for CEJIL-corpus perf. */
+ *  Matching uses the same terms as the Library filter and `HighlightedText`
+ *  (`parseSearchQuery` / `highlightTerms` in `utils/queryTokens.ts`), case- and
+ *  diacritic-insensitive, so an entity that passes the filter always gets a snippet.
+ *  Excerpts are plain text; `HighlightedText` re-derives the marks, so nothing
+ *  uses `dangerouslySetInnerHTML`. Only CEJIL snippets carry a page: the mock
+ *  corpus's shared rendition is not page-mapped, so its snippets get `page: null`. */
 
 export interface MetadataSnippet {
   /** Field label ("Title", or an adapter-localized `entity.fields[].label`). */
   field: string;
-  /** Stable field key (NOT the localized label) for deep-focus: matched against
-   *  the drawer's `MetadataField.id`. Natural keys for the pseudo-fields
-   *  (`title`/`country`/`descriptors`); adapter fields send their template
-   *  property name, or a label slug where the adapter has none (see
-   *  `entitySearchFields`). */
+  /** Stable key (not the localized label) for deep-focus, matched against the
+   *  drawer's `MetadataField.id`. See `entitySearchFields` for how it is chosen. */
   fieldKey: string;
   /** One windowed excerpt per matched field (around the first hit). */
   texts: string[];
-  /** Query occurrences in the field, and the AND groups it satisfies — the same
-   *  two numbers a page carries, so a property and a page rank on one scale
-   *  (`compareEvidence`). */
+  /** Query occurrences and AND groups met: the same two numbers a page carries,
+   *  so fields and pages rank on one scale (`compareEvidence`). */
   hits: number;
   groupsMet: number;
 }
 
 export interface FullTextSnippet {
-  /** 1-based page in the OPEN FILE — or `null` when the corpus can't say
-   *  honestly which page this is (see `documentPages`). A null page renders
-   *  without a "p.N" tag and isn't clickable: printing a number that points
-   *  nowhere is worse than printing none. */
+  /** 1-based page in the open file, or `null` when the text is not page-mapped
+   *  (see `documentPages`). A null page renders no "p.N" tag and no jump. */
   page: number | null;
   text: string;
-  /** How many times the query occurs on this page — drives the spine's
-   *  counted-ring node (>1 → a counted ring, 1 → a plain dot). */
+  /** Query occurrences on this page; the spine draws a counted ring when > 1. */
   hits: number;
-  /** How many DISTINCT query terms occur on this page. (The best-first order
-   *  ranks on AND groups met, not on this — see `buildSnippetsFor`.) */
+  /** Distinct query terms on this page. Ranking uses `groupsMet`, not this. */
   termsHit: number;
-  /** How many of the query's AND groups this page satisfies — the first key
-   *  of `compareEvidence`. */
+  /** AND groups this page satisfies; the first key of `compareEvidence`. */
   groupsMet: number;
 }
 
-/** A passage's rank: the query's AND groups it satisfies, then its occurrences.
- *  ONE comparator for every surface that orders evidence — `buildSnippetsFor`
- *  picking an entity's best pages, the Passages layout ordering its rows, the
- *  Spine choosing each row's passage — so a page that misses the AND never
- *  outranks one that meets it anywhere. Returns 0 on a tie, so a stable sort
- *  keeps whatever order the caller arrived in. */
+/** Ranks a passage by AND groups met, then occurrences. Every surface that orders
+ *  evidence (`buildSnippetsFor`, the Passages layout, the Spine) uses this one
+ *  comparator so they agree. Returns 0 on a tie so a stable sort keeps caller order. */
 export function compareEvidence(
   a: { groupsMet: number; hits: number },
   b: { groupsMet: number; hits: number },
@@ -102,42 +70,32 @@ export interface TermHit {
 export type { BorrowedDoc };
 
 export interface EntitySnippets {
-  /** The connected document these passages were quoted from, when the entity
-   *  doesn't own the file the viewer renders (a Causa reading its Sentencia).
-   *  Null for an entity's own document, and for the mock corpus. It describes
-   *  the DOCUMENT, not the match, so it's set whether or not `fullText` is
-   *  empty; surfaces render it beside document passages. */
+  /** The connected document these passages come from when the entity does not
+   *  own the file the viewer renders (a Causa reading its Sentencia). Null for an
+   *  own document and for the mock corpus. Set even when `fullText` is empty. */
   borrowedFrom: BorrowedDoc | null;
-  /** Which text the document passages were cut from: a CEJIL file `_id`, the
-   *  stand-in filename a record still resolves through, or the mock corpus's
-   *  shared rendition. Equal keys mean the same text, so `docKey` + page names a
-   *  passage across every result that reads it. Null with no document. */
+  /** Which text the passages were cut from: a CEJIL file `_id`, a stand-in
+   *  filename, or the mock rendition. `docKey` + page identifies a passage
+   *  across results. Null with no document. */
   docKey: string | null;
-  /** metadata groups + **every** matched page — NOT `fullText.length`. The
-   *  excerpt list is capped (`MAX_FULLTEXT`); this count isn't, so a card can say
-   *  "5 of 23" instead of quietly presenting 5 as the whole story. */
+  /** Metadata groups plus every matched page, not `fullText.length`, so a card
+   *  can say "5 of 23" when excerpts are capped by `MAX_FULLTEXT`. */
   count: number;
   metadata: MetadataSnippet[];
-  /** The excerpts actually built — at most `maxFullText` of them. */
+  /** The excerpts built, at most `maxFullText`. */
   fullText: FullTextSnippet[];
-  /** How many document pages matched in total. `≥ fullText.length`; strictly
-   *  greater means the rest were counted but not excerpted (see
-   *  `buildSnippetsFor`'s `maxFullText`). */
+  /** Matched pages in total; greater than `fullText.length` when excerpts were capped. */
   fullTextTotal: number;
-  /** Query occurrences summed over every matched page — the document's hit
-   *  count, where `fullTextTotal` is its matched-PAGE count. */
+  /** Query occurrences summed over every matched page. */
   fullTextHits: number;
-  /** One entry per query term, in query order: where it matched. */
+  /** One entry per distinct query term, in query order. */
   termsHit: TermHit[];
 }
 
-/** The count badge's wording: matched pages as passages when the document
- *  matched, else matched fields. `count` used to add the two into one unitless
- *  number (2 fields + 81 pages printed as 83).
- *
- *  The TITLE is not a field here: every Results layout drops its snippet (the
- *  heading already prints it marked), so counting it put "1 field" on a
- *  header-only card. A title-only match says so. */
+/** Count badge: matched pages as "passages" when the document matched, else
+ *  matched fields. Fields and pages are not summed, since they are different units.
+ *  The title is excluded because Results layouts drop its snippet; a title-only
+ *  match reads "title match". */
 export function evidenceBadge(s: EntitySnippets): { count: number; unit: string } {
   if (s.fullTextTotal > 0) {
     return { count: s.fullTextTotal, unit: s.fullTextTotal === 1 ? "passage" : "passages" };
@@ -147,24 +105,13 @@ export function evidenceBadge(s: EntitySnippets): { count: number; unit: string 
   return { count: n, unit: n === 1 ? "field" : "fields" };
 }
 
-/** Words of context on each side of a hit — the FLOOR, and what a narrow column
- *  still gets. */
+/** Words of context on each side of a hit: the minimum, used by narrow columns. */
 const CONTEXT_WORDS = 6;
 
-/** Words of context for a column of `px` that can spend `lines` on the excerpt.
- *
- *  Six was a constant, and a constant is why a wide pane bought nothing: eight
- *  results matching the same phrase truncated at the same word and became
- *  indistinguishable from one another. That — not the whitespace — is the cost.
- *  More context per side is what makes two hits on the same sentence in
- *  different documents diverge.
- *
- *  `CH` is the average advance of the row's type (14px system sans, ~7.2px per
- *  character measured against the rendered rows). The match itself is allowed
- *  ~12 characters before the two flanks are sized. The ceiling is not a
- *  performance guard — the window is a slice, and its cost does not scale with
- *  its width — it is an editorial one: past ~40 words a side the "excerpt" is a
- *  paragraph, and a ranked list of paragraphs is not a ranked list. */
+/** Words of context for a column `px` wide with `lines` for the excerpt. Wider
+ *  columns get more context so results quoting the same sentence stay distinguishable.
+ *  `CH` is the measured average character width of the row's 14px sans; the match
+ *  takes ~12 characters. The 40-word cap keeps excerpts short, not for performance. */
 const CH = 7.2;
 export function contextWordsFor(px: number, lines = 1): number {
   if (!px) return CONTEXT_WORDS;
@@ -173,46 +120,31 @@ export function contextWordsFor(px: number, lines = 1): number {
   // ~6 characters a word, space included.
   return Math.max(CONTEXT_WORDS, Math.min(40, Math.round(perSide / 6)));
 }
-/** How many full-text excerpts a card shows before "Show all" — a cap on what's
- *  RENDERED, never on what's counted (`fullTextTotal` always sees every page). */
+/** Full-text excerpts a card shows before "Show all". Caps rendering only;
+ *  `fullTextTotal` still counts every page. */
 export const MAX_FULLTEXT = 5;
 
-/** The searchable metadata fields of an entity, in display order — the same
- *  parts `buildSearchIndex` concatenates (title, country, adapter fields,
- *  descriptors), kept per-field with labels because snippets need the field
- *  granularity the flat index throws away. */
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-/** The searchable + snippet-able metadata fields of an entity, each with a stable
- *  key for deep-focus. Adapter entities (CEJIL) carry their scalars in
- *  `searchFields`/`fields` (label/value plus the template property name as
- *  `key` where known — else slug the label); mock entities
- *  carry theirs in the PROFILE, whose fields have real ids matching the drawer's
- *  `MetadataField.id`, so `country`/`definition`/etc. deep-focus cleanly and
- *  localization-safely.
+/** The searchable metadata fields of an entity, in display order, each with a
+ *  stable key for deep-focus. Adapter entities (CEJIL) use the template property
+ *  name as `key`, else a label slug; mock entities use their profile field ids.
  *
- *  THE one definition of "what text does this entity carry": the filter's
- *  `buildSearchIndex` concatenates exactly this, so an entity can't pass the
- *  filter without a snippet to show for it, or carry a snippet the filter never
- *  saw. */
+ *  This is the single definition of an entity's searchable text: `buildSearchIndex`
+ *  concatenates exactly this, so filter matches and snippets always agree. */
 export function entitySearchFields(
   e: Entity,
   language: Language,
 ): { field: string; fieldKey: string; text: string }[] {
   const out = [{ field: "Title", fieldKey: "title", text: e.title }];
   if (e.country) out.push({ field: "Country", fieldKey: "country", text: e.country });
-  // `searchFields` (the adapter's FULL projection) before `fields` (its card
-  // summary — three fields, first value, 90 characters): a hit in a 4th
-  // property, a 2nd value or a truncated tail has to be reachable, and reading
-  // the summary meant ~93% of the CEJIL corpus carried metadata no query could
-  // touch. Both slug the same labels, so deep-focus lands on the same field.
+  // Prefer `searchFields` (the full projection) over `fields` (the card summary,
+  // truncated to three fields), or later properties and values are unsearchable.
   const adapterFields = e.searchFields ?? e.fields;
   if (adapterFields?.length) {
     for (const f of adapterFields) {
-      // The template property name when the adapter supplies it: it is what
-      // the record's cards carry (`data-field-key`, and `data-field-keys` on a
-      // relationship group), so a Results click lands on the same card a
-      // Library card click does. The label slug is only a fallback.
+      // Template property name first: it matches the record cards'
+      // `data-field-key`/`data-field-keys`, so a Results click lands on the right card.
       if (f.value) out.push({ field: f.label, fieldKey: f.key ?? slug(f.label), text: f.value });
     }
   } else {
@@ -237,17 +169,10 @@ export interface FoldedField {
   folded: string;
 }
 
-/** `entitySearchFields`, with every value pre-folded and MEMOISED per entity.
- *
- *  Folding is `normalize("NFD")` + a regex strip + `toLowerCase()` over every
- *  field of every entity — and it was being redone on every call of
- *  `matchCategories`, which the Library invokes thousands of times per keystroke
- *  for a single query. The text doesn't change between those calls; only the
- *  query does. So fold once per corpus and reuse.
- *
- *  Keyed by the ENTITY OBJECT (a WeakMap), not by id: an edited entity is a new
- *  object, so its cache entry is simply never found again — no staleness to
- *  invalidate, and no retention of entities the corpus has dropped. */
+/** `entitySearchFields` with every value pre-folded, memoised per entity.
+ *  `matchCategories` runs thousands of times per keystroke, so folding must not repeat.
+ *  Keyed by entity object in a WeakMap: an edited entity is a new object, so
+ *  nothing needs invalidating and dropped entities are not retained. */
 const foldedFieldsCache = new WeakMap<Entity, Map<Language, FoldedField[]>>();
 function foldedFields(e: Entity, language: Language): FoldedField[] {
   let byLang = foldedFieldsCache.get(e);
@@ -299,11 +224,10 @@ function windowAround(text: string, idx: number, len: number, ctx: number): stri
   return `${prefix}${body}${suffix}`;
 }
 
-/** Map a folded-text match span back to the ORIGINAL string's indices, so the
+/** Map a folded-text match span back to the original string's indices, so the
  *  window is cut from the accented/cased source even though matching was folded. */
 function originalSpan(
-  /** `ArrayLike`, not `number[]`: the worker ships its maps as `Int32Array`
-   *  (transferable, and half the memory), and they're read exactly the same. */
+  /** `ArrayLike` so an `Int32Array` map works as well as a `number[]`. */
   map: ArrayLike<number>,
   textLength: number,
   from: number,
@@ -329,15 +253,13 @@ export function excerptAround(
   return windowAround(text, start, len, ctx);
 }
 
-/** A window around the EARLIEST occurrence of any of `terms` (already folded) —
- *  so a multi-token query excerpts wherever it first hits. */
+/** A window around the earliest occurrence of any of `terms` (already folded). */
 function excerptAroundTerms(
   text: string,
   terms: string[],
   ctx: number = CONTEXT_WORDS,
-  /** A cached `foldWithMap(text)` when the caller has one (document pages do —
-   *  see `pageFoldWithMap`). Must be the fold OF `text`, or the window is cut at
-   *  indices belonging to another string. */
+  /** A cached `foldWithMap(text)` (see `pageFoldWithMap`). Must be the fold of
+   *  `text` itself, or the window is cut at another string's indices. */
   pre?: { folded: string; map: ArrayLike<number> },
 ): string | null {
   const { folded, map } = pre ?? foldWithMap(text);
@@ -354,26 +276,17 @@ function excerptAroundTerms(
   return windowAround(text, start, len, ctx);
 }
 
-/** The document's text, split for excerpting, plus whether those splits are the
- *  REAL pages of the file on screen.
- *   - CEJIL (`paged: true`): genuine per-page arrays keyed by the primary file's
- *     name, so index+1 IS the page the viewer shows.
- *   - mock (`paged: false`): doc-bearing types share one Velásquez rendition
- *     whose text isn't page-mapped — and isn't even the PDF rendered beside it.
- *     We still chunk it so excerpts come from across the document, but those
- *     chunks are NOT pages, so they carry no page number and no jump.
+/** The document's text split for excerpting, and whether the splits are real pages.
+ *   - CEJIL (`paged: true`): real per-page text, so index + 1 is the viewer's page.
+ *   - mock (`paged: false`): one shared Velásquez rendition, not page-mapped. It is
+ *     chunked so excerpts spread across the document, but chunks get no page or jump.
  */
 interface DocPages {
   pages: string[];
   paged: boolean;
-  /** The connected entity this document was borrowed from — see
-   *  `cejilRenderedDoc`. Null when the entity owns its file.
-   *
-   *  The mock corpus borrows too, in its way (every doc-bearing type shares one
-   *  Velásquez rendition), but there is no connected DOCUMENT ENTITY to name —
-   *  the sharing is a seed-data shortcut, not a relationship the data records —
-   *  so it stays null rather than inventing an attribution. Its snippets already
-   *  carry no page for the same reason. */
+  /** The connected entity this document was borrowed from (see `cejilRenderedDoc`).
+   *  Null when the entity owns its file, and always null for the mock corpus, whose
+   *  shared rendition has no connected document entity to name. */
   borrowedFrom: BorrowedDoc | null;
   /** See `EntitySnippets.docKey`. */
   docKey: string | null;
@@ -381,38 +294,30 @@ interface DocPages {
   fileId: string | null;
 }
 
-/** No document. ONE instance, so the page-keyed caches below don't accumulate a
- *  distinct entry per document-less entity (and `[] !== []` doesn't defeat them). */
+/** No document. A single shared instance, so the page-keyed caches below don't
+ *  add an entry per document-less entity. */
 const NO_PAGES: DocPages = { pages: [], paged: false, borrowedFrom: null, docKey: null, fileId: null };
 
-/** `paginate` is deterministic in (rendition, pageCount), so the mock corpus's
- *  chunking is done once per language rather than per entity per keystroke —
- *  and, more importantly, every mock entity then shares ONE page array, which is
- *  the identity the fold caches below key on. */
+/** Mock pages, chunked once per language. Every mock entity shares one page
+ *  array, which is the identity the fold caches below key on. */
 const mockPagesCache = new Map<Language, DocPages>();
 
-/** `documentPages`, memoised per entity. The lookup itself is not free on CEJIL:
- *  `cejilDocPagesFor` resolves the entity's own PDF or borrows one from a
- *  connected Sentencia, which walks that entity's relationships — and a País hub
- *  has thousands. That walk was being redone on every call, i.e. per entity per
- *  keystroke, to arrive at the same array every time. */
+/** `documentPages`, memoised per entity. On CEJIL, `cejilRenderedDoc` may walk
+ *  the entity's relationships to borrow a Sentencia, and a País hub has thousands. */
 const docPagesCache = new Map<string, DocPages>();
 
 function documentPages(e: Entity, language: Language, source: DataSource): DocPages {
   switch (source) {
     case "cejil": {
-      // Before the corpus lands every entity has no pages; caching that would
-      // outlive the load and permanently blind full-text search (same rule as
-      // `entityFullTextBlob`'s).
+      // Don't cache before the corpus loads: the empty result would outlive the
+      // load and disable full-text search.
       if (!cejilLoaded()) return NO_PAGES;
       const key = `cejil:${e.id}`;
       let hit = docPagesCache.get(key);
       if (!hit) {
-        // The file the VIEWER renders, and whether it came from a connected
-        // document — one resolver, one relationship walk (see `cejilRenderedDoc`).
         const { pages, borrowedFrom, docKey, fileId } = cejilRenderedDoc(e.id);
-        // Entities that borrow the SAME file get the same array instance back, so
-        // the per-document fold cache below is shared across all of them.
+        // Entities that borrow the same file get the same array instance, so the
+        // per-document fold caches are shared across them.
         hit = pages.length ? { pages, paged: true, borrowedFrom, docKey, fileId } : NO_PAGES;
         docPagesCache.set(key, hit);
       }
@@ -447,20 +352,10 @@ function documentPages(e: Entity, language: Language, source: DataSource): DocPa
   }
 }
 
-/** Every page of a document, FOLDED — keyed by the PAGE ARRAY ITSELF, not by the
- *  entity that asked for it.
- *
- *  This is where the search was spending its time. `fold` is an NFD normalise, a
- *  `\p{Diacritic}` regex strip and a lowercase over the whole text, and the
- *  corpus has ~4,400 entities sharing ~80 documents: an entity with no PDF of its
- *  own borrows a connected Sentencia's, so the SAME judgment was folded once per
- *  entity that pointed at it — thousands of times — and then again on the next
- *  keystroke, because nothing kept the result. Keyed by document, each one folds
- *  once for the life of the corpus.
- *
- *  A WeakMap on the array (the same idiom as `foldedFieldsCache`): a reloaded
- *  corpus hands out new arrays, so stale entries are simply never found again and
- *  nothing has to be invalidated. */
+/** Every page of a document, folded, keyed by the page array rather than the entity.
+ *  Thousands of CEJIL entities borrow the same few documents, so per-entity folding
+ *  repeated the same work on every keystroke. A WeakMap on the array means a
+ *  reloaded corpus's new arrays miss the cache and nothing needs invalidating. */
 const foldedPagesCache = new WeakMap<string[], string[]>();
 function foldedPages(pages: string[]): string[] {
   let folded = foldedPagesCache.get(pages);
@@ -471,18 +366,9 @@ function foldedPages(pages: string[]): string[] {
   return folded;
 }
 
-/** `foldWithMap` for a document page, computed lazily per page and kept.
- *
- *  The excerpt cutter matches on folded text but must slice the ORIGINAL, so it
- *  needs the folded→original index map — the most expensive fold we do (a
- *  per-character loop building an array as long as the page). It was being redone
- *  for every excerpt on every keystroke; once `foldedPages` landed it was ALL the
- *  remaining scan time. Same key as the fold above, so a document pays for its
- *  map once.
- *
- *  Sparse on purpose: only pages that actually get excerpted (`maxFullText` of
- *  them per entity) ever build a map, so a long document doesn't pay for pages
- *  nobody reads. */
+/** `foldWithMap` for one document page, built lazily and cached. The folded-to-
+ *  original index map is the most expensive fold, needed only to slice excerpts
+ *  from the original text. Sparse on purpose: only excerpted pages build a map. */
 const pageFoldMapCache = new WeakMap<string[], ({ folded: string; map: ArrayLike<number> } | undefined)[]>();
 function pageFoldWithMap(pages: string[], i: number): { folded: string; map: ArrayLike<number> } {
   let byPage = pageFoldMapCache.get(pages);
@@ -498,51 +384,29 @@ function pageFoldWithMap(pages: string[], i: number): { folded: string; map: Arr
   return hit;
 }
 
-/** One document's folded pages, as computed off the main thread. `folded[i]` is
- *  `fold(pages[i])`.
- *
- *  Folds ONLY — no folded→original index maps. The maps are what the excerpt
- *  cutter needs, and it needs them for the handful of pages it actually cuts
- *  (`maxFullText` per entity, memoised in `pageFoldMapCache`), whereas the folded
- *  text is read for EVERY page on every scan. Priming maps eagerly meant
- *  computing and retaining an `Int32Array` per character of the corpus for pages
- *  nobody reads: measured at 20.4MB of live buffers for the 26 recovered
- *  documents (5.36M chars), on top of a transient `number[]` several times that
- *  inside the worker. `pageFoldWithMap` builds them lazily instead — which is
- *  what it already did for every document the prime didn't reach. */
+/** One document's folded pages, computed off the main thread; `folded[i]` is
+ *  `fold(pages[i])`. Folds only, no index maps: maps are needed just for excerpted
+ *  pages, and priming them for every page held ~20MB of `Int32Array`.
+ *  `pageFoldWithMap` builds them lazily. */
 export interface DocumentFolds {
   folded: string[];
 }
 
-/** Install pre-computed folds for the CEJIL documents, by document key.
- *
- *  This is the ONLY way scan work gets off the main thread here: the caches above
- *  are the whole cost of a search, so a worker that fills them (see
- *  `searchScan.worker.ts`) leaves the query path itself synchronous — every
- *  Results layout, `MatchOrigin` and the document search stay on the one
- *  `buildSnippetsFor` data path, with no async plumbed through six render trees
- *  to buy what is, by then, a cache hit.
- *
- *  Keying on the wire is whatever `cejilFullText()` keys by — a file `_id` for a
- *  recovered document, the legacy filename for one still pointing at a stand-in
- *  (see `docPagesOf`) — and by PAGE-ARRAY IDENTITY in the caches. The worker only
- *  echoes back the keys it was handed, so it never has to know which is which.
- *  Called before the corpus lands, or with a key it doesn't know, this is a no-op
- *  — priming is an optimisation, and a miss just means the main thread folds that
- *  document lazily, as it always did. Idempotent: re-priming overwrites with
- *  identical values. */
+/** Installs folds computed by `searchScan.worker.ts` into the caches above, so the
+ *  query path stays synchronous and every surface keeps using `buildSnippetsFor`.
+ *  Keys are whatever `cejilFullText()` keys by (file `_id` or legacy filename, see
+ *  `docPagesOf`). Before the corpus loads, or for an unknown key, this is a no-op
+ *  and the main thread folds lazily. Idempotent. */
 export function primeDocumentFolds(byDocKey: Record<string, DocumentFolds>): void {
   if (!cejilLoaded()) return;
   const byKey = cejilFullText();
   for (const [key, { folded }] of Object.entries(byDocKey)) {
     const pages = byKey[key];
-    // A document whose page count doesn't match what we folded is a corpus that
-    // changed under the worker — drop it rather than pair page i with fold j.
+    // A page-count mismatch means the corpus changed under the worker; skip it
+    // rather than pair page i with another page's fold.
     if (!pages || pages.length !== folded.length) continue;
     foldedPagesCache.set(pages, folded);
-    // NOT `pageFoldMapCache` — see `DocumentFolds`. The maps are per-excerpt and
-    // built on demand; priming them cost 20MB of live Int32Array for pages no
-    // excerpt ever cuts.
+    // Not `pageFoldMapCache`: index maps stay lazy (see `DocumentFolds`).
     blobByPages.set(pages, folded.join("\n"));
   }
 }
@@ -570,42 +434,23 @@ function paginate(text: string, pageCount: number): string[] {
   return pages;
 }
 
-/** Build the snippet response for one entity against query `q`. Matching is
- *  per-TOKEN (`highlightTerms`: quoted phrases as units, bare words separately,
- *  operators dropped) — the SAME tokens the filter ANDs and `HighlightedText`
- *  marks, so an entity that matched via any token is guaranteed a snippet here
- *  (count > 0). An empty/termless query yields `count: 0` (the caller drops
- *  those).
- *
- *  `perPassage` applies the whole query to EACH passage (a field, a page) rather
- *  than to the entity. The Library gates the ENTITY with the boolean rules
- *  (`matchesSearch`) and then shows where any term hit, since an entity is its
- *  result. The entity drawer's Search tab lists PASSAGES as its results, so there
- *  the same rules apply to each one: `a b` lists passages holding both, `a OR b`
- *  either, `a NOT b` drops any passage that mentions `b`. One parser, one set
- *  of rules, applied to whatever the surface returns.
- *
- *  EVERY page is scanned, always. `maxFullText` caps only how many excerpts get
- *  BUILT — pages past the cap are still counted into `fullTextTotal`, which is
- *  what lets a card offer "5 of 23 · Show all" instead of implying 5 is all
- *  there is. Pass `Infinity` to excerpt them all (what Show-all re-builds with);
- *  the extra work is the windowing pass, so it stays off the default path.
- *
- *  WHICH pages get excerpted is `order`. `"best"` (the default) ranks every
- *  matching page by how many of the query's AND groups it satisfies (a group is
- *  met by any of its OR terms), then occurrences, then page order, and excerpts the top `maxFullText` in that order: an AND query shows
- *  the pages where the terms meet, and an 81-page match stops opening on its
- *  front matter. `"page"` keeps reading order — the entity drawer's Search tab,
- *  which reads through one document. Either way the ranking reuses the counts
- *  the scan already makes; only the excerpted pages are windowed. */
-/** The file a document passage's page number refers to: the one its text was
- *  cut from. Null where passages carry no page (the mock corpus) or there is no
- *  document. A page jump opens this file, not whichever file the reading
- *  language would pick — for a CEJIL entity those can be different documents. */
+/** The file a passage's page number refers to: the one its text was cut from.
+ *  Null for the mock corpus or with no document. A page jump opens this file, which
+ *  for a CEJIL entity can differ from the one the reading language would pick. */
 export function passageFileId(e: Entity, language: Language, source: DataSource): string | null {
   return documentPages(e, language, source).fileId;
 }
 
+/** Build the snippet response for one entity against query `q`, using the same
+ *  terms the filter and `HighlightedText` use. A termless query yields `count: 0`.
+ *
+ *  `perPassage` applies the full boolean query to each field or page (the entity
+ *  drawer's Search tab); otherwise the entity is already gated by `matchesSearch`
+ *  and any term hit counts.
+ *
+ *  Every page is scanned; `maxFullText` caps only the excerpts built, so
+ *  `fullTextTotal` stays exact (pass `Infinity` for Show all). `order: "best"`
+ *  excerpts pages by `compareEvidence` then page order; `"page"` keeps reading order. */
 export function buildSnippetsFor(
   entity: Entity,
   q: string,
@@ -645,8 +490,7 @@ export function buildSnippetsFor(
       docKey: null,
     };
   }
-  // One entry per DISTINCT term: `a b OR a` flattens to [a, b, a], and counting
-  // `a` twice doubled its occurrences in every total built from these.
+  // Distinct terms only: `a b OR a` flattens to [a, b, a], which would double-count `a`.
   const uniqueTerms = [...new Set(terms)];
   const termsHit: TermHit[] = uniqueTerms.map((term) => ({
     term,
@@ -655,9 +499,8 @@ export function buildSnippetsFor(
     documentHits: 0,
   }));
 
-  // `foldedFields`, not `entitySearchFields`: the same per-entity fold the categoriser
-  // uses, so a card that is both ranked and excerpted folds its fields once, not
-  // twice — and not again on the next keystroke.
+  // `foldedFields`, not `entitySearchFields`: reuses the memoised fold shared with
+  // `matchCategoriesWithTerms`.
   for (const { field, fieldKey, text, folded } of foldedFields(entity, language)) {
     if (!passes(folded)) continue;
     let fieldHits = 0;
@@ -683,16 +526,12 @@ export function buildSnippetsFor(
   }
 
   const { pages, paged, borrowedFrom, docKey } = documentPages(entity, language, source);
-  // No early break: the loop used to stop at the cap, which is exactly why the
-  // total was unknowable. Folding every page is the same work the search filter
-  // already does for this entity (`entityFullTextBlob` folds the whole doc), so
-  // the honest count costs the windowing pass, not a second scan.
+  // No early break at the cap: every page is counted so `fullTextTotal` is exact.
+  // The folds are cached and shared with the filter, so this adds no second scan.
   let fullTextHits = 0;
-  // Every matching page, in page order, with the counts the ranking needs. The
-  // per-term counts are the ones `hits` was already summed from.
+  // Every matching page, in page order, with the counts the ranking needs.
   const matched: { i: number; hits: number; termsHit: number; groupsMet: number }[] = [];
   const onPage = new Set<string>();
-  // Folded ONCE per document (see `foldedPages`), not per entity per keystroke.
   const lowerPages = foldedPages(pages);
   for (let i = 0; i < pages.length; i++) {
     const lower = lowerPages[i];
@@ -708,11 +547,9 @@ export function buildSnippetsFor(
     }
     if (hits === 0) continue;
     fullTextHits += hits;
-    // The query's AND groups this page satisfies — what "best" ranks on first.
-    // Distinct terms would score `a OR b c`'s a-and-b page (OR side only, no
-    // `c`) level with an a-and-c page that meets the AND.
+    // Rank on AND groups met, not distinct terms: for `a OR b c`, a page with a
+    // and b would otherwise tie a page with a and c, which meets the AND.
     const groupsMet = groups.reduce((n, g) => (g.some((t) => onPage.has(t)) ? n + 1 : n), 0);
-    // counted whether or not it gets excerpted below
     matched.push({ i, hits, termsHit: onPage.size, groupsMet });
   }
   if (order === "best") {
@@ -756,12 +593,8 @@ export interface MatchCategories {
 
 const NO_MATCH: MatchCategories = { title: false, properties: false, document: false };
 
-/** Where a query matched an entity, given ALREADY-TOKENIZED terms.
- *
- *  The terms are a property of the QUERY, not of the entity, so tokenizing them
- *  per entity was pure repetition — one `highlightTerms` parse per call, times
- *  thousands of calls, for one query. Callers that categorise a corpus hoist the
- *  parse and pass it in; `matchCategories` below keeps the one-shot signature. */
+/** Where a query matched an entity, given already-tokenized terms. Callers that
+ *  loop over the corpus parse the query once and pass the terms in. */
 export function matchCategoriesWithTerms(
   entity: Entity,
   terms: string[],
@@ -776,7 +609,6 @@ export function matchCategoriesWithTerms(
     if (!terms.some((t) => termIn(f.folded, t))) continue;
     if (f.fieldKey === "title") title = true;
     else properties = true;
-    // Both flags set — no later field can change the answer.
     if (title && properties) break;
   }
   const blob = entityFullTextBlob(entity, language, source);
@@ -785,9 +617,8 @@ export function matchCategoriesWithTerms(
   return { title, properties, document };
 }
 
-/** Where a query matched an entity — for the Results tab's match-type chips.
- *  Uses the SAME sources as the filter/snippets so the categories agree with
- *  what surfaces. Prefer `matchCategoriesWithTerms` in a loop over the corpus. */
+/** Where a query matched an entity, for the Results match-type chips. Uses the
+ *  same sources as the filter and snippets. In a corpus loop, use `matchCategoriesWithTerms`. */
 export function matchCategories(
   entity: Entity,
   q: string,
@@ -797,25 +628,12 @@ export function matchCategories(
   return matchCategoriesWithTerms(entity, highlightTerms(q), language, source);
 }
 
-/** Where a query matched an entity that THE ROW ITSELF cannot show.
- *
- *  A list row or a spine line renders a title (marked) and — in the table — a
- *  country column (also marked). Those matches are self-evident: the mark IS the
- *  evidence. A hit in an unrendered property, or in the document body, leaves the
- *  row looking like it matched nothing, which is the whole problem in a result set
- *  of thousands. This is what the row's match marker names.
- *
- *  `visibleFieldKeys` are the field keys the surface already renders WITH marks
- *  (list: `title` + `country` when that column is on; spine: `title` only).
- *  Anything matched outside that set is hidden evidence.
- *
- *  Only the FIRST hidden property is returned, plus how many more there were: the
- *  marker names one place and routes there; the drawer's Results card is where the
- *  full account lives, and duplicating it in a 4rem column would be noise.
- *
- *  Full text is gated on `q.length ≥ 3`, exactly like the library filter's
- *  `fullTextSearch` — a marker for a body hit the filter never made would be an
- *  affordance the data can't back. */
+/** Where a query matched an entity outside what the row already shows, for the
+ *  row's match marker. `visibleFieldKeys` are the fields the row renders with marks
+ *  (list: `title`, plus `country` when shown; spine: `title`). Returns only the first
+ *  hidden property and a count of the rest; the drawer's Results card lists them all.
+ *  Full text is gated on `q.length ≥ 3`, like the filter's `fullTextSearch`, so the
+ *  marker never claims a body hit the filter did not make. */
 export interface HiddenMatchOrigin {
   /** First matched metadata field the row doesn't already display. */
   property: { field: string; fieldKey: string } | null;
@@ -833,15 +651,14 @@ export function hiddenMatchOrigin(
   visibleFieldKeys: readonly string[],
 ): HiddenMatchOrigin {
   const empty: HiddenMatchOrigin = { property: null, moreProperties: 0, document: false };
-  const terms = highlightTerms(q); // already folded — one tokenizer, see §4.3
+  const terms = highlightTerms(q); // already folded
   if (terms.length === 0) return empty;
 
   const visible = new Set(visibleFieldKeys);
   let property: HiddenMatchOrigin["property"] = null;
   let moreProperties = 0;
-  // `foldedFields`, not `entitySearchFields` + `fold`: this runs per RENDERED ROW per
-  // keystroke (every row of the list and the spine carries a match marker), and
-  // it was re-folding each row's fields from scratch every time.
+  // `foldedFields`, not `entitySearchFields` + `fold`: this runs for every
+  // rendered row on every keystroke.
   for (const f of foldedFields(entity, language)) {
     if (visible.has(f.fieldKey)) continue;
     if (!terms.some((t) => termIn(f.folded, t))) continue;
@@ -859,28 +676,15 @@ export function hiddenMatchOrigin(
   return { property, moreProperties, document };
 }
 
-/** Lowercase full-text blob (all of a document's pages joined), for the library
- *  search predicate to scan alongside the metadata index.
- *
- *  Keyed by the DOCUMENT, not the entity. It used to be `source:language:id`,
- *  which meant the corpus's ~80 judgments were folded — and then stored — once
- *  per entity that reads them, and thousands of entities read a borrowed one. The
- *  fold is shared with `buildSnippetsFor` through `foldedPages`, so a document
- *  that has been excerpted is already folded for the filter, and vice versa.
- *
- *  A CEJIL entity queried before its corpus loads has no pages, so it returns ""
- *  WITHOUT caching and picks up the real text once `cejilReady` flips.
- *
- *  Joining the folded pages is the same string as folding the joined pages:
- *  `fold` is per-character apart from `toLowerCase`, whose one context-sensitive
- *  case (Greek final sigma) turns on adjacent letters — and the "\n" separator is
- *  a word boundary either way. Asserted over the real corpus, not assumed. */
+/** Folded full-text blob per document (keyed by page array, not entity), scanned
+ *  by the Library filter and shared with `buildSnippetsFor` via `foldedPages`.
+ *  A CEJIL entity queried before load gets "" uncached, so text appears once
+ *  `cejilReady` flips. Joining folded pages equals folding joined pages: `fold` is
+ *  per-character except Greek final sigma, and "\n" is a word boundary either way. */
 const blobByPages = new WeakMap<string[], string>();
-/** The pieces a ranker needs from the SAME caches the filter and snippets fill:
- *  the folded fields (title included, `fieldKey === "title"`), the document's
- *  page array (its identity is shared by every entity that borrows it — a stable
- *  cache key), its folded blob, and whether the document is borrowed. Nothing
- *  here computes anything the search path hasn't already. */
+/** What a ranker needs, read from the caches the filter and snippets already fill:
+ *  folded fields (title included), the page array (a cache key shared by every
+ *  entity borrowing that document), the folded blob, and whether it is borrowed. */
 export function entitySearchParts(
   entity: Entity,
   language: Language,

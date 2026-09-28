@@ -99,9 +99,8 @@ import { entityScalarFields } from "../utils/entityFields";
 import { MatchOrigin } from "../components/library/MatchOrigin";
 import { listColumnSpecs, buildListColumns } from "../components/library/listColumns";
 import { LIBRARY_SORTS } from "../data/libraryDisplay";
-// Lazy: react-simple-maps + the world atlas are the heaviest static chunk in
-// the bundle and only the map view needs them — split so the default Library
-// (and everything else) never downloads them.
+// Lazy: react-simple-maps and the world atlas are the largest static chunk and
+// only the map view needs them.
 const LibraryMapView = lazy(() =>
   import("../components/library/LibraryMapView").then((m) => ({ default: m.LibraryMapView })),
 );
@@ -131,20 +130,19 @@ import { useTapGuard } from "../hooks/useTapGuard";
 
 const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
 
-/** Sort keys — shared by the toolbar Select and (on mobile, where the Select
- *  steps aside for the view switcher) the Display popover. */
+/** Sort keys, shared by the toolbar Select and the Display popover (where Sort
+ *  goes when the row is too narrow). */
 export const SORTS = LIBRARY_SORTS.map((c) => ({ value: c.id, label: c.label }));
 
-/** How long the search box must sit still before the query counts as a search
- *  worth remembering. Long enough to cover typing and a pause to read, short
- *  enough that a query you meant is logged before you move on. */
+/** How long the query must stay unchanged before it is recorded in recent
+ *  searches: long enough to skip the partial queries typed on the way. */
 const SETTLE_MS = 1200;
 
 /** How many cards to reveal per page in the Library grid/list. */
 const DISPLAY_STEP = 120;
 
-/** Stable identities for the "what does this row already mark?" sets — a fresh
- *  literal per row would re-run every marker's match scan on every render. */
+/** Stable identities for the fields a row already marks: a fresh literal per
+ *  row would re-run every `MatchOrigin` match scan on every render. */
 const TITLE_ONLY = ["title"] as const;
 const TITLE_AND_COUNTRY = ["title", "country"] as const;
 
@@ -155,9 +153,9 @@ export function LibraryView() {
   // masthead's t() labels re-render when the navbar switcher changes it.
   useAtomValue(uiLanguageAtom);
   const [cejilReady, setCejilReady] = useAtom(cejilReadyAtom);
-  // Fetch the full CEJIL corpus on demand the first time the source is selected.
-  // `cejilRetry` bumps to re-run the effect after a failed load (the loader
-  // clears its cached promise on rejection, so this genuinely refetches).
+  // Fetch the CEJIL corpus the first time the source is selected. `cejilRetry`
+  // re-runs the effect after a failed load; the loader clears its cached promise
+  // on rejection, so a retry refetches.
   const [cejilError, setCejilError] = useState(false);
   const [cejilRetry, setCejilRetry] = useState(0);
   useEffect(() => {
@@ -168,11 +166,9 @@ export function LibraryView() {
         () => {
           if (!alive) return;
           setCejilReady(true);
-          // Fold the corpus's documents off the main thread while the user is
-          // still reading the list. Not awaited and nothing gates on it: it only
-          // fills the caches the search path already consults, so the keystroke
-          // that turns full-text search on finds them warm instead of paying for
-          // the whole scan inline. See `utils/warmSearchScan.ts`.
+          // Fold the documents off the main thread so the first full-text
+          // keystroke finds the search caches warm. Not awaited; nothing depends
+          // on it finishing. See `utils/warmSearchScan.ts`.
           warmSearchScan();
         },
         () => alive && setCejilError(true),
@@ -198,36 +194,24 @@ export function LibraryView() {
       };
     }
   }, [dataSource, travesiaReady, setTravesiaReady, cejilRetry]);
-  // "cejilLoading" predates the second lazy source: it means "the selected
-  // corpus is still arriving", whichever one that is.
+  // `cejilLoading` covers every lazy source: the selected corpus is still loading.
   const cejilLoading =
     (dataSource === "cejil" && !cejilReady) || (dataSource === "travesia" && !travesiaReady);
   const lazyName = dataSource === "travesia" ? "Red Travesía" : "CEJIL";
   const references = useAtomValue(referencesAtom);
-  // `query` is the COMMITTED search — everything below (filtering, ranking,
-  // match categories, highlighting) reads it. Only the input binds to the draft.
+  // Filtering, ranking, match categories and highlighting read `query` (the
+  // committed search). Only the input binds to the draft.
   const committedQuery = useAtomValue(libraryQueryAtom);
-  // EVERYTHING heavy below reads `query`, and `query` is the DEFERRED committed
-  // search. Typing updates the draft (the input) urgently and commits in a
-  // transition; this is the other half — while the new query's cascade is being
-  // computed, React keeps rendering this component with the PREVIOUS value, so
-  // the last result set stays on screen and interactive instead of the pane
-  // going blank or the keystroke waiting for 4,398 entities to be re-ranked.
+  // `query` is deferred: while a new query's results compute, React keeps
+  // rendering the previous result set, so the pane stays interactive instead of
+  // blocking the keystroke on a re-rank of the whole corpus.
   const deferredQuery = useDeferredValue(committedQuery);
-  // …except when the committed query is GONE. Deferral is right for typing —
-  // there is a next result set coming and the previous one is the best thing to
-  // show until it lands — and wrong for dismissal, where there is no incoming
-  // set to wait for and the previous one is precisely what the user just asked
-  // to be rid of. Deferred, clearing tore in half: `clearLibrarySearchAtom`
-  // empties the box and `libraryActiveSearchAtom` urgently (so the chip vanishes
-  // instantly) while everything reading this value — the "N results for"
-  // sentence, the filtered cards, the highlights — stayed on the old query for a
-  // pass or more, leaving the masthead reading "807 results for" with nothing
-  // after it. Clearing is one state change and has to land in one pass, so it
-  // skips the deferral: an empty committed query is empty HERE immediately.
+  // Clearing skips the deferral. `clearLibrarySearchAtom` empties the chip
+  // urgently; a deferred value would keep the cards and the "N results for"
+  // readout on the old query for a render, with no query after "for".
   const query = committedQuery ? deferredQuery : "";
-  // The results on screen are for `query` while the user has already asked for
-  // `committedQuery` — say so, rather than pretending they're current.
+  // The results on screen are for `query`, not yet `committedQuery`: the
+  // readout dims and sets `aria-busy` while they differ.
   const searchPending = query !== committedQuery;
   const [searchDraft, setSearchDraft] = useAtom(librarySearchDraftAtom);
   const clearSearch = useSetAtom(clearLibrarySearchAtom);
@@ -235,9 +219,8 @@ export function LibraryView() {
   const submitSearch = useSetAtom(submitLibrarySearchAtom);
   const searchBoxRef = useRef<HTMLDivElement>(null);
   const [searchFocused, setSearchFocused] = useState(false);
-  // Filters / Results drawer tabs. Results auto-activates while the search box
-  // carries a query and falls back to Filters when it's cleared; between those
-  // transitions the tab can still be switched by hand.
+  // Results activates when a query starts and Filters when it is cleared; in
+  // between the user can switch tabs by hand.
   const [drawerTab, setDrawerTab] = useState<"filters" | "results">("filters");
   const [typeFilters, setTypeFilters] = useAtom(libraryTypeFiltersAtom);
   const [hasDocOnly, setHasDocOnly] = useAtom(libraryHasDocAtom);
@@ -259,18 +242,13 @@ export function LibraryView() {
   const thumbFrame = useAtomValue(libraryThumbFrameAtom);
   const thumbSize = useAtomValue(libraryThumbSizeAtom);
   const cardSide = useAtomValue(libraryCardSideAtom);
-  /* The column count follows the PANE, not the viewport. Every hang is
-     `auto-fill` with a minimum card width per mode and size: a pane narrowed by
-     the drawer drops a column instead of shrinking cards below readable, and a
-     wide pane (a big screen, a narrow drawer) gains columns. The viewport
-     breakpoints this replaced gave a 975px pane five portrait columns at 1440
-     with the drawer open — 190px cards, one-word titles, ten-line labels.
-
-     Minimums: a landscape card needs room for a two-line title and a label/value
-     pair; a portrait card is narrower by design (the grid is what keeps the 3:4
-     slot from becoming a poster); a side card carries the slot beside the text,
-     so its text side sets the floor. Size steps the minimum, which steps the
-     count. Static strings: Tailwind reads class names, not expressions. */
+  /* The column count follows the pane, not the viewport: `auto-fill` with a
+     minimum card width per frame and size, so a pane narrowed by the drawer
+     drops a column instead of shrinking cards below readable.
+     Landscape needs a two-line title and a label/value pair; portrait is
+     narrower so the 3:4 slot stays small; a side card's text side sets its
+     floor. Size steps the minimum, which steps the count.
+     Static strings: Tailwind reads class names, not expressions. */
   const cardGridCols = cardSide
     ? {
         s: "grid-cols-[repeat(auto-fill,minmax(min(24rem,100%),1fr))]",
@@ -288,7 +266,7 @@ export function LibraryView() {
           m: "grid-cols-[repeat(auto-fill,minmax(min(15.5rem,100%),1fr))]",
           l: "grid-cols-[repeat(auto-fill,minmax(min(19rem,100%),1fr))]",
         }[thumbSize];
-  /* ONE lightbox for the whole grid — see `EntityCard.onOpenImage`. */
+  /* One lightbox for the whole grid; see `EntityCard.onOpenImage`. */
   const [lightbox, setLightbox] = useState<EntityImage | null>(null);
 
   const timeHub = useAtomValue(libraryTimeHubAtom);
@@ -355,7 +333,7 @@ export function LibraryView() {
     guard(() => setSelectedId(startDraft({ typeId, corpus: dataSource })));
   };
   /** Upload PDF: the picked PDFs open `UploadDocumentsModal` (a title each,
-   *  one template), and Upload runs the batch as ONE Beacon task. A single
+   *  one template), and Upload runs the batch as one Beacon task. A single
    *  document opens in the drawer when it lands; a batch doesn't pick one. */
   const [pendingUploads, setPendingUploads] = useState<File[] | null>(null);
   function handleUpload(files: FileList | null) {
@@ -377,17 +355,15 @@ export function LibraryView() {
       // Only while the library still shows that corpus: an upload that lands
       // after the user moved elsewhere shouldn't pull them back.
       if (ids.length !== 1 || store.get(dataSourceAtom) !== corpus) return;
-      // It lands seconds after Upload was pressed, when the reader may be in a
-      // form — a new entity's draft, an edit. Switching the drawer then would
-      // unmount it and lose what they typed, with nothing done by them at that
-      // moment. So it never takes the drawer from an open form; the
-      // notification says where the document is instead.
+      // Never take the drawer from an open form: the upload lands seconds later,
+      // and switching then would unmount the form and lose the user's input.
+      // The notification says where the document is instead.
       if (store.get(editSessionOpenAtom)) return "Not opened while a form is open; it is in the library.";
       guard(() => setSelectedId(ids[0]));
     });
   }
-  /** Export CSV: the CURRENT result set — facets, query and match types
-   *  applied — which is `filtered`, the list every view mode draws. */
+  /** Export CSV: the current result set with facets, query and match types
+   *  applied (`filtered`, the list every view mode draws). */
   function handleExport() {
     if (filtered.length === 0) {
       notify("Nothing to export — no entity matches the current filters", "info");
@@ -404,28 +380,14 @@ export function LibraryView() {
   const isMobile = breakpoint === "mobile";
 
   /* ── Masthead fold ──────────────────────────────────────────────────────
-     The toolbar row folds on ITS OWN width, not the viewport's: the Library
-     pane is whatever a drawer leaves of the window, so a tablet-width window
-     with the drawer open gave the row ~380px and viewport breakpoints still
-     laid it out for 768 — the search box collapsed to a sliver, the readout
-     painted over it and Sort and View ran past the drawer's edge.
-
-     The thresholds are the row's parts at their natural widths (measured:
-     Sort 113px, View 89, Display 32, Language 56, the readout slot 240, 8px
-     gaps) with the search box held at 16rem, plus the mobile drawer trigger
-     where there is one. The floor was 11rem, and at 11rem the search box was
-     the control that yielded first: at a 1024px window with the default drawer
-     it sat at 210px, its query cut mid-word, while Sort kept all 113px beside
-     it. The box is the row's primary control and Sort and Language both have
-     a second home in the Display menu, so they give before it does. Past
-     each threshold, in order:
-       - Sort steps into the Display menu (`librarySortInMenuAtom`), as it
-         already does on a phone;
-       - the readout leaves the row for its own line under it (always mounted
-         at that width, so typing a query never adds the line);
-       - Language steps aside, as it already does on a phone.
-     A tier changes when the WIDTH changes — a drawer drag, a window resize —
-     never on typing or on the number the readout prints. */
+     The toolbar row folds on its own width, not the viewport's: the pane is
+     whatever the drawer leaves of the window. Thresholds are the parts'
+     measured widths with the search box held at 16rem; Sort and Language have
+     a second place in the Display menu, so they give way before the box does.
+     In order: Sort moves to the Display menu (`librarySortInMenuAtom`), the
+     readout moves to its own line under the row, Language moves to the menu.
+     A tier changes only with width (drawer drag, window resize), never with
+     typing or the readout's number. */
   const [mastheadW, setMastheadW] = useState(0);
   const mastheadRO = useRef<ResizeObserver | null>(null);
   const mastheadRef = useCallback((el: HTMLDivElement | null) => {
@@ -454,11 +416,9 @@ export function LibraryView() {
     SEARCH_FLOOR + 5 + [READOUT, SORT, VIEW, DISPLAY, LANG]
       .filter((w) => !gone.includes(w))
       .reduce((sum, w) => sum + GAP + w, 0);
-  // ORDER: Sort, then the readout, then Language. Sort goes first because it is
-  // the one part with a second home already (the Display menu) and it buys the
-  // readout 121px: the row stays ONE line, 49px, down to a 705px pane instead
-  // of wrapping at 826. A tier never comes back as the row narrows, so Sort does
-  // not reappear once the readout has taken its own line.
+  // Sort folds first: it has a place in the Display menu, and dropping it keeps
+  // the readout on the row down to a 705px pane instead of 826. A folded part
+  // stays folded as the row narrows further.
   const sortInline = fits(rowWithout()); // 826
   const readoutInline = fits(rowWithout(SORT)); // 705
   const langInline = fits(rowWithout(READOUT, SORT)); // 457
@@ -490,9 +450,8 @@ export function LibraryView() {
     return m;
   }, [references, dataSource, cejilReady, travesiaReady]);
 
-  // Precomputed lowercase searchable text per entity (title + country + the
-  // displayed metadata field values + descriptors), so search matches real
-  // metadata — not just titles — without scanning the corpus on each keystroke.
+  // Precomputed lowercase searchable text per entity (title, country, displayed
+  // metadata values, descriptors), so a keystroke doesn't rebuild it per entity.
   const searchIndex = useMemo(() => buildSearchIndex(entities, language), [entities, language]);
 
   const activeTypeIds = Object.entries(typeFilters)
@@ -517,30 +476,20 @@ export function LibraryView() {
   const statusActive = wantPublished || wantRestricted;
   const q = query.trim().toLowerCase();
   const hasQuery = q.length > 0;
-  // The drawer's Results tab exists because cards / list / map / timeline can't
-  // show a snippet. When the MAIN pane is the Results view, the tab is a 24rem
-  // copy of what's already on screen at full width — so it isn't rendered at all,
-  // and the drawer is simply the filter panel. Suppressing only its
-  // auto-activation left the duplicate one click away and made the effect below
-  // read like a special case; this makes it a consequence.
-  //
-  // Nothing shifts when it goes: Filters sits to its INLINE-START, so the strip
-  // shrinks from the end, and the change is bound to an explicit view switch —
-  // never to typing.
-  // Record the search once it SETTLES. Typing "velásquez" commits nine times on
-  // its way there; logging each would leave a history of "v", "ve", "vel" and
-  // bury the entry anyone wanted. The debounce is the commit boundary — the
-  // query has to stop changing before it counts as a search you ran. Enter and
-  // blur record immediately, because both are the user saying "that's the one".
+  // Record the search once it settles, so partial queries typed on the way
+  // don't fill the history. Enter and blur record immediately.
   useEffect(() => {
-    // `committedQuery`, not the deferred one: the log records the search the user
-    // RAN, and shouldn't wait on the render that displays it.
+    // `committedQuery`, not the deferred one: record what the user ran without
+    // waiting for the render that displays it.
     const t = committedQuery.trim();
     if (!t) return;
     const id = window.setTimeout(() => recordSearch(t), SETTLE_MS);
     return () => window.clearTimeout(id);
   }, [committedQuery, recordSearch]);
 
+  // The drawer's Results tab is not rendered while the main pane is the Results
+  // view: it would be a narrow copy of the same list. Filters sits at the
+  // strip's start, so removing Results shifts nothing.
   const showResultsTab = viewMode !== "results";
   // Phones: the sheet a search opened (see `libraryResultsSheetOpenAtom`),
   // folded into the split view's own open-section state.
@@ -552,7 +501,8 @@ export function LibraryView() {
   }, [hasQuery, showResultsTab]);
   // Query tokens for the search predicate (shared with snippets + marks). Derived
   // from the raw `query` so uppercase AND/OR/NOT are recognised before lowering.
-  // Full-text body scanning is gated on `q.length ≥ 3` for CEJIL-corpus perf.
+  // Full-text body scanning needs `q.length ≥ 3`, to keep one- and two-character
+  // queries from scanning every CEJIL document body.
   const searchTerms = useMemo(
     () => highlightTerms(query), // already folded
     [query],
@@ -585,24 +535,12 @@ export function LibraryView() {
   );
   const chainKey = JSON.stringify(chainFilters);
 
-  // MEMOISED, and that is the whole point of it.
-  //
-  // Four memos below take this as a dependency, and between them they are every
-  // full-corpus pass the Library makes — `matchTypeBase`, `searchMatchCount` and
-  // the two brush passes, each a filter over 4,398 entities. As a plain object
-  // literal this was a NEW IDENTITY ON EVERY RENDER, so all four recomputed every
-  // time anything re-rendered this component, including the urgent render each
-  // keystroke produces while `useDeferredValue` is still handing out the previous
-  // query. The deferral was doing its job and the memos were throwing the result
-  // away: measured at ~2 full-corpus passes per keystroke where the query hadn't
-  // even changed yet.
-  //
-  // Keyed on CONTENT, not identity — `activeTypeIds`/`activeCountries`/
-  // `activeDescriptors` are rebuilt per render from the facet atoms and
-  // `activeInherited` from `inheritedFilters`, so their joined keys (and
-  // `inheritedKey`) stand in for them, the same way the brush memo below already
-  // keys itself. `activeChains`, `searchIndex` and `searchTerms` are memos and
-  // can be depended on directly.
+  // Must stay memoised: `matchTypeBase`, `searchMatchCount` and the two brush
+  // passes depend on it, and each is a full-corpus pass. A new identity per
+  // render would rerun all four on the urgent render of every keystroke.
+  // Keyed on content: the facet arrays are rebuilt each render, so their joined
+  // keys (and `inheritedKey`) stand in for them. `activeChains`, `searchIndex`
+  // and `searchTerms` are memos and are depended on directly.
   const filterState: LibraryFilterState = useMemo(
     () => ({
       source: dataSource,
@@ -651,14 +589,10 @@ export function LibraryView() {
     ],
   );
 
-  // WHERE each entity matched, computed at most ONCE per entity per query.
-  //
-  // Three consumers need the same answer — the relevance ranking below, the
-  // match-type chip gate, and the chip counts — and each used to call
-  // `matchCategories` itself, so a 4,000-match query categorised the corpus
-  // several times over per keystroke. Lazy rather than eager: the all-chips-on
-  // case never asks, and the ranking only asks for entities whose title didn't
-  // already settle it.
+  // Where each entity matched, computed at most once per entity per query and
+  // shared by the relevance ranking, the match-type chip gate and the chip
+  // counts. Lazy: with all chips on nothing asks, and the ranking asks only when
+  // the title doesn't settle it.
   const categoriesOf = useMemo(() => {
     const cache = new Map<string, MatchCategories>();
     return (e: Entity): MatchCategories => {
@@ -673,10 +607,9 @@ export function LibraryView() {
     // "document: false" answers from before that must not survive it.
   }, [searchTerms, language, dataSource, cejilReady]);
 
-  // Relevance per entity, at most ONCE per entity per query — the same lazy cache
-  // shape as `categoriesOf`, so toggling a match-type chip or a facet never
-  // re-scores an entity it has already seen. Only asked for when the sort is
-  // relevance.
+  // Relevance per entity, at most once per query (same lazy cache as
+  // `categoriesOf`), so toggling a chip or facet never re-scores an entity.
+  // Asked for only when the sort is relevance.
   const maxConnections = useMemo(() => {
     let m = 0;
     for (const n of countByEntity.values()) if (n > m) m = n;
@@ -696,10 +629,9 @@ export function LibraryView() {
     // `cejilReady`: document bodies go empty→real when the corpus lands.
   }, [searchTerms, language, dataSource, cejilReady, countByEntity, maxConnections]);
 
-  // ONE full-corpus pass. `matchTypeBase` is every entity passing the facets and
-  // the search but NOT the chips; the chip-narrowed list is a subset of it, so
-  // running `matchesAll` again over all 4,398 entities to get it was scanning the
-  // corpus twice for two nested answers. Filter the subset from the superset.
+  // One full-corpus pass: `matchTypeBase` passes facets and search but not the
+  // chips, and the chip-narrowed list is filtered from it rather than from the
+  // corpus.
   const matchTypeBase = useMemo(
     () => (q ? entities.filter((e) => matchesAll(e, filterState, "matchType")) : []),
     [entities, filterState, q],
@@ -732,7 +664,7 @@ export function LibraryView() {
       }
       return sortDir === "asc" ? r : -r;
     };
-    // With an active query the default order is RELEVANCE (`utils/relevance.ts`):
+    // With an active query the default order is relevance (`utils/relevance.ts`):
     // exact title first, then coverage, field weight, frequency and whole-word
     // hits, with connections and recency as weak tie-breakers. The reader can pick
     // another sort for the query (`librarySortAtom`), and then that sort applies
@@ -750,15 +682,15 @@ export function LibraryView() {
     // filtered set must recompute to surface document-body-only matches.
   }, [entities, matchTypeBase, categoriesOf, scoreOf, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, fromMs, toMs, inheritedKey, chainKey, activeChains, language, q, sort, sortDir, countByEntity, searchIndex, cejilReady, matchTypes]);
 
-  // How many entities the query matches with the FACETS widened — so the Results
+  // How many entities the query matches with the facets widened, so the Results
   // tab can offer to reveal the ones the current facets are hiding.
   const searchMatchCount = useMemo(
     () => (q ? entities.reduce((n, e) => n + (matchesSearch(e, filterState) ? 1 : 0), 0) : 0),
     [entities, filterState, q],
   );
 
-  // Chip counts over the pre-chip set, reading the SAME categories the ranking
-  // and the gate used — no third scan.
+  // Chip counts over the pre-chip set, reading the same cached categories as the
+  // ranking and the gate.
   const matchTypeCounts = useMemo(() => {
     const c = { title: 0, properties: 0, document: 0 };
     for (const e of matchTypeBase) {
@@ -770,21 +702,18 @@ export function LibraryView() {
     return c;
   }, [matchTypeBase, categoriesOf]);
 
-  // The chips are query-relative — a new query starts from "all kinds" so they
-  // never linger as an invisible filter.
+  // The chips are per query: a new query resets them to all kinds so they never
+  // persist as a hidden filter.
   useEffect(() => {
     setMatchTypes(ALL_MATCH_TYPES);
   }, [q, setMatchTypes]);
 
-  // The time strip rides under EVERY layout, not just the map and the timeline it
-  // started under — it filters by date and charts the whole result set, so cards
-  // and the table want it just as much. A display option (Display → Time strip),
-  // on by default.
+  // The time strip shows under every layout (Display → Time strip, on by
+  // default): it filters by date and charts the whole result set.
   const showBrush = timeHub && !cejilLoading;
 
-  // The brush's histogram is the results with EVERY facet applied except the
-  // date one — so the bars keep showing what widening the window would give back
-  // (dimmed outside the range), instead of collapsing to the current selection.
+  // The brush histogram applies every facet except the date one, so the bars
+  // outside the range (dimmed) show what widening the window would add.
   const timeChart = useMemo(
     () => (showBrush ? entities.filter((e) => matchesAll(e, filterState, "date")) : []),
     [entities, dataSource, activeTypeIds.join(","), hasDocOnly, wantPublished, wantRestricted, statusActive, activeCountries.join(","), countryMode, activeDescriptors.join(","), descriptorMode, inheritedKey, chainKey, activeChains, language, q, searchIndex, showBrush],
@@ -805,12 +734,9 @@ export function LibraryView() {
   useEffect(() => setVisibleCount(DISPLAY_STEP), [filtered]);
   const shown = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
 
-  /* ONE answer for the whole grid: does any entity on screen resolve a property?
-     Handed to every card so they all claim the same subgrid row tracks — a
-     per-card test would let one template's cards claim three tracks and another's
-     four, and a row that does not share tracks stops lining up. What it fixes is
-     the template that resolves nothing (CEJIL's Instrumento): its card mounted an
-     empty metadata row and drew a gap between title and footer. */
+  /* One answer for the whole grid: does any entity on screen resolve a property?
+     Every card gets it so all claim the same subgrid row tracks; a per-card test
+     would give cards different track counts and the rows would stop lining up. */
   const metadataTrack = useMemo(
     () => shown.some((e) => entityScalarFields(e, language).length > 0),
     [shown, language],
@@ -819,28 +745,22 @@ export function LibraryView() {
 
 
 
-  // Tap-to-preview on desktop/tablet; tap-to-open on mobile (no side drawer).
-  // Previewing focuses the entity so the drawer's tabbed bodies (Relationships /
-  // Files / Document read the focused + scoped atoms) reflect it immediately.
-  // Stable so memoized EntityCards don't re-render on every selection/hover.
   /* ── Multi-selection ─────────────────────────────────────────────────────
-     A plain click previews, as it always has. Cmd/Ctrl+click toggles the
-     entity in the selection and Shift+click spans from the anchor over the
-     order the visible view draws (`currentSelectionOrder`) — without a
-     preview. This component never reads the selection Set: the cards read
-     their own flag, and the footer and drawer subscribe on their own. */
+     A plain click previews. Cmd/Ctrl+click toggles the entity in the selection;
+     Shift+click spans from the anchor over the order the visible view draws
+     (`currentSelectionOrder`), without a preview. This component never reads
+     the selection Set, so a selection change doesn't re-render it: cards,
+     footer and drawer subscribe on their own. */
   const toggleSelection = useSetAtom(toggleSelectionAtom);
   const setAnchor = useSetAtom(setSelectionAnchorAtom);
   const rangeSelection = useSetAtom(rangeSelectionAtom);
   const clearSelection = useSetAtom(clearSelectionAtom);
   const collapseSelection = useSetAtom(collapseSelectionAtom);
   const selectionActive = useAtomValue(librarySelectionActiveAtom);
-  /* A plain click on the EMPTY GROUND of the results — the lane, the gap
-     between cards, the margin — clears the selection, as Escape does, and
-     through the same guard (a dirty bulk form asks first). Not a click on an
-     item or any control, not one with a modifier, not the end of a drag (a
-     text selection, or a press that moved), and not on the map, whose ground
-     is the map. */
+  /* A plain click on the empty ground of the results (lane, gaps, margin)
+     clears the selection through the same guard as Escape. Ignored: clicks on
+     items or controls, modifier clicks, the end of a drag or text selection,
+     and the map, whose ground is the map. */
   const groundDown = useRef<{ x: number; y: number } | null>(null);
   const clearOnGround = useCallback(
     (e: React.MouseEvent) => {
@@ -868,7 +788,7 @@ export function LibraryView() {
   // The grid's and the table's order — Timeline and Results register their own,
   // so this one stands down while they draw (see `useSelectionOrder`).
   useSelectionOrder(viewMode === "timeline" || viewMode === "results" ? null : shownIds);
-  // What the visible view DRAWS, for "select all loaded". The grid, the table
+  // What the visible view draws, for "select all loaded". The grid, the table
   // and the map are drawn here; Timeline and Results publish their own.
   const setDrawnIds = useSetAtom(libraryDrawnIdsAtom);
   const drawnIds = useAtomValue(libraryDrawnIdsAtom);
@@ -900,11 +820,11 @@ export function LibraryView() {
     return () => window.removeEventListener("keydown", onKey);
   }, [selectionActive, clearSelection]);
 
-  /* `collapse`: a plain click in the VIEW with 2 or more selected ends the
-     multi-selection and makes that item the one previewed, as a file manager
-     does. The selection and cluster drawers pass false — their rows ARE the
-     selection (or a map cluster), and clicking one previews it without
-     dropping the rest. */
+  /* `collapse`: a plain click in the view with 2 or more selected ends the
+     multi-selection and previews that item. The selection and cluster drawers
+     pass false: their rows are the selection, so a click previews without
+     dropping the rest. Stable, so memoised `EntityCard`s don't re-render on
+     every selection or hover. */
   const selectFrom = useCallback(
     (
       collapse: boolean,
@@ -1008,22 +928,19 @@ export function LibraryView() {
     setCejilRetry((n) => n + 1);
   }, []);
 
-  // What the TABLE row already marks in place — everything else the query hit is
-  // off-row evidence (see `MatchOrigin`). Country counts only when the column is
-  // ON *and this row has a value in it*: a profile field labelled "Country" can
-  // match on an entity whose `country` is empty, and that cell renders an
-  // em-dash — suppressing the marker there hides the only evidence there was.
+  // What the table row already marks in place; any other hit is off-row evidence
+  // (see `MatchOrigin`). Country counts only when the column is on and the row
+  // has a value: an empty cell shows an em-dash, and the marker would be the
+  // only evidence of a profile "Country" field match.
   const countryColumn = listColumnOn("country");
   const rowMarkedFields = useCallback(
     (e: Entity) => (countryColumn && e.country ? TITLE_AND_COUNTRY : TITLE_ONLY),
     [countryColumn],
   );
 
-  // The table's tracks come from `listColumns` — one entry per column, read here
-  // AND by the Display menu's toggles, so a column can never be drawable but
-  // unlistable (or listed but undrawable, which is what three separate edits per
-  // column used to risk). The Match cell is handed in rather than imported by
-  // that module: see `ListCellContext.renderMatch`.
+  // The table's tracks come from `listColumns`, which the Display menu's toggles
+  // also read, so drawable and listed columns can't drift apart. The Match cell
+  // is passed in rather than imported: see `ListCellContext.renderMatch`.
   const listSpecs = useMemo(
     () => listColumnSpecs({ hasQuery, fieldLabels }),
     [hasQuery, fieldLabels],
@@ -1094,9 +1011,8 @@ export function LibraryView() {
             onChange={(e) => setSearchDraft(e.target.value)}
             onFocus={() => setSearchFocused(true)}
             // Enter and Escape close the panel without moving focus, so a later
-            // click on an ALREADY-FOCUSED box fires no focus event and the panel
-            // would never come back. Clicking the box is its own request to see
-            // the list again.
+            // click on the already-focused box fires no focus event. The click
+            // reopens the list.
             onClick={() => setSearchFocused(true)}
             onBlur={() => {
               setSearchFocused(false);
@@ -1116,16 +1032,15 @@ export function LibraryView() {
             }}
             placeholder="Search title & metadata"
             aria-label="Search entities"
-            // `min-w-0`, not a pixel floor: the BOX is what yields, and an
-            // input holding its own minimum spilled out of a narrowed box and
-            // under whatever sat beside it.
+            // `min-w-0`, not a pixel floor: the box yields, and an input with its
+            // own minimum overflows a narrowed box under its neighbours.
             className="flex-1 min-w-0 w-0 bg-transparent text-xs font-medium placeholder:text-ink-tertiary focus:outline-none"
           />
           {searchDraft && (
             <button
-              // Empties the BOX, not the search: the committed query survives so
-              // the results stay usable while you retype. Dropping the search
-              // itself is the chip in Active filters, or Clear all.
+              // Empties the box, not the search: the committed query stays so the
+              // results remain usable while retyping. `ActiveSearchChip` or Clear
+              // all ends the search.
               onClick={() => setSearchDraft("")}
               aria-label="Clear search text"
               className="hit-area shrink-0 p-0.5 rounded-full hover:bg-parchment text-ink-tertiary hover:text-ink cursor-pointer transition-colors"
@@ -1134,9 +1049,9 @@ export function LibraryView() {
             </button>
           )}
           <SearchTipsPopover compact={!readoutInline} />
-          {/* Follows FOCUS; the tips popover follows a click on its chip — which
-              blurs the input, so the two can never be open at once without any
-              shared state to arbitrate. */}
+          {/* Follows focus; the tips popover follows a click on its chip, which
+              blurs the input, so the two are never open at once without shared
+              state. */}
           <RecentSearches
             anchorRef={searchBoxRef}
             open={searchFocused}
@@ -1149,59 +1064,22 @@ export function LibraryView() {
             onClose={() => setSearchFocused(false)}
           />
         </div>
-        {/* THE number for this surface — every other row below dropped its
-            count so this masthead slot is the one place it lives. Contents
-            toggle between the total ("4,398 entities", "120 of 4,398 entities"
-            when facets narrow) and the search form ("312 results for [“q” ×]").
-            The chip is `ActiveSearchChip` — the ONE dismiss for a committed
-            search — so the readout that reports the results is also where the
-            search ends.
-
-            FIXED SLOT, aligned to the SEARCH BOX it reports on. It used to be
-            right-aligned, which parked it 8px from "Date added" with the whole
-            240px reserve between it and the query — attached, by proximity, to
-            the one thing it says nothing about. Now the reserve sits on the
-            control side: the readout reads as the search box's caption and the
-            gap is what separates it from the controls.
-
-            The slot stays FIXED at 15rem, because the number swings from "82"
-            on artworks to "4,398" on CEJIL and every keystroke and facet
-            rewrites it. Growth runs rightward into the reserve, so Sort · View ·
-            Display · Language never move. The sentence is `shrink-0`; the CHIP
-            is what yields (`min-w-0`, its label truncates), so a long query can
-            never push the controls.
-
-            ALWAYS MOUNTED. While a collection is still loading there is no
-            honest number to print, so the slot holds and its contents are
-            empty — it never appears or disappears under the controls beside
-            it. Where the row is too narrow for the slot it moves to its own
-            line under the row — a WIDTH rule, never a state one (see "Masthead
-            fold").
-
-            `aria-busy` + a dim carry staleness instead of the footer's
-            "updating…" word: the counts describe the set ON SCREEN, which
-            during a transition is the previous query's, and a second string
-            appearing beside this one would need a reserve of its own.
-
-            ONE TREATMENT, whole sentence, both states: `text-meta
-            tabular-nums text-ink-tertiary` off this element and nothing
-            overriding it. The figure used to be lifted to `font-medium
-            text-ink-secondary` against a tertiary unit, on the theory that it
-            was the loudest thing inside the readout without outranking the row.
-            At one size, weight and colour ARE the size — a heavier, darker
-            numeral among lighter words reads as larger type, so the readout
-            printed a number that looked like a different step of the scale from
-            the words attached to it. It is one sentence and now looks like one;
-            `tabular-nums` stays, because what the figure actually needs is to
-            not reflow while it changes, and that was never the weight's job. */}
+        {/* The only count on this surface: "N entities" / "N of M entities", or
+            "N results for [chip]" where the chip is `ActiveSearchChip`, the one
+            dismiss for a committed search.
+            Fixed 15rem slot, left-aligned under the search box, so a changing
+            number never moves the controls; the sentence is `shrink-0` and the
+            chip yields (`min-w-0`). Always mounted, empty while a corpus loads.
+            `aria-busy` and a dim mark results that are still the previous query's.
+            One style for the whole sentence; `tabular-nums` keeps the figure from
+            reflowing as it changes. */}
         {readoutInline && (
           <span
             data-part="readout"
             aria-busy={searchPending}
-            // `pe-3` is INSIDE the fixed slot: it guarantees a gap before Sort in
-            // the long state too, where the chip otherwise truncates flush to the
-            // slot's edge and reads as a second control pill beside "Date added".
-            // The slot's outer width is untouched, so the controls still never move.
+            // `pe-3` sits inside the fixed slot: a truncated chip keeps a gap
+            // before Sort instead of reading as another control. The slot's outer
+            // width doesn't change.
             className={`flex items-center justify-start gap-1.5 shrink-0 w-[15rem] pe-3
               text-meta tabular-nums text-ink-tertiary transition-opacity ${
                 searchPending ? "opacity-60" : "opacity-100"
@@ -1210,11 +1088,9 @@ export function LibraryView() {
             {readoutContent}
           </span>
         )}
-        {/* Sort steps aside on a phone — it moves into the Display popover, where
-            it costs no width. The VIEW switcher does not: cards / list / map /
-            timeline are the point of the Library, and they were unreachable on
-            mobile because this whole cluster was `hidden sm:block`. */}
-        {/* ARRANGE: which order, which shape. One group, a tighter gap inside it. */}
+        {/* Arrange: sort and view, one group. Sort can move to the Display
+            menu; the view switcher stays on the row at every width, phones
+            included. */}
         <div data-part="arrange" className="flex items-center gap-1.5">
           {sortInline && (
           <div>
@@ -1229,37 +1105,25 @@ export function LibraryView() {
               // Same rows, chrome-language labels; values stay the sort keys.
               // Relevance only exists while a query runs (`librarySortAtom`).
               options={SORTS.filter((s) => q || s.value !== "relevance").map((s) => ({ ...s, label: t("System", s.label) }))}
-              // Same row, same reason as the switcher: this trigger swung 47px
-              // between "Title" and "Connections", shoving View, Display and
-              // Language sideways on every sort change.
+              // `steady`: a fixed trigger width, so changing the sort doesn't
+              // shift View, Display and Language.
               steady
             />
           </div>
           )}
-          {/* The switcher is a dropdown, like Sort and Language either side of it,
-              so this row reads as three of one control rather than two dropdowns
-              and a segmented widget. It is also the narrowest the switcher has
-              been: five segments cost a fixed 156px whatever they show, while one
-              trigger costs the widest label once. `steady` is what makes that
-              safe — see Select. The trade is real and deliberate: every view is
-              still reachable, but at two clicks rather than one, and the trigger
-              names the active view where five icons couldn't. */}
+          {/* A dropdown like Sort and Language, and narrower than a five-segment
+              control; its `steady` trigger keeps the width fixed across views. */}
           <ViewSwitcher value={viewMode} onChange={(v) => setViewMode(v as typeof viewMode)} />
         </div>
-        {/* One hairline, between the controls that change WHAT is listed and how
-            it is ordered, and the two that change how it is drawn and read. A gap
-            step alone did not separate four look-alike triggers; a rule per
-            control would be chrome. It goes with Language: past that fold each
-            side is one control, and a rule between two lone buttons costs a
-            phone's search box 9px for nothing. Width decides it, never state. */}
+        {/* One hairline between what is listed (sort, view) and how it is drawn
+            (Display, Language). It folds with Language, since past that point
+            each side is one control. Width decides it, never state. */}
         {langInline && (
           <span aria-hidden="true" data-part="rule" className="shrink-0 w-px h-4 bg-border" />
         )}
         <div data-part="display" className="flex items-center gap-1.5">
-          {/* Display is icon-only and ALWAYS mounted; the view-specific modifiers
-              (timeline layout) live inside its popover. Anything that appears and
-              disappears from this row shoves every other control sideways when you
-              change view — which is exactly what it used to do. */}
+          {/* Display is icon-only and always mounted; view-specific options live
+              in its popover, so changing view never shifts this row. */}
           <LibraryDisplayMenu />
           {/* Languages: one dropdown of fixed width (codes, not names — a "Français"
               label would resize the trigger and shift the row again). */}
@@ -1276,14 +1140,10 @@ export function LibraryView() {
           )}
         </div>
       </div>
-      {/* The readout's own line, when the row can't hold it. Mounted for as
-          long as the row is this narrow — with or without a query — so a
-          search never adds a line and shoves the results down. The sentence
-          is `shrink-0` and the chip yields (`min-w-0`), as in the row.
-          One stack step (`mt-2`) under the controls and the band's own `py-2`
-          under it: 8px each side. `h-6` is the CHIP's height, so "N entities"
-          and "N results for [chip]" hold the same row; at `h-5` the chip
-          overflowed it and sat 4px under the search box, 7px over the rule. */}
+      {/* The readout's own line when the row can't hold it. Mounted whenever
+          the row is this narrow, with or without a query, so a search never
+          adds a line. `h-6` is the chip's height, so both readout forms fit the
+          same line; `mt-2` and the band's `py-2` give 8px each side. */}
       {!readoutInline && (
         <p
           data-part="readout"
@@ -1358,9 +1218,8 @@ export function LibraryView() {
             />
           </div>
         ) : viewMode === "results" ? (
-          // The evidence view at full width. It owns its own scroll, paging and
-          // blank states (including "no query yet"), so it sits above the shared
-          // empty-state branch below.
+          // Results owns its scroll, paging and blank states (including "no
+          // query yet"), so it sits above the shared empty-state branch below.
           <div className="flex-1 min-h-0">
             <ResultsMainView
               query={query}
@@ -1407,9 +1266,8 @@ export function LibraryView() {
             ))}
           </ul>
         ) : tableColumns.length === 0 ? (
-          // Every column can be switched off, so "none of them" is a state the
-          // table can be in — and an empty grid is not a thing to render. It
-          // says so, and names the way out.
+          // Every column can be switched off; with none on, show a message that
+          // names the way out instead of an empty grid.
           <div className="flex items-center justify-center h-40 text-sm text-ink-muted">
             No columns shown — pick one in Display.
           </div>
@@ -1433,8 +1291,7 @@ export function LibraryView() {
           />
         )}
 
-        {/* Not while the table has no columns to draw them in — "show more" of
-            nothing is an offer to widen an empty screen. */}
+        {/* Hidden while the table has no columns: there is nothing to show more of. */}
         {!cejilLoading && viewMode !== "map" && viewMode !== "timeline" && viewMode !== "results" &&
           !(viewMode === "list" && tableColumns.length === 0) && shown.length < filtered.length && (
           <div className="flex justify-center pt-4">
@@ -1460,17 +1317,16 @@ export function LibraryView() {
         className="@container bleed shrink-0 flex items-center gap-1 h-12 bg-paper"
         style={{
           borderTop: "1px solid var(--border-primary)",
-          // Phones: the home indicator's inset is added BELOW the 3rem row, so
+          // Phones: the home indicator's inset is added below the 3rem row, so
           // the row keeps its height and nothing above it moves.
           ...(menuTrigger
             ? { boxSizing: "content-box", paddingBottom: "env(safe-area-inset-bottom, 0px)" }
             : null),
         }}
       >
-        {/* The bar swaps IN PLACE between the baseline actions and the
-            selection's — same bar, same height. The selection's readout, Clear
-            and the tri-state select-all sit at the bar's END, in
-            LibrarySelectionBar; the idle bar carries no checkbox. */}
+        {/* The bar swaps in place between the baseline actions and the
+            selection's, at the same height. The selection's readout, Clear and
+            select-all sit at the bar's end in `LibrarySelectionBar`. */}
         {selectionActive && (
           <LibrarySelectionBar
             filteredIds={filteredIds}
@@ -1555,21 +1411,12 @@ export function LibraryView() {
             />
           </>
         )}
-        {/* The count used to be printed here too ("Showing N of M", with an
-            "updating…" beside it while the query settled). It is the masthead
-            readout's number — same set, same two figures — and the toolbar slot
-            is where it belongs, beside the search box that changes it. Two
-            copies of one number on one screen is the thing every other row on
-            this surface already gave up (the Results headers, the info rows,
-            the Relationships toolbar); the footer was the last holdout.
-            Staleness went with it: the masthead carries `aria-busy` and dims,
-            so the word had nothing left to say. What survives here is the
-            active-filter readout, which is NOT a duplicate — it is the only
-            place the filters are reachable while the drawer shows an entity
-            instead of the Filters panel. `ms-2` keeps it out of the run of
-            footer actions, so a readout doesn't read as a fourth button. */}
-        {/* Phone: the four actions above are `hidden sm:flex`, so the bar
-            there was empty — the same actions, in the selection's sheet. */}
+        {/* No result count here: the masthead readout is the only one. The
+            active-filters button below is not a duplicate; it is the only way to
+            reach the filters while the drawer shows an entity. `ms-2` separates
+            it from the footer actions. */}
+        {/* Phones: the four actions above are `hidden sm:flex`; this button
+            opens them in a sheet. */}
         {!selectionActive && (
           <button
             type="button"
@@ -1648,16 +1495,9 @@ export function LibraryView() {
     <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0 bg-warm">
       <DrawerTabs
         tabs={[
-          // DOTS, not counts. Both signals here are user-set state that is still
-          // in effect while you're looking at the other panel — filters you
-          // ticked, a query you typed — which is exactly what the dot is for.
-          //
-          // A count was the wrong instrument twice over: it can be ABSENT (no
-          // filters, no query), so it mounted on first use and widened its own
-          // tab, shoving Results sideways the moment you ticked a box; and the
-          // number itself was never the point. "Something you set is still on
-          // back there" is one bit, and the dot costs no width to say it.
-          // `count` stays for inventory — see `DrawerTabs`.
+          // Dots, not counts: both mark user-set state still in effect behind
+          // the other tab. A count mounts on first use and widens its tab,
+          // shifting the strip; the dot takes no width. See `DrawerTabs`.
           { id: "filters", label: t("System", "Filters"), dot: activeFilterCount > 0 },
           // A query that found nothing gets no dot: the tab would be pointing at
           // an empty panel. Dot means "there is something here", not "you typed".
@@ -1691,16 +1531,13 @@ export function LibraryView() {
 
   return (
     <>
-    {/* ONE lightbox for the whole grid, mounted beside the view rather than
-        inside a card — it portals to `document.body` anyway, so where it is
-        declared decides only who owns the state, and 120 cards each holding
-        their own would be 120 components rendering nothing. */}
+    {/* One lightbox for the whole grid rather than one per card; it portals to
+        `document.body`, so only state ownership depends on where it mounts. */}
     <ImageLightbox image={lightbox} onClose={() => setLightbox(null)} />
-    {/* Phones have no right-hand drawer, so what the Library selects INTO it —
-        a new entity's draft (Create entity), a single uploaded PDF — opens as
-        a full-height sheet on the stack instead of somewhere nobody can see.
-        Dismissing it is a navigation (the dirty guard asks first) and an
-        untouched draft goes with it, so no empty entity is left behind. */}
+    {/* Phones have no drawer, so what the Library opens into it (a new draft,
+        a single uploaded PDF) opens as a full-height sheet. Dismissing goes
+        through the dirty guard and discards an untouched draft, so no empty
+        entity is left behind. */}
     {isMobile && (
       <MobileBottomSheet
         open={!!selectedId}

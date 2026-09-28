@@ -15,38 +15,27 @@ import {
   type LibraryViewMode,
 } from "../data/libraryDisplay";
 
-/** The COMMITTED library search — what every consumer filters, ranks, marks and
- *  counts by. Read this one everywhere; only the search input itself binds to
- *  the draft below. */
+/** The committed library search: what every consumer filters, ranks, marks and
+ *  counts by. Only the search input binds to the draft below. */
 export const libraryQueryAtom = atom("");
 
-/** What is currently TYPED in the search box, which is not the same thing as
- *  what you are searching for.
- *
- *  Emptying the box used to empty the results with it: you cleared the text to
- *  type something else, or just to see the row underneath, and the entire result
- *  set — with its facets, its counts and its snippets — evaporated mid-read. So
- *  the two are split. Every non-empty draft commits immediately, so live search
- *  is unchanged; an EMPTY draft commits nothing, leaving the last real search
- *  standing. The committed query is dismissed deliberately, by its chip in
- *  ACTIVE FILTERS or by Clear all — never as a side effect of an empty box. */
+/** The text in the search box, kept apart from the committed query. A non-empty
+ *  draft commits immediately; an empty draft commits nothing, so clearing the box
+ *  to retype does not wipe the result set mid-read. The committed query is
+ *  dismissed only through `clearLibrarySearchAtom` (its chip, or Clear all). */
 const searchDraftStateAtom = atom("");
 export const librarySearchDraftAtom = atom(
   (get) => get(searchDraftStateAtom),
   (get, set, next: string) => {
-    // The DRAFT is urgent: it is the text in the box, and a character that
-    // appears a frame after you typed it is the one thing search must never do.
+    // The draft is urgent: typed characters must appear in the box without delay.
     set(searchDraftStateAtom, next);
-    // The COMMIT is not. Committing drives filter → rank → count → snippets over
-    // the whole corpus, and running that synchronously inside the keystroke is
-    // what put 2.6s tasks on the main thread. As a transition React can abandon
-    // it when the next keystroke arrives, and keeps showing the previous results
-    // until the new ones are ready — see `useDeferredValue` in `LibraryView`.
+    // The commit runs filter, rank, count and snippets over the whole corpus
+    // (multi-second main-thread tasks when synchronous). As a transition React can
+    // abandon it on the next keystroke; see `useDeferredValue` in `LibraryView`.
     if (next.trim())
       startTransition(() => {
-        // Becoming active is the moment the FIRST character commits — from here
-        // on the query is only being refined, and a view that jumped on every
-        // keystroke would be a view you can't leave.
+        // Switch views only when the first character commits; later keystrokes
+        // refine the query and must not move the view again.
         const becomingActive = !get(libraryQueryAtom).trim();
         set(libraryQueryAtom, next);
         if (becomingActive) set(enterSearchResultsAtom);
@@ -54,50 +43,35 @@ export const librarySearchDraftAtom = atom(
   },
 );
 
-/** Drop the search for real: empties the box AND the committed query, and puts
- *  the library back in the view the search took it out of. The only route back
- *  to "no search" — the box's own X clears just the text. */
+/** Ends the search: empties the box and the committed query, and restores the
+ *  view the search replaced. The only route back to no search; the box's own X
+ *  clears just the text. */
 export const clearLibrarySearchAtom = atom(null, (get, set) => {
   set(searchDraftStateAtom, "");
   set(libraryQueryAtom, "");
   const prior = get(preSearchViewModeAtom);
-  // Only if the search is still where it put you: having walked to another view
-  // yourself, you are not returned from it.
+  // Restore only if the user is still on Results; a view they chose themselves stays.
   if (prior && get(viewModeStateAtom) === "results") set(viewModeStateAtom, prior);
   set(preSearchViewModeAtom, null);
   set(searchModeOverriddenAtom, false);
   set(libraryResultsSheetOpenAtom, false);
   set(resultsSheetArmedAtom, false);
-  // The sort picked DURING the search was for the search; the one from before
-  // it comes back (see `librarySortAtom`).
+  // A sort picked during the search applies to that search only (see `librarySortAtom`).
   set(searchSortOverrideAtom, null);
   set(searchSortDirOverrideAtom, null);
 });
 
-/** The running search, or `null` — the search as its OWN state, deliberately not
- *  folded into the filter count.
- *
- *  A search is not a facet. You run it from the search box at the top of the
- *  results, not from the Filters panel, and counting it there made the Filters
- *  tab claim custody of something it doesn't hold: type a query having ticked
- *  nothing, and the tab wore a "1" and an attention dot over a panel with every
- *  box unticked. The dot means "something you set is still on BACK HERE", and
- *  the search was never back there. This is what the Results page's
- *  active-search element reads instead. */
+/** The running search, or `null`. Kept out of `libraryActiveFilterCountAtom`:
+ *  the search is not set in the Filters panel, so counting it would put a count
+ *  and dot on the Filters tab over a panel with nothing ticked. */
 export const libraryActiveSearchAtom = atom(
   (get) => get(libraryQueryAtom).trim() || null,
 );
 
-/** Recent searches — the queries you actually ran, newest first.
- *
- *  SESSION storage, following `appViewAtom`'s reasoning exactly: a reload should
- *  keep your place, but a visit should start clean. In localStorage this list
- *  would hand every later visitor of a shared prototype the last person's
- *  research questions, which is a different feature (and a worse one).
- *
- *  What gets recorded is a COMMITTED, SETTLED query — see `recordSearchAtom`.
- *  Recording per keystroke would fill the log with "v", "ve", "vel" and bury the
- *  one entry anybody wanted. */
+/** Recent searches, newest first. Session storage, as with `appViewAtom`: a
+ *  reload keeps the list, a new visit starts clean, and a shared prototype does
+ *  not show the previous visitor's queries. Only settled queries are recorded
+ *  (`recordSearchAtom`), so the log does not fill with keystroke prefixes. */
 const searchHistoryJSON = createJSONStorage<string[]>(() => sessionStorage);
 export const librarySearchHistoryAtom = atomWithStorage<string[]>(
   "uwazi:searchHistory",
@@ -106,14 +80,12 @@ export const librarySearchHistoryAtom = atomWithStorage<string[]>(
   { getOnInit: true },
 );
 
-/** How many searches the log keeps. Small on purpose: it is a way back to what
- *  you just did, not an archive — past ~8 you scan it slower than you retype. */
+/** How many searches the log keeps: a short way back, not an archive. */
 export const SEARCH_HISTORY_CAP = 8;
 /** Below this, a query isn't worth remembering (and is faster to retype). */
 export const MIN_LOGGED_QUERY = 2;
 
-/** Record a search. Deduped case-insensitively — re-running an old query moves
- *  it back to the top rather than listing it twice — and capped. */
+/** Record a search. Deduped case-insensitively (a re-run moves to the top) and capped. */
 export const recordSearchAtom = atom(null, (get, set, raw: string) => {
   const q = raw.trim();
   if (q.length < MIN_LOGGED_QUERY) return;
@@ -149,29 +121,20 @@ export const libraryFiltersOpenAtom = atom(false);
 /** Entity previewed in the right drawer. null → the drawer shows Filters. */
 export const librarySelectedEntityIdAtom = atom<string | null>(null);
 
-/** The Results-tab full-text page the user last jumped to. Lives here (not in the
- *  drawer subtree, which unmounts while a preview shows) so its spine node stays
- *  lit + `aria-pressed` when the user closes the preview and lands back on the
- *  Results list — the fix for the otherwise-unreachable active state. */
+/** The Results-tab full-text page the user last jumped to. Kept here, not in the
+ *  drawer subtree (which unmounts while a preview shows), so its spine node stays
+ *  active and `aria-pressed` after the preview closes. */
 export interface ResultsActivePage {
   entityId: string;
   page: number;
 }
 export const resultsActivePageAtom = atom<ResultsActivePage | null>(null);
 
-/** Which KINDS of match the results keep — the Results tab's title/properties/
- *  document chips.
- *
- *  DECISION (2026-07-21): these are a real FILTER, not a panel-local view toggle,
- *  so they narrow the LEFT PANE too. A researcher who turns off "Document" is
- *  saying "show me entities that matched in their metadata", and a grid that kept
- *  showing full-text-only hits would contradict the panel beside it — the two
- *  panes are one result set at two levels of detail. Living in the filter state
- *  also makes the Results header count correct by construction (it counts the
- *  filtered set) rather than needing a separate "N of M" reconciliation.
- *
- *  They are query-relative, so they no-op without a query and reset whenever the
- *  query changes — that keeps them from becoming an invisible sticky filter. */
+/** Which kinds of match the results keep (the title / properties / document
+ *  chips). A real filter, not a panel toggle: it narrows the main pane too, so
+ *  both panes show one result set and the count covers the filtered set.
+ *  Query-relative: no-op without a query, reset when the query changes, so it
+ *  never lingers as an invisible filter. */
 export interface MatchTypeFilters {
   title: boolean;
   properties: boolean;
@@ -184,27 +147,20 @@ export const ALL_MATCH_TYPES: MatchTypeFilters = {
 };
 export const matchTypeFiltersAtom = atom<MatchTypeFilters>(ALL_MATCH_TYPES);
 
-/** A Results-tab "Properties" hit the user clicked: open the entity preview on
- *  its Metadata tab and flash the matching field. Matched by field KEY (stable,
- *  not the localized label) against the drawer's `MetadataField.id`. The metadata
- *  body clears it once it has scrolled + flashed. */
+/** A Results-tab "Properties" hit the user clicked: open the preview on its
+ *  Metadata tab and flash the field. Matched by field key (stable across
+ *  languages) against `MetadataField.id`; the metadata body clears it after flashing. */
 export interface FocusMetadataField {
   entityId: string;
   fieldKey: string;
-  /** Bumped on every request, and the reason this is not a plain object.
-   *
-   *  The record CLEARS the request once it has scrolled and flashed, which is
-   *  right — a focus is an event, not a state. But clicking the same property
-   *  twice writes an equal-looking value, and without something that differs
-   *  the second write is indistinguishable from the first for any consumer that
-   *  compares. The nonce is the `pageJumpAtom` / `fillRequestAtom` idiom the
-   *  app already uses wherever an atom carries a request rather than a value. */
+  /** Bumped on every request so clicking the same property twice is a new value
+   *  to consumers that compare. Same idiom as `pageJumpAtom` / `fillRequestAtom`. */
   nonce: number;
 }
 export const focusMetadataFieldAtom = atom<FocusMetadataField | null>(null);
 
-/** Ask the record to scroll to a field and flash it. THE way to raise a focus
- *  request — it stamps the nonce, so no caller has to remember to. */
+/** Ask the record to scroll to a field and flash it. Use this rather than
+ *  writing `focusMetadataFieldAtom` directly: it stamps the nonce. */
 let focusNonce = 0;
 export const requestMetadataFocusAtom = atom(
   null,
@@ -221,48 +177,34 @@ export interface LibraryCluster {
 export const librarySelectedClusterAtom = atom<LibraryCluster | null>(null);
 
 /* ── Multi-selection ──────────────────────────────────────────────────────
-   A SET of entity ids the user has picked for a bulk action — apart from
-   `librarySelectedEntityIdAtom`, which stays "the one entity the drawer
-   previews". A plain click still previews; a checkbox, Cmd/Ctrl+click or
-   Shift+click selects.
-
-   Explicit ids, always: "select all" writes every id, so every rule below is
-   one rule. It survives view-mode switches, sorting, "Show more" and filter
-   or search changes (ids the current results no longer show stay selected
-   and are counted as "not in view"); a collection switch and Clear end it.
-
-   PERFORMANCE. A card never reads the Set. It reads `entitySelectedAtom(id)`,
-   a boolean derived per id, so ticking one of 4,398 re-renders that one card
-   (jotai only notifies a subscriber whose value changed) — and the grids
-   paint the selected ground in CSS off the checkbox itself, so nothing
-   above the cards subscribes at all. */
+   Entity ids picked for a bulk action, separate from
+   `librarySelectedEntityIdAtom` (the one entity the drawer previews). A plain
+   click previews; a checkbox, Cmd/Ctrl-click or Shift-click selects.
+   Always explicit ids ("select all" writes every id). Survives view, sort,
+   filter and search changes; a collection switch and Clear end it.
+   Performance: cards read `entitySelectedAtom(id)`, never the Set, so ticking
+   one card re-renders only that card; grids paint the selected state in CSS. */
 export const librarySelectionAtom = atom<ReadonlySet<string>>(new Set<string>());
 /** Where the next Shift range starts: the last item clicked on its own —
  *  a plain click (a preview), a Cmd/Ctrl click, Space, or a long press. */
 export const librarySelectionAnchorAtom = atom<string | null>(null);
 
-/** A plain click on an item: it previews, and it becomes the anchor, so the
- *  next Shift+click ranges from IT. The preview used to stand in for a
- *  missing anchor only when a range began — and a preview left over from
- *  earlier (a card opened long before, often near the top) made the range
- *  start there. */
+/** A plain click on an item previews it and makes it the anchor, so the next
+ *  Shift-click ranges from it rather than from a stale preview. */
 export const setSelectionAnchorAtom = atom(null, (_get, set, id: string) => {
   set(librarySelectionAnchorAtom, id);
   set(lastRangeAtom, []);
 });
-/** The ids the last Shift range added. A second Shift+click RE-SPANS from the
- *  same anchor: these come out and the new range goes in, while ids picked one
- *  by one outside the range stay. */
+/** The ids the last Shift range added. A second Shift-click re-spans from the
+ *  same anchor: these come out and the new range goes in; ids picked one by one stay. */
 const lastRangeAtom = atom<readonly string[]>([]);
 export const librarySelectionCountAtom = atom((get) => get(librarySelectionAtom).size);
-/** Anything selected — flips only at 0↔1, so it is cheap for every card to
- *  read (it shows the checkboxes at rest while a selection exists). */
-/** Phones: selection mode entered from the Actions sheet's "Select", with
- *  nothing picked yet. A touch screen has no modifier keys and the card's
- *  checkbox is visually hidden, so a long press was the only way in and nothing
- *  said so. In this mode the selection bar shows and a tap toggles, the same
- *  state a long press sets. Clear ends it (`clearSelectionAtom`). */
+/** Phones: selection mode entered from the Actions sheet's "Select" with nothing
+ *  picked yet, since touch has no modifier keys and the checkbox is visually
+ *  hidden. The selection bar shows and a tap toggles. `clearSelectionAtom` ends it. */
 export const librarySelectModeAtom = atom(false);
+/** Anything selected. Flips only at 0↔1, so it is cheap for every card to read
+ *  (cards show their checkboxes at rest while a selection exists). */
 export const librarySelectionActiveAtom = atom(
   (get) => get(librarySelectionAtom).size > 0 || get(librarySelectModeAtom),
 );
@@ -278,11 +220,9 @@ export const librarySelectionDrawerOpenAtom = atom(true);
  *  Apply and clearing the selection end it. */
 export const libraryBulkEditOpenAtom = atom(false);
 
-/** The ids the bulk form edits — FROZEN when it opens, so what Apply writes
- *  is the set the form (and its review step) names, not whatever the
- *  selection has become since. While the form is clean it follows the
- *  selection; while it is dirty a selection change goes through the
- *  dirty-form guard (`selectionWrite`). */
+/** The ids the bulk form edits, frozen when it opens so Apply writes the set
+ *  the form and its review step name. A clean form follows the selection; a
+ *  dirty one routes selection changes through the guard (`selectionWrite`). */
 export const libraryBulkEditIdsAtom = atom<string[]>([]);
 
 /** Open the bulk form over the current selection. */
@@ -308,40 +248,33 @@ function selectionWrite(get: Getter, set: Setter, run: () => void) {
   if (get(libraryBulkEditOpenAtom)) set(libraryBulkEditIdsAtom, [...get(librarySelectionAtom)]);
 }
 
-/** Which selection dialog is open — the footer bar, the phone sheet and the
- *  selection drawer's Actions menu all open the SAME dialogs, hosted once by
- *  `SelectionDialogs`. */
+/** Which selection dialog is open. The footer bar, the phone sheet and the
+ *  drawer's Actions menu open the same dialogs, hosted once by `SelectionDialogs`. */
 export type SelectionDialog = "delete" | "change-template" | "share" | "permissions";
 export const librarySelectionDialogAtom = atom<SelectionDialog | null>(null);
 
-/** An entity whose preview should open straight on its edit form — Edit with
- *  exactly one entity selected is that entity's ordinary edit. Spent by the
- *  entity panel once it has opened the form. */
+/** An entity whose preview should open on its edit form (Edit with exactly one
+ *  entity selected). Cleared by the entity panel once the form is open. */
 export const libraryEditRequestAtom = atom<string | null>(null);
 
-/** The ids the VISIBLE view actually draws — the grid's loaded page, the
- *  timeline's plotted rows, the Results page, the map's located entities.
- *  "Select all loaded" means these, in every view; each view writes its own. */
+/** The ids the visible view draws (grid page, timeline rows, Results page, map
+ *  entities). "Select all loaded" means these; each view writes its own. */
 export const libraryDrawnIdsAtom = atom<readonly string[]>([]);
 
-/** Show the selection list in the drawer — by dropping the preview, unless
- *  the preview is holding an open form (a draft, an edit): ticking a box
- *  must not unmount it and lose what was typed. The list shows once the form
- *  is closed. */
+/** Show the selection list in the drawer by dropping the preview, unless the
+ *  preview holds an open form: ticking a box must not unmount it and lose input. */
 function showSelectionList(get: Getter, set: Setter) {
   if (!get(editSessionOpenAtom)) set(librarySelectedEntityIdAtom, null);
   set(librarySelectionDrawerOpenAtom, true);
 }
 
-/** Toggle one id. Sets the anchor, ends any range, and — like every selection
- *  gesture — drops the preview so the drawer shows the selection being built. */
+/** Toggle one id. Sets the anchor, ends any range, and drops the preview so the
+ *  drawer shows the selection. */
 export const toggleSelectionAtom = atom(null, (get, set, id: string) =>
   selectionWrite(get, set, () => {
     const next = new Set(get(librarySelectionAtom));
-    // Finder: the gesture that STARTS a selection takes the card already
-    // open in the preview (the anchor, set by its plain click) along with
-    // it — the first card clicked is part of what the reader is picking,
-    // and it shouldn't be the one card that looks different.
+    // As in Finder, the gesture that starts a selection includes the card already
+    // open in the preview (the anchor from its plain click).
     const previewed = get(librarySelectedEntityIdAtom);
     if (next.size === 0 && previewed && previewed === get(librarySelectionAnchorAtom) && previewed !== id)
       next.add(previewed);
@@ -354,10 +287,9 @@ export const toggleSelectionAtom = atom(null, (get, set, id: string) =>
   }),
 );
 
-/** Shift+click: select from the anchor to `id` over `order` — the order the
- *  current view draws. The anchor is ONLY the last item clicked on its own;
- *  with none (or one this view doesn't draw), the click selects just `id`
- *  and anchors it — never a range from somewhere else. */
+/** Shift-click: select from the anchor to `id` in `order` (the current view's
+ *  draw order). With no anchor, or one this view doesn't draw, it selects and
+ *  anchors just `id`. */
 export const rangeSelectionAtom = atom(null, (get, set, { order, id }: { order: readonly string[]; id: string }) =>
   selectionWrite(get, set, () => rangeSelect(get, set, order, id)),
 );
@@ -378,8 +310,8 @@ function rangeSelect(get: Getter, set: Setter, order: readonly string[], id: str
   const range = order.slice(Math.min(a, b), Math.max(a, b) + 1);
   const next = new Set(get(librarySelectionAtom));
   for (const x of get(lastRangeAtom)) next.delete(x);
-  // What THIS range adds — not the whole span: an id inside it that was
-  // already selected (ticked on its own) must survive the next re-span.
+  // Track only what this range adds: an id already ticked on its own must
+  // survive the next re-span.
   const added = range.filter((x) => !next.has(x));
   for (const x of added) next.add(x);
   // The anchor itself was picked on its own; re-spanning must not drop it.
@@ -410,7 +342,7 @@ export const deselectIdsAtom = atom(null, (get, set, ids: readonly string[]) =>
   }),
 );
 
-/** Clear — the ONE control that ends a selection (Escape routes here too). */
+/** The one action that ends a selection (Escape routes here too). */
 export const clearSelectionAtom = atom(null, (get, set) =>
   selectionWrite(get, set, () => {
     set(librarySelectionAtom, new Set<string>());
@@ -421,14 +353,11 @@ export const clearSelectionAtom = atom(null, (get, set) =>
   }),
 );
 
-/** A plain click on an item while 2 or more are selected: the selection
- *  collapses to that item, as in a file manager — the multi-selection ends
- *  and `then` previews the item (which, as the anchor, is the one a next
- *  Cmd/Ctrl click takes along). Through the dirty-form guard like any other
- *  selection write, so a held Discard holds the preview too. */
+/** A plain click while 2 or more are selected collapses the selection, as in a
+ *  file manager, and `then` previews the item. Goes through the dirty-form guard,
+ *  so a held Discard holds the preview too. */
 export const collapseSelectionAtom = atom(null, (get, set, then: () => void) => {
-  // Read at click time, so the view that calls this never subscribes to the
-  // selection. Below 2 there is nothing to collapse: the preview alone.
+  // Read at click time so the calling view never subscribes to the selection.
   if (get(librarySelectionAtom).size < 2) return then();
   selectionWrite(get, set, () => {
     set(librarySelectionAtom, new Set<string>());
@@ -443,77 +372,63 @@ export const libraryCountryFiltersAtom = atom<Record<string, boolean>>({});
 export type FacetMode = "AND" | "OR";
 export const libraryCountryModeAtom = atom<FacetMode>("OR");
 
-/** Keyword-style Descriptores (violations) facet — CEJIL property facet. The
- *  mode mirrors the Countries facet: "OR" = entity has any selected descriptor,
- *  "AND" = entity has all of them (meaningful — an entity carries several). */
+/** Descriptores (violations) facet, CEJIL only. "OR" = any selected descriptor,
+ *  "AND" = all of them (an entity carries several). */
 export const libraryDescriptorFiltersAtom = atom<Record<string, boolean>>({});
 export const libraryDescriptorModeAtom = atom<FacetMode>("OR");
 
-/** Date-range property filter (the entity's representative date, e.g. CEJIL
- *  `Fecha`). ISO `yyyy-mm-dd` strings; "" = open-ended on that side. Mirrors
- *  Uwazi's per-property DateFilter (a from/to range). */
+/** Date-range filter on the entity's representative date (e.g. CEJIL `Fecha`).
+ *  ISO `yyyy-mm-dd`; "" = open-ended on that side. */
 export const libraryDateFromAtom = atom<string>("");
 export const libraryDateToAtom = atom<string>("");
 
-/** Dynamic facets generated from INHERITED relationship properties (e.g. a
- *  person's Role, a case's Region) — keyed `inheritProperty → (value → on)`.
- *  Mirrors Uwazi, where an inherited relationship property becomes a filter. */
+/** Facets generated from inherited relationship properties, keyed
+ *  `inheritProperty → (value → on)`, as in Uwazi. */
 export const libraryInheritedFiltersAtom = atom<
   Record<string, Record<string, boolean>>
 >({});
 
-/** Relationship-CHAIN facet selections (CEJIL only) — keyed `${chainId}:${seg}`
- *  → (value → on). Several keys of one chain combine path-coupled (a single
- *  traversed path must satisfy them all). See utils/chainTraversal.ts. */
+/** Relationship-chain facet selections (CEJIL only), keyed `${chainId}:${seg}`
+ *  → (value → on). Keys of one chain are path-coupled: a single traversed path
+ *  must satisfy them all. See utils/chainTraversal.ts. */
 export const libraryChainFiltersAtom = atom<
   Record<string, Record<string, boolean>>
 >({});
 
-/** Results layout. `results` is the evidence view promoted out of the drawer: it
- *  reads the same `buildSnippetsFor` output the Results tab does, at full width.
- *  It stays selectable with no query (the switcher may not gain and lose a
- *  segment as you type — that shifts every control beside it); the view renders
- *  its own "search to see where terms match" state instead.
- *
- *  The mode list itself lives in `data/libraryDisplay` — it keys the option
- *  registry, so the registry is where a new mode has to be declared or it would
- *  be a mode with no options and no way to notice. */
+/** The `results` mode reads the same `buildSnippetsFor` output as the Results
+ *  tab, at full width. It stays selectable with no query so the switcher never
+ *  gains or loses a segment while typing (layout shift).
+ *  The mode list lives in `data/libraryDisplay` because it keys the option
+ *  registry; declare new modes there. */
 export type { LibraryViewMode };
 
-/** Where the library was before a search took it to Results, and whether the
- *  reader has overruled that for the current query. Both are cleared when the
- *  search is dismissed, so the next search starts the behaviour over. */
+/** The view before a search switched to Results, and whether the user overruled
+ *  that for the current query. Both reset when the search is dismissed. */
 const preSearchViewModeAtom = atom<LibraryViewMode | null>(null);
 const searchModeOverriddenAtom = atom(false);
 
 const viewModeStateAtom = atom<LibraryViewMode>("cards");
 
-/** Phones: the Results sheet a search opened. Set once, when a query becomes
- *  active (`enterSearchResultsAtom`), so refining the query never reopens a
- *  sheet the reader closed; closing it keeps the query; clearing the search
- *  (`clearLibrarySearchAtom`) closes it. */
+/** Phones: the Results sheet a search opened. Opened once per query, so refining
+ *  never reopens a sheet the user closed; closing it keeps the query;
+ *  `clearLibrarySearchAtom` closes it. */
 export const libraryResultsSheetOpenAtom = atom(false);
 
 /** A query became active on a phone and its Results sheet has not opened yet. */
 const resultsSheetArmedAtom = atom(false);
 
-/** The search box was submitted (Enter / the keyboard's Search key, leaving the
- *  box, picking a recent search): on a phone, open the Results sheet the query
- *  armed, once. Not at the first character: the sheet is a modal and takes
- *  focus, so opening mid-word sent the rest of the word into the sheet. */
+/** The search box was submitted (Enter, the keyboard's Search key, blur, or a
+ *  recent search): on a phone, open the armed Results sheet once. Not on the
+ *  first character: the sheet is modal and takes focus, which would swallow typing. */
 export const submitLibrarySearchAtom = atom(null, (get, set) => {
   if (!get(resultsSheetArmedAtom) || !get(libraryQueryAtom).trim()) return;
   set(resultsSheetArmedAtom, false);
   set(libraryResultsSheetOpenAtom, true);
 });
 
-/** The library's view mode.
- *
- *  Writing it is also how the reader overrules the search's own choice of view:
- *  leaving Results while a query is running says "not for this search", so the
- *  query stops steering AND stops restoring at the end of it — being returned to
- *  a mode you had already walked away from is the same interruption in reverse.
- *  A search that starts again after a dismissal steers again. */
+/** The library's view mode. Leaving Results while a query runs overrules the
+ *  search: it stops switching the view and does not restore the prior view when
+ *  it ends. The next search after a dismissal switches again. */
 export const libraryViewModeAtom = atom(
   (get) => get(viewModeStateAtom),
   (get, set, next: LibraryViewMode) => {
@@ -525,20 +440,12 @@ export const libraryViewModeAtom = atom(
   },
 );
 
-/** A query has become active: show the evidence.
- *
- *  Results answers "why is this row here?", which is the question a search just
- *  asked — so a search opens it instead of leaving it as a mode you have to know
- *  about. It remembers the mode it displaced, and `clearLibrarySearchAtom` puts
- *  it back; the view keeps its own no-query state, because it stays selectable
- *  with nothing typed. It lives here, in the atom that commits the query, rather
- *  than in an effect watching the query from a component: the switch is part of
- *  the search starting, not a consequence some mounted view happens to notice. */
+/** A query became active: switch to Results and remember the displaced mode for
+ *  `clearLibrarySearchAtom`. Called from the commit, not from a component effect,
+ *  so the switch does not depend on which views are mounted. */
 const enterSearchResultsAtom = atom(null, (get, set) => {
-  // A phone keeps the view you were in and opens the Results SHEET over it
-  // instead: swapping the whole page under a thumb that is still typing is the
-  // bigger jump there, and the sheet closes back onto where you were. It is
-  // only ARMED here — see `submitLibrarySearchAtom`.
+  // Phones keep the current view and open the Results sheet over it on submit;
+  // here it is only armed (see `submitLibrarySearchAtom`).
   if (get(breakpointAtom) === "mobile") {
     set(resultsSheetArmedAtom, true);
     return;
@@ -550,33 +457,26 @@ const enterSearchResultsAtom = atom(null, (get, set) => {
   set(viewModeStateAtom, "results");
 });
 
-/** Results body flavour — four readings of the same snippets:
+/** Results body layout, four readings of the same snippets:
  *  - `grouped`   one wide card per entity: its matched properties beside its
  *                document passages (the drawer's card, given room)
  *  - `tree`      entity → matched field → its snippets, collapsible at both levels
  *  - `passages`  every matching passage as one flat ranked list, entity secondary
- *                — the reading view
  *  - `spine`     passages on a proportional time axis, each entity carrying its
  *                strongest one */
 export type ResultsLayout = "grouped" | "tree" | "passages" | "spine";
 
-/** Timeline body flavour — four ways to read the same chronology:
- *  - `rail`     the text-references minimap on a vertical time track: dots and
- *               counted clusters that fan out into their members. Navigation —
- *               clicking picks an entity, it does not filter.
- *  - `density`  the same track as a volume histogram; clicking a bar FILTERS the
+/** Timeline body layout, four views of the same chronology:
+ *  - `rail`     vertical time track with dots and clusters; clicking picks an
+ *               entity, it does not filter.
+ *  - `density`  the same track as a volume histogram; clicking a bar filters the
  *               Library to that period.
- *  - `spine`    a proportional chronology — every entity at its exact instant
+ *  - `spine`    a proportional chronology, every entity at its exact instant
  *  - `lanes`    a template × period grid */
 export type TimelineLayout = "rail" | "density" | "spine" | "lanes";
 
-/** How many metadata properties a card draws.
- *
- *  It replaced a boolean. `Metadata: on/off` answered only "all or nothing",
- *  and the interesting question — how much of a record a card should carry —
- *  had been answered by a constant in the code (three, then five) that nobody
- *  could see or change. A template's property count is not the app's business
- *  to cap; it is the reader's to choose. `none` is the old `off`. */
+/** How many metadata properties a card draws; the user chooses, the app does
+ *  not cap it. */
 export type CardFields = "none" | "3" | "5" | "all";
 export const DEFAULT_CARD_FIELDS: CardFields = "all";
 
@@ -585,70 +485,40 @@ export function cardFieldLimit(v: CardFields): number | null {
   return v === "none" ? 0 : v === "all" ? null : Number(v);
 }
 
-/** Thumbnail rendering — how tall the preview slot is drawn and how an image
- *  sits inside it.
- *
- *  Two steps, not three. The band was 64 / 96 / 144px and the top of that ramp
- *  is where a document first reads as a document; below it a page is a grey
- *  smudge with a PDF tag on it, which is not a preview of anything. So 144 is
- *  the BASE now (`m`, the default) and `l` is the one step above it. The old
- *  small was cut rather than renamed: a control whose first option nobody should
- *  pick is a control with a wrong default. */
+/** Thumbnail slot size. `m` (the default) is the smallest height at which a
+ *  document page is still legible as a page. */
 export type ThumbSize = "s" | "m" | "l";
 
-/** The SHAPE of the slot, for the whole grid at once — never per card, or rows
- *  stop lining up and the grid ragged-edges the way it did before the slot was
- *  reserved at all. `landscape` is the wide band the cards have always had;
- *  `portrait` is a taller slot for a corpus that is mostly standing figures (the
- *  artworks sample runs 30 portrait to 22 landscape) — drawn as a centred 3:4
- *  frame under `auto`/`contain`, and as a tall full-width band under an explicit
- *  `cover`, where the instruction is to fill and a frame would only mat.
- *  Size scales BOTH: a portrait frame at size N is as tall as a landscape one at
- *  N+1, which is what keeps the two orientations feeling like one control. */
+/** The slot's shape, one choice for the whole grid: per-card shapes would stop
+ *  rows lining up. `landscape` is the wide band; `portrait` is a 3:4 slot for
+ *  corpora of mostly portrait images. See CLAUDE.md "Library card thumbnails". */
 export type ThumbFrame = "landscape" | "portrait";
 
-/** How an IMAGE sits in its slot — documents keep their cropped-sheet framing
- *  whatever this says. `auto` is the ratio-decides rule, now read against the
- *  FRAME: an image whose orientation matches the frame covers it, anything else
- *  is matted (a square never matches, so it mats in both). `cover`/`contain`
- *  force one treatment for every ratio. */
+/** How an image sits in its slot (documents ignore this). `auto`: an image
+ *  whose orientation matches the frame covers it, anything else is matted (a
+ *  square mats in both). `cover` / `contain` force one treatment. */
 export type ThumbFit = "auto" | "cover" | "contain";
 
-/** Where the preview sits on a card. `stacked` puts the slot above the text, the
- *  way cards always have. `side` puts it at the card's logical START (left in
- *  LTR, right in RTL) and the text beside it, so the card runs wider than tall
- *  and the grid hangs fewer, wider columns. One choice for the whole grid, like
- *  the frame. */
+/** Where the preview sits on a card. `stacked`: above the text. `side`: at the
+ *  card's logical start (left in LTR, right in RTL), so the grid uses fewer,
+ *  wider columns. One choice for the whole grid. */
 export type CardLayout = "stacked" | "side";
 
-/** How much air a list row gets. Height and padding ONLY — the type never
- *  shrinks, so compact stays on the 11px floor the rest of the app keeps. */
+/** List row density. Changes height and padding only; type size stays at the
+ *  app's 11px floor. */
 export type ListDensity = "comfortable" | "compact";
 
-/** Track scope, mirroring the document minimap's whole-document / this-page
- *  toggle: `all` plots the entire corpus span, `year` zooms the track to the
- *  year you're currently reading (months, with ↑/↓ counts for the rest). */
+/** Track scope: `all` plots the whole corpus span, `year` zooms to the current
+ *  year by month, with ↑/↓ counts for the rest. */
 export type TimelineScope = "all" | "year";
 export const libraryTimelineScopeAtom = atom<TimelineScope>("all");
 
 // ── Display options ──────────────────────────────────────────────────────────
 
-/** EVERY Display-menu value, in one store, shaped the way the registry is.
- *
- *  It used to be six atoms plus a five-key `libraryInfoAtom` that cards and the
- *  list table SHARED — so "Country" was one switch over a card's subtitle and a
- *  table column that have nothing to do with each other, and the table could
- *  only ever offer the three columns that record happened to have keys for.
- *
- *  Now: `modes` holds each view's own answers, `shared` holds the handful that
- *  are genuinely global. Both are SPARSE — an absent key means "still on its
- *  registry default", which is what lets a default change without migrating
- *  anybody's session, and what makes "is this off its default?" a real question
- *  rather than a comparison against a hard-coded guess.
- *
- *  Session state, deliberately: the menu's dot already advertises anything off
- *  its default, so a reload starting clean is the contract the info toggles
- *  always kept. */
+/** Every Display-menu value in one store, shaped like the registry. `modes`
+ *  holds each view's own values, `shared` the global ones. Both are sparse: an
+ *  absent key means the registry default, so defaults can change without
+ *  migrating state. In-memory only; a reload starts clean. */
 export interface LibraryDisplayState {
   modes: Partial<Record<LibraryViewMode, DisplayValues>>;
   shared: DisplayValues;
@@ -656,23 +526,22 @@ export interface LibraryDisplayState {
 export const libraryDisplayAtom = atom<LibraryDisplayState>({ modes: {}, shared: {} });
 
 /** The property labels the current corpus carries, for the list's optional
- *  metadata columns. Derived, so it recomputes only when the source's entity
- *  array or the language changes — never per keystroke — and capped, because
- *  this is a MENU and menus must be stable and cheap. */
+ *  metadata columns. Derived from entities and language only, so it does not
+ *  recompute per keystroke. */
 export const libraryFieldLabelsAtom = atom((get) =>
   distinctFieldLabels(get(libraryEntitiesAtom), get(languageAtom)),
 );
 
-/** What the registry needs to know that it can't: the viewport, whether a query
- *  is running, and the columns this corpus can offer. One atom, so the menu, the
- *  dot and the table all resolve the same option list. */
 /** Set by the Library toolbar from its own width: true while the Sort select
  *  has no room in the row (see the masthead fold in `LibraryView`). */
 export const librarySortInMenuAtom = atom(false);
-/** The same, for the Language select: past the last fold it had nowhere to go
- *  on a desktop pane, so the reading language was unreachable there. */
+/** The same for the Language select, which otherwise has no place on a narrow
+ *  desktop pane. */
 export const libraryLanguageInMenuAtom = atom(false);
 
+/** Context the registry cannot know itself: viewport, whether a query runs, and
+ *  the columns this corpus offers. One atom, so the menu, its dot and the table
+ *  resolve the same option list. */
 export const libraryDisplayContextAtom = atom<DisplayContext>((get) => {
   const hasQuery = get(libraryQueryAtom).trim().length > 0;
   const isMobile = get(breakpointAtom) === "mobile";
@@ -697,13 +566,9 @@ function readOption(
   return bag?.[id] ?? fallback;
 }
 
-/** A read/write atom over one option of the CURRENT view mode.
- *
- *  Resolving against `libraryViewModeAtom` rather than taking a mode argument is
- *  what keeps the split invisible to consumers: a card is only ever mounted
- *  inside the view whose options govern it, so "the current mode" and "my mode"
- *  are the same mode. The menu writes the view you are looking at; the view
- *  reads the view it is. */
+/** A read/write atom over one option of the current view mode. Takes no mode
+ *  argument: a card is only mounted inside the view whose options govern it, so
+ *  the current mode is always the consumer's mode. */
 function displayOption<T extends DisplayValue>(
   id: string,
   scope: "mode" | "shared",
@@ -733,11 +598,8 @@ export const DEFAULT_RESULTS_LAYOUT: ResultsLayout = "grouped";
 export const DEFAULT_TIMELINE_LAYOUT: TimelineLayout = "rail";
 export const DEFAULT_THUMB_SIZE: ThumbSize = "m";
 export const DEFAULT_THUMB_FRAME: ThumbFrame = "landscape";
-/* COVER, not `auto`. `auto` mats anything whose orientation does not match the
-   frame, which was my argument and is now overruled: a slot with a picture in it
-   should hold a picture, not a picture in a box. `auto` stays on the Fit control
-   as a real third behaviour — it is neither "always fill" nor "always mat" — and
-   so does `contain`. */
+/* Default is `cover` so a slot with an image is filled edge to edge; `auto` and
+   `contain` remain as options. */
 export const DEFAULT_THUMB_FIT: ThumbFit = "cover";
 export const DEFAULT_LIST_DENSITY: ListDensity = "comfortable";
 export const DEFAULT_TIME_HUB = true;
@@ -753,11 +615,9 @@ export const libraryTimelineLayoutAtom = displayOption<TimelineLayout>(
   DEFAULT_TIMELINE_LAYOUT,
 );
 const thumbSizeStateAtom = displayOption<ThumbSize>("thumbSize", "mode", DEFAULT_THUMB_SIZE);
-/** Reads through a validity check, because the stored value outlives the option
- *  list: an unknown key indexes the size tables to `undefined` — a card with no
- *  band height at all. Anything not on the current list reads as the default.
- *  (Small was cut once, c8e52fbc, and is back; the check stays for the next
- *  change to the list.) */
+/** Reads through a validity check because a stored value can outlive the option
+ *  list, and an unknown key would index the size tables to `undefined` (a card
+ *  with no slot height). Unknown values read as the default. */
 export const libraryThumbSizeAtom = atom(
   (get) => {
     const v = get(thumbSizeStateAtom);
@@ -773,11 +633,9 @@ export const libraryThumbFrameAtom = displayOption<ThumbFrame>(
 export const libraryThumbFitAtom = displayOption<ThumbFit>("thumbFit", "mode", DEFAULT_THUMB_FIT);
 export const DEFAULT_CARD_LAYOUT: CardLayout = "stacked";
 export const libraryCardLayoutAtom = displayOption<CardLayout>("cardLayout", "mode", DEFAULT_CARD_LAYOUT);
-/** The layout the cards actually DRAW. Side needs a preview to put at the side
- *  and room for a slot beside the text: with previews off it is the stacked card
- *  (there is no slot), and on a phone a 128px slot beside the text leaves the
- *  title about 200px, so the card falls back to stacked there. The stored
- *  choice is kept, so widening the window brings the side layout back. */
+/** Whether cards draw the side layout. Falls back to stacked with previews off
+ *  (no slot) and on phones (the title would get about 200px). The stored choice
+ *  is kept, so widening the window restores it. */
 export const libraryCardSideAtom = atom(
   (get) =>
     get(libraryCardLayoutAtom) === "side" &&
@@ -793,8 +651,7 @@ export const libraryListDensityAtom = displayOption<ListDensity>(
  *  mode — the only `shared` toggle in the registry. */
 export const libraryTimeHubAtom = displayOption<boolean>("timeStrip", "shared", DEFAULT_TIME_HUB);
 
-/** What a CARD carries, for whichever mode is drawing cards. Replaces the old
- *  `libraryInfoAtom`, which the list table also read. */
+/** What a card carries, for whichever mode is drawing cards. */
 export const libraryCardInfoAtom = atom((get) => {
   const state = get(libraryDisplayAtom);
   const mode = get(libraryViewModeAtom);
@@ -806,8 +663,7 @@ export const libraryCardInfoAtom = atom((get) => {
       : DEFAULT_CARD_FIELDS;
   return {
     preview: read("preview"),
-    /** Kept as the boolean the surfaces already ask for — it is now derived from
-     *  the count rather than stored beside it, so the two can never disagree. */
+    /** Derived from `fields` rather than stored, so the two cannot disagree. */
     metadata: fields !== "none",
     fields,
     country: read("country"),
@@ -816,9 +672,8 @@ export const libraryCardInfoAtom = atom((get) => {
   };
 });
 
-/** Is a given list column drawn? Columns default from their own spec, so a
- *  column added to `LIST_COLUMNS` arrives switched on (or off) without anyone
- *  editing this. */
+/** Is a given list column drawn? Columns default from their own spec, so a new
+ *  entry in `LIST_COLUMNS` needs no change here. */
 export const libraryListColumnsAtom = atom((get) => {
   const bag = get(libraryDisplayAtom).modes.list;
   const defaults = new Map(
@@ -827,21 +682,10 @@ export const libraryListColumnsAtom = atom((get) => {
   return (id: string) => (bag?.[id] as boolean | undefined) ?? defaults.get(id) ?? false;
 });
 
-/** Does any control THE MENU IS SHOWING sit off its default?
- *
- *  One fold over the registry, which is the point: every term is gated by the
- *  same data that renders its section, so the dot can never point at a control
- *  this mode hides. Hiding Thumbnail in Cards then switching to Results used to
- *  leave it lit over a menu with no "Show information" in it, and no way to
- *  clear it.
- *
- *  `external` options are excluded, which is a deliberate change: the old
- *  expression lit the dot for a non-default SORT on mobile. The dot is for state
- *  HIDDEN behind the trigger, and sort is not hidden — it has its own control,
- *  with its own visible checkmark, inside the very menu the dot is pointing at
- *  (and its own labelled Select in the toolbar everywhere else). Counting it
- *  would also make "Reset this view" a lie, since sort is shared across every
- *  mode and resetting one view's display has no business changing it. */
+/** Does any option the menu shows for this mode sit off its default? Reads the
+ *  same registry that renders the menu, so the dot never points at a hidden
+ *  control. `external` options (sort) are excluded: sort has its own visible
+ *  control and is shared across modes, so "Reset this view" does not touch it. */
 export const libraryDisplayModifiedAtom = atom((get) => {
   const state = get(libraryDisplayAtom);
   const mode = get(libraryViewModeAtom);
@@ -853,8 +697,7 @@ export const libraryDisplayModifiedAtom = atom((get) => {
   );
 });
 
-/** Put this mode back to the registry's answers, leaving every other mode
- *  alone. Shared options are left alone too — they aren't this mode's to reset. */
+/** Reset this mode to registry defaults. Other modes and shared options are untouched. */
 export const resetLibraryDisplayAtom = atom(null, (get, set) => {
   const mode = get(libraryViewModeAtom);
   const state = get(libraryDisplayAtom);
@@ -863,9 +706,8 @@ export const resetLibraryDisplayAtom = atom(null, (get, set) => {
   set(libraryDisplayAtom, { ...state, modes });
 });
 
-/** Sort order. `relevance` exists only while a query is active — it is the
- *  order of match quality (`utils/relevance.ts`), which a list with nothing
- *  searched doesn't have. */
+/** Sort order. `relevance` (match quality, `utils/relevance.ts`) applies only
+ *  while a query is active. */
 export type LibrarySort =
   | "relevance"
   | "recent"
@@ -876,8 +718,7 @@ export type LibrarySort =
 export const DEFAULT_LIBRARY_SORT: LibrarySort = "recent";
 export type LibrarySortDir = "asc" | "desc";
 
-/** The sort the reader chose for browsing — what applies with no query, and
- *  what a search hands back when it is dismissed. */
+/** The browsing sort: applies with no query and returns when a search is dismissed. */
 const sortStateAtom = atom<LibrarySort>(DEFAULT_LIBRARY_SORT);
 const sortDirStateAtom = atom<LibrarySortDir>("desc");
 /** A sort picked while a query runs, for that query only. `null` = relevance. */
@@ -888,13 +729,9 @@ type Update<T> = T | ((prev: T) => T);
 const resolve = <T,>(next: Update<T>, prev: T): T =>
   typeof next === "function" ? (next as (p: T) => T)(prev) : next;
 
-/** The Library's sort key.
- *
- *  A query sorts by RELEVANCE unless the reader picks something else for it,
- *  which lasts until the search is dismissed (`clearLibrarySearchAtom`); then
- *  the browsing sort from before the search is back. Same shape as the view
- *  mode's search steering above. With no query, `relevance` isn't an order —
- *  writing it then changes nothing. */
+/** The Library's sort key. A query sorts by relevance unless the user picks
+ *  another sort, which lasts until `clearLibrarySearchAtom`; then the browsing
+ *  sort returns. With no query, writing `relevance` does nothing. */
 export const librarySortAtom = atom(
   (get): LibrarySort =>
     get(libraryQueryAtom).trim()
@@ -932,19 +769,16 @@ export const defaultSortDir = (key: LibrarySort): LibrarySortDir =>
   key === "title" || key === "type" || key === "country" ? "asc" : "desc";
 
 /** Switch collection. Template ids, countries and descriptors are per-source, so
- *  every facet and the open preview have to go with it — this lives in an atom
- *  (not in the view) because the collection picker now sits in the navbar, and
- *  two call-sites clearing "most of" the facets would drift. */
+ *  every facet and the open preview are cleared. An atom rather than view code so
+ *  the navbar picker and any other caller share one reset. */
 export const selectDataSourceAtom = atom(null, (get, set, source: DataSource) =>
-  // The WHOLE switch is guarded, not just its selection clear: held
-  // half-way, "Keep editing" left the new collection on screen with the old
-  // one's selection and bulk form still up (and a Delete from there filed old
-  // ids under the new corpus).
+  // Guard the whole switch, not just the selection clear: otherwise "Keep
+  // editing" leaves the new collection showing with the old selection and form.
   whenBulkClean(get, set, () => switchDataSource(set, source)),
 );
 
-/** Run `run` now, or — while the bulk form holds changes — behind the
- *  discard-confirm, closing the form first on Discard. */
+/** Run `run` now, or, while the bulk form has changes, behind the discard
+ *  confirm, closing the form first on Discard. */
 export function whenBulkClean(get: Getter, set: Setter, run: () => void) {
   if (!get(bulkEditDirtyAtom)) return run();
   set(guardNavigationAtom, () => {
@@ -972,12 +806,8 @@ function switchDataSource(set: Setter, source: DataSource) {
   set(clearSelectionAtom);
 }
 
-/** Clear every filter. ONE definition: the Filters panel and the view each had
- *  their own, and they had already drifted — the panel's forgot the search box,
- *  the view's forgot the AND/OR modes. */
-/** Clear the facet filters but KEEP the query — for the Results tab's "hidden by
- *  filters · Clear filters" line, which widens the facets to reveal the matches
- *  the current query found but the facets excluded. */
+/** Clear the facet filters but keep the query, for the Results tab's "hidden by
+ *  filters · Clear filters" line. */
 export const clearLibraryFacetsAtom = atom(null, (_get, set) => {
   set(libraryTypeFiltersAtom, {});
   set(libraryHasDocAtom, false);
@@ -992,10 +822,10 @@ export const clearLibraryFacetsAtom = atom(null, (_get, set) => {
   set(libraryChainFiltersAtom, {});
 });
 
+/** Clear every filter and the search. The one definition, so callers cannot drift. */
 export const clearLibraryFiltersAtom = atom(null, (_get, set) => {
-  // BOTH halves of the search: clearing only the committed query would leave the
-  // box still holding text that no longer filters anything, and the next
-  // keystroke would silently re-commit the old string.
+  // Clear both the draft and the committed query: leaving the draft would let
+  // the next keystroke re-commit the old string.
   set(clearLibrarySearchAtom);
   set(libraryTypeFiltersAtom, {});
   set(libraryHasDocAtom, false);
@@ -1010,15 +840,9 @@ export const clearLibraryFiltersAtom = atom(null, (_get, set) => {
   set(libraryChainFiltersAtom, {});
 });
 
-/** Count of active FACETS — types, has-doc, status, countries, descriptors,
- *  dates, inherited and chain values. The search is NOT one of them: see
- *  `libraryActiveSearchAtom`. This is what the Filters tab's count and dot read,
- *  so both describe the panel's own state and nothing else.
- *
- *  Surfaces that LIST the filters (the Active-filters sheet and the action-bar
- *  popover) show the search alongside the facets, so they size themselves off
- *  `useActiveFilters().length` — the real length of what they render — rather
- *  than this. Counting from the list is how they stay honest either way. */
+/** Count of active facets (not the search; see `libraryActiveSearchAtom`). The
+ *  Filters tab's count and dot read this. Surfaces that list filters including
+ *  the search use `useActiveFilters().length` instead. */
 export const libraryActiveFilterCountAtom = atom((get) => {
   let n = Object.values(get(libraryTypeFiltersAtom)).filter(Boolean).length;
   if (get(libraryHasDocAtom)) n += 1;
@@ -1033,12 +857,9 @@ export const libraryActiveFilterCountAtom = atom((get) => {
   return n;
 });
 
-/** Is ANYTHING narrowing the results — a facet or the search?
- *
- *  What the "nothing matched" escape hatches gate on (the map's and the time
- *  brush's Clear buttons), because those clear both. Gating them on the facet
- *  count alone would strand the one case they exist for: a search that matches
- *  nothing, with no facets ticked, offering no way out of an empty screen. */
+/** Is a facet or the search narrowing the results? Gates the "nothing matched"
+ *  Clear buttons (map, time brush), which clear both; a facet count alone would
+ *  hide them for a search that matches nothing. */
 export const libraryHasNarrowingAtom = atom(
   (get) => get(libraryActiveFilterCountAtom) > 0 || get(libraryActiveSearchAtom) !== null,
 );

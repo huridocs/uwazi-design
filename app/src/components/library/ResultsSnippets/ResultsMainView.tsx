@@ -50,28 +50,15 @@ import { CountBadge } from "../../shared/CountBadge";
 import { MatchedTerms } from "../MatchedTerms";
 import type { RelevanceBreakdown } from "../../../utils/relevance";
 
-/** The Results view in the MAIN pane — the drawer's evidence list given the
- *  width it always wanted.
+/** The Results view in the main pane. Same data path as the drawer's Results tab
+ *  (`buildSnippetsFor`); `libraryResultsLayoutAtom` picks one of four layouts:
+ *  grouped (card per entity), tree (entity → field → snippets), passages (flat
+ *  ranked list) and spine (best passage on a time axis).
  *
- *  Same data path as the Results tab (`buildSnippetsFor` → marked excerpts), four
- *  readings of it (`libraryResultsLayoutAtom`, picked in the Display menu the way
- *  the timeline picks its own):
- *
- *    grouped   one wide card per entity — properties BESIDE passages, not stacked
- *    tree      entity → field → snippets, collapsible at both levels
- *    passages  every passage as one flat ranked list, the entity secondary
- *    spine     each entity's strongest passage at its exact date on a time axis
- *
- *  Honesty rules this surface inherits (PATTERNS §4.2): a page tag and a
- *  jump-to-page appear ONLY where the corpus really is page-mapped; a snippet
- *  whose page is `null` is a passive excerpt. Counts are `fullTextTotal` (every
- *  matched page), never the number of excerpts built — and where this view caps
- *  what it renders, it says so rather than passing the cap off as the whole set.
- *
- *  Layout stability: the header strip (chips, cap note) is mounted at all times
- *  with only its CONTENTS toggling, so ticking a match-type chip can't shove
- *  the results out from under the pointer. The COUNT is not here at all — the
- *  toolbar masthead is the one place this surface's number lives. */
+ *  Page tags and page jumps appear only where the corpus is page-mapped (PATTERNS
+ *  §4.2). Counts use `fullTextTotal`, and any render cap is stated. The header
+ *  strip stays mounted so toggling a chip can't shift the results; the count
+ *  lives in the toolbar masthead only. */
 
 type MatchType = keyof MatchTypeFilters;
 const MATCH_TYPES: { key: MatchType; label: string }[] = [
@@ -80,8 +67,8 @@ const MATCH_TYPES: { key: MatchType; label: string }[] = [
   { key: "document", label: "Document" },
 ];
 
-/** Entities rendered per page. Lower than the drawer's 40 — each card here is
- *  far bigger — and every layout pays the same windowing cost per entity. */
+/** Entities rendered per page. Lower than the drawer's 40 because each card here
+ *  is bigger, and every layout pays the same windowing cost per entity. */
 const STEP = 24;
 /** Passages view excerpts more per entity (it IS the passage list) but still a
  *  bounded number; the surplus is reported, never silently dropped. */
@@ -93,18 +80,8 @@ const TWO_COL_TREE = 1024; // 64rem
 /** …and where a passage can afford a third line of context. */
 const THREE_LINE_PASSAGE = 896; // 56rem
 
-/** The excerpt budget each layout gets: the column the prose is set in, and how
- *  many lines of it the layout can afford.
- *
- *  The column is the one the row actually has. Passages used to be capped at a
- *  74ch/96ch measure with the context sized to that cap, so on a wide pane every
- *  excerpt stopped two thirds of the way across and carried a dozen words a
- *  side. Now the text runs to the row's edge and the context is sized to that
- *  width, so a wider pane shows more of the sentence around the hit.
- *
- *  Passage and attribution are still one block (no meta column beside the
- *  quote): a stretched `1fr_15rem` split parked the attribution a hand's width
- *  from the sentence it names. */
+/** Context words per excerpt for each layout, sized to the row's real text
+ *  width and line count, so a wider pane shows more words around the hit. */
 function excerptBudget(layout: ResultsLayout, w: number): { ctx: number; twoCol: boolean } {
   if (!w) return { ctx: contextWordsFor(0), twoCol: false };
   if (layout === "passages") {
@@ -164,12 +141,9 @@ interface Result {
   snippets: EntitySnippets;
 }
 
-/** Every layout here prints the entity's title, marked. So the title's own
- *  snippet is dropped from the bodies: restating the words directly under the
- *  heading that already highlights them is noise, and at this width it's a
- *  paragraph of it. (The count badge still counts the title hit — the badge
- *  reports matches, not rows.) A result that matched ONLY on its title therefore
- *  has no body, and says so in one line rather than showing an empty card. */
+/** Metadata snippets minus the title, which every layout already prints marked.
+ *  The count badge still counts the title hit. A title-only match therefore has
+ *  no body and says so in one line. */
 const properties = (s: EntitySnippets): MetadataSnippet[] =>
   s.metadata.filter((m) => m.fieldKey !== "title");
 
@@ -201,10 +175,9 @@ export function ResultsMainView({
   // The page this view draws, for "select all loaded".
   const drawnIds = useMemo(() => rankedIds.slice(0, visible), [rankedIds, visible]);
   useDrawnIds(drawnIds);
-  /* THE PANE'S OWN WIDTH, quantised to 64px and held while the drawer divider
-     is dragged (`useSettledWidth`). It feeds a memo that re-snippets the
-     visible page, so following a drag rebuilt and re-wrapped every excerpt at
-     each 64px step; the width now changes once, on release. */
+  /* Pane width, quantised to 64px and held while the drawer divider is dragged
+     (`useSettledWidth`). It feeds the re-snippeting memo below, so it must only
+     change on release, not at every step of a drag. */
   const [bodyRef, paneW] = useSettledWidth();
   // Per-entity "show every page-snippet", owned here so the capped `results`
   // memo stays cheap and only the expanded cards pay for the extra windowing.
@@ -301,21 +274,15 @@ export function ResultsMainView({
 
   return (
     <div data-component="ResultsMainView" data-layout={layout} className="flex flex-col h-full min-h-0">
-      {/* Header strip — always mounted; only its contents change. Match-type
-          chips and the cap note ride the shared list-header shape so this
-          surface and the drawer's Results tab read as one component at two
-          widths. NO count here: "N results for [chip]" lives in the toolbar
-          masthead — the one place this surface's number is printed — and a
-          second copy a line below it was the scatter this row used to be. */}
+      {/* Always mounted; only its contents change. No count here: the toolbar
+          masthead is the one place this surface prints its number. */}
       <header data-part="header" className="shrink-0">
         <ListInfoRow
           count={null}
           activeFilterCount={0}
           showFilterChips={false}
-          // The chips' widths never change (`matchTypeCounts` comes from
-          // `matchTypeBase`, which the toggles don't narrow), so this row keeps
-          // a fixed height with fixed contents — toggling a chip rewrites the
-          // masthead's number, not anything on this line.
+          // `matchTypeCounts` comes from `matchTypeBase`, which the toggles
+          // don't narrow, so toggling a chip never changes this row's width.
           leadingSlot={
             <span className="flex items-center gap-1">
               {MATCH_TYPES.map(({ key, label }) => (
@@ -329,11 +296,9 @@ export function ResultsMainView({
               ))}
             </span>
           }
-          // Always mounted, contents hidden when nothing is excluded — this note
-          // appears and vanishes as facets are ticked, exactly while the results
-          // below are being read. It rides the chip row rather than a line of
-          // its own: an invisible reserved line under the chips doubled the gap
-          // above the first result.
+          // Always mounted and hidden when nothing is excluded, so ticking facets
+          // doesn't shift the results. On the chip row, not its own line, to
+          // keep the gap above the first result at one step.
           rightSlot={
             <span
               data-part="hidden-by-filters"
@@ -422,9 +387,7 @@ export function ResultsMainView({
 }
 
 /* ------------------------------------------------------------------ *
- * 1 — GROUPED: one wide card per entity. The drawer stacks properties
- *     above passages because it has 24rem; here they sit side by side,
- *     which is the whole reason to promote this view out of the drawer.
+ * 1 — Grouped: one wide card per entity, properties then passages.
  * ------------------------------------------------------------------ */
 
 function GroupedBody({
@@ -468,9 +431,8 @@ function GroupedBody({
               selected ? `bg-parchment border-border ${PREVIEWED_RING}` : "bg-paper border-border/60"
             } ${SELECTED_LOOK} ${FOCUS_RING_ON_SELECT}`}
           >
-            {/* The visually hidden selection checkbox (see EntitySelectBox). A
-                passage row is evidence, not an entity, so only the entity's
-                card carries one. */}
+            {/* Only the entity card carries a selection box; passage rows are
+                evidence, not entities. */}
             <EntitySelectBox id={entity.id} title={entity.title} />
             <header
               data-part="result-header"
@@ -478,8 +440,7 @@ function GroupedBody({
             >
               <div className="flex items-center gap-2">
               <EntityTypeChip typeId={entity.typeId} />
-              {/* The heading is a flex box so the button inside it keeps
-                  shrinking and truncating exactly as it did as a direct child. */}
+              {/* Flex so the button inside can shrink and truncate. */}
               <h2 data-part="title" className="flex min-w-0">
               <button
                 type="button"
@@ -512,18 +473,14 @@ function GroupedBody({
                 )}
               </span>
               </div>
-              {/* Multi-term queries only (renders nothing for one term), and
-                  constant for the life of the query, so it never appears under a
-                  card the reader is looking at. */}
+              {/* Renders only for multi-term queries and is constant for the
+                  life of a query, so it never shifts a card being read. */}
               <MatchedTerms relevance={relevanceOf(entity)} query={query} className="mt-1" />
             </header>
 
-            {/* Properties, then Document, one above the other at the card's
-                full width, at every pane width. Side by side, the properties
-                column left the passages two thirds of the card and a short
-                property list beside a long column of prose. Neither section
-                means a header-only card, which is the honest shape of a
-                title-only match. */}
+            {/* Properties above Document, both full width: side by side, the
+                passages lost a third of the card. A title-only match renders
+                the header alone. */}
             {(hasMeta || hasText) && (
               <div className="flex flex-col gap-stack px-4 py-3">
                 {hasMeta && (
@@ -548,13 +505,9 @@ function GroupedBody({
                     <SectionLabel icon={<FileText size={11} />}>
                       {documentLabel(snippets.borrowedFrom)}
                       <PageCount shown={snippets.fullText.length} total={snippets.fullTextTotal} />
-                      {/* Rides the section label rather than taking a line of
-                          its own — the label is mounted whether or not the
-                          document is borrowed, so the passages under it never
-                          move (CLAUDE.md). Trailing the page count, not pushed
-                          to the far edge: across a card that can be a metre wide
-                          an `ms-auto` attribution parks nowhere near the thing
-                          it attributes. */}
+                      {/* In the always-mounted label, so the passages don't move
+                          when a document is borrowed. After the page count, not
+                          `ms-auto`, so it stays next to what it attributes. */}
                       <BorrowedDocLine from={snippets.borrowedFrom} className="min-w-0" />
                     </SectionLabel>
                     <ul className="mt-1.5 flex flex-col gap-1">
@@ -569,11 +522,9 @@ function GroupedBody({
                         </li>
                       ))}
                     </ul>
-                    {/* The card already PRINTS the honest total beside the
-                        section label; without this it stated a number it gave
-                        you no way to reach. Same contract as the drawer's
-                        card: stays mounted once expanded (`shown === total`
-                        then), so the control can't vanish under the click. */}
+                    {/* Lets the user reach the total printed in the label. Stays
+                        mounted once expanded (`shown === total` then), so the
+                        control doesn't vanish under the click. */}
                     {(snippets.fullTextTotal > snippets.fullText.length ||
                       expanded) && (
                       <button
@@ -602,9 +553,8 @@ function GroupedBody({
 }
 
 /* ------------------------------------------------------------------ *
- * 2 — TREE: entity → matched field → its snippets. Two collapsible
- *     levels, so a thousand results can be read as an index first and
- *     opened where it looks promising.
+ * 2 — Tree: entity → matched field → its snippets, two collapsible
+ *     levels, so a long result set can be scanned as an index.
  * ------------------------------------------------------------------ */
 
 function TreeBody({
@@ -630,8 +580,8 @@ function TreeBody({
         const props = properties(snippets);
         const bare = props.length === 0 && snippets.fullText.length === 0;
         return (
-          // The shared grouped-card shell in `standalone` mode — off the
-          // relationships panel's expand/collapse globals entirely.
+          // `standalone`: ignores the relationships panel's expand/collapse
+          // atoms.
           <li key={entity.id} data-part="result">
           <RelationshipGroupedCard
             title={entity.title}
@@ -683,9 +633,8 @@ function TreeBody({
                       ? `${snippets.fullText.length} of ${snippets.fullTextTotal.toLocaleString()} shown`
                       : undefined
                   }
-                  // On the branch header, not above the passages: the header is
-                  // there whether or not the document is borrowed, so nothing
-                  // below it moves.
+                  // On the always-mounted branch header, so nothing below moves
+                  // when the document is borrowed.
                   trailing={<BorrowedDocLine from={snippets.borrowedFrom} />}
                 >
                   {snippets.fullText.map((s, i) => (
@@ -700,9 +649,8 @@ function TreeBody({
                   ))}
                 </TreeBranch>
               )}
-              {/* The branches above already name the fields that matched; the
-                  terms that matched nothing are the one thing they can't show.
-                  Multi-term queries only. */}
+              {/* Shows only the terms that matched nothing; the branches
+                  already name the fields that matched. Multi-term queries only. */}
               <MatchedTerms relevance={relevanceOf(entity)} query={query} missedOnly className="px-4 py-1.5" />
             </div>
           </RelationshipGroupedCard>
@@ -713,8 +661,8 @@ function TreeBody({
   );
 }
 
-/** One collapsible field branch. Indented under the entity with a quiet guide
- *  rail, mirroring the relationships tree. */
+/** One collapsible field branch, indented under the entity with a guide rail
+ *  like the relationships tree. */
 function TreeBranch({
   twoUp = false,
   label,
@@ -730,8 +678,8 @@ function TreeBranch({
   count: number;
   icon: ReactNode;
   note?: string;
-  /** Rides the header row after the note — where the Document branch names the
-   *  connected document its passages were quoted from. */
+  /** Rendered after the note; the Document branch uses it for the borrowed
+   *  document's name. */
   trailing?: ReactNode;
   children: ReactNode;
 }) {
@@ -759,19 +707,14 @@ function TreeBranch({
         {trailing}
       </button>
       {open && (
-        /* TWO-UP past 64rem, and only here. A tree's leaves are short lines —
-           a field's snippets, a page's excerpt — so one column of them down a
-           wide pane is mostly rule and margin. Two columns is the hierarchy's
-           own way to spend width: the branch still owns its children, they are
-           still under its rule, there are just two of them across. `grid`, not
-           `columns`, because CSS columns flow top-to-bottom and would put leaf 2
+        /* Two columns past 64rem, since leaves are short lines. `grid`, not
+           CSS `columns`: columns flow top-to-bottom and would put leaf 2
            halfway down the pane. */
         <ul
           data-part="leaves"
           className={`mt-1 ms-2 ps-3 ${
-            // …and only when there are two to put across. A single leaf in a
-            // two-column grid is a half-width leaf beside nothing, which is the
-            // emptiness this change exists to remove, moved one level in.
+            // Only with two or more leaves; a single leaf would sit at half
+            // width beside an empty column.
             twoUp && Children.count(children) > 1
               ? "grid grid-cols-2 gap-x-6 gap-y-0.5 items-start"
               : "flex flex-col gap-0.5"
@@ -786,10 +729,8 @@ function TreeBranch({
 }
 
 /* ------------------------------------------------------------------ *
- * 3 — PASSAGES: every matching passage as one flat list, ranked by how
- *     many times the term occurs on that page. The entity becomes the
- *     secondary line — this is the view for reading the corpus, not for
- *     counting entities.
+ * 3 — Passages: every matching passage in one flat list, ranked by
+ *     `compareEvidence`, with the entity as the secondary line.
  * ------------------------------------------------------------------ */
 
 interface FlatPassage {
@@ -802,16 +743,14 @@ interface FlatPassage {
   field: string | null;
   fieldKey: string | null;
   text: string;
-  /** For document rows: the connected document the passage was quoted from. The
-   *  flattening loses the entity's snippets, and this list is exactly where the
-   *  same judgment shows up under a dozen different case names. */
+  /** Document rows: the connected document the passage was quoted from, kept
+   *  on the row because flattening drops the entity's snippets. */
   from: BorrowedDoc | null;
   /** Other results whose document has this same passage on the same page. The
    *  row is listed once, under `entity`; these are counted in its attribution. */
   also: Entity[];
-  /** The row's identity, stable while the fold changes which result heads it
-   *  (a "Show more" can bring in the document's owner) — so a selection made
-   *  on the row doesn't go dark when its head swaps. */
+  /** Stable row identity. "Show more" can change which result heads the row,
+   *  and the selection must survive that. */
   key: string;
 }
 
@@ -828,31 +767,25 @@ function PassagesBody({
   onFocusProperty: (id: string, fieldKey: string) => void;
   onSelectSnippet: (id: string, page: number) => void;
 }) {
-  // Same signal the grouped/tree passage rows read, so a page opened from any
-  // layout — or from a `MatchOrigin` popover — stays lit in this one
-  // (`handleSnippetSelect` writes it).
+  // Shared with the grouped/tree rows and `MatchOrigin`, so a page opened from
+  // any of them stays selected here (`handleSnippetSelect` writes it).
   const activePage = useAtomValue(resultsActivePageAtom);
-  // …but that atom can only name a row the corpus gives a PAGE. A passage with
-  // no page (Sample full text, every property hit) is identified by its content
-  // alone, so the row the user actually opened is remembered here. Falling back
-  // to `selectedId` instead would light every row of that entity at once — a
-  // band of "selected" scattered down a ranked list, which is not what selected
-  // means anywhere else in the app.
+  // That atom only covers rows with a page. Page-less rows (Sample full text,
+  // property hits) are tracked here by key; falling back to `selectedId` would
+  // select every row of that entity at once.
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const { rows, notShown, titleOnly } = useMemo(() => {
     const rows: FlatPassage[] = [];
     let notShown = 0;
     let titleOnly = 0;
     const byPassage = new Map<string, FlatPassage>();
-    // Per DOCUMENT, not per result: the note counts matched pages the list
-    // doesn't excerpt, and twelve results reading one judgment fold into that
-    // judgment's rows — summing per result counted its pages twelve times.
+    // Per document, not per result: several results can read one document, and
+    // summing per result would count its unexcerpted pages once per result.
     const byDoc = new Map<string, { total: number; shown: number }>();
     for (const { entity, snippets } of results) {
       const props = properties(snippets);
-      // A title-only result has no passage to list here — counted and reported
-      // at the foot, never silently dropped from a list that claims to hold
-      // "every passage".
+      // A title-only result has no passage; it is counted and reported in the
+      // foot note rather than dropped.
       if (props.length === 0 && snippets.fullText.length === 0) titleOnly++;
       for (const m of props) {
         for (const t of m.texts) {
@@ -871,13 +804,10 @@ function PassagesBody({
         }
       }
       for (const s of snippets.fullText) {
-        // One passage is one row, however many results read it. A Causa with
-        // no PDF of its own quotes a connected document, and the corpus's
-        // documents share six stand-in files, so the same page used to be
-        // listed once per result — five identical rows in a list that ranks
-        // passages. Keyed on `docKey` (the text a document resolves to), not
-        // on the document entity: the repeats come from DIFFERENT document
-        // entities serving the same file. A page-less corpus keys on the text.
+        // One row per passage, however many results read it. Keyed on `docKey`
+        // (the text a document resolves to), not the document entity, because
+        // different document entities can serve the same file. A page-less
+        // corpus keys on the text.
         const docId = snippets.docKey ?? entity.id;
         const key = `${docId}|${s.page ?? s.text}`;
         let doc = byDoc.get(docId);
@@ -888,7 +818,7 @@ function PassagesBody({
         doc.total = Math.max(doc.total, snippets.fullTextTotal);
         const seen = byPassage.get(key);
         if (seen) {
-          // A result reading its OWN document heads the row; otherwise the
+          // A result reading its own document heads the row; otherwise the
           // best-ranked result that quotes the passage does.
           if (!snippets.borrowedFrom && seen.from) {
             seen.also.unshift(seen.entity);
@@ -916,30 +846,25 @@ function PassagesBody({
         doc.shown++;
       }
     }
-    // Pages counted but not excerpted — said out loud rather than dropped.
+    // Pages counted but not excerpted, reported in the foot note.
     for (const { total, shown } of byDoc.values()) notShown += Math.max(0, total - shown);
-    // Best passages first, by the SAME rank that chose each entity's pages
-    // (`compareEvidence`: AND groups met, then occurrences) — raw hits let a
-    // page that misses the AND outrank one that meets it. The sort is stable,
-    // so ties keep the relevance order the entities arrived in.
+    // Same rank that chose each entity's pages (`compareEvidence`: AND groups
+    // met, then occurrences); raw hits would let a page that misses the AND
+    // outrank one that meets it. Stable sort keeps relevance order on ties.
     rows.sort(compareEvidence);
     return { rows, notShown, titleOnly };
   }, [results]);
 
   return (
     <div data-part="passages" className="pb-2">
-      {/* ONE paper sheet of hairline-separated rows, not a stack of bordered
-          boxes. A card per passage is a box the passage never fills: the excerpt
-          is a sentence, so at pane width every card was mostly empty and the
-          list read as 120 half-filled containers. The sheet turns that leftover
-          into the margin of a page, which is what it actually is. */}
+      {/* One paper sheet with hairline-separated rows rather than a card per
+          passage: a one-sentence excerpt leaves a full-width card mostly empty. */}
       <ul className="rounded-md border border-border/60 bg-paper overflow-hidden">
         {rows.map((row, i) => {
           const color = getEntityType(row.entity.typeId)?.color ?? "#6B7280";
           const isDoc = row.field === null;
-          // Keyed by CONTENT, not by index: "Show more" splices new rows into a
-          // list ranked by hit density, so an index would quietly slide the lit
-          // state onto whatever passage inherited the slot.
+          // Keyed by content, not index: "Show more" splices new rows into the
+          // ranked list, and an index would move the selection to another row.
           const rowKey = row.key;
           const selected =
             activeKey === rowKey ||
@@ -947,18 +872,16 @@ function PassagesBody({
               activePage?.page === row.page &&
               (activePage.entityId === row.entity.id ||
                 row.also.some((e) => e.id === activePage.entityId)));
-          // What the row did before it lost its click: a page jump where the
-          // page is real, the entity's document where it isn't, the field for
-          // a property row.
+          // Page jump where there is a page, the entity's document where there
+          // isn't, the field for a property row.
           const goTo = () => {
             setActiveKey(rowKey);
             if (isDoc && row.page !== null) onSelectSnippet(row.entity.id, row.page);
             else if (isDoc) onSelect(row.entity.id);
             else onFocusProperty(row.entity.id, row.fieldKey!);
           };
-          // The count rides the row's NAME: the "N matches" text beside the
-          // page tag is passive, so its hover hint is out of a keyboard's reach
-          // and a tab stop just to read a number would be one too many.
+          // The match count goes in the accessible name: the visible "N matches"
+          // is passive text whose hint keyboard users can't reach.
           const matchCount = row.hits > 1 ? `, ${row.hits} matches` : "";
           const primaryName =
             (!isDoc
@@ -967,12 +890,10 @@ function PassagesBody({
                 ? `Go to page ${row.page} in ${row.entity.title}`
                 : `Open the document of ${row.entity.title}`) + matchCount;
           return (
-            // A CLICKABLE row (CLAUDE.md a11y patterns): clicking the passage
-            // goes to it. The keyboard and screen-reader path is a stretched
-            // invisible primary-action button, first child; the content sits
-            // above it in a `relative` wrapper so the footer's controls stay
-            // clickable, and the item keeps a plain `onClick` for the mouse.
-            // Footer controls stop propagation, so nothing fires twice.
+            // Clickable row (CLAUDE.md a11y patterns): stretched primary-action
+            // button first, content above it in a `relative` wrapper, plain
+            // `onClick` on the item for the mouse. Footer controls stop
+            // propagation, so nothing fires twice.
             <li
               key={`${row.entity.id}-${i}`}
               data-part="passage"
@@ -994,19 +915,14 @@ function PassagesBody({
                 className="absolute inset-0 w-full cursor-pointer focus:outline-none
                   focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-carbon/30"
               />
-              {/* Passage and attribution are ONE block that runs to the row's
-                  edge. They used to sit in a stretched `1fr_15rem` grid: the
-                  meta stayed pinned to the far edge, a hand's width from the
-                  sentence it names. The attribution now sits under the quote. */}
+              {/* Passage and attribution form one block, attribution under the
+                  quote, so it stays next to the sentence it names. */}
               <div className="relative">
               <p data-part="excerpt" className="leading-relaxed text-ink wrap-anywhere">
                 <HighlightedText text={row.text} query={query} />
               </p>
-              {/* The attribution, under the quote it belongs to — and every
-                  part of it a way in: the entity, the evidence, the page, the
-                  other results that read the same passage. One line at one
-                  height (`min-h-5` holds the page tag's box on rows without
-                  one), so no row grows when it carries more. */}
+              {/* One line at a fixed height (`min-h-5` holds the page tag's box
+                  on rows without one), so rows don't grow when they carry more. */}
               <div data-part="attribution" className="mt-1 flex items-center gap-1.5 min-w-0 min-h-5 text-meta">
                 <Hint text={`Open ${row.entity.title}`} describe={false}>
                   {(hint) => (
@@ -1017,9 +933,8 @@ function PassagesBody({
                       aria-label={`Open ${row.entity.title}`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        // Cmd/Ctrl or Shift: the passage's ENTITY joins the
-                        // selection (the handler reads the modifiers); a
-                        // passage row itself is evidence, not an entity.
+                        // Cmd/Ctrl or Shift adds the passage's entity to the
+                        // selection (the handler reads the modifiers).
                         if (!selectionIntent(e)) setActiveKey(rowKey);
                         onSelect(row.entity.id, e);
                       }}
@@ -1040,21 +955,16 @@ function PassagesBody({
                 <span className="shrink-0 text-ink-muted" aria-hidden="true">
                   ·
                 </span>
-                {/* `<bdi dir="ltr">` keeps the ASSEMBLED "Document · p.15 ·
-                    2 matches" in order under RTL without flipping the line's
-                    alignment. A field name is the field's OWN translation
-                    ("الصك المصدر"), so it takes `auto` and reads in its own
-                    direction — forcing ltr on it is how a translated label
-                    ends up mis-ordered. */}
+                {/* `ltr` keeps "Document · p.15 · 2 matches" in order under RTL.
+                    A field name is translated, so it takes `auto`; forcing ltr
+                    on it mis-orders an RTL label. */}
                 <bdi dir={isDoc ? "ltr" : "auto"} className="shrink-0 flex items-center gap-1">
-                  {/* Plain text: going to the evidence is the row's own action
-                      (the primary button above), so a second button here would
-                      be the same control announced twice. */}
+                  {/* Plain text: the primary button already goes to the
+                      evidence, and a second button would announce it twice. */}
                   <span data-part="source" className="uppercase tracking-wide text-ink-tertiary">
                     {isDoc ? documentLabel(row.from) : row.field}
                   </span>
-                  {/* No invented page numbers: the tag exists only where the
-                      corpus is genuinely page-mapped. */}
+                  {/* Only where the corpus is page-mapped. */}
                   {isDoc && row.page !== null && (
                     <>
                     <Sep />
@@ -1073,8 +983,8 @@ function PassagesBody({
                     </Hint>
                     </>
                   )}
-                  {/* A count, not a control — so it is spelled out rather than
-                      left as "4×" for a screen reader to guess at. */}
+                  {/* Spelled out rather than "4×" so screen readers read it
+                      as a count. */}
                   {row.hits > 1 && (
                     <>
                     <Sep />
@@ -1090,13 +1000,9 @@ function PassagesBody({
                     </>
                   )}
                 </bdi>
-                {/* The attribution line is mounted for every row, so naming the
-                    source document here costs no height and moves nothing. It
-                    is what turns a run of identical passages under a dozen
-                    case names into a dozen cases citing one judgment. */}
+                {/* On the always-mounted attribution line, so it adds no height. */}
                 <BorrowedDocLine from={row.from} className="min-w-0" />
-                {/* The results folded into this row, in the same `↳` idiom.
-                    Rides the mounted attribution line, so it moves nothing. */}
+                {/* Other results folded into this row, same `↳` idiom. */}
                 {row.also.length > 0 && <AlsoUnder entities={row.also} onOpenEntity={onSelect} />}
               </div>
               </div>
@@ -1131,15 +1037,12 @@ const FOOTER_TARGET = `rounded-sm hover:underline cursor-pointer focus-visible:o
   focus-visible:ring-1 focus-visible:ring-carbon/40`;
 
 /* ------------------------------------------------------------------ *
- * 4 — SPINE: the results on a proportional time axis, each carrying its
- *     strongest passage. Answers "when does this term happen?", which
- *     neither the card list nor the passage list can.
+ * 4 — Spine: results on a proportional time axis, each with its
+ *     strongest passage.
  * ------------------------------------------------------------------ */
 
-/** The Results spine's row: a line of facts and a line of passage. Within
- *  `TimeSpine`'s `GAP_H + rowHeight ≤ MAX_GAP` invariant (its own notes name 44
- *  as the denser height that still leaves slack), so breaks and elisions lay
- *  out as they do at the default. */
+/** Two lines: facts, then passage. Must stay within `TimeSpine`'s
+ *  `GAP_H + rowHeight ≤ MAX_GAP` invariant, or silences stop eliding. */
 const SPINE_ROW_H = 44;
 
 function SpineBody({
@@ -1174,15 +1077,9 @@ function SpineBody({
 
   return (
     <div data-part="spine" className="pb-2">
-      {/* The SAME spine the Timeline view draws. The geometry — axis inset,
-          adaptive scale, year marks, elided silences, leader lines, date gutter
-          — is all `TimeSpine`'s; this passes only a row height.
-
-          That height is a budget, not a styling knob: `TimeSpine` derives its
-          scale from it, so a 104px row once stretched the axis 4.7× and, being
-          taller than `MAX_GAP` (88), stopped any silence from eliding. The row is
-          two lines at `SPINE_ROW_H` (44) — the facts, then the passage across
-          the row — inside the invariant `TimeSpine` documents. */}
+      {/* All geometry is `TimeSpine`'s; this passes only a row height.
+          `TimeSpine` derives its scale from that height, so raising
+          `SPINE_ROW_H` stretches the axis and can break eliding. */}
       <TimeSpine
         rows={dated}
         rowHeight={SPINE_ROW_H}
@@ -1191,9 +1088,8 @@ function SpineBody({
         renderRow={({ entity, snippets }, { t }) => {
           const selected = selectedId === entity.id;
           const color = getEntityType(entity.typeId)?.color ?? "#6B7280";
-          // The strongest passage by `compareEvidence`, page or property. One
-          // passage per result — the spine is a chronology, not a second
-          // results list.
+          // One passage per result: the strongest by `compareEvidence`, page
+          // or property.
           const best = bestPassage(snippets);
           return (
             <button
@@ -1202,7 +1098,7 @@ function SpineBody({
               aria-pressed={selected}
               onClick={(e) =>
                 // A selection gesture selects the entity; otherwise the row
-                // jumps to its best passage, as before.
+                // jumps to its best passage.
                 selectionIntent(e)
                   ? onSelect(entity.id, e)
                   : best?.page != null
@@ -1217,9 +1113,8 @@ function SpineBody({
                   selected ? "bg-parchment" : "hover:bg-warm"
                 }`}
             >
-              {/* Line 1: the facts. Line 2: the passage, at the row's full
-                  width — squeezed onto the facts' line it was a few words cut
-                  mid-sentence. */}
+              {/* Line 1: facts. Line 2: the passage at full row width, so it
+                  isn't cut to a few words. */}
               <span className="flex items-center gap-2 min-w-0 h-4">
               <span
                 aria-hidden
@@ -1227,28 +1122,22 @@ function SpineBody({
                 style={{ backgroundColor: color }}
               />
               <SpineDate t={t} />
-              {/* Title first and bounded, so a long case name can't eat the whole
-                  line — the passage is the reason to be in this layout. */}
+              {/* Bounded so a long title can't take the whole line. */}
               <span className="shrink-0 max-w-[18rem] truncate text-xs font-medium text-ink">
                 <HighlightedText text={entity.title} query={query} />
               </span>
               <CountBadge {...evidenceBadge(snippets)} />
               <span className="flex-1" />
-              {/* The trailing slot the timeline spends on a type name — spent
-                  here on where the passage came from: the page tag, and the
-                  connected document it was quoted from. `<bdi>` keeps "Document ·
-                  p.5" in order under RTL without flipping the box's alignment.
-                  A FIXED width, not `max-w`: this is the reserved space for the
-                  attribution, so a borrowed document appearing on one row can't
-                  pull that row's passage shorter than its neighbours'. */}
+              {/* Passage source: page tag and borrowed document. `<bdi>` keeps
+                  "Document · p.5" in order under RTL. Fixed width, not `max-w`,
+                  so rows line up whether or not they carry a borrowed document. */}
               {best && (
                 <span className="hidden md:flex shrink-0 w-[14rem] items-center gap-1.5 overflow-hidden text-meta text-ink-muted">
                   <bdi dir="ltr" className="shrink-0">
                     {best.label}
                   </bdi>
-                  {/* Start-aligned and fading at the slot's end: justified to
-                      the end of an overflow-hidden box, a long title was cut
-                      at its START, which is the part that names it. */}
+                  {/* Start-aligned with a fade: end-aligned in an overflow-hidden
+                      box, a long title would be cut at its start. */}
                   {best.isDocument && (
                     <BorrowedDocLine from={snippets.borrowedFrom} className="min-w-0" fade />
                   )}
@@ -1274,10 +1163,9 @@ function SpineBody({
   );
 }
 
-/** The passage that best represents a result: the best-ranked of its pages
- *  and its properties by `compareEvidence` — the same rank every other surface
- *  orders evidence by — a page winning a tie. Never the title: the row already
- *  prints it, marked. Its label never claims a page the data can't back. */
+/** Best-ranked page or property by `compareEvidence` (a page wins a tie).
+ *  Never the title, which the row already prints. The label names a page only
+ *  when the snippet has one. */
 function bestPassage(
   s: EntitySnippets,
 ): { text: string; page: number | null; label: string; isDocument: boolean } | null {
@@ -1320,9 +1208,8 @@ function PropertyRow({
       type="button"
       data-component="PropertyRow"
       onClick={onClick}
-      // Flat, not tinted. The drawer tints these because a 24rem column needs the
-      // separation; across a full-width card a filled block reads as a stranded
-      // slab, and the card's own border is already doing that work.
+      // Not tinted, unlike the drawer: the card's border already separates it,
+      // and a filled full-width block looks heavy.
       className="w-full text-start rounded-md px-2 py-1.5 hover:bg-warm
         transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1
         focus-visible:ring-inset focus-visible:ring-ink/20"
@@ -1337,8 +1224,8 @@ function PropertyRow({
   );
 }
 
-/** One document passage. Clickable — and page-tagged — only where the page is
- *  real; otherwise a passive excerpt (PATTERNS §4.2). */
+/** One document passage. Clickable and page-tagged only where the snippet has
+ *  a page; otherwise a passive excerpt (PATTERNS §4.2). */
 function PassageRow({
   snippet,
   query,
@@ -1357,13 +1244,9 @@ function PassageRow({
   ]
     .filter(Boolean)
     .join(" · ");
-  // The tag trails the passage's last word instead of right-aligning on its own
-  // line: `text-end` in a card that can be a metre wide parked "p.15" a hand's
-  // width from the sentence it annotates, next to whichever passage happened to
-  // end nearest. Inline, it is a citation — it costs no line of its own, so a
-  // page-less passage sits at exactly the same height as a tagged one. The
-  // body runs to the row's edge, like the passages layout. `bdi dir="ltr"` holds "p.15 · 2×" in order under RTL
-  // without forcing the passage's own direction.
+  // The tag trails the last word inline rather than end-aligning, so it stays
+  // next to its passage and takes no extra line. `bdi dir="ltr"` keeps
+  // "p.15 · 2×" in order under RTL without forcing the passage's direction.
   const body = (
     // A block <span>, not <p>: this body is also the content of a <button>,
     // where a paragraph isn't phrasing content.
@@ -1403,8 +1286,8 @@ function PassageRow({
   );
 }
 
-/** "3 of 41 pages" — `total` is every matched page, so a capped card never
- *  passes its cap off as the whole document. */
+/** "3 of 41 pages". `total` is every matched page, so a capped card still
+ *  shows the full count. */
 function PageCount({ shown, total }: { shown: number; total: number }) {
   return (
     <span dir="ltr" data-part="page-count" className="ms-1.5 font-normal normal-case tracking-normal text-ink-muted">

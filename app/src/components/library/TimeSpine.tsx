@@ -4,29 +4,27 @@ import { breakpointAtom } from "../../atoms/viewport";
 import { languageAtom } from "../../atoms/language";
 import { bucketOf, elapsed, formatDay } from "../../utils/timeline";
 
-/* ONE track geometry, shared by Rail, Density and BOTH spines. The axis lands at
- * the same x in every layout, so switching between them doesn't slide the
- * timeline across the pane. All measure from the pane's inline-end edge:
+/* One track geometry, shared by Rail, Density and both spines, so the axis sits at
+ * the same x in every layout and switching layouts doesn't move the timeline.
+ * All values measure from the pane's inline-end edge:
  *
  *   |<-- TRACK_BAR -->|<- TRACK_AXIS ->|
  *   [ bars / leaders ]|                | axis line
  *                     |     marks      | TRACK_LABEL
  *
- * TRACK_AXIS has to clear TRACK_LABEL by more than a counted ring's radius —
- * the cluster nodes straddle the axis, the density bars only grow inward. */
-// Sized for the 11px floor: at 9px this column was 26 and a date just fitted.
+ * TRACK_AXIS must exceed TRACK_LABEL by more than a counted ring's radius: the
+ * cluster nodes straddle the axis, while the density bars only grow inward. */
+// Sized so a date label fits at the 11px text floor.
 const TRACK_LABEL = 32;
 const TRACK_AXIS = 44;
 const TRACK_BAR = 42;
 const TRACK_W = TRACK_AXIS + TRACK_BAR + 4;
-/** On a phone the track was taking 90px of a 414px screen — a fifth of the width,
- *  spent on a gutter, while the rows beside it truncated to "Kimel. Informe …".
- *  Same geometry, scaled down. */
+/** At full size the track takes about a fifth of a phone's width and the rows
+ *  beside it truncate, so on mobile the same geometry is scaled down. */
 const MOBILE_SCALE = 0.62;
 
-/** The track's geometry, scaled for the viewport. ONE source, so the cluster
- *  nodes, the density bars, the marks and both spines' axes stay on the same line
- *  at every width. */
+/** The track's geometry, scaled for the viewport. Single source, so cluster
+ *  nodes, density bars, marks and both spines' axes stay aligned at every width. */
 export function useTrackGeom() {
   const k = useAtomValue(breakpointAtom) === "mobile" ? MOBILE_SCALE : 1;
   return {
@@ -37,60 +35,46 @@ export function useTrackGeom() {
   };
 }
 
-/** Floor for the adaptive scale — below this a multi-decade sweep reads as a void. */
+/** Floor for the adaptive scale; below it a multi-decade range becomes mostly empty space. */
 export const PX_PER_YEAR = 190;
 /** Default row box: one line. A row occupies this much axis whatever it draws,
  *  so collisions push down instead of overlapping. */
 export const EVENT_H = 22;
 /** The gutter kept for the leader line between the axis and the pushed row. */
 export const LEADER_W = 22;
-/** The instant mark's radius. It was 2.5, and at that size the axis hairline ran
- *  straight THROUGH the dot: the mark read as a speck of ink behind the line
- *  rather than a node on it. The ring below is the other half of the fix. */
+/** The instant mark's radius. Large enough that the axis hairline doesn't run
+ *  through the dot; the ring below stops the line at the mark's edge. */
 const MARK_R = 3.5;
-/** A paper ring, painted UNDER the fill (`paintOrder: "stroke"`, so the fill
- *  covers the inner half and the stroke reads as an outer ring — half this
- *  number wide). It stops the axis at the mark's edge and keeps two
- *  near-touching marks countable. */
+/** A paper ring painted under the fill (`paintOrder: "stroke"`), so it shows as
+ *  an outer ring half this width. It stops the axis at the mark's edge and keeps
+ *  two near-touching marks distinguishable. */
 const MARK_RING = 3;
-/** Marks closer together than their own drawn width can't be told apart — they
- *  fuse into one bead and their leaders into a hair-bundle. Rows this close
- *  share ONE cluster mark: a capsule spanning the instants, and one brace down
- *  to their rows. Measured on the mark's full footprint, ring included, so the
- *  test is exactly "would these two touch". */
+/** Marks closer than their own drawn width can't be told apart, so rows this
+ *  close share one cluster mark (a capsule and one brace). Measured on the full
+ *  footprint, ring included: the test is "would these two marks touch". */
 const CLUSTER_EPS = 2 * (MARK_R + MARK_RING / 2) + 1;
-/** The UTC day an instant falls on — the same day `formatDay` prints in the date
- *  gutter, so two rows share a value here exactly when they show one date. */
+/** The UTC day an instant falls on, the same day `formatDay` prints, so two rows
+ *  share a value here exactly when they show the same date. */
 const dayOf = (t: number) => Math.floor(t / 86_400_000);
-/** Where the brace's stem stands inside the leader gutter (0 = the row's edge,
- *  `LEADER_W - 4` = the axis). Far enough from the axis that the capsule reads
- *  on its own, close enough that the ticks into the rows stay short. */
+/** The brace stem's x in the leader gutter (0 = row edge, `LEADER_W - 4` = axis):
+ *  clear of the capsule, close enough that the ticks into the rows stay short. */
 const STEM_X = 7;
 /** The longest stretch of nothing the axis draws at true scale before it elides. */
 export const MAX_GAP = 88;
-/** The "N later" break label's line box — `leading-4` on the label pins it to
- *  exactly this, so the reserve below is a real measurement and not a guess. */
+/** The "N later" label's line box; `leading-4` on the label pins it to this. */
 const GAP_LABEL_H = 16;
-/** Clearance above and below the label inside its reserve. Without it the label
- *  is mathematically correct and visually wrong: a reserve equal to the line box
- *  leaves the phrase touching the rows on both sides, which reads as a collision
- *  even though it technically isn't one. */
+/** Clearance above and below the label inside its reserve, so the phrase doesn't
+ *  touch the rows on either side. */
 const GAP_CLEAR = 8;
 
-/** The "N later" break label's own box on the axis. It sits in the SAME columns
- *  as a row body (both run from the pane's inline-start to the axis), so it has
- *  to reserve height against rows the way a row does — otherwise a
- *  collision-pushed stack catches up with the break and the label prints on top
- *  of a row label.
+/** Height reserved for the "N later" break label. It sits in the same columns as
+ *  a row body, so it reserves height the way a row does; otherwise a
+ *  collision-pushed stack reaches the break and the label prints over a row.
  *
- *  INVARIANT: `GAP_H + rowHeight ≤ MAX_GAP`. A break's row lands a whole
- *  `MAX_GAP` below the previous row's ideal position, so as long as the reserve
- *  still fits once that row's own height is taken out, an UNCROWDED break never
- *  binds the floor and the spine lays out identically to one with no reserve at
- *  all. That bound is `rowHeight ≤ 56` at this reserve: both spines run at
- *  `EVENT_H` (22), which leaves 34px of slack, and a denser 44 still leaves 12.
- *  Past 56 an unclustered break would start being pushed down — and past
- *  `MAX_GAP` itself nothing elides at all (see `rowHeight` on Props). */
+ *  Invariant: `GAP_H + rowHeight ≤ MAX_GAP` (here `rowHeight ≤ 56`). Within it, an
+ *  uncrowded break never binds the floor and the layout matches one with no
+ *  reserve. Past 56 uncrowded breaks get pushed down; past `MAX_GAP` nothing
+ *  elides at all (see `rowHeight` on Props). */
 export const GAP_H = GAP_LABEL_H + 2 * GAP_CLEAR;
 
 export interface SpineRow<T> {
@@ -102,42 +86,26 @@ export interface SpineRow<T> {
 
 interface Props<T> {
   rows: SpineRow<T>[];
-  /** Axis box per row. **Leave it alone unless you have measured what happens.**
-   *  It is not a styling knob: the adaptive scale is multiplied by it, so raising
-   *  it stretches the whole chronology by the same factor — and once it passes
-   *  `MAX_GAP` (88) no silence can ever exceed a row, so nothing elides and the
-   *  axis degenerates into a column of whitespace. Both spines run at the default
-   *  `EVENT_H`; the Results spine shipped at 104 and had to be walked back.
-   *  If a row needs to say more, say it on ONE line — that's what the passage
-   *  continuation in the Results spine is. */
+  /** Axis box per row. Not a styling knob: the adaptive scale is multiplied by it,
+   *  and past `MAX_GAP` (88) no silence exceeds a row, so nothing elides and the
+   *  axis becomes whitespace. Keep the default `EVENT_H`; put extra content on one line. */
   rowHeight?: number;
   /** Colour of the instant dot on the axis. */
   dotColor: (item: T) => string;
   /** Full-strength dot (selected/active) instead of the resting 0.7. */
   dotActive?: (item: T) => boolean;
-  /** The row body. Positioned by the spine, styled by the caller — the caller
-   *  owns what a row SAYS, never where it sits. */
+  /** The row body. The spine positions it; the caller decides what it shows. */
   renderRow: (item: T, ctx: { t: number }) => ReactNode;
 }
 
 /** The proportional chronology, shared by the Timeline's Spine layout and the
- *  Results view's.
- *
- *  It owns everything that must be identical between them and would otherwise
- *  drift on the next edit: the axis inset (`useTrackGeom`, the same x the Rail
- *  and Density tracks use), the adaptive scale, the year/month marks, the
- *  elided-silence breaks, the collision push and the leader line back to the true
- *  instant. Callers supply only the rows and what each one draws.
- *
- *  Three properties worth keeping in mind when you render into it:
- *   - a row occupies `rowHeight` of axis whatever it actually draws — if the body
- *     grows past that, rows overlap. Raise `rowHeight`, don't clamp the axis.
- *   - the scroller belongs to the HOST. This renders one positioned canvas so it
- *     can sit inside whatever pane the caller already scrolls.
- *   - rows are CENTRED on their instant, so the canvas reserves half a row at
- *     each end and lays everything out inside that. A row of any height stays
- *     fully on-canvas and therefore scrollable-to; nothing renders at a negative
- *     offset, where a scroller could never reach it.
+ *  Results view's spine layout. It owns the axis inset (`useTrackGeom`), the
+ *  adaptive scale, year/month marks, elided-silence breaks, the collision push
+ *  and leader lines; callers supply the rows and what each one draws.
+ *   - A row occupies `rowHeight` of axis whatever it draws; a taller body overlaps.
+ *   - The host owns the scroller; this renders one positioned canvas.
+ *   - Rows are centred on their instant, so the canvas reserves half a row at each
+ *     end; nothing renders at a negative offset, where a scroller can't reach it.
  */
 export function TimeSpine<T>({
   rows: input,
@@ -151,26 +119,19 @@ export function TimeSpine<T>({
   const rtl = useAtomValue(languageAtom) === "AR";
 
   const { rows, clusters, height, years, gaps } = useMemo(() => {
-    // Half a row of reserve at each end of the canvas. Rows are CENTRED on their
-    // instant (`top: y - rowHeight/2 + 1`) and the earliest y is 6, so the first
-    // row reaches `rowHeight/2 - 7` ABOVE the origin — already 4px at the default
-    // 22, and the whole row once `rowHeight` passes ~14. Content above a
-    // scroller's origin is unreachable: scrollTop bottoms out at 0, so it sits
-    // clipped under the host's header with no way to bring it into view.
-    //
-    // Everything below is laid out in unpadded coordinates and shifted by PAD in
-    // ONE place (the return), because rows, year marks, silence breaks and
-    // leader lines share this origin — move them separately and the leaders
-    // detach from the dots they point at.
+    // Half a row of reserve at each end. Rows are centred on their instant and the
+    // earliest y is 6, so without it the first row starts above the origin, where
+    // scrollTop can't reach. Layout below is unpadded and shifted by PAD in one
+    // place (the return): rows, marks, breaks and leaders share this origin, and
+    // shifting them separately detaches the leaders from their dots.
     const PAD = Math.ceil(rowHeight / 2);
     const sorted = [...input].sort((a, b) => a.t - b.t);
     const min = sorted.length ? sorted[0].t : 0;
     const max = sorted.length ? sorted[sorted.length - 1].t : 0;
     const yearMs = 365.2425 * 86_400_000;
-    // The scale ADAPTS to the density of what's on screen. A fixed px-per-year
-    // makes a single busy year collide into an undifferentiated list (the exact
-    // thing this layout exists to avoid) and a 40-year sweep into a void. Give
-    // every event roughly its own row's worth of axis, and the proportions read.
+    // The scale adapts to event density: a fixed px-per-year collapses a busy year
+    // into a list and stretches a 40-year range into empty space. Each event gets
+    // roughly one row of axis.
     const spanYears = Math.max((max - min) / yearMs, 1 / 365);
     const scale = Math.min(
       Math.max((sorted.length * rowHeight * 1.35) / spanYears, PX_PER_YEAR),
@@ -178,9 +139,8 @@ export function TimeSpine<T>({
     );
     const raw = (t: number) => 6 + ((t - min) / yearMs) * scale;
 
-    // A long silence is information, but 700px of white is not. Anything longer
-    // than MAX_GAP collapses to MAX_GAP and gets a labelled break, so the axis
-    // stays proportional WHERE THE EVENTS ARE and elides where they aren't.
+    // A gap longer than MAX_GAP collapses to MAX_GAP with a labelled break, so the
+    // axis stays proportional where events are and elides where they aren't.
     const cuts: { fromRaw: number; atRaw: number; cut: number }[] = [];
     const gaps: { y: number; ms: number }[] = [];
     let accum = 0;
@@ -201,35 +161,21 @@ export function TimeSpine<T>({
       prevRaw = r;
       prevT = row.t;
       const ideal = r - accum;
-      // A break's label competes for the same columns as a row body, so it joins
-      // the collision push as a box of its own: the row after a break may not
-      // come closer than one label's height past where the previous row already
-      // pushed to. Without it, a stack pushed far enough to reach the break puts
-      // the row at `cursor` and the label at `(cursor + y) / 2` — the same y, one
-      // printed over the other. In the uncrowded case `ideal` is a whole MAX_GAP
-      // clear of `cursor`, so this floor never binds and nothing moves.
+      // A break's label shares the row columns, so it joins the collision push:
+      // the row after a break sits at least GAP_H past the previous row's end, or
+      // a pushed stack prints the label over a row. Uncrowded, this never binds.
       const y = Math.max(ideal, broke ? cursor + GAP_H : cursor);
-      // The break marker goes between the LAID-OUT rows, not at the ideal
-      // position — collision-pushed neighbours would sit on top of it. Centre it
-      // between the two rows' centres, which is also the midpoint of the empty
-      // band between their facing edges.
-      //
-      // `+ 1` matches the row body's own `top: y - rowHeight / 2 + 1`: the rows
-      // are DRAWN a pixel below the centres they're laid out on, so a label
-      // centred on the bare midpoint sits a pixel proud of the band it was given
-      // — 7px of air above and 9 below instead of 8 and 8. Measured, not
-      // guessed; keep the two offsets in step.
+      // The break label centres between the laid-out rows, not the ideal positions,
+      // or pushed neighbours cover it. `+ 1` matches the row body's
+      // `top: y - rowHeight / 2 + 1`; keep the two offsets in step.
       if (broke) gaps.push({ y: (prevY + y) / 2 + 1, ms: broke });
       prevY = y;
       cursor = y + rowHeight;
       return { row, y, ideal };
     });
-    // Where a mark lands once the elisions are taken out. A mark INSIDE an
-    // elided band is the case that bites: it has no cut of its own to subtract,
-    // so it kept its uncompressed position and printed BELOW marks it precedes —
-    // a spine running Jan, then Jul, then Apr. Inside a band it compresses with
-    // the band, which keeps the sequence monotonic and says the true thing: that
-    // stretch of the axis is squeezed.
+    // Where a mark lands once elisions are taken out. A mark inside an elided band
+    // compresses with the band; subtracting only whole cuts would print it below
+    // later marks (Jan, Jul, Apr).
     const at = (t: number) => {
       const r = raw(t);
       let a = 0;
@@ -242,10 +188,8 @@ export function TimeSpine<T>({
       }
       return r - a;
     };
-    // `+ PAD` pays for the top reserve the shift below consumes. The BOTTOM
-    // reserve is already there: `cursor` advances a full `rowHeight` past the
-    // last row's centre, which is `PAD` past that row's bottom edge — so the
-    // canvas ends PAD + 24 clear of the last thing drawn on it.
+    // `+ PAD` covers the top reserve. The bottom reserve is already in `cursor`,
+    // which sits a full `rowHeight` past the last row's centre.
     const height = cursor + PAD + 24;
 
     // Marks: years across a long sweep, months once the range is short enough
@@ -261,8 +205,8 @@ export function TimeSpine<T>({
         m = new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth() + step, 1))
       ) {
         const pos = at(m.getTime());
-        // Compact: "Jan 2009" doesn't fit the shared 26px label column. January
-        // carries the year, every other month is just its name.
+        // "Jan 2009" doesn't fit the label column: January shows the year, other
+        // months show a three-letter name.
         const full = bucketOf(m.getTime(), "month").label;
         const label = m.getUTCMonth() === 0 ? String(m.getUTCFullYear()) : full.slice(0, 3);
         if (pos >= 0) years.push({ label, y: pos });
@@ -276,8 +220,8 @@ export function TimeSpine<T>({
         if (pos >= 0) years.push({ label: String(y), y: pos });
       }
     }
-    // The first mark is often clipped (a range starting 17 Jan has no 1 Jan tick
-    // above it) — anchor the top of the axis explicitly.
+    // A range starting mid-period has no tick above its first row, so anchor the
+    // top of the axis explicitly.
     if (!years.length || years[0].y > 14) {
       const anchor = bucketOf(min, spanYears < 2.5 ? "month" : "year").label;
       years.unshift({ label: spanYears < 2.5 ? anchor.slice(0, 3) : anchor, y: 6 });
@@ -285,30 +229,12 @@ export function TimeSpine<T>({
     // The single shift into the reserve — see PAD above.
     const laid = rows.map((r) => ({ ...r, y: r.y + PAD, ideal: r.ideal + PAD }));
 
-    // Marks that would fuse become ONE cluster, on EITHER of two tests.
-    //
-    // The first is the DRAWN distance between instants, not equal timestamps: at
-    // a compressed scale a fortnight of filings overlaps exactly as badly as
-    // thirteen documents dated the same day, and both want the same treatment.
-    //
-    // The second is the DATE THE ROWS PRINT. Distance alone leaves one case
-    // incoherent: rows carrying intraday timestamps read "24 Apr 1986" in the
-    // gutter whatever the hour, so once the scale is open enough for a few hours
-    // to exceed a mark's width (it runs to 40,000px/year), one date on screen
-    // grows a second mark — and a reader has no way to tell that from two dates.
-    // Every spine prints `SpineDate`, so "one mark per date shown" is the
-    // primitive's invariant to keep, and `dayOf` reads the same UTC day
-    // `formatDay` does.
-    //
-    // A UNION, not a replacement: the day test can only ever merge more, so the
-    // compressed-fortnight behaviour above survives intact. It changes nothing
-    // in the corpora as they stand (CEJIL dates are unix days at midnight UTC,
-    // the sample's are date-only), which is the point — it closes the case
-    // before a corpus with real timestamps opens it.
-    //
-    // Chaining is deliberate — a run of rows each within a mark's width of the
-    // last IS one continuous band of activity, and drawing it as one capsule is
-    // what it looks like.
+    // Rows join one cluster if either test holds (a union: the day test only adds):
+    //  - drawn distance within CLUSTER_EPS, since at a compressed scale nearby
+    //    instants overlap as badly as equal ones;
+    //  - the same printed day (`dayOf` matches `formatDay`), so intraday
+    //    timestamps at a wide scale never show two marks for one date.
+    // Chaining is deliberate: a run of close rows is drawn as one capsule.
     const clusters: { members: typeof laid; top: number; bottom: number }[] = [];
     for (const r of laid) {
       const open = clusters[clusters.length - 1];
@@ -331,17 +257,13 @@ export function TimeSpine<T>({
     };
   }, [input, rowHeight]);
 
-  // Nothing to plot draws NOTHING — not an axis. With no rows the extent
-  // collapses to the epoch and the anchor mark below would print a lone "1970"
-  // against an empty rail, which reads as a corpus dated 1970 rather than as no
-  // corpus at all. Both callers already say so in words; this is the primitive
-  // refusing to contradict them.
+  // No rows renders nothing: the extent would collapse to the epoch and the
+  // anchor mark would print a lone "1970". Callers show their own empty state.
   if (!rows.length) return null;
 
   return (
     <div data-component="TimeSpine" className="relative" style={{ height }}>
-      {/* Axis — right rail (inline-end), where the document's reference minimap
-          sits and where the Rail and Density tracks put theirs. */}
+      {/* Axis on the inline-end side, matching the Rail and Density tracks. */}
       <div
         data-part="axis"
         aria-hidden
@@ -361,12 +283,8 @@ export function TimeSpine<T>({
           style={{ top: y.y, insetInlineEnd: 0 }}
         >
           <span className="w-1.5 h-px" style={{ backgroundColor: "var(--border-primary)" }} />
-          {/* ink-TERTIARY, not muted. At 9px these are small text by WCAG's
-              measure and muted (#777 on parchment) lands at 3.94:1 — under AA in
-              light, and worse in dark, where muted is the DARKER of the two.
-              Tertiary is the design system's quiet-but-readable step and clears
-              it in both. The Rail and Density tracks' marks moved with it; the
-              three axes are one label column and can't drift. */}
+          {/* Tertiary, not muted: muted fails AA contrast for small text in both
+              themes. Keep in step with the Rail and Density tracks' marks. */}
           <span
             className="text-meta leading-none tabular-nums text-ink-tertiary whitespace-nowrap"
             style={{ width: geom.LABEL }}
@@ -376,20 +294,10 @@ export function TimeSpine<T>({
         </div>
       ))}
 
-      {/* Elided silences.
-          The phrase reads at the START of the row columns, with the dashed rule
-          running from it toward the axis — NOT the other way round, which is
-          where it used to sit. Hard against the axis it landed in two occupied
-          places at once: the column every row ends with (a run of thirteen
-          documents all labelled "Document", and an italic "2 months later"
-          mixed in among them, reading as a fourteenth), and the leader gutter,
-          where the rule crossed the very curves a break exists to explain. The
-          band it sits in is empty by construction (GAP_H is reserved for it), so
-          at the start it has the whole width to itself.
-
-          It STOPS at the row bodies' own inline-end edge and leaves the gutter
-          clear, because the row after a break is the one most likely to be
-          pushed — its leader runs down through exactly this band. */}
+      {/* Elided silences. The phrase sits at the start of the row columns with the
+          rule running toward the axis; at the axis end it would mix with the rows'
+          trailing type column. It stops at the row bodies' edge so it doesn't
+          cross the leader of the pushed row after the break. */}
       {gaps.map((g, i) => (
         <div
           key={`gap-${i}-${g.y}`}
@@ -397,12 +305,9 @@ export function TimeSpine<T>({
           className="absolute flex items-center gap-2 ps-2 pointer-events-none -translate-y-1/2"
           style={{ top: g.y, insetInlineStart: 0, insetInlineEnd: AXIS_GUTTER + LEADER_W }}
         >
-          {/* `dir="ltr"`: the phrase leads with a number, so an RTL pane
-              otherwise renders "months later 4". Isolating the digit alone isn't
-              enough — the whole phrase has to keep its order.
-              `leading-4` pins the line box to GAP_H — the height the layout
-              reserved for it. Inheriting the line-height instead would let the
-              label outgrow its reserve on a caller with roomier leading. */}
+          {/* `dir="ltr"` on the whole phrase: an RTL pane otherwise renders
+              "months later 4". `leading-4` pins the line box to GAP_LABEL_H so the
+              label can't outgrow its reserve under a caller's roomier leading. */}
           <span dir="ltr" className="shrink-0 text-meta leading-4 italic text-ink-tertiary">
             {elapsed(g.ms)} later
           </span>
@@ -416,7 +321,7 @@ export function TimeSpine<T>({
         </div>
       ))}
 
-      {/* Instants and leaders — ONE drawing per cluster, not per row. */}
+      {/* Instants and leaders: one drawing per cluster, not per row. */}
       {clusters.map((c) => (
         <ClusterLeader
           key={c.members[0].row.key}
@@ -450,30 +355,21 @@ export function TimeSpine<T>({
 
 interface LaidRow<T> {
   row: SpineRow<T>;
-  /** Where the row is DRAWN, after the collision push. */
+  /** Where the row is drawn, after the collision push. */
   y: number;
   /** Where its instant truly is on the axis. */
   ideal: number;
 }
 
-/** One instant, or a stack of them, and the leader(s) back to the rows.
+/** One instant, or a cluster of them, and the leader(s) back to the rows.
  *
- *  A single row draws what it always drew: a mark on the axis and one curve down
- *  to the row. A cluster — rows whose marks would fuse — draws a CAPSULE instead:
- *  one rounded stroke spanning the instants, then one brace (a curve, a stem and
- *  a tick per row) rather than a fan of near-identical curves out of a single
- *  bead. The capsule is measured, not decorative: it starts at the first instant
- *  and ends at the last, so thirteen documents filed on one day read as a dot and
- *  thirteen filed over a fortnight read as a stroke that long.
+ *  A single row draws a mark and one curve to the row. A cluster draws a capsule
+ *  spanning its first to last instant, then one brace (curve, stem, a tick per
+ *  row). Colour is the members' shared colour, or ink-tertiary when they differ,
+ *  like the Rail's counted node.
  *
- *  Colour: the members' colour where they agree, ink-tertiary where they don't —
- *  the same honesty the Rail's counted node keeps by going neutral once a period
- *  is too busy to speak for one type. Every row still carries its own colour on
- *  its own line; the axis is not where a mixed group gets to pick a winner.
- *
- *  The whole drawing mirrors under RTL. The box already flips (`insetInlineEnd`),
- *  but SVG coordinates don't, so without this the curves would leave the axis
- *  going the wrong way and land on top of the year marks. */
+ *  The SVG mirrors under RTL: the box flips via `insetInlineEnd` but SVG
+ *  coordinates don't, so the curves would otherwise land on the year marks. */
 function ClusterLeader<T>({
   members,
   top,
@@ -525,9 +421,7 @@ function ClusterLeader<T>({
     >
       {many ? (
         <>
-          {/* Brace: one curve out of the capsule, one stem, one short tick per
-              row. Thirteen rows cost thirteen 7px ticks instead of thirteen
-              full curves leaving the same point. */}
+          {/* Brace: one curve out of the capsule, one stem, one short tick per row. */}
           <path d={curve(leave, firstY, STEM_X)} fill="none" stroke="var(--border-primary)" strokeWidth={1} />
           <path
             d={`M ${STEM_X} ${rel(firstY)} V ${rel(lastY)}`}
@@ -554,8 +448,8 @@ function ClusterLeader<T>({
         />
       )}
 
-      {/* The mark itself: a capsule across the cluster's instants, a circle for a
-          lone one (a zero-height capsule IS that circle, so it is drawn once). */}
+      {/* The mark: a capsule across the cluster's instants. For a lone instant the
+          zero-height capsule is a circle. */}
       <rect
         x={AXIS_X - MARK_R}
         y={rel(top) - MARK_R}
@@ -568,8 +462,7 @@ function ClusterLeader<T>({
         style={{ paintOrder: "stroke" }}
       />
 
-      {/* The selected member surfaces from the group in its own colour — the one
-          thing a neutral capsule would otherwise swallow. */}
+      {/* The selected member is drawn in its own colour on top of the capsule. */}
       {active && (
         <>
           <circle cx={AXIS_X} cy={rel(active.ideal)} r={MARK_R + 3} fill={dotColor(active.row.item)} opacity={0.2} />
@@ -588,14 +481,11 @@ function ClusterLeader<T>({
   );
 }
 
-/** The date gutter — same width, size and colour in every spine, so the two
- *  layouts line up column for column and can't drift apart by a `w-` class.
+/** The date gutter, shared by every spine so the layouts line up column for column.
  *
- *  The date is a fixed-order token, not prose: under RTL "9 Feb 2012" otherwise
- *  reorders to "Feb 2012 9". `<bdi>` isolates the RUN while the BOX keeps the
- *  pane's direction — putting `dir="ltr"` on the box itself would also flip its
- *  text-align, parking the date at the far side of its 5.5rem column, away from
- *  the dot it belongs to. */
+ *  Under RTL "9 Feb 2012" would reorder to "Feb 2012 9", so `<bdi>` isolates the
+ *  text while the box keeps the pane's direction; `dir="ltr"` on the box would
+ *  also flip its text-align and move the date away from its dot. */
 export function SpineDate({ t }: { t: number }) {
   return (
     <time

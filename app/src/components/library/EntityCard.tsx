@@ -48,81 +48,47 @@ import {
   type ThumbSize,
 } from "../../atoms/library";
 
-/** The preview slot at each Display-menu size AND frame.
+/** The preview slot per Display-menu size and frame.
  *
- *  **Landscape** is a band: full card width, fixed height per size, so its
- *  ratio is whatever the column happens to be (~3:1 at three columns).
- *  **Portrait** is the card's full width at 3:4 — the SLOT is portrait-shaped,
- *  not a portrait picture centred in a wide band (that read as landscape, twice).
- *  What keeps it from becoming a poster is the GRID, not the slot: LibraryView
- *  re-hangs portrait cards in narrower columns, and Size steps the column count
- *  there instead of a height table here. A gallery wall gets taller pictures by
- *  hanging more of them, smaller.
+ *  Landscape is a full-width band with a fixed height per size. Portrait is the
+ *  card's full width at 3:4; `LibraryView` narrows the columns for portrait, and
+ *  Size steps the column count there rather than a height here.
  *
- *  Both are DEFINITE boxes before an image loads — fixed height, or aspect
- *  resolved against the column width — which is the no-shift contract. */
-/*  RE-BASED: what was Large is the base. The band ran 64 / 96 / 144px and only
-    the top of that ramp shows a document as a document — at 96 a judgment's
-    first page is a grey smudge with a PDF tag on it. So `m` is 144 and `l` is
-    the step above it; the old 64 is gone rather than renamed, because a control
-    whose first option nobody should pick has the wrong default.
-
-    The floors move with the band, one for one (+3rem each), so the 1–3 metadata
-    field spread they absorb is unchanged. */
-/*  SMALL IS BACK (2026-09-23), for the side layout first: a 60px preview
-    (3.75rem) makes a short card with a wide text side. Cut once (c8e52fbc)
-    because a 96px band made a first page a smudge; at 60 it is smaller still,
-    and deliberately — Small is the choice for a reader who wants the text, and
-    the page is an identifier there, not a preview to read. Medium stays the
-    default. The floor keeps the same offset from the band as the other two. */
+ *  Both are definite boxes before an image loads (fixed height, or aspect against
+ *  the column width), so loading shifts nothing. `m` is 144px because below that
+ *  a document's first page is unreadable; `s` (60px) is for readers who want the
+ *  text, with the page as an identifier. Each floor keeps the same offset from its band. */
 const COVER_H: Record<ThumbSize, string> = { s: "h-[3.75rem]", m: "h-36", l: "h-48" };
 const CARD_FLOOR: Record<ThumbSize, string> = {
   s: "min-h-[13.25rem]",
   m: "min-h-[18.5rem]",
   l: "min-h-[21.5rem]",
 };
-/** The list row's chip is square at every frame — see EntityThumbnail. It does
- *  NOT follow the band: a row is two lines of text tall, so the chip is sized
- *  against the row and the old m/l pair is the whole useful range there. */
+/** The list row's chip is square at every frame (see `EntityThumbnail`) and is
+ *  sized against the row's two text lines, not the band. */
 const CHIP_BOX: Record<ThumbSize, string> = { s: "w-7 h-7", m: "w-9 h-9", l: "w-12 h-12" };
 
-/** The SIDE layout's slot: a fixed WIDTH per size, and the frame's ratio
- *  against it — 4:3 for landscape, 3:4 for portrait. Width plus aspect is a
- *  definite box before any image loads, the same no-shift contract as the
- *  stacked slot. The slot spans the card's rows at the logical start, so its
- *  height is also the card's floor: no `CARD_FLOOR` here, and a one-field card
- *  is as tall as its neighbours because the subgrid shares the rows. */
+/** The side layout's slot: a fixed width per size at the frame's ratio (4:3 or
+ *  3:4), a definite box before any image loads. It spans the card's rows, so it
+ *  is the card's floor and `CARD_FLOOR` does not apply. */
 const SIDE_W: Record<ThumbSize, string> = { s: "", m: "w-40", l: "w-52" };
-/** How many properties a SIDE card shows, whatever the Display menu's count:
- *  three lines of the label/value grid. The side card's height is meant to
- *  sit near its slot's (the metadata-off look), not to stack a record beside a
- *  small picture; the rest is counted in the footer (`+N`) and one click away
- *  in the drawer. */
+/** A side card shows at most three properties, whatever the Display menu says,
+ *  so its height stays near its slot's. The rest is counted in the footer (`+N`). */
 const SIDE_FIELD_CAP = 3;
 const SIDE_SHAPE: Record<ThumbFrame, string> = { landscape: "aspect-[4/3]", portrait: "aspect-[3/4]" };
-/** Small is defined by its HEIGHT (60px, 3.75rem) at the frame's ratio, with
- *  both sides written out so the box is definite before any image loads:
- *  4:3 → 5rem wide, 3:4 → 2.8125rem wide. The side card at Small is then as
- *  tall as its text (title and up to three fields), not its slot. */
+/** Small is set by height (3.75rem) at the frame's ratio, both sides written out
+ *  so the box is definite before any image loads. The card is then as tall as
+ *  its text, not its slot. */
 const SIDE_SMALL: Record<ThumbFrame, string> = {
   landscape: "h-[3.75rem] w-[5rem]",
   portrait: "h-[3.75rem] w-[2.8125rem]",
 };
 
-/** What the sort key is READING on this card, so the card can mark it.
+/** The field the current sort reads on this card, so the card can shade it.
  *
- *  The sort answers "why is this row where it is", and the answer was only ever
- *  in the toolbar — a Library sorted by Country gave no sign, on any card, of
- *  which value put it there. Shading the value the sort read is the per-card
- *  half of that, the way `MatchOrigin` is the per-card half of "why is this row
- *  here" for search.
- *
- *  `country` is matched by VALUE, not by label: the property is "País" in this
- *  corpus and "Country" in another, and the entity already carries the hoisted
- *  value the sort itself compares. Matching the label would work in one language
- *  and break in the next, the same trap the field keys avoid. `recent` marks
- *  nothing — a card carries no added-on date, and inventing one to have
- *  something to shade would be worse than the silence. */
+ *  `country` is matched by value, not label: the label differs per corpus and
+ *  language ("País", "Country"), and `entity.country` is the value the sort
+ *  compares. `recent` marks nothing because a card shows no added-on date. */
 function sortedFieldId(
   sort: LibrarySort,
   entity: Entity,
@@ -132,12 +98,9 @@ function sortedFieldId(
   return fields.find((f) => f.value === entity.country)?.id ?? null;
 }
 
-/** The footer glyph for a kind that cannot be a card line, and what it is
- *  called for anyone not reading glyphs.
- *
- *  Media is split by what the VALUE is (the adapter reads it): the clapperboard
- *  means video and only video, a waveform means audio, and a recording whose
- *  address names neither gets a neutral play mark rather than a guessed film. */
+/** Footer glyph and accessible label for each kind that cannot be a card line.
+ *  Media is split by the value (set by the adapter): a recording that is neither
+ *  clearly video nor audio gets the neutral play mark. */
 const MARK_ICON: Record<CardMark, typeof Pilcrow> = {
   long: Pilcrow,
   table: Table2,
@@ -154,38 +117,30 @@ const MARK_LABEL: Record<CardMark, string> = {
 };
 const isMediaMark = (m: CardMark): m is MediaMark => m === "video" || m === "audio" || m === "media";
 
-/** The kinds whose value is a THING you would open rather than a sentence you
- *  have already read: a place, a connected entity, a table, a file.
- *
- *  This is the whole restraint in Part B of the proposal, and it is about tab
- *  stops. Every trigger is one, times every card on screen; making all three
- *  rows clickable turns a five-stop grid row into a fifteen-stop one, which is
- *  a worse library to move through than the one that has no triggers at all. */
+/** Kinds whose value is something to open (a place, a connected entity, a table,
+ *  a file). Only these become triggers: each trigger is a tab stop on every card,
+ *  and making every property one would triple the stops per grid row. */
 const INSPECTABLE = new Set<PropertyKind>(["place", "relationship", "table", "media", "files"]);
 
-/** A field is a trigger only when it is an inspectable kind AND carries the
- *  template key the record is keyed on. No key, no honest target. */
+/** A trigger needs an inspectable kind and the template key the record is keyed
+ *  on; without the key there is nothing to focus. */
 function inspectable(f: EntityScalarField): boolean {
   return !!f.key && !!f.kind && INSPECTABLE.has(f.kind);
 }
 
-/** How many of the parent grid's row tracks one card claims — one per row it
- *  draws (slot? · title · metadata? · footer).
- *
- *  Static strings because Tailwind reads class names, not expressions. The count
- *  is the same for every card on screen (both toggles are global Display
- *  settings), which is the condition subgrid needs: cards in a visual row must
- *  claim the same tracks or they stop sharing them. */
+/** Parent-grid row tracks one card claims, one per row it draws (slot? · title ·
+ *  metadata? · footer). Static strings because Tailwind reads class names, not
+ *  expressions. Every card on screen must claim the same count, or cards in a
+ *  visual row stop sharing subgrid tracks. */
 const ROW_SPAN: Record<number, string> = {
   2: "row-span-2",
   3: "row-span-3",
   4: "row-span-4",
 };
 
-/** A Library result for one standalone entity. Mirrors the Uwazi card IA:
- *  title → metadata field label/value pairs → footer (template pill · Open).
- *  Clicking the surface opens the entity in the drawer; "Open" navigates in.
- *  Selected (previewed) = bg-parchment; no left-border accent. */
+/** A Library result for one entity: title, metadata label/value pairs, footer
+ *  (template tag · Open). Clicking the card previews it in the drawer; Open
+ *  navigates to it. */
 export const EntityCard = memo(function EntityCard({
   entity,
   layout,
@@ -204,46 +159,37 @@ export const EntityCard = memo(function EntityCard({
 }: {
   entity: Entity;
   layout: LibraryViewMode;
-  /** The query to MARK — passed in, never read from `libraryQueryAtom` here.
-   *  Subscribing to the raw atom made every mounted card re-render on every
-   *  keystroke (~2,594 renders per query over a 120-card grid), which is exactly
-   *  the work `LibraryView`'s `useDeferredValue` exists to defer: the cards were
-   *  re-rendering for a query whose results hadn't been computed yet. The owner
-   *  passes the DEFERRED query, so a card re-renders once per settled query. */
+  /** The query to highlight. A prop, never a `libraryQueryAtom` subscription:
+   *  that would re-render every mounted card on each keystroke. `LibraryView`
+   *  passes the deferred query, so a card re-renders once per settled query. */
   query: string;
   selected: boolean;
   connections?: number;
-  /** The card's own click — a preview, or (with Cmd/Ctrl or Shift held) a
-   *  selection gesture: the event is passed up so the host can tell. */
+  /** Preview, or a selection when Cmd/Ctrl or Shift is held; the event is
+   *  passed so the host can tell which. */
   onSelect: (id: string, e?: React.MouseEvent) => void;
   onView: (id: string) => void;
-  /** Carry the (visually hidden) selection checkbox — `EntitySelectBox`. Hosts
-   *  that don't offer bulk actions (the template preview) leave it off. */
+  /** Render the visually hidden `EntitySelectBox`. Off where there are no bulk
+   *  actions (the template preview). */
   selectable?: boolean;
-  /** The selection drawer's "Remove from selection" — a hover / focus X at the
-   *  row's end, in place of the checkbox the drawer used to show. Its slot is
-   *  reserved on every row, so it appearing moves nothing. List layout only;
+  /** The selection drawer's "Remove from selection" X, shown on hover or focus.
+   *  Its slot is reserved on every row so it shifts nothing. List layout only;
    *  `null` keeps the slot empty (a row already removed). */
   onRemove?: ((id: string) => void) | null;
-  /** Extra classes on the card's own element (the selection drawer dims a
-   *  row that was unticked). */
+  /** Extra classes on the root (the selection drawer dims an unticked row). */
   className?: string;
-  /** Open the entity in the drawer WITH one property focused — the record
-   *  scrolls to it and flashes it. Optional: the layouts that don't offer a
-   *  property trigger simply don't pass it. */
+  /** Open the entity in the drawer with one property focused (scrolled to and
+   *  flashed). Hosts without property triggers omit it. */
   onFocusProperty?: (id: string, fieldKey: string) => void;
-  /** Show one image at its own size. The VIEW owns the lightbox, not the card:
-   *  one overlay for a grid of 120 rather than 120 that each render nothing. */
+  /** Show one image full size. The view owns the lightbox so a grid mounts one
+   *  overlay, not one per card. */
   onOpenImage?: (image: EntityImage) => void;
-  /** Whether the grid draws a metadata track AT ALL — one answer for every card
-   *  on screen, computed by the view. See the track comment below. */
+  /** Whether the grid draws a metadata track at all; computed once by the view
+   *  for every card. See the track comment below. */
   metadataTrack?: boolean;
-  /** The card's own element. A card is an `article` — a self-contained entity
-   *  record — EXCEPT where it is one item of a list, and then it is the `li`
-   *  itself rather than sitting inside one: in the grid the card IS the subgrid
-   *  item, so a wrapper `li` would take the row tracks and the cards would stop
-   *  sharing them. The three list hosts pass `li`; the template preview renders
-   *  a lone inert card and keeps the default. */
+  /** Root element: `article` by default; list hosts pass `li` so the card is the
+   *  list item itself. A wrapper `li` would take the subgrid row tracks and the
+   *  cards would stop sharing them. */
   as?: "article" | "li";
 }) {
   const store = useStore();
@@ -272,53 +218,31 @@ export const EntityCard = memo(function EntityCard({
     </span>
   );
 
-  // Adapter-supplied real fields (e.g. CEJIL) win; otherwise derive from the mock
-  // entityMetadata profile. Only fields that resolved to a value. Shared with
-  // the list table's metadata columns, which ask the identical question.
+  // Only fields that resolved to a value; shared with the list table's metadata columns.
   const scalarFields = entityScalarFields(entity, language);
-  /* EVERY property the entity resolves, and no appended "Language" row — that
-     one repeats the toolbar's own selector on every card.
-
-     There is no ceiling. There was one, at five, and it was mine and it was
-     wrong: I justified it with a thirteen-property Causa that does not exist.
-     Once paragraphs, tables and media became footer marks the real spread across
-     the corpus is 0-9 properties and Causa tops out at 7, so a ceiling of five
-     was truncating 1,138 of 4,398 entities — 26% — to save at most four lines in
-     the worst row. And level rows were never the ceiling's job: the subgrid sizes
-     each track to the tallest card in the row and pins every footer to the same
-     y, whatever the line counts are. Cards SHOULD carry different numbers of
-     properties; that is the whole point of taking shape from a template.
-
-     How many is the READER's choice, in the Display menu — "Metadata
-     properties: None / First 3 / First 5 / All", defaulting to All. It replaced
-     a Metadata on/off switch, which answered only "all or nothing" while the
-     interesting number sat in this file as a constant nobody could see. */
+  /* No fixed ceiling: the count is the Display menu's choice (None / First 3 /
+     First 5 / All). The subgrid keeps rows level whatever the line counts, and
+     no "Language" row is added because the toolbar already shows it. */
   const menuLimit = cardFieldLimit(info.fields);
   const limit = side ? Math.min(menuLimit ?? Infinity, SIDE_FIELD_CAP) : menuLimit;
   const fields = limit === null ? scalarFields : scalarFields.slice(0, limit);
-  /* What the choice left behind, so a card showing three of nine says so. At
-     "All" it is always 0. At "None" it is suppressed rather than accurate: the
-     reader has said they do not want properties on the card, and answering that
-     with "+7" on every card is a count nobody asked for. */
+  /* Properties the limit left out, shown as `+N`. Suppressed at "None": the
+     reader turned properties off, so a count on every card is noise. */
   const beyond = limit === 0 ? 0 : scalarFields.length - fields.length;
 
-  /* Kinds the entity holds that cannot be a line. Adapter-supplied; a corpus
-     without one simply has none, which is the truth for the mock sample. */
+  /* Kinds that cannot be a card line; adapter-supplied, absent in the mock sample. */
   const marks = showMetadata ? (entity.marks ?? []) : [];
-  /* A picture worth enlarging: a real asset behind an `image` preview. See the
-     slot below for why documents, video, audio and the no-preview mark are all
-     out. */
+  /* Only a real `image` asset enlarges; see the slot below for why the other kinds don't. */
   const enlargeable =
     showPreview && layout === "cards" && entity.preview === "image" && !!entity.image && !!onOpenImage;
-  /* Images past the first — the first IS the slot's picture. Only those with a
-     property key, since a name with nothing to open is a dead link. */
+  /* Images after the first (the first is the slot's picture), and only those with
+     a property key, since the link opens the record at that key. */
   const extraImages =
     showMetadata && metadataTrack
       ? (entity.images ?? []).slice(1).filter((img) => !!img.fieldKey)
       : [];
-  /* The mark rides whatever the sort is reading — a property row, the title, the
-     template tag or the connection count. It is a shade on an element that is
-     already there, so it costs no line and cannot move anything. */
+  /* The sort mark shades an existing element (property row, title, template tag
+     or connection count), so it adds no line and moves nothing. */
   const sortedId = sortedFieldId(sort, entity, fields);
   const sortLabel = LIBRARY_SORTS.find((c) => c.id === sort)?.label ?? sort;
   const sortedNote = `Sorted by ${sortLabel}`;
@@ -339,17 +263,15 @@ export const EntityCard = memo(function EntityCard({
   );
 
   const base = `group relative text-start rounded-md border transition-colors cursor-pointer data-[peek]:z-10 has-[:focus-visible]:z-10 ${FOCUS_RING_ON_SELECT}`;
-  // Previewed OR selected is bg-parchment — the same ground, one rule. The
-  // selected case is CSS off the hidden checkbox itself, so a selection
-  // change re-renders nothing but the box.
+  // Previewed and selected both use bg-parchment. The selected case is CSS off
+  // the hidden checkbox, so a selection change re-renders only the box.
   const surface = `${selected ? `bg-parchment border-border ${PREVIEWED_RING}` : "bg-paper border-border/60 hover:bg-parchment"}
     ${SELECTED_LOOK}`;
   const selectBox = selectable ? <EntitySelectBox id={entity.id} title={entity.title} /> : null;
 
-  // The card container is NOT a button — it hosts nested controls (Open,
-  // connection badge), so a stretched invisible primary-action button carries
-  // the keyboard/AT path instead, and the content sits above it. Clicks on
-  // content bubble to the container's plain onClick (mouse path unchanged).
+  // The card is not a button because it hosts nested controls. A stretched
+  // invisible button carries the keyboard and screen-reader path; mouse clicks
+  // on content bubble to the container's plain onClick.
   const primaryAction = (
     <button
       type="button"
@@ -367,11 +289,8 @@ export const EntityCard = memo(function EntityCard({
   if (layout === "list") {
     const type = getEntityType(entity.typeId);
     const metaFields = scalarFields.slice(0, 2);
-    // Two-line editorial row: title leads, a quiet meta line (type + key
-    // fields, middot-separated) sits beneath. The leading block is the
-    // thumbnail when there is one, else a vellum well with the type's square
-    // dot — so rows always align and carry the entity colour without
-    // repeating a pill per row.
+    // Two-line row: title, then type and key fields. The leading block is the
+    // thumbnail or a `QuietMark`, so rows align and carry the type colour.
     return (
       <Root
         data-component="EntityCard"
@@ -395,8 +314,7 @@ export const EntityCard = memo(function EntityCard({
                 className={`${CHIP_BOX[thumbSize]} rounded shrink-0 overflow-hidden`}
               />
             ) : (
-              // The same mark the grid's empty slot draws, at chip scale — its
-              // parts are fractions of the box, so one component serves both.
+              // Same mark as the grid's empty slot; its parts scale with the box.
               <QuietMark tint={type?.color} className={`${CHIP_BOX[thumbSize]} rounded shrink-0`} />
             ))}
           <div className="flex-1 min-w-0">
@@ -430,10 +348,8 @@ export const EntityCard = memo(function EntityCard({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      // The row leaves the list with its X. From the keyboard
-                      // (`detail` 0), hand focus to the neighbour's X so the
-                      // next Enter removes the next row instead of landing on
-                      // the page.
+                      // From the keyboard (`detail` 0), move focus to the
+                      // neighbour's X so focus is not lost when this row unmounts.
                       const li = e.currentTarget.closest("li");
                       const next =
                         e.detail === 0
@@ -462,55 +378,41 @@ export const EntityCard = memo(function EntityCard({
     );
   }
 
-  // A floor, not a fixed height — but only where heights actually vary: with
-  // metadata ON, entities carry 1–3 display fields and a one-field card would
-  // sit short of a three-field neighbour. With metadata OFF the card is
-  // slot + title + footer, already equal everywhere, and in PORTRAIT the aspect
-  // slot plus the grid row's own stretch keeps neighbours level — a rem floor
-  // sized for one column width is wrong at every other.
+  // A min-height only with metadata on in the landscape stacked layout, where
+  // field counts vary. In portrait the aspect slot and row stretch keep cards
+  // level, and a rem floor would be right at only one column width.
   const minHeight =
     showPreview && showMetadata && metadataTrack && thumbFrame === "landscape" && !side
       ? CARD_FLOOR[thumbSize]
       : "";
 
-  /** One track per row this card draws. Both toggles are global, so every card
-   *  on screen agrees — see ROW_SPAN. */
+  /** One track per row drawn; see `ROW_SPAN`. */
   const rowCount = 2 + (showPreview && !side ? 1 : 0) + (showMetadata && metadataTrack ? 1 : 0);
 
-  /** Slot class: landscape = the fixed band; portrait = the card's width at
-   *  3:4. The picture fills the slot either way — Cover crops to fill it,
-   *  auto/contain mat within it (ImageThumb's object-fit owns that call). */
+  /** Landscape is the fixed band, portrait the card's width at 3:4. How the
+   *  picture sits inside is `ImageThumb`'s object-fit. */
   const slotShape = side
     ? `${thumbSize === "s" ? SIDE_SMALL[thumbFrame] : `${SIDE_W[thumbSize]} ${SIDE_SHAPE[thumbFrame]}`} row-span-full col-start-1 self-start`
     : `w-full ${thumbFrame === "portrait" ? "aspect-[3/4]" : COVER_H[thumbSize]}`;
-  /** In the side layout every text row sits in the second column, beside the
-   *  slot. Explicit rather than left to auto-placement, so the order of the
-   *  children can never put a row under the slot. */
+  /** Side layout: text rows are placed explicitly in column 2 so child order
+   *  can never put one under the slot. */
   const textCol = side ? "col-start-2" : "";
-  /** A document in the landscape frame is pulled out of its band when the
-   *  pointer rests on the thumbnail (`docPeek.ts`, `.doc-peek-sheet`), so its
+  /** A landscape document peeks out of its band on hover (`docPeek.ts`), so its
    *  wrapper must not clip. */
   const peekDoc = entity.preview === "document" && thumbFrame === "landscape";
   return (
-    // A SUBGRID, not a flex column. The card's rows — slot, title, metadata,
-    // footer — are the parent grid's row tracks, so every card in a visual row
-    // shares them: a title that wraps to two lines grows THAT ROW's title track
-    // and every sibling's metadata starts on the same line as a result. The card
-    // no longer has to guess at alignment, which is what the reserved second
-    // title line was doing.
+    // A subgrid: the card's rows are the parent grid's tracks, so a wrapping
+    // title grows that row's title track for every card in the row.
     //
-    // The rows are direct children, so the old inner wrapper is gone and each
-    // row carries its own `relative`. That is load-bearing, not tidying: the
-    // stretched primary-action button is `absolute inset-0` and paints in the
-    // positioned layer, so a STATIC sibling would paint underneath it and the
-    // nested Open button would stop taking clicks. Positioned siblings at
-    // `z-index: auto` paint in DOM order, and the rows come after.
+    // Each row needs its own `relative`. The primary-action button is `absolute
+    // inset-0`; a static sibling would paint under it and its nested controls
+    // would stop taking clicks. Positioned siblings paint in DOM order.
     <Root
       data-component="EntityCard"
       data-layout="cards"
       data-card-layout={side ? "side" : "stacked"}
-      // Keyboard rise is CSS (`:focus-visible` in the card); it still needs the
-      // room above it measured.
+      // The keyboard peek is CSS (`:focus-visible`) but still needs the room
+      // above it measured.
       onFocus={peekDoc ? (e) => measurePeekRoom(e.currentTarget) : undefined}
       onClick={(e) => onSelect(entity.id, e)}
       onMouseDown={holdTextSelection}
@@ -520,48 +422,30 @@ export const EntityCard = memo(function EntityCard({
     >
       {primaryAction}
       {selectBox}
-      {/* The preview slot is ALWAYS filled when previews are on: an entity with
-          no thumbnail gets a quiet vellum well carrying its type colour (the
-          same idiom the list layout uses). Rendering the thumbnail only when one
-          exists made every row as tall as its tallest card and left the grid
-          ragged — reserving the slot is what lets rows line up. */}
-      {/* The row is what has to line up, so the SLOT is a full-width shrink-0
-          box at every frame — band in landscape, 3:4 in portrait — and the
-          picture fills it. The no-preview well takes the same box, so empty
-          slots and pictures agree on both height and position. */}
+      {/* With previews on the slot is always rendered, with a `QuietMark` when
+          there is no thumbnail, so every card in a row has the same slot box. */}
       {showPreview && (
         <span
           data-part="preview"
           className={`relative min-w-0 shrink-0 ${slotShape}`}
-          // The page peek answers to the THUMBNAIL, not the card, and only
-          // after the pointer rests on it — see `docPeek.ts`.
+          // The page peek follows the thumbnail, not the card; see `docPeek.ts`.
           onPointerEnter={peekDoc ? peekEnter : undefined}
           onPointerLeave={peekDoc ? peekLeave : undefined}
         >
           {entity.preview ? (
             enlargeable ? (
-              /* The picture opens full size, WITHOUT becoming the card's main
-                 gesture. Selecting the entity is still what clicking a card
-                 does; this is a nested control on top of the stretched primary
-                 action, the same shape the property triggers take, with its own
-                 name and `stopPropagation` so a click never fires both.
-
-                 Only a REAL ASSET. Not the no-preview mark, which is a mark.
-                 Not the video or audio treatments, which are drawings of a kind
-                 of file and enlarge into bigger drawings. And deliberately not
-                 the document sheet: what the card holds there is a bitmap
-                 rasterised at the card's own width, so "full size" would be that
-                 same 352px raster blown up — softer than the card, and a lie
-                 about what full size means. A document's full size is the
-                 document, and `View` already goes there. */
+              /* A nested control above the primary action, with
+                 `stopPropagation` so a click never also selects. Only real image
+                 assets: video/audio are drawings, and a document thumbnail is a
+                 raster at card width, so enlarging it only blurs it; Open shows
+                 the document. */
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  // A selection gesture on the picture is a selection, never
-                  // the lightbox: Cmd/Ctrl or Shift held, or a tap on touch
-                  // while a selection is going (read at click time, so no
-                  // card subscribes to the selection).
+                  // A selection gesture (Cmd/Ctrl or Shift, or a touch tap
+                  // while a selection is active) selects instead. Read at click
+                  // time so no card subscribes to the selection.
                   if (
                     selectionIntent(e) ||
                     (lastPointerWasTouch() && store.get(librarySelectionActiveAtom))
@@ -573,9 +457,8 @@ export const EntityCard = memo(function EntityCard({
                 }}
                 aria-label={`Open ${entity.image!.filename ?? entity.title} full size`}
                 title="View full size"
-                /* `cursor-zoom-in!` because `index.css` sets `cursor: pointer`
-                   on every enabled button, and this one is not a pointer thing
-                   — the cursor is most of what says "this enlarges". */
+                /* `cursor-zoom-in!` overrides the global `cursor: pointer` on
+                   buttons in `index.css`; the cursor signals that this enlarges. */
                 className="thumb-zoom-trigger relative block h-full w-full cursor-zoom-in! rounded
                   focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
               >
@@ -589,13 +472,9 @@ export const EntityCard = memo(function EntityCard({
                   tint={getEntityType(entity.typeId)?.color}
                   className="h-full w-full rounded overflow-hidden border border-border/60"
                 />
-                {/* The only affordance a mouse gets besides the cursor, which
-                    it cannot see until it is already there. One element, in one
-                    corner, on hover or focus — the card already changes ground
-                    on hover and does not need a second thing moving. */}
-                {/* `.thumb-zoom` / `.thumb-zoom-trigger` are a plain pair in
-                    index.css, not a Tailwind named-group variant — see the rule
-                    there for why the variant loses a specificity tie. */}
+                {/* Zoom icon shown on hover or focus. `.thumb-zoom` /
+                    `.thumb-zoom-trigger` are plain rules in index.css because a
+                    Tailwind named-group variant loses a specificity tie there. */}
                 <span
                   aria-hidden
                   className="thumb-zoom pointer-events-none absolute bottom-1 end-1 flex items-center
@@ -624,22 +503,12 @@ export const EntityCard = memo(function EntityCard({
           )}
         </span>
       )}
-      {/* Two lines are PERMITTED (`line-clamp-2`), no longer reserved. The floor
-          used to be `min-h-[2.375rem]` unconditionally, which bought alignment
-          by making every card pay for a second title line whether or not any
-          title in the grid used one — on the artworks collection, where not one
-          of 82 titles wraps, it was 38px of nothing between every title and its
-          first metadata row. The row track buys the same alignment and only
-          charges the rows that need it.
-          `not-supports-…` keeps the old floor for engines without subgrid, where
-          each card is back to sizing itself and a reserved line is the only
-          thing holding a row level. */}
+      {/* Up to two lines; the subgrid track aligns titles across a row. Without
+          subgrid support, `not-supports-…` reserves the second line instead. */}
       <span
         data-part="title"
-        /* `self-start`: the title's box is its own two clamped lines, never the
-           TRACK's height. A track taller than two lines (the side slot spanning
-           a title and a footer, a neighbour's longer title) stretched the box,
-           and `line-clamp` then showed a third line cut mid-glyph under it. */
+        /* `self-start`: a stretched box taller than two lines makes `line-clamp`
+           show a third line cut mid-glyph. */
         className={`relative min-w-0 ${textCol} self-start text-sm font-semibold text-ink leading-snug line-clamp-2
           not-supports-[grid-template-rows:subgrid]:min-h-[2.375rem]`}
       >
@@ -651,34 +520,15 @@ export const EntityCard = memo(function EntityCard({
         </span>
       </span>
 
-      {/* The track, not the card, decides. `metadataTrack` is computed ONCE
-          over the whole result set by the view and handed to every card, so all
-          of them claim the same subgrid tracks — a per-card `fields.length > 0`
-          would let one template's cards claim three tracks and another's four,
-          and the row would stop sharing them. What it fixes is a template that
-          resolves nothing (Instrumento): the row was mounted regardless and
-          drew a visible gap between title and footer. */}
+      {/* `metadataTrack` is one answer for the whole result set, so every card
+          claims the same tracks. A per-card `fields.length > 0` would break the
+          shared subgrid. It drops the gap when no card has any property. */}
       {showMetadata && metadataTrack && (
-        /* READABILITY, not decoration. Seven label/value pairs at nearly equal
-           weight, evenly spaced, read as one flat ladder with nothing to land
-           on — which is what a card grew into once the ceiling came off.
-
-           Two changes, and between them the values become the thing you scan.
-           The LABEL takes the record's own field-label recipe (uppercase,
-           tracked, muted, semibold at 11px — `MetadataCard`'s head, verbatim),
-           so it reads as a caption rather than as a second value; it is
-           smaller-looking than the sentence-case grey it replaces despite the
-           same size, because small caps at this scale sit lower than lowercase
-           with ascenders. And the pairs get AIR between them (`space-y-2`)
-           while label and value stay locked together (`leading-tight`, no gap),
-           so the eye chunks by pair instead of reading fourteen equal lines.
-
-           It also makes the card and the record say a field name the same way,
-           which they did not before. */
-        /* A record's label/value pairs ARE a description list: `dl` with one
-           `dt`/`dd` per property, so the pairing is in the markup and not only
-           in the spacing. The `div` wrapper per pair is valid inside a `dl` and
-           is what keeps label and value locked together. */
+        /* Labels use `MetadataCard`'s field-label style (uppercase, tracked,
+           muted) so values are what the eye scans; `space-y-2` separates pairs
+           while label and value stay tight. */
+        /* A `dl` with one `dt`/`dd` per property; the per-pair `div` is valid
+           inside a `dl` and keeps label and value together. */
         <dl
           data-part="metadata"
           // `@container/fields`: a chip row drops chips as the card narrows
@@ -688,46 +538,31 @@ export const EntityCard = memo(function EntityCard({
           }`}
         >
           {fields.map((f) => (
-            /* Side: a label column and a value column, like the record, one
-               line per field. The label column takes its natural width up to
-               42% (`fit-content`), so a short label costs only itself and a long
-               one ("Documentos de la CorteIDH") keeps the value at least 58% of
-               the row; neither wraps, each ends in an ellipsis past its column.
-               `contents` puts label and value straight into the grid. */
+            /* Side: label and value columns, one line each. The label takes its
+               natural width up to 42% (`fit-content`) so values keep at least
+               58%. `contents` puts both straight into the grid. */
             <div key={f.id} className={side ? "contents" : "min-w-0"}>
               <dt
                 className={`text-meta font-semibold uppercase text-ink-tertiary leading-tight ${
-                  // Side: a ~270px text column at two columns per 980px pane,
-                  // so the label runs at the tighter tracking and the pair at
-                  // an 8px gap — measured over the Sample's 158 side fields,
-                  // cut labels 31 → 25 and cut values 27 → 22.
-                  // Stacked: TWO lines at most, then an ellipsis. Red
-                  // Travesía's labels are sentences ("Nombre de la persona que
-                  // realiza el reporte"), and at a narrow card one ran to ten
-                  // lines and pushed the whole grid row down with it.
+                  // Side: tighter tracking to fit a ~270px text column.
+                  // Stacked: two lines at most, since some labels are full
+                  // sentences and would push the grid row down.
                   side ? "block min-w-0 truncate self-baseline leading-snug tracking-wide" : "line-clamp-2 tracking-wider"
                 }`}
                 title={f.label}
               >
                 {f.label}
               </dt>
-              {/* Exactly ONE line per field, always. `truncate` rather than
-                  `line-clamp-1` because the old `block line-clamp-1` pair fought
-                  over `display` (block won) and the clamp silently never
-                  applied — which is how three-line values reached the grid. The
-                  "+N more" is a shrink-0 sibling, so it survives the ellipsis
-                  instead of being cut off inside it. */}
+              {/* One line per field. `+N more` is a shrink-0 sibling so the
+                  ellipsis never cuts it off. Don't combine `block` with
+                  `line-clamp-1`: `block` overrides the clamp's `display`. */}
               <dd
                 className={`flex items-baseline gap-1 min-w-0 text-xs text-ink leading-snug ${side ? "self-baseline" : ""} ${sortMark(f.id === sortedId)}`}
                 title={f.id === sortedId ? sortedNote : undefined}
               >
                 {inspectable(f) && onFocusProperty ? (
-                  /* A property whose value is a THING TO INSPECT gets a real
-                     button, above the card's stretched primary action and
-                     stopping propagation — the pattern every nested card
-                     control uses. Deliberately not every property: each trigger
-                     is a tab stop, and a plain sentence has already said
-                     everything it has. */
+                  /* Inspectable kinds only (see `INSPECTABLE`): a nested button
+                     above the primary action that stops propagation. */
                   <button
                     type="button"
                     onClick={(e) => {
@@ -751,15 +586,9 @@ export const EntityCard = memo(function EntityCard({
             </div>
           ))}
 
-          {/* THE IMAGES THE SLOT CANNOT DRAW.
-              A template may select several image properties for the card, and a
-              slot holds one. The rest were absent — not truncated, not counted.
-              A filename is a poorer thing than a picture and an honest one, and
-              it is a way IN: the click opens the record at the images.
-
-              Inside the metadata track, so it costs no row of its own and the
-              grid stays level. Only from the second image on; the first is the
-              picture above. */}
+          {/* Card images beyond the one the slot shows, listed by filename; a
+              click opens the record at that image. Inside the metadata track so
+              it adds no row and the grid stays level. */}
           {extraImages.length > 0 && onFocusProperty && (
             <div className={`min-w-0 flex flex-wrap items-center gap-x-2 gap-y-0.5 ${side ? "col-span-2" : ""}`}>
               <span className="block text-meta font-semibold uppercase tracking-wider text-ink-tertiary leading-tight w-full">
@@ -789,20 +618,14 @@ export const EntityCard = memo(function EntityCard({
         </dl>
       )}
 
-      {/* The footer is its own row track, so it lands on one line across the
-          whole grid row without `mt-auto` pushing it there — and `self-end`
-          keeps it on the track's bottom edge in the fallback, where the track
-          may be taller than the footer. */}
+      {/* Its own row track aligns footers across a grid row; `self-end` keeps it
+          at the bottom in the no-subgrid fallback. */}
       <div
         data-part="footer"
         className={`relative min-w-0 ${textCol} self-end flex items-center justify-between gap-2 pt-1`}
       >
-        {/* `min-w-0` on the wrapper, not just on the tag: the tag already says
-            it may shrink (`min-w-0 max-w-full`, truncating label), but a flex
-            ITEM only shrinks below its content when it is allowed to, and this
-            wrapper sat at its natural width. A long template name — "Resolución
-            de Presidencia de la CorteIDH" — then pushed the count and Open past
-            the card's edge instead of truncating. */}
+        {/* `min-w-0` on this flex item too, or a long template name pushes the
+            count and Open past the card's edge instead of truncating. */}
         <span
           className={`min-w-0 flex-1 ${sortMark(sort === "type")}`}
           title={sort === "type" ? sortedNote : undefined}
@@ -810,21 +633,14 @@ export const EntityCard = memo(function EntityCard({
           <EntityTypeTag typeId={entity.typeId} />
         </span>
         <div className="shrink-0 flex items-center gap-2">
-          {/* Marks and the count ride a line that is ALREADY MOUNTED, which is
-              the whole reason they are here: neither can make a card taller,
-              and a card that gains a paragraph does not shove its neighbours.
+          {/* Marks and the count sit on the always-mounted footer, so they
+              never make a card taller.
 
-              A MEDIA mark (video / audio / neutral) is also a POINTER shortcut:
-              the record renders the recording and its chapters
-              (`MediaFieldValue`), so a click lands on that property, like a
-              property trigger. Pointer only, and deliberately NOT a control to
-              assistive tech: no button, no role, no name — the glyph stays
-              `aria-hidden` and the sr-only line below still says "Has video".
-              It was a `<button tabIndex={-1}>` named "Open the recording…",
-              which a screen reader announced as a button no keyboard could
-              reach. Nothing may be announced as operable unless it can be
-              operated. Keyboard readers open the record through Open or the
-              card itself. Paragraph and table marks stay plain signals. */}
+              A media mark is a pointer-only shortcut to the recording in the
+              record (`MediaFieldValue`). It stays `aria-hidden` with no role:
+              a focusable-looking control that the keyboard cannot reach would
+              be announced as operable. Keyboard users use Open or the card;
+              the sr-only line below names the mark. */}
           {marks.length > 0 && (
             <span className="flex items-center gap-1 text-ink-muted" title={markTitle}>
               {marks.map((m) => {
