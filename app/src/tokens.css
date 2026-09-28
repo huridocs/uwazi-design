@@ -33,8 +33,8 @@
   /* How far a saturated accent travels toward the text colour before it is
      allowed to BE text. The one number behind both `--accent-seal-label` below
      and `typeLabelColor` (utils/typeColor.ts), which reads this var rather than
-     carrying its own copy — the second copy is how EntityTypeChip shipped the
-     raw colour. utils/typeColor.ts holds the reasoning for the value. */
+     carrying its own copy. utils/typeColor.ts holds the reasoning for the
+     value. */
   --label-mix: 55%;
 
   /* Seal AS TEXT. `--accent-seal` is one red for both themes and clears 4.5:1

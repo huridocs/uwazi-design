@@ -12,7 +12,7 @@ import { ThesaurusValueLabel } from "../components/shared/ThesaurusValueLabel";
 import { FieldMessage, issueBorderClass } from "../components/shared/FieldMessage";
 import { BorrowedDocLine } from "../components/library/BorrowedDocLine";
 import { PdfPageThumb } from "../components/shared/PdfPageThumb";
-import { EntityTypeChip } from "../components/shared/EntityTypeChip";
+import { EntityTypeTag } from "../components/shared/EntityTypeTag";
 import { ViewSwitcher } from "../components/library/ViewSwitcher";
 import { entityTypes } from "../data/entities";
 import { PageTag } from "../components/shared/PageTag";
@@ -1669,11 +1669,11 @@ className={\`… border \${issueBorderClass(issues[field.id])} …\`}`}
                 </CatalogEntry>
               </div>
 
-              <div id="sh-entity-type-chip" ref={reg("sh-entity-type-chip")}>
+              <div id="sh-entity-type-swatch" ref={reg("sh-entity-type-swatch")}>
                 <CatalogEntry
-                  name="EntityTypeChip"
-                  description="The dot-only type indicator for dense rows, expanding to the tinted pill on hover. Its LABEL never uses the raw type colour — that measured 3.64:1 light / 3.21:1 dark, under AA for 12px text. utils/typeColor.ts owns the rule for every surface that turns a type colour into text: pale → ink, saturated → 65% toward ink (5.63:1 / 5.46:1), dot keeps the true colour. EntityPill shows the same treatment permanently."
-                  code={`<EntityTypeChip typeId={entity.typeId} />
+                  name="EntityTypeTag · swatch"
+                  description="The dot-only template indicator for dense rows, expanding to the tinted pill on hover. Its label never uses the raw type colour: utils/typeColor.ts (typeLabelColor) mixes saturated colours toward ink by --label-mix and sends pale ones to ink, so 12px text clears AA in both themes. The dot keeps the true colour. EntityPill shows the same treatment permanently."
+                  code={`<EntityTypeTag variant="swatch" typeId={entity.typeId} />
 
 {/* The shared rule, one implementation: */}
 const textColor = typeLabelColor(type.color);`}
@@ -1681,7 +1681,7 @@ const textColor = typeLabelColor(type.color);`}
                   <div className="w-full max-w-md space-y-3">
                     <div className="flex flex-wrap items-center gap-3">
                       {entityTypes.map((t) => (
-                        <EntityTypeChip key={t.id} typeId={t.id} />
+                        <EntityTypeTag variant="swatch" key={t.id} typeId={t.id} />
                       ))}
                     </div>
                     <div className="flex flex-wrap items-center gap-2">

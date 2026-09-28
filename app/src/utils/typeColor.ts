@@ -6,9 +6,8 @@
  *  2.70:1 to 4.33:1 across the eight types and both themes. The dot keeps the
  *  true colour; that is where the hue belongs and where nothing has to be read.
  *
- *  Lives here, once, because it was already written twice (EntityPill and
- *  EntityTypeChip each carried their own `luminance` and their own mix) and the
- *  second copy is how one of them ended up shipping the raw colour. */
+ *  One implementation for EntityPill and EntityTypeTag, so no label can draw
+ *  the raw colour through a copy of its own. */
 
 /** Perceived luminance of a hex colour, 0–1. */
 export function luminance(hex: string): number {

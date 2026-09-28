@@ -526,7 +526,7 @@ const FOOTER_BUTTON = `px-3 py-1.5 text-xs font-medium rounded-md ${BAR_GHOST} t
  *  Both of the other treatments were tried and dropped. `shadow-sm` claimed to
  *  match "the app's other cards" and didn't — every other `shadow-sm` here is a
  *  floating or media surface (the SegmentedTabs thumb, DocPlaceholder,
- *  EntityTypeChip, the file thumbnails and modal media) — and it barely read in
+ *  the EntityTypeTag swatch, the file thumbnails and modal media) — and it barely read in
  *  dark, where `--shadow-sm` is one 20%-black pixel over a near-black rail. The
  *  hairline border that replaced it read as too much fence for a filter list. */
 const FACET_CARD = "bg-paper rounded-lg p-1.5";

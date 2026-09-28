@@ -28,7 +28,7 @@ import { RelationshipGroupedCard } from "../../relationships/RelationshipGrouped
 import { SectionLabel } from "../../shared/SectionLabel";
 import { TimeSpine, SpineDate } from "../TimeSpine";
 import { HighlightedText } from "../../shared/HighlightedText";
-import { EntityTypeChip } from "../../shared/EntityTypeChip";
+import { EntityTypeTag } from "../../shared/EntityTypeTag";
 import { ListInfoRow } from "../../shared/ListInfoRow";
 import { BorrowedDocLine } from "../BorrowedDocLine";
 import { Hint } from "../../shared/Hint";
@@ -439,7 +439,7 @@ function GroupedBody({
               className={`px-4 py-2.5 ${hasMeta || hasText ? "border-b border-border/40" : ""}`}
             >
               <div className="flex items-center gap-2">
-              <EntityTypeChip typeId={entity.typeId} />
+              <EntityTypeTag variant="swatch" typeId={entity.typeId} />
               {/* Flex so the button inside can shrink and truncate. */}
               <h2 data-part="title" className="flex min-w-0">
               <button

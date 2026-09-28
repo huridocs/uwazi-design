@@ -152,7 +152,7 @@ Two of them deserve their reasoning written down:
   at all. The three sites had drifted to exactly those two extremes and the
   middle; this is the middle.
 - **`badge / chip` splits by size on purpose.** The 11px family is the filter and
-  status chips; the 12px family is `CountBadge`, `EntityPill`, `EntityTypeChip` —
+  status chips; the 12px family is `CountBadge`, `EntityPill`, the `EntityTypeTag` swatch —
   things that carry an entity's identity rather than a piece of UI state, and
   that sit inline with 12px body text. Both are `font-medium`; the weight is what
   holds them together.

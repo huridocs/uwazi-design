@@ -122,7 +122,6 @@ import { LibraryDisplayMenu } from "../components/library/LibraryDisplayMenu";
 import { ActiveSearchChip } from "../components/library/ActiveSearchChip";
 import { ActiveFiltersButton } from "../components/library/ActiveFiltersButton";
 import { DataTable, type Column } from "../components/shared/DataTable";
-import { EntityTypeChip } from "../components/shared/EntityTypeChip";
 import { HighlightedText } from "../components/shared/HighlightedText";
 import { Select } from "../components/shared/Select";
 import { ViewSwitcher } from "../components/library/ViewSwitcher";

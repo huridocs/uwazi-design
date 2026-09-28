@@ -47,7 +47,7 @@ Uwazi's classic single-hop `inheritProperty`, so every multi-hop/provenance/roll
 component in the prototype's `metadata/` is net-new; (2) **mobile chrome** — no
 draggable bottom sheet, no per-section swap logic matching the prototype's
 `<768/768-1023/≥1024` breakpoints; (3) a handful of **standalone shared primitives**
-(`CountBadge`, `StatsCard`, `DocPlaceholder`, `PdfPageThumb`, `EntityTypeChip`)
+(`CountBadge`, `StatsCard`, `DocPlaceholder`, `PdfPageThumb`, `EntityTypeTag`)
 that don't exist as reusable components anywhere in `production` yet.
 
 ## Difficulty scale
@@ -69,7 +69,7 @@ that don't exist as reusable components anywhere in `production` yet.
 | DocPlaceholder.tsx | none — closest: `UI/FileIcon.tsx` / `Files/FilePreview.tsx` | Partial — `FileIcon.stories.tsx` (icon only, not the frame chrome) | None | L | No "sheet in a frame" placeholder concept exists |
 | EntityIdentity.tsx | `Metadata/MetadataEntityHeader.tsx` | No | None | M | Same inline/stacked concept via TemplateLabel+Title, but unused/unwired; needs baseline-align pattern |
 | EntityPill.tsx | `UI/TemplatePill.tsx` | Yes — `Components/UI/TemplatePill.stories.tsx` | None | S | Same dot+tint-pill shape; contrast handled via theme util instead of inline luminance calc |
-| EntityTypeChip.tsx | none — closest: `UI/ColorDot.tsx` (no hover-expand overlay) | No | None | L | Hover-to-expand chip-over-row behavior has no repo equivalent |
+| EntityTypeTag.tsx (`swatch`) | none — closest: `UI/ColorDot.tsx` (no hover-expand overlay) | No | None | L | Hover-to-expand chip-over-row behavior has no repo equivalent |
 | EntityTypeTag.tsx | `Metadata/Components/TemplateLabel.tsx` (filled-pill style) | Yes — `EntityViewer/TemplateLabel.stories.tsx` | None | M | Repo kept the filled pill the prototype explicitly replaced with a quiet dot+caps tag |
 | FacetSection.tsx | `UI/FacetSection.tsx` | Yes — `Components/UI/CollapsibleSectionHeader.stories.tsx` | None | M | Repo version lacks search box, AND/OR mode, show-more/clear — reduced feature set |
 | FadeTruncate.tsx | `UI/FadeTruncate.tsx` | Yes — `Components/UI/FadeTruncate.stories.tsx` | None | S | Near drop-in; repo adds `quoted` prop, uses line-clamp classes instead of measured px height |

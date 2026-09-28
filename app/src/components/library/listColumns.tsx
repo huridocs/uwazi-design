@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { HighlightedText } from "../shared/HighlightedText";
-import { EntityTypeChip } from "../shared/EntityTypeChip";
 import { EntityTypeTag } from "../shared/EntityTypeTag";
 import { entityFieldValue } from "../../utils/entityFields";
 import type { Entity } from "../../data/entities";
@@ -68,7 +67,7 @@ export const LIST_COLUMNS: ListColumnSpec[] = [
     sortKey: "title",
     cell: (e, ctx) => (
       <span data-part="title-cell" className="flex items-center gap-2 min-w-0">
-        <EntityTypeChip typeId={e.typeId} />
+        <EntityTypeTag variant="swatch" typeId={e.typeId} />
         <span data-part="title" className="font-medium text-ink truncate">
           <HighlightedText text={e.title} query={ctx.query} />
         </span>
