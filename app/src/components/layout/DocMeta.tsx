@@ -139,7 +139,7 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
             <div
               role="menu"
               data-part="menu"
-              className="absolute right-0 top-full mt-1 z-30 min-w-40 rounded-md bg-paper border border-border shadow-xl py-1 animate-fade-in-up"
+              className="absolute end-0 top-full mt-1 z-30 min-w-40 rounded-md bg-paper border border-border shadow-xl py-1 animate-fade-in-up"
             >
               {FORMATS.map((f) => {
                 const Icon = f.icon;
@@ -155,7 +155,7 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
                       setFormat(f.id);
                       setPickerOpen(false);
                     }}
-                    className={`flex items-center gap-2 w-full px-3 py-1.5 text-xs text-left transition-colors cursor-pointer ${
+                    className={`flex items-center gap-2 w-full px-3 py-1.5 text-xs text-start transition-colors cursor-pointer ${
                       f.id === format
                         ? "bg-vellum text-ink font-semibold"
                         : "text-ink-secondary hover:bg-warm"

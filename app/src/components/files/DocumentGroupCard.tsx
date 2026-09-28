@@ -68,8 +68,11 @@ function GroupTitleField({
   initial: string;
   onCommit: (next: string) => void;
 }) {
+  // `max-w-full` + a shrinkable input: sized to its content, the field was
+  // wider than a 360px pane for a long title and scrolled the files lane
+  // sideways. Capped, it ends in an ellipsis until focused.
   return (
-    <label data-component="GroupTitleField" className="group flex items-center gap-1">
+    <label data-component="GroupTitleField" className="group flex items-center gap-1 min-w-0 max-w-full">
       <input
         defaultValue={initial}
         size={Math.max(initial.length, 16)}
@@ -81,7 +84,7 @@ function GroupTitleField({
             (e.target as HTMLInputElement).blur();
           }
         }}
-        className="text-sm font-semibold text-ink bg-transparent
+        className="min-w-0 max-w-full text-ellipsis text-sm font-semibold text-ink bg-transparent
           focus:outline-none focus:bg-paper focus:ring-1 focus:ring-carbon/30 focus:rounded px-1 -mx-1"
         style={{ fieldSizing: "content" } as React.CSSProperties}
         aria-label="Document title"
