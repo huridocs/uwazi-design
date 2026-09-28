@@ -97,10 +97,8 @@ export function MetadataView({ tabs, activeTab, onTabChange, onBack }: MetadataV
   const [paneEl, setPaneEl] = useState<HTMLDivElement | null>(null);
 
   const renderLeft = (menuTrigger?: ReactNode) => (
-    // The narrow-tier gutter host: tabs, DocMeta, the card lane and the action bar
-    // all take their side inset from this padding (see `gutter-host`). Narrow,
-    // like the Document and Relationships tabs: all four tabs share the tab
-    // strip, so a different gutter here moved the strip 4px when switching.
+    // Narrow gutter host, like the other entity tabs: all four share one tab
+    // strip, so a different gutter here would move the strip on tab switch.
     <ModalHostProvider host={paneEl}>
     <div ref={setPaneEl} data-gutter-host className="gutter-host relative flex flex-col h-full min-h-0 bg-paper">
       <MainTabs
@@ -112,12 +110,9 @@ export function MetadataView({ tabs, activeTab, onTabChange, onBack }: MetadataV
         availableLanguages={LANGUAGES}
         activeLanguage={language}
         onLanguageChange={(lang) => setLanguage(lang as Language)}
-        /* While the form is open this picker is not "which language am I
-           reading" but "which language am I writing into" — the same switch,
-           two different consequences. The value it points at is the slice every
-           field's editor holds, and every MultiLanguageField's `current`, so
-           moving it moves the whole form to that language at once. It has to
-           say so; see MainTabs. */
+        /* While editing, the picker selects the language being written: every
+           field's editor and MultiLanguageField's `current` follow it, so
+           MainTabs labels it as such. */
         languageEditing={editing}
       />
 
@@ -175,11 +170,10 @@ function MetadataReadBody({
       <DocMeta showPdfSelector={false} />
 
       <div className="bleed flex-1 overflow-auto body-top pb-8">
-        {/* Full width — no 56rem cap. The label|value table sizes its label column
-            to the labels and lets values run in one column, so a wide pane just
-            gives the values more room rather than stretching a line of prose. */}
+        {/* Full width, no max-width cap: the label column sizes to the labels,
+            so a wide pane only gives the values more room. */}
         <div className="w-full space-y-3">
-          {/* The record itself — the SAME component the drawer renders. */}
+          {/* The same component the drawer renders. */}
           <MetadataRecord profile={profile} language={language} />
         </div>
       </div>
@@ -197,10 +191,9 @@ function MetadataReadBody({
         >
           Edit
         </button>
-        {/* Share, Permissions | Delete — the selection's dialogs, for this one
-            entity. Icons (each keeping its name) below 768px: with their labels
-            the bar ran past the edge at every phone width and pushed the sheet
-            menu off screen. */}
+        {/* Share, Permissions | Delete for this entity. Icon-only below 768px:
+            with labels the bar overflows phone widths and pushes the sheet menu
+            off screen. */}
         <EntityBarActions entityId={focusedId} onDeleted={onDeleted} compact={mobile} />
         <div className="flex-1" />
         {menuSlot}
@@ -213,43 +206,31 @@ function MetadataReadBody({
 
 export interface MetadataEditBodyProps {
   onCancel: () => void;
-  /** Called once the (mocked) save succeeds, with the form's values — every
-   *  language's title and scalar fields. Hosts that only close the form ignore
-   *  it; creating an entity is what reads it. */
+  /** Called after the mocked save succeeds, with every language's title and
+   *  scalar fields. Creating an entity reads it; other hosts only close. */
   onSave: (result: EditResult) => void;
   menuSlot?: ReactNode;
-  /** Identifies this edit SESSION, and must be distinct per mounted instance.
-   *  Two are mountable at once — the full Metadata view and the Library drawer
-   *  preview — and both singleton pieces of shared state key off it: the
-   *  dirty-form registry (same id = the second registration overwrites the
-   *  first, and one unmount unregisters both) and click-to-fill (same entity,
-   *  so `fieldId` alone addresses a row in both forms). */
+  /** Must be distinct per mounted instance: the Metadata view and the Library
+   *  drawer can both mount this form, and the dirty-form registry and
+   *  click-to-fill key off the session id (a shared id would collide). */
   sessionId?: string;
-  /** What the discard-confirm calls these edits. Names the session the user is
-   *  actually being asked about when both are open. */
+  /** Label for these edits in the discard confirm. */
   dirtyLabel?: string;
-  /** Drawer flavour: tighter gutters and no side-by-side field pairs. A
-   *  460px pane is one column wide. */
+  /** Drawer flavour: tighter gutters and no side-by-side field pairs. */
   compact?: boolean;
-  /** What the form edits: the focused entity (the default), or a BULK set —
-   *  one form over many entities, see `BulkEditBody`. */
+  /** The focused entity (default), or a bulk set edited by `BulkEditBody`. */
   subject?: { kind: "entity" } | { kind: "bulk"; ids: string[] };
-  /** The form is creating an entity (a draft). Template leads the form, the
-   *  properties take pins, and the bar offers "Save and create another", which
-   *  saves and hands back the values for the next draft. */
+  /** Creating an entity: Template leads the form, properties take pins, and
+   *  the bar offers "Save and create another". */
   draft?: { onSaveAndNew: (result: EditResult, pinned: ReadonlySet<string>) => void };
 }
 
-/** The metadata edit form. Exported because the Library's entity drawer renders
- *  THIS component rather than a drawer-sized copy of it — a second
- *  implementation of a form carrying validation, click-to-fill, Copy From and
- *  the dirty guard is how the type-label colour shipped wrong twice.
+/** The metadata edit form. Exported so the Library's entity drawer renders this
+ *  component instead of a copy; a second copy of validation, click-to-fill,
+ *  Copy From and the dirty guard would drift.
  *
- *  A bulk subject renders `BulkEditBody`: the same field vocabulary (the
- *  thesaurus picker, the label-row recipe, the bars), but a form whose every
- *  field has to say whether the entities agree, which the single form's
- *  per-field machinery (per-language titles, click-to-fill, Copy From)
- *  doesn't. Split here so neither form's hooks run for the other. */
+ *  A bulk subject renders `BulkEditBody`, whose fields show whether the
+ *  entities agree. Split here so neither form's hooks run for the other. */
 export function MetadataEditBody(props: MetadataEditBodyProps) {
   const subject = props.subject;
   if (subject?.kind === "bulk")
@@ -271,16 +252,9 @@ function EntityEditBody({
   const getProp = makeEntityPropReader(useAtomValue(entityMetadataAtom));
   const profile = getEntityProfile(focusedId);
   /* ── Title, per language ─────────────────────────────────────────────────
-     Uwazi stores a title per language, and this form only ever held the one
-     the header picker pointed at — so switching language mid-edit swapped the
-     LABEL under an unchanged value, and the other three languages were
-     unreachable without leaving the form. The seed carries real EN/ES/FR/AR
-     titles for the document-bearing entity; everything else repeats its one
-     title, which is exactly the case the empty-state row is for.
-
-     `titles` is the whole record; `title` is the current language's slice, so
-     every consumer below (validation, click-to-fill, the dirty guard, the
-     save-failure trigger) keeps addressing one string and did not change. */
+     Uwazi stores a title per language, so the form holds all of them.
+     `titles` is the whole record; `title` is the current language's slice,
+     which validation, click-to-fill, the dirty guard and the save read. */
   const authoredTitles = useMemo<Partial<Record<Language, string>>>(
     () => Object.fromEntries(
       LANGUAGES.map((l) => [l, profile.document?.[l]?.title]).filter(([, v]) => v),
@@ -297,14 +271,9 @@ function EntityEditBody({
     ) as Record<Language, string>;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- read once, at mount
   }, [profile, focusedId]);
-  /* Scalar fields edit inline here; relationship fields go through the
-     connection editor. Like the title above, they are held PER LANGUAGE —
-     Uwazi stores every text and markdown value per language, and this form held
-     one language's array, seeded once from whichever language it opened in. So
-     switching the header picker mid-edit relabelled the form without changing a
-     single value, and Save then wrote English prose into the Spanish record.
-     `fields` is the current language's slice; `setFields` still takes the same
-     updater, so `updateField` and Copy From's commit did not change. */
+  /* Scalar fields are held per language, like the title: Uwazi stores text
+     values per language, and one shared array would save one language's text
+     into another's record. `fields` / `setFields` address the current slice. */
   const initialFieldsByLang = useMemo(
     () =>
       Object.fromEntries(
@@ -335,28 +304,19 @@ function EntityEditBody({
   const [machineFields, setMachineFields] =
     useState<Record<string, Partial<Record<Language, boolean>>>>({});
   const [showIcon, setShowIcon] = useState(true);
-  /* The icon section is closed until asked for. Most entities never take one,
-     and it was the second thing on the form — a picker, a checkbox and a Clear,
-     ahead of Description — for a feature the prototype can't even fill. "Add
-     icon" in the Title row opens it; an entity that HAS an icon opens it
-     already, because a set value must never be hidden behind a disclosure. (No
-     seed entity carries one, so `icon` stays null here — the state is what says
-     which of the two rules is doing the work.) */
+  /* The icon section stays closed until "Add icon" in the Title row opens it,
+     since most entities have none. An entity with an icon shows it open: a set
+     value is never hidden behind a disclosure. */
   const [icon, setIcon] = useState<string | null>(null);
   const [iconOpen, setIconOpen] = useState(false);
   const iconShown = iconOpen || icon !== null;
-  /** The entity's template. On an entity being CREATED it re-shapes the form:
-      the draft becomes one of the picked template (`retypeDraftAtom`), with
-      the values whose property the new template also has (same key, same
-      type) carried over and the rest dropped, and the form remounts on it.
-      Nothing is saved. On an existing entity it is still presentational —
-      changing a saved entity's template is the Library's Change template. */
+  /** On a draft, changing it retypes the draft (`retypeDraftAtom`): values
+      whose key and type the new template shares carry over, the rest drop, and
+      the form remounts. On a saved entity it is presentational only. */
   const [templateId, setTemplateId] = useState(profile.typeId);
   const draftId = useAtomValue(draftEntityIdAtom);
   const retypeDraft = useSetAtom(retypeDraftAtom);
-  /** Asked for before a template change that would DROP values: the ones the
-   *  new template has no property for (same key, same type). Named in the
-   *  confirm, so nothing typed disappears unannounced. */
+  /** A template change that would drop values asks first, naming them. */
   const [pendingTemplate, setPendingTemplate] = useState<{ typeId: string; labels: string[] } | null>(null);
   const requestTemplate = (typeId: string) => {
     if (draftId !== focusedId || typeId === profile.typeId) return changeTemplate(typeId);
@@ -400,10 +360,9 @@ function EntityEditBody({
   };
   const notify = useNotify();
 
-  /* ── Pins (drafts only) ── A pinned property's value carries into the next
-     draft on "Save and create another". Per corpus and template, for the
-     session (`draftPinsAtom`). Title, Description, files and connections
-     never pin: they are what makes a record this record. */
+  /* ── Pins (drafts only) ── A pinned value carries into the next draft on
+     "Save and create another", per corpus and template (`draftPinsAtom`).
+     Title, Description, files and connections never pin: they identify the record. */
   const [pinsByKey, setPinsByKey] = useAtom(draftPinsAtom);
   const pinK = pinKey(entityCorpusOf(focusedId), profile.typeId);
   const pinned = useMemo(() => new Set(pinsByKey[pinK] ?? []), [pinsByKey, pinK]);
@@ -418,21 +377,17 @@ function EntityEditBody({
     draft ? <PinToggle pinned={pinned.has(id)} label={label} onToggle={() => togglePin(id)} /> : undefined;
 
   /* ── Validation ──────────────────────────────────────────────────────────
-     Errors block save (required missing, unparseable date, malformed link);
-     warnings surface but allow it (utils/validation.ts is the rule set).
-     Relationship / derived fields are exempt by construction — `fields` is
-     already the scalar subset (`type !== "relationship"`). Evaluated on blur
-     and on save attempt; a field that has flagged once re-checks live so
-     fixing it clears the message without another blur. */
+     Errors block save; warnings allow it (rules in utils/validation.ts).
+     `fields` is the scalar subset, so relationship fields are exempt. Checked
+     on blur and save; a flagged field re-checks live so a fix clears it. */
   const kindOf = (t: MetadataField["type"]): ValueKind =>
     t === "date" ? "date" : t === "link" ? "link" : t === "multiline" ? "multiline" : "text";
   const scalarEditable = fields.filter(
     (f) => !["description", "country"].includes(f.id) && f.type !== "file-list",
   );
-  /** The media editor judges its own value (a URL and chapter rows are not a
-   *  string rule) and reports here; a ref, so a save attempt reads the verdict
-   *  from the same keystroke rather than the last render. Never set for an
-   *  untouched media value — stored data does not block a save. */
+  /** The media editor validates its own value and reports here. A ref, so a
+   *  save reads the result of the same keystroke, not the last render. Unset
+   *  for an untouched value: stored data does not block a save. */
   const mediaIssues = useRef<Record<string, ValidationIssue | null>>({});
   const issueFor = (id: string, value: string): ValidationIssue | null => {
     if (id === "title") return validateValue("text", value, { required: true, label: "Title" });
@@ -444,10 +399,8 @@ function EntityEditBody({
   };
   const [issues, setIssues] = useState<Record<string, ValidationIssue | null>>({});
   const [saveAttempted, setSaveAttempted] = useState(false);
-  /* Switching the header language swaps which string the Title box holds, so a
-     "Title is required" left over from the language before it is a message
-     about a value no longer on screen. Clear it and let the field re-flag on
-     its own blur or on save. */
+  /* A language switch changes the Title value on screen, so clear its message;
+     it re-flags on blur or save. */
   useEffect(() => {
     setIssues((prev) => (prev.title ? { ...prev, title: null } : prev));
   }, [language]);
@@ -457,8 +410,7 @@ function EntityEditBody({
   const reflag = (id: string, value: string) =>
     setIssues((prev) => (prev[id] ? { ...prev, [id]: issueFor(id, value) } : prev));
   const { errors: errorCount, warnings: warningCount } = countBySeverity(Object.values(issues));
-  // `field-${id}` is ALSO what EditSection's htmlFor and the fill machinery's
-  // data-fill-id use — three consumers, one scheme, keep them aligned.
+  // EditSection's htmlFor uses the same `field-${id}` scheme; keep them aligned.
   const inputId = (id: string) => `field-${id}`;
   const msgId = (id: string) => `field-${id}-msg`;
   const fieldAria = (id: string) => ({
@@ -466,27 +418,22 @@ function EntityEditBody({
     "aria-describedby": issues[id] ? msgId(id) : undefined,
   });
 
-  /* ── Save lifecycle ── idle → saving → failed → retry. The save itself is
-     mocked (~800ms). MOCK FAILURE TRIGGER: a title containing "[fail]" always
-     fails, so the failed state is demonstrable on demand. Success closes the
-     edit via onSave() — the session unmounts and the dirty-form registration
-     tears down with it, so the dirty guard never sees the programmatic close.
-     Failure keeps the session mounted and puts the state ON the button;
-     clicking again retries (re-validates first, like any save). */
+  /* ── Save lifecycle ── idle → saving → failed → retry, mocked at 800ms. A
+     title containing "[fail]" always fails, to demo the failed state. Success
+     unmounts the session (and its dirty registration) via onSave(); failure
+     stays mounted and shows on the button, and a click re-validates and retries. */
   const [saveState, setSaveState] = useState<"idle" | "saving" | "failed">("idle");
   const saving = saveState === "saving";
   const aliveRef = useRef(true);
-  // RE-ARM on mount, don't just disarm on unmount: StrictMode mounts, runs the
-  // cleanup, and mounts again, so a cleanup-only guard latches false before the
-  // first render the user sees — and every save then returned early below and
-  // sat on "Saving…" forever.
+  // Set true on mount, not only false on unmount: StrictMode runs the cleanup
+  // once before the real mount, and a cleanup-only guard leaves saves stuck.
   useEffect(() => {
     aliveRef.current = true;
     return () => { aliveRef.current = false; };
   }, []);
 
   const handleSave = (then: "close" | "another" = "close") => {
-    if (saving) return; // aria-disabled — the working state explains the held click
+    if (saving) return; // aria-disabled; the loader explains the ignored click
     const next: Record<string, ValidationIssue | null> = {
       title: issueFor("title", title),
       description: issueFor("description", fields.find((f) => f.id === "description")?.value ?? ""),
@@ -540,13 +487,9 @@ function EntityEditBody({
 
   const updateField = (id: string, value: string) => {
     setFields((prev) =>
-      // Description and Country render from FIXED boxes above, whatever the
-      // template holds — so on an entity whose profile carries no `description`
-      // field there was nothing for this to map onto and every keystroke went
-      // into the void, textarea included. Click-to-fill made that visible rather
-      // than causing it: a button labelled "Fill Description" that silently does
-      // nothing is a promise broken in public. A missing field is created on
-      // first write instead.
+      // Description and Country render from fixed boxes whatever the template
+      // holds, so a missing field is created on first write; mapping only
+      // would silently drop every keystroke and every fill.
       prev.some((f) => f.id === id)
         ? prev.map((f) => (f.id === id ? { ...f, value } : f))
         : [...prev, { id, label: id === "description" ? "Description" : id, type: "multiline", value }],
@@ -554,9 +497,8 @@ function EntityEditBody({
     reflag(id, value);
   };
 
-  /** Write one field in ONE named language — the per-field translation rows.
-   *  Same create-if-missing rule as `updateField`: a language whose seed never
-   *  carried the field still has to be able to hold a translation of it. */
+  /** Write one field in one language (the translation rows). Creates the field
+   *  if that language's seed lacks it, like `updateField`. */
   const updateFieldFor = (id: string, lang: Language, value: string, machine = false) => {
     setFieldsByLang((prev) => {
       const list = prev[lang];
@@ -593,9 +535,8 @@ function EntityEditBody({
     Object.fromEntries(
       LANGUAGES.map((l) => [l, fieldsByLang[l].find((f) => f.id === id)?.value ?? ""]),
     ) as Record<Language, string>;
-  /** The SEED's per-language values, so a mocked translation can return the
-   *  real one where the corpus has it rather than a stand-in. Deliberately not
-   *  `valuesFor` — that already holds whatever the user just typed. */
+  /** The seed's per-language values, so a mocked translation can return the
+   *  real one. Not `valuesFor`, which holds what the user typed. */
   const authoredFor = (id: string) =>
     Object.fromEntries(
       LANGUAGES.map((l) => [l, initialFieldsByLang[l].find((f) => f.id === id)?.value]).filter(
@@ -604,32 +545,26 @@ function EntityEditBody({
     ) as Partial<Record<Language, string>>;
 
   /* ── Click-to-fill ────────────────────────────────────────────────────────
-     Focus arms a field; the arm is LATCHED (see atoms/fillTarget) because
-     finding the value means leaving the field. The document viewer and the
-     source-entity preview both write a request here, addressed by field id. */
+     Focus arms a field; the arm is latched (atoms/fillTarget) because finding
+     the value means leaving the field. The document viewer and the entity
+     preview send requests addressed by field id. */
   const [rawFillTarget, setFillTarget] = useAtom(fillTargetAtom);
   const [fillRequest, sendFill] = useAtom(fillRequestAtom);
   const bodyRef = useRef<HTMLDivElement>(null);
-  /** The arm, but only if THIS session owns it. Everything below reads this,
-   *  never the atom: the other mounted form is editing the same entity, so its
-   *  arm would light up an identically-named row over here. */
+  /** The arm, only if this session owns it. Read this, never the atom: the
+   *  other mounted form edits the same entity and has rows with the same ids. */
   const fillTarget = rawFillTarget?.sessionId === sessionId ? rawFillTarget : null;
 
-  // Disarm when the form goes away. Save and Cancel both unmount this body, and
-  // an arm that outlives it would leave the next edit session listening for a
-  // field nobody focused — the Copy From leak, rebuilt. Only OUR arm, though —
-  // closing the drawer must not disarm the field the main view is waiting on.
+  // Disarm on unmount, or the next session would listen for a field nobody
+  // focused. Only this session's arm: closing the drawer must not disarm the main view.
   useEffect(
     () => () => setFillTarget((prev) => (prev?.sessionId === sessionId ? null : prev)),
     [setFillTarget, sessionId],
   );
 
-  // Escape disarms. On the WINDOW, because by the time a user gives up on a fill
-  // the focus is in another pane — but NOT while focus sits inside a modal: the
-  // source preview is itself opened and closed with Escape, and one keypress
-  // that both closes the preview and forgets which field you were filling costs
-  // the user the whole trip. Bound only while armed, so it is not competing for
-  // Escape the rest of the time.
+  // Escape disarms, on the window since focus is usually in another pane. Skipped
+  // inside a dialog, so closing the source preview doesn't also disarm. Bound only
+  // while armed.
   useEffect(() => {
     if (!fillTarget) return;
     const onKey = (e: KeyboardEvent) => {
@@ -641,13 +576,10 @@ function EntityEditBody({
     return () => window.removeEventListener("keydown", onKey);
   }, [fillTarget, setFillTarget]);
 
-  // Apply a request, then spend it. The field is usually scrolled out of sight —
-  // the user has been reading the document — so it comes back into view and
-  // flashes: without that, a fill from the far pane is a silent write to
-  // somewhere you can't see.
+  // Apply a request, then clear it. The field is usually out of view, so it
+  // scrolls into view and flashes to show where the value landed.
   useEffect(() => {
-    // Addressed to a SESSION, not just a field. Both mounted forms see this
-    // atom and both have a row with this id; only the one that armed it writes.
+    // Only the session that armed the field writes; both forms see the atom.
     if (!fillRequest || fillRequest.sessionId !== sessionId) return;
     const { fieldId, value } = fillRequest;
     if (fieldId === "title") setTitle(value);
@@ -656,17 +588,14 @@ function EntityEditBody({
     const el = bodyRef.current?.querySelector<HTMLElement>(`[data-fill-id="${CSS.escape(fieldId)}"]`);
     if (!el) return;
     el.scrollIntoView({ behavior: "smooth", block: "center" });
-    // The flash ends itself: `sendFill(null)` above re-runs this effect, which
-    // would cancel a timeout returned from here.
+    // The flash ends itself: `sendFill(null)` re-runs this effect, which would
+    // cancel a timeout returned from here.
     flashElement(el);
-    // `fillRequest.nonce` is the signal — filling one field twice with the same
-    // text has to fire twice, so the object identity is what we watch.
+    // Watch object identity (`nonce`), so the same text filled twice fires twice.
   }, [fillRequest, sendFill, sessionId]);
 
-  /** The one input skin. An ARMED field keeps the focus treatment while blurred:
-   *  you left it on purpose, to go and fetch the value, and a form that drops
-   *  every trace of where you were is a form you have to re-find your place in.
-   *  It is the focus ring, latched — no second selected-state colour. */
+  /** The input skin. An armed field keeps the focus ring while blurred, so the
+   *  user can see which field is waiting for a value. No new selected colour. */
   const fieldClass = (fieldId: string, extra = "") =>
     `w-full px-3 py-2 text-sm text-ink bg-paper rounded-md border transition-shadow
      focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 ${
@@ -675,9 +604,8 @@ function EntityEditBody({
          : issueBorderClass(issues[fieldId])
      } ${extra}`;
 
-  /** Focus arms; nothing on blur. Bound to CLICK as well as focus: Escape
-   *  disarms a field that still holds the caret, and without a click path the
-   *  only way back into the mode would be to tab away and return. */
+  /** Focus arms; blur does nothing. Click arms too: after Escape the field
+   *  still has focus, and a click is the way to re-arm it. */
   const arm = (fieldId: string, label: string) => () =>
     setFillTarget({ sessionId, fieldId, label });
   const armProps = (fieldId: string, label: string) => ({
@@ -685,11 +613,9 @@ function EntityEditBody({
     onClick: arm(fieldId, label),
   });
 
-  // Relationship fields → one editor per connection. The connection (entity
-  // set) is the source of truth, keyed so multi-inheritance siblings sync.
-  // Read-only fields (CEJIL projections, chain-traversed inheritance) are NOT
-  // editable inline — they render as read cards at their template position
-  // (design doc Q6; see `editUnits`).
+  // One editor per connection, keyed so multi-inheritance siblings sync.
+  // Read-only fields (CEJIL projections, chain inheritance) render as read
+  // cards at their template position (see `editUnits`).
   const allRelFields = profile.metadata[language].filter(
     (f): f is RelationshipMetadataField => f.type === "relationship",
   );
@@ -726,20 +652,11 @@ function EntityEditBody({
     Object.fromEntries(connectionDefs.map((d) => [d.key, d.entityIds])),
   );
 
-  /* The form below Description, in TEMPLATE order — the same sequence the read
-     record uses (`profile.metadata`), so entering and leaving edit mode does
-     not reorder fields and there is no separate Relationships section.
-     Title, Template and Description keep their fixed controls above: Title is
-     the template's header property, Template is the entity's type rather than a
-     property, and Description is the form's required body field (the seed
-     template declares it first, so its position there is the same).
-     Country renders at the template position of the `country` field. A control
-     the template does not declare goes last, the same rule untemplated fields
-     follow: the Geolocation placeholder always (no seed or CEJIL field backs
-     it), and Country when the template has no `country` field.
-     A multi-inheritance group (several fields sharing one `connectionKey`) is
-     ONE connection: its editor, or its read-only card for a derived group,
-     renders once, at the template position of its FIRST member field. */
+  /* Fields below Description in template order, as the read record uses, so
+     edit mode does not reorder them. Title, Template and Description keep fixed
+     controls above. Controls the template doesn't declare go last (Geolocation
+     always; Country when there is no `country` field). A multi-inheritance group
+     renders once, at its first member's position. */
   type EditUnit =
     | { kind: "country" }
     | { kind: "geolocation" }
@@ -783,35 +700,20 @@ function EntityEditBody({
   editUnits.push({ kind: "geolocation" });
 
   /* ── Copy From ────────────────────────────────────────────────────────────
-     The picker modal does the choosing — source, then which properties — and
-     hands back the ticked set, which lands in THIS form's state. Nothing is
-     saved; the user still presses Save, and Cancel throws the copy away with
-     everything else. None of it lives in an atom: the preview atom that used
-     to carry this form's closures to the entity overlay is gone. */
+     The picker chooses the source and properties; the ticked set lands in this
+     form's state. Nothing is saved until Save; Cancel discards it. Kept out of
+     atoms so no closure outlives the form. */
   const [pickerOpen, setPickerOpen] = useState(false);
   /** unit key → the entity it was copied from. Survives until the edit ends. */
   const [copiedFrom, setCopiedFrom] = useState<Record<string, string>>({});
   const target = getEntity(focusedId);
 
-  /** The plan's matches, resolved into what THIS FORM can stage and show.
-   *
-   *  `plan.matches` is a schema-level answer — these two entities define the
-   *  same property, so it would copy. Whether the form can APPLY it is a
-   *  different question, and seeding the checkbox set from the plan wholesale
-   *  answered the wrong one: a connection match had no row anywhere, so "Copy 3
-   *  fields" replaced the entity's connection set with no comparison ever shown
-   *  — the precise overwrite-without-warning `CopyFieldRow` exists to prevent —
-   *  and a `country` match was written into state that `CountryPicker` doesn't
-   *  read, counted in the footer and visible nowhere.
-   *
-   *  So a unit is what the form can both apply and render:
-   *   · a scalar with a controlled editor (everything but `country`, whose
-   *     picker isn't bound to this state, and `file-list`, whose item inputs are
-   *     uncontrolled);
-   *   · a CONNECTION, keyed by its def — which is also the multi-inheritance
-   *     fix: sibling columns over one `connectionKey` are ONE connection, and
-   *     counting them separately made "1 of 3" out of a single copy.
-   *  Anything left over is `unstageable` and says so. */
+  /** The plan's matches, reduced to what this form can apply and show.
+   *  `plan.matches` is schema-level; a unit here is either a scalar with a
+   *  controlled editor (not `country`, whose picker isn't bound to this state,
+   *  nor `file-list`, whose inputs are uncontrolled) or a connection keyed by
+   *  its def, so sibling columns over one `connectionKey` count as one.
+   *  Everything else is returned as `unstageable`. */
   const copyUnitsFor = (plan: CopyPlan) => {
     const matches = plan.matches;
     const units: CopyUnit[] = [];
@@ -819,8 +721,7 @@ function EntityEditBody({
     const unstageable: CopyMatch[] = [];
     for (const m of matches) {
       if (m.copies === "connection") {
-        // Singles are keyed by field id; grouped connections by their shared
-        // key, so find whichever def actually owns this field.
+        // Singles are keyed by field id, groups by their shared key.
         const def =
           connectionDefs.find((d) => d.key === m.id) ??
           connectionDefs.find((d) => d.columns.some((c) => c.fieldId === m.id));
@@ -856,17 +757,14 @@ function EntityEditBody({
     return { units, unstageable };
   };
 
-  /** Write the ticked units into this form's state and remember where each
-   *  came from. Still nothing saved. */
+  /** Write the ticked units into form state and record each one's source. */
   const applyCopy = (source: Entity, taking: CopyUnit[]) => {
     setFields((prev) =>
       prev.map((f) => {
         const u = taking.find((x) => x.kind === "value" && x.key === f.id);
         if (!u) return f;
-        // A multiselect's copy arrives as its display string; its set is
-        // rebuilt from it so the list and the string agree.
-        // A multiselect copies its SET (labels and ids) — splitting the display
-        // string on ", " broke a label that contains one.
+        // A multiselect copies its set (labels and ids); splitting the display
+        // string on ", " would break a label that contains one.
         return f.type === "multiselect"
           ? withLabels(f, u.row.sourceValues ?? [], u.row.sourceValueIds)
           : { ...f, value: u.row.sourceValue ?? "" };
@@ -886,17 +784,13 @@ function EntityEditBody({
     setPickerOpen(false);
   };
 
-  /* Once a copy has landed, EVERY field carries its provenance slot, so a
-     later copy's lines cannot shove the fields below them (PATTERNS §3). The
-     first copy mounts them all at once, in the same commit that rewrites the
-     values — the one moment the form is expected to change. */
+  /* After the first copy every field mounts its provenance slot, so later
+     copies don't shift the form (PATTERNS §3). */
   const copyActive = Object.keys(copiedFrom).length > 0;
 
-  /* ── Dirty guard ── the edit session registers itself while mounted, so the
-     navigation choke points (view switch, tab strip, focal hops, settings)
-     hold a leave behind a confirm while anything below differs from what the
-     session opened with. Unregisters on unmount — Save and Cancel both close
-     the session, so neither needs explicit teardown. */
+  /* ── Dirty guard ── registered while mounted, so navigation asks to confirm
+     while anything differs from the opening values. Save and Cancel unmount
+     the session, which unregisters it. */
   const dirty =
     LANGUAGES.some((l) => titles[l] !== initialTitles[l]) ||
     LANGUAGES.some((l) =>
@@ -923,12 +817,10 @@ function EntityEditBody({
       )}
       <div
         ref={bodyRef}
-        /* A `bleed` scroll lane with the fields back on the host's gutter —
-           narrow in the entity drawer, main in the full view. */
+        /* A `bleed` scroll lane; the fields sit on the host's gutter. */
         className={`bleed flex-1 overflow-auto body-top pb-8 space-y-3`}
       >
-        {/* A new entity starts with its template: it decides which fields
-            there are, so it is the form's first question. */}
+        {/* A draft asks for its template first: it decides the fields. */}
         {draft && templateSection}
 
         {/* Title */}
@@ -962,12 +854,9 @@ function EntityEditBody({
             rows={2}
             className={fieldClass("title", "resize-none")}
           />
-          {/* The other languages, in place. The big box above stays the current
-              one; this row is always mounted, so opening it is the only thing
-              that ever moves the Icon section below. It also CARRIES the field's
-              validation line — see `messageSlot`; a translatable field should
-              not pay for two always-mounted 11px lines when one will hold
-              both. */}
+          {/* The other languages. Always mounted, so only opening it moves the
+              section below. It also holds the validation line (`messageSlot`),
+              so the field reserves one line, not two. */}
           <MultiLanguageField
             messageSlot={<FieldMessage id={msgId("title")} issue={issues.title} />}
             label="Title"
@@ -981,9 +870,8 @@ function EntityEditBody({
           />
         </EditSection>
 
-        {/* Select icon — on demand (see `iconShown`). Clear removes the icon AND
-            closes the section: an empty picker left open is the state the
-            disclosure exists to avoid. */}
+        {/* Shown on demand (`iconShown`). Clear removes the icon and closes the
+            section, so no empty picker stays open. */}
         {iconShown && (
           <EditSection label="Icon">
             <button
@@ -1007,12 +895,8 @@ function EntityEditBody({
           </EditSection>
         )}
 
-        {/* Template — the entity's own type, and the one field on this form that
-            IS a type. It reads with the type's own square dot and the label
-            colour every other type label uses, so the answer to "which template
-            is this?" looks the same here as it does on a card, a pill or a row.
-            (`typeLabelColor`, not the raw colour: small text on the tint has to
-            clear AA in dark — see `utils/typeColor`.) */}
+        {/* Template: drawn like every other type label (square dot, name in
+            `typeLabelColor`, not the raw colour, to clear AA in dark). */}
         {!draft && templateSection}
 
         {/* Description */}
@@ -1045,9 +929,7 @@ function EntityEditBody({
             authored={authoredFor("description")}
             multiline
           />
-          {/* Rendered here too: the description is a controlled editor like any
-              other scalar, so a copy into it is applyable — it was simply the
-              one field the staged-row loop below never reached. */}
+          {/* Description is outside the `editUnits` loop, so it renders its own slot. */}
           <CopyFieldSlot
             active={copyActive}
             sourceId={copiedFrom["description"]}
@@ -1071,9 +953,7 @@ function EntityEditBody({
                 <div className="h-40 bg-warm rounded-md flex items-center justify-center overflow-hidden">
                   <span className="text-xs text-ink-muted">Map Preview</span>
                 </div>
-                {/* The only side-by-side pair in the form. In the drawer it stacks:
-                    two number boxes across 460px leaves each of them narrower than
-                    the value it holds. */}
+                {/* Stacks in the drawer: side by side, each box is narrower than its value. */}
                 <div className={`gap-2 mt-2 ${compact ? "flex flex-col" : "flex items-center"}`}>
                   <EditInput label="Latitude" value="" placeholder="Value" />
                   <EditInput label="Longitude" value="" placeholder="Value" />
@@ -1093,9 +973,8 @@ function EntityEditBody({
                   entityIds={connections[d.key] ?? d.entityIds}
                   onChange={(ids) => setConnections((prev) => ({ ...prev, [d.key]: ids }))}
                 />
-                {/* A connection copies too — and REPLACES the set above it, which is
-                    exactly the kind of overwrite that has to be read before it
-                    happens. One row per connection, not per inherited column. */}
+                {/* A copy replaces the connection set, so it shows its source.
+                    One row per connection, not per inherited column. */}
                 <CopyFieldSlot
                   active={copyActive}
                   sourceId={copiedFrom[d.key]}
@@ -1158,11 +1037,8 @@ function EntityEditBody({
               action={pinFor(field.id, field.label)}
             >
               {field.type === "media" ? (
-                // A URL and chapter rows, not a one-line box around the raw
-                // `URL, {json}` string. Keyed per language: each language's
-                // record holds its own value (the chapter titles are
-                // translated), and the editor seeds its rows from the value it
-                // mounts with. Not armed for click-to-fill — see the editor.
+                // Keyed per language: chapter titles are translated and the
+                // editor seeds its rows at mount. Not armed for click-to-fill.
                 <MediaFieldEditor
                   key={`${language}:${field.id}`}
                   inputId={inputId(field.id)}
@@ -1176,15 +1052,10 @@ function EntityEditBody({
                   }}
                 />
               ) : field.type === "date" ? (
-                // A date input takes `yyyy-mm-dd` and nothing else, so it is not
-                // armed: a passage of prose is not a date, and quietly dropping
-                // the fill would be worse than never offering it.
-                //
-                // …and for the same reason the stored value is CONVERTED on the
-                // way in and back out (utils/dateValue): the seed writes
-                // `dd/mm/yyyy` (CEJIL) or prose (the curated entity), and bound
-                // straight to `value` the browser blanked the control, leaving a
-                // seeded date looking empty and saving as empty.
+                // Not armed: a date input only takes `yyyy-mm-dd`, and a prose
+                // passage would be dropped. The value is converted both ways
+                // (utils/dateValue) because seeds hold `dd/mm/yyyy` or prose,
+                // which the browser would blank.
                 <input
                   id={inputId(field.id)}
                   type="date"
@@ -1221,11 +1092,8 @@ function EntityEditBody({
                   className={fieldClass(field.id)}
                 />
               )}
-              {/* Only prose is translated. A date, a link and a file list are the
-                  same string in every language, and a control offering to render
-                  them in French would be a promise nothing behind it can keep —
-                  and those keep their own reserved message line, because they
-                  have no languages row to fold it into. */}
+              {/* Only text and multiline are translated; other types are the same
+                  in every language, so they reserve their own message line. */}
               {field.type !== "text" && field.type !== "multiline" && (
                 <FieldMessage id={msgId(field.id)} issue={issues[field.id]} reserve />
               )}
@@ -1251,10 +1119,8 @@ function EntityEditBody({
         })}
       </div>
 
-      {/* Save-attempt summary — a RESERVED line above the action bar, mounted
-          at a fixed height with only its contents toggling, so a failed save
-          cannot shove the footer (never-shift rule). role="alert" fires only
-          on the save attempt, never per keystroke. */}
+      {/* Save summary: a fixed-height line, always mounted, so a failed save
+          does not shift the footer. role="alert" fires on save, not per keystroke. */}
       <div className="bleed flex items-center justify-end h-6 bg-paper shrink-0">
         {saveState === "failed" ? (
           <span role="alert" className="text-meta font-medium text-seal-label">
@@ -1271,18 +1137,15 @@ function EntityEditBody({
         ) : null}
       </div>
 
-      {/* Edit action bar. A container: at the drawer's 360px minimum a
-          draft's four buttons need ~440px, so below 27rem "Copy from…" keeps
-          only its icon (and its name) and "Save and create another" reads
-          "Save & new" — nothing is clipped at any width. */}
+      {/* A container: a draft's four buttons need ~440px and the drawer's
+          minimum is 360px, so below 27rem the labels shorten. */}
       <div
         className={`@container flex items-center justify-end gap-3 h-12 bg-paper shrink-0 ${
           compact ? "bleed gap-2" : "bleed"
         }`}
         style={{ borderTop: "1px solid var(--border-primary)" }}
       >
-        {/* EDIT MODE ONLY — this whole bar exists only while editing, which is
-            the same rule Uwazi's `.copy-from-btn` follows. */}
+        {/* Edit mode only, as in Uwazi. */}
           <button
             onClick={() => setPickerOpen(true)}
             data-gutter-align="box"
@@ -1307,19 +1170,13 @@ function EntityEditBody({
         >
           Cancel
         </button>
-        {/* NOT `disabled`: a blocked save stays clickable so it can explain
-            itself — re-validate, alert via the summary line, focus the first
-            invalid field. aria-disabled + the alert carry the state. While
-            saving, the label goes transparent under a centred loader so the
-            button keeps its width (never-shift rule). Failure is
-            danger-family, so it wears seal — seal text on the seal tint, not a
-            new red. No border in any state: bar buttons carry none, and a
-            border that appears only on failure would be the one outline in
-            the bar. */}
+        {/* Save uses aria-disabled, not `disabled`: a blocked save stays
+            clickable to re-validate and focus the first invalid field. While
+            saving, the label hides under a loader so the width holds. Failure
+            is seal text on the seal tint; no border in any state. */}
         {draft && (
-          /* The run-of-records path: saves, then opens the next draft of this
-             template with the pinned values in it. The lead, not a second
-             commit: Save stays the one filled button. */
+          /* Saves, then opens the next draft with the pinned values. Styled as
+             the lead so Save stays the one filled button. */
           <button
             type="button"
             data-part="save-another"
@@ -1329,8 +1186,7 @@ function EntityEditBody({
               saving ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
             }`}
           >
-            {/* One label shows at a time; the hidden one is out of the
-                accessibility tree, so the name is what is seen. */}
+            {/* The hidden label is out of the accessibility tree, so the name matches what is seen. */}
             <span className="hidden @[27rem]:inline">Save and create another</span>
             <span className="@[27rem]:hidden">Save &amp; new</span>
           </button>
@@ -1363,9 +1219,8 @@ function EntityEditBody({
 
 /* ── Edit helpers ── */
 
-/** A property's pin, on its label row. Revealed on the field's hover or focus
- *  (`.pin-host` / `.pin-toggle` in index.css, with keyboard focus included),
- *  and always shown once pinned, so what will carry over is on screen. */
+/** A property's pin. Revealed on the field's hover or focus (`.pin-host` /
+ *  `.pin-toggle` in index.css); always shown once pinned. */
 function PinToggle({ pinned, label, onToggle }: { pinned: boolean; label: string; onToggle: () => void }) {
   return (
     <button
@@ -1397,15 +1252,12 @@ function EditSection({
 }: {
   label: string;
   icon?: React.ReactNode;
-  /** A quiet control at the end of the label row — the Title row's "Add icon".
-   *  The row is already mounted and already holds the listening chip, so an
-   *  action here costs no layout. */
+  /** A quiet control at the end of the label row (e.g. "Add icon"). The row is
+   *  always mounted, so it costs no layout. */
   action?: React.ReactNode;
   children: React.ReactNode;
-  /** The id of the control this label names. Without it the label is a bare
-   *  `<label>` pointing at nothing: screen readers announce the input as
-   *  unlabelled, and clicking the word doesn't focus the field — which for a
-   *  form whose fields are ARMED by focus is a lost way in. */
+  /** The labelled control's id. Needed so screen readers name the input and a
+   *  label click focuses (and so arms) the field. */
   htmlFor?: string;
   /** This field is armed for click-to-fill. */
   listening?: boolean;
@@ -1414,18 +1266,8 @@ function EditSection({
   return (
     <div className="pin-host space-y-1.5">
       {label && (
-        // `text-xs font-medium text-ink-secondary` — the form-label recipe, the
-        // one `settings/SettingsField.tsx` already gives every Settings page and both
-        // modals. This row used to carry `text-sm font-bold text-ink`, which is
-        // the CARD-TITLE recipe: 14px/700 naming an input, two full steps above
-        // every other field label in the app, on the form a reader meets most.
-        //
-        // The listening chip rides THIS row and the row is always mounted, so
-        // arming a field must move nothing below it. The old label held the row
-        // open at its own 20px line box; a 12px label's is 16px, exactly the
-        // chip's `h-4` — true, and too tight to leave implied, so `min-h-4`
-        // states it. The chip can now grow the row only by growing itself, and
-        // it would have to say so here.
+        // The form-label recipe, as in `settings/SettingsField.tsx`. `min-h-4`
+        // matches the listening chip's `h-4`, so arming a field shifts nothing.
         <div className="flex items-center gap-2 min-h-4">
           {icon}
           <label htmlFor={htmlFor} className="text-xs font-medium text-ink-secondary">
@@ -1442,16 +1284,10 @@ function EditSection({
   );
 }
 
-/** A select / multiselect property's editor: the thesaurus picker under the
- *  field label, with "Add value" on the label row (the row is always mounted,
- *  so the action costs no layout) and, for a select holding a value, "Clear" —
- *  a radio group cannot be emptied by clicking it.
- *
- *  The values come from the shared thesauri store of the entity's own corpus;
- *  the binding is the template's, or one made in this session by "New
- *  thesaurus". A value added here is written to the store on the modal's Save,
- *  so Settings › Thesauri lists it at once; the CHOICE is the form's, and is
- *  saved or discarded with it. */
+/** A select / multiselect editor: the thesaurus picker, with "Add value" and,
+ *  for a select with a value, "Clear" (a radio group can't be emptied by click).
+ *  Values come from the corpus's thesauri store. An added value is written to
+ *  the store on the modal's Save; the choice is saved or discarded with the form. */
 function ThesaurusFieldEditor({
   field,
   corpus,
@@ -1484,9 +1320,8 @@ function ThesaurusFieldEditor({
   const thesaurusId = bindings[bindingKey(typeId, field.id)] ?? field.thesaurus;
   const thesaurus = thesauri.find((t) => t.id === thesaurusId) ?? null;
   const multiple = field.type === "multiselect";
-  // The list in the language being written: CEJIL's records hold translated
-  // labels, its thesauri the Spanish ones. A choice is its VALUE IDS (see
-  // `fieldKeys`), written into every language in that language's label.
+  // Localised because CEJIL records hold translated labels but its thesauri
+  // hold Spanish. A choice is its value ids (`fieldKeys`), labelled per language.
   const shown = useMemo(
     () => (thesaurus ? localizeValues(thesaurus.values, corpus, language) : null),
     [thesaurus, corpus, language],
@@ -1599,19 +1434,6 @@ const countries = [
   { flag: "🇻🇪", name: "Venezuela" },
 ];
 
-/** The template field's control: the current template, and the list of the
- *  others, each carrying its own type dot.
- *
- *  Both halves get the SAME treatment as every other type label in the app —
- *  the true colour in a `rounded-[2px]` square, the name in `typeLabelColor`
- *  (never the raw colour: 12-14px text on the tint has to clear AA in dark).
- *  Issue #42's note was "no template coloring?" — the field named the template
- *  in plain ink, so the one place you SET the type was the one place it didn't
- *  look like a type.
- *
- *  Presentational, like the icon picker beside it: the prototype keys an
- *  entity's profile off its seeded type, so choosing another shows the choice
- *  but doesn't re-shape the entity. */
 /** The form's Template field: `TemplateSelect` over the edited entity's
  *  corpus, with the templates this session created in listed first. */
 function TemplatePicker({
@@ -1621,9 +1443,7 @@ function TemplatePicker({
   value: string;
   onChange: (id: string) => void;
 }) {
-  // The EDITED entity's corpus, not the Sample list: a CEJIL record's
-  // template is a CEJIL template, and the Sample list made every CEJIL form
-  // open on "Select template…".
+  // The edited entity's corpus: a CEJIL record's template is a CEJIL template.
   const focusedId = useAtomValue(focusedEntityIdAtom);
   const corpus = entityCorpusOf(focusedId);
   const types = corpusTypes(corpus, useAtomValue(entityTypesAtom));
@@ -1691,14 +1511,12 @@ function MetadataDrawer() {
     { id: "template", label: "Template" },
   ];
 
-  // Documents live in Files now; the drawer opens on the connections either way.
   const [activeDrawerTab, setActiveDrawerTab] = useState("connections");
 
   return (
     // The gutter host (see `gutter-host`): tabs and tab bodies carry no side padding.
     <div data-gutter-host className="gutter-host relative flex flex-col h-full overflow-clip">
-      {/* Clicking a connected entity in a metadata relationship field opens its
-          source preview here in the drawer (not as a slide-over on the left). */}
+      {/* A connected entity in a relationship field opens its preview in this drawer. */}
       <EntityOverlay />
       <DrawerTabs
         tabs={drawerTabs}
@@ -1721,16 +1539,10 @@ function MetadataDrawer() {
   );
 }
 
-/** The "↳ copied from …" stamp under a field, in a slot mounted for EVERY
- *  field once any copy has landed (`active`), so a later copy's line can't push
- *  the fields below it down (PATTERNS §3).
- *
- *  This is the undo-adjacent affordance Uwazi has no answer for (research
- *  weakness #4): their copy is irreversible except by discarding the entire edit
- *  session, because after the values land nothing records which fields moved or
- *  where they came from. Naming the source per field means a user can put one
- *  back by hand, and knows what to put back. The choosing happens in the picker
- *  modal (`CopyFromPicker`); this slot only records the result. */
+/** The "↳ copied from …" line under a field. Mounted for every field once any
+ *  copy has landed (`active`), so a later copy doesn't shift the form
+ *  (PATTERNS §3). Naming the source per field lets a user revert one by hand,
+ *  which Uwazi's copy does not allow. */
 function CopyFieldSlot({ active, sourceId }: { active: boolean; sourceId?: string }) {
   if (!active) return null;
   const source = sourceId ? getEntity(sourceId) : undefined;

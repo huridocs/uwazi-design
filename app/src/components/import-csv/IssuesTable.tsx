@@ -24,7 +24,6 @@ export function IssuesTable({ issues }: IssuesTableProps) {
           so the implicit roles are restated. */}
       <table role="table" className="flex flex-col flex-1 min-h-0 w-full">
         <caption className="sr-only">Import issues</caption>
-        {/* Header */}
         <thead role="rowgroup" data-part="header" className="block shrink-0">
           <tr
             role="row"
@@ -42,7 +41,6 @@ export function IssuesTable({ issues }: IssuesTableProps) {
           </tr>
         </thead>
 
-        {/* Rows — fills available space, scrolls */}
         <tbody role="rowgroup" data-part="rows" className="block flex-1 overflow-y-auto min-h-0">
           {issues.map((issue) => (
             <tr
@@ -75,7 +73,6 @@ export function IssuesTable({ issues }: IssuesTableProps) {
         </tbody>
       </table>
 
-      {/* Footer */}
       <div
         data-part="footer"
         className="flex items-center px-4 h-10 shrink-0 text-xs text-ink-muted"

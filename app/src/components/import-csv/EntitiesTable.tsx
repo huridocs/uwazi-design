@@ -33,7 +33,6 @@ export function EntitiesTable({ entities }: EntitiesTableProps) {
           the body is the scroll lane. */}
       <table role="table" className="flex flex-col flex-1 min-h-0 w-full">
         <caption className="sr-only">Created entities</caption>
-        {/* Header */}
         <thead role="rowgroup" data-part="header" className="block shrink-0">
           <tr
             role="row"
@@ -51,7 +50,6 @@ export function EntitiesTable({ entities }: EntitiesTableProps) {
           </tr>
         </thead>
 
-        {/* Rows — fills available space, scrolls */}
         <tbody role="rowgroup" data-part="rows" className="block flex-1 overflow-y-auto min-h-0">
           {entities.map((entity) => (
             <tr
@@ -83,7 +81,6 @@ export function EntitiesTable({ entities }: EntitiesTableProps) {
         </tbody>
       </table>
 
-      {/* Footer */}
       <div
         data-part="footer"
         className="flex items-center px-4 h-10 shrink-0 text-xs text-ink-muted"

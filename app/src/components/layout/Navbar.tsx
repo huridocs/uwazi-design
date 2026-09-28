@@ -48,10 +48,8 @@ interface NavbarProps {
   onToggleRtl?: () => void;
 }
 
-/** The two builds are deployed to the same site — `main` at the root and this
- *  branch under /playground/ — so the only thing telling them apart is the URL.
- *  Vite bakes the base in at build time, which is exactly when the difference is
- *  decided; nothing at runtime needs to be asked. */
+/** Both builds deploy to one site: `main` at the root, this branch under
+ *  /playground/. Vite bakes the base URL in at build time, so it tells them apart. */
 const IS_PLAYGROUND = import.meta.env.BASE_URL.includes("/playground/");
 
 export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onToggleRtl }: NavbarProps) {
@@ -111,9 +109,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
   ];
   const collection = COLLECTIONS.find((c) => c.id === dataSource) ?? COLLECTIONS[0];
 
-  // The Tools dropdown IS the Tools settings group — one list, not a hardcoded
-  // copy of it that had drifted into five mostly-disabled placeholders while the
-  // real pages sat unreachable in the settings rail.
+  // The Tools dropdown reads the Tools settings group, so the two lists cannot drift.
   const toolsItems = settingsToolsItems();
 
   /** Open a settings destination. The rail scopes itself to the group the
@@ -127,10 +123,9 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
       onNavigate?.("settings");
     });
   };
-  /** Phones: open a settings GROUP's list (the rail, full width), not a page.
-   *  The rail lists the group of the current section, so this has to set one:
-   *  navigating to Settings alone left the section on Account, and User settings
-   *  and System settings both opened a list holding only Account. */
+  /** Phones: open a settings group's list (the rail, full width), not a page.
+   *  The rail lists the current section's group, so this sets the section to
+   *  the group's entry; without it every group opens on Account's list. */
   const openSettingsList = (groupId: string) => {
     guard(() => {
       setSettingsSection(settingsEntryOf(groupId));
@@ -140,10 +135,8 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
   };
 
   return (
-    // px-3 matches the content gutter below it — the Library toolbar, the card
-    // grid, the entity MainTabs and DocMeta all sit at px-3, so a wider navbar
-    // padding parked the logo (and the right cluster) 8px inboard of everything it
-    // sits above. The chrome and its content share a left edge now.
+    // px-3 matches the content gutter below (Library toolbar, card grid,
+    // MainTabs, DocMeta), so the logo and right cluster share their edges.
     <header
       data-component="Navbar"
       className="relative h-13 bg-paper flex items-center justify-between px-3 shrink-0"
@@ -209,9 +202,8 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                 </span>
               </div>
             ) : (
-              // Library + its COLLECTION picker. The dataset switch used to sit in
-              // the Library toolbar, where it was one more thing pushing the view
-              // controls around; it belongs to the destination, not the view.
+              // Library + its collection picker. The dataset belongs to the
+              // destination, not the view, so it is not in the Library toolbar.
               <div ref={collectionRef} data-part="collection" className="relative flex items-center">
                 <button
                   type="button"
@@ -375,8 +367,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                             data-part="tools-item"
                             onClick={() => {
                               // Import CSV is its own top-level view; the rest are
-                              // settings pages that were sitting unreachable in a
-                              // rail group nothing linked to.
+                              // settings pages.
                               if (item.navigateTo) onNavigate?.(item.navigateTo);
                               else openSettings(item.id);
                               setToolsOpen(false);
@@ -435,28 +426,20 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
             >
               <Settings size={14} /> {t("System", "Settings")}
             </button>
-            {/* No `dir="ltr"` on the panel: this menu is chrome like every
-                other, so it mirrors under RTL. The left/right anchoring below
-                already flips — pinning the CONTENT to LTR was what left this
-                one surface reading against the page. */}
+            {/* No `dir="ltr"` on the panel: this menu is chrome and mirrors
+                under RTL like every other; the left/right anchoring below flips. */}
             {settingsOpen && (
               <div
                 data-part="settings-menu"
-                // w-72, not the old w-52: the language row carries a control in
-                // its trailing slot, so the label has far less room than the
-                // plain rows. Sized against the LONGEST of the three UI
-                // languages ("Idioma de la interfaz"), not English — at w-64
-                // that one wrapped and made its row taller than the others,
-                // which is the whole thing this menu was being tidied to avoid.
+                // w-72: the language row carries a control in its trailing slot.
+                // Sized for the longest UI language label ("Idioma de la
+                // interfaz"); at w-64 it wraps and its row grows taller.
                 className="absolute top-full mt-1.5 w-72 bg-paper border border-border rounded-lg shadow-lg overflow-hidden z-50"
                 style={{ right: rtl ? undefined : 0, left: rtl ? 0 : undefined }}
               >
-                {/* Icon LEADS, as in the Tools dropdown, DocumentationLink,
-                    SettingsNav and the Settings rail. The trailing slot is reserved
-                    for something that carries meaning — the RTL pill here, an
-                    ExternalLink for "leaves the app", a chevron for "goes
-                    deeper" — so an icon parked there reads as a promise the row
-                    doesn't keep. */}
+                {/* The icon leads, as in the Tools dropdown and SettingsNav. The
+                    trailing slot is reserved for state or a hint: the RTL pill,
+                    ExternalLink for "leaves the app", a chevron for "goes deeper". */}
                 <div className="py-1">
                   <button
                     onClick={() => { onToggleRtl?.(); setSettingsOpen(false); }}
@@ -476,14 +459,10 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                       {rtl ? "ON" : "OFF"}
                     </span>
                   </button>
-                  {/* Interface language — the chrome's language, NOT the
-                      document's reading language (that one lives in the tab
-                      strips / Library toolbar), and nothing to do with System ›
-                      Languages. It sits with the RTL toggle because both are
-                      switches you flip and watch, not places you navigate to:
-                      choosing writes `uiLanguageAtom` immediately and closes
-                      the menu. Same leading-icon shape as the rows around it,
-                      with the control in the trailing slot. */}
+                  {/* Interface language: the chrome's language, not the
+                      document's reading language or System › Languages. It sits
+                      with the RTL toggle because both are switches, not
+                      destinations; choosing writes `uiLanguageAtom` and closes the menu. */}
                   <div className="flex items-center justify-between gap-2 px-3 py-2">
                     <span className="flex items-center gap-2 text-xs font-medium text-ink-secondary">
                       <Globe size={14} className="text-ink-tertiary" />
@@ -498,9 +477,8 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                       steady
                     />
                   </div>
-                  {/* Two doors, two destinations. Both used to dump you on the
-                      same page with the same twenty-item rail — the distinction
-                      was a label, not a place. */}
+                  {/* User settings and System settings each open their own
+                      group's entry section, so the rail shows only that group. */}
                   <button
                     onClick={() => {
                       openSettings(settingsEntryOf("user"));
@@ -624,10 +602,8 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                 {rtl ? "ON" : "OFF"}
               </span>
             </button>
-            {/* Same control as the desktop Settings dropdown, same section —
-                the chrome's language, not the document's. Choosing leaves the
-                sheet open: it's a switch you watch take effect, and the strings
-                around it are the demonstration. */}
+            {/* Same control as the desktop Settings dropdown. Choosing leaves the
+                sheet open so the user sees the menu strings change language. */}
             <div className="flex items-center justify-between gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary">
               <div className="flex items-center gap-3">
                 <Globe size={16} className="text-ink-tertiary" />
@@ -664,8 +640,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
 }
 
 /** Documentation, appended to every menu that opens onto settings. It belongs to
- *  no group — it's the way OUT of all of them — so it isn't a Tools item that you
- *  only find if you already went looking somewhere else. */
+ *  no settings group, so it is not listed as a Tools item. */
 function DocumentationLink({ onDone }: { onDone: () => void }) {
   const Icon = settingsDocumentation.icon;
   return (

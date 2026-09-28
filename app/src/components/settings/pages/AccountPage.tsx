@@ -141,7 +141,6 @@ export function AccountPage() {
       <SettingsContent.Header title="Account" />
       <SettingsContent.Body>
         <div className="flex flex-col gap-6">
-          {/* Profile */}
           <section>
             <h3 className="text-sm font-semibold text-ink mb-1">Profile</h3>
             <p className="text-xs text-ink-tertiary mb-3">
@@ -157,7 +156,6 @@ export function AccountPage() {
             </div>
           </section>
 
-          {/* Password */}
           <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
             <h3 className="text-sm font-semibold text-ink mb-1">Change password</h3>
             <p className="text-xs text-ink-tertiary mb-3">
@@ -209,7 +207,6 @@ export function AccountPage() {
             </div>
           </section>
 
-          {/* Two-factor */}
           <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
             <div className="flex items-start gap-3 mb-3">
               <div className="flex-1 min-w-0">
@@ -285,7 +282,6 @@ export function AccountPage() {
             )}
           </section>
 
-          {/* API keys */}
           <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
             <div className="flex items-start gap-3 mb-3">
               <div className="flex-1 min-w-0">

@@ -1,13 +1,9 @@
 import type { ReactNode } from "react";
 
-/** The preview FRAME: a sheet of paper pinned near the top and running off the
- *  bottom edge, so the page is partially hidden the way one sits in a stack.
- *
- *  What fills the sheet is the caller's business — `DocumentPreview` puts the
- *  document's real first page in it. On its own it's the empty state: a blank
- *  sheet, no invented ruled lines. Those lines were a drawing of a document
- *  pretending to be the document, identical on every card, and they read as a
- *  wireframe that never loaded. */
+/** The preview frame: a sheet pinned near the top and running off the bottom
+ *  edge. The caller fills it (`PdfPageThumb` puts the real first page in it);
+ *  empty, it is a blank sheet with no drawn placeholder lines, which read as a
+ *  page that failed to load. */
 export function DocPlaceholder({
   ext,
   size = "md",
@@ -15,30 +11,22 @@ export function DocPlaceholder({
   peek = false,
   children,
 }: {
-  /** e.g. "pdf". Hidden at `sm` — there's no room, and a 5px word is noise. */
+  /** e.g. "pdf". Hidden at `sm`, where it would be too small to read. */
   ext?: string;
   size?: "sm" | "md" | "lg";
-  /** The sheet IS the box: no inset, no stack framing.
-   *
-   *  For the portrait slot, where the box is already 3:4 and a page is ~0.77 —
-   *  near enough the same shape that insetting a second, smaller sheet inside it
-   *  draws a page floating in vellum with nothing gained. The stack framing
-   *  earns its keep in the wide band, where a page CAN'T fill the box and the
-   *  inset is what stops it reading as a crop; here it is just a smaller page. */
+  /** The sheet fills the box: no inset, no stack framing. For the portrait slot,
+   *  which is 3:4 against a page's ~0.77, so an inset sheet would only be a
+   *  smaller page. The wide band keeps the inset so a page doesn't read as a crop. */
   fill?: boolean;
-  /** On hover (or keyboard focus inside) of the library card, the sheet is
-   *  pulled UP out of the band like a page out of a folder: it rises past the
-   *  card's top edge over whatever is above, with a lifted shadow, and settles
-   *  back on leave. Stack frame only (never with `fill`). The motion lives in
-   *  `index.css` (`.doc-peek-sheet`), because it is a clip-path and a translate
-   *  moving in step, which no utility pair expresses.
+  /** On hover or focus-within of the library card, the sheet rises past the
+   *  card's top edge and settles back on leave. Stack frame only, never with
+   *  `fill`. The motion is in `index.css` (`.doc-peek-sheet`): a clip-path and
+   *  a translate in step, which utilities can't express.
    *
-   *  In this mode the band does NOT clip (no `overflow-hidden`): the sheet
-   *  carries its own clip-path, whose bottom edge sits exactly on the band's
-   *  bottom at rest and stays there while the sheet rises — the part below it
-   *  is still "in the folder". The sheet is 170% of the band tall, so there is
-   *  page to pull out; the page bitmap is the whole first page at the sheet's
-   *  width, so everything the rise uncovers is already painted. */
+   *  The band does not clip in this mode; the sheet's own clip-path keeps its
+   *  bottom edge on the band's bottom while it rises. The sheet is 170% of the
+   *  band tall and the bitmap is the whole first page, so the rise uncovers
+   *  content that is already painted. */
   peek?: boolean;
   /** Page content. Absent → a blank sheet. */
   children?: ReactNode;
@@ -48,17 +36,10 @@ export function DocPlaceholder({
       data-component="DocPlaceholder"
       className={`group relative w-full h-full bg-vellum ${peek && !fill ? "rounded-[inherit]" : "overflow-hidden"}`}
     >
-      {/* Inset at the sides, pinned near the top, running PAST the bottom so the
-          frame crops it. Rounded on the top corners only — the bottom is
-          off-frame, and rounding it would put the sheet back inside the box.
-
-          The side inset is 6%, not 16%. At 16 the sheet was two thirds of the
-          band's width — measured 250px of a 371px card — and the remaining third
-          was vellum on either side of a page too small to read. The framing is
-          what stops a fitted page reading as a crop, and it does that job at a
-          hairline's remove as well as at a margin's; the margin was only ever
-          sized for a 96px band. The sheet is still a sheet: same top anchor,
-          same run off the bottom edge, same border and shadow. */}
+      {/* Inset at the sides, pinned near the top, running past the bottom so the
+          frame crops it. Top corners rounded only: the bottom is off-frame.
+          The side inset is 6%: a wider one leaves the page too small to read
+          in a wide card. */}
       <div
         data-part="sheet"
         className={
@@ -73,17 +54,13 @@ export function DocPlaceholder({
         {children}
       </div>
 
-      {/* Folder pocket: a small elliptical shadow pooled along the bottom, over the
-          sheet, so the page reads as tucked INTO the frame — a radial gradient
-          gives the ellipse, which an inset box-shadow can't. Only on hover, and
-          faint: a flourish when you're looking at this one, not a permanent mark on
-          every thumbnail. */}
+      {/* A faint elliptical shadow along the bottom, over the sheet, on hover only.
+          A radial gradient, because an inset box-shadow can't draw an ellipse. */}
       <div
         data-part="pocket"
         aria-hidden
         className={`pointer-events-none absolute inset-x-0 bottom-0 h-[14%] opacity-0 transition-opacity duration-200 ${
-          // The pocket is the stack's shadow. A filled sheet has no bottom edge
-          // to be tucked behind, so the gradient would just be a smudge.
+          // A filled sheet has no bottom edge for the shadow to sit behind.
           fill ? "" : "group-hover:opacity-100"
         }`}
         style={{

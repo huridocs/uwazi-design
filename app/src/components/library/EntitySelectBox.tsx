@@ -8,7 +8,7 @@ import {
 } from "../../atoms/library";
 
 /* ── The order a Shift range runs over ────────────────────────────────────
-   "From the anchor to here" means in the order the reader SEES: the grid's
+   "From the anchor to here" means in the order the reader sees: the grid's
    loaded page, the timeline's dates, the Results ranking. Each view
    registers its drawn order when it commits (`useSelectionOrder`); a list
    drawn somewhere else at the same time (the selection or cluster drawer)
@@ -18,9 +18,9 @@ let viewOrder: readonly string[] = [];
 
 /** Register the order the visible view draws its entities in, or `null` for
  *  a host that is not drawing the view right now. A layout effect, so only a
- *  committed render counts — a render React throws away (a deferred value's
- *  interrupted pass) no longer leaves its order behind — and it is in place
- *  before the browser paints anything to click. Only ONE mounted caller may
+ *  committed render counts (a render React discards, such as a deferred
+ *  value's interrupted pass, leaves no order behind) and it is in place
+ *  before the browser paints anything to click. Only one mounted caller may
  *  pass ids at a time: a parent's layout effect runs after its child's. */
 export function useSelectionOrder(ids: readonly string[] | null): void {
   useLayoutEffect(() => {
@@ -52,28 +52,22 @@ export function selectionIntent(e: { metaKey: boolean; ctrlKey: boolean; shiftKe
 }
 
 /** A row's mousedown: with Shift held, keep the browser from extending the
- *  page's text selection to the click — a Shift+click on a row is a range of
- *  ENTITIES, and without this it also highlighted every line between the
- *  anchor and the row. The click itself still fires. */
+ *  page's text selection to the click: a Shift+click on a row selects a range
+ *  of entities, not the text between the anchor and the row. The click still fires. */
 export function holdTextSelection(e: MouseEvent) {
   if (e.shiftKey) e.preventDefault();
 }
 
-/** One entity's selection control — the same control in a card, a table
- *  row, a timeline line, a Results card and a drawer row.
+/** One entity's selection control, shared by cards, table rows, timeline
+ *  lines, Results cards and drawer rows.
  *
- *  NOT DRAWN (Juan, 2026-09-21): the Library selects by modifier click —
- *  Cmd/Ctrl toggles, Shift ranges — and selected is the row's `bg-parchment`,
- *  so a visible checkbox on every card was a second way to say the same thing,
- *  and a slot every card paid for. What stays is the ACCESSIBLE route: a real
- *  `<input type="checkbox">`, visually hidden but focusable, named "Select
- *  <title>", a tab stop after the row's primary action. While it has focus
- *  the ROW draws the focus ring (`FOCUS_RING_ON_SELECT`), since the box itself
- *  can't be seen. Screen readers get its checked state.
+ *  Not rendered in the Library: selection uses Cmd/Ctrl- and Shift-click (on
+ *  touch, a long press or `librarySelectModeAtom`). It stays as a visually hidden, focusable
+ *  checkbox named "Select <title>" for keyboard and screen-reader users; the row
+ *  draws its focus ring (`FOCUS_RING_ON_SELECT`).
  *
- *  Keys: Space toggles (native); Shift+Space and Shift+Arrow extend the range
- *  from the anchor, the arrow moving focus to the next one in the view's
- *  order. Clicks stop here — the row's own click is the preview. */
+ *  Keys: Space toggles; Shift+Space and Shift+Arrow extend the range and move
+ *  focus along the view's order. Clicks stop here: the row's click is the preview. */
 export function EntitySelectBox({ id, title }: { id: string; title: string }) {
   const checked = useAtomValue(entitySelectedAtom(id));
   const toggle = useSetAtom(toggleSelectionAtom);
@@ -100,7 +94,7 @@ export function EntitySelectBox({ id, title }: { id: string; title: string }) {
     if (i < 0 || !next) return;
     e.preventDefault();
     range({ order: list, id: next });
-    // The next box in THIS list: the same id is drawn in the grid and in the
+    // The next box in this list: the same id is drawn in the grid and in the
     // selection drawer, and the first match in the document may be the other.
     const root = e.currentTarget.closest("[data-select-scope]") ?? document;
     root.querySelector<HTMLInputElement>(`[data-select-id="${CSS.escape(next)}"] input`)?.focus();
@@ -126,22 +120,18 @@ export function EntitySelectBox({ id, title }: { id: string; title: string }) {
  *  one visible sign of where a keyboard user is. Put on every host row. */
 export const FOCUS_RING_ON_SELECT = [
   "has-[[data-part=select]_input:focus-visible]:ring-2 has-[[data-part=select]_input:focus-visible]:ring-[var(--selected-ring)]",
-  // Forced colors (Windows High Contrast) drop box-shadows AND backgrounds,
-  // which were both signals — the ring and the parchment. Outlines survive:
-  // SELECTED is a solid system-colour outline, FOCUS a dashed one outside it.
+  // Forced colors (Windows High Contrast) drop box-shadows and backgrounds, so
+  // the ring and the parchment vanish. Outlines survive: selected is a solid
+  // system-colour outline, focus a dashed one outside it.
   "forced-colors:has-[[data-part=select]_input:checked]:outline-2 forced-colors:has-[[data-part=select]_input:checked]:outline-[SelectedItem]",
   "forced-colors:has-[[data-part=select]_input:focus-visible]:outline-3 forced-colors:has-[[data-part=select]_input:focus-visible]:outline-dashed",
   "forced-colors:has-[[data-part=select]_input:focus-visible]:outline-offset-2 forced-colors:has-[[data-part=select]_input:focus-visible]:outline-[Highlight]",
 ].join(" ");
 
-/** SELECTED — ONE look, whatever else is true of the item: the parchment
- *  fill AND a steady 2px carbon ring (a box-shadow, so no layout shift),
- *  focused or not. It wins over the preview's ink hairline (the border goes
- *  back to the resting one, and the inset hairline a table row draws is
- *  dropped). Before, one gesture gave three looks — ink outline, then fill,
- *  then fill + ring only while the hidden box had focus. Keyboard focus on an
- *  UNSELECTED item is still the same carbon ring, without the fill, so the
- *  two stay apart; on a selected item focus adds nothing. */
+/** Selected: one look whatever else is true of the item, the parchment fill
+ *  and a 2px carbon ring (a box-shadow, so no layout shift), focused or not.
+ *  It overrides the preview's ink hairline. Focus on an unselected item is the
+ *  same ring without the fill; on a selected item focus adds nothing. */
 export const SELECTED_LOOK = [
   "has-[[data-part=select]_input:checked]:bg-parchment has-[[data-part=select]_input:checked]:border-border",
   "has-[[data-part=select]_input:checked]:ring-2 has-[[data-part=select]_input:checked]:ring-[var(--selected-ring)] has-[[data-part=select]_input:checked]:shadow-none",
@@ -149,7 +139,7 @@ export const SELECTED_LOOK = [
 /** The same, drawn inside the box — for rows, whose neighbours touch them. */
 export const SELECTED_LOOK_INSET = `${SELECTED_LOOK} has-[[data-part=select]_input:checked]:ring-inset`;
 
-/** The PREVIEWED item — the one open in the drawer. Callers pair this ring
+/** The previewed item, the one open in the drawer. Callers pair this ring
  *  with `bg-parchment`, so a single previewed item looks exactly like a
  *  selected one: one look for "this is the item you picked", however many
  *  are picked. Forced colors drop rings, so there it
@@ -160,8 +150,8 @@ export const PREVIEWED_RING =
 export const PREVIEWED_RING_INSET = `${PREVIEWED_RING} ring-inset forced-colors:-outline-offset-1`;
 
 /* ── Touch ──────────────────────────────────────────────────────────────
-   Selection is modifier-click, and a touch screen has no modifiers — so on
-   touch a LONG PRESS (500ms, without moving) toggles the item under the
+   Selection is modifier-click, and a touch screen has no modifiers, so on
+   touch a long press (500ms, without moving) toggles the item under the
    finger, and while a selection exists a plain tap toggles too (the
    convention of every touch file manager). The item is whatever carries a
    hidden selection box: `[data-select-id]` inside the pressed card or row. */

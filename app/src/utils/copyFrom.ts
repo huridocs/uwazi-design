@@ -4,78 +4,15 @@ import type { Entity } from "../data/entities";
 import { getEntityProfile } from "../data/entityProfiles";
 
 /**
- * "Copy From" — the MATCHING layer. Pure logic, no React, no atoms, no UI.
- *
- * Uwazi's version (`app/shared/commonProperties.js` + `CopyFromEntity.tsx`) lets
- * an editor pull metadata off any other entity in the library. A property is
- * eligible only when BOTH templates define one with the same `name`, `type`,
- * `content` (thesaurus id) and `inherit.property` — exact schema identity — and
- * three types are excluded outright (`generatedid`, `media`, `image`).
- *
- * We mirror that rule. What we add is the thing their implementation has no
- * place for: a REASON for every property that did NOT come across. Their
- * `sameProperty()` is a boolean, so two fields a human would call "the same"
- * (same label, different thesaurus) fail silently and the user is left staring
- * at a field that didn't fill in, with nothing to read (research §"Critical
- * assessment", weakness #5). Every rejection here carries a `CopySkipReason` and
- * a sentence explaining it.
- *
- * ── How Uwazi's model maps onto ours ────────────────────────────────────────
- *
- * They have templates as first-class records with a `properties[]` schema. We
- * don't: an entity's field list IS its schema, resolved per language through
- * `getEntityProfile(id).metadata[language]`. So "both templates define it"
- * becomes "both entities' field lists define it", which is the same test in
- * practice — profiles are derived from the entity's type — but it is a genuine
- * difference and the reason this module takes FIELD ARRAYS as its primitive and
- * offers entity-level wrappers on top, rather than pretending we have templates.
- *
- *   `name`     → `field.id`. Stable across languages; `label` is localized
- *                display text and must never be the match key (the same field is
- *                "Country"/"País"/"Pays" depending on the reading language).
- *   `type`     → `field.type`.
- *   `content`  → ONLY relationship fields have one: `relationType` +
- *                `targetTypeId`, which is exactly what Uwazi's `content` holds
- *                for a relationship property (the target template id). Our
- *                scalar fields have NO thesaurus concept — `items` is a file
- *                list on `file-list` fields, not an option set — so
- *                `different-thesaurus` can only ever be reported for a
- *                relationship field. Inventing a vocabulary for text/date/etc.
- *                would be modelling something we don't have.
- *   `inherit`  → `inheritProperty`, or `inheritPath` + `inheritLeaf` for the
- *                multi-hop form (see `RelationshipMetadataField`). Both fold
- *                into one comparable key.
- *
- * Excluded types: their `generatedid` / `media` / `image` are "values the target
- * must own, not inherit from a neighbour". Our single equivalent is
- * `file-list` — files belong to the entity that holds them, and copying one
- * entity's attachments onto another is never what a copy of *metadata* means. We
- * have no generatedid analogue at all (nothing in `MetadataField` is
- * server-minted), so the exclusion set is one entry rather than three.
- *
- * ── Are inheriting relationship fields copyable? YES, but what copies is the
- *    CONNECTION, not the value. ───────────────────────────────────────────────
- *
- * A relationship field's displayed value is DERIVED: `utils/inheritance.ts`
- * resolves it live from `connectedEntityIds` at render, and nothing stores it.
- * So there is no inherited value to copy, and writing one would be a lie that
- * the next render overwrites. What is real and writable is the connection —
- * `connectedEntityIds` — and copying that reproduces the inherited value for
- * free, correctly, because it re-derives at the destination.
- *
- * That makes an inheriting field MORE copyable than a scalar, not less: it is
- * the case where copying is guaranteed to stay consistent. Two conditions:
- *   - the inherit spec must match on both sides (a field inheriting `country`
- *     and one inheriting `role` are different columns over the same connection —
- *     see the `connectionKey` multi-inheritance tier — so copying across them
- *     would put the wrong projection under the wrong label);
- *   - `readOnly` fields are refused (`read-only-derived`). Those are graph
- *     projections (CEJIL chains) with no editable connection behind them; the
- *     edit view already renders them read-only, so "copyable" would be a
- *     promise the form can't keep.
- *
- * Callers get `copies: "value" | "connection"` per match so a commit layer never
- * has to re-derive that distinction.
+ * Copy From matching: pure logic, no React or atoms. Mirrors Uwazi's
+ * `sameProperty()`: a property copies only when both sides define the same
+ * `field.id` (never the localised label), `type`, content pointer and inherit
+ * spec. Only relationship fields have a content pointer (`relationType` +
+ * `targetTypeId`); scalars have no thesaurus here. Every rejection carries a
+ * `CopySkipReason` and a sentence, because Uwazi's boolean gives the user none.
+ * Inheriting relationship fields copy their `connectedEntityIds`: the inherited
+ * value is resolved at render and re-derives at the destination. `readOnly`
+ * fields have no editable connection and are refused.
  */
 
 /** Why a property did not come across. The first five mirror the questions a
@@ -84,30 +21,29 @@ import { getEntityProfile } from "../data/entityProfiles";
 export type CopySkipReason =
   /** The target defines it, the source doesn't — nothing to copy from. */
   | "not-on-source-template"
-  /** The source has it, the target doesn't. Uwazi never even considers these;
-   *  we report them so a picker can say why a visibly-populated source field is
-   *  not on offer. The target's field list is the hard boundary either way. */
+  /** The source has it, the target doesn't. Reported so a picker can say why a
+   *  populated source field is not on offer; the target's field list is the limit. */
   | "not-on-target-template"
   /** Same key, different `type` (e.g. `text` here, `date` there). */
   | "type-mismatch"
   /** Same key and type, different content pointer — relationship fields whose
-   *  `relationType`/`targetTypeId` differ. See the header note on why this
-   *  cannot arise for scalars in our model. */
+   *  `relationType`/`targetTypeId` differ. Scalars have no content pointer, so
+   *  this cannot arise for them. */
   | "different-thesaurus"
   /** Same key, type and pointer, different inheritance projection. Uwazi folds
-   *  this into `sameProperty()`'s `inherit.property` check; naming it separately
-   *  is the whole point of this module. */
+   *  this into `sameProperty()`'s `inherit.property` check; it is reported
+   *  separately so the user can see why the field did not copy. */
   | "different-inherit-spec"
-  /** `file-list` — our `media`/`image` equivalent (see header). */
+  /** A type in `COPY_EXCLUDED_TYPES`. */
   | "excluded-type"
   /** A derived/graph projection with no writable connection (`readOnly`). */
   | "read-only-derived";
 
-/** One property that WOULD copy. */
+/** One property that would copy. */
 export interface CopyMatch {
   /** `field.id` — the match key, not the localized label. */
   id: string;
-  /** The TARGET's label: the form the user is looking at is the target's. */
+  /** The target's label: the form the user is looking at is the target's. */
   label: string;
   type: AnyMetadataField["type"];
   /** Scalars carry a `value`; relationship fields carry a connection and derive
@@ -120,10 +56,10 @@ export interface CopyMatch {
   sourceValueIds?: string[];
   sourceConnectedEntityIds?: string[];
   /** What the target holds right now, so a caller can show incoming-vs-current
-   *  per row instead of overwriting silently (weakness #3). */
+   *  per row instead of overwriting silently. */
   targetValue?: string;
   targetConnectedEntityIds?: string[];
-  /** The source's field is empty — copying would CLEAR the target's value.
+  /** The source's field is empty — copying would clear the target's value.
    *  Still a match (Uwazi copies it too); flagged so a UI can default it off. */
   emptyOnSource: boolean;
   /** Source and target already agree — copying is a no-op. */
@@ -150,7 +86,7 @@ export interface CopyPlan {
   matchCount: number;
 }
 
-/** One thing a copy can actually do to a FORM: a scalar the form has a
+/** One thing a copy can actually do to a form: a scalar the form has a
  *  controlled editor for, or a whole connection. What a form can apply is the
  *  form's rule (see `MetadataEditBody`'s `copyUnitsFor`); this is the shape it
  *  hands the picker, so the list the user ticks is exactly what will be written. */
@@ -178,10 +114,10 @@ export function copyUnitsOneToOne(plan: CopyPlan): { units: CopyUnit[]; unstagea
   };
 }
 
-/** Our `media`/`image` equivalent — see the header — and, now that the record
- *  carries one, `media` itself: another entity's recording is never this
- *  entity's. Exported so a UI can explain the exclusion without hardcoding the
- *  same list a second time. */
+/** Uwazi excludes `media`/`image`: values an entity owns rather than shares.
+ *  Here that is `file-list` and `media`; another entity's files or recording are
+ *  never this entity's. Exported so a UI can explain the exclusion without
+ *  repeating the list. */
 export const COPY_EXCLUDED_TYPES: ReadonlySet<AnyMetadataField["type"]> = new Set(["file-list", "media"]);
 
 const isRelationship = (f: AnyMetadataField): f is RelationshipMetadataField =>
@@ -215,8 +151,8 @@ const sameIds = (a?: string[], b?: string[]): boolean =>
 
 /**
  * The target side, pre-computed once so a candidate list costs one map lookup
- * per field rather than a rebuild per row (weakness #6: Uwazi makes you SELECT a
- * result before you learn whether it overlaps at all).
+ * per field rather than a rebuild per row, so a picker can badge every candidate
+ * before the user selects one.
  */
 export interface CopyIndex {
   byId: Map<string, AnyMetadataField>;
@@ -252,7 +188,7 @@ export function buildCopyIndex(targetFields: readonly AnyMetadataField[]): CopyI
 
 /**
  * How many properties this source would bring across — the number a picker
- * badges each candidate with, BEFORE the user commits to one.
+ * badges each candidate with, before the user commits to one.
  *
  * Deliberately does no allocation beyond the loop: one map lookup and one string
  * compare per source field, against an index built once for the whole list. The
@@ -279,7 +215,7 @@ export function countCopyMatches(
 /**
  * The full plan: what copies, and a reason for everything that doesn't.
  *
- * Checks run in the order a person would ask them, and the FIRST difference is
+ * Checks run in the order a person would ask them, and the first difference is
  * the reason reported — matching how `sameProperty()` short-circuits, so we
  * never report "different thesaurus" for two fields that aren't even the same
  * type.

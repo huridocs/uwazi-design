@@ -179,7 +179,6 @@ const spacingValues = [
 export function StyleGuide() {
   return (
     <div data-component="StyleGuide" className="flex flex-col gap-8">
-      {/* Colors */}
       <section id="sg-colors" data-part="colors" aria-labelledby="sg-colors-title">
         <h3 id="sg-colors-title" className="text-base font-semibold text-ink mb-4">Colors</h3>
         <div className="flex flex-col gap-6">
@@ -192,7 +191,6 @@ export function StyleGuide() {
         </div>
       </section>
 
-      {/* Typography */}
       <section id="sg-typography" data-part="typography" aria-labelledby="sg-typography-title">
         <h3 id="sg-typography-title" className="text-base font-semibold text-ink mb-4">Typography</h3>
         <div className="flex flex-col gap-3 bg-paper border border-border/40 rounded-md p-4">
@@ -207,7 +205,6 @@ export function StyleGuide() {
         </div>
       </section>
 
-      {/* Shadows */}
       <section id="sg-shadows" data-part="shadows" aria-labelledby="sg-shadows-title">
         <h3 id="sg-shadows-title" className="text-base font-semibold text-ink mb-4">Shadows</h3>
         <div className="grid grid-cols-4 gap-4">
@@ -225,7 +222,6 @@ export function StyleGuide() {
         </div>
       </section>
 
-      {/* Radii */}
       <section id="sg-radii" data-part="radii" aria-labelledby="sg-radii-title">
         <h3 id="sg-radii-title" className="text-base font-semibold text-ink mb-4">Border Radius</h3>
         <div className="grid grid-cols-4 gap-4">
@@ -243,7 +239,6 @@ export function StyleGuide() {
         </div>
       </section>
 
-      {/* Spacing */}
       <section id="sg-spacing" data-part="spacing" aria-labelledby="sg-spacing-title">
         <h3 id="sg-spacing-title" className="text-base font-semibold text-ink mb-4">Spacing</h3>
         <div className="flex flex-col gap-1.5">

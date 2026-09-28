@@ -5,15 +5,11 @@ const running = new WeakMap<HTMLElement, () => void>();
 
 /** Flash an element with the shared `flash-highlight` keyframe (index.css).
  *
- *  The flash owns its own end. It used to be a timeout returned from the
- *  caller's effect cleanup, and every caller clears its request atom inside
- *  that same effect, so the re-run cancelled the timeout and the class stayed
- *  on the element. Here the class comes off on `animationend`, with a timeout
- *  as a backstop for when no animation runs (a hidden tab does not advance
- *  animations, and reduced-motion rules can remove them). The timeout is keyed
- *  by element and cleared only when that element flashes again.
- *
- *  Calling it on an element that is still flashing restarts the flash. */
+ *  The flash ends itself, not through the caller's effect cleanup: callers clear
+ *  their request atom inside that effect, and the re-run would cancel the end and
+ *  leave the class on. The class comes off on `animationend`, with a timeout as a
+ *  backstop for when no animation runs (hidden tab, reduced motion). The timeout
+ *  is keyed by element. Calling it on a flashing element restarts the flash. */
 export function flashElement(el: HTMLElement, fallbackMs = 1100) {
   running.get(el)?.();
 

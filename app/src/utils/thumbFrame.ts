@@ -1,12 +1,9 @@
-/** The thumbnail's DECISIONS, with nothing browser-shaped in them.
+/** Thumbnail crop and blank-check decisions, with no browser dependencies.
  *
- *  `pdfThumb.ts` owns the canvases and pdf.js; this owns where the crop lands
- *  and whether what came out is worth showing. Split out so it can be exercised
- *  headlessly: pdf.js won't resolve a render in a hidden tab, which is exactly
- *  the state browser automation leaves a tab in, so the only honest way to check
- *  these numbers against the real corpus is off the browser entirely.
- *  `app/scripts/check-thumbs.ts` imports THIS module — not a copy of it — so the
- *  check can't drift from what ships. */
+ *  `pdfThumb.ts` owns the canvases and pdf.js; this module owns where the crop
+ *  lands and whether the result is worth showing. It is separate so
+ *  `app/scripts/check-thumbs.ts` can import it and run against the corpus
+ *  headlessly: pdf.js does not resolve a render in a hidden tab. */
 
 export interface ThumbFrame {
   /** The crop window's aspect (w/h), in CSS px — the sheet box it has to fill. */
@@ -26,13 +23,9 @@ const INK = 160;
 /** How far down a page we look before concluding there's no masthead to find. */
 const SCAN_DEPTH = 0.6;
 
-/** The fraction of page height above its first inked row, read off a probe
- *  bitmap (RGBA, row-major).
- *
- *  Only the middle of the column band is scanned: a page number, a margin rule
- *  or a scan's black edge isn't the masthead and shouldn't drag the crop up to
- *  it. Returns 0 when nothing is found — a page that empty reads better from its
- *  top edge than from wherever its one stray mark happens to be. */
+/** Fraction of page height above the first inked row of a probe bitmap (RGBA,
+ *  row-major). Only the middle 60% of the width is scanned so page numbers, margin
+ *  rules and scan edges are ignored. Returns 0 when nothing is found. */
 export function inkStart(pixels: Uint8ClampedArray, w: number, h: number): number {
   const depth = Math.ceil(h * SCAN_DEPTH);
   const x0 = Math.floor(w * 0.2);
@@ -45,22 +38,11 @@ export function inkStart(pixels: Uint8ClampedArray, w: number, h: number): numbe
   return 0;
 }
 
-/** Air above the masthead, as a fraction of the crop's height.
- *
- *  This is a framing judgment, not a tolerance. At 0.07 the first line of type
- *  sat almost on the crop's top edge and the thumbnail read as a scan clipped at
- *  the letterhead — the page looked cut, not composed. A title block wants a
- *  margin above it the way it has one on paper, so the eye reads "the top of a
- *  document" rather than "a document with its top missing".
- *
- *  Chosen against every PDF in `public/cejil-docs`, not one. They open on
- *  anywhere from 8.8% to 35.2% of blank margin (median 12.5%, n=39), which is
- *  why this rides on TOP of the measured ink position instead of replacing it:
- *  a fixed offset would be right for the median document and wrong for both
- *  ends. Swept at 0.07 / 0.12 / 0.16 / 0.22 over the whole set — 0.12 still
- *  reads tight on the denser mastheads, and by 0.22 the crop is pushing the
- *  judgment date off the bottom of the tighter-set ones, which costs more than
- *  the air buys. `npm run check:thumbs` reports the air it produces. */
+/** Air above the masthead, as a fraction of the crop's height. Added on top of
+ *  the measured ink position because the PDFs in `public/cejil-docs` open on 8.8%
+ *  to 35.2% of blank margin. At 0.12 dense mastheads still sit tight against the
+ *  crop's top edge; at 0.22 the judgment date drops off the bottom on tightly set pages.
+ *  `npm run check:thumbs` reports the air it produces. */
 const TOP_AIR = 0.16;
 
 export interface Geometry {
@@ -71,16 +53,9 @@ export interface Geometry {
   offsetY: number;
 }
 
-/** Where the framed crop sits on the page.
- *
- *  The crop is pinned just above the page's first ink rather than to the sheet's
- *  top edge — judgments open on 8.8–35.2% of blank margin, so a zoomed top crop
- *  frames white paper — and then `TOP_AIR` puts a deliberate margin back above
- *  it. It is centred horizontally because a masthead is centred.
- *
- *  `ink` is clamped so the window always lands on a real slab of page: pinning
- *  to ink that starts near the BOTTOM of a page (a cover sheet with one line
- *  low down) would otherwise frame the blank paper above it just as badly. */
+/** Where the framed crop sits on the page: just above the first ink plus
+ *  `TOP_AIR`, centred horizontally. `ink` is clamped so a page whose only ink is
+ *  near the bottom still frames a full slab of page rather than blank paper. */
 export function thumbGeometry(opts: {
   pageW: number;
   pageH: number;
@@ -101,12 +76,8 @@ export function thumbGeometry(opts: {
   return { scale, cropW, cropH, offsetX, offsetY };
 }
 
-/** How much of a rendered thumbnail is actually ink, 0–1 (RGBA, row-major).
- *
- *  This is the blank-card test. A framed crop that lands on empty paper is
- *  indistinguishable from a failed render and from the placeholder behind it —
- *  all three are a white rectangle — so the only way to tell "we drew a page"
- *  from "we drew nothing" is to look at the pixels. */
+/** Fraction of a rendered thumbnail that is ink, 0–1 (RGBA, row-major). A crop
+ *  of empty paper looks the same as a failed render, so this is the blank check. */
 export function inkCoverage(pixels: Uint8ClampedArray, w: number, h: number): number {
   let dark = 0;
   for (let i = 0; i < w * h; i++) {
@@ -115,10 +86,8 @@ export function inkCoverage(pixels: Uint8ClampedArray, w: number, h: number): nu
   return dark / (w * h);
 }
 
-/** Below this, a thumbnail has nothing on it worth showing — it reads as a card
- *  that failed to load. Calibrated against the corpus: a masthead crop runs
- *  ~1–4% ink, a whole fitted page ~3–8%, and a blank crop is under a tenth of a
- *  percent. */
+/** Below this a thumbnail is treated as blank. In the corpus a masthead crop is
+ *  ~1–4% ink, a whole page ~3–8%, and a blank crop under 0.1%. */
 export const MIN_INK = 0.004;
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(Math.max(n, lo), hi);

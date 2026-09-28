@@ -39,7 +39,7 @@ const EXCLUDED = new Set<MetadataField["type"]>(["file-list", "media", "country"
 const kindOf = (t: MetadataField["type"]): BulkFieldKind =>
   t === "select" ? "select" : t === "multiselect" ? "multi" : "scalar";
 
-/** The properties EVERY selected template has: same id, same type, and for a
+/** The properties every selected template has: same id, same type, and for a
  *  select the same thesaurus. In the first template's order. Plus the editable
  *  connections every selected entity carries (same relation and target), which
  *  a template table doesn't list in this prototype. */
@@ -52,7 +52,7 @@ export function commonFields(entities: Entity[], corpus: Corpus, language: Langu
   const scalars: BulkField[] = perTemplate[0]
     .filter((f) => !EXCLUDED.has(f.type) && !f.list && f.id !== "title" && f.id !== "geolocation")
     .filter((f) => perTemplate.every((list) => list.some((g) => same(f, g))))
-    // Read off the TEMPLATE only — never every entity's record: opening the
+    // Read off the template only — never every entity's record: opening the
     // form on a whole corpus built every CEJIL profile in one render. The one
     // template/record mismatch that matters (multidates, a list printed as
     // one string) is marked on the template's own field as `list`.
@@ -196,9 +196,9 @@ export interface BulkPlan {
  *
  *  Scalars — text, dates — are written in the language being edited only:
  *  the records hold them localised, and copying one language's string over
- *  another's is how "29 de julio de 1988" became "May 3, 1990". A link is the
- *  same address in every language. A select and a multiselect go into all
- *  four BY VALUE ID, each in its own language's label (`choiceByLanguage`). */
+ *  another's would put Spanish text in the English record. A link is the same
+ *  address in every language. A select and a multiselect go into all four by
+ *  value id, each in its own language's label (`labelForKey`). */
 export function planBulkEdit({
   entities,
   fields,
@@ -284,7 +284,7 @@ export function planBulkEdit({
         for (const f of editedFields) {
           const e = edits[f.id];
           if (f.kind === "scalar" && e.kind === "scalar") {
-            // Text, dates and every other scalar are LOCALISED on the record
+            // Text, dates and every other scalar are localised on the record
             // ("July 29, 1988" / "29 de julio de 1988"), so they are written
             // in the edited language only — a value in one language is never
             // copied over another's. A link is an address, the same in all.

@@ -143,7 +143,6 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
         className="flex flex-col flex-1 min-h-0 w-full"
       >
         <caption className="sr-only">Imports</caption>
-        {/* Header */}
         <thead role="rowgroup" data-part="header" className="block shrink-0">
           <tr
             role="row"
@@ -169,7 +168,6 @@ export function ImportTable({ imports, selectedIds, onSelect, onSelectAll, onVie
           </tr>
         </thead>
 
-        {/* Rows */}
         <tbody role="rowgroup" data-part="rows" className="block flex-1 overflow-y-auto min-h-0">
           {imports.map((entry) => {
             const isSelected = selectedIds.has(entry.id);

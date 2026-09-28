@@ -167,7 +167,6 @@ export function ImportDetailView({ entry, onBack }: ImportDetailViewProps) {
         <StatBox label="Relationships" value={entry.relationshipsCreated ?? 0} />
       </dl>
 
-      {/* Progress bar */}
       <section data-part="progress" className="space-y-2">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-ink">Progress</h3>
@@ -210,7 +209,6 @@ export function ImportDetailView({ entry, onBack }: ImportDetailViewProps) {
         </SectionLabel>
       )}
 
-      {/* Table */}
       {hasTable && (
         // Phones: the table keeps its natural height (`shrink-0`) and the whole
         // detail scrolls. As a shrinking scroll lane under the stats it had no

@@ -29,10 +29,9 @@ export function FloatingMenu({ x, y, yBelow, text }: FloatingMenuProps) {
     setEntityPickerOpen(true);
   };
 
-  /** Commit the selection into the armed field. This is the COMMIT step, and it
-   *  is deliberately a click rather than the selection itself: a bare drag over
-   *  a paragraph is how people read, and having that overwrite a field they
-   *  filled ten minutes ago would make the mode frightening to leave on. */
+  /** Commit the selection into the armed field. A click, not the selection
+   *  itself: filling on selection would overwrite a field every time the user
+   *  selects text to read it. */
   const handleFill = () => {
     sendFill(text);
     setSelection(null);
@@ -65,8 +64,8 @@ export function FloatingMenu({ x, y, yBelow, text }: FloatingMenuProps) {
     window.getSelection()?.removeAllRanges();
   };
 
-  /* Touch (a coarse pointer): BELOW the selection. Above it is exactly where
-     iOS draws its own copy / look-up callout, so the two covered each other
+  /* Touch (a coarse pointer): below the selection. Above it is where iOS
+     draws its own copy / look-up callout, so the two covered each other
      (M22). 24px clears the selection handles; clamped above the on-screen
      keyboard and the screen's foot. Fine pointers keep the menu above. */
   const touch = typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches;
@@ -96,12 +95,9 @@ export function FloatingMenu({ x, y, yBelow, text }: FloatingMenuProps) {
         role="group"
         aria-label={t("System", "Selection actions")}
         className="flex items-center gap-0.5 rounded-md shadow-xl px-1 py-1" style={{ backgroundColor: "#1A1A1A" }}>
-        {/* When a field is listening, filling it LEADS — that is what the user
-            crossed the pane to do. "Create relationship" keeps its place and its
-            wording behind it; arming a field narrows what you are most likely
-            here for, it doesn't take the other action away. The field is NAMED,
-            because from inside the document the form is out of sight and
-            "Fill" alone would be a button with no object. */}
+        {/* While a field is armed, Fill comes first; "Create relationship" stays
+            after it. The button names the field, because the form is out of
+            sight from inside the document. */}
         {fillTarget && (
           <>
             <button

@@ -15,11 +15,8 @@ import { useDirtyGuard } from "../../hooks/useDirtyGuard";
  *  Uwazi's V2 SettingsNavigation: full-width items on the rail gutter, py-2, active =
  *  vellum + semibold (no rounded inset, no left-border accent).
  *
- *  Also the IMPORT CSV rail. That view used to mount `ToolsSidebar`, a second
- *  hand-maintained copy of these lists whose items only raised a toast — a rail
- *  that looked like navigation and was scenery. Its arrays had already drifted
- *  from this one (no Paragraph Extraction, no "ML tools" shelf). Pass `activeId`
- *  and the rail serves a destination that ISN'T a settings section. */
+ *  Also the Import CSV rail, so there is one list of tools, not two to keep in
+ *  step. Pass `activeId` for a destination that is not a settings section. */
 export function SettingsNav({
   onNavigate,
   activeId,
@@ -49,13 +46,9 @@ export function SettingsNav({
       className="gutter-host-rail h-full w-full md:w-[15.625rem] shrink-0 flex flex-col bg-paper"
       style={{ borderInlineEnd: "1px solid var(--border-primary)" }}
     >
-      {/* The data-source switch used to live here as well. It's the collection
-          picker on the navbar's Library button now — one control, one place. */}
       <div data-part="groups" className="bleed flex-1 min-h-0 overflow-y-auto py-4">
-      {/* ONE group — the one you came in through. Settings ▸ User settings,
-          Settings ▸ System settings and the Tools dropdown are three separate
-          doors; the rail behind each shows that door's destinations rather than
-          all twenty under every one. */}
+      {/* One group: the one you came in through (User settings, System settings
+          or the Tools dropdown), not every section under each entry point. */}
       {[settingsGroupOf(current)].map((group) => (
         // A flex column, so the items stretch: a stretched item's `bleed`
         // margins widen it to the rail edge. A `w-full` button does not widen,
@@ -89,11 +82,8 @@ export function SettingsNav({
               </>
             );
 
-            // Active was `bg-warm` — the SAME token as hover, so the selected
-            // page looked exactly like whatever the cursor happened to be over.
-            // It steps up to vellum + semibold: a real state, not a hover echo.
-            // (Still no left-border accent, and the icon keeps its colour — the
-            // background carries the state.)
+            // Active is vellum + semibold, not `bg-warm`, which is the hover fill.
+            // No left-border accent; the icon keeps its colour.
             const cls = `bleed flex items-center gap-2.5 py-2 text-tab text-left transition-colors ${
               active
                 ? "bg-vellum text-ink font-semibold"
@@ -167,9 +157,8 @@ export function SettingsNav({
 
       </div>
 
-      {/* Documentation — the panel's FOOTER, pinned to the bottom whichever group
-          you're in. It belongs to none of them: it's the way out of all of them.
-          Not in the Tools dropdown, where it read as one more tool. */}
+      {/* Documentation: the panel's footer, pinned to the bottom in every group.
+          It belongs to no group, so it is not listed as a Tools item. */}
       <a
         href={settingsDocumentation.external}
         target="_blank"

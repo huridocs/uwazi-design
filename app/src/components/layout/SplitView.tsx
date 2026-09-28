@@ -117,13 +117,9 @@ export function SplitView({
     <div ref={containerRef} data-component="SplitView" className="flex flex-1 overflow-hidden">
       {/* Both panes wait for the container's first measure — see `measured`. */}
       <div data-part="content" className="flex-1 overflow-hidden">{measured && left}</div>
-      {/* ONE EDGE, not two. The drawer used to carry `border-l` and the divider
-          sat beside it as a 4px transparent strip, so the line you could see and
-          the thing you could drag were different objects a few pixels apart —
-          which is why this reads as "the drag is gone". The border moves HERE,
-          painted at the divider's inline end so the rule stays at exactly the x
-          it was at, and the pane keeps its geometry: 4px + 1px border becomes a
-          5px divider that paints its own last pixel. */}
+      {/* One edge: the divider paints the pane's border at its inline end, so
+          the visible line and the drag target are the same element. The
+          drawer carries no `border-l`; 4px + 1px border becomes a 5px divider. */}
       <div
         role="separator"
         data-part="divider"

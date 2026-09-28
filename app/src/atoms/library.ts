@@ -154,7 +154,7 @@ export interface FocusMetadataField {
   entityId: string;
   fieldKey: string;
   /** Bumped on every request so clicking the same property twice is a new value
-   *  to consumers that compare. Same idiom as `pageJumpAtom` / `fillRequestAtom`. */
+   *  to consumers that compare. Same idiom as `scrollToPageAtom` / `fillRequestAtom`. */
   nonce: number;
 }
 export const focusMetadataFieldAtom = atom<FocusMetadataField | null>(null);

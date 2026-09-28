@@ -22,8 +22,8 @@ const FORMATS: { id: DocumentFormat; label: string; icon: typeof FileText }[] = 
   { id: "html", label: "HTML", icon: Code2 },
 ];
 
-/** Entity header strip. Names the ENTITY (type tag + its own title) and — on the
- *  Document tab — the document on screen plus a picker that switches between
+/** Entity header strip. Names the entity (type tag + its own title) and, on the
+ *  Document tab, the document on screen plus a picker that switches between
  *  that document's renditions (PDF, plain text, HTML). */
 export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
   const groups = useAtomValue(documentGroupsAtom);
@@ -31,45 +31,21 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
   const [format, setFormat] = useAtom(documentFormatAtom);
   const focusedId = useAtomValue(focusedEntityIdAtom);
 
-  // The header identifies the ENTITY whose page this is — for every entity,
-  // main or focal. It used to name the DOCUMENT instead, by two separate
-  // routes, and both printed something that isn't this entity's name:
-  //   - main: the default group's title, i.e. the document. Entity `e3` is
-  //     "Case 11.137 (La Tablada)" and its primary group is
-  //     "Velásquez-Rodríguez v. Honduras — Judgment (1988)"; the header showed
-  //     the latter.
-  //   - focal: the entity's own title, but falling back to `documentsByLanguage`
-  //     — the MOCK document — whenever the entity didn't resolve. A CEJIL
-  //     entity read before its corpus lands would be captioned with the
-  //     Velásquez judgment's name.
-  // Only the first one fired in practice — a CEJIL entity is never `isMain`,
-  // since `focusEntity` moves the focused id and the groups together — but the
-  // group title is at its most obviously not-the-entity there: a Causa with no
-  // PDF of its own BORROWS a connected Sentencia's (`docFilesFor`), so its
-  // group is titled after a different entity ("Kimel" → "Kimel. Sentencia de 2
-  // de mayo de 2008"). That title is right for a GROUP — see `buildCejilProfile`'s
-  // `docTitle`, which names the document, which is what a group title is for.
-  // It just must never be read back as the entity's name.
-  //
-  // `getEntity` covers main and focal alike (seed entities and the CEJIL
-  // corpus), so the split disappears. Unresolved falls through to
-  // `EntityIdentity`'s own "Unknown entity" rather than borrowing a document's
-  // name — an honest blank beats a confident wrong one.
+  // The header names the entity, never a document. A group title names the
+  // document, and a Causa without its own PDF borrows a connected Sentencia's
+  // (`docFilesFor`), so the group title would name a different entity.
+  // `getEntity` covers seed and CEJIL entities; an unresolved id shows
+  // `EntityIdentity`'s "Unknown entity" rather than another document's name.
   const entity = getEntity(focusedId);
   const primaryGroups = groups
     .filter((g) => g.isPrimary)
     .sort((a, b) => a.order - b.order);
-  // The document on screen: the active primary if a selection floated one up,
-  // else the first by order — the same resolution `DocumentViewer` uses, so
-  // this names what is actually rendered.
+  // Same resolution as `DocumentViewer`, so this names what is rendered.
   const defaultGroup =
     primaryGroups.find((g) => g.id === activeGroupId) ?? primaryGroups[0];
-  // Nothing else on the Document tab names the document — the viewer draws the
-  // file and the picker only switches RENDITION (PDF / text / HTML). With more
-  // than one primary document that title is the only way to tell which one you
-  // are looking at, so it stays in the strip; it just stops impersonating the
-  // entity. Suppressed when it merely repeats the heading (an entity that owns
-  // its document titles the group after itself).
+  // The strip is the only place that names the document on screen, which
+  // matters with several primary documents. Hidden when it repeats the entity
+  // title (an entity that owns its document titles the group after itself).
   const docName =
     defaultGroup?.title && defaultGroup.title !== entity?.title ? defaultGroup.title : null;
 

@@ -244,7 +244,6 @@ export function PreserveTokenEditor({
                 </SettingsButton>
               </div>
 
-              {/* Token */}
               {/* A readout with a copy action, not a control: a label/value pair. */}
               <dl data-part="token" className="flex flex-col gap-1.5">
                 <dt className="text-xs font-medium text-ink-secondary">Token</dt>

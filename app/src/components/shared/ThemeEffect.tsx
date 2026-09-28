@@ -2,14 +2,12 @@ import { useEffect } from "react";
 import { useAtomValue } from "jotai";
 import { themeAtom, resolveTheme, type Theme } from "../../atoms/theme";
 
-/** Paint the theme: swap `:root.dark`, remember the preference, and follow the
- *  OS while in auto.
+/** Apply the theme: swap `:root.dark`, store the preference, and follow the OS
+ *  while in auto.
  *
- *  It is a LEAF, mounted beside the app rather than inside it, because the
- *  theme is a document-level fact and nothing in React needs to re-render when
- *  it changes — the whole design system is CSS variables. Read from `App`, the
- *  toggle re-rendered every view under it (the CEJIL library grid, the entity
- *  view, the graph) to produce markup identical to what was already there. */
+ *  Mounted beside the app, not read from `App`: the design system is CSS
+ *  variables, so nothing in React needs to re-render on a theme change, and
+ *  reading it in `App` re-rendered every view for identical markup. */
 export function ThemeEffect() {
   const theme = useAtomValue(themeAtom);
 
@@ -29,33 +27,26 @@ export function ThemeEffect() {
 
 /** Swap the class with every transition suppressed for that one frame.
  *
- *  Half the surfaces animate their colours and half don't — `body` fades its
- *  background over 0.2s, a button fades its own, a card swaps instantly — so a
- *  theme change used to arrive as a wash of mismatched surfaces rather than one
- *  change. `theme-switching` turns transitions off, the swap is flushed under
- *  it, and the class comes off on the next frame: everything lands together and
- *  every hover / focus transition is back before the user can reach one.
- *
- *  The rAF is paired with a timeout because rAF does not fire in a background
- *  tab — without the fallback the app could sit there with transitions off. */
+ *  Some surfaces transition their colours and some don't, so without this the
+ *  surfaces change at different times. `theme-switching` turns transitions off,
+ *  the swap is flushed under it, and the class comes off after the paint.
+ *  The timeout covers a background tab, where rAF does not fire. */
 function applyTheme(theme: Theme) {
   const root = document.documentElement;
   root.classList.add("theme-switching");
   root.classList.toggle("dark", resolveTheme(theme) === "dark");
   void root.offsetHeight; // flush the swap while transitions are off
-  // Two frames, not one: taking the class off re-invalidates style for every
-  // element (~40ms on the entity view's 11k nodes), and a single rAF runs
-  // BEFORE that frame paints — so the cleanup would delay the theme landing by
-  // its own cost. After the paint it costs the user nothing. Re-enabling
-  // transitions can't start one: the values already changed under the
-  // suppression, so there is nothing left to interpolate.
+  // Two frames, not one: removing the class restyles every element (~40ms on
+  // the entity view), and a single rAF runs before the paint, delaying the
+  // theme by that cost. Re-enabling transitions starts none: the values have
+  // already changed.
   const clear = () => root.classList.remove("theme-switching");
   requestAnimationFrame(() => requestAnimationFrame(clear));
   window.setTimeout(clear, 250); // rAF never fires in a background tab
 }
 
-/** Paint the stored theme BEFORE React's first render, so a dark-mode reader
- *  doesn't get a frame of light while the app mounts. */
+/** Apply the stored theme before React's first render, so dark mode doesn't
+ *  show one light frame while the app mounts. */
 export function primeTheme() {
   document.documentElement.classList.toggle(
     "dark",

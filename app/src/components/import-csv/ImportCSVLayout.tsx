@@ -9,10 +9,9 @@ interface ImportCSVLayoutProps {
   onNavigate?: (view: AppView) => void;
 }
 
-/** Import CSV is a Tools destination, so its rail is the Tools rail — the same
- *  `SettingsNav`, driven by the same `settingsGroups`, rather than a second list
- *  kept in step by hand. The old `ToolsSidebar` wore this one's clothes and had
- *  none of its behaviour: every item raised a toast and went nowhere. */
+/** Import CSV is a Tools destination, so its rail is the Tools rail: the same
+ *  `SettingsNav`, driven by the same `settingsGroups`, not a second list kept
+ *  in step by hand. */
 export function ImportCSVLayout({ children, actionBar, onNavigate }: ImportCSVLayoutProps) {
   const [breakpoint] = useAtom(breakpointAtom);
   const isMobile = breakpoint === "mobile";

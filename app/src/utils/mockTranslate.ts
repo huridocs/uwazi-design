@@ -3,7 +3,7 @@ import { languageName, type Language } from "../atoms/language";
 /** Machine translation, mocked.
  *
  *  There is no translation service behind this prototype, and the deliverable
- *  is the FLOW — a value arriving in a field the user didn't type into, marked
+ *  is the flow: a value arriving in a field the user didn't type into, marked
  *  as machine-written until a human touches it. So this resolves in three
  *  steps, best first:
  *
@@ -13,9 +13,8 @@ import { languageName, type Language } from "../atoms/language";
  *  2. A phrase swap over the vocabulary the corpus actually repeats — CEJIL
  *     titles are case names, hearing labels and resolution headers, a few
  *     hundred rows deep on maybe a dozen distinct nouns.
- *  3. The source verbatim. Better an honest echo than invented words: the row
- *     still carries the machine-translated marker, which is the thing being
- *     designed.
+ *  3. The source verbatim, rather than invented words. The row still carries
+ *     the machine-translated marker.
  *
  *  Do not grow step 2 into a translation engine. If real translation is ever
  *  wanted, it replaces this whole file with a call. */

@@ -149,8 +149,8 @@ export function EntityDetailBody({
   useAtomValue(uiLanguageAtom);
   const showDocument = focused && profile.hasDocument;
   const tabs = tabsForType(profile.typeId, showDocument)
-    // Files reads the globally seeded file atoms, so it only tells the truth
-    // about the entity the app has focused.
+    // Files reads the globally seeded file atoms, which hold the focused
+    // entity's files only.
     .filter((tab) => (tab.id === "files" ? focused : true))
     .filter((tab) => (isDraft ? tab.id === "metadata" : true))
     .map((tab) => {

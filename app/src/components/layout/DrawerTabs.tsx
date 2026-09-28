@@ -49,21 +49,14 @@ interface DrawerTabsProps {
  *  -end-0.5` on a `relative` trigger, logical `-end-` so it mirrors under RTL),
  *  because they say the same thing in the same visual language. */
 export function DrawerTabs({ tabs, activeId, onChange, className = "tabstrip-slot" }: DrawerTabsProps) {
-  /* FOLDS LIKE `MainTabs`, on the same measurement and for the same reason.
-     This strip used to SCROLL when it did not fit — `overflow-x-auto` with the
-     scrollbar hidden — so every tab stayed reachable but the strip read as cut,
-     with nothing saying it scrolled. At a 460 drawer the entity view's five
-     tabs (441px) happened to fit, which is the only thing that kept the drawer's
-     minimum from coming down to the Library's 360.
-
-     A hidden PROBE draws the strip at its natural width; the available width is
-     the wrapper's own inner box, which is a block spanning the pane and so does
-     not depend on what is rendered into it — no feedback loop, and no `flex-1`
-     needed here the way the entity strip needs one beside its language picker.
-     When the probe is wider, the strip becomes the shared `Select`: counts ride
-     the options as hints, a dot behind an unselected tab rides the trigger with
-     a spoken suffix, and `steady` sizes the trigger from the widest label so
-     switching tabs never changes its width. */
+  /* Folds like `MainTabs`, on the same measurement, instead of scrolling (a
+     strip with a hidden scrollbar reads as cut off). A hidden probe draws the
+     strip at its natural width and compares it with the wrapper's inner box,
+     which spans the pane and does not depend on its content, so there is no
+     feedback loop. When the probe is wider, the strip becomes the shared
+     `Select`: counts ride the options as hints, a dot behind an unselected tab
+     rides the trigger with a spoken suffix, and `steady` sizes the trigger from
+     the widest label so switching tabs never changes its width. */
   const { availRef, probeRef, folded } = useStripFold();
   const activeTab = tabs.find((t) => t.id === activeId) ?? tabs[0];
   const hiddenDot = tabs.some((t) => t.dot && t.id !== activeId);
@@ -130,9 +123,8 @@ function Strip({
 }) {
   return (
     /* No `overflow-hidden` here: it would clip the dots, which sit just
-       outside their tab's corner. The rounding it used to provide is done by
-       the end tabs themselves — logically (`rounded-s`/`rounded-e`), so the
-       strip still reads as one frame under RTL. */
+       outside their tab's corner. The end tabs round themselves logically
+       (`rounded-s`/`rounded-e`), so the corners stay right under RTL. */
     <div
       className="flex items-stretch rounded-md w-fit"
       data-part="strip"

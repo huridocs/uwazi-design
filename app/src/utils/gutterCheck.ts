@@ -1,39 +1,12 @@
-/** `window.__gutter()` — is the drawer's side gutter ONE value, measured?
+/** `window.__gutter()`: checks that the open `[data-gutter-host]` has one side gutter.
  *
- *  The drawer's layout owns its horizontal spacing: the host sets the gutter
- *  once (`gutter-host`, see index.css) and the rows inside stop carrying their
- *  own side padding. Whether that holds is a pixel question a screenshot answers
- *  badly — a 2px step between a tab selector and a search box is exactly what
- *  the eye misses — so this reads the rects.
- *
- *  It walks the host's content top to bottom and stops at each ROW: an element
- *  that draws a side edge (a card border, a filled control), holds text, or lays
- *  its children out side by side. Wrappers that only stack rows vertically are
- *  passed through. For every row it records
- *
- *  - `start` — where the row's visible ink starts: its box when it draws one,
- *    else the first text or icon inside it. A padded button can declare that its
- *    BOX, not its text, is the edge (`data-gutter-align="box"`), and a field can
- *    declare the opposite — its text, not its focus box (`data-gutter-align="text"`).
- *  - `end` — the end edge of the box the row is laid out in. A row whose ink
- *    stops short of it (a tab selector sized to its widest label) is still
- *    inside the gutter; ink past it is reported as overflow.
- *
- *  Both are LOGICAL insets, read in the host's computed `direction`: start is
- *  the left edge in LTR and the right edge in RTL. And both are measured from
- *  INSIDE the host's border. A host that draws its own `border-inline-start`
- *  (the notifications drawer's `border-l`) otherwise reads one pixel more on
- *  that side than the other — 17 against 16 — for a layout that is symmetric.
- *
- *  Rows marked `data-gutter-bleed` (a graph canvas, a document page) run edge to
- *  edge on purpose and are listed but not asserted. Absolutely positioned boxes
- *  (tab dots, the fold probe, closed slide-overs) are not rows.
- *
- *  Passes when every asserted row shares one `start` inset and one `end` inset
- *  and nothing overflows. `gaps` lists the vertical distance between successive
- *  visual lines — the lines of a toolbar that wraps count separately, and a row
- *  with a rule (header, footer) is measured from the rule — so the stack's
- *  rhythm can be read off as numbers too. */
+ *  Walks the host's content to each row (an element that draws a side edge, holds
+ *  text, or lays children out side by side) and records `start` (where its ink
+ *  begins; `data-gutter-align="box"|"text"` picks box or text) and `end` (the end
+ *  edge of its layout box). Both are logical insets in the host's `direction`,
+ *  measured inside the host's border. `data-gutter-bleed` rows are listed, not
+ *  asserted. `pass` is true when `starts` and `ends` each hold one value and
+ *  `overflow` is empty; `gaps` lists the vertical distance between visual lines. */
 
 interface Box {
   left: number;
@@ -134,7 +107,7 @@ function contentBox(el: Element): Box {
 }
 
 /** Spans its frame — so its own padding is part of what places its children.
- *  A box sized to its content (a `w-fit` selector wrapper) is placed BY the
+ *  A box sized to its content (a `w-fit` selector wrapper) is placed by the
  *  frame, and measuring against its own edges would hide the frame's gutter. */
 function stretches(el: Element, frame: Box) {
   return el.getBoundingClientRect().width >= frame.right - frame.left - EPS;
@@ -247,7 +220,7 @@ export function gutter(target?: Element | string, { maxRows = 14 } = {}): Gutter
   const walk = (el: Element, frame: Box) => {
     if (found.length >= maxRows) return;
     const cs = getComputedStyle(el);
-    // An indented block (a tree's children) is structure INSIDE the content,
+    // An indented block (a tree's children) is structure inside the content,
     // not a gutter: it is left out rather than asserted.
     if (parseFloat(cs.marginInlineStart) > 0) return;
     const bleed = el.hasAttribute("data-gutter-bleed");
@@ -268,7 +241,7 @@ export function gutter(target?: Element | string, { maxRows = 14 } = {}): Gutter
       !stackedVertically(kids);
     const own = stretches(el, frame) ? contentBox(el) : frame;
     if (isRow) {
-      // A row whose BOX is its edge (a card, a filled or box-aligned control, a
+      // A row whose box is its edge (a card, a filled or box-aligned control, a
       // graphic) is measured against the frame it sits in; its own padding is
       // inside it. So is centred content.
       const boxEdge = !lane && (drawsSide(el) || boxAligned(el) || isGraphic(el));
@@ -281,7 +254,7 @@ export function gutter(target?: Element | string, { maxRows = 14 } = {}): Gutter
 
   const rows: GutterRow[] = [];
   const lines: { name: string; top: number; bottom: number }[] = [];
-  /** Where a row's content STARTS. A row that paints or holds text starts at its
+  /** Where a row's content starts. A row that paints or holds text starts at its
    *  ink. A row of children starts at its first child's ink — or, when that
    *  child paints nothing (the `flex-1` spacer before a footer's end-aligned
    *  buttons), at that child's box, which is where the layout put the start. */
@@ -289,7 +262,7 @@ export function gutter(target?: Element | string, { maxRows = 14 } = {}): Gutter
   const rowStart = (el: Element, box: Box, frame: Box, centred?: boolean) => {
     if (centred) return startOf(frame);
     if (boxAligned(el) || (!isLane(el) && drawsSide(el)) || isGraphic(el) || hasOwnText(el)) return startOf(box);
-    // Children by LAYOUT, not by visibility: a `flex-1` spacer has no height, and
+    // Children by layout, not by visibility: a `flex-1` spacer has no height, and
     // the empty `<div />` that opens a `justify-between` row has no width, and
     // each is exactly the child that says where the row starts.
     const first = Array.from(el.children).find((k) => {

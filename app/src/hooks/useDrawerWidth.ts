@@ -9,29 +9,16 @@ import {
 import { useAtom } from "jotai";
 import { drawerWidthAtom } from "../atoms/session";
 
-/** THE MINIMUM, for every host that has a drawer.
- *
- *  It was 360 in the Library and 460 in the other four, and that asymmetry is
- *  what "the Library one works and this one does not" was about: only the
- *  Library could be dragged into the range where its strips fold. With the width
- *  shared across hosts, two minimums also meant dragging one host narrow and
- *  finding another had clamped it back.
- *
- *  460 was not arbitrary — it was roughly what kept the entity drawer's
- *  five-tab strip from overflowing. That strip folds now (`DrawerTabs`), which
- *  is what makes 360 safe. The other width-sensitive parts already had designed
- *  narrow forms a 460 drawer was below: connection tables stack below 28.5rem,
- *  and the metadata masonry is single-column below 44rem. */
+/** One minimum for every drawer host. The width is shared across hosts, so
+ *  different minimums would let one host clamp a width dragged in another. 360 is
+ *  safe because `DrawerTabs` folds, connection tables stack below 28.5rem, and the
+ *  metadata masonry goes single-column below 44rem. */
 export const DRAWER_MIN_WIDTH = 360;
 
-/** The right drawer's width as ONE host resolves it: the remembered value
- *  (`drawerWidthAtom`, shared by every host), else the host's default, clamped
- *  into [the host's minimum, half the host's container].
- *
- *  Hosts differ only in their default and minimum, which is why the stored value
- *  is clamped on read rather than stored per host — and why the clamp lives here
- *  once. Shrinking the window pulls the drawer back to half without overwriting
- *  what was remembered, so growing it again restores the dragged width. */
+/** The right drawer's width for one host: the stored `drawerWidthAtom` (shared by
+ *  every host), else the host's default, clamped into [minimum, half the container].
+ *  Clamped on read, not on write, so shrinking the window does not overwrite the
+ *  stored width and growing it again restores the dragged width. */
 export function useDrawerWidth(
   containerRef: RefObject<HTMLElement | null>,
   { defaultWidth, minWidth }: { defaultWidth: number; minWidth: number },
@@ -65,26 +52,20 @@ export function useDrawerWidth(
     /** The width this host shows when nothing is being dragged. */
     width: clamp(storedWidth ?? defaultWidth),
     clamp,
-    /** The widest this host allows — half its container. Exposed because the
-     *  divider is a `role="separator"` now and has to say `aria-valuemax`; a
-     *  range control that cannot state its own bounds is not one. */
+    /** Half the container. The divider is a `role="separator"` and needs it for
+     *  `aria-valuemax`. */
     maxWidth: containerWidth / 2,
     setStoredWidth,
-    /** False for the one render before the container is measured, when `width`
-     *  is the stored value UNCLAMPED (half of an unknown container is no cap).
-     *  Hosts render no content on that pass: it is re-rendered before paint, but
-     *  anything that measures itself on mount (the metadata masonry, the Results
-     *  excerpt budget) would measure at the unclamped width and correct only
-     *  after paint — a frame of overlapping cards whenever the remembered width
-     *  is wider than half this host. */
+    /** False on the render before the container is measured, when `width` is
+     *  unclamped. Hosts render no content on that pass: components that measure on
+     *  mount (metadata masonry, Results excerpt budget) would otherwise paint one
+     *  frame of overlapping cards at the unclamped width. */
     measured,
   };
 }
 
-/** The width the enclosing drawer is drawn at right now — live during a drag —
- *  or `null` outside one (the mobile bottom sheets render the same content with
- *  no drawer around it). Provided by `SplitView`, so a panel stacked inside the
- *  drawer reads the resolved number instead of re-deriving it. */
+/** The enclosing drawer's current width, live during a drag, provided by
+ *  `SplitView`. `null` outside a drawer (mobile bottom sheets). */
 const DrawerWidthContext = createContext<number | null>(null);
 
 export const DrawerWidthProvider = DrawerWidthContext.Provider;
@@ -93,12 +74,10 @@ export function useHostDrawerWidth() {
   return useContext(DrawerWidthContext);
 }
 
-/** The drawer width as seen from EITHER pane of a `SplitView`. The other pane
- *  changes width whenever the drawer does, but it sits outside
- *  `DrawerWidthProvider` (which means "the drawer I am inside"), so nothing told
- *  it to re-render. A component that measures itself (the tab strips' fold)
- *  reads this to re-measure on a width change even when no ResizeObserver
- *  callback arrives, as in a hidden page. `null` outside a split. */
+/** The drawer width as seen from either pane of a `SplitView`. The main pane sits
+ *  outside `DrawerWidthProvider`, so self-measuring components there (the tab
+ *  strips' fold) read this to re-measure when no ResizeObserver callback arrives,
+ *  as in a hidden page. `null` outside a split. */
 const SplitWidthContext = createContext<number | null>(null);
 
 export const SplitWidthProvider = SplitWidthContext.Provider;
@@ -107,11 +86,9 @@ export function useSplitWidth() {
   return useContext(SplitWidthContext);
 }
 
-/** Whether a `SplitView` divider is being dragged right now. `false` outside a
- *  split. Both panes read it: a pane that sizes its content to its own width
- *  (the Results excerpt budget) holds its last settled width while this is
- *  true and applies the new one once, on release, so the content under the
- *  reader doesn't re-wrap at every step of the drag. */
+/** Whether a `SplitView` divider is being dragged. Width-sized content (the
+ *  Results excerpt budget) keeps its last width until release so text does not
+ *  re-wrap on every drag step. `false` outside a split. */
 const SplitDraggingContext = createContext(false);
 
 export const SplitDraggingProvider = SplitDraggingContext.Provider;
