@@ -126,6 +126,8 @@ export const sidebarGroups: SidebarGroup[] = [
       { id: "relationship-row-hub", label: "RelationshipRow · hub" },
       { id: "relationship-grouped-card-aggregate", label: "RelationshipGroupedCard · aggregate" },
       { id: "view-controls", label: "ViewControls" },
+      { id: "year-strip", label: "YearStrip" },
+      { id: "event-row", label: "EventRow" },
       { id: "direction-glyph", label: "DirectionGlyph" },
       { id: "row-checkbox", label: "RowCheckbox" },
       { id: "relationships-action-bar", label: "RelationshipsActionBar" },
