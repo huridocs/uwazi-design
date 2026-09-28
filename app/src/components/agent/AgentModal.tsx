@@ -20,7 +20,15 @@ import {
   type NodeKind,
   type AgentMessage,
 } from "../../atoms/agent";
-import { appViewAtom } from "../../atoms/navigation";
+import { appViewAtom, type AppView } from "../../atoms/navigation";
+
+const VIEW_LABEL: Record<AppView, string> = {
+  entity: "Library",
+  library: "Library",
+  settings: "Settings",
+  "import-csv": "Import CSV",
+  catalog: "Component catalog",
+};
 import { languageAtom } from "../../atoms/language";
 import { selectedRefIdsAtom } from "../../atoms/filters";
 import { currentPageAtom } from "../../atoms/selection";
@@ -85,7 +93,9 @@ export function AgentModal() {
   // Resolve the enabled sources against the live app state. Everything Bert
   // says is grounded in the FOCUSED entity's real profile (CEJIL-aware), not
   // the static sample document.
-  const viewLabel = appView === "entity" ? "Library" : appView === "import-csv" ? "Import CSV" : "Component catalog";
+  // One label per view. The chained ternary sent every view it didn't name,
+  // the Library and Settings included, to "Component catalog" (M24).
+  const viewLabel = VIEW_LABEL[appView];
   const focusedId = useAtomValue(focusedEntityIdAtom);
   const focusedEntity = getEntity(focusedId);
   const focusedProfile = getEntityProfile(focusedId);
@@ -323,7 +333,7 @@ export function AgentModal() {
               </span>
               <h2 id="agent-modal-title" data-part="title" className="text-base font-semibold text-ink leading-none">Bert</h2>
             </div>
-            <kbd data-part="shortcut" className="px-1.5 py-0.5 text-meta font-medium text-ink-muted bg-warm rounded leading-none">{shortcutLabel}</kbd>
+            <kbd data-part="shortcut" className="[@media(pointer:coarse)]:hidden px-1.5 py-0.5 text-meta font-medium text-ink-muted bg-warm rounded leading-none">{shortcutLabel}</kbd>
             <button
               type="button"
               data-part="close"
