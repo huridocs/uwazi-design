@@ -1246,7 +1246,6 @@ export function LibraryView() {
           </div>
           )}
         </div>
-        {menuTrigger}
       </div>
       {/* The readout's own line, when the row can't hold it. Mounted for as
           long as the row is this narrow — with or without a query — so a
@@ -1422,8 +1421,16 @@ export function LibraryView() {
           labels — a drawer open beside the library, a small window — instead
           of wrapping onto a second line inside a fixed-height bar. */}
       <div
+        data-part="library-footer"
         className="@container bleed shrink-0 flex items-center gap-1 h-12 bg-paper"
-        style={{ borderTop: "1px solid var(--border-primary)" }}
+        style={{
+          borderTop: "1px solid var(--border-primary)",
+          // Phones: the home indicator's inset is added BELOW the 3rem row, so
+          // the row keeps its height and nothing above it moves.
+          ...(menuTrigger
+            ? { boxSizing: "content-box", paddingBottom: "env(safe-area-inset-bottom, 0px)" }
+            : null),
+        }}
       >
         {/* The bar swaps IN PLACE between the baseline actions and the
             selection's — same bar, same height. The selection's readout, Clear
@@ -1558,6 +1565,15 @@ export function LibraryView() {
         )}
         {/* With a selection the bar places it, before its end group. */}
         {!selectionActive && <ActiveFiltersButton className="ms-2 shrink-0" />}
+        {/* Phones: the drawer's navigation (Filters / Results sheets) sits at
+            the bar's END, where the entity view's bar keeps it: in thumb reach,
+            and a menu at the bottom opens upward. Only the drawer nav moved;
+            search, view mode, Display and the readout stay on top. */}
+        {menuTrigger && (
+          <div data-part="sheets" className="ms-auto shrink-0">
+            {menuTrigger}
+          </div>
+        )}
       </div>
     </div>
   );
