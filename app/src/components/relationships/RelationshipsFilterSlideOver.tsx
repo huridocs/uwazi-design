@@ -51,7 +51,7 @@ function facetEntries(
     .filter(([id, n]) => n > 0 || selected[id]);
 }
 
-export function RelationshipsFilterDrawer() {
+export function RelationshipsFilterSlideOver() {
   const references = useScopedReferences();
   const [language] = useAtom(languageAtom);
   const [relTypeFilters, setRelTypeFilters] = useRelAtom(relTypeFiltersAtom);

@@ -6,7 +6,7 @@ import { SearchBar } from "./SearchBar";
 import { RelationshipsDisplayMenu } from "./RelationshipsDisplayMenu";
 import { ActiveFilterChips } from "./ActiveFilterChips";
 import { ViewControls } from "./ViewControls";
-import { RelationshipsFilterDrawer } from "./RelationshipsFilterDrawer";
+import { RelationshipsFilterSlideOver } from "./RelationshipsFilterSlideOver";
 import { FiltersButton } from "../shared/FiltersButton";
 import { FiltersSlideOver } from "../shared/FiltersSlideOver";
 import { ConfirmDialog } from "../shared/ConfirmDialog";
@@ -71,7 +71,7 @@ export function RelationshipsFiltersPanel({ width }: { width?: number }) {
         ) : null
       }
     >
-      <RelationshipsFilterDrawer />
+      <RelationshipsFilterSlideOver />
     </FiltersSlideOver>
   );
 }

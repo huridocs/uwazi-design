@@ -44,7 +44,7 @@ All components are bound to variables — switching a frame to Dark mode updates
 │   │   │   │                      # RelationshipRow + rows/ (AggregateRow, HubRow, ReferenceRow, RowCheckbox),
 │   │   │   │                      # RelationshipGroupedCard, RelationshipsTreeView/TreeBranch,
 │   │   │   │                      # RelationshipsGraphView, RelationshipsActionBar, RelationshipsDrawerSection,
-│   │   │   │                      # RelationshipsFilterDrawer, RelationshipsToolbar, RelationshipsDisplayMenu,
+│   │   │   │                      # RelationshipsFilterSlideOver, RelationshipsToolbar, RelationshipsDisplayMenu,
 │   │   │   │                      # SearchBar, ViewControls, ZoomControl, CollapseControls, DirectionGlyph, ActiveFilterChips,
 │   │   │   │                      # EntityPreviewSlideOver, MobileOverlayStack, HighlightCard, RelatedDocCard, ToCPanel, TemplateStructure,
 │   │   │   │                      # MetadataDrawerContent, DrawerActionBar,
