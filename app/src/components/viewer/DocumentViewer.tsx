@@ -5,7 +5,11 @@ import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { currentPageAtom, scrollToPageAtom, textSelectionAtom, documentFormatAtom } from "../../atoms/selection";
-import { scrollToHighlightAtom, scopedReferencesAtom, activeRefIdAtom, docHighlightQueryAtom } from "../../atoms/references";
+import {
+  scrollToHighlightAtom,
+  scopedReferencesAtom,
+  activeRefIdAtom,
+} from "../../atoms/references";
 import { resultsCurrentPageAtom } from "../../atoms/library";
 import { highlightTerms } from "../../utils/queryTokens";
 import { markSearchHits } from "../../utils/pdfTextHighlight";
@@ -24,6 +28,7 @@ import { ActionBar } from "./ActionBar";
 import "../../utils/pdfWorker";
 import { RefMinimap } from "./RefMinimap";
 import { DocumentRendition } from "./DocumentRendition";
+import { docHighlightQueryAtom } from "../../atoms/docSearch";
 
 
 interface DocumentViewerProps {

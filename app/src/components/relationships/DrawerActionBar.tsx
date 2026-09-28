@@ -3,9 +3,9 @@ import { HelpCircle, Pencil, Share2, Trash2 } from "lucide-react";
 import { useNotify } from "../../hooks/useNotify";
 import { ShareEntityModal } from "../share/ShareEntityModal";
 import { SearchTipsPopover } from "../library/SearchTipsPopover";
-import { docSearchQueryAtom } from "../../atoms/references";
 import { useSetAtom } from "jotai";
 import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../shared/warmButton";
+import { docSearchQueryAtom } from "../../atoms/docSearch";
 
 interface DrawerActionBarProps {
   activeTab: string;

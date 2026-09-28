@@ -12,12 +12,12 @@ import { DrawerFilesBody } from "../files/DrawerFilesBody";
 import { DocumentSearchBody } from "../search/DocumentSearchBody";
 import { t } from "../../utils/i18n";
 import { activeFilterCountAtom } from "../../atoms/filters";
-import { docSearchQueryAtom } from "../../atoms/references";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { saveEntityEditAtom } from "../../atoms/entityChanges";
 import { languageAtom } from "../../atoms/language";
 import { MetadataEditBody } from "../../views/MetadataView";
 import { activeDrawerTabAtom } from "../../atoms/entityDrawer";
+import { docSearchQueryAtom } from "../../atoms/docSearch";
 
 const baseDrawerTabs = [
   { id: "metadata", label: t("System", "Metadata") },
