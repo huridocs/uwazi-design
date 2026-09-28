@@ -13,10 +13,13 @@ import { UnsavedChangesGuard } from "./components/shared/UnsavedChangesGuard";
 import { languageAtom } from "./atoms/language";
 import { appViewAtom, type AppView } from "./atoms/navigation";
 import { useBreakpointSync } from "./hooks/useBreakpointSync";
+import { useKeyboardInset } from "./hooks/useKeyboardInset";
 import { useDirtyGuard } from "./hooks/useDirtyGuard";
 
 export function App() {
   useBreakpointSync();
+  // `--kb`: the on-screen keyboard's height, for bottom-anchored layers.
+  useKeyboardInset();
   const [appView, setAppView] = useAtom(appViewAtom);
   const guard = useDirtyGuard();
   const [language, setLanguage] = useAtom(languageAtom);

@@ -293,7 +293,9 @@ export function AgentModal() {
   const suggestions = ["Summarize this document", "Find related cases", "Re-process this document"];
 
   return (
-    <div data-component="AgentModal" className="fixed inset-0 z-[80] flex items-end justify-center p-4 pb-[8vh]">
+    // Anchored to the lower third, and lifted above the on-screen keyboard
+    // (`--kb`) so the composer stays in view while typing on a phone.
+    <div data-component="AgentModal" className="fixed inset-0 z-[80] flex items-end justify-center p-4 pb-[calc(8vh+var(--kb,0px))]">
       {/* Scrim */}
       <div data-part="scrim" className="absolute inset-0 bg-ink/30 animate-agent-scrim" onClick={() => setOpen(false)} aria-hidden />
 
