@@ -209,7 +209,8 @@ export function MobileBottomSheet({
           borderTopRightRadius: 12,
           boxShadow: "0 -8px 24px rgba(0,0,0,0.15)",
           zIndex: sheetZ(Math.max(0, layer.index)) + 1,
-          paddingBottom: "env(safe-area-inset-bottom, 0)",
+          // Clear of the on-screen keyboard too (`--kb`, useKeyboardInset).
+          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + var(--kb, 0px))",
         }}
       >
         {/* The dim that says "under another layer". Drawn over the content,

@@ -165,7 +165,8 @@ export function Modal({
         sheet
           ? "fixed inset-0"
           : `${scope === "pane" ? "absolute" : "fixed"} inset-0 ${z} flex bg-overlay ${
-              fullOnPhone ? "md:items-center md:justify-center md:p-4" : "items-center justify-center p-4"
+              // Full-screen on a phone: its footer rises above the keyboard (`--kb`).
+              fullOnPhone ? "pb-[var(--kb,0px)] md:pb-0 md:items-center md:justify-center md:p-4" : "items-center justify-center p-4"
             }`
       }
       // A stacked sheet's scrim is clear (the first layer's dims the page) but
@@ -204,7 +205,7 @@ export function Modal({
                 borderTopLeftRadius: 12,
                 borderTopRightRadius: 12,
                 boxShadow: "0 -8px 24px rgba(0,0,0,0.15)",
-                paddingBottom: "env(safe-area-inset-bottom, 0px)",
+                paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + var(--kb, 0px))",
                 transform: `scale(${1 - SHEET_STACK.scaleStep * depth})`,
                 transformOrigin: "top center",
               }
