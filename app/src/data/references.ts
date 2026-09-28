@@ -1,3 +1,5 @@
+import { documentsByLanguage } from "./document";
+
 /** Free-form relation-type id. The seed set ships with mentions / relates_to /
  *  cites / refers_to / no_label, but `relationTypesAtom` is writable at runtime
  *  so the Manage Types modal can append more. `no_label` is the canonical
@@ -1009,27 +1011,28 @@ function generateBulkReferences(): Reference[] {
   ];
 
   const refs: Reference[] = [];
-  // Cover up to 120 pages so refs distribute across the FULL minimap track
-  // for every primary document, not just the shortest one. Page counts in
-  // the vendored set: Velásquez EN 17pp, ES 47pp; Bámaca EN 112pp, ES 116pp;
-  // Gelman EN 90pp, ES 92pp. For docs shorter than 120, RefMinimap drops
-  // refs with page > numPages so the track tail isn't padded with off-doc
-  // refs — but the seeded distribution still reaches the bottom for any
-  // primary the user switches to.
-  const totalPages = 120;
+  // 120 generator SLOTS, folded onto the pages the document actually has.
+  // These refs anchor passages in e3's own document, and the reader sees it
+  // as whichever language's PDF: EN 39pp (FR/AR fall back to it), ES 47pp.
+  // So a page must exist in the SHORTEST of them. The slots used to be pages,
+  // from when another primary (Bámaca, 116pp) could be switched in: 261 of 435
+  // anchored refs pointed past page 39, their page tags went nowhere and the
+  // rail stopped at 39. Folding keeps every slot's id, seed, target and
+  // snippet, so the corpus is the same 456 refs, now ~10 per page.
+  const totalSlots = 120;
+  const docPages = Math.min(...Object.values(documentsByLanguage).map((d) => d.pages));
+  const pageOf = (slot: number) => 1 + Math.floor(((slot - 1) * docPages) / totalSlots);
   let id = 38;
 
-  // Per-page count tuned for the longest primary (Bámaca ES, 116pp). At
-  // ~3 refs per page that's ~350 refs for Bámaca and ~50 for Velásquez —
-  // both feel populated without overwhelming the panel. Each yPercent-merged
-  // cluster (~3-5 pages worth at 3.5% threshold) holds ~10 refs, which
-  // expands to ≤200px — safely inside the minimap track.
-  for (let page = 1; page <= totalPages; page++) {
-    // Each page gets 2-5 refs
-    const refsPerPage = 2 + Math.floor(seededRandom(page * 7) * 4);
+  // 2-5 refs per slot, ~3.3 on average: 392 generated refs, ~10 per page of
+  // a 39-page document.
+  for (let slot = 1; slot <= totalSlots; slot++) {
+    const page = pageOf(slot);
+    // Each slot gets 2-5 refs
+    const refsPerSlot = 2 + Math.floor(seededRandom(slot * 7) * 4);
 
-    for (let j = 0; j < refsPerPage; j++) {
-      const seed = id * 31 + page * 13 + j * 7;
+    for (let j = 0; j < refsPerSlot; j++) {
+      const seed = id * 31 + slot * 13 + j * 7;
       // Create clusters by snapping some refs to nearby positions
       const clusterBase = Math.floor(seededRandom(seed) * 5) / 5; // 0, 0.2, 0.4, 0.6, 0.8
       const jitter = seededRandom(seed + 1) * 0.08;

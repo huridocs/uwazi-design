@@ -17,7 +17,9 @@ export const currentDocument: DocumentMeta = {
   entityTypeId: "court_case",
   language: "English",
   createdAt: "2024-06-15",
-  pages: 17,
+  // The vendored EN PDF's page count (pdf.js numPages). It said 17, and the
+  // viewer paged through 39.
+  pages: 39,
   filename: "Velasquez-Rodriguez_v_Honduras_Judgment_1988.pdf",
 };
 
