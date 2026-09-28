@@ -544,3 +544,17 @@ button:not(:disabled) {
   height: 100vh;
   height: 100dvh;
 }
+
+/* Touch screens: hover-revealed CONTROLS show at rest (M07). A control that
+   is `opacity-0 group-hover:opacity-100` has no hover to reveal it on a phone,
+   so it was either unreachable or appeared after a tap as a stuck hover (the
+   stray trash icon on relationship rows). Under `(hover: none)` any element
+   carrying that token that IS a control, or holds one, is simply visible; the
+   controls already use the muted ink, so they stay quiet. Decoration that
+   uses the same token (a thumbnail's hover sheen) is not a control and keeps
+   its hover. Delete stays one tap away from its confirm. */
+@media (hover: none) {
+  [class~="group-hover:opacity-100"]:is(button, a, :has(button, a)) {
+    opacity: 1;
+  }
+}
