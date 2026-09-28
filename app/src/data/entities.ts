@@ -20,6 +20,7 @@ import { artworks, ARTWORK_IMAGE_BASE } from "./artworks/artworks";
 import { asset } from "../utils/asset";
 import { docPageAssets, DOC_PAGE_BASE, type DocPageAsset } from "./docPages";
 import { overlayCreated, overlayPatch, patchedEntity } from "./entityOverlay";
+import { V4_ENTITIES, V4_ENTITY_IDS, V4_HEARING_TYPE } from "./sampleSeedV4";
 
 /** One property as a CARD shows it: the key that names it to the record, the
  *  kind that says how to draw it, the label, the display value, and the "+N"
@@ -61,6 +62,7 @@ export const entityTypes: EntityType[] = [
   { id: "right", name: "Right", color: "#2563EB" },
   { id: "organization", name: "Organization", color: "#8B5CF6" },
   { id: "document", name: "Document", color: "#6B7280" },
+  { ...V4_HEARING_TYPE },
 ];
 
 export interface Entity {
@@ -258,6 +260,8 @@ const baseEntities: Omit<Entity, "createdAt">[] = [
   { id: "e51", title: "Geneva Conventions Protocol II", typeId: "document" },
   { id: "e52", title: "UN Universal Declaration of Human Rights", typeId: "document" },
   { id: "e53", title: "Final Report La Tablada Investigation", typeId: "document" },
+  // The v4 showcase seed: respondent states, one unconnected record, 48 hearings.
+  ...V4_ENTITIES,
 ];
 
 /** Stable string hash (no Math.random / Date.now) for deterministic seeding. */
@@ -416,7 +420,9 @@ export const entities: Entity[] = baseEntities.map((e) => ({
   ...e,
   createdAt: seededDate(e.id),
   updatedAt: seededUpdatedAt(e.id),
-  published: seededPublished(e.id),
+  // The v4 additions are all published: the 12 restricted entities the Sample
+  // had are the restricted set, and a hearing turning up restricted would move it.
+  published: V4_ENTITY_IDS.has(e.id) || seededPublished(e.id),
   preview: seededPreview(e.id, e.typeId),
   geo: entityGeo(e.id, e.typeId, e.title),
   ...withImages(seededImages(e.id, e.typeId)),

@@ -13,7 +13,7 @@ import {
   DEFAULT_ZOOM,
   defaultSortFor,
   type GroupBy,
-  type SortOrder,
+  type SortOrder, isUngroupedView
 } from "../../atoms/filters";
 import { groupingOptions } from "../../utils/connectionGrouping";
 import { Select } from "../shared/Select";
@@ -59,7 +59,7 @@ export function RelationshipsDisplayMenu({ size = "md" }: { size?: "sm" | "md" }
   const zoom = useAtomValue(zoomAtom);
   const [open, setOpen] = useState(false);
 
-  const isGraph = view === "graph";
+  const isGraph = isUngroupedView(view);
   const grouped = groupBy !== "none";
   const showThenBy = grouped && !isGraph;
   const showDensity = !isGraph;

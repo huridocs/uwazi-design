@@ -21,6 +21,9 @@ import { isPdf, runCsvExport, runPdfUploadBatch } from "../utils/libraryTasks";
 import { defaultTemplateId, uploadTemplateId } from "../utils/createEntity";
 import { UploadDocumentsModal } from "../components/library/UploadDocumentsModal";
 import { loadCejilData, cejilRelsByEntity } from "../data/cejil/load";
+import { cejilDefaultEntityId } from "../data/cejil/defaultEntity";
+import { isCejilEntity } from "../data/cejil/profile";
+import { focusCollectionDefaultAtom } from "../atoms/focusedEntity";
 import { loadTravesiaData, travesiaRelsByEntity } from "../data/travesia/load";
 import { warmSearchScan } from "../utils/warmSearchScan";
 import { overlayEntityIdAtom, referencesAtom } from "../atoms/references";
@@ -188,6 +191,14 @@ export function LibraryView() {
       };
     }
   }, [dataSource, cejilReady, setCejilReady, cejilRetry]);
+  // The CEJIL collection's default entity (Blake), focused once the corpus is
+  // here unless the reader is already on a CEJIL record.
+  const focusCollectionDefault = useSetAtom(focusCollectionDefaultAtom);
+  useEffect(() => {
+    if (dataSource !== "cejil" || !cejilReady) return;
+    const id = cejilDefaultEntityId();
+    if (id) focusCollectionDefault({ entityId: id, inCollection: isCejilEntity });
+  }, [dataSource, cejilReady, focusCollectionDefault]);
   // Travesía loads the same way: on first pick, sharing the error/retry state
   // (only one lazy source is ever selected at a time).
   const [travesiaReady, setTravesiaReady] = useAtom(travesiaReadyAtom);

@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { YearStrip } from "../../components/relationships/when/YearStrip";
+import { EventRow } from "../../components/relationships/when/EventRow";
 import { createStore, Provider, useSetAtom } from "jotai";
 import { ChevronDown } from "lucide-react";
 import { AddThesaurusValueModal, ThesaurusPicker } from "../../components/metadata/ThesaurusPicker";
@@ -1061,5 +1063,40 @@ export function IsolatedShareSelection() {
       </div>
       <ShareEntityModal open={focus !== null} onClose={() => setFocus(null)} ids={["e2", "e13", "e31"]} initialFocus={focus ?? "access"} />
     </>
+  );
+}
+
+/* ── When view primitives ── */
+
+const DEMO_YEARS = [
+  { year: 1993, count: 1 }, { year: 1994, count: 0 }, { year: 1995, count: 3 }, { year: 1996, count: 1 },
+  { year: 1997, count: 0 }, { year: 1998, count: 2 }, { year: 1999, count: 2 }, { year: 2000, count: 0 },
+  { year: 2001, count: 0 }, { year: 2002, count: 1 }, { year: 2003, count: 0 }, { year: 2004, count: 1 },
+];
+
+export function IsolatedYearStrip() {
+  const [range, setRange] = useState<[number, number] | null>([1995, 1996]);
+  return <YearStrip years={DEMO_YEARS} range={range} onChange={setRange} />;
+}
+
+const demoEvent = (entityId: string, own: boolean, label: string, iso: string, via: string[], end?: string) => ({
+  key: `${entityId}-${iso}`,
+  entityId,
+  own,
+  via,
+  date: { prop: label, label, t: Date.parse(`${iso}T00:00:00Z`), ...(end ? { end: Date.parse(`${end}T00:00:00Z`) } : {}) },
+});
+
+export function IsolatedEventRow() {
+  const store = createStore();
+  return (
+    <Provider store={store}>
+      <div className="flex flex-col gap-1 max-w-[36rem]">
+        <EventRow event={demoEvent("e3", true, "Petition filed", "1989-03-15", [])} />
+        <EventRow event={demoEvent("e7", false, "Date", "1997-11-18", ["Judgment"])} selected />
+        <EventRow event={demoEvent("e53", false, "Adopted", "2003-05-10", ["Mentions", "Cites", "Refers to"])} />
+        <EventRow event={demoEvent("e22", false, "Mandate", "1986-01-01", ["Signed by"], "1997-12-31")} />
+      </div>
+    </Provider>
   );
 }
