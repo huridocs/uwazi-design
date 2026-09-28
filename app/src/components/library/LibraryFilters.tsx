@@ -525,8 +525,12 @@ function FacetCard({ title, children }: { title?: string; children: ReactNode })
   return (
     <div className={FACET_CARD}>
       {title && (
-        <div className="px-2 pt-1 pb-0.5">
-          <span className="text-tab font-bold text-ink">{title}</span>
+        <div className="px-2 pt-1 pb-1.5">
+          {/* `pb-1.5`: the same 6px from header to first item as the keyword
+              cards, whose `space-y-1.5` puts their search box there. `block`,
+              so the title takes its own 20px line rather than the div's 24px
+              strut, as the keyword cards' flex-row titles do. */}
+          <span className="block text-tab font-bold text-ink">{title}</span>
         </div>
       )}
       {children}
@@ -584,6 +588,14 @@ function TreeChildren({ children }: { children: ReactNode }) {
   );
 }
 
+/** ONE row metric for every facet list in this panel — Status, Type (and its
+ *  tree), and the keyword cards (Countries, Descriptores, inherited props) — in
+ *  the drawer and the phone sheet alike. The whole label + checkbox row is the
+ *  target, so it takes no touch-target floor of its own: `min-h-11` below `md`
+ *  made Status/Type rows 44px in the sheet while the keyword rows beside them
+ *  stayed 28px. */
+const FACET_ROW = "flex items-center py-1 cursor-pointer transition-colors";
+
 /** Row: solid-triangle expander (expandable parents only) · checkbox · optional
  *  status icon · label · bold count. Top-level rows reserve a triangle gutter so
  *  every checkbox aligns in one column; `child` rows drop the gutter (the tree
@@ -617,13 +629,9 @@ function FacetRow({
   reserveGutter?: boolean;
 }) {
   const Icon = icon;
-  // The desktop rail tightens to py-1 now the type sits a step smaller, but a
-  // row is a CHECKBOX, so the floor below `md` is the repo's touch target
-  // (min-h-11 — the same utility DocMeta and DataTable rows use) rather than
-  // whatever the padding happens to add up to.
   return (
     <label
-      className={`flex items-center rounded-md min-h-11 md:min-h-0 py-1 pe-2 cursor-pointer hover:bg-warm transition-colors ${
+      className={`${FACET_ROW} rounded-md pe-2 hover:bg-warm ${
         child ? "ps-0" : expandable || reserveGutter ? "ps-0" : "ps-2"
       }`}
     >
@@ -780,7 +788,7 @@ function KeywordFacetCard({
             return (
               <label
                 key={c}
-                className={`flex items-center gap-2.5 py-1 px-2 rounded-sm transition-colors cursor-pointer ${
+                className={`${FACET_ROW} gap-2.5 px-2 rounded-sm ${
                   checked ? "bg-carbon/[0.04] hover:bg-carbon/[0.07]" : "hover:bg-warm"
                 }`}
               >
