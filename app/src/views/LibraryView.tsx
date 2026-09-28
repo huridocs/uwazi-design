@@ -1282,12 +1282,16 @@ export function LibraryView() {
       {/* The readout's own line, when the row can't hold it. Mounted for as
           long as the row is this narrow — with or without a query — so a
           search never adds a line and shoves the results down. The sentence
-          is `shrink-0` and the chip yields (`min-w-0`), as in the row. */}
+          is `shrink-0` and the chip yields (`min-w-0`), as in the row.
+          One stack step (`mt-2`) under the controls and the band's own `py-2`
+          under it: 8px each side. `h-6` is the CHIP's height, so "N entities"
+          and "N results for [chip]" hold the same row; at `h-5` the chip
+          overflowed it and sat 4px under the search box, 7px over the rule. */}
       {!readoutInline && (
         <p
           data-part="readout"
           aria-busy={searchPending}
-          className={`mt-1.5 h-5 flex items-center gap-1.5 min-w-0 text-meta tabular-nums text-ink-tertiary
+          className={`mt-2 h-6 flex items-center gap-1.5 min-w-0 text-meta tabular-nums text-ink-tertiary
             transition-opacity ${searchPending ? "opacity-60" : "opacity-100"}`}
         >
           {readoutContent}
