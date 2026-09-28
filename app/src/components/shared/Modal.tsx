@@ -141,7 +141,7 @@ export function Modal({
      the first layer it keeps its own shape; opened from inside a sheet it is a
      sheet itself, near full height, staggered on the ones below — whatever its
      size — and viewport-scoped, since a pane is only a slice of the screen. */
-  const layer = useSheetLayer(true);
+  const layer = useSheetLayer(true, { onClose, label: typeof title === "string" ? title : undefined });
   const sheet = layer.stacked && layer.index >= 1;
   const fullOnPhone = size !== "sm" && !sheet;
   const depth = Math.min(layer.depth, SHEET_STACK.visible - 1);
@@ -223,8 +223,8 @@ export function Modal({
               data-part="back"
               data-gutter-align="box"
               onClick={onClose}
-              aria-label="Back"
-              className="shrink-0 p-1 rounded-md text-ink-muted hover:bg-warm hover:text-ink transition-colors cursor-pointer"
+              aria-label={layer.belowLabel ? `Back to ${layer.belowLabel}` : "Back"}
+              className="relative after:absolute after:-inset-2.5 after:content-[''] shrink-0 p-1 rounded-md text-ink-muted hover:bg-warm hover:text-ink transition-colors cursor-pointer"
             >
               <ArrowLeft size={16} aria-hidden className="rtl:rotate-180" />
             </button>
@@ -256,9 +256,10 @@ export function Modal({
             type="button"
             data-part="close"
             data-gutter-align="box"
-            onClick={onClose}
-            aria-label={closeLabel}
-            className="shrink-0 p-1 rounded-md text-ink-muted hover:bg-warm hover:text-ink transition-colors cursor-pointer"
+            // A stacked sheet's × closes the whole stack; Back (above) pops one.
+            onClick={sheet ? layer.closeAll : onClose}
+            aria-label={sheet ? "Close all" : closeLabel}
+            className={`${sheet ? "relative after:absolute after:-inset-2.5 after:content-['']" : ""} shrink-0 p-1 rounded-md text-ink-muted hover:bg-warm hover:text-ink transition-colors cursor-pointer`}
           >
             <X size={16} aria-hidden />
           </button>

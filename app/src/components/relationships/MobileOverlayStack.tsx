@@ -49,16 +49,22 @@ export function MobileOverlayStack() {
           ariaLabel={getEntity(id)?.title ?? "Entity details"}
           onClose={() => setOverlay(null)}
         >
-          <EntityDetailBody
-            entityId={id}
-            identitySize="sm"
-            onClose={() => setOverlay(null)}
-            onOpen={() => {
-              openEntity(id);
-              closeAll();
-            }}
-            openLabel="Open entity"
-          />
+          {(chrome) => (
+            <EntityDetailBody
+              entityId={id}
+              identitySize="sm"
+              // Back (layers above the first) pops one; × pops this sheet on the
+              // first layer and closes the whole stack above it.
+              leading={chrome.back}
+              onClose={chrome.close}
+              closeLabel={chrome.closeLabel}
+              onOpen={() => {
+                openEntity(id);
+                closeAll();
+              }}
+              openLabel="Open entity"
+            />
+          )}
         </MobileBottomSheet>
       ))}
     </>

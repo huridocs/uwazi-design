@@ -9,7 +9,10 @@ interface MobileBottomSheetProps {
   open: boolean;
   onClose: () => void;
   title?: string;
-  children: ReactNode;
+  /** The sheet's content. A `bare` sheet's content draws its own header, so it
+   *  can take the layer's Back and Close as a render prop (`SheetChrome`) and
+   *  put them on ITS header row. */
+  children: ReactNode | ((chrome: SheetChrome) => ReactNode);
   defaultSnap?: "half" | "full";
   /** No header row: the content brings its own title and close (an entity
    *  preview). The back button of a stacked layer then rides the handle row. */
@@ -20,6 +23,20 @@ interface MobileBottomSheetProps {
 
 const SNAP_HALF_VH = 60;
 const SNAP_FULL_VH = 92;
+
+/** A stacked layer's controls, for content that draws its own header. */
+export interface SheetChrome {
+  /** Back to the layer below (layers ≥1), or null on the first layer. */
+  back: ReactNode;
+  /** What the header's × does: pop this sheet on the first layer, close the
+   *  whole stack on the layers above it. */
+  close: () => void;
+  closeLabel: string;
+}
+
+/** 44px hit area around a 24px icon button, without growing the row it sits
+ *  in (the pseudo-element extends the target, not the box). */
+const HIT_44 = "relative after:absolute after:-inset-2.5 after:content-['']";
 
 export function MobileBottomSheet({
   open,
@@ -34,7 +51,7 @@ export function MobileBottomSheet({
      keeps its own height; while something is stacked on it, it rises so its top
      edge peeks above the next one. Every later layer is near full height, its
      top a stagger step below the layer under it. Only the top layer is live. */
-  const layer = useSheetLayer(open);
+  const layer = useSheetLayer(open, { onClose, label: title ?? ariaLabel });
   const stacked = layer.stacked && layer.count > 1;
   const live = open && layer.isTop;
   const [snap, setSnap] = useState<"half" | "full">(defaultSnap);
@@ -127,17 +144,26 @@ export function MobileBottomSheet({
   const transform = open
     ? `${lift} scale(${1 - SHEET_STACK.scaleStep * depth})`
     : "translateY(100%)";
-  const back = open && layer.index > 0 && (
+  // Back pops ONE layer (as Escape and a drag down do); on the layers above
+  // the first, × closes the whole stack. Two controls, two jobs.
+  const upper = open && layer.index > 0;
+  const back = upper ? (
     <button
       type="button"
       onClick={onClose}
       data-part="back"
-      aria-label="Back"
-      className="p-1 rounded-md hover:bg-warm text-ink-muted hover:text-ink transition-colors cursor-pointer"
+      data-gutter-align="box"
+      aria-label={layer.belowLabel ? `Back to ${layer.belowLabel}` : "Back"}
+      className={`${HIT_44} shrink-0 p-1 rounded-md hover:bg-warm text-ink-muted hover:text-ink transition-colors cursor-pointer`}
     >
       <ArrowLeft size={16} aria-hidden className="rtl:rotate-180" />
     </button>
-  );
+  ) : null;
+  const chrome: SheetChrome = {
+    back,
+    close: upper ? layer.closeAll : onClose,
+    closeLabel: upper ? "Close all" : "Close",
+  };
 
   /* Portalled to the body. A sheet opened from inside another sheet would
      otherwise be that sheet's DOM descendant: inside its `inert` (so the new top
@@ -213,11 +239,6 @@ export function MobileBottomSheet({
             className="rounded-full w-9 h-1"
             style={{ backgroundColor: "var(--border-soft)" }}
           />
-          {bare && back && (
-            <span className="absolute start-2 top-0.5" onPointerDown={(e) => e.stopPropagation()}>
-              {back}
-            </span>
-          )}
         </div>
 
         {/* Header */}
@@ -231,10 +252,10 @@ export function MobileBottomSheet({
             <h2 id={titleId} data-part="title" className="flex-1 min-w-0 truncate text-sm font-semibold text-ink">{title}</h2>
             <button
               type="button"
-              onClick={onClose}
+              onClick={chrome.close}
               data-part="close"
-              className="p-1 rounded-md hover:bg-warm text-ink-muted hover:text-ink transition-colors"
-              aria-label="Close"
+              className={`${HIT_44} shrink-0 p-1 rounded-md hover:bg-warm text-ink-muted hover:text-ink transition-colors`}
+              aria-label={chrome.closeLabel}
             >
               <X size={16} aria-hidden />
             </button>
@@ -243,7 +264,7 @@ export function MobileBottomSheet({
 
         {/* Content */}
         <div data-part="body" className="flex-1 min-h-0 overflow-auto" style={{ overscrollBehavior: "contain" }}>
-          {children}
+          {typeof children === "function" ? children(chrome) : children}
         </div>
       </div>
     </>,

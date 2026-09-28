@@ -40,6 +40,8 @@ export interface EntityDetailBodyProps {
   onClose: () => void;
   /** Accessible name for the header's close button ("Back to filters", …). */
   closeLabel?: string;
+  /** Before the identity on the header row: a stacked sheet's Back. */
+  leading?: ReactNode;
   onOpen: () => void;
   openLabel: string;
   identitySize?: "sm" | "md";
@@ -75,6 +77,7 @@ export function EntityDetailBody({
   banner,
   onClose,
   closeLabel = "Close",
+  leading,
   onOpen,
   openLabel,
   identitySize = "md",
@@ -237,6 +240,9 @@ export function EntityDetailBody({
           className="bleed flex items-start gap-2 pt-3 pb-2.5 shrink-0"
           style={{ borderBottom: "1px solid var(--border-primary)" }}
         >
+          {/* A stacked sheet's Back (MobileOverlayStack): on this row, level
+              with the type and title, not squeezed against the sheet's edge. */}
+          {leading && <div className="shrink-0 self-center">{leading}</div>}
           <EntityIdentity entity={entity} size={identitySize} />
           {/* Its BOX meets the gutter, not the icon: the hover fill must stay
               inside the panel edge. */}
@@ -244,7 +250,8 @@ export function EntityDetailBody({
             onClick={onClose}
             aria-label={closeLabel}
             data-gutter-align="box"
-            className="-mt-0.5 p-1.5 rounded-md hover:bg-warm text-ink-muted hover:text-ink transition-colors shrink-0"
+            // `after:` extends the target to 44px without growing the header.
+            className="relative after:absolute after:-inset-2 after:content-[''] -mt-0.5 p-1.5 rounded-md hover:bg-warm text-ink-muted hover:text-ink transition-colors shrink-0"
           >
             <X size={16} />
           </button>
