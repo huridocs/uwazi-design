@@ -229,7 +229,15 @@ const lastRangeAtom = atom<readonly string[]>([]);
 export const librarySelectionCountAtom = atom((get) => get(librarySelectionAtom).size);
 /** Anything selected — flips only at 0↔1, so it is cheap for every card to
  *  read (it shows the checkboxes at rest while a selection exists). */
-export const librarySelectionActiveAtom = atom((get) => get(librarySelectionAtom).size > 0);
+/** Phones: selection mode entered from the Actions sheet's "Select", with
+ *  nothing picked yet. A touch screen has no modifier keys and the card's
+ *  checkbox is visually hidden, so a long press was the only way in and nothing
+ *  said so. In this mode the selection bar shows and a tap toggles, the same
+ *  state a long press sets. Clear ends it (`clearSelectionAtom`). */
+export const librarySelectModeAtom = atom(false);
+export const librarySelectionActiveAtom = atom(
+  (get) => get(librarySelectionAtom).size > 0 || get(librarySelectModeAtom),
+);
 export const entitySelectedAtom = atomFamily((id: string) =>
   atom((get) => get(librarySelectionAtom).has(id)),
 );
@@ -381,6 +389,7 @@ export const clearSelectionAtom = atom(null, (get, set) =>
     set(librarySelectionAnchorAtom, null);
     set(lastRangeAtom, []);
     set(libraryBulkEditOpenAtom, false);
+    set(librarySelectModeAtom, false);
   }),
 );
 
