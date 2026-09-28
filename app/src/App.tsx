@@ -62,7 +62,9 @@ export function App() {
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    // `app-shell` (index.css): the DYNAMIC viewport height, not 100vh, which on
+    // iOS includes the collapsing URL bar and put every bottom bar under it.
+    <div className="app-shell flex flex-col overflow-hidden">
       <Navbar
         onLogoClick={handleLogoClick}
         appView={appView}
