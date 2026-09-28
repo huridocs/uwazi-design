@@ -37,6 +37,18 @@ function focusEntity(entityId: string, get: Getter, set: Setter) {
   seedFilesFor(entityId, set);
 }
 
+/** Write-only: make `entityId` the focused entity when the current focus
+ *  belongs to another collection — what a collection switch does, so the entity
+ *  view never opens on a record the Library isn't showing. A focus already in
+ *  the collection (the reader opened something) is left alone. No navigation. */
+export const focusCollectionDefaultAtom = atom(
+  null,
+  (get, set, { entityId, inCollection }: { entityId: string; inCollection: (id: string) => boolean }) => {
+    if (inCollection(get(focusedEntityIdAtom))) return;
+    focusEntity(entityId, get, set);
+  },
+);
+
 /** Focal navigation history — entity ids visited before the current one. Lets
  *  the entity-header back button retrace entity→entity hops; empty means the
  *  precedent screen is the Library. */
