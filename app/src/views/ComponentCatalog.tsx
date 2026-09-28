@@ -581,7 +581,7 @@ export function ComponentCatalog({ onReturn }: Props) {
 //   notificationsAtom   — past events (the drawer log)
 //   beaconOpenAtom      — drawer open?
 // Collapsed = the UwaziLoader mark; expands for a task intro / on hover.
-// Renders <NotificationsDrawer /> internally.
+// Renders <NotificationsSlideOver /> internally.
 <Beacon />`}
                 >
                   <BeaconDemo />

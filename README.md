@@ -35,7 +35,7 @@ All components are bound to variables — switching a frame to Dark mode updates
 │   │   ├── atoms/                 # Jotai state (navigation, entities, references, files, selection,
 │   │   │                          # filters, suggestions, notifications, theme, language, viewport)
 │   │   ├── components/
-│   │   │   ├── layout/            # Navbar, Beacon + NotificationsDrawer, SplitView, AdaptiveSplitView,
+│   │   │   ├── layout/            # Navbar, Beacon + NotificationsSlideOver, SplitView, AdaptiveSplitView,
 │   │   │   │                      # MainTabs, DrawerTabs, SegmentedTabs, Breadcrumb, DocMeta,
 │   │   │   │                      # ToolsActionBar,
 │   │   │   │                      # MobileBottomSheet, MobileActionMenu, MobileNavDrawer

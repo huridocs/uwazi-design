@@ -63,7 +63,7 @@ function fmtTime(t: number, now: number): string {
 type Bucket = "new" | "today" | "earlier";
 const bucketLabel: Record<Bucket, string> = { new: "New", today: "Today", earlier: "Earlier" };
 
-export function NotificationsDrawer({ rtl = false }: { rtl?: boolean }) {
+export function NotificationsSlideOver({ rtl = false }: { rtl?: boolean }) {
   const [notifications, setNotifications] = useAtom(notificationsAtom);
   const [activities, setActivities] = useAtom(activitiesAtom);
   const [open, setOpen] = useAtom(beaconOpenAtom);
@@ -142,7 +142,7 @@ export function NotificationsDrawer({ rtl = false }: { rtl?: boolean }) {
       {/* Scrim */}
       <div
         onClick={() => setOpen(false)}
-        data-component="NotificationsDrawer"
+        data-component="NotificationsSlideOver"
         data-part="scrim"
         className={`fixed inset-0 z-[60] bg-ink/20 transition-opacity duration-300 ${
           open ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -157,7 +157,7 @@ export function NotificationsDrawer({ rtl = false }: { rtl?: boolean }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="notifications-drawer-title"
-        data-component="NotificationsDrawer"
+        data-component="NotificationsSlideOver"
         data-part="panel"
         data-state={open ? "open" : "closed"}
         data-gutter-host

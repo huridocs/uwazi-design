@@ -271,7 +271,7 @@ repo; update them when tokens or style rules change.
   - PDF thumbnails do not render in a background tab; use `scripts/check-thumbs.ts`.
 
 ### Notifications and Bert
-- `Beacon` (navbar right cluster) is the indicator; `NotificationsDrawer` is the log.
+- `Beacon` (navbar right cluster) is the indicator; `NotificationsSlideOver` is the log.
   - Beacon: a `rounded-md bg-warm` button with no edge, showing the `UwaziLoader` mark coloured by
     the most urgent unread item (seal, amber, carbon, ink), animated only while a task runs. It
     expands for a new task, on hover and on a flash, and collapses on phones.

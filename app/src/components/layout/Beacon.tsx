@@ -11,7 +11,7 @@ import {
 import { breakpointAtom } from "../../atoms/viewport";
 import { toastsAtom, type Toast } from "../../atoms/references";
 import { UwaziLoader } from "../shared/UwaziLoader";
-import { NotificationsDrawer } from "./NotificationsDrawer";
+import { NotificationsSlideOver } from "./NotificationsSlideOver";
 
 const kindIcon: Record<NotificationKind, typeof CheckCircle2> = {
   success: CheckCircle2,
@@ -262,7 +262,7 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
         </div>
       </div>
 
-      <NotificationsDrawer rtl={rtl} />
+      <NotificationsSlideOver rtl={rtl} />
     </>
   );
 }

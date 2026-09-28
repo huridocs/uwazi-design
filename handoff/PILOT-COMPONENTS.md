@@ -321,7 +321,7 @@ pilot really validates here is **motion + live regions** surviving the token swa
   animated **only while a task runs**. Colour ladder: `seal` (unread error) →
   `warning` (unread warning) → `carbon` (info / processing) → `default`/ink (idle
   or only-a-success-left).
-- Click opens the `NotificationsDrawer` (the history log). The pill is the
+- Click opens the `NotificationsSlideOver` (the history log). The pill is the
   indicator; the drawer is the log.
 
 **Reskin** — the pill chrome:
@@ -356,7 +356,7 @@ className={pop ? "animate-beacon-pop" : ""}
   `transitionend` still fires), the `animate-*` classes go to `none`.
 - Mobile stays collapsed (tap → drawer); only desktop expands on hover.
 
-Migrate the `NotificationsDrawer` alongside — inventory rates it **S** too, same
+Migrate the `NotificationsSlideOver` alongside — inventory rates it **S** too, same
 convergence, and the two are one feature. Its only real gaps vs `production` are
 the unread-filter pill and the per-card Retry action.
 

@@ -154,7 +154,7 @@ that don't exist as reusable components anywhere in `production` yet.
 | MobileBottomSheet.tsx | none — net-new (closest is `UI/Drawer.tsx`, a side panel not a bottom sheet) | Partial — `Drawer.stories.tsx` (different component) | None | L | No drag-to-snap bottom-sheet primitive exists; Drawer only slides in from the side |
 | MobileNavDrawer.tsx | `UI/Header/MobileMenuDropdown.tsx` (BaseDropdown) | Partial — `Header.stories.tsx` | None | M | Both are the mobile nav-menu surface, but real one is an anchored dropdown, not a full slide-up sheet |
 | Navbar.tsx | `UI/Header/Header.tsx` | Yes — `Header.stories.tsx` | None | M | Strong parity (RequestStatus≈Beacon slot, AskBertButton, language dropdown, theme toggle) but Tools/Collection dropdowns + mobile-sheet variant aren't in real Header |
-| NotificationsDrawer.tsx | `UI/Notifications/NotificationsPanel.tsx` (built on `UI/Drawer.tsx`) | Yes — `NotificationsPanel.stories.tsx`, `NotificationItem.stories.tsx` | None | **S** | Naming/structural convergence with Beacon: real panel already buckets today/earlier, tracks tasks with progress bars; unread filter pill + retry action are the only real gaps |
+| NotificationsSlideOver.tsx | `UI/Notifications/NotificationsPanel.tsx` (built on `UI/Drawer.tsx`) | Yes — `NotificationsPanel.stories.tsx`, `NotificationItem.stories.tsx` | None | **S** | Naming/structural convergence with Beacon: real panel already buckets today/earlier, tracks tasks with progress bars; unread filter pill + retry action are the only real gaps |
 | SegmentedTabs.tsx | `UI/SegmentedControl/SegmentedControl.tsx` | Yes — `Components/UI/SegmentedControl.stories.tsx` | None | S | Equivalent pill-group selector structure already exists |
 | SplitView.tsx | `Layouts/PaneLayout/PaneLayoutDesktop.tsx` | Yes — `Layouts/PaneLayout.stories.tsx` | None | S | Same drag-resize concept; real version is more capable (localStorage-persisted ratios, N panes vs 2) |
 | ToolsActionBar.tsx | `Routes/Entity/.../relationships/panel/RelationshipsActionBar.tsx` | No dedicated story | None | M | Same list/detail selection+bulk-delete pattern, but tightly coupled to relationships domain — needs generalizing |
@@ -178,7 +178,7 @@ folded into work that's already needed, not an extra pass.
 ## Suggested migration order
 
 1. **Tokens PR** (already staged, see `TOKENS-MAPPING.md`) — unblocks everything below.
-2. **The convergent pairs first** (`Beacon`/`NotificationsDrawer`, most of
+2. **The convergent pairs first** (`Beacon`/`NotificationsSlideOver`, most of
    `relationships/`) — these are S-rated *and* already story-covered, so they're
    the fastest way to prove the token layer against real, complex components
    before touching anything net-new.
