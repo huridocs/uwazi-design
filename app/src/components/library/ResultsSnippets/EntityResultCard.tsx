@@ -137,7 +137,7 @@ export function EntityResultCard({
                   className="font-medium text-carbon hover:underline cursor-pointer
                     focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/40 rounded-sm"
                 >
-                  {showAllFullText ? "Show fewer" : "Show all"}
+                  {showAllFullText ? "Show less" : "Show all"}
                 </button>
               </p>
             )}

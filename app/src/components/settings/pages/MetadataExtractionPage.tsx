@@ -48,7 +48,7 @@ export function MetadataExtractionPage() {
 
   return (
     <SettingsContent component="MetadataExtractionPage">
-      <SettingsContent.Header title="Metadata Extraction" />
+      <SettingsContent.Header title="Metadata extraction" />
       <SettingsContent.Body>
         <p className="text-xs text-ink-tertiary mb-4">
           Train extractors to suggest property values from document text automatically.

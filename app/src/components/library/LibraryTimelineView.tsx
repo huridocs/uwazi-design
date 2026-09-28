@@ -908,8 +908,8 @@ function LanesLayout({ laneChart }: LayoutProps) {
         })}
 
         <p className="pt-3 text-meta text-ink-muted">
-          A dot is one period of one template, sized by how many entities landed in it. Click one to
-          filter the Library to that slice; click it again to clear.
+          A dot is one period of one template, sized by how many entities landed in it. Select one to
+          filter the Library to that slice; select it again to clear.
         </p>
       </div>
     </div>

@@ -180,8 +180,8 @@ export function ImportCSVView({ onNavigate }: { onNavigate?: (view: AppView) => 
 
       <ConfirmDialog
         open={deleteConfirmOpen}
-        title="Delete Imports"
-        message={`Are you sure you want to delete ${selectedIds.size} import${selectedIds.size !== 1 ? "s" : ""}? This action cannot be undone.`}
+        title={`Delete ${selectedIds.size} import${selectedIds.size !== 1 ? "s" : ""}?`}
+        message="The selected imports are removed from the list. This can’t be undone."
         confirmLabel="Delete"
         variant="danger"
         onConfirm={handleDeleteSelected}
@@ -190,8 +190,8 @@ export function ImportCSVView({ onNavigate }: { onNavigate?: (view: AppView) => 
 
       <ConfirmDialog
         open={deleteCurrentConfirmOpen}
-        title="Delete Import"
-        message={`Are you sure you want to delete ${activeEntry?.filename ?? "this import"}? This action cannot be undone.`}
+        title="Delete import?"
+        message={`${activeEntry ? `“${activeEntry.filename}”` : "This import"} is removed from the list. This can’t be undone.`}
         confirmLabel="Delete"
         variant="danger"
         onConfirm={handleDeleteCurrent}

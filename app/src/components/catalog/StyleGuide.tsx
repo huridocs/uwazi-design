@@ -66,7 +66,7 @@ function ColorSwatch({ hex, name, cssVar, tw }: { hex: string; name: string; css
         className="h-10 rounded-md border border-border/60 cursor-pointer hover:ring-2 hover:ring-carbon/30 transition-all"
         style={{ backgroundColor: hex }}
         onClick={() => copyToast(hex, name)}
-        title={`Click to copy ${hex}`}
+        title={`Copy ${hex}`}
       />
       <CopyText text={tw}>
         <span className="text-meta font-medium text-ink hover:text-carbon transition-colors">{name}</span>
@@ -122,7 +122,7 @@ function DarkSwatch({ hex, name, cssVar, tw }: { hex: string; name: string; cssV
         className="h-10 rounded-md cursor-pointer hover:ring-2 hover:ring-white/30 transition-all"
         style={{ backgroundColor: hex, border: "1px solid rgba(255,255,255,0.12)" }}
         onClick={() => copyToast(hex, `${name} dark`)}
-        title={`Click to copy ${hex}`}
+        title={`Copy ${hex}`}
       />
       <CopyText text={tw}>
         <span className="text-meta font-medium hover:opacity-70 transition-colors" style={{ color: "#D4CDB8" }}>{name}</span>

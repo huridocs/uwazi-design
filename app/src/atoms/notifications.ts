@@ -91,7 +91,7 @@ export const notificationsAtom = atom<Notification[]>([
     id: "n-4",
     kind: "error",
     title: "Failed to save entity.",
-    detail: "A network timeout occurred. Please retry.",
+    detail: "A network timeout occurred. Retry the task.",
     details: "ETIMEDOUT: connect ETIMEDOUT 10.0.0.4:443\n    at TLSSocket.onConnectEnd (net.js:1145:8)",
     time: now - 2 * hour,
     read: true,

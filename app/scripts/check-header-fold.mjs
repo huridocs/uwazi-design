@@ -48,7 +48,7 @@ for (const dir of ["ltr", "rtl"]) for (const w of widths) for (const drawer of w
   if (!off.missing && !on.missing && (off.h !== on.h || norm(off.xs) !== norm(on.xs))) { fails++; console.log(label, "SHIFT on query:", off.h, "→", on.h, "\n   ", off.xs, "\n   ", on.xs); }
   if (dir === "ltr" || w === 1024 || w === 390) await p.screenshot({ path: `${out}/${tag}-lib-${dir}-${w}-${drawer}.png`, clip: { x: 0, y: 0, width: w, height: 240 } });
   // entity
-  await p.locator('[aria-label="Clear search text"]').click().catch(() => {});
+  await p.locator('[aria-label="Clear search"]').first().click().catch(() => {});
   await p.goto(BASE); await p.waitForTimeout(1200);
   await p.evaluate((d) => (document.documentElement.dir = d), dir);
   const open = p.getByRole("button", { name: "Open", exact: true }).first();

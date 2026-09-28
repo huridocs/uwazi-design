@@ -70,7 +70,7 @@ export function NewImportModal({ open, onClose, onImport }: NewImportModalProps)
       // Not dismissed by the scrim: a half-filled import isn't thrown away by a stray click.
       dismissOnScrim={false}
       onClose={onClose}
-      title="New Import"
+      title="New import"
       titleId="import-modal-title"
       bodyClassName="py-4 space-y-5"
       footer={
@@ -133,7 +133,7 @@ export function NewImportModal({ open, onClose, onImport }: NewImportModalProps)
           >
             <CloudUpload size={32} className="text-ink-tertiary/40 mb-2" aria-hidden />
             <span className="text-sm font-medium text-ink-secondary">
-              Click to select a CSV file
+              Select a CSV file
             </span>
             <span className="text-xs text-ink-muted mt-1">or drag and drop here</span>
           </button>
@@ -160,7 +160,7 @@ export function NewImportModal({ open, onClose, onImport }: NewImportModalProps)
             template ? "text-ink" : "text-ink-muted"
           }`}
         >
-          <span id="import-modal-template-value">{template || "Select a template..."}</span>
+          <span id="import-modal-template-value">{template || "Select a template…"}</span>
           <ChevronDown size={14} aria-hidden className={`text-ink-tertiary transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
         </button>
 
@@ -174,7 +174,7 @@ export function NewImportModal({ open, onClose, onImport }: NewImportModalProps)
               <ModalSearchField
                 value={search}
                 onChange={setSearch}
-                placeholder="Search templates..."
+                placeholder="Search templates…"
                 ariaLabel="Search templates"
                 autoFocus
               />

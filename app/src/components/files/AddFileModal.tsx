@@ -237,7 +237,7 @@ export function AddFileModal() {
         onDrop: handleDrop,
       }}
       onClose={() => setTarget(null)}
-      title={lockedGroup ? `Add translation to "${lockedGroup.title}"` : "Add file"}
+      title={lockedGroup ? `Add translation to “${lockedGroup.title}”` : "Add file"}
       titleId="add-file-modal-title"
       bodyClassName="py-4 space-y-4"
       footer={
@@ -278,7 +278,7 @@ export function AddFileModal() {
         >
           <CloudUpload size={28} className="text-ink-tertiary/50 mb-1.5" aria-hidden />
           <span className="text-sm font-medium text-ink-secondary">
-            Click to select files
+            Select files
           </span>
           <span className="text-xs text-ink-muted mt-0.5">
             or drag and drop here

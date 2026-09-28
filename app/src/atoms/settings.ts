@@ -85,8 +85,8 @@ export const settingsGroups: SettingsGroup[] = [
       // under System purely because Uwazi's V2 rail listed it there. And it's ML,
       // which is a different kind of tool from an activity log, so it gets its own
       // shelf inside the group rather than a fourth top-level door.
-      { id: "metadata-extraction", label: "Metadata Extraction", icon: ScanText, subgroup: "ML tools" },
-      { id: "paragraph-extraction", label: "Paragraph Extraction", icon: AlignLeft, subgroup: "ML tools" },
+      { id: "metadata-extraction", label: "Metadata extraction", icon: ScanText, subgroup: "ML tools" },
+      { id: "paragraph-extraction", label: "Paragraph extraction", icon: AlignLeft, subgroup: "ML tools" },
     ],
   },
 ];

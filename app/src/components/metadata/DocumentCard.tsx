@@ -70,7 +70,7 @@ export function DocumentCard({
   const facts = [
     { label: "Type", value: doc.type, ltr: false },
     { label: "Size", value: doc.size, ltr: true },
-    { label: "Last Edited", value: doc.lastEdited, ltr: true },
+    { label: "Last edited", value: doc.lastEdited, ltr: true },
     { label: "Added", value: doc.added, ltr: true },
   ].filter((f) => !!f.value?.trim());
 

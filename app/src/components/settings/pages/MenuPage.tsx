@@ -74,8 +74,8 @@ export function MenuPage() {
 
       <ConfirmDialog
         open={confirm !== null}
-        title="Delete menu link"
-        message={`Remove “${confirm?.title}” from the navigation menu?`}
+        title="Delete menu link?"
+        message={`“${confirm?.title}” is removed from the navigation menu. This can’t be undone.`}
         confirmLabel="Delete"
         variant="danger"
         onConfirm={() => {

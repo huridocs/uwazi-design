@@ -537,7 +537,7 @@ function GroupedBody({
                           focus-visible:ring-1 focus-visible:ring-carbon/40 rounded-sm"
                       >
                         {expanded
-                          ? "Show fewer"
+                          ? "Show less"
                           : `Show all ${snippets.fullTextTotal.toLocaleString()}`}
                       </button>
                     )}

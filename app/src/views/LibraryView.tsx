@@ -1042,7 +1042,7 @@ export function LibraryView() {
               // results remain usable while retyping. `ActiveSearchChip` or Clear
               // all ends the search.
               onClick={() => setSearchDraft("")}
-              aria-label="Clear search text"
+              aria-label="Clear search"
               className="hit-area shrink-0 p-0.5 rounded-full hover:bg-parchment text-ink-tertiary hover:text-ink cursor-pointer transition-colors"
             >
               <X size={12} />

@@ -47,7 +47,7 @@ export function ToolsActionBar({
           data-gutter-align="box"
           className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${BAR_DANGER} rounded-md transition-colors cursor-pointer`}
         >
-          <Trash2 size={14} /> Delete Import
+          <Trash2 size={14} /> Delete import
         </button>
       </div>
     );
@@ -70,7 +70,7 @@ export function ToolsActionBar({
         data-part="new"
         className="px-4 py-1.5 text-xs font-medium text-paper bg-ink rounded-md hover:bg-ink/90 transition-colors cursor-pointer"
       >
-        New Import
+        New import
       </button>
 
       {hasSelection && (

@@ -145,7 +145,7 @@ export function CreateRelationshipModal() {
         message: t(
           "System",
           "Relationship created",
-          `Relationship to "${selectedEntity.title}" created`,
+          `Relationship to “${selectedEntity.title}” created`,
         ),
         type: "success" as const,
       },
@@ -214,8 +214,8 @@ export function CreateRelationshipModal() {
       subtitle={
         selection ? (
           <>
-            {t("System", "From:")} "{selection.text.slice(0, 60)}
-            {selection.text.length > 60 ? "..." : ""}"
+            {t("System", "From:")} “{selection.text.slice(0, 60)}
+            {selection.text.length > 60 ? "…" : ""}”
           </>
         ) : undefined
       }
@@ -228,7 +228,7 @@ export function CreateRelationshipModal() {
         <ModalSearchRow
           value={search}
           onChange={setSearch}
-          placeholder={t("System", "Search entities...")}
+          placeholder={t("System", "Search entities…")}
           ariaLabel={t("System", "Search entities")}
           clearLabel={t("System", "Clear search")}
           autoFocus

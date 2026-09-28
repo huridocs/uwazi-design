@@ -209,7 +209,7 @@ export function ExtractorEditor({
 
   return (
     <SettingsContent component="ExtractorEditor">
-      <SettingsContent.Header path={["Metadata Extraction"]} title={isNew ? "New extractor" : base!.property} onBack={onClose} />
+      <SettingsContent.Header path={["Metadata extraction"]} title={isNew ? "New extractor" : base!.property} onBack={onClose} />
       <SettingsContent.Body>
         <div className="flex flex-col gap-6">
           {/* Config */}
