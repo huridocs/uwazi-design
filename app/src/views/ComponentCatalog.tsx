@@ -3,8 +3,8 @@ import { CatalogEntry } from "../components/catalog/CatalogEntry";
 import { HighlightedText } from "../components/shared/HighlightedText";
 import { StyleGuide } from "../components/catalog/StyleGuide";
 
-// Components rendered directly inside the catalog body (not wrapped in an
-// Isolated* demo helper). Everything that needs scoped atom state or stateful
+// Components rendered directly inside the catalog body (not wrapped in a
+// `*Demo` helper). Everything that needs scoped atom state or stateful
 // interaction lives in `./catalog/demos.tsx` and is imported lower down.
 import { EntityPill } from "../components/shared/EntityPill";
 import { ProvenanceLine } from "../components/shared/ProvenanceLine";
@@ -61,44 +61,44 @@ import {
   SegmentedTabsDemo,
   DrawerTabsDemo,
   MainTabsDemo,
-  IsolatedBeacon,
-  IsolatedViewSwitcher,
-  IsolatedCopyFromPicker,
+  BeaconDemo,
+  ViewSwitcherDemo,
+  CopyFromPickerDemo,
   FileTableDemo,
-  IsolatedSearchBar,
-  IsolatedRelationshipGroupedCard,
-  IsolatedRelationshipRowReference,
-  IsolatedActionBar,
-  IsolatedRefMinimap,
+  SearchBarDemo,
+  RelationshipGroupedCardDemo,
+  RelationshipRowReferenceDemo,
+  ActionBarDemo,
+  RefMinimapDemo,
   FiltersDrawerDemo,
   FacetSectionDemo,
   ToggleChipDemo,
-  IsolatedCollapseControls,
-  IsolatedListInfoRow,
-  IsolatedZoomControl,
-  IsolatedCheckboxes,
-  IsolatedRelationshipRowAggregate,
-  IsolatedRelationshipRowHub,
-  IsolatedRowCheckbox,
-  IsolatedRelationshipsActionBar,
-  IsolatedManageRelationTypesModal,
-  IsolatedSelectControls,
-  IsolatedRelationshipGroupedCardAggregate,
-  IsolatedViewControls,
-  IsolatedYearStrip,
-  IsolatedEventRow,
-  IsolatedDirectionGlyph,
-  IsolatedConnectionGroupCard,
-  IsolatedRelationshipFieldCard,
-  IsolatedInheritedValueChip,
-  IsolatedRelationshipFieldEditor,
-  IsolatedThesaurusPicker,
-  IsolatedSelectionActionsMenu,
-  IsolatedChangeTemplate,
-  IsolatedShareSelection,
-  IsolatedBulkFieldRows,
-  IsolatedRadioGroup,
-  IsolatedDataTable,
+  CollapseControlsDemo,
+  ListInfoRowDemo,
+  ZoomControlDemo,
+  CheckboxesDemo,
+  RelationshipRowAggregateDemo,
+  RelationshipRowHubDemo,
+  RowCheckboxDemo,
+  RelationshipsActionBarDemo,
+  ManageRelationTypesModalDemo,
+  SelectControlsDemo,
+  RelationshipGroupedCardAggregateDemo,
+  ViewControlsDemo,
+  YearStripDemo,
+  EventRowDemo,
+  DirectionGlyphDemo,
+  ConnectionGroupCardDemo,
+  RelationshipFieldCardDemo,
+  InheritedValueChipDemo,
+  RelationshipFieldEditorDemo,
+  ThesaurusPickerDemo,
+  SelectionActionsMenuDemo,
+  ChangeTemplateDemo,
+  ShareSelectionDemo,
+  BulkFieldRowsDemo,
+  RadioGroupDemo,
+  DataTableDemo,
 } from "./catalog/demos";
 
 import { sidebarGroups, allItemIds } from "./catalog/sidebarGroups";
@@ -584,7 +584,7 @@ export function ComponentCatalog({ onReturn }: Props) {
 // Renders <NotificationsDrawer /> internally.
 <Beacon />`}
                 >
-                  <IsolatedBeacon />
+                  <BeaconDemo />
                 </CatalogEntry>
               </div>
             </div>
@@ -619,7 +619,7 @@ export function ComponentCatalog({ onReturn }: Props) {
                   description="Document viewer footer with OCR button and page navigation"
                   code={`<ActionBar numPages={15} onScrollToPage={(page) => {}} />`}
                 >
-                  <IsolatedActionBar />
+                  <ActionBarDemo />
                 </CatalogEntry>
               </div>
 
@@ -654,7 +654,7 @@ export function ComponentCatalog({ onReturn }: Props) {
 {/* Reads referencesAtom + currentPageAtom + activeRefIdAtom.
     Entity-level refs (no page anchor) are filtered out. */}`}
                 >
-                  <IsolatedRefMinimap />
+                  <RefMinimapDemo />
                 </CatalogEntry>
               </div>
             </div>
@@ -672,7 +672,7 @@ export function ComponentCatalog({ onReturn }: Props) {
 
 {/* Uses searchQueryAtom from atoms/filters.ts */}`}
                 >
-                  <IsolatedSearchBar />
+                  <SearchBarDemo />
                 </CatalogEntry>
               </div>
 
@@ -687,7 +687,7 @@ export function ComponentCatalog({ onReturn }: Props) {
 />`}
                 >
                   <div className="w-full max-w-md border border-border/40 rounded-md overflow-hidden">
-                    <IsolatedRelationshipRowReference />
+                    <RelationshipRowReferenceDemo />
                   </div>
                 </CatalogEntry>
               </div>
@@ -708,7 +708,7 @@ export function ComponentCatalog({ onReturn }: Props) {
 </RelationshipGroupedCard>`}
                 >
                   <div className="w-full max-w-md">
-                    <IsolatedRelationshipGroupedCard />
+                    <RelationshipGroupedCardDemo />
                   </div>
                 </CatalogEntry>
               </div>
@@ -787,7 +787,7 @@ export function ComponentCatalog({ onReturn }: Props) {
 
 {/* Badge = countCopyMatchesFor(index, candidate, language) */}`}
                 >
-                  <IsolatedCopyFromPicker />
+                  <CopyFromPickerDemo />
                 </CatalogEntry>
               </div>
 
@@ -834,7 +834,7 @@ sendFill(selection.text);                                    // commits, then di
 <CopyFieldRow match={plan.matches[0]} checked={checked} onChange={setChecked} />`}
                 >
                   <div className="w-full max-w-md space-y-3">
-                    <IsolatedCopyFromPicker step="properties" />
+                    <CopyFromPickerDemo step="properties" />
                     <CopyFieldRow match={CATALOG_COPY_PLAN.matches[0]} checked onChange={() => {}} />
                     <CopyFieldRow
                       match={CATALOG_COPY_PLAN.matches[1]}
@@ -852,7 +852,7 @@ sendFill(selection.text);                                    // commits, then di
                   code={`const { groups } = groupConnections(relationshipFieldsByLanguage.EN, "EN");
 <ConnectionGroupCard group={groups[0]} span="full" />`}
                 >
-                  <IsolatedConnectionGroupCard />
+                  <ConnectionGroupCardDemo />
                 </CatalogEntry>
               </div>
 
@@ -863,7 +863,7 @@ sendFill(selection.text);                                    // commits, then di
                   code={`<RelationshipFieldCard field={relCases} />   {/* inherits Region */}
 <RelationshipFieldCard field={relRights} />  {/* link-only */}`}
                 >
-                  <IsolatedRelationshipFieldCard />
+                  <RelationshipFieldCardDemo />
                 </CatalogEntry>
               </div>
 
@@ -874,7 +874,7 @@ sendFill(selection.text);                                    // commits, then di
                   code={`<RelationCaption relationLabel="Cites" inheritLabel="Region" />
 <InheritedValueChip value={v} inherits relationLabel="Cites" />`}
                 >
-                  <IsolatedInheritedValueChip />
+                  <InheritedValueChipDemo />
                 </CatalogEntry>
               </div>
 
@@ -891,7 +891,7 @@ sendFill(selection.text);                                    // commits, then di
   onChange={setIds}
 />`}
                 >
-                  <IsolatedRelationshipFieldEditor />
+                  <RelationshipFieldEditorDemo />
                 </CatalogEntry>
               </div>
 
@@ -910,7 +910,7 @@ sendFill(selection.text);                                    // commits, then di
 />
 <AddThesaurusValueModal thesaurusName={t.name} existing={labels} onSave={add} onClose={close} />`}
                 >
-                  <IsolatedThesaurusPicker />
+                  <ThesaurusPickerDemo />
                 </CatalogEntry>
               </div>
 
@@ -922,7 +922,7 @@ sendFill(selection.text);                                    // commits, then di
   <ThesaurusPicker multiple chosen={all} mixed={some} coverage={{ counts, of: ids.length }} onToggle={cycle} />
 </BulkFieldRow>`}
                 >
-                  <IsolatedBulkFieldRows />
+                  <BulkFieldRowsDemo />
                 </CatalogEntry>
               </div>
             </div>
@@ -1295,7 +1295,7 @@ sendFill(selection.text);                                    // commits, then di
   disabled={viewMode === "all"}
 />`}
                 >
-                  <IsolatedCollapseControls />
+                  <CollapseControlsDemo />
                 </CatalogEntry>
               </div>
 
@@ -1309,7 +1309,7 @@ sendFill(selection.text);                                    // commits, then di
   rightSlot={<CollapseControls ... />}
 />`}
                 >
-                  <IsolatedListInfoRow />
+                  <ListInfoRowDemo />
                 </CatalogEntry>
               </div>
 
@@ -1345,7 +1345,7 @@ sendFill(selection.text);                                    // commits, then di
   ariaLabel="Select"
 />`}
                 >
-                  <IsolatedCheckboxes />
+                  <CheckboxesDemo />
                 </CatalogEntry>
               </div>
 
@@ -1357,7 +1357,7 @@ sendFill(selection.text);                                    // commits, then di
 
 {/* Bound to zoomAtom */}`}
                 >
-                  <IsolatedZoomControl />
+                  <ZoomControlDemo />
                 </CatalogEntry>
               </div>
 
@@ -1390,7 +1390,7 @@ sendFill(selection.text);                                    // commits, then di
   onDeselectAll={() => {}}
 />`}
                 >
-                  <IsolatedSelectControls />
+                  <SelectControlsDemo />
                 </CatalogEntry>
               </div>
 
@@ -1401,7 +1401,7 @@ sendFill(selection.text);                                    // commits, then di
                   code={`const actions = useSelectionActions({ order: ids, corpus });
 <SelectionActionsMenu actions={actions.filter((a) => a.id !== "edit")} />`}
                 >
-                  <IsolatedSelectionActionsMenu />
+                  <SelectionActionsMenuDemo />
                 </CatalogEntry>
               </div>
 
@@ -1411,7 +1411,7 @@ sendFill(selection.text);                                    // commits, then di
                   description="Change the template of a selection. One decision with a consequence list: pick the target, and per source template it lists what is KEPT (same property name, type and thesaurus), DROPPED (with how many values go, amber) and NEW (empty). Entities already on the target are skipped and counted. The warning line is always mounted; the confirm is seal when values are deleted. Undo restores templates and values; over 200 entities it runs as a Beacon task."
                   code={`<ChangeTemplateDialog ids={[...selection]} corpus={corpus} types={types} onClose={close} />`}
                 >
-                  <IsolatedChangeTemplate />
+                  <ChangeTemplateDemo />
                 </CatalogEntry>
               </div>
 
@@ -1422,7 +1422,7 @@ sendFill(selection.text);                                    // commits, then di
                   code={`<ShareEntityModal open onClose={close} ids={[...selection]} initialFocus="access" />   // Share
 <ShareEntityModal open onClose={close} ids={[...selection]} initialFocus="people" />   // Permissions`}
                 >
-                  <IsolatedShareSelection />
+                  <ShareSelectionDemo />
                 </CatalogEntry>
               </div>
 
@@ -1444,7 +1444,7 @@ sendFill(selection.text);                                    // commits, then di
 
 {/* rel comes from deriveRelationships(references) */}`}
                 >
-                  <IsolatedRelationshipRowAggregate />
+                  <RelationshipRowAggregateDemo />
                 </CatalogEntry>
               </div>
 
@@ -1456,7 +1456,7 @@ sendFill(selection.text);                                    // commits, then di
 
 {/* hub comes from deriveHubs(references) */}`}
                 >
-                  <IsolatedRelationshipRowHub />
+                  <RelationshipRowHubDemo />
                 </CatalogEntry>
               </div>
 
@@ -1475,7 +1475,7 @@ sendFill(selection.text);                                    // commits, then di
   ))}
 </RelationshipGroupedCard>`}
                 >
-                  <IsolatedRelationshipGroupedCardAggregate />
+                  <RelationshipGroupedCardAggregateDemo />
                 </CatalogEntry>
               </div>
 
@@ -1485,7 +1485,7 @@ sendFill(selection.text);                                    // commits, then di
                   description="Presentation toggle for the merged Relationships panel: list / tree / graph / when."
                   code={`<ViewControls />`}
                 >
-                  <IsolatedViewControls />
+                  <ViewControlsDemo />
                 </CatalogEntry>
               </div>
 
@@ -1495,7 +1495,7 @@ sendFill(selection.text);                                    // commits, then di
                   description="The When view's events per year — one bar per year across the span, empty years included. Click narrows to a year, Shift+click extends, the chip clears. The chip's line is always mounted, so choosing a range moves nothing."
                   code={`<YearStrip years={[{ year: 1995, count: 3 }, …]} range={range} onChange={setRange} />`}
                 >
-                  <IsolatedYearStrip />
+                  <YearStripDemo />
                 </CatalogEntry>
               </div>
 
@@ -1505,7 +1505,7 @@ sendFill(selection.text);                                    // commits, then di
                   description="One line of the When spine. The entity's own dates print their label in ink; a connected entity's print its pill (opens the preview), the date's label and the relation that reached it (+N when several). A span prints its years."
                   code={`<EventRow event={event} selected={event.entityId === previewing} />`}
                 >
-                  <IsolatedEventRow />
+                  <EventRowDemo />
                 </CatalogEntry>
               </div>
 
@@ -1517,7 +1517,7 @@ sendFill(selection.text);                                    // commits, then di
 <DirectionGlyph direction="incoming" size="md" />
 <DirectionGlyph direction="both" />`}
                 >
-                  <IsolatedDirectionGlyph />
+                  <DirectionGlyphDemo />
                 </CatalogEntry>
               </div>
 
@@ -1528,7 +1528,7 @@ sendFill(selection.text);                                    // commits, then di
                   code={`<RowCheckbox refIds={[reference.id]} />
 <RowCheckbox refIds={rel.refIds} />`}
                 >
-                  <IsolatedRowCheckbox />
+                  <RowCheckboxDemo />
                 </CatalogEntry>
               </div>
 
@@ -1538,7 +1538,7 @@ sendFill(selection.text);                                    // commits, then di
                   description="Bottom action bar with Edit toggle. View mode shows just Edit; edit mode reveals Create relationship, Manage types, Select all/Deselect all on the left, and selection count + Delete + Cancel + Save on the right."
                   code={`<RelationshipsActionBar />`}
                 >
-                  <IsolatedRelationshipsActionBar />
+                  <RelationshipsActionBarDemo />
                 </CatalogEntry>
               </div>
 
@@ -1550,7 +1550,7 @@ sendFill(selection.text);                                    // commits, then di
 
 {/* Open from anywhere by writing manageRelationTypesOpenAtom */}`}
                 >
-                  <IsolatedManageRelationTypesModal />
+                  <ManageRelationTypesModalDemo />
                 </CatalogEntry>
               </div>
             </div>
@@ -1568,7 +1568,7 @@ sendFill(selection.text);                                    // commits, then di
 
 {/* Width held by Select's steady prop — reserves the widest label. */}`}
                 >
-                  <IsolatedViewSwitcher />
+                  <ViewSwitcherDemo />
                 </CatalogEntry>
               </div>
 
@@ -1987,7 +1987,7 @@ const textColor = typeLabelColor(type.color);`}
 <DataTable density="compact" … />`}
                 >
                   <div className="w-full max-w-md">
-                    <IsolatedDataTable />
+                    <DataTableDemo />
                   </div>
                 </CatalogEntry>
               </div>
@@ -2007,7 +2007,7 @@ const textColor = typeLabelColor(type.color);`}
 />`}
                 >
                   <div className="w-full max-w-md">
-                    <IsolatedRadioGroup />
+                    <RadioGroupDemo />
                   </div>
                 </CatalogEntry>
               </div>

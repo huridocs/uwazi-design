@@ -137,7 +137,7 @@ export function FileTableDemo() {
   );
 }
 
-export function IsolatedSearchBar() {
+export function SearchBarDemo() {
   const [query, setQuery] = useState("");
   return (
     <div className="w-full max-w-sm">
@@ -160,7 +160,7 @@ export function IsolatedSearchBar() {
   );
 }
 
-export function IsolatedBeacon() {
+export function BeaconDemo() {
   // Fresh store → the demo runs its own seeded import + notifications and
   // ticks to completion independently of the live navbar instance.
   const store = createStore();
@@ -173,7 +173,7 @@ export function IsolatedBeacon() {
   );
 }
 
-export function IsolatedRelationshipGroupedCard() {
+export function RelationshipGroupedCardDemo() {
   const store = createStore();
   return (
     <Provider store={store}>
@@ -196,7 +196,7 @@ export function IsolatedRelationshipGroupedCard() {
   );
 }
 
-export function IsolatedRelationshipRowReference() {
+export function RelationshipRowReferenceDemo() {
   // Find an entity-level ref (no sourceSelection) so the "no text anchor"
   // variant is shown alongside the standard text-anchored one.
   const entityLevelRef = references.find((r) => !r.sourceSelection) ?? references[0];
@@ -262,7 +262,7 @@ function ZoomedRowDemo({
   );
 }
 
-export function IsolatedActionBar() {
+export function ActionBarDemo() {
   const store = createStore();
   return (
     <Provider store={store}>
@@ -277,7 +277,7 @@ export function IsolatedActionBar() {
 
 /** Multi-inheritance: the "People involved" connection (country + role columns)
  *  rendered as one table. */
-export function IsolatedConnectionGroupCard() {
+export function ConnectionGroupCardDemo() {
   const store = createStore();
   const { groups } = groupConnections(relationshipFieldsByLanguage.EN, "EN");
   return (
@@ -293,7 +293,7 @@ export function IsolatedConnectionGroupCard() {
 
 /** Single-inheritance ("Related cases" → Region) and link-only ("Rights
  *  invoked") on the same lightweight card. */
-export function IsolatedRelationshipFieldCard() {
+export function RelationshipFieldCardDemo() {
   const store = createStore();
   const fields = relationshipFieldsByLanguage.EN;
   const single = fields.find((f) => f.id === "rel-cases")!;
@@ -310,7 +310,7 @@ export function IsolatedRelationshipFieldCard() {
 
 /** One connected-entity row: pill + inherited value, plus the missing-value
  *  (em-dash) state. */
-export function IsolatedInheritedValueChip() {
+export function InheritedValueChipDemo() {
   const store = createStore();
   const field = relationshipFieldsByLanguage.EN.find((f) => f.id === "rel-cases")!;
   const resolved = resolveRelationshipField(field, "EN");
@@ -328,16 +328,16 @@ export function IsolatedInheritedValueChip() {
 
 /** The connection editor — add/remove entities; inherited previews are
  *  read-only. Stateful so the catalog demo is interactive. */
-export function IsolatedRelationshipFieldEditor() {
+export function RelationshipFieldEditorDemo() {
   const store = createStore();
   return (
     <Provider store={store}>
-      <RelationshipFieldEditorDemo />
+      <RelationshipFieldEditorDemoBody />
     </Provider>
   );
 }
 
-function RelationshipFieldEditorDemo() {
+function RelationshipFieldEditorDemoBody() {
   const { groups } = groupConnections(relationshipFieldsByLanguage.EN, "EN");
   const g = groups[0];
   const [ids, setIds] = useState<string[]>(g.rows.map((r) => r.entityId));
@@ -355,7 +355,7 @@ function RelationshipFieldEditorDemo() {
   );
 }
 
-export function IsolatedRefMinimap() {
+export function RefMinimapDemo() {
   const store = createStore();
   // `RefMinimap` uses `position: absolute` with top/bottom/right offsets so
   // it can sit alongside the real document viewer. The catalog demo needs a
@@ -535,7 +535,7 @@ export function FacetSectionDemo() {
   );
 }
 
-export function IsolatedCollapseControls() {
+export function CollapseControlsDemo() {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-6">
@@ -554,7 +554,7 @@ export function IsolatedCollapseControls() {
   );
 }
 
-export function IsolatedListInfoRow() {
+export function ListInfoRowDemo() {
   const store = createStore();
   return (
     <Provider store={store}>
@@ -576,7 +576,7 @@ export function IsolatedListInfoRow() {
   );
 }
 
-export function IsolatedZoomControl() {
+export function ZoomControlDemo() {
   const store = createStore();
   return (
     <Provider store={store}>
@@ -585,7 +585,7 @@ export function IsolatedZoomControl() {
   );
 }
 
-export function IsolatedCheckboxes() {
+export function CheckboxesDemo() {
   const [a, setA] = useState(false);
   const [b, setB] = useState(true);
   return (
@@ -606,7 +606,7 @@ export function IsolatedCheckboxes() {
   );
 }
 
-export function IsolatedRelationshipRowAggregate() {
+export function RelationshipRowAggregateDemo() {
   const rels = deriveRelationships(references);
   if (rels.length === 0) return null;
   // Find a bidirectional aggregate (refs in both directions collapsed into
@@ -638,7 +638,7 @@ export function IsolatedRelationshipRowAggregate() {
   );
 }
 
-export function IsolatedRelationshipRowHub() {
+export function RelationshipRowHubDemo() {
   const hubs = deriveHubs(references);
   if (hubs.length === 0) return null;
   return (
@@ -656,7 +656,7 @@ export function IsolatedRelationshipRowHub() {
   );
 }
 
-export function IsolatedRowCheckbox() {
+export function RowCheckboxDemo() {
   const someRefIds = references.slice(0, 3).map((r) => r.id);
   return (
     <div className="flex flex-col gap-3">
@@ -664,25 +664,25 @@ export function IsolatedRowCheckbox() {
         <p className="text-meta text-ink-muted uppercase tracking-wide mb-1.5">
           Edit mode off — checkbox hidden, row layout unchanged
         </p>
-        <RowCheckboxDemo editMode={false} preselectedRefIds={[]} />
+        <RowCheckboxDemoBody editMode={false} preselectedRefIds={[]} />
       </div>
       <div>
         <p className="text-meta text-ink-muted uppercase tracking-wide mb-1.5">
           Edit mode on — checkbox visible, none selected
         </p>
-        <RowCheckboxDemo editMode preselectedRefIds={[]} />
+        <RowCheckboxDemoBody editMode preselectedRefIds={[]} />
       </div>
       <div>
         <p className="text-meta text-ink-muted uppercase tracking-wide mb-1.5">
           Edit mode on — aggregate row's checkbox covers every backing ref; toggles them as a set
         </p>
-        <RowCheckboxDemo editMode preselectedRefIds={someRefIds} />
+        <RowCheckboxDemoBody editMode preselectedRefIds={someRefIds} />
       </div>
     </div>
   );
 }
 
-function RowCheckboxDemo({
+function RowCheckboxDemoBody({
   editMode,
   preselectedRefIds,
 }: {
@@ -701,7 +701,7 @@ function RowCheckboxDemo({
   );
 }
 
-export function IsolatedRelationshipsActionBar() {
+export function RelationshipsActionBarDemo() {
   const store = createStore();
   return (
     <Provider store={store}>
@@ -716,16 +716,16 @@ export function IsolatedRelationshipsActionBar() {
   );
 }
 
-export function IsolatedManageRelationTypesModal() {
+export function ManageRelationTypesModalDemo() {
   const store = createStore();
   return (
     <Provider store={store}>
-      <ManageRelationTypesModalDemo />
+      <ManageRelationTypesModalDemoBody />
     </Provider>
   );
 }
 
-function ManageRelationTypesModalDemo() {
+function ManageRelationTypesModalDemoBody() {
   return (
     <div className="flex flex-col gap-2">
       <ManageModalOpenButton />
@@ -750,7 +750,7 @@ function ManageModalOpenButton() {
   );
 }
 
-export function IsolatedSelectControls() {
+export function SelectControlsDemo() {
   return (
     <div className="flex flex-col gap-3">
       <SelectControlsRow label="Empty list (both disabled)">
@@ -802,7 +802,7 @@ function SelectControlsRow({
 }
 
 
-export function IsolatedRelationshipGroupedCardAggregate() {
+export function RelationshipGroupedCardAggregateDemo() {
   const store = createStore();
   const rels = deriveRelationships(references);
   if (rels.length === 0) return null;
@@ -822,7 +822,7 @@ export function IsolatedRelationshipGroupedCardAggregate() {
   );
 }
 
-export function IsolatedViewControls() {
+export function ViewControlsDemo() {
   const store = createStore();
   return (
     <Provider store={store}>
@@ -831,7 +831,7 @@ export function IsolatedViewControls() {
   );
 }
 
-export function IsolatedDirectionGlyph() {
+export function DirectionGlyphDemo() {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-3">
@@ -850,7 +850,7 @@ export function IsolatedDirectionGlyph() {
   );
 }
 
-export function IsolatedRadioGroup() {
+export function RadioGroupDemo() {
   const [value, setValue] = useState("cards");
   return (
     <RadioGroup
@@ -867,7 +867,7 @@ export function IsolatedRadioGroup() {
   );
 }
 
-export function IsolatedDataTable() {
+export function DataTableDemo() {
   const [selected, setSelected] = useState<string | null>("r2");
   const rows = [
     { id: "r1", name: "Court Case", count: 18 },
@@ -891,7 +891,7 @@ export function IsolatedDataTable() {
 
 /** The Library view switcher, holding its own value — the catalog's copy is
  *  live, so the constant-width claim is checkable by switching views in it. */
-export function IsolatedViewSwitcher() {
+export function ViewSwitcherDemo() {
   const [view, setView] = useState("cards");
   return <ViewSwitcher value={view} onChange={setView} />;
 }
@@ -899,7 +899,7 @@ export function IsolatedViewSwitcher() {
 /** The Copy From source picker, in a bounded box (it fills its positioned
  *  parent — in the app, the metadata pane). Live: the type/any toggle and the
  *  match-count badges are computed from real entities. */
-export function IsolatedCopyFromPicker({ step = "source" }: { step?: "source" | "properties" }) {
+export function CopyFromPickerDemo({ step = "source" }: { step?: "source" | "properties" }) {
   const countries = entities.filter((e) => e.typeId === "country");
   return (
     <div className="relative h-[34rem] w-full overflow-hidden rounded-lg bg-vellum">
@@ -917,7 +917,7 @@ export function IsolatedCopyFromPicker({ step = "source" }: { step?: "source" | 
 /** ThesaurusPicker, live: a multiselect over the Sample's "Violation types"
  *  (nested groups), with "Add value" opening the one-field modal. Local state
  *  only — the catalog doesn't write the thesauri store. */
-export function IsolatedThesaurusPicker() {
+export function ThesaurusPickerDemo() {
   const values = seedThesaurusValues.t1;
   const [extra, setExtra] = useState<string[]>([]);
   // Keys are value ids; the extras made here get ids of their own.
@@ -964,7 +964,7 @@ export function IsolatedThesaurusPicker() {
 
 /** BulkFieldRow, live: a mixed text field that turns "Will change" when typed
  *  in, and a tri-state thesaurus list with coverage. Revert returns each. */
-export function IsolatedBulkFieldRows() {
+export function BulkFieldRowsDemo() {
   const [text, setText] = useState<string | null>(null);
   const [edit, setEdit] = useState<{ add: string[]; remove: string[] }>({ add: [], remove: [] });
   const base: Record<string, number> = { "t2-1": 12, "t2-4": 4 };
@@ -1018,7 +1018,7 @@ export function IsolatedBulkFieldRows() {
 }
 
 /** SelectionActionsMenu with the selection's actions (inert here). */
-export function IsolatedSelectionActionsMenu() {
+export function SelectionActionsMenuDemo() {
   return (
     <div className="pt-48">
       <SelectionActionsMenu
@@ -1036,7 +1036,7 @@ export function IsolatedSelectionActionsMenu() {
 
 /** ChangeTemplateDialog over three Sample entities (a Country and two Court
  *  Cases). Opens a live dialog; confirming writes to the catalog's session. */
-export function IsolatedChangeTemplate() {
+export function ChangeTemplateDemo() {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -1049,7 +1049,7 @@ export function IsolatedChangeTemplate() {
 }
 
 /** ShareEntityModal over three Sample entities, as Share and as Permissions. */
-export function IsolatedShareSelection() {
+export function ShareSelectionDemo() {
   const [focus, setFocus] = useState<"access" | "people" | null>(null);
   return (
     <>
@@ -1074,7 +1074,7 @@ const DEMO_YEARS = [
   { year: 2001, count: 0 }, { year: 2002, count: 1 }, { year: 2003, count: 0 }, { year: 2004, count: 1 },
 ];
 
-export function IsolatedYearStrip() {
+export function YearStripDemo() {
   const [range, setRange] = useState<[number, number] | null>([1995, 1996]);
   return <YearStrip years={DEMO_YEARS} range={range} onChange={setRange} />;
 }
@@ -1087,7 +1087,7 @@ const demoEvent = (entityId: string, own: boolean, label: string, iso: string, v
   date: { prop: label, label, t: Date.parse(`${iso}T00:00:00Z`), ...(end ? { end: Date.parse(`${end}T00:00:00Z`) } : {}) },
 });
 
-export function IsolatedEventRow() {
+export function EventRowDemo() {
   const store = createStore();
   return (
     <Provider store={store}>
