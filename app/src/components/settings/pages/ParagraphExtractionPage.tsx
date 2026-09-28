@@ -1,3 +1,5 @@
+import { useAtomValue } from "jotai";
+import { breakpointAtom } from "../../../atoms/viewport";
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
@@ -9,6 +11,7 @@ import { seedParagraphJobs, type SettingsParagraphJob } from "../../../data/sett
 
 export function ParagraphExtractionPage() {
   const [editing, setEditing] = useState<SettingsParagraphJob | "new" | null>(null);
+  const mobile = useAtomValue(breakpointAtom) === "mobile";
 
   if (editing) return <ParagraphJobEditor job={editing} onClose={() => setEditing(null)} />;
 
@@ -23,6 +26,23 @@ export function ParagraphExtractionPage() {
     },
   ];
 
+  // Phones: the three columns needed a 29.5rem table (472px) and scrolled
+  // sideways with no sign of it (M26), cut at "PARAGR…". One column instead,
+  // with the template, its status and the count on one line.
+  const mobileColumns: Column<SettingsParagraphJob>[] = [
+    {
+      id: "job",
+      header: "Template",
+      cell: (j) => (
+        <span className="flex items-center gap-2 w-full min-w-0">
+          <span className="flex-1 min-w-0 font-medium text-ink truncate">{j.template}</span>
+          <StatusPill status={j.status} />
+          <span className="shrink-0 text-ink-secondary tabular-nums">{j.paragraphs.toLocaleString()}</span>
+        </span>
+      ),
+    },
+  ];
+
   return (
     <SettingsContent>
       <SettingsContent.Header title="Paragraph Extraction" />
@@ -30,7 +50,7 @@ export function ParagraphExtractionPage() {
         <p className="text-xs text-ink-tertiary mb-4">
           Split documents into paragraph-level records for fine-grained search and analysis.
         </p>
-        <Table columns={columns} data={seedParagraphJobs} getRowId={(j) => j.id} onRowClick={(j) => setEditing(j)} />
+        <Table columns={mobile ? mobileColumns : columns} data={seedParagraphJobs} getRowId={(j) => j.id} onRowClick={(j) => setEditing(j)} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <Button variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
