@@ -37,40 +37,39 @@ All components are bound to variables — switching a frame to Dark mode updates
 │   │   ├── components/
 │   │   │   ├── layout/            # Navbar, Beacon + NotificationsDrawer, SplitView, AdaptiveSplitView,
 │   │   │   │                      # MainTabs, DrawerTabs, SegmentedTabs, Breadcrumb, DocMeta,
-│   │   │   │                      # ToolsSidebar, ToolsActionBar,
+│   │   │   │                      # ToolsActionBar,
 │   │   │   │                      # MobileBottomSheet, MobileActionMenu, MobileNavDrawer
 │   │   │   ├── viewer/            # DocumentViewer, PageHighlights, FloatingMenu, ActionBar, RefMinimap, HoverExpand
 │   │   │   ├── relationships/     # The merged Relationships surface: ReferencePanel, RelationshipsPanelBody,
 │   │   │   │                      # RelationshipRow + rows/ (AggregateRow, HubRow, ReferenceRow, RowCheckbox),
 │   │   │   │                      # RelationshipGroupedCard, RelationshipsTreeView/TreeBranch,
 │   │   │   │                      # RelationshipsGraphView, RelationshipsActionBar, RelationshipsDrawerSection,
-│   │   │   │                      # RelationshipsFilterDrawer, SearchBar, ViewControls, GroupByControl,
-│   │   │   │                      # SortControl, ZoomControl, DirectionGlyph, ActiveFilterChips,
-│   │   │   │                      # EntityOverlay, HighlightCard, RelatedDocCard, ToCPanel, TemplateStructure,
-│   │   │   │                      # MetadataDrawerContent, DrawerActionBar, IxSuggestionsCard,
+│   │   │   │                      # RelationshipsFilterDrawer, RelationshipsToolbar, SearchBar, ViewControls,
+│   │   │   │                      # ZoomControl, FiltersRow (CollapseControls), DirectionGlyph, ActiveFilterChips,
+│   │   │   │                      # EntityOverlay, MobileOverlayStack, HighlightCard, RelatedDocCard, ToCPanel,
+│   │   │   │                      # MetadataDrawerContent, DrawerActionBar,
 │   │   │   │                      # CreateRelationshipModal, ManageRelationTypesModal
 │   │   │   ├── files/             # FileTable, FileDrawer, FileDetailEditor, FileViewerModal, DocumentGroupCard,
 │   │   │   │                      # DrawerFilesBody, AddFileModal, AddFileDropArea
 │   │   │   ├── metadata/          # MetadataCard, MetadataRecord, ConnectionGroupCard,
-│   │   │   │                      # RelationshipFieldCard/Editor, InheritedValueChip, ProvenanceTrail
+│   │   │   │                      # RelationshipFieldCard/Editor, InheritedValueChip (includes ProvenanceTrail)
 │   │   │   ├── import-csv/        # ImportCSVLayout, ImportListView, ImportDetailView, ImportTable,
 │   │   │   │                      # EntitiesTable, IssuesTable, ImportEmptyState, NewImportModal
 │   │   │   ├── shared/            # List/filter primitives (ListInfoRow, ListCardRow, FiltersButton, FiltersDrawer,
 │   │   │   │                      # FacetSection, ActiveFilterChip, Checkbox, SelectControls, FadeTruncate);
 │   │   │   │                      # elements (EntityPill, PageTag, CountBadge, ViewButton); feedback (ConfirmDialog,
 │   │   │   │                      # UwaziLoader, StatusBadge, ProgressBar, StatsCard, Stepper, AlertBanner)
-│   │   │   └── catalog/           # CatalogEntry, StyleGuide
+│   │   │   ├── catalog/           # CatalogEntry, StyleGuide
 │   │   │   ├── library/           # The Library view: EntityCard, EntityThumbnail, LibraryFilters,
-│   │   │   │                      # ActiveFiltersSheet/Button, ActiveSearchChip, DisplayMenu, TimeBrush,
-│   │   │   │                      # BucketBreakdown, LibraryTimelineView, LibraryMapView, TimeSpine
-│   │   │   │                      # (the one shared chronology), MatchOrigin, RecentSearches,
+│   │   │   │                      # ActiveFiltersSheet/Button, ActiveSearchChip, DisplayMenu, LibraryMapView,
+│   │   │   │                      # MatchOrigin, RecentSearches,
 │   │   │   │                      # LibraryClusterDrawer, EntityDrawerPreview, SearchTipsPopover,
 │   │   │   │                      # ResultsSnippets/ (ResultsBody, ResultsMainView, EntityResultCard)
 │   │   │   ├── share/             # ShareEntityModal
 │   │   │   ├── search/            # Document search: DocumentSearchBody, PageSpine
 │   │   │   ├── settings/          # Settings clone: SettingsContent/Nav/Table/Button/Field/RowActions,
 │   │   │   │                      # StatusPill, pages/ (18 pages incl. TemplateEditor, ThesaurusEditor)
-│   │   │   ├── agent/             # "Bert" assistant: AgentModal, BertMark
+│   │   │   ├── agent/             # "Bert" assistant: AgentModal (includes BertMark)
 │   │   ├── data/                  # Mock data (entities, document, references, files, metadata, toc, imports,
 │   │   │                          # suggestions, settings) + cejil/ (the full published corpus, lazy JSON)
 │   │   ├── stories/               # Storybook stories for shared primitives
@@ -85,8 +84,9 @@ All components are bound to variables — switching a frame to Dark mode updates
 ├── images/                        # Logos, screenshots, assets
 │   └── screens/                   # Prototype screenshots (prototype/ + import_csv/)
 ├── ui/                            # Legacy design files
-│   └── archive/pen-originals/     # Archived .pen files (Pencil format)
-├── docs/                          # Rebrand guides & design documentation
+│   └── archive/                   # Archived .pen files (Pencil format), March-era design notes,
+│                                  # the tokens PR body
+├── docs/                          # Uwazi domain notes, the control inventory, design proposals
 ├── CLAUDE.md                      # Working handoff: decisions and patterns not obvious from the code
 └── README.md
 ```
@@ -181,10 +181,9 @@ Tailwind v4 + Storybook), readable on disk or in-app under the catalog's **Hando
 | `PATTERNS.md` | The a11y, motion, and style rules to preserve, plus a review checklist |
 | `COMPONENT-INVENTORY.md` | Prototype ↔ uwazi component pairings, difficulty-rated, with a migration order |
 | `PILOT-COMPONENTS.md` | Per-component build sheets for the six Phase-2 pilots |
-| `PR-BODY.md` | Draft PR description for the tokens phase |
 
-Keep it in sync when tokens, patterns, or data shapes change — it's the artifact the frontend team
-actually reads.
+Keep it in sync when tokens, patterns or data shapes change. The frontend team reads these files,
+not the prototype's code.
 
 ## Branding
 

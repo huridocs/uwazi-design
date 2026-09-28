@@ -28,7 +28,7 @@ Both being Tailwind v4 means the token layer transfers nearly verbatim. The gap 
 this for?"). The migration is: add the semantic layer, move components onto it,
 retire the ramps.
 
-## The two-layer rule (the thing that bites)
+## The two-layer rule
 
 1. **Real vars** (`--text-primary`, `--bg-surface`, `--border-primary`…) — the only
    names to use in raw CSS, `style={{}}`, SVG `fill`/`stroke`, `color-mix()`.
@@ -118,7 +118,7 @@ Light values are unchanged; they already clear their floors.
 ### Radii (opt-in, Phase 3 — see the commented block in the CSS)
 
 `xs 2 · sm 3 · base 4 · md 6 · lg 8 · xl 10 · 2xl 12 · 3xl 14 · 4xl 16` (px).
-Half Tailwind's ramp — "soft but not pillowy". Global change; own PR.
+About half Tailwind's ramp. Global change; own PR.
 
 ### Gutter & stack (opt-in — see the commented block in the CSS)
 
@@ -129,9 +129,9 @@ Half Tailwind's ramp — "soft but not pillowy". Global change; own PR.
 | `--spacing-gutter-rail` | `gutter-host-rail` | 1.25rem (20px) | navigation rails, centred modals |
 | `--spacing-stack` | `gap-stack`, `py-stack` | 0.5rem (8px) | vertical step between stacked rows |
 
-The prototype had three gutters in circulation (`px-3`, `px-3.5`, `px-4`), chosen
-row by row, so a tab strip and the body under it disagreed by 2–4px. Uwazi V2
-has the same shape of problem. The fix is structural, not a value: see the rule below.
+When each row picks its own side padding, a tab strip and the body under it
+end up 2–4px apart. Uwazi V2 has the same problem. The pane sets the gutter once
+and rows carry none: see the rule below.
 
 ## Style rules that come with the tokens
 

@@ -1,4 +1,4 @@
-# Typography — what makes the prototype look the way it does
+# Typography
 
 Everything type-related, extracted for huridocs/uwazi. Three parts: the fonts
 themselves (and the one gap you must close), the rendering setup, and the type
@@ -182,7 +182,7 @@ file said, because the app was measured and the app won:
   had been using the card-title recipe for it — a 14px bold word naming an
   input, two full steps above every other field label in the app.
 
-### Rules that carry the feel
+### Rules
 
 - **Letter-spacing exists ONLY on uppercase labels** (`tracking-wide` /
   `tracking-wider`, 90 uses). Prose and mixed-case UI are never tracked —

@@ -2,17 +2,16 @@
 
 Everything `app/src/index.css` (plus `index.html`) sets globally. Tokens are
 covered by `uwazi-semantic-tokens.css` + `TOKENS-MAPPING.md`, the type layer by
-`TYPOGRAPHY.md` — this is the rest: the resets, chrome, and defaults that make
-the prototype feel the way it does before a single component renders. In the
+`TYPOGRAPHY.md`. This file covers the rest: the resets, app chrome and
+defaults that apply before any component renders. In the
 uwazi repo, scope selectors to `.tw-content` where they'd otherwise leak into
 legacy screens.
 
-## 1. Radii ramp — brand-defining, don't skip
+## 1. Radii ramp
 
-Tailwind's radius scale is overridden globally, ~½ the default ramp: visible
-softness without going pillowy. Every `rounded-*` utility in every component
-assumes THESE values — copying components without this block makes everything
-too round.
+Tailwind's radius scale is overridden globally at about half the default ramp. Every `rounded-*` utility in every component
+assumes these values; copying components without this block makes every
+corner too round.
 
 ```css
 @layer theme {
@@ -124,10 +123,10 @@ Components use logical utilities (`text-start`, `-end-0.5`, `ps-*`/`pe-*`) and
 `<bdi dir="ltr">` around composed numeric runs ("p.15 · 2×") so the shell flips
 from `dir` alone.
 
-## 7. Motion — the signature easings
+## 7. Motion: easing curves
 
-Component animations live with their components, but the FEEL is carried by two
-shared curves and a rule:
+Component animations live with their components. They share two curves and
+one rule:
 
 - **Springy settle** — `cubic-bezier(0.34, 1.4, 0.5, 1)` (and the close
   variants `1.45`, `(0.22, 1, 0.36, 1)`): slight overshoot, used for the

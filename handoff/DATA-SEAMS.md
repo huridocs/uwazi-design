@@ -11,13 +11,14 @@ Companion files: [`TOKENS-MAPPING.md`](./TOKENS-MAPPING.md) (styles),
 `app/src/data/references.ts`, `app/src/utils/relationships.ts`,
 `app/src/data/metadata.ts`, `app/src/utils/{inheritance,chainTraversal}.ts`.
 
-## 1. One record, three projections
+## 1. The stored record and the two derived shapes
 
 Uwazi v2's model is a single `Relationship { from, to, type }` where each
 pointer may carry a text anchor (`{ file, selections[], text }`). There is no
-separate "references" collection — a text reference and an entity-to-entity
-edge are **the same record, viewed differently**. The prototype keeps that
-principle and derives everything else at runtime:
+separate "references" collection: a text reference and an entity-to-entity
+edge are the same record. The prototype stores one record, `Reference`, and
+derives two shapes from it at render time. CLAUDE.md's "Reference vs
+Relationship" section describes the first two rows; hubs are the third:
 
 | Layer | Prototype shape | Stored? | Uwazi v2 equivalent |
 |---|---|---|---|
@@ -104,14 +105,14 @@ first ref). If per-member roles matter for the port, the data layer grows a
 `role` on the member — the UI shell (`RelationshipRow kind="hub"`) already
 renders members individually and won't need restructuring.
 
-## 5. Where each projection surfaces in the UI
+## 5. Where each shape appears in the UI
 
 | Surface | Consumes | Detail |
 |---|---|---|
 | List view rows | `Reference[]` | one row per evidence: snippet + page tag |
 | Tree view leaves | `Relationship[]` | aggregate cards, inline-expand → backing refs |
 | Graph nodes | `Relationship[]` | with `includeHubMembers: true` |
-| Header counter | `deriveRelationships(filtered).length` | so list and tree numbers agree |
+| Tab count | `references.length` | the Relationships tab is the only place this surface prints a number |
 | Evidence badge | `relationship.evidenceCount` | |
 | Target-side quote | `ref.targetSelection` | second warm/italic snippet ("target p.N") |
 
@@ -242,10 +243,10 @@ sibling to Filters (auto-switches with the query), hits group under
 (click → the doc at that page), and the match mark is layout-neutral
 (`px-0.5 -mx-0.5`, weight inherited) so highlighting never re-wraps a line.
 
-### Two surfaces, one engine
+### Both search surfaces use one snippet builder
 
-The same snippet engine feeds **both** search surfaces, which is the part worth
-preserving:
+The same snippet builder feeds both search surfaces. Keep it that way, so the
+two can't disagree about what matched:
 
 | Surface | Prototype | v2 counterpart |
 |---|---|---|

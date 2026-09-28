@@ -102,7 +102,7 @@ prototype's `data/entities` lookup.
 const isPale = luminance(color) > 0.6;
 const textColor = isPale
   ? "var(--text-primary)"                                  // pale → ink
-  : `color-mix(in srgb, ${color} 70%, var(--text-primary))`; // saturated → 70% toward ink
+  : `color-mix(in srgb, ${color} var(--label-mix), var(--text-primary))`; // saturated → 55% hue, rest ink
 ```
 
 The dot keeps the true colour; the **label** is mixed toward `--text-primary` so
@@ -221,8 +221,8 @@ generic):
 | Layout | CSS grid per row (`gridTemplateColumns` from `column.width`), **not** `<table>` — matches the prototype's grid-table convention |
 
 **Keep** — the clickable-row shell (`PATTERNS.md` §1.1). The real tanstack rows
-put the interaction on the row element; the 2026 rule is the opposite and it's
-non-negotiable:
+put the interaction on the row element; the prototype does the opposite, because a row
+that is a button hides its cells' controls from assistive tech:
 
 - The row `<div>` is `role="row"` with a plain mouse `onClick` — **never**
   `role="button"` on a row that contains cells' own controls.
