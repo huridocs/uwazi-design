@@ -1,5 +1,11 @@
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { scopedReferencesAtom, scrollToHighlightAtom, scrollToRefAtom, activeRefIdAtom, activeDrawerTabAtom, expandGroupForRefAtom } from "../../atoms/references";
+import {
+  scopedReferencesAtom,
+  scrollToHighlightAtom,
+  scrollToRefAtom,
+  activeRefIdAtom,
+  expandGroupForRefAtom,
+} from "../../atoms/references";
 import { collapseAllSignalAtom, searchQueryAtom, activeClusterRefIdsAtom } from "../../atoms/filters";
 import { currentPageAtom } from "../../atoms/selection";
 import { activePrimaryGroupIdAtom } from "../../atoms/files";
@@ -8,6 +14,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Reference } from "../../data/references";
 import { FileText, Layers } from "lucide-react";
 import { buildMatcher } from "../../utils/searchQuery";
+import { activeDrawerTabAtom } from "../../atoms/entityDrawer";
 
 interface RefMinimapProps {
   numPages: number;

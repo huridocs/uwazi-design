@@ -4,7 +4,6 @@ import {
   scrollToRefAtom,
   scrollToHighlightAtom,
   activeRefIdAtom,
-  activeDrawerTabAtom,
   expandGroupForRefAtom,
 } from "../../atoms/references";
 import { collapseAllSignalAtom } from "../../atoms/filters";
@@ -13,6 +12,7 @@ import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { getEntity, getEntityType } from "../../data/entities";
 import { TextSelection } from "../../data/references";
 import { useEffect, useState } from "react";
+import { activeDrawerTabAtom } from "../../atoms/entityDrawer";
 
 interface PageHighlightsProps {
   page: number;

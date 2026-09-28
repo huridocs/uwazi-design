@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { scopedReferencesAtom, activeDrawerTabAtom } from "../../atoms/references";
+import { scopedReferencesAtom } from "../../atoms/references";
 import { filesAtom } from "../../atoms/files";
 import { DrawerTabs } from "../layout/DrawerTabs";
 import { DrawerActionBar } from "./DrawerActionBar";
@@ -17,6 +17,7 @@ import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { saveEntityEditAtom } from "../../atoms/entityChanges";
 import { languageAtom } from "../../atoms/language";
 import { MetadataEditBody } from "../../views/MetadataView";
+import { activeDrawerTabAtom } from "../../atoms/entityDrawer";
 
 const baseDrawerTabs = [
   { id: "metadata", label: t("System", "Metadata") },

@@ -2,7 +2,7 @@ import { useMemo, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Search, X } from "lucide-react";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
-import { activeDrawerTabAtom, docSearchQueryAtom } from "../../atoms/references";
+import { docSearchQueryAtom } from "../../atoms/references";
 import { languageAtom } from "../../atoms/language";
 import { dataSourceAtom } from "../../atoms/dataSource";
 import { scrollToPageAtom } from "../../atoms/selection";
@@ -14,6 +14,7 @@ import { HighlightedText } from "../shared/HighlightedText";
 import { SectionLabel } from "../shared/SectionLabel";
 import { BorrowedDocLine } from "../library/BorrowedDocLine";
 import { PageSpine } from "./PageSpine";
+import { activeDrawerTabAtom } from "../../atoms/entityDrawer";
 
 function Centered({ children }: { children: ReactNode }) {
   return (

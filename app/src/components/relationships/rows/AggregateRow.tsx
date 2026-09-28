@@ -3,7 +3,6 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   activeAggregateIdAtom,
   activeRefIdAtom,
-  activeDrawerTabAtom,
   previewEntityIdAtom,
 } from "../../../atoms/references";
 import { activeClusterRefIdsAtom, searchQueryAtom } from "../../../atoms/filters";
@@ -16,6 +15,7 @@ import { DirectionGlyph } from "../DirectionGlyph";
 import { RowCheckbox } from "./RowCheckbox";
 import { RowShell } from "./RowShell";
 import { EvidenceBadge, RowChevron, RowEntityPill } from "./RowParts";
+import { activeDrawerTabAtom } from "../../../atoms/entityDrawer";
 
 export interface AggregateRowProps {
   rel: Relationship;

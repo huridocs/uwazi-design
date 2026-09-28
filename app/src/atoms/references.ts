@@ -123,9 +123,6 @@ export const scrollToHighlightAtom = atom<string | null>(null);
 /** ID of a reference whose highlight was just clicked — panel should scroll to it */
 export const scrollToRefAtom = atom<string | null>(null);
 
-/** Active drawer tab — shared so highlight clicks can switch to "references" */
-export const activeDrawerTabAtom = atom("metadata");
-
 /** The entity-view drawer's Search-tab query. Lifted out of the tab body so the
  *  action bar's "Search tips" popover can drop an example straight into it. */
 export const docSearchQueryAtom = atom("");
