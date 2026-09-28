@@ -197,7 +197,10 @@ export function ImportDetailView({ entry, onBack }: ImportDetailViewProps) {
 
       {/* Table */}
       {hasTable && (
-        <div className="flex flex-col min-h-0">
+        // Phones: the table keeps its natural height (`shrink-0`) and the whole
+        // detail scrolls. As a shrinking scroll lane under the stats it had no
+        // height left on a phone and showed its header and footer only.
+        <div className="flex flex-col shrink-0 md:shrink md:min-h-0">
           {entry.issues.length > 0 ? (
             <IssuesTable issues={entry.issues} />
           ) : isCompleted && entry.entities > 0 ? (

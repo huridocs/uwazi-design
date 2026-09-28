@@ -69,7 +69,9 @@ export function ImportListView({
           <>
             {/* Stats breakdown row */}
             <div
-              className="flex items-center gap-3 md:gap-6 px-4 h-10 shrink-0 text-xs text-ink-tertiary overflow-x-auto no-scrollbar [&>*]:shrink-0"
+              // Phones wrap the four stats onto a second line; a hidden-scrollbar
+              // strip cut "Failed" off at the edge with no sign it was there (M10).
+              className="flex flex-wrap md:flex-nowrap items-center gap-x-3 gap-y-1 md:gap-6 px-4 py-2 md:py-0 md:h-10 shrink-0 text-xs text-ink-tertiary md:overflow-x-auto no-scrollbar [&>*]:shrink-0"
               style={{ borderBottom: "1px solid var(--border-primary)" }}
             >
               <Stat count={imports.length} label="Total imports" tone="ink" />

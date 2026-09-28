@@ -1,16 +1,24 @@
+import { useAtomValue } from "jotai";
 import { Eye } from "lucide-react";
 import type { CreatedEntity } from "../../data/imports";
 import { useNotify } from "../../hooks/useNotify";
 import { formatShortDate } from "../../utils/dates";
+import { breakpointAtom } from "../../atoms/viewport";
 
 interface EntitiesTableProps {
   entities: CreatedEntity[];
 }
 
 const cols = "1fr 10rem 5.625rem 2.75rem";
+/** Phones: no Template column. Its fixed 10rem left the title about 14px of
+ *  a 360px screen and pushed View past the edge (M10); every entity in one
+ *  import shares the template the import names in its header anyway. */
+const colsMobile = "1fr 5.625rem 2.75rem";
 
 export function EntitiesTable({ entities }: EntitiesTableProps) {
   const notify = useNotify();
+  const mobile = useAtomValue(breakpointAtom) === "mobile";
+  const grid = mobile ? colsMobile : cols;
   if (entities.length === 0) return null;
 
   return (
@@ -24,13 +32,13 @@ export function EntitiesTable({ entities }: EntitiesTableProps) {
       <div
         className="grid items-center gap-3 px-4 h-10 shrink-0 text-meta font-semibold text-ink-tertiary uppercase tracking-wider"
         style={{
-          gridTemplateColumns: cols,
+          gridTemplateColumns: grid,
           backgroundColor: "var(--bg-warm)",
           borderBottom: "1px solid var(--border-primary)",
         }}
       >
         <span>Title</span>
-        <span>Template</span>
+        {!mobile && <span>Template</span>}
         <span>Created</span>
         <span className="text-center">View</span>
       </div>
@@ -42,12 +50,12 @@ export function EntitiesTable({ entities }: EntitiesTableProps) {
             key={entity.id}
             className="grid items-center gap-3 px-4 h-11 text-sm hover:bg-warm transition-colors"
             style={{
-              gridTemplateColumns: cols,
+              gridTemplateColumns: grid,
               borderBottom: "1px solid var(--border-primary)",
             }}
           >
             <span className="text-xs font-medium text-ink truncate">{entity.title}</span>
-            <span className="text-xs text-ink-tertiary">{entity.template}</span>
+            {!mobile && <span className="text-xs text-ink-tertiary">{entity.template}</span>}
             <span className="text-xs text-ink-tertiary">{formatShortDate(entity.date)}</span>
             <button
               aria-label={`View ${entity.title}`}
