@@ -1,7 +1,9 @@
-import { createContext, useContext, useId, type HTMLAttributes, type KeyboardEvent, type MutableRefObject, type ReactNode } from "react";
+import { createContext, useContext, useId, useLayoutEffect, type HTMLAttributes, type KeyboardEvent, type MutableRefObject, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
+import { useSheetLayer } from "../../hooks/useSheetLayer";
+import { SHEET_STACK, sheetZ } from "../../atoms/sheetStack";
 
 /** Width tiers. A modal picks the narrowest that holds its content; there is
  *  no fifth width. */
@@ -134,12 +136,24 @@ export function Modal({
   const autoId = useId();
   const titleId = titleIdProp ?? `modal-${autoId}`;
   const panelRef = useFocusTrap<HTMLDivElement>(true);
-  const fullOnPhone = size !== "sm";
   const paneHost = useContext(ModalHostContext);
+  /* On a phone a dialog is a layer on the sheet stack (atoms/sheetStack). As
+     the first layer it keeps its own shape; opened from inside a sheet it is a
+     sheet itself, near full height, staggered on the ones below — whatever its
+     size — and viewport-scoped, since a pane is only a slice of the screen. */
+  const layer = useSheetLayer(true);
+  const sheet = layer.stacked && layer.index >= 1;
+  const fullOnPhone = size !== "sm" && !sheet;
+  const depth = Math.min(layer.depth, SHEET_STACK.visible - 1);
+  useLayoutEffect(() => {
+    panelRef.current?.toggleAttribute("inert", !layer.isTop);
+  }, [layer.isTop, panelRef]);
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key !== "Escape" || e.defaultPrevented) return;
     e.stopPropagation();
+    // Claimed, so a sheet listening on the document doesn't close too.
+    e.preventDefault();
     onClose();
   };
 
@@ -147,9 +161,16 @@ export function Modal({
     <div
       data-component={component}
       {...scrimProps}
-      className={`${scope === "pane" ? "absolute" : "fixed"} inset-0 ${z} flex bg-overlay ${
-        fullOnPhone ? "md:items-center md:justify-center md:p-4" : "items-center justify-center p-4"
-      }`}
+      className={
+        sheet
+          ? "fixed inset-0"
+          : `${scope === "pane" ? "absolute" : "fixed"} inset-0 ${z} flex bg-overlay ${
+              fullOnPhone ? "md:items-center md:justify-center md:p-4" : "items-center justify-center p-4"
+            }`
+      }
+      // A stacked sheet's scrim is clear (the first layer's dims the page) but
+      // still takes the tap that closes it.
+      style={layer.stacked ? { zIndex: sheetZ(layer.index) } : undefined}
       onMouseDown={(e) => {
         if (dismissOnScrim && e.target === e.currentTarget) onClose();
       }}
@@ -167,16 +188,47 @@ export function Modal({
         data-gutter-host
         onKeyDown={onKeyDown}
         {...panelProps}
-        className={`gutter-host-main w-full ${WIDTH[size]} flex flex-col bg-paper shadow-xl overflow-hidden animate-fade-in-up ${
-          fullOnPhone
-            ? "h-full md:rounded-lg md:border md:border-border"
-            : "max-h-full rounded-lg border border-border"
-        } ${height ?? "md:h-auto"} ${maxHeight ?? "md:max-h-[min(90vh,100%)]"}`}
+        className={
+          sheet
+            ? "gutter-host-main absolute inset-x-0 bottom-0 flex flex-col bg-paper overflow-hidden animate-fade-in-up transition-transform duration-250 motion-reduce:transition-none motion-reduce:animate-none"
+            : `gutter-host-main w-full ${WIDTH[size]} flex flex-col bg-paper shadow-xl overflow-hidden animate-fade-in-up ${
+                fullOnPhone
+                  ? "h-full md:rounded-lg md:border md:border-border"
+                  : "max-h-full rounded-lg border border-border"
+              } ${height ?? "md:h-auto"} ${maxHeight ?? "md:max-h-[min(90vh,100%)]"}`
+        }
+        style={
+          sheet
+            ? {
+                height: `calc(100dvh - ${layer.offsetRem}rem)`,
+                borderTopLeftRadius: 12,
+                borderTopRightRadius: 12,
+                boxShadow: "0 -8px 24px rgba(0,0,0,0.15)",
+                paddingBottom: "env(safe-area-inset-bottom, 0px)",
+                transform: `scale(${1 - SHEET_STACK.scaleStep * depth})`,
+                transformOrigin: "top center",
+              }
+            : layer.stacked && depth > 0
+              ? { transform: `scale(${1 - SHEET_STACK.scaleStep * depth})`, transformOrigin: "top center" }
+              : undefined
+        }
       >
         <header
           data-part="header"
           className="bleed shrink-0 flex items-center gap-2 h-12 border-b border-border"
         >
+          {sheet && (
+            <button
+              type="button"
+              data-part="back"
+              data-gutter-align="box"
+              onClick={onClose}
+              aria-label="Back"
+              className="shrink-0 p-1 rounded-md text-ink-muted hover:bg-warm hover:text-ink transition-colors cursor-pointer"
+            >
+              <ArrowLeft size={16} aria-hidden className="rtl:rotate-180" />
+            </button>
+          )}
           {leading}
           <div className="min-w-0 flex-1 flex items-baseline gap-2">
             <h2
@@ -232,6 +284,7 @@ export function Modal({
     </div>
   );
 
+  if (sheet) return createPortal(node, document.body);
   if (scope === "pane") return paneHost ? createPortal(node, paneHost) : node;
   return portal ? createPortal(node, document.body) : node;
 }

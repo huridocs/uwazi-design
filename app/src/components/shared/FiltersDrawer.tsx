@@ -4,6 +4,8 @@ import { useAtomValue } from "jotai";
 import { X } from "lucide-react";
 import { languageAtom } from "../../atoms/language";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
+import { breakpointAtom } from "../../atoms/viewport";
+import { MobileBottomSheet } from "../layout/MobileBottomSheet";
 
 /** The element a `FiltersDrawer` should render INTO, when it must escape the
  *  box it is called from.
@@ -42,7 +44,37 @@ interface FiltersDrawerProps {
   width?: number;
 }
 
-export function FiltersDrawer({
+export function FiltersDrawer(props: FiltersDrawerProps) {
+  // On a phone the slide-over is a bottom sheet on the shared stack, so Filters
+  // opened from inside another sheet (a connected entity's Relationships)
+  // stacks on it rather than covering a slice of it.
+  const mobile = useAtomValue(breakpointAtom) === "mobile";
+  return mobile ? <FiltersSheet {...props} /> : <PaneFiltersDrawer {...props} />;
+}
+
+function FiltersSheet({ open, onClose, title = "Filters", children, footer }: FiltersDrawerProps) {
+  return (
+    <MobileBottomSheet open={open} onClose={onClose} title={title}>
+      {/* The same narrow gutter host the slide-over is. */}
+      <div data-gutter-host data-component="FiltersDrawer" className="gutter-host flex flex-col h-full min-h-0">
+        <div data-part="body" className="bleed flex-1 min-h-0 overflow-auto">
+          {children}
+        </div>
+        {footer && (
+          <footer
+            data-part="footer"
+            className="bleed shrink-0 py-2"
+            style={{ borderTop: "1px solid var(--border-primary)" }}
+          >
+            {footer}
+          </footer>
+        )}
+      </div>
+    </MobileBottomSheet>
+  );
+}
+
+function PaneFiltersDrawer({
   open,
   onClose,
   title = "Filters",

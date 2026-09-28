@@ -1,4 +1,5 @@
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { breakpointAtom } from "../../atoms/viewport";
 import { useEffect, useState } from "react";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { activeAggregateIdAtom, overlayEntityIdAtom } from "../../atoms/references";
@@ -19,6 +20,13 @@ import { EntityDetailBody } from "../entity/EntityDetailBody";
  *  also why the Document and Files tabs — which read the globally seeded file
  *  atoms — aren't offered here; "Open entity" is the route to those. */
 export function EntityOverlay() {
+  // On a phone the overlay is a bottom sheet on the shared stack, drawn once by
+  // `MobileOverlayStack` in the app shell; the hosts that mount this draw nothing.
+  const mobile = useAtomValue(breakpointAtom) === "mobile";
+  return mobile ? null : <PaneEntityOverlay />;
+}
+
+function PaneEntityOverlay() {
   const [entityId, setEntityId] = useAtom(overlayEntityIdAtom);
   const setActiveAggregateId = useSetAtom(activeAggregateIdAtom);
   const lang = useAtom(languageAtom)[0];
