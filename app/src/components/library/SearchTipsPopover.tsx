@@ -68,7 +68,7 @@ export function SearchTipsPopover({
   const [open, setOpen] = useState(false);
   const chipRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null);
   // The DRAFT, not the committed query: a non-empty draft commits itself, so
   // the example both runs and shows up in the box. Writing the committed atom
   // alone would search for something the empty-looking box never mentions.
@@ -79,10 +79,13 @@ export function SearchTipsPopover({
     const place = () => {
       const r = chipRef.current?.getBoundingClientRect();
       if (!r) return;
+      // Never wider than the screen less an 8px margin each side: at 390 the
+      // 432px panel ran to x=431 and its right column was cut off (M09).
+      const width = Math.min(PANEL_WIDTH, window.innerWidth - 16);
       // END-align: the panel's RIGHT edge sits at the chip's right edge, so it
       // grows leftward toward the search box — never rightward over the toolbar
       // controls. Viewport-clamped on both edges so it's never clipped.
-      const left = Math.max(8, Math.min(r.right - PANEL_WIDTH, window.innerWidth - PANEL_WIDTH - 8));
+      const left = Math.max(8, Math.min(r.right - width, window.innerWidth - width - 8));
       // Flip ABOVE the trigger when there isn't room below — the drawer's action
       // bar sits at the foot of the pane, so "below" would be off-screen.
       const below = r.bottom + 6;
@@ -90,7 +93,7 @@ export function SearchTipsPopover({
         below + PANEL_EST_HEIGHT > window.innerHeight - 8
           ? Math.max(8, r.top - PANEL_EST_HEIGHT - 6)
           : below;
-      setPos({ top, left });
+      setPos({ top, left, width });
     };
     place();
     window.addEventListener("resize", place);
@@ -151,7 +154,7 @@ export function SearchTipsPopover({
             role="dialog"
             aria-label="Search tips"
             className="fixed z-50 rounded-lg border border-border bg-paper p-2 shadow-lg animate-fade-in-up"
-            style={{ top: pos.top, left: pos.left, width: PANEL_WIDTH }}
+            style={{ top: pos.top, left: pos.left, width: pos.width }}
           >
             {/* Header — frames the list and names the intent. */}
             <div className="flex items-center gap-1.5 px-2 pt-1 pb-2 mb-1 border-b border-border-soft">
