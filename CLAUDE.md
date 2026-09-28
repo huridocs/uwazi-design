@@ -212,7 +212,7 @@ The prototype keeps a simpler shape: every row in `data/references.ts` is a `Ref
 - List view rows = `Reference[]` (one per evidence, snippet + page tag).
 - Tree view leaves = `Relationship[]` (deduped aggregates) with inline-expand into their underlying refs.
 - Graph nodes = `Relationship[]`.
-- **The tab strip is the only place this surface prints a number** — the Relationships tab's `count` (`references.length`, `EntityView.tsx`). Neither toolbar carries a readout and the info rows pass `count={null}`, keeping only the collapse controls. (A toolbar `CountReadout` showing the **aggregate** count — `deriveRelationships(filtered).length` + hubs — existed until 2026-08-11; it was removed as a second number for the same surface. Don't add a count back to the toolbar or the info rows.)
+- **The tab strip is the only place this surface prints a number** — the Relationships tab's `count` (`references.length`, `EntityView.tsx`). Neither toolbar carries a readout and the info rows pass `count={null}`, keeping only the collapse controls. Don't add a count to the toolbar or the info rows: it would be a second number for the same surface.
 - The aggregate row's "evidence count" badge is `relationship.evidenceCount`.
 
 **Known gaps vs Uwazi v2 (intentional, don't paper over):**
@@ -242,7 +242,7 @@ src/components/relationships/
   GroupByControl.tsx             // grouping axis (+ subGroupBy "Then by")
   DirectionGlyph.tsx             // shared arrow badge
   SearchBar.tsx                  // has rightSlot AND inlineSlot
-  FiltersRow.tsx                 // exports CollapseControls
+  CollapseControls.tsx           // expand/collapse-all controls
   ZoomControl.tsx                // detail / compact / overview
   RelationshipsTreeView.tsx      // tree body — target cards use RelationshipRow kind="aggregate"
   RelationshipsGraphView.tsx     // radial SVG body
@@ -266,11 +266,11 @@ src/components/shared/
 Toolbar pattern (main view):
 ```tsx
 <SearchBar
-  inlineSlot={<ActiveFilterChips />}
+  inlineSlot={<ActiveFilterChips omitSearch />}
   rightSlot={
     <>
       <ViewControls />
-      {showZoom && <ZoomControl />}
+      <RelationshipsDisplayMenu />   {/* holds ZoomControl, group-by, sort */}
       <FiltersButton size="sm" activeCount={n} onClick={…} />
     </>
   }
@@ -386,8 +386,8 @@ expandable stack traces + Clear).
     unread count rises. Respects `prefers-reduced-motion`. Click → `beaconOpenAtom`.
 - **Drawer** — right slide-over (`fixed`, flips to left under RTL), scrim +
   Escape to close.
-  - **Header**: title + unread count chip + **Mark all read** (opening no longer
-    auto-marks read) + close. An **All / Unread** filter row (with counts).
+  - **Header**: title + unread count chip + **Mark all read** (opening does not
+    mark anything read) + close. An **All / Unread** filter row (with counts).
   - **TASKS** section lists every `activitiesAtom` entry (multi-task) — loader mark
     + label + detail + Running/Finishing + cancel + progress + `%`.
   - **NOTIFICATIONS** grouped into **New** (unread) / **Today** / **Earlier**
@@ -408,9 +408,8 @@ expandable stack traces + Clear).
 - **Toasts are consolidated into the beacon.** All the old `setToasts(...)`
   call-sites are untouched — the beacon *drains* `toastsAtom`: each toast becomes a
   persistent notification AND briefly flashes on the pill. The floating
-  `ToastContainer` was removed from the app shell + EntityView; it survives **only**
-  in the catalog view (App's `catalog` branch), where the beacon isn't mounted and
-  `useCopyToast` still needs it.
+  `ToastContainer` renders **only** in the catalog view (App's `catalog` branch),
+  where the beacon isn't mounted and `useCopyToast` needs it.
 
 ## Bert — the agent assistant
 A centered modal (`components/agent/AgentModal.tsx`, state in `atoms/agent.ts`)
@@ -467,7 +466,7 @@ in the document, a property on a connected entity's preview.
   overwrite a field would make the mode frightening to leave on.
 - **The signal is a VALUE, not a callback** (`fillRequestAtom`, `{fieldId, value,
   nonce}` — the `pageJumpAtom` idiom). An atom holding closures owned by the edit
-  form is exactly how the since-removed `copyPreviewAtom` came to setState on an unmounted form.
+  form can call setState after that form unmounts.
   `MetadataEditBody` clears `fillTargetAtom` **on unmount** for the same reason.
 - Ends on: fill (which disarms — the field asked for one value), Escape (skipped
   while focus is inside a `[role="dialog"]`, so closing the source preview
@@ -553,8 +552,7 @@ Several fields sharing a `connectionKey` = **one connection, many inherited colu
   panel"), so a source entity's properties are the metadata record itself. It no
   longer carries its own Properties editor — editing a source's native props is
   now reached through "Open entity".
-- `TemplateStructure` derives its Inherited group from the real relationship fields
-  (no longer the hardcoded `mechanism`/`signatories` flags).
+- `TemplateStructure` derives its Inherited group from the real relationship fields.
 - Simplification vs. real Uwazi: connections are explicit `connectedEntityIds` on the
   field (not derived from `references[]`), so direction/inverse is sidestepped.
 
@@ -596,8 +594,8 @@ Search matches can hide in a property or a document body. Three surfaces answer
   beside passages) / **tree** (entity → field → snippets) / **passages** (flat
   ranked passage list, entity secondary) / **spine** (best passage on a time axis).
   Every layout drops the TITLE snippet — each already prints the title marked.
-  With the main pane in Results, a query no longer auto-opens the drawer's Results
-  tab (two copies of one list).
+  With the main pane in Results, a query does not open the drawer's Results tab
+  (that would be two copies of one list).
 - **`TimeSpine`** (`components/library/TimeSpine.tsx`) — ONE proportional
   chronology, rendered by both `LibraryTimelineView`'s Spine layout and the
   Results spine. It owns `useTrackGeom` (the axis inset the Rail and Density
@@ -629,8 +627,8 @@ Search matches can hide in a property or a document body. Three surfaces answer
 Match-type chips (Title / Properties / Document) are `ToggleChip`
 (`components/shared/ToggleChip.tsx`) — `ActiveFilterChip`'s visual twin with
 `aria-pressed` instead of an X — and ride the header `ListInfoRow` (its
-`leadingSlot`), in both the drawer tab and the main view. That row no longer
-carries a count: both Results surfaces pass `count={null}` — the number lives in
+`leadingSlot`), in both the drawer tab and the main view. That row carries no
+count: both Results surfaces pass `count={null}` — the number lives in
 the toolbar masthead readout (see "Ending a search").
 
 **Borrowed documents are named, not hidden.** A CEJIL entity with no PDF of its
@@ -685,9 +683,9 @@ trap, second instance: `ResultsBody` re-snippets its whole visible page on every
 render, so it is `memo`'d AND its callbacks are `useCallback`'d at the call site —
 an inline `() => clearSearch()` there silently undoes the memo. Together: settle
 5,379ms → ~2,990ms, long-task total 3,473ms → ~1,200ms, commits per query 43 → 22.
-**`EntityCard` takes the query as a PROP** (`d2a8492`) — it used to subscribe to
-the raw `libraryQueryAtom`, which re-rendered every mounted card on the urgent
-render each keystroke fires, for a query whose results hadn't been computed yet.
+**`EntityCard` takes the query as a PROP**, never subscribing to the raw
+`libraryQueryAtom`: that re-renders every mounted card on the urgent render each
+keystroke fires, for a query whose results haven't been computed yet.
 `LibraryView` passes the DEFERRED query, so a card re-renders for a query that
 has actually settled. Most card re-renders come from the result set changing on
 each keystroke, not from the query; reducing them means stable prop identity,
@@ -739,8 +737,7 @@ big, what shape, how the picture sits in it.
   document floating in vellum. A page that runs the other way (landscape scans)
   is matted rather than butchered — the same match-the-frame rule the pictures
   keep — and the fill is anchored to the TOP so the ~3% trim comes off the
-  footer, not the masthead. **The whole first page is still the treatment**
-  (f36c2ab); no crop.
+  footer, not the masthead. **The whole first page is the treatment**; no crop.
 - `PdfPageThumb` rasterises at the box's **live** width (ResizeObserver,
   quantised to 32px, monotonic) — switching frame or size re-hangs the grid under
   a mounted card, and a mount-only measure left a 221px bitmap stretched across a
@@ -800,7 +797,7 @@ Breakpoints: mobile `<768`, tablet `768-1023`, desktop `≥1024` (`atoms/viewpor
 ## Where the long-lived context lives
 - **Auto-memory**: `~/.claude/projects/-Users-juanmnl-Developer-huridocs-uwazi-app/memory/`
   - `MEMORY.md` (index, always loaded)
-  - `session-handoff.md` (current state, recent commits, follow-ups)
+  - the current handoff is the file `MEMORY.md` marks CURRENT; older `operator-session-*` and `session-handoff*` files are history
   - `feedback-list-primitives.md`, `feedback-tokens-and-svg.md`, `feedback-styles.md` (load when relevant)
   - `prototype-state.md`, `text-references-feature.md`, `screens.md`, `figma-v3.md`, etc.
 - **Figma**: [Uwazi v3 — Screens](https://www.figma.com/design/5VSISGr1dSEKi1dGG5Noft) is the design source.
