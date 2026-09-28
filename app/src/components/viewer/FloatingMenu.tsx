@@ -10,10 +10,12 @@ import { t } from "../../utils/i18n";
 interface FloatingMenuProps {
   x: number;
   y: number;
+  /** The selection's bottom edge: where the menu goes on a touch screen. */
+  yBelow?: number;
   text: string;
 }
 
-export function FloatingMenu({ x, y, text }: FloatingMenuProps) {
+export function FloatingMenu({ x, y, yBelow, text }: FloatingMenuProps) {
   const setEntityPickerOpen = useSetAtom(entityPickerOpenAtom);
   const selection = useAtomValue(textSelectionAtom);
   const focusedEntityId = useAtomValue(focusedEntityIdAtom);
@@ -63,6 +65,16 @@ export function FloatingMenu({ x, y, text }: FloatingMenuProps) {
     window.getSelection()?.removeAllRanges();
   };
 
+  /* Touch (a coarse pointer): BELOW the selection. Above it is exactly where
+     iOS draws its own copy / look-up callout, so the two covered each other
+     (M22). 24px clears the selection handles; clamped above the on-screen
+     keyboard and the screen's foot. Fine pointers keep the menu above. */
+  const touch = typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches;
+  const top =
+    touch && yBelow !== undefined
+      ? Math.min(yBelow + 24, window.innerHeight - 56 - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--kb")) || 0))
+      : Math.max(8, y - 48);
+
   // Clamp horizontally so the menu doesn't escape the viewport
   const clampedX = typeof window !== "undefined"
     ? Math.min(Math.max(x, 110), window.innerWidth - 110)
@@ -75,7 +87,7 @@ export function FloatingMenu({ x, y, text }: FloatingMenuProps) {
       className="fixed z-50 animate-fade-in-up"
       style={{
         left: clampedX,
-        top: Math.max(8, y - 48),
+        top,
         transform: "translateX(-50%)",
       }}
     >
