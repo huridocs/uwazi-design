@@ -169,7 +169,7 @@ function AdvancedSection({ editor }: { editor: Editor }) {
               JavaScript
             </label>
             <textarea id={jsId} dir="ltr" spellCheck={false} value={a.js} onChange={(e) => set({ js: e.target.value }, "adv-js")} rows={6} className={`${inputCls} h-auto py-1.5 font-mono text-xs leading-relaxed`} placeholder="// Runs once when a page opens" />
-            <p className="text-[0.6875rem] text-ink-tertiary">Runs once per page view. If it throws, the page still shows and the preview says why.</p>
+            <p className="text-[0.6875rem] text-ink-tertiary">Runs once per page view. The preview reruns it on a fresh page when you stop typing; if it throws, the page still shows and the preview says why.</p>
           </div>
         </>
       ) : null}
