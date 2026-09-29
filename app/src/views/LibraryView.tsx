@@ -1072,7 +1072,9 @@ export function LibraryView() {
                 submitSearch();
               }
             }}
-            placeholder="Search title & metadata"
+            // A phone takes the short form: at 360–390 the long one cut mid-word
+            // ("Search title & me"). The aria-label says what is searched.
+            placeholder={isMobile ? "Search" : "Search title & metadata"}
             aria-label="Search entities"
             // `min-w-0`, not a pixel floor: the box yields, and an input with its
             // own minimum overflows a narrowed box under its neighbours.
