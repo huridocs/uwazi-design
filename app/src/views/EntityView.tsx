@@ -142,7 +142,8 @@ export function EntityView() {
             label: t("System", "Table of contents"),
             content: (
               <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0">
-                <ToCPanel />
+                {/* The sheet header already says "Table of contents". */}
+                <ToCPanel titled={false} />
               </div>
             ),
           },
