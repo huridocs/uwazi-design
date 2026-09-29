@@ -19,6 +19,7 @@ import {
   getGroupLabel,
   getRelGroupKey,
 } from "../../utils/connectionGrouping";
+import { breakpointAtom } from "../../atoms/viewport";
 
 interface GraphNode {
   id: string;
@@ -57,6 +58,9 @@ const VIEW_H = 900;
 const CX = VIEW_W / 2;
 const CY = VIEW_H / 2;
 const SOURCE_R = 26;
+/** Node radius factor on phones. At the phone's viewBox fit nodes drew 6–7px
+ *  across; doubled they read as targets, and the r=16 hit circles still apply. */
+const PHONE_NODE_SCALE = 2;
 const LABEL_DIST = 122;
 const FIRST_RING_R = 200;
 const RING_GAP = 40;
@@ -170,6 +174,7 @@ export function RelationshipsGraphView() {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [transform, setTransform] = useState({ tx: 0, ty: 0, scale: 1 });
+  const nodeScale = useAtomValue(breakpointAtom) === "mobile" ? PHONE_NODE_SCALE : 1;
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [hover, setHover] = useState<{ node: GraphNode; x: number; y: number } | null>(null);
   const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
@@ -355,7 +360,7 @@ export function RelationshipsGraphView() {
             direction: rel.direction,
             x: CX + Math.cos(nodeAngle) * R,
             y: CY + Math.sin(nodeAngle) * R,
-            r: Math.min(7, 4 + Math.sqrt(rel.evidenceCount) * 1.1),
+            r: Math.min(7, 4 + Math.sqrt(rel.evidenceCount) * 1.1) * nodeScale,
             selected,
           });
         }
@@ -379,7 +384,7 @@ export function RelationshipsGraphView() {
     });
 
     return { spokes: spokesArr, nodes, truncated };
-  }, [filteredRefs, collapsed, groupBy, activeRefId, overlayEntityId, sourceLabelW, pillScale]);
+  }, [filteredRefs, collapsed, groupBy, activeRefId, overlayEntityId, sourceLabelW, pillScale, nodeScale]);
 
   // Did the open entity get opened FROM the graph? If it was selected elsewhere
   // (a list row, the overlay), no single node owns the click — so every node of
