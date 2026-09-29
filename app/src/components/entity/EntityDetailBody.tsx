@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { X, ArrowRight } from "lucide-react";
+import { X, ArrowRight, ChevronLeft } from "lucide-react";
 import { referencesAtom } from "../../atoms/references";
 import { activeFilterCountAtom } from "../../atoms/filters";
 import { focusMetadataFieldAtom, libraryEditRequestAtom } from "../../atoms/library";
@@ -15,6 +15,7 @@ import { tabsForType } from "../../utils/entityTabs";
 import { EntityScopeProvider } from "../../hooks/useEntityScope";
 import { EntityIdentity } from "../shared/EntityIdentity";
 import { MainTabs } from "../layout/MainTabs";
+import { CloseAllButton } from "../layout/CloseAllButton";
 import { DocumentViewer } from "../viewer/DocumentViewer";
 import { RelationshipsDrawerSection } from "../relationships/RelationshipsDrawerSection";
 import { FiltersHostProvider } from "../shared/FiltersDrawer";
@@ -42,6 +43,10 @@ export interface EntityDetailBodyProps {
   closeLabel?: string;
   /** Before the identity on the header row: a stacked sheet's Back. */
   leading?: ReactNode;
+  /** A layer above the first on the phone's sheet stack: the header's close
+   *  becomes the labelled "Close all" (`onClose`), and the footer's Close
+   *  becomes Back, which returns to the layer beneath (`onBack`). */
+  stackedBack?: { onBack: () => void; label?: string };
   onOpen: () => void;
   openLabel: string;
   identitySize?: "sm" | "md";
@@ -78,6 +83,7 @@ export function EntityDetailBody({
   onClose,
   closeLabel = "Close",
   leading,
+  stackedBack,
   onOpen,
   openLabel,
   identitySize = "md",
@@ -246,15 +252,21 @@ export function EntityDetailBody({
           <EntityIdentity entity={entity} size={identitySize} />
           {/* Its BOX meets the gutter, not the icon: the hover fill must stay
               inside the panel edge. */}
-          <button
-            onClick={onClose}
-            aria-label={closeLabel}
-            data-gutter-align="box"
-            // `after:` extends the target to 44px without growing the header.
-            className="relative after:absolute after:-inset-2 after:content-[''] -mt-0.5 p-1.5 rounded-md hover:bg-warm text-ink-muted hover:text-ink transition-colors shrink-0"
-          >
-            <X size={16} />
-          </button>
+          {stackedBack ? (
+            <div className="shrink-0 self-center">
+              <CloseAllButton onClick={onClose} />
+            </div>
+          ) : (
+            <button
+              onClick={onClose}
+              aria-label={closeLabel}
+              data-gutter-align="box"
+              // `after:` extends the target to 44px without growing the header.
+              className="relative after:absolute after:-inset-2 after:content-[''] -mt-0.5 p-1.5 rounded-md hover:bg-warm text-ink-muted hover:text-ink transition-colors shrink-0"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
 
         {banner && <div className="pt-3 shrink-0">{banner}</div>}
@@ -349,12 +361,24 @@ export function EntityDetailBody({
             <div className="flex-1" />
             {/* Ghost: the ink "Open entity" beside it is this bar's one filled
                 button (the ladder in `warmButton.ts`). */}
-            <button
-              onClick={onClose}
-              className={`px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
-            >
-              Close
-            </button>
+            {stackedBack ? (
+              <button
+                onClick={stackedBack.onBack}
+                data-part="back-footer"
+                aria-label={stackedBack.label ? `Back to ${stackedBack.label}` : "Back"}
+                className={`inline-flex items-center gap-1 ps-2 pe-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
+              >
+                <ChevronLeft size={14} aria-hidden className="rtl:rotate-180" />
+                Back
+              </button>
+            ) : (
+              <button
+                onClick={onClose}
+                className={`px-3 py-1.5 text-xs font-medium ${BAR_GHOST} rounded-md transition-colors cursor-pointer`}
+              >
+                Close
+              </button>
+            )}
             {/* HIDDEN while any edit form is open — this panel over a Metadata
                 edit's "Source" row, a click-to-fill hunt, the drawer preview's
                 own edit: opening an entity navigates, and navigating discards

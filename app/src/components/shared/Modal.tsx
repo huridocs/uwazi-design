@@ -4,6 +4,7 @@ import { ArrowLeft, X } from "lucide-react";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { useSheetLayer } from "../../hooks/useSheetLayer";
 import { SHEET_STACK, sheetZ } from "../../atoms/sheetStack";
+import { CloseAllButton } from "../layout/CloseAllButton";
 
 /** Width tiers. A modal picks the narrowest that holds its content; there is
  *  no fifth width. */
@@ -253,17 +254,22 @@ export function Modal({
             )}
           </div>
           {headerActions}
-          <button
-            type="button"
-            data-part="close"
-            data-gutter-align="box"
-            // A stacked sheet's × closes the whole stack; Back (above) pops one.
-            onClick={sheet ? layer.closeAll : onClose}
-            aria-label={sheet ? "Close all" : closeLabel}
-            className={`${sheet ? "relative after:absolute after:-inset-2.5 after:content-['']" : ""} shrink-0 p-1 rounded-md text-ink-muted hover:bg-warm hover:text-ink transition-colors cursor-pointer`}
-          >
-            <X size={16} aria-hidden />
-          </button>
+          {/* A stacked sheet closes the whole stack with a LABELLED control;
+              Back (above) pops one. Elsewhere the × closes this dialog. */}
+          {sheet ? (
+            <CloseAllButton onClick={layer.closeAll} />
+          ) : (
+            <button
+              type="button"
+              data-part="close"
+              data-gutter-align="box"
+              onClick={onClose}
+              aria-label={closeLabel}
+              className="shrink-0 p-1 rounded-md text-ink-muted hover:bg-warm hover:text-ink transition-colors cursor-pointer"
+            >
+              <X size={16} aria-hidden />
+            </button>
+          )}
         </header>
         {flush ? (
           <div data-part="body" className="bleed flex-1 min-h-0 flex flex-col">

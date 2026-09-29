@@ -53,11 +53,13 @@ export function MobileOverlayStack() {
             <EntityDetailBody
               entityId={id}
               identitySize="sm"
-              // Back (layers above the first) pops one; × pops this sheet on the
-              // first layer and closes the whole stack above it.
+              // First layer: × and the footer's Close pop this sheet. Above it:
+              // Back (header arrow, footer "Back") pops one; "Close all" closes
+              // the stack.
               leading={chrome.back}
               onClose={chrome.close}
               closeLabel={chrome.closeLabel}
+              stackedBack={chrome.upper ? { onBack: chrome.pop, label: chrome.belowLabel } : undefined}
               onOpen={() => {
                 openEntity(id);
                 closeAll();

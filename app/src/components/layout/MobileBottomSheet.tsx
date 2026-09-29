@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useId, useLayoutEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, X } from "lucide-react";
+import { CloseAllButton } from "./CloseAllButton";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { useSheetLayer } from "../../hooks/useSheetLayer";
 import { SHEET_STACK, sheetZ } from "../../atoms/sheetStack";
@@ -30,10 +31,17 @@ const SNAP_FULL_VH = 92;
 export interface SheetChrome {
   /** Back to the layer below (layers ≥1), or null on the first layer. */
   back: ReactNode;
-  /** What the header's × does: pop this sheet on the first layer, close the
-   *  whole stack on the layers above it. */
+  /** What the header's close does: pop this sheet on the first layer, close
+   *  the whole stack on the layers above it. */
   close: () => void;
   closeLabel: string;
+  /** A layer above the first: the header's close is the labelled "Close all"
+   *  (`CloseAllButton`), and a footer's dismiss button should be Back (`pop`). */
+  upper: boolean;
+  /** Close this layer only (Back, Escape, a drag down). */
+  pop: () => void;
+  /** The layer beneath, for "Back to …". */
+  belowLabel?: string;
 }
 
 /** 44px hit area around a 24px icon button, without growing the row it sits
@@ -166,6 +174,9 @@ export function MobileBottomSheet({
     back,
     close: upper ? layer.closeAll : onClose,
     closeLabel: upper ? "Close all" : title ?? ariaLabel ? `Close ${title ?? ariaLabel}` : "Close",
+    upper,
+    pop: onClose,
+    belowLabel: layer.belowLabel,
   };
 
   /* Portalled to the body. A sheet opened from inside another sheet would
@@ -254,15 +265,19 @@ export function MobileBottomSheet({
           >
             {back}
             <h2 id={titleId} data-part="title" className="flex-1 min-w-0 truncate text-sm font-semibold text-ink">{title}</h2>
-            <button
-              type="button"
-              onClick={chrome.close}
-              data-part="close"
-              className={`${HIT_44} shrink-0 p-1 rounded-md hover:bg-warm text-ink-muted hover:text-ink transition-colors`}
-              aria-label={chrome.closeLabel}
-            >
-              <X size={16} aria-hidden />
-            </button>
+            {upper ? (
+              <CloseAllButton onClick={layer.closeAll} />
+            ) : (
+              <button
+                type="button"
+                onClick={chrome.close}
+                data-part="close"
+                className={`${HIT_44} shrink-0 p-1 rounded-md hover:bg-warm text-ink-muted hover:text-ink transition-colors`}
+                aria-label={chrome.closeLabel}
+              >
+                <X size={16} aria-hidden />
+              </button>
+            )}
           </div>
         )}
 
