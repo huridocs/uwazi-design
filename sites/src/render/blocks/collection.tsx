@@ -6,7 +6,7 @@ import { feature } from "topojson-client";
 import land110 from "world-atlas/land-110m.json";
 import type { Bucket, Entity, GroupBy } from "../../data/types";
 import type { BlockProps } from "../../model/config";
-import { listPage } from "../../model/config";
+import { isRtl, listPage } from "../../model/config";
 import { useQuery, useSite } from "../context";
 import { EntityCard, EntityLink, EntityRow, EntityTable, keyLabel, Loadable, PageLink, Section, statusTone, TypeDot, fmtDate, useMetaLine } from "../parts";
 import { ui } from "../ui";
@@ -487,15 +487,18 @@ export function Lightbox({ rows, index, onClose, onMove }: { rows: Entity[]; ind
     ref.current?.focus();
     const onKey = (ev: KeyboardEvent) => {
       if (ev.key === "Escape") onClose();
-      if (ev.key === "ArrowRight") onMove((index + 1) % rows.length);
-      if (ev.key === "ArrowLeft") onMove((index - 1 + rows.length) % rows.length);
+      // The arrow that points at "next" is the one on the reading side.
+      const fwd = isRtl(lang) ? "ArrowLeft" : "ArrowRight";
+      const back = isRtl(lang) ? "ArrowRight" : "ArrowLeft";
+      if (ev.key === fwd) onMove((index + 1) % rows.length);
+      if (ev.key === back) onMove((index - 1 + rows.length) % rows.length);
     };
     window.addEventListener("keydown", onKey);
     return () => {
       window.removeEventListener("keydown", onKey);
       prev?.focus();
     };
-  }, [index, rows.length, onClose, onMove]);
+  }, [index, rows.length, onClose, onMove, lang]);
   if (!e?.image) return null;
   const btn = "w-10 h-10 grid place-items-center rounded-full bg-white/10 text-white hover:bg-white/20 cursor-pointer";
   return (
