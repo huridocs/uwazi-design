@@ -204,7 +204,7 @@ export function Builder({ editor, onStartOver }: { editor: Editor; onStartOver: 
                   editor={editor}
                   before={
                     <Disclosure title="Site type" open={siteOpen === "type"} onToggle={() => setSiteOpen((o) => (o === "type" ? null : "type"))} aside={siteType(config.template).label}>
-                      <SiteTypePicker current={config.template} previewing={trial?.type} prof={prof} onPreview={previewType} />
+                      <SiteTypePicker current={config.template} previewing={trial?.type} prof={prof} onPreview={previewType} onApply={applyTrial} onCancel={cancelTrial} />
                     </Disclosure>
                   }
                   open={siteOpen}
@@ -458,7 +458,7 @@ function TrialBar({ type, removed, onCancel, onApply, className = "" }: { type: 
           Cancel
         </Button>
         <Button variant="primary" onClick={onApply}>
-          Apply
+          Use {siteType(type).label}
         </Button>
       </span>
     </div>
