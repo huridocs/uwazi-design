@@ -16,6 +16,7 @@ import {
   Check,
   ExternalLink,
   LogOut,
+  Database,
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import type { AppView } from "../../atoms/navigation";
@@ -542,6 +543,27 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
               <BookOpen size={16} className="text-ink-tertiary" />
               {t("System", "Library")}
             </button>
+
+            {/* Collection: the desktop crumb's picker, as one row so the menu's
+                Settings stay above the fold. Choosing opens the Library on it. */}
+            <div data-part="mobile-collection" className="flex items-center justify-between gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary">
+              <div className="flex items-center gap-3">
+                <Database size={16} className="text-ink-tertiary" />
+                Collection
+              </div>
+              <Select
+                value={dataSource}
+                onChange={(v) => {
+                  selectSource(v as DataSource);
+                  onNavigate?.("library");
+                  setMobileMenuOpen(false);
+                }}
+                ariaLabel="Collection"
+                align="end"
+                options={COLLECTIONS.map((c) => ({ value: c.id, label: c.label, hint: c.detail }))}
+                steady
+              />
+            </div>
 
             {/* Tools section */}
             <SectionLabel className="px-4 pt-4 pb-1">
