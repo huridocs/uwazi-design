@@ -3,6 +3,7 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { ComposableMap, Geographies, Geography, Graticule, Marker, ZoomableGroup } from "react-simple-maps";
 import worldData from "world-atlas/countries-110m.json";
 import { languageAtom } from "../../atoms/language";
+import { breakpointAtom } from "../../atoms/viewport";
 import {
   librarySelectedClusterAtom,
   librarySelectedEntityIdAtom,
@@ -54,6 +55,7 @@ interface Cluster {
  *  splits a cluster; zooming out merges it. */
 export function LibraryMapView({ entities }: { entities: Entity[] }) {
   const language = useAtomValue(languageAtom);
+  const isMobile = useAtomValue(breakpointAtom) === "mobile";
   const [selectedCluster, setSelectedCluster] = useAtom(librarySelectedClusterAtom);
   const setSelectedId = useSetAtom(librarySelectedEntityIdAtom);
   // Facets OR the search — this button clears both, and the empty screen it
@@ -135,15 +137,18 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
 
   return (
     <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+      {/* A phone fills the pane's height and crops the sides (`slice`) around
+          the same centre: at 2:1 the map was a short band in an empty screen. */}
       <div
         className="relative w-full bg-vellum rounded-lg border border-border/60 overflow-hidden"
-        style={{ aspectRatio: "2 / 1", maxHeight: "100%" }}
+        style={isMobile ? { height: "100%" } : { aspectRatio: "2 / 1", maxHeight: "100%" }}
       >
         <ComposableMap
           projection="geoEquirectangular"
           width={WIDTH}
           height={HEIGHT}
           projectionConfig={{ scale: SCALE, center: [0, 0] }}
+          preserveAspectRatio={isMobile ? "xMidYMid slice" : undefined}
           style={{ width: "100%", height: "100%" }}
         >
           <ZoomableGroup
