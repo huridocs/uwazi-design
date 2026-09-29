@@ -38,7 +38,7 @@ export function EntityDrawerPreview({ entityId }: { entityId: string }) {
       closeLabel="Back to filters"
       onOpen={() => openEntity(entityId)}
       openLabel="View entity"
-      editOverlay={<EntityOverlay />}
+      overlay={<EntityOverlay />}
     />
   );
 }
