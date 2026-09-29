@@ -1,7 +1,7 @@
 /* The public site: header, the current page's blocks, footer. Runs on its own
  * (site.html) and inside the builder's preview frame. */
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Menu as MenuIcon, X } from "lucide-react";
+import { ChevronDown, Menu as MenuIcon, X } from "lucide-react";
 import type { DataSource, Entity, Template } from "../data/types";
 import type { Block, MenuItem, Page, SiteConfig } from "../model/config";
 import { LANG_NAMES, entityPage, isRtl, pageBySlug, tr } from "../model/config";
@@ -136,9 +136,10 @@ function Header({ onMenu }: { onMenu: () => void }) {
           })}
         </nav>
         {config.languages.length > 1 ? (
-          <label className="hidden sm:block">
+          <label className="hidden sm:flex relative items-center">
             <span className="sr-only">{ui("language", lang)}</span>
-            <select value={lang} onChange={(e) => navigate({ lang: e.target.value })} className="h-9 rounded-md border border-border-soft bg-paper px-2 text-sm text-ink">
+            <ChevronDown size={14} aria-hidden className="pointer-events-none absolute end-2.5 text-ink-tertiary" />
+            <select value={lang} onChange={(e) => navigate({ lang: e.target.value })} className="h-9 appearance-none rounded-md border border-border-soft bg-paper ps-3 pe-8 text-sm text-ink">
               {config.languages.map((l) => (
                 <option key={l} value={l}>
                   {LANG_NAMES[l]?.native ?? l}

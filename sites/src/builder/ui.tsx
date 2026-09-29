@@ -1,7 +1,7 @@
 /* The builder's controls, in the prototype's look: ink primary, warm
  * secondary, parchment selected, tokens only. */
 import { useEffect, useId, useRef, type ButtonHTMLAttributes, type ReactNode } from "react";
-import { X } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 const VARIANT: Record<Variant, string> = {
@@ -46,15 +46,21 @@ export function Label({ htmlFor, children, aside }: { htmlFor?: string; children
 export const inputCls =
   "w-full h-8 px-2.5 rounded-md border border-border-soft bg-paper text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:border-ink/40 focus:ring-2 focus:ring-carbon/20";
 
+/** Native select without the browser's caret: ours sits inside the box at
+ * the end edge (left in RTL), and pe-8 keeps the label clear of it. */
 export function Select({ id, value, onChange, options, className = "" }: { id?: string; value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; className?: string }) {
+  const inline = className.includes("w-auto");
   return (
-    <select id={id} value={value} onChange={(e) => onChange(e.target.value)} className={`${inputCls} pe-7 ${className}`}>
-      {options.map((o) => (
-        <option key={o.value} value={o.value}>
-          {o.label}
-        </option>
-      ))}
-    </select>
+    <span className={`relative min-w-0 ${inline ? "inline-flex" : "flex w-full"}`}>
+      <select id={id} value={value} onChange={(e) => onChange(e.target.value)} className={`${inputCls} appearance-none pe-8 truncate ${className}`}>
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown size={14} aria-hidden className="pointer-events-none absolute end-2.5 top-1/2 -translate-y-1/2 text-ink-tertiary" />
+    </span>
   );
 }
 
