@@ -142,11 +142,12 @@ export const expandGroupForRefAtom = atom<string | null>(null);
 export const overlayEntityIdAtom = atom(
   (get) => get(overlayEntityBase),
   (get, set, id: string | null) => {
-    // A phone stacks: an entity opened while a preview is open is a new sheet
-    // on top, and closing pops one. Elsewhere the one overlay is replaced.
+    // Previews stack, on phones (sheets) and on desktop (slide-over layers):
+    // an entity opened while a preview is open is a new layer on top, and
+    // closing pops one.
     const stack = get(overlayStackBase);
     const top = stack[stack.length - 1] ?? null;
-    const stacks = get(breakpointAtom) === "mobile" && stack.length > 0;
+    const stacks = stack.length > 0;
     let next: string[];
     if (id === null) {
       next = stacks ? stack.slice(0, -1) : [];

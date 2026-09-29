@@ -1,5 +1,7 @@
 import { useEffect } from "react";
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
+import { overlayStackBase } from "../../atoms/rightPane";
+import { closeAllOverlaysAtom } from "../../atoms/references";
 import { librarySelectedEntityIdAtom } from "../../atoms/library";
 import { openEntityAtom, focusEntityForPreviewAtom } from "../../atoms/focusedEntity";
 import { EntityDetailBody } from "../entity/EntityDetailBody";
@@ -16,6 +18,8 @@ export function EntityDrawerPreview({ entityId }: { entityId: string }) {
   const setSelected = useSetAtom(librarySelectedEntityIdAtom);
   const openEntity = useSetAtom(openEntityAtom);
   const focusForPreview = useSetAtom(focusEntityForPreviewAtom);
+  const stackDepth = useAtomValue(overlayStackBase).length;
+  const closeAll = useSetAtom(closeAllOverlaysAtom);
 
   // Safety net: keep the focused entity in sync with the previewed one even if
   // selection changed without going through LibraryView's handler. The focus is
@@ -39,6 +43,7 @@ export function EntityDrawerPreview({ entityId }: { entityId: string }) {
       onOpen={() => openEntity(entityId)}
       openLabel="View entity"
       overlay={<EntityOverlay />}
+      covered={{ on: stackDepth > 0, onBack: closeAll }}
     />
   );
 }

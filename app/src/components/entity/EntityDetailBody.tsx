@@ -57,6 +57,9 @@ export interface EntityDetailBodyProps {
    *  used to render only inside the edit form, so pills in the Library
    *  preview's Relationships tab set the overlay entity and nothing showed it. */
   overlay?: ReactNode;
+  /** Whether a layer above covers this panel, and how its title row takes
+   *  the reader back to it (closes the layers above). */
+  covered?: { on: boolean; onBack: () => void };
   /** Session id for the metadata editor — must be distinct per mounted form. */
   editSessionId?: string;
   editDirtyLabel?: string;
@@ -75,6 +78,20 @@ const pendingDraftDiscard = new Map<string, number>();
  *  surfaces inside it are scoped by `EntityScopeProvider` rather than by moving
  *  the app's focus, which is what lets the overlay sit on top of a view without
  *  swapping the entity behind it. */
+/** The title row's height, so the slide-over layer can start beneath it. */
+function useHeight<T extends HTMLElement>() {
+  const ref = useRef<T | null>(null);
+  const [h, setH] = useState(0);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setH(el.getBoundingClientRect().height));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return [ref, h] as const;
+}
+
 export function EntityDetailBody({
   entityId,
   focused = false,
@@ -87,6 +104,7 @@ export function EntityDetailBody({
   openLabel,
   identitySize = "md",
   overlay,
+  covered: coveredBy,
   editSessionId = "metadata-edit-drawer",
   editDirtyLabel = "Metadata edits (preview)",
 }: EntityDetailBodyProps) {
@@ -222,6 +240,8 @@ export function EntityDetailBody({
      out to it. See FiltersHostProvider. A pane modal (Copy From) takes the
      same root for the same reason: its scrim covers header, tabs and footer. */
   const [panelEl, setPanelEl] = useState<HTMLDivElement | null>(null);
+  const [headerRef, headerH] = useHeight<HTMLDivElement>();
+  const covered = !!coveredBy?.on;
 
   return (
     <EntityScopeProvider entityId={entityId}>
@@ -236,15 +256,30 @@ export function EntityDetailBody({
       <div
         ref={setPanelEl}
         data-gutter-host
+        data-covered={covered ? "" : undefined}
         className="gutter-host relative flex flex-col h-full min-h-0 bg-paper overflow-clip"
       >
         {/* Identity header on top — the entity title + close, acting as the
             panel header. Tabs sit beneath it (flipped from the entity view so the
             panel reads title-first). */}
         <div
-          className="bleed flex items-start gap-2 pt-3 pb-2.5 shrink-0"
+          ref={headerRef}
+          data-part="title-row"
+          className="bleed relative flex items-start gap-2 pt-3 pb-2.5 shrink-0"
           style={{ borderBottom: "1px solid var(--border-primary)" }}
         >
+          {/* While the slide-over covers this panel, the title row stays as
+              the parent in the hierarchy and is ONE control: back to this
+              entity (closes the slide-over). Its own × and Back sit under it. */}
+          {covered ? (
+            <button
+              type="button"
+              data-part="back-to-parent"
+              onClick={coveredBy?.onBack}
+              aria-label={`Back to ${entity?.title ?? "entity"}`}
+              className="absolute inset-0 z-30 cursor-pointer bg-transparent hover:bg-warm/40 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--accent-blue)]"
+            />
+          ) : null}
           {/* A stacked sheet's Back (MobileOverlayStack): on this row, level
               with the type and title, not squeezed against the sheet's edge. */}
           {leading && <div className="shrink-0 self-center">{leading}</div>}
@@ -280,7 +315,6 @@ export function EntityDetailBody({
             the top half of an empty pane. `bleed`: it clips (`overflow-hidden`), so
             it has to span the panel for the lanes inside it to reach the edge. */}
         <div className="bleed flex-1 min-h-0 relative overflow-hidden flex flex-col">
-          {overlay}
           {activeTab === "document" ? (
             <DocumentViewer showMinimap={false} hideActionBar />
           ) : activeTab === "relationships" ? (
@@ -398,6 +432,15 @@ export function EntityDetailBody({
             </button>
           </div>
         )}
+        {/* The connected-entity slide-over: from under the title row to the
+            panel's bottom edge, over the tabs, the body and the action bar, so
+            only its own footer shows. The layer takes no pointer events of its
+            own; the scrim and panel inside it do. */}
+        {overlay ? (
+          <div data-part="overlay-layer" className="absolute inset-x-0 bottom-0 pointer-events-none [&>[role=dialog]]:pointer-events-auto" style={{ top: headerH, zIndex: 20 }}>
+            {overlay}
+          </div>
+        ) : null}
       </div>
       </ModalHostProvider>
       </FiltersHostProvider>

@@ -488,3 +488,17 @@ button:not(:disabled) {
 .hit-area-y::after {
   inset: -10px 0;
 }
+
+/* A panel covered by a preview layer (EntityDetailBody `data-covered`): only
+   its title row stays, as the parent in the hierarchy, and that row's own
+   controls hide (the row itself is the way back). Everything else under it
+   is hidden, so the strip a narrower layer leaves reads as a clean edge
+   rather than slices of the content beneath. Child combinators: a nested
+   layer is inside `overlay-layer` and keeps its own content. */
+[data-covered] > :not([data-part="title-row"]):not([data-part="overlay-layer"]) {
+  visibility: hidden;
+}
+[data-covered] > [data-part="title-row"] > :not([data-part="back-to-parent"]):has(button),
+[data-covered] > [data-part="title-row"] > button:not([data-part="back-to-parent"]) {
+  visibility: hidden;
+}
