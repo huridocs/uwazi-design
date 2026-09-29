@@ -1,0 +1,84 @@
+@import "tailwindcss";
+/* The prototype's tokens, not a copy: one file owns the colours of both apps. */
+@import "../../app/src/tokens.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-parchment: var(--bg-primary);
+  --color-paper: var(--bg-surface);
+  --color-warm: var(--bg-warm);
+  --color-vellum: var(--bg-muted);
+  --color-ink: var(--text-primary);
+  --color-ink-secondary: var(--text-secondary);
+  --color-ink-tertiary: var(--text-tertiary);
+  --color-ink-muted: var(--text-muted);
+  --color-border: var(--border-primary);
+  --color-border-soft: var(--border-soft);
+  --color-carbon: var(--accent-blue);
+  --color-carbon-tint: var(--accent-blue-tint);
+  --color-seal: var(--accent-seal);
+  --color-seal-label: var(--accent-seal-label);
+  --color-seal-tint: var(--accent-seal-tint);
+  --color-success: var(--success);
+  --color-success-light: var(--success-light);
+  --color-warning: var(--warning);
+  --color-warning-light: var(--warning-light);
+  --color-overlay: var(--bg-overlay);
+  --color-selected: var(--bg-selected);
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --text-meta: 0.6875rem;
+  --text-tab: 0.8125rem;
+}
+
+/* The public site's theme, set per site on the site's root by render/theme.ts.
+   `inline` so utilities read the per-site variable where it is set, not a copy
+   resolved at :root (where it doesn't exist). */
+@theme inline {
+  --color-accent: var(--site-accent);
+  --color-on-accent: var(--site-on-accent);
+  --color-accent-text: var(--site-accent-text);
+  --font-heading: var(--site-heading);
+  --font-body: var(--site-body);
+}
+
+@layer theme {
+  :root {
+    --radius-xs: 2px;
+    --radius-sm: 3px;
+    --radius: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 10px;
+    --radius-2xl: 12px;
+  }
+}
+
+:root.dark {
+  color-scheme: dark;
+}
+html,
+body {
+  margin: 0;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
