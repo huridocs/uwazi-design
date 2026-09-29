@@ -145,7 +145,7 @@ export function AccountPage() {
           <section>
             <h3 className="text-sm font-semibold text-ink mb-1">Profile</h3>
             <p className="text-xs text-ink-tertiary mb-3">
-              The address and name you use to sign in.
+              The username you log in with, and your email address.
             </p>
             <div className="grid sm:grid-cols-2 gap-3">
               <Field label="Username">
@@ -217,7 +217,7 @@ export function AccountPage() {
                   Two-factor authentication
                 </h3>
                 <p className="text-xs text-ink-tertiary">
-                  Add a second step at sign-in using an authenticator app.
+                  Add a second step at login using an authenticator app.
                 </p>
               </div>
               {twoFactorEnabled && (

@@ -1880,13 +1880,13 @@ const textColor = typeLabelColor(type.color);`}
                 <CatalogEntry
                   name="Field"
                   description="Labelled form field wrapper (label + hint/error) with the warm TextInput."
-                  code={`<Field label="Email" hint="Used to sign in.">
-  <TextInput type="email" defaultValue="admin@uwazi.io" />
+                  code={`<Field label="Username" hint="Used to log in.">
+  <TextInput defaultValue="admin" />
 </Field>`}
                 >
                   <div className="w-full max-w-sm flex flex-col gap-3">
-                    <Field label="Email" hint="Used to sign in.">
-                      <TextInput type="email" defaultValue="admin@uwazi.io" />
+                    <Field label="Username" hint="Used to log in.">
+                      <TextInput defaultValue="admin" />
                     </Field>
                     <Field label="Password" error="Passwords don't match">
                       <TextInput type="password" defaultValue="••••••" />
