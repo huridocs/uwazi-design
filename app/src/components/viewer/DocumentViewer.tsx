@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, useMemo, ReactNode } from "react";
+import { useState, useRef, useCallback, useEffect, useLayoutEffect, useMemo, ReactNode } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import { X } from "lucide-react";
 import "react-pdf/dist/Page/AnnotationLayer.css";
@@ -38,6 +38,11 @@ interface DocumentViewerProps {
    *  footer (the library preview's Close / View entity bar). */
   hideActionBar?: boolean;
 }
+
+const ZOOM_MIN = 1;
+const ZOOM_MAX = 4;
+const ZOOM_PHONE_DEFAULT = 2;
+const ZOOM_STEPS = [1, 1.25, 1.5, 2, 2.5, 3, 4];
 
 export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride, hideActionBar = false }: DocumentViewerProps = {}) {
   const [breakpoint] = useAtom(breakpointAtom);
@@ -128,7 +133,77 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
     return () => ro.disconnect();
   }, []);
 
-  const pageWidth = useMemo(() => Math.min(860, containerWidth - 48), [containerWidth]);
+  /* Zoom, phones only (M21). Fit width on a 390px phone draws body text at
+     about 5px, so a phone opens at 200% of fit (about 11px) and the action bar
+     carries −, the % readout, + and Fit. Pinch zooms the pages only: the pages
+     take `touch-action: pan-x pan-y`, a two-finger gesture scales them live
+     with a CSS transform and re-renders at the new width on release; the
+     viewport's own pinch is stopped by the viewport meta (M05). Desktop keeps
+     its fit width. */
+  const [zoom, setZoom] = useState(ZOOM_PHONE_DEFAULT);
+  const fitWidth = isMobile ? containerWidth - 32 : Math.min(860, containerWidth - 48);
+  const pageWidth = useMemo(() => Math.round(isMobile ? fitWidth * zoom : fitWidth), [isMobile, fitWidth, zoom]);
+
+  // Keep the reading position through a zoom: remember where the view was as
+  // a fraction of the content, restore it once the pages have the new size.
+  const zoomAnchor = useRef<{ y: number; x: number } | null>(null);
+  const applyZoom = useCallback((next: number) => {
+    const el = containerRef.current;
+    const z = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(next * 100) / 100));
+    if (el) zoomAnchor.current = { y: (el.scrollTop + el.clientHeight / 2) / Math.max(1, el.scrollHeight), x: (el.scrollLeft + el.clientWidth / 2) / Math.max(1, el.scrollWidth) };
+    setZoom(z);
+  }, []);
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    const a = zoomAnchor.current;
+    if (!el || !a) return;
+    zoomAnchor.current = null;
+    const restore = () => {
+      el.scrollTop = a.y * el.scrollHeight - el.clientHeight / 2;
+      el.scrollLeft = a.x * el.scrollWidth - el.clientWidth / 2;
+    };
+    restore();
+    requestAnimationFrame(() => requestAnimationFrame(restore));
+  }, [pageWidth]);
+
+  // Two-finger pinch on the pages: live transform, commit on release.
+  const pinch = useRef<{ ids: Map<number, { x: number; y: number }>; start?: number; scale: number }>({ ids: new Map(), scale: 1 });
+  const zoomLayer = useRef<HTMLDivElement>(null);
+  const dist = (m: Map<number, { x: number; y: number }>) => {
+    const [a, b] = [...m.values()];
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  };
+  const onPinchDown = (e: React.PointerEvent) => {
+    if (!isMobile || e.pointerType !== "touch") return;
+    pinch.current.ids.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinch.current.ids.size === 2) {
+      pinch.current.start = dist(pinch.current.ids);
+      const layer = zoomLayer.current, el = containerRef.current;
+      if (layer && el) {
+        const [a, b] = [...pinch.current.ids.values()];
+        const r = layer.getBoundingClientRect();
+        layer.style.transformOrigin = `${(a.x + b.x) / 2 - r.left}px ${(a.y + b.y) / 2 - r.top}px`;
+      }
+    }
+  };
+  const onPinchMove = (e: React.PointerEvent) => {
+    const p = pinch.current;
+    if (!p.ids.has(e.pointerId)) return;
+    p.ids.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (p.ids.size !== 2 || !p.start) return;
+    p.scale = Math.min(ZOOM_MAX / zoom, Math.max(ZOOM_MIN / zoom, dist(p.ids) / p.start));
+    if (zoomLayer.current) zoomLayer.current.style.transform = `scale(${p.scale})`;
+  };
+  const onPinchUp = (e: React.PointerEvent) => {
+    const p = pinch.current;
+    if (!p.ids.delete(e.pointerId)) return;
+    if (p.start && p.ids.size < 2) {
+      if (zoomLayer.current) zoomLayer.current.style.transform = "";
+      if (Math.abs(p.scale - 1) > 0.02) applyZoom(zoom * p.scale);
+      p.start = undefined;
+      p.scale = 1;
+    }
+  };
 
   const onDocumentLoadSuccess = useCallback(
     ({ numPages }: { numPages: number }) => {
@@ -446,14 +521,25 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
             to reload + repaint when the user switches back. */}
         <div
           ref={containerRef}
-          className={`absolute inset-0 overflow-auto flex flex-col items-center body-top pb-4 gap-4 ${renditionMode ? "hidden" : ""}`}
+          data-part="pages"
+          data-state={renditionMode ? "hidden" : undefined}
+          className={`absolute inset-0 overflow-auto flex flex-col body-top pb-4 gap-4 ${renditionMode ? "hidden" : ""}`}
           style={{
             paddingLeft: 16,
             paddingRight: isMobile ? 16 : showMinimap ? 80 : 16,
+            // `safe`: a page wider than the pane (zoomed on a phone) starts at
+            // the left edge and scrolls, instead of centring off-screen.
+            alignItems: "safe center",
+            touchAction: isMobile ? "pan-x pan-y" : undefined,
           }}
           onMouseUp={handleTextSelect}
           onMouseDown={handleMouseDown}
+          onPointerDown={onPinchDown}
+          onPointerMove={onPinchMove}
+          onPointerUp={onPinchUp}
+          onPointerCancel={onPinchUp}
         >
+        <div ref={zoomLayer} data-part="zoom-layer" className="flex flex-col gap-4" style={{ alignItems: "safe center" }}>
         <Document
           file={filePath}
           onLoadSuccess={onDocumentLoadSuccess}
@@ -503,6 +589,7 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
           ))}
         </Document>
         </div>
+        </div>
         {renditionMode && <DocumentRendition format={docFormat} />}
         {!isMobile && showMinimap && !renditionMode && <RefMinimap numPages={numPages} />}
       </div>
@@ -515,6 +602,18 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
           numPages={numPages}
           onScrollToPage={scrollToPage}
           rightSlot={actionBarMenu}
+          zoom={
+            isMobile && !renditionMode
+              ? {
+                  percent: Math.round(zoom * 100),
+                  onOut: () => applyZoom([...ZOOM_STEPS].reverse().find((s) => s < zoom - 0.01) ?? ZOOM_MIN),
+                  onIn: () => applyZoom(ZOOM_STEPS.find((s) => s > zoom + 0.01) ?? ZOOM_MAX),
+                  onFit: () => applyZoom(1),
+                  canOut: zoom > ZOOM_MIN,
+                  canIn: zoom < ZOOM_MAX,
+                }
+              : undefined
+          }
           showPager={!renditionMode}
           // Mounted on the QUERY, like the pager is on the format — a deliberate
           // user action, not a count that pops in mid-read. Hits arrive as pages
