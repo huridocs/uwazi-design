@@ -126,6 +126,7 @@ import { ActiveFiltersButton } from "../components/library/ActiveFiltersButton";
 import { DataTable, type Column } from "../components/shared/DataTable";
 import { HighlightedText } from "../components/shared/HighlightedText";
 import { Select } from "../components/shared/Select";
+import { MobileEntityList } from "../components/library/MobileEntityList";
 import { ViewSwitcher } from "../components/library/ViewSwitcher";
 import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
 import { BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
@@ -1306,6 +1307,9 @@ export function LibraryView() {
               />
             ))}
           </ul>
+        ) : breakpoint === "mobile" ? (
+          // Phones: two-line rows, no table columns (M19).
+          <MobileEntityList rows={shown} query={query} selectedId={selectedId} onSelect={handleSelect} />
         ) : tableColumns.length === 0 ? (
           // Every column can be switched off; with none on, show a message that
           // names the way out instead of an empty grid.
