@@ -15,6 +15,10 @@ import { ExportPanel } from "./ExportPanel";
 import { diff, type Editor } from "./state";
 import { Mark } from "./FirstRun";
 import { Button, Disclosure, IconButton, Modal, Segmented, Select } from "./ui";
+import { SiteTypePicker } from "./SiteTypePicker";
+import { profile, siteType, type CollectionProfile } from "../model/templates";
+import { switchSiteType, type Removed } from "../model/switchType";
+import type { TemplateId } from "../model/config";
 
 export function Builder({ editor, onStartOver }: { editor: Editor; onStartOver: () => void }) {
   const doc = editor.doc!;
@@ -34,11 +38,17 @@ export function Builder({ editor, onStartOver }: { editor: Editor; onStartOver: 
   const [confirmReset, setConfirmReset] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [siteOpen, setSiteOpen] = useState<string | null>("theme");
+  // Site type preview: the site as it would be with another type. Nothing is
+  // saved until Apply; the main preview shows `trial.config` meanwhile.
+  const [prof, setProf] = useState<CollectionProfile>();
+  const [trial, setTrial] = useState<{ type: TemplateId; config: SiteConfig; removed: Removed[] } | null>(null);
+  const [trialRoute, setTrialRoute] = useState<Route>();
   const narrow = useNarrow();
 
   useEffect(() => {
     ds.templates().then(setTemplates, () => {});
     ds.thesauri().then(setThesauri, () => {});
+    profile(ds).then(setProf, () => {});
   }, [ds]);
   useEffect(() => {
     if (!config.languages.includes(lang)) setLang(config.defaultLanguage);
@@ -46,6 +56,40 @@ export function Builder({ editor, onStartOver }: { editor: Editor; onStartOver: 
 
   const page: Page = config.pages.find((p) => p.id === pageId) ?? config.pages[0];
   const route: Route = page.kind === "entity" ? { lang, slug: "entity", entity: entityId } : { lang, slug: page.slug };
+  const previewType = (type: TemplateId) => {
+    if (!prof || type === config.template) {
+      setTrial(null);
+      setTrialRoute(undefined);
+      return;
+    }
+    if (trial?.type === type) return;
+    setTrial({ type, ...switchSiteType(config, type, prof) });
+    setTrialRoute(undefined);
+  };
+  const cancelTrial = () => {
+    setTrial(null);
+    setTrialRoute(undefined);
+  };
+  const applyTrial = () => {
+    if (!trial || !prof) return;
+    const from = siteType(config.template).label;
+    const next = switchSiteType(config, trial.type, prof).config;
+    editor.edit(() => next);
+    setNotice(`Site type changed from ${from} to ${siteType(trial.type).label}. Undo puts it back.`);
+    cancelTrial();
+  };
+  useEffect(() => {
+    if (!trial) return;
+    const on = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !e.defaultPrevented && !document.querySelector("[aria-modal=true]")) cancelTrial();
+    };
+    window.addEventListener("keydown", on);
+    return () => window.removeEventListener("keydown", on);
+  }, [trial]);
+  // In the preview, the page that corresponds to the one being edited.
+  const trialPage = trial ? trial.config.pages.find((p) => p.id === page.id) ?? trial.config.pages.find((p) => p.kind === page.kind) ?? trial.config.pages[0] : undefined;
+  const previewRoute: Route = trial ? trialRoute ?? (trialPage!.kind === "entity" ? { lang, slug: "entity", entity: entityId } : { lang, slug: trialPage!.slug }) : route;
+
   const changes = useMemo(() => diff(doc.published, config), [doc.published, config]);
   const unpublished = doc.published ? changes.length : 1;
 
@@ -152,12 +196,17 @@ export function Builder({ editor, onStartOver }: { editor: Editor; onStartOver: 
                 {doc.published ? (changes.length ? `${changes.length} unpublished change${changes.length === 1 ? "" : "s"}` : "All published") : "Not published yet"}
               </span>
             </div>
-            <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-8">
+            <div className={`flex-1 min-h-0 overflow-y-auto px-4 ${trial ? "pb-48 md:pb-8" : "pb-8"}`}>
               {tab === "page" ? (
                 <PagePanel page={page} editor={editor} selected={selected} onSelect={setSelected} />
               ) : (
                 <SitePanel
                   editor={editor}
+                  before={
+                    <Disclosure title="Site type" open={siteOpen === "type"} onToggle={() => setSiteOpen((o) => (o === "type" ? null : "type"))} aside={siteType(config.template).label}>
+                      <SiteTypePicker current={config.template} previewing={trial?.type} prof={prof} onPreview={previewType} />
+                    </Disclosure>
+                  }
                   open={siteOpen}
                   onOpen={setSiteOpen}
                   extra={
@@ -170,21 +219,29 @@ export function Builder({ editor, onStartOver }: { editor: Editor; onStartOver: 
               )}
             </div>
           </aside>
-          <section aria-label="Preview" className={`${mobileView === "preview" ? "flex" : "hidden"} md:flex flex-1 min-w-0 min-h-0 bg-parchment`}>
+          <section aria-label="Preview" className={`${mobileView === "preview" ? "flex" : "hidden"} md:flex flex-col flex-1 min-w-0 min-h-0 bg-parchment`}>
+            {/* Over the preview, not above both panes: the picker must not
+                move under a pointer that is resting on it. */}
+            {trial ? <TrialBar type={trial.type} removed={trial.removed} onCancel={cancelTrial} onApply={applyTrial} className="hidden md:flex" /> : null}
+            <div className="flex-1 min-h-0 flex">
             <Preview
-              config={config}
-              route={route}
+              config={trial?.config ?? config}
+              route={previewRoute}
               selected={tab === "page" ? selected : siteOpen === "menu" ? "__header" : siteOpen === "footer" ? "__footer" : undefined}
               device={device}
               onSelect={(id) => {
+                if (trial) return;
                 setTab("page");
                 setSelected(id);
                 setMobileView("edit");
               }}
-              onNavigate={onNavigate}
+              onNavigate={trial ? setTrialRoute : onNavigate}
             />
+            </div>
           </section>
         </div>
+        {/* Phones: pinned to the bottom, over whichever pane is showing. */}
+        {trial ? <TrialBar type={trial.type} removed={trial.removed} onCancel={cancelTrial} onApply={applyTrial} className="flex md:hidden fixed inset-x-0 bottom-0 z-30 border-t shadow-[var(--shadow-lg)]" /> : null}
 
         {notice ? (
           <div role="status" className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 rounded-md bg-ink text-paper text-sm px-3 py-2 shadow-[var(--shadow-lg)]">
@@ -373,4 +430,37 @@ function useNarrow() {
     return () => m.removeEventListener("change", on);
   }, []);
   return n;
+}
+
+/** Above both panes while another site type is previewed: what it is, what
+ * would be lost, and the only two ways out. */
+function TrialBar({ type, removed, onCancel, onApply, className = "" }: { type: TemplateId; removed: Removed[]; onCancel: () => void; onApply: () => void; className?: string }) {
+  const n = removed.length;
+  // "Inicio: Search box, List of records ×2; Registro: How to cite"
+  const byPage = new Map<string, Map<string, number>>();
+  for (const r of removed) {
+    const m = byPage.get(r.page) ?? new Map<string, number>();
+    m.set(r.block, (m.get(r.block) ?? 0) + 1);
+    byPage.set(r.page, m);
+  }
+  const list = [...byPage].map(([page, m]) => `${page}: ${[...m].map(([b, k]) => (k > 1 ? `${b} ×${k}` : b)).join(", ")}`).join("; ");
+  return (
+    <div role="region" aria-label="Site type preview" className={`shrink-0 flex-wrap items-center gap-x-3 gap-y-1.5 px-3 sm:px-4 py-2 bg-selected border-b border-border ${className}`}>
+      <p className="min-w-0 flex-1 basis-64 text-sm text-ink" aria-live="polite">
+        Previewing <b className="font-medium">{siteType(type).label}</b>
+        <span className="text-ink-secondary">
+          {" · "}
+          {n ? `${n === 1 ? "1 block" : `${n} blocks`} will be removed. ${list}.` : "Nothing you made is removed."}
+        </span>
+      </p>
+      <span className="ms-auto flex items-center gap-1.5">
+        <Button variant="ghost" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button variant="primary" onClick={onApply}>
+          Apply
+        </Button>
+      </span>
+    </div>
+  );
 }
