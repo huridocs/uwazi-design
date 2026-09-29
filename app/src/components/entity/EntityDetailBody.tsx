@@ -12,7 +12,6 @@ import type { EditResult } from "../../utils/createEntity";
 import type { MetadataField } from "../../data/metadata";
 import type { Language } from "../../atoms/language";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
-import { previewEntityIdAtom } from "../../atoms/entityPreview";
 import { getEntityProfile } from "../../data/entityProfiles";
 import { uiLanguageAtom } from "../../atoms/uiLanguage";
 import { tabsForType } from "../../utils/entityTabs";
@@ -61,6 +60,9 @@ export interface EntityDetailBodyProps {
    *  used to render only inside the edit form, so pills in the Library
    *  preview's Relationships tab set the preview entity and nothing showed it. */
   overlay?: ReactNode;
+  /** Whether a layer above covers this panel, and how its title row takes
+   *  the reader back to it (closes the layers above). */
+  covered?: { on: boolean; onBack: () => void };
   /** Session id for the metadata editor — must be distinct per mounted form. */
   editSessionId?: string;
   editDirtyLabel?: string;
@@ -105,6 +107,7 @@ export function EntityDetailBody({
   openLabel,
   identitySize = "md",
   overlay,
+  covered: coveredBy,
   editSessionId = "metadata-edit-drawer",
   editDirtyLabel = "Metadata edits (preview)",
 }: EntityDetailBodyProps) {
@@ -240,9 +243,7 @@ export function EntityDetailBody({
      same root for the same reason: its scrim covers header, tabs and footer. */
   const [panelEl, setPanelEl] = useState<HTMLDivElement | null>(null);
   const [headerRef, headerH] = useHeight<HTMLDivElement>();
-  // Covered: this panel hosts the slide-over (`overlay`) and it is open.
-  const [previewId, setPreviewId] = useAtom(previewEntityIdAtom);
-  const covered = !!overlay && previewId !== null;
+  const covered = !!coveredBy?.on;
 
   /** "Save and create another": save this draft, then open the next one of
    *  the same template in this drawer, its pinned properties filled from the
@@ -292,6 +293,7 @@ export function EntityDetailBody({
       <div
         ref={setPanelEl}
         data-gutter-host
+        data-covered={covered ? "" : undefined}
         className="gutter-host relative flex flex-col h-full min-h-0 bg-paper overflow-clip"
       >
         {/* Identity header on top — the entity title + close, acting as the
@@ -299,6 +301,7 @@ export function EntityDetailBody({
             panel reads title-first). */}
         <div
           ref={headerRef}
+          data-part="title-row"
           className="bleed relative flex items-start gap-2 pt-3 pb-2.5 shrink-0"
           style={{ borderBottom: "1px solid var(--border-primary)" }}
         >
@@ -309,7 +312,7 @@ export function EntityDetailBody({
             <button
               type="button"
               data-part="back-to-parent"
-              onClick={() => setPreviewId(null)}
+              onClick={coveredBy?.onBack}
               aria-label={`Back to ${entity?.title ?? "entity"}`}
               className="absolute inset-0 z-30 cursor-pointer bg-transparent hover:bg-warm/40 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--accent-blue)]"
             />
