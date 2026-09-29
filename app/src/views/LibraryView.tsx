@@ -65,6 +65,8 @@ import {
   libraryStatusFiltersAtom,
   libraryThumbFrameAtom,
   libraryThumbSizeAtom,
+  libraryCardColumnsAtom,
+  libraryCardColumnsInEffectAtom,
   libraryTimeHubAtom,
   libraryTypeFiltersAtom,
   libraryViewModeAtom,
@@ -253,34 +255,58 @@ export function LibraryView() {
   const thumbFrame = useAtomValue(libraryThumbFrameAtom);
   const thumbSize = useAtomValue(libraryThumbSizeAtom);
   const cardSide = useAtomValue(libraryCardSideAtom);
-  /* The column count follows the pane, not the viewport: `auto-fill` with a
-     minimum card width per frame and size, so a pane narrowed by the drawer
-     drops a column instead of shrinking cards below readable.
-     Landscape needs a two-line title and a label/value pair; portrait is
-     narrower so the 3:4 slot stays small; a side card's text side sets its
-     floor. Size steps the minimum, which steps the count.
-     Static strings: Tailwind reads class names, not expressions. */
+  const cardColumns = useAtomValue(libraryCardColumnsAtom);
+  const setColsInEffect = useSetAtom(libraryCardColumnsInEffectAtom);
+  /* The column count follows the pane, not the viewport.
+     Auto: `auto-fill` over a readable minimum card width per frame, so a pane
+     narrowed by the drawer drops a column instead of shrinking cards (landscape
+     21.5rem: 3 columns in a 1400px pane, as on main; portrait 13.5rem). Side
+     cards keep their size-stepped minimums, because Size sets their picture
+     width. Thumbnail size no longer changes the count otherwise.
+     A chosen count (Display › Columns) is a ceiling: each column is the larger
+     of the pane's 1/N share and a floor, so the grid draws N while cards stay
+     readable and fewer when they would not. Phones stay at 1–2. The 0.5px
+     keeps rounding from turning N into N−1. Static class strings for Auto
+     (Tailwind reads class names); the count path is an inline style. */
+  const portrait = !cardSide && thumbFrame === "portrait" && cardInfo.preview;
   const cardGridCols = cardSide
     ? {
         s: "grid-cols-[repeat(auto-fill,minmax(min(24rem,100%),1fr))]",
         m: "grid-cols-[repeat(auto-fill,minmax(min(29rem,100%),1fr))]",
         l: "grid-cols-[repeat(auto-fill,minmax(min(33rem,100%),1fr))]",
       }[thumbSize]
-    : thumbFrame === "portrait" && cardInfo.preview
-      ? {
-          s: "grid-cols-[repeat(auto-fill,minmax(min(11.5rem,100%),1fr))]",
-          m: "grid-cols-[repeat(auto-fill,minmax(min(13.5rem,100%),1fr))]",
-          l: "grid-cols-[repeat(auto-fill,minmax(min(17rem,100%),1fr))]",
-        }[thumbSize]
-      : {
-          // Landscape floors sized so a title, a label/value pair and the
-          // chip row fit without cutting words: at a 1400px pane Small and
-          // Medium give 3 columns (as on main), Large 2; at 1700 4 / 3 / 3.
-          // 13.5–19rem packed 5–6 columns there and truncated mid-word.
-          s: "grid-cols-[repeat(auto-fill,minmax(min(21.5rem,100%),1fr))]",
-          m: "grid-cols-[repeat(auto-fill,minmax(min(26rem,100%),1fr))]",
-          l: "grid-cols-[repeat(auto-fill,minmax(min(31rem,100%),1fr))]",
-        }[thumbSize];
+    : portrait
+      ? "grid-cols-[repeat(auto-fill,minmax(min(13.5rem,100%),1fr))]"
+      : "grid-cols-[repeat(auto-fill,minmax(min(21.5rem,100%),1fr))]";
+  const phone = useAtomValue(breakpointAtom) === "mobile";
+  const colCount = cardColumns === "auto" ? null : phone ? Math.min(cardColumns, 2) : cardColumns;
+  const colFloor = phone ? (portrait ? "8rem" : "10.5rem") : cardSide ? "20rem" : portrait ? "9.5rem" : "15rem";
+  const cardGridStyle = colCount
+    ? { gridTemplateColumns: `repeat(auto-fill, minmax(max(min(${colFloor}, 100%), calc((100% - ${colCount - 1} * 0.75rem) / ${colCount} - 0.5px)), 1fr))` }
+    : undefined;
+  // What the grid drew, for the menu's "in effect" line. A callback ref
+  // attaches the observer whenever the grid mounts (it unmounts in other views
+  // and with no results); the effect re-measures when the template changes
+  // without a resize. LibraryView re-renders per keystroke, so neither runs
+  // per render.
+  const cardGridEl = useRef<HTMLUListElement | null>(null);
+  const cardGridRO = useRef<ResizeObserver | null>(null);
+  const measureCols = useCallback(() => {
+    const ul = cardGridEl.current;
+    if (ul) setColsInEffect(getComputedStyle(ul).gridTemplateColumns.split(" ").filter(Boolean).length);
+  }, [setColsInEffect]);
+  const cardGridRef = useCallback(
+    (ul: HTMLUListElement | null) => {
+      cardGridRO.current?.disconnect();
+      cardGridEl.current = ul;
+      if (!ul) return;
+      measureCols();
+      cardGridRO.current = new ResizeObserver(measureCols);
+      cardGridRO.current.observe(ul);
+    },
+    [measureCols],
+  );
+  useEffect(measureCols, [measureCols, colCount, colFloor, cardGridCols]);
   /* One lightbox for the whole grid; see `EntityCard.onOpenImage`. */
   const [lightbox, setLightbox] = useState<EntityImage | null>(null);
 
@@ -1261,7 +1287,7 @@ export function LibraryView() {
             No entities match your filters.
           </div>
         ) : viewMode === "cards" ? (
-          <ul className={`grid ${cardGridCols} gap-3`}>
+          <ul ref={cardGridRef} className={`grid ${colCount ? "" : cardGridCols} gap-3`} style={cardGridStyle}>
             {shown.map((e) => (
               <EntityCard
                 key={e.id}

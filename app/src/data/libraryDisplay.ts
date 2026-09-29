@@ -65,6 +65,20 @@ export interface ChoiceOption {
   default: string;
   choices: Choice[];
   scope?: DisplayScope;
+  /** Keep one answer per value of another option: the stored key becomes
+   *  `${id}:${value}` (Columns is kept per thumbnail frame, since a portrait
+   *  hang wants more, narrower columns than a landscape one). */
+  keyedBy?: { id: string; fallback: string; values: string[] };
+  /** Draw the choices as one segmented row instead of a list. For short,
+   *  ordered answers (counts), where a row per choice would be mostly air. */
+  layout?: "segmented";
+}
+
+/** Where a choice option's answer is stored, given the current values. */
+export function storageId(option: ChoiceOption, values: DisplayValues): string {
+  if (!option.keyedBy) return option.id;
+  const k = option.keyedBy;
+  return `${option.id}:${(values[k.id] as string | undefined) ?? k.fallback}`;
 }
 
 /** What the menu knows that the registry can't: the viewport, the query, and
@@ -204,6 +218,26 @@ const CARD_FIELDS: DisplaySection = {
   },
 };
 
+/** How many columns the grid draws. Auto is the readable minimum (3 in a
+ *  1400px pane); a number is a ceiling the grid keeps while each card stays
+ *  readable, and drops below when the pane is too narrow (the menu says what
+ *  is in effect). Kept per frame. Thumbnail size no longer changes the count:
+ *  it sizes the picture only. */
+export const CARD_COLUMNS_CHOICES = ["auto", "2", "3", "4", "5", "6"] as const;
+const CARD_COLUMNS: DisplaySection = {
+  id: "cardCols",
+  label: "Columns",
+  kind: "choice",
+  separator: true,
+  option: {
+    id: "cardCols",
+    default: "auto",
+    layout: "segmented",
+    keyedBy: { id: "thumbFrame", fallback: "landscape", values: ["landscape", "portrait"] },
+    choices: CARD_COLUMNS_CHOICES.map((c) => ({ id: c, label: c === "auto" ? "Auto" : c })),
+  },
+};
+
 /** Size, then frame, then fit — the order the questions come in: how big, what
  *  shape, how the picture sits in it. All three are dead while the Thumbnail
  *  toggle is off, and they say so by dimming rather than by leaving. */
@@ -286,6 +320,7 @@ export const LIBRARY_DISPLAY: Record<LibraryViewMode, DisplaySection[]> = {
         ],
       },
     },
+    CARD_COLUMNS,
     ...thumbSections(),
   ],
 
@@ -396,11 +431,9 @@ export function optionsFor(
   const out: { id: string; scope: DisplayScope; fallback: DisplayValue }[] = [];
   for (const section of sectionsFor(mode, ctx)) {
     if (section.kind === "choice") {
-      out.push({
-        id: section.option.id,
-        scope: section.option.scope ?? "mode",
-        fallback: section.option.default,
-      });
+      const o = section.option;
+      for (const id of o.keyedBy ? o.keyedBy.values.map((v) => `${o.id}:${v}`) : [o.id])
+        out.push({ id, scope: o.scope ?? "mode", fallback: o.default });
     } else {
       for (const o of sectionOptions(section, ctx)) {
         out.push({ id: o.id, scope: o.scope ?? "mode", fallback: o.default });

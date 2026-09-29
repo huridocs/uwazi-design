@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { SlidersHorizontal, Check, RotateCcw } from "lucide-react";
 import { SectionLabel } from "../shared/SectionLabel";
+import { SegmentedControl } from "../shared/SegmentedControl";
 import {
   libraryDisplayAtom,
   libraryDisplayContextAtom,
@@ -12,12 +13,14 @@ import {
   librarySortAtom,
   librarySortDirAtom,
   libraryActiveSearchAtom,
+  libraryCardColumnsInEffectAtom,
   defaultSortDir,
   type LibraryDisplayState,
 } from "../../atoms/library";
 import {
   sectionsFor,
   sectionOptions,
+  storageId,
   type DisplaySection,
   type DisplayValue,
   type DisplayValues,
@@ -48,6 +51,7 @@ export function LibraryDisplayMenu() {
   const setSortDir = useSetAtom(librarySortDirAtom);
   const searching = useAtomValue(libraryActiveSearchAtom) !== null;
   const [open, setOpen] = useState(false);
+  const colsInEffect = useAtomValue(libraryCardColumnsInEffectAtom);
 
   // Escape closes it, like every other overlay in the app. The scrim was the
   // only way out, which is a mouse-only exit from a keyboard-operable menu.
@@ -137,7 +141,36 @@ export function LibraryDisplayMenu() {
     const { option } = section;
     const scope = option.scope ?? "mode";
     const bound = scope === "external" ? external[option.id] : undefined;
-    const current = bound ? bound.value : (valueOf(option.id, scope, option.default) as string);
+    const key = storageId(option, values);
+    const current = bound ? bound.value : (valueOf(key, scope, option.default) as string);
+    if (option.layout === "segmented") {
+      // Columns: the grid reports what it drew. Auto names it; a count the
+      // pane cannot fit says so rather than looking ignored.
+      const n = Number(current);
+      const note =
+        option.id !== "cardCols" || !colsInEffect
+          ? null
+          : current === "auto"
+            ? `${colsInEffect} in this pane`
+            : colsInEffect < n
+              ? `${colsInEffect} in effect: the pane is too narrow for ${n}`
+              : null;
+      return (
+        <div className={`px-2 pb-1 flex flex-col gap-1.5 ${live ? "" : "opacity-40 pointer-events-none"}`}>
+          <SegmentedControl
+            size="sm"
+            fill
+            ariaLabel={section.label}
+            value={current}
+            options={option.choices.map((c) => ({ id: c.id, label: c.label }))}
+            onChange={(id) => write(key, scope, id)}
+          />
+          <p data-part="in-effect" aria-live="polite" className="min-h-4 text-meta leading-4 text-ink-tertiary">
+            {note}
+          </p>
+        </div>
+      );
+    }
     // Relevance is an order only while a query runs; with none it isn't offered.
     const choices = bound && !searching ? option.choices.filter((c) => c.id !== "relevance") : option.choices;
     return choices.map((c) => (

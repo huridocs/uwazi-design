@@ -630,6 +630,17 @@ export const libraryThumbFrameAtom = displayOption<ThumbFrame>(
   "mode",
   DEFAULT_THUMB_FRAME,
 );
+/** Columns for the current frame: "auto" or a count 2–6 (see CARD_COLUMNS). */
+export type CardColumns = "auto" | 2 | 3 | 4 | 5 | 6;
+export const libraryCardColumnsAtom = atom((get): CardColumns => {
+  const frame = get(libraryThumbFrameAtom);
+  const raw = readOption(get(libraryDisplayAtom), get(libraryViewModeAtom), `cardCols:${frame}`, "mode", "auto");
+  const n = Number(raw);
+  return n >= 2 && n <= 6 ? (n as CardColumns) : "auto";
+});
+/** The count the grid actually drew, measured by the Library. The menu shows
+ *  it, so a count the pane cannot fit is never a silent no-op. */
+export const libraryCardColumnsInEffectAtom = atom(0);
 export const libraryThumbFitAtom = displayOption<ThumbFit>("thumbFit", "mode", DEFAULT_THUMB_FIT);
 export const DEFAULT_CARD_LAYOUT: CardLayout = "stacked";
 export const libraryCardLayoutAtom = displayOption<CardLayout>("cardLayout", "mode", DEFAULT_CARD_LAYOUT);

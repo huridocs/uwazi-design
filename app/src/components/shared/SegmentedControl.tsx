@@ -15,12 +15,16 @@ export function SegmentedControl({
   onChange,
   size = "md",
   ariaLabel,
+  fill = false,
 }: {
   value: string;
   options: Segment[];
   onChange: (id: string) => void;
   size?: "sm" | "md";
   ariaLabel?: string;
+  /** Span the container, segments sharing the width equally (a row of short
+   *  answers inside a fixed-width menu). */
+  fill?: boolean;
 }) {
   const h = size === "sm" ? "h-6" : "h-8";
   const iconSize = size === "sm" ? 11 : 14;
@@ -30,7 +34,7 @@ export function SegmentedControl({
       role="group"
       data-component="SegmentedControl"
       aria-label={ariaLabel}
-      className={`inline-flex w-fit items-center rounded-md overflow-hidden ${h}`}
+      className={`${fill ? "flex w-full" : "inline-flex w-fit"} items-center rounded-md overflow-hidden ${h}`}
       style={{ border: "1px solid var(--border-primary)" }}
     >
       {options.map((opt, i) => {
@@ -45,7 +49,7 @@ export function SegmentedControl({
             data-part="option"
             aria-label={opt.label}
             title={opt.label}
-            className={`flex items-center justify-center ${h} px-2 transition-colors cursor-pointer ${
+            className={`flex items-center justify-center ${h} ${fill ? "flex-auto px-1.5" : "px-2"} transition-colors cursor-pointer ${
               active ? "bg-vellum text-ink" : "text-ink-tertiary hover:text-ink-secondary"
             }`}
             style={{ borderLeft: i > 0 ? "1px solid var(--border-primary)" : "none" }}
