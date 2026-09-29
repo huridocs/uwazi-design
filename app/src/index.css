@@ -523,19 +523,6 @@ button:not(:disabled) {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--pdf-hit-ring) 55%, transparent);
 }
 
-/* Phones: every text field at 16px (M05). iOS Safari zooms the page when a
-   field under 16px takes focus, and with the app's overflow-hidden shell it
-   stays zoomed after blur. Unlayered on purpose: it has to win over the
-   `text-xs` / `text-sm` utilities the fields carry at every other width.
-   Checkboxes, radios and ranges have no text to zoom to. */
-@media (max-width: 767.98px) {
-  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
-  select,
-  textarea {
-    font-size: 16px;
-  }
-}
-
 /* The app shell's height (M12): 100dvh where the engine has it, 100vh as the
    fallback before it. iOS Safari counts its collapsing toolbar inside 100vh, so
    a 100vh shell with bars at its foot (Library actions, entity footers, the
