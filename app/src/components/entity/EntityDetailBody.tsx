@@ -12,6 +12,7 @@ import type { EditResult } from "../../utils/createEntity";
 import type { MetadataField } from "../../data/metadata";
 import type { Language } from "../../atoms/language";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
+import { previewEntityIdAtom } from "../../atoms/entityPreview";
 import { getEntityProfile } from "../../data/entityProfiles";
 import { uiLanguageAtom } from "../../atoms/uiLanguage";
 import { tabsForType } from "../../utils/entityTabs";
@@ -78,6 +79,20 @@ const pendingDraftDiscard = new Map<string, number>();
  *  surfaces inside it are scoped by `EntityScopeProvider` rather than by moving
  *  the app's focus, which is what lets the overlay sit on top of a view without
  *  swapping the entity behind it. */
+/** The title row's height, so the slide-over layer can start beneath it. */
+function useHeight<T extends HTMLElement>() {
+  const ref = useRef<T | null>(null);
+  const [h, setH] = useState(0);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setH(el.getBoundingClientRect().height));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return [ref, h] as const;
+}
+
 export function EntityDetailBody({
   entityId,
   focused = false,
@@ -224,6 +239,10 @@ export function EntityDetailBody({
      out to it. See FiltersHostProvider. A pane modal (Copy From) takes the
      same root for the same reason: its scrim covers header, tabs and footer. */
   const [panelEl, setPanelEl] = useState<HTMLDivElement | null>(null);
+  const [headerRef, headerH] = useHeight<HTMLDivElement>();
+  // Covered: this panel hosts the slide-over (`overlay`) and it is open.
+  const [previewId, setPreviewId] = useAtom(previewEntityIdAtom);
+  const covered = !!overlay && previewId !== null;
 
   /** "Save and create another": save this draft, then open the next one of
    *  the same template in this drawer, its pinned properties filled from the
@@ -279,9 +298,22 @@ export function EntityDetailBody({
             panel header. Tabs sit beneath it (flipped from the entity view so the
             panel reads title-first). */}
         <div
-          className="bleed flex items-start gap-2 pt-3 pb-2.5 shrink-0"
+          ref={headerRef}
+          className="bleed relative flex items-start gap-2 pt-3 pb-2.5 shrink-0"
           style={{ borderBottom: "1px solid var(--border-primary)" }}
         >
+          {/* While the slide-over covers this panel, the title row stays as
+              the parent in the hierarchy and is ONE control: back to this
+              entity (closes the slide-over). Its own × and Back sit under it. */}
+          {covered ? (
+            <button
+              type="button"
+              data-part="back-to-parent"
+              onClick={() => setPreviewId(null)}
+              aria-label={`Back to ${entity?.title ?? "entity"}`}
+              className="absolute inset-0 z-30 cursor-pointer bg-transparent hover:bg-warm/40 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--accent-blue)]"
+            />
+          ) : null}
           {/* A stacked sheet's Back (MobileOverlayStack): on this row, level
               with the type and title, not squeezed against the sheet's edge. */}
           {leading && <div className="shrink-0 self-center">{leading}</div>}
@@ -317,7 +349,6 @@ export function EntityDetailBody({
             the top half of an empty pane. `bleed`: it clips (`overflow-hidden`), so
             it has to span the panel for the lanes inside it to reach the edge. */}
         <div className="bleed flex-1 min-h-0 relative overflow-hidden flex flex-col">
-          {overlay}
           {activeTab === "document" ? (
             <DocumentViewer showMinimap={false} hideActionBar />
           ) : activeTab === "relationships" ? (
@@ -436,6 +467,15 @@ export function EntityDetailBody({
             </button>
           </div>
         )}
+        {/* The connected-entity slide-over: from under the title row to the
+            panel's bottom edge, over the tabs, the body and the action bar, so
+            only its own footer shows. The layer takes no pointer events of its
+            own; the scrim and panel inside it do. */}
+        {overlay ? (
+          <div data-part="overlay-layer" className="absolute inset-x-0 bottom-0 pointer-events-none [&>[role=dialog]]:pointer-events-auto" style={{ top: headerH, zIndex: 20 }}>
+            {overlay}
+          </div>
+        ) : null}
       </div>
       </ModalHostProvider>
       </FiltersHostProvider>
