@@ -527,6 +527,9 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
           open={mobileMenuOpen}
           onClose={() => setMobileMenuOpen(false)}
           title="Menu"
+          // Full height: at half, Settings (theme, RTL, language, User/System)
+          // sat below the fold with only a fade to say so.
+          defaultSnap="full"
         >
           <nav data-part="mobile-nav" aria-label="Primary" className="flex flex-col py-2">
             {/* Library */}
