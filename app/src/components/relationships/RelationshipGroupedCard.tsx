@@ -1,5 +1,7 @@
 import { ReactNode, useId } from "react";
 import { ChevronDown } from "lucide-react";
+import { useAtomValue } from "jotai";
+import { breakpointAtom } from "../../atoms/viewport";
 import { useGroupExpansion } from "../../hooks/useGroupExpansion";
 import { CountBadge } from "../shared/CountBadge";
 import { HighlightedText } from "../shared/HighlightedText";
@@ -63,6 +65,7 @@ export function RelationshipGroupedCard({
     onToggle,
   });
   const bodyId = useId();
+  const stackCount = useAtomValue(breakpointAtom) === "mobile" && !!countUnit;
 
   return (
     // A section headed by its title. The heading wraps the toggle (the
@@ -96,10 +99,23 @@ export function RelationshipGroupedCard({
               style={{ backgroundColor: color }}
             />
           )}
-          <span data-part="title" className="text-sm font-medium text-ink truncate">
-            <HighlightedText text={title} query={highlight} />
-          </span>
-          <CountBadge count={count} unit={countUnit} label={countLabel} />
+          {/* A worded count ("1 title match") on a phone goes on its own line
+              under the title: beside a truncated title it wrapped to two. */}
+          {stackCount ? (
+            <span className="min-w-0 flex flex-col items-start gap-1 text-start">
+              <span data-part="title" className="max-w-full text-sm font-medium text-ink truncate">
+                <HighlightedText text={title} query={highlight} />
+              </span>
+              <CountBadge count={count} unit={countUnit} label={countLabel} />
+            </span>
+          ) : (
+            <>
+              <span data-part="title" className="text-sm font-medium text-ink truncate">
+                <HighlightedText text={title} query={highlight} />
+              </span>
+              <CountBadge count={count} unit={countUnit} label={countLabel} />
+            </>
+          )}
         </button>
       </h3>
       {expanded && (
