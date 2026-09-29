@@ -25,6 +25,9 @@ import { MatchModeToggle, type MatchMode } from "../components/shared/MatchModeT
 import { CountBadge } from "../components/shared/CountBadge";
 import { CopyFieldRow } from "../components/metadata/CopyFieldRow";
 import { ListeningChip } from "../components/metadata/ListeningChip";
+import { LangSwitch } from "../components/settings/pages/site/shared";
+import { SyntaxBadge } from "../components/settings/pages/site/CodePageEditor";
+import type { SiteLang } from "../data/sitePages";
 import type { CopyPlan } from "../utils/copyFrom";
 import { MetadataCard, Property, PropertyRow } from "../components/metadata/MetadataCard";
 import { HighlightCard } from "../components/relationships/HighlightCard";
@@ -1576,6 +1579,18 @@ sendFill(selection.text);                                    // commits, then di
                 </CatalogEntry>
               </div>
 
+              <div id="sh-pages-editor" ref={reg("sh-pages-editor")}>
+                <CatalogEntry
+                  name="Pages editor · LangSwitch + SyntaxBadge"
+                  description="Settings › Pages. LangSwitch picks the language being edited: one tab stop, arrow keys move the choice, and a dot marks a language that already has content, so an empty one shows before you open it. SyntaxBadge says which of Uwazi's two component syntaxes a component takes — an HTML-style tag or the older {name}(options) extension — because nothing in Uwazi's editor says so today."
+                  code={`<LangSwitch value={lang} onChange={setLang} filled={(l) => !!draft[l].html.trim()} />
+<SyntaxBadge syntax="jsx" />   // <EntityInfo …/>
+<SyntaxBadge syntax="ext" />   // {link}(…)`}
+                >
+                  <PagesEditorDemo />
+                </CatalogEntry>
+              </div>
+
               <div id="sh-provenance-line" ref={reg("sh-provenance-line")}>
                 <CatalogEntry
                   name="ProvenanceLine"
@@ -2116,3 +2131,14 @@ const textColor = typeLabelColor(type.color);`}
   );
 }
 
+
+function PagesEditorDemo() {
+  const [lang, setLang] = useState<SiteLang>("en");
+  return (
+    <div className="flex flex-wrap items-center gap-4">
+      <LangSwitch value={lang} onChange={setLang} filled={(l) => l === "en" || l === "es"} />
+      <SyntaxBadge syntax="jsx" />
+      <SyntaxBadge syntax="ext" />
+    </div>
+  );
+}
