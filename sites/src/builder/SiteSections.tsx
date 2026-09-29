@@ -91,10 +91,6 @@ function MenuList({ items, onChange, label, listName }: { items: MenuItem[]; onC
   );
 }
 
-function Counted({ n, max }: { n: number; max: number }) {
-  return <span className={`text-[0.6875rem] tabular-nums ${n > max ? "text-seal-label" : "text-ink-muted"}`}>{n} / {max}</span>;
-}
-
 function SeoSection({ editor }: { editor: Editor }) {
   const { config, lang } = useBuilder();
   const t = (x: Parameters<typeof tr>[0]) => tr(x, lang, config.defaultLanguage);
@@ -102,18 +98,13 @@ function SeoSection({ editor }: { editor: Editor }) {
   const title = t(config.seo.title) || t(config.name);
   const desc = t(config.seo.description) || t(config.tagline);
   const host = `${config.collection}.uwazi.io`;
+  const img = config.seo.image;
   return (
     <>
-      <L10nField label="Title in search results" value={config.seo.title} onChange={(title) => set({ title }, "seo-title")} hint="Leave empty to use the site name." />
-      <div className="-mt-1 flex justify-end">
-        <Counted n={title.length} max={60} />
-      </div>
-      <L10nField label="Description" long value={config.seo.description} onChange={(description) => set({ description }, "seo-desc")} />
-      <div className="-mt-1 flex justify-end">
-        <Counted n={desc.length} max={155} />
-      </div>
-      <ImageField label="Picture when shared" value={config.seo.image} onChange={(image) => set({ image })} />
-      <div className="flex flex-col gap-2">
+      <L10nField label="Title in search results" value={config.seo.title} onChange={(title) => set({ title }, "seo-title")} hint="Leave empty to use the site name." max={60} />
+      <L10nField label="Description" long value={config.seo.description} onChange={(description) => set({ description }, "seo-desc")} hint="Leave empty to use the line about the site." max={155} />
+      <ImageField label="Picture when shared" value={img} onChange={(image) => set({ image })} />
+      <section aria-label="How the site appears" className="flex flex-col gap-2">
         <span className="text-xs font-medium text-ink-secondary">In a search engine</span>
         <div className="rounded-md border border-border-soft bg-paper p-3 flex flex-col gap-0.5">
           <span className="text-[0.6875rem] text-ink-tertiary" dir="ltr">{host}</span>
@@ -121,26 +112,34 @@ function SeoSection({ editor }: { editor: Editor }) {
           <span className="text-xs text-ink-secondary line-clamp-2">{desc || "No description: search engines will pick a line from the page."}</span>
         </div>
         <span className="text-xs font-medium text-ink-secondary">When the link is shared</span>
-        <div className="rounded-lg border border-border-soft bg-paper overflow-hidden">
-          <div className="aspect-[1.91/1] bg-vellum grid place-items-center overflow-hidden">
-            {config.seo.image ? (
-              <img src={config.seo.image.src} alt="" className="w-full h-full object-cover" style={{ objectPosition: `${config.seo.image.focal.x * 100}% ${config.seo.image.focal.y * 100}%` }} />
-            ) : (
-              <span className="flex flex-col items-center gap-2 text-ink-muted">
-                <span className="w-10 h-10 rounded-lg grid place-items-center text-lg font-semibold" style={{ background: config.theme.accent, color: onAccent(config.theme.accent) }}>
-                  {t(config.name).charAt(0)}
-                </span>
-                <span className="text-[0.6875rem]">No picture: a plain card is shown</span>
+        {img ? (
+          <div className="rounded-lg border border-border-soft bg-paper overflow-hidden">
+            <div className="aspect-[1.91/1] bg-vellum overflow-hidden">
+              <img src={img.src} alt="" className="w-full h-full object-cover" style={{ objectPosition: `${img.focal.x * 100}% ${img.focal.y * 100}%` }} />
+            </div>
+            <div className="px-3 py-2 flex flex-col gap-0.5 border-t border-border">
+              <span className="text-[0.6875rem] text-ink-tertiary" dir="ltr">{host}</span>
+              <span className="text-sm font-medium text-ink line-clamp-1">{title}</span>
+              <span className="text-xs text-ink-tertiary line-clamp-1">{desc}</span>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Without a picture, chat apps and social sites show a small card. */}
+            <div className="rounded-lg border border-border-soft bg-paper flex items-stretch overflow-hidden">
+              <span aria-hidden className="w-16 shrink-0 grid place-items-center text-xl font-semibold" style={{ background: config.theme.accent, color: onAccent(config.theme.accent) }}>
+                {t(config.name).trim().charAt(0)}
               </span>
-            )}
-          </div>
-          <div className="px-3 py-2 flex flex-col gap-0.5 border-t border-border">
-            <span className="text-[0.6875rem] uppercase text-ink-tertiary" dir="ltr">{host}</span>
-            <span className="text-sm font-medium text-ink line-clamp-1">{title}</span>
-            <span className="text-xs text-ink-tertiary line-clamp-1">{desc}</span>
-          </div>
-        </div>
-      </div>
+              <span className="min-w-0 px-3 py-2 flex flex-col gap-0.5">
+                <span className="text-[0.6875rem] text-ink-tertiary" dir="ltr">{host}</span>
+                <span className="text-sm font-medium text-ink line-clamp-1">{title}</span>
+                <span className="text-xs text-ink-tertiary line-clamp-1">{desc}</span>
+              </span>
+            </div>
+            <p className="text-[0.6875rem] text-ink-tertiary">Add a picture for the large card. 1200 × 630 fits every site.</p>
+          </>
+        )}
+      </section>
     </>
   );
 }

@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useId, useMemo, useRef, useState,
 import { ArrowDown, ArrowUp, ImagePlus, Plus, Search, Trash2, X } from "lucide-react";
 import type { DataSource, Entity, Template, Thesaurus } from "../data/types";
 import type { ImageRef, L10n, Lang, SiteConfig, StatItem } from "../model/config";
-import { LANG_NAMES, missing, newId } from "../model/config";
+import { LANG_NAMES, missing, newId, tr } from "../model/config";
 import { IconButton, Label, Select, inputCls } from "./ui";
 
 export interface BuilderCtx {
@@ -38,7 +38,9 @@ export function MissingMark({ onCopy }: { onCopy?: () => void }) {
   );
 }
 
-export function L10nField({ label, value, onChange, long = false, required = false, hint }: { label: string; value: L10n; onChange: (v: L10n) => void; long?: boolean; required?: boolean; hint?: string }) {
+/** `max` shows a length counter for what will actually be used: this
+ * language's text, or the fallback shown as the placeholder. */
+export function L10nField({ label, value, onChange, long = false, required = false, hint, max }: { label: string; value: L10n; onChange: (v: L10n) => void; long?: boolean; required?: boolean; hint?: string; max?: number }) {
   const { config, lang } = useBuilder();
   const id = useId();
   const def = config.defaultLanguage;
@@ -46,6 +48,9 @@ export function L10nField({ label, value, onChange, long = false, required = fal
   const current = value[lang] ?? "";
   const set = (s: string) => onChange({ ...value, [lang]: s });
   const empty = required && !current.trim() && !(value[def] ?? "").trim();
+  // An empty field shows what will be used instead, from any language.
+  const fallback = current.trim() ? undefined : tr(value, lang, def) || undefined;
+  const used = current.trim() || fallback || "";
   return (
     <div className="flex flex-col gap-1.5">
       <Label htmlFor={id} aside={gap ? <MissingMark onCopy={() => set(value[def] ?? "")} /> : config.languages.length > 1 ? <span className="text-[0.6875rem] text-ink-muted">{lang.toUpperCase()}</span> : null}>
@@ -57,16 +62,21 @@ export function L10nField({ label, value, onChange, long = false, required = fal
           id={id}
           dir={LANG_NAMES[lang]?.rtl ? "rtl" : undefined}
           value={current}
-          placeholder={gap ? value[def] : undefined}
+          placeholder={fallback}
           onChange={(e) => set(e.target.value)}
           rows={Math.min(10, Math.max(3, current.split("\n").length + 1))}
           aria-invalid={empty || undefined}
           className={`${inputCls} h-auto py-1.5 leading-relaxed resize-y ${empty ? "border-seal/60" : ""}`}
         />
       ) : (
-        <input id={id} dir={LANG_NAMES[lang]?.rtl ? "rtl" : undefined} value={current} placeholder={gap ? value[def] : undefined} onChange={(e) => set(e.target.value)} aria-invalid={empty || undefined} className={`${inputCls} ${empty ? "border-seal/60" : ""}`} />
+        <input id={id} dir={LANG_NAMES[lang]?.rtl ? "rtl" : undefined} value={current} placeholder={fallback} onChange={(e) => set(e.target.value)} aria-invalid={empty || undefined} className={`${inputCls} ${empty ? "border-seal/60" : ""}`} />
       )}
-      {hint ? <p className="text-[0.6875rem] text-ink-tertiary">{hint}</p> : null}
+      {hint || max ? (
+        <p className="flex gap-3 text-[0.6875rem] text-ink-tertiary">
+          {hint ? <span className="flex-1">{hint}</span> : null}
+          {max ? <span className={`ms-auto tabular-nums ${used.length > max ? "text-seal-label" : "text-ink-muted"}`}>{used.length} / {max}</span> : null}
+        </p>
+      ) : null}
     </div>
   );
 }
