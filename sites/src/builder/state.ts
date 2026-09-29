@@ -5,6 +5,7 @@ import { useCallback, useEffect, useReducer } from "react";
 import type { Block, Page, SiteConfig } from "../model/config";
 import { newId } from "../model/config";
 import { BLOCKS } from "../model/blocks";
+import { siteType } from "../model/templates";
 import { saveDoc, type SiteDoc } from "../lib/store";
 
 interface State {
@@ -130,6 +131,7 @@ export function diff(before: SiteConfig | null, after: SiteConfig): string[] {
   if (!before) return ["First publish"];
   const out: string[] = [];
   const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+  if (before.template !== after.template) out.push(`Site type: ${siteType(before.template).label} → ${siteType(after.template).label}`);
   if (!same(before.name, after.name) || !same(before.tagline, after.tagline)) out.push("Site name");
   if (!same(before.theme, after.theme)) out.push("Theme");
   if (!same(before.menu, after.menu)) out.push("Menu");

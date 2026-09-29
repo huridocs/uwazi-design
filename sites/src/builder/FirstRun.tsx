@@ -1,6 +1,6 @@
 /* First run: pick a collection, pick a site type, get a finished site. Two
  * choices, one button. */
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import type { CollectionId } from "../data/types";
 import type { SiteConfig, TemplateId } from "../model/config";
@@ -189,10 +189,10 @@ const SIL: Partial<Record<string, string>> = {
   cta: "h-3",
   share: "h-1.5",
 };
-function Schematic({ type, accent, prof }: { type: TemplateId; accent: string; prof: CollectionProfile }) {
-  const home = buildSite(type, prof).pages.find((p) => p.kind === "home")!.blocks;
+export function Schematic({ type, accent, prof, className = "h-36" }: { type: TemplateId; accent: string; prof: CollectionProfile; className?: string }) {
+  const home = useMemo(() => buildSite(type, prof).pages.find((p) => p.kind === "home")!.blocks, [type, prof]);
   return (
-    <span aria-hidden className="flex flex-col gap-1 p-2 h-36 rounded-md bg-paper border border-border overflow-hidden">
+    <span aria-hidden className={`flex flex-col gap-1 p-2 ${className} rounded-md bg-paper border border-border overflow-hidden`}>
       <span className="flex items-center gap-1 mb-0.5">
         <span className="w-2 h-2 rounded-[2px]" style={{ background: accent }} />
         <span className="h-1 w-10 rounded-full bg-border-soft" />

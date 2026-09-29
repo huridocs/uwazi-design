@@ -13,12 +13,13 @@ const SWATCHES = ["#1E3A5F", "#0F766E", "#7C4A1E", "#9F1239", "#B45309", "#33415
 
 /** One section open at a time across Whole site, including `extra`'s; the
  * builder owns which, so the preview can mark the header or footer. */
-export function SitePanel({ editor, open, onOpen, extra }: { editor: Editor; open: string | null; onOpen: (k: string | null) => void; extra?: ReactNode }) {
+export function SitePanel({ editor, open, onOpen, before, extra }: { editor: Editor; open: string | null; onOpen: (k: string | null) => void; before?: ReactNode; extra?: ReactNode }) {
   const { config } = useBuilder();
   const toggle = (k: string) => onOpen(open === k ? null : k);
   const edit = (fn: (c: SiteConfig) => SiteConfig, tag?: string) => editor.edit(fn, tag);
   return (
     <div className="flex flex-col">
+      {before}
       <Disclosure title="Name" open={open === "name"} onToggle={() => toggle("name")}>
         <L10nField label="Site name" value={config.name} onChange={(name) => edit((c) => ({ ...c, name }), "name")} />
         <L10nField label="One line about it" long value={config.tagline} onChange={(tagline) => edit((c) => ({ ...c, tagline }), "tagline")} />
