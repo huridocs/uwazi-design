@@ -252,7 +252,8 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
   // Axis ticks — every Nth bucket boundary, thinned to fit.
   // 11px labels are ~22% wider than the 9px ones this axis was tuned for,
   // so the axis carries fewer of them rather than a smaller size (11px floor).
-  const tickEvery = Math.max(1, Math.ceil(buckets.length / 7));
+  // A phone takes three: at 360–390 more of them ran together ("Jan 2023Apr 2023").
+  const tickEvery = Math.max(1, Math.ceil(buckets.length / (isMobile ? 3 : 7)));
   const ticks = buckets.filter((_, i) => i % tickEvery === 0);
 
   const startDrag = (mode: DragState["mode"]) => (ev: React.PointerEvent) => {

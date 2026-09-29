@@ -122,12 +122,13 @@ export type DisplaySection =
 
 /** The time strip filters by date and charts the whole result set, so it is
  *  useful under every layout — not just the map and the timeline it started
- *  under. One switch, shared. */
+ *  under. One switch, shared. Off by default on phones, where it took about
+ *  110px of every Library screen; the switch stays here. */
 const CHART: DisplaySection = {
   id: "chart",
   label: "Chart",
   kind: "toggles",
-  options: [{ id: "timeStrip", label: "Time strip", default: true, scope: "shared" }],
+  options: (ctx) => [{ id: "timeStrip", label: "Time strip", default: !ctx.isMobile, scope: "shared" }],
 };
 
 /** The sort keys, once — the toolbar Select reads this list and so does the

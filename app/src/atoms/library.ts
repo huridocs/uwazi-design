@@ -572,14 +572,15 @@ function readOption(
 function displayOption<T extends DisplayValue>(
   id: string,
   scope: "mode" | "shared",
-  fallback: T,
+  fallback: T | ((get: Getter) => T),
 ) {
+  const fallbackOf = (get: Getter) => (typeof fallback === "function" ? fallback(get) : fallback);
   return atom(
-    (get) => readOption(get(libraryDisplayAtom), get(libraryViewModeAtom), id, scope, fallback) as T,
+    (get) => readOption(get(libraryDisplayAtom), get(libraryViewModeAtom), id, scope, fallbackOf(get)) as T,
     (get, set, next: T | ((prev: T) => T)) => {
       const mode = get(libraryViewModeAtom);
       const state = get(libraryDisplayAtom);
-      const prev = readOption(state, mode, id, scope, fallback) as T;
+      const prev = readOption(state, mode, id, scope, fallbackOf(get)) as T;
       const value = typeof next === "function" ? (next as (p: T) => T)(prev) : next;
       set(
         libraryDisplayAtom,
@@ -660,7 +661,12 @@ export const libraryListDensityAtom = displayOption<ListDensity>(
 );
 /** The time strip charts the whole result set, so it is one switch for every
  *  mode — the only `shared` toggle in the registry. */
-export const libraryTimeHubAtom = displayOption<boolean>("timeStrip", "shared", DEFAULT_TIME_HUB);
+export const libraryTimeHubAtom = displayOption<boolean>(
+  "timeStrip",
+  "shared",
+  // Off on phones by default, matching the registry (`CHART` in libraryDisplay.ts).
+  (get) => DEFAULT_TIME_HUB && get(breakpointAtom) !== "mobile",
+);
 
 /** What a card carries, for whichever mode is drawing cards. */
 export const libraryCardInfoAtom = atom((get) => {
