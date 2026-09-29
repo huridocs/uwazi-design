@@ -96,3 +96,15 @@ test("blocks with no Uwazi equivalent are named in the warnings", async () => {
   assert.ok(blocks.includes("Status overview"));
   assert.ok(blocks.includes("Status history"));
 });
+
+test("each warning appears once, and the menu warning names its links", async () => {
+  const p = await profile(new MockSource("cejil", "/"));
+  for (const type of SITE_TYPES) {
+    const site = buildSite(type.id, p);
+    const x = exportSite(site);
+    const lines = x.warnings.map((w) => `${w.page}|${w.block}|${w.message}`);
+    assert.equal(new Set(lines).size, lines.length, `${type.id}: duplicate warnings`);
+    const menu = x.warnings.find((w) => w.block === "Menu");
+    if (site.menu.length) assert.ok(menu && menu.message.includes("→"), `${type.id}: menu warning lists the links`);
+  }
+});

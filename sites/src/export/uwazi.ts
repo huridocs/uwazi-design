@@ -134,11 +134,11 @@ function cta(kind: string, label: string, href: string, b: Block, c: Ctx): strin
   if (!label) return "";
   if (kind === "link") return `<a class="s-button" href="${esc(href || "#")}">${esc(label)}</a>`;
   if (kind === "donate") {
-    c.warn(b, "Donate uses PayPalDonateLink: put your PayPal id where it says DONATE_ID.");
+    c.warn(b, "Uses PayPalDonateLink: put your PayPal id where it says DONATE_ID.");
     return `<PayPalDonateLink paypalid="DONATE_ID" currency="USD">${esc(label)}</PayPalDonateLink>`;
   }
   if (kind === "form") return `<ContactForm button="${esc(label)}" />`;
-  c.warn(b, "Sign-up has no Uwazi component; exported as a link. Point it at your mailing-list form.");
+  c.warn(b, "No Uwazi component; exported as a link. Point it at your mailing-list form.");
   return `<a class="s-button" href="${esc(href || "#")}">${esc(label)}</a>`;
 }
 
@@ -170,7 +170,7 @@ function compileBlock(b: Block, c: Ctx): string {
     }
     case "share": {
       const x = p as BlockProps["share"];
-      c.warn(b, "Share is exported as plain links to the site's home; Uwazi has no share component.");
+      c.warn(b, "Exported as plain links to the site's home; Uwazi has no share component.");
       return section("s-share", t(x.title), `<p>\n  <a class="s-button" href="https://wa.me/?text=/">WhatsApp</a>\n  <a class="s-button" href="mailto:?body=/">Email</a>\n</p>`);
     }
     case "contact": {
@@ -183,7 +183,7 @@ function compileBlock(b: Block, c: Ctx): string {
     }
     case "facets": {
       const x = p as BlockProps["facets"];
-      c.warn(b, "Browse by is exported as one ListChart per filter (value + count, linked to the Library).");
+      c.warn(b, "Exported as one ListChart per filter (value + count, linked to the Library).");
       return section("s-facets", t(x.title), x.keys.map((k) => `<ListChart property="${k}"${x.template ? ` context="${x.template}"` : ""} />`).join("\n"));
     }
     case "stats": {
@@ -196,7 +196,7 @@ function compileBlock(b: Block, c: Ctx): string {
     }
     case "statusBar": {
       const x = p as BlockProps["statusBar"];
-      c.warn(b, "Status overview is exported as a PieChart: Uwazi has no stacked status bar.");
+      c.warn(b, "Exported as a PieChart: Uwazi has no stacked status bar.");
       return section("s-status", t(x.title), `<PieChart property="${x.key}"${x.template ? ` context="${x.template}"` : ""} />`);
     }
     case "entityList": {
@@ -224,34 +224,34 @@ function compileBlock(b: Block, c: Ctx): string {
     }
     case "timeline": {
       const x = p as BlockProps["timeline"];
-      c.warn(b, "Timeline has no Uwazi component; exported as a list of the latest dated records.");
+      c.warn(b, "No Uwazi component; exported as a list of the latest dated records.");
       return section("s-timeline", t(x.title), repeat(query({ template: x.template }), "recent", x.limit, "s-rows", card(`<Value path="title" />`)));
     }
     case "index": {
       const x = p as BlockProps["index"];
       if (x.key === "title") {
-        c.warn(b, "A–Z index is exported as one alphabetical list, without letter headings.");
+        c.warn(b, "Exported as one alphabetical list, without letter headings.");
         return section("s-index", t(x.title), repeat(query({ template: x.template }), "title", 200, "s-rows", card(`<Value path="title" />`)));
       }
       return section("s-index", t(x.title), `<ListChart property="${x.key}"${x.template ? ` context="${x.template}"` : ""} />`);
     }
     case "gallery": {
       const x = p as BlockProps["gallery"];
-      c.warn(b, "Picture grid is exported as cards with titles; showing each picture needs its image property in <Value>.");
+      c.warn(b, "Exported as cards with titles; showing each picture needs its image property in <Value>.");
       return section("s-gallery", t(x.title), repeat(query({ template: x.template }), "title", x.limit, "s-cards", card(`<Value path="title" />`)));
     }
     case "collections": {
       const x = p as BlockProps["collections"];
-      c.warn(b, "Collections are exported as a ListChart, without cover pictures.");
+      c.warn(b, "Exported as a ListChart, without cover pictures.");
       return section("s-collections", t(x.title), `<ListChart property="${x.key}"${x.template ? ` context="${x.template}"` : ""} />`);
     }
     case "table": {
       const x = p as BlockProps["table"];
-      c.warn(b, "Table is exported as a list: Repeat has no columns.");
+      c.warn(b, "Exported as a list: Repeat has no columns.");
       return section("s-table", t(x.title), repeat(query({ template: x.template }), "recent", x.limit, "s-rows", card(`<Value path="title" />`)));
     }
     case "results": {
-      c.warn(b, "Search results: Uwazi's Library is the results page. Exported as a search box that opens it.");
+      c.warn(b, "Uwazi's Library is the results page. Exported as a search box that opens it.");
       return `<section class="s-search">\n  <SearchBox />\n</section>`;
     }
     case "entityHeader":
@@ -260,7 +260,7 @@ function compileBlock(b: Block, c: Ctx): string {
       const x = p as BlockProps["entityFields"];
       const keys = x.keys.length ? x.keys : (c.entityTemplate?.properties ?? []).map((q) => q.name).filter((k) => k !== c.summaryKey);
       if (!keys.length) {
-        c.warn(b, "Properties: the template isn't known, so the export lists the creation date only. Pick properties to export them.");
+        c.warn(b, "The template isn't known, so the export lists the creation date only. Pick properties to export them.");
         keys.push("creationDate");
       }
       return section("s-fields", t(x.title), `<dl>\n${keys.map((k) => `  <dt><EntityData label-of="${k}" /></dt>\n  <dd><EntityData value-of="${k}" /></dd>`).join("\n")}\n</dl>`);
@@ -270,17 +270,17 @@ function compileBlock(b: Block, c: Ctx): string {
       return section("s-summary", t(x.title), `<EntityData value-of="${c.summaryKey}" />`);
     }
     case "entityHistory":
-      c.warn(b, "Status history has no Uwazi equivalent and is left out.");
+      c.warn(b, "No Uwazi equivalent; left out.");
       return "";
     case "entityConnections":
-      c.warn(b, "Connections have no page component in Uwazi and are left out; the entity's own view lists them.");
+      c.warn(b, "No page component in Uwazi; left out, and the entity's own view lists them.");
       return "";
     case "entityDownload":
-      c.warn(b, "Download is left out: Uwazi's entity view already offers the document.");
+      c.warn(b, "Left out: Uwazi's entity view already offers the document.");
       return "";
     case "entityCitation": {
       const x = p as BlockProps["entityCitation"];
-      c.warn(b, "How to cite is exported as static text built from the title; there is no copy button.");
+      c.warn(b, "Exported as static text built from the title; there is no copy button.");
       return section("s-cite", t(x.title), `<p><EntityData value-of="title" />. ${esc(t(c.config.name))}.</p>`);
     }
   }
@@ -336,6 +336,7 @@ export interface ExportOptions {
 
 export function exportSite(config: SiteConfig, { titleOf = (id) => id, templates = [] }: ExportOptions = {}): SiteExport {
   const warnings: Warning[] = [];
+  const seen = new Set<string>();
   const pages = config.pages.map((page): PageExport => {
     const scope = scopeOf(page);
     const pageTitle = tr(page.title, "en", config.defaultLanguage);
@@ -344,7 +345,6 @@ export function exportSite(config: SiteConfig, { titleOf = (id) => id, templates
     const html: Record<Lang, string> = {};
     const titles: Record<Lang, string> = {};
     for (const lang of config.languages) {
-      const seen = new Set<string>();
       const ctx: Ctx = {
         lang,
         config,
@@ -353,9 +353,10 @@ export function exportSite(config: SiteConfig, { titleOf = (id) => id, templates
         titleOf,
         summaryKey,
         entityTemplate,
-        // Warnings are about blocks, not languages: record each once.
+        // Warnings are about kinds of block, not languages or copies: two
+        // Connections blocks on one page give one line.
         warn: (b, message) => {
-          const k = `${b.id}:${message}`;
+          const k = `${page.id}:${b.type}:${message}`;
           if (seen.has(k) || lang !== config.defaultLanguage) return;
           seen.add(k);
           warnings.push({ page: pageTitle, block: BLOCKS[b.type].label, message });
@@ -381,7 +382,17 @@ export function exportSite(config: SiteConfig, { titleOf = (id) => id, templates
       jsReason: custom ? "The site's own code from Whole site › Advanced. No block needs JavaScript." : undefined,
     };
   });
-  if (config.menu.length) warnings.push({ page: "Whole site", block: "Menu", message: "The menu is not code: add each item in Settings › Menu." });
+  const t = (x: Parameters<typeof tr>[0]) => tr(x, config.defaultLanguage, config.defaultLanguage);
+  const target = (m: SiteConfig["menu"][number]) => {
+    const p = config.pages.find((q) => q.id === m.page);
+    return p ? `the “${t(p.title)}” page` : m.url ?? "";
+  };
+  const links = (ms: SiteConfig["menu"]) => ms.map((m) => `${t(m.label)} → ${target(m)}`).join("; ");
+  if (config.menu.length) warnings.push({ page: "Whole site", block: "Menu", message: `Not code: add each item in Settings › Menu, in this order: ${links(config.menu)}.` });
+  if (t(config.footer.text) || config.footer.links.length)
+    warnings.push({ page: "Whole site", block: "Footer", message: "Uwazi's footer is fixed. Put the footer text and links at the end of each page's HTML, or leave them out." });
+  if (t(config.seo.description) || config.seo.image)
+    warnings.push({ page: "Whole site", block: "Search and sharing", message: "Uwazi sets the page title itself; the description and share picture are not exported." });
   if (config.theme.logo) warnings.push({ page: "Whole site", block: "Logo", message: "The logo is not exported: upload it in Settings › Collection." });
   return { globalCss: themeCss(config), pages, warnings };
 }
