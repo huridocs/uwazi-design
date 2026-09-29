@@ -890,7 +890,9 @@ export function LibraryView() {
                 submitSearch();
               }
             }}
-            placeholder="Search title & metadata"
+            // A phone takes the short form: at 360–390 the long one cut mid-word
+            // ("Search title & me"). The aria-label says what is searched.
+            placeholder={isMobile ? "Search" : "Search title & metadata"}
             aria-label="Search entities"
             className="flex-1 min-w-[60px] bg-transparent text-xs font-medium placeholder:text-ink-tertiary focus:outline-none"
           />
@@ -906,7 +908,7 @@ export function LibraryView() {
               <X size={12} />
             </button>
           )}
-          <SearchTipsPopover />
+          <SearchTipsPopover compact={isMobile} />
           {/* Follows FOCUS; the tips popover follows a click on its chip — which
               blurs the input, so the two can never be open at once without any
               shared state to arbitrate. */}

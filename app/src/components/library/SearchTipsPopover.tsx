@@ -60,7 +60,11 @@ const PROSE_CLASS = "min-w-0 text-meta leading-snug text-ink-secondary";
  *  (which live-runs the search) and closes the popover. */
 export function SearchTipsPopover({
   onInsert,
+  compact = false,
 }: {
+  /** Icon only, with "tips" kept for screen readers. For a phone, where the
+   *  word took about 47px of the search box. */
+  compact?: boolean;
   /** Where a clicked example goes. Defaults to the Library search box; the
    *  entity drawer's Search tab passes its own setter. */
   onInsert?: (example: string) => void;
@@ -142,7 +146,7 @@ export function SearchTipsPopover({
           cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20"
       >
         <Lightbulb size={11} aria-hidden="true" />
-        tips
+        {compact ? <span className="sr-only">tips</span> : "tips"}
       </button>
 
       {open &&
