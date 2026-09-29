@@ -54,7 +54,7 @@ function checkCss(css, scope, where) {
   const body = css.split("/* Custom CSS from Advanced")[0];
   for (const m of body.matchAll(/(^|})\s*([^{}]+?)\s*{/g)) {
     for (const sel of m[2].split(",").map((s) => s.trim())) {
-      if (sel.startsWith(":root")) continue;
+      if (sel.startsWith(":root") || sel.startsWith("@")) continue;
       assert.ok(sel === `.${scope}` || sel.startsWith(`.${scope} `), `${where}: selector "${sel}" escapes .${scope}`);
     }
   }
@@ -107,4 +107,24 @@ test("each warning appears once, and the menu warning names its links", async ()
     const menu = x.warnings.find((w) => w.block === "Menu");
     if (site.menu.length) assert.ok(menu && menu.message.includes("→"), `${type.id}: menu warning lists the links`);
   }
+});
+
+test("block style exports as scoped page CSS; per-language visibility drops the block from other languages", async () => {
+  const p = await profile(new MockSource("cejil", "/"));
+  const site = buildSite("legal", p);
+  const home = site.pages.find((x) => x.kind === "home");
+  const [hero, second] = home.blocks;
+  hero.style = { pad: "XL", align: "center", eyebrow: { es: "Archivo", en: "Archive" }, devices: ["desktop", "tablet"] };
+  second.style = { langs: ["en"], bg: "image" };
+  const x = exportSite(site);
+  const page = x.pages.find((q) => q.pageId === home.id);
+  const scope = scopeOf(home);
+  assert.ok(page.html.es.includes('class="s-b0 s-hero"'), "styled block gets its class");
+  assert.ok(page.html.es.includes('<p class="s-eyebrow">Archivo</p>'), "eyebrow in the page language");
+  assert.ok(page.css.includes(`.${scope} .s-b0 {`) && page.css.includes("padding-block: 6rem"), "padding step exported");
+  assert.ok(page.css.includes("@media (max-width: 39.99rem)"), "hidden on phones");
+  checkCss(page.css, scope, "styled page");
+  const n = (html) => (html.match(/<section/g) ?? []).length;
+  assert.equal(n(page.html.es) + 1, n(page.html.en), "an EN-only block is left out of the ES HTML");
+  assert.ok(x.warnings.some((w) => /background picture/.test(w.message)), "a background picture is named in the warnings");
 });

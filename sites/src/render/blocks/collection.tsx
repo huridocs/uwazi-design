@@ -69,7 +69,7 @@ function Chips({ template, k, limit = 10 }: { template?: string; k: string; limi
   return (
     <Loadable q={q} rows={1} empty={(d) => !d.length}>
       {(d) => (
-        <ul className="flex flex-wrap gap-2">
+        <ul className="blk-grid blk-row flex flex-wrap gap-2">
           {(k === "year" ? d.slice(-limit).reverse() : d.slice(0, limit)).map((b) => (
             <li key={b.key}>
               <PageLink slug={slug} filters={{ [k]: [b.key] }} className="inline-flex items-center gap-2 h-8 px-3 rounded-full border border-border-soft bg-paper text-sm text-ink hover:bg-warm hover:border-ink/30">
@@ -116,7 +116,7 @@ export function Stats({ p }: { p: BlockProps["stats"] }) {
   const { t } = useSite();
   return (
     <Section title={t(p.title)}>
-      <dl className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-8 border-y border-border py-8">
+      <dl className="blk-grid grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-8 border-y border-border py-8">
         {p.items.map((it) => (
           <div key={it.id} className="flex flex-col-reverse gap-2">
             <dt className="text-sm text-ink-tertiary">{t(it.label)}</dt>
@@ -177,7 +177,7 @@ function ListBody({ rows, layout, keys }: { rows: Entity[]; layout: "cards" | "l
       </ul>
     );
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="blk-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {rows.map((e) => (
         <EntityCard key={e.id} e={e} />
       ))}
@@ -216,7 +216,7 @@ export function Featured({ p }: { p: BlockProps["featured"] }) {
     <Section title={t(p.title)}>
       <Loadable q={q} rows={3} empty={(d) => !d.length}>
         {(d) => (
-          <div className={`grid gap-4 sm:grid-cols-2 ${p.lead ? "lg:grid-cols-4" : "lg:grid-cols-4"}`}>
+          <div className="blk-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {d.map((e, i) => (
               <EntityCard key={e.id} e={e} lead={p.lead && i === 0} />
             ))}
@@ -235,7 +235,7 @@ export function Topics({ p }: { p: BlockProps["topics"] }) {
     <Section title={t(p.title)}>
       <Loadable q={q} rows={3} empty={(d) => !d.length}>
         {(d) => (
-          <ul className="grid gap-px bg-border border border-border rounded-lg overflow-hidden grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+          <ul className="blk-grid grid gap-px bg-border border border-border rounded-lg overflow-hidden grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
             {d.slice(0, p.limit).map((b) => (
               <li key={b.key} className="bg-paper">
                 <PageLink slug={slug} filters={{ [p.key]: [b.key] }} className="group flex flex-col gap-1 p-4 h-full hover:bg-warm">
@@ -396,7 +396,7 @@ export function Timeline({ p }: { p: BlockProps["timeline"] }) {
             // Phones: vertical, the line down the start edge through each dot.
             // Wider: rows that wrap (nothing is clipped or scrolled away), the
             // date above a rail whose line runs through the dots' centres.
-            <ol className="grid sm:grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] sm:gap-y-8">
+            <ol className="blk-grid grid sm:grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] sm:gap-y-8">
               {rows.map((e, i) => {
                 const last = i === rows.length - 1;
                 return (
@@ -547,7 +547,7 @@ export function Gallery({ p }: { p: BlockProps["gallery"] }) {
       <Loadable q={q} rows={4} empty={(d) => !d.rows.length}>
         {(d) => (
           <>
-            <ul className={p.layout === "masonry" ? "columns-2 sm:columns-3 lg:columns-4 gap-3" : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"}>
+            <ul className={`blk-grid ${p.layout === "masonry" ? "columns-2 sm:columns-3 lg:columns-4 gap-3" : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"}`}>
               {d.rows.map((e, i) => (
                 <li key={e.id} className={p.layout === "masonry" ? "mb-3 break-inside-avoid" : ""}>
                   <button type="button" onClick={() => setOpen(i)} className="group block w-full text-start cursor-zoom-in rounded-md overflow-hidden bg-vellum focus-visible:outline-2 focus-visible:outline-accent">
@@ -557,7 +557,7 @@ export function Gallery({ p }: { p: BlockProps["gallery"] }) {
                       loading="lazy"
                       width={e.image!.width}
                       height={e.image!.height}
-                      className={`w-full block group-hover:opacity-90 transition-opacity ${p.layout === "grid" ? "aspect-square object-cover" : "h-auto"}`}
+                      className={`blk-shape w-full block group-hover:opacity-90 transition-opacity ${p.layout === "grid" ? "aspect-square object-cover" : "h-auto"}`}
                     />
                   </button>
                 </li>
@@ -582,11 +582,11 @@ export function Collections({ p }: { p: BlockProps["collections"] }) {
     <Section title={t(p.title)}>
       <Loadable q={q} rows={3} empty={(d) => !d.length}>
         {(d) => (
-          <ul className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+          <ul className="blk-grid grid gap-4 grid-cols-2 lg:grid-cols-4">
             {d.map(({ b, cover }) => (
               <li key={b.key}>
                 <PageLink slug={slug} filters={{ [p.key]: [b.key] }} className="group flex flex-col gap-2">
-                  <span className="block aspect-[4/3] rounded-md overflow-hidden bg-vellum">
+                  <span className="blk-shape block aspect-[4/3] rounded-md overflow-hidden bg-vellum">
                     {cover?.image ? <img src={cover.image.url} alt="" loading="lazy" className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" /> : null}
                   </span>
                   <span className="flex items-baseline gap-2">

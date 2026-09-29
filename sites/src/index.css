@@ -97,3 +97,31 @@ button:not(:disabled),
     text-align: right;
   }
 }
+
+/* Block style hooks (model/style.ts, render/blockStyle.tsx). The block's
+   wrapper carries data-gap / data-cols / data-shape / data-bg; a renderer
+   marks its item container `blk-grid` and its pictures `blk-shape`. Unlayered
+   on purpose: they must beat the renderer's own utility classes, and only
+   apply when a style is set. Scales match GAP_REM / SHAPE_RATIO. */
+[data-gap="S"] .blk-grid { gap: 0.5rem; }
+[data-gap="L"] .blk-grid { gap: 1.5rem; }
+[data-gap="XL"] .blk-grid { gap: 2.25rem; }
+@media (min-width: 640px) {
+  [data-cols="2"] .blk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); column-count: 2; }
+  [data-cols="3"] .blk-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); column-count: 3; }
+  [data-cols="4"] .blk-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); column-count: 4; }
+}
+[data-shape="square"] .blk-shape { aspect-ratio: 1 / 1; height: auto; object-fit: cover; }
+[data-shape="portrait"] .blk-shape { aspect-ratio: 3 / 4; height: auto; object-fit: cover; }
+[data-shape="landscape"] .blk-shape { aspect-ratio: 4 / 3; height: auto; object-fit: cover; }
+/* Over a picture the text turns light: the tokens are redefined for the
+   block, so every block reads the same way without knowing it. */
+[data-bg="image"] {
+  --text-primary: #fff;
+  --text-secondary: rgb(255 255 255 / 0.88);
+  --text-tertiary: rgb(255 255 255 / 0.75);
+  --text-muted: rgb(255 255 255 / 0.6);
+  --border-primary: rgb(255 255 255 / 0.28);
+  --border-soft: rgb(255 255 255 / 0.22);
+  --site-accent-text: #fff;
+}

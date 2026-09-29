@@ -2,6 +2,7 @@
  * the renderer draws it, Export to Uwazi compiles it. Nothing about a site
  * lives anywhere else. */
 import type { CollectionId, Sort } from "../data/types";
+import type { BlockStyle } from "./style";
 
 export type Lang = string;
 /** Per-language text. A missing key means "not translated yet"; readers fall
@@ -119,6 +120,8 @@ export interface Block<T extends BlockType = BlockType> {
   type: T;
   hidden?: boolean;
   props: BlockProps[T];
+  /** Style steps (model/style.ts); absent = the block's defaults. */
+  style?: BlockStyle;
 }
 
 export interface SiteConfig {

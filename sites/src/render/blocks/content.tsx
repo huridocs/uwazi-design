@@ -5,6 +5,7 @@ import { Check, Link2, Mail } from "lucide-react";
 import type { BlockProps, ImageRef } from "../../model/config";
 import { useSite } from "../context";
 import { Section } from "../parts";
+import { useBlockStyle } from "../blockStyle";
 import { RichText } from "../text";
 import { ui } from "../ui";
 
@@ -66,8 +67,19 @@ function Cta({ kind, label, href }: { kind: string; label: string; href: string 
   );
 }
 
+const HERO_PAD: Record<string, [string, string]> = {
+  S: ["pt-8 pb-6 sm:pt-10 sm:pb-8", "pt-24 pb-8"],
+  M: ["pt-14 pb-10 sm:pt-20 sm:pb-14", "pt-40 pb-14"],
+  L: ["pt-20 pb-14 sm:pt-28 sm:pb-20", "pt-52 pb-20"],
+  XL: ["pt-28 pb-20 sm:pt-40 sm:pb-28", "pt-64 pb-28"],
+};
+const HERO_H1: Record<string, string> = { "-1": "text-3xl sm:text-4xl", "0": "text-4xl sm:text-5xl", "1": "text-5xl sm:text-6xl" };
+
 export function Hero({ p }: { p: BlockProps["hero"] }) {
   const { t } = useSite();
+  const st = useBlockStyle();
+  const center = st?.align === "center";
+  const eyebrow = st?.eyebrow ? t(st.eyebrow) : "";
   const hasImage = !!p.image;
   return (
     <section className={`w-full ${hasImage ? "relative isolate overflow-hidden" : "border-b border-border"}`}>
@@ -77,8 +89,9 @@ export function Hero({ p }: { p: BlockProps["hero"] }) {
           <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-black/70 via-black/30 to-black/10" />
         </>
       ) : null}
-      <div className={`mx-auto max-w-[68rem] px-5 ${hasImage ? "pt-40 pb-14 text-white" : "pt-14 pb-10 sm:pt-20 sm:pb-14"}`}>
-        <h1 className={`font-heading text-4xl sm:text-5xl leading-[1.08] tracking-tight text-balance max-w-[20ch] ${hasImage ? "" : "text-ink"}`}>{t(p.title)}</h1>
+      <div className={`mx-auto max-w-[68rem] px-5 ${HERO_PAD[st?.pad ?? "M"][hasImage ? 1 : 0]} ${hasImage ? "text-white" : ""} ${center ? "flex flex-col items-center text-center" : ""}`}>
+        {eyebrow ? <p className={`mb-3 text-xs font-medium uppercase tracking-[0.08em] ${hasImage ? "text-white/85" : "text-accent-text"}`}>{eyebrow}</p> : null}
+        <h1 className={`font-heading ${HERO_H1[String(st?.heading ?? 0)]} leading-[1.08] tracking-tight text-balance max-w-[20ch] ${hasImage ? "" : "text-ink"}`}>{t(p.title)}</h1>
         {t(p.subtitle) ? <p className={`mt-4 text-lg sm:text-xl max-w-[42rem] text-pretty ${hasImage ? "text-white/90" : "text-ink-secondary"}`}>{t(p.subtitle)}</p> : null}
         {p.ctaKind !== "none" && t(p.ctaLabel) ? (
           <div className="mt-7">
@@ -122,7 +135,7 @@ export function Asks({ p }: { p: BlockProps["asks"] }) {
   const items = p.items.map(t).filter(Boolean);
   return (
     <Section title={t(p.title)}>
-      <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <ol className="blk-grid grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((it, i) => (
           <li key={i} className="flex gap-4 rounded-lg bg-vellum p-5">
             <span className="font-heading text-3xl leading-none text-accent-text tabular-nums">{i + 1}</span>
@@ -154,7 +167,7 @@ export function Share({ p }: { p: BlockProps["share"] }) {
   const btn = "inline-flex items-center gap-2 h-9 px-3 rounded-md border border-border-soft bg-paper text-sm text-ink hover:bg-warm cursor-pointer";
   return (
     <Section title={t(p.title)}>
-      <div className="flex flex-wrap gap-2">
+      <div className="blk-row flex flex-wrap gap-2">
         <a className={btn} href={`https://wa.me/?text=${encodeURIComponent(url)}`} target="_blank" rel="noreferrer">
           WhatsApp
         </a>

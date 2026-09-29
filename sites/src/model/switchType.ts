@@ -36,7 +36,8 @@ export function switchSiteType(current: SiteConfig, type: TemplateId, p: Collect
       const i = pool.findIndex((b) => b.type === nb.type);
       if (i < 0) return nb;
       const [b] = pool.splice(i, 1);
-      return pristine(b) ? { ...nb, id: b.id } : b;
+      // A block's style is the person's too: it rides along either way.
+      return pristine(b) ? { ...nb, id: b.id, style: b.style } : b;
     });
     for (const b of pool) removed.push({ page: t(op.title), block: BLOCKS[b.type].label });
     const titled = gen && same(gen.title, op.title);

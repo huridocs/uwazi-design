@@ -8,10 +8,14 @@ import { BLOCKS, makeBlock, type BlockGroup } from "../model/blocks";
 import { BlockForm, blockSummary } from "./BlockForm";
 import { L10nField, TextField, useBuilder } from "./fields";
 import { duplicateBlock, moveBlock, onBlock, onPage, type Editor } from "./state";
-import { Disclosure, IconButton, Modal } from "./ui";
+import { Disclosure, IconButton, Modal, Segmented } from "./ui";
+import { StyleForm } from "./StyleForm";
+import { isStyled } from "../model/style";
 import { tr } from "../model/config";
 
-export function PagePanel({ page, editor, selected, onSelect }: { page: Page; editor: Editor; selected?: string; onSelect: (id?: string) => void }) {
+export type BlockPane = "content" | "style";
+
+export function PagePanel({ page, editor, selected, onSelect, pane, onPane }: { page: Page; editor: Editor; selected?: string; onSelect: (id?: string) => void; pane: BlockPane; onPane: (p: BlockPane) => void }) {
   const { config, lang, templates } = useBuilder();
   const t = (x: Parameters<typeof tr>[0]) => tr(x, lang, config.defaultLanguage);
   const [adding, setAdding] = useState(false);
@@ -124,7 +128,14 @@ export function PagePanel({ page, editor, selected, onSelect }: { page: Page; ed
                   <button type="button" aria-expanded={open} onClick={() => onSelect(open ? undefined : b.id)} className="flex-1 min-w-0 flex items-center gap-2 text-start py-1.5">
                     <ChevronRight size={13} aria-hidden className={`shrink-0 text-ink-muted transition-transform ${open ? "rotate-90" : "rtl:rotate-180"}`} />
                     <span className="min-w-0 flex flex-col">
-                      <span className={`text-sm ${b.hidden ? "text-ink-muted line-through decoration-ink-muted/60" : "text-ink"}`}>{def.label}</span>
+                      <span className="flex items-center gap-1.5">
+                        <span className={`text-sm ${b.hidden ? "text-ink-muted line-through decoration-ink-muted/60" : "text-ink"}`}>{def.label}</span>
+                        {isStyled(b.style) ? (
+                          <span data-part="styled" className="rounded px-1 text-[0.625rem] leading-4 font-medium text-ink-tertiary shadow-[inset_0_0_0_1px_var(--border-primary)]">
+                            styled
+                          </span>
+                        ) : null}
+                      </span>
                       {summary ? <span className="text-[0.6875rem] text-ink-tertiary truncate">{summary}</span> : null}
                     </span>
                   </button>
@@ -156,8 +167,21 @@ export function PagePanel({ page, editor, selected, onSelect }: { page: Page; ed
                   </span>
                 </div>
                 {open ? (
-                  <div className="ps-7 pe-1 pt-2 pb-4">
-                    <BlockForm block={b} onChange={(props, tag) => editor.edit(onBlock(page.id, b.id, (x) => ({ ...x, props }) as Block), tag)} />
+                  <div className="ps-7 pe-1 pt-2 pb-4 flex flex-col gap-3">
+                    <Segmented<BlockPane>
+                      label={`${def.label}: content or style`}
+                      value={pane}
+                      onChange={onPane}
+                      options={[
+                        { value: "content", label: "Content" },
+                        { value: "style", label: "Style" },
+                      ]}
+                    />
+                    {pane === "style" ? (
+                      <StyleForm block={b} onChange={(style, tag) => editor.edit(onBlock(page.id, b.id, (x) => ({ ...x, style })), tag)} />
+                    ) : (
+                      <BlockForm block={b} onChange={(props, tag) => editor.edit(onBlock(page.id, b.id, (x) => ({ ...x, props }) as Block), tag)} />
+                    )}
                   </div>
                 ) : null}
               </li>

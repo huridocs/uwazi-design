@@ -51,3 +51,14 @@ test("switching back and forth without edits returns the original type's blocks"
   const types = (c) => c.pages.map((x) => x.blocks.map((b) => b.type).join(","));
   assert.deepEqual(types(back), types(site));
 });
+
+test("a block's style survives a type change when the new type keeps the block", async () => {
+  const p = await profile(new MockSource("cejil", "/"));
+  const site = buildSite("legal", p);
+  const hero = site.pages.find((x) => x.kind === "home").blocks.find((b) => b.type === "hero");
+  hero.style = { pad: "L", bg: "warm" };
+  for (const t of SITE_TYPES.filter((s) => s.id !== "legal")) {
+    const next = switchSiteType(site, t.id, p).config.pages.find((x) => x.kind === "home").blocks.find((b) => b.type === "hero");
+    if (next) assert.deepEqual(next.style, { pad: "L", bg: "warm" }, `${t.id}: hero keeps its style`);
+  }
+});

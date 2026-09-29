@@ -7,7 +7,7 @@ import { LANG_NAMES, tr } from "../model/config";
 import { sourceFor } from "../lib/sources";
 import type { Route } from "../render/context";
 import { BuilderProvider } from "./fields";
-import { PagePanel } from "./PagePanel";
+import { PagePanel, type BlockPane } from "./PagePanel";
 import { Preview, type Device } from "./Preview";
 import { SitePanel } from "./SitePanel";
 import { SiteSections } from "./SiteSections";
@@ -30,6 +30,7 @@ export function Builder({ editor, onStartOver }: { editor: Editor; onStartOver: 
   const [pageId, setPageId] = useState(() => config.pages.find((p) => p.kind === "home")?.id ?? config.pages[0].id);
   const [entityId, setEntityId] = useState<string>();
   const [selected, setSelected] = useState<string>();
+  const [blockPane, setBlockPane] = useState<BlockPane>("content");
   const [device, setDevice] = useState<Device>("desktop");
   const [tab, setTab] = useState<"page" | "site">("page");
   const [mobileView, setMobileView] = useState<"edit" | "preview">("edit");
@@ -198,7 +199,7 @@ export function Builder({ editor, onStartOver }: { editor: Editor; onStartOver: 
             </div>
             <div className={`flex-1 min-h-0 overflow-y-auto px-4 ${trial ? "pb-48 md:pb-8" : "pb-8"}`}>
               {tab === "page" ? (
-                <PagePanel page={page} editor={editor} selected={selected} onSelect={setSelected} />
+                <PagePanel page={page} editor={editor} selected={selected} onSelect={setSelected} pane={blockPane} onPane={setBlockPane} />
               ) : (
                 <SitePanel
                   editor={editor}

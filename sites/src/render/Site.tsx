@@ -6,6 +6,8 @@ import type { DataSource, Entity, Template } from "../data/types";
 import type { Block, MenuItem, Page, SiteConfig } from "../model/config";
 import { LANG_NAMES, entityPage, isRtl, pageBySlug, tr } from "../model/config";
 import { BLOCKS } from "../model/blocks";
+import { shownIn } from "../model/style";
+import { BlockStyleProvider, wrapperProps } from "./blockStyle";
 import { SiteProvider, routeHref, useQuery, useSite, type Route, type SiteCtx } from "./context";
 import { themeVars } from "./theme";
 import { ui } from "./ui";
@@ -60,28 +62,51 @@ function useRegion(id: "__header" | "__footer") {
 }
 
 function BlockView({ block, page }: { block: Block; page: Page }) {
-  const { preview, selected, onSelect } = useSite();
+  const { preview, selected, onSelect, lang } = useSite();
   const R = RENDER[block.type];
-  if (block.hidden && !preview) return null;
-  const body = R ? <R p={block.props} page={page} /> : null;
-  if (!preview) return <div data-block={block.type}>{body}</div>;
+  const st = block.style;
+  const langOff = !shownIn(st, lang);
+  if ((block.hidden || langOff) && !preview) return null;
+  const w = wrapperProps(st, preview);
+  const inner = R ? <R p={block.props} page={page} /> : null;
+  const body = (
+    <BlockStyleProvider value={st}>
+      {st?.bg === "image" && st.bgImage ? (
+        <>
+          <Picture image={st.bgImage} className="absolute inset-0 w-full h-full -z-10" />
+          <div aria-hidden className={`absolute inset-0 -z-10 ${st.overlay === "strong" ? "bg-black/65" : "bg-black/40"}`} />
+        </>
+      ) : null}
+      {inner}
+    </BlockStyleProvider>
+  );
+  if (!preview)
+    return (
+      <div data-block={block.type} {...w}>
+        {body}
+      </div>
+    );
   // In the builder: every block is a target. Clicking outside a link selects
-  // it in the editor; hidden blocks show faded so they can still be found.
+  // it in the editor; hidden blocks, and blocks hidden in this language, show
+  // faded so they can still be found.
   const on = selected === block.id;
+  const faded = block.hidden || langOff;
+  const note = block.hidden ? " · hidden" : langOff ? ` · not in ${lang.toUpperCase()}` : "";
   return (
     <div
       data-block-id={block.id}
       data-block={block.type}
+      {...w}
       onClickCapture={(e) => {
         if ((e.target as HTMLElement).closest("a,button,input,label,select,textarea")) return;
         onSelect?.(block.id);
       }}
-      className={`relative ${block.hidden ? "opacity-35" : ""} ${on ? "outline-2 -outline-offset-2 outline-[var(--accent-blue)]" : "hover:outline-1 hover:-outline-offset-1 hover:outline-[color-mix(in_srgb,var(--accent-blue)_55%,transparent)]"}`}
+      className={`relative ${w.className} ${faded ? "opacity-35" : ""} ${on ? "outline-2 -outline-offset-2 outline-[var(--accent-blue)]" : "hover:outline-1 hover:-outline-offset-1 hover:outline-[color-mix(in_srgb,var(--accent-blue)_55%,transparent)]"}`}
     >
-      {on || block.hidden ? (
+      {on || faded ? (
         <span className="absolute top-1 end-1 z-20 rounded-md bg-[var(--accent-blue)] px-1.5 py-0.5 text-[0.6875rem] font-medium text-white pointer-events-none">
           {BLOCKS[block.type].label}
-          {block.hidden ? " · hidden" : ""}
+          {note}
         </span>
       ) : null}
       {body}

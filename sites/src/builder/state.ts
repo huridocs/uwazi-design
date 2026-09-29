@@ -157,6 +157,7 @@ export function diff(before: SiteConfig | null, after: SiteConfig): string[] {
       if (!w) out.push(`${title(p)} · ${label} added`);
       else if (!!w.b.hidden !== !!b.hidden) out.push(`${title(p)} · ${label} ${b.hidden ? "hidden" : "shown"}`);
       else if (!same(w.b.props, b.props)) out.push(`${title(p)} · ${label} edited`);
+      if (w && !same(w.b.style, b.style)) out.push(`${title(p)} · ${label} ${b.style ? "restyled" : "style reset"}`);
     }
     for (const b of q.blocks) if (!p.blocks.some((x) => x.id === b.id)) out.push(`${title(p)} · ${BLOCKS[b.type].label} removed`);
     if (moved) out.push(`${title(p)} · blocks reordered`);

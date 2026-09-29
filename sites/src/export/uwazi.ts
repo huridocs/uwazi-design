@@ -19,6 +19,7 @@ import type { Template } from "../data/types";
 import type { Block, BlockProps, L10n, Lang, Page, SiteConfig } from "../model/config";
 import { tr } from "../model/config";
 import { BLOCKS } from "../model/blocks";
+import { GAP_REM, PAD_REM, SHAPE_RATIO, WIDTH_REM, isStyled, shownIn, type BlockStyle } from "../model/style";
 import { FONT_PAIRS, onAccent } from "../render/theme";
 
 /** Components Uwazi renders from page HTML today (tag syntax). */
@@ -289,12 +290,51 @@ function compileBlock(b: Block, c: Ctx): string {
 
 /** The page's styles, every selector under its own class, so pasting one page's
  *  CSS can never restyle another page or Uwazi itself. */
+/** A styled block's rules, scoped to the page and to the block's own class
+ *  (`s-b<index>`). Steps come from model/style.ts, so the export and the
+ *  builder use one scale. What CSS on a page cannot do is warned. */
+function blockStyleCss(scope: string, i: number, s: BlockStyle, warn: (m: string) => void): string {
+  const sel = `.${scope} .s-b${i}`;
+  const out: string[] = [];
+  const rule = (x: string, body: string) => out.push(`${x} {\n  ${body.split("; ").join(";\n  ")};\n}`);
+  const decl: string[] = [];
+  if (s.pad) decl.push(`padding-block: ${PAD_REM[s.pad][1]}rem`);
+  if (s.width && s.width !== "wide") {
+    const w = WIDTH_REM[s.width];
+    decl.push(w ? `max-width: ${w}rem; margin-inline: auto` : "max-width: none");
+    if (!w) warn("Full width stays inside the page's own width in Uwazi.");
+  }
+  if (s.bg === "warm" || s.bg === "vellum" || s.bg === "tint")
+    decl.push(`background: ${s.bg === "tint" ? "var(--s-tint)" : s.bg === "warm" ? "rgba(0, 0, 0, 0.03)" : "rgba(0, 0, 0, 0.06)"}; padding-inline: 1.5rem; border-radius: 10px`);
+  if (s.bg === "image") warn("The background picture is not exported: upload it to Uwazi and set it as this block's background in the page CSS.");
+  if (s.align === "center") decl.push("text-align: center");
+  if (decl.length) rule(sel, decl.join("; "));
+  if (s.heading) rule(`${sel} h1, ${sel} h2`, `font-size: ${s.heading > 0 ? "2.25rem" : "1.375rem"}`);
+  if (s.gap) rule(`${sel} .s-cards, ${sel} ol, ${sel} dl, ${sel} ul`, `gap: ${GAP_REM[s.gap]}rem`);
+  if (s.shape) rule(`${sel} img`, `aspect-ratio: ${SHAPE_RATIO[s.shape]}; object-fit: cover; width: 100%; height: auto`);
+  if (s.cols) out.push(`@media (min-width: 40rem) {\n  ${sel} .s-cards, ${sel} ol, ${sel} dl, ${sel} ul {\n    grid-template-columns: repeat(${s.cols}, minmax(0, 1fr));\n  }\n}`);
+  if (s.devices?.length) {
+    const q: Record<string, string> = { phone: "(max-width: 39.99rem)", tablet: "(min-width: 40rem) and (max-width: 63.99rem)", desktop: "(min-width: 64rem)" };
+    for (const d of ["phone", "tablet", "desktop"] as const)
+      if (!s.devices.includes(d)) out.push(`@media ${q[d]} {\n  ${sel} {\n    display: none;\n  }\n}`);
+  }
+  return out.length ? `${out.join("\n\n")}\n` : "";
+}
+
+/** Give a compiled block its style class, and its eyebrow line. */
+function withStyle(html: string, i: number, eyebrow: string): string {
+  let h = html.replace('class="', `class="s-b${i} `);
+  if (eyebrow) h = h.replace(/^(<[^>]+>)/, `$1\n  <p class="s-eyebrow">${esc(eyebrow)}</p>`);
+  return h;
+}
+
 function pageCss(scope: string): string {
   const rules: [string, string][] = [
     ["", "max-width: 68rem; margin: 0 auto; padding: 0 1.25rem; font-family: var(--s-body); color: inherit;"],
     ["h1, h2", "font-family: var(--s-heading); line-height: 1.15; text-wrap: balance;"],
     ["h1", "font-size: 2.75rem; margin: 0 0 0.75rem;"],
     ["h2", "font-size: 1.75rem; margin: 0 0 1.25rem;"],
+    [".s-eyebrow", "font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--s-accent); margin: 0 0 0.5rem;"],
     ["section, figure, header", "margin: 0; padding: var(--s-space) 0;"],
     [".s-hero", "padding: calc(var(--s-space) * 1.5) 0 var(--s-space); border-bottom: 1px solid var(--s-rule);"],
     [".s-hero p", "font-size: 1.25rem; max-width: 42rem; opacity: 0.85;"],
@@ -362,9 +402,15 @@ export function exportSite(config: SiteConfig, { titleOf = (id) => id, templates
           warnings.push({ page: pageTitle, block: BLOCKS[b.type].label, message });
         },
       };
+      // A block shown only in some languages is left out of the others'
+      // HTML: Uwazi keeps one HTML per language, so this maps exactly.
       const body = page.blocks
-        .filter((b) => !b.hidden)
-        .map((b) => compileBlock(b, ctx))
+        .map((b, i) => ({ b, i }))
+        .filter(({ b }) => !b.hidden && shownIn(b.style, lang))
+        .map(({ b, i }) => {
+          const html = compileBlock(b, ctx);
+          return html && isStyled(b.style) ? withStyle(html, i, b.style!.eyebrow ? ctx.t(b.style!.eyebrow) : "") : html;
+        })
         .filter(Boolean)
         .join("\n\n");
       html[lang] = `<div class="${scope}">\n${indent(body)}\n</div>\n`;
@@ -377,7 +423,24 @@ export function exportSite(config: SiteConfig, { titleOf = (id) => id, templates
       titles,
       entityView: page.kind === "entity",
       html,
-      css: pageCss(scope) + (config.advanced.enabled && config.advanced.css.trim() ? `\n/* Custom CSS from Advanced — not scoped; check it before pasting. */\n${config.advanced.css.trim()}\n` : ""),
+      css:
+        pageCss(scope) +
+        page.blocks
+          .map((b, i) =>
+            !b.hidden && isStyled(b.style)
+              ? blockStyleCss(scope, i, b.style!, (m) => {
+                  const k = `${page.id}:${b.id}:${m}`;
+                  if (!seen.has(k)) {
+                    seen.add(k);
+                    warnings.push({ page: pageTitle, block: BLOCKS[b.type].label, message: m });
+                  }
+                })
+              : "",
+          )
+          .filter(Boolean)
+          .map((x) => `\n${x}`)
+          .join("") +
+        (config.advanced.enabled && config.advanced.css.trim() ? `\n/* Custom CSS from Advanced — not scoped; check it before pasting. */\n${config.advanced.css.trim()}\n` : ""),
       js: custom ? `${config.advanced.js.trim()}\n` : "",
       jsReason: custom ? "The site's own code from Whole site › Advanced. No block needs JavaScript." : undefined,
     };

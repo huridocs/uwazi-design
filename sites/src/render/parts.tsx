@@ -5,11 +5,18 @@ import { valuesOf } from "../data/mock";
 import { entityPage } from "../model/config";
 import { routeHref, useSite, type QueryState } from "./context";
 import { ui, type UiKey } from "./ui";
+import { headingClass, sectionClasses, useBlockStyle } from "./blockStyle";
 
+/** A block's section. Padding, width, alignment, heading size and the
+ *  eyebrow come from the block's style (render/blockStyle.tsx). */
 export function Section({ title, children, className = "", wide = false }: { title?: string; children: ReactNode; className?: string; wide?: boolean }) {
+  const style = useBlockStyle();
+  const { t } = useSite();
+  const eyebrow = style?.eyebrow ? t(style.eyebrow) : "";
   return (
-    <section className={`mx-auto w-full ${wide ? "max-w-[80rem]" : "max-w-[68rem]"} px-5 py-8 sm:py-10 ${className}`}>
-      {title ? <h2 className="font-heading text-2xl sm:text-[1.75rem] leading-tight text-ink mb-5 text-balance">{title}</h2> : null}
+    <section className={`mx-auto w-full px-5 ${sectionClasses(style, wide)} ${className}`}>
+      {eyebrow ? <p className="mb-2 text-xs font-medium uppercase tracking-[0.08em] text-accent-text">{eyebrow}</p> : null}
+      {title ? <h2 className={`font-heading ${headingClass(style)} leading-tight text-ink mb-5 text-balance`}>{title}</h2> : null}
       {children}
     </section>
   );
@@ -72,7 +79,7 @@ export function EntityCard({ e, lead = false }: { e: Entity; lead?: boolean }) {
       className={`group flex flex-col gap-2 rounded-lg border border-border bg-paper hover:border-border-soft hover:shadow-[var(--shadow-md)] transition-shadow overflow-hidden ${lead ? "sm:col-span-2 sm:row-span-2" : ""}`}
     >
       {e.image ? (
-        <img src={e.image.url} alt={e.image.alt} loading="lazy" className={`w-full object-cover bg-vellum ${lead ? "h-72" : "h-40"}`} />
+        <img src={e.image.url} alt={e.image.alt} loading="lazy" className={`blk-shape w-full object-cover bg-vellum ${lead ? "h-72" : "h-40"}`} />
       ) : null}
       <span className={`flex flex-col gap-1.5 ${lead ? "p-6" : "p-4"}`}>
         <span className="flex items-center gap-1.5 text-xs text-ink-tertiary">

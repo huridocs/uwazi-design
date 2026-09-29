@@ -6,6 +6,7 @@ import type { Entity } from "../../data/types";
 import type { BlockProps } from "../../model/config";
 import { useQuery, useSite } from "../context";
 import { EntityLink, EntityRow, Loadable, Section, StatusChip, TypeDot, fmtDate, statusTone, useMetaLine } from "../parts";
+import { useBlockStyle } from "../blockStyle";
 import { ui } from "../ui";
 
 export const EntityCtx = createContext<Entity | null>(null);
@@ -14,12 +15,16 @@ const useEntity = () => useContext(EntityCtx);
 export function EntityHeader({ p }: { p: BlockProps["entityHeader"] }) {
   const e = useEntity();
   const { templates, lang } = useSite();
+  const st = useBlockStyle();
   if (!e) return null;
   const tpl = templates.get(e.template);
+  const pad = { S: "pt-6 pb-5", M: "pt-10 pb-8", L: "pt-14 pb-12", XL: "pt-20 pb-16" }[st?.pad ?? "M"];
+  const h1 = { "-1": "text-2xl sm:text-3xl", "0": "text-3xl sm:text-[2.75rem]", "1": "text-4xl sm:text-5xl" }[String(st?.heading ?? 0)];
+  const center = st?.align === "center";
   return (
     <section className="border-b border-border">
-      <div className="mx-auto max-w-[68rem] px-5 pt-10 pb-8 flex flex-col gap-4">
-        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-tertiary">
+      <div className={`mx-auto max-w-[68rem] px-5 ${pad} flex flex-col gap-4 ${center ? "items-center text-center" : ""}`}>
+        <p className={`flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-tertiary ${center ? "justify-center" : ""}`}>
           <span className="inline-flex items-center gap-1.5 text-ink-secondary">
             <TypeDot template={e.template} />
             {tpl?.name}
@@ -28,7 +33,7 @@ export function EntityHeader({ p }: { p: BlockProps["entityHeader"] }) {
           {e.date ? <span className="tabular-nums">{fmtDate(e.date, lang)}</span> : null}
           {e.status ? <StatusChip value={e.status} /> : null}
         </p>
-        <h1 className="font-heading text-3xl sm:text-[2.75rem] leading-[1.1] tracking-tight text-ink text-balance max-w-[28ch]">{e.title}</h1>
+        <h1 className={`font-heading ${h1} leading-[1.1] tracking-tight text-ink text-balance max-w-[28ch]`}>{e.title}</h1>
         {p.showImage && e.image ? (
           <figure className="mt-2 rounded-lg overflow-hidden bg-vellum max-w-[48rem]">
             <img src={e.image.url} alt={e.image.alt} className="w-full max-h-[70vh] object-contain" />
@@ -51,7 +56,7 @@ export function EntityFields({ p }: { p: BlockProps["entityFields"] }) {
   const plain = fields.filter((m) => !linked.includes(m));
   return (
     <Section title={t(p.title)}>
-      <dl className="grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
+      <dl className="blk-grid grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
         {plain.map((m) => (
           <div key={m.name} className="flex flex-col gap-1 min-w-0">
             <dt className="text-xs font-medium uppercase tracking-wider text-ink-tertiary">{m.label}</dt>
