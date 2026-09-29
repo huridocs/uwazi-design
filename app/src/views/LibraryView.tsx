@@ -123,6 +123,7 @@ import { DataTable, type Column } from "../components/shared/DataTable";
 import { EntityTypeChip } from "../components/shared/EntityTypeChip";
 import { HighlightedText } from "../components/shared/HighlightedText";
 import { Select } from "../components/shared/Select";
+import { MobileEntityList } from "../components/library/MobileEntityList";
 import { ViewSwitcher } from "../components/library/ViewSwitcher";
 import { DRAWER_MIN_WIDTH } from "../components/layout/SplitView";
 import { BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
@@ -1140,6 +1141,9 @@ export function LibraryView() {
               />
             ))}
           </div>
+        ) : breakpoint === "mobile" ? (
+          // Phones: two-line rows, no table columns (M19).
+          <MobileEntityList rows={shown} query={query} selectedId={selectedId} onSelect={handleSelect} />
         ) : tableColumns.length === 0 ? (
           // Every column can be switched off, so "none of them" is a state the
           // table can be in — and an empty grid is not a thing to render. It
