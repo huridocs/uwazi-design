@@ -273,9 +273,13 @@ export function LibraryView() {
           l: "grid-cols-[repeat(auto-fill,minmax(min(17rem,100%),1fr))]",
         }[thumbSize]
       : {
-          s: "grid-cols-[repeat(auto-fill,minmax(min(13.5rem,100%),1fr))]",
-          m: "grid-cols-[repeat(auto-fill,minmax(min(15.5rem,100%),1fr))]",
-          l: "grid-cols-[repeat(auto-fill,minmax(min(19rem,100%),1fr))]",
+          // Landscape floors sized so a title, a label/value pair and the
+          // chip row fit without cutting words: at a 1400px pane Small and
+          // Medium give 3 columns (as on main), Large 2; at 1700 4 / 3 / 3.
+          // 13.5–19rem packed 5–6 columns there and truncated mid-word.
+          s: "grid-cols-[repeat(auto-fill,minmax(min(21.5rem,100%),1fr))]",
+          m: "grid-cols-[repeat(auto-fill,minmax(min(26rem,100%),1fr))]",
+          l: "grid-cols-[repeat(auto-fill,minmax(min(31rem,100%),1fr))]",
         }[thumbSize];
   /* One lightbox for the whole grid; see `EntityCard.onOpenImage`. */
   const [lightbox, setLightbox] = useState<EntityImage | null>(null);
