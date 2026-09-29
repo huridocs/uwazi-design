@@ -20,6 +20,8 @@ interface MobileBottomSheetProps {
   bare?: boolean;
   /** Name for the dialog when `bare` (no visible title to label it). */
   ariaLabel?: string;
+  /** A bar under the body, above the safe area (a settings sheet's Done). */
+  footer?: ReactNode;
 }
 
 const SNAP_HALF_VH = 60;
@@ -54,6 +56,7 @@ export function MobileBottomSheet({
   defaultSnap = "half",
   bare = false,
   ariaLabel,
+  footer,
 }: MobileBottomSheetProps) {
   /* Its place on the phone's sheet stack (atoms/sheetStack). The first layer
      keeps its own height; while something is stacked on it, it rises so its top
@@ -282,6 +285,11 @@ export function MobileBottomSheet({
         <div data-part="body" className="flex-1 min-h-0 overflow-auto" style={{ overscrollBehavior: "contain" }}>
           {typeof children === "function" ? children(chrome) : children}
         </div>
+        {footer ? (
+          <div data-part="footer" className="shrink-0 px-4 py-2.5" style={{ borderTop: "1px solid var(--border-primary)" }}>
+            {footer}
+          </div>
+        ) : null}
       </div>
     </>,
     document.body,

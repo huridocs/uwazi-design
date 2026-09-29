@@ -1,9 +1,12 @@
 import { languageAtom, type Language } from "../../atoms/language";
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { SlidersHorizontal, Check, RotateCcw } from "lucide-react";
 import { SectionLabel } from "../shared/SectionLabel";
 import { SegmentedControl } from "../shared/SegmentedControl";
+import { MobileBottomSheet } from "../layout/MobileBottomSheet";
+import { SheetDone } from "../layout/SheetDone";
+import { breakpointAtom } from "../../atoms/viewport";
 import {
   libraryDisplayAtom,
   libraryDisplayContextAtom,
@@ -52,6 +55,7 @@ export function LibraryDisplayMenu() {
   const searching = useAtomValue(libraryActiveSearchAtom) !== null;
   const [open, setOpen] = useState(false);
   const colsInEffect = useAtomValue(libraryCardColumnsInEffectAtom);
+  const mobile = useAtomValue(breakpointAtom) === "mobile";
 
   // Escape closes it, like every other overlay in the app. The scrim was the
   // only way out, which is a mouse-only exit from a keyboard-operable menu.
@@ -186,6 +190,35 @@ export function LibraryDisplayMenu() {
     ));
   };
 
+  const contents = (
+    <>
+            {sections.map(renderSection)}
+      {/* The dot says something is off its default; this is the way back.
+          It is ALWAYS mounted and merely goes quiet when there is nothing
+          to reset — a row that appeared with the dot would shove the whole
+          panel the moment you ticked anything. Shared options (the time
+          strip) are not this mode's to clear, so it resets the mode. */}
+      <div role="separator" className="my-1 h-px" style={{ backgroundColor: "var(--border-soft)" }} />
+      <button
+        type="button"
+        role="menuitem"
+        data-part="reset"
+        onClick={() => reset()}
+        disabled={!modified}
+        className={`w-full flex items-center gap-2 px-2 rounded text-start transition-colors ${mobile ? "min-h-11 text-sm" : "py-1.5 text-xs"} ${
+          modified
+            ? "text-ink-secondary hover:bg-warm hover:text-ink cursor-pointer"
+            : "text-ink-muted cursor-not-allowed"
+        }`}
+      >
+        <span className="w-4 shrink-0 flex items-center justify-center">
+          <RotateCcw size={12} />
+        </span>
+        Reset this view
+      </button>
+    </>
+  );
+
   return (
     <div data-component="LibraryDisplayMenu" className="relative">
       <button
@@ -214,7 +247,17 @@ export function LibraryDisplayMenu() {
           />
         )}
       </button>
-      {open && (
+      {mobile ? (
+        // Phones: a bottom sheet on the shared stack, the rows at touch size,
+        // Done at the foot. The options apply as they are picked.
+        <MobileBottomSheet open={open} onClose={() => setOpen(false)} title="Display options" defaultSnap="full" footer={<SheetDone onClick={() => setOpen(false)} />}>
+          <TouchRows.Provider value={true}>
+            <div data-part="menu" role="menu" aria-label="Display options" className="px-2 py-2">
+              {contents}
+            </div>
+          </TouchRows.Provider>
+        </MobileBottomSheet>
+      ) : open && (
         <>
           <div data-part="scrim" className="fixed inset-0 z-30" onClick={() => setOpen(false)} aria-hidden />
           {/* The list's column list can run long on a corpus with a dozen
@@ -226,36 +269,16 @@ export function LibraryDisplayMenu() {
               border border-border rounded-md shadow-lg p-1"
             role="menu"
           >
-            {sections.map(renderSection)}
-            {/* The dot says something is off its default; this is the way back.
-                It is ALWAYS mounted and merely goes quiet when there is nothing
-                to reset — a row that appeared with the dot would shove the whole
-                panel the moment you ticked anything. Shared options (the time
-                strip) are not this mode's to clear, so it resets the mode. */}
-            <div role="separator" className="my-1 h-px" style={{ backgroundColor: "var(--border-soft)" }} />
-            <button
-              type="button"
-              role="menuitem"
-              data-part="reset"
-              onClick={() => reset()}
-              disabled={!modified}
-              className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-start text-xs transition-colors ${
-                modified
-                  ? "text-ink-secondary hover:bg-warm hover:text-ink cursor-pointer"
-                  : "text-ink-muted cursor-not-allowed"
-              }`}
-            >
-              <span className="w-4 shrink-0 flex items-center justify-center">
-                <RotateCcw size={12} />
-              </span>
-              Reset this view
-            </button>
+            {contents}
           </div>
         </>
       )}
     </div>
   );
 }
+
+/** Phones draw the rows at touch size (44px, text-sm) inside a sheet. */
+const TouchRows = createContext(false);
 
 /** One row of the menu — a check gutter, a label, and an optional second line.
  *
@@ -281,6 +304,7 @@ function OptionRow({
   disabled?: boolean;
   onClick: () => void;
 }) {
+  const touch = useContext(TouchRows);
   return (
     <button
       type="button"
@@ -290,23 +314,23 @@ function OptionRow({
       disabled={disabled}
       role="menuitemcheckbox"
       aria-checked={on}
-      className={`w-full flex items-start gap-2 px-2 py-1.5 rounded transition-colors text-start ${
+      className={`w-full flex gap-2 rounded transition-colors text-start ${touch ? "min-h-11 items-center px-2 py-2" : "items-start px-2 py-1.5"} ${
         disabled ? "opacity-40 cursor-not-allowed" : "hover:bg-warm cursor-pointer"
       }`}
     >
-      <span className="w-4 shrink-0 pt-0.5 flex justify-center text-carbon">
-        {on && <Check size={13} aria-hidden />}
+      <span className={`w-4 shrink-0 flex justify-center text-carbon ${touch ? "" : "pt-0.5"}`}>
+        {on && <Check size={touch ? 15 : 13} aria-hidden />}
       </span>
       <span className="min-w-0">
         <span
-          className={`block text-xs ${
+          className={`block ${touch ? "text-sm" : "text-xs"} ${
             on ? `text-ink ${strong ? "font-semibold" : ""}` : "text-ink-tertiary"
           }`}
         >
           {label}
         </span>
         {detail && (
-          <span className="block text-meta text-ink-tertiary leading-tight">{detail}</span>
+          <span className={`block ${touch ? "text-xs" : "text-meta"} text-ink-tertiary leading-tight`}>{detail}</span>
         )}
       </span>
     </button>

@@ -1,5 +1,9 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { ChevronDown } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
+import { useAtomValue } from "jotai";
+import { breakpointAtom } from "../../atoms/viewport";
+import { MobileBottomSheet } from "../layout/MobileBottomSheet";
+import { SheetDone } from "../layout/SheetDone";
 
 export interface SelectOption {
   value: string;
@@ -37,6 +41,7 @@ export function Select({
   triggerTitle,
   steady = false,
   id,
+  sheetTitle,
 }: {
   value: string;
   options: SelectOption[];
@@ -72,13 +77,17 @@ export function Select({
   steady?: boolean;
   /** Put on the trigger, so a `<label htmlFor>` can name and focus it. */
   id?: string;
+  /** On phones, open the options as a bottom sheet with this title (44px
+   *  rows, Done) instead of a popover. Opt-in per use. */
+  sheetTitle?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const asSheet = useAtomValue(breakpointAtom) === "mobile" && !!sheetTitle;
   const ref = useRef<HTMLDivElement>(null);
   const listId = useId();
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || asSheet) return;
     const onClick = (e: MouseEvent) => {
       if (!ref.current?.contains(e.target as Node)) setOpen(false);
     };
@@ -96,7 +105,7 @@ export function Select({
       document.removeEventListener("mousedown", onClick);
       document.removeEventListener("keydown", onKey);
     };
-  }, [open]);
+  }, [open, asSheet]);
 
   const current = options.find((o) => o.value === value) ?? options[0];
 
@@ -191,7 +200,34 @@ export function Select({
         </bdi>
         <ChevronDown size={14} data-part="chevron" aria-hidden className={`text-ink-secondary shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
-      {open && (
+      {asSheet ? (
+        <MobileBottomSheet open={open} onClose={() => setOpen(false)} title={sheetTitle} footer={<SheetDone onClick={() => setOpen(false)} />}>
+          <div role="listbox" id={listId} aria-label={ariaLabel} className="px-2 py-2">
+            {options.map((o) => (
+              <button
+                key={o.value}
+                type="button"
+                role="option"
+                data-part="option"
+                aria-selected={o.value === value}
+                disabled={o.disabled}
+                onClick={() => {
+                  if (o.disabled) return;
+                  onChange(o.value);
+                  setOpen(false);
+                }}
+                className={`flex items-center gap-2 w-full min-h-11 px-2 rounded text-sm text-start transition-colors ${
+                  o.disabled ? "text-ink-muted/50 cursor-not-allowed" : o.value === value ? "text-ink font-semibold" : "text-ink-secondary hover:bg-warm cursor-pointer"
+                }`}
+              >
+                <span className="w-4 shrink-0 flex justify-center text-carbon">{o.value === value ? <Check size={15} aria-hidden /> : null}</span>
+                <span className="truncate">{o.label}</span>
+                {o.hint !== undefined && <span className="ms-auto shrink-0 text-xs text-ink-tertiary">{o.hint}</span>}
+              </button>
+            ))}
+          </div>
+        </MobileBottomSheet>
+      ) : open && (
         <div
           role="listbox"
           id={listId}

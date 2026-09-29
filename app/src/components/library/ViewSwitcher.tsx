@@ -38,6 +38,7 @@ export function ViewSwitcher({
       options={VIEWS}
       onChange={onChange}
       ariaLabel="View"
+      sheetTitle="View"
       steady
     />
   );
