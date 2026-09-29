@@ -334,9 +334,22 @@ export function Site({ config, ds, route, onNavigate, preview = false, selected,
 
   // Custom JavaScript (Whole site › Advanced): once per page view, after the
   // page has rendered. A throw is caught so the page still shows; the preview
-  // says what went wrong.
+  // says what went wrong. In the builder the code changes as it is typed, so
+  // it runs after a pause, on a freshly mounted page: a script that edits the
+  // DOM would otherwise stack its edits on the previous run's.
   const [scriptError, setScriptError] = useState<string>();
-  const js = config.advanced.enabled ? config.advanced.js.trim() : "";
+  const typed = config.advanced.enabled ? config.advanced.js.trim() : "";
+  const [js, setJs] = useState(typed);
+  const [run, setRun] = useState(0);
+  useEffect(() => {
+    if (typed === js) return;
+    if (!preview) return setJs(typed);
+    const t = setTimeout(() => {
+      setJs(typed);
+      setRun((n) => n + 1);
+    }, 800);
+    return () => clearTimeout(t);
+  }, [typed, js, preview]);
   useEffect(() => {
     setScriptError(undefined);
     if (!js) return;
@@ -348,7 +361,7 @@ export function Site({ config, ds, route, onNavigate, preview = false, selected,
       }
     }, 0);
     return () => clearTimeout(t);
-  }, [js, route.slug, route.entity, lang]);
+  }, [js, run, route.slug, route.entity, lang]);
   const custom = config.advanced.enabled ? config.advanced.css : "";
 
   return (
@@ -362,7 +375,7 @@ export function Site({ config, ds, route, onNavigate, preview = false, selected,
       {!ctx ? (
         <Notice text={ui("notFound", lang)} />
       ) : (
-        <SiteProvider value={ctx}>
+        <SiteProvider value={ctx} key={run}>
           <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:start-2 focus:z-50 focus:bg-paper focus:px-3 focus:py-2 focus:rounded-md">
             Skip to content
           </a>
