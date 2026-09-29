@@ -232,6 +232,8 @@ export function Builder({ editor, onStartOver }: { editor: Editor; onStartOver: 
               device={device}
               onSelect={(id) => {
                 if (trial) return;
+                // A block picked in the preview opens on its Style tab.
+                setBlockPane("style");
                 setTab("page");
                 setSelected(id);
                 setMobileView("edit");

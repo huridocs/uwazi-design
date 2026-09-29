@@ -8,6 +8,7 @@ import { LANG_NAMES, entityPage, isRtl, pageBySlug, tr } from "../model/config";
 import { BLOCKS } from "../model/blocks";
 import { shownIn } from "../model/style";
 import { BlockStyleProvider, wrapperProps } from "./blockStyle";
+import { Inspector } from "./Inspector";
 import { SiteProvider, routeHref, useQuery, useSite, type Route, type SiteCtx } from "./context";
 import { themeVars } from "./theme";
 import { ui } from "./ui";
@@ -86,9 +87,11 @@ function BlockView({ block, page }: { block: Block; page: Page }) {
         {body}
       </div>
     );
-  // In the builder: every block is a target. Clicking outside a link selects
-  // it in the editor; hidden blocks, and blocks hidden in this language, show
-  // faded so they can still be found.
+  // In the builder: every block is a target. Hovering names it; clicking
+  // outside a link opens its Style tab; Alt draws its spacing (Inspector).
+  // The first control in each block is a "Style <block>" button that shows
+  // on focus, so the same works from the keyboard. Hidden blocks, and blocks
+  // hidden in this language, show faded so they can still be found.
   const on = selected === block.id;
   const faded = block.hidden || langOff;
   const note = block.hidden ? " · hidden" : langOff ? ` · not in ${lang.toUpperCase()}` : "";
@@ -101,14 +104,23 @@ function BlockView({ block, page }: { block: Block; page: Page }) {
         if ((e.target as HTMLElement).closest("a,button,input,label,select,textarea")) return;
         onSelect?.(block.id);
       }}
-      className={`relative ${w.className} ${faded ? "opacity-35" : ""} ${on ? "outline-2 -outline-offset-2 outline-[var(--accent-blue)]" : "hover:outline-1 hover:-outline-offset-1 hover:outline-[color-mix(in_srgb,var(--accent-blue)_55%,transparent)]"}`}
+      className={`group/blk relative ${w.className} ${faded ? "opacity-35" : ""} ${on ? "outline-2 -outline-offset-2 outline-[var(--accent-blue)]" : "hover:outline-1 hover:-outline-offset-1 hover:outline-[color-mix(in_srgb,var(--accent-blue)_55%,transparent)] focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-[var(--accent-blue)]"}`}
     >
-      {on || faded ? (
-        <span className="absolute top-1 end-1 z-20 rounded-md bg-[var(--accent-blue)] px-1.5 py-0.5 text-[0.6875rem] font-medium text-white pointer-events-none">
-          {BLOCKS[block.type].label}
-          {note}
-        </span>
-      ) : null}
+      <button
+        type="button"
+        data-part="style-target"
+        onClick={() => onSelect?.(block.id)}
+        className="sr-only focus:not-sr-only focus:absolute focus:top-1 focus:start-1 focus:z-30 focus:rounded-md focus:bg-[var(--accent-blue)] focus:px-2 focus:py-1 focus:text-[0.6875rem] focus:font-medium focus:text-white"
+      >
+        Style {BLOCKS[block.type].label}
+      </button>
+      <span
+        aria-hidden
+        className={`absolute top-1 end-1 z-20 rounded-md bg-[var(--accent-blue)] px-1.5 py-0.5 text-[0.6875rem] font-medium text-white pointer-events-none ${on || faded ? "" : "hidden group-hover/blk:inline"}`}
+      >
+        {BLOCKS[block.type].label}
+        {note}
+      </span>
       {body}
     </div>
   );
@@ -415,6 +427,7 @@ export function Site({ config, ds, route, onNavigate, preview = false, selected,
             )}
           </main>
           <Footer />
+          {preview ? <Inspector /> : null}
         </SiteProvider>
       )}
     </div>
