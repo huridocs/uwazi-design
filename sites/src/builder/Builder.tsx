@@ -10,6 +10,8 @@ import { BuilderProvider } from "./fields";
 import { PagePanel } from "./PagePanel";
 import { Preview, type Device } from "./Preview";
 import { SitePanel } from "./SitePanel";
+import { SiteSections } from "./SiteSections";
+import { ExportPanel } from "./ExportPanel";
 import { diff, type Editor } from "./state";
 import { Mark } from "./FirstRun";
 import { Button, Disclosure, IconButton, Modal, Segmented, Select } from "./ui";
@@ -30,6 +32,7 @@ export function Builder({ editor, onStartOver }: { editor: Editor; onStartOver: 
   const [publishing, setPublishing] = useState(false);
   const [notice, setNotice] = useState<string>();
   const [confirmReset, setConfirmReset] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const narrow = useNarrow();
 
   useEffect(() => {
@@ -154,7 +157,12 @@ export function Builder({ editor, onStartOver }: { editor: Editor; onStartOver: 
               ) : (
                 <SitePanel
                   editor={editor}
-                  extra={<HistorySection editor={editor} onReset={() => setConfirmReset(true)} onRestored={(n) => setNotice(n)} />}
+                  extra={
+                    <>
+                      <SiteSections editor={editor} onExport={() => setExporting(true)} />
+                      <HistorySection editor={editor} onReset={() => setConfirmReset(true)} onRestored={(n) => setNotice(n)} />
+                    </>
+                  }
                 />
               )}
             </div>
@@ -200,6 +208,7 @@ export function Builder({ editor, onStartOver }: { editor: Editor; onStartOver: 
             }}
           />
         ) : null}
+        {exporting ? <ExportPanel onClose={() => setExporting(false)} /> : null}
         {confirmReset ? (
           <Modal
             title="Start a new site?"
