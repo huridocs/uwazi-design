@@ -53,14 +53,13 @@ export interface EntityDetailBodyProps {
   onOpen: () => void;
   openLabel: string;
   identitySize?: "sm" | "md";
-  /** Rendered beside the editor, inside the (relative) content pane. The
-   *  Library preview passes an `EntityPreviewSlideOver` there: the edit form's routes out
-   *  to another entity (Copy from…'s source preview, a relationship row's
-   *  "Source") open one, and the Library mounts none of its own. It is a SLOT
-   *  rather than a mount of its own so this component and the overlay don't
-   *  import each other — and since only the focused flavour edits, the overlay
-   *  can never end up mounting a second copy of itself. */
-  editOverlay?: ReactNode;
+  /** The connected-entity slide-over (`EntityPreviewSlideOver`), mounted over
+   *  the tab content on EVERY tab: a Relationships pill, a relationship field's
+   *  "Source" and Copy from's source preview all open it. The Library preview
+   *  passes one; the slide-over host mounts none (it would mount itself). It
+   *  used to render only inside the edit form, so pills in the Library
+   *  preview's Relationships tab set the preview entity and nothing showed it. */
+  overlay?: ReactNode;
   /** Session id for the metadata editor — must be distinct per mounted form. */
   editSessionId?: string;
   editDirtyLabel?: string;
@@ -90,7 +89,7 @@ export function EntityDetailBody({
   onOpen,
   openLabel,
   identitySize = "md",
-  editOverlay,
+  overlay,
   editSessionId = "metadata-edit-drawer",
   editDirtyLabel = "Metadata edits (preview)",
 }: EntityDetailBodyProps) {
@@ -318,6 +317,7 @@ export function EntityDetailBody({
             the top half of an empty pane. `bleed`: it clips (`overflow-hidden`), so
             it has to span the panel for the lanes inside it to reach the edge. */}
         <div className="bleed flex-1 min-h-0 relative overflow-hidden flex flex-col">
+          {overlay}
           {activeTab === "document" ? (
             <DocumentViewer showMinimap={false} hideActionBar />
           ) : activeTab === "relationships" ? (
@@ -326,7 +326,6 @@ export function EntityDetailBody({
             <DrawerFilesBody hideActionBar />
           ) : editing && (!isDraft || focusArrived) ? (
             <>
-              {editOverlay}
               <MetadataEditBody
                 // A draft whose template changed is a new form over the new
                 // template's record (see `retypeDraftAtom`).
