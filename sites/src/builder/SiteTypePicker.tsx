@@ -1,12 +1,15 @@
-/* Whole site › Site type: the eight types drawn on this collection. Pointing
- * at one (hover, focus, arrow keys) previews it in the main preview; nothing
- * changes until Apply in the bar above the preview. */
+/* Whole site › Site type: the eight types drawn on this collection. Clicking
+ * one (or Enter/Space) previews it in the main preview and holds until another
+ * click; arrow keys only move focus. Nothing changes until "Use <type>", here
+ * under the grid or in the bar over the preview. Hover never previews: the way
+ * from a thumbnail to Apply crosses other thumbnails. */
 import { useRef } from "react";
 import type { TemplateId } from "../model/config";
 import { SITE_TYPES, type CollectionProfile } from "../model/templates";
 import { Schematic } from "./FirstRun";
+import { Button } from "./ui";
 
-export function SiteTypePicker({ current, previewing, prof, onPreview }: { current: TemplateId; previewing?: TemplateId; prof?: CollectionProfile; onPreview: (t: TemplateId) => void }) {
+export function SiteTypePicker({ current, previewing, prof, onPreview, onApply, onCancel }: { current: TemplateId; previewing?: TemplateId; prof?: CollectionProfile; onPreview: (t: TemplateId) => void; onApply: () => void; onCancel: () => void }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   if (!prof) return <p className="text-xs text-ink-tertiary">Reading the collection…</p>;
   const shown = previewing ?? current;
@@ -20,7 +23,7 @@ export function SiteTypePicker({ current, previewing, prof, onPreview }: { curre
   };
   return (
     <>
-      <p className="text-xs text-ink-secondary">Point at a type to preview it on this site. Your edits, languages, logo and pages you added come along.</p>
+      <p className="text-xs text-ink-secondary">Pick a type to preview it on this site. Your edits, languages, logo and pages you added come along.</p>
       <ul className="grid grid-cols-2 gap-2" aria-label="Site types">
         {SITE_TYPES.map((s, i) => {
           const on = shown === s.id;
@@ -34,8 +37,6 @@ export function SiteTypePicker({ current, previewing, prof, onPreview }: { curre
                 type="button"
                 aria-pressed={on}
                 aria-describedby={`st-${s.id}`}
-                onPointerEnter={(e) => e.pointerType === "mouse" && onPreview(s.id)}
-                onFocus={() => onPreview(s.id)}
                 onClick={() => onPreview(s.id)}
                 onKeyDown={(e) => move(i, e)}
                 className={`w-full flex flex-col gap-1.5 p-1.5 rounded-lg text-start ${on ? "bg-parchment" : "hover:bg-warm"}`}
@@ -58,6 +59,16 @@ export function SiteTypePicker({ current, previewing, prof, onPreview }: { curre
           );
         })}
       </ul>
+      {previewing ? (
+        <div className="flex items-center justify-end gap-1.5">
+          <Button variant="ghost" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={onApply}>
+            Use {SITE_TYPES.find((t) => t.id === previewing)!.label}
+          </Button>
+        </div>
+      ) : null}
     </>
   );
 }

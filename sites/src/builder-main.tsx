@@ -10,8 +10,11 @@ function App() {
   const editor = useEditor(loadDoc());
   if (!editor.doc) return <FirstRun onCreate={(config) => editor.dispatch({ type: "create", config })} />;
   return (
+    // Keyed on the collection only: changing the site type (or undoing it)
+    // must not remount the builder and lose the open panel, device and notice.
+    // Start over unmounts it anyway, through FirstRun.
     <Builder
-      key={`${editor.doc.draft.collection}:${editor.doc.draft.template}`}
+      key={editor.doc.draft.collection}
       editor={editor}
       onStartOver={() => {
         saveDoc(null);
