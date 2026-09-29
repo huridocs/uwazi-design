@@ -8,8 +8,12 @@ import { ImageField, L10nField, TextField, useBuilder } from "./fields";
 import type { Editor } from "./state";
 import { Button, Disclosure, IconButton, Select, Toggle, inputCls } from "./ui";
 
-function MenuList({ items, onChange, label }: { items: MenuItem[]; onChange: (m: MenuItem[]) => void; label: string }) {
+/** Links as one line each (label → where it goes); a line opens to edit.
+ * A new link opens ready to name. */
+function MenuList({ items, onChange, label, listName }: { items: MenuItem[]; onChange: (m: MenuItem[]) => void; label: string; listName: string }) {
   const { config, lang } = useBuilder();
+  const [editing, setEditing] = useState<string | null>(null);
+  const t = (x: Parameters<typeof tr>[0]) => tr(x, lang, config.defaultLanguage);
   const pages = config.pages.filter((p) => p.kind !== "entity");
   const move = (i: number, d: number) => {
     const n = [...items];
@@ -18,39 +22,69 @@ function MenuList({ items, onChange, label }: { items: MenuItem[]; onChange: (m:
     onChange(n);
   };
   const set = (i: number, patch: Partial<MenuItem>) => onChange(items.map((m, j) => (j === i ? { ...m, ...patch } : m)));
+  const where = (m: MenuItem) => {
+    const p = pages.find((q) => q.id === m.page);
+    return p ? t(p.title) : (m.url ?? "").replace(/^https?:\/\//, "") || "No address";
+  };
   return (
     <div className="flex flex-col gap-2">
-      <ol className="flex flex-col gap-2" aria-label={label}>
-        {items.map((m, i) => (
-          <li key={m.id} className="rounded-md border border-border-soft bg-warm p-2.5 flex flex-col gap-2">
-            <div className="flex items-center gap-1">
-              <span className="text-xs text-ink-tertiary flex-1 truncate">
-                {i + 1}. {tr(m.label, lang, config.defaultLanguage) || "Untitled"}
-              </span>
-              <IconButton label="Move up" disabled={i === 0} onClick={() => move(i, -1)}>
-                <ArrowUp size={13} />
-              </IconButton>
-              <IconButton label="Move down" disabled={i === items.length - 1} onClick={() => move(i, 1)}>
-                <ArrowDown size={13} />
-              </IconButton>
-              <IconButton label={`Remove ${tr(m.label, lang, config.defaultLanguage)}`} onClick={() => onChange(items.filter((_, j) => j !== i))}>
-                <Trash2 size={13} />
-              </IconButton>
-            </div>
-            <L10nField label="Label" value={m.label} onChange={(v) => set(i, { label: v })} />
-            <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-ink-secondary">Goes to</span>
-              <Select
-                value={m.page ?? "__url"}
-                onChange={(v) => set(i, v === "__url" ? { page: undefined, url: m.url ?? "https://" } : { page: v, url: undefined })}
-                options={[...pages.map((p) => ({ value: p.id, label: tr(p.title, lang, config.defaultLanguage) })), { value: "__url", label: "Another website…" }]}
-              />
-            </div>
-            {!m.page ? <TextField label="Address" value={m.url ?? ""} onChange={(v) => set(i, { url: v })} /> : null}
-          </li>
-        ))}
-      </ol>
-      <button type="button" onClick={() => onChange([...items, { id: newId("m"), label: {}, page: pages[0]?.id }])} className="self-start inline-flex items-center gap-1 text-xs text-ink-secondary hover:text-ink">
+      <span className="text-xs font-medium text-ink-secondary">{label}</span>
+      {items.length ? (
+        <ol className="flex flex-col rounded-md border border-border-soft divide-y divide-border-soft" aria-label={listName}>
+          {items.map((m, i) => {
+            const open = editing === m.id;
+            const name = t(m.label) || "Untitled";
+            return (
+              <li key={m.id} className={open ? "bg-warm" : ""}>
+                <div className="flex items-center gap-1 ps-2.5 pe-1 min-h-10">
+                  <button type="button" aria-expanded={open} onClick={() => setEditing(open ? null : m.id)} className="flex-1 min-w-0 self-stretch flex items-center text-start">
+                    <span className="flex items-baseline gap-2 min-w-0">
+                      <span className="text-sm text-ink truncate shrink-0 max-w-[55%]">{name}</span>
+                      <span className="text-xs text-ink-tertiary truncate" dir={m.page ? undefined : "ltr"}>
+                        <span aria-hidden className="rtl:inline-block rtl:-scale-x-100">→</span> {where(m)}
+                      </span>
+                    </span>
+                  </button>
+                  <IconButton label={`Move ${name} up`} disabled={i === 0} onClick={() => move(i, -1)}>
+                    <ArrowUp size={13} />
+                  </IconButton>
+                  <IconButton label={`Move ${name} down`} disabled={i === items.length - 1} onClick={() => move(i, 1)}>
+                    <ArrowDown size={13} />
+                  </IconButton>
+                  <IconButton label={`Remove ${name}`} onClick={() => onChange(items.filter((_, j) => j !== i))}>
+                    <Trash2 size={13} />
+                  </IconButton>
+                </div>
+                {open ? (
+                  <div className="px-2.5 pb-3 flex flex-col gap-2.5">
+                    <L10nField label="Label" value={m.label} onChange={(v) => set(i, { label: v })} />
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-xs font-medium text-ink-secondary">Goes to</span>
+                      <Select
+                        value={m.page ?? "__url"}
+                        onChange={(v) => set(i, v === "__url" ? { page: undefined, url: m.url ?? "https://" } : { page: v, url: undefined })}
+                        options={[...pages.map((p) => ({ value: p.id, label: t(p.title) })), { value: "__url", label: "Another website…" }]}
+                      />
+                    </div>
+                    {!m.page ? <TextField label="Address" value={m.url ?? ""} onChange={(v) => set(i, { url: v })} /> : null}
+                  </div>
+                ) : null}
+              </li>
+            );
+          })}
+        </ol>
+      ) : (
+        <p className="rounded-md border border-dashed border-border-soft px-3 py-2.5 text-xs text-ink-tertiary">No links.</p>
+      )}
+      <button
+        type="button"
+        onClick={() => {
+          const id = newId("m");
+          onChange([...items, { id, label: {}, page: pages[0]?.id }]);
+          setEditing(id);
+        }}
+        className="self-start inline-flex items-center gap-1 text-xs text-ink-secondary hover:text-ink"
+      >
         <Plus size={13} aria-hidden /> Add a link
       </button>
     </div>
@@ -144,18 +178,17 @@ function AdvancedSection({ editor }: { editor: Editor }) {
   );
 }
 
-export function SiteSections({ editor, onExport }: { editor: Editor; onExport: () => void }) {
+export function SiteSections({ editor, open, onOpen, onExport }: { editor: Editor; open: string | null; onOpen: (k: string | null) => void; onExport: () => void }) {
   const { config } = useBuilder();
-  const [open, setOpen] = useState<string | null>(null);
-  const toggle = (k: string) => setOpen((o) => (o === k ? null : k));
+  const toggle = (k: string) => onOpen(open === k ? null : k);
   return (
     <>
       <Disclosure title="Menu" open={open === "menu"} onToggle={() => toggle("menu")} aside={`${config.menu.length} links`}>
-        <MenuList label="Menu links" items={config.menu} onChange={(menu) => editor.edit((c) => ({ ...c, menu }))} />
+        <MenuList label="Links" listName="Menu links" items={config.menu} onChange={(menu) => editor.edit((c) => ({ ...c, menu }))} />
       </Disclosure>
       <Disclosure title="Footer" open={open === "footer"} onToggle={() => toggle("footer")}>
         <L10nField label="Footer text" value={config.footer.text} onChange={(text) => editor.edit((c) => ({ ...c, footer: { ...c.footer, text } }), "footer-text")} />
-        <MenuList label="Footer links" items={config.footer.links} onChange={(links) => editor.edit((c) => ({ ...c, footer: { ...c.footer, links } }))} />
+        <MenuList label="Links" listName="Footer links" items={config.footer.links} onChange={(links) => editor.edit((c) => ({ ...c, footer: { ...c.footer, links } }))} />
         <Toggle label="Say it's published with Uwazi" checked={config.footer.poweredBy} onChange={(poweredBy) => editor.edit((c) => ({ ...c, footer: { ...c.footer, poweredBy } }))} />
       </Disclosure>
       <Disclosure title="Search and sharing" open={open === "seo"} onToggle={() => toggle("seo")}>

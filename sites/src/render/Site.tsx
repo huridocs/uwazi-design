@@ -51,6 +51,14 @@ function ResultsWithTitle({ p, page }: { p: Parameters<typeof Results>[0]["p"]; 
   return <Results p={p} title={t(page.title)} />;
 }
 
+/** Header and footer in the builder: outlined while Whole site › Menu or
+ * Footer is open, so the edit and its result are on screen together. */
+function useRegion(id: "__header" | "__footer") {
+  const { preview, selected } = useSite();
+  if (!preview) return {};
+  return { "data-block-id": id, "data-region-on": selected === id ? "" : undefined };
+}
+
 function BlockView({ block, page }: { block: Block; page: Page }) {
   const { preview, selected, onSelect } = useSite();
   const R = RENDER[block.type];
@@ -85,8 +93,9 @@ function Header({ onMenu }: { onMenu: () => void }) {
   const { config, t, lang, route, navigate } = useSite();
   const home = pageBySlug(config, "");
   const pageOf = (m: MenuItem) => config.pages.find((p) => p.id === m.page);
+  const region = useRegion("__header");
   return (
-    <header className="border-b border-border bg-paper sticky top-0 z-30">
+    <header {...region} className="border-b border-border bg-paper sticky top-0 z-30 data-[region-on]:outline-2 data-[region-on]:-outline-offset-2 data-[region-on]:outline-[var(--accent-blue)]">
       <div className="mx-auto max-w-[80rem] px-5 h-16 flex items-center gap-6">
         <a
           href={routeHref({ lang, slug: "" })}
@@ -198,8 +207,9 @@ function MobileMenu({ onClose }: { onClose: () => void }) {
 
 function Footer() {
   const { config, t, lang, navigate } = useSite();
+  const region = useRegion("__footer");
   return (
-    <footer className="mt-12 border-t border-border bg-warm">
+    <footer {...region} className="mt-12 border-t border-border bg-warm data-[region-on]:outline-2 data-[region-on]:-outline-offset-2 data-[region-on]:outline-[var(--accent-blue)]">
       <div className="mx-auto max-w-[80rem] px-5 py-10 flex flex-col sm:flex-row gap-6 sm:items-end">
         <div className="flex flex-col gap-2 me-auto">
           <span className="font-heading text-lg text-ink">{t(config.name)}</span>

@@ -72,7 +72,8 @@ function Preview() {
     const el = document.querySelector(`[data-block-id="${state.selected}"]`);
     if (!el) return;
     const r = el.getBoundingClientRect();
-    if (r.top < 64 || r.top > innerHeight - 80) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (state.selected === "__footer") el.scrollIntoView({ behavior: "smooth", block: "end" });
+    else if (r.top < 64 || r.top > innerHeight - 80) el.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [state?.selected]);
   if (!state) return <div className="min-h-screen bg-paper" />;
   return (
