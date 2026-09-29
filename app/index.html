@@ -3,6 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // iOS Safari zooms the page when a field under 16px takes focus, and the
+      // app's overflow-hidden shell keeps it zoomed after blur. maximum-scale=1
+      // stops that focus zoom; iOS still allows pinch-zoom with it. Only iOS
+      // gets it: elsewhere maximum-scale would block pinch-zoom (WCAG 1.4.4).
+      // iPadOS reports as MacIntel, so a touch Mac is an iPad.
+      (function () {
+        var ua = navigator.userAgent;
+        var ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+        if (!ios) return;
+        var meta = document.querySelector('meta[name="viewport"]');
+        if (meta) meta.setAttribute("content", meta.getAttribute("content") + ", maximum-scale=1");
+      })();
+    </script>
     <meta name="description" content="Uwazi 2026 — Entity viewer prototype with document references, metadata, and file management" />
     <meta name="theme-color" content="#F5F0E8" />
     <title>Uwazi — Entity Viewer</title>
