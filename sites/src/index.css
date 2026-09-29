@@ -82,3 +82,18 @@ button:not(:disabled),
     scroll-behavior: auto !important;
   }
 }
+
+/* Right-to-left pages: a text that falls back to a left-to-right language
+ * (an untranslated Spanish line on the Arabic site) takes its own direction,
+ * so its full stop and ellipsis stay at its end. Alignment stays with the
+ * page. In `base` so any utility (text-center) still wins. */
+@layer base {
+  :where([dir="rtl"] .site) :where(h1, h2, h3, h4, p, li, dt, dd, blockquote, figcaption, label, a, button, input, textarea) {
+    unicode-bidi: plaintext;
+    text-align: right;
+  }
+  :where([dir="rtl"] .site) :where(input, textarea)::placeholder {
+    unicode-bidi: plaintext;
+    text-align: right;
+  }
+}

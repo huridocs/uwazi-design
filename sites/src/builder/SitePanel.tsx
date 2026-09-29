@@ -173,7 +173,7 @@ function LanguagesSection({ editor }: { editor: Editor }) {
               {l !== def ? (
                 n ? (
                   <>
-                    <span className="inline-flex items-center gap-1 text-[0.6875rem] text-ink-tertiary">
+                    <span className="inline-flex items-center gap-1 whitespace-nowrap text-[0.6875rem] text-ink-tertiary">
                       <span aria-hidden className="w-1.5 h-1.5 rounded-full bg-warning" />
                       {n} not translated
                     </span>
