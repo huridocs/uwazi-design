@@ -80,7 +80,7 @@ export function ExportPanel({ onClose }: { onClose: () => void }) {
       size="xl"
       footer={
         <>
-          <span className="me-auto text-xs text-ink-tertiary">Copy all gives every page and language as one checklist, in order.</span>
+          <span className="me-auto hidden sm:inline text-xs text-ink-tertiary">Copy all gives every page and language as one checklist, in order.</span>
           <Button variant="ghost" onClick={onClose}>
             Close
           </Button>
