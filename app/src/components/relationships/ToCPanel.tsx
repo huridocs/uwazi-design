@@ -17,7 +17,9 @@ function flatten(entries: TocEntry[], ancestors: string[] = []): {
   ]);
 }
 
-export function ToCPanel() {
+/** `titled={false}` in a host that already names it (the phone's sheet header
+ *  says "Table of contents"): the row keeps only Collapse and Expand all. */
+export function ToCPanel({ titled = true }: { titled?: boolean }) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [currentPage] = useAtom(currentPageAtom);
   const setScrollToPage = useSetAtom(scrollToPageAtom);
@@ -79,17 +81,20 @@ export function ToCPanel() {
   return (
     <>
       {/* Header */}
+      {(titled || hasAnyChildren) && (
       <div
         data-component="ToCPanel"
         data-part="header"
-        className="flex items-center justify-between py-2.5 shrink-0"
+        className={`flex items-center py-2.5 shrink-0 ${titled ? "justify-between" : "justify-end"}`}
       >
-        <div className="flex items-center gap-1.5">
-          <h3 data-part="title" className="text-sm font-semibold text-ink">
-            {t("System", "Table of contents")}
-          </h3>
-          <Sparkles size={14} aria-hidden className="text-ink-tertiary" />
-        </div>
+        {titled && (
+          <div className="flex items-center gap-1.5">
+            <h3 data-part="title" className="text-sm font-semibold text-ink">
+              {t("System", "Table of contents")}
+            </h3>
+            <Sparkles size={14} aria-hidden className="text-ink-tertiary" />
+          </div>
+        )}
         {hasAnyChildren && (
           <div className="flex items-center gap-3">
             <button
@@ -111,6 +116,7 @@ export function ToCPanel() {
           </div>
         )}
       </div>
+      )}
 
       {/* Tree */}
       {/* A scroll lane on the host's gutter. The rows are filled when active,
