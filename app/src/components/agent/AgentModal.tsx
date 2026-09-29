@@ -28,6 +28,7 @@ const VIEW_LABEL: Record<AppView, string> = {
   settings: "Settings",
   "import-csv": "Import CSV",
   catalog: "Component catalog",
+  login: "Sign in",
 };
 import { languageAtom } from "../../atoms/language";
 import { selectedRefIdsAtom } from "../../atoms/filters";

@@ -158,6 +158,10 @@ export const sidebarGroups: SidebarGroup[] = [
       { id: "set-row-actions", label: "RowActions" },
     ],
   },
+  {
+    label: "Screens",
+    items: [{ id: "sc-login", label: "Sign in" }],
+  },
 ];
 
 export const allItemIds = sidebarGroups.flatMap((g) =>

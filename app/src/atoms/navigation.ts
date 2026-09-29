@@ -1,7 +1,7 @@
 import { atom } from "jotai";
 import { atomWithStorage, createJSONStorage } from "jotai/utils";
 
-export type AppView = "entity" | "library" | "catalog" | "import-csv" | "settings";
+export type AppView = "entity" | "library" | "catalog" | "import-csv" | "settings" | "login";
 
 /** Which top-level surface is showing.
  *

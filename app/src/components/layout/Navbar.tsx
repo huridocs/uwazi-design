@@ -15,6 +15,7 @@ import {
   ChevronDown,
   Check,
   ExternalLink,
+  LogOut,
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import type { AppView } from "../../atoms/navigation";
@@ -500,6 +501,18 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                     {t("System", "System settings")}
                   </button>
                   <DocumentationLink onDone={() => setSettingsOpen(false)} />
+                  <button
+                    onClick={() => {
+                      setSettingsOpen(false);
+                      onNavigate?.("login");
+                    }}
+                    data-part="sign-out"
+                    className="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
+                    style={{ borderTop: "1px solid var(--border-soft)" }}
+                  >
+                    <LogOut size={14} className="text-ink-tertiary rtl:-scale-x-100" />
+                    {t("System", "Sign out")}
+                  </button>
                 </div>
               </div>
             )}
@@ -631,6 +644,15 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
             >
               <Server size={16} className="text-ink-tertiary" />
               {t("System", "System settings")}
+            </button>
+            <button
+              onClick={() => { setMobileMenuOpen(false); onNavigate?.("login"); }}
+              data-part="sign-out"
+              className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
+              style={{ borderTop: "1px solid var(--border-soft)" }}
+            >
+              <LogOut size={16} className="text-ink-tertiary rtl:-scale-x-100" />
+              {t("System", "Sign out")}
             </button>
           </nav>
         </MobileBottomSheet>

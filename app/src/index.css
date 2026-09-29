@@ -567,3 +567,23 @@ button:not(:disabled) {
 .hit-area-y::after {
   inset: -10px 0;
 }
+
+/* Sign-in fields under browser autofill. Chrome and Safari paint their own
+   fill and text colour on an autofilled input, which clashes with paper in
+   both themes. The text colour is set back; the background change is held off
+   with a very long transition, because the usual inset box-shadow cover would
+   also hide the focus ring. */
+.login-field:-webkit-autofill,
+.login-field:-webkit-autofill:hover,
+.login-field:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text-primary);
+  caret-color: var(--text-primary);
+  transition: background-color 600000s 0s, color 600000s 0s;
+}
+
+/* The sign-in art is light-toned; at full brightness beside a dark form it
+   reads as a lamp. Dark mode dims it a little. */
+:root.dark .login-art {
+  filter: brightness(0.82) saturate(0.95);
+}
+

@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { useSetAtom } from "jotai";
+import { appViewAtom } from "../atoms/navigation";
+import { LoginView } from "./LoginView";
 import { CatalogEntry } from "../components/catalog/CatalogEntry";
 import { HighlightedText } from "../components/shared/HighlightedText";
 import { StyleGuide } from "../components/catalog/StyleGuide";
@@ -161,6 +164,7 @@ interface Props {
 }
 
 export function ComponentCatalog({ onReturn }: Props) {
+  const setAppView = useSetAtom(appViewAtom);
   const [activeId, setActiveId] = useState(allItemIds[0]);
   const contentRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Map<string, HTMLElement>>(new Map());
@@ -2074,6 +2078,32 @@ const textColor = typeLabelColor(type.color);`}
                   <div className="w-full max-w-xs flex items-center justify-between bg-paper border border-border-soft rounded-md px-3 py-2">
                     <span className="text-sm text-ink">Court Case</span>
                     <RowActions label="Court Case" onEdit={() => {}} onDelete={() => {}} />
+                  </div>
+                </CatalogEntry>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-bold text-ink mb-6">Screens</h2>
+            <div className="space-y-10">
+              <div id="sc-login" ref={reg("sc-login")}>
+                <CatalogEntry
+                  name="LoginView"
+                  description="The sign-in screen (appView “login”; the navbar's Sign out leads here). Art panel beside the form, a band above it on phones. One of six images per page load, never the previous load's, cropped around its focal point, faded in over paper. Mock auth: a seed user's username or email and any password of 4+ characters."
+                  code={`<LoginView onSignedIn={(username) => setAppView("library")} />`}
+                >
+                  <div className="w-full space-y-3">
+                    <div className="relative w-full h-[36rem] overflow-hidden rounded-lg border border-border">
+                      <LoginView onSignedIn={() => {}} />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setAppView("login")}
+                      className="px-3 py-1.5 text-xs font-medium rounded-md bg-ink text-paper hover:bg-ink/90"
+                    >
+                      Open full screen
+                    </button>
                   </div>
                 </CatalogEntry>
               </div>

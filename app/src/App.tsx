@@ -6,6 +6,7 @@ import { LibraryView } from "./views/LibraryView";
 import { ComponentCatalog } from "./views/ComponentCatalog";
 import { ImportCSVView } from "./views/ImportCSVView";
 import { SettingsView } from "./views/SettingsView";
+import { LoginView } from "./views/LoginView";
 import { ToastContainer } from "./views/ToastContainer";
 import { AgentModal } from "./components/agent/AgentModal";
 import { MobileOverlayStack } from "./components/relationships/MobileOverlayStack";
@@ -53,6 +54,15 @@ export function App() {
   // two surfaces from fighting over height propagation through a common
   // ancestor. The uwazi-app shell renders Navbar + main flex column for
   // EntityView / ImportCSVView.
+  // Signed out: the sign-in screen alone, without the app's navbar.
+  if (appView === "login") {
+    return (
+      <main data-part="view" data-view="login" className="app-shell flex flex-col">
+        <LoginView onSignedIn={() => setAppView("library")} />
+      </main>
+    );
+  }
+
   if (appView === "catalog") {
     return (
       <>

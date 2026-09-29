@@ -1,6 +1,7 @@
 interface UwaziLoaderProps {
   size?: "xs" | "sm" | "md" | "lg";
-  color?: "default" | "white" | "muted" | "carbon" | "seal" | "warning";
+  /** `paper` sits on an ink fill (a commit button) and inverts with it in dark mode. */
+  color?: "default" | "white" | "paper" | "muted" | "carbon" | "seal" | "warning";
   /** When false, renders the static brand mark (no sweep). Default true. */
   animate?: boolean;
 }
@@ -15,6 +16,7 @@ const sizes = {
 const colors: Record<NonNullable<UwaziLoaderProps["color"]>, string> = {
   default: "var(--text-primary)",
   white: "#FFFFFF",
+  paper: "var(--bg-surface)",
   muted: "var(--text-muted)",
   carbon: "var(--accent-blue)",
   seal: "var(--accent-seal)",
