@@ -393,19 +393,27 @@ export function Timeline({ p }: { p: BlockProps["timeline"] }) {
         {(d) => {
           const rows = d.rows.filter((e) => e.date).sort((a, b) => a.date! - b.date!);
           return (
-            <ol className="flex gap-4 overflow-x-auto pb-3 -mx-5 px-5 snap-x">
-              {rows.map((e) => (
-                <li key={e.id} className="snap-start shrink-0 w-56 flex flex-col gap-2">
-                  <span className="flex items-center gap-2 text-xs text-ink-tertiary tabular-nums">
-                    <span aria-hidden className="w-2 h-2 rounded-full bg-accent" />
-                    {fmtDate(e.date!, lang)}
-                  </span>
-                  <span aria-hidden className="h-px bg-border-soft -mt-[0.8125rem] ms-3 -me-4" />
-                  <EntityLink id={e.id} className="text-sm text-ink hover:text-accent-text hover:underline underline-offset-2 text-pretty line-clamp-3 pt-1">
-                    {e.title}
-                  </EntityLink>
-                </li>
-              ))}
+            // Phones: vertical, the line down the start edge through each dot.
+            // Wider: rows that wrap (nothing is clipped or scrolled away), the
+            // date above a rail whose line runs through the dots' centres.
+            <ol className="grid sm:grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] sm:gap-y-8">
+              {rows.map((e, i) => {
+                const last = i === rows.length - 1;
+                return (
+                  <li key={e.id} className={`relative flex flex-col gap-1.5 ps-6 sm:ps-0 sm:pe-4 ${last ? "" : "pb-6 sm:pb-0"}`}>
+                    <span aria-hidden className="sm:hidden absolute start-0 top-[0.1875rem] w-2.5 h-2.5 rounded-full bg-accent" />
+                    {last ? null : <span aria-hidden className="sm:hidden absolute start-[0.28125rem] top-3.5 bottom-0 w-px bg-border" />}
+                    <span className="text-xs leading-4 text-ink-tertiary tabular-nums">{fmtDate(e.date!, lang)}</span>
+                    <span aria-hidden className="hidden sm:flex relative h-2.5 items-center">
+                      {last ? null : <span className="absolute start-0 -end-4 top-1/2 h-px bg-border" />}
+                      <span className="relative w-2.5 h-2.5 rounded-full bg-accent" />
+                    </span>
+                    <EntityLink id={e.id} className="text-sm text-ink hover:text-accent-text hover:underline underline-offset-2 text-pretty break-words sm:pt-0.5">
+                      {e.title}
+                    </EntityLink>
+                  </li>
+                );
+              })}
             </ol>
           );
         }}
