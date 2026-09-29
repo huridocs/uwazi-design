@@ -321,11 +321,34 @@ export function Site({ config, ds, route, onNavigate, preview = false, selected,
   });
 
   const vars = useMemo(() => themeVars(config.theme), [config.theme]);
+
+  // Custom JavaScript (Whole site › Advanced): once per page view, after the
+  // page has rendered. A throw is caught so the page still shows; the preview
+  // says what went wrong.
+  const [scriptError, setScriptError] = useState<string>();
+  const js = config.advanced.enabled ? config.advanced.js.trim() : "";
+  useEffect(() => {
+    setScriptError(undefined);
+    if (!js) return;
+    const t = setTimeout(() => {
+      try {
+        new Function(js)();
+      } catch (e) {
+        setScriptError((e as Error).message);
+      }
+    }, 0);
+    return () => clearTimeout(t);
+  }, [js, route.slug, route.entity, lang]);
   const custom = config.advanced.enabled ? config.advanced.css : "";
 
   return (
     <div className="site min-h-screen flex flex-col bg-paper text-ink font-body" style={vars as React.CSSProperties}>
       {custom ? <style>{custom}</style> : null}
+      {preview && scriptError ? (
+        <p role="alert" className="sticky top-0 z-40 bg-seal-tint text-ink text-sm px-5 py-2">
+          Custom JavaScript stopped with an error: {scriptError}
+        </p>
+      ) : null}
       {!ctx ? (
         <Notice text={ui("notFound", lang)} />
       ) : (
