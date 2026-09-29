@@ -1,6 +1,6 @@
 /* Settings that belong to the whole site. Each section is closed until
  * opened; the defaults already make a finished site. */
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { AlertTriangle, Check } from "lucide-react";
 import type { FontPair, L10n, SiteConfig, ThemeMode } from "../model/config";
 import { LANG_NAMES, missing } from "../model/config";
@@ -11,10 +11,11 @@ import { Button, Disclosure, Segmented } from "./ui";
 
 const SWATCHES = ["#1E3A5F", "#0F766E", "#7C4A1E", "#9F1239", "#B45309", "#334155", "#1A1A1A", "#4C1D95"];
 
-export function SitePanel({ editor, extra }: { editor: Editor; extra?: ReactNode }) {
+/** One section open at a time across Whole site, including `extra`'s; the
+ * builder owns which, so the preview can mark the header or footer. */
+export function SitePanel({ editor, open, onOpen, extra }: { editor: Editor; open: string | null; onOpen: (k: string | null) => void; extra?: ReactNode }) {
   const { config } = useBuilder();
-  const [open, setOpen] = useState<string | null>("theme");
-  const toggle = (k: string) => setOpen((o) => (o === k ? null : k));
+  const toggle = (k: string) => onOpen(open === k ? null : k);
   const edit = (fn: (c: SiteConfig) => SiteConfig, tag?: string) => editor.edit(fn, tag);
   return (
     <div className="flex flex-col">

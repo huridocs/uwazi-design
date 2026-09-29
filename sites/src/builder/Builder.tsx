@@ -33,6 +33,7 @@ export function Builder({ editor, onStartOver }: { editor: Editor; onStartOver: 
   const [notice, setNotice] = useState<string>();
   const [confirmReset, setConfirmReset] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [siteOpen, setSiteOpen] = useState<string | null>("theme");
   const narrow = useNarrow();
 
   useEffect(() => {
@@ -157,10 +158,12 @@ export function Builder({ editor, onStartOver }: { editor: Editor; onStartOver: 
               ) : (
                 <SitePanel
                   editor={editor}
+                  open={siteOpen}
+                  onOpen={setSiteOpen}
                   extra={
                     <>
-                      <SiteSections editor={editor} onExport={() => setExporting(true)} />
-                      <HistorySection editor={editor} onReset={() => setConfirmReset(true)} onRestored={(n) => setNotice(n)} />
+                      <SiteSections editor={editor} open={siteOpen} onOpen={setSiteOpen} onExport={() => setExporting(true)} />
+                      <HistorySection editor={editor} open={siteOpen === "history"} onToggle={() => setSiteOpen((o) => (o === "history" ? null : "history"))} onReset={() => setConfirmReset(true)} onRestored={(n) => setNotice(n)} />
                     </>
                   }
                 />
@@ -171,7 +174,7 @@ export function Builder({ editor, onStartOver }: { editor: Editor; onStartOver: 
             <Preview
               config={config}
               route={route}
-              selected={tab === "page" ? selected : undefined}
+              selected={tab === "page" ? selected : siteOpen === "menu" ? "__header" : siteOpen === "footer" ? "__footer" : undefined}
               device={device}
               onSelect={(id) => {
                 setTab("page");
@@ -299,8 +302,7 @@ function PublishDialog({ config, changes, lang, onClose, onPublish, onGoTo }: { 
   );
 }
 
-function HistorySection({ editor, onReset, onRestored }: { editor: Editor; onReset: () => void; onRestored: (msg: string) => void }) {
-  const [open, setOpen] = useState(false);
+function HistorySection({ editor, open, onToggle, onReset, onRestored }: { editor: Editor; open: boolean; onToggle: () => void; onReset: () => void; onRestored: (msg: string) => void }) {
   const doc = editor.doc!;
   const download = () => {
     const blob = new Blob([JSON.stringify(doc.draft, null, 2)], { type: "application/json" });
@@ -311,7 +313,7 @@ function HistorySection({ editor, onReset, onRestored }: { editor: Editor; onRes
     URL.revokeObjectURL(a.href);
   };
   return (
-    <Disclosure title="History" open={open} onToggle={() => setOpen((o) => !o)} aside={doc.versions.length ? `${doc.versions.length} published` : undefined}>
+    <Disclosure title="History" open={open} onToggle={onToggle} aside={doc.versions.length ? `${doc.versions.length} published` : undefined}>
       {doc.versions.length ? (
         <ol className="flex flex-col divide-y divide-border rounded-md border border-border-soft">
           {doc.versions.map((v, i) => (
