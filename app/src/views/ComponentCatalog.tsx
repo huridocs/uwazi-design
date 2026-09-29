@@ -110,7 +110,7 @@ import {
 import { sidebarGroups, allItemIds } from "./catalog/sidebarGroups";
 import { handoffDocs, resolveHandoffAnchor } from "./catalog/handoffDocs";
 import { Markdown } from "./catalog/Markdown";
-import { asset } from "../utils/asset";
+import { Wordmark } from "../components/shared/Wordmark";
 
 /** Demo data for the Copy From entry — a plan with matches AND refusals, so the
  *  half that explains itself is visible in the catalog too. */
@@ -272,7 +272,7 @@ export function ComponentCatalog({ onReturn }: Props) {
         className="sticky top-0 z-30 h-13 bg-paper flex items-center justify-between px-5"
         style={{ borderBottom: "1px solid var(--border-primary)" }}
       >
-        <img src={asset("/nu-logo.svg")} alt="Uwazi" style={{ height: 14.7 }} className="logo-img" />
+        <Wordmark />
         <button
           onClick={onReturn}
           className="flex items-center gap-1.5 px-3 py-1 text-tab font-medium text-ink-secondary rounded-md bg-warm border border-border-soft/60 hover:bg-parchment transition-colors cursor-pointer"
@@ -1353,6 +1353,16 @@ sendFill(selection.text);                                    // commits, then di
 />`}
                 >
                   <CheckboxesDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="fl-wordmark" ref={reg("fl-wordmark")}>
+                <CatalogEntry
+                  name="Wordmark"
+                  description="The Uwazi wordmark at the navbar's size. Used by the navbar, this catalog's header and the sign-in screen; inverts in dark mode."
+                  code={`<Wordmark />`}
+                >
+                  <Wordmark />
                 </CatalogEntry>
               </div>
 

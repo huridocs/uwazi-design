@@ -4,6 +4,7 @@ import { ArrowLeft, X } from "lucide-react";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { useSheetLayer } from "../../hooks/useSheetLayer";
 import { SHEET_STACK, sheetZ } from "../../atoms/sheetStack";
+import { COMMIT_FILL } from "./warmButton";
 
 /** Width tiers. A modal picks the narrowest that holds its content. `grid` is
  *  for a spreadsheet-like body (batch entry) and nothing else: it takes most of
@@ -296,6 +297,6 @@ export function Modal({
 /** Footer buttons: the modal's commit and its ghosts. Same metrics as the
  *  action bars' buttons. */
 export const MODAL_BUTTON = "px-3 py-1.5 text-xs font-medium rounded-md transition-colors";
-export const MODAL_COMMIT = `${MODAL_BUTTON} bg-ink text-paper hover:bg-ink/90 cursor-pointer`;
+export const MODAL_COMMIT = `${MODAL_BUTTON} ${COMMIT_FILL} cursor-pointer`;
 export const MODAL_COMMIT_DISABLED = `${MODAL_BUTTON} bg-ink/40 text-paper cursor-not-allowed`;
 export const MODAL_DANGER = `${MODAL_BUTTON} bg-seal-fill text-white hover:bg-seal-fill/90 cursor-pointer`;

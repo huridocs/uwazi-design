@@ -1,10 +1,14 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { asset } from "../utils/asset";
 import { loginArtFallback, loginArtSrcSet, pickLoginArt } from "../data/loginArt";
 import { seedUsers } from "../data/settings";
 import { settingsDocumentation } from "../atoms/settings";
 import { UwaziLoader } from "../components/shared/UwaziLoader";
+import { Checkbox } from "../components/shared/Checkbox";
+import { FieldMessage } from "../components/shared/FieldMessage";
+import { FORM_INPUT_LG, MODAL_LABEL } from "../components/shared/ModalParts";
+import { COMMIT_FILL } from "../components/shared/warmButton";
+import { Wordmark } from "../components/shared/Wordmark";
 
 /** Mock credentials: a seed user's username or email, and any password of at
  *  least four characters. */
@@ -19,12 +23,14 @@ const FOOTER_LINKS = [
 ];
 const VERSION = "Uwazi v2 · 2026 prototype";
 
-const INPUT =
-  "login-field w-full h-10 px-3 text-sm text-ink bg-paper rounded-md border border-border " +
-  "placeholder:text-ink-muted transition-colors focus:outline-none focus:border-carbon/50 " +
-  "focus:ring-2 focus:ring-carbon/20 aria-invalid:border-seal aria-invalid:focus:ring-seal/20 " +
-  "disabled:opacity-70";
-const LABEL = "block text-xs font-medium text-ink-secondary mb-1.5";
+// The shared field at its larger size (`FORM_INPUT_LG`): MODAL_INPUT's 2rem
+// and 12px read as a dialog's dense fields in a page-wide form.
+// `login-field` only keeps browser autofill in the theme (index.css).
+const INPUT = `login-field ${FORM_INPUT_LG} transition-colors`;
+const LABEL = `${MODAL_LABEL} mb-1.5`;
+/** The two small text-and-icon controls in the form (reveal, forgot). The
+ *  app has no shared icon-button or text-link style yet. */
+const FOCUS_RING = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30";
 
 function readRemembered(): string {
   try {
@@ -59,7 +65,7 @@ export function LoginView({ onSignedIn }: { onSignedIn: (username: string) => vo
   const identifierRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const timer = useRef<number | undefined>(undefined);
-  const ids = { identifier: useId(), password: useId(), remember: useId(), message: useId() };
+  const ids = { identifier: useId(), password: useId(), message: useId() };
 
   // A cached image can finish before React attaches onLoad.
   useEffect(() => {
@@ -146,7 +152,7 @@ export function LoginView({ onSignedIn }: { onSignedIn: (username: string) => vo
         className="gutter-host-rail flex-1 md:min-h-0 md:overflow-y-auto flex flex-col"
       >
         <header data-part="brand" className="pt-8 pb-6 flex justify-center">
-          <img src={asset("/nu-logo.svg")} alt="Uwazi" style={{ height: 18 }} className="logo-img" />
+          <Wordmark />
         </header>
 
         <div data-part="body" className="flex-1 flex items-center justify-center py-6">
@@ -212,7 +218,7 @@ export function LoginView({ onSignedIn }: { onSignedIn: (username: string) => vo
                   onClick={() => setShowPassword((v) => !v)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                   aria-controls={ids.password}
-                  className="absolute end-1 top-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 rounded-md text-ink-tertiary hover:text-ink hover:bg-warm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"
+                  className={`absolute end-1 top-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 rounded-md text-ink-tertiary hover:text-ink hover:bg-warm transition-colors ${FOCUS_RING}`}
                 >
                   {showPassword ? <EyeOff size={16} aria-hidden /> : <Eye size={16} aria-hidden />}
                 </button>
@@ -220,15 +226,8 @@ export function LoginView({ onSignedIn }: { onSignedIn: (username: string) => vo
             </div>
 
             <div className="mt-4 flex items-center justify-between gap-3">
-              <label htmlFor={ids.remember} className="flex items-center gap-2 text-sm text-ink-secondary cursor-pointer">
-                <input
-                  id={ids.remember}
-                  type="checkbox"
-                  checked={remember}
-                  onChange={(e) => setRemember(e.target.checked)}
-                  disabled={pending}
-                  className="w-3.5 h-3.5 rounded accent-ink cursor-pointer"
-                />
+              <label className="flex items-center gap-2 text-sm text-ink-secondary cursor-pointer">
+                <Checkbox checked={remember} onChange={(e) => setRemember(e.target.checked)} disabled={pending} />
                 Remember me
               </label>
               <button
@@ -240,24 +239,23 @@ export function LoginView({ onSignedIn }: { onSignedIn: (username: string) => vo
                     text: "Password reset isn’t part of this prototype.",
                   })
                 }
-                className="text-sm text-ink-secondary underline decoration-border underline-offset-4 hover:text-ink hover:decoration-ink-tertiary transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"
+                className={`text-sm text-ink-secondary underline decoration-border underline-offset-4 hover:text-ink hover:decoration-ink-tertiary transition-colors rounded-sm ${FOCUS_RING}`}
               >
                 Forgot password?
               </button>
             </div>
 
-            {/* One message line, always mounted at a fixed height, so an error
-                or a note never pushes the button down. Every message fits one
-                line at phone width. */}
-            <div
-              id={ids.message}
-              data-part="message"
-              role={message?.kind === "error" ? "alert" : "status"}
-              className={`mt-4 min-h-5 text-sm leading-5 ${
-                message?.kind === "error" ? "text-seal-label" : "text-ink-secondary"
-              }`}
-            >
-              {message?.text}
+            {/* One message line, the shared FieldMessage, always mounted at its
+                height (`reserve`) so an error or a note never pushes the button
+                down. FieldMessage has no live role (per-field lines arrive on
+                blur); here the line answers a submit, so the wrapper is the
+                alert. Every message fits one line at phone width. */}
+            <div id={ids.message} data-part="message" role={message?.kind === "error" ? "alert" : "status"} className="mt-4">
+              <FieldMessage
+                reserve
+                issue={message?.kind === "error" ? { severity: "error", message: message.text } : null}
+                hint={message?.kind === "note" ? message.text : undefined}
+              />
             </div>
 
             <button
@@ -265,7 +263,7 @@ export function LoginView({ onSignedIn }: { onSignedIn: (username: string) => vo
               data-part="submit"
               disabled={pending}
               aria-busy={pending || undefined}
-              className="mt-4 w-full h-10 flex items-center justify-center gap-2 rounded-md bg-ink text-paper text-sm font-medium hover:bg-ink/90 disabled:bg-ink/80 disabled:cursor-wait transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-paper focus-visible:ring-carbon/50"
+              className={`mt-4 w-full h-10 flex items-center justify-center gap-2 rounded-md ${COMMIT_FILL} text-sm font-medium disabled:bg-ink/80 disabled:cursor-wait transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-paper focus-visible:ring-carbon/50`}
             >
               {pending ? (
                 <>
@@ -292,7 +290,7 @@ export function LoginView({ onSignedIn }: { onSignedIn: (username: string) => vo
                 href={l.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-ink underline-offset-4 hover:underline transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30"
+                className={`hover:text-ink underline-offset-4 hover:underline transition-colors rounded-sm ${FOCUS_RING}`}
               >
                 {l.label}
               </a>

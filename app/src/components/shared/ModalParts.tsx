@@ -10,10 +10,18 @@ import { SectionLabel } from "./SectionLabel";
    Each strip or row is a `bleed` lane: it reaches the panel edge and keeps
    its content on the panel's gutter, so none of them carries `px-*`. */
 
+/** Every text field's look, without its size. An `aria-invalid` field takes
+ *  the seal border, so a field and its `FieldMessage` agree. */
+const INPUT_BASE =
+  "w-full text-ink bg-paper rounded-md border border-border placeholder:text-ink-muted " +
+  "focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 disabled:opacity-70 " +
+  "aria-invalid:border-seal aria-invalid:focus:ring-seal/20";
 /** A text input or select inside a modal. One height, one type size. */
-export const MODAL_INPUT =
-  "w-full h-8 px-2.5 text-xs text-ink bg-paper rounded-md border border-border placeholder:text-ink-muted " +
-  "focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 disabled:opacity-70";
+export const MODAL_INPUT = `${INPUT_BASE} h-8 px-2.5 text-xs`;
+/** The larger size, for a form that is the whole page (sign-in): a few
+ *  fields in a narrow column, read and typed at arm's length on a phone.
+ *  Same look as `MODAL_INPUT`; only height, padding and type size change. */
+export const FORM_INPUT_LG = `${INPUT_BASE} h-10 px-3 text-sm`;
 /** A field's label, for a `<label>` that wraps its control (`ModalField`
  *  draws the same label for one that sits beside it). */
 export const MODAL_LABEL = "block text-xs font-medium text-ink-secondary";

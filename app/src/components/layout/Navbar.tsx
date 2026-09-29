@@ -39,7 +39,7 @@ import { MobileBottomSheet } from "./MobileBottomSheet";
 import { Beacon } from "./Beacon";
 import { Select } from "../shared/Select";
 import { SectionLabel } from "../shared/SectionLabel";
-import { asset } from "../../utils/asset";
+import { Wordmark } from "../shared/Wordmark";
 
 interface NavbarProps {
   onLogoClick?: () => void;
@@ -168,7 +168,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
           data-part="logo"
           className="flex items-center"
         >
-          <img src={asset("/nu-logo.svg")} alt="Uwazi" style={{ height: 14.7 }} className="logo-img" />
+          <Wordmark />
         </button>
         {IS_PLAYGROUND && (
           <span
