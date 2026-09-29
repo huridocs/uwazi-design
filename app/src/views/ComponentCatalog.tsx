@@ -1359,7 +1359,7 @@ sendFill(selection.text);                                    // commits, then di
               <div id="fl-wordmark" ref={reg("fl-wordmark")}>
                 <CatalogEntry
                   name="Wordmark"
-                  description="The Uwazi wordmark at the navbar's size. Used by the navbar, this catalog's header and the sign-in screen; inverts in dark mode."
+                  description="The Uwazi wordmark at the navbar's size. Used by the navbar, this catalog's header and the login screen; inverts in dark mode."
                   code={`<Wordmark />`}
                 >
                   <Wordmark />
@@ -2064,13 +2064,13 @@ const textColor = typeLabelColor(type.color);`}
                 <CatalogEntry
                   name="SettingsField"
                   description="Labelled form field wrapper (label + hint/error) with the warm TextInput."
-                  code={`<SettingsField label="Email" hint="Used to sign in.">
-  <TextInput type="email" defaultValue="admin@uwazi.io" />
+                  code={`<SettingsField label="Username" hint="Used to log in.">
+  <TextInput defaultValue="admin" />
 </SettingsField>`}
                 >
                   <div className="w-full max-w-sm flex flex-col gap-3">
-                    <SettingsField label="Email" hint="Used to sign in.">
-                      <TextInput type="email" defaultValue="admin@uwazi.io" />
+                    <SettingsField label="Username" hint="Used to log in.">
+                      <TextInput defaultValue="admin" />
                     </SettingsField>
                     <SettingsField label="Password" error="Passwords don't match">
                       <TextInput type="password" defaultValue="••••••" />
@@ -2115,12 +2115,12 @@ const textColor = typeLabelColor(type.color);`}
               <div id="sc-login" ref={reg("sc-login")}>
                 <CatalogEntry
                   name="LoginView"
-                  description="The sign-in screen (appView “login”; the navbar's Sign out leads here). Art panel beside the form, a band above it on phones. One of six images per page load, never the previous load's, cropped around its focal point, faded in over paper. Mock auth: a seed user's username or email and any password of 4+ characters."
-                  code={`<LoginView onSignedIn={(username) => setAppView("library")} />`}
+                  description="The login screen (appView “login”; the navbar's Log out leads here). Art panel beside the form, a band above it on phones. One of six images per page load, never the previous load's, cropped around its focal point, faded in over paper. Mock auth: a seed user's username and any password of 4+ characters."
+                  code={`<LoginView onLoggedIn={(username) => setAppView("library")} />`}
                 >
                   <div className="w-full space-y-3">
                     <div className="relative w-full h-[36rem] overflow-hidden rounded-lg border border-border">
-                      <LoginView onSignedIn={() => {}} />
+                      <LoginView onLoggedIn={() => {}} />
                     </div>
                     <button
                       type="button"

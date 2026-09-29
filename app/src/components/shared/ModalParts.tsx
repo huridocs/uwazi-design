@@ -18,7 +18,7 @@ const INPUT_BASE =
   "aria-invalid:border-seal aria-invalid:focus:ring-seal/20";
 /** A text input or select inside a modal. One height, one type size. */
 export const MODAL_INPUT = `${INPUT_BASE} h-8 px-2.5 text-xs`;
-/** The larger size, for a form that is the whole page (sign-in): a few
+/** The larger size, for a form that is the whole page (login): a few
  *  fields in a narrow column, read and typed at arm's length on a phone.
  *  Same look as `MODAL_INPUT`; only height, padding and type size change. */
 export const FORM_INPUT_LG = `${INPUT_BASE} h-10 px-3 text-sm`;

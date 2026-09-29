@@ -1,6 +1,6 @@
 import { asset } from "../utils/asset";
 
-/** The sign-in screen's art. Each image ships as AVIF and WebP at two widths
+/** The login screen's art. Each image ships as AVIF and WebP at two widths
  *  (`public/login-art/art-N-1x|2x.{avif,webp}`, every file ≤ 250KB); the
  *  originals are in `images/login-art-src/`, outside the bundle. `w2x` is the
  *  largest width that stayed under the size budget, so for the detailed pieces

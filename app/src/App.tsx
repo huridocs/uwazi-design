@@ -54,11 +54,11 @@ export function App() {
   // two surfaces from fighting over height propagation through a common
   // ancestor. The uwazi-app shell renders Navbar + main flex column for
   // EntityView / ImportCSVView.
-  // Signed out: the sign-in screen alone, without the app's navbar.
+  // Logged out: the login screen alone, without the app's navbar.
   if (appView === "login") {
     return (
       <main data-part="view" data-view="login" className="app-shell flex flex-col">
-        <LoginView onSignedIn={() => setAppView("library")} />
+        <LoginView onLoggedIn={() => setAppView("library")} />
       </main>
     );
   }

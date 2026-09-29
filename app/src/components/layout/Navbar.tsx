@@ -506,12 +506,12 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                       setSettingsOpen(false);
                       onNavigate?.("login");
                     }}
-                    data-part="sign-out"
+                    data-part="log-out"
                     className="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors cursor-pointer"
                     style={{ borderTop: "1px solid var(--border-soft)" }}
                   >
                     <LogOut size={14} className="text-ink-tertiary rtl:-scale-x-100" />
-                    {t("System", "Sign out")}
+                    {t("System", "Log out")}
                   </button>
                 </div>
               </div>
@@ -647,12 +647,12 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
             </button>
             <button
               onClick={() => { setMobileMenuOpen(false); onNavigate?.("login"); }}
-              data-part="sign-out"
+              data-part="log-out"
               className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
               style={{ borderTop: "1px solid var(--border-soft)" }}
             >
               <LogOut size={16} className="text-ink-tertiary rtl:-scale-x-100" />
-              {t("System", "Sign out")}
+              {t("System", "Log out")}
             </button>
           </nav>
         </MobileBottomSheet>

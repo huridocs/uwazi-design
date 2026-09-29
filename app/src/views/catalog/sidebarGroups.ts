@@ -160,7 +160,7 @@ export const sidebarGroups: SidebarGroup[] = [
   },
   {
     label: "Screens",
-    items: [{ id: "sc-login", label: "Sign in" }],
+    items: [{ id: "sc-login", label: "Log in" }],
   },
 ];
 

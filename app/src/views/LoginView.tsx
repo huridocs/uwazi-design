@@ -10,11 +10,11 @@ import { FORM_INPUT_LG, MODAL_LABEL } from "../components/shared/ModalParts";
 import { COMMIT_FILL } from "../components/shared/warmButton";
 import { Wordmark } from "../components/shared/Wordmark";
 
-/** Mock credentials: a seed user's username or email, and any password of at
- *  least four characters. */
+/** Mock credentials: a seed user's username, and any password of at least
+ *  four characters. */
 const MIN_PASSWORD = 4;
 const REMEMBER_KEY = "uwazi:loginRemember";
-const SIGN_IN_DELAY_MS = 800;
+const LOGIN_DELAY_MS = 800;
 
 const FOOTER_LINKS = [
   { label: "Website", href: "https://uwazi.io" },
@@ -40,16 +40,16 @@ function readRemembered(): string {
   }
 }
 
-function findUser(identifier: string) {
-  const id = identifier.trim().toLowerCase();
-  return seedUsers.find((u) => u.username.toLowerCase() === id || u.email.toLowerCase() === id);
+function findUser(username: string) {
+  const name = username.trim().toLowerCase();
+  return seedUsers.find((u) => u.username.toLowerCase() === name);
 }
 
 type Message = { kind: "error" | "note"; text: string } | null;
 
-/** The sign-in screen: an art panel beside the form (above it on phones).
+/** The login screen: an art panel beside the form (above it on phones).
  *  Fills its parent, so the app shell and the catalog frame can both host it. */
-export function LoginView({ onSignedIn }: { onSignedIn: (username: string) => void }) {
+export function LoginView({ onLoggedIn }: { onLoggedIn: (username: string) => void }) {
   const art = pickLoginArt();
   const [loaded, setLoaded] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -84,8 +84,8 @@ export function LoginView({ onSignedIn }: { onSignedIn: (username: string) => vo
         kind: "error",
         text: missing.identifier
           ? missing.password
-            ? "Enter your username or email and password."
-            : "Enter your username or email."
+            ? "Enter your username and password."
+            : "Enter your username."
           : "Enter your password.",
       });
       (missing.identifier ? identifierRef : passwordRef).current?.focus();
@@ -110,8 +110,8 @@ export function LoginView({ onSignedIn }: { onSignedIn: (username: string) => vo
       } catch {
         // Storage blocked: nothing is remembered.
       }
-      onSignedIn(user.username);
-    }, SIGN_IN_DELAY_MS);
+      onLoggedIn(user.username);
+    }, LOGIN_DELAY_MS);
   };
 
   return (
@@ -163,12 +163,12 @@ export function LoginView({ onSignedIn }: { onSignedIn: (username: string) => vo
             aria-describedby={ids.message}
             className="w-full max-w-[22.5rem]"
           >
-            <h1 className="text-2xl font-semibold tracking-tight text-ink">Sign in</h1>
-            <p className="mt-1.5 text-sm text-ink-tertiary">With your Uwazi username or email.</p>
+            <h1 className="text-2xl font-semibold tracking-tight text-ink">Log in</h1>
+            <p className="mt-1.5 text-sm text-ink-tertiary">With your Uwazi username.</p>
 
             <div className="mt-8">
               <label htmlFor={ids.identifier} className={LABEL}>
-                Username or email
+                Username
               </label>
               <input
                 ref={identifierRef}
@@ -268,15 +268,15 @@ export function LoginView({ onSignedIn }: { onSignedIn: (username: string) => vo
               {pending ? (
                 <>
                   <UwaziLoader size="xs" color="paper" />
-                  Signing in…
+                  Logging in…
                 </>
               ) : (
-                "Sign in"
+                "Log in"
               )}
             </button>
 
             <p className="mt-4 text-meta text-ink-tertiary">
-              Prototype: sign in as admin, mlopez or another seed user, with any password of {MIN_PASSWORD}+
+              Prototype: log in as admin, mlopez or another seed user, with any password of {MIN_PASSWORD}+
               characters.
             </p>
           </form>
