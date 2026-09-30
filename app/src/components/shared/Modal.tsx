@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { ArrowLeft, X } from "lucide-react";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { useSheetLayer } from "../../hooks/useSheetLayer";
+import { useOverlayLayer } from "../../hooks/useOverlayLayer";
 import { SHEET_STACK, sheetZ } from "../../atoms/sheetStack";
 import { CloseAllButton } from "../layout/CloseAllButton";
 
@@ -144,6 +145,9 @@ export function Modal({
      size — and viewport-scoped, since a pane is only a slice of the screen. */
   const layer = useSheetLayer(true, { onClose, label: typeof title === "string" ? title : undefined });
   const sheet = layer.stacked && layer.index >= 1;
+  // On the app's layer stack too, so an overlay under the dialog ignores
+  // presses and Escape while it is open (see atoms/layerStack).
+  useOverlayLayer(true);
   const fullOnPhone = size !== "sm" && !sheet;
   const depth = Math.min(layer.depth, SHEET_STACK.visible - 1);
   useLayoutEffect(() => {

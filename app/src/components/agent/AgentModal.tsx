@@ -42,6 +42,7 @@ import { getEntityProfile } from "../../data/entityProfiles";
 import { relationTypes, type Reference } from "../../data/references";
 import type { MetadataField } from "../../data/metadata";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
+import { useOverlayLayer } from "../../hooks/useOverlayLayer";
 
 interface Chip {
   source: ContextSource;
@@ -52,6 +53,7 @@ interface Chip {
 export function AgentModal() {
   const [open, setOpen] = useAtom(agentOpenAtom);
   const trapRef = useFocusTrap<HTMLDivElement>(open);
+  const { isTopNow } = useOverlayLayer(open);
   const [scope, setScope] = useAtom(agentScopeAtom);
   const [chainNodes, setChainNodes] = useAtom(agentChainAtom);
   const [messages, setMessages] = useAtom(agentMessagesAtom);
@@ -78,13 +80,13 @@ export function AgentModal() {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setOpen((o) => !o);
-      } else if (e.key === "Escape" && open) {
+      } else if (e.key === "Escape" && open && isTopNow()) {
         setOpen(false);
       }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open, setOpen]);
+  }, [open, setOpen, isTopNow]);
 
   useEffect(() => {
     if (open) threadRef.current?.scrollTo({ top: threadRef.current.scrollHeight });
