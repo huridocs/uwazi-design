@@ -597,7 +597,7 @@ function displayOption<T extends DisplayValue>(
 
 export const DEFAULT_RESULTS_LAYOUT: ResultsLayout = "grouped";
 export const DEFAULT_TIMELINE_LAYOUT: TimelineLayout = "rail";
-export const DEFAULT_THUMB_SIZE: ThumbSize = "m";
+export const DEFAULT_THUMB_SIZE: ThumbSize = "s";
 export const DEFAULT_THUMB_FRAME: ThumbFrame = "landscape";
 /* Default is `cover` so a slot with an image is filled edge to edge; `auto` and
    `contain` remain as options. */
