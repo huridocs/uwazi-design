@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import type { EntityImage } from "../../data/entities";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
+import { useOverlayLayer } from "../../hooks/useOverlayLayer";
 
 /** One image at its own size, over everything.
  *
@@ -27,18 +28,21 @@ export function ImageLightbox({
   onClose: () => void;
 }) {
   const trapRef = useFocusTrap<HTMLDivElement>(!!image);
+  // A layer on the app's stack, so the slide-over or dialog it opened from
+  // leaves presses and Escape on it alone.
+  const { isTopNow } = useOverlayLayer(!!image);
 
   useEffect(() => {
     if (!image) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === "Escape" && isTopNow()) {
         e.stopPropagation();
         onClose();
       }
     };
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
-  }, [image, onClose]);
+  }, [image, onClose, isTopNow]);
 
   if (!image) return null;
 

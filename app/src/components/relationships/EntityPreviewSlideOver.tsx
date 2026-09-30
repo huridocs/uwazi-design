@@ -2,6 +2,7 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { breakpointAtom } from "../../atoms/viewport";
 import { useEffect, useState } from "react";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
+import { useOverlayLayer } from "../../hooks/useOverlayLayer";
 import { useHostDrawerWidth } from "../../hooks/useDrawerWidth";
 import { activeAggregateIdAtom } from "../../atoms/references";
 import { languageAtom } from "../../atoms/language";
@@ -99,10 +100,15 @@ function OverlayLayer({ depth }: { depth: number }) {
   const isOpen = entityId !== null && entity !== undefined;
 
   // Only the top layer answers Escape and outside clicks: one press, one layer.
-  // A click outside every layer (outside layer 0) closes them all.
+  // A click outside every layer (outside layer 0) closes them all. "Top" is
+  // the app's layer stack, not this preview stack: while a lightbox or a dialog
+  // sits above this layer, a press on it is that layer's, even though it lands
+  // outside this panel in the DOM.
+  const layer = useOverlayLayer(isOpen);
   useEffect(() => {
     if (!isTop) return;
     const onPointerDown = (e: PointerEvent) => {
+      if (!layer.isTopNow()) return;
       const panel = panelRef.current;
       if (!panel || panel.contains(e.target as Node)) return;
       const root = panel.closest("[data-overlay-root]");
@@ -110,7 +116,7 @@ function OverlayLayer({ depth }: { depth: number }) {
       else closeAll();
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !e.defaultPrevented) pop();
+      if (e.key === "Escape" && !e.defaultPrevented && layer.isTopNow()) pop();
     };
     // Defer one tick so the click that opened the layer doesn't close it.
     const t = window.setTimeout(() => {
