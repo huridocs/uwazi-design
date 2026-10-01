@@ -76,11 +76,6 @@
      text on a dark surface; on the page it blacked the word out. */
   --pdf-hit: #FCD34D;
   --pdf-hit-ring: #1A1A1A;
-  /* The rendered page itself, and the back of it where a library card's page
-     curls its corner (`.doc-lift-curl`). Paper in both themes, for the same
-     reason. */
-  --pdf-page: #FFFFFF;
-  --pdf-page-back: #E9E6DF;
 
   /* Shadows */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);

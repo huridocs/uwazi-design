@@ -23,6 +23,7 @@ export function EntityThumbnail({
   tint,
   peek = false,
   lift = false,
+  loupe = false,
   className = "",
 }: {
   kind: PreviewKind;
@@ -41,9 +42,12 @@ export function EntityThumbnail({
   tint?: string;
   /** A document's sheet slides up on the card's hover (landscape frame only). */
   peek?: boolean;
-  /** Small cards: the document's page rises further, curls its corner, and
-   *  carries a loupe (see `PdfPageThumb`). Documents only. */
+  /** Small cards: the document's page rises further (see `PdfPageThumb`).
+   *  Documents only. */
   lift?: boolean;
+  /** A loupe magnifies the document's page under the pointer (`PageLoupe`).
+   *  Documents only. */
+  loupe?: boolean;
   className?: string;
 }) {
   if (kind === "document") {
@@ -59,6 +63,7 @@ export function EntityThumbnail({
         fill={frame === "portrait"}
         peek={peek}
         lift={lift}
+        loupe={loupe}
         className={className}
       />
     );

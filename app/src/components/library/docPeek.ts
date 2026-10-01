@@ -25,6 +25,13 @@ let installed = false;
 const pending = new Map<HTMLElement, number>();
 const settling = new Map<HTMLElement, number>();
 const raised = new Set<HTMLElement>();
+const raisedAt = new WeakMap<HTMLElement, number>();
+
+/** When the card's page started rising (`performance.now()`), or null while it
+ *  is not raised. The Small card's loupe waits on this. */
+export function peekRaisedAt(card: HTMLElement) {
+  return card.dataset.peek === "up" ? (raisedAt.get(card) ?? null) : null;
+}
 
 function install() {
   if (installed || typeof window === "undefined") return;
@@ -70,6 +77,7 @@ function fire(card: HTMLElement) {
   if (t) window.clearTimeout(t);
   settling.delete(card);
   measurePeekRoom(card);
+  if (card.dataset.peek !== "up") raisedAt.set(card, performance.now());
   card.dataset.peek = "up";
   raised.add(card);
 }

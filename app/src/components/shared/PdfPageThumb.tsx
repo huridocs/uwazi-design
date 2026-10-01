@@ -30,6 +30,7 @@ export function PdfPageThumb({
   fill = false,
   peek = false,
   lift = false,
+  loupe = false,
   className = "",
   style,
 }: {
@@ -41,14 +42,15 @@ export function PdfPageThumb({
   fill?: boolean;
   /** Slide the sheet up on the card's hover — see `DocPlaceholder`. */
   peek?: boolean;
-  /** The Small card's variant of `peek`: a higher rise that ends with the
-   *  corner curling, and a loupe that magnifies the page under the pointer
-   *  (`PageLoupe`). Stack frame only. */
+  /** The Small card's variant of `peek`: a higher rise. Stack frame only. */
   lift?: boolean;
+  /** A loupe that magnifies the page under the pointer (`PageLoupe`). With
+   *  `lift` it waits for the rise; otherwise only for a short beat. */
+  loupe?: boolean;
   className?: string;
   style?: React.CSSProperties;
 }) {
-  const loupe = usePageLoupe(lift && !fill ? url : null);
+  const lens = usePageLoupe(loupe ? url : null, lift && !fill);
   const sheetRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const [src, setSrc] = useState<string | null>(null);
@@ -152,11 +154,12 @@ export function PdfPageThumb({
           data-part="page"
           data-thumb-w={renderW || undefined}
           className="w-full h-full"
-          {...(lift && !fill ? loupe.handlers : {})}
+          {...(loupe ? lens.handlers : {})}
         >
           {src &&
             (fill ? (
               <img
+                ref={lens.imgRef}
                 src={src}
                 data-part="image"
                 alt=""
@@ -171,11 +174,11 @@ export function PdfPageThumb({
             ) : (
               /* Full width, natural height, running off the sheet's bottom the
                  way a page in a stack does — the frame crops it. */
-              <img ref={loupe.imgRef} src={src} data-part="image" alt="" aria-hidden className="w-full block" />
+              <img ref={lens.imgRef} src={src} data-part="image" alt="" aria-hidden className="w-full block" />
             ))}
         </div>
       </DocPlaceholder>
-      {loupe.lens}
+      {lens.lens}
     </div>
   );
 }

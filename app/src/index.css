@@ -263,81 +263,35 @@ body {
 }
 
 /* The Small card's page lift (`DocPlaceholder` with `lift`): the peek above,
-   rising further, with the end corner curling as the rise finishes.
+   rising further.
 
    The sheet is 200% of the band and starts 10% down it, so 55% of the sheet
-   hangs below the band (`--hang`). Everything moves through two registered
-   properties so one transition drives both the translate and the clip:
-   `--lift` (the rise, a percentage of the sheet's own height, capped by
-   `--peek-room` so the scroller never cuts the page off) and `--curl` (the
-   fold's leg length). The clip is a polygon whose top-end vertex is split in
-   two along the fold line; at `--curl: 0` it is the plain rectangle. Its
-   outer vertices sit 3rem out, so the sheet's shadow and the curl's are not
-   cut. `.doc-lift-curl` is the page's back, folded over that line.
+   hangs below the band (`--hang`). The rise is one registered property,
+   `--lift` (a percentage of the sheet's own height, capped by `--peek-room` so
+   the scroller never cuts the page off), so one transition drives both the
+   translate and the clip's bottom edge. The clip's other edges sit 3rem out,
+   so the sheet's shadow is not cut.
 
-   Rising: 240ms ease-out, the curl in the last 100ms. Settling: the curl goes
-   first. Transform and clip only; still under reduced motion. */
+   240ms ease-out; the loupe (`PageLoupe.tsx`) waits for it. Transform and clip
+   only; still under reduced motion. */
 @property --lift {
   syntax: "<length-percentage>";
   inherits: false;
   initial-value: 0%;
 }
-@property --curl {
-  syntax: "<length>";
-  inherits: true;
-  initial-value: 0px;
-}
 .doc-lift-sheet {
   --hang: 55%;
   translate: 0 calc(-1 * var(--lift));
-  clip-path: polygon(
-    -3rem -3rem,
-    calc(100% - var(--curl) - 3rem) -3rem,
-    calc(100% + 3rem) calc(var(--curl) + 3rem),
-    calc(100% + 3rem) calc(100% - var(--hang) + var(--lift)),
-    -3rem calc(100% - var(--hang) + var(--lift))
-  );
+  clip-path: inset(-3rem -3rem calc(var(--hang) - var(--lift)) -3rem);
   transition:
     --lift 240ms ease-out,
-    --curl 80ms ease-out,
     box-shadow 240ms ease-out;
-}
-.doc-lift-sheet:dir(rtl) {
-  clip-path: polygon(
-    calc(var(--curl) + 3rem) -3rem,
-    calc(100% + 3rem) -3rem,
-    calc(100% + 3rem) calc(100% - var(--hang) + var(--lift)),
-    -3rem calc(100% - var(--hang) + var(--lift)),
-    -3rem calc(var(--curl) + 3rem)
-  );
-}
-.doc-lift-curl {
-  position: absolute;
-  top: 0;
-  inset-inline-end: 0;
-  width: var(--curl);
-  height: var(--curl);
-  /* Back of the page: shaded at the fold, lighter toward the tip, whose
-     corner is rounded so it reads as a curl rather than a crease. The page is
-     printed paper in both themes, so the back is too (`--pdf-page*`). */
-  background: linear-gradient(to bottom left, transparent 50%, var(--pdf-page-back) 50%, var(--pdf-page));
-  border-end-start-radius: 45%;
-  box-shadow: var(--shadow-md);
-  pointer-events: none;
-}
-.doc-lift-curl:dir(rtl) {
-  background: linear-gradient(to bottom right, transparent 50%, var(--pdf-page-back) 50%, var(--pdf-page));
 }
 @media (prefers-reduced-motion: no-preference) {
   [data-peek="up"] .doc-lift-sheet,
   .group:has(:focus-visible) .doc-lift-sheet {
     --lift: min(46%, var(--peek-room, 100vh));
-    --curl: 0.875rem;
     box-shadow: var(--shadow-lg);
-    transition:
-      --lift 240ms ease-out,
-      --curl 100ms ease-out 140ms,
-      box-shadow 240ms ease-out;
   }
 }
 

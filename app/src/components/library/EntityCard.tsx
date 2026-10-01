@@ -492,6 +492,7 @@ export const EntityCard = memo(function EntityCard({
                 frame={thumbFrame}
                 peek={thumbFrame === "landscape"}
                 lift={peekDoc && thumbSize === "s"}
+                loupe={entity.preview === "document" && (thumbFrame === "portrait" || thumbSize === "s")}
                 tint={getEntityType(entity.typeId)?.color}
                 className={`h-full w-full rounded border border-border/60 ${peekDoc ? "" : "overflow-hidden"}`}
               />

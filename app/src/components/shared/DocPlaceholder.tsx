@@ -30,8 +30,7 @@ export function DocPlaceholder({
    *  content that is already painted. */
   peek?: boolean;
   /** The Small card's peek (`.doc-lift-sheet` in `index.css`): the sheet is
-   *  200% of the band, rises further, and its end corner curls at the end of
-   *  the rise. Implies `peek`. */
+   *  200% of the band and rises further. Implies `peek`. */
   lift?: boolean;
   /** Page content. Absent → a blank sheet. */
   children?: ReactNode;
@@ -59,9 +58,6 @@ export function DocPlaceholder({
         style={fill ? undefined : { border: "1px solid var(--border-soft)" }}
       >
         {children}
-        {/* The curled corner: the page's back, folded over the line the sheet's
-            clip-path cuts. Sized by `--curl`, so it is nothing at rest. */}
-        {lift && !fill && <span data-part="curl" aria-hidden className="doc-lift-curl" />}
       </div>
 
       {/* A faint elliptical shadow along the bottom, over the sheet, on hover only.

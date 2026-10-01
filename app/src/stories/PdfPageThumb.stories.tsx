@@ -74,11 +74,11 @@ export const AllStates: Story = {
 };
 
 /** The Small library card's variant: hover the page for the loupe (a high-res
- *  page one is rendered on first hover). The rise and corner curl are driven by
+ *  page one is rendered on first hover). The rise is driven by
  *  the card (`data-peek`) or keyboard focus inside a `.group`; the focusable
  *  wrapper here shows them on Tab. */
 export const Lift: Story = {
-  args: { url: URL, ext: "pdf", peek: true, lift: true },
+  args: { url: URL, ext: "pdf", peek: true, lift: true, loupe: true },
   render: (args) => (
     <div className="group pt-16">
       <div tabIndex={0} aria-label="Document preview" className="w-[17.5rem] h-[3.75rem] rounded border border-border/60 focus:outline-none">
