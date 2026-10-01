@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { pdfThumb } from "../../utils/pdfThumb";
 import { DocPlaceholder } from "./DocPlaceholder";
+import { usePageLoupe } from "./PageLoupe";
 
 /** A document preview: the real first page.
  *
@@ -28,6 +29,7 @@ export function PdfPageThumb({
   size = "md",
   fill = false,
   peek = false,
+  lift = false,
   className = "",
   style,
 }: {
@@ -39,9 +41,14 @@ export function PdfPageThumb({
   fill?: boolean;
   /** Slide the sheet up on the card's hover — see `DocPlaceholder`. */
   peek?: boolean;
+  /** The Small card's variant of `peek`: a higher rise that ends with the
+   *  corner curling, and a loupe that magnifies the page under the pointer
+   *  (`PageLoupe`). Stack frame only. */
+  lift?: boolean;
   className?: string;
   style?: React.CSSProperties;
 }) {
+  const loupe = usePageLoupe(lift && !fill ? url : null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const [src, setSrc] = useState<string | null>(null);
@@ -132,7 +139,7 @@ export function PdfPageThumb({
 
   return (
     <div data-component="PdfPageThumb" className={className} style={style}>
-      <DocPlaceholder ext={ext} size={size} fill={fill} peek={peek && !fill}>
+      <DocPlaceholder ext={ext} size={size} fill={fill} peek={peek && !fill} lift={lift && !fill}>
         {/* The ref is on the SHEET, not the frame: its width is what the page gets
             rendered at, and it's what has to come on screen. */}
         {/* `data-thumb-w` is the width the page was actually RASTERISED at, in
@@ -140,7 +147,13 @@ export function PdfPageThumb({
             it's drawn in" is the one question about this component that a
             screenshot cannot answer, and it is exactly what went wrong when the
             portrait slot inherited the band's smaller render. */}
-        <div ref={sheetRef} data-part="page" data-thumb-w={renderW || undefined} className="w-full h-full">
+        <div
+          ref={sheetRef}
+          data-part="page"
+          data-thumb-w={renderW || undefined}
+          className="w-full h-full"
+          {...(lift && !fill ? loupe.handlers : {})}
+        >
           {src &&
             (fill ? (
               <img
@@ -158,10 +171,11 @@ export function PdfPageThumb({
             ) : (
               /* Full width, natural height, running off the sheet's bottom the
                  way a page in a stack does — the frame crops it. */
-              <img src={src} data-part="image" alt="" aria-hidden className="w-full block" />
+              <img ref={loupe.imgRef} src={src} data-part="image" alt="" aria-hidden className="w-full block" />
             ))}
         </div>
       </DocPlaceholder>
+      {loupe.lens}
     </div>
   );
 }

@@ -9,6 +9,7 @@ export function DocPlaceholder({
   size = "md",
   fill = false,
   peek = false,
+  lift = false,
   children,
 }: {
   /** e.g. "pdf". Hidden at `sm`, where it would be too small to read. */
@@ -28,13 +29,17 @@ export function DocPlaceholder({
    *  band tall and the bitmap is the whole first page, so the rise uncovers
    *  content that is already painted. */
   peek?: boolean;
+  /** The Small card's peek (`.doc-lift-sheet` in `index.css`): the sheet is
+   *  200% of the band, rises further, and its end corner curls at the end of
+   *  the rise. Implies `peek`. */
+  lift?: boolean;
   /** Page content. Absent → a blank sheet. */
   children?: ReactNode;
 }) {
   return (
     <div
       data-component="DocPlaceholder"
-      className={`group relative w-full h-full bg-vellum ${peek && !fill ? "rounded-[inherit]" : "overflow-hidden"}`}
+      className={`group relative w-full h-full bg-vellum ${(peek || lift) && !fill ? "rounded-[inherit]" : "overflow-hidden"}`}
     >
       {/* Inset at the sides, pinned near the top, running past the bottom so the
           frame crops it. Top corners rounded only: the bottom is off-frame.
@@ -45,13 +50,18 @@ export function DocPlaceholder({
         className={
           fill
             ? "absolute inset-0 bg-paper overflow-hidden"
-            : peek
+            : lift
+              ? "doc-lift-sheet absolute inset-x-[6%] top-[10%] h-[200%] bg-paper rounded-t-[3px] shadow-sm overflow-hidden"
+              : peek
               ? "doc-peek-sheet absolute inset-x-[6%] top-[10%] h-[170%] bg-paper rounded-t-[3px] shadow-sm overflow-hidden"
               : "absolute inset-x-[6%] top-[10%] -bottom-[15%] bg-paper rounded-t-[3px] shadow-sm overflow-hidden"
         }
         style={fill ? undefined : { border: "1px solid var(--border-soft)" }}
       >
         {children}
+        {/* The curled corner: the page's back, folded over the line the sheet's
+            clip-path cuts. Sized by `--curl`, so it is nothing at rest. */}
+        {lift && !fill && <span data-part="curl" aria-hidden className="doc-lift-curl" />}
       </div>
 
       {/* A faint elliptical shadow along the bottom, over the sheet, on hover only.
