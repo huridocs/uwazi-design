@@ -124,7 +124,6 @@ function RelationTypeDeleteOpen({
           noun: "relationship type",
           id: type.id,
           name: type.label,
-          message: `${type.label} deleted`,
           detail:
             deletion.moved && target
               ? `${deletion.moved.refIds.length.toLocaleString()} references moved to ${target.label}. Undo puts the type and its references back.`
@@ -247,7 +246,6 @@ function LanguageDeleteOpen({
           noun: "language",
           id: language.key,
           name: language.label,
-          message: `${language.label} uninstalled`,
         });
         onCancel();
       }}
@@ -281,7 +279,7 @@ export function PageDelete({
         // A failed delete keeps the page and says why (Uwazi says nothing).
         const injected = consumeFailure("delete");
         if (injected) {
-          fail("An error occurred", injected);
+          fail(undefined, injected);
           return onCancel();
         }
         onDelete(page);

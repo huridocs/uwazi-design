@@ -47,7 +47,6 @@ export function GroupEditor({
       noun: "group",
       id,
       name: name.trim(),
-      message: isNew ? "Group created" : undefined,
     });
     onClose();
   };

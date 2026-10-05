@@ -346,7 +346,6 @@ function ThesaurusEditorBody({
       noun: "thesaurus",
       id,
       name: finalName,
-      message: isNew ? "Thesaurus created" : `${finalName} saved`,
     });
     onClose();
   };

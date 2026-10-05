@@ -6,6 +6,7 @@ import { dataSourceAtom } from "../atoms/dataSource";
 import { uploads, uploadsAtom } from "../atoms/uploads";
 import type { SettingsUpload } from "../data/settings";
 import type { Corpus } from "../data/entityChanges";
+import { SETTINGS_NOTICES } from "../data/settingsNotices";
 
 /** Settings › Uploads' upload path, shared with the Collection favicon picker.
  *
@@ -85,7 +86,7 @@ export async function runUploads(store: Store, files: File[], corpus: Corpus): P
   const tooBig = files.filter((f) => f.size > UPLOAD_LIMIT);
   const queue = files.filter((f) => f.size <= UPLOAD_LIMIT);
   for (const f of tooBig)
-    say(store, "error", "An error occurred", `“${f.name}” is larger than the ${UPLOAD_LIMIT_LABEL} limit for uploads. It was not uploaded.`);
+    say(store, "error", SETTINGS_NOTICES.error, `“${f.name}” is larger than the ${UPLOAD_LIMIT_LABEL} limit for uploads. It was not uploaded.`);
   if (queue.length === 0) return [];
 
   const id = `upload-custom-${Date.now().toString(36)}-${++seq}`;
@@ -124,7 +125,7 @@ export async function runUploads(store: Store, files: File[], corpus: Corpus): P
       });
     } catch (err) {
       failed.push(f.name);
-      say(store, "error", "An error occurred", `“${f.name}” could not be uploaded: ${(err as Error)?.message ?? "storage is full"}`);
+      say(store, "error", SETTINGS_NOTICES.error, `“${f.name}” could not be uploaded: ${(err as Error)?.message ?? "storage is full"}`);
     }
     patch({ label: line(f.name, 100, remaining), current: (i + 1) * 100 - (i === queue.length - 1 ? 1 : 0) });
   }

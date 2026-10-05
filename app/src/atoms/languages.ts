@@ -5,6 +5,7 @@ import type { Corpus } from "../data/entityChanges";
 import { createSettingsCollection, hasId, registerSettingsReset } from "./settingsCollection";
 import { tasksAtom, toastsAtom } from "./notifications";
 import { appendActivityAtom } from "./activityLog";
+import { SETTINGS_NOTICES } from "../data/settingsNotices";
 
 /** Settings › Languages: the collection's installed languages, one store per
  *  corpus, keyed by language key. Pages and Translations read it. Per G8 the
@@ -165,7 +166,7 @@ export function installLanguages(store: Store, corpus: Corpus, picked: CatalogLa
       current: 0,
       total: 1,
       driven: true,
-      done: { title: "Languages installed successfully", detail: names(fresh) },
+      done: { title: SETTINGS_NOTICES.languagesInstalled, detail: names(fresh) },
     },
   ]);
   setTimeout(() => {
@@ -180,7 +181,7 @@ export function installLanguages(store: Store, corpus: Corpus, picked: CatalogLa
       setStates(store, corpus, keys, { status: "failed", reason });
       store.set(toastsAtom, (prev) => [
         ...prev,
-        { id: `${id}-error`, type: "error", message: "An error occurred", detail: `Installing ${names(fresh)} failed. ${reason}` },
+        { id: `${id}-error`, type: "error", message: SETTINGS_NOTICES.error, detail: `Installing ${names(fresh)} failed. ${reason}` },
       ]);
       return;
     }
@@ -219,7 +220,7 @@ export function uninstallLanguage(store: Store, corpus: Corpus, lang: LanguageRe
       current: 0,
       total: 1,
       driven: true,
-      done: { title: "Language uninstalled successfully", detail: lang.label },
+      done: { title: SETTINGS_NOTICES.languageUninstalled, detail: lang.label },
     },
   ]);
   setTimeout(() => store.set(tasksAtom, (prev) => prev.map((t) => (t.id === id ? { ...t, current: t.total } : t))), UNINSTALL_MS);

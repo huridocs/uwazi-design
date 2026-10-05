@@ -91,7 +91,6 @@ export function UserEditor({
       noun: "user",
       id,
       name: username.trim(),
-      message: isNew ? "User invited" : undefined,
     });
     onClose();
   };
@@ -106,7 +105,7 @@ export function UserEditor({
     setAskUnlock(false);
     if (!base) return;
     unlockUser(base.id);
-    record({ method: "UPDATE", domain: "user", noun: "user", id: base.id, name: base.username, summary: `Unlocked user “${base.username}”`, message: "Account unlocked successfully" });
+    record({ method: "UPDATE", domain: "user", noun: "user", id: base.id, name: base.username, summary: `Unlocked user “${base.username}”`, notice: "userUnlocked" });
   };
   const reset2fa = () => {
     setAskReset2fa(false);
@@ -119,7 +118,7 @@ export function UserEditor({
       id: base.id,
       name: base.username,
       summary: `Reset two-factor authentication for “${base.username}”`,
-      message: "2FA reset",
+      notice: "user2faDisabled",
     });
   };
 

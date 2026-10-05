@@ -98,7 +98,7 @@ export function TranslationEditor({ context, onClose }: { context: TranslationCo
       noun: "translations of",
       id: context.id,
       name: context.name,
-      message: "Translations saved",
+      notice: "translationsSaved",
     });
   };
 

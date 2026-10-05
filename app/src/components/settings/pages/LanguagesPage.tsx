@@ -172,7 +172,7 @@ export function LanguagesPage() {
                 id: ask.lang.key,
                 name: ask.lang.label,
                 summary: `Set “${ask.lang.label}” as the default language`,
-                message: "Default language change success",
+                notice: "languageDefault",
               });
               setAsk(null);
             }}
@@ -232,7 +232,7 @@ function ResetDialog({ lang, onDone }: { lang: LanguageRecord; onDone: () => voi
           id: lang.key,
           name: lang.label,
           summary: `Reset language “${lang.label}”`,
-          message: "Language reset success",
+          notice: "languageReset",
         });
         onDone();
       }}

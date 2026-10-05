@@ -78,7 +78,7 @@ export function AccountPage() {
       // Shown under the field and once in the Beacon. The typed password stays.
       const detail = `The email "${next}" already exists`;
       setTakenEmail(email);
-      fail("An error occurred", detail);
+      fail(undefined, detail);
       return;
     }
     const changes = next !== me.email ? [{ field: "Email", before: me.email, after: next }] : [];
@@ -92,7 +92,7 @@ export function AccountPage() {
       noun: "account",
       id: me.id,
       name: me.username,
-      message: "Account updated",
+      notice: "accountUpdated",
       changes,
     });
   };
@@ -116,7 +116,7 @@ export function AccountPage() {
       id: me.id,
       name: me.username,
       summary: `Enabled two-factor authentication for “${me.username}”`,
-      message: "2FA Enabled",
+      notice: "account2faEnabled",
     });
   };
 

@@ -49,7 +49,6 @@ export function RelationTypeEditor({ typeId, onClose }: { typeId: string | "new"
       noun: "relationship type",
       id,
       name: name.trim(),
-      message: isNew ? "Relationship type created" : undefined,
     });
     onClose();
   };

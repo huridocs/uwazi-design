@@ -138,7 +138,7 @@ export function TemplatesPage() {
       id: t.id,
       name: t.name,
       summary: `Set default template “${t.name}”`,
-      message: "Default template set successfully.",
+      notice: "templateDefault",
     });
   };
 

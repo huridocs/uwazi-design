@@ -331,7 +331,7 @@ function TemplateEditorBody({
       noun: "template",
       id,
       name: template.name,
-      message: "Template saved successfully.",
+      notice: "templateSaved",
     });
     setImpact(null);
     onClose(id);
@@ -790,7 +790,7 @@ function AddThesaurusModal({ corpus, onClose }: { corpus: Corpus; onClose: () =>
   const save = () => {
     if (thesauri.some((t) => t.name.trim().toLowerCase() === clean.toLowerCase())) return setError("Thesaurus name already exists");
     const created = create({ corpus, name: clean });
-    record({ method: "CREATE", domain: "thesaurus", noun: "thesaurus", id: created, name: clean, message: "Thesaurus created successfully." });
+    record({ method: "CREATE", domain: "thesaurus", noun: "thesaurus", id: created, name: clean, notice: "thesaurusCreatedInline" });
     onClose();
   };
   return (
@@ -811,7 +811,7 @@ function AddRelationTypeModal({ corpus, onClose }: { corpus: Corpus; onClose: ()
     if (types.some((t) => t.label.trim().toLowerCase() === clean.toLowerCase())) return setError("Relationship type name already exists");
     const created = save({ id: null, name: clean, corpus: relationTypesCorpus(corpus) });
     if (!created) return setError("Relationship type name already exists");
-    record({ method: "CREATE", domain: "relationType", noun: "relationship type", id: created, name: clean, message: "Relationship type created successfully." });
+    record({ method: "CREATE", domain: "relationType", noun: "relationship type", id: created, name: clean, notice: "relationTypeCreatedInline" });
     onClose();
   };
   return (
