@@ -41,7 +41,6 @@ import { t, UI_LANGUAGES, type UiLanguage } from "../../utils/i18n";
 import { useDirtyGuard } from "../../hooks/useDirtyGuard";
 import { MobileBottomSheet } from "./MobileBottomSheet";
 import { Beacon } from "./Beacon";
-import { NavMenuLinks, NavMenuLinksMobile } from "./NavMenuLinks";
 import { Select } from "../shared/Select";
 import { SectionLabel } from "../shared/SectionLabel";
 import { Wordmark } from "../shared/Wordmark";
@@ -410,7 +409,6 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                 </div>
               )}
             </div>
-            {breakpoint === "desktop" && <NavMenuLinks onLibrary={() => onNavigate?.("library")} />}
           </nav>
         )}
       </div>
@@ -589,8 +587,6 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                 steady
               />
             </div>
-
-            <NavMenuLinksMobile onLibrary={() => { onNavigate?.("library"); setMobileMenuOpen(false); }} />
 
             {/* Tools section */}
             {toolsItems.length > 0 && (
