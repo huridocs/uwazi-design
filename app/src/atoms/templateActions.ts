@@ -8,6 +8,7 @@ import { cejilEntityCountByTemplate } from "../data/cejil/aggregates";
 import { DEFAULT_LIBRARY_SORT, libraryInheritedFiltersAtom, librarySortAtom, libraryTypeFiltersAtom } from "./library";
 import { libraryInheritedDefs } from "../utils/libraryFacets";
 import { templatesMirror } from "../data/templates/mirror";
+import { inheritedRefusal, inheritorsOf } from "../utils/templateRules";
 
 /** Settings › Templates' writes (step M8). Each is one store action, so a
  *  bulk delete is all or nothing (Uwazi sends one request per template and
@@ -68,6 +69,10 @@ export interface TemplateDeleteCascade {
   properties: { templateName: string; label: string }[];
   /** Names of the deleted templates that have a Filters entry. */
   filters: string[];
+  /** Why the delete is refused: a relationship property it would remove is
+   *  inherited elsewhere, as a direct removal would be refused (Uwazi's
+   *  InheritedPropertyCanNotBeDeleted). Null when nothing inherits them. */
+  block: string | null;
 }
 
 export function templateDeleteCascade(
@@ -76,22 +81,32 @@ export function templateDeleteCascade(
   ids: string[],
 ): TemplateDeleteCascade {
   const gone = new Set(ids);
-  const properties = templates
-    .filter((t) => !gone.has(t.id))
-    .flatMap((t) =>
-      t.properties
-        .filter((p) => p.type === "relationship" && !!p.content && gone.has(p.content))
-        .map((p) => ({ templateName: t.name, label: p.label })),
-    );
+  const kept = templates.filter((t) => !gone.has(t.id));
+  const removed = kept.flatMap((t) =>
+    t.properties
+      .filter((p) => p.type === "relationship" && !!p.content && gone.has(p.content))
+      .map((p) => ({ owner: t, prop: p })),
+  );
+  const properties = removed.map(({ owner, prop }) => ({ templateName: owner.name, label: prop.label }));
   const names = new Map(templates.map((t) => [t.id, t.name]));
   const filters = filterRows.filter((r) => gone.has(r.templateId)).map((r) => names.get(r.templateId) ?? r.templateId);
-  return { properties, filters };
+  const inherited = removed.flatMap(({ owner, prop }) =>
+    inheritorsOf(kept, owner.id, prop).map((i) => `${i.templateName} › ${i.label} inherits ${owner.name} › ${prop.label}`),
+  );
+  const block = inherited.length
+    ? `${inherited.join("; ")}, which this delete would remove. Remove the inheritance there first. ${inheritedRefusal(
+        removed.filter(({ owner, prop }) => inheritorsOf(kept, owner.id, prop).length).map(({ prop }) => prop.name),
+      )}`
+    : null;
+  return { properties, filters, block };
 }
 
 /** Delete templates, all in one step: their Filters entries go, and other
  *  templates lose the relationship properties that target them. The caller
  *  has already refused the default template and templates in use. */
-export const deleteTemplatesAtom = atom(null, (get, set, { corpus, ids }: { corpus: Corpus; ids: string[] }) => {
+export const deleteTemplatesAtom = atom(null, (get, set, { corpus, ids }: { corpus: Corpus; ids: string[] }): boolean => {
+  // The refusal the dialog states holds here too, for any other caller.
+  if (templateDeleteCascade(get(templatesAtom(corpus)), [], ids).block) return false;
   const gone = new Set(ids);
   for (const t of get(templatesAtom(corpus))) {
     if (gone.has(t.id)) continue;
@@ -103,6 +118,7 @@ export const deleteTemplatesAtom = atom(null, (get, set, { corpus, ids }: { corp
   const rows = filters.rows.filter((r) => !gone.has(r.templateId));
   if (rows.length !== filters.rows.length) set(filterSettings.saveAtom, { corpus, value: { ...filters, rows } });
   set(reconcileLibraryAtom, corpus);
+  return true;
 });
 
 /** Make one template the default: exactly one holds the flag at any time. */

@@ -114,7 +114,7 @@ export function TemplatesPage() {
 
   const confirmDelete = () => {
     const ids = ticked.map((r) => r.template.id);
-    deleteTemplates({ corpus: dataSource, ids });
+    if (!deleteTemplates({ corpus: dataSource, ids })) return setConfirm(false);
     for (const r of ticked)
       record({ method: "DELETE", domain: "template", noun: "template", id: r.template.id, name: r.template.name, notify: false });
     record({
@@ -245,7 +245,7 @@ export function TemplatesPage() {
               ...(cascade.filters.length ? [`Removed from Filters: ${cascade.filters.join(", ")}.`] : []),
               ...(cascade.properties.length || cascade.filters.length ? [] : ["Nothing else changes."]),
             ],
-            block: null,
+            block: cascade.block,
           }}
           onConfirm={confirmDelete}
           onCancel={() => setConfirm(false)}
