@@ -1,11 +1,11 @@
 import type { Language } from "../atoms/language";
 import type { Entity } from "../data/entities";
-import { blankTypeFields, getEntityProfile } from "../data/entityProfiles";
 import type { MetadataField } from "../data/metadata";
 import type { DocumentGroup, FileEntry } from "../data/files";
 import type { Corpus, EntityRecord } from "../data/entityOverlay";
-import { cejilBlankFields, cejilDefaultTemplateId } from "../data/cejil/profile";
-import { artworkLibraryEntities } from "../data/artworks/adapt";
+import { cejilDefaultTemplateId } from "../data/cejil/profile";
+import { templateMirror } from "../data/templates/mirror";
+import { blankFieldsFor, generatedId } from "./templateProjection";
 import { ARTWORK_TYPE_ID } from "../data/artworks/typesAdapter";
 
 const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
@@ -18,34 +18,28 @@ export interface EditResult {
 }
 
 /** A template's fields, empty and in template order, per language — for the
- *  corpus the entity is being created in. Each corpus keeps its template shape
- *  in a different place:
- *   - the Sample corpus in the mock type table (`blankTypeFields`);
- *   - CEJIL in its real templates (`cejilBlankFields`), one set for every
- *     language, since a template's properties don't change with the language;
- *   - artworks in no table at all, so the fields of an existing entity of the
- *     type are read and emptied — the same template, by construction. */
-export function templateFields(typeId: string, corpus: Corpus): Record<Language, MetadataField[]> {
-  if (corpus === "cejil") {
-    const fields = cejilBlankFields(typeId);
-    return Object.fromEntries(LANGS.map((l) => [l, fields.map((f) => ({ ...f }))])) as Record<
-      Language,
-      MetadataField[]
-    >;
-  }
-  if (corpus === "artworks") {
-    const peer = artworkLibraryEntities().find((e) => e.typeId === typeId);
-    const profile = peer ? getEntityProfile(peer.id) : undefined;
-    return Object.fromEntries(
-      LANGS.map((l) => [
-        l,
-        (profile?.metadata[l] ?? [])
-          .filter((f): f is MetadataField => f.type !== "relationship")
-          .map((f) => ({ ...f, value: "" })),
-      ]),
-    ) as Record<Language, MetadataField[]>;
-  }
-  return blankTypeFields(typeId);
+ *  corpus the entity is being created in. Projected from the corpus's template
+ *  (`atoms/templates.ts`, `utils/templateProjection.ts`): one schema for
+ *  Create entity, Change template and bulk edit in every corpus. Properties
+ *  the form has no editor for yet (relationship, geolocation, image) are left
+ *  out, as they always were. */
+export function templateFields(
+  typeId: string,
+  corpus: Corpus,
+  { newEntity = false }: { newEntity?: boolean } = {},
+): Record<Language, MetadataField[]> {
+  const template = templateMirror(corpus, typeId);
+  // A "Generated ID" property starts with a value, the same in every language,
+  // drawn once for each entity being created. Change template and bulk edit
+  // read blank fields and must not hand an id to existing entities.
+  const ids = newEntity
+    ? Object.fromEntries(
+        (template?.properties ?? []).filter((p) => p.type === "generatedid").map((p) => [p.name, generatedId()]),
+      )
+    : {};
+  return Object.fromEntries(
+    LANGS.map((l) => [l, blankFieldsFor(corpus, template, l).map((f) => (ids[f.id] ? { ...f, value: ids[f.id] } : f))]),
+  ) as Record<Language, MetadataField[]>;
 }
 
 /** The template a corpus flags as its default, if it flags one — Create entity

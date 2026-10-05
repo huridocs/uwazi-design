@@ -81,12 +81,15 @@ export function lbl(key: string, lang: Language): string {
  *  Case status t3, Regions t5, Document types t4, Legal instruments t2. The
  *  organisation type is a select the template binds to NO thesaurus, the case
  *  the form's "New thesaurus" exists for. */
+/*  Main keeps the Sample's own types: its dates of birth, filing, judgment and
+ *  adoption hold bare years ("1962", "1986"), which a date property would
+ *  reformat or drop, so they stay text. */
 export const TYPE_FIELDS: Record<string, { prop: string; type: MetadataField["type"]; thesaurus?: string }[]> = {
   person: [
     { prop: "country", type: "text" },
     { prop: "role", type: "text" },
     { prop: "profession", type: "text" },
-    { prop: "born", type: "date" },
+    { prop: "born", type: "text" },
   ],
   country: [
     { prop: "region", type: "select", thesaurus: "t5" },
@@ -95,7 +98,7 @@ export const TYPE_FIELDS: Record<string, { prop: string; type: MetadataField["ty
   ],
   court_case: [
     { prop: "caseNumber", type: "text" },
-    { prop: "dateFiled", type: "date" },
+    { prop: "dateFiled", type: "text" },
     { prop: "respondent", type: "text" },
     { prop: "status", type: "select", thesaurus: "t3" },
     { prop: "region", type: "select", thesaurus: "t5" },
@@ -106,7 +109,7 @@ export const TYPE_FIELDS: Record<string, { prop: string; type: MetadataField["ty
     { prop: "category", type: "text" },
   ],
   judgment: [
-    { prop: "date", type: "date" },
+    { prop: "date", type: "text" },
     { prop: "court", type: "text" },
     { prop: "series", type: "text" },
     { prop: "outcome", type: "text" },
@@ -123,7 +126,7 @@ export const TYPE_FIELDS: Record<string, { prop: string; type: MetadataField["ty
   ],
   document: [
     { prop: "docType", type: "select", thesaurus: "t4" },
-    { prop: "adopted", type: "date" },
+    { prop: "adopted", type: "text" },
     { prop: "source", type: "text" },
   ],
 };

@@ -43,26 +43,29 @@ function nativeProperties(typeId: string): PropertyDef[] {
   }));
 }
 
-/** Court Case's own properties: the field table's and the case record's,
- *  merged in a reviewed order (identifiers and parties, place, procedure,
- *  dates, then the long texts). */
+/** Court Case's own properties: the field table's and the case record's.
+ *  On main the order keeps both records as they read today: the case record
+ *  (e3) in its own order, and the other cases' fields (case number, date
+ *  filed, respondent, status, region) in theirs. */
 const COURT_CASE: { name: string; type: PropertyType; content?: string; label?: string }[] = [
   { name: "caseNumber", type: "text" },
+  { name: "dateFiled", type: "text" },
   { name: "victim", type: "text" },
-  { name: "petitioner", type: "text" },
-  { name: "respondent", type: "text" },
-  { name: "country", type: "select", content: "t6" },
-  { name: "region", type: "select", content: "t5" },
+  // Text on main: there is no Countries thesaurus, and the case record keeps
+  // its own country field (with its flag).
+  { name: "country", type: "text" },
   { name: "place-incident", type: "text" },
-  { name: "mechanism", type: "text" },
-  { name: "status", type: "select", content: "t3" },
-  { name: "type", type: "text" },
-  { name: "series", type: "text" },
-  { name: "dateFiled", type: "date" },
   { name: "date-incident", type: "date" },
   { name: "date", type: "date", label: "Date of judgment" },
+  { name: "type", type: "text" },
+  { name: "series", type: "text" },
+  { name: "petitioner", type: "text" },
+  { name: "respondent", type: "text" },
   { name: "articles-invoked", type: "markdown" },
+  { name: "mechanism", type: "text" },
   { name: "bench", type: "markdown" },
+  { name: "status", type: "select", content: "t3" },
+  { name: "region", type: "select", content: "t5" },
 ];
 
 /** What a Court Case card shows: the identifiers, parties, place and dates,

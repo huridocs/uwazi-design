@@ -4,12 +4,11 @@
 // existing entity's fields. These are those fields, declared once, with the
 // names the record already uses, so every key-based feature keeps working.
 //
-// Typed since step M5: genres and nationalities are multiselects on the
-// corpus's own thesauri (data/artworks/thesauri.ts), the dataset number and
-// the painting count are numbers, born and died are dates (years), and an
-// artwork's picture is its image property.
+// On main the values keep the types the record has always shown: genres and
+// nationalities are comma lists (main has no Best Artworks thesauri), born
+// and died are years, so they are text. The dataset number and the painting
+// count are numbers; an artwork's picture is its image property.
 import type { PropertyType, TemplateDef } from "../templates/types";
-import { ART_GENRES, ART_NATIONALITIES } from "./thesauri";
 import { commonPropertiesFor, propertyIdOf } from "../templates/types";
 import { ARTIST_TYPE_ID, ARTWORK_TYPE_ID, artworkTypeById } from "./typesAdapter";
 
@@ -45,8 +44,8 @@ export const artworkTemplateDefs = (): TemplateDef[] => (built ??= [
         content: ARTIST_TYPE_ID,
         relationType: "Painted by",
       },
-      p(ARTWORK_TYPE_ID, "genres", "Genre", "multiselect", ART_GENRES),
-      p(ARTWORK_TYPE_ID, "nationalities", "Nationality", "multiselect", ART_NATIONALITIES),
+      p(ARTWORK_TYPE_ID, "genres", "Genre", "text"),
+      p(ARTWORK_TYPE_ID, "nationalities", "Nationality", "text"),
       p(ARTWORK_TYPE_ID, "dataset-number", "Dataset number", "numeric"),
       p(ARTWORK_TYPE_ID, "image", "Image", "image"),
     ],
@@ -58,10 +57,10 @@ export const artworkTemplateDefs = (): TemplateDef[] => (built ??= [
     isDefault: false,
     commonProperties: commonPropertiesFor(ARTIST_TYPE_ID),
     properties: [
-      p(ARTIST_TYPE_ID, "born", "Born", "date"),
-      p(ARTIST_TYPE_ID, "died", "Died", "date"),
-      p(ARTIST_TYPE_ID, "nationalities", "Nationality", "multiselect", ART_NATIONALITIES),
-      p(ARTIST_TYPE_ID, "genres", "Movement", "multiselect", ART_GENRES),
+      p(ARTIST_TYPE_ID, "born", "Born", "text"),
+      p(ARTIST_TYPE_ID, "died", "Died", "text"),
+      p(ARTIST_TYPE_ID, "nationalities", "Nationality", "text"),
+      p(ARTIST_TYPE_ID, "genres", "Movement", "text"),
       p(ARTIST_TYPE_ID, "paintings", "Paintings in the dataset", "numeric"),
       p(ARTIST_TYPE_ID, "wikipedia", "Wikipedia", "link"),
       {
