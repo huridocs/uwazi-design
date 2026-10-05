@@ -19,6 +19,7 @@ export function SettingsEmptyState({
   query,
   onClearQuery,
   noMatchTitle,
+  noMatch,
 }: {
   /** "No thesauri yet". */
   title: string;
@@ -34,6 +35,9 @@ export function SettingsEmptyState({
   /** The no-match title, naming the object: `(q) => \`No uploads match “${q}”\``.
    *  Defaults to "Nothing matches “q”". */
   noMatchTitle?: (query: string) => string;
+  /** The no-match title naming the object ("No pages match"), followed by the
+   *  quoted query. Default "Nothing matches". */
+  noMatch?: string;
 }) {
   const searching = !!query?.trim();
   return (
@@ -46,7 +50,7 @@ export function SettingsEmptyState({
         {searching ? <SearchX size={16} /> : (icon ?? <Inbox size={16} />)}
       </span>
       <p data-part="title" className="text-sm font-medium text-ink">
-        {searching ? (noMatchTitle ? noMatchTitle(query!.trim()) : <>Nothing matches “{query!.trim()}”</>) : title}
+        {searching ? (noMatchTitle ? noMatchTitle(query!.trim()) : <>{noMatch ?? "Nothing matches"} “{query!.trim()}”</>) : title}
       </p>
       {!searching && hint && (
         <p data-part="hint" className="max-w-sm text-xs text-ink-tertiary text-pretty">

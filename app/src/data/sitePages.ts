@@ -34,7 +34,8 @@ export interface CodeLocale {
   css: string;
   js: string;
 }
-export type CodeLocales = Record<SiteLang, CodeLocale>;
+/** By language key: every language the collection has installed. */
+export type CodeLocales = Record<string, CodeLocale>;
 export interface CodeDoc {
   draft: CodeLocales;
   /** What the public site serves. null = never published. */

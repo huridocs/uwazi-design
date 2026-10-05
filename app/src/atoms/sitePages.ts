@@ -1,15 +1,9 @@
-import { atom } from "jotai";
 import type { CodeDoc, CodeLocales } from "../data/sitePages";
 import { emptyLocale } from "../data/sitePages";
 import { seedPages, type SettingsPage } from "../data/settings";
 import { cejilSettingsPages } from "../data/cejil/settingsAdapt";
-import { createSettingsCollection, hasId, registerSettingsReset } from "./settingsCollection";
-
-/** Each page's code documents for the session, seeded on first open from the
- *  page's starter (see `PagesPage`). Mock only.
- *  @deprecated Superseded by `pagesStore`; kept until Pages reads the store. */
-export const codeDocsAtom = atom<Record<string, CodeDoc>>({});
-registerSettingsReset((set) => set(codeDocsAtom, {}));
+import { createSettingsCollection, hasId } from "./settingsCollection";
+import { deepEqual } from "../utils/deepEqual";
 
 /** One published release: a copy of every language's draft at Publish time,
  *  with the message typed in the Publish dialog. Restore copies it back. */
@@ -32,6 +26,8 @@ export interface SitePage {
   slug: string;
   doc: CodeDoc;
   releases: PageRelease[];
+  /** Earlier URL keys a menu link may still use (`/page/about`). */
+  aliases?: string[];
 }
 
 const isPage = (r: unknown): boolean => {
@@ -86,6 +82,7 @@ function seedPage(p: SettingsPage): SitePage {
     slug: slugify(p.title),
     doc: { draft, published: p.published ? draft : null },
     releases: p.published ? [{ id: `${p.id}-r1`, message: "Initial release", at: Date.UTC(2026, 5, 1, 9), locales: draft }] : [],
+    aliases: [p.slug],
   };
 }
 
@@ -99,5 +96,36 @@ export const pagesStore = createSettingsCollection<SitePage>({
 
 export const sitePagesAtom = pagesStore.listAtom;
 
-/** The page's title in the list: the English draft's, or "Untitled page". */
-export const pageTitle = (p: SitePage) => p.doc.draft.en?.title?.trim() || "Untitled page";
+/** The page's title in the list: the default language's draft title, or
+ *  "Untitled page". */
+export const pageTitle = (p: SitePage, lang = "en") =>
+  p.doc.draft[lang]?.title?.trim() || p.doc.draft.en?.title?.trim() || "Untitled page";
+
+/** The public URL without a language, as the list shows it. */
+export const pageUrl = (p: SitePage, lang = "en") => `/page/${p.id}/${slugify(pageTitle(p, lang))}`;
+
+/** Where a page stands. "edited": published, and the saved draft has changed
+ *  since. One wording for the list and the editor. */
+export type PageStatus = "draft" | "published" | "edited";
+export function pageStatus(doc: CodeDoc): PageStatus {
+  if (!doc.published) return "draft";
+  // Over the draft's languages: a language uninstalled since the release
+  // does not make the page read as edited.
+  const published = doc.published;
+  const same = Object.keys(doc.draft).every((k) => deepEqual(doc.draft[k], published[k]));
+  return same ? "published" : "edited";
+}
+export const PAGE_STATUS_LABEL: Record<PageStatus, string> = {
+  draft: "Draft",
+  published: "Published",
+  edited: "Published · edited",
+};
+
+/** A page's locales for the installed languages: each language's own, or,
+ *  for a language installed since, a copy of the default language's (Uwazi
+ *  copies the default locale into every page on install). Locales of
+ *  languages no longer installed are left out, so the next save drops them. */
+export function localesFor(locales: CodeLocales, keys: string[], defaultKey: string): CodeLocales {
+  const fallback = locales[defaultKey] ?? locales.en ?? Object.values(locales)[0] ?? emptyLocale();
+  return Object.fromEntries(keys.map((k) => [k, locales[k] ?? { ...fallback }]));
+}

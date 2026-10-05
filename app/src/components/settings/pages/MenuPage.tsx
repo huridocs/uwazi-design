@@ -75,7 +75,7 @@ export function MenuPage() {
 }
 
 function MenuTreeEditor() {
-  const { record } = useSettingsNotify();
+  const { record, fail } = useSettingsNotify();
   const stored = useAtomValue(menuSettings.valueAtom).links;
   const save = useSetAtom(menuSettings.saveAtom);
   const announce = useSettingsAnnounce();
@@ -134,7 +134,13 @@ function MenuTreeEditor() {
 
   const commit = () => {
     const value = tree;
-    save({ value: { links: value } });
+    try {
+      save({ value: { links: value } });
+    } catch (e) {
+      // The draft stays as it is, still unsaved.
+      fail("An error occurred", e instanceof Error ? e.message : String(e));
+      return;
+    }
     // Translations' Menu context reads this store and keys each link by id,
     // so a rename keeps its translations and a removed link's key goes.
     markSaved(value);

@@ -323,10 +323,20 @@ export function languageUsage({
 
 /* ── Pages ─────────────────────────────────────────────────────────────── */
 
-export function pageUsage({ slug, menu }: { slug: string; menu: { title: string; url: string }[] }): Impact {
-  const links = menu.filter((m) => m.url.replace(/\/$/, "") === `/page/${slug}`).map((m) => m.title);
-  return {
-    lines: links.length ? [`Linked from the menu: ${nameList(links)}. The ${links.length === 1 ? "link stays and" : "links stay and"} will lead nowhere.`] : [],
-    block: null,
+/** The menu links (top level and in groups) that lead to a page: a URL
+ *  `/page/<key>` or `/<lang>/page/<key>/…`, where the key is the page's id or
+ *  one of its slugs. */
+export function pageMenuLinks(
+  keys: string[],
+  menu: { title: string; url: string; sublinks?: { title: string; url: string }[] }[],
+): { title: string; url: string }[] {
+  const want = new Set(keys.filter(Boolean));
+  const leads = (url: string) => {
+    const m = url.match(/^(?:\/[a-z]{2})?\/page\/([^/?#]+)/);
+    return !!m && want.has(m[1]);
   };
+  return menu
+    .flatMap((m) => [m, ...(m.sublinks ?? [])])
+    .filter((m) => leads(m.url))
+    .map(({ title, url }) => ({ title, url }));
 }

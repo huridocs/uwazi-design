@@ -80,7 +80,7 @@ export function UploadsPage() {
           (locs) => !!locs && Object.values(locs).some((l) => `${l.html}\n${l.css}\n${l.js}`.includes(url)),
         ),
       )
-      .map(pageTitle);
+      .map((p) => pageTitle(p));
     if (custom.css.includes(url)) titles.push("Global CSS");
     if (custom.js.includes(url)) titles.push("Global JS");
     return titles;

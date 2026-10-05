@@ -2,27 +2,25 @@ import { useState } from "react";
 import { LayoutTemplate } from "lucide-react";
 import { Modal, MODAL_BUTTON, MODAL_COMMIT, MODAL_COMMIT_DISABLED } from "../../../shared/Modal";
 import { SITE_LANGS, SITE_TEMPLATES, templateDoc, type BlockType, type SiteLang, type SiteTemplateId } from "../../../../data/sitePages";
+import { PAGE_STATUS_LABEL, type PageStatus } from "../../../../atoms/sitePages";
 
-/** Where a page stands. The line is always mounted, so a change of state
- *  swaps its words and moves nothing. */
-export type PublishState = "unpublished" | "published" | "changed";
-export function publishState(hasPublished: boolean, dirtyVsPublished: boolean): PublishState {
-  if (!hasPublished) return "unpublished";
-  return dirtyVsPublished ? "changed" : "published";
-}
-
-export function StatusLine({ state, unsaved }: { state: PublishState; unsaved: boolean }) {
-  const pill =
-    state === "published"
-      ? { label: "Published", cls: "text-success bg-success-light" }
-      : state === "changed"
-        ? { label: "Published · draft has changes", cls: "text-ink-secondary bg-warning-light" }
-        : { label: "Draft · not published", cls: "text-ink-secondary bg-warm" };
+/** Where a page stands, in the words the Pages list uses. The line is always
+ *  mounted, so a change of state swaps its words and moves nothing. */
+export function StatusLine({ state, unsaved }: { state: PageStatus; unsaved: boolean }) {
   return (
     <div data-component="PageStatusLine" className="flex items-center gap-2 h-6 min-w-0" aria-live="polite">
-      <span className={`text-meta font-semibold px-2 py-0.5 rounded-md w-fit whitespace-nowrap ${pill.cls}`}>{pill.label}</span>
+      <PageStatusPill status={state} />
       <span className={`text-meta text-ink-tertiary truncate ${unsaved ? "" : "invisible"}`}>Unsaved edits</span>
     </div>
+  );
+}
+
+export function PageStatusPill({ status }: { status: PageStatus }) {
+  const cls = status === "published" ? "text-success bg-success-light" : status === "edited" ? "text-ink-secondary bg-warning-light" : "text-ink-secondary bg-warm";
+  return (
+    <span data-part="status" className={`text-meta font-semibold px-2 py-0.5 rounded-md w-fit whitespace-nowrap ${cls}`}>
+      {PAGE_STATUS_LABEL[status]}
+    </span>
   );
 }
 
@@ -151,18 +149,21 @@ export function TemplatePickerModal({
 /** Pick one language to copy from into another. */
 export function CopyFromLanguageModal({
   target,
+  languages,
   filled,
   onCopy,
   onClose,
 }: {
-  target: SiteLang;
-  filled: (l: SiteLang) => boolean;
-  onCopy: (from: SiteLang) => void;
+  target: string;
+  /** The installed languages, by key, with the name to show. */
+  languages: { key: string; label: string }[];
+  filled: (l: string) => boolean;
+  onCopy: (from: string) => void;
   onClose: () => void;
 }) {
-  const sources = SITE_LANGS.filter((l) => l.key !== target && filled(l.key));
-  const [from, setFrom] = useState<SiteLang | null>(sources[0]?.key ?? null);
-  const targetLabel = SITE_LANGS.find((l) => l.key === target)!.label;
+  const sources = languages.filter((l) => l.key !== target && filled(l.key));
+  const [from, setFrom] = useState<string | null>(sources[0]?.key ?? null);
+  const targetLabel = languages.find((l) => l.key === target)?.label ?? target;
   return (
     <Modal
       onClose={onClose}
