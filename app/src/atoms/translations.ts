@@ -2,8 +2,8 @@ import { atom } from "jotai";
 import { atomFamily } from "jotai/utils";
 import type { Corpus } from "../data/entityChanges";
 import type { Language } from "./language";
-import { seedMenuLinks, type SettingsLanguage } from "../data/settings";
-import { cejilSettingsMenu } from "../data/cejil/settingsAdapt";
+import type { SettingsLanguage } from "../data/settings";
+import { menuSettings } from "./siteMenu";
 import { templatesAtom } from "./templates";
 import { localizeValues, thesauriAtom } from "./thesauri";
 import { relationTypesCorpus, relationTypesOfAtom } from "./relationTypes";
@@ -83,9 +83,11 @@ export const translationContextsAtom = atomFamily((corpus: Corpus) =>
       // Uwazi's own System keys and its shipped translations (SD-7).
       keys: UWAZI_UI_KEYS.map((k) => ({ id: k.key, text: k.key, defaults: { es: k.es, fr: k.fr, ar: k.ar } })),
     });
-    // The Menu's links (the Menu page's seed until Menu is on a store).
-    const menu = corpus === "cejil" ? cejilSettingsMenu : seedMenuLinks;
-    const menuKeys = menu.filter((l) => l.title.trim()).map((l) => ({ id: l.id, text: l.title }));
+    // The Menu's links and sub-links, as Settings › Menu saved them.
+    const menuKeys = get(menuSettings.valueOfAtom(corpus))
+      .links.flatMap((l) => [l, ...(l.sublinks ?? [])])
+      .filter((l) => l.title.trim())
+      .map((l) => ({ id: l.id, text: l.title }));
     if (menuKeys.length) out.push({ id: "Menu", name: "Menu", type: "Menu", system: true, keys: menuKeys.sort(byText) });
     const groups = get(filterSettings.valueOfAtom(corpus)).groups.filter((g) => g.name.trim());
     if (groups.length)
