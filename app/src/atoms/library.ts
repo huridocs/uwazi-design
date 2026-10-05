@@ -771,6 +771,38 @@ export type LibrarySortDir = "asc" | "desc";
 /** The browsing sort: applies with no query and returns when a search is dismissed. */
 const sortStateAtom = atom<LibrarySort>(DEFAULT_LIBRARY_SORT);
 const sortDirStateAtom = atom<LibrarySortDir>("desc");
+/** Whether the reader picked the browsing sort. Until they do, a view
+ *  narrowed to templates sorts by their priority-sorting property. */
+const userSortedAtom = atom(false);
+
+/** Uwazi's default sort for the templates in view
+ *  (`utils/prioritySortingCriteria.js`): the `prioritySorting` property most
+ *  of them share (the first on a tie), common properties first; custom ones
+ *  count when they are filters of type text, date, numeric or select. Dates
+ *  sort newest first, the rest A to Z. Only with a Type selection: with none,
+ *  the Library keeps its own default. */
+const prioritySortAtom = atom((get): { key: LibrarySort; dir: LibrarySortDir } | null => {
+  const types = get(libraryTypeFiltersAtom);
+  const ids = new Set(Object.keys(types).filter((k) => types[k]));
+  if (!ids.size) return null;
+  const counts = new Map<LibrarySort, { n: number; date: boolean }>();
+  const add = (key: LibrarySort, date: boolean) => {
+    const c = counts.get(key);
+    counts.set(key, { n: (c?.n ?? 0) + 1, date });
+  };
+  for (const t of get(templatesAtom(get(dataSourceAtom)))) {
+    if (!ids.has(t.id)) continue;
+    for (const p of t.commonProperties)
+      if (p.prioritySorting && p.name === "title") add("title", false);
+      else if (p.prioritySorting && p.name === "creationDate") add("recent", true);
+    for (const p of t.properties)
+      if (p.prioritySorting && p.filter && ["text", "date", "numeric", "select"].includes(p.type))
+        add(`prop:${p.name}`, p.type === "date");
+  }
+  let best: [LibrarySort, { n: number; date: boolean }] | null = null;
+  for (const entry of counts) if (!best || entry[1].n > best[1].n) best = entry;
+  return best ? { key: best[0], dir: best[1].date ? "desc" : "asc" } : null;
+});
 /** A sort picked while a query runs, for that query only. `null` = relevance. */
 const searchSortOverrideAtom = atom<LibrarySort | null>(null);
 const searchSortDirOverrideAtom = atom<LibrarySortDir | null>(null);
@@ -786,7 +818,7 @@ export const librarySortAtom = atom(
   (get): LibrarySort =>
     get(libraryQueryAtom).trim()
       ? (get(searchSortOverrideAtom) ?? "relevance")
-      : get(sortStateAtom),
+      : ((!get(userSortedAtom) && get(prioritySortAtom)?.key) || get(sortStateAtom)),
   (get, set, next: Update<LibrarySort>) => {
     const searching = !!get(libraryQueryAtom).trim();
     if (searching) {
@@ -795,8 +827,10 @@ export const librarySortAtom = atom(
       set(searchSortOverrideAtom, key === "relevance" ? null : key);
       return;
     }
-    const key = resolve(next, get(sortStateAtom));
-    if (key !== "relevance") set(sortStateAtom, key);
+    const key = resolve(next, get(librarySortAtom));
+    if (key === "relevance") return;
+    set(sortStateAtom, key);
+    set(userSortedAtom, true);
   },
 );
 /** Direction, kept per the same split so a search can't overwrite the browsing
@@ -805,13 +839,17 @@ export const librarySortDirAtom = atom(
   (get): LibrarySortDir =>
     get(libraryQueryAtom).trim()
       ? (get(searchSortDirOverrideAtom) ?? "desc")
-      : get(sortDirStateAtom),
+      : ((!get(userSortedAtom) && get(prioritySortAtom)?.dir) || get(sortDirStateAtom)),
   (get, set, next: Update<LibrarySortDir>) => {
     if (get(libraryQueryAtom).trim()) {
       set(searchSortDirOverrideAtom, resolve(next, get(searchSortDirOverrideAtom) ?? "desc"));
       return;
     }
-    set(sortDirStateAtom, resolve(next, get(sortDirStateAtom)));
+    // Turning the direction keeps the sort in view, priority default or not.
+    const dir = resolve(next, get(librarySortDirAtom));
+    set(sortStateAtom, get(librarySortAtom));
+    set(sortDirStateAtom, dir);
+    set(userSortedAtom, true);
   },
 );
 /** Natural direction for a freshly-picked sort key: text → A→Z, value → high→low. */

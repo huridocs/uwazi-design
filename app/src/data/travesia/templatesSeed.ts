@@ -16,8 +16,9 @@ function propertyOf(p: TravesiaProperty): PropertyDef {
     type: p.type as PropertyType,
     ...(p.showInCard ? { showInCard: true } : {}),
     ...(p.filter ? { filter: true } : {}),
-    // The dump has no prioritySorting flag; a record's own date sorts.
-    ...(p.type === "date" && p.name === "fecha" ? { prioritySorting: true } : {}),
+    // The dump has no prioritySorting flag; a record's own date sorts, where
+    // it is a filter (Uwazi offers priority sorting only then).
+    ...(p.filter && p.type === "date" && p.name === "fecha" ? { prioritySorting: true } : {}),
     ...(p.content !== undefined ? { content: p.content } : p.type === "relationship" ? { content: "" } : {}),
     ...(p.relationType ? { relationType: p.relationType } : {}),
     ...(p.inherit ? { inherit: { property: p.inherit.property, type: p.inherit.type as PropertyType } } : {}),

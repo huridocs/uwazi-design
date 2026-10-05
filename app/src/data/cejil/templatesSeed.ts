@@ -50,8 +50,9 @@ function propertyOf(templateId: string, p: CejilTemplateProperty): PropertyDef {
     label: p.label,
     type: typeOf(p.type),
     ...(carded ? { showInCard: true } : {}),
-    ...(flagged ? { filter: true } : {}),
-    // A document's date is the sort Uwazi would "pick as best fit".
+    // A document's date is the sort Uwazi would "pick as best fit". Priority
+    // sorting needs Use as filter (ConfigPropertyPanel.tsx).
+    ...(flagged || p.name === "fecha" ? { filter: true } : {}),
     ...(p.name === "fecha" ? { prioritySorting: true } : {}),
     ...(p.content ? { content: p.content } : p.type === "relationship" ? { content: "" } : {}),
     ...(p.relationType ? { relationType: p.relationType } : {}),
