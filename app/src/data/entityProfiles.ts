@@ -63,7 +63,37 @@ export interface EntityProfile {
    *  issuer, the source address, its terms and how its text was made. The
    *  Document tab prints it under the header (`DocProvenance`). */
   documentProvenance?: DocumentProvenance;
+  /** The record IS a photo, a recording or a post (the Nepal corpus's media
+   *  items): what the record leads with (`MediaItemCard`). */
+  mediaItem?: MediaItemView;
   relationships: RelationshipSource;
+}
+
+/** A media item as its record shows it. Everything is display-ready. */
+export interface MediaItemView {
+  kind: "photo" | "video" | "audio" | "graphic";
+  /** A bundled picture; attribution and licence are then required. */
+  image?: EntityImage;
+  /** The stored `media` value: a video or podcast address. */
+  embed?: string;
+  /** The part of the recording the record is about, in seconds. */
+  segment?: { start: number; end?: number };
+  duration?: number;
+  /** Where the item was posted or is hosted. */
+  page?: { url: string; label: string };
+  platform?: string;
+  attribution?: string;
+  licence?: string;
+  licenceUrl?: string;
+  /** Set for an item marked graphic or distressing: the record covers it
+   *  until the reader chooses to see it. */
+  contentWarning?: { value: "graphic" | "distressing"; label: string };
+  verification?: { value: string; label: string };
+  verifiedBy?: string;
+  /** The fact-checks that report on it, for a misattributed item. */
+  factChecks: { entityId: string; publisher: string; title: string; url?: string }[];
+  /** Template properties the card shows, which the field list then skips. */
+  covers: string[];
 }
 
 export interface DocumentProvenance {

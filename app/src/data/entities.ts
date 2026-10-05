@@ -208,6 +208,9 @@ export interface EntityImage {
    *  tell the record WHICH image to scroll to — the same key the record puts on
    *  its field cards. */
   fieldKey?: string;
+  /** Who made it and under what licence ("Name, CC BY-SA 4.0, via Wikimedia
+   *  Commons"), for an image shown on those terms: the lightbox prints it. */
+  credit?: string;
 }
 
 const baseEntities: Omit<Entity, "createdAt">[] = [

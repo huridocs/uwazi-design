@@ -79,6 +79,9 @@ function classify(url: URL): Pick<MediaValue, "kind" | "provider"> {
   if (host === "youtu.be" || host.endsWith("youtube.com")) return { kind: "video", provider: "YouTube" };
   if (host.endsWith("vimeo.com")) return { kind: "video", provider: "Vimeo" };
   if (host.endsWith("soundcloud.com")) return { kind: "audio", provider: "SoundCloud" };
+  if (host === "podcasts.apple.com") return { kind: "audio", provider: "Apple Podcasts" };
+  if (host === "open.spotify.com" || host === "podcasters.spotify.com" || host === "creators.spotify.com")
+    return { kind: "audio", provider: "Spotify" };
   if (AUDIO_EXT.test(url.pathname)) return { kind: "audio" };
   if (VIDEO_EXT.test(url.pathname)) return { kind: "video" };
   return { kind: "unknown" };

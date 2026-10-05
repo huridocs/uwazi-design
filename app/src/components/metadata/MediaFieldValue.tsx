@@ -9,14 +9,73 @@ import { mediaUrlAt, parseMediaValue, youtubeId, type MediaValue } from "../../u
  *  read — keeps the plain link and `?t=` chapter links, never a broken embed.
  *
  *  The card mark says a recording exists; this is where the reader watches it. */
-export function MediaFieldValue({ raw }: { raw: string }) {
-  const media = parseMediaValue(raw);
+export function MediaFieldValue({
+  raw,
+  segment,
+  kindHint,
+}: {
+  raw: string;
+  segment?: MediaSegment;
+  /** What the record says the recording is, for an address that does not
+   *  (an outlet's episode page). The address wins when it knows. */
+  kindHint?: "video" | "audio";
+}) {
+  const parsed = parseMediaValue(raw);
+  const media = parsed && parsed.kind === "unknown" && kindHint ? { ...parsed, kind: kindHint } : parsed;
   if (!media) {
     // Not a URL we can open. Say what the record holds rather than hiding it.
     return <p className="text-sm text-ink-secondary leading-relaxed break-words">{raw}</p>;
   }
   const id = youtubeId(media);
-  return id ? <YouTubeMedia media={media} id={id} /> : <LinkedMedia media={media} />;
+  return id ? <YouTubeMedia media={media} id={id} segment={segment} /> : <LinkedMedia media={media} segment={segment} />;
+}
+
+/** The part of a recording a record is about, in seconds. `end` absent: from
+ *  `start` to the end. */
+export interface MediaSegment {
+  start: number;
+  end?: number;
+}
+
+/** Seconds as a clock: 1:07, 12:24, 1:02:09. */
+export function formatClock(seconds: number): string {
+  const s = Math.max(0, Math.round(seconds));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const ss = String(s % 60).padStart(2, "0");
+  return h ? `${h}:${String(m).padStart(2, "0")}:${ss}` : `${m}:${ss}`;
+}
+
+const segmentText = (seg: MediaSegment) =>
+  seg.end !== undefined ? `${formatClock(seg.start)}–${formatClock(seg.end)}` : `from ${formatClock(seg.start)}`;
+
+/** The segment as one line: what part of the recording the record is about.
+ *  A button where the player can seek, a sentence where it cannot. */
+function SegmentRow({ segment, onPlay }: { segment: MediaSegment; onPlay?: () => void }) {
+  const text = segmentText(segment);
+  if (!onPlay)
+    return (
+      <p data-part="segment" className="text-sm text-ink leading-snug">
+        <span className="text-ink-tertiary">Relevant segment </span>
+        <span dir="ltr" className="font-mono text-meta tabular-nums">{text}</span>
+      </p>
+    );
+  return (
+    <button
+      type="button"
+      data-part="segment"
+      onClick={onPlay}
+      aria-label={`Play the relevant segment, ${text}`}
+      className={CHAPTER_ROW}
+    >
+      <span dir="ltr" className="font-mono text-meta tabular-nums text-ink-tertiary">
+        {formatClock(segment.start)}
+      </span>
+      <span className="text-sm text-ink leading-snug">
+        Relevant segment <span dir="ltr" className="tabular-nums">{text}</span>
+      </span>
+    </button>
+  );
 }
 
 const EMBED_ORIGIN = "https://www.youtube-nocookie.com";
@@ -78,10 +137,13 @@ function ChapterText({ time, label }: { time: string; label: string }) {
 }
 
 /** Not embeddable: the recording as a link, chapters as links that start there. */
-function LinkedMedia({ media }: { media: MediaValue }) {
+function LinkedMedia({ media, segment }: { media: MediaValue; segment?: MediaSegment }) {
   return (
     <div data-component="MediaFieldValue" data-kind={media.kind} className="flex flex-col gap-2 min-w-0">
       <MetaRow media={media} />
+      {/* A podcast host gives no way to start at a time: the segment is said,
+          and the reader finds it in the episode. */}
+      {segment && <SegmentRow segment={segment} />}
       {media.chapters.length > 0 && (
         <ol data-part="chapters" aria-label="Chapters" className="flex flex-col">
           {media.chapters.map((c) => (
@@ -132,7 +194,7 @@ const SEEK_TOLERANCE_S = 3;
  *
  *  THE BOX IS DEFINITE: `aspect-video` on the same element before and after the
  *  iframe arrives, so the record never shifts when the player loads. */
-function YouTubeMedia({ media, id }: { media: MediaValue; id: string }) {
+function YouTubeMedia({ media, id, segment }: { media: MediaValue; id: string; segment?: MediaSegment }) {
   /** `null` until the reader asks for the player; then the start it loaded at.
    *  `loadNonce` changes the iframe's key when a reload is the only way to seek. */
   const [start, setStart] = useState<number | null>(null);
@@ -184,6 +246,8 @@ function YouTubeMedia({ media, id }: { media: MediaValue; id: string }) {
       origin: window.location.origin,
       playsinline: "1",
     });
+    // Started inside the record's segment: stop where it ends.
+    if (segment?.end !== undefined && from >= segment.start && from < segment.end) params.set("end", String(segment.end));
     return `${EMBED_ORIGIN}/embed/${id}?${params}`;
   };
 
@@ -261,8 +325,8 @@ function YouTubeMedia({ media, id }: { media: MediaValue; id: string }) {
           <button
             type="button"
             data-part="play"
-            onClick={() => playFrom(0)}
-            aria-label="Play video"
+            onClick={() => playFrom(segment?.start ?? 0)}
+            aria-label={segment ? `Play the relevant segment, ${segmentText(segment)}` : "Play video"}
             className="group absolute inset-0 flex flex-col items-center justify-center gap-3 cursor-pointer
               focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-carbon/40"
           >
@@ -274,13 +338,15 @@ function YouTubeMedia({ media, id }: { media: MediaValue; id: string }) {
               <Play size={18} className="translate-x-px" fill="currentColor" />
             </span>
             <span aria-hidden className="px-4 text-center text-meta text-ink-tertiary">
-              Loads from {media.provider ?? "the provider"} when you press play
+              {segment ? `Plays ${segmentText(segment)}. ` : ""}Loads{"\u00a0"}from {media.provider ?? "the provider"} when you press{"\u00a0"}play
             </span>
           </button>
         )}
       </div>
       <MetaRow media={media} />
       </div>
+
+      {segment && <SegmentRow segment={segment} onPlay={() => playFrom(segment.start)} />}
 
       {media.chapters.length > 0 && (
         <ol data-part="chapters" aria-label="Chapters" className="flex flex-col">

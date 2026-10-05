@@ -9,6 +9,7 @@ import { focusMetadataFieldAtom } from "../../atoms/library";
 import type { RelationshipMetadataField } from "../../data/metadata";
 import { MetadataCard } from "./MetadataCard";
 import { ImageCard } from "./ImageCard";
+import { MediaItemCard } from "./MediaItemCard";
 import { ImageLightbox } from "../shared/ImageLightbox";
 import { SectionLabel } from "../shared/SectionLabel";
 import { imageFocusKey, type EntityImage } from "../../data/entities";
@@ -191,7 +192,11 @@ export function MetadataRecord({
   const groupByKey = new Map(groups.map((g) => [g.connectionKey, g]));
   const placedGroups = new Set<string>();
   const entries: RecordEntry[] = [];
+  // A media item's card draws its picture or player, credit and warning; the
+  // properties it shows are not repeated as fields.
+  const covered = new Set(profile.mediaItem?.covers ?? []);
   for (const f of fields) {
+    if (covered.has(f.id)) continue;
     // A connection with nothing connected (a property added in Settings, not
     // filled yet) is the form's to fill; the record has nothing to show.
     if (f.type === "relationship" && f.connectedEntityIds.length === 0 && !f.totalConnected) continue;
@@ -229,7 +234,7 @@ export function MetadataRecord({
   const images = profile.images ?? [];
   const hasImages = images.length > 1;
 
-  const empty = entries.length === 0 && !hasImages;
+  const empty = entries.length === 0 && !hasImages && !profile.mediaItem;
   if (empty) {
     return (
       <div data-component="MetadataRecord" data-part="empty" className="flex items-center justify-center py-10 text-center">
@@ -241,6 +246,17 @@ export function MetadataRecord({
   return (
     <>
     <MasonryGrid containerRef={rootRef} component="MetadataRecord">
+      {profile.mediaItem && (
+        // Full width, so nothing sits in a hole beside it; the card caps its
+        // own content (see MediaItemCard).
+        <MasonryItem key={`media:${profile.id}`} full>
+          {/* Keyed on the record: a cover revealed on one item is not revealed
+              on the next. */}
+          <div data-part="field" data-field-key="file" data-field-keys="embed page_url">
+            <MediaItemCard key={profile.id} item={profile.mediaItem} onOpenImage={setLightbox} />
+          </div>
+        </MasonryItem>
+      )}
       {/* Template sequence. The only thing kind decides here is `wide`: prose
           takes two columns of three, because a paragraph set in a third of a
           wide pane is a column of six-word lines. Chips and scalars take one.

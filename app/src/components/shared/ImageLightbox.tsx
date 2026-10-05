@@ -72,10 +72,21 @@ export function ImageLightbox({
       />
       {/* The filename, because this is also where you confirm WHICH file this
           is — the same name the Library card printed to get you here. */}
-      {image.filename && (
-        <span data-part="filename" className="fixed bottom-4 start-1/2 -translate-x-1/2 rounded-md bg-ink/70 px-2 py-1 text-meta text-paper">
-          {image.filename}
+      {image.credit ? (
+        // An image shown under a licence keeps its credit at full size too.
+        <span
+          data-part="credit"
+          onClick={(e) => e.stopPropagation()}
+          className="fixed bottom-4 start-1/2 -translate-x-1/2 max-w-[calc(100%-2rem)] rounded-md bg-ink/70 px-2 py-1 text-center text-meta text-paper"
+        >
+          {image.credit}
         </span>
+      ) : (
+        image.filename && (
+          <span data-part="filename" className="fixed bottom-4 start-1/2 -translate-x-1/2 rounded-md bg-ink/70 px-2 py-1 text-meta text-paper">
+            {image.filename}
+          </span>
+        )
       )}
       <button
         type="button"
