@@ -34,6 +34,15 @@ const SCOPES: Scope[] = ["mock", "cejil", "artworks", "travesia", "global"];
 
 const emptyOverlay = <T>(): Overlay<T> => ({ created: [], patched: {}, deleted: [] });
 
+/** Settings data stored under unversioned keys (before v2) is never read
+ *  again; clear it once so it does not sit in the tab. */
+try {
+  for (const k of Object.keys(sessionStorage))
+    if (/^uwazi:settings:(?!v\d+:|activity$)/.test(k)) sessionStorage.removeItem(k);
+} catch {
+  // Storage blocked: nothing to clear.
+}
+
 /** Storage keys carry a version. A change to a record's shape bumps it, so
  *  an older session's data is never read as the new shape. */
 export const SETTINGS_STORAGE_VERSION = 2;
@@ -43,7 +52,12 @@ const isPlainObject = (v: unknown): v is Record<string, unknown> =>
   !!v && typeof v === "object" && !Array.isArray(v);
 
 /** A record any store accepts: an object with a string id. */
-export const hasId = (r: unknown): r is { id: string } => isPlainObject(r) && typeof r.id === "string";
+// A function declaration, not a const: stores built while the import cycle
+// through `dataSource` is still loading default to it before this module's
+// body has run.
+export function hasId(r: unknown): r is { id: string } {
+  return !!r && typeof r === "object" && !Array.isArray(r) && typeof (r as { id?: unknown }).id === "string";
+}
 
 /** What storage hands back is outside the app's control. Each entry is
  *  checked on its own and a bad one is dropped, never the whole overlay and

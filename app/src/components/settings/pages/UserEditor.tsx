@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { ShieldCheck } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
@@ -7,7 +7,8 @@ import { SettingsField, TextInput } from "../SettingsField";
 import { RadioGroup } from "../../shared/RadioGroup";
 import { Checkbox } from "../../shared/Checkbox";
 import type { SettingsUser, UserRole } from "../../../data/settings";
-import { groupsAtom, roleChangeBlock, saveUserAtom, userIdentityBlock, usersAtom } from "../../../atoms/users";
+import { groupsAtom, roleChangeBlock, saveUserAtom, signedInUserAtom, userIdentityBlock, usersAtom } from "../../../atoms/users";
+import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { MissingRecord } from "../../shared/MissingRecord";
 import { useNotify } from "../../../hooks/useNotify";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
@@ -61,7 +62,15 @@ export function UserEditor({
   const toggleGroup = (id: string) =>
     update({ groupIds: (groupIds.includes(id) ? groupIds.filter((g) => g !== id) : [...groupIds, id]).sort() });
 
+  // An admin changing their own role loses System settings and Tools the
+  // moment it saves (role gating, `atoms/settings.ts`): ask first.
+  const me = useAtomValue(signedInUserAtom);
+  const demotesSelf = !!base && base.id === me?.id && base.role === "admin" && role !== "admin";
+  const [askDemote, setAskDemote] = useState(false);
+  const trySave = () => (demotesSelf ? setAskDemote(true) : save());
+
   const save = () => {
+    setAskDemote(false);
     const id = saveUser({ id: isNew ? null : userId, value: { ...draft, username: username.trim(), email: email.trim() } });
     if (!id) return;
     record({
@@ -147,10 +156,19 @@ export function UserEditor({
       <SettingsContent.Footer>
         <LastSavedLine domain="user" id={base?.id} className="me-auto" />
         <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
-        <SettingsButton variant={isNew ? "commit" : "success"} size="sm" disabled={!dirty || !valid} onClick={save}>
+        <SettingsButton variant={isNew ? "commit" : "success"} size="sm" disabled={!dirty || !valid} onClick={trySave}>
           {isNew ? "Invite user" : "Save"}
         </SettingsButton>
       </SettingsContent.Footer>
+      <ConfirmDialog
+        open={askDemote}
+        title="Change your own role"
+        message={`You will be ${role === "editor" ? "an Editor" : "a Collaborator"} as soon as this saves, and lose access to System settings${role === "editor" ? " and most Tools" : " and Tools"}. Another admin can change it back.`}
+        confirmLabel="Change my role"
+        variant="danger"
+        onConfirm={save}
+        onCancel={() => setAskDemote(false)}
+      />
     </SettingsContent>
   );
 }

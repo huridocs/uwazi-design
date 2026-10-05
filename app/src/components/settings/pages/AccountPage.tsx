@@ -5,7 +5,8 @@ import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
 import { SettingsField, TextInput } from "../SettingsField";
 import { SettingsTable, type Column } from "../SettingsTable";
-import { signedInUserAtom, userIdentityBlock, users, usersAtom } from "../../../atoms/users";
+import { saveUserAtom, signedInUserAtom, userIdentityBlock, usersAtom } from "../../../atoms/users";
+import type { SettingsUser } from "../../../data/settings";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 import { useNotify } from "../../../hooks/useNotify";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
@@ -42,7 +43,14 @@ export function AccountPage() {
   // The signed-in user's record in the users store, so Settings › Users and
   // the login screen see the change.
   const me = useAtomValue(signedInUserAtom);
-  const patchUser = useSetAtom(users.patchAtom);
+  // Through the store's rules (unique username and email), like the editor.
+  const saveUser = useSetAtom(saveUserAtom);
+  const patchUser = ({ id, patch }: { id: string; patch: Partial<SettingsUser> }) => {
+    const current = me && me.id === id ? me : undefined;
+    if (!current) return null;
+    const { id: _id, ...rest } = current;
+    return saveUser({ id, value: { ...rest, ...patch } });
+  };
   const profile = useSettingsDraft({
     id: "account-profile",
     label: "Profile edits",
@@ -55,7 +63,7 @@ export function AccountPage() {
   const saveProfile = () => {
     if (!me) return;
     const next = { username: username.trim(), email: email.trim() };
-    patchUser({ id: me.id, patch: next });
+    if (!patchUser({ id: me.id, patch: next })) return;
     profile.markSaved(next);
     logAccount("Profile saved");
   };

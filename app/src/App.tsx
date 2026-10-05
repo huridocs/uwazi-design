@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { collectionSettings } from "./atoms/settingsSingletons";
+import { settingsAccessAtom } from "./atoms/settings";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Navbar } from "./components/layout/Navbar";
 import { EntityView } from "./views/EntityView";
@@ -36,6 +37,13 @@ export function App() {
   useEffect(() => {
     document.documentElement.dir = rtl ? "rtl" : "ltr";
   }, [rtl]);
+
+  // Import CSV is an admin page (Uwazi: adminsOnlyRoute); a restored session
+  // on it for another role lands on the Library.
+  const canImport = useAtomValue(settingsAccessAtom)("import-csv");
+  useEffect(() => {
+    if (appView === "import-csv" && !canImport) setAppView("library");
+  }, [appView, canImport, setAppView]);
 
   // The window title is the collection's name (Settings › Collection).
   const collectionName = useAtomValue(collectionSettings.valueAtom).name;
@@ -103,7 +111,7 @@ export function App() {
       />
       {/* The document's one `main`: whichever view is switched in. */}
       <main data-part="view" data-view={appView} className="flex-1 min-h-0 flex flex-col">
-        {appView === "import-csv" ? (
+        {appView === "import-csv" && canImport ? (
           <ImportCSVView onNavigate={handleNavigate} />
         ) : appView === "settings" ? (
           <SettingsView onNavigate={handleNavigate} />
