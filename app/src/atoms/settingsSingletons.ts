@@ -1,6 +1,8 @@
 import { atom } from "jotai";
 import type { Corpus } from "../data/entityChanges";
-import { seedFilterConfig, templatePropertiesByTemplate } from "../data/settings";
+import { templatePropertiesByTemplate } from "../data/settings";
+import { entityTypes } from "../data/entities";
+import { corpusTypes } from "./dataSource";
 import {
   cejilCollection,
   cejilFilterGroups,
@@ -31,10 +33,18 @@ export interface CollectionSettings extends Record<string, unknown> {
   publicSharing: boolean;
 }
 
+/** Each corpus's own name, as the navbar's collection switcher reads it. */
+const COLLECTION_NAMES: Record<Corpus, string> = {
+  mock: "Inter-American Human Rights Archive",
+  cejil: cejilCollection.name,
+  artworks: "Best Artworks",
+  travesia: "Red Travesía",
+};
+
 export const collectionSettings = createSettingsSingleton<CollectionSettings>({
   name: "collection",
   seedOf: (corpus: Corpus) => ({
-    name: corpus === "cejil" ? cejilCollection.name : "Inter-American Human Rights Archive",
+    name: COLLECTION_NAMES[corpus],
     landing: "/library",
     defaultView: corpus === "cejil" && VIEWS.includes(cejilCollection.defaultView as DefaultLibraryView)
       ? (cejilCollection.defaultView as DefaultLibraryView)
@@ -103,9 +113,11 @@ export const filterSettings = createSettingsSingleton<FilterSettings>({
     corpus === "cejil"
       ? { groups: cejilFilterGroups, rows: cejilFilterRows, propertyRows: cejilPropertyFilterRows }
       : {
+          // Every template of the corpus, shown: a filter list with nothing
+          // hidden is Uwazi's default (an empty `settings.filters` lists all).
           groups: [],
-          rows: seedFilterConfig.map((f) => ({ templateId: f.templateId, active: f.active, groupId: "" })),
-          propertyRows: sampleFilterProperties.map((p) => ({ propertyId: p.id, active: true })),
+          rows: corpusTypes(corpus, entityTypes).map((t) => ({ templateId: t.id, active: true, groupId: "" })),
+          propertyRows: corpus === "mock" ? sampleFilterProperties.map((p) => ({ propertyId: p.id, active: true })) : [],
         },
   isField: {
     groups: arrayOf((g) => isString(g.id) && isString(g.name)),

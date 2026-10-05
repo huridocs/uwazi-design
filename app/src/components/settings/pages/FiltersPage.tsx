@@ -1,4 +1,4 @@
-import { useId, type Dispatch, type SetStateAction } from "react";
+import { useId, useMemo, type Dispatch, type SetStateAction } from "react";
 import { useSetAtom, useAtomValue } from "jotai";
 import { ChevronUp, ChevronDown, FolderPlus, Trash2 } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
@@ -8,8 +8,8 @@ import { DragGrip } from "../DragGrip";
 import { useReorder } from "../../../hooks/useReorder";
 import { Checkbox } from "../../shared/Checkbox";
 import { Select } from "../../shared/Select";
-import { seedFilterConfig, seedTemplates } from "../../../data/settings";
-import { dataSourceAtom } from "../../../atoms/dataSource";
+import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom } from "../../../atoms/dataSource";
+import { libraryTypeFiltersAtom } from "../../../atoms/library";
 import { cejilFilterMeta, cejilPropertyFilterMeta } from "../../../data/cejil/settingsAdapt";
 import {
   filterSettings,
@@ -25,14 +25,6 @@ import { LastSavedLine } from "../../shared/LastSavedLine";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 import { newSettingsId } from "../../../atoms/settingsCollection";
 
-/** name / colour / entity-count per template, by id, for the active source. */
-const mockMeta: Record<string, { name: string; color: string; count: number }> =
-  Object.fromEntries(
-    seedFilterConfig.map((f) => [
-      f.templateId,
-      { name: f.name, color: f.color, count: seedTemplates.find((t) => t.id === f.templateId)?.entityCount ?? 0 },
-    ]),
-  );
 
 /** name / value count per filterable property, by id. */
 const mockPropertyMeta: Record<string, { name: string; count: number | null }> = Object.fromEntries(
@@ -50,7 +42,17 @@ function swap<T>(arr: T[], i: number, dir: -1 | 1): T[] {
 export function FiltersPage() {
   const { record } = useSettingsNotify();
   const cejil = useAtomValue(dataSourceAtom) === "cejil";
-  const meta = cejil ? cejilFilterMeta : mockMeta;
+  // name / colour / entity count per template: CEJIL's from its Settings
+  // adapter, every other corpus's from its own types and entities.
+  const types = useAtomValue(libraryTypesAtom);
+  const entities = useAtomValue(libraryEntitiesAtom);
+  const corpusMeta = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const e of entities) counts.set(e.typeId, (counts.get(e.typeId) ?? 0) + 1);
+    return Object.fromEntries(types.map((t) => [t.id, { name: t.name, color: t.color, count: counts.get(t.id) ?? 0 }]));
+  }, [types, entities]);
+  const meta = cejil ? cejilFilterMeta : corpusMeta;
+  const setTypeFilters = useSetAtom(libraryTypeFiltersAtom);
   const propertyMeta = cejil ? cejilPropertyFilterMeta : mockPropertyMeta;
   // The corpus's saved filters (`atoms/settingsSingletons.ts`), which the
   // Library's Template facet reads. Compared with the last save.
@@ -114,6 +116,11 @@ export function FiltersPage() {
     const value = { ...draft, groups: groups.filter((g) => rows.some((r) => r.groupId === g.id)) };
     saveFilters({ value });
     markSaved(value);
+    // A type filter set on a template the facet no longer shows could not be
+    // cleared from the Library: drop it.
+    const hidden = new Set(value.rows.filter((r) => !r.active).map((r) => r.templateId));
+    if (hidden.size)
+      setTypeFilters((prev) => Object.fromEntries(Object.entries(prev).filter(([id]) => !hidden.has(id))));
     record({ method: "UPDATE", domain: "filters", noun: "settings", id: "filters", name: "Library filters", message: "Library filters updated" });
   };
 

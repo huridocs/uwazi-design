@@ -188,9 +188,12 @@ export function LibraryFilters() {
   const shownOrder = new Map(
     facetNodes.flatMap((n) => (n.kind === "group" ? n.ids : [n.id])).map((id, i) => [id, i] as const),
   );
-  const shownTypes = types
+  const matched = types
     .filter((t) => shownOrder.has(t.id))
     .sort((a, b) => shownOrder.get(a.id)! - shownOrder.get(b.id)!);
+  // Saved filters that name none of this corpus's types list every type, as
+  // Uwazi does when `settings.filters` is empty.
+  const shownTypes = matched.length ? matched : types;
   const typeName = (id: string) => types.find((t) => t.id === id)?.name ?? id;
   const nonDocTypes = shownTypes.filter((t) => !typeHasDocument(t.id));
   const docTypes = shownTypes.filter((t) => typeHasDocument(t.id));

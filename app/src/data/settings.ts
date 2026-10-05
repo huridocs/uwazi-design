@@ -333,21 +333,7 @@ export const seedMenuLinks: SettingsMenuLink[] = [
   { id: "m5", title: "Contact", url: "/page/contact", type: "link" },
 ];
 
-// ── Filters configuration ───────────────────────────────────────────────────
-// Which templates surface as library filters (reuses the template list).
-export interface SettingsFilterConfig {
-  templateId: string;
-  name: string;
-  color: string;
-  active: boolean;
-}
 
-export const seedFilterConfig: SettingsFilterConfig[] = seedTemplates.map((t) => ({
-  templateId: t.id,
-  name: t.name,
-  color: t.color,
-  active: !["document", "organization"].includes(t.id),
-}));
 
 // ── Metadata extraction (IX) ────────────────────────────────────────────────
 export type ExtractorStatus = "ready" | "training" | "processing" | "error";
