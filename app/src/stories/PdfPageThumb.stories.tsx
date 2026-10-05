@@ -87,3 +87,15 @@ export const Lift: Story = {
     </div>
   ),
 };
+
+/** The portrait card's variant: the page fills a 3:4 slot (`fill`) and does
+ *  not move. Hover the page for the loupe, which shows after a short beat. It
+ *  is pointer-only and decorative, so there is nothing to focus here. */
+export const PortraitLoupe: Story = {
+  args: { url: URL, ext: "pdf", fill: true, loupe: true },
+  render: (args) => (
+    <div className="w-[13rem] aspect-[3/4] rounded overflow-hidden border border-border/60">
+      <PdfPageThumb {...args} className="h-full w-full" />
+    </div>
+  ),
+};
