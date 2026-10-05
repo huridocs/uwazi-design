@@ -113,6 +113,16 @@ Known gaps, kept on purpose:
 - Every settings editor and form page edits through `useSettingsDraft`, which registers with
   the dirty guard. Dirty compares with the last save; call `markSaved` on a page that stays
   open. The settings header guards back, breadcrumb and the mobile back chevron.
+- Usage: `atoms/settingsUsage.ts` answers what a template, property, thesaurus, value, relationship
+  type, group, user or language is used by (pure logic in `utils/settingsUsage.ts`). Deletes go
+  through `components/shared/SettingsDeletes.tsx` on `ConfirmDelete`, which lists the impact and,
+  where Uwazi refuses, names the rule and offers only OK. A confirm message says only what the code
+  does.
+- A child row removed inside an open editor (property, value, filter group, sub-link) gets an Undo
+  in the Beacon (`useSettingsUndo`), not a dialog. The undo ends when the editor unmounts.
+- Every settings create, save and delete goes through `useSettingsNotify().record`: one Beacon
+  notification plus an Activity log entry (`atoms/activityLog.ts`). Editor footers show
+  `LastSavedLine`. Transient feedback that changes no record stays on `useNotify`.
 
 ## Layout and style
 
