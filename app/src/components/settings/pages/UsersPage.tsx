@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { Lock, Shield, ShieldCheck, Trash2, UserPlus, Users } from "lucide-react";
+import { Lock, Shield, Trash2, UserPlus, Users } from "lucide-react";
 import { Hint } from "../../shared/Hint";
 import { SettingsListPage, useSettingsSearch } from "../SettingsListPage";
 import { SettingsEmptyState } from "../SettingsEmptyState";
@@ -135,14 +135,16 @@ export function UsersPage() {
     },
     {
       id: "2fa",
-      header: "2FA",
-      align: "center",
-      width: "4rem",
+      // Uwazi's Protection column: a pill that reads the account's 2FA flag.
+      header: "Protection",
+      width: "8.5rem",
       cell: (u) =>
         u.using2fa ? (
-          <ShieldCheck size={15} className="text-success mx-auto" />
+          <span className="text-meta font-semibold px-2 py-0.5 rounded-md w-fit whitespace-nowrap bg-success-light text-success-label">
+            Password + 2fa
+          </span>
         ) : (
-          <span className="text-ink-muted">—</span>
+          <span className="text-meta font-semibold px-2 py-0.5 rounded-md w-fit bg-warm text-ink-secondary">Password</span>
         ),
     },
     {
