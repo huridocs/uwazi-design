@@ -31,6 +31,7 @@ import { newSettingsId } from "../../../atoms/settingsCollection";
 import { getEntity } from "../../../data/entities";
 import { getEntityProfile } from "../../../data/entityProfiles";
 import { commonPropertiesFor, type PropertyDef, type TemplateDef } from "../../../data/templates/types";
+import { TEMPLATE_SEEDS } from "../../../data/templates/mirror";
 import { entityPropertyValues } from "../../../utils/propertyValues";
 import { count, foldName } from "../../../utils/settingsUsage";
 import { blockingSummary } from "../../../utils/validation";
@@ -220,7 +221,12 @@ function TemplateEditorBody({
       setProps((prev) => prev.map((x) => (x.id === p.id ? p : x)));
     } else {
       const others = templates.filter((t) => t.id !== draft.id);
-      const name = newPropertyName(p.label, draft, others);
+      // Properties this template has had and no longer has: as saved, and as
+      // seeded (a removal saved earlier in the session).
+      const inDraft = new Set(draft.properties.map((x) => x.id));
+      const seed = TEMPLATE_SEEDS[corpus]?.().find((t) => t.id === draft.id);
+      const removed = [...(base?.properties ?? []), ...(seed?.properties ?? [])].filter((x) => !inDraft.has(x.id));
+      const name = newPropertyName(p.label, p.type, draft, others, removed);
       setProps((prev) => [...prev, { ...p, id: newSettingsId("prop"), name }]);
     }
     setPanel(null);

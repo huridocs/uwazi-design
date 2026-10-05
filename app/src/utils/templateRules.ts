@@ -174,13 +174,25 @@ export function safeName(label: string): string {
 
 /** The key for a new property: its safe name, or the name another template
  *  already gives that label (so the two combine in the Library), made unique
- *  in this template. */
-export function newPropertyName(label: string, draft: TemplateDef, others: TemplateDef[]): string {
+ *  in this template. A name a removed property of another type held is not
+ *  reused either: its values stay in the records (removal is soft), and they
+ *  would be read through the new type. A removed property of the same type
+ *  gives its name back, and its values with it, as an undo would. */
+export function newPropertyName(
+  label: string,
+  type: PropertyType,
+  draft: TemplateDef,
+  others: TemplateDef[],
+  removed: PropertyDef[] = [],
+): string {
   const shared = others
     .flatMap((t) => t.properties)
     .find((p) => fold(p.label) === fold(label))?.name;
   const base = shared ?? safeName(label);
-  const taken = new Set([...draft.commonProperties, ...draft.properties].map((p) => p.name));
+  const taken = new Set([
+    ...[...draft.commonProperties, ...draft.properties].map((p) => p.name),
+    ...removed.filter((p) => p.type !== type).map((p) => p.name),
+  ]);
   if (!taken.has(base)) return base;
   let n = 2;
   while (taken.has(`${base}_${n}`)) n++;
