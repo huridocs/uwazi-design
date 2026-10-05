@@ -1,0 +1,878 @@
+[
+ {
+  "id": "nepal_event",
+  "name": "Event",
+  "color": "#B5483A",
+  "isDefault": true,
+  "commonProperties": [
+   {
+    "id": "nepal_event:title",
+    "name": "title",
+    "label": "Title",
+    "type": "text"
+   },
+   {
+    "id": "nepal_event:creationDate",
+    "name": "creationDate",
+    "label": "Date added",
+    "type": "date"
+   },
+   {
+    "id": "nepal_event:editDate",
+    "name": "editDate",
+    "label": "Date modified",
+    "type": "date"
+   }
+  ],
+  "properties": [
+   {
+    "id": "nepal_event:summary",
+    "name": "summary",
+    "label": "Summary",
+    "type": "markdown",
+    "showInCard": true,
+    "fullWidth": true
+   },
+   {
+    "id": "nepal_event:when",
+    "name": "when",
+    "label": "When",
+    "type": "daterange",
+    "required": true,
+    "showInCard": true,
+    "filter": true,
+    "defaultfilter": true,
+    "prioritySorting": true
+   },
+   {
+    "id": "nepal_event:precision",
+    "name": "precision",
+    "label": "Time precision",
+    "type": "select",
+    "content": "time_precision"
+   },
+   {
+    "id": "nepal_event:event_type",
+    "name": "event_type",
+    "label": "Event type",
+    "type": "select",
+    "content": "event_types",
+    "showInCard": true,
+    "filter": true,
+    "defaultfilter": true
+   },
+   {
+    "id": "nepal_event:phase",
+    "name": "phase",
+    "label": "Phase",
+    "type": "select",
+    "content": "phases",
+    "filter": true,
+    "defaultfilter": true
+   },
+   {
+    "id": "nepal_event:reported_fatalities",
+    "name": "reported_fatalities",
+    "label": "Reported fatalities",
+    "type": "numeric",
+    "filter": true
+   },
+   {
+    "id": "nepal_event:verification",
+    "name": "verification",
+    "label": "Verification",
+    "type": "select",
+    "content": "verification_status",
+    "showInCard": true,
+    "filter": true
+   },
+   {
+    "id": "nepal_event:occurred_at",
+    "name": "occurred_at",
+    "label": "Location",
+    "type": "relationship",
+    "content": "nepal_location",
+    "relationType": "occurred_at",
+    "showInCard": true,
+    "x": {
+     "connectionKey": "occurred_at:nepal_location"
+    }
+   },
+   {
+    "id": "nepal_event:organised_by",
+    "name": "organised_by",
+    "label": "Organised by",
+    "type": "relationship",
+    "content": "",
+    "relationType": "organised_by",
+    "x": {
+     "connectionKey": "organised_by:"
+    }
+   },
+   {
+    "id": "nepal_event:involved",
+    "name": "involved",
+    "label": "Involved",
+    "type": "relationship",
+    "content": "",
+    "relationType": "involved",
+    "x": {
+     "connectionKey": "involved:"
+    }
+   },
+   {
+    "id": "nepal_event:responded_by",
+    "name": "responded_by",
+    "label": "Security and official response",
+    "type": "relationship",
+    "content": "nepal_organisation",
+    "relationType": "responded_by",
+    "x": {
+     "connectionKey": "responded_by:nepal_organisation"
+    }
+   },
+   {
+    "id": "nepal_event:led_to",
+    "name": "led_to",
+    "label": "Led to",
+    "type": "relationship",
+    "content": "nepal_event",
+    "relationType": "led_to",
+    "x": {
+     "connectionKey": "led_to:nepal_event"
+    }
+   },
+   {
+    "id": "nepal_event:part_of",
+    "name": "part_of",
+    "label": "Part of",
+    "type": "relationship",
+    "content": "nepal_event",
+    "relationType": "part_of",
+    "x": {
+     "connectionKey": "part_of:nepal_event"
+    }
+   }
+  ]
+ },
+ {
+  "id": "nepal_person",
+  "name": "Person",
+  "color": "#3B5B8C",
+  "isDefault": false,
+  "commonProperties": [
+   {
+    "id": "nepal_person:title",
+    "name": "title",
+    "label": "Title",
+    "type": "text"
+   },
+   {
+    "id": "nepal_person:creationDate",
+    "name": "creationDate",
+    "label": "Date added",
+    "type": "date"
+   },
+   {
+    "id": "nepal_person:editDate",
+    "name": "editDate",
+    "label": "Date modified",
+    "type": "date"
+   }
+  ],
+  "properties": [
+   {
+    "id": "nepal_person:name_native",
+    "name": "name_native",
+    "label": "Name in Nepali",
+    "type": "text"
+   },
+   {
+    "id": "nepal_person:roles",
+    "name": "roles",
+    "label": "Roles",
+    "type": "multiselect",
+    "content": "person_roles",
+    "filter": true,
+    "defaultfilter": true,
+    "showInCard": true
+   },
+   {
+    "id": "nepal_person:profile",
+    "name": "profile",
+    "label": "Profile",
+    "type": "markdown",
+    "fullWidth": true,
+    "showInCard": true
+   },
+   {
+    "id": "nepal_person:public_status",
+    "name": "public_status",
+    "label": "Public status",
+    "type": "select",
+    "content": "public_status",
+    "filter": true
+   },
+   {
+    "id": "nepal_person:member_of",
+    "name": "member_of",
+    "label": "Member of",
+    "type": "relationship",
+    "content": "nepal_organisation",
+    "relationType": "member_of",
+    "x": {
+     "connectionKey": "member_of:nepal_organisation"
+    }
+   },
+   {
+    "id": "nepal_person:held_office",
+    "name": "held_office",
+    "label": "Offices held",
+    "type": "relationship",
+    "content": "nepal_organisation",
+    "relationType": "held_office",
+    "showInCard": true,
+    "x": {
+     "connectionKey": "held_office:nepal_organisation"
+    }
+   },
+   {
+    "id": "nepal_person:succeeded",
+    "name": "succeeded",
+    "label": "Succeeded",
+    "type": "relationship",
+    "content": "nepal_person",
+    "relationType": "succeeded",
+    "x": {
+     "connectionKey": "succeeded:nepal_person"
+    }
+   }
+  ]
+ },
+ {
+  "id": "nepal_organisation",
+  "name": "Organisation",
+  "color": "#5B6B3A",
+  "isDefault": false,
+  "commonProperties": [
+   {
+    "id": "nepal_organisation:title",
+    "name": "title",
+    "label": "Title",
+    "type": "text"
+   },
+   {
+    "id": "nepal_organisation:creationDate",
+    "name": "creationDate",
+    "label": "Date added",
+    "type": "date"
+   },
+   {
+    "id": "nepal_organisation:editDate",
+    "name": "editDate",
+    "label": "Date modified",
+    "type": "date"
+   }
+  ],
+  "properties": [
+   {
+    "id": "nepal_organisation:name_native",
+    "name": "name_native",
+    "label": "Name in Nepali",
+    "type": "text"
+   },
+   {
+    "id": "nepal_organisation:org_type",
+    "name": "org_type",
+    "label": "Organisation type",
+    "type": "select",
+    "content": "org_types",
+    "filter": true,
+    "defaultfilter": true,
+    "showInCard": true
+   },
+   {
+    "id": "nepal_organisation:description",
+    "name": "description",
+    "label": "Description",
+    "type": "markdown",
+    "fullWidth": true,
+    "showInCard": true
+   },
+   {
+    "id": "nepal_organisation:website",
+    "name": "website",
+    "label": "Official website",
+    "type": "link"
+   },
+   {
+    "id": "nepal_organisation:part_of_org",
+    "name": "part_of_org",
+    "label": "Part of",
+    "type": "relationship",
+    "content": "nepal_organisation",
+    "relationType": "part_of",
+    "x": {
+     "connectionKey": "part_of:nepal_organisation"
+    }
+   }
+  ]
+ },
+ {
+  "id": "nepal_location",
+  "name": "Location",
+  "color": "#8A6D2F",
+  "isDefault": false,
+  "commonProperties": [
+   {
+    "id": "nepal_location:title",
+    "name": "title",
+    "label": "Title",
+    "type": "text"
+   },
+   {
+    "id": "nepal_location:creationDate",
+    "name": "creationDate",
+    "label": "Date added",
+    "type": "date"
+   },
+   {
+    "id": "nepal_location:editDate",
+    "name": "editDate",
+    "label": "Date modified",
+    "type": "date"
+   }
+  ],
+  "properties": [
+   {
+    "id": "nepal_location:location_type",
+    "name": "location_type",
+    "label": "Location type",
+    "type": "select",
+    "content": "location_types",
+    "filter": true,
+    "defaultfilter": true,
+    "showInCard": true
+   },
+   {
+    "id": "nepal_location:geolocation",
+    "name": "geolocation",
+    "label": "Coordinates",
+    "type": "geolocation",
+    "showInCard": true
+   },
+   {
+    "id": "nepal_location:coordinate_basis",
+    "name": "coordinate_basis",
+    "label": "Coordinate basis",
+    "type": "text"
+   },
+   {
+    "id": "nepal_location:name_native",
+    "name": "name_native",
+    "label": "Name in Nepali",
+    "type": "text"
+   },
+   {
+    "id": "nepal_location:description",
+    "name": "description",
+    "label": "Description",
+    "type": "markdown",
+    "fullWidth": true
+   },
+   {
+    "id": "nepal_location:located_in",
+    "name": "located_in",
+    "label": "Located in",
+    "type": "relationship",
+    "content": "nepal_location",
+    "relationType": "located_in",
+    "x": {
+     "connectionKey": "located_in:nepal_location"
+    }
+   }
+  ]
+ },
+ {
+  "id": "nepal_source",
+  "name": "Source",
+  "color": "#6B4F8C",
+  "isDefault": false,
+  "commonProperties": [
+   {
+    "id": "nepal_source:title",
+    "name": "title",
+    "label": "Title",
+    "type": "text"
+   },
+   {
+    "id": "nepal_source:creationDate",
+    "name": "creationDate",
+    "label": "Date added",
+    "type": "date"
+   },
+   {
+    "id": "nepal_source:editDate",
+    "name": "editDate",
+    "label": "Date modified",
+    "type": "date"
+   }
+  ],
+  "properties": [
+   {
+    "id": "nepal_source:publisher",
+    "name": "publisher",
+    "label": "Publisher",
+    "type": "text",
+    "required": true,
+    "showInCard": true,
+    "filter": true
+   },
+   {
+    "id": "nepal_source:publisher_type",
+    "name": "publisher_type",
+    "label": "Publisher type",
+    "type": "select",
+    "content": "publisher_types",
+    "filter": true,
+    "defaultfilter": true
+   },
+   {
+    "id": "nepal_source:medium",
+    "name": "medium",
+    "label": "Medium",
+    "type": "select",
+    "content": "media",
+    "filter": true
+   },
+   {
+    "id": "nepal_source:published",
+    "name": "published",
+    "label": "Published",
+    "type": "date",
+    "required": true,
+    "showInCard": true,
+    "prioritySorting": true,
+    "filter": true
+   },
+   {
+    "id": "nepal_source:url",
+    "name": "url",
+    "label": "URL",
+    "type": "link",
+    "required": true
+   },
+   {
+    "id": "nepal_source:language",
+    "name": "language",
+    "label": "Language",
+    "type": "select",
+    "content": "languages"
+   },
+   {
+    "id": "nepal_source:syndicated_from",
+    "name": "syndicated_from",
+    "label": "Syndicated from",
+    "type": "text"
+   },
+   {
+    "id": "nepal_source:archived_url",
+    "name": "archived_url",
+    "label": "Archived copy",
+    "type": "link"
+   },
+   {
+    "id": "nepal_source:reports_on",
+    "name": "reports_on",
+    "label": "Reports on",
+    "type": "relationship",
+    "content": "",
+    "relationType": "reports_on",
+    "x": {
+     "connectionKey": "reports_on:"
+    }
+   },
+   {
+    "id": "nepal_source:supports",
+    "name": "supports",
+    "label": "Supports claims",
+    "type": "relationship",
+    "content": "nepal_claim",
+    "relationType": "supports",
+    "x": {
+     "connectionKey": "supports:nepal_claim"
+    }
+   },
+   {
+    "id": "nepal_source:disputes",
+    "name": "disputes",
+    "label": "Disputes claims",
+    "type": "relationship",
+    "content": "nepal_claim",
+    "relationType": "disputes",
+    "x": {
+     "connectionKey": "disputes:nepal_claim"
+    }
+   },
+   {
+    "id": "nepal_source:geolocates",
+    "name": "geolocates",
+    "label": "Geolocates",
+    "type": "relationship",
+    "content": "nepal_location",
+    "relationType": "geolocates",
+    "x": {
+     "connectionKey": "geolocates:nepal_location"
+    }
+   }
+  ]
+ },
+ {
+  "id": "nepal_claim",
+  "name": "Claim",
+  "color": "#B8860B",
+  "isDefault": false,
+  "commonProperties": [
+   {
+    "id": "nepal_claim:title",
+    "name": "title",
+    "label": "Title",
+    "type": "text"
+   },
+   {
+    "id": "nepal_claim:creationDate",
+    "name": "creationDate",
+    "label": "Date added",
+    "type": "date"
+   },
+   {
+    "id": "nepal_claim:editDate",
+    "name": "editDate",
+    "label": "Date modified",
+    "type": "date"
+   }
+  ],
+  "properties": [
+   {
+    "id": "nepal_claim:statement",
+    "name": "statement",
+    "label": "Statement",
+    "type": "markdown",
+    "required": true,
+    "fullWidth": true,
+    "showInCard": true
+   },
+   {
+    "id": "nepal_claim:claim_type",
+    "name": "claim_type",
+    "label": "Claim type",
+    "type": "select",
+    "content": "claim_types",
+    "filter": true,
+    "defaultfilter": true
+   },
+   {
+    "id": "nepal_claim:verification_status",
+    "name": "verification_status",
+    "label": "Verification status",
+    "type": "select",
+    "content": "verification_status",
+    "required": true,
+    "filter": true,
+    "defaultfilter": true,
+    "showInCard": true
+   },
+   {
+    "id": "nepal_claim:asserted_on",
+    "name": "asserted_on",
+    "label": "Asserted on",
+    "type": "date",
+    "prioritySorting": true
+   },
+   {
+    "id": "nepal_claim:verification_note",
+    "name": "verification_note",
+    "label": "Verification note",
+    "type": "markdown",
+    "fullWidth": true
+   },
+   {
+    "id": "nepal_claim:claimed_by",
+    "name": "claimed_by",
+    "label": "Claimed by",
+    "type": "relationship",
+    "content": "",
+    "relationType": "claimed_by",
+    "x": {
+     "connectionKey": "claimed_by:"
+    }
+   },
+   {
+    "id": "nepal_claim:concerns",
+    "name": "concerns",
+    "label": "Concerns",
+    "type": "relationship",
+    "content": "",
+    "relationType": "concerns",
+    "x": {
+     "connectionKey": "concerns:"
+    }
+   }
+  ]
+ },
+ {
+  "id": "nepal_action",
+  "name": "Official action",
+  "color": "#2F7F7F",
+  "isDefault": false,
+  "commonProperties": [
+   {
+    "id": "nepal_action:title",
+    "name": "title",
+    "label": "Title",
+    "type": "text"
+   },
+   {
+    "id": "nepal_action:creationDate",
+    "name": "creationDate",
+    "label": "Date added",
+    "type": "date"
+   },
+   {
+    "id": "nepal_action:editDate",
+    "name": "editDate",
+    "label": "Date modified",
+    "type": "date"
+   }
+  ],
+  "properties": [
+   {
+    "id": "nepal_action:action_type",
+    "name": "action_type",
+    "label": "Action type",
+    "type": "select",
+    "content": "action_types",
+    "filter": true,
+    "defaultfilter": true,
+    "showInCard": true
+   },
+   {
+    "id": "nepal_action:date",
+    "name": "date",
+    "label": "Date",
+    "type": "date",
+    "required": true,
+    "showInCard": true,
+    "prioritySorting": true
+   },
+   {
+    "id": "nepal_action:precision",
+    "name": "precision",
+    "label": "Time precision",
+    "type": "select",
+    "content": "time_precision"
+   },
+   {
+    "id": "nepal_action:status",
+    "name": "status",
+    "label": "Status",
+    "type": "select",
+    "content": "action_status",
+    "filter": true
+   },
+   {
+    "id": "nepal_action:description",
+    "name": "description",
+    "label": "Description",
+    "type": "markdown",
+    "fullWidth": true,
+    "showInCard": true
+   },
+   {
+    "id": "nepal_action:document_url",
+    "name": "document_url",
+    "label": "Document",
+    "type": "link"
+   },
+   {
+    "id": "nepal_action:verification",
+    "name": "verification",
+    "label": "Verification",
+    "type": "select",
+    "content": "verification_status",
+    "filter": true
+   },
+   {
+    "id": "nepal_action:issued_by",
+    "name": "issued_by",
+    "label": "Issued by",
+    "type": "relationship",
+    "content": "",
+    "relationType": "issued_by",
+    "x": {
+     "connectionKey": "issued_by:"
+    }
+   },
+   {
+    "id": "nepal_action:targets",
+    "name": "targets",
+    "label": "Concerns",
+    "type": "relationship",
+    "content": "",
+    "relationType": "targets",
+    "x": {
+     "connectionKey": "targets:"
+    }
+   },
+   {
+    "id": "nepal_action:in_response_to",
+    "name": "in_response_to",
+    "label": "In response to",
+    "type": "relationship",
+    "content": "",
+    "relationType": "in_response_to",
+    "x": {
+     "connectionKey": "in_response_to:"
+    }
+   }
+  ]
+ },
+ {
+  "id": "nepal_casualty",
+  "name": "Casualty record",
+  "color": "#7A2E2E",
+  "isDefault": false,
+  "commonProperties": [
+   {
+    "id": "nepal_casualty:title",
+    "name": "title",
+    "label": "Title",
+    "type": "text"
+   },
+   {
+    "id": "nepal_casualty:creationDate",
+    "name": "creationDate",
+    "label": "Date added",
+    "type": "date"
+   },
+   {
+    "id": "nepal_casualty:editDate",
+    "name": "editDate",
+    "label": "Date modified",
+    "type": "date"
+   }
+  ],
+  "properties": [
+   {
+    "id": "nepal_casualty:full_name",
+    "name": "full_name",
+    "label": "Name as reported",
+    "type": "text",
+    "showInCard": true
+   },
+   {
+    "id": "nepal_casualty:age",
+    "name": "age",
+    "label": "Age",
+    "type": "numeric",
+    "filter": true
+   },
+   {
+    "id": "nepal_casualty:gender",
+    "name": "gender",
+    "label": "Gender",
+    "type": "select",
+    "content": "gender",
+    "filter": true
+   },
+   {
+    "id": "nepal_casualty:outcome",
+    "name": "outcome",
+    "label": "Outcome",
+    "type": "select",
+    "content": "outcomes",
+    "required": true,
+    "filter": true,
+    "defaultfilter": true,
+    "showInCard": true
+   },
+   {
+    "id": "nepal_casualty:cause",
+    "name": "cause",
+    "label": "Cause as reported",
+    "type": "select",
+    "content": "causes",
+    "filter": true
+   },
+   {
+    "id": "nepal_casualty:occurred",
+    "name": "occurred",
+    "label": "Date of incident or death",
+    "type": "date",
+    "showInCard": true,
+    "prioritySorting": true
+   },
+   {
+    "id": "nepal_casualty:identity_status",
+    "name": "identity_status",
+    "label": "Identity status",
+    "type": "select",
+    "content": "identity_status"
+   },
+   {
+    "id": "nepal_casualty:described_as",
+    "name": "described_as",
+    "label": "Described in reporting as",
+    "type": "text"
+   },
+   {
+    "id": "nepal_casualty:district",
+    "name": "district",
+    "label": "District, as reported",
+    "type": "text"
+   },
+   {
+    "id": "nepal_casualty:verification",
+    "name": "verification",
+    "label": "Verification",
+    "type": "select",
+    "content": "verification_status",
+    "filter": true
+   },
+   {
+    "id": "nepal_casualty:casualty_of",
+    "name": "casualty_of",
+    "label": "Event",
+    "type": "relationship",
+    "content": "nepal_event",
+    "relationType": "casualty_of",
+    "showInCard": true,
+    "x": {
+     "connectionKey": "casualty_of:nepal_event"
+    }
+   },
+   {
+    "id": "nepal_casualty:incident_at",
+    "name": "incident_at",
+    "label": "Incident location",
+    "type": "relationship",
+    "content": "nepal_location",
+    "relationType": "incident_at",
+    "x": {
+     "connectionKey": "incident_at:nepal_location"
+    }
+   },
+   {
+    "id": "nepal_casualty:treated_at",
+    "name": "treated_at",
+    "label": "Treated at",
+    "type": "relationship",
+    "content": "nepal_location",
+    "relationType": "treated_at",
+    "x": {
+     "connectionKey": "treated_at:nepal_location"
+    }
+   }
+  ]
+ }
+]

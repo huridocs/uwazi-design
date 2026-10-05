@@ -1,0 +1,90 @@
+[
+ {
+  "_id": "occurred_at",
+  "name": "occurred at"
+ },
+ {
+  "_id": "organised_by",
+  "name": "organised by"
+ },
+ {
+  "_id": "involved",
+  "name": "involved"
+ },
+ {
+  "_id": "responded_by",
+  "name": "response by"
+ },
+ {
+  "_id": "led_to",
+  "name": "led to"
+ },
+ {
+  "_id": "part_of",
+  "name": "part of"
+ },
+ {
+  "_id": "member_of",
+  "name": "member of"
+ },
+ {
+  "_id": "held_office",
+  "name": "held office at"
+ },
+ {
+  "_id": "succeeded",
+  "name": "succeeded"
+ },
+ {
+  "_id": "located_in",
+  "name": "located in"
+ },
+ {
+  "_id": "reports_on",
+  "name": "reports on"
+ },
+ {
+  "_id": "supports",
+  "name": "supports"
+ },
+ {
+  "_id": "disputes",
+  "name": "disputes"
+ },
+ {
+  "_id": "geolocates",
+  "name": "geolocates"
+ },
+ {
+  "_id": "claimed_by",
+  "name": "claimed by"
+ },
+ {
+  "_id": "concerns",
+  "name": "concerns"
+ },
+ {
+  "_id": "issued_by",
+  "name": "issued by"
+ },
+ {
+  "_id": "targets",
+  "name": "targets"
+ },
+ {
+  "_id": "in_response_to",
+  "name": "in response to"
+ },
+ {
+  "_id": "casualty_of",
+  "name": "casualty of"
+ },
+ {
+  "_id": "incident_at",
+  "name": "incident at"
+ },
+ {
+  "_id": "treated_at",
+  "name": "treated at"
+ }
+]
