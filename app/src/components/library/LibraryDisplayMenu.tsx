@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { SlidersHorizontal, Check, RotateCcw } from "lucide-react";
 import { SectionLabel } from "../shared/SectionLabel";
+import { ModalSearchField } from "../shared/ModalParts";
 import { SegmentedControl } from "../shared/SegmentedControl";
 import { MobileBottomSheet } from "../layout/MobileBottomSheet";
 import { SheetDone } from "../layout/SheetDone";
@@ -54,6 +55,7 @@ export function LibraryDisplayMenu() {
   const setSortDir = useSetAtom(librarySortDirAtom);
   const searching = useAtomValue(libraryActiveSearchAtom) !== null;
   const [open, setOpen] = useState(false);
+  const [toggleQuery, setToggleQuery] = useState("");
   const colsInEffect = useAtomValue(libraryCardColumnsInEffectAtom);
   const mobile = useAtomValue(breakpointAtom) === "mobile";
 
@@ -107,10 +109,15 @@ export function LibraryDisplayMenu() {
     // not make three sections vanish from under a pointer already travelling
     // toward them.
     const live = section.enabled?.(values) ?? true;
+    const options = section.kind === "choice" ? [] : sectionOptions(section, ctx);
+    // A long toggle list (a corpus's property columns) gets a search.
+    const searchable = options.length > SEARCH_FROM;
+    const q = searchable ? toggleQuery.trim().toLowerCase() : "";
+    const shown = q ? options.filter((o) => o.label.toLowerCase().includes(q)) : options;
     const body =
       section.kind === "choice"
         ? renderChoice(section, live)
-        : sectionOptions(section, ctx).map((o) => {
+        : shown.map((o) => {
             const scope = o.scope ?? "mode";
             const on = valueOf(o.id, scope, o.default) !== false;
             return (
@@ -133,7 +140,18 @@ export function LibraryDisplayMenu() {
         <SectionLabel as="p" className={`px-2 pt-1 pb-1 ${live ? "" : "opacity-40"}`}>
           {section.label}
         </SectionLabel>
+        {searchable && (
+          <div data-part="toggle-search" className="px-1 pb-1">
+            <ModalSearchField
+              value={toggleQuery}
+              onChange={setToggleQuery}
+              ariaLabel={`Search ${section.label.toLowerCase()}`}
+              placeholder={`Search ${options.length} ${section.label.toLowerCase()}`}
+            />
+          </div>
+        )}
         {body}
+        {searchable && shown.length === 0 && <p className="px-2 py-1.5 text-xs text-ink-muted">No matches.</p>}
       </div>
     );
   };
@@ -278,6 +296,9 @@ export function LibraryDisplayMenu() {
     </div>
   );
 }
+
+/** Toggle lists longer than this get a search above them. */
+const SEARCH_FROM = 12;
 
 /** Phones draw the rows at touch size (44px, text-sm) inside a sheet. */
 const TouchRows = createContext(false);

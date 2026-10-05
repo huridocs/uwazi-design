@@ -537,10 +537,18 @@ export interface LibraryDisplayState {
 export const libraryDisplayAtom = atom<LibraryDisplayState>({ modes: {}, shared: {} });
 
 /** The list's optional metadata columns: one per template property of the
- *  Library's corpus, keyed by name (spec §6.3). Derived from the templates
- *  only, so it does not recompute per keystroke, and a label renamed in
- *  Settings retitles its column without losing a saved choice. */
-export const libraryFieldColumnsAtom = atom((get) => propertyColumns(get(templatesAtom(get(dataSourceAtom)))));
+ *  templates in view (the selected Types, else the whole corpus), keyed by
+ *  name (spec §6.3), as Uwazi's table view offers the selected templates'
+ *  properties. Derived from the templates and the Type selection only, so it
+ *  does not recompute per keystroke, and a label renamed in Settings retitles
+ *  its column without losing a saved choice. */
+export const libraryFieldColumnsAtom = atom((get) => {
+  const templates = get(templatesAtom(get(dataSourceAtom)));
+  const types = get(libraryTypeFiltersAtom);
+  const ids = new Set(Object.keys(types).filter((k) => types[k]));
+  const inView = ids.size ? templates.filter((t) => ids.has(t.id)) : templates;
+  return propertyColumns(inView.length ? inView : templates);
+});
 
 /** The sort keys the Library's templates add: one per property flagged
  *  `prioritySorting` (Uwazi: "the system will try to pick up the best fit"),
