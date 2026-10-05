@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue } from "jotai";
 import { Spline } from "lucide-react";
 import { SettingsListPage, useSettingsSearch } from "../SettingsListPage";
 import { SettingsEmptyState } from "../SettingsEmptyState";
@@ -12,24 +12,15 @@ import {
   RelationTypeTemplates,
 } from "../../shared/SettingsDeletes";
 import type { RelationTypeDef } from "../../../atoms/references";
-import {
-  restoreRelationTypeAtom,
-  settingsRelationTypesAtom,
-  type RelationTypeDeletion,
-} from "../../../atoms/relationTypes";
-import { useSettingsUndo } from "../../../hooks/useSettingsUndo";
+import { settingsRelationTypesAtom } from "../../../atoms/relationTypes";
 
 /** Settings › Relationship types: the collection's one registry
  *  (`atoms/relationTypes.ts`), which the Relationships panel and the template
  *  editor's relationship fields read too. */
 export function RelationTypesPage() {
   const types = useAtomValue(settingsRelationTypesAtom);
-  const restore = useSetAtom(restoreRelationTypeAtom);
   const [confirm, setConfirm] = useState<RelationTypeDef | null>(null);
   const [editing, setEditing] = useState<string | "new" | null>(null);
-  // A delete, references moved or not, can be undone from the Beacon while
-  // this page is open, like every other removal in Settings.
-  const offerUndo = useSettingsUndo<RelationTypeDeletion>(restore);
   const search = useSettingsSearch(types, (r) => r.label);
 
   if (editing) return <RelationTypeEditor typeId={editing} onClose={() => setEditing(null)} />;
@@ -77,19 +68,7 @@ export function RelationTypesPage() {
       search={{ value: search.query, onChange: search.setQuery, label: "Search relationship types" }}
       lead={{ label: "Add relationship type", onClick: () => setEditing("new") }}
       overlays={
-        <RelationTypeDelete
-          type={confirm}
-          onCancel={() => setConfirm(null)}
-          onDeleted={(d, movedTo) =>
-            offerUndo(
-              d,
-              `${d.def.label} deleted`,
-              d.moved && movedTo
-                ? `${d.moved.refIds.length.toLocaleString()} references moved to ${movedTo}. Undo puts the type and its references back.`
-                : "Undo puts the type back.",
-            )
-          }
-        />
+        <RelationTypeDelete type={confirm} onCancel={() => setConfirm(null)} />
       }
     >
       <SettingsTable
