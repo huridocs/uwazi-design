@@ -23,6 +23,7 @@ import { deleteGroupAtom, deleteUserAtom, type GroupWithMembers } from "../../at
 import { removeAccessMemberAtom } from "../../atoms/entityChanges";
 import { dataSourceAtom } from "../../atoms/dataSource";
 import { pageUsage } from "../../utils/settingsUsage";
+import { consumeFailureAtom } from "../../atoms/devSwitches";
 import type {
   SettingsLanguage,
   SettingsMenuLink,
@@ -266,7 +267,8 @@ export function PageDelete({
   onCancel: () => void;
   onDelete: (p: SettingsPage) => void;
 }) {
-  const { record } = useSettingsNotify();
+  const { record, fail } = useSettingsNotify();
+  const consumeFailure = useSetAtom(consumeFailureAtom);
   if (!page) return null;
   return (
     <ConfirmDelete
@@ -276,6 +278,12 @@ export function PageDelete({
       impact={pageUsage({ slug: page.slug, menu })}
       onCancel={onCancel}
       onConfirm={() => {
+        // A failed delete keeps the page and says why (Uwazi says nothing).
+        const injected = consumeFailure("delete");
+        if (injected) {
+          fail("An error occurred", injected);
+          return onCancel();
+        }
         onDelete(page);
         record({ log: false, method: "DELETE", domain: "page", noun: "page", id: page.id, name: page.title });
         onCancel();

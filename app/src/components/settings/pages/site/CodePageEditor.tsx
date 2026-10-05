@@ -16,6 +16,7 @@ import { Modal } from "../../../shared/Modal";
 import { PublicPreview } from "../../../site/PublicPreview";
 import { useSiteData } from "../../../site/useSiteData";
 import { codeDocsAtom } from "../../../../atoms/sitePages";
+import { consumeFailureAtom } from "../../../../atoms/devSwitches";
 import { useSettingsNotify } from "../../../../hooks/useSettingsNotify";
 import { ConfirmDialog } from "../../../shared/ConfirmDialog";
 import { LastSavedLine } from "../../../shared/LastSavedLine";
@@ -53,7 +54,8 @@ export function CodePageEditor({
 }) {
   const [docs, setDocs] = useAtom(codeDocsAtom);
   const doc = useMemo(() => docs[pageId] ?? seed(), [docs, pageId, seed]);
-  const { record } = useSettingsNotify();
+  const { record, fail } = useSettingsNotify();
+  const consumeFailure = useSetAtom(consumeFailureAtom);
   const [askDiscard, setAskDiscard] = useState(false);
   const mobile = useAtomValue(breakpointAtom) === "mobile";
   const site = useSiteData();
@@ -82,7 +84,17 @@ export function CodePageEditor({
     setDraft((d) => ({ ...d, [lang]: { ...d[lang], [field]: value } }));
 
   const commit = (publish: boolean) => {
-    setDocs((all) => ({ ...all, [pageId]: { draft, published: publish ? draft : (all[pageId] ?? doc).published } }));
+    // A failed write leaves the draft unsaved (the editor stays dirty) and
+    // says why, once, with no success line.
+    const injected = consumeFailure("save");
+    if (injected) return fail("An error occurred", injected);
+    const before = docs;
+    try {
+      setDocs((all) => ({ ...all, [pageId]: { draft, published: publish ? draft : (all[pageId] ?? doc).published } }));
+    } catch (err) {
+      setDocs(before);
+      return fail("An error occurred", err instanceof Error ? err.message : String(err));
+    }
     record({
       method: "UPDATE",
       domain: "page",

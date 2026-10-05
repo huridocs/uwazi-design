@@ -117,6 +117,7 @@ import {
   DataTableDemo,
 } from "./catalog/demos";
 
+import { DevPanel } from "./catalog/DevPanel";
 import { sidebarGroups, allItemIds } from "./catalog/sidebarGroups";
 import { handoffDocs, resolveHandoffAnchor } from "./catalog/handoffDocs";
 import { Markdown } from "./catalog/Markdown";
@@ -2394,6 +2395,21 @@ const textColor = typeLabelColor(type.color);`}
                       Open full screen
                     </button>
                   </div>
+                </CatalogEntry>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-bold text-ink mb-6">Dev</h2>
+            <div className="space-y-10">
+              <div id="dev-panel" ref={reg("dev-panel")}>
+                <CatalogEntry
+                  name="Dev panel"
+                  description="Switches for demos and QA. Fail next request: the next action of the chosen kind fails once with the given reason (one 'An error occurred' entry, edits kept). Reset demo data clears every switch."
+                  code={`set(failNextAtom, { scope: "save", reason })`}
+                >
+                  <DevPanel />
                 </CatalogEntry>
               </div>
             </div>
