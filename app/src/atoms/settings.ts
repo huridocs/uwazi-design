@@ -1,4 +1,5 @@
 import { atom } from "jotai";
+import { sectionFlagOffAtom } from "./featureFlags";
 import { atomWithStorage } from "jotai/utils";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -24,6 +25,9 @@ import {
   ExternalLink,
 } from "lucide-react";
 import type { AppView } from "./navigation";
+import type { UserRole } from "../data/settings";
+import { signedInUserAtom } from "./users";
+import { collectionSettings } from "./settingsSingletons";
 
 /** A single settings destination. Mirrors Uwazi's V2 SettingsNavigation IA
  *  (huridocs/uwazi · app/react/V2/Routes/Settings/SettingsNavigation.tsx).
@@ -125,6 +129,61 @@ export const settingsToolsItems = (): SettingsItem[] =>
 /** Which settings page is showing. Defaults to Account (Uwazi's first item).
  *  Persisted so a reload keeps you on the same settings section. */
 export const settingsSectionAtom = atomWithStorage<string>("uwazi:settingsSection", "account");
+
+/* ── Who reaches what ────────────────────────────────────────────────────
+   Uwazi guards every settings page with `adminsOnlyRoute`, except Account
+   (every signed-in role) and the two extraction pages (admin and editor)
+   (inventory Part 0.8). A page a role cannot reach is not listed and does
+   not render. */
+const NON_ADMIN_SECTIONS: Record<Exclude<UserRole, "admin">, string[]> = {
+  editor: ["account", "metadata-extraction", "paragraph-extraction"],
+  collaborator: ["account"],
+};
+
+export const settingsSectionAllowed = (role: UserRole | undefined, id: string): boolean =>
+  !role || role === "admin" || NON_ADMIN_SECTIONS[role].includes(id);
+
+/** Whether the signed-in user may open a settings section: their role
+ *  reaches it, and no feature switch hides it. */
+export const settingsAccessAtom = atom((get) => {
+  const role = get(signedInUserAtom)?.role;
+  const flagOff = get(sectionFlagOffAtom);
+  return (id: string) => settingsSectionAllowed(role, id) && !flagOff(id);
+});
+
+/** An item's label as the rail shows it. Uwazi names the customisation page
+ *  "Global CSS & JS" only while Collection › "Global JS" is on. */
+export const settingsItemLabelAtom = atom((get) => {
+  const globalJs = get(collectionSettings.valueAtom).globalJs;
+  return (item: SettingsItem) => (item.id === "customisation" && !globalJs ? "Global CSS" : item.label);
+});
+
+/** The groups the signed-in user sees, each with only the items they reach;
+ *  a group left empty is dropped. */
+export const visibleSettingsGroupsAtom = atom<SettingsGroup[]>((get) => {
+  const allowed = get(settingsAccessAtom);
+  const label = get(settingsItemLabelAtom);
+  return settingsGroups
+    .map((g) => ({ ...g, items: g.items.filter((i) => allowed(i.id)).map((i) => ({ ...i, label: label(i) })) }))
+    .filter((g) => g.items.length > 0);
+});
+
+/** The section Settings is on: the stored one. One the signed-in role cannot
+ *  reach renders the "not available" page (`blockedSettingsSectionAtom`) and
+ *  marks no rail item, since the rail does not list it. Not written back, so
+ *  an admin who signs in after a collaborator lands on their own last
+ *  section. */
+export const effectiveSettingsSectionAtom = atom((get) => get(settingsSectionAtom));
+
+/** The stored section when the signed-in role cannot open it, so Settings
+ *  can say why instead of quietly showing another page; null otherwise. */
+export const blockedSettingsSectionAtom = atom((get) => {
+  const stored = get(settingsSectionAtom);
+  return get(settingsAccessAtom)(stored) ? null : stored;
+});
+
+/** The first section the signed-in role reaches, for a blocked page's way out. */
+export const firstAllowedSettingsSectionAtom = atom((get) => get(visibleSettingsGroupsAtom)[0]?.items[0]?.id ?? "account");
 
 /** Mobile drill-in: on a phone the rail and the content can't share the width,
  *  so we show one at a time. False = rail; true = the selected section (with a

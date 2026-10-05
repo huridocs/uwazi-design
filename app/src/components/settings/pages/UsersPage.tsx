@@ -69,13 +69,13 @@ export function UsersPage() {
       id: "groups",
       header: "Groups",
       cell: (u) =>
-        u.groups.length === 0 ? (
+        u.groupIds.length === 0 ? (
           <span className="text-ink-muted">—</span>
         ) : (
           <div className="flex flex-wrap gap-1">
-            {u.groups.map((g) => (
-              <span key={g} className="text-meta text-ink-secondary bg-warm px-1.5 py-0.5 rounded w-fit">
-                {g}
+            {u.groupIds.map((id) => (
+              <span key={id} className="text-meta text-ink-secondary bg-warm px-1.5 py-0.5 rounded w-fit">
+                {seedGroups.find((g) => g.id === id)?.name ?? id}
               </span>
             ))}
           </div>
@@ -125,7 +125,7 @@ export function UsersPage() {
       id: "members",
       header: "Members",
       width: "8rem",
-      cell: (g) => <span className="text-ink-secondary">{g.memberCount}</span>,
+      cell: (g) => <span className="text-ink-secondary">{seedUsers.filter((u) => u.groupIds.includes(g.id)).length}</span>,
     },
     {
       id: "actions",

@@ -36,7 +36,9 @@ export interface Notification {
 
 export interface NotificationAction {
   label: string;
-  kind: "undo";
+  /** `undo`: the Library's change layer (`undoAtom`). `settings-undo`: a
+   *  child removed in an open Settings editor (`atoms/settingsUndo.ts`). */
+  kind: "undo" | "settings-undo";
   ref: string;
 }
 

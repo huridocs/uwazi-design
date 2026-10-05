@@ -12,6 +12,7 @@ import { libraryQueryAtom } from "./library";
 import { filtersDrawerBase, overlayEntityBase, overlayStackBase } from "./rightPane";
 import { breakpointAtom } from "./viewport";
 import { scopedFiltersOpenAtom } from "./filters";
+import type { NotificationAction } from "./notifications";
 
 export const referencesAtom = atom<Reference[]>(initialRefs);
 
@@ -189,5 +190,7 @@ export interface Toast {
   id: string;
   message: string;
   type: "success" | "error" | "info";
+  detail?: string;
+  action?: NotificationAction;
 }
 export const toastsAtom = atom<Toast[]>([]);

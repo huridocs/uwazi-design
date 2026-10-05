@@ -98,6 +98,9 @@ import { sidebarGroups, allItemIds } from "./catalog/sidebarGroups";
 import { handoffDocs, resolveHandoffAnchor } from "./catalog/handoffDocs";
 import { Markdown } from "./catalog/Markdown";
 import { asset } from "../utils/asset";
+import { ConfirmDelete } from "../components/shared/ConfirmDelete";
+import { TypedConfirmModal } from "../components/shared/TypedConfirmModal";
+import { PasswordConfirmModal } from "../components/shared/PasswordConfirmModal";
 
 /** Demo data for the Copy From entry — a plan with matches AND refusals, so the
  *  half that explains itself is visible in the catalog too. */
@@ -1653,6 +1656,50 @@ const textColor = typeLabelColor(type.color);`}
                 </CatalogEntry>
               </div>
 
+              <div id="sh-confirm-delete" ref={reg("sh-confirm-delete")}>
+                <CatalogEntry
+                  name="ConfirmDelete"
+                  description="Settings delete: lists what the delete touches, or the rule that refuses it (OK only)"
+                  code={`<ConfirmDelete
+  open={open}
+  title="Delete thesaurus"
+  message="Delete the Case status thesaurus?"
+  impact={useAtomValue(thesaurusUsageAtom(id))}
+  onConfirm={…}
+  onCancel={…}
+/>`}
+                >
+                  <ConfirmDeleteDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="sh-typed-confirm" ref={reg("sh-typed-confirm")}>
+                <CatalogEntry
+                  name="TypedConfirmModal"
+                  description="Uwazi's type-the-word confirm (Languages Reset and Uninstall): warning band, what changes, accept off until CONFIRM is typed"
+                  code={`<TypedConfirmModal
+  open={open}
+  message="You are about to uninstall a language."
+  impact={["4 entities have a version in this language."]}
+  confirmLabel="Uninstall"
+  onConfirm={…}
+  onCancel={…}
+/>`}
+                >
+                  <TypedConfirmDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="sh-password-confirm" ref={reg("sh-password-confirm")}>
+                <CatalogEntry
+                  name="PasswordConfirmModal"
+                  description="Current-password check before an account change (G15). Mocked: any non-empty password is accepted"
+                  code={`<PasswordConfirmModal open={open} onAccept={(pw) => save()} onCancel={…} />`}
+                >
+                  <PasswordConfirmDemo />
+                </CatalogEntry>
+              </div>
+
               <div id="sh-toast" ref={reg("sh-toast")}>
                 <CatalogEntry
                   name="Toast"
@@ -1979,3 +2026,57 @@ const textColor = typeLabelColor(type.color);`}
   );
 }
 
+/** Live ConfirmDelete: one allowed delete with its facts, one refused. */
+function ConfirmDeleteDemo() {
+  const [open, setOpen] = useState<"allowed" | "blocked" | null>(null);
+  const btn = "px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer";
+  return (
+    <div className="flex gap-2">
+      <button type="button" className={btn} onClick={() => setOpen("allowed")}>Delete a group</button>
+      <button type="button" className={btn} onClick={() => setOpen("blocked")}>Delete a used template</button>
+      <ConfirmDelete
+        open={open !== null}
+        title={open === "blocked" ? "Delete template" : "Delete group"}
+        message="Delete the Research group?"
+        impact={
+          open === "blocked"
+            ? { lines: ["Used by 337 entities."], block: "337 entities use this template. Move or delete them first." }
+            : { lines: ["2 members lose this group: jnkemba and afarah."], block: null }
+        }
+        onConfirm={() => setOpen(null)}
+        onCancel={() => setOpen(null)}
+      />
+    </div>
+  );
+}
+
+function TypedConfirmDemo() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)} className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer">
+        Uninstall a language
+      </button>
+      <TypedConfirmModal
+        open={open}
+        message="You are about to uninstall a language."
+        impact={["4 entities have a version in this language.", "18 translated keys are removed."]}
+        confirmLabel="Uninstall"
+        onConfirm={() => setOpen(false)}
+        onCancel={() => setOpen(false)}
+      />
+    </>
+  );
+}
+
+function PasswordConfirmDemo() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)} className="px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer">
+        Update account
+      </button>
+      <PasswordConfirmModal open={open} onAccept={() => setOpen(false)} onCancel={() => setOpen(false)} />
+    </>
+  );
+}

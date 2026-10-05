@@ -27,29 +27,36 @@ export interface SettingsUser {
   username: string;
   email: string;
   role: UserRole;
-  groups: string[];
+  /** Uwazi locks an account after repeated failed sign-ins; an admin unlocks it. */
+  locked?: boolean;
+  /** Group ids, not names: a renamed group keeps its members. */
+  groupIds: string[];
   using2fa: boolean;
 }
 
 export const seedUsers: SettingsUser[] = [
-  { id: "u1", username: "admin", email: "admin@uwazi.io", role: "admin", groups: ["Administrators"], using2fa: true },
-  { id: "u2", username: "mlopez", email: "m.lopez@cejil.org", role: "editor", groups: ["Litigation"], using2fa: true },
-  { id: "u3", username: "jnkemba", email: "j.nkemba@example.org", role: "editor", groups: ["Litigation", "Research"], using2fa: false },
-  { id: "u4", username: "afarah", email: "a.farah@example.org", role: "collaborator", groups: ["Research"], using2fa: false },
-  { id: "u5", username: "tbuergenthal", email: "t.buergenthal@example.org", role: "collaborator", groups: [], using2fa: false },
+  { id: "u1", username: "admin", email: "admin@uwazi.io", role: "admin", groupIds: ["g1"], using2fa: true },
+  { id: "u2", username: "mlopez", email: "m.lopez@cejil.org", role: "editor", groupIds: ["g2"], using2fa: true },
+  { id: "u3", username: "jnkemba", email: "j.nkemba@example.org", role: "editor", groupIds: ["g2", "g3"], using2fa: false },
+  { id: "u4", username: "afarah", email: "a.farah@example.org", role: "collaborator", groupIds: ["g3"], using2fa: false },
+  { id: "u5", username: "tbuergenthal", email: "t.buergenthal@example.org", role: "collaborator", groupIds: [], using2fa: false, locked: true },
 ];
 
+/** A group's members are the users that list its id; the count is derived
+ *  (`atoms/users.ts`), never stored. */
 export interface SettingsGroupRecord {
   id: string;
   name: string;
-  memberCount: number;
 }
 
 export const seedGroups: SettingsGroupRecord[] = [
-  { id: "g1", name: "Administrators", memberCount: 1 },
-  { id: "g2", name: "Litigation", memberCount: 2 },
-  { id: "g3", name: "Research", memberCount: 2 },
+  { id: "g1", name: "Administrators" },
+  { id: "g2", name: "Litigation" },
+  { id: "g3", name: "Research" },
 ];
+
+/** The account signed in when the prototype opens (`signedInUserIdAtom`). */
+export const DEFAULT_SIGNED_IN_USER_ID = "u1";
 
 /** The signed-in account (Account settings page). */
 export const currentAccount = {
@@ -308,6 +315,10 @@ export interface SettingsLogEntry {
   user: string;
   method: LogMethod;
   summary: string;
+  /** The settings record the entry is about, where it is one: an editor's
+   *  "Saved … by …" line reads the newest entry for its record. */
+  domain?: string;
+  targetId?: string;
 }
 
 export const seedActivityLog: SettingsLogEntry[] = [
@@ -316,7 +327,8 @@ export const seedActivityLog: SettingsLogEntry[] = [
   { id: "l3", time: "2026-06-15 14:55", user: "mlopez", method: "CREATE", summary: "Created entity “Case 12.250 (Bámaca Velásquez)”" },
   { id: "l4", time: "2026-06-14 09:30", user: "admin", method: "DELETE", summary: "Deleted user “t.guest@example.org”" },
   { id: "l5", time: "2026-06-13 22:05", user: "system", method: "MIGRATE", summary: "Ran migration “add-relationship-tiers”" },
-  { id: "l6", time: "2026-06-13 11:48", user: "jnkemba", method: "UPDATE", summary: "Edited thesaurus “Violation types”" },
+  { id: "l6", time: "2026-06-13 11:48", user: "jnkemba", method: "UPDATE", summary: "Updated thesaurus “Violation types”", domain: "thesaurus", targetId: "t1" },
+  { id: "l7", time: "2026-06-12 16:20", user: "mlopez", method: "UPDATE", summary: "Updated template “Court Case”", domain: "template", targetId: "court_case" },
 ];
 
 // ── Menu (navlinks) ─────────────────────────────────────────────────────────

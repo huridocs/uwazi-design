@@ -21,12 +21,12 @@ export function GroupEditor({
 
   const [name, setName] = useState(base?.name ?? "");
   const [members, setMembers] = useState<string[]>(
-    isNew ? [] : seedUsers.filter((u) => u.groups.includes(base!.name)).map((u) => u.id),
+    isNew ? [] : seedUsers.filter((u) => u.groupIds.includes(base!.id)).map((u) => u.id),
   );
 
   const initialMembers = isNew
     ? []
-    : seedUsers.filter((u) => u.groups.includes(base!.name)).map((u) => u.id);
+    : seedUsers.filter((u) => u.groupIds.includes(base!.id)).map((u) => u.id);
   const dirty =
     name !== (base?.name ?? "") || JSON.stringify(members) !== JSON.stringify(initialMembers);
 

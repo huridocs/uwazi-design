@@ -6,7 +6,7 @@ import { Button } from "../Button";
 import { Field, TextInput } from "../Field";
 import { RadioGroup } from "../../shared/RadioGroup";
 import { Checkbox } from "../../shared/Checkbox";
-import { seedGroups, type SettingsUser, type UserRole } from "../../../data/settings";
+import { seedGroups, seedUsers, type SettingsUser, type UserRole } from "../../../data/settings";
 import { toastsAtom } from "../../../atoms/references";
 
 const ROLE_OPTIONS = [
@@ -30,16 +30,16 @@ export function UserEditor({
   const [username, setUsername] = useState(base?.username ?? "");
   const [email, setEmail] = useState(base?.email ?? "");
   const [role, setRole] = useState<UserRole>(base?.role ?? "collaborator");
-  const [groups, setGroups] = useState<string[]>(base?.groups ?? []);
+  const [groups, setGroups] = useState<string[]>(base?.groupIds ?? []);
 
   const dirty =
     username !== (base?.username ?? "") ||
     email !== (base?.email ?? "") ||
     role !== (base?.role ?? "collaborator") ||
-    JSON.stringify(groups) !== JSON.stringify(base?.groups ?? []);
+    JSON.stringify(groups) !== JSON.stringify(base?.groupIds ?? []);
 
-  const toggleGroup = (name: string) =>
-    setGroups((prev) => (prev.includes(name) ? prev.filter((g) => g !== name) : [...prev, name]));
+  const toggleGroup = (id: string) =>
+    setGroups((prev) => (prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]));
 
   const save = () => {
     setToasts((p) => [
@@ -83,9 +83,9 @@ export function UserEditor({
                   key={g.id}
                   className="flex items-center gap-3 rounded-lg border border-border bg-paper px-3 py-2.5 cursor-pointer hover:bg-warm transition-colors"
                 >
-                  <Checkbox checked={groups.includes(g.name)} onChange={() => toggleGroup(g.name)} ariaLabel={g.name} />
+                  <Checkbox checked={groups.includes(g.id)} onChange={() => toggleGroup(g.id)} ariaLabel={g.name} />
                   <span className="text-sm font-medium text-ink flex-1">{g.name}</span>
-                  <span className="text-xs text-ink-tertiary">{g.memberCount} members</span>
+                  <span className="text-xs text-ink-tertiary">{seedUsers.filter((u) => u.groupIds.includes(g.id)).length} members</span>
                 </label>
               ))}
             </div>
