@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useAtomValue } from "jotai";
-import { Plus, Pencil, Trash2, ShieldCheck } from "lucide-react";
-import { SettingsContent } from "../SettingsContent";
-import { SettingsButton } from "../SettingsButton";
+import { ShieldCheck, Users } from "lucide-react";
+import { SettingsListPage, useSettingsSearch } from "../SettingsListPage";
+import { SettingsEmptyState } from "../SettingsEmptyState";
 import { SettingsTable, type Column } from "../SettingsTable";
+import { RowActions } from "../RowActions";
+import { Select } from "../../shared/Select";
 import { DrawerTabs } from "../../layout/DrawerTabs";
 import { GroupDelete, UserDelete } from "../../shared/SettingsDeletes";
 import { UserEditor } from "./UserEditor";
@@ -17,7 +19,8 @@ import {
 } from "../../../atoms/users";
 
 const roleStyle: Record<UserRole, string> = {
-  admin: "bg-seal-tint text-seal-label",
+  // Admin is a role, not a danger: ink on vellum, the strongest neutral.
+  admin: "bg-vellum text-ink",
   editor: "bg-carbon-tint text-carbon",
   collaborator: "bg-warm text-ink-secondary",
 };
@@ -32,6 +35,12 @@ export function UsersPage() {
   // Ids, not records: the editor reads the live record from the store.
   const [editingUser, setEditingUser] = useState<string | "new" | null>(null);
   const [editingGroup, setEditingGroup] = useState<string | "new" | null>(null);
+  const [roleFilter, setRoleFilter] = useState<UserRole | "">("");
+  const userSearch = useSettingsSearch(
+    roleFilter ? users.filter((u) => u.role === roleFilter) : users,
+    (u) => `${u.username} ${u.email}`,
+  );
+  const groupSearch = useSettingsSearch(groups, (g) => g.name);
 
   if (editingUser) return <UserEditor userId={editingUser} onClose={() => setEditingUser(null)} />;
   if (editingGroup) return <GroupEditor groupId={editingGroup} onClose={() => setEditingGroup(null)} />;
@@ -103,25 +112,8 @@ export function UsersPage() {
       id: "actions",
       header: "",
       align: "right",
-      width: "6rem",
-      cell: (u) => (
-        <div className="flex items-center justify-end gap-1">
-          <button
-            onClick={(e) => { e.stopPropagation(); setEditingUser(u.id); }}
-            aria-label={`Edit ${u.username}`}
-            className="p-1.5 rounded-md text-ink-tertiary hover:bg-warm hover:text-ink transition-colors cursor-pointer"
-          >
-            <Pencil size={14} />
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); askDeleteUser(u); }}
-            aria-label={`Delete ${u.username}`}
-            className="p-1.5 rounded-md text-ink-tertiary hover:bg-seal-tint hover:text-seal-label transition-colors cursor-pointer"
-          >
-            <Trash2 size={14} />
-          </button>
-        </div>
-      ),
+      width: "4rem",
+      cell: (u) => <RowActions label={u.username} onDelete={() => askDeleteUser(u)} />,
     },
   ];
 
@@ -137,63 +129,97 @@ export function UsersPage() {
       id: "actions",
       header: "",
       align: "right",
-      width: "6rem",
-      cell: (g) => (
-        <div className="flex items-center justify-end gap-1">
-          <button
-            onClick={(e) => { e.stopPropagation(); setEditingGroup(g.id); }}
-            aria-label={`Edit ${g.name}`}
-            className="p-1.5 rounded-md text-ink-tertiary hover:bg-warm hover:text-ink transition-colors cursor-pointer"
-          >
-            <Pencil size={14} />
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); setConfirmGroup(g); }}
-            aria-label={`Delete ${g.name}`}
-            className="p-1.5 rounded-md text-ink-tertiary hover:bg-seal-tint hover:text-seal-label transition-colors cursor-pointer"
-          >
-            <Trash2 size={14} />
-          </button>
-        </div>
-      ),
+      width: "4rem",
+      cell: (g) => <RowActions label={g.name} onDelete={() => setConfirmGroup(g)} />,
     },
   ];
 
-  return (
-    <SettingsContent component="UsersPage">
-      <SettingsContent.Header title="Users & Groups" />
-      <SettingsContent.Body>
-        <div className="mb-4">
-          <DrawerTabs
-            className=""
-            activeId={tab}
-            onChange={(v) => setTab(v as "users" | "groups")}
-            tabs={[
-              { id: "users", label: "Users", count: users.length },
-              { id: "groups", label: "Groups", count: groups.length },
-            ]}
-          />
-        </div>
-        {tab === "users" ? (
-          <SettingsTable columns={userColumns} data={users} getRowId={(u) => u.id} onRowClick={(u) => setEditingUser(u.id)} rowAriaLabel={(u) => `Edit ${u.username}`} />
-        ) : (
-          <SettingsTable columns={groupColumns} data={groups} getRowId={(g) => g.id} onRowClick={(g) => setEditingGroup(g.id)} rowAriaLabel={(g) => `Edit ${g.name}`} />
-        )}
-      </SettingsContent.Body>
-      <SettingsContent.Footer>
-        <SettingsButton
-          variant="primary"
-          size="sm"
-          className="me-auto"
-          icon={<Plus size={14} />}
-          onClick={() => (tab === "users" ? setEditingUser("new") : setEditingGroup("new"))}
-        >
-          {tab === "users" ? "Add user" : "Add group"}
-        </SettingsButton>
-      </SettingsContent.Footer>
+  const search = tab === "users" ? userSearch : groupSearch;
+  const addNew = () => (tab === "users" ? setEditingUser("new") : setEditingGroup("new"));
 
-      <UserDelete user={confirmUser} onCancel={() => setConfirmUser(null)} />
-      <GroupDelete group={confirmGroup} onCancel={() => setConfirmGroup(null)} />
-    </SettingsContent>
+  return (
+    <SettingsListPage
+      component="UsersPage"
+      title="Users & Groups"
+      intro="Who can sign in to this collection, what each person can do, and the groups that share access."
+      tabs={
+        <DrawerTabs
+          className=""
+          activeId={tab}
+          onChange={(v) => setTab(v as "users" | "groups")}
+          tabs={[
+            { id: "users", label: "Users", count: users.length },
+            { id: "groups", label: "Groups", count: groups.length },
+          ]}
+        />
+      }
+      search={{
+        value: search.query,
+        onChange: search.setQuery,
+        label: tab === "users" ? "Search users" : "Search groups",
+      }}
+      filters={
+        tab === "users" && (
+          <div className="w-36">
+            <Select
+              value={roleFilter}
+              onChange={(v) => setRoleFilter(v as UserRole | "")}
+              ariaLabel="Filter by role"
+              options={[
+                { value: "", label: "All roles" },
+                { value: "admin", label: "Admin" },
+                { value: "editor", label: "Editor" },
+                { value: "collaborator", label: "Collaborator" },
+              ]}
+            />
+          </div>
+        )
+      }
+      lead={{ label: tab === "users" ? "Add user" : "Add group", onClick: addNew }}
+      overlays={
+        <>
+          <UserDelete user={confirmUser} onCancel={() => setConfirmUser(null)} />
+          <GroupDelete group={confirmGroup} onCancel={() => setConfirmGroup(null)} />
+        </>
+      }
+    >
+      {tab === "users" ? (
+        <SettingsTable
+          columns={userColumns}
+          data={userSearch.rows}
+          getRowId={(u) => u.id}
+          onRowClick={(u) => setEditingUser(u.id)}
+          rowAriaLabel={(u) => `Edit ${u.username}`}
+          emptyState={
+            <SettingsEmptyState
+              icon={<Users size={16} />}
+              title={roleFilter ? "No users with this role" : "No users yet"}
+              hint="Invite the people who will work in this collection."
+              action={{ label: "Add user", onClick: addNew }}
+              query={userSearch.query}
+              onClearQuery={userSearch.clear}
+            />
+          }
+        />
+      ) : (
+        <SettingsTable
+          columns={groupColumns}
+          data={groupSearch.rows}
+          getRowId={(g) => g.id}
+          onRowClick={(g) => setEditingGroup(g.id)}
+          rowAriaLabel={(g) => `Edit ${g.name}`}
+          emptyState={
+            <SettingsEmptyState
+              icon={<Users size={16} />}
+              title="No groups yet"
+              hint="A group shares access to entities among several users."
+              action={{ label: "Add group", onClick: addNew }}
+              query={groupSearch.query}
+              onClearQuery={groupSearch.clear}
+            />
+          }
+        />
+      )}
+    </SettingsListPage>
   );
 }

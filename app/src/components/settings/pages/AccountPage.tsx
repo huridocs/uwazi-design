@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { ShieldCheck, KeyRound, Copy } from "lucide-react";
-import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
+import { SettingsFormPage } from "../SettingsEditor";
+import { SettingsFieldRow, SettingsSection } from "../SettingsSection";
+import { SettingsEmptyState } from "../SettingsEmptyState";
+import { RowActionButton, RowActions } from "../RowActions";
 import { SettingsField, TextInput } from "../SettingsField";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { saveUserAtom, signedInUserAtom, userIdentityBlock, usersAtom } from "../../../atoms/users";
@@ -10,7 +13,7 @@ import type { SettingsUser } from "../../../data/settings";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 import { useNotify } from "../../../hooks/useNotify";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
-import { ConfirmDialog } from "../../shared/ConfirmDialog";
+import { ConfirmDelete } from "../../shared/ConfirmDelete";
 
 interface ApiKey {
   id: string;
@@ -37,7 +40,7 @@ export function AccountPage() {
   // API keys live in this page's state, so their changes are not logged.
   const logAccount = (message: string, method: "CREATE" | "UPDATE" | "DELETE" = "UPDATE", noun = "user") =>
     me && record({ method, domain: "user", noun, id: me.id, name: me.username, message, log: noun === "user" });
-  /** Revoke and Disable 2FA ask first (UX audit Summary 3). */
+  /** Revoke asks first (UX audit Summary 3). */
   const [ask, setAsk] = useState<{ kind: "revoke"; id: string } | null>(null);
 
   // ── Profile ────────────────────────────────────────────────────────────
@@ -60,13 +63,14 @@ export function AccountPage() {
   const { username, email } = profile.draft;
   // Another account's username or email would make login pick the wrong one.
   const taken = userIdentityBlock(useAtomValue(usersAtom), me?.id ?? null, { username, email });
-  const canSaveProfile = profile.dirty && !!username.trim() && !!email.trim() && !taken;
+  const profileValid = !!username.trim() && !!email.trim() && !taken;
+  /** False when the store refuses the change. */
   const saveProfile = () => {
-    if (!me) return;
+    if (!me) return false;
     const next = { username: username.trim(), email: email.trim() };
-    if (!patchUser({ id: me.id, patch: next })) return;
+    if (!patchUser({ id: me.id, patch: next })) return false;
     profile.markSaved(next);
-    logAccount("Profile saved");
+    return true;
   };
 
   // ── Password ───────────────────────────────────────────────────────────
@@ -80,9 +84,22 @@ export function AccountPage() {
   const canSavePassword =
     current.length > 0 && password.length > 0 && confirm.length > 0 && password === confirm;
 
-  const savePassword = () => {
+  const savePassword = () => pw.discard();
+
+  // One save for the page: the profile and the password are two drafts, and
+  // the footer commits whichever has changes. Each must be complete to save.
+  const dirty = profile.dirty || pw.dirty;
+  const valid = (!profile.dirty || profileValid) && (!pw.dirty || canSavePassword);
+  const saveAll = () => {
+    const both = profile.dirty && pw.dirty;
+    const message = both ? "Profile and password saved" : profile.dirty ? "Profile saved" : "Password updated";
+    if (profile.dirty && !saveProfile()) return;
+    if (pw.dirty) savePassword();
+    logAccount(message);
+  };
+  const discardAll = () => {
+    profile.discard();
     pw.discard();
-    logAccount("Password updated");
   };
 
   // ── Two-factor ─────────────────────────────────────────────────────────
@@ -144,230 +161,168 @@ export function AccountPage() {
     {
       id: "actions",
       header: "",
-      width: "10rem",
+      width: "5rem",
       align: "right",
       cell: (row) => (
-        <div className="flex items-center justify-end gap-1">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              copyKey();
-            }}
-            aria-label="Copy key"
-            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs text-ink-tertiary hover:bg-warm hover:text-ink transition-colors cursor-pointer"
-          >
-            <Copy size={13} />
-            Copy
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setAsk({ kind: "revoke", id: row.id });
-            }}
-            aria-label="Revoke key"
-            className="px-2 py-1 rounded-md text-xs text-ink-tertiary hover:bg-seal-tint hover:text-seal-label transition-colors cursor-pointer"
-          >
-            Revoke
-          </button>
-        </div>
+        <RowActions label={`key ${row.token}`} deleteLabel="Revoke" onDelete={() => setAsk({ kind: "revoke", id: row.id })}>
+          <RowActionButton label={`Copy key ${row.token}`} icon={<Copy size={14} aria-hidden />} onClick={copyKey} />
+        </RowActions>
       ),
     },
   ];
 
   return (
-    <SettingsContent component="AccountPage">
-      <SettingsContent.Header title="Account" />
-      <SettingsContent.Body>
-        <div className="flex flex-col gap-6">
-          <section>
-            <h3 className="text-sm font-semibold text-ink mb-1">Profile</h3>
-            <p className="text-xs text-ink-tertiary mb-3">
-              The username you log in with, and your email address.
-            </p>
-            <div className="grid sm:grid-cols-2 gap-3">
-              <SettingsField label="Username" issue={taken?.username ? { severity: "error", message: taken.username } : null}>
-                <TextInput value={username} onChange={(e) => profile.update({ username: e.target.value })} />
-              </SettingsField>
-              <SettingsField label="Email" issue={taken?.email ? { severity: "error", message: taken.email } : null}>
-                <TextInput type="email" value={email} onChange={(e) => profile.update({ email: e.target.value })} />
-              </SettingsField>
-            </div>
-            <div className="mt-3">
-              <SettingsButton variant="success" size="sm" disabled={!canSaveProfile} onClick={saveProfile}>
-                Save profile
-              </SettingsButton>
-            </div>
-          </section>
+    <SettingsFormPage
+      component="AccountPage"
+      title="Account"
+      dirty={dirty}
+      valid={valid}
+      onSave={saveAll}
+      onDiscard={discardAll}
+      overlays={
+        <ConfirmDelete
+          open={ask !== null}
+          title="Revoke key"
+          message="Revoke this key? Anything that signs in with it stops working."
+          impact={null}
+          confirmLabel="Revoke"
+          onConfirm={() => {
+            if (ask) revokeKey(ask.id);
+            setAsk(null);
+          }}
+          onCancel={() => setAsk(null)}
+        />
+      }
+    >
+      <SettingsSection title="Profile" description="The username you log in with, and your email address.">
+        <SettingsFieldRow>
+          <SettingsField label="Username" issue={taken?.username ? { severity: "error", message: taken.username } : null}>
+            <TextInput value={username} onChange={(e) => profile.update({ username: e.target.value })} />
+          </SettingsField>
+          <SettingsField label="Email" issue={taken?.email ? { severity: "error", message: taken.email } : null}>
+            <TextInput type="email" value={email} onChange={(e) => profile.update({ email: e.target.value })} />
+          </SettingsField>
+        </SettingsFieldRow>
+      </SettingsSection>
 
-          <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
-            <h3 className="text-sm font-semibold text-ink mb-1">Change password</h3>
-            <p className="text-xs text-ink-tertiary mb-3">
-              Choose a strong password you don't use elsewhere.
-            </p>
-            <div className="flex flex-col gap-3">
-              <SettingsField label="Current password">
+      <SettingsSection title="Change password" description="Choose a strong password you don't use elsewhere.">
+        <SettingsField label="Current password">
+          <TextInput
+            type="password"
+            value={current}
+            onChange={(e) => pw.update({ current: e.target.value })}
+            placeholder="••••••••"
+            autoComplete="current-password"
+          />
+        </SettingsField>
+        <SettingsFieldRow>
+          <SettingsField label="New password">
+            <TextInput
+              type="password"
+              value={password}
+              onChange={(e) => pw.update({ password: e.target.value })}
+              placeholder="••••••••"
+              autoComplete="new-password"
+            />
+          </SettingsField>
+          <SettingsField label="Confirm password" error={mismatch ? "Passwords don't match" : undefined}>
+            <TextInput
+              type="password"
+              value={confirm}
+              onChange={(e) => pw.update({ confirm: e.target.value })}
+              placeholder="••••••••"
+              autoComplete="new-password"
+            />
+          </SettingsField>
+        </SettingsFieldRow>
+      </SettingsSection>
+
+      <SettingsSection
+        title="Two-factor authentication"
+        description="Add a second step at login using an authenticator app."
+        action={
+          twoFactorEnabled && (
+            <span className="w-fit inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-success-light text-success text-xs font-medium">
+              <ShieldCheck size={13} aria-hidden />
+              Enabled
+            </span>
+          )
+        }
+      >
+        {twoFactorEnabled ? (
+          // Uwazi has no self-disable: an admin resets 2FA from Users (G4).
+          <p data-part="2fa-note" className="text-xs text-ink-tertiary">
+            To turn it off, ask an admin to reset it in Users &amp; Groups.
+          </p>
+        ) : setupOpen ? (
+          <div className="rounded-lg border border-border bg-paper px-4 py-4 flex flex-col gap-4">
+            <div className="flex items-start gap-4">
+              <div className="flex items-center justify-center w-28 h-28 rounded-md bg-warm shrink-0 border border-border">
+                <span className="text-xs font-medium text-ink-tertiary">QR</span>
+              </div>
+              <p className="text-xs text-ink-tertiary pt-1">
+                Scan this code with your authenticator app, then enter the 6-digit verification code it shows.
+              </p>
+            </div>
+            <div className="max-w-[16rem]">
+              <SettingsField label="Verification code">
                 <TextInput
-                  type="password"
-                  value={current}
-                  onChange={(e) => pw.update({ current: e.target.value })}
-                  placeholder="••••••••"
-                  autoComplete="current-password"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  placeholder="000000"
                 />
               </SettingsField>
-              <div className="grid sm:grid-cols-2 gap-3">
-                <SettingsField label="New password">
-                  <TextInput
-                    type="password"
-                    value={password}
-                    onChange={(e) => pw.update({ password: e.target.value })}
-                    placeholder="••••••••"
-                    autoComplete="new-password"
-                  />
-                </SettingsField>
-                <SettingsField
-                  label="Confirm password"
-                  error={mismatch ? "Passwords don't match" : undefined}
-                >
-                  <TextInput
-                    type="password"
-                    value={confirm}
-                    onChange={(e) => pw.update({ confirm: e.target.value })}
-                    placeholder="••••••••"
-                    autoComplete="new-password"
-                  />
-                </SettingsField>
-              </div>
-              <div>
-                <SettingsButton
-                  variant="commit"
-                  size="sm"
-                  disabled={!canSavePassword}
-                  onClick={savePassword}
-                >
-                  Update password
-                </SettingsButton>
-              </div>
             </div>
-          </section>
-
-          <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
-            <div className="flex items-start gap-3 mb-3">
-              <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-semibold text-ink mb-1">
-                  Two-factor authentication
-                </h3>
-                <p className="text-xs text-ink-tertiary">
-                  Add a second step at login using an authenticator app.
-                </p>
-              </div>
-              {twoFactorEnabled && (
-                <span className="w-fit inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-success-light text-success text-xs font-medium">
-                  <ShieldCheck size={13} />
-                  Enabled
-                </span>
-              )}
-            </div>
-
-            {twoFactorEnabled ? (
-              // Uwazi has no self-disable: an admin resets 2FA from Users (G4).
-              <p data-part="2fa-note" className="text-xs text-ink-tertiary">
-                To turn it off, ask an admin to reset it in Users &amp; Groups.
-              </p>
-            ) : setupOpen ? (
-              <div className="rounded-lg border border-border bg-paper px-4 py-4 flex flex-col gap-4">
-                <div className="flex items-start gap-4">
-                  <div
-                    className="flex items-center justify-center w-28 h-28 rounded-md bg-warm shrink-0"
-                    style={{ border: "1px solid var(--border-primary)" }}
-                  >
-                    <span className="text-xs font-medium text-ink-tertiary">QR</span>
-                  </div>
-                  <p className="text-xs text-ink-tertiary pt-1">
-                    Scan this code with your authenticator app, then enter the 6-digit
-                    verification code it shows.
-                  </p>
-                </div>
-                <div className="max-w-[16rem]">
-                  <SettingsField label="Verification code">
-                    <TextInput
-                      inputMode="numeric"
-                      maxLength={6}
-                      value={code}
-                      onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                      placeholder="000000"
-                    />
-                  </SettingsField>
-                </div>
-                <div className="flex items-center gap-2">
-                  <SettingsButton
-                    variant="commit"
-                    size="sm"
-                    disabled={code.length !== 6}
-                    onClick={verifyTwoFactor}
-                  >
-                    Verify &amp; enable
-                  </SettingsButton>
-                  <SettingsButton
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setSetupOpen(false);
-                      setCode("");
-                    }}
-                  >
-                    Cancel
-                  </SettingsButton>
-                </div>
-              </div>
-            ) : (
-              <SettingsButton variant="secondary" size="sm" onClick={() => setSetupOpen(true)}>
-                Enable two-factor authentication
+            <div className="flex items-center gap-2">
+              <SettingsButton variant="commit" size="sm" disabled={code.length !== 6} onClick={verifyTwoFactor}>
+                Verify &amp; enable
               </SettingsButton>
-            )}
-          </section>
-
-          <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
-            <div className="flex items-start gap-3 mb-3">
-              <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-semibold text-ink mb-1">
-                  Personal access keys
-                </h3>
-                <p className="text-xs text-ink-tertiary">
-                  Use these tokens to authenticate against the Uwazi API.
-                </p>
-              </div>
               <SettingsButton
-                variant="secondary"
+                variant="ghost"
                 size="sm"
-                icon={<KeyRound size={14} />}
-                onClick={generateKey}
+                onClick={() => {
+                  setSetupOpen(false);
+                  setCode("");
+                }}
               >
-                Generate key
+                Cancel
               </SettingsButton>
             </div>
-            <SettingsTable
-              columns={keyColumns}
-              data={keys}
-              getRowId={(row) => row.id}
-              emptyState={
-                <span className="text-sm text-ink-tertiary">No access keys yet.</span>
-              }
+          </div>
+        ) : (
+          <div>
+            <SettingsButton variant="secondary" size="sm" onClick={() => setSetupOpen(true)}>
+              Enable two-factor authentication
+            </SettingsButton>
+          </div>
+        )}
+      </SettingsSection>
+
+      <SettingsSection
+        title="Personal access keys"
+        description="Use these tokens to authenticate against the Uwazi API."
+        action={
+          <SettingsButton variant="secondary" size="sm" icon={<KeyRound size={14} />} onClick={generateKey}>
+            Generate key
+          </SettingsButton>
+        }
+      >
+        <SettingsTable
+          columns={keyColumns}
+          data={keys}
+          getRowId={(row) => row.id}
+          emptyState={
+            <SettingsEmptyState
+              icon={<KeyRound size={16} />}
+              title="No access keys yet"
+              hint="Generate a key to call the Uwazi API as yourself."
+              action={{ label: "Generate key", onClick: generateKey }}
             />
-          </section>
-        </div>
-      </SettingsContent.Body>
-      <ConfirmDialog
-        open={ask !== null}
-        title="Revoke key"
-        message="Revoke this key? Anything that signs in with it stops working."
-        confirmLabel="Revoke"
-        variant="danger"
-        onConfirm={() => {
-          if (ask) revokeKey(ask.id);
-          setAsk(null);
-        }}
-        onCancel={() => setAsk(null)}
-      />
-    </SettingsContent>
+          }
+        />
+      </SettingsSection>
+    </SettingsFormPage>
   );
 }

@@ -1,14 +1,15 @@
-import { useId, useState } from "react";
+import { useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { ShieldCheck } from "lucide-react";
-import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
+import { SettingsEditor } from "../SettingsEditor";
+import { SettingsCheckList, SettingsCheckRow, SettingsFieldRow, SettingsSection } from "../SettingsSection";
 import { SettingsField, TextInput } from "../SettingsField";
 import { RadioGroup } from "../../shared/RadioGroup";
 import { Checkbox } from "../../shared/Checkbox";
 import type { SettingsUser, UserRole } from "../../../data/settings";
 import { groupsAtom, roleChangeBlock, saveUserAtom, signedInUserAtom, userIdentityBlock, usersAtom } from "../../../atoms/users";
-import { ConfirmDialog } from "../../shared/ConfirmDialog";
+import { ConfirmDelete } from "../../shared/ConfirmDelete";
 import { MissingRecord } from "../../shared/MissingRecord";
 import { useNotify } from "../../../hooks/useNotify";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
@@ -52,7 +53,6 @@ export function UserEditor({
   /** The user was deleted (or the demo data reset) while this was open. */
   const missing = !isNew && !base;
   const { username, email, role, groupIds } = draft;
-  const groupsHeadingId = useId();
   const roleNote = base ? roleChangeBlock(users, base.id, "editor") : null;
   // Uwazi rejects a username or email another account has; login matches
   // case-insensitively, so this does too.
@@ -85,90 +85,80 @@ export function UserEditor({
   };
 
   return (
-    <SettingsContent component="UserEditor">
-      <SettingsContent.Header path={["Users & Groups"]} title={isNew ? "New user" : base?.username ?? ""} onBack={onClose} />
-      <SettingsContent.Body>
-        <div className="flex flex-col gap-6">
-          {missing && <MissingRecord noun="user" />}
-          <section className="grid sm:grid-cols-2 gap-3">
-            <SettingsField label="Username" issue={taken?.username ? { severity: "error", message: taken.username } : null}>
-              <TextInput value={username} onChange={(e) => update({ username: e.target.value })} placeholder="e.g. jdoe" />
-            </SettingsField>
-            <SettingsField label="Email" issue={taken?.email ? { severity: "error", message: taken.email } : null}>
-              <TextInput type="email" value={email} onChange={(e) => update({ email: e.target.value })} placeholder="name@org.example" />
-            </SettingsField>
-          </section>
+    <SettingsEditor
+      component="UserEditor"
+      path={["Users & Groups"]}
+      title={isNew ? "New user" : base?.username ?? ""}
+      onBack={onClose}
+      isNew={isNew}
+      createLabel="Invite user"
+      dirty={dirty}
+      valid={valid}
+      onSave={trySave}
+      footerStart={<LastSavedLine domain="user" id={base?.id} />}
+      overlays={
+        <ConfirmDelete
+          open={askDemote}
+          title="Change your own role"
+          message={`You will be ${role === "editor" ? "an Editor" : "a Collaborator"} as soon as this saves, and lose access to System settings${role === "editor" ? " and most Tools" : " and Tools"}. Another admin can change it back.`}
+          impact={null}
+          confirmLabel="Change my role"
+          onConfirm={save}
+          onCancel={() => setAskDemote(false)}
+        />
+      }
+    >
+      {missing && <MissingRecord noun="user" />}
+      <SettingsSection>
+        <SettingsFieldRow>
+          <SettingsField label="Username" issue={taken?.username ? { severity: "error", message: taken.username } : null}>
+            <TextInput value={username} onChange={(e) => update({ username: e.target.value })} placeholder="e.g. jdoe" />
+          </SettingsField>
+          <SettingsField label="Email" issue={taken?.email ? { severity: "error", message: taken.email } : null}>
+            <TextInput type="email" value={email} onChange={(e) => update({ email: e.target.value })} placeholder="name@org.example" />
+          </SettingsField>
+        </SettingsFieldRow>
+      </SettingsSection>
 
-          <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
-            <h3 className="text-sm font-semibold text-ink mb-1">Role</h3>
-            <p className="text-xs text-ink-tertiary mb-3">What this user can do in the collection.</p>
-            <RadioGroup
-              name="user-role"
-              ariaLabel="Role"
-              value={role}
-              onChange={(v) => update({ role: v as UserRole })}
-              // The last admin stays one: Uwazi leaves this to the server.
-              options={ROLE_OPTIONS.map((o) => ({ ...o, disabled: !!roleNote && o.id !== "admin" }))}
-            />
-            {roleNote && <p data-part="role-note" className="mt-2 text-xs text-ink-tertiary">{roleNote}</p>}
-          </section>
+      <SettingsSection title="Role" description="What this user can do in the collection.">
+        <RadioGroup
+          name="user-role"
+          ariaLabel="Role"
+          value={role}
+          onChange={(v) => update({ role: v as UserRole })}
+          // The last admin stays one: Uwazi leaves this to the server.
+          options={ROLE_OPTIONS.map((o) => ({ ...o, disabled: !!roleNote && o.id !== "admin" }))}
+        />
+        {roleNote && <p data-part="role-note" className="text-xs text-ink-tertiary">{roleNote}</p>}
+      </SettingsSection>
 
-          <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
-            <h3 id={groupsHeadingId} className="text-sm font-semibold text-ink mb-3">Groups</h3>
-            {/* A set of checkboxes answering one question: a fieldset, named by the
-                section heading above it (a legend would draw into the rule). */}
-            <fieldset aria-labelledby={groupsHeadingId} data-part="groups" className="flex flex-col gap-2 min-w-0">
-              {groups.map((g) => (
-                <label
-                  key={g.id}
-                  className="flex items-center gap-3 rounded-lg border border-border bg-paper px-3 py-2.5 cursor-pointer hover:bg-warm transition-colors"
-                >
-                  <Checkbox checked={groupIds.includes(g.id)} onChange={() => toggleGroup(g.id)} ariaLabel={g.name} />
-                  <span className="text-sm font-medium text-ink flex-1">{g.name}</span>
-                  <span className="text-xs text-ink-tertiary">{g.memberCount} {g.memberCount === 1 ? "member" : "members"}</span>
-                </label>
-              ))}
-            </fieldset>
-          </section>
+      <SettingsSection title="Groups">
+        <SettingsCheckList part="groups">
+          {groups.map((g) => (
+            <SettingsCheckRow key={g.id}>
+              <Checkbox checked={groupIds.includes(g.id)} onChange={() => toggleGroup(g.id)} ariaLabel={g.name} />
+              <span className="text-sm font-medium text-ink flex-1">{g.name}</span>
+              <span className="text-xs text-ink-tertiary">{g.memberCount} {g.memberCount === 1 ? "member" : "members"}</span>
+            </SettingsCheckRow>
+          ))}
+        </SettingsCheckList>
+      </SettingsSection>
 
-          {!isNew && (
-            <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
-              <h3 className="text-sm font-semibold text-ink mb-3">Two-factor authentication</h3>
-              <div className="flex items-center gap-3 rounded-lg border border-border bg-paper px-4 py-3">
-                <span className="flex items-center justify-center w-8 h-8 rounded-md bg-success-light shrink-0">
-                  <ShieldCheck size={16} aria-hidden className="text-success" />
-                </span>
-                <p className="text-sm text-ink flex-1 min-w-0">
-                  {base?.using2fa ? "2FA is enabled for this account." : "This account has not enabled 2FA."}
-                </p>
-                <SettingsButton
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => notify("2FA reset for this user", "success")}
-                >
-                  Reset
-                </SettingsButton>
-              </div>
-            </section>
-          )}
-        </div>
-      </SettingsContent.Body>
-      <SettingsContent.Footer>
-        <LastSavedLine domain="user" id={base?.id} className="me-auto" />
-        <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
-        <SettingsButton variant={isNew ? "commit" : "success"} size="sm" disabled={!dirty || !valid} onClick={trySave}>
-          {isNew ? "Invite user" : "Save"}
-        </SettingsButton>
-      </SettingsContent.Footer>
-      <ConfirmDialog
-        open={askDemote}
-        title="Change your own role"
-        message={`You will be ${role === "editor" ? "an Editor" : "a Collaborator"} as soon as this saves, and lose access to System settings${role === "editor" ? " and most Tools" : " and Tools"}. Another admin can change it back.`}
-        confirmLabel="Change my role"
-        variant="danger"
-        onConfirm={save}
-        onCancel={() => setAskDemote(false)}
-      />
-    </SettingsContent>
+      {!isNew && (
+        <SettingsSection title="Two-factor authentication">
+          <div className="flex items-center gap-3 rounded-lg border border-border bg-paper px-4 py-3">
+            <span className="flex items-center justify-center w-8 h-8 rounded-md bg-success-light shrink-0">
+              <ShieldCheck size={16} aria-hidden className="text-success" />
+            </span>
+            <p className="text-sm text-ink flex-1 min-w-0">
+              {base?.using2fa ? "2FA is enabled for this account." : "This account has not enabled 2FA."}
+            </p>
+            <SettingsButton variant="secondary" size="sm" onClick={() => notify("2FA reset for this user", "success")}>
+              Reset
+            </SettingsButton>
+          </div>
+        </SettingsSection>
+      )}
+    </SettingsEditor>
   );
 }

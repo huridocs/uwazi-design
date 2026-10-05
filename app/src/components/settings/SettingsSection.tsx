@@ -63,3 +63,24 @@ export function SettingsSection({
     </section>
   );
 }
+
+/** A set of checkboxes answering one question, inside a `SettingsSection`:
+ *  a fieldset named by the section's heading (a legend would draw into the
+ *  section rule). Rows are `SettingsCheckRow`s. */
+export function SettingsCheckList({ children, part }: { children: ReactNode; part?: string }) {
+  const headingId = useSectionHeadingId();
+  return (
+    <fieldset data-part={part} aria-labelledby={headingId} className="flex flex-col gap-2 min-w-0">
+      {children}
+    </fieldset>
+  );
+}
+
+/** One row of a `SettingsCheckList`. The whole row is the checkbox's label. */
+export function SettingsCheckRow({ children }: { children: ReactNode }) {
+  return (
+    <label className="flex items-center gap-3 rounded-lg border border-border bg-paper px-3 py-2.5 cursor-pointer hover:bg-warm transition-colors">
+      {children}
+    </label>
+  );
+}
