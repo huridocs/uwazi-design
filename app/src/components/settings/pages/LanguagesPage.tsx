@@ -181,7 +181,7 @@ export function LanguagesPage() {
     <SettingsListPage
       component="LanguagesPage"
       title="Languages"
-      intro="Active languages for your collection. The default language is shown to users who haven't chosen one."
+      intro="Active languages for your collection. The&nbsp;default language is shown to users who haven't chosen one."
       search={{ value: search.query, onChange: search.setQuery, label: "Search languages" }}
       lead={{
         label: "Install language",

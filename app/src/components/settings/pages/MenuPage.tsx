@@ -74,7 +74,7 @@ export function MenuPage() {
     <SettingsListPage
       component="MenuPage"
       title="Menu"
-      intro="Links shown in the top navigation. Groups nest links into a dropdown."
+      intro="Links shown in the top navigation. Groups&nbsp;nest links into a dropdown."
       search={{ value: search.query, onChange: search.setQuery, label: "Search menu" }}
       lead={{ label: "Add link", onClick: () => setEditing("new") }}
       overlays={

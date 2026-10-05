@@ -105,7 +105,7 @@ export function TranslationEditor({
       path={["Translations"]}
       title={context.name}
       onBack={onClose}
-      intro="Translate each term into your active languages. The source language is shown for reference."
+      intro="Translate each term into your active languages. The&nbsp;source language is shown for reference."
       toolbar={<SettingsToolbar search={{ value: search.query, onChange: search.setQuery, label: "Search terms" }} />}
       dirty={dirty}
       onSave={save}
