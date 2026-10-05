@@ -5,6 +5,8 @@ export interface RadioOption {
   label: string;
   hint?: string;
   icon?: ReactNode;
+  /** Not choosable now; the group's caller says why. */
+  disabled?: boolean;
 }
 
 interface RadioGroupProps {
@@ -41,17 +43,21 @@ export function RadioGroup({
           <label
             key={opt.id}
             data-part="option"
-            className={`flex items-start gap-2.5 rounded-lg border bg-paper px-3 py-2.5 cursor-pointer transition-colors ${
-              checked ? "border-ink" : "border-border hover:bg-warm"
-            } ${inline ? "flex-1 min-w-[8rem]" : ""}`}
+            data-disabled={opt.disabled || undefined}
+            className={`flex items-start gap-2.5 rounded-lg border bg-paper px-3 py-2.5 transition-colors ${
+              opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+            } ${checked ? "border-ink" : opt.disabled ? "border-border" : "border-border hover:bg-warm"} ${
+              inline ? "flex-1 min-w-[8rem]" : ""
+            }`}
           >
             <input
               type="radio"
               name={name}
               checked={checked}
               onChange={() => onChange(opt.id)}
+              disabled={opt.disabled}
               aria-label={opt.label}
-              className="w-3.5 h-3.5 mt-0.5 accent-ink cursor-pointer shrink-0"
+              className="w-3.5 h-3.5 mt-0.5 accent-ink cursor-pointer disabled:cursor-not-allowed shrink-0"
             />
             <span className="min-w-0">
               <span data-part="label" className="flex items-center gap-1.5 text-sm font-medium text-ink">

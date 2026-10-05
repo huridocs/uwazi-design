@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { ShieldCheck, KeyRound, Copy } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
 import { SettingsField, TextInput } from "../SettingsField";
 import { SettingsTable, type Column } from "../SettingsTable";
-import { currentAccount } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/notifications";
+import { signedInUserAtom, users } from "../../../atoms/users";
+import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
+import { useNotify } from "../../../hooks/useNotify";
 
 interface ApiKey {
   id: string;
@@ -25,43 +26,60 @@ function randomKey(): string {
 }
 
 export function AccountPage() {
-  const setToasts = useSetAtom(toastsAtom);
+  const notify = useNotify();
   const toast = (message: string, type: "success" | "info" = "success") =>
-    setToasts((prev) => [...prev, { id: Date.now().toString(), message, type }]);
+    notify(message, type);
 
   // ── Profile ────────────────────────────────────────────────────────────
-  const [email, setEmail] = useState(currentAccount.email);
-  const [username, setUsername] = useState(currentAccount.username);
+  // The signed-in user's record in the users store, so Settings › Users and
+  // the login screen see the change.
+  const me = useAtomValue(signedInUserAtom);
+  const patchUser = useSetAtom(users.patchAtom);
+  const profile = useSettingsDraft({
+    id: "account-profile",
+    label: "Profile edits",
+    saved: { username: me?.username ?? "", email: me?.email ?? "" },
+  });
+  const { username, email } = profile.draft;
+  const canSaveProfile = profile.dirty && !!username.trim() && !!email.trim();
+  const saveProfile = () => {
+    if (!me) return;
+    const next = { username: username.trim(), email: email.trim() };
+    patchUser({ id: me.id, patch: next });
+    profile.markSaved(next);
+    toast("Profile saved");
+  };
 
   // ── Password ───────────────────────────────────────────────────────────
-  const [current, setCurrent] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
+  const pw = useSettingsDraft({
+    id: "account-password",
+    label: "Password changes",
+    saved: { current: "", password: "", confirm: "" },
+  });
+  const { current, password, confirm } = pw.draft;
   const mismatch = password.length > 0 && confirm.length > 0 && password !== confirm;
   const canSavePassword =
     current.length > 0 && password.length > 0 && confirm.length > 0 && password === confirm;
 
   const savePassword = () => {
-    setCurrent("");
-    setPassword("");
-    setConfirm("");
+    pw.discard();
     toast("Password updated");
   };
 
   // ── Two-factor ─────────────────────────────────────────────────────────
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const twoFactorEnabled = !!me?.using2fa;
   const [setupOpen, setSetupOpen] = useState(false);
   const [code, setCode] = useState("");
 
   const verifyTwoFactor = () => {
-    setTwoFactorEnabled(true);
+    if (me) patchUser({ id: me.id, patch: { using2fa: true } });
     setSetupOpen(false);
     setCode("");
     toast("Two-factor authentication enabled");
   };
 
   const disableTwoFactor = () => {
-    setTwoFactorEnabled(false);
+    if (me) patchUser({ id: me.id, patch: { using2fa: false } });
     toast("Two-factor authentication disabled", "info");
   };
 
@@ -148,11 +166,16 @@ export function AccountPage() {
             </p>
             <div className="grid sm:grid-cols-2 gap-3">
               <SettingsField label="Username">
-                <TextInput value={username} onChange={(e) => setUsername(e.target.value)} />
+                <TextInput value={username} onChange={(e) => profile.update({ username: e.target.value })} />
               </SettingsField>
               <SettingsField label="Email">
-                <TextInput type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <TextInput type="email" value={email} onChange={(e) => profile.update({ email: e.target.value })} />
               </SettingsField>
+            </div>
+            <div className="mt-3">
+              <SettingsButton variant="success" size="sm" disabled={!canSaveProfile} onClick={saveProfile}>
+                Save profile
+              </SettingsButton>
             </div>
           </section>
 
@@ -166,7 +189,7 @@ export function AccountPage() {
                 <TextInput
                   type="password"
                   value={current}
-                  onChange={(e) => setCurrent(e.target.value)}
+                  onChange={(e) => pw.update({ current: e.target.value })}
                   placeholder="••••••••"
                   autoComplete="current-password"
                 />
@@ -176,7 +199,7 @@ export function AccountPage() {
                   <TextInput
                     type="password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => pw.update({ password: e.target.value })}
                     placeholder="••••••••"
                     autoComplete="new-password"
                   />
@@ -188,7 +211,7 @@ export function AccountPage() {
                   <TextInput
                     type="password"
                     value={confirm}
-                    onChange={(e) => setConfirm(e.target.value)}
+                    onChange={(e) => pw.update({ confirm: e.target.value })}
                     placeholder="••••••••"
                     autoComplete="new-password"
                   />

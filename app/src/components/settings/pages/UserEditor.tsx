@@ -1,13 +1,15 @@
-import { useId, useState } from "react";
-import { useSetAtom } from "jotai";
+import { useId } from "react";
+import { useAtomValue, useSetAtom } from "jotai";
 import { ShieldCheck } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
 import { SettingsField, TextInput } from "../SettingsField";
 import { RadioGroup } from "../../shared/RadioGroup";
 import { Checkbox } from "../../shared/Checkbox";
-import { seedGroups, type SettingsUser, type UserRole } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/notifications";
+import type { SettingsUser, UserRole } from "../../../data/settings";
+import { groupsAtom, roleChangeBlock, saveUserAtom, usersAtom } from "../../../atoms/users";
+import { useNotify } from "../../../hooks/useNotify";
+import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
 const ROLE_OPTIONS = [
   { id: "admin", label: "Admin", hint: "Full access to settings and content." },
@@ -15,52 +17,57 @@ const ROLE_OPTIONS = [
   { id: "collaborator", label: "Collaborator", hint: "Comment and suggest only." },
 ];
 
-/** User detail/editor — opened from the Users list (list → detail). */
+type UserDraft = Omit<SettingsUser, "id">;
+
+const NEW_USER: UserDraft = { username: "", email: "", role: "collaborator", groupIds: [], using2fa: false };
+
+/** User detail/editor — opened from the Users list (list → detail). Saves to
+ *  the users store (`atoms/users.ts`). */
 export function UserEditor({
-  user,
+  userId,
   onClose,
 }: {
-  user: SettingsUser | "new";
+  userId: string | "new";
   onClose: () => void;
 }) {
-  const setToasts = useSetAtom(toastsAtom);
-  const isNew = user === "new";
-  const base = isNew ? undefined : user;
+  const notify = useNotify();
+  const users = useAtomValue(usersAtom);
+  const groups = useAtomValue(groupsAtom);
+  const saveUser = useSetAtom(saveUserAtom);
+  const isNew = userId === "new";
+  const base = isNew ? undefined : users.find((u) => u.id === userId);
+  const { id: _id, ...saved } = base ?? { id: "", ...NEW_USER };
 
-  const [username, setUsername] = useState(base?.username ?? "");
-  const [email, setEmail] = useState(base?.email ?? "");
-  const [role, setRole] = useState<UserRole>(base?.role ?? "collaborator");
-  const [groups, setGroups] = useState<string[]>(base?.groups ?? []);
+  const { draft, update, dirty } = useSettingsDraft<UserDraft>({
+    id: `user:${userId}`,
+    label: "User edits",
+    saved,
+  });
+  const { username, email, role, groupIds } = draft;
   const groupsHeadingId = useId();
+  const roleNote = base ? roleChangeBlock(users, base.id, "editor") : null;
+  const valid = !!username.trim() && !!email.trim();
 
-  const dirty =
-    username !== (base?.username ?? "") ||
-    email !== (base?.email ?? "") ||
-    role !== (base?.role ?? "collaborator") ||
-    JSON.stringify(groups) !== JSON.stringify(base?.groups ?? []);
-
-  const toggleGroup = (name: string) =>
-    setGroups((prev) => (prev.includes(name) ? prev.filter((g) => g !== name) : [...prev, name]));
+  const toggleGroup = (id: string) =>
+    update({ groupIds: groupIds.includes(id) ? groupIds.filter((g) => g !== id) : [...groupIds, id] });
 
   const save = () => {
-    setToasts((p) => [
-      ...p,
-      { id: Date.now().toString(), message: isNew ? "User invited" : `${username || "User"} saved`, type: "success" as const },
-    ]);
+    saveUser({ id: base?.id ?? null, value: { ...draft, username: username.trim(), email: email.trim() } });
+    notify(isNew ? "User invited" : `${username.trim()} saved`, "success");
     onClose();
   };
 
   return (
     <SettingsContent component="UserEditor">
-      <SettingsContent.Header path={["Users & Groups"]} title={isNew ? "New user" : base!.username} onBack={onClose} />
+      <SettingsContent.Header path={["Users & Groups"]} title={isNew ? "New user" : base?.username ?? ""} onBack={onClose} />
       <SettingsContent.Body>
         <div className="flex flex-col gap-6">
           <section className="grid sm:grid-cols-2 gap-3">
             <SettingsField label="Username">
-              <TextInput value={username} onChange={(e) => setUsername(e.target.value)} placeholder="e.g. jdoe" />
+              <TextInput value={username} onChange={(e) => update({ username: e.target.value })} placeholder="e.g. jdoe" />
             </SettingsField>
             <SettingsField label="Email">
-              <TextInput type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@org.example" />
+              <TextInput type="email" value={email} onChange={(e) => update({ email: e.target.value })} placeholder="name@org.example" />
             </SettingsField>
           </section>
 
@@ -71,9 +78,11 @@ export function UserEditor({
               name="user-role"
               ariaLabel="Role"
               value={role}
-              onChange={(v) => setRole(v as UserRole)}
-              options={ROLE_OPTIONS}
+              onChange={(v) => update({ role: v as UserRole })}
+              // The last admin stays one: Uwazi leaves this to the server.
+              options={ROLE_OPTIONS.map((o) => ({ ...o, disabled: !!roleNote && o.id !== "admin" }))}
             />
+            {roleNote && <p data-part="role-note" className="mt-2 text-xs text-ink-tertiary">{roleNote}</p>}
           </section>
 
           <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
@@ -81,12 +90,12 @@ export function UserEditor({
             {/* A set of checkboxes answering one question: a fieldset, named by the
                 section heading above it (a legend would draw into the rule). */}
             <fieldset aria-labelledby={groupsHeadingId} data-part="groups" className="flex flex-col gap-2 min-w-0">
-              {seedGroups.map((g) => (
+              {groups.map((g) => (
                 <label
                   key={g.id}
                   className="flex items-center gap-3 rounded-lg border border-border bg-paper px-3 py-2.5 cursor-pointer hover:bg-warm transition-colors"
                 >
-                  <Checkbox checked={groups.includes(g.name)} onChange={() => toggleGroup(g.name)} ariaLabel={g.name} />
+                  <Checkbox checked={groupIds.includes(g.id)} onChange={() => toggleGroup(g.id)} ariaLabel={g.name} />
                   <span className="text-sm font-medium text-ink flex-1">{g.name}</span>
                   <span className="text-xs text-ink-tertiary">{g.memberCount} members</span>
                 </label>
@@ -102,17 +111,12 @@ export function UserEditor({
                   <ShieldCheck size={16} aria-hidden className="text-success" />
                 </span>
                 <p className="text-sm text-ink flex-1 min-w-0">
-                  {base!.using2fa ? "2FA is enabled for this account." : "This account has not enabled 2FA."}
+                  {base?.using2fa ? "2FA is enabled for this account." : "This account has not enabled 2FA."}
                 </p>
                 <SettingsButton
                   variant="secondary"
                   size="sm"
-                  onClick={() =>
-                    setToasts((p) => [
-                      ...p,
-                      { id: Date.now().toString(), message: "2FA reset for this user", type: "success" as const },
-                    ])
-                  }
+                  onClick={() => notify("2FA reset for this user", "success")}
                 >
                   Reset
                 </SettingsButton>
@@ -123,7 +127,7 @@ export function UserEditor({
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
-        <SettingsButton variant="success" size="sm" disabled={!dirty || !username || !email} onClick={save}>
+        <SettingsButton variant="success" size="sm" disabled={!dirty || !valid} onClick={save}>
           {isNew ? "Invite user" : "Save"}
         </SettingsButton>
       </SettingsContent.Footer>

@@ -27,36 +27,35 @@ export interface SettingsUser {
   username: string;
   email: string;
   role: UserRole;
-  groups: string[];
+  /** Group ids, not names: a renamed group keeps its members. */
+  groupIds: string[];
   using2fa: boolean;
 }
 
 export const seedUsers: SettingsUser[] = [
-  { id: "u1", username: "admin", email: "admin@uwazi.io", role: "admin", groups: ["Administrators"], using2fa: true },
-  { id: "u2", username: "mlopez", email: "m.lopez@cejil.org", role: "editor", groups: ["Litigation"], using2fa: true },
-  { id: "u3", username: "jnkemba", email: "j.nkemba@example.org", role: "editor", groups: ["Litigation", "Research"], using2fa: false },
-  { id: "u4", username: "afarah", email: "a.farah@example.org", role: "collaborator", groups: ["Research"], using2fa: false },
-  { id: "u5", username: "tbuergenthal", email: "t.buergenthal@example.org", role: "collaborator", groups: [], using2fa: false },
+  { id: "u1", username: "admin", email: "admin@uwazi.io", role: "admin", groupIds: ["g1"], using2fa: true },
+  { id: "u2", username: "mlopez", email: "m.lopez@cejil.org", role: "editor", groupIds: ["g2"], using2fa: true },
+  { id: "u3", username: "jnkemba", email: "j.nkemba@example.org", role: "editor", groupIds: ["g2", "g3"], using2fa: false },
+  { id: "u4", username: "afarah", email: "a.farah@example.org", role: "collaborator", groupIds: ["g3"], using2fa: false },
+  { id: "u5", username: "tbuergenthal", email: "t.buergenthal@example.org", role: "collaborator", groupIds: [], using2fa: false },
 ];
 
+/** A group's members are the users that list its id; the count is derived
+ *  (`atoms/users.ts`), never stored. */
 export interface SettingsGroupRecord {
   id: string;
   name: string;
-  memberCount: number;
 }
 
 export const seedGroups: SettingsGroupRecord[] = [
-  { id: "g1", name: "Administrators", memberCount: 1 },
-  { id: "g2", name: "Litigation", memberCount: 2 },
-  { id: "g3", name: "Research", memberCount: 2 },
+  { id: "g1", name: "Administrators" },
+  { id: "g2", name: "Litigation" },
+  { id: "g3", name: "Research" },
 ];
 
-/** The signed-in account (Account settings page). */
-export const currentAccount = {
-  username: "admin",
-  email: "admin@uwazi.io",
-  role: "admin" as UserRole,
-};
+/** The account signed in when the prototype opens, until someone signs in as
+ *  another seed user (`signedInUserIdAtom`). */
+export const DEFAULT_SIGNED_IN_USER_ID = "u1";
 
 // ── Templates ──────────────────────────────────────────────────────────────
 export interface SettingsTemplate {

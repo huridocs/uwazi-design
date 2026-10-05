@@ -1,12 +1,18 @@
-import { useAtomValue } from "jotai";
+import { useState } from "react";
+import { useAtomValue, useSetAtom } from "jotai";
+import { RotateCcw } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { StatsCard } from "../../shared/StatsCard";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { entities } from "../../../data/entities";
 import { dataSourceAtom } from "../../../atoms/dataSource";
 import { cejilDashboardStats } from "../../../data/cejil/settingsAdapt";
+import { usersAtom } from "../../../atoms/users";
+import { resetSettingsDataAtom } from "../../../atoms/settingsCollection";
+import { SettingsButton } from "../SettingsButton";
+import { ConfirmDialog } from "../../shared/ConfirmDialog";
+import { useNotify } from "../../../hooks/useNotify";
 import {
-  seedUsers,
   seedLanguages,
   seedRelationTypes,
   seedActivityLog,
@@ -24,6 +30,10 @@ const methodStyle: Record<LogMethod, string> = {
 export function DashboardPage() {
   const dataSource = useAtomValue(dataSourceAtom);
   const cejil = dataSource === "cejil";
+  const userCount = useAtomValue(usersAtom).length;
+  const resetData = useSetAtom(resetSettingsDataAtom);
+  const notify = useNotify();
+  const [confirmReset, setConfirmReset] = useState(false);
   const connectionTotal = seedRelationTypes.reduce((n, r) => n + r.usageCount, 0);
 
   const columns: Column<SettingsLogEntry>[] = [
@@ -57,7 +67,7 @@ export function DashboardPage() {
             <>
               <StatsCard label="Entities" value={entities.length} accent="blue" />
               <StatsCard label="Relationships" value={connectionTotal} accent="green" />
-              <StatsCard label="Users" value={seedUsers.length} />
+              <StatsCard label="Users" value={userCount} />
               <StatsCard label="Languages" value={seedLanguages.length} accent="amber" />
             </>
           )}
@@ -72,6 +82,32 @@ export function DashboardPage() {
           <SettingsTable columns={columns} data={seedActivityLog.slice(0, 5)} getRowId={(e) => e.id} />
         )}
       </SettingsContent.Body>
+      <SettingsContent.Footer>
+        {/* The prototype keeps Settings edits for the visit (sessionStorage).
+            This puts every collection's settings back to the demo seed. */}
+        <SettingsButton
+          variant="ghost"
+          size="sm"
+          className="me-auto"
+          icon={<RotateCcw size={14} aria-hidden />}
+          onClick={() => setConfirmReset(true)}
+        >
+          Reset demo data
+        </SettingsButton>
+      </SettingsContent.Footer>
+      <ConfirmDialog
+        open={confirmReset}
+        title="Reset demo data"
+        message="Settings changes made in this visit go back to the demo data, in every collection: users, groups, thesauri and pages."
+        confirmLabel="Reset"
+        variant="danger"
+        onConfirm={() => {
+          resetData();
+          setConfirmReset(false);
+          notify("Demo data reset", "success");
+        }}
+        onCancel={() => setConfirmReset(false)}
+      />
     </SettingsContent>
   );
 }

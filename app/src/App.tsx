@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Navbar } from "./components/layout/Navbar";
 import { EntityView } from "./views/EntityView";
 import { LibraryView } from "./views/LibraryView";
@@ -13,6 +13,7 @@ import { MobileOverlayStack } from "./components/relationships/MobileOverlayStac
 import { UnsavedChangesGuard } from "./components/shared/UnsavedChangesGuard";
 import { languageAtom } from "./atoms/language";
 import { appViewAtom, type AppView } from "./atoms/navigation";
+import { signedInUserIdAtom, usersAtom } from "./atoms/users";
 import { useBreakpointSync } from "./hooks/useBreakpointSync";
 import { useKeyboardInset } from "./hooks/useKeyboardInset";
 import { useDirtyGuard } from "./hooks/useDirtyGuard";
@@ -23,6 +24,8 @@ export function App() {
   useKeyboardInset();
   const [appView, setAppView] = useAtom(appViewAtom);
   const guard = useDirtyGuard();
+  const users = useAtomValue(usersAtom);
+  const setSignedIn = useSetAtom(signedInUserIdAtom);
   const [language, setLanguage] = useAtom(languageAtom);
   // Direction derives from the reading language — selecting AR anywhere
   // (language pills or the navbar toggle) flips the document, and leaving
@@ -58,7 +61,13 @@ export function App() {
   if (appView === "login") {
     return (
       <main data-part="view" data-view="login" className="app-shell flex flex-col">
-        <LoginView onLoggedIn={() => setAppView("library")} />
+        <LoginView
+          onLoggedIn={(username) => {
+            const user = users.find((u) => u.username === username);
+            if (user) setSignedIn(user.id);
+            setAppView("library");
+          }}
+        />
       </main>
     );
   }

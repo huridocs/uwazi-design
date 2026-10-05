@@ -1,65 +1,64 @@
-import { useId, useState } from "react";
-import { useSetAtom } from "jotai";
+import { useId } from "react";
+import { useAtomValue, useSetAtom } from "jotai";
 import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
 import { SettingsField, TextInput } from "../SettingsField";
 import { Checkbox } from "../../shared/Checkbox";
-import { seedUsers, type SettingsGroupRecord } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/notifications";
+import { groupsAtom, saveGroupAtom, usersAtom } from "../../../atoms/users";
+import { useNotify } from "../../../hooks/useNotify";
+import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
-/** Group detail/editor — name + membership, opened from the Groups tab. */
+/** Group detail/editor — name + membership, opened from the Groups tab.
+ *  Membership is written onto the users (`saveGroupAtom`), by group id. */
 export function GroupEditor({
-  group,
+  groupId,
   onClose,
 }: {
-  group: SettingsGroupRecord | "new";
+  groupId: string | "new";
   onClose: () => void;
 }) {
-  const setToasts = useSetAtom(toastsAtom);
-  const isNew = group === "new";
-  const base = isNew ? undefined : group;
+  const notify = useNotify();
+  const users = useAtomValue(usersAtom);
+  const groups = useAtomValue(groupsAtom);
+  const saveGroup = useSetAtom(saveGroupAtom);
+  const isNew = groupId === "new";
+  const base = isNew ? undefined : groups.find((g) => g.id === groupId);
 
-  const [name, setName] = useState(base?.name ?? "");
+  const { draft, update, dirty } = useSettingsDraft({
+    id: `group:${groupId}`,
+    label: "Group edits",
+    saved: { name: base?.name ?? "", memberIds: base?.memberIds ?? [] },
+  });
+  const { name, memberIds: members } = draft;
   const membersHeadingId = useId();
-  const [members, setMembers] = useState<string[]>(
-    isNew ? [] : seedUsers.filter((u) => u.groups.includes(base!.name)).map((u) => u.id),
-  );
-
-  const initialMembers = isNew
-    ? []
-    : seedUsers.filter((u) => u.groups.includes(base!.name)).map((u) => u.id);
-  const dirty =
-    name !== (base?.name ?? "") || JSON.stringify(members) !== JSON.stringify(initialMembers);
 
   const toggle = (id: string) =>
-    setMembers((prev) => (prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id]));
+    update({ memberIds: members.includes(id) ? members.filter((m) => m !== id) : [...members, id] });
 
   const save = () => {
-    setToasts((p) => [
-      ...p,
-      { id: Date.now().toString(), message: isNew ? "Group created" : `${name || "Group"} saved`, type: "success" as const },
-    ]);
+    saveGroup({ id: base?.id ?? null, name: name.trim(), memberIds: members });
+    notify(isNew ? "Group created" : `${name.trim()} saved`, "success");
     onClose();
   };
 
   return (
     <SettingsContent component="GroupEditor">
-      <SettingsContent.Header path={["Users & Groups"]} title={isNew ? "New group" : base!.name} onBack={onClose} />
+      <SettingsContent.Header path={["Users & Groups"]} title={isNew ? "New group" : base?.name ?? ""} onBack={onClose} />
       <SettingsContent.Body>
         <div className="flex flex-col gap-6">
           <section className="max-w-sm">
             <SettingsField label="Group name">
-              <TextInput value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Litigation" />
+              <TextInput value={name} onChange={(e) => update({ name: e.target.value })} placeholder="e.g. Litigation" />
             </SettingsField>
           </section>
 
           <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
             <h3 id={membersHeadingId} className="text-sm font-semibold text-ink mb-1">Members</h3>
-            <p className="text-xs text-ink-tertiary mb-3">{members.length} of {seedUsers.length} users.</p>
+            <p className="text-xs text-ink-tertiary mb-3">{members.length} of {users.length} users.</p>
             {/* A set of checkboxes answering one question: a fieldset, named by the
                 section heading above it (a legend would draw into the rule). */}
             <fieldset aria-labelledby={membersHeadingId} data-part="members" className="flex flex-col gap-2 min-w-0">
-              {seedUsers.map((u) => (
+              {users.map((u) => (
                 <label
                   key={u.id}
                   className="flex items-center gap-3 rounded-lg border border-border bg-paper px-3 py-2.5 cursor-pointer hover:bg-warm transition-colors"
@@ -80,7 +79,7 @@ export function GroupEditor({
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
-        <SettingsButton variant="success" size="sm" disabled={!dirty || !name} onClick={save}>
+        <SettingsButton variant="success" size="sm" disabled={!dirty || !name.trim()} onClick={save}>
           {isNew ? "Create group" : "Save"}
         </SettingsButton>
       </SettingsContent.Footer>

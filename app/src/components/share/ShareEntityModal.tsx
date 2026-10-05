@@ -4,14 +4,15 @@ import { AlertTriangle, Eye, Globe, Info, Lock, Pencil, RotateCcw, Trash2 } from
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import {
   applyShareAtom,
-  DEFAULT_MEMBERS,
+  defaultMembersAtom,
   entityAccessAtom,
   type AccessLevel,
   type MemberChange,
 } from "../../atoms/entityChanges";
 import { notificationsAtom } from "../../atoms/notifications";
 import { entityCorpusOf, getEntity, getEntityType } from "../../data/entities";
-import { seedGroups, seedUsers } from "../../data/settings";
+import { groupsAtom, usersAtom } from "../../atoms/users";
+import type { SettingsGroupRecord, SettingsUser } from "../../data/settings";
 import { Modal, MODAL_BUTTON, MODAL_COMMIT } from "../shared/Modal";
 import { MODAL_INPUT, ModalSectionLabel } from "../shared/ModalParts";
 import { BAR_GHOST } from "../shared/warmButton";
@@ -39,16 +40,21 @@ const noticeClass = "flex items-center gap-1 text-meta leading-tight text-ink-se
 const hintClass =
   "rounded-md border border-border bg-paper px-2.5 py-1.5 text-meta font-medium leading-snug text-ink shadow-sm";
 
-const findCollaborator = (term: string, assignedIds: Set<string>): { id: string; label: string } | undefined => {
+const findCollaborator = (
+  users: SettingsUser[],
+  groups: SettingsGroupRecord[],
+  term: string,
+  assignedIds: Set<string>,
+): { id: string; label: string } | undefined => {
   const normalized = term.trim().toLowerCase();
   if (!normalized) return undefined;
-  const user = seedUsers.find(
+  const user = users.find(
     (entry) =>
       !assignedIds.has(entry.id) &&
       (entry.username.toLowerCase() === normalized || entry.email.toLowerCase() === normalized),
   );
   if (user) return { id: user.id, label: user.username };
-  const group = seedGroups.find((entry) => !assignedIds.has(entry.id) && entry.name.toLowerCase() === normalized);
+  const group = groups.find((entry) => !assignedIds.has(entry.id) && entry.name.toLowerCase() === normalized);
   if (group) return { id: group.id, label: group.name };
   return undefined;
 };
@@ -79,6 +85,9 @@ export function ShareEntityModal({ open, onClose, ids: idsProp, initialFocus = "
   const store = useStore();
   const focusedId = useAtomValue(focusedEntityIdAtom);
   const access = useAtomValue(entityAccessAtom);
+  const defaultMembers = useAtomValue(defaultMembersAtom);
+  const users = useAtomValue(usersAtom);
+  const groups = useAtomValue(groupsAtom);
   const applyShare = useSetAtom(applyShareAtom);
   // Frozen when the modal opens: the set the review names is the set Apply
   // writes. Until the opening effect has frozen it (the first render), the
@@ -138,14 +147,14 @@ export function ShareEntityModal({ open, onClose, ids: idsProp, initialFocus = "
   const members = useMemo(() => {
     const m = new Map<string, MemberSummary>();
     for (const id of eligible)
-      for (const x of access[id] ?? DEFAULT_MEMBERS) {
+      for (const x of access[id] ?? defaultMembers) {
         const s = m.get(x.id) ?? { id: x.id, label: x.label, count: 0, levels: new Set<AccessLevel>() };
         s.count++;
         s.levels.add(x.level);
         m.set(x.id, s);
       }
     return [...m.values()];
-  }, [eligible, access]);
+  }, [eligible, access, defaultMembers]);
 
   if (!open) return null;
 
@@ -174,7 +183,7 @@ export function ShareEntityModal({ open, onClose, ids: idsProp, initialFocus = "
   const handleAdd = () => {
     const term = lookupTerm.trim();
     if (!term) return;
-    const match = findCollaborator(term, new Set([...members.map((m) => m.id), ...Object.keys(changes)]));
+    const match = findCollaborator(users, groups, term, new Set([...members.map((m) => m.id), ...Object.keys(changes)]));
     if (!match) {
       setLookupError(t("System", "No user or group found"));
       lookupInputRef.current?.focus();

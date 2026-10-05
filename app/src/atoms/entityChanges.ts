@@ -1,6 +1,7 @@
 import { atom } from "jotai";
 import { entityCorpusOf, getEntity, type Entity } from "../data/entities";
-import { seedUsers } from "../data/settings";
+import { usersAtom } from "./users";
+import type { SettingsUser } from "../data/settings";
 import { getEntityProfile } from "../data/entityProfiles";
 import { adapterPatch, changedFieldIds, mergeScalarsByLang } from "../utils/entityEdit";
 import {
@@ -203,9 +204,9 @@ export interface AccessMember {
   label: string;
   level: AccessLevel;
 }
-export const DEFAULT_MEMBERS: AccessMember[] = seedUsers
-  .slice(0, 1)
-  .map((u) => ({ id: u.id, label: u.username, level: "read" as AccessLevel }));
+export const defaultMembersOf = (users: SettingsUser[]): AccessMember[] =>
+  users.slice(0, 1).map((u) => ({ id: u.id, label: u.username, level: "read" as AccessLevel }));
+export const defaultMembersAtom = atom((get) => defaultMembersOf(get(usersAtom)));
 
 export const entityAccessAtom = atom<Record<string, AccessMember[]>>({});
 
@@ -245,7 +246,7 @@ export const applyShareAtom = atom(
       if (visibility && !!e.published !== (visibility === "published"))
         patches[id] = { published: visibility === "published" };
       if (Object.keys(changes).length) {
-        let list = [...(access[id] ?? DEFAULT_MEMBERS)];
+        let list = [...(access[id] ?? get(defaultMembersAtom))];
         for (const [mid, c] of Object.entries(changes)) {
           if (c.kind === "remove") list = list.filter((m) => m.id !== mid);
           else if (list.some((m) => m.id === mid))

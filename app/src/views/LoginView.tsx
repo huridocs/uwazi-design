@@ -1,7 +1,9 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { loginArtFallback, loginArtSrcSet, pickLoginArt } from "../data/loginArt";
-import { seedUsers } from "../data/settings";
+import { useAtomValue } from "jotai";
+import { usersAtom } from "../atoms/users";
+import type { SettingsUser } from "../data/settings";
 import { settingsDocumentation } from "../atoms/settings";
 import { UwaziLoader } from "../components/shared/UwaziLoader";
 import { Checkbox } from "../components/shared/Checkbox";
@@ -10,8 +12,8 @@ import { FORM_INPUT_LG, MODAL_LABEL } from "../components/shared/ModalParts";
 import { COMMIT_FILL } from "../components/shared/warmButton";
 import { Wordmark } from "../components/shared/Wordmark";
 
-/** Mock credentials: a seed user's username, and any password of at least
- *  four characters. */
+/** Mock credentials: a username from the users store (`atoms/users.ts`), and
+ *  any password of at least four characters. */
 const MIN_PASSWORD = 4;
 const REMEMBER_KEY = "uwazi:loginRemember";
 const LOGIN_DELAY_MS = 800;
@@ -40,9 +42,9 @@ function readRemembered(): string {
   }
 }
 
-function findUser(username: string) {
+function findUser(users: SettingsUser[], username: string) {
   const name = username.trim().toLowerCase();
-  return seedUsers.find((u) => u.username.toLowerCase() === name);
+  return users.find((u) => u.username.toLowerCase() === name);
 }
 
 type Message = { kind: "error" | "note"; text: string } | null;
@@ -51,6 +53,8 @@ type Message = { kind: "error" | "note"; text: string } | null;
  *  Fills its parent, so the app shell and the catalog frame can both host it. */
 export function LoginView({ onLoggedIn }: { onLoggedIn: (username: string) => void }) {
   const art = pickLoginArt();
+  // The users store, so an account added in Settings can sign in and a deleted one can't.
+  const users = useAtomValue(usersAtom);
   const [loaded, setLoaded] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
@@ -95,7 +99,7 @@ export function LoginView({ onLoggedIn }: { onLoggedIn: (username: string) => vo
     setMessage(null);
     setPending(true);
     timer.current = window.setTimeout(() => {
-      const user = findUser(identifier);
+      const user = findUser(users, identifier);
       if (!user || password.length < MIN_PASSWORD) {
         setPending(false);
         setInvalid({ identifier: true, password: true });

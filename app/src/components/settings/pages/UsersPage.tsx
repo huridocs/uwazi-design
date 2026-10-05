@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { Plus, Pencil, Trash2, ShieldCheck } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
@@ -8,14 +8,17 @@ import { DrawerTabs } from "../../layout/DrawerTabs";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { UserEditor } from "./UserEditor";
 import { GroupEditor } from "./GroupEditor";
+import type { SettingsUser, UserRole } from "../../../data/settings";
 import {
-  seedUsers,
-  seedGroups,
-  type SettingsUser,
-  type SettingsGroupRecord,
-  type UserRole,
-} from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/notifications";
+  deleteGroupAtom,
+  deleteUserAtom,
+  groupsAtom,
+  signedInUserAtom,
+  userDeleteBlock,
+  usersAtom,
+  type GroupWithMembers,
+} from "../../../atoms/users";
+import { useNotify } from "../../../hooks/useNotify";
 
 const roleStyle: Record<UserRole, string> = {
   admin: "bg-seal-tint text-seal-label",
@@ -24,20 +27,33 @@ const roleStyle: Record<UserRole, string> = {
 };
 
 export function UsersPage() {
-  const setToasts = useSetAtom(toastsAtom);
+  const notify = useNotify();
+  const users = useAtomValue(usersAtom);
+  const groups = useAtomValue(groupsAtom);
+  const me = useAtomValue(signedInUserAtom);
+  const deleteUser = useSetAtom(deleteUserAtom);
+  const deleteGroup = useSetAtom(deleteGroupAtom);
   const [tab, setTab] = useState<"users" | "groups">("users");
-  const [users, setUsers] = useState<SettingsUser[]>(seedUsers);
-  const [groups, setGroups] = useState<SettingsGroupRecord[]>(seedGroups);
   const [confirmUser, setConfirmUser] = useState<SettingsUser | null>(null);
-  const [confirmGroup, setConfirmGroup] = useState<SettingsGroupRecord | null>(null);
-  const [editingUser, setEditingUser] = useState<SettingsUser | "new" | null>(null);
-  const [editingGroup, setEditingGroup] = useState<SettingsGroupRecord | "new" | null>(null);
+  const [blocked, setBlocked] = useState<string | null>(null);
+  const [confirmGroup, setConfirmGroup] = useState<GroupWithMembers | null>(null);
+  // Ids, not records: the editor reads the live record from the store.
+  const [editingUser, setEditingUser] = useState<string | "new" | null>(null);
+  const [editingGroup, setEditingGroup] = useState<string | "new" | null>(null);
 
-  if (editingUser) return <UserEditor user={editingUser} onClose={() => setEditingUser(null)} />;
-  if (editingGroup) return <GroupEditor group={editingGroup} onClose={() => setEditingGroup(null)} />;
+  if (editingUser) return <UserEditor userId={editingUser} onClose={() => setEditingUser(null)} />;
+  if (editingGroup) return <GroupEditor groupId={editingGroup} onClose={() => setEditingGroup(null)} />;
 
-  const toast = (message: string) =>
-    setToasts((prev) => [...prev, { id: Date.now().toString(), message, type: "success" as const }]);
+  const toast = (message: string) => notify(message, "success");
+  const groupName = new Map(groups.map((g) => [g.id, g.name]));
+
+  /** Delete, unless it would remove the signed-in account or the last admin;
+   *  then say why instead. Uwazi leaves both to the server. */
+  const askDeleteUser = (u: SettingsUser) => {
+    const reason = userDeleteBlock(users, me?.id, u.id);
+    if (reason) setBlocked(reason);
+    else setConfirmUser(u);
+  };
 
   const userColumns: Column<SettingsUser>[] = [
     {
@@ -49,7 +65,10 @@ export function UsersPage() {
             {u.username.slice(0, 2)}
           </span>
           <div className="min-w-0">
-            <p className="font-medium text-ink truncate">{u.username}</p>
+            <p className="font-medium text-ink truncate">
+              {u.username}
+              {u.id === me?.id && <span className="ms-1.5 text-xs font-normal text-ink-tertiary">(you)</span>}
+            </p>
             <p className="text-xs text-ink-tertiary truncate">{u.email}</p>
           </div>
         </div>
@@ -69,13 +88,13 @@ export function UsersPage() {
       id: "groups",
       header: "Groups",
       cell: (u) =>
-        u.groups.length === 0 ? (
+        u.groupIds.length === 0 ? (
           <span className="text-ink-muted">—</span>
         ) : (
           <div className="flex flex-wrap gap-1">
-            {u.groups.map((g) => (
+            {u.groupIds.map((g) => (
               <span key={g} className="text-meta text-ink-secondary bg-warm px-1.5 py-0.5 rounded w-fit">
-                {g}
+                {groupName.get(g) ?? g}
               </span>
             ))}
           </div>
@@ -101,14 +120,14 @@ export function UsersPage() {
       cell: (u) => (
         <div className="flex items-center justify-end gap-1">
           <button
-            onClick={(e) => { e.stopPropagation(); setEditingUser(u); }}
+            onClick={(e) => { e.stopPropagation(); setEditingUser(u.id); }}
             aria-label={`Edit ${u.username}`}
             className="p-1.5 rounded-md text-ink-tertiary hover:bg-warm hover:text-ink transition-colors cursor-pointer"
           >
             <Pencil size={14} />
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); setConfirmUser(u); }}
+            onClick={(e) => { e.stopPropagation(); askDeleteUser(u); }}
             aria-label={`Delete ${u.username}`}
             className="p-1.5 rounded-md text-ink-tertiary hover:bg-seal-tint hover:text-seal-label transition-colors cursor-pointer"
           >
@@ -119,7 +138,7 @@ export function UsersPage() {
     },
   ];
 
-  const groupColumns: Column<SettingsGroupRecord>[] = [
+  const groupColumns: Column<GroupWithMembers>[] = [
     { id: "name", header: "Group", cell: (g) => <span className="font-medium text-ink">{g.name}</span> },
     {
       id: "members",
@@ -135,7 +154,7 @@ export function UsersPage() {
       cell: (g) => (
         <div className="flex items-center justify-end gap-1">
           <button
-            onClick={(e) => { e.stopPropagation(); setEditingGroup(g); }}
+            onClick={(e) => { e.stopPropagation(); setEditingGroup(g.id); }}
             aria-label={`Edit ${g.name}`}
             className="p-1.5 rounded-md text-ink-tertiary hover:bg-warm hover:text-ink transition-colors cursor-pointer"
           >
@@ -169,9 +188,9 @@ export function UsersPage() {
           />
         </div>
         {tab === "users" ? (
-          <SettingsTable columns={userColumns} data={users} getRowId={(u) => u.id} onRowClick={(u) => setEditingUser(u)} rowAriaLabel={(u) => `Edit ${u.username}`} />
+          <SettingsTable columns={userColumns} data={users} getRowId={(u) => u.id} onRowClick={(u) => setEditingUser(u.id)} rowAriaLabel={(u) => `Edit ${u.username}`} />
         ) : (
-          <SettingsTable columns={groupColumns} data={groups} getRowId={(g) => g.id} onRowClick={(g) => setEditingGroup(g)} rowAriaLabel={(g) => `Edit ${g.name}`} />
+          <SettingsTable columns={groupColumns} data={groups} getRowId={(g) => g.id} onRowClick={(g) => setEditingGroup(g.id)} rowAriaLabel={(g) => `Edit ${g.name}`} />
         )}
       </SettingsContent.Body>
       <SettingsContent.Footer>
@@ -194,7 +213,7 @@ export function UsersPage() {
         variant="danger"
         onConfirm={() => {
           if (confirmUser) {
-            setUsers((prev) => prev.filter((u) => u.id !== confirmUser.id));
+            deleteUser(confirmUser.id);
             toast(`${confirmUser.username} deleted`);
           }
           setConfirmUser(null);
@@ -204,17 +223,32 @@ export function UsersPage() {
       <ConfirmDialog
         open={confirmGroup !== null}
         title="Delete group"
-        message={`Delete the ${confirmGroup?.name} group? Members keep their accounts.`}
+        message={
+          !confirmGroup?.memberCount
+            ? `Delete the ${confirmGroup?.name} group? It has no members.`
+            : confirmGroup.memberCount === 1
+              ? `Delete the ${confirmGroup.name} group? Its member keeps their account.`
+              : `Delete the ${confirmGroup.name} group? Its ${confirmGroup.memberCount} members keep their accounts.`
+        }
         confirmLabel="Delete"
         variant="danger"
         onConfirm={() => {
           if (confirmGroup) {
-            setGroups((prev) => prev.filter((g) => g.id !== confirmGroup.id));
+            deleteGroup(confirmGroup.id);
             toast(`${confirmGroup.name} deleted`);
           }
           setConfirmGroup(null);
         }}
         onCancel={() => setConfirmGroup(null)}
+      />
+      <ConfirmDialog
+        open={blocked !== null}
+        title="Can't delete this user"
+        message={blocked ?? ""}
+        confirmLabel="OK"
+        cancelLabel={null}
+        onConfirm={() => setBlocked(null)}
+        onCancel={() => setBlocked(null)}
       />
     </SettingsContent>
   );
