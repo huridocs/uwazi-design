@@ -17,6 +17,8 @@ import { RecordFooter } from "./RecordFooter";
 import { ConnectionGroupCard } from "./ConnectionGroupCard";
 import { RelationshipFieldCard } from "./RelationshipFieldCard";
 import { fieldItem, connectionItem, type MetadataItem } from "./items";
+import { templateMirror } from "../../data/templates/mirror";
+import { entityCorpusOf } from "../../data/entities";
 import { deriveTemplateStructure } from "../../utils/templateStructure";
 import { flashElement } from "../../utils/flash";
 import { settleScrollTo } from "../../utils/settleScroll";
@@ -56,7 +58,7 @@ export function MetadataFieldBlock({ item }: { item: MetadataItem }) {
          card, and one field can answer to several property names. */
       data-field-keys={item.keyAliases?.join(" ")}
     >
-      <MetadataCard title={item.label} component="MetadataFieldBlock">
+      <MetadataCard title={item.label} hideTitle={item.noLabel} component="MetadataFieldBlock">
         <FillableValue item={item} />
       </MetadataCard>
     </div>
@@ -177,6 +179,11 @@ export function MetadataRecord({
      FIRST member field; the later members are skipped where they are declared.
      Its card answers deep focus for every member's id and aliases. */
   const { fields } = deriveTemplateStructure(profile, language);
+  // The template's display flags, by property name (Hide label, Full width,
+  // an image's Fill or Fit).
+  const templateProps = new Map(
+    (templateMirror(entityCorpusOf(profile.id), profile.typeId)?.properties ?? []).map((p) => [p.name, p]),
+  );
   const relFields = fields.filter(
     (f): f is RelationshipMetadataField => f.type === "relationship",
   );
@@ -199,7 +206,8 @@ export function MetadataRecord({
         entries.push({ kind: "item", item: connectionItem(f) });
       }
     } else if (f.value?.trim() && (f.propertyType !== "image" || isImageUrl(f.value))) {
-      entries.push({ kind: "item", item: fieldItem(f) });
+      const p = templateProps.get(f.id);
+      entries.push({ kind: "item", item: { ...fieldItem(f, p?.style), noLabel: p?.noLabel, fullWidth: p?.fullWidth } });
     }
   }
 
@@ -243,7 +251,7 @@ export function MetadataRecord({
           columns. Full width keeps the table while the record can carry one. */}
       {entries.map((entry) =>
         entry.kind === "item" ? (
-          <MasonryItem key={entry.item.id} wide={entry.item.kind === "long"}>
+          <MasonryItem key={entry.item.id} wide={entry.item.kind === "long"} full={entry.item.fullWidth}>
             <MetadataFieldBlock item={entry.item} />
           </MasonryItem>
         ) : entry.kind === "group" ? (

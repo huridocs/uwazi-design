@@ -36,6 +36,9 @@ export interface MetadataItem {
    *  already recorded on a connected entity as it is buried in the document,
    *  and this record is where they read it. */
   fillValue?: string;
+  /** The template property's display flags: Hide label, Full width. */
+  noLabel?: boolean;
+  fullWidth?: boolean;
 }
 
 /** The three shapes a record's values come in, and the whole basis of the
@@ -81,7 +84,7 @@ export function isLongField(f: MetadataField): boolean {
   return fieldKind(f) === "long";
 }
 
-export function fieldItem(f: MetadataField): MetadataItem {
+export function fieldItem(f: MetadataField, style?: "cover" | "contain"): MetadataItem {
   const kind = fieldKind(f);
   const long = kind === "long";
   return {
@@ -109,7 +112,14 @@ export function fieldItem(f: MetadataField): MetadataItem {
           <span className="font-medium">{f.value}</span>
         </span>
       ) : f.propertyType === "image" ? (
-        <img src={f.value} alt={f.label} className="max-w-full max-h-64 rounded-md border border-border-soft" />
+        // Fill covers the frame (cropping), Fit shows the whole picture.
+        <img
+          src={f.value}
+          alt={f.label}
+          className={`rounded-md border border-border-soft ${
+            style === "cover" ? "w-full h-64 object-cover" : "max-w-full max-h-64 object-contain"
+          }`}
+        />
       ) : f.type === "link" ? (
         // `min-w-0` + `truncate`, for the same reason the pills next door carry
         // them: the value column has a definite width, and a URL is the one

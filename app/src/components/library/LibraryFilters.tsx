@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { templatesAtom } from "../../atoms/templates";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Play, Search, Lock, Globe, X, ChevronRight, Link2, type LucideIcon } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom } from "../../atoms/dataSource";
@@ -72,9 +73,12 @@ export function LibraryFilters() {
   const activeFilterCount = useAtomValue(libraryActiveFilterCountAtom);
   const matchTypes = useAtomValue(matchTypeFiltersAtom);
 
+  // Recomputed when Settings › Templates changes the corpus's templates.
+  const templates = useAtomValue(templatesAtom(dataSource));
   const inheritedDefs = useMemo(
     () => libraryInheritedDefs(dataSource, language),
-    [dataSource, language],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `templates` is the store the defs are read from
+    [dataSource, language, templates],
   );
   // Which template property facets show, by Uwazi's rule
   // (Library/helpers/libraryFilters.js, shared/commonProperties.js): with no
