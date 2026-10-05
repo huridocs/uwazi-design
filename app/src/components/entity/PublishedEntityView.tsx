@@ -543,13 +543,11 @@ function PublishedMap({ lat, lon, label }: { lat: number; lon: number; label: st
 /** The one switch between the published view and the entity view, for an
  *  entity whose template has a published view (hidden otherwise).
  *
- *  Fixed at the content area's top inline-end corner, under the navbar: in the
- *  entity view that is the empty end of the drawer's tab row, in the published
- *  view the page's margin. It is the same spot in both modes, and being fixed
- *  it moves nothing when the mode changes. Icon only, with a hint; its name
- *  says where it goes ("Entity view" / "Published view"). Leaving the entity
- *  view goes through the dirty-form guard, like a tab change. Below desktop
- *  the entity view's tab row keeps its slot free (`reserveToggleSlotAtom`). */
+ *  Fixed, centred on the navbar's lower edge: the same spot in both modes, and
+ *  being fixed it moves nothing when the mode changes. Icon only, with a hint
+ *  below it; its name says where it goes ("Entity view" / "Published view").
+ *  Leaving the entity view goes through the dirty-form guard, like a tab
+ *  change. */
 export function PublishedViewToggle() {
   const available = useAtomValue(focusedHasPublishedViewAtom);
   const mode = useAtomValue(entityDisplayModeAtom);
@@ -563,7 +561,7 @@ export function PublishedViewToggle() {
   const label = toEntity ? "Entity view" : "Published view";
   const Icon = toEntity ? PanelRight : Newspaper;
   return (
-    <Hint text={label} describe={false}>
+    <Hint text={label} describe={false} placement="below">
       {(hint) => (
         <button
           {...hint}
@@ -572,12 +570,12 @@ export function PublishedViewToggle() {
           data-mode={mode}
           aria-label={label}
           onClick={() => (toEntity ? setMode("entity") : guard(() => setMode("published")))}
-          className={`fixed z-30 top-[3.75rem] end-3 w-8 h-8 flex items-center justify-center rounded-md
+          className={`fixed z-30 top-13 left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-md
             transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35 ${WARM_BUTTON} ${
             covered ? "invisible" : ""
           }`}
         >
-          <Icon size={15} aria-hidden className="rtl:-scale-x-100" />
+          <Icon size={14} aria-hidden className="rtl:-scale-x-100" />
         </button>
       )}
     </Hint>

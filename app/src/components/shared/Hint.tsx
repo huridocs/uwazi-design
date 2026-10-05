@@ -23,7 +23,8 @@ export interface HintTriggerProps {
   onBlur: () => void;
 }
 
-/** A one-line hint above an element, on hover AND keyboard focus.
+/** A one-line hint above an element (or below, `placement="below"`), on hover
+ *  AND keyboard focus.
  *
  *  Not a `title` attribute: a title never shows on focus, shows late on hover,
  *  and can't be styled or dismissed. Portalled to `body` and positioned from the
@@ -44,11 +45,14 @@ export function Hint({
   text,
   describe = true,
   muted = false,
+  placement = "above",
   children,
 }: {
   text: string;
   describe?: boolean;
   muted?: boolean;
+  /** Where the hint prefers to sit; it flips when the viewport has no room. */
+  placement?: "above" | "below";
   children: (props: HintTriggerProps) => ReactNode;
 }) {
   const id = useId();
@@ -58,7 +62,7 @@ export function Hint({
 
   // The BOX is clamped to the viewport, not its centre: centring a 20rem hint on
   // a trigger near an edge put half of it off-screen. Measured once it exists,
-  // then placed above the trigger, or below when there is no room above.
+  // then placed on its preferred side, or the other one when there is no room.
   useLayoutEffect(() => {
     const tip = tipRef.current;
     if (!rect || !tip) return setPos(null);
@@ -66,8 +70,12 @@ export function Hint({
     const h = tip.offsetHeight;
     const left = Math.max(EDGE, Math.min(rect.left + rect.width / 2 - w / 2, window.innerWidth - w - EDGE));
     const above = rect.top - GAP - h;
-    setPos({ left, top: above >= EDGE ? above : rect.bottom + GAP });
-  }, [rect]);
+    const below = rect.bottom + GAP;
+    const fitsAbove = above >= EDGE;
+    const fitsBelow = below + h <= window.innerHeight - EDGE;
+    const top = placement === "below" ? (fitsBelow || !fitsAbove ? below : above) : fitsAbove ? above : below;
+    setPos({ left, top });
+  }, [rect, placement]);
 
   useEffect(() => {
     if (muted) setRect(null);
@@ -113,7 +121,9 @@ export function Hint({
             role="tooltip"
             aria-hidden
             data-component="Hint"
-            className="pointer-events-none fixed z-50 max-w-[20rem] rounded-md bg-ink px-2 py-1
+            // `w-max`: a fixed box placed near the viewport's end otherwise
+            // shrinks to the room left of it and wraps a short hint.
+            className="pointer-events-none fixed z-50 w-max max-w-[20rem] rounded-md bg-ink px-2 py-1
               text-meta font-normal normal-case tracking-normal text-paper shadow-md"
             // Hidden until placed: the first layout pass only measures it.
             style={pos ? { left: pos.left, top: pos.top } : { left: 0, top: 0, visibility: "hidden" }}
