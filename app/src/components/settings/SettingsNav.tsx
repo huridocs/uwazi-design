@@ -5,6 +5,7 @@ import { SectionLabel } from "../shared/SectionLabel";
 import {
   visibleSettingsGroupsAtom,
   settingsSectionAtom,
+  effectiveSettingsSectionAtom,
   settingsMobileDrilledAtom,
   settingsDocumentation,
 } from "../../atoms/settings";
@@ -26,7 +27,9 @@ export function SettingsNav({
    *  CSV view passes `"import-csv"`. Also picks the group to show. */
   activeId?: string;
 }) {
-  const [section, setSection] = useAtom(settingsSectionAtom);
+  // Marks the section actually shown (Account when the role falls back).
+  const section = useAtomValue(effectiveSettingsSectionAtom);
+  const setSection = useSetAtom(settingsSectionAtom);
   // Only what the signed-in role reaches (`atoms/settings.ts`).
   const groups = useAtomValue(visibleSettingsGroupsAtom);
   const setDrilled = useSetAtom(settingsMobileDrilledAtom);

@@ -1,6 +1,5 @@
-import { useEffect } from "react";
-import { useAtom, useAtomValue } from "jotai";
-import { settingsAccessAtom, settingsSectionAtom, settingsMobileDrilledAtom } from "../atoms/settings";
+import { useAtomValue } from "jotai";
+import { effectiveSettingsSectionAtom, settingsMobileDrilledAtom } from "../atoms/settings";
 import { dataSourceAtom } from "../atoms/dataSource";
 import { breakpointAtom } from "../atoms/viewport";
 import type { AppView } from "../atoms/navigation";
@@ -31,15 +30,9 @@ import { PlaceholderPage } from "../components/settings/pages/PlaceholderPage";
  *  V2 Settings shell. Cloned pages render natively; the rest fall back to a
  *  placeholder so the whole IA is navigable. */
 export function SettingsView({ onNavigate }: { onNavigate?: (view: AppView) => void }) {
-  const [stored, setSection] = useAtom(settingsSectionAtom);
   // A section the signed-in role cannot reach renders Account, as Uwazi's
-  // route guard sends it away (a stored section can outlive a sign-in), and
-  // the stored section follows so the rail marks Account current.
-  const allowed = useAtomValue(settingsAccessAtom)(stored);
-  const section = allowed ? stored : "account";
-  useEffect(() => {
-    if (!allowed) setSection("account");
-  }, [allowed, setSection]);
+  // route guard sends it away (a stored section can outlive a sign-in).
+  const section = useAtomValue(effectiveSettingsSectionAtom);
   const drilled = useAtomValue(settingsMobileDrilledAtom);
   const isMobile = useAtomValue(breakpointAtom) === "mobile";
   // Pages init their useState from the active source; remount on a source flip

@@ -119,7 +119,10 @@ export function FiltersPage() {
     offerUndo.end();
     // A type filter set on a template the facet no longer shows could not be
     // cleared from the Library: drop it.
-    const hidden = new Set(value.rows.filter((r) => !r.active).map((r) => r.templateId));
+    // With none ticked the Library lists them all (Uwazi), so nothing is hidden.
+    const hidden = new Set(
+      value.rows.some((r) => r.active) ? value.rows.filter((r) => !r.active).map((r) => r.templateId) : [],
+    );
     if (hidden.size)
       setTypeFilters((prev) => Object.fromEntries(Object.entries(prev).filter(([id]) => !hidden.has(id))));
     record({ method: "UPDATE", domain: "filters", noun: "settings", id: "filters", name: "Library filters", message: "Library filters updated" });
@@ -263,7 +266,11 @@ export function FiltersPage() {
         </section>
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <span className="text-xs text-ink-tertiary me-auto">{activeCount} filters shown</span>
+        <span className="text-xs text-ink-tertiary me-auto">
+          {rows.some((r) => r.active)
+            ? `${activeCount} filters shown`
+            : "No template ticked: the Library lists every template"}
+        </span>
         <LastSavedLine domain="filters" id="filters" />
         <SettingsButton variant="success" size="sm" disabled={!dirty} onClick={save}>
           Save

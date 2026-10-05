@@ -32,7 +32,7 @@ export function AccountPage() {
   const notify = useNotify();
   const toast = (message: string, type: "success" | "info" = "success") =>
     notify(message, type);
-  const { record } = useSettingsNotify();
+  const { record, fail } = useSettingsNotify();
   /** Every change to the account is a change to the signed-in user's record. */
   // API keys live in this page's state, so their changes are not logged.
   const logAccount = (message: string, method: "CREATE" | "UPDATE" | "DELETE" = "UPDATE", noun = "user") =>
@@ -91,7 +91,12 @@ export function AccountPage() {
   const [code, setCode] = useState("");
 
   const verifyTwoFactor = () => {
-    if (me) patchUser({ id: me.id, patch: { using2fa: true } });
+    // The store refuses a record that breaks its rules (a username or email
+    // another account has); say so rather than closing as if it worked.
+    if (me && !patchUser({ id: me.id, patch: { using2fa: true } })) {
+      fail("Two-factor authentication was not enabled", "Another account has this username or email. Change it under Profile first.");
+      return;
+    }
     setSetupOpen(false);
     setCode("");
     logAccount("Two-factor authentication enabled");
