@@ -26,6 +26,9 @@ export interface SettingsEvent {
    *  written, since an audit trail must not list edits that are gone after
    *  navigation. */
   log?: boolean;
+  /** False to write the log entry without its own Beacon card: a bulk
+   *  action logs each record and sends one summary card. */
+  notify?: boolean;
 }
 
 const VERB: Record<SettingsEvent["method"], [string, string]> = {
@@ -55,6 +58,7 @@ export function useSettingsNotify() {
           targetId: e.id,
           scope: scopeOfDomain(e.domain, corpus),
         });
+      if (e.notify === false) return;
       setToasts((p) => [
         ...p,
         {

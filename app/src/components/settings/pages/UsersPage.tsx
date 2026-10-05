@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useAtomValue } from "jotai";
-import { ShieldCheck, Users } from "lucide-react";
+import { useAtomValue, useSetAtom } from "jotai";
+import { Shield, ShieldCheck, Trash2, UserPlus, Users } from "lucide-react";
 import { SettingsListPage, useSettingsSearch } from "../SettingsListPage";
 import { SettingsEmptyState } from "../SettingsEmptyState";
 import { SettingsTable, type Column } from "../SettingsTable";
@@ -8,6 +8,10 @@ import { RowActions } from "../RowActions";
 import { Select } from "../../shared/Select";
 import { DrawerTabs } from "../../layout/DrawerTabs";
 import { GroupDelete, UserDelete } from "../../shared/SettingsDeletes";
+import { ConfirmDelete } from "../../shared/ConfirmDelete";
+import { BulkPickModal } from "../BulkPickModal";
+import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { removeAccessMemberAtom } from "../../../atoms/entityChanges";
 import { UserEditor } from "./UserEditor";
 import { GroupEditor } from "./GroupEditor";
 import type { SettingsUser, UserRole } from "../../../data/settings";
@@ -15,8 +19,20 @@ import {
   groupsAtom,
   signedInUserAtom,
   usersAtom,
+  bulkAddToGroupAtom,
+  bulkDeleteUsersAtom,
+  bulkSetRoleAtom,
+  planAddToGroup,
+  planRoleChange,
+  planUserDelete,
+  type BulkPlan,
   type GroupWithMembers,
 } from "../../../atoms/users";
+
+const ROLE_LABEL: Record<UserRole, string> = { admin: "Admin", editor: "Editor", collaborator: "Collaborator" };
+const people = (n: number) => `${n.toLocaleString()} ${n === 1 ? "user" : "users"}`;
+/** "admin stays: This is the last admin…" — one line per refused user. */
+const blockedLines = (plan: BulkPlan) => plan.blocked.map((b) => `${b.username} stays: ${b.reason}`);
 
 const roleStyle: Record<UserRole, string> = {
   // Admin is a role, not a danger: ink on vellum, the strongest neutral.
@@ -41,6 +57,17 @@ export function UsersPage() {
     (u) => `${u.username} ${u.email}`,
   );
   const groupSearch = useSettingsSearch(groups, (g) => g.name);
+  // Ticked users (UX2). Ids of users that no longer exist drop out, and
+  // switching tab clears the selection (Uwazi).
+  const [tickedRaw, setTicked] = useState<Set<string>>(new Set());
+  const ticked = new Set([...tickedRaw].filter((id) => users.some((u) => u.id === id)));
+  const tickedIds = [...ticked];
+  const [bulk, setBulk] = useState<"group" | "role" | "delete" | null>(null);
+  const addToGroup = useSetAtom(bulkAddToGroupAtom);
+  const setRole = useSetAtom(bulkSetRoleAtom);
+  const deleteUsers = useSetAtom(bulkDeleteUsersAtom);
+  const unshare = useSetAtom(removeAccessMemberAtom);
+  const { record } = useSettingsNotify();
 
   if (editingUser) return <UserEditor userId={editingUser} onClose={() => setEditingUser(null)} />;
   if (editingGroup) return <GroupEditor groupId={editingGroup} onClose={() => setEditingGroup(null)} />;
@@ -134,6 +161,42 @@ export function UsersPage() {
     },
   ];
 
+  const nameOf = (id: string) => users.find((u) => u.id === id)?.username ?? id;
+  /** One log entry per user, one Beacon card for the action. */
+  const report = (plan: BulkPlan, message: string, entry: (id: string) => { method: "UPDATE" | "DELETE"; summary: string }) => {
+    for (const id of plan.apply)
+      record({ ...entry(id), domain: "user", noun: "user", id, name: nameOf(id), notify: false });
+    record({
+      log: false,
+      method: "UPDATE",
+      domain: "user",
+      noun: "users",
+      name: "Users",
+      message,
+      ...(plan.blocked.length ? { detail: blockedLines(plan).join(" ") } : {}),
+    });
+  };
+  const selection =
+    tab === "users"
+      ? {
+          count: ticked.size,
+          total: users.length,
+          onClear: () => setTicked(new Set()),
+          actions: [
+            {
+              id: "group",
+              label: "Add to group",
+              icon: <UserPlus size={13} />,
+              onClick: () => setBulk("group" as const),
+              disabledReason: groups.length ? undefined : "There are no groups yet",
+            },
+            { id: "role", label: "Change role", icon: <Shield size={13} />, onClick: () => setBulk("role" as const) },
+            { id: "delete", label: "Delete", icon: <Trash2 size={13} />, onClick: () => setBulk("delete" as const), danger: true },
+          ],
+        }
+      : undefined;
+  const deletePlan = bulk === "delete" ? planUserDelete(users, me?.id, tickedIds) : null;
+
   const search = tab === "users" ? userSearch : groupSearch;
   const addNew = () => (tab === "users" ? setEditingUser("new") : setEditingGroup("new"));
 
@@ -146,7 +209,10 @@ export function UsersPage() {
         <DrawerTabs
           className=""
           activeId={tab}
-          onChange={(v) => setTab(v as "users" | "groups")}
+          onChange={(v) => {
+            setTab(v as "users" | "groups");
+            setTicked(new Set());
+          }}
           tabs={[
             { id: "users", label: "Users", count: users.length },
             { id: "groups", label: "Groups", count: groups.length },
@@ -176,8 +242,104 @@ export function UsersPage() {
         )
       }
       lead={{ label: tab === "users" ? "Add user" : "Add group", onClick: addNew }}
+      selection={selection}
       overlays={
         <>
+          {bulk === "group" && (
+            <BulkPickModal
+              title="Add to group"
+              subtitle={people(ticked.size)}
+              confirmLabel="Add to group"
+              options={groups.map((g) => ({ value: g.id, label: g.name, meta: `${g.memberCount} ${g.memberCount === 1 ? "member" : "members"}` }))}
+              readback={(gid) => {
+                const plan = planAddToGroup(users, tickedIds, gid);
+                const name = groupName.get(gid);
+                if (!plan.apply.length) return { text: `All ${people(ticked.size)} are already in ${name}.`, none: true };
+                return {
+                  text: `${people(plan.apply.length)} join ${name}.${plan.same.length ? ` ${people(plan.same.length)} already ${plan.same.length === 1 ? "is" : "are"} a member.` : ""}`,
+                };
+              }}
+              onClose={() => setBulk(null)}
+              onConfirm={(gid) => {
+                const plan = addToGroup({ ids: tickedIds, groupId: gid });
+                const name = groupName.get(gid) ?? gid;
+                report(plan, `${people(plan.apply.length)} added to ${name}`, () => ({ method: "UPDATE", summary: `Added user to group “${name}”` }));
+                setBulk(null);
+                setTicked(new Set());
+              }}
+            />
+          )}
+          {bulk === "role" && (
+            <BulkPickModal
+              title="Change role"
+              subtitle={people(ticked.size)}
+              confirmLabel="Change role"
+              options={(Object.keys(ROLE_LABEL) as UserRole[]).map((r) => ({ value: r, label: ROLE_LABEL[r] }))}
+              readback={(r) => {
+                const plan = planRoleChange(users, me?.id, tickedIds, r as UserRole);
+                const parts = [
+                  plan.apply.length ? `${people(plan.apply.length)} become ${ROLE_LABEL[r as UserRole]}.` : "",
+                  plan.same.length ? `${people(plan.same.length)} already ${plan.same.length === 1 ? "is" : "are"}.` : "",
+                  ...blockedLines(plan),
+                ].filter(Boolean);
+                return { text: parts.join(" "), none: plan.apply.length === 0 };
+              }}
+              onClose={() => setBulk(null)}
+              onConfirm={(r) => {
+                const role = r as UserRole;
+                const plan = setRole({ ids: tickedIds, role });
+                report(plan, `${people(plan.apply.length)} now ${ROLE_LABEL[role]}`, () => ({ method: "UPDATE", summary: `Changed role to ${ROLE_LABEL[role]}` }));
+                setBulk(null);
+                // Refused users stay ticked, so the reason can be acted on.
+                setTicked(new Set(plan.blocked.map((b) => b.id)));
+              }}
+            />
+          )}
+          <ConfirmDelete
+            open={!!deletePlan}
+            title="Delete users"
+            message={
+              deletePlan && deletePlan.apply.length
+                ? `Delete ${deletePlan.apply.map(nameOf).join(", ")}? They can no longer sign in to this collection.`
+                : "None of the selected users can be deleted."
+            }
+            impact={
+              deletePlan
+                ? {
+                    lines: [
+                      ...(() => {
+                        const left = new Set(deletePlan.apply);
+                        const touched = groups.filter((g) => g.memberIds.some((id) => left.has(id)));
+                        return touched.length ? [`They leave ${touched.map((g) => g.name).join(", ")}.`] : [];
+                      })(),
+                      ...blockedLines(deletePlan),
+                    ],
+                    block: deletePlan.apply.length ? null : deletePlan.blocked[0]?.reason ?? null,
+                  }
+                : null
+            }
+            confirmLabel={deletePlan && deletePlan.apply.length > 1 ? `Delete ${deletePlan.apply.length}` : "Delete"}
+            onCancel={() => setBulk(null)}
+            onConfirm={() => {
+              const names = new Map(tickedIds.map((id) => [id, nameOf(id)]));
+              const plan = deleteUsers(tickedIds);
+              for (const id of plan.apply) {
+                unshare(id);
+                record({ method: "DELETE", domain: "user", noun: "user", id, name: names.get(id) ?? id, notify: false });
+              }
+              record({
+                log: false,
+                method: "DELETE",
+                domain: "user",
+                noun: "users",
+                name: "Users",
+                message: `${people(plan.apply.length)} deleted`,
+                ...(plan.blocked.length ? { detail: blockedLines(plan).join(" ") } : {}),
+              });
+              setBulk(null);
+              setTicked(new Set(plan.blocked.map((b) => b.id)));
+            }}
+          />
           <UserDelete user={confirmUser} onCancel={() => setConfirmUser(null)} />
           <GroupDelete group={confirmGroup} onCancel={() => setConfirmGroup(null)} />
         </>
@@ -188,6 +350,7 @@ export function UsersPage() {
           columns={userColumns}
           data={userSearch.rows}
           getRowId={(u) => u.id}
+          selection={{ selected: ticked, onChange: setTicked, label: (u) => u.username }}
           onRowClick={(u) => setEditingUser(u.id)}
           rowAriaLabel={(u) => `Edit ${u.username}`}
           emptyState={

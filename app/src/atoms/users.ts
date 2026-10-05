@@ -180,3 +180,86 @@ export const deleteUserAtom = atom(null, (get, set, id: string): boolean => {
   set(users.deleteAtom, { id });
   return true;
 });
+
+/* ── Bulk (UX2) ────────────────────────────────────────────────────────────
+   A selection is planned before it is applied, one user at a time against
+   the list as it will be, so "the last admin" means the last one after the
+   others in the selection have changed. The readback and the write use the
+   same plan. */
+
+export interface BulkPlan {
+  /** Users the action changes. */
+  apply: string[];
+  /** Users it leaves alone because they already match. */
+  same: string[];
+  /** Users it refuses, and why. */
+  blocked: { id: string; username: string; reason: string }[];
+}
+
+export function planRoleChange(all: SettingsUser[], signedInId: string | undefined, ids: string[], role: UserRole): BulkPlan {
+  let list = all;
+  const plan: BulkPlan = { apply: [], same: [], blocked: [] };
+  for (const id of ids) {
+    const u = list.find((x) => x.id === id);
+    if (!u) continue;
+    if (u.role === role) plan.same.push(id);
+    else if (id === signedInId) plan.blocked.push({ id, username: u.username, reason: "You can't change your own role." });
+    else {
+      const block = roleChangeBlock(list, id, role);
+      if (block) plan.blocked.push({ id, username: u.username, reason: block });
+      else {
+        plan.apply.push(id);
+        list = list.map((x) => (x.id === id ? { ...x, role } : x));
+      }
+    }
+  }
+  return plan;
+}
+
+export function planUserDelete(all: SettingsUser[], signedInId: string | undefined, ids: string[]): BulkPlan {
+  let list = all;
+  const plan: BulkPlan = { apply: [], same: [], blocked: [] };
+  for (const id of ids) {
+    const u = list.find((x) => x.id === id);
+    if (!u) continue;
+    const block = userDeleteBlock(list, signedInId, id);
+    if (block) plan.blocked.push({ id, username: u.username, reason: block });
+    else {
+      plan.apply.push(id);
+      list = list.filter((x) => x.id !== id);
+    }
+  }
+  return plan;
+}
+
+export function planAddToGroup(all: SettingsUser[], ids: string[], groupId: string): BulkPlan {
+  const plan: BulkPlan = { apply: [], same: [], blocked: [] };
+  for (const id of ids) {
+    const u = all.find((x) => x.id === id);
+    if (!u) continue;
+    (u.groupIds.includes(groupId) ? plan.same : plan.apply).push(id);
+  }
+  return plan;
+}
+
+export const bulkSetRoleAtom = atom(null, (get, set, { ids, role }: { ids: string[]; role: UserRole }): BulkPlan => {
+  const plan = planRoleChange(get(usersAtom), get(signedInUserAtom)?.id, ids, role);
+  for (const id of plan.apply) set(users.patchAtom, { id, patch: { role } });
+  return plan;
+});
+
+export const bulkAddToGroupAtom = atom(null, (get, set, { ids, groupId }: { ids: string[]; groupId: string }): BulkPlan => {
+  const all = get(usersAtom);
+  const plan = planAddToGroup(all, ids, groupId);
+  for (const id of plan.apply) {
+    const u = all.find((x) => x.id === id)!;
+    set(users.patchAtom, { id, patch: { groupIds: [...u.groupIds, groupId] } });
+  }
+  return plan;
+});
+
+export const bulkDeleteUsersAtom = atom(null, (get, set, ids: string[]): BulkPlan => {
+  const plan = planUserDelete(get(usersAtom), get(signedInUserAtom)?.id, ids);
+  for (const id of plan.apply) set(users.deleteAtom, { id });
+  return plan;
+});
