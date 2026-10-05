@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import L from "leaflet";
 import { useAtomValue, useSetAtom } from "jotai";
 import { FileText, Newspaper, PanelRight } from "lucide-react";
 import { languageAtom, LANGUAGE_NAMES } from "../../atoms/language";
@@ -27,6 +28,7 @@ import { EntityPill } from "../shared/EntityPill";
 import { SectionLabel } from "../shared/SectionLabel";
 import { Hint } from "../shared/Hint";
 import { EntityOverlay } from "../relationships/EntityOverlay";
+import { useLeafletMap, labelledDivIcon } from "../shared/map/useLeafletMap";
 import { WARM_BUTTON } from "../shared/warmButton";
 
 /** The width the entity slide-over takes over this page: the entity view's
@@ -61,8 +63,8 @@ const relationDisplayLabel = (type: RelationType) => {
  *  - Masthead: the first image (when there is one) beside the template, the
  *    title, a descriptor made of the first short facts, and when the record
  *    was last changed.
- *  - Main column: prose and inheritance tables, the other images, the
- *    supporting files. With no prose the short facts lead it as
+ *  - Main column: prose and inheritance tables, the other images, the place
+ *    on a map, the supporting files. With no prose the short facts lead it as
  *    a definition grid, so no page is a title over an empty half.
  *  - Side column: the short facts when there is prose to read beside them,
  *    then the relationships, one row per entity, grouped by template. A
@@ -95,6 +97,8 @@ export function PublishedEntityView() {
   );
   const images = profile.images ?? (profile.image ? [profile.image] : entity?.images ?? (entity?.image ? [entity.image] : []));
   const [hero, ...gallery] = images;
+  // The entity's own geolocation (main's records carry no geolocation field).
+  const place = entity?.geo ? { lat: entity.geo.lat, lon: entity.geo.lng, fieldLabel: t("System", "Location") } : undefined;
   const rels = useMemo(() => relationshipGroups(references, shownLinks), [references, shownLinks]);
   const hasFiles = profile.hasDocument || (profile.files?.length ?? 0) > 0;
   const empty = facts.length === 0 && reading.length === 0;
@@ -226,6 +230,12 @@ export function PublishedEntityView() {
                       </div>
                     ))}
                   </div>
+                </section>
+              )}
+              {place && (
+                <section data-part="place" className="flex flex-col gap-4">
+                  <SectionLabel as="h2">{place.fieldLabel}</SectionLabel>
+                  <PublishedMap lat={place.lat} lon={place.lon} label={title} />
                 </section>
               )}
               {hasFiles && <SupportingFiles profile={profile} language={language} />}
@@ -477,6 +487,33 @@ function SupportingFiles({ profile, language }: { profile: EntityProfile; langua
         })}
       </ul>
     </section>
+  );
+}
+
+/** The entity's place, on OpenStreetMap tiles. Wheel zoom is off: the map
+ *  sits in a scrolling page, and a wheel over it should scroll the page. */
+function PublishedMap({ lat, lon, label }: { lat: number; lon: number; label: string }) {
+  const host = useRef<HTMLDivElement>(null);
+  const map = useLeafletMap(host, { center: [lat, lon], zoom: 5, minZoom: 1, maxZoom: 18, scrollWheelZoom: false });
+  useEffect(() => {
+    if (!map) return;
+    map.setView([lat, lon], map.getZoom());
+    const marker = L.marker([lat, lon], {
+      keyboard: false,
+      interactive: false,
+      icon: labelledDivIcon(
+        { html: '<span class="map-pin" style="--pin-color:var(--text-primary)"></span>', className: "", iconSize: [16, 16] },
+        label,
+      ),
+    }).addTo(map);
+    return () => {
+      marker.remove();
+    };
+  }, [map, lat, lon, label]);
+  return (
+    <div data-component="PublishedMap" className="relative isolate h-64 rounded-md overflow-hidden border border-border-soft">
+      <div ref={host} role="group" aria-label={`Map: ${label}`} className="absolute inset-0" />
+    </div>
   );
 }
 

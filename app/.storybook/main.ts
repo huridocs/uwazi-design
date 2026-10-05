@@ -6,8 +6,8 @@ import type { StorybookConfig } from '@storybook/react-vite';
  * `@storybook/react-vite` loads and merges the project's own `vite.config.ts`,
  * so the app's `resolve.dedupe` and `optimizeDeps.include` already apply here —
  * verified, not assumed: no story imports `LibraryView`/`LibraryMapView`, yet
- * `react-simple-maps` appears in Storybook's dep cache, which it can only get
- * from the app config's `include`.
+ * `react-simple-maps` (the map library then) appeared in Storybook's dep cache,
+ * which it could only get from the app config's `include`.
  *
  * That makes ONE config the source of truth for both builders. Adding a
  * `viteFinal` that re-declares `optimizeDeps` here would REPLACE that array

@@ -101,9 +101,7 @@ import { LibrarySelectionDrawer } from "../components/library/LibrarySelectionDr
 import { MatchOrigin } from "../components/library/MatchOrigin";
 import { listColumnSpecs, buildListColumns } from "../components/library/listColumns";
 import { LIBRARY_SORTS } from "../data/libraryDisplay";
-// Lazy: react-simple-maps + the world atlas are the heaviest static chunk in
-// the bundle and only the map view needs them — split so the default Library
-// (and everything else) never downloads them.
+// Lazy: Leaflet and markercluster load with the map view, not with the Library.
 const LibraryMapView = lazy(() =>
   import("../components/library/LibraryMapView").then((m) => ({ default: m.LibraryMapView })),
 );

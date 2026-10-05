@@ -1,246 +1,209 @@
-import { useCallback, useMemo, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { ComposableMap, Geographies, Geography, Graticule, Marker, ZoomableGroup } from "react-simple-maps";
-import worldData from "world-atlas/countries-110m.json";
+import L from "leaflet";
+import "leaflet.markercluster";
+import "leaflet.markercluster/dist/MarkerCluster.css";
 import { languageAtom } from "../../atoms/language";
-import { breakpointAtom } from "../../atoms/viewport";
 import {
   librarySelectedClusterAtom,
   librarySelectedEntityIdAtom,
   libraryHasNarrowingAtom,
   clearLibraryFiltersAtom,
+  type LibraryCluster,
 } from "../../atoms/library";
 import { MapPinOff } from "lucide-react";
 import { entityCountries } from "../../utils/libraryFacets";
-import { getEntity, type Entity } from "../../data/entities";
+import { getEntity, getEntityType, type Entity } from "../../data/entities";
+import { useLeafletMap, labelledDivIcon } from "../shared/map/useLeafletMap";
 
-const WIDTH = 800;
-const HEIGHT = 400;
-const SCALE = 127;
-const START_ZOOM = 1.6;
+/** Zoom a fit to the pins stops at, so one pin does not open at street level. */
+const FIT_MAX_ZOOM = 6;
+const PIN = 14;
 
-/** How close two pins may sit, in ON-SCREEN units, before they merge. Compared
- *  against projected distance ÷ zoom, so clusters break apart as you zoom in. */
-const CLUSTER_PX = 16;
-
-/* The map is a plain equirectangular projection with no rotation, so projecting
- * and inverting is two lines of arithmetic — no need to pull d3-geo in as a
- * direct dependency just to reach the same numbers react-simple-maps uses. */
-const project = (lng: number, lat: number): [number, number] => [
-  WIDTH / 2 + SCALE * (lng * (Math.PI / 180)),
-  HEIGHT / 2 - SCALE * (lat * (Math.PI / 180)),
-];
-const invert = (x: number, y: number): [number, number] => [
-  ((x - WIDTH / 2) / SCALE) * (180 / Math.PI),
-  ((HEIGHT / 2 - y) / SCALE) * (180 / Math.PI),
-];
-
-interface Cluster {
-  key: string;
-  label: string;
-  lng: number;
-  lat: number;
-  count: number;
-  ids: string[];
+interface PinOptions extends L.MarkerOptions {
+  entityId: string;
 }
 
-/** Library geolocation view. Real world geography via react-simple-maps
- *  (equirectangular + graticule), styled to our tokens.
+const isActivation = (e: L.LeafletEvent) => {
+  const key = (e as L.LeafletKeyboardEvent).originalEvent?.key;
+  return key === "Enter" || key === " ";
+};
+
+/** Library geolocation view, on Leaflet and leaflet.markercluster as Uwazi
+ *  draws it (app/react/Map/LMap.tsx), on OpenStreetMap tiles.
  *
- *  Pins cluster by SCREEN PROXIMITY at the current zoom, not by identical
- *  coordinates. They used to key on `${lat},${lng}` — fine when every entity sat
- *  on a shared country centroid, but once the adapter started reading real
- *  geolocation properties no two incidents shared a coordinate, so 352 pins each
- *  reading "1" piled on top of each other into an unreadable mass. Zooming in
- *  splits a cluster; zooming out merges it. */
+ *  One pin per entity with a geolocation, in its template's colour. Nearby pins
+ *  merge into markercluster's fixed-size badges; a badge zooms to its members,
+ *  and one whose members cannot split any further (they share a point, or the
+ *  map is at its last zoom) opens them as a list in the drawer. A pin opens the
+ *  entity's preview. Pins and badges are buttons: Tab reaches them, Enter or
+ *  Space opens them. */
 export function LibraryMapView({ entities }: { entities: Entity[] }) {
   const language = useAtomValue(languageAtom);
-  const isMobile = useAtomValue(breakpointAtom) === "mobile";
   const [selectedCluster, setSelectedCluster] = useAtom(librarySelectedClusterAtom);
   const setSelectedId = useSetAtom(librarySelectedEntityIdAtom);
   // Facets OR the search — this button clears both, and the empty screen it
   // rescues you from is most often a search that matched nothing.
   const hasNarrowing = useAtomValue(libraryHasNarrowingAtom);
   const clearFilters = useSetAtom(clearLibraryFiltersAtom);
-  const [zoom, setZoom] = useState(START_ZOOM);
 
-  // MUST be stable. react-simple-maps' useZoomPan lists onMove/onMoveEnd in the
-  // deps of the effect that attaches d3-zoom, so an inline arrow — a new function
-  // every render — makes it tear down and re-attach the zoom behaviour on each
-  // render. Re-attaching mid-gesture kills d3's "end" event, so onMoveEnd never
-  // fired, the zoom level never reached this component, and the clusters never
-  // re-computed. The map's own `center`/`zoom` props stay CONSTANT (uncontrolled)
-  // — useZoomPan's re-sync effect keys off those props, so leaving them fixed is
-  // what stops it yanking the map back to the initial view on every re-render.
-  const handleMoveEnd = useCallback(({ zoom: z }: { zoom: number }) => setZoom(z), []);
+  const host = useRef<HTMLDivElement>(null);
+  const map = useLeafletMap(host, {
+    center: [-12, -60],
+    zoom: 3,
+    minZoom: 1,
+    maxZoom: 18,
+  });
 
-  const clusters = useMemo(() => {
-    const pts = entities
-      .filter((e) => e.geo)
-      .map((e) => {
-        const [x, y] = project(e.geo!.lng, e.geo!.lat);
-        return { e, x, y };
-      });
+  // The cluster icons read these when markercluster redraws them; refs, so a
+  // new selection or language refreshes the badges without rebuilding pins.
+  const languageRef = useRef(language);
+  languageRef.current = language;
+  const selectedRef = useRef<LibraryCluster | null>(selectedCluster);
+  selectedRef.current = selectedCluster;
+  const groupRef = useRef<L.MarkerClusterGroup | null>(null);
+  // A badge opened from the keyboard is redrawn (zoom, or the selection mark),
+  // which drops focus to the page; this says to put it back.
+  const keyboardOpen = useRef(false);
 
-    // Greedy proximity merge against a running centroid. n is in the hundreds,
-    // so the O(n·clusters) scan is far cheaper than pulling in a quadtree.
-    const threshold = CLUSTER_PX / zoom;
-    const t2 = threshold * threshold;
-    const acc: { x: number; y: number; sx: number; sy: number; ids: string[]; labels: string[] }[] = [];
+  const located = entities.filter((e) => e.geo);
 
-    for (const p of pts) {
-      const hit = acc.find((c) => (c.x - p.x) ** 2 + (c.y - p.y) ** 2 <= t2);
-      const label = entityCountries(p.e, language)[0] ?? "";
-      if (hit) {
-        hit.ids.push(p.e.id);
-        hit.labels.push(label);
-        hit.sx += p.x;
-        hit.sy += p.y;
-        hit.x = hit.sx / hit.ids.length;
-        hit.y = hit.sy / hit.ids.length;
-      } else {
-        acc.push({ x: p.x, y: p.y, sx: p.x, sy: p.y, ids: [p.e.id], labels: [label] });
-      }
-    }
-
-    return acc.map((c): Cluster => {
-      const [lng, lat] = invert(c.x, c.y);
-      // A lone pin is one incident — name it after the entity. A cluster is a
-      // place; name it after the country its members share, and when they
-      // straddle a border, after the main one. NOT "N locations": that made
-      // every multi-country cluster of the same size share a label.
-      const countries = [...new Set(c.labels.filter(Boolean))];
+  useEffect(() => {
+    if (!map) return;
+    /** A badge is named after the country its members share, and when they
+     *  straddle a border, after the main one, so badges of the same size do
+     *  not all read alike. */
+    const clusterInfo = (cluster: L.MarkerCluster): LibraryCluster => {
+      const ids = cluster.getAllChildMarkers().map((m) => (m.options as PinOptions).entityId);
+      const countries = [
+        ...new Set(
+          ids.map((id) => {
+            const e = getEntity(id);
+            return e ? entityCountries(e, languageRef.current)[0] ?? "" : "";
+          }).filter(Boolean),
+        ),
+      ];
       const label =
-        c.ids.length === 1
-          ? getEntity(c.ids[0])?.title ?? countries[0] ?? "Location"
-          : countries.length === 0
-            ? `${c.ids.length} locations`
-            : countries.length === 1
-              ? countries[0]
-              : `${countries[0]} +${countries.length - 1}`;
-      return { key: c.ids[0], label, lng, lat, count: c.ids.length, ids: c.ids };
+        countries.length === 0
+          ? `${ids.length} locations`
+          : countries.length === 1
+            ? countries[0]
+            : `${countries[0]} +${countries.length - 1}`;
+      return { label, ids };
+    };
+
+    const group = L.markerClusterGroup({
+      showCoverageOnHover: false,
+      spiderfyOnMaxZoom: false,
+      zoomToBoundsOnClick: false,
+      iconCreateFunction: (cluster) => {
+        const { label, ids } = clusterInfo(cluster);
+        const n = ids.length;
+        const size = n < 10 ? 32 : n < 100 ? 38 : 44;
+        const sel = selectedRef.current;
+        const active = !!sel && sel.ids.length === n && sel.ids[0] === ids[0];
+        return labelledDivIcon(
+          {
+            html: `<span>${n.toLocaleString()}</span>`,
+            className: "map-cluster",
+            iconSize: [size, size],
+          },
+          `${label} · ${n} entities`,
+          active ? { "data-active": "" } : {},
+        );
+      },
     });
-  }, [entities, language, zoom]);
 
-  const located = clusters.reduce((n, c) => n + c.count, 0);
-  const unlocated = entities.length - located;
+    const openCluster = (e: L.LeafletEvent) => {
+      if (e.type === "clusterkeypress" && !isActivation(e)) return;
+      (e as L.LeafletKeyboardEvent).originalEvent?.preventDefault?.();
+      const cluster = (e as unknown as { layer: L.MarkerCluster }).layer;
+      const bounds = cluster.getBounds();
+      const onePoint = bounds.getNorthEast().equals(bounds.getSouthWest());
+      const fromKeyboard = e.type === "clusterkeypress";
+      if (onePoint || map.getZoom() >= map.getMaxZoom()) {
+        keyboardOpen.current = fromKeyboard;
+        setSelectedId(null);
+        setSelectedCluster(clusterInfo(cluster));
+      } else {
+        // After a zoom the badge is gone; the map itself takes focus, and Tab
+        // goes on to the pins and badges now in view.
+        if (fromKeyboard) map.once("zoomend", () => map.getContainer().focus({ preventScroll: true }));
+        cluster.zoomToBounds({ padding: [24, 24] });
+      }
+    };
+    group.on("clusterclick clusterkeypress", openCluster);
 
-  const open = (c: Cluster) => {
-    if (c.count === 1) {
-      setSelectedCluster(null);
-      setSelectedId(c.ids[0]);
-      return;
+    for (const e of located) {
+      const color = getEntityType(e.typeId)?.color ?? "var(--text-tertiary)";
+      const pin = L.marker([e.geo!.lat, e.geo!.lng], {
+        entityId: e.id,
+        keyboard: true,
+        title: e.title,
+        icon: labelledDivIcon(
+          {
+            html: `<span class="map-pin" style="--pin-color:${color}"></span>`,
+            className: "",
+            iconSize: [PIN, PIN],
+          },
+          `Open ${e.title}`,
+        ),
+      } as PinOptions);
+      const open = () => {
+        setSelectedCluster(null);
+        setSelectedId(e.id);
+      };
+      pin.on("click", open);
+      pin.on("keypress", (ev) => {
+        if (!isActivation(ev)) return;
+        (ev as L.LeafletKeyboardEvent).originalEvent.preventDefault();
+        open();
+      });
+      group.addLayer(pin);
     }
-    setSelectedId(null);
-    setSelectedCluster({ label: c.label, ids: c.ids });
-  };
+
+    group.addTo(map);
+    groupRef.current = group;
+    if (located.length) map.fitBounds(group.getBounds(), { maxZoom: FIT_MAX_ZOOM, padding: [32, 32] });
+
+    return () => {
+      groupRef.current = null;
+      map.removeLayer(group);
+    };
+    // `located` follows `entities`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, entities, setSelectedCluster, setSelectedId]);
+
+  // Redraw the badges to mark the selected one, or to rename them in a new language.
+  useEffect(() => {
+    groupRef.current?.refreshClusters();
+    if (keyboardOpen.current) {
+      keyboardOpen.current = false;
+      host.current?.querySelector<HTMLElement>(".map-cluster[data-active]")?.focus({ preventScroll: true });
+    }
+  }, [selectedCluster, language]);
+
+  const unlocated = entities.length - located.length;
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
-      {/* A phone fills the pane's height and crops the sides (`slice`) around
-          the same centre: at 2:1 the map was a short band in an empty screen. */}
+    <div data-component="LibraryMapView" className="relative w-full h-full">
       <div
-        className="relative w-full bg-vellum rounded-lg border border-border/60 overflow-hidden"
-        style={isMobile ? { height: "100%" } : { aspectRatio: "2 / 1", maxHeight: "100%" }}
+        data-part="map"
+        className="absolute inset-0 isolate bg-vellum rounded-lg border border-border/60 overflow-hidden"
       >
-        <ComposableMap
-          projection="geoEquirectangular"
-          width={WIDTH}
-          height={HEIGHT}
-          projectionConfig={{ scale: SCALE, center: [0, 0] }}
-          preserveAspectRatio={isMobile ? "xMidYMid slice" : undefined}
-          style={{ width: "100%", height: "100%" }}
-        >
-          <ZoomableGroup
-            center={[-60, -12]}
-            zoom={START_ZOOM}
-            minZoom={1}
-            maxZoom={24}
-            onMoveEnd={handleMoveEnd}
-          >
-            <Geographies geography={worldData as object}>
-              {({ geographies }) =>
-                geographies.map((geo) => (
-                  <Geography
-                    key={geo.rsmKey}
-                    geography={geo}
-                    fill="var(--bg-surface)"
-                    stroke="var(--border-primary)"
-                    strokeWidth={0.4 / zoom}
-                    style={{
-                      default: { outline: "none" },
-                      hover: { outline: "none", fill: "var(--bg-surface)" },
-                      pressed: { outline: "none", fill: "var(--bg-surface)" },
-                    }}
-                  />
-                ))
-              }
-            </Geographies>
-
-            <Graticule stroke="var(--border-soft)" strokeWidth={0.35 / zoom} step={[30, 30]} />
-
-            {clusters.map((c) => {
-              // ZoomableGroup scales its children, so every pin dimension is
-              // divided by the zoom to keep a constant on-screen size. Without
-              // this the markers balloon as you zoom and re-swamp the map.
-              const base = c.count === 1 ? 3.5 : 4.5 + Math.min(Math.sqrt(c.count) * 1.6, 7);
-              const r = base / zoom;
-              // Selected = the SAME cluster, identified by its members. Matching
-              // on (label, count) lit up every other cluster that happened to
-              // share both — three unrelated pins of 10 all went black at once.
-              const active =
-                !!selectedCluster &&
-                selectedCluster.ids.length === c.ids.length &&
-                selectedCluster.ids[0] === c.ids[0];
-              return (
-                <Marker key={c.key} coordinates={[c.lng, c.lat]} onClick={() => open(c)}>
-                  <circle
-                    r={r}
-                    strokeWidth={1 / zoom}
-                    style={{ cursor: "pointer" }}
-                    fill={
-                      active
-                        ? "var(--text-primary)"
-                        : "color-mix(in srgb, var(--accent-blue) 22%, transparent)"
-                    }
-                    stroke={
-                      active
-                        ? "var(--text-primary)"
-                        : "color-mix(in srgb, var(--accent-blue) 70%, transparent)"
-                    }
-                  />
-                  {/* A count on a single pin is noise — it's always "1". */}
-                  {c.count > 1 && (
-                    <text
-                      textAnchor="middle"
-                      dy="0.32em"
-                      style={{
-                        fontSize: 7 / zoom,
-                        fontWeight: 600,
-                        pointerEvents: "none",
-                        fill: active ? "#fff" : "var(--text-primary)",
-                      }}
-                    >
-                      {c.count}
-                    </text>
-                  )}
-                  <title>{`${c.label}${c.count > 1 ? ` · ${c.count}` : ""}`}</title>
-                </Marker>
-              );
-            })}
-          </ZoomableGroup>
-        </ComposableMap>
+        <div ref={host} role="region" aria-label="Map of located entities" className="absolute inset-0" />
 
         {/* Empty state — a map with no pins is indistinguishable from a map that
             failed to load. Say which, over the map rather than instead of it, so
             the geography stays as context and the way out is right there. */}
-        {located === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+        {located.length === 0 && (
+          <div data-part="empty" className="absolute inset-0 z-[1000] flex items-center justify-center p-4 pointer-events-none">
             <div
+              role="status"
               className="pointer-events-auto max-w-[20rem] text-center bg-paper/90 backdrop-blur-sm rounded-lg px-4 py-3"
               style={{ border: "1px solid var(--border-primary)", boxShadow: "0 6px 18px rgba(0,0,0,0.08)" }}
             >
-              <MapPinOff size={18} className="mx-auto text-ink-muted" />
+              <MapPinOff size={18} aria-hidden className="mx-auto text-ink-muted" />
               <p className="mt-2 text-xs font-semibold text-ink">
                 {entities.length ? "Nothing to place on the map" : "No results"}
               </p>
@@ -251,6 +214,8 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
               </p>
               {hasNarrowing && (
                 <button
+                  type="button"
+                  data-part="clear-filters"
                   onClick={() => clearFilters()}
                   className="mt-2.5 px-2.5 h-6 text-meta font-medium rounded-md bg-warm text-ink-secondary hover:bg-parchment hover:text-ink transition-colors cursor-pointer"
                 >
@@ -264,16 +229,15 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
         {/* Caption — states what ISN'T here. Only entities with a real
             geolocation property are plotted, and in a corpus like CEJIL that is
             a small minority; without this the map reads as the whole library. */}
-        <div className="absolute bottom-2 left-2 text-meta text-ink-tertiary bg-paper/70 backdrop-blur-sm rounded px-2 py-0.5">
-          {located.toLocaleString()} located {located === 1 ? "entity" : "entities"} ·{" "}
-          {clusters.length.toLocaleString()} {clusters.length === 1 ? "pin" : "pins"}
+        <p data-part="caption" className="absolute top-2 left-2 z-[1000] text-meta text-ink-tertiary bg-paper/80 backdrop-blur-sm rounded px-2 py-0.5">
+          {located.length.toLocaleString()} located {located.length === 1 ? "entity" : "entities"}
           {unlocated > 0 && (
-            <span className="text-ink-muted">
+            <span className="text-ink-tertiary">
               {" · "}
               {unlocated.toLocaleString()} with no geolocation
             </span>
           )}
-        </div>
+        </p>
       </div>
     </div>
   );
