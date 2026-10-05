@@ -129,6 +129,12 @@ function templateNameOf(corpus: Corpus): (id: string) => string {
   return (id) => m.get(id) ?? id;
 }
 
+/** Said instead of a count while a lazy corpus's entities are still loading:
+ *  an unknown count must not read as zero. */
+const PENDING = "Entity counts appear when the collection's records have loaded.";
+const withPending = <T extends { lines: string[] }>(u: T, pending: boolean): T =>
+  pending ? { ...u, lines: [...u.lines, PENDING] } : u;
+
 /* ── Templates ─────────────────────────────────────────────────────────── */
 
 /** Entities using a template: live where the corpus is loaded, otherwise the
@@ -160,14 +166,18 @@ const propertyUsageFamily = atomFamily((key: string) => {
   const k = { templateId, label, name: name ?? undefined };
   return atom((get) => {
       const corpus = templatesCorpus(get(dataSourceAtom));
-      return propertyUsage({
-        templateId: k.templateId,
-        prop: k,
-        schema: schemaOf(corpus),
-        entities: get(byTemplate(corpus))?.get(k.templateId) ?? [],
-        read: get(readerAtom(corpus)),
-        templateName: templateNameOf(corpus),
-      });
+      const groups = get(byTemplate(corpus));
+      return withPending(
+        propertyUsage({
+          templateId: k.templateId,
+          prop: k,
+          schema: schemaOf(corpus),
+          entities: groups?.get(k.templateId) ?? [],
+          read: get(readerAtom(corpus)),
+          templateName: templateNameOf(corpus),
+        }),
+        groups === null,
+      );
     });
 });
 export const propertyUsageAtom = (k: { templateId: string; label: string; name?: string }) =>
@@ -187,12 +197,15 @@ export const thesaurusUsageAtom = atomFamily((thesaurusId: string) =>
   atom((get) => {
     const corpus = thesauriCorpus(get(dataSourceAtom));
     const groups = get(byTemplate(corpus));
-    return thesaurusUsage({
-      properties: get(boundAtom(thesaurusId)),
-      entitiesOf: (id) => groups?.get(id) ?? [],
-      read: get(readerAtom(corpus)),
-      templateName: templateNameOf(corpus),
-    });
+    return withPending(
+      thesaurusUsage({
+        properties: get(boundAtom(thesaurusId)),
+        entitiesOf: (id) => groups?.get(id) ?? [],
+        read: get(readerAtom(corpus)),
+        templateName: templateNameOf(corpus),
+      }),
+      groups === null,
+    );
   }),
 );
 
@@ -204,8 +217,9 @@ export const valueUsageAtom = atomFamily((thesaurusId: string) =>
     const groups = get(byTemplate(corpus));
     const read = get(readerAtom(corpus));
     const properties = get(boundAtom(thesaurusId));
-    return (value: ThesaurusValue) =>
-      valueUsage({ value, properties, entitiesOf: (id) => groups?.get(id) ?? [], read });
+    // null: the corpus has not loaded, so the count is unknown.
+    return (value: ThesaurusValue): number | null =>
+      groups === null ? null : valueUsage({ value, properties, entitiesOf: (id) => groups.get(id) ?? [], read });
   }),
 );
 
