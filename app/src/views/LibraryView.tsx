@@ -274,9 +274,11 @@ export function LibraryView() {
   /* The column count follows the pane, not the viewport.
      Auto: `auto-fill` over a readable minimum card width per frame, so a pane
      narrowed by the drawer drops a column instead of shrinking cards (landscape
-     21.5rem: 3 columns in a 1400px pane, as on main; portrait 13.5rem). Side
-     cards keep their size-stepped minimums, because Size sets their picture
-     width. Thumbnail size no longer changes the count otherwise.
+     21.5rem: 3 columns in a 1400px pane, as on main). Portrait and side cards
+     keep size-stepped minimums, because there Size sets the picture's width:
+     a portrait slot is the column's width at 3:4, so the minimum is the only
+     thing Size can change (13.5 / 17 / 21rem, all narrower than landscape).
+     Landscape Size sets the band's height and leaves the count alone.
      A chosen count (Display › Columns) is a ceiling: each column is the larger
      of the pane's 1/N share and a floor, so the grid draws N while cards stay
      readable and fewer when they would not. Phones stay at 1–2. The 0.5px
@@ -290,7 +292,11 @@ export function LibraryView() {
         l: "grid-cols-[repeat(auto-fill,minmax(min(33rem,100%),1fr))]",
       }[thumbSize]
     : portrait
-      ? "grid-cols-[repeat(auto-fill,minmax(min(13.5rem,100%),1fr))]"
+      ? {
+          s: "grid-cols-[repeat(auto-fill,minmax(min(13.5rem,100%),1fr))]",
+          m: "grid-cols-[repeat(auto-fill,minmax(min(17rem,100%),1fr))]",
+          l: "grid-cols-[repeat(auto-fill,minmax(min(21rem,100%),1fr))]",
+        }[thumbSize]
       : "grid-cols-[repeat(auto-fill,minmax(min(21.5rem,100%),1fr))]";
   const phone = useAtomValue(breakpointAtom) === "mobile";
   const colCount = cardColumns === "auto" ? null : phone ? Math.min(cardColumns, 2) : cardColumns;

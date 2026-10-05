@@ -225,8 +225,9 @@ const CARD_FIELDS: DisplaySection = {
 /** How many columns the grid draws. Auto is the readable minimum (3 in a
  *  1400px pane); a number is a ceiling the grid keeps while each card stays
  *  readable, and drops below when the pane is too narrow (the menu says what
- *  is in effect). Kept per frame. Thumbnail size no longer changes the count:
- *  it sizes the picture only. */
+ *  is in effect). Kept per frame. In landscape, thumbnail size sizes the
+ *  picture only; in portrait (and side cards) it steps Auto's minimum width,
+ *  because there the picture's width is the column's. */
 export const CARD_COLUMNS_CHOICES = ["auto", "2", "3", "4", "5", "6"] as const;
 const CARD_COLUMNS: DisplaySection = {
   id: "cardCols",
