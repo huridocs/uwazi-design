@@ -10,10 +10,11 @@ import { relationTypesCorpus, relationTypesOfAtom } from "./relationTypes";
 import { filterSettings } from "./settingsSingletons";
 import { languages as languageStore } from "./languages";
 import { createSettingsSingleton } from "./settingsCollection";
-import { UI_KEYS, uiTranslation } from "../utils/i18n";
+import { UWAZI_UI_KEYS } from "../data/uwaziUiKeys";
 
 /** Settings › Translations, from the collection's real contexts (Uwazi's
- *  translation contexts, page-briefs.md "Translations"): the User Interface,
+ *  translation contexts, page-briefs.md "Translations"): the User Interface
+ *  (Uwazi's first 412 System keys, `data/uwaziUiKeys.ts`),
  *  the Menu, the Filters groups, then one context per template (its name, its
  *  title label, every property label), per thesaurus (its name and every
  *  value) and per relationship type (its name).
@@ -79,7 +80,8 @@ export const translationContextsAtom = atomFamily((corpus: Corpus) =>
       name: "User Interface",
       type: "User interface",
       system: true,
-      keys: UI_KEYS.map((k) => ({ id: k, text: k, defaults: { es: uiTranslation(k, "es"), fr: uiTranslation(k, "fr") } })),
+      // Uwazi's own System keys and its shipped translations (SD-7).
+      keys: UWAZI_UI_KEYS.map((k) => ({ id: k.key, text: k.key, defaults: { es: k.es, fr: k.fr, ar: k.ar } })),
     });
     // The Menu's links (the Menu page's seed until Menu is on a store).
     const menu = corpus === "cejil" ? cejilSettingsMenu : seedMenuLinks;

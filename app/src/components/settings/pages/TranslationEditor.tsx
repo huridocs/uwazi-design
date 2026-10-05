@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { X } from "lucide-react";
 import { SettingsEditor } from "../SettingsEditor";
@@ -22,6 +22,9 @@ import {
 } from "../../../atoms/translations";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
+
+/** Keys rendered per page of a long context. */
+const PAGE = 60;
 
 /** Per-context translation editor: a key × language grid, opened from the
  *  Translations list. The default language is the read-only source; every
@@ -65,6 +68,23 @@ export function TranslationEditor({ context, onClose }: { context: TranslationCo
       .map((r) => r.id),
   );
   const shown = rows.filter((r) => keep.has(r.id));
+
+  // A long context (the User Interface's 412 keys) renders a page of keys at
+  // a time; the next page mounts as the end of the grid scrolls into view.
+  // Search and the filters still cover every key.
+  const [limit, setLimit] = useState(PAGE);
+  useEffect(() => setLimit(PAGE), [query, gapsOnly, lang]);
+  const sentinel = useRef<HTMLDivElement | null>(null);
+  const more = shown.length > limit;
+  useEffect(() => {
+    const el = sentinel.current;
+    if (!el || !more) return;
+    const io = new IntersectionObserver((entries) => entries.some((e) => e.isIntersecting) && setLimit((n) => n + PAGE), {
+      rootMargin: "400px",
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [more, limit]);
   const progress = progressOf(rows, languages);
   const empties = rows.reduce((n, r) => n + targets.filter((l) => !(r.values[l.key] ?? "").trim()).length, 0);
 
@@ -218,7 +238,7 @@ export function TranslationEditor({ context, onClose }: { context: TranslationCo
     >
       <SettingsTable
         columns={columns}
-        data={shown}
+        data={more ? shown.slice(0, limit) : shown}
         getRowId={(r) => r.id}
         emptyState={
           rows.length === 0 ? (
@@ -233,6 +253,11 @@ export function TranslationEditor({ context, onClose }: { context: TranslationCo
           )
         }
       />
+      {more && (
+        <div ref={sentinel} data-part="more" className="py-3 text-center text-meta text-ink-tertiary">
+          Showing {limit} of {shown.length} keys
+        </div>
+      )}
     </SettingsEditor>
   );
 }
