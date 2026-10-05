@@ -11,7 +11,8 @@ import { ProgressBar } from "../../shared/ProgressBar";
 import { seedLanguages, type SettingsLanguage } from "../../../data/settings";
 import { dataSourceAtom } from "../../../atoms/dataSource";
 import { cejilSettingsLanguages } from "../../../data/cejil/settingsAdapt";
-import { toastsAtom } from "../../../atoms/notifications";
+import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { LanguageDelete } from "../../shared/SettingsDeletes";
 
 type CatalogLanguage = { key: string; label: string; localizedLabel: string; ltr: boolean };
 
@@ -51,19 +52,19 @@ const LANGUAGE_CATALOG: CatalogLanguage[] = [
 ];
 
 export function LanguagesPage() {
-  const setToasts = useSetAtom(toastsAtom);
+  const { record } = useSettingsNotify();
   const dataSource = useAtomValue(dataSourceAtom);
   const [languages, setLanguages] = useState<SettingsLanguage[]>(
     dataSource === "cejil" ? cejilSettingsLanguages : seedLanguages,
   );
-  const [confirm, setConfirm] = useState<{ kind: "reset" | "uninstall"; lang: SettingsLanguage } | null>(
+  const [confirm, setConfirm] = useState<{ kind: "reset" | "uninstall" | "default"; lang: SettingsLanguage } | null>(
     null,
   );
   const [installOpen, setInstallOpen] = useState(false);
   const [query, setQuery] = useState("");
 
-  const toast = (message: string) =>
-    setToasts((prev) => [...prev, { id: Date.now().toString(), message, type: "success" as const }]);
+  const log = (method: "CREATE" | "UPDATE", l: { key: string; label: string }, message: string) =>
+    record({ method, domain: "language", noun: "language", id: l.key, name: l.label, message });
 
   const installLanguage = (cat: CatalogLanguage) => {
     setLanguages((prev) => [
@@ -77,7 +78,7 @@ export function LanguagesPage() {
         default: false,
       },
     ]);
-    toast(`${cat.label} installed`);
+    log("CREATE", cat, `${cat.label} installed`);
   };
 
   const q = query.trim().toLowerCase();
@@ -138,10 +139,7 @@ export function LanguagesPage() {
           <Check size={16} className="text-success mx-auto" />
         ) : (
           <button
-            onClick={() => {
-              setDefault(l.key);
-              toast(`${l.label} set as default language`);
-            }}
+            onClick={() => setConfirm({ kind: "default", lang: l })}
             className="text-xs font-medium text-carbon hover:underline cursor-pointer"
           >
             Set
@@ -270,26 +268,31 @@ export function LanguagesPage() {
       )}
 
       <ConfirmDialog
-        open={confirm !== null}
-        title={confirm?.kind === "reset" ? "Reset language" : "Uninstall language"}
+        open={confirm?.kind === "reset" || confirm?.kind === "default"}
+        title={confirm?.kind === "reset" ? "Reset language" : "Change default language"}
         message={
           confirm?.kind === "reset"
             ? `Reset all translations for ${confirm?.lang.label} to their default values? This can't be undone.`
-            : `Uninstall ${confirm?.lang.label}? All its translations will be removed from the collection.`
+            : `Make ${confirm?.lang.label} the default language? It is shown to users who haven't chosen a language.`
         }
-        confirmLabel={confirm?.kind === "reset" ? "Reset" : "Uninstall"}
-        variant="danger"
+        confirmLabel={confirm?.kind === "reset" ? "Reset" : "Make default"}
+        variant={confirm?.kind === "reset" ? "danger" : "default"}
         onConfirm={() => {
           if (!confirm) return;
-          if (confirm.kind === "uninstall") {
-            setLanguages((prev) => prev.filter((l) => l.key !== confirm.lang.key));
-            toast(`${confirm.lang.label} uninstalled`);
+          if (confirm.kind === "default") {
+            setDefault(confirm.lang.key);
+            log("UPDATE", confirm.lang, `${confirm.lang.label} set as default language`);
           } else {
-            toast(`${confirm.lang.label} translations reset`);
+            log("UPDATE", confirm.lang, `${confirm.lang.label} translations reset`);
           }
           setConfirm(null);
         }}
         onCancel={() => setConfirm(null)}
+      />
+      <LanguageDelete
+        language={confirm?.kind === "uninstall" ? confirm.lang : null}
+        onCancel={() => setConfirm(null)}
+        onDelete={(lang) => setLanguages((prev) => prev.filter((l) => l.key !== lang.key))}
       />
     </SettingsContent>
   );

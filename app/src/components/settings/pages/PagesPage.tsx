@@ -1,24 +1,22 @@
 import { useCallback, useState } from "react";
-import { useSetAtom, useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import { Plus } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { RowActions } from "../RowActions";
-import { ConfirmDialog } from "../../shared/ConfirmDialog";
+import { PageDelete } from "../../shared/SettingsDeletes";
 import { CodePageEditor } from "./site/CodePageEditor";
 import { TemplatePickerModal } from "./site/shared";
 import { codeDocFrom, seedDataFrom } from "./site/seeds";
 import { useSiteData } from "../../site/useSiteData";
 import { codeDocsAtom } from "../../../atoms/sitePages";
 import { templateDoc, textPageDoc, type CodeDoc, type SiteTemplateId } from "../../../data/sitePages";
-import { seedPages, type SettingsPage } from "../../../data/settings";
+import { seedMenuLinks, seedPages, type SettingsPage } from "../../../data/settings";
 import { dataSourceAtom } from "../../../atoms/dataSource";
-import { cejilSettingsPages } from "../../../data/cejil/settingsAdapt";
-import { toastsAtom } from "../../../atoms/notifications";
+import { cejilSettingsMenu, cejilSettingsPages } from "../../../data/cejil/settingsAdapt";
 
 export function PagesPage() {
-  const setToasts = useSetAtom(toastsAtom);
   const dataSource = useAtomValue(dataSourceAtom);
   const [pages, setPages] = useState<SettingsPage[]>(
     dataSource === "cejil" ? cejilSettingsPages : seedPages,
@@ -116,20 +114,11 @@ export function PagesPage() {
 
       {picking && <TemplatePickerModal onPick={create} onClose={() => setPicking(false)} />}
 
-      <ConfirmDialog
-        open={confirm !== null}
-        title="Delete page"
-        message={`Delete “${confirm?.title}”? Any menu links pointing to it will break.`}
-        confirmLabel="Delete"
-        variant="danger"
-        onConfirm={() => {
-          if (confirm) {
-            setPages((prev) => prev.filter((p) => p.id !== confirm.id));
-            setToasts((p) => [...p, { id: Date.now().toString(), message: `${confirm.title} deleted`, type: "success" as const }]);
-          }
-          setConfirm(null);
-        }}
+      <PageDelete
+        page={confirm}
+        menu={dataSource === "cejil" ? cejilSettingsMenu : seedMenuLinks}
         onCancel={() => setConfirm(null)}
+        onDelete={(page) => setPages((prev) => prev.filter((p) => p.id !== page.id))}
       />
     </SettingsContent>
   );
