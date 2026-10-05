@@ -176,6 +176,7 @@ export function MetadataExtractionPage() {
         </>
       }
     >
+      <h3 className="text-sm font-semibold text-ink mb-2">Extractors</h3>
       <SettingsTable
         corpusScoped
         columns={columns}

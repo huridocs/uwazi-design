@@ -340,6 +340,10 @@ repo; update them when tokens or style rules change.
   Suggestion rows are derived from the entities (current value read through the entity overlay);
   Accept writes the entity (G12). Train and process runs are timers with one Beacon task each;
   the page restarts a run that a reload interrupted. No Reject, no "Accept all".
+- Paragraph extraction: extractors and per-entity statuses are per-corpus stores
+  (`atoms/paragraphExtraction.ts`); paragraphs are derived per entity. A target template needs a
+  rich text and a numeric property; only Red Travesía has one, so it holds the seed and the
+  Sample starts empty, with the wizard saying what a target needs.
 - Catalog: the logo toggles `ComponentCatalog`. Add shared components as a `CatalogEntry` with a
   live demo.
 - Mobile: `<768` / `768–1023` / `≥1024` (`atoms/viewport.ts`). On phones every nested view is a

@@ -6,6 +6,8 @@ import { templateStore, templatesAtom } from "./templates";
 import { deleteThesaurusAtom, thesauriAtom } from "./thesauri";
 import { deleteRelationTypeAtom, relationTypesCorpus, relationTypesOfAtom } from "./relationTypes";
 import { emptyActivityLogAtom } from "./activityLog";
+import { ixExtractors } from "./extraction";
+import { pxExtractors } from "./paragraphExtraction";
 
 /** Dev switches for demos and QA (the component catalog's Dev panel,
  *  acceptance SD-1): one-shot failure injection. The next action of the armed
@@ -57,7 +59,7 @@ export const slowLoadingAtom = atom(
 
 /* ── Zero rows (SD-5) ──────────────────────────────────────────────────── */
 
-export type EmptyDomain = "templates" | "thesauri" | "relationTypes" | "activity";
+export type EmptyDomain = "templates" | "thesauri" | "relationTypes" | "activity" | "ixExtractors" | "pxExtractors";
 
 /** Empty a content store for the collection shown, past its delete guards,
  *  so its empty state and create action can be reached. Reset demo data
@@ -71,6 +73,8 @@ export const emptyDomainAtom = atom(null, (get, set, domain: EmptyDomain) => {
     for (const t of get(relationTypesOfAtom(relationTypesCorpus(corpus))))
       set(deleteRelationTypeAtom, { id: t.id, to: null, corpus: relationTypesCorpus(corpus) });
   if (domain === "activity") set(emptyActivityLogAtom);
+  if (domain === "ixExtractors") for (const x of get(ixExtractors.listOfAtom(corpus))) set(ixExtractors.deleteAtom, { id: x.id, corpus });
+  if (domain === "pxExtractors") for (const x of get(pxExtractors.listOfAtom(corpus))) set(pxExtractors.deleteAtom, { id: x.id, corpus });
 });
 
 /* ── Missing id (SD-6) ─────────────────────────────────────────────────── */

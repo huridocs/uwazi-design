@@ -1,4 +1,3 @@
-import type { ExtractorStatus } from "./extraction";
 /** Mock seed for the cloned Settings views. Shapes mirror Uwazi's real
  *  collections (languages, users, groups) but trimmed to what the prototype
  *  renders. No backend — these are the initial atom values. */
@@ -325,20 +324,6 @@ export const seedMenuLinks: SettingsMenuLink[] = [
 ];
 
 
-
-// ── Paragraph extraction ────────────────────────────────────────────────────
-export interface SettingsParagraphJob {
-  id: string;
-  template: string;
-  status: ExtractorStatus;
-  paragraphs: number;
-}
-
-export const seedParagraphJobs: SettingsParagraphJob[] = [
-  { id: "pe1", template: "Judgment", status: "ready", paragraphs: 1840 },
-  { id: "pe2", template: "Court Case", status: "processing", paragraphs: 612 },
-  { id: "pe3", template: "Document", status: "ready", paragraphs: 327 },
-];
 
 // ── Uploads (custom uploads) ────────────────────────────────────────────────
 /** A custom upload. `filename` is the stored name and fixes the URL

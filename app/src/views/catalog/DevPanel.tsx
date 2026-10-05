@@ -22,6 +22,8 @@ const EMPTY: { domain: EmptyDomain; label: string }[] = [
   { domain: "thesauri", label: "Empty thesauri" },
   { domain: "relationTypes", label: "Empty relationship types" },
   { domain: "activity", label: "Empty activity log" },
+  { domain: "ixExtractors", label: "Empty metadata extractors" },
+  { domain: "pxExtractors", label: "Empty paragraph extractors" },
 ];
 
 /** Switches for demos and QA (acceptance "Amendments for run 2"). Each is
