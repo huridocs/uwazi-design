@@ -77,7 +77,9 @@ export function BulkPickModal({
       {options.length > 8 && (
         <ModalSearchRow value={query} onChange={setQuery} ariaLabel={`Search ${title.toLowerCase()}`} placeholder="Search…" />
       )}
-      <ModalList role="radiogroup" aria-label={title}>
+      {/* The radiogroup wraps the list, so the list keeps its own semantics. */}
+      <div role="radiogroup" aria-label={title} className="bleed-flush flex-1 min-h-0 flex flex-col">
+      <ModalList atEdge>
         {shown.length === 0 ? (
           <ModalStatus as="li">{options.length ? "No match" : empty}</ModalStatus>
         ) : (
@@ -100,12 +102,13 @@ export function BulkPickModal({
           ))
         )}
       </ModalList>
+      </div>
       <p
         role="status"
         data-part="readback"
         className="bleed shrink-0 min-h-10 flex items-center py-2 border-t border-border-soft text-xs text-ink-secondary text-pretty"
       >
-        {said?.text ?? <span className="text-ink-muted">Choose one to see what changes.</span>}
+        {said?.text ?? <span className="text-ink-tertiary">Choose one to see what changes.</span>}
       </p>
     </Modal>
   );

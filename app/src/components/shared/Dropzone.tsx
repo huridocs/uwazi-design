@@ -84,7 +84,7 @@ export function Dropzone({
       >
         <CloudUpload size={32} className="text-ink-tertiary/40 mb-2" aria-hidden />
         <span className="text-sm font-medium text-ink-secondary">{title}</span>
-        <span className="text-xs text-ink-muted mt-1">{hint}</span>
+        <span className="text-xs text-ink-tertiary mt-1">{hint}</span>
       </button>
       {!onBrowse && (
         <input
