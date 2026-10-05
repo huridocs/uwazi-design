@@ -1,3 +1,6 @@
+// First: `./dataSource` leads back here through a cycle, and the stores that
+// load on the way register their resets; `./settingsReset` must have run.
+import { registerSettingsReset } from "./settingsReset";
 import { atom, type Getter, type Setter } from "jotai";
 import { atomFamily, atomWithStorage, createJSONStorage, RESET } from "jotai/utils";
 import type { Corpus } from "../data/entityChanges";
@@ -75,19 +78,7 @@ function sessionOverlay<T>(key: string, isRecord: (r: unknown) => boolean) {
   );
 }
 
-/** How each settings store clears its changes, for "Reset demo data". Stores
- *  not built on this helper (`atoms/thesauri.ts`) register theirs too. */
-const resetters: ((set: Setter, get: Getter) => void)[] = [];
-/** Resetters run in registration order, so one registered after a store
- *  sees that store already reset. */
-export function registerSettingsReset(reset: (set: Setter, get: Getter) => void) {
-  resetters.push(reset);
-}
-
-/** Clear every settings overlay: each store reads its seed again. */
-export const resetSettingsDataAtom = atom(null, (get, set) => {
-  for (const reset of resetters) reset(set, get);
-});
+export { registerSettingsReset, resetSettingsDataAtom } from "./settingsReset";
 
 let seq = 0;
 /** A fresh id: time plus a sequence, so two records made in the same
