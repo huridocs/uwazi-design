@@ -195,6 +195,22 @@ repo; update them when tokens or style rules change.
 - Radii are overridden in `index.css` (`xs 2 … 4xl 16`). Entity dots are `rounded-[2px]`, track
   dots `rounded-full`, pills and badges `rounded-md`.
 
+### Type roles
+One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
+- Title (page bar, dialog, drawer, sheet) and section heading: `text-sm font-semibold text-ink`.
+- Caps label (section label, table header, stat label): `text-meta font-semibold uppercase
+  tracking-wider text-ink-tertiary`. Use `SectionLabel`.
+- Status badge `text-meta font-semibold`; chip `text-meta font-medium`.
+- Table primary cell `text-sm font-medium text-ink`; secondary or count cell
+  `text-xs text-ink-tertiary tabular-nums`.
+- Input `text-sm`, `h-9`, in pages and modals (`MODAL_INPUT`). Search fields and the
+  `BatchEntryModal` grid stay `text-xs`.
+- Help and caption `text-xs text-ink-tertiary`. Empty message `text-sm font-medium
+  text-ink-secondary`; one-line empty `text-xs text-ink-tertiary`.
+- Stat figure `text-xl font-semibold tabular-nums`. Breadcrumb `text-sm`.
+- UI text tops out at `font-semibold`. Text never uses `text-ink-muted`; it is for placeholders,
+  disabled controls, icons and separators.
+
 ### Buttons and dialogs
 - A warm button on paper outside bars and dialogs uses `WARM_BUTTON` from
   `components/shared/warmButton.ts` (fill plus `WARM_EDGE`). Buttons on warm, parchment or vellum
