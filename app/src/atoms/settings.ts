@@ -27,6 +27,7 @@ import {
 import type { AppView } from "./navigation";
 import type { UserRole } from "../data/settings";
 import { signedInUserAtom } from "./users";
+import { collectionSettings } from "./settingsSingletons";
 
 /** A single settings destination. Mirrors Uwazi's V2 SettingsNavigation IA
  *  (huridocs/uwazi · app/react/V2/Routes/Settings/SettingsNavigation.tsx).
@@ -161,9 +162,17 @@ export const settingsAccessAtom = atom((get) => {
  *  a group left empty is dropped. */
 export const visibleSettingsGroupsAtom = atom<SettingsGroup[]>((get) => {
   const allowed = get(settingsAccessAtom);
+  const label = get(settingsItemLabelAtom);
   return settingsGroups
-    .map((g) => ({ ...g, items: g.items.filter((i) => allowed(i.id)) }))
+    .map((g) => ({ ...g, items: g.items.filter((i) => allowed(i.id)).map((i) => ({ ...i, label: label(i) })) }))
     .filter((g) => g.items.length > 0);
+});
+
+/** An item's label as the rail shows it. Uwazi names the customisation page
+ *  "Global CSS & JS" only while Collection › "Global JS" is on. */
+export const settingsItemLabelAtom = atom((get) => {
+  const globalJs = get(collectionSettings.valueAtom).globalJs;
+  return (item: SettingsItem) => (item.id === "customisation" && !globalJs ? "Global CSS" : item.label);
 });
 
 /** Which settings page is showing. Defaults to Account (Uwazi's first item).

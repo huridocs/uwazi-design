@@ -8,6 +8,7 @@ import {
   cejilFilterRows,
 } from "../data/cejil/settingsAdapt";
 import { createSettingsSingleton } from "./settingsCollection";
+import { DATE_PATTERNS, type DatePattern } from "../utils/dateFormat";
 
 /** The settings domains that are one value per corpus: Collection, Global
  *  CSS & JS and Filters. Each page edits a draft of its value and saves it
@@ -20,15 +21,52 @@ const arrayOf = (check: (x: Record<string, unknown>) => boolean) => (v: unknown)
 /* ── Collection ─────────────────────────────────────────────────────────── */
 
 export type DefaultLibraryView = "cards" | "table" | "map";
-const VIEWS: DefaultLibraryView[] = ["cards", "table", "map"];
+/** Uwazi's option order: Cards, Map, Table. */
+export const DEFAULT_VIEWS: DefaultLibraryView[] = ["cards", "map", "table"];
+export type MapProvider = "mapbox" | "google";
+export type MapLayer = "Dark" | "Streets" | "Satellite" | "Hybrid";
+/** Popover order. */
+export const MAP_LAYERS: MapLayer[] = ["Dark", "Streets", "Satellite", "Hybrid"];
+export interface MapPoint {
+  lat: number;
+  lon: number;
+}
 
-export interface CollectionSettings extends Record<string, unknown> {
+/** Settings › Collection, one value per corpus. The Uwazi key each field
+ *  stands for is noted where the name differs. */
+export type CollectionSettings = CollectionFields & Record<string, unknown>;
+export interface CollectionFields {
+  /** `site_name` */
   name: string;
+  /** Upload id of the favicon; "" = the Uwazi logo. Uwazi stores the URL. */
+  favicon: string;
+  /** `home_page`; "" = the library */
   landing: string;
+  /** `defaultLibraryView` */
   defaultView: DefaultLibraryView;
-  privateInstance: boolean;
+  dateFormat: DatePattern;
+  /** Uwazi stores the inverse, `private`. */
+  publicInstance: boolean;
+  /** `filterUnauthorizedRelated` */
+  hideRestrictedRelationships: boolean;
+  /** `cookiepolicy` */
   cookiePolicy: boolean;
-  publicSharing: boolean;
+  /** `allowcustomJS` */
+  globalJs: boolean;
+  /** `analyticsTrackingId` */
+  googleAnalytics: string;
+  /** `matomoConfig`, a JSON string */
+  matomo: string;
+  senderEmail: string;
+  contactEmail: string;
+  /** `publicFormDestination` */
+  publicFormSubmitUrl: string;
+  /** `tilesProvider` */
+  mapProvider: MapProvider;
+  mapApiKey: string;
+  mapLayers: MapLayer[];
+  /** `mapStartingPoint`; null = none stored */
+  mapStartingPoint: MapPoint | null;
 }
 
 /** Each corpus's own name, as the navbar's collection switcher reads it. */
@@ -43,16 +81,44 @@ export const collectionSettings = createSettingsSingleton<CollectionSettings>({
   name: "collection",
   seedOf: (corpus: Corpus) => ({
     name: COLLECTION_NAMES[corpus],
-    landing: "/library",
-    defaultView: corpus === "cejil" && VIEWS.includes(cejilCollection.defaultView as DefaultLibraryView)
+    favicon: "",
+    landing: "",
+    defaultView: corpus === "cejil" && DEFAULT_VIEWS.includes(cejilCollection.defaultView as DefaultLibraryView)
       ? (cejilCollection.defaultView as DefaultLibraryView)
       : "cards",
-    privateInstance: false,
-    cookiePolicy: true,
-    publicSharing: true,
+    dateFormat:
+      corpus === "cejil" && DATE_PATTERNS.includes(cejilCollection.dateFormat as DatePattern)
+        ? (cejilCollection.dateFormat as DatePattern)
+        : "yyyy/MM/dd",
+    publicInstance: false,
+    hideRestrictedRelationships: false,
+    cookiePolicy: false,
+    globalJs: false,
+    googleAnalytics: "",
+    matomo: "",
+    senderEmail: "",
+    contactEmail: "",
+    publicFormSubmitUrl: "",
+    mapProvider: "mapbox",
+    mapApiKey: "",
+    // What a fresh Uwazi install stores.
+    mapLayers: ["Streets", "Hybrid", "Satellite"],
+    mapStartingPoint: null,
   }),
-  isField: { defaultView: (v) => VIEWS.includes(v as DefaultLibraryView) },
+  isField: {
+    defaultView: (v) => DEFAULT_VIEWS.includes(v as DefaultLibraryView),
+    dateFormat: (v) => DATE_PATTERNS.includes(v as DatePattern),
+    mapProvider: (v) => v === "mapbox" || v === "google",
+    mapLayers: (v) => Array.isArray(v) && v.length > 0 && v.every((l) => MAP_LAYERS.includes(l as MapLayer)),
+    // null is stored for "no point"; the seed's kind check would refuse an object.
+    mapStartingPoint: (v) =>
+      v === null ||
+      (!!v && typeof v === "object" && Number.isFinite((v as MapPoint).lat) && Number.isFinite((v as MapPoint).lon)),
+  },
 });
+
+/** The active corpus's date pattern, for components that print dates. */
+export const dateFormatAtom = atom((get) => get(collectionSettings.valueAtom).dateFormat);
 
 /* ── Global CSS & JS ────────────────────────────────────────────────────── */
 

@@ -12,6 +12,9 @@ interface CheckboxProps {
   /** Mixed: some of what this box stands for is ticked (a select-all over a
    *  partial selection). A DOM property with no attribute, so set by ref. */
   indeterminate?: boolean;
+  /** The id of help text describing the box. */
+  describedBy?: string;
+  id?: string;
 }
 
 export function Checkbox({
@@ -22,6 +25,8 @@ export function Checkbox({
   className,
   tone = "ink",
   indeterminate = false,
+  describedBy,
+  id,
 }: CheckboxProps) {
   const ref = useRef<HTMLInputElement | null>(null);
   useEffect(() => {
@@ -35,6 +40,8 @@ export function Checkbox({
       checked={checked}
       onChange={onChange}
       aria-label={ariaLabel}
+      aria-describedby={describedBy}
+      id={id}
       disabled={disabled}
       className={`w-3.5 h-3.5 rounded cursor-pointer shrink-0 ${
         tone === "carbon" ? "accent-carbon" : "accent-ink"

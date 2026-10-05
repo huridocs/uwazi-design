@@ -30,7 +30,9 @@ import {
   settingsAccessAtom,
   settingsEntryOf,
   settingsDocumentation,
+  settingsItemLabelAtom,
 } from "../../atoms/settings";
+import { collectionSettings } from "../../atoms/settingsSingletons";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { getEntity } from "../../data/entities";
 import { agentOpenAtom, shortcutLabel } from "../../atoms/agent";
@@ -102,14 +104,20 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
 
   const showingCatalog = appView === "catalog";
 
+  // Each collection reads as its saved name (Settings › Collection ›
+  // "Collection Name"); the detail line says which demo dataset it is.
+  const names: Record<DataSource, string> = {
+    mock: useAtomValue(collectionSettings.valueOfAtom("mock")).name,
+    cejil: useAtomValue(collectionSettings.valueOfAtom("cejil")).name,
+    artworks: useAtomValue(collectionSettings.valueOfAtom("artworks")).name,
+    travesia: useAtomValue(collectionSettings.valueOfAtom("travesia")).name,
+  };
   const COLLECTIONS: { id: DataSource; label: string; detail: string }[] = [
-    { id: "mock", label: "Sample", detail: "Curated demo entities" },
-    { id: "cejil", label: "CEJIL", detail: "Published corpus · 4,398" },
-    // The dataset's own name, not its slug — "artworks" tells a reader nothing,
-    // and this is the row that has to be recognisable at a glance.
-    { id: "artworks", label: "Best Artworks", detail: "60 paintings · 22 artists" },
+    { id: "mock", label: names.mock, detail: "Sample · curated demo entities" },
+    { id: "cejil", label: names.cejil, detail: "CEJIL · published corpus · 4,398" },
+    { id: "artworks", label: names.artworks, detail: "60 paintings · 22 artists" },
     // A fictional shelter network: generated records, synthetic portraits.
-    { id: "travesia", label: "Red Travesía", detail: "Fictional · synthetic portraits" },
+    { id: "travesia", label: names.travesia, detail: "Fictional · synthetic portraits" },
   ];
   const collection = COLLECTIONS.find((c) => c.id === dataSource) ?? COLLECTIONS[0];
 
@@ -117,7 +125,10 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
   // Only what the signed-in role reaches: a collaborator has no Tools and no
   // System settings (`atoms/settings.ts`).
   const settingsAllowed = useAtomValue(settingsAccessAtom);
-  const toolsItems = settingsToolsItems().filter((i) => settingsAllowed(i.id));
+  const itemLabel = useAtomValue(settingsItemLabelAtom);
+  const toolsItems = settingsToolsItems()
+    .filter((i) => settingsAllowed(i.id))
+    .map((i) => ({ ...i, label: itemLabel(i) }));
   const systemAllowed = settingsAllowed(settingsEntryOf("system"));
 
   /** Open a settings destination. The rail scopes itself to the group the
@@ -254,7 +265,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                   }`}
                   style={{ borderInlineStart: "1px solid var(--border-primary)" }}
                 >
-                  <span className="text-ink-tertiary">{collection.label}</span>
+                  <span className="text-ink-tertiary truncate max-w-[12rem]">{collection.label}</span>
                   <ChevronDown
                     size={13}
                     className={`text-ink-tertiary transition-transform ${collectionOpen ? "rotate-180" : ""}`}

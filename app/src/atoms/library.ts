@@ -419,6 +419,9 @@ const viewModeStateAtom = atom(
     get(viewModeChosenAtom) ?? DEFAULT_VIEW_MODE[get(collectionSettings.valueAtom).defaultView] ?? "cards",
   (_get, set, next: LibraryViewMode) => set(viewModeChosenAtom, next),
 );
+/** Forget the reader's pick, so the Library opens on the saved default view
+ *  again (Settings › Collection writes this when it saves a new default). */
+export const resetLibraryViewChoiceAtom = atom(null, (_get, set) => set(viewModeChosenAtom, null));
 
 /** Phones: the Results sheet a search opened. Opened once per query, so refining
  *  never reopens a sheet the user closed; closing it keeps the query;

@@ -3,6 +3,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { loginArtFallback, loginArtSrcSet, pickLoginArt } from "../data/loginArt";
 import { useAtomValue } from "jotai";
 import { usersAtom } from "../atoms/users";
+import { collectionSettings } from "../atoms/settingsSingletons";
 import type { SettingsUser } from "../data/settings";
 import { settingsDocumentation } from "../atoms/settings";
 import { UwaziLoader } from "../components/shared/UwaziLoader";
@@ -55,6 +56,7 @@ export function LoginView({ onLoggedIn }: { onLoggedIn: (username: string) => vo
   const art = pickLoginArt();
   // The users store, so an account added in Settings can sign in and a deleted one can't.
   const users = useAtomValue(usersAtom);
+  const collectionName = useAtomValue(collectionSettings.valueAtom).name;
   const [loaded, setLoaded] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
@@ -167,6 +169,9 @@ export function LoginView({ onLoggedIn }: { onLoggedIn: (username: string) => vo
             aria-describedby={ids.message}
             className="w-full max-w-[22.5rem]"
           >
+            <p data-part="collection-name" className="mb-2 text-sm font-medium text-ink-secondary truncate">
+              {collectionName}
+            </p>
             <h1 className="text-2xl font-semibold tracking-tight text-ink">Log in</h1>
             <p className="mt-1.5 text-sm text-ink-tertiary">With your Uwazi username.</p>
 

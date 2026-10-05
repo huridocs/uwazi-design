@@ -26,6 +26,7 @@ import type { ValidationIssue } from "../../utils/validation";
 export function SettingsField({
   label,
   hint,
+  description,
   error,
   issue,
   group = false,
@@ -34,6 +35,9 @@ export function SettingsField({
 }: {
   label?: string;
   hint?: string;
+  /** Help that stays visible under the control whatever the message line
+   *  shows (Uwazi's tooltip copy, as text). Linked by `aria-describedby`. */
+  description?: ReactNode;
   error?: string;
   issue?: ValidationIssue | null;
   /** The children are several controls answering one question. */
@@ -44,24 +48,33 @@ export function SettingsField({
   children: ReactNode;
 }) {
   const msgId = useId();
+  const descId = useId();
   const generatedId = useId();
   const effective: ValidationIssue | null =
     issue ?? (error ? { severity: "error", message: error } : null);
-  const described = !!effective || !!hint;
+  const describedBy =
+    [effective || hint ? msgId : "", description ? descId : ""].filter(Boolean).join(" ") || undefined;
+  const described = !!describedBy;
 
-  const labelClass = "text-xs font-medium text-ink-secondary";
+  const labelClass = `text-xs font-medium ${effective?.severity === "error" ? "text-seal-label" : "text-ink-secondary"}`;
+  const descriptionNode = description ? (
+    <div id={descId} data-part="description" className="text-xs text-ink-tertiary text-pretty flex flex-col gap-1.5">
+      {description}
+    </div>
+  ) : null;
 
   if (group) {
     return (
       <fieldset
         data-component="SettingsField"
         data-kind="group"
-        aria-describedby={described ? msgId : undefined}
+        aria-describedby={describedBy}
         className="flex flex-col gap-1.5 min-w-0"
       >
         {label && <legend className={`${labelClass} mb-1.5`}>{label}</legend>}
         {children}
         <FieldMessage id={msgId} issue={effective} hint={hint} />
+        {descriptionNode}
       </fieldset>
     );
   }
@@ -76,7 +89,7 @@ export function SettingsField({
   const child = single
     ? cloneElement(single, {
         id: controlId,
-        "aria-describedby": described ? msgId : undefined,
+        "aria-describedby": described ? describedBy : undefined,
         "aria-invalid": effective?.severity === "error" || undefined,
       })
     : children;
@@ -95,6 +108,7 @@ export function SettingsField({
         ))}
       {child}
       <FieldMessage id={msgId} issue={effective} hint={hint} />
+      {descriptionNode}
     </div>
   );
 }
@@ -117,8 +131,30 @@ function isLabelable(type: unknown): boolean {
 export function TextInput({
   className = "",
   issue,
+  addon,
   ...props
-}: InputHTMLAttributes<HTMLInputElement> & { issue?: ValidationIssue | null }) {
+}: InputHTMLAttributes<HTMLInputElement> & {
+  issue?: ValidationIssue | null;
+  /** Fixed text joined to the input's start ("https://yourdomain"). Not part
+   *  of the value. */
+  addon?: string;
+}) {
+  if (addon)
+    return (
+      <div data-component="TextInput" data-part="with-addon" className="flex min-w-0" dir="ltr">
+        <span
+          data-part="addon"
+          aria-hidden
+          className={`shrink-0 flex items-center px-3 text-sm text-ink-tertiary bg-vellum border border-e-0 ${issueBorderClass(issue)} rounded-s-md`}
+        >
+          {addon}
+        </span>
+        <input
+          className={`w-full min-w-0 px-3 py-2 text-sm text-ink bg-warm border ${issueBorderClass(issue)} rounded-e-md placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 transition-colors ${className}`}
+          {...props}
+        />
+      </div>
+    );
   return (
     <input
       data-component="TextInput"
