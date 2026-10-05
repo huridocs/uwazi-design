@@ -2,6 +2,9 @@ import { atom, type Getter } from "jotai";
 import { atomFamily } from "jotai/utils";
 import { entityTypes, type Entity } from "../data/entities";
 import { applyOverlay, type Corpus } from "../data/entityChanges";
+import type { AnyMetadataField, MetadataField, RelationshipMetadataField } from "../data/metadata";
+import { cejilEsBySid } from "../data/cejil/load";
+import { travesiaEntity } from "../data/travesia/load";
 import { unregisterRelationType } from "../data/references";
 import { cejilLibraryEntities } from "../data/cejil/adapt";
 import { travesiaLibraryEntities } from "../data/travesia/adapt";
@@ -20,6 +23,7 @@ import {
   thesaurusUsage,
   userUsage,
   valueUsage,
+  type HeldValue,
   type ValueReader,
 } from "../utils/settingsUsage";
 import { cejilReadyAtom, dataSourceAtom, travesiaReadyAtom, type DataSource } from "./dataSource";
@@ -64,18 +68,50 @@ const byTemplate = atomFamily((corpus: Corpus) =>
   }),
 );
 
-/** How each corpus reads an entity's values for a property. */
+/** A raw Uwazi metadata value list (CEJIL, Travesía) as held values: the
+ *  stored `value` is the id for a select (thesaurus value) and a relationship
+ *  (entity), and anything non-empty counts, geolocation and media included. */
+function heldFromRaw(list: { value: unknown; label?: string }[] | undefined): HeldValue[] {
+  const out: HeldValue[] = [];
+  for (const v of list ?? []) {
+    if (v.value === null || v.value === undefined || v.value === "") continue;
+    const id = typeof v.value === "string" ? v.value : undefined;
+    out.push({ id, label: v.label ?? (typeof v.value === "object" ? JSON.stringify(v.value) : String(v.value)) });
+  }
+  return out;
+}
+
+/** An edited or created entity's record, as held values. */
+function heldFromRecord(fields: AnyMetadataField[] | undefined, p: { name: string; label: string }): HeldValue[] | null {
+  const f = fields?.find((x) => x.id === p.name);
+  if (!f) return null;
+  if (f.type === "relationship") return (f as RelationshipMetadataField).connectedEntityIds.map((id) => ({ id, label: id }));
+  const m = f as MetadataField;
+  const labels = m.values ?? (m.value ? [m.value] : []);
+  return labels.filter((l) => l.trim() !== "").map((label, i) => ({ id: m.valueIds?.[i] || undefined, label }));
+}
+
+/** How each corpus reads an entity's values for a property: the session's
+ *  record first (edit form, bulk edit, Copy From, Create), else the corpus's
+ *  own record: CEJIL's and Travesía's raw metadata, the Sample's native
+ *  props. */
 const readerAtom = atomFamily((corpus: Corpus) =>
   atom<ValueReader>((get) => {
-    if (corpus === "cejil" || corpus === "travesia")
-      return (e, p) =>
-        (e.searchFields ?? e.fields ?? [])
-          .filter((f) => (f.key ? f.key === p.name : f.label === p.label))
-          .map((f) => f.value);
+    const records = get(libraryEntityOverlayAtom)[corpus === "artworks" ? "mock" : corpus].records;
+    const lang: Language = corpus === "mock" || corpus === "artworks" ? "EN" : "ES";
     const native = get(entityMetadataAtom).EN;
+    const cejilReady = get(cejilReadyAtom);
+    const travesiaReady = get(travesiaReadyAtom);
     return (e, p) => {
+      const rec = records[e.id];
+      if (rec) {
+        const held = heldFromRecord(rec.metadata[lang] ?? rec.metadata.EN, p);
+        if (held) return held;
+      }
+      if (corpus === "cejil") return cejilReady ? heldFromRaw(cejilEsBySid().get(e.id)?.metadata[p.name]) : [];
+      if (corpus === "travesia") return travesiaReady ? heldFromRaw(travesiaEntity(e.id)?.metadata[p.name]) : [];
       const v = native[e.id]?.[p.name];
-      return v ? [v] : [];
+      return v ? [{ label: v }] : [];
     };
   }),
 );

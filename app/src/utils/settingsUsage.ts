@@ -112,9 +112,17 @@ export function schemaOf(corpus: Corpus): SchemaProperty[] {
 export const foldName = (s: string) =>
   s.normalize("NFD").replace(/\p{M}/gu, "").trim().toLowerCase();
 
-/** Reads the values an entity holds for a property. The Sample keeps native
- *  props by key; the imported corpora carry `searchFields` keyed by name. */
-export type ValueReader = (e: Entity, p: SchemaProperty) => string[];
+/** One value an entity holds for a property: the stored id where there is
+ *  one (a thesaurus value, a connected entity), and its label. */
+export interface HeldValue {
+  id?: string;
+  label: string;
+}
+
+/** Reads the values an entity holds for a property, empty ones left out.
+ *  Each corpus reads its real record (`atoms/settingsUsage.ts`), never the
+ *  search index, which leaves out hoisted and non-text properties. */
+export type ValueReader = (e: Entity, p: SchemaProperty) => HeldValue[];
 
 /** "1 entity", "412 entities". */
 export const count = (n: number, one: string, many = `${one}s`) =>
@@ -211,7 +219,7 @@ export function propertyUsage({
 }): PropertyUsage {
   const p = findProperty(schema, templateId, prop);
   if (!p) return { entities: 0, inheritedBy: [], lines: [], block: null };
-  const withValue = entities.filter((e) => read(e, p).some((v) => v.trim() !== "")).length;
+  const withValue = entities.filter((e) => read(e, p).length > 0).length;
   const inheritedBy = schema
     .filter((x) => x.targetTemplateId === templateId && x.inherits === p.name)
     .map((x) => templateName(x.templateId));
@@ -266,7 +274,7 @@ export function thesaurusUsage({
   const templates = [...new Set(properties.map((p) => templateName(p.templateId)))];
   const counted = new Set<string>();
   for (const p of properties)
-    for (const e of entitiesOf(p.templateId)) if (read(e, p).some((v) => v.trim())) counted.add(e.id);
+    for (const e of entitiesOf(p.templateId)) if (read(e, p).length > 0) counted.add(e.id);
   const lines: string[] = [];
   if (properties.length)
     lines.push(`Used by ${count(properties.length, "property", "properties")} in ${count(templates.length, "template")}: ${nameList(properties.map((p) => p.label))}.`);
@@ -282,8 +290,9 @@ export function thesaurusUsage({
 export const valueLabels = (v: ThesaurusValue): string[] => (v.values ? v.values.map((c) => c.label) : [v.label]);
 
 /** Entities holding a value (or any child of a group), across the bound
- *  properties. Matched by label: the imported corpora's search fields carry
- *  labels, and the Sample stores labels only. */
+ *  properties. Matched by the value's id where the record stores one (CEJIL,
+ *  Travesía), else by its exact label (the Sample stores labels only). A
+ *  label is never split: a label can contain ", ". */
 export function valueUsage({
   value,
   properties,
@@ -295,12 +304,13 @@ export function valueUsage({
   entitiesOf: (templateId: string) => Entity[];
   read: ValueReader;
 }): number {
-  const want = new Set(valueLabels(value).map(foldName).filter(Boolean));
-  if (!want.size) return 0;
+  const ids = new Set([value.id, ...(value.values ?? []).map((c) => c.id)]);
+  const labels = new Set(valueLabels(value).map(foldName).filter(Boolean));
+  if (!labels.size && !value.id) return 0;
   const hit = new Set<string>();
   for (const p of properties)
     for (const e of entitiesOf(p.templateId))
-      if (read(e, p).some((v) => v.split(", ").some((x) => want.has(foldName(x))))) hit.add(e.id);
+      if (read(e, p).some((v) => (v.id ? ids.has(v.id) : labels.has(foldName(v.label))))) hit.add(e.id);
   return hit.size;
 }
 
