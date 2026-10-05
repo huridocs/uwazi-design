@@ -143,6 +143,11 @@ export const saveUserAtom = atom(
   },
 );
 
+/** Unlock an account Uwazi locked after failed sign-ins (SD-2). */
+export const unlockUserAtom = atom(null, (get, set, id: string) => {
+  if (get(usersAtom).some((u) => u.id === id && u.locked)) set(users.patchAtom, { id, patch: { locked: false } });
+});
+
 /** Save a group: its name, and its membership written onto each user whose
  *  membership changed. `id` null creates; returns the id. */
 export const saveGroupAtom = atom(

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { Shield, ShieldCheck, Trash2, UserPlus, Users } from "lucide-react";
+import { Lock, Shield, ShieldCheck, Trash2, UserPlus, Users } from "lucide-react";
+import { Hint } from "../../shared/Hint";
 import { SettingsListPage, useSettingsSearch } from "../SettingsListPage";
 import { SettingsEmptyState } from "../SettingsEmptyState";
 import { SettingsTable, type Column } from "../SettingsTable";
@@ -88,9 +89,18 @@ export function UsersPage() {
             {u.username.slice(0, 2)}
           </span>
           <div className="min-w-0">
-            <p className="font-medium text-ink truncate">
-              {u.username}
-              {u.id === me?.id && <span className="ms-1.5 text-xs font-normal text-ink-tertiary">(you)</span>}
+            <p className={`flex items-center gap-1.5 font-medium truncate ${u.locked ? "text-seal-label" : "text-ink"}`}>
+              <span className="truncate">{u.username}</span>
+              {u.locked && (
+                <Hint text="Account locked">
+                  {(hint) => (
+                    <span {...hint} tabIndex={0} aria-label="Account locked" className="relative inline-flex shrink-0 rounded-sm focus-visible:outline-2 focus-visible:outline-carbon">
+                      <Lock size={12} aria-hidden />
+                    </span>
+                  )}
+                </Hint>
+              )}
+              {u.id === me?.id && <span className="text-xs font-normal text-ink-tertiary">(you)</span>}
             </p>
             <p className="text-xs text-ink-tertiary truncate">{u.email}</p>
           </div>

@@ -8,7 +8,7 @@ import { SettingsField, TextInput } from "../SettingsField";
 import { RadioGroup } from "../../shared/RadioGroup";
 import { Checkbox } from "../../shared/Checkbox";
 import type { SettingsUser, UserRole } from "../../../data/settings";
-import { groupsAtom, roleChangeBlock, saveUserAtom, signedInUserAtom, userIdentityBlock, users as usersStore, usersAtom } from "../../../atoms/users";
+import { groupsAtom, roleChangeBlock, saveUserAtom, signedInUserAtom, unlockUserAtom, userIdentityBlock, users as usersStore, usersAtom } from "../../../atoms/users";
 import { ConfirmDelete } from "../../shared/ConfirmDelete";
 import { MissingRecord } from "../../shared/MissingRecord";
 import { PasswordConfirmModal } from "../../shared/PasswordConfirmModal";
@@ -64,17 +64,25 @@ export function UserEditor({
   // An admin changing their own role loses System settings and Tools the
   // moment it saves (role gating, `atoms/settings.ts`): ask first.
   const me = useAtomValue(signedInUserAtom);
+  const unlockUser = useSetAtom(unlockUserAtom);
   const demotesSelf = !!base && base.id === me?.id && base.role === "admin" && role !== "admin";
   const [askDemote, setAskDemote] = useState(false);
   const trySave = () => (demotesSelf ? setAskDemote(true) : save());
 
   const save = () => {
     setAskDemote(false);
-    // 2FA is not edited here: Reset 2FA writes it at once, so the draft's copy
-    // may be stale.
+    // 2FA and the lock are not edited here: Reset 2FA and Unlock account write
+    // them at once, so the draft's copies may be stale.
+    const { locked: _locked, ...fields } = draft;
     const id = saveUser({
       id: isNew ? null : userId,
-      value: { ...draft, username: username.trim(), email: email.trim(), using2fa: base?.using2fa ?? false },
+      value: {
+        ...fields,
+        ...(base?.locked ? { locked: true } : {}),
+        username: username.trim(),
+        email: email.trim(),
+        using2fa: base?.using2fa ?? false,
+      },
     });
     if (!id) return;
     record({
@@ -92,6 +100,14 @@ export function UserEditor({
    *  and clears the flag the user's Account card reads. */
   const patchUser = useSetAtom(usersStore.patchAtom);
   const [askReset2fa, setAskReset2fa] = useState(false);
+  /** "Unlock account", behind the same password check (USR-14). */
+  const [askUnlock, setAskUnlock] = useState(false);
+  const unlock = () => {
+    setAskUnlock(false);
+    if (!base) return;
+    unlockUser(base.id);
+    record({ method: "UPDATE", domain: "user", noun: "user", id: base.id, name: base.username, summary: `Unlocked user “${base.username}”`, message: "Account unlocked successfully" });
+  };
   const reset2fa = () => {
     setAskReset2fa(false);
     if (!base) return;
@@ -122,6 +138,7 @@ export function UserEditor({
       overlays={
         <>
           <PasswordConfirmModal open={askReset2fa} onAccept={reset2fa} onCancel={() => setAskReset2fa(false)} />
+          <PasswordConfirmModal open={askUnlock} onAccept={unlock} onCancel={() => setAskUnlock(false)} />
           <ConfirmDelete
             open={askDemote}
             title="Change your own role"
@@ -169,6 +186,21 @@ export function UserEditor({
           ))}
         </SettingsCheckList>
       </SettingsSection>
+
+      {!isNew && base?.locked && (
+        <SettingsSection title="Account locked" description="Uwazi locks an account after repeated failed sign-ins.">
+          <div>
+            <SettingsButton
+              variant="secondary"
+              size="sm"
+              className="ring-1 ring-seal-label text-seal-label"
+              onClick={() => setAskUnlock(true)}
+            >
+              Unlock account
+            </SettingsButton>
+          </div>
+        </SettingsSection>
+      )}
 
       {!isNew && (
         <SettingsSection title="Two-factor authentication">
