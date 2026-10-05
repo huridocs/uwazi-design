@@ -11,6 +11,10 @@ export interface Column<T> {
   /** When set (with the table's `onSort`), the header is clickable and sorts by
    *  this key — toggling direction. Omit for non-sortable columns. */
   sortKey?: string;
+  /** Where the column goes when a host lays rows out as a list instead of a
+   *  grid (`SettingsTable` on phones): the row's title, a labelled item on its
+   *  meta line, its trailing actions, or nowhere. `DataTable` ignores it. */
+  mobile?: "primary" | "meta" | "actions" | "hidden";
 }
 
 export type SortDir = "asc" | "desc";

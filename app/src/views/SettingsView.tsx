@@ -4,6 +4,7 @@ import { dataSourceAtom } from "../atoms/dataSource";
 import { breakpointAtom } from "../atoms/viewport";
 import type { AppView } from "../atoms/navigation";
 import { SettingsNav } from "../components/settings/SettingsNav";
+import { useLoadSettingsCorpus } from "../hooks/useSettingsCorpus";
 import { AccountPage } from "../components/settings/pages/AccountPage";
 import { LanguagesPage } from "../components/settings/pages/LanguagesPage";
 import { UsersPage } from "../components/settings/pages/UsersPage";
@@ -34,6 +35,7 @@ export function SettingsView({ onNavigate }: { onNavigate?: (view: AppView) => v
   // Pages init their useState from the active source; remount on a source flip
   // (rail toggle) so their tables re-seed from CEJIL ↔ Sample.
   const dataSource = useAtomValue(dataSourceAtom);
+  useLoadSettingsCorpus();
 
   const page = (() => {
     switch (section) {
