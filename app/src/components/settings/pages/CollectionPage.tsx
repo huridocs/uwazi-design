@@ -26,6 +26,7 @@ import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 import { DATE_PATTERNS, datePatternLabel, type DatePattern } from "../../../utils/dateFormat";
 import type { ValidationIssue } from "../../../utils/validation";
+import { emailIssue, landingIssue, mapKeyIssue, matomoIssue, nameIssue, pointIssues } from "../../../utils/collectionRules";
 import type { ActivityChange } from "../../../atoms/activityLog";
 
 /** The form's value: the stored settings, with the starting point as the two
@@ -38,20 +39,6 @@ const toForm = (s: CollectionSettings): CollectionForm => {
 };
 
 const VIEW_LABEL: Record<DefaultLibraryView, string> = { cards: "Cards", map: "Map", table: "Table" };
-
-/** The runtime's own check for `home_page` (Uwazi `routeHelpers.ts`). */
-const LANDING = /^(\/[a-z]{2})?\/(library(\/map)?(\/table)?\/?(\?.*)?|page\/.+|entity\/.+)$/;
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MAP_KEY = /^[a-zA-Z0-9._]*$/;
-
-const matomoValid = (v: string) => {
-  try {
-    const o = JSON.parse(v);
-    return !!o && typeof o === "object" && typeof o.id === "string" && typeof o.url === "string";
-  } catch {
-    return false;
-  }
-};
 
 type FieldId = "name" | "landing" | "matomo" | "senderEmail" | "contactEmail" | "mapApiKey" | "lat" | "lon";
 /** DOM order, for focusing the first invalid field. */
@@ -68,21 +55,16 @@ const INPUT_ID: Record<FieldId, string> = {
 };
 
 function validate(f: CollectionForm): Partial<Record<FieldId, string>> {
-  const out: Partial<Record<FieldId, string>> = {};
-  if (!f.name.trim()) out.name = "Enter a name for the collection.";
-  if (f.landing.trim() && !LANDING.test(f.landing.trim()))
-    out.landing = "Use a relative URL that starts with /page/, /entity/ or /library/.";
-  if (f.matomo.trim() && !matomoValid(f.matomo.trim())) out.matomo = 'Use the form {"id":"1","url":"https://…"}.';
-  if (f.senderEmail.trim() && !EMAIL.test(f.senderEmail.trim())) out.senderEmail = "Enter a valid email address.";
-  if (f.contactEmail.trim() && !EMAIL.test(f.contactEmail.trim())) out.contactEmail = "Enter a valid email address.";
-  if (!MAP_KEY.test(f.mapApiKey.trim())) out.mapApiKey = "Use only letters, digits, dots and underscores.";
-  const hasLat = f.lat.trim() !== "";
-  const hasLon = f.lon.trim() !== "";
-  if (hasLat !== hasLon) {
-    if (!hasLat) out.lat = "Enter a latitude, or clear both.";
-    else out.lon = "Enter a longitude, or clear both.";
-  }
-  return out;
+  const all: Partial<Record<FieldId, string | null>> = {
+    name: nameIssue(f.name),
+    landing: landingIssue(f.landing),
+    matomo: matomoIssue(f.matomo),
+    senderEmail: emailIssue(f.senderEmail),
+    contactEmail: emailIssue(f.contactEmail),
+    mapApiKey: mapKeyIssue(f.mapApiKey),
+    ...pointIssues(f.lat, f.lon),
+  };
+  return Object.fromEntries(Object.entries(all).filter(([, m]) => m)) as Partial<Record<FieldId, string>>;
 }
 
 const err = (message: string | undefined): ValidationIssue | null => (message ? { severity: "error", message } : null);
