@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { Plus, Spline } from "lucide-react";
-import { SettingsContent } from "../SettingsContent";
-import { SettingsButton } from "../SettingsButton";
+import { Spline } from "lucide-react";
+import { SettingsListPage, useSettingsSearch } from "../SettingsListPage";
+import { SettingsEmptyState } from "../SettingsEmptyState";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { RowActions } from "../RowActions";
 import { RelationTypeEditor } from "./RelationTypeEditor";
@@ -30,6 +30,7 @@ export function RelationTypesPage() {
   // A delete, references moved or not, can be undone from the Beacon while
   // this page is open, like every other removal in Settings.
   const offerUndo = useSettingsUndo<RelationTypeDeletion>(restore);
+  const search = useSettingsSearch(types, (r) => r.label);
 
   if (editing) return <RelationTypeEditor typeId={editing} onClose={() => setEditing(null)} />;
 
@@ -62,44 +63,52 @@ export function RelationTypesPage() {
     {
       id: "actions",
       header: "",
-      width: "6rem",
+      width: "4rem",
       align: "right",
-      cell: (r) => <RowActions label={r.label} onEdit={() => setEditing(r.id)} onDelete={() => setConfirm(r)} />,
+      cell: (r) => <RowActions label={r.label} onDelete={() => setConfirm(r)} />,
     },
   ];
 
   return (
-    <SettingsContent component="RelationTypesPage">
-      <SettingsContent.Header title="Relationship types" />
-      <SettingsContent.Body>
-        <SettingsTable
-          columns={columns}
-          data={types}
-          getRowId={(r) => r.id}
-          onRowClick={(r) => setEditing(r.id)}
-          rowAriaLabel={(r) => `Edit ${r.label}`}
-          emptyState={<span className="text-sm text-ink-tertiary">No relationship types yet. Add one to start connecting entities.</span>}
+    <SettingsListPage
+      component="RelationTypesPage"
+      title="Relationship types"
+      intro="The labels available when connecting entities."
+      search={{ value: search.query, onChange: search.setQuery, label: "Search relationship types" }}
+      lead={{ label: "Add relationship type", onClick: () => setEditing("new") }}
+      overlays={
+        <RelationTypeDelete
+          type={confirm}
+          onCancel={() => setConfirm(null)}
+          onDeleted={(d, movedTo) =>
+            offerUndo(
+              d,
+              `${d.def.label} deleted`,
+              d.moved && movedTo
+                ? `${d.moved.refIds.length.toLocaleString()} references moved to ${movedTo}. Undo puts the type and its references back.`
+                : "Undo puts the type back.",
+            )
+          }
         />
-      </SettingsContent.Body>
-      <SettingsContent.Footer>
-        <SettingsButton variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
-          Add relationship type
-        </SettingsButton>
-      </SettingsContent.Footer>
-
-      <RelationTypeDelete
-        type={confirm}
-        onCancel={() => setConfirm(null)}
-        onDeleted={(d, movedTo) =>
-          offerUndo(
-            d,
-            `${d.def.label} deleted`,
-            d.moved && movedTo
-              ? `${d.moved.refIds.length.toLocaleString()} references moved to ${movedTo}. Undo puts the type and its references back.`
-              : "Undo puts the type back.",
-          )
+      }
+    >
+      <SettingsTable
+        columns={columns}
+        data={search.rows}
+        getRowId={(r) => r.id}
+        onRowClick={(r) => setEditing(r.id)}
+        rowAriaLabel={(r) => `Edit ${r.label}`}
+        emptyState={
+          <SettingsEmptyState
+            icon={<Spline size={16} />}
+            title="No relationship types yet"
+            hint="A relationship type is the label on a connection between two entities."
+            action={{ label: "Add relationship type", onClick: () => setEditing("new") }}
+            query={search.query}
+            onClearQuery={search.clear}
+          />
         }
       />
-    </SettingsContent>
+    </SettingsListPage>
   );
 }

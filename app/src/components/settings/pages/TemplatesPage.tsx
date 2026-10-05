@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useAtomValue } from "jotai";
-import { Plus } from "lucide-react";
-import { SettingsContent } from "../SettingsContent";
-import { SettingsButton } from "../SettingsButton";
+import { LayoutTemplate } from "lucide-react";
+import { SettingsListPage, useSettingsSearch } from "../SettingsListPage";
+import { SettingsEmptyState } from "../SettingsEmptyState";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { RowActions } from "../RowActions";
 import { newSettingsId } from "../../../atoms/settingsCollection";
@@ -19,6 +19,7 @@ export function TemplatesPage() {
   );
   const [confirm, setConfirm] = useState<SettingsTemplate | null>(null);
   const [editing, setEditing] = useState<SettingsTemplate | "new" | null>(null);
+  const search = useSettingsSearch(templates, (t) => t.name);
 
   const handleSave = (patch: { name: string; color: string }): string | undefined => {
     if (editing === "new") {
@@ -74,32 +75,44 @@ export function TemplatesPage() {
     {
       id: "actions",
       header: "",
-      width: "6rem",
+      width: "4rem",
       align: "right",
-      cell: (t) => <RowActions label={t.name} onEdit={() => setEditing(t)} onDelete={() => setConfirm(t)} />,
+      cell: (t) => <RowActions label={t.name} onDelete={() => setConfirm(t)} />,
     },
   ];
 
   return (
-    <SettingsContent component="TemplatesPage">
-      <SettingsContent.Header title="Templates" />
-      <SettingsContent.Body>
-        <p className="text-xs text-ink-tertiary mb-4">
-          Templates define the metadata properties an entity of each type can carry.
-        </p>
-        <SettingsTable columns={columns} data={templates} getRowId={(t) => t.id} onRowClick={(t) => setEditing(t)} rowAriaLabel={(t) => `Edit ${t.name}`} />
-      </SettingsContent.Body>
-      <SettingsContent.Footer>
-        <SettingsButton variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
-          Add template
-        </SettingsButton>
-      </SettingsContent.Footer>
-
-      <TemplateDelete
-        template={confirm}
-        onCancel={() => setConfirm(null)}
-        onDelete={(t) => setTemplates((prev) => prev.filter((x) => x.id !== t.id))}
+    <SettingsListPage
+      component="TemplatesPage"
+      title="Templates"
+      intro="Templates define the metadata properties an entity of each type can carry."
+      search={{ value: search.query, onChange: search.setQuery, label: "Search templates" }}
+      lead={{ label: "Add template", onClick: () => setEditing("new") }}
+      overlays={
+        <TemplateDelete
+          template={confirm}
+          onCancel={() => setConfirm(null)}
+          onDelete={(t) => setTemplates((prev) => prev.filter((x) => x.id !== t.id))}
+        />
+      }
+    >
+      <SettingsTable
+        columns={columns}
+        data={search.rows}
+        getRowId={(t) => t.id}
+        onRowClick={(t) => setEditing(t)}
+        rowAriaLabel={(t) => `Edit ${t.name}`}
+        emptyState={
+          <SettingsEmptyState
+            icon={<LayoutTemplate size={16} />}
+            title="No templates yet"
+            hint="A template lists the properties an entity of one type carries."
+            action={{ label: "Add template", onClick: () => setEditing("new") }}
+            query={search.query}
+            onClearQuery={search.clear}
+          />
+        }
       />
-    </SettingsContent>
+    </SettingsListPage>
   );
 }

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { SettingsContent } from "../SettingsContent";
-import { SettingsButton } from "../SettingsButton";
+import { SettingsEditor } from "../SettingsEditor";
+import { SettingsSection } from "../SettingsSection";
 import { SettingsField, TextInput } from "../SettingsField";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
@@ -55,31 +55,29 @@ export function RelationTypeEditor({ typeId, onClose }: { typeId: string | "new"
   };
 
   return (
-    <SettingsContent component="RelationTypeEditor">
-      <SettingsContent.Header
-        path={["Relationship types"]}
-        title={isNew ? "Add relationship type" : base?.label ?? ""}
-        onBack={onClose}
-      />
-      <SettingsContent.Body>
-        <div className="flex flex-col gap-4 max-w-lg">
-          {missing && <MissingRecord noun="relationship type" />}
-          <section className="max-w-sm">
-            <SettingsField label="Name" issue={attempted && issue ? { severity: "error", message: issue } : null}>
-              <TextInput id="relationship-type-name" value={name} onChange={(e) => setName(e.target.value)} />
-            </SettingsField>
-          </section>
-          {base && <UsageLine id={base.id} />}
+    <SettingsEditor
+      component="RelationTypeEditor"
+      path={["Relationship types"]}
+      title={isNew ? "Add relationship type" : base?.label ?? ""}
+      onBack={onClose}
+      isNew={isNew}
+      createLabel="Create relationship type"
+      dirty={dirty}
+      valid={!missing}
+      saveBlocked={attempted && !!issue}
+      onSave={save}
+      footerStart={<LastSavedLine domain="relationType" id={base?.id} />}
+    >
+      {missing && <MissingRecord noun="relationship type" />}
+      <SettingsSection>
+        <div className="max-w-sm">
+          <SettingsField label="Name" issue={attempted && issue ? { severity: "error", message: issue } : null}>
+            <TextInput id="relationship-type-name" value={name} onChange={(e) => setName(e.target.value)} />
+          </SettingsField>
         </div>
-      </SettingsContent.Body>
-      <SettingsContent.Footer>
-        <LastSavedLine domain="relationType" id={base?.id} className="me-auto" />
-        <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
-        <SettingsButton variant="commit" size="sm" disabled={!dirty || missing} onClick={save}>
-          Save
-        </SettingsButton>
-      </SettingsContent.Footer>
-    </SettingsContent>
+        {base && <UsageLine id={base.id} />}
+      </SettingsSection>
+    </SettingsEditor>
   );
 }
 

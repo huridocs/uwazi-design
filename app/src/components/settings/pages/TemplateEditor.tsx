@@ -2,7 +2,9 @@ import { useId, useState } from "react";
 import { useAtomValue, useStore } from "jotai";
 import { settingsRelationTypesAtom } from "../../../atoms/relationTypes";
 import { Plus } from "lucide-react";
-import { SettingsContent } from "../SettingsContent";
+import { SettingsEditor } from "../SettingsEditor";
+import { SettingsFieldRow, SettingsSection } from "../SettingsSection";
+import { SettingsEmptyState } from "../SettingsEmptyState";
 import { TemplateCardPreview } from "../TemplateCardPreview";
 import { SettingsBarContext, SettingsButton } from "../SettingsButton";
 import { Modal } from "../../shared/Modal";
@@ -107,7 +109,6 @@ export function TemplateEditor({
   // The property being edited in the dialog: an existing property, "new", or none.
   const [editing, setEditing] = useState<TemplateProperty | "new" | null>(null);
   const { dragIdx, rowProps, gripProps } = useReorder(setProps);
-  const propertiesHeadingId = useId();
 
   /* ── Validation — same rules + message idiom as the entity metadata form.
      Name is required (error, blocks save); a very short name only warns. */
@@ -204,81 +205,128 @@ export function TemplateEditor({
   const customSelected = !PALETTE.some((c) => c.toLowerCase() === color.toLowerCase());
 
   return (
-    <SettingsContent component="TemplateEditor">
-      <SettingsContent.Header path={["Templates"]} title={isNew ? "New template" : base!.name} onBack={onClose} />
-      <SettingsContent.Body>
-        <div className="flex flex-col lg:flex-row gap-6">
+    <SettingsEditor
+      component="TemplateEditor"
+      path={["Templates"]}
+      title={isNew ? "New template" : base!.name}
+      onBack={onClose}
+      isNew={isNew}
+      createLabel="Create template"
+      dirty={dirty}
+      saveBlocked={saveBlocked}
+      onSave={trySave}
+      wide
+      footerStatus={
+        // Save-attempt summary — alert only on the attempt, not per keystroke.
+        // The footer keeps its fixed height; this rides the existing row.
+        saveBlocked ? (
+          <span role="alert" className="text-meta font-medium text-seal-label">
+            {blockingSummary(1, 0)}
+          </span>
+        ) : (
+          <LastSavedLine domain="template" id={base?.id} />
+        )
+      }
+      overlays={
+        <>
+          <ConfirmDelete
+            open={refused !== null}
+            title="Remove property"
+            message=""
+            impact={refused ? { lines: [], block: refused.block } : null}
+            onConfirm={() => setRefused(null)}
+            onCancel={() => setRefused(null)}
+          />
+          {editing !== null && (
+            <PropertyDialog
+              property={editing === "new" ? null : editing}
+              config={editing === "new" ? undefined : config[editing.id]}
+              onCancel={() => setEditing(null)}
+              onSave={commitProperty}
+            />
+          )}
+        </>
+      }
+    >
+      <div className="flex flex-col lg:flex-row gap-6">
         <div className="flex flex-col gap-6 flex-1 min-w-0">
-          <section className="grid sm:grid-cols-2 gap-3">
-            <SettingsField label="Template name" issue={nameIssue}>
-              <TextInput
-                id="template-name-input"
-                value={name}
-                issue={nameIssue}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  if (nameIssue) setNameIssue(checkName(e.target.value));
-                }}
-                onBlur={(e) => setNameIssue(checkName(e.currentTarget.value))}
-                placeholder="e.g. Court Case"
-              />
-            </SettingsField>
-            <SettingsField label="Colour" group>
-              <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                {PALETTE.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setColor(c)}
-                    aria-label={`Colour ${c}`}
-                    className={`w-6 h-6 rounded-md border border-ink/20 transition-transform ${color.toLowerCase() === c.toLowerCase() ? "ring-2 ring-offset-1 ring-ink scale-105" : "hover:scale-105"}`}
-                    style={{ backgroundColor: c }}
-                  />
-                ))}
-                {customSelected && (
-                  <span
-                    className="w-6 h-6 rounded-md border border-ink/20 ring-2 ring-offset-1 ring-ink"
-                    style={{ backgroundColor: color }}
-                    aria-label="Custom colour (selected)"
-                  />
-                )}
-                {/* Custom colour picker — opens the native swatch. */}
-                <label
-                  className="relative w-6 h-6 rounded-md cursor-pointer overflow-hidden grid place-items-center"
-                  style={{ background: "conic-gradient(from 0deg, #ef4444, #f59e0b, #eab308, #22c55e, #06b6d4, #3b82f6, #8b5cf6, #ec4899, #ef4444)" }}
-                  title="Custom colour"
-                >
-                  <Plus size={12} className="text-white" style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,.4))" }} />
-                  <input
-                    type="color"
-                    value={color}
-                    onChange={(e) => setColor(e.target.value)}
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                    aria-label="Custom colour"
-                  />
-                </label>
-              </div>
-            </SettingsField>
-          </section>
+          <SettingsSection>
+            <SettingsFieldRow>
+              <SettingsField label="Template name" issue={nameIssue}>
+                <TextInput
+                  id="template-name-input"
+                  value={name}
+                  issue={nameIssue}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    if (nameIssue) setNameIssue(checkName(e.target.value));
+                  }}
+                  onBlur={(e) => setNameIssue(checkName(e.currentTarget.value))}
+                  placeholder="e.g. Court Case"
+                />
+              </SettingsField>
+              <SettingsField label="Colour" group>
+                <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                  {PALETTE.map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setColor(c)}
+                      aria-label={`Colour ${c}`}
+                      className={`w-6 h-6 rounded-md border border-ink/20 transition-transform ${color.toLowerCase() === c.toLowerCase() ? "ring-2 ring-offset-1 ring-ink scale-105" : "hover:scale-105"}`}
+                      style={{ backgroundColor: c }}
+                    />
+                  ))}
+                  {customSelected && (
+                    <span
+                      className="w-6 h-6 rounded-md border border-ink/20 ring-2 ring-offset-1 ring-ink"
+                      style={{ backgroundColor: color }}
+                      aria-label="Custom colour (selected)"
+                    />
+                  )}
+                  {/* Custom colour picker — opens the native swatch. */}
+                  <label
+                    className="relative w-6 h-6 rounded-md cursor-pointer overflow-hidden grid place-items-center"
+                    style={{ background: "conic-gradient(from 0deg, #ef4444, #f59e0b, #eab308, #22c55e, #06b6d4, #3b82f6, #8b5cf6, #ec4899, #ef4444)" }}
+                    title="Custom colour"
+                  >
+                    <Plus size={12} className="text-white" style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,.4))" }} />
+                    <input
+                      type="color"
+                      value={color}
+                      onChange={(e) => setColor(e.target.value)}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      aria-label="Custom colour"
+                    />
+                  </label>
+                </div>
+              </SettingsField>
+            </SettingsFieldRow>
+          </SettingsSection>
 
-          <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
-            <h3 id={propertiesHeadingId} className="text-sm font-semibold text-ink mb-3">Properties</h3>
+          <SettingsSection
+            title="Properties"
+            action={
+              <SettingsButton variant="secondary" size="sm" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
+                Add property
+              </SettingsButton>
+            }
+          >
 
             {/* A real table, re-displayed as grid rows like the shared DataTable.
                 WebKit drops table semantics from re-displayed table elements, so
                 the implicit roles are stated too. */}
             <table
               role="table"
-              aria-labelledby={propertiesHeadingId}
+              aria-label="Properties"
               data-part="properties"
-              className="flex flex-col rounded-md overflow-hidden"
-              style={{ border: "1px solid var(--border-soft)" }}
+              className="flex flex-col rounded-md overflow-hidden border border-border-soft"
             >
               <thead role="rowgroup" className="block">
                 <tr
                   role="row"
                   // Phone rows label their own flags, so the header row is for
                   // screen readers only below `md`.
-                  className="sr-only md:not-sr-only md:grid items-center gap-3 px-3 py-2 text-meta font-semibold uppercase tracking-wide text-ink-tertiary bg-warm"
+                  className="sr-only md:not-sr-only md:grid items-center gap-3 md:px-3 md:py-2 text-meta font-semibold uppercase tracking-wide text-ink-tertiary bg-warm"
                   style={{ gridTemplateColumns: PROPERTY_COLUMNS }}
                 >
                   <th role="columnheader" scope="col" className="font-semibold text-start min-w-0 truncate">Property</th>
@@ -295,7 +343,12 @@ export function TemplateEditor({
               <tbody role="rowgroup" className="block">
                 {props.length === 0 ? (
                   <tr role="row" className="block">
-                    <td role="cell" className="block px-3 py-6 text-sm text-ink-muted text-center">No properties yet.</td>
+                    <td role="cell" className="block px-3 py-8 border-t border-border-soft">
+                      <SettingsEmptyState
+                        title="No properties yet"
+                        hint="Add the fields an entity of this template carries."
+                      />
+                    </td>
                   </tr>
                 ) : (
                   props.map((p, i) => {
@@ -312,8 +365,8 @@ export function TemplateEditor({
                         {...rowProps(i)}
                         role="row"
                         data-part="property"
-                        className={`flex flex-wrap md:grid items-center gap-x-3 gap-y-1.5 md:gap-3 px-3 py-2 transition-opacity ${dragIdx === i ? "opacity-40" : ""}`}
-                        style={{ gridTemplateColumns: PROPERTY_COLUMNS, borderTop: "1px solid var(--border-soft)" }}
+                        className={`group flex flex-wrap md:grid items-center gap-x-3 gap-y-1.5 md:gap-3 px-3 py-2 border-t border-border-soft transition-opacity ${dragIdx === i ? "opacity-40" : ""}`}
+                        style={{ gridTemplateColumns: PROPERTY_COLUMNS }}
                       >
                         <td role="cell" className="flex items-center gap-2 basis-full md:basis-auto w-full min-w-0">
                           <DragGrip {...gripProps(i)} />
@@ -354,7 +407,7 @@ export function TemplateEditor({
                 )}
               </tbody>
             </table>
-          </section>
+          </SettingsSection>
         </div>
 
         {/* Live card preview — beside the field list on wide screens, stacked
@@ -364,53 +417,8 @@ export function TemplateEditor({
             <TemplateCardPreview name={name} color={color} properties={props} config={config} />
           </div>
         </aside>
-        </div>
-      </SettingsContent.Body>
-      <SettingsContent.Footer>
-        <SettingsButton variant="secondary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
-          Add property
-        </SettingsButton>
-        {/* Save-attempt summary — alert only on the attempt, not per keystroke.
-            The footer keeps its fixed height; this rides the existing row. */}
-        {saveBlocked ? (
-          <span role="alert" className="text-meta font-medium text-seal-label">
-            {blockingSummary(1, 0)}
-          </span>
-        ) : (
-          <LastSavedLine domain="template" id={base?.id} />
-        )}
-        <SettingsButton variant="ghost" size="sm" onClick={onClose}>
-          Cancel
-        </SettingsButton>
-        <SettingsButton
-          variant={isNew ? "commit" : "success"}
-          size="sm"
-          disabled={!dirty}
-          aria-disabled={saveBlocked || undefined}
-          className={saveBlocked ? "opacity-60" : undefined}
-          onClick={trySave}
-        >
-          {isNew ? "Create template" : "Save"}
-        </SettingsButton>
-      </SettingsContent.Footer>
-
-      <ConfirmDelete
-        open={refused !== null}
-        title="Remove property"
-        message=""
-        impact={refused ? { lines: [], block: refused.block } : null}
-        onConfirm={() => setRefused(null)}
-        onCancel={() => setRefused(null)}
-      />
-      {editing !== null && (
-        <PropertyDialog
-          property={editing === "new" ? null : editing}
-          config={editing === "new" ? undefined : config[editing.id]}
-          onCancel={() => setEditing(null)}
-          onSave={commitProperty}
-        />
-      )}
-    </SettingsContent>
+      </div>
+    </SettingsEditor>
   );
 }
 

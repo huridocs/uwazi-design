@@ -1,8 +1,10 @@
-import { useId, useMemo, type Dispatch, type SetStateAction } from "react";
+import { useMemo, type Dispatch, type SetStateAction } from "react";
 import { useSetAtom, useAtomValue } from "jotai";
 import { ChevronUp, ChevronDown, FolderPlus, Trash2 } from "lucide-react";
-import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
+import { SettingsFormPage } from "../SettingsEditor";
+import { SettingsSection } from "../SettingsSection";
+import { SettingsEmptyState } from "../SettingsEmptyState";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { DragGrip } from "../DragGrip";
 import { useReorder } from "../../../hooks/useReorder";
@@ -58,7 +60,7 @@ export function FiltersPage() {
   // Library's Template facet reads. Compared with the last save.
   const stored = useAtomValue(filterSettings.valueAtom);
   const saveFilters = useSetAtom(filterSettings.saveAtom);
-  const { draft, setField, dirty, markSaved } = useSettingsDraft<FilterSettings>({
+  const { draft, setField, dirty, markSaved, discard } = useSettingsDraft<FilterSettings>({
     id: "filters",
     label: "Filter changes",
     saved: stored,
@@ -69,8 +71,6 @@ export function FiltersPage() {
   const setPropertyRows = setField("propertyRows");
   const { dragIdx, rowProps, gripProps } = useReorder(setRows);
   const propertyReorder = useReorder(setPropertyRows);
-  const typesHeadingId = useId();
-  const propertiesHeadingId = useId();
 
   const activeCount = rows.filter((r) => r.active).length + propertyRows.filter((r) => r.active).length;
   const groupOptions = [
@@ -197,86 +197,82 @@ export function FiltersPage() {
   ];
 
   return (
-    <SettingsContent component="FiltersPage">
-      <SettingsContent.Header title="Filters" />
-      <SettingsContent.Body>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between mb-4">
-          <p className="text-xs text-ink-tertiary min-w-0 sm:max-w-md">
-            Choose which entity types and properties appear as filters in the library sidebar, group
-            the types, and set the order of each — exactly how readers will see them.
-          </p>
-          <SettingsButton
-            variant="secondary"
-            size="sm"
-            icon={<FolderPlus size={14} />}
-            onClick={addGroup}
-            className="shrink-0 whitespace-nowrap"
-          >
-            New group
-          </SettingsButton>
-        </div>
-
-        <section aria-labelledby={typesHeadingId} className="mb-6">
-          <h3 id={typesHeadingId} className="text-sm font-semibold text-ink mb-2">Types</h3>
-          {groups.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3">
-              {groups.map((g) => (
-                <div key={g.id} className="flex items-center gap-1 rounded-md bg-warm px-2 py-1">
-                  <input
-                    value={g.name}
-                    onChange={(e) => renameGroup(g.id, e.target.value)}
-                    aria-label="Group name"
-                    className="bg-transparent text-xs font-medium text-ink w-28 focus:outline-none focus:bg-paper rounded px-1"
-                  />
-                  <button
-                    onClick={() => removeGroup(g.id)}
-                    aria-label={`Remove ${g.name}`}
-                    className="p-0.5 rounded text-ink-tertiary hover:bg-seal-tint hover:text-seal-label transition-colors cursor-pointer shrink-0"
-                  >
-                    <Trash2 size={12} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <SettingsTable
-            columns={columns}
-            data={rows}
-            getRowId={(r) => r.templateId}
-            rowProps={(_r, i) => ({
-              ...rowProps(i),
-              className: dragIdx === i ? "opacity-60" : undefined,
-            })}
-          />
-        </section>
-
-        <section aria-labelledby={propertiesHeadingId}>
-          <h3 id={propertiesHeadingId} className="text-sm font-semibold text-ink mb-2">Properties</h3>
-          <SettingsTable
-            columns={propertyColumns}
-            data={propertyRows}
-            getRowId={(r) => r.propertyId}
-            rowProps={(_r, i) => ({
-              ...propertyReorder.rowProps(i),
-              className: propertyReorder.dragIdx === i ? "opacity-60" : undefined,
-            })}
-            emptyState={<span className="text-sm text-ink-muted">No filterable properties.</span>}
-          />
-        </section>
-      </SettingsContent.Body>
-      <SettingsContent.Footer>
-        <span className="text-xs text-ink-tertiary me-auto">
+    <SettingsFormPage
+      component="FiltersPage"
+      title="Filters"
+      intro="Choose which entity types and properties appear as filters in the library sidebar, group the types, and set the order of each — exactly how readers will see them."
+      dirty={dirty}
+      onSave={save}
+      onDiscard={discard}
+      footerStart={
+        <span className="text-xs text-ink-tertiary">
           {rows.some((r) => r.active)
             ? `${activeCount} filters shown`
             : "No template ticked: the Library lists every template"}
         </span>
-        <LastSavedLine domain="filters" id="filters" />
-        <SettingsButton variant="success" size="sm" disabled={!dirty} onClick={save}>
-          Save
-        </SettingsButton>
-      </SettingsContent.Footer>
-    </SettingsContent>
+      }
+      footerStatus={<LastSavedLine domain="filters" id="filters" />}
+    >
+      <SettingsSection
+        title="Types"
+        action={
+          <SettingsButton variant="secondary" size="sm" icon={<FolderPlus size={14} />} onClick={addGroup} className="whitespace-nowrap">
+            New group
+          </SettingsButton>
+        }
+      >
+        {groups.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {groups.map((g) => (
+              <div key={g.id} className="flex items-center gap-1 rounded-md bg-warm px-2 py-1">
+                <input
+                  value={g.name}
+                  onChange={(e) => renameGroup(g.id, e.target.value)}
+                  aria-label="Group name"
+                  className="bg-transparent text-xs font-medium text-ink w-28 focus:outline-none focus:bg-paper rounded px-1"
+                />
+                <button
+                  onClick={() => removeGroup(g.id)}
+                  aria-label={`Remove ${g.name}`}
+                  className="p-0.5 rounded text-ink-tertiary hover:bg-seal-tint hover:text-seal-label transition-colors cursor-pointer shrink-0"
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <SettingsTable
+          columns={columns}
+          data={rows}
+          getRowId={(r) => r.templateId}
+          rowProps={(_r, i) => ({
+            ...rowProps(i),
+            className: dragIdx === i ? "opacity-60" : undefined,
+          })}
+          emptyState={<SettingsEmptyState title="No templates yet" hint="Each template can be a filter once it exists." />}
+        />
+      </SettingsSection>
+
+      <SettingsSection title="Properties">
+        <SettingsTable
+          columns={propertyColumns}
+          data={propertyRows}
+          getRowId={(r) => r.propertyId}
+          rowProps={(_r, i) => ({
+            ...propertyReorder.rowProps(i),
+            className: propertyReorder.dragIdx === i ? "opacity-60" : undefined,
+          })}
+          emptyState={
+            <SettingsEmptyState
+              title="No filterable properties"
+              hint="Tick “Use as filter” on a template property to list it here."
+            />
+          }
+        />
+      </SettingsSection>
+    </SettingsFormPage>
   );
 }
 

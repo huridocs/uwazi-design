@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useAtomValue } from "jotai";
-import { Plus, BookOpen } from "lucide-react";
-import { SettingsContent } from "../SettingsContent";
-import { SettingsButton } from "../SettingsButton";
+import { BookOpen } from "lucide-react";
+import { SettingsListPage, useSettingsSearch } from "../SettingsListPage";
+import { SettingsEmptyState } from "../SettingsEmptyState";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { RowActions } from "../RowActions";
 import { ThesaurusDelete } from "../../shared/SettingsDeletes";
@@ -19,6 +19,7 @@ export function ThesauriPage() {
   const thesauri = useAtomValue(thesauriAtom(dataSource));
   const [confirm, setConfirm] = useState<SettingsThesaurus | null>(null);
   const [editing, setEditing] = useState<SettingsThesaurus | "new" | null>(null);
+  const search = useSettingsSearch(thesauri, (t) => t.name);
 
   if (editing) return <ThesaurusEditor thesaurus={editing} onClose={() => setEditing(null)} />;
 
@@ -42,28 +43,38 @@ export function ThesauriPage() {
     {
       id: "actions",
       header: "",
-      width: "6rem",
+      width: "4rem",
       align: "right",
-      cell: (t) => <RowActions label={t.name} onEdit={() => setEditing(t)} onDelete={() => setConfirm(t)} />,
+      cell: (t) => <RowActions label={t.name} onDelete={() => setConfirm(t)} />,
     },
   ];
 
   return (
-    <SettingsContent component="ThesauriPage">
-      <SettingsContent.Header title="Thesauri" />
-      <SettingsContent.Body>
-        <p className="text-xs text-ink-tertiary mb-4">
-          Controlled vocabularies you can attach to template properties.
-        </p>
-        <SettingsTable columns={columns} data={thesauri} getRowId={(t) => t.id} onRowClick={(t) => setEditing(t)} rowAriaLabel={(t) => `Edit ${t.name}`} />
-      </SettingsContent.Body>
-      <SettingsContent.Footer>
-        <SettingsButton variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
-          Add thesaurus
-        </SettingsButton>
-      </SettingsContent.Footer>
-
-      <ThesaurusDelete thesaurus={confirm} onCancel={() => setConfirm(null)} />
-    </SettingsContent>
+    <SettingsListPage
+      component="ThesauriPage"
+      title="Thesauri"
+      intro="Controlled vocabularies you can attach to template properties."
+      search={{ value: search.query, onChange: search.setQuery, label: "Search thesauri" }}
+      lead={{ label: "Add thesaurus", onClick: () => setEditing("new") }}
+      overlays={<ThesaurusDelete thesaurus={confirm} onCancel={() => setConfirm(null)} />}
+    >
+      <SettingsTable
+        columns={columns}
+        data={search.rows}
+        getRowId={(t) => t.id}
+        onRowClick={(t) => setEditing(t)}
+        rowAriaLabel={(t) => `Edit ${t.name}`}
+        emptyState={
+          <SettingsEmptyState
+            icon={<BookOpen size={16} />}
+            title="No thesauri yet"
+            hint="A thesaurus gives a property a fixed list of values to choose from."
+            action={{ label: "Add thesaurus", onClick: () => setEditing("new") }}
+            query={search.query}
+            onClearQuery={search.clear}
+          />
+        }
+      />
+    </SettingsListPage>
   );
 }
