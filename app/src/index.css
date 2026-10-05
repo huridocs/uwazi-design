@@ -19,6 +19,9 @@
      accent, for dots, borders and swatches. See tokens.css. */
   --color-seal-label: var(--accent-seal-label);
   --color-seal-fill: var(--accent-seal-fill);
+  --color-carbon-label: var(--accent-blue-label);
+  --color-success-label: var(--success-label);
+  --color-warning-label: var(--warning-label);
   --color-carbon-tint: var(--accent-blue-tint);
   --color-seal-tint: var(--accent-seal-tint);
   --color-success: var(--success);

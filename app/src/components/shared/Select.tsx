@@ -164,7 +164,7 @@ export function Select({
           rounded-md transition-colors cursor-pointer
           focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35 ${
             tone === "carbon"
-              ? "text-carbon bg-carbon-tint/40 border border-carbon/30 hover:bg-carbon-tint"
+              ? "text-carbon-label bg-carbon-tint/40 border border-carbon/30 hover:bg-carbon-tint"
               : "text-ink-secondary bg-paper border border-border hover:bg-parchment hover:text-ink"
           }`}
       >

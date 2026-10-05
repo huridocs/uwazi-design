@@ -44,7 +44,7 @@ export function DocumentGroupCard({
             single source of "which one the viewer's rendering". Same
             shape, different fill so they read as a continuum, not two
             unrelated states. */}
-        <span data-part="primary-badge" className="px-1.5 py-0.5 text-meta font-medium rounded shrink-0 bg-warning-light text-warning">
+        <span data-part="primary-badge" className="px-1.5 py-0.5 text-meta font-medium rounded shrink-0 bg-warning-light text-warning-label">
           Primary
         </span>
         {active && (

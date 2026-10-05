@@ -264,7 +264,7 @@ export function FileDetailEditor({
                 group.isPrimary
                   ? isActiveGroup
                     ? "bg-ink text-parchment"
-                    : "bg-warning-light text-warning"
+                    : "bg-warning-light text-warning-label"
                   : "bg-vellum text-ink-secondary"
               }`}
             >

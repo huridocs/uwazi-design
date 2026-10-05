@@ -525,7 +525,7 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
         {showLangFallback && (
           <div
             data-part="language-notice"
-            className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 ps-3 pe-1.5 py-1.5 rounded-md bg-warning-light text-warning text-xs font-medium shadow-sm animate-fade-in-up"
+            className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 ps-3 pe-1.5 py-1.5 rounded-md bg-warning-light text-warning-label text-xs font-medium shadow-sm animate-fade-in-up"
             role="status"
           >
             {/* `dir="auto"`: an English sentence inside the Arabic (RTL) layout

@@ -60,7 +60,7 @@ export function IssuesTable({ issues }: IssuesTableProps) {
                 <span
                   className={`inline-flex w-fit px-2 py-0.5 text-meta font-semibold rounded-md ${
                     issue.type === "warning"
-                      ? "bg-warning-light text-warning"
+                      ? "bg-warning-light text-warning-label"
                       : "bg-seal-tint text-seal-label"
                   }`}
                 >

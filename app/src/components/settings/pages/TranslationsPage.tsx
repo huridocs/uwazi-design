@@ -13,7 +13,7 @@ import { useNotify } from "../../../hooks/useNotify";
 import { seedTranslationContexts, type SettingsTranslationContext } from "../../../data/settings";
 
 const typeStyle: Record<SettingsTranslationContext["type"], string> = {
-  System: "bg-carbon-tint text-carbon",
+  System: "bg-carbon-tint text-carbon-label",
   Template: "bg-warm text-ink-secondary",
   Thesaurus: "bg-warm text-ink-secondary",
   Menu: "bg-warm text-ink-secondary",

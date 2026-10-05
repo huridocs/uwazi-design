@@ -1,9 +1,9 @@
 import type { ExtractorStatus } from "../../data/settings";
 
 const styles: Record<ExtractorStatus, { cls: string; label: string }> = {
-  ready: { cls: "bg-success-light text-success", label: "Ready" },
-  training: { cls: "bg-carbon-tint text-carbon", label: "Training" },
-  processing: { cls: "bg-warning-light text-warning", label: "Processing" },
+  ready: { cls: "bg-success-light text-success-label", label: "Ready" },
+  training: { cls: "bg-carbon-tint text-carbon-label", label: "Training" },
+  processing: { cls: "bg-warning-light text-warning-label", label: "Processing" },
   error: { cls: "bg-seal-tint text-seal-label", label: "Error" },
 };
 

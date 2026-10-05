@@ -197,7 +197,7 @@ const CODE_CLASS =
  *  shape but a faint carbon tint. Without this the nested `<code>` overrides the
  *  `<a>` and real links look pixel-identical to non-clickable code. */
 const LINK_CODE_CLASS =
-  "rounded-sm bg-carbon-tint px-1 py-px font-mono text-[0.85em] text-carbon " +
+  "rounded-sm bg-carbon-tint px-1 py-px font-mono text-[0.85em] text-carbon-label " +
   "underline decoration-carbon/30 underline-offset-2";
 
 /** Three outcomes, so no link in these docs can be dead:

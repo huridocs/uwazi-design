@@ -185,7 +185,7 @@ export function ThesaurusPicker({
           fresh?.size
             ? (l) =>
                 fresh.has(l) ? (
-                  <span className="ms-1.5 px-1.5 rounded-sm bg-carbon-tint text-meta font-medium text-carbon">New</span>
+                  <span className="ms-1.5 px-1.5 rounded-sm bg-carbon-tint text-meta font-medium text-carbon-label">New</span>
                 ) : null
             : undefined
         }

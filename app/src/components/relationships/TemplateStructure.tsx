@@ -53,7 +53,7 @@ function PropertyItem({ prop }: { prop: TemplateProperty }) {
         className={`px-2.5 py-0.5 text-xs font-medium rounded-md transition-colors shrink-0 ${
           prop.inherited
             ? "bg-carbon-tint/50 text-carbon/50"
-            : "bg-carbon-tint text-carbon hover:bg-carbon-tint/80"
+            : "bg-carbon-tint text-carbon-label hover:bg-carbon-tint/80"
         }`}
       >
         Edit

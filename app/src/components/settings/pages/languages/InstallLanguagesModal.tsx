@@ -110,7 +110,7 @@ export function InstallLanguagesModal({
                 }
                 meta={
                   <span
-                    className={`w-fit rounded-md px-1.5 py-px font-semibold ${on ? "bg-success-light text-success" : "bg-warm text-ink-secondary"}`}
+                    className={`w-fit rounded-md px-1.5 py-px font-semibold ${on ? "bg-success-light text-success-label" : "bg-warm text-ink-secondary"}`}
                   >
                     {on ? "Selected" : "Select"}
                   </span>

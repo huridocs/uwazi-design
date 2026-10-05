@@ -57,7 +57,7 @@ export function RollupChip({ summary }: { summary: { text: string; title: string
     <span
       data-component="RollupChip"
       title={summary.title}
-      className="inline-flex w-fit items-center gap-1 rounded-md bg-carbon-tint px-1.5 py-0.5 text-meta font-medium text-carbon"
+      className="inline-flex w-fit items-center gap-1 rounded-md bg-carbon-tint px-1.5 py-0.5 text-meta font-medium text-carbon-label"
     >
       <Sigma size={10} className="shrink-0" aria-hidden />
       {summary.text}

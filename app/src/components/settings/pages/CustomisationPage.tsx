@@ -140,7 +140,7 @@ export function CustomisationPage() {
 
           {/* Per-language note */}
           {lang === "js" ? (
-            <div className="mt-2 flex items-center gap-2 px-3 py-2 text-xs text-warning bg-warning-light rounded-md">
+            <div className="mt-2 flex items-center gap-2 px-3 py-2 text-xs text-warning-label bg-warning-light rounded-md">
               <AlertTriangle className="size-3.5 shrink-0" />
               Scripts run on every public page — use with care.
             </div>

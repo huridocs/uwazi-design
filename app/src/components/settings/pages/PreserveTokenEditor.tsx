@@ -67,8 +67,8 @@ function seedCaptures(source: SettingsPreserveToken | undefined): Capture[] {
 }
 
 const STATE_META: Record<CaptureState, { label: string; cls: string }> = {
-  captured: { label: "Captured", cls: "bg-success-light text-success" },
-  pending: { label: "Pending", cls: "bg-carbon-tint text-carbon" },
+  captured: { label: "Captured", cls: "bg-success-light text-success-label" },
+  pending: { label: "Pending", cls: "bg-carbon-tint text-carbon-label" },
   failed: { label: "Failed", cls: "bg-seal-tint text-seal-label" },
 };
 

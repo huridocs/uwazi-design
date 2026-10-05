@@ -72,10 +72,10 @@ function seedSuggestions(property: string): Suggestion[] {
 }
 
 const STATE_META: Record<SuggestionState, { label: string; cls: string }> = {
-  match: { label: "Matches", cls: "bg-success-light text-success" },
-  empty: { label: "Empty", cls: "bg-carbon-tint text-carbon" },
-  mismatch: { label: "Mismatch", cls: "bg-warning-light text-warning" },
-  accepted: { label: "Accepted", cls: "bg-success-light text-success" },
+  match: { label: "Matches", cls: "bg-success-light text-success-label" },
+  empty: { label: "Empty", cls: "bg-carbon-tint text-carbon-label" },
+  mismatch: { label: "Mismatch", cls: "bg-warning-light text-warning-label" },
+  accepted: { label: "Accepted", cls: "bg-success-light text-success-label" },
 };
 
 const FILTERS = [
@@ -210,7 +210,7 @@ export function ExtractorEditor({
             onClick={() => accept(r.id)}
             disabled={r.state === "accepted"}
             aria-label={`Accept suggestion for ${r.entity}`}
-            className="p-1 rounded text-success hover:bg-success-light transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-default"
+            className="p-1 rounded text-success-label hover:bg-success-light transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-default"
           >
             <Check size={14} />
           </button>

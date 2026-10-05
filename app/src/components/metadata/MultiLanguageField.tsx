@@ -185,7 +185,7 @@ export function MultiLanguageField({
           shrink-0 whitespace-nowrap border transition-colors cursor-pointer focus:outline-none
           focus-visible:ring-2 focus-visible:ring-carbon/40 ${s === 3 ? "w-6" : "px-2"} ${
             canTranslate
-              ? "text-carbon border-carbon/30 bg-carbon-tint/40 hover:bg-carbon-tint"
+              ? "text-carbon-label border-carbon/30 bg-carbon-tint/40 hover:bg-carbon-tint"
               : "text-ink-muted border-border bg-paper cursor-default"
           }`}
       >
@@ -287,7 +287,7 @@ export function MultiLanguageField({
                         <span
                           title="Machine translated — editing this row clears the marker"
                           className="inline-flex items-center h-4 px-1.5 rounded-md
-                            bg-carbon-tint text-meta leading-none text-carbon"
+                            bg-carbon-tint text-meta leading-none text-carbon-label"
                         >
                           Auto
                         </span>

@@ -1292,7 +1292,7 @@ function PinToggle({ pinned, label, onToggle }: { pinned: boolean; label: string
       data-part="pin"
       className={`pin-toggle inline-flex items-center gap-1 h-4 px-1.5 rounded-sm text-meta font-medium transition-colors cursor-pointer
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30 ${
-          pinned ? "bg-carbon-tint text-carbon" : "text-ink-tertiary hover:text-ink-secondary"
+          pinned ? "bg-carbon-tint text-carbon-label" : "text-ink-tertiary hover:text-ink-secondary"
         }`}
     >
       <Pin size={10} aria-hidden className={pinned ? "fill-current" : ""} />

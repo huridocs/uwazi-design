@@ -37,7 +37,7 @@ const blockedLines = (plan: BulkPlan) => plan.blocked.map((b) => `${b.username} 
 const roleStyle: Record<UserRole, string> = {
   // Admin is a role, not a danger: ink on vellum, the strongest neutral.
   admin: "bg-vellum text-ink",
-  editor: "bg-carbon-tint text-carbon",
+  editor: "bg-carbon-tint text-carbon-label",
   collaborator: "bg-warm text-ink-secondary",
 };
 

@@ -76,9 +76,9 @@ function seedDocs(seed: string): DocRow[] {
 }
 
 const STATE_META: Record<DocState, { label: string; cls: string }> = {
-  done: { label: "Done", cls: "bg-success-light text-success" },
-  queued: { label: "Queued", cls: "bg-carbon-tint text-carbon" },
-  skipped: { label: "Skipped", cls: "bg-warning-light text-warning" },
+  done: { label: "Done", cls: "bg-success-light text-success-label" },
+  queued: { label: "Queued", cls: "bg-carbon-tint text-carbon-label" },
+  skipped: { label: "Skipped", cls: "bg-warning-light text-warning-label" },
 };
 
 const FILTERS = [
@@ -185,7 +185,7 @@ export function ParagraphJobEditor({
         <button
           onClick={() => rerunDoc(r.title)}
           aria-label={`Re-run extraction for ${r.title}`}
-          className="p-1 rounded text-ink-tertiary hover:bg-carbon-tint hover:text-carbon transition-colors cursor-pointer"
+          className="p-1 rounded text-ink-tertiary hover:bg-carbon-tint hover:text-carbon-label transition-colors cursor-pointer"
         >
           <RotateCw size={14} />
         </button>
