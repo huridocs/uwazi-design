@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSetAtom, useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import { Plus, Link2, Folder } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
@@ -10,10 +10,11 @@ import { MenuLinkEditor } from "./MenuLinkEditor";
 import { seedMenuLinks, type SettingsMenuLink } from "../../../data/settings";
 import { dataSourceAtom } from "../../../atoms/dataSource";
 import { cejilSettingsMenu } from "../../../data/cejil/settingsAdapt";
-import { toastsAtom } from "../../../atoms/notifications";
+import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { newSettingsId } from "../../../atoms/settingsCollection";
 
 export function MenuPage() {
-  const setToasts = useSetAtom(toastsAtom);
+  const { record } = useSettingsNotify();
   const dataSource = useAtomValue(dataSourceAtom);
   const [links, setLinks] = useState<SettingsMenuLink[]>(
     dataSource === "cejil" ? cejilSettingsMenu : seedMenuLinks,
@@ -21,7 +22,18 @@ export function MenuPage() {
   const [confirm, setConfirm] = useState<SettingsMenuLink | null>(null);
   const [editing, setEditing] = useState<SettingsMenuLink | "new" | null>(null);
 
-  if (editing) return <MenuLinkEditor link={editing} onClose={() => setEditing(null)} />;
+  const saveLink = (value: Omit<SettingsMenuLink, "id">): string => {
+    if (editing === "new") {
+      const id = newSettingsId("m");
+      setLinks((prev) => [...prev, { ...value, id }]);
+      return id;
+    }
+    const id = (editing as SettingsMenuLink).id;
+    setLinks((prev) => prev.map((m) => (m.id === id ? { ...m, ...value } : m)));
+    return id;
+  };
+
+  if (editing) return <MenuLinkEditor link={editing} onClose={() => setEditing(null)} onSave={saveLink} />;
 
   const columns: Column<SettingsMenuLink>[] = [
     {
@@ -81,7 +93,7 @@ export function MenuPage() {
         onConfirm={() => {
           if (confirm) {
             setLinks((prev) => prev.filter((m) => m.id !== confirm.id));
-            setToasts((p) => [...p, { id: Date.now().toString(), message: `${confirm.title} removed`, type: "success" as const }]);
+            record({ method: "DELETE", domain: "menu", noun: "menu item", id: confirm.id, name: confirm.title, message: `${confirm.title} removed` });
           }
           setConfirm(null);
         }}

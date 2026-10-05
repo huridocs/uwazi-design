@@ -1,4 +1,3 @@
-import { useSetAtom } from "jotai";
 import { Plus } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
@@ -9,7 +8,9 @@ import { useReorder } from "../../../hooks/useReorder";
 import { newSettingsId } from "../../../atoms/settingsCollection";
 import { SegmentedControl } from "../../shared/SegmentedControl";
 import { type SettingsMenuLink } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/notifications";
+import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { useSettingsUndo } from "../../../hooks/useSettingsUndo";
+import { LastSavedLine } from "../../shared/LastSavedLine";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
 /** A group's nested links. The shared SettingsMenuLink is flat, so the editable
@@ -31,11 +32,14 @@ const SAMPLE_SUBLINKS: SubLink[] = [
 export function MenuLinkEditor({
   link,
   onClose,
+  onSave,
 }: {
   link: SettingsMenuLink | "new";
   onClose: () => void;
+  /** Write the item to the menu list; returns its id. */
+  onSave: (value: Omit<SettingsMenuLink, "id">) => string;
 }) {
-  const setToasts = useSetAtom(toastsAtom);
+  const { record } = useSettingsNotify();
   const isNew = link === "new";
   const base = isNew ? undefined : link;
 
@@ -61,14 +65,31 @@ export function MenuLinkEditor({
   const addSubLink = () =>
     setSubLinks((prev) => [...prev, { id: newSettingsId("ns"), title: "", url: "" }]);
 
-  const deleteSubLink = (id: string) => setSubLinks((prev) => prev.filter((s) => s.id !== id));
+  /** A removed sub-link gets an Undo in the Beacon (UX5); the removal stays
+   *  in the draft until Save. */
+  const offerUndo = useSettingsUndo<{ link: SubLink; index: number }>(({ link: l, index }) =>
+    setSubLinks((prev) => (prev.some((s) => s.id === l.id) ? prev : [...prev.slice(0, index), l, ...prev.slice(index)])),
+  );
+  const deleteSubLink = (id: string) => {
+    const index = subLinks.findIndex((s) => s.id === id);
+    if (index < 0) return;
+    const removed = subLinks[index];
+    setSubLinks((prev) => prev.filter((s) => s.id !== id));
+    if (removed.title.trim() || removed.url.trim())
+      offerUndo({ link: removed, index }, `${removed.title || "Sub-link"} removed`, "Nothing is saved until you save the menu item.");
+  };
   const { dragIdx, rowProps, gripProps } = useReorder(setSubLinks);
 
   const save = () => {
-    setToasts((p) => [
-      ...p,
-      { id: Date.now().toString(), message: isNew ? "Menu item added" : `${title || "Item"} saved`, type: "success" as const },
-    ]);
+    const id = onSave({ type, title: title.trim(), url: type === "group" ? "" : url.trim() });
+    record({
+      method: isNew ? "CREATE" : "UPDATE",
+      domain: "menu",
+      noun: "menu item",
+      id,
+      name: title.trim(),
+      message: isNew ? "Menu item added" : undefined,
+    });
     onClose();
   };
 
@@ -145,6 +166,7 @@ export function MenuLinkEditor({
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
+        <LastSavedLine domain="menu" id={base?.id} className="me-auto" />
         <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
         <SettingsButton variant={isNew ? "commit" : "success"} size="sm" disabled={!dirty || !title.trim()} onClick={save}>
           {isNew ? "Add item" : "Save"}

@@ -17,7 +17,9 @@ import {
   cejilPropertyFilterRows,
   cejilPropertyFilterMeta,
 } from "../../../data/cejil/settingsAdapt";
-import { toastsAtom } from "../../../atoms/notifications";
+import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { useSettingsUndo } from "../../../hooks/useSettingsUndo";
+import { LastSavedLine } from "../../shared/LastSavedLine";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 import { newSettingsId } from "../../../atoms/settingsCollection";
 
@@ -70,7 +72,7 @@ function swap<T>(arr: T[], i: number, dir: -1 | 1): T[] {
 }
 
 export function FiltersPage() {
-  const setToasts = useSetAtom(toastsAtom);
+  const { record } = useSettingsNotify();
   const cejil = useAtomValue(dataSourceAtom) === "cejil";
   const meta = cejil ? cejilFilterMeta : mockMeta;
   const initialRows = cejil ? cejilFilterRows : mockRows();
@@ -110,14 +112,31 @@ export function FiltersPage() {
     setGroups((prev) => [...prev, { id: newSettingsId("fg"), name: `Group ${prev.length + 1}` }]);
   const renameGroup = (id: string, name: string) =>
     setGroups((prev) => prev.map((g) => (g.id === id ? { ...g, name } : g)));
+  /** A removed group gets an Undo in the Beacon (UX5): it puts the group
+   *  back with the templates it held. */
+  const offerUndo = useSettingsUndo<{ group: FilterGroup; index: number; members: string[] }>(
+    ({ group, index, members }) => {
+      setGroups((prev) => (prev.some((g) => g.id === group.id) ? prev : [...prev.slice(0, index), group, ...prev.slice(index)]));
+      setRows((prev) => prev.map((r) => (members.includes(r.templateId) && !r.groupId ? { ...r, groupId: group.id } : r)));
+    },
+  );
   const removeGroup = (id: string) => {
+    const index = groups.findIndex((g) => g.id === id);
+    if (index < 0) return;
+    const group = groups[index];
+    const members = rows.filter((r) => r.groupId === id).map((r) => r.templateId);
     setGroups((prev) => prev.filter((g) => g.id !== id));
     setRows((prev) => prev.map((r) => (r.groupId === id ? { ...r, groupId: "" } : r)));
+    offerUndo(
+      { group, index, members },
+      `${group.name || "Group"} removed`,
+      `${members.length ? `${members.length} ${members.length === 1 ? "filter moves" : "filters move"} out of the group. ` : ""}Nothing is saved until you save the filters.`,
+    );
   };
 
   const save = () => {
     markSaved();
-    setToasts((p) => [...p, { id: Date.now().toString(), message: "Library filters updated", type: "success" as const }]);
+    record({ method: "UPDATE", domain: "filters", noun: "settings", id: "filters", name: "Library filters", message: "Library filters updated" });
   };
 
   const columns: Column<FilterRow>[] = [
@@ -259,6 +278,7 @@ export function FiltersPage() {
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <span className="text-xs text-ink-tertiary me-auto">{activeCount} filters shown</span>
+        <LastSavedLine domain="filters" id="filters" />
         <SettingsButton variant="success" size="sm" disabled={!dirty} onClick={save}>
           Save
         </SettingsButton>
