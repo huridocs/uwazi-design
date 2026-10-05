@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useId } from "react";
 import { useSetAtom, useAtomValue } from "jotai";
 import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
@@ -9,6 +9,7 @@ import { LayoutGrid, Table2, Map } from "lucide-react";
 import { dataSourceAtom } from "../../../atoms/dataSource";
 import { cejilCollection } from "../../../data/cejil/settingsAdapt";
 import { toastsAtom } from "../../../atoms/notifications";
+import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
 interface ToggleRowProps {
   label: string;
@@ -38,24 +39,32 @@ export function CollectionPage() {
     dataSource === "cejil"
       ? { name: cejilCollection.name, view: cejilCollection.defaultView }
       : { name: "Inter-American Human Rights Archive", view: "cards" };
-  const [name, setName] = useState(init.name);
   const accessHeadingId = useId();
-  const [landing, setLanding] = useState("/library");
-  const [defaultView, setDefaultView] = useState(init.view);
-  const [privateInstance, setPrivateInstance] = useState(false);
-  const [cookiePolicy, setCookiePolicy] = useState(true);
-  const [publicSharing, setPublicSharing] = useState(true);
+  // Compared with the last save, not the seed: after Save the page is clean.
+  const { draft, setField, dirty, markSaved } = useSettingsDraft({
+    id: "collection",
+    label: "Collection settings",
+    saved: {
+      name: init.name,
+      landing: "/library",
+      defaultView: init.view,
+      privateInstance: false,
+      cookiePolicy: true,
+      publicSharing: true,
+    },
+  });
+  const { name, landing, defaultView, privateInstance, cookiePolicy, publicSharing } = draft;
+  const setName = setField("name");
+  const setLanding = setField("landing");
+  const setDefaultView = setField("defaultView");
+  const setPrivateInstance = setField("privateInstance");
+  const setCookiePolicy = setField("cookiePolicy");
+  const setPublicSharing = setField("publicSharing");
 
-  const dirty =
-    name !== init.name ||
-    landing !== "/library" ||
-    defaultView !== init.view ||
-    privateInstance !== false ||
-    cookiePolicy !== true ||
-    publicSharing !== true;
-
-  const save = () =>
+  const save = () => {
+    markSaved();
     setToasts((p) => [...p, { id: Date.now().toString(), message: "Collection settings saved", type: "success" as const }]);
+  };
 
   return (
     <SettingsContent component="CollectionPage">

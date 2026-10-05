@@ -1,10 +1,10 @@
-import { useState } from "react";
 import { useSetAtom } from "jotai";
 import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
 import { SettingsField, TextInput } from "../SettingsField";
 import { type SettingsRelationType } from "../../../data/settings";
 import { toastsAtom } from "../../../atoms/notifications";
+import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
 /** A relationship type may optionally carry a label for its reverse direction
  *  (forward "appealed to" / inverse "ruled on"). The shared SettingsRelationType
@@ -23,10 +23,14 @@ export function RelationTypeEditor({
   const isNew = relationType === "new";
   const base = isNew ? undefined : (relationType as WithInverse);
 
-  const [name, setName] = useState(base?.name ?? "");
-  const [inverseName, setInverseName] = useState(base?.inverseName ?? "");
-
-  const dirty = name !== (base?.name ?? "") || inverseName !== (base?.inverseName ?? "");
+  const { draft, setField, dirty } = useSettingsDraft({
+    id: `relation-type:${base?.id ?? "new"}`,
+    label: "Relationship type edits",
+    saved: { name: base?.name ?? "", inverseName: base?.inverseName ?? "" },
+  });
+  const { name, inverseName } = draft;
+  const setName = setField("name");
+  const setInverseName = setField("inverseName");
 
   // Show the usage stat only when the record actually carries a count.
   const usageCount = typeof base?.usageCount === "number" ? base.usageCount : undefined;
@@ -61,7 +65,7 @@ export function RelationTypeEditor({
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
-        <SettingsButton variant="success" size="sm" disabled={!dirty || !name} onClick={save}>
+        <SettingsButton variant="success" size="sm" disabled={!dirty || !name.trim()} onClick={save}>
           {isNew ? "Create type" : "Save"}
         </SettingsButton>
       </SettingsContent.Footer>

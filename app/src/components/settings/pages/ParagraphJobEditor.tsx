@@ -9,6 +9,7 @@ import { StatusPill } from "../StatusPill";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { seedTemplates, type SettingsParagraphJob } from "../../../data/settings";
 import { toastsAtom } from "../../../atoms/notifications";
+import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
 const TEMPLATE_OPTIONS = seedTemplates.map((t) => ({ value: t.name, label: t.name }));
 
@@ -101,9 +102,16 @@ export function ParagraphJobEditor({
   const isNew = job === "new";
   const base = isNew ? undefined : job;
 
-  const [template, setTemplate] = useState(base?.template ?? TEMPLATE_OPTIONS[0].value);
-  const [segmentation, setSegmentation] = useState("paragraph");
-  const [minChars, setMinChars] = useState("40");
+  // The job's configuration. The footer runs the job whether or not it changed.
+  const { draft, setField } = useSettingsDraft({
+    id: `paragraph-job:${base?.id ?? "new"}`,
+    label: "Extraction settings",
+    saved: { template: base?.template ?? TEMPLATE_OPTIONS[0].value, segmentation: "paragraph", minChars: "40" },
+  });
+  const { template, segmentation, minChars } = draft;
+  const setTemplate = setField("template");
+  const setSegmentation = setField("segmentation");
+  const setMinChars = setField("minChars");
   const [filter, setFilter] = useState("all");
   const [rows] = useState<DocRow[]>(() => (isNew ? [] : seedDocs(base!.template)));
 

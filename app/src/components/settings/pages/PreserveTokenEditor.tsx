@@ -9,6 +9,7 @@ import { RadioGroup } from "../../shared/RadioGroup";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { type SettingsPreserveToken } from "../../../data/settings";
 import { toastsAtom } from "../../../atoms/notifications";
+import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
 const AUTH_OPTIONS = [
   { value: "none", label: "None" },
@@ -93,15 +94,20 @@ export function PreserveTokenEditor({
   const isNew = token === "new";
   const base = isNew ? undefined : token;
 
-  const [name, setName] = useState(base?.name ?? "");
-  const [schedule, setSchedule] = useState("daily");
-  const [url, setUrl] = useState("");
-  const [auth, setAuth] = useState("none");
+  // The source's configuration. Captures below act at once.
+  const { draft, setField, dirty } = useSettingsDraft({
+    id: `preserve-source:${base?.id ?? "new"}`,
+    label: "Capture source edits",
+    saved: { name: base?.name ?? "", schedule: "daily", url: "", auth: "none" },
+  });
+  const { name, schedule, url, auth } = draft;
+  const setName = setField("name");
+  const setSchedule = setField("schedule");
+  const setUrl = setField("url");
+  const setAuth = setField("auth");
   const [filter, setFilter] = useState("all");
   const [rows, setRows] = useState<Capture[]>(() => (isNew ? [] : seedCaptures(base)));
 
-  const dirty =
-    name !== (base?.name ?? "") || schedule !== "daily" || url !== "" || auth !== "none";
 
   // Live stats over the current capture set.
   const captured = rows.filter((r) => r.state === "captured").length;
@@ -271,7 +277,7 @@ export function PreserveTokenEditor({
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
-        <SettingsButton variant="success" size="sm" disabled={!dirty || !name} onClick={save}>
+        <SettingsButton variant="success" size="sm" disabled={!dirty || !name.trim()} onClick={save}>
           {isNew ? "Add source" : "Save"}
         </SettingsButton>
       </SettingsContent.Footer>

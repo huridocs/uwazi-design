@@ -1,4 +1,4 @@
-import { useId, useState, type Dispatch, type SetStateAction } from "react";
+import { useId, type Dispatch, type SetStateAction } from "react";
 import { useSetAtom, useAtomValue } from "jotai";
 import { ChevronUp, ChevronDown, FolderPlus, Trash2 } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
@@ -18,6 +18,8 @@ import {
   cejilPropertyFilterMeta,
 } from "../../../data/cejil/settingsAdapt";
 import { toastsAtom } from "../../../atoms/notifications";
+import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
+import { newSettingsId } from "../../../atoms/settingsCollection";
 
 interface FilterGroup {
   id: string;
@@ -74,22 +76,24 @@ export function FiltersPage() {
   const initialRows = cejil ? cejilFilterRows : mockRows();
   const initialGroups: FilterGroup[] = cejil ? cejilFilterGroups : [];
 
-  const [groups, setGroups] = useState<FilterGroup[]>(initialGroups);
-  const [rows, setRows] = useState<FilterRow[]>(initialRows);
-  const { dragIdx, rowProps, gripProps } = useReorder(setRows);
-
   const propertyMeta = cejil ? cejilPropertyFilterMeta : mockPropertyMeta;
   const initialPropertyRows = cejil ? cejilPropertyFilterRows : mockPropertyRows();
-  const [propertyRows, setPropertyRows] = useState<PropertyFilterRow[]>(initialPropertyRows);
+  // Compared with the last save, not the seed: after Save the page is clean.
+  const { draft, setField, dirty, markSaved } = useSettingsDraft({
+    id: "filters",
+    label: "Filter changes",
+    saved: { groups: initialGroups, rows: initialRows, propertyRows: initialPropertyRows },
+  });
+  const { groups, rows, propertyRows } = draft;
+  const setGroups = setField("groups");
+  const setRows = setField("rows");
+  const setPropertyRows = setField("propertyRows");
+  const { dragIdx, rowProps, gripProps } = useReorder(setRows);
   const propertyReorder = useReorder(setPropertyRows);
   const typesHeadingId = useId();
   const propertiesHeadingId = useId();
 
   const activeCount = rows.filter((r) => r.active).length + propertyRows.filter((r) => r.active).length;
-  const dirty =
-    JSON.stringify(groups) !== JSON.stringify(initialGroups) ||
-    JSON.stringify(rows) !== JSON.stringify(initialRows) ||
-    JSON.stringify(propertyRows) !== JSON.stringify(initialPropertyRows);
   const groupOptions = [
     { value: "", label: "No group" },
     ...groups.map((g) => ({ value: g.id, label: g.name || "Untitled group" })),
@@ -103,7 +107,7 @@ export function FiltersPage() {
     setPropertyRows((prev) => prev.map((r) => (r.propertyId === propertyId ? { ...r, active: !r.active } : r)));
 
   const addGroup = () =>
-    setGroups((prev) => [...prev, { id: `g-${prev.length}-${rows.length}`, name: `Group ${prev.length + 1}` }]);
+    setGroups((prev) => [...prev, { id: newSettingsId("fg"), name: `Group ${prev.length + 1}` }]);
   const renameGroup = (id: string, name: string) =>
     setGroups((prev) => prev.map((g) => (g.id === id ? { ...g, name } : g)));
   const removeGroup = (id: string) => {
@@ -111,8 +115,10 @@ export function FiltersPage() {
     setRows((prev) => prev.map((r) => (r.groupId === id ? { ...r, groupId: "" } : r)));
   };
 
-  const save = () =>
+  const save = () => {
+    markSaved();
     setToasts((p) => [...p, { id: Date.now().toString(), message: "Library filters updated", type: "success" as const }]);
+  };
 
   const columns: Column<FilterRow>[] = [
     {

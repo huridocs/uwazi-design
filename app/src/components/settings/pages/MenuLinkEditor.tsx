@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useSetAtom } from "jotai";
 import { Plus } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
@@ -7,9 +6,11 @@ import { RowActions } from "../RowActions";
 import { SettingsField, TextInput } from "../SettingsField";
 import { DragGrip } from "../DragGrip";
 import { useReorder } from "../../../hooks/useReorder";
+import { newSettingsId } from "../../../atoms/settingsCollection";
 import { SegmentedControl } from "../../shared/SegmentedControl";
 import { type SettingsMenuLink } from "../../../data/settings";
 import { toastsAtom } from "../../../atoms/notifications";
+import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
 /** A group's nested links. The shared SettingsMenuLink is flat, so the editable
  *  sub-link list lives locally. */
@@ -38,25 +39,27 @@ export function MenuLinkEditor({
   const isNew = link === "new";
   const base = isNew ? undefined : link;
 
-  const [type, setType] = useState<"link" | "group">(base?.type ?? "link");
-  const [title, setTitle] = useState(base?.title ?? "");
-  const [url, setUrl] = useState(base?.url ?? "");
-  const [subLinks, setSubLinks] = useState<SubLink[]>(
-    !isNew && base?.type === "group" ? SAMPLE_SUBLINKS : [],
-  );
-
-  const initialSubLinks = !isNew && base?.type === "group" ? SAMPLE_SUBLINKS : [];
-  const dirty =
-    type !== (base?.type ?? "link") ||
-    title !== (base?.title ?? "") ||
-    url !== (base?.url ?? "") ||
-    JSON.stringify(subLinks) !== JSON.stringify(initialSubLinks);
+  const { draft, setField, dirty } = useSettingsDraft({
+    id: `menu-link:${base?.id ?? "new"}`,
+    label: "Menu item edits",
+    saved: {
+      type: (base?.type ?? "link") as "link" | "group",
+      title: base?.title ?? "",
+      url: base?.url ?? "",
+      subLinks: !isNew && base?.type === "group" ? SAMPLE_SUBLINKS : ([] as SubLink[]),
+    },
+  });
+  const { type, title, url, subLinks } = draft;
+  const setType = setField("type");
+  const setTitle = setField("title");
+  const setUrl = setField("url");
+  const setSubLinks = setField("subLinks");
 
   const patchSubLink = (id: string, patch: Partial<SubLink>) =>
     setSubLinks((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
 
   const addSubLink = () =>
-    setSubLinks((prev) => [...prev, { id: `ns-${prev.length}-${Date.now()}`, title: "", url: "" }]);
+    setSubLinks((prev) => [...prev, { id: newSettingsId("ns"), title: "", url: "" }]);
 
   const deleteSubLink = (id: string) => setSubLinks((prev) => prev.filter((s) => s.id !== id));
   const { dragIdx, rowProps, gripProps } = useReorder(setSubLinks);
@@ -143,7 +146,7 @@ export function MenuLinkEditor({
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
-        <SettingsButton variant="success" size="sm" disabled={!dirty || !title} onClick={save}>
+        <SettingsButton variant="success" size="sm" disabled={!dirty || !title.trim()} onClick={save}>
           {isNew ? "Add item" : "Save"}
         </SettingsButton>
       </SettingsContent.Footer>

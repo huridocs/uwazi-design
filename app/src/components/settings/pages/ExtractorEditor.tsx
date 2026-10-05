@@ -8,6 +8,7 @@ import { Select } from "../../shared/Select";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { seedTemplates, type SettingsExtractor } from "../../../data/settings";
 import { toastsAtom } from "../../../atoms/notifications";
+import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
 const TEMPLATE_OPTIONS = seedTemplates.map((t) => ({ value: t.name, label: t.name }));
 const TYPE_OPTIONS = [
@@ -99,14 +100,20 @@ export function ExtractorEditor({
   const isNew = extractor === "new";
   const base = isNew ? undefined : extractor;
 
-  const [template, setTemplate] = useState(base?.template ?? TEMPLATE_OPTIONS[0].value);
-  const [property, setProperty] = useState(base?.property ?? "");
-  const [propType, setPropType] = useState("text");
+  // The extractor's configuration. Suggestion review below acts at once and
+  // is not part of the draft.
+  const { draft, setField, dirty } = useSettingsDraft({
+    id: `extractor:${base?.id ?? "new"}`,
+    label: "Extractor edits",
+    saved: { template: base?.template ?? TEMPLATE_OPTIONS[0].value, property: base?.property ?? "", propType: "text" },
+  });
+  const { template, property, propType } = draft;
+  const setTemplate = setField("template");
+  const setProperty = setField("property");
+  const setPropType = setField("propType");
   const [filter, setFilter] = useState("all");
   const [rows, setRows] = useState<Suggestion[]>(() => (isNew ? [] : seedSuggestions(base!.property)));
 
-  const dirty =
-    template !== (base?.template ?? TEMPLATE_OPTIONS[0].value) || property !== (base?.property ?? "");
 
   // Live stats over the current suggestion set.
   const reviewed = rows.filter((r) => r.state === "accepted").length;
@@ -265,7 +272,7 @@ export function ExtractorEditor({
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
-        <SettingsButton variant="success" size="sm" disabled={!dirty || !property} onClick={save}>
+        <SettingsButton variant="success" size="sm" disabled={!dirty || !property.trim()} onClick={save}>
           {isNew ? "Create extractor" : "Save"}
         </SettingsButton>
       </SettingsContent.Footer>

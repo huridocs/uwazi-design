@@ -29,6 +29,7 @@ import {
   type SiteLang,
 } from "../../../../data/sitePages";
 import { CopyFromLanguageModal, LangSwitch, StatusLine, publishState } from "./shared";
+import { useRegisterDirtyForm } from "../../../../hooks/useDirtyGuard";
 
 type Tab = "html" | "css" | "js";
 const LANG_NAME: Record<SiteLang, string> = { en: "English", es: "Spanish", fr: "French", ar: "Arabic" };
@@ -67,6 +68,9 @@ export function CodePageEditor({
 
   const saved = docs[pageId]?.draft ?? doc.draft;
   const unsaved = !sameLocales(draft, saved);
+  // The saved draft lives in `codeDocsAtom`, so this clears on Save; the guard
+  // asks before the back arrow, the rail or a reload drops an unsaved draft.
+  useRegisterDirtyForm(`settings:code-page:${pageId}`, "Page edits", unsaved);
   const state = publishState(!!doc.published, !sameLocales(draft, doc.published));
   const filled = (l: SiteLang) => !!(draft[l].html.trim() || draft[l].title.trim());
   const loc = draft[lang];

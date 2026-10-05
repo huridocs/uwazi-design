@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useSetAtom } from "jotai";
 import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
@@ -10,6 +9,7 @@ import {
   type TranslationKey,
 } from "../../../data/settings";
 import { toastsAtom } from "../../../atoms/notifications";
+import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
 /** Build the editable rows for a context — seeded terms when we have them, else
  *  a representative set generated from the context's key count. */
@@ -36,14 +36,16 @@ export function TranslationEditor({
   onClose: () => void;
 }) {
   const setToasts = useSetAtom(toastsAtom);
-  const [rows, setRows] = useState<TranslationKey[]>(() => buildRows(context));
+  const { draft: rows, setDraft: setRows, dirty } = useSettingsDraft({
+    id: `translations:${context.id}`,
+    label: "Translation edits",
+    saved: buildRows(context),
+  });
 
   const patch = (rowIndex: number, langKey: string, value: string) =>
     setRows((prev) =>
       prev.map((r, i) => (i === rowIndex ? { ...r, values: { ...r.values, [langKey]: value } } : r)),
     );
-
-  const dirty = JSON.stringify(rows) !== JSON.stringify(buildRows(context));
 
   const save = () => {
     setToasts((p) => [

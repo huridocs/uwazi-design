@@ -27,6 +27,17 @@ export function useSettingsDraft<T>({ id, label, saved }: { id: string; label: s
     (patch: Partial<T>) => setDraftState((d) => ({ ...d, ...patch })),
     [],
   );
+  /** A `useState`-style setter for one field of an object draft, so a form
+   *  that kept each field in its own state reads the same. */
+  const setField = useCallback(
+    <K extends keyof T>(key: K) =>
+      (next: SetStateAction<T[K]>) =>
+        setDraftState((d) => ({
+          ...d,
+          [key]: typeof next === "function" ? (next as (prev: T[K]) => T[K])(d[key]) : next,
+        })),
+    [],
+  );
   const markSaved = useCallback(
     (next?: T) => {
       const value = next === undefined ? draft : next;
@@ -37,5 +48,5 @@ export function useSettingsDraft<T>({ id, label, saved }: { id: string; label: s
   );
   const discard = useCallback(() => setDraftState(baseline), [baseline]);
 
-  return { draft, setDraft, update, dirty, markSaved, discard, saved: baseline };
+  return { draft, setDraft, update, setField, dirty, markSaved, discard, saved: baseline };
 }

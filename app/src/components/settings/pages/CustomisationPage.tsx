@@ -5,6 +5,7 @@ import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
 import { DrawerTabs } from "../../layout/DrawerTabs";
 import { toastsAtom } from "../../../atoms/notifications";
+import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
 const SAMPLE_CSS = `/* Global CSS — applied across the public collection */
 .home-banner {
@@ -17,25 +18,32 @@ console.log('Collection loaded');`;
 export function CustomisationPage() {
   const setToasts = useSetAtom(toastsAtom);
   const [lang, setLang] = useState<"css" | "js">("css");
-  const [css, setCss] = useState(SAMPLE_CSS);
-  const [js, setJs] = useState(SAMPLE_JS);
+  // Compared with the last save, not the sample: after Save the page is clean.
+  const { draft, setField, dirty, markSaved, saved } = useSettingsDraft({
+    id: "customisation",
+    label: "CSS and JS edits",
+    saved: { css: SAMPLE_CSS, js: SAMPLE_JS },
+  });
+  const { css, js } = draft;
+  const setCss = setField("css");
+  const setJs = setField("js");
 
   const gutterRef = useRef<HTMLDivElement>(null);
 
   const value = lang === "css" ? css : js;
-  const sample = lang === "css" ? SAMPLE_CSS : SAMPLE_JS;
-  const tabDirty = value !== sample;
-  const dirty = css !== SAMPLE_CSS || js !== SAMPLE_JS;
+  const tabDirty = value !== saved[lang];
 
   const lineCount = value.split("\n").length;
   const charCount = value.length;
 
-  const save = () =>
+  const save = () => {
+    markSaved();
     setToasts((p) => [...p, { id: Date.now().toString(), message: "Customisation saved", type: "success" as const }]);
+  };
 
   const resetTab = () => {
-    if (lang === "css") setCss(SAMPLE_CSS);
-    else setJs(SAMPLE_JS);
+    if (lang === "css") setCss(saved.css);
+    else setJs(saved.js);
   };
 
   const syncScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {

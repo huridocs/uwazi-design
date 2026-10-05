@@ -11,6 +11,7 @@ import type { SettingsThesaurus, ThesaurusValue } from "../../../data/settings";
 import { dataSourceAtom } from "../../../atoms/dataSource";
 import { saveThesaurusAtom, thesauriAtom } from "../../../atoms/thesauri";
 import { toastsAtom } from "../../../atoms/notifications";
+import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
 interface Item {
   id: string;
@@ -21,10 +22,6 @@ interface Item {
 const isGroup = (it: Item): boolean => Array.isArray(it.children);
 const countItems = (items: Item[]): number =>
   items.reduce((n, it) => n + 1 + (it.children ? it.children.length : 0), 0);
-/** Serialize the full nested structure (labels + grouping) for dirty checks. */
-const serialize = (items: Item[]): string =>
-  JSON.stringify(items.map((it) => (it.children ? { g: it.label, c: it.children.map((c) => c.label) } : it.label)));
-
 let uid = 0;
 const newId = () => `tv-${Date.now().toString(36)}-${++uid}`;
 
@@ -80,11 +77,14 @@ export function ThesaurusEditor({
       ...(v.values ? { children: v.values.map((c) => ({ id: c.id, label: c.label })) } : {}),
     }));
 
-  const [name, setName] = useState(base?.name ?? "");
-  const [items, setItems] = useState<Item[]>(seedItems);
-
-  const initialSerialized = serialize(seedItems());
-  const dirty = name !== (base?.name ?? "") || serialize(items) !== initialSerialized;
+  const { draft, setField, dirty } = useSettingsDraft({
+    id: `thesaurus:${base?.id ?? "new"}`,
+    label: "Thesaurus edits",
+    saved: { name: base?.name ?? "", items: seedItems() },
+  });
+  const { name, items } = draft;
+  const setName = setField("name");
+  const setItems = setField("items");
 
   // Top-level edits
   const patch = (id: string, label: string) =>
@@ -243,7 +243,7 @@ export function ThesaurusEditor({
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
-        <SettingsButton variant="success" size="sm" disabled={!dirty || !name} onClick={save}>
+        <SettingsButton variant="success" size="sm" disabled={!dirty || !name.trim()} onClick={save}>
           {isNew ? "Create thesaurus" : "Save"}
         </SettingsButton>
       </SettingsContent.Footer>

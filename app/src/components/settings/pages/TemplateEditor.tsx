@@ -23,6 +23,9 @@ import {
 import { cejilTemplateProperties } from "../../../data/cejil/settingsAdapt";
 import { validateValue, blockingSummary, type ValidationIssue } from "../../../utils/validation";
 import { toastsAtom } from "../../../atoms/notifications";
+import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
+import { newSettingsId } from "../../../atoms/settingsCollection";
+import { deepEqual } from "../../../utils/deepEqual";
 
 /** A distinct, calm palette (no duplicates) + a custom picker. */
 const PALETTE = [
@@ -73,14 +76,25 @@ export function TemplateEditor({
   const isNew = template === "new";
   const base = isNew ? undefined : template;
 
-  const [name, setName] = useState(base?.name ?? "");
-  const [color, setColor] = useState(base?.color ?? PALETTE[0]);
-  const [props, setProps] = useState<TemplateProperty[]>(
-    isNew
-      ? [...defaultTemplateProperties]
-      : cejilTemplateProperties[base!.id] ?? templatePropertiesByTemplate[base!.id] ?? defaultTemplateProperties,
-  );
-  const [config, setConfig] = useState<Record<string, PropConfig>>({});
+  // Property storage is unchanged (pending a decision): only name and colour
+  // reach `onSave`. The draft covers everything so the guard sees every edit.
+  const { draft, setField, dirty } = useSettingsDraft({
+    id: `template:${base?.id ?? "new"}`,
+    label: "Template edits",
+    saved: {
+      name: base?.name ?? "",
+      color: base?.color ?? PALETTE[0],
+      props: isNew
+        ? [...defaultTemplateProperties]
+        : cejilTemplateProperties[base!.id] ?? templatePropertiesByTemplate[base!.id] ?? defaultTemplateProperties,
+      config: {} as Record<string, PropConfig>,
+    },
+  });
+  const { name, color, props, config } = draft;
+  const setName = setField("name");
+  const setColor = setField("color");
+  const setProps = setField("props");
+  const setConfig = setField("config");
   // The property being edited in the dialog: an existing property, "new", or none.
   const [editing, setEditing] = useState<TemplateProperty | "new" | null>(null);
   const { dragIdx, rowProps, gripProps } = useReorder(setProps);
@@ -94,16 +108,6 @@ export function TemplateEditor({
     validateValue("text", v, { required: true, label: "Template name" });
   const saveBlocked = saveAttempted && nameIssue?.severity === "error";
 
-  const initialColor = base?.color ?? PALETTE[0];
-  const initialProps = isNew
-    ? defaultTemplateProperties
-    : cejilTemplateProperties[base!.id] ?? templatePropertiesByTemplate[base!.id] ?? defaultTemplateProperties;
-  const dirty =
-    name !== (base?.name ?? "") ||
-    color !== initialColor ||
-    JSON.stringify(props) !== JSON.stringify(initialProps) ||
-    Object.keys(config).length > 0;
-
   const patchProp = (id: string, patch: Partial<TemplateProperty>) =>
     setProps((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
 
@@ -116,15 +120,18 @@ export function TemplateEditor({
   };
 
   /** Commit a property dialog — append (new) or patch (existing) + its config. */
-  const commitProperty = (draft: PropertyDraft) => {
-    const { label, type, required, filterable, showInCard, ...cfg } = draft;
+  const commitProperty = (prop: PropertyDraft) => {
+    const { label, type, required, filterable, showInCard, ...cfg } = prop;
     if (editing === "new") {
-      const id = `np-${props.length}-${name.length}-${label.length}`;
+      const id = newSettingsId("np");
       setProps((prev) => [...prev, { id, label, type, required, filterable, showInCard }]);
       setConfig((prev) => ({ ...prev, [id]: cfg }));
     } else if (editing) {
       patchProp(editing.id, { label, type, required, filterable, showInCard });
-      setConfig((prev) => ({ ...prev, [editing.id]: cfg }));
+      // A dialog saved with no change leaves the config as it was: writing the
+      // dialog's defaults made an unchanged template read as dirty.
+      if (!deepEqual(cfg, effectiveConfig(editing.type, config[editing.id])))
+        setConfig((prev) => ({ ...prev, [editing.id]: cfg }));
     }
     setEditing(null);
   };
@@ -345,6 +352,18 @@ export function TemplateEditor({
 
 /** Modal to edit a single property — label, type, type-specific config, and the
  *  required / filterable flags. Drives both the edit pencil and "Add property". */
+/** The config a property dialog opens with, and submits when left alone:
+ *  the stored config, else the first option of each list. */
+function effectiveConfig(type: TemplateProperty["type"], config?: PropConfig): PropConfig {
+  if (type === "select") return { content: config?.content ?? THESAURUS_OPTIONS[0]?.value ?? "" };
+  if (type === "relationship")
+    return {
+      targetTemplate: config?.targetTemplate ?? TEMPLATE_OPTIONS[0]?.value ?? "",
+      relationType: config?.relationType ?? RELATION_OPTIONS[0]?.value ?? "",
+    };
+  return {};
+}
+
 function PropertyDialog({
   property,
   config,
@@ -363,9 +382,9 @@ function PropertyDialog({
   const [filterable, setFilterable] = useState(property?.filterable ?? false);
   // A new property is on the card unless the author says otherwise.
   const [showInCard, setShowInCard] = useState(property?.showInCard ?? true);
-  const [content, setContent] = useState(config?.content ?? THESAURUS_OPTIONS[0]?.value ?? "");
-  const [targetTemplate, setTargetTemplate] = useState(config?.targetTemplate ?? TEMPLATE_OPTIONS[0]?.value ?? "");
-  const [relationType, setRelationType] = useState(config?.relationType ?? RELATION_OPTIONS[0]?.value ?? "");
+  const [content, setContent] = useState(effectiveConfig("select", config).content ?? "");
+  const [targetTemplate, setTargetTemplate] = useState(effectiveConfig("relationship", config).targetTemplate ?? "");
+  const [relationType, setRelationType] = useState(effectiveConfig("relationship", config).relationType ?? "");
   const [labelIssue, setLabelIssue] = useState<ValidationIssue | null>(null);
   const checkLabel = (v: string) => validateValue("text", v, { required: true, label: "Label" });
 
