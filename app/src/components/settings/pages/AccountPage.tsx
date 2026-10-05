@@ -5,7 +5,7 @@ import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
 import { SettingsField, TextInput } from "../SettingsField";
 import { SettingsTable, type Column } from "../SettingsTable";
-import { signedInUserAtom, users } from "../../../atoms/users";
+import { signedInUserAtom, userIdentityBlock, users, usersAtom } from "../../../atoms/users";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 import { useNotify } from "../../../hooks/useNotify";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
@@ -49,7 +49,9 @@ export function AccountPage() {
     saved: { username: me?.username ?? "", email: me?.email ?? "" },
   });
   const { username, email } = profile.draft;
-  const canSaveProfile = profile.dirty && !!username.trim() && !!email.trim();
+  // Another account's username or email would make login pick the wrong one.
+  const taken = userIdentityBlock(useAtomValue(usersAtom), me?.id ?? null, { username, email });
+  const canSaveProfile = profile.dirty && !!username.trim() && !!email.trim() && !taken;
   const saveProfile = () => {
     if (!me) return;
     const next = { username: username.trim(), email: email.trim() };
@@ -173,10 +175,10 @@ export function AccountPage() {
               The username you log in with, and your email address.
             </p>
             <div className="grid sm:grid-cols-2 gap-3">
-              <SettingsField label="Username">
+              <SettingsField label="Username" issue={taken?.username ? { severity: "error", message: taken.username } : null}>
                 <TextInput value={username} onChange={(e) => profile.update({ username: e.target.value })} />
               </SettingsField>
-              <SettingsField label="Email">
+              <SettingsField label="Email" issue={taken?.email ? { severity: "error", message: taken.email } : null}>
                 <TextInput type="email" value={email} onChange={(e) => profile.update({ email: e.target.value })} />
               </SettingsField>
             </div>

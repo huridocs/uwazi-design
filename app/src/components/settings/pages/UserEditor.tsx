@@ -7,7 +7,8 @@ import { SettingsField, TextInput } from "../SettingsField";
 import { RadioGroup } from "../../shared/RadioGroup";
 import { Checkbox } from "../../shared/Checkbox";
 import type { SettingsUser, UserRole } from "../../../data/settings";
-import { groupsAtom, roleChangeBlock, saveUserAtom, usersAtom } from "../../../atoms/users";
+import { groupsAtom, roleChangeBlock, saveUserAtom, userIdentityBlock, usersAtom } from "../../../atoms/users";
+import { MissingRecord } from "../../shared/MissingRecord";
 import { useNotify } from "../../../hooks/useNotify";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
 import { LastSavedLine } from "../../shared/LastSavedLine";
@@ -41,21 +42,28 @@ export function UserEditor({
   const base = isNew ? undefined : users.find((u) => u.id === userId);
   const { id: _id, ...saved } = base ?? { id: "", ...NEW_USER };
 
+  // Groups as a sorted set: unticking and re-ticking is no change.
   const { draft, update, dirty } = useSettingsDraft<UserDraft>({
     id: `user:${userId}`,
     label: "User edits",
-    saved,
+    saved: { ...saved, groupIds: [...saved.groupIds].sort() },
   });
+  /** The user was deleted (or the demo data reset) while this was open. */
+  const missing = !isNew && !base;
   const { username, email, role, groupIds } = draft;
   const groupsHeadingId = useId();
   const roleNote = base ? roleChangeBlock(users, base.id, "editor") : null;
-  const valid = !!username.trim() && !!email.trim();
+  // Uwazi rejects a username or email another account has; login matches
+  // case-insensitively, so this does too.
+  const taken = userIdentityBlock(users, isNew ? null : userId, { username, email });
+  const valid = !!username.trim() && !!email.trim() && !taken && !missing;
 
   const toggleGroup = (id: string) =>
-    update({ groupIds: groupIds.includes(id) ? groupIds.filter((g) => g !== id) : [...groupIds, id] });
+    update({ groupIds: (groupIds.includes(id) ? groupIds.filter((g) => g !== id) : [...groupIds, id]).sort() });
 
   const save = () => {
-    const id = saveUser({ id: base?.id ?? null, value: { ...draft, username: username.trim(), email: email.trim() } });
+    const id = saveUser({ id: isNew ? null : userId, value: { ...draft, username: username.trim(), email: email.trim() } });
+    if (!id) return;
     record({
       method: isNew ? "CREATE" : "UPDATE",
       domain: "user",
@@ -72,11 +80,12 @@ export function UserEditor({
       <SettingsContent.Header path={["Users & Groups"]} title={isNew ? "New user" : base?.username ?? ""} onBack={onClose} />
       <SettingsContent.Body>
         <div className="flex flex-col gap-6">
+          {missing && <MissingRecord noun="user" />}
           <section className="grid sm:grid-cols-2 gap-3">
-            <SettingsField label="Username">
+            <SettingsField label="Username" issue={taken?.username ? { severity: "error", message: taken.username } : null}>
               <TextInput value={username} onChange={(e) => update({ username: e.target.value })} placeholder="e.g. jdoe" />
             </SettingsField>
-            <SettingsField label="Email">
+            <SettingsField label="Email" issue={taken?.email ? { severity: "error", message: taken.email } : null}>
               <TextInput type="email" value={email} onChange={(e) => update({ email: e.target.value })} placeholder="name@org.example" />
             </SettingsField>
           </section>

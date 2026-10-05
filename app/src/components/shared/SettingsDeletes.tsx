@@ -204,7 +204,7 @@ function UserDeleteOpen({ user, onCancel }: { user: SettingsUser; onCancel: () =
       impact={usage}
       onCancel={onCancel}
       onConfirm={() => {
-        deleteUser(user.id);
+        if (!deleteUser(user.id)) return onCancel();
         unshare(user.id);
         record({ method: "DELETE", domain: "user", noun: "user", id: user.id, name: user.username });
         onCancel();

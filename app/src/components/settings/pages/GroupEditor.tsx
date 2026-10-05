@@ -5,6 +5,7 @@ import { SettingsButton } from "../SettingsButton";
 import { SettingsField, TextInput } from "../SettingsField";
 import { Checkbox } from "../../shared/Checkbox";
 import { groupsAtom, saveGroupAtom, usersAtom } from "../../../atoms/users";
+import { MissingRecord } from "../../shared/MissingRecord";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
 import { LastSavedLine } from "../../shared/LastSavedLine";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
@@ -28,16 +29,20 @@ export function GroupEditor({
   const { draft, update, dirty } = useSettingsDraft({
     id: `group:${groupId}`,
     label: "Group edits",
-    saved: { name: base?.name ?? "", memberIds: base?.memberIds ?? [] },
+    // Members as a sorted set: unticking and re-ticking is no change.
+    saved: { name: base?.name ?? "", memberIds: [...(base?.memberIds ?? [])].sort() },
   });
+  /** The group was deleted (or the demo data reset) while this was open. */
+  const missing = !isNew && !base;
   const { name, memberIds: members } = draft;
   const membersHeadingId = useId();
 
   const toggle = (id: string) =>
-    update({ memberIds: members.includes(id) ? members.filter((m) => m !== id) : [...members, id] });
+    update({ memberIds: (members.includes(id) ? members.filter((m) => m !== id) : [...members, id]).sort() });
 
   const save = () => {
-    const id = saveGroup({ id: base?.id ?? null, name: name.trim(), memberIds: members });
+    const id = saveGroup({ id: isNew ? null : groupId, name: name.trim(), memberIds: members });
+    if (!id) return;
     record({
       method: isNew ? "CREATE" : "UPDATE",
       domain: "group",
@@ -54,6 +59,7 @@ export function GroupEditor({
       <SettingsContent.Header path={["Users & Groups"]} title={isNew ? "New group" : base?.name ?? ""} onBack={onClose} />
       <SettingsContent.Body>
         <div className="flex flex-col gap-6">
+          {missing && <MissingRecord noun="group" />}
           <section className="max-w-sm">
             <SettingsField label="Group name">
               <TextInput value={name} onChange={(e) => update({ name: e.target.value })} placeholder="e.g. Litigation" />
@@ -88,7 +94,7 @@ export function GroupEditor({
       <SettingsContent.Footer>
         <LastSavedLine domain="group" id={base?.id} className="me-auto" />
         <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
-        <SettingsButton variant={isNew ? "commit" : "success"} size="sm" disabled={!dirty || !name.trim()} onClick={save}>
+        <SettingsButton variant={isNew ? "commit" : "success"} size="sm" disabled={!dirty || !name.trim() || missing} onClick={save}>
           {isNew ? "Create group" : "Save"}
         </SettingsButton>
       </SettingsContent.Footer>
