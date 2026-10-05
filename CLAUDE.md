@@ -133,6 +133,12 @@ Known gaps, kept on purpose:
   editor's relationship fields share. Settings never lists `no_label`.
 - Settings is gated by the signed-in role (`settingsAccessAtom`): collaborator sees Account only;
   editor sees Account and the extraction pages; admin sees everything.
+- Every Settings page is one of three shells: `SettingsListPage` (intro, toolbar with search and
+  filters, table, lead create action), `SettingsEditor` (list → detail, Cancel then the commit)
+  or `SettingsFormPage` (one form, Discard changes then Save). Bodies use `SettingsSection`,
+  `SettingsFieldRow`, `SettingsCheckList`, `SettingsStat`; empty lists use `SettingsEmptyState`.
+  A table of per-corpus records passes `corpusScoped` (loading rows, and an error if the load fails).
+  Row actions show on hover and focus; a row that opens its editor has no pencil.
 
 ## Layout and style
 

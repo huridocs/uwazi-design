@@ -194,8 +194,7 @@ export function SettingsNav({
         target="_blank"
         rel="noopener noreferrer"
         data-part="documentation"
-        className="bleed shrink-0 flex items-center gap-2.5 h-12 text-tab font-medium text-left text-ink-secondary hover:bg-warm hover:text-ink transition-colors"
-        style={{ borderTop: "1px solid var(--border-primary)" }}
+        className="bleed shrink-0 flex items-center gap-2.5 h-12 text-tab font-medium text-left text-ink-secondary hover:bg-warm hover:text-ink transition-colors border-t border-border"
       >
         <settingsDocumentation.icon size={15} aria-hidden className="text-ink-tertiary shrink-0" />
         <span className="truncate flex-1">{settingsDocumentation.label}</span>

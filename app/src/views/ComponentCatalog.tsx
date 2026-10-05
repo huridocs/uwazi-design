@@ -49,11 +49,12 @@ import { SettingsNav } from "../components/settings/SettingsNav";
 // Settings primitives (static demos)
 import { SettingsBarContext, SettingsButton } from "../components/settings/SettingsButton";
 import { SettingsField, TextInput } from "../components/settings/SettingsField";
-import { RowActions } from "../components/settings/RowActions";
+import { RowActionButton, RowActions } from "../components/settings/RowActions";
+import { SettingsEditorDemo, SettingsEmptyStateDemo, SettingsListPageDemo, SettingsSectionDemo } from "./catalog/settingsDemos";
 import { StatusPill } from "../components/settings/StatusPill";
 
 // Icons
-import { ArrowLeft, FileText, Pencil, Download, Trash2, Share2, Plus, Tag } from "lucide-react";
+import { ArrowLeft, FileText, Pencil, Download, Trash2, Share2, Plus, Tag, Link2 } from "lucide-react";
 import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
 import { BarDivider } from "../components/shared/BarDivider";
 import { ModalDemo, ModalPartsDemo } from "../components/catalog/ModalDemo";
@@ -2129,13 +2130,97 @@ const textColor = typeLabelColor(type.color);`}
               <div id="set-row-actions" ref={reg("set-row-actions")}>
                 <CatalogEntry
                   name="RowActions"
-                  description="Edit + delete icon pair for a table row. Stops row-click propagation."
-                  code={`<RowActions label="Court Case" onEdit={() => …} onDelete={() => …} />`}
+                  description="The action cluster at the end of a settings row. Shown on hover and on keyboard focus inside the row (group-focus-within), always on phones and touch; opacity only, so nothing moves. A row that opens its editor carries no pencil. Extra actions (RowActionButton) go before delete; deleteLabel names the verb (Revoke, Uninstall). Stops the click reaching the row target."
+                  code={`<RowActions label="logo.svg" onDelete={() => …}>
+  <RowActionButton label="Copy URL for logo.svg" icon={<Link2 size={14} />} onClick={() => …} />
+</RowActions>`}
                 >
-                  <div className="w-full max-w-xs flex items-center justify-between bg-paper border border-border-soft rounded-md px-3 py-2">
-                    <span className="text-sm text-ink">Court Case</span>
-                    <RowActions label="Court Case" onEdit={() => {}} onDelete={() => {}} />
+                  <div className="w-full max-w-xs flex flex-col gap-2">
+                    <div className="group flex items-center justify-between bg-paper border border-border-soft rounded-md px-3 py-2 hover:bg-warm">
+                      <span className="text-sm text-ink">Court Case (hover)</span>
+                      <RowActions label="Court Case" onDelete={() => {}} />
+                    </div>
+                    <div className="group flex items-center justify-between bg-paper border border-border-soft rounded-md px-3 py-2 hover:bg-warm">
+                      <span className="text-sm text-ink">logo.svg</span>
+                      <RowActions label="logo.svg" onDelete={() => {}}>
+                        <RowActionButton label="Copy URL for logo.svg" icon={<Link2 size={14} aria-hidden />} onClick={() => {}} />
+                      </RowActions>
+                    </div>
                   </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="set-list-page" ref={reg("set-list-page")}>
+                <CatalogEntry
+                  name="SettingsListPage"
+                  description="The shell of every Settings list page: header, one intro line, the toolbar (SettingsToolbar: search on the start side, filters on the end, always mounted at one height), the table, and a footer whose lead is the create action (BAR_LEAD). useSettingsSearch filters the rows. Tabs (DrawerTabs) sit above the toolbar; dialogs go in overlays."
+                  code={`const search = useSettingsSearch(rows, (r) => r.name);
+<SettingsListPage
+  component="ThesauriPage"
+  title="Thesauri"
+  intro="Controlled vocabularies you can attach to template properties."
+  search={{ value: search.query, onChange: search.setQuery, label: "Search thesauri" }}
+  filters={<Select … />}
+  lead={{ label: "Add thesaurus", onClick: add }}
+  overlays={<ConfirmDialog … />}
+>
+  <SettingsTable corpusScoped data={search.rows} … emptyState={<SettingsEmptyState … />} />
+</SettingsListPage>`}
+                >
+                  <SettingsListPageDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="set-empty-state" ref={reg("set-empty-state")}>
+                <CatalogEntry
+                  name="SettingsEmptyState"
+                  description="A settings list with no rows: a vellum tile, the object named, one line on what it is for, and the create action. With a live search it says nothing matched and offers Clear search. A corpusScoped SettingsTable shows loading rows instead while the corpus loads, and an error with Try again if it fails."
+                  code={`<SettingsEmptyState
+  icon={<BookOpen size={16} />}
+  title="No thesauri yet"
+  hint="A thesaurus gives a property a fixed list of values to choose from."
+  action={{ label: "Add thesaurus", onClick: add }}
+  query={search.query}
+  onClearQuery={search.clear}
+/>`}
+                >
+                  <SettingsEmptyStateDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="set-section" ref={reg("set-section")}>
+                <CatalogEntry
+                  name="SettingsSection"
+                  description="The blocks of a settings form. SettingsForm is the 40rem column (wide for grids); SettingsSection is a heading, a one-line description, an optional action on the heading's line, then content, with a soft rule between sections. SettingsFieldRow puts two fields side by side from sm up. SettingsCheckList is a fieldset named by the section heading; SettingsStat is one figure in a stats list."
+                  code={`<SettingsForm>
+  <SettingsSection>
+    <SettingsFieldRow>…two SettingsFields…</SettingsFieldRow>
+  </SettingsSection>
+  <SettingsSection title="Groups" description="…" action={<SettingsButton …>Add group</SettingsButton>}>
+    <SettingsCheckList>
+      <SettingsCheckRow><Checkbox … />Litigation</SettingsCheckRow>
+    </SettingsCheckList>
+  </SettingsSection>
+</SettingsForm>`}
+                >
+                  <SettingsSectionDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="set-editor" ref={reg("set-editor")}>
+                <CatalogEntry
+                  name="SettingsEditor · SettingsFormPage"
+                  description="The two form shells, both fed by useSettingsDraft (which registers with the dirty guard). SettingsEditor is the detail a list opens: breadcrumb and back arrow (guarded), the form, then Cancel and the commit: ink with createLabel for a new record, green Save for an existing one. SettingsFormPage is a top-level page that is one form: Discard changes then Save, both enabled only while dirty."
+                  code={`const { draft, update, dirty, markSaved, discard } = useSettingsDraft({ id, label, saved });
+<SettingsEditor component="RelationTypeEditor" path={["Relationship types"]} title={name}
+  onBack={close} isNew={isNew} createLabel="Create type" dirty={dirty} valid={!!name.trim()} onSave={save}>
+  <SettingsSection>…</SettingsSection>
+</SettingsEditor>
+
+<SettingsFormPage component="CollectionPage" title="Collection" intro="…"
+  dirty={dirty} onSave={() => markSaved()} onDiscard={discard}>…</SettingsFormPage>`}
+                >
+                  <SettingsEditorDemo />
                 </CatalogEntry>
               </div>
             </div>

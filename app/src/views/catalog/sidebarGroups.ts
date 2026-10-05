@@ -157,6 +157,10 @@ export const sidebarGroups: SidebarGroup[] = [
       { id: "set-field", label: "SettingsField" },
       { id: "set-status-pill", label: "StatusPill" },
       { id: "set-row-actions", label: "RowActions" },
+      { id: "set-list-page", label: "SettingsListPage" },
+      { id: "set-empty-state", label: "SettingsEmptyState" },
+      { id: "set-section", label: "SettingsSection" },
+      { id: "set-editor", label: "SettingsEditor" },
     ],
   },
   {
