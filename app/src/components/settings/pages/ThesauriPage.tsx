@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { useAtomValue } from "jotai";
+import { useEffect, useState } from "react";
+import { useAtom, useAtomValue } from "jotai";
+import { openThesaurusRequestAtom } from "../../../atoms/devSwitches";
 import { BookOpen } from "lucide-react";
 import { SettingsListPage, useSettingsSearch } from "../SettingsListPage";
 import { SettingsEmptyState } from "../SettingsEmptyState";
@@ -19,6 +20,13 @@ export function ThesauriPage() {
   const thesauri = useAtomValue(thesauriAtom(dataSource));
   const [confirm, setConfirm] = useState<SettingsThesaurus | null>(null);
   const [editing, setEditing] = useState<SettingsThesaurus | "new" | null>(null);
+  // A request to open an editor by id (the Dev panel, SD-6), taken once.
+  const [request, setRequest] = useAtom(openThesaurusRequestAtom);
+  useEffect(() => {
+    if (!request) return;
+    setEditing(thesauri.find((t) => t.id === request) ?? { id: request, name: "", itemCount: 0 });
+    setRequest(null);
+  }, [request, thesauri, setRequest]);
   const search = useSettingsSearch(thesauri, (t) => t.name);
 
   if (editing) return <ThesaurusEditor thesaurus={editing} onClose={() => setEditing(null)} />;

@@ -63,3 +63,10 @@ export const emptyDomainAtom = atom(null, (get, set, domain: EmptyDomain) => {
       set(deleteRelationTypeAtom, { id: t.id, to: null, corpus: relationTypesCorpus(corpus) });
   if (domain === "activity") set(emptyActivityLogAtom);
 });
+
+/* ── Missing id (SD-6) ─────────────────────────────────────────────────── */
+
+/** A thesaurus id the Thesauri page opens its editor on, once, then clears:
+ *  the Dev panel's "Open thesaurus editor with a missing id" (the app has no
+ *  router, so a URL cannot be edited by hand). */
+export const openThesaurusRequestAtom = atom<string | null>(null);

@@ -111,6 +111,30 @@ export function ThesaurusEditor({
   thesaurus: SettingsThesaurus | "new";
   onClose: () => void;
 }) {
+  const corpus = useAtomValue(dataSourceAtom);
+  const all = useAtomValue(thesauriAtom(corpus));
+  // An id the collection does not have (deleted, or a stale link) is a
+  // not-found state with the way back, never an empty "new" editor.
+  if (thesaurus !== "new" && !all.some((t) => t.id === thesaurus.id))
+    return (
+      <SettingsEditor component="ThesaurusEditor" path={["Thesauri"]} title="Thesaurus not found" onBack={onClose} dirty={false} onSave={() => {}}>
+        <SettingsEmptyState
+          title="Thesaurus not found"
+          hint="It may have been deleted, or the link is out of date."
+          action={{ label: "Back to Thesauri", onClick: onClose }}
+        />
+      </SettingsEditor>
+    );
+  return <ThesaurusEditorBody thesaurus={thesaurus} onClose={onClose} />;
+}
+
+function ThesaurusEditorBody({
+  thesaurus,
+  onClose,
+}: {
+  thesaurus: SettingsThesaurus | "new";
+  onClose: () => void;
+}) {
   const store = useStore();
   const { record } = useSettingsNotify();
   const corpus = useAtomValue(dataSourceAtom);

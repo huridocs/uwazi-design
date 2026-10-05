@@ -3,12 +3,15 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { signedInUserIdAtom, usersAtom } from "../../atoms/users";
 import { FEATURE_LABELS, featureFlagsAtom, type FeatureFlags } from "../../atoms/featureFlags";
 import type { UserRole } from "../../data/settings";
+import { appViewAtom } from "../../atoms/navigation";
+import { settingsSectionAtom } from "../../atoms/settings";
 import { Select } from "../../components/shared/Select";
 import { Checkbox } from "../../components/shared/Checkbox";
 import {
   FAIL_SCOPES,
   emptyDomainAtom,
   failNextAtom,
+  openThesaurusRequestAtom,
   slowLoadAtom,
   type EmptyDomain,
   type FailScope,
@@ -34,6 +37,9 @@ export function DevPanel() {
   const [signedIn, setSignedIn] = useAtom(signedInUserIdAtom);
   const role = users.find((u) => u.id === signedIn)?.role ?? "admin";
   const [flags, setFlags] = useAtom(featureFlagsAtom);
+  const openThesaurus = useSetAtom(openThesaurusRequestAtom);
+  const setAppView = useSetAtom(appViewAtom);
+  const setSection = useSetAtom(settingsSectionAtom);
   return (
     <div data-component="DevPanel" className="flex flex-col gap-4 max-w-xl">
       <section className="flex flex-col gap-2">
@@ -133,6 +139,23 @@ export function DevPanel() {
         <p role="status" className="min-h-4 text-meta text-ink-secondary">
           {emptied ? `${emptied}: done. Reset demo data brings the seed back.` : ""}
         </p>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h3 className="text-sm font-semibold text-ink">Missing id</h3>
+        <div>
+          <button
+            type="button"
+            onClick={() => {
+              openThesaurus("th-missing");
+              setSection("thesauri");
+              setAppView("settings");
+            }}
+            className="h-8 px-3 text-xs font-medium rounded-md bg-warm text-ink hover:bg-parchment cursor-pointer"
+          >
+            Open thesaurus editor with a missing id
+          </button>
+        </div>
       </section>
     </div>
   );
