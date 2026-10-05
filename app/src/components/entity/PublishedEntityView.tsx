@@ -7,13 +7,14 @@ import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { scopedReferencesAtom } from "../../atoms/references";
 import { entityMetadataAtom, makeEntityPropReader } from "../../atoms/entityMetadata";
 import { previewEntityIdAtom } from "../../atoms/entityPreview";
-import { entityDisplayModeAtom, entityTabRequestAtom, focusedHasPublishedViewAtom } from "../../atoms/publishedView";
+import { entityDisplayModeAtom, entityTabRequestAtom, publishedTogglePlacementAtom } from "../../atoms/publishedView";
 import { useDirtyGuard } from "../../hooks/useDirtyGuard";
 import { layerStackAtom } from "../../atoms/layerStack";
 import { getEntityProfile, type EntityProfile } from "../../data/entityProfiles";
 import { entityCorpusOf, getEntity, getEntityType, type EntityImage } from "../../data/entities";
 import type { MetadataField, RelationshipMetadataField } from "../../data/metadata";
 import type { Reference, RelationType } from "../../data/references";
+import type { PublishedTogglePlacement } from "../../data/templates/types";
 import type { Language } from "../../atoms/language";
 import { templateMirror } from "../../data/templates/mirror";
 import { deriveTemplateStructure } from "../../utils/templateStructure";
@@ -540,16 +541,29 @@ function PublishedMap({ lat, lon, label }: { lat: number; lon: number; label: st
   );
 }
 
+/** The toggle's size, shared by both placements so they cannot drift. */
+const TOGGLE_BOX = "w-7 h-7 rounded-md";
+const TOGGLE_ICON = 14;
+const TOGGLE_POSITION: Record<PublishedTogglePlacement, string> = {
+  center: "top-13 left-1/2 -translate-x-1/2 -translate-y-1/2",
+  corner: "top-[3.75rem] end-3",
+};
+
 /** The one switch between the published view and the entity view, for an
  *  entity whose template has a published view (hidden otherwise).
  *
- *  Fixed, centred on the navbar's lower edge: the same spot in both modes, and
- *  being fixed it moves nothing when the mode changes. Icon only, with a hint
- *  below it; its name says where it goes ("Entity view" / "Published view").
+ *  Fixed, so it moves nothing when the mode changes, and in the same spot in
+ *  both modes. Where depends on the template (`publishedView.placement`):
+ *  "center" sits centred on the navbar's lower edge with its hint below;
+ *  "corner" sits at the content area's top inline-end corner (in the entity
+ *  view the empty end of the drawer's tab row, in the published view the
+ *  page's margin), and below desktop the entity view's tab row keeps its slot
+ *  free (`reserveToggleSlotAtom`). One size for both (`TOGGLE_BOX`). Icon
+ *  only; its name says where it goes ("Entity view" / "Published view").
  *  Leaving the entity view goes through the dirty-form guard, like a tab
  *  change. */
 export function PublishedViewToggle() {
-  const available = useAtomValue(focusedHasPublishedViewAtom);
+  const placement = useAtomValue(publishedTogglePlacementAtom);
   const mode = useAtomValue(entityDisplayModeAtom);
   const setMode = useSetAtom(entityDisplayModeAtom);
   const requestTab = useSetAtom(entityTabRequestAtom);
@@ -557,18 +571,19 @@ export function PublishedViewToggle() {
   // A slide-over, sheet or dialog puts its own close where this sits; the
   // toggle steps aside (invisible, so nothing moves) until it closes.
   const covered = useAtomValue(layerStackAtom).length > 0;
-  if (!available) return null;
+  if (!placement) return null;
   const toEntity = mode === "published";
   const label = toEntity ? "Entity view" : "Published view";
   const Icon = toEntity ? PanelRight : Newspaper;
   return (
-    <Hint text={label} describe={false} placement="below">
+    <Hint text={label} describe={false} placement={placement === "center" ? "below" : undefined}>
       {(hint) => (
         <button
           {...hint}
           type="button"
           data-component="PublishedViewToggle"
           data-mode={mode}
+          data-placement={placement}
           aria-label={label}
           onClick={() => {
             if (!toEntity) return guard(() => setMode("published"));
@@ -577,12 +592,12 @@ export function PublishedViewToggle() {
             requestTab("metadata");
             setMode("entity");
           }}
-          className={`fixed z-30 top-13 left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-md
+          className={`fixed z-30 ${TOGGLE_POSITION[placement]} ${TOGGLE_BOX} flex items-center justify-center
             transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35 ${WARM_BUTTON} ${
             covered ? "invisible" : ""
           }`}
         >
-          <Icon size={14} aria-hidden className="rtl:-scale-x-100" />
+          <Icon size={TOGGLE_ICON} aria-hidden className="rtl:-scale-x-100" />
         </button>
       )}
     </Hint>
