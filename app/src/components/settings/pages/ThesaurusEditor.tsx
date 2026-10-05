@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent } from "react";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
-import { ArrowDownAZ, ChevronRight, FolderInput, FolderPlus, Plus, Trash2 } from "lucide-react";
+import { ArrowDownAZ, ChevronRight, Download, FolderInput, FolderPlus, Plus, Trash2, Upload } from "lucide-react";
 import { SettingsButton } from "../SettingsButton";
 import { SettingsEditor } from "../SettingsEditor";
 import { SettingsSection } from "../SettingsSection";
@@ -8,6 +8,10 @@ import { SettingsEmptyState } from "../SettingsEmptyState";
 import { RowActionButton, RowActions } from "../RowActions";
 import { MoveButtons, ReorderGrip } from "../ReorderControls";
 import { BulkPickModal } from "../BulkPickModal";
+import { ThesaurusImportModal } from "../ThesaurusImportModal";
+import { useNotify } from "../../../hooks/useNotify";
+import { toThesaurusCsv } from "../../../utils/thesaurusCsv";
+import { seedLanguages } from "../../../data/settings";
 import { SettingsField, TextInput } from "../SettingsField";
 import { Checkbox } from "../../shared/Checkbox";
 import { AlphaJump } from "../../shared/AlphaJump";
@@ -145,6 +149,20 @@ export function ThesaurusEditor({
   const [ticked, setTicked] = useState<Set<string>>(new Set());
   const [moving, setMoving] = useState<string[] | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const notify = useNotify();
+
+  /** The values as Uwazi's CSV, in the default language's column. */
+  const exportCsv = () => {
+    const lang = seedLanguages.find((l) => l.default)?.label ?? "English";
+    const blob = new Blob([toThesaurusCsv(items, lang)], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${clean(name) || "thesaurus"}.csv`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  };
 
   const rows = useMemo(
     () => flatten(items, { collapsed, query, keep: editingId }),
@@ -334,7 +352,18 @@ export function ThesaurusEditor({
       dirty={dirty}
       issues={issues}
       onSave={save}
-      footerStart={<LastSavedLine domain="thesaurus" id={base?.id} />}
+      footerStart={
+        <>
+          {/* Icon-only on phones, where the footer also holds Cancel and Save. */}
+          <SettingsButton variant="ghost" size="sm" aria-label="Import CSV" className="whitespace-nowrap" icon={<Upload size={14} aria-hidden />} onClick={() => setImporting(true)}>
+            <span className="hidden sm:inline">Import CSV</span>
+          </SettingsButton>
+          <SettingsButton variant="ghost" size="sm" aria-label="Export CSV" className="whitespace-nowrap" icon={<Download size={14} aria-hidden />} onClick={exportCsv} disabled={total === 0}>
+            <span className="hidden sm:inline">Export CSV</span>
+          </SettingsButton>
+          <LastSavedLine domain="thesaurus" id={base?.id} className="hidden md:inline" />
+        </>
+      }
       selection={{
         count: ticked.size,
         total,
@@ -351,7 +380,23 @@ export function ThesaurusEditor({
         ],
       }}
       overlays={
-        moving && (
+        <>
+        {importing && (
+          <ThesaurusImportModal
+            items={items}
+            newId={newId}
+            onClose={() => setImporting(false)}
+            onApply={(plan, file) => {
+              setItems(plan.items);
+              setImporting(false);
+              notify(
+                `${(plan.added + plan.groupsAdded).toLocaleString()} rows added from ${file}. Save the thesaurus to keep them.`,
+                "success",
+              );
+            }}
+          />
+        )}
+        {moving && (
           <BulkPickModal
             title="Move to group"
             subtitle={moving.length === 1 ? clean(findItem(items, moving[0])?.label ?? "") : valuesWord(moving.length)}
@@ -371,7 +416,8 @@ export function ThesaurusEditor({
               setMoving(null);
             }}
           />
-        )
+        )}
+        </>
       }
     >
       <SettingsSection>

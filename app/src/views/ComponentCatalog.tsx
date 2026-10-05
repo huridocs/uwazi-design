@@ -53,6 +53,7 @@ import { RowActionButton, RowActions } from "../components/settings/RowActions";
 import { SettingsSelectionBar } from "../components/settings/SettingsSelectionBar";
 import { MoveButtons, ReorderGrip } from "../components/settings/ReorderControls";
 import { AlphaJump } from "../components/shared/AlphaJump";
+import { Dropzone } from "../components/shared/Dropzone";
 import { BulkPickModal } from "../components/settings/BulkPickModal";
 import { SettingsEditorDemo, SettingsEmptyStateDemo, SettingsListPageDemo, SettingsSectionDemo } from "./catalog/settingsDemos";
 import { StatusPill } from "../components/settings/StatusPill";
@@ -2223,6 +2224,19 @@ const textColor = typeLabelColor(type.color);`}
 />`}
                 >
                   <BulkPickDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="set-dropzone" ref={reg("set-dropzone")}>
+                <CatalogEntry
+                  name="Dropzone"
+                  description="The Import CSV file picker, shared by New import and the thesaurus CSV import: a dashed warm well that opens the file chooser or takes a dropped file, then a row naming the chosen file with Remove. onFile receives the File; onBrowse replaces the chooser (the Import CSV demo). The input is cleared after each pick, so choosing the same file again still reports it."
+                  code={`<Dropzone onFile={read} file={file && { name: file.name, detail: summary }} onRemove={() => setFile(null)} />`}
+                >
+                  <div className="max-w-md flex flex-col gap-2">
+                    <Dropzone onFile={() => {}} />
+                    <Dropzone file={{ name: "estados.csv", detail: "Adds 3 values and 1 group." }} onRemove={() => {}} />
+                  </div>
                 </CatalogEntry>
               </div>
 

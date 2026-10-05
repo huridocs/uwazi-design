@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, type KeyboardEvent } from "react";
-import { CloudUpload, FileSpreadsheet, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import { Dropzone } from "../shared/Dropzone";
 import { templates } from "../../data/imports";
 import { BAR_GHOST } from "../shared/warmButton";
 import { Modal, MODAL_BUTTON } from "../shared/Modal";
@@ -105,39 +106,11 @@ export function NewImportModal({ open, onClose, onImport }: NewImportModalProps)
       {/* The title names the group, not a control: the picker is a button. */}
       <div data-part="file" role="group" aria-labelledby="import-modal-file-label">
         <span id="import-modal-file-label" className={`${MODAL_LABEL} mb-1`}>CSV File</span>
-        {file ? (
-          <div
-            data-part="selected-file"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg bg-warm"
-            style={{ border: "1px solid var(--border-primary)" }}
-          >
-            <FileSpreadsheet size={18} className="text-success shrink-0" aria-hidden />
-            <span className="text-sm font-medium text-ink flex-1 truncate">{file}</span>
-            <button
-              type="button"
-              data-part="remove-file"
-              aria-label={`Remove ${file}`}
-              onClick={() => setFile(null)}
-              className="text-xs text-ink-tertiary hover:text-ink transition-colors"
-            >
-              Remove
-            </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            data-part="dropzone"
-            onClick={simulateFileSelect}
-            className="flex flex-col items-center justify-center w-full py-8 rounded-lg bg-warm hover:bg-parchment transition-colors cursor-pointer"
-            style={{ border: "2px dashed var(--border-soft)" }}
-          >
-            <CloudUpload size={32} className="text-ink-tertiary/40 mb-2" aria-hidden />
-            <span className="text-sm font-medium text-ink-secondary">
-              Select a CSV file
-            </span>
-            <span className="text-xs text-ink-muted mt-1">or drag and drop here</span>
-          </button>
-        )}
+        <Dropzone
+          onBrowse={simulateFileSelect}
+          file={file ? { name: file } : null}
+          onRemove={() => setFile(null)}
+        />
       </div>
 
       {/* Template Select */}
