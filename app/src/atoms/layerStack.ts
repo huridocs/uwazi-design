@@ -1,7 +1,8 @@
 import { atom } from "jotai";
 
 /** Every overlay layer that is open, bottom first, on any breakpoint: the
- *  entity preview's slide-over layers, `ImageLightbox`, `Modal`, `AgentModal`.
+ *  entity preview's slide-over layers, `ImageLightbox`, `Modal`, `AgentModal`,
+ *  `MobileBottomSheet`.
  *
  *  The desktop counterpart of `sheetStackAtom`. Overlays that close on an
  *  outside press or on Escape listen on the document, and a layer drawn on top

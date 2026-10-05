@@ -4,6 +4,7 @@ import { ArrowLeft, X } from "lucide-react";
 import { CloseAllButton } from "./CloseAllButton";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { useSheetLayer } from "../../hooks/useSheetLayer";
+import { useOverlayLayer } from "../../hooks/useOverlayLayer";
 import { SHEET_STACK, sheetZ } from "../../atoms/sheetStack";
 
 interface MobileBottomSheetProps {
@@ -65,6 +66,9 @@ export function MobileBottomSheet({
   const layer = useSheetLayer(open, { onClose, label: title ?? ariaLabel });
   const stacked = layer.stacked && layer.count > 1;
   const live = open && layer.isTop;
+  /* On the app's layer stack too (atoms/layerStack): Bert is not a sheet, and
+     while it is open above the sheets their Escape is its. */
+  const { isTopNow } = useOverlayLayer(open);
   const [snap, setSnap] = useState<"half" | "full">(defaultSnap);
   /* The sheet is `role="dialog"` + `aria-modal`, so it traps focus while open
      and gives it back to whatever opened it (the navbar hamburger, a split
@@ -101,13 +105,13 @@ export function MobileBottomSheet({
   useEffect(() => {
     if (!live) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || e.defaultPrevented) return;
+      if (e.key !== "Escape" || e.defaultPrevented || !isTopNow()) return;
       e.preventDefault();
       onClose();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [live, onClose]);
+  }, [live, onClose, isTopNow]);
 
   // Drag handlers for the handle
   const handlePointerDown = (e: React.PointerEvent) => {
