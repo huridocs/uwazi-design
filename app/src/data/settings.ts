@@ -58,13 +58,6 @@ export const seedGroups: SettingsGroupRecord[] = [
 /** The account signed in when the prototype opens (`signedInUserIdAtom`). */
 export const DEFAULT_SIGNED_IN_USER_ID = "u1";
 
-/** The signed-in account (Account settings page). */
-export const currentAccount = {
-  username: "admin",
-  email: "admin@uwazi.io",
-  role: "admin" as UserRole,
-};
-
 // ── Templates ──────────────────────────────────────────────────────────────
 export interface SettingsTemplate {
   id: string;

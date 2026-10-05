@@ -101,6 +101,8 @@ import { asset } from "../utils/asset";
 import { ConfirmDelete } from "../components/shared/ConfirmDelete";
 import { TypedConfirmModal } from "../components/shared/TypedConfirmModal";
 import { PasswordConfirmModal } from "../components/shared/PasswordConfirmModal";
+import { SettingsEditorDemo, SettingsEmptyStateDemo, SettingsListPageDemo, SettingsSectionDemo } from "./catalog/settingsDemos";
+import { BulkPickModal } from "../components/settings/BulkPickModal";
 
 /** Demo data for the Copy From entry — a plan with matches AND refusals, so the
  *  half that explains itself is visible in the catalog too. */
@@ -2017,6 +2019,95 @@ const textColor = typeLabelColor(type.color);`}
                   </div>
                 </CatalogEntry>
               </div>
+
+              <div id="set-list-page" ref={reg("set-list-page")}>
+                <CatalogEntry
+                  name="SettingsListPage"
+                  description="The shell of every Settings list page: header, one intro line, the toolbar (SettingsToolbar: search on the start side, filters on the end, always mounted at one height), the table, and a footer whose lead is the create action (BAR_LEAD). useSettingsSearch filters the rows. Tabs (DrawerTabs) sit above the toolbar; dialogs go in overlays."
+                  code={`const search = useSettingsSearch(rows, (r) => r.name);
+<SettingsListPage
+  component="ThesauriPage"
+  title="Thesauri"
+  intro="Controlled vocabularies you can attach to template properties."
+  search={{ value: search.query, onChange: search.setQuery, label: "Search thesauri" }}
+  filters={<Select … />}
+  lead={{ label: "Add thesaurus", onClick: add }}
+  overlays={<ConfirmDialog … />}
+>
+  <SettingsTable corpusScoped data={search.rows} … emptyState={<SettingsEmptyState … />} />
+</SettingsListPage>`}
+                >
+                  <SettingsListPageDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="set-empty-state" ref={reg("set-empty-state")}>
+                <CatalogEntry
+                  name="SettingsEmptyState"
+                  description="A settings list with no rows: a vellum tile, the object named, one line on what it is for, and the create action. With a live search it says nothing matched and offers Clear search. A corpusScoped SettingsTable shows loading rows instead while the corpus loads, and an error with Try again if it fails."
+                  code={`<SettingsEmptyState
+  icon={<BookOpen size={16} />}
+  title="No thesauri yet"
+  hint="A thesaurus gives a property a fixed list of values to choose from."
+  action={{ label: "Add thesaurus", onClick: add }}
+  query={search.query}
+  onClearQuery={search.clear}
+/>`}
+                >
+                  <SettingsEmptyStateDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="set-section" ref={reg("set-section")}>
+                <CatalogEntry
+                  name="SettingsSection"
+                  description="The blocks of a settings form. SettingsForm is the 40rem column (wide for grids); SettingsSection is a heading, a one-line description, an optional action on the heading's line, then content, with a soft rule between sections. SettingsFieldRow puts two fields side by side from sm up. SettingsCheckList is a fieldset named by the section heading; SettingsStat is one figure in a stats list."
+                  code={`<SettingsForm>
+  <SettingsSection>
+    <SettingsFieldRow>…two SettingsFields…</SettingsFieldRow>
+  </SettingsSection>
+  <SettingsSection title="Groups" description="…" action={<SettingsButton …>Add group</SettingsButton>}>
+    <SettingsCheckList>
+      <SettingsCheckRow><Checkbox … />Litigation</SettingsCheckRow>
+    </SettingsCheckList>
+  </SettingsSection>
+</SettingsForm>`}
+                >
+                  <SettingsSectionDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="set-editor" ref={reg("set-editor")}>
+                <CatalogEntry
+                  name="SettingsEditor · SettingsFormPage"
+                  description="The two form shells, both fed by useSettingsDraft (which registers with the dirty guard). SettingsEditor is the detail a list opens: breadcrumb and back arrow (guarded), the form, then Cancel and the commit: ink with createLabel for a new record, green Save for an existing one. SettingsFormPage is a top-level page that is one form: Discard changes then Save, both enabled only while dirty."
+                  code={`const { draft, update, dirty, markSaved, discard } = useSettingsDraft({ id, label, saved });
+<SettingsEditor component="RelationTypeEditor" path={["Relationship types"]} title={name}
+  onBack={close} isNew={isNew} createLabel="Create type" dirty={dirty} valid={!!name.trim()} onSave={save}>
+  <SettingsSection>…</SettingsSection>
+</SettingsEditor>
+
+<SettingsFormPage component="CollectionPage" title="Collection" intro="…"
+  dirty={dirty} onSave={() => markSaved()} onDiscard={discard}>…</SettingsFormPage>`}
+                >
+                  <SettingsEditorDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="set-bulk-pick" ref={reg("set-bulk-pick")}>
+                <CatalogEntry
+                  name="BulkPickModal"
+                  description="One choice applied to a selection: Add to group, Change role, Move to group. A radio list (searchable past eight options) and a reserved readback line saying what the choice changes and what it leaves alone and why, before anything is applied. A choice that changes nothing keeps the commit off."
+                  code={`<BulkPickModal
+  title="Change role" subtitle="3 users" confirmLabel="Change role"
+  options={roles}
+  readback={(role) => ({ text: "2 users become Editor. admin stays: …", none: false })}
+  onConfirm={apply} onClose={close}
+/>`}
+                >
+                  <BulkPickDemo />
+                </CatalogEntry>
+              </div>
             </div>
           </section>
         </div>
@@ -2077,6 +2168,32 @@ function PasswordConfirmDemo() {
         Update account
       </button>
       <PasswordConfirmModal open={open} onAccept={() => setOpen(false)} onCancel={() => setOpen(false)} />
+    </>
+  );
+}
+
+function BulkPickDemo() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)} className="px-3 py-1.5 text-xs rounded-md bg-paper text-ink border border-border-soft cursor-pointer">
+        Open Change role
+      </button>
+      {open && (
+        <BulkPickModal
+          title="Change role"
+          subtitle="3 users"
+          confirmLabel="Change role"
+          options={[
+            { value: "admin", label: "Admin" },
+            { value: "editor", label: "Editor" },
+            { value: "collaborator", label: "Collaborator" },
+          ]}
+          readback={(v) => (v === "admin" ? { text: "All 3 users are already Admin.", none: true } : { text: `3 users become ${v === "editor" ? "Editor" : "Collaborator"}.` })}
+          onConfirm={() => setOpen(false)}
+          onClose={() => setOpen(false)}
+        />
+      )}
     </>
   );
 }

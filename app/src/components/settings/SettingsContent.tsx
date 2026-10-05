@@ -1,7 +1,9 @@
-import type { ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useId, useState, type ReactNode } from "react";
 import { useSetAtom } from "jotai";
 import { ChevronLeft, ArrowLeft } from "lucide-react";
 import { settingsMobileDrilledAtom } from "../../atoms/settings";
+import { useDirtyGuard } from "../../hooks/useDirtyGuard";
+import { SettingsBarContext } from "./SettingsButton";
 
 /** Content-area shell for a settings page, mirroring Uwazi's V2
  *  SettingsContent layout (Header breadcrumb · Body · sticky Footer save bar)
@@ -13,18 +15,74 @@ import { settingsMobileDrilledAtom } from "../../atoms/settings";
  *      <SettingsContent.Footer>…</SettingsContent.Footer>
  *    </SettingsContent>
  */
-export function SettingsContent({ children }: { children: ReactNode }) {
+/** The id of the page's title heading, so the section is named by it. */
+const TitleId = createContext<string | undefined>(undefined);
+
+/** Counts the page's tables that are loading, so the page says "Loading…"
+ *  once however many tables wait (Filters has two). */
+const LoadingCount = createContext<((delta: number) => void) | null>(null);
+
+/** The page's polite announcer, for changes a control makes without moving
+ *  focus ("Moved Bogotá to position 3 of 12"). */
+const Announce = createContext<(message: string) => void>(() => {});
+export const useSettingsAnnounce = () => useContext(Announce);
+
+/** Report a loading table to its page's one live region. Returns false when
+ *  there is no page (a table in the catalog), so the table announces itself. */
+export function useAnnounceLoading(loading: boolean): boolean {
+  const add = useContext(LoadingCount);
+  useEffect(() => {
+    if (!loading || !add) return;
+    add(1);
+    return () => add(-1);
+  }, [loading, add]);
+  return !!add;
+}
+
+export function SettingsContent({
+  component = "SettingsContent",
+  children,
+}: {
+  /** The page rendering this shell ("UsersPage", "TemplateEditor"), stamped as
+   *  its `data-component` — the shell has no DOM of its own to name. */
+  component?: string;
+  children: ReactNode;
+}) {
+  const titleId = useId();
+  const [loadingCount, setLoadingCount] = useState(0);
+  const addLoading = useCallback((delta: number) => setLoadingCount((n) => n + delta), []);
+  const [announcement, setAnnouncement] = useState("");
+  // The same text twice in a row would not be read again: clear, then set.
+  const announce = useCallback((message: string) => {
+    setAnnouncement("");
+    requestAnimationFrame(() => setAnnouncement(message));
+  }, []);
   return (
     // The main-tier gutter host (16px). Header, Body and Footer are `bleed`
     // bands: rules, the scrollbar and the footer tint reach the pane edge, and
     // their content sits on the gutter.
-    <div
+    //
+    // A `section` named by the page's `h2` — the page is one region of the
+    // app's `main`, titled under its `h1`.
+    <section
+      data-component={component}
+      aria-labelledby={titleId}
       data-gutter-host
       className="gutter-host-main flex flex-col h-full min-h-0 bg-paper"
       data-testid="settings-content"
     >
-      {children}
-    </div>
+      <TitleId.Provider value={titleId}>
+        <LoadingCount.Provider value={addLoading}>
+          <Announce.Provider value={announce}>{children}</Announce.Provider>
+        </LoadingCount.Provider>
+      </TitleId.Provider>
+      <p role="status" className="sr-only">
+        {loadingCount > 0 ? "Loading…" : ""}
+      </p>
+      <p aria-live="polite" className="sr-only">
+        {announcement}
+      </p>
+    </section>
   );
 }
 
@@ -35,59 +93,87 @@ interface HeaderProps {
   /** Provided by a nested (child) view — renders a back arrow on all sizes and
    *  makes the breadcrumb crumbs clickable, all returning to the parent list. */
   onBack?: () => void;
+  /** Processing state on the header's end ("Updating 412 entities…"), a
+   *  live region. Always mounted, so the header never changes height. */
+  status?: ReactNode;
 }
 
 // Title/breadcrumb only — actions live in the bottom action bar (Footer), per
 // our convention (we don't put primary actions in a top bar).
-SettingsContent.Header = function SettingsHeader({ path, title, onBack }: HeaderProps) {
+SettingsContent.Header = function SettingsHeader({ path, title, onBack: leave, status }: HeaderProps) {
   const setDrilled = useSetAtom(settingsMobileDrilledAtom);
+  // Every way out of the page asks first while its form is dirty
+  // (`useSettingsDraft` registers it). Cancel in the footer is the explicit
+  // discard and does not come through here.
+  const guard = useDirtyGuard();
+  const onBack = leave ? () => guard(leave) : undefined;
+  const titleId = useContext(TitleId);
   return (
-    <div
-      className="bleed flex items-center gap-2 h-12 shrink-0 bg-paper"
-      style={{ borderBottom: "1px solid var(--border-primary)" }}
+    // A `header` inside the page's section, so it heads the page, not the site.
+    <header
+      data-part="header"
+      className="bleed flex items-center gap-2 h-12 shrink-0 bg-paper border-b border-border"
       data-testid="settings-content-header"
     >
       {onBack ? (
         // Nested view: a back arrow on every breakpoint → returns to the list.
         <button
+          type="button"
+          data-part="back"
           onClick={onBack}
           aria-label="Back"
           className="-ms-1 p-1 rounded-md text-ink-tertiary hover:bg-warm hover:text-ink transition-colors shrink-0"
         >
-          <ArrowLeft size={18} />
+          <ArrowLeft size={18} aria-hidden />
         </button>
       ) : (
         // Top-level page: the mobile drill-out to the settings rail.
         <button
-          onClick={() => setDrilled(false)}
+          type="button"
+          data-part="back"
+          onClick={() => guard(() => setDrilled(false))}
           aria-label="Back to settings"
           className="md:hidden -ms-1 p-1 rounded-md text-ink-tertiary hover:bg-warm hover:text-ink transition-colors shrink-0"
         >
-          <ChevronLeft size={18} />
+          <ChevronLeft size={18} aria-hidden />
         </button>
       )}
       <div className="flex items-center gap-1.5 min-w-0 flex-1 text-sm">
-        {path?.map((crumb) =>
-          onBack ? (
-            <span key={crumb} className="flex items-center gap-1.5">
-              <button
-                onClick={onBack}
-                className="truncate text-ink-tertiary hover:text-ink hover:underline transition-colors cursor-pointer"
-              >
-                {crumb}
-              </button>
-              <span className="text-ink-muted">/</span>
-            </span>
-          ) : (
-            <span key={crumb} className="flex items-center gap-1.5 text-ink-tertiary">
-              <span className="truncate">{crumb}</span>
-              <span className="text-ink-muted">/</span>
-            </span>
-          ),
+        {path && path.length > 0 && (
+          // The trail to the parent list. The page's own title is the heading
+          // beside it, not a crumb.
+          <nav aria-label="Breadcrumb" data-part="breadcrumb" className="flex min-w-0">
+            <ol className="flex items-center gap-1.5 min-w-0">
+              {path.map((crumb) =>
+                onBack ? (
+                  <li key={crumb} className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={onBack}
+                      className="truncate text-ink-tertiary hover:text-ink hover:underline transition-colors cursor-pointer"
+                    >
+                      {crumb}
+                    </button>
+                    <span aria-hidden className="text-ink-muted">/</span>
+                  </li>
+                ) : (
+                  <li key={crumb} className="flex items-center gap-1.5 text-ink-tertiary">
+                    <span className="truncate">{crumb}</span>
+                    <span aria-hidden className="text-ink-muted">/</span>
+                  </li>
+                ),
+              )}
+            </ol>
+          </nav>
         )}
-        <span className="font-semibold text-ink truncate">{title}</span>
+        <h2 id={titleId} data-part="title" className="text-sm font-semibold text-ink truncate">
+          {title}
+        </h2>
       </div>
-    </div>
+      <div data-part="status" role="status" className="shrink-0 flex items-center gap-2 text-xs text-ink-tertiary">
+        {status}
+      </div>
+    </header>
   );
 };
 
@@ -100,6 +186,7 @@ SettingsContent.Body = function SettingsBody({
 }) {
   return (
     <div
+      data-part="body"
       className={`bleed grow min-h-0 overflow-auto py-4 ${className}`}
       data-testid="settings-content-body"
     >
@@ -116,14 +203,14 @@ SettingsContent.Footer = function SettingsFooter({
   highlighted?: boolean;
 }) {
   return (
-    <div
-      className={`bleed sticky bottom-0 z-10 flex items-center justify-end gap-2 h-12 shrink-0 ${
+    <footer
+      data-part="footer"
+      className={`bleed sticky bottom-0 z-10 flex items-center justify-end gap-2 h-12 shrink-0 border-t border-border ${
         highlighted ? "bg-carbon-tint" : "bg-paper"
       }`}
-      style={{ borderTop: "1px solid var(--border-primary)" }}
       data-testid="settings-content-footer"
     >
-      {children}
-    </div>
+      <SettingsBarContext.Provider value={true}>{children}</SettingsBarContext.Provider>
+    </footer>
   );
 };

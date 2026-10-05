@@ -50,6 +50,9 @@ export interface SettingsItem {
 export interface SettingsGroup {
   id: string;
   label?: string;
+  /** The label heads the group for assistive tech only: the heading outline
+   *  stays User › System › Tools while the rail shows the shelves alone. */
+  hideLabel?: boolean;
   items: SettingsItem[];
 }
 
@@ -61,19 +64,27 @@ export const settingsGroups: SettingsGroup[] = [
   },
   {
     id: "system",
+    // No visible heading in the rail: its task shelves (`subgroup`) are the
+    // headings, and a "System" label above them read as one more shelf at the
+    // same level. The heading stays for screen readers, so the shelves do not
+    // nest under "User" in the outline. The navbar calls it "System settings".
     label: "System",
+    hideLabel: true,
     items: [
-      { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-      { id: "users", label: "Users & Groups", icon: Users },
-      { id: "collection", label: "Collection", icon: SlidersHorizontal },
-      { id: "menu", label: "Menu", icon: Menu },
-      { id: "pages", label: "Pages", icon: FileText },
-      { id: "languages", label: "Languages", icon: Languages },
-      { id: "translations", label: "Translations", icon: Globe },
-      { id: "filters", label: "Filters", icon: Filter },
-      { id: "templates", label: "Templates", icon: LayoutTemplate },
-      { id: "thesauri", label: "Thesauri", icon: BookOpen },
-      { id: "relationship-types", label: "Relationship types", icon: Spline },
+      // One shelf per task an admin does: run the collection and its public
+      // site, shape the data, translate it, manage who can use it. Dashboard
+      // stays first, since the System entry opens it.
+      { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, subgroup: "Collection" },
+      { id: "collection", label: "Collection", icon: SlidersHorizontal, subgroup: "Collection" },
+      { id: "menu", label: "Menu", icon: Menu, subgroup: "Collection" },
+      { id: "pages", label: "Pages", icon: FileText, subgroup: "Collection" },
+      { id: "templates", label: "Templates", icon: LayoutTemplate, subgroup: "Content model" },
+      { id: "thesauri", label: "Thesauri", icon: BookOpen, subgroup: "Content model" },
+      { id: "relationship-types", label: "Relationship types", icon: Spline, subgroup: "Content model" },
+      { id: "filters", label: "Filters", icon: Filter, subgroup: "Content model" },
+      { id: "languages", label: "Languages", icon: Languages, subgroup: "Languages" },
+      { id: "translations", label: "Translations", icon: Globe, subgroup: "Languages" },
+      { id: "users", label: "Users & Groups", icon: Users, subgroup: "People" },
     ],
   },
   {
@@ -112,9 +123,9 @@ export const settingsItemsById: Record<string, SettingsItem> = Object.fromEntrie
 );
 
 /** Which GROUP a section belongs to. The three groups are reached from three
- *  different places now — Settings ▸ User settings, Settings ▸ System settings,
- *  and the Tools dropdown — and the rail scopes itself to whichever one you came
- *  in through, rather than listing all 20 destinations under every one. */
+ *  different places — Settings ▸ User settings, Settings ▸ System settings and
+ *  the Tools dropdown. The rail lists every group, so moving between Templates
+ *  and Metadata extraction does not mean going back to the navbar. */
 export const settingsGroupOf = (sectionId: string): SettingsGroup =>
   settingsGroups.find((g) => g.items.some((i) => i.id === sectionId)) ?? settingsGroups[1];
 
@@ -125,10 +136,6 @@ export const settingsEntryOf = (groupId: string): string =>
 /** The Tools group, rendered by the navbar's Tools dropdown. */
 export const settingsToolsItems = (): SettingsItem[] =>
   settingsGroups.find((g) => g.id === "tools")?.items ?? [];
-
-/** Which settings page is showing. Defaults to Account (Uwazi's first item).
- *  Persisted so a reload keeps you on the same settings section. */
-export const settingsSectionAtom = atomWithStorage<string>("uwazi:settingsSection", "account");
 
 /* ── Who reaches what ────────────────────────────────────────────────────
    Uwazi guards every settings page with `adminsOnlyRoute`, except Account
@@ -151,13 +158,6 @@ export const settingsAccessAtom = atom((get) => {
   return (id: string) => settingsSectionAllowed(role, id) && !flagOff(id);
 });
 
-/** An item's label as the rail shows it. Uwazi names the customisation page
- *  "Global CSS & JS" only while Collection › "Global JS" is on. */
-export const settingsItemLabelAtom = atom((get) => {
-  const globalJs = get(collectionSettings.valueAtom).globalJs;
-  return (item: SettingsItem) => (item.id === "customisation" && !globalJs ? "Global CSS" : item.label);
-});
-
 /** The groups the signed-in user sees, each with only the items they reach;
  *  a group left empty is dropped. */
 export const visibleSettingsGroupsAtom = atom<SettingsGroup[]>((get) => {
@@ -167,6 +167,17 @@ export const visibleSettingsGroupsAtom = atom<SettingsGroup[]>((get) => {
     .map((g) => ({ ...g, items: g.items.filter((i) => allowed(i.id)).map((i) => ({ ...i, label: label(i) })) }))
     .filter((g) => g.items.length > 0);
 });
+
+/** An item's label as the rail shows it. Uwazi names the customisation page
+ *  "Global CSS & JS" only while Collection › "Global JS" is on. */
+export const settingsItemLabelAtom = atom((get) => {
+  const globalJs = get(collectionSettings.valueAtom).globalJs;
+  return (item: SettingsItem) => (item.id === "customisation" && !globalJs ? "Global CSS" : item.label);
+});
+
+/** Which settings page is showing. Defaults to Account (Uwazi's first item).
+ *  Persisted so a reload keeps you on the same settings section. */
+export const settingsSectionAtom = atomWithStorage<string>("uwazi:settingsSection", "account");
 
 /** The section Settings is on: the stored one. One the signed-in role cannot
  *  reach renders the "not available" page (`blockedSettingsSectionAtom`) and

@@ -1,25 +1,23 @@
-import { Fragment } from "react";
-import { useAtom, useSetAtom } from "jotai";
+import { Fragment, useEffect, useRef } from "react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { ExternalLink } from "lucide-react";
 import { SectionLabel } from "../shared/SectionLabel";
 import {
-  settingsGroupOf,
+  visibleSettingsGroupsAtom,
   settingsSectionAtom,
+  effectiveSettingsSectionAtom,
   settingsMobileDrilledAtom,
   settingsDocumentation,
 } from "../../atoms/settings";
 import type { AppView } from "../../atoms/navigation";
 import { useDirtyGuard } from "../../hooks/useDirtyGuard";
 
-/** The settings rail — three grouped sections (User / System / Tools) matching
- *  Uwazi's V2 SettingsNavigation: full-width items on the rail gutter, py-2, active =
+/** The settings rail — every group (User / System / Tools) with its task
+ *  shelves, after Uwazi's V2 SettingsNavigation: full-width items on the rail gutter, py-2, active =
  *  vellum + semibold (no rounded inset, no left-border accent).
  *
- *  Also the IMPORT CSV rail. That view used to mount `ToolsSidebar`, a second
- *  hand-maintained copy of these lists whose items only raised a toast — a rail
- *  that looked like navigation and was scenery. Its arrays had already drifted
- *  from this one (no Paragraph Extraction, no "ML tools" shelf). Pass `activeId`
- *  and the rail serves a destination that ISN'T a settings section. */
+ *  Also the Import CSV rail, so there is one list of tools, not two to keep in
+ *  step. Pass `activeId` for a destination that is not a settings section. */
 export function SettingsNav({
   onNavigate,
   activeId,
@@ -29,15 +27,42 @@ export function SettingsNav({
    *  CSV view passes `"import-csv"`. Also picks the group to show. */
   activeId?: string;
 }) {
-  const [section, setSection] = useAtom(settingsSectionAtom);
+  // Marks the section actually shown (Account when the role falls back).
+  const section = useAtomValue(effectiveSettingsSectionAtom);
+  const setSection = useSetAtom(settingsSectionAtom);
+  // Only what the signed-in role reaches (`atoms/settings.ts`).
+  const groups = useAtomValue(visibleSettingsGroupsAtom);
   const setDrilled = useSetAtom(settingsMobileDrilledAtom);
   const guard = useDirtyGuard();
   /** Where we are, whether that's a settings section or another view. */
   const current = activeId ?? section;
 
+  // Every group is listed, so the current item can sit below the fold (a phone
+  // opening Tools from the navbar lands on Preserve). Scroll the rail's own
+  // lane so it is in view; the page itself does not move.
+  const laneRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    // After the frame, so the rail has its height (it mounts inside a pane
+    // that is laid out in the same commit).
+    const frame = requestAnimationFrame(() => {
+      const lane = laneRef.current;
+      const item = lane?.querySelector<HTMLElement>('[aria-current="page"]');
+      if (!lane || !item) return;
+      const laneBox = lane.getBoundingClientRect();
+      const box = item.getBoundingClientRect();
+      if (box.bottom > laneBox.bottom || box.top < laneBox.top)
+        lane.scrollTop += box.top - laneBox.top - lane.clientHeight / 3;
+    });
+    return () => cancelAnimationFrame(frame);
+    // On a change of the current item too: the stored section arrives after
+    // the first render. A click lands on an item already in view, which this
+    // leaves alone.
+  }, [current]);
+
   return (
     <nav
       aria-label="Settings navigation"
+      data-component="SettingsNav"
       /* The rail-tier gutter host (20px). Items, the scroll lane and the
          Documentation footer are `bleed`, so hover and active fills and the
          footer rule reach the rail edge while the text sits on the gutter. */
@@ -48,23 +73,22 @@ export function SettingsNav({
       className="gutter-host-rail h-full w-full md:w-[15.625rem] shrink-0 flex flex-col bg-paper"
       style={{ borderInlineEnd: "1px solid var(--border-primary)" }}
     >
-      {/* The data-source switch used to live here as well. It's the collection
-          picker on the navbar's Library button now — one control, one place. */}
-      <div className="bleed flex-1 min-h-0 overflow-y-auto py-4">
-      {/* ONE group — the one you came in through. Settings ▸ User settings,
-          Settings ▸ System settings and the Tools dropdown are three separate
-          doors; the rail behind each shows that door's destinations rather than
-          all twenty under every one. */}
-      {[settingsGroupOf(current)].map((group) => (
+      <div ref={laneRef} data-part="groups" className="bleed flex-1 min-h-0 overflow-y-auto py-4">
+      {/* Every group, each with its task shelves (`subgroup`). The navbar's
+          three entries still open their own group's first page. */}
+      {groups.map((group) => (
         // A flex column, so the items stretch: a stretched item's `bleed`
         // margins widen it to the rail edge. A `w-full` button does not widen,
         // it only moves.
-        <div key={group.id} className="mb-2 flex flex-col">
-          {group.label && (
-            <SectionLabel as="h3" className="py-2">
-              {group.label}
-            </SectionLabel>
-          )}
+        <div key={group.id} data-part="group" className="mb-2 flex flex-col">
+          {group.label &&
+            (group.hideLabel ? (
+              <h2 className="sr-only">{group.label}</h2>
+            ) : (
+              <SectionLabel as="h2" className="py-2">
+                {group.label}
+              </SectionLabel>
+            ))}
           {group.items.map((item, i) => {
             const Icon = item.icon;
             // An item that jumps to another VIEW is never the current settings
@@ -77,29 +101,29 @@ export function SettingsNav({
 
             const inner = (
               <>
-                <Icon size={15} className="text-ink-tertiary shrink-0" />
+                <Icon size={15} aria-hidden className="text-ink-tertiary shrink-0" />
                 <span className="truncate flex-1">{item.label}</span>
                 {item.badge && (
-                  <span className="text-meta font-semibold text-carbon">{item.badge}</span>
+                  <span data-part="badge" className="text-meta font-semibold text-carbon">
+                    {item.badge}
+                  </span>
                 )}
-                {item.external && <ExternalLink size={12} className="text-ink-muted shrink-0" />}
+                {item.external && <ExternalLink size={12} aria-hidden className="text-ink-muted shrink-0" />}
               </>
             );
 
-            // Active was `bg-warm` — the SAME token as hover, so the selected
-            // page looked exactly like whatever the cursor happened to be over.
-            // It steps up to vellum + semibold: a real state, not a hover echo.
-            // (Still no left-border accent, and the icon keeps its colour — the
-            // background carries the state.)
+            // Active is `bg-warm text-ink` (CLAUDE.md: active sidebar item); hover
+            // is a lighter warm so the two stay apart. No left-border accent; the
+            // icon keeps its colour.
             const cls = `bleed flex items-center gap-2.5 py-2 text-tab text-left transition-colors ${
               active
-                ? "bg-vellum text-ink font-semibold"
-                : "font-medium text-ink-secondary hover:bg-warm hover:text-ink"
+                ? "bg-warm text-ink font-medium"
+                : "font-medium text-ink-secondary hover:bg-warm/60 hover:text-ink"
             }`;
 
             const sub = startsSub && (
               <SectionLabel
-                as="h4"
+                as="h3"
                 key={`sub-${item.subgroup}`}
                 className="pt-3 pb-1"
               >
@@ -111,7 +135,13 @@ export function SettingsNav({
               return (
                 <Fragment key={item.id}>
                   {sub}
-                  <a href={item.external} target="_blank" rel="noopener noreferrer" className={cls}>
+                  <a
+                    href={item.external}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-part="item"
+                    className={cls}
+                  >
                     {inner}
                   </a>
                 </Fragment>
@@ -122,6 +152,9 @@ export function SettingsNav({
               <Fragment key={item.id}>
                 {sub}
                 <button
+                  type="button"
+                  data-part="item"
+                  aria-current={active ? "page" : undefined}
                   className={cls}
                   onClick={() => {
                     // navigateTo routes through App's handleNavigate, which is
@@ -155,19 +188,18 @@ export function SettingsNav({
 
       </div>
 
-      {/* Documentation — the panel's FOOTER, pinned to the bottom whichever group
-          you're in. It belongs to none of them: it's the way out of all of them.
-          Not in the Tools dropdown, where it read as one more tool. */}
+      {/* Documentation: the panel's footer, pinned to the bottom in every group.
+          It belongs to no group, so it is not listed as a Tools item. */}
       <a
         href={settingsDocumentation.external}
         target="_blank"
         rel="noopener noreferrer"
-        className="bleed shrink-0 flex items-center gap-2.5 h-12 text-tab font-medium text-left text-ink-secondary hover:bg-warm hover:text-ink transition-colors"
-        style={{ borderTop: "1px solid var(--border-primary)" }}
+        data-part="documentation"
+        className="bleed shrink-0 flex items-center gap-2.5 h-12 text-tab font-medium text-left text-ink-secondary hover:bg-warm hover:text-ink transition-colors border-t border-border"
       >
-        <settingsDocumentation.icon size={15} className="text-ink-tertiary shrink-0" />
+        <settingsDocumentation.icon size={15} aria-hidden className="text-ink-tertiary shrink-0" />
         <span className="truncate flex-1">{settingsDocumentation.label}</span>
-        <ExternalLink size={12} className="text-ink-muted shrink-0" />
+        <ExternalLink size={12} aria-hidden className="text-ink-muted shrink-0" />
       </a>
     </nav>
   );

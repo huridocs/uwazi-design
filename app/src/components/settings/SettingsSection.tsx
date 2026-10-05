@@ -1,0 +1,115 @@
+import { createContext, useContext, useId, type ReactNode } from "react";
+
+/** The column a settings form sits in: sections stacked one rhythm step
+ *  apart. Fields and prose keep a readable 40rem measure (`data-measure`,
+ *  `index.css`); a table (`data-table`) spans the pane. `wide` lifts the
+ *  measure for a body that is a grid throughout (a template's properties). */
+export function SettingsForm({
+  wide = false,
+  fill = false,
+  children,
+}: {
+  wide?: boolean;
+  /** Grow to the body's height (a code editor that fills the pane). */
+  fill?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      data-component="SettingsForm"
+      data-measure={wide ? undefined : ""}
+      className={`flex flex-col gap-6 min-w-0 ${fill ? "flex-1 min-h-0" : ""}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** Two fields side by side from `sm` up, stacked below. */
+export function SettingsFieldRow({ children }: { children: ReactNode }) {
+  return <div data-part="field-row" className="grid sm:grid-cols-2 gap-3">{children}</div>;
+}
+
+const HeadingId = createContext<string | undefined>(undefined);
+
+/** The id of the enclosing section's heading, for a control group the
+ *  heading names (`<fieldset aria-labelledby={useSectionHeadingId()}>`). */
+export function useSectionHeadingId() {
+  return useContext(HeadingId);
+}
+
+/** One block of a settings form: a heading, a one-line description, an
+ *  optional action on the heading's line ("Add property"), then its content.
+ *  Sections after the first are separated by a soft rule. A section with no
+ *  title is a plain group of fields (the first block of an editor). */
+export function SettingsSection({
+  title,
+  description,
+  action,
+  children,
+}: {
+  title?: ReactNode;
+  description?: ReactNode;
+  action?: ReactNode;
+  children: ReactNode;
+}) {
+  const headingId = useId();
+  return (
+    <section
+      data-component="SettingsSection"
+      aria-labelledby={title ? headingId : undefined}
+      className="flex flex-col gap-3 min-w-0 pt-6 border-t border-border-soft first:pt-0 first:border-t-0"
+    >
+      {(title || action) && (
+        // On a narrow pane the actions wrap under the heading rather than
+        // squeezing it to one word per line.
+        <div data-part="heading" className="flex flex-wrap items-start gap-x-3 gap-y-2">
+          <div className="flex-1 min-w-[min(100%,10rem)]">
+            {title && (
+              <h3 id={headingId} className="text-sm font-semibold text-ink">
+                {title}
+              </h3>
+            )}
+            {description && <p className="mt-1 text-xs text-ink-tertiary text-pretty">{description}</p>}
+          </div>
+          {action && <div className="shrink-0 flex flex-wrap items-center gap-2">{action}</div>}
+        </div>
+      )}
+      <HeadingId.Provider value={title ? headingId : undefined}>{children}</HeadingId.Provider>
+    </section>
+  );
+}
+
+/** A set of checkboxes answering one question, inside a `SettingsSection`:
+ *  a fieldset named by the section's heading (a legend would draw into the
+ *  section rule). Rows are `SettingsCheckRow`s. */
+export function SettingsCheckList({ children, part }: { children: ReactNode; part?: string }) {
+  const headingId = useSectionHeadingId();
+  return (
+    <fieldset data-part={part} aria-labelledby={headingId} className="flex flex-col gap-2 min-w-0">
+      {children}
+    </fieldset>
+  );
+}
+
+/** One row of a `SettingsCheckList`. The whole row is the checkbox's label. */
+export function SettingsCheckRow({ children }: { children: ReactNode }) {
+  return (
+    <label className="flex items-center gap-3 rounded-lg border border-border bg-paper px-3 py-2.5 cursor-pointer hover:bg-warm transition-colors">
+      {children}
+    </label>
+  );
+}
+
+/** One figure in a section's stats `dl` ("Documents 42"): a `dt`/`dd` pair
+ *  in a `div`, which a `dl` allows. `value` may be a node (a status pill). */
+export function SettingsStat({ label, value, ltr }: { label: string; value: ReactNode; ltr?: boolean }) {
+  return (
+    <div data-part="stat" className="flex flex-col gap-1">
+      <dt className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider">{label}</dt>
+      <dd dir={ltr ? "ltr" : undefined} className="text-xl font-semibold text-ink tabular-nums">
+        {value}
+      </dd>
+    </div>
+  );
+}

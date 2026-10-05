@@ -1,86 +1,94 @@
-import { useState } from "react";
-import { useSetAtom } from "jotai";
-import { SettingsContent } from "../SettingsContent";
-import { Button } from "../Button";
-import { Field, TextInput } from "../Field";
+import { useAtomValue, useSetAtom } from "jotai";
+import { SettingsEditor } from "../SettingsEditor";
+import { SettingsCheckList, SettingsCheckRow, SettingsSection } from "../SettingsSection";
+import { SettingsField, TextInput } from "../SettingsField";
 import { Checkbox } from "../../shared/Checkbox";
-import { seedUsers, type SettingsGroupRecord } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/references";
+import { groupsAtom, saveGroupAtom, usersAtom } from "../../../atoms/users";
+import { MissingRecord } from "../../shared/MissingRecord";
+import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { LastSavedLine } from "../../shared/LastSavedLine";
+import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
-/** Group detail/editor — name + membership, opened from the Groups tab. */
+/** Group detail/editor — name + membership, opened from the Groups tab.
+ *  Membership is written onto the users (`saveGroupAtom`), by group id. */
 export function GroupEditor({
-  group,
+  groupId,
   onClose,
 }: {
-  group: SettingsGroupRecord | "new";
+  groupId: string | "new";
   onClose: () => void;
 }) {
-  const setToasts = useSetAtom(toastsAtom);
-  const isNew = group === "new";
-  const base = isNew ? undefined : group;
+  const { record } = useSettingsNotify();
+  const users = useAtomValue(usersAtom);
+  const groups = useAtomValue(groupsAtom);
+  const saveGroup = useSetAtom(saveGroupAtom);
+  const isNew = groupId === "new";
+  const base = isNew ? undefined : groups.find((g) => g.id === groupId);
 
-  const [name, setName] = useState(base?.name ?? "");
-  const [members, setMembers] = useState<string[]>(
-    isNew ? [] : seedUsers.filter((u) => u.groupIds.includes(base!.id)).map((u) => u.id),
-  );
-
-  const initialMembers = isNew
-    ? []
-    : seedUsers.filter((u) => u.groupIds.includes(base!.id)).map((u) => u.id);
-  const dirty =
-    name !== (base?.name ?? "") || JSON.stringify(members) !== JSON.stringify(initialMembers);
+  const { draft, update, dirty } = useSettingsDraft({
+    id: `group:${groupId}`,
+    label: "Group edits",
+    // Members as a sorted set: unticking and re-ticking is no change.
+    saved: { name: base?.name ?? "", memberIds: [...(base?.memberIds ?? [])].sort() },
+  });
+  /** The group was deleted (or the demo data reset) while this was open. */
+  const missing = !isNew && !base;
+  const { name, memberIds: members } = draft;
 
   const toggle = (id: string) =>
-    setMembers((prev) => (prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id]));
+    update({ memberIds: (members.includes(id) ? members.filter((m) => m !== id) : [...members, id]).sort() });
 
   const save = () => {
-    setToasts((p) => [
-      ...p,
-      { id: Date.now().toString(), message: isNew ? "Group created" : `${name || "Group"} saved`, type: "success" as const },
-    ]);
+    const id = saveGroup({ id: isNew ? null : groupId, name: name.trim(), memberIds: members });
+    if (!id) return;
+    record({
+      method: isNew ? "CREATE" : "UPDATE",
+      domain: "group",
+      noun: "group",
+      id,
+      name: name.trim(),
+    });
     onClose();
   };
 
   return (
-    <SettingsContent>
-      <SettingsContent.Header path={["Users & Groups"]} title={isNew ? "New group" : base!.name} onBack={onClose} />
-      <SettingsContent.Body>
-        <div className="flex flex-col gap-6">
-          <section className="max-w-sm">
-            <Field label="Group name">
-              <TextInput value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Litigation" />
-            </Field>
-          </section>
-
-          <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
-            <h3 className="text-sm font-semibold text-ink mb-1">Members</h3>
-            <p className="text-xs text-ink-tertiary mb-3">{members.length} of {seedUsers.length} users.</p>
-            <div className="flex flex-col gap-2">
-              {seedUsers.map((u) => (
-                <label
-                  key={u.id}
-                  className="flex items-center gap-3 rounded-lg border border-border bg-paper px-3 py-2.5 cursor-pointer hover:bg-warm transition-colors"
-                >
-                  <Checkbox checked={members.includes(u.id)} onChange={() => toggle(u.id)} ariaLabel={u.username} />
-                  <span className="flex items-center justify-center w-7 h-7 rounded-md bg-vellum text-meta font-semibold text-ink-secondary uppercase shrink-0">
-                    {u.username.slice(0, 2)}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium text-ink truncate">{u.username}</span>
-                    <span className="block text-xs text-ink-tertiary truncate">{u.email}</span>
-                  </span>
-                </label>
-              ))}
-            </div>
-          </section>
+    <SettingsEditor
+      component="GroupEditor"
+      path={["Users & Groups"]}
+      title={isNew ? "New group" : base?.name ?? ""}
+      onBack={onClose}
+      isNew={isNew}
+      createLabel="Create group"
+      dirty={dirty}
+      valid={!!name.trim() && !missing}
+      onSave={save}
+      footerStart={<LastSavedLine domain="group" id={base?.id} />}
+    >
+      {missing && <MissingRecord noun="group" />}
+      <SettingsSection>
+        <div className="max-w-sm">
+          <SettingsField label="Group name">
+            <TextInput value={name} onChange={(e) => update({ name: e.target.value })} placeholder="e.g. Litigation" />
+          </SettingsField>
         </div>
-      </SettingsContent.Body>
-      <SettingsContent.Footer>
-        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-        <Button variant="success" size="sm" disabled={!dirty || !name} onClick={save}>
-          {isNew ? "Create group" : "Save"}
-        </Button>
-      </SettingsContent.Footer>
-    </SettingsContent>
+      </SettingsSection>
+
+      <SettingsSection title="Members" description={`${members.length} of ${users.length} users.`}>
+        <SettingsCheckList part="members">
+          {users.map((u) => (
+            <SettingsCheckRow key={u.id}>
+              <Checkbox checked={members.includes(u.id)} onChange={() => toggle(u.id)} ariaLabel={u.username} />
+              <span className="flex items-center justify-center w-7 h-7 rounded-md bg-vellum text-meta font-semibold text-ink-secondary uppercase shrink-0">
+                {u.username.slice(0, 2)}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-medium text-ink truncate">{u.username}</span>
+                <span className="block text-xs text-ink-tertiary truncate">{u.email}</span>
+              </span>
+            </SettingsCheckRow>
+          ))}
+        </SettingsCheckList>
+      </SettingsSection>
+    </SettingsEditor>
   );
 }
