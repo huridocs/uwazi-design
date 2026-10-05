@@ -11,6 +11,8 @@ import { CloudUpload, FileSpreadsheet } from "lucide-react";
  *  - `file` is what is chosen; with it the well becomes the file row. */
 export function Dropzone({
   onFile,
+  onFiles,
+  multiple = false,
   onBrowse,
   onRemove,
   file,
@@ -20,6 +22,9 @@ export function Dropzone({
   labelledBy,
 }: {
   onFile?: (file: File) => void;
+  /** With `multiple`: every file chosen or dropped, in one call. */
+  onFiles?: (files: File[]) => void;
+  multiple?: boolean;
   onBrowse?: () => void;
   onRemove?: () => void;
   file?: { name: string; detail?: ReactNode } | null;
@@ -75,8 +80,9 @@ export function Dropzone({
         onDrop={(e) => {
           e.preventDefault();
           setOver(false);
-          const f = e.dataTransfer.files?.[0];
-          if (f) onFile?.(f);
+          const all = Array.from(e.dataTransfer.files ?? []);
+          if (multiple && all.length) onFiles?.(all);
+          else if (all[0]) onFile?.(all[0]);
         }}
         className={`flex flex-col items-center justify-center w-full py-8 rounded-lg transition-colors cursor-pointer
           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30 ${over ? "bg-parchment" : "bg-warm hover:bg-parchment"}`}
@@ -91,14 +97,16 @@ export function Dropzone({
           ref={input}
           type="file"
           accept={accept}
+          multiple={multiple}
           tabIndex={-1}
           aria-hidden
           className="sr-only"
           onChange={(e) => {
-            const f = e.target.files?.[0];
+            const all = Array.from(e.target.files ?? []);
             // Cleared, so choosing the same file again still reports it.
             e.target.value = "";
-            if (f) onFile?.(f);
+            if (multiple && all.length) onFiles?.(all);
+            else if (all[0]) onFile?.(all[0]);
           }}
         />
       )}

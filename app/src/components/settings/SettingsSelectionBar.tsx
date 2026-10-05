@@ -30,7 +30,7 @@ export interface SettingsSelection {
 /** A footer's selected state (UX2), swapped in place of its idle start
  *  group, in the same bar at the same height:
  *
- *    [n of m selected] · actions (ghost) · | · Remove/Delete (danger) · Clear
+ *    [Selected n of m] · actions (ghost) · | · Remove/Delete (danger) · Clear
  *
  *  The count sits in a fixed-width slot and is a live region, so 9 → 10
  *  moves no button. The bar is not tinted. On phones the actions go into a
@@ -40,7 +40,7 @@ export interface SettingsSelection {
 export function SettingsSelectionBar({ count, total, actions, onClear }: SettingsSelection) {
   const phone = useAtomValue(breakpointAtom) === "mobile";
   const [sheet, setSheet] = useState(false);
-  const readout = `${count.toLocaleString()} of ${total.toLocaleString()} selected`;
+  const readout = `Selected ${count.toLocaleString()} of ${total.toLocaleString()}`;
   return (
     <div data-component="SettingsSelectionBar" className="me-auto flex items-center gap-1 min-w-0">
       <span
