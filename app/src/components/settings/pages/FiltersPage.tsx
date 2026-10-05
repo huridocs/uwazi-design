@@ -1,12 +1,12 @@
 import { useMemo, type Dispatch, type SetStateAction } from "react";
 import { useSetAtom, useAtomValue } from "jotai";
-import { ChevronUp, ChevronDown, FolderPlus, Trash2 } from "lucide-react";
+import { FolderPlus, Trash2 } from "lucide-react";
 import { SettingsButton } from "../SettingsButton";
 import { SettingsFormPage } from "../SettingsEditor";
 import { SettingsSection } from "../SettingsSection";
 import { SettingsEmptyState } from "../SettingsEmptyState";
 import { SettingsTable, type Column } from "../SettingsTable";
-import { DragGrip } from "../DragGrip";
+import { MoveButtons, ReorderGrip, moveTo } from "../ReorderControls";
 import { useReorder } from "../../../hooks/useReorder";
 import { Checkbox } from "../../shared/Checkbox";
 import { Select } from "../../shared/Select";
@@ -33,13 +33,6 @@ const mockPropertyMeta: Record<string, { name: string; count: number | null }> =
   sampleFilterProperties.map((p) => [p.id, { name: p.label, count: null }]),
 );
 
-function swap<T>(arr: T[], i: number, dir: -1 | 1): T[] {
-  const j = i + dir;
-  if (j < 0 || j >= arr.length) return arr;
-  const next = [...arr];
-  [next[i], next[j]] = [next[j], next[i]];
-  return next;
-}
 
 export function FiltersPage() {
   const { record } = useSettingsNotify();
@@ -134,7 +127,13 @@ export function FiltersPage() {
       header: "Filter",
       cell: (r, i) => (
         <div className="flex items-center gap-2 w-full min-w-0">
-          <DragGrip {...gripProps(i)} />
+          <ReorderGrip
+            {...gripProps(i)}
+            label={meta[r.templateId]?.name ?? "filter"}
+            index={i}
+            count={rows.length}
+            onMove={(to) => setRows((prev) => moveTo(prev, i, to))}
+          />
           <Checkbox checked={r.active} onChange={() => toggle(r.templateId)} ariaLabel={`Show ${meta[r.templateId]?.name}`} />
           <span className="w-2.5 h-2.5 rounded-[2px] border border-ink/20 shrink-0" style={{ backgroundColor: meta[r.templateId]?.color }} />
           <span className={`truncate text-sm ${r.active ? "text-ink" : "text-ink-tertiary"}`}>
@@ -161,7 +160,7 @@ export function FiltersPage() {
           <span className="text-xs text-ink-muted">—</span>
         ),
     },
-    orderColumn(setRows, rows.length),
+    orderColumn(setRows, rows.length, (r) => meta[r.templateId]?.name ?? "filter"),
   ];
 
   const propertyColumns: Column<PropertyFilterRow>[] = [
@@ -170,7 +169,13 @@ export function FiltersPage() {
       header: "Filter",
       cell: (r, i) => (
         <div className="flex items-center gap-2 w-full min-w-0">
-          <DragGrip {...propertyReorder.gripProps(i)} />
+          <ReorderGrip
+            {...propertyReorder.gripProps(i)}
+            label={propertyMeta[r.propertyId]?.name ?? "filter"}
+            index={i}
+            count={propertyRows.length}
+            onMove={(to) => setPropertyRows((prev) => moveTo(prev, i, to))}
+          />
           <Checkbox checked={r.active} onChange={() => toggleProperty(r.propertyId)} ariaLabel={`Show ${propertyMeta[r.propertyId]?.name}`} />
           <span className={`truncate text-sm ${r.active ? "text-ink" : "text-ink-tertiary"}`}>
             {propertyMeta[r.propertyId]?.name}
@@ -193,7 +198,7 @@ export function FiltersPage() {
       width: "11rem",
       cell: () => <span className="text-xs text-ink-muted">—</span>,
     },
-    orderColumn(setPropertyRows, propertyRows.length),
+    orderColumn(setPropertyRows, propertyRows.length, (r) => propertyMeta[r.propertyId]?.name ?? "filter"),
   ];
 
   return (
@@ -285,32 +290,14 @@ export function FiltersPage() {
 
 /** Move up / down within ONE section's rows: each section is its own list, so
  *  a row can never cross into the other. */
-function orderColumn<T>(setList: Dispatch<SetStateAction<T[]>>, length: number): Column<T> {
-  const move = (i: number, dir: -1 | 1) => setList((prev) => swap(prev, i, dir));
+function orderColumn<T>(setList: Dispatch<SetStateAction<T[]>>, length: number, nameOf: (row: T) => string): Column<T> {
   return {
     id: "order",
-    header: "",
+    header: <span className="sr-only">Order</span>,
     width: "5rem",
     align: "right",
-    cell: (_r, i) => (
-      <div className="flex items-center justify-end">
-        <button
-          onClick={() => move(i, -1)}
-          disabled={i === 0}
-          aria-label="Move up"
-          className="p-0.5 rounded text-ink-tertiary hover:bg-warm hover:text-ink transition-colors disabled:opacity-30 cursor-pointer disabled:cursor-default"
-        >
-          <ChevronUp size={14} />
-        </button>
-        <button
-          onClick={() => move(i, 1)}
-          disabled={i === length - 1}
-          aria-label="Move down"
-          className="p-0.5 rounded text-ink-tertiary hover:bg-warm hover:text-ink transition-colors disabled:opacity-30 cursor-pointer disabled:cursor-default"
-        >
-          <ChevronDown size={14} />
-        </button>
-      </div>
+    cell: (r, i) => (
+      <MoveButtons label={nameOf(r)} index={i} count={length} onMove={(to) => setList((prev) => moveTo(prev, i, to))} />
     ),
   };
 }

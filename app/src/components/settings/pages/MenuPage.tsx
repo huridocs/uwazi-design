@@ -5,6 +5,8 @@ import { SettingsListPage, useSettingsSearch } from "../SettingsListPage";
 import { SettingsEmptyState } from "../SettingsEmptyState";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { RowActions } from "../RowActions";
+import { MoveButtons, ReorderGrip, moveTo } from "../ReorderControls";
+import { useReorder } from "../../../hooks/useReorder";
 import { ConfirmDelete } from "../../shared/ConfirmDelete";
 import { MenuLinkEditor } from "./MenuLinkEditor";
 import { seedMenuLinks, type SettingsMenuLink } from "../../../data/settings";
@@ -22,6 +24,13 @@ export function MenuPage() {
   const [confirm, setConfirm] = useState<SettingsMenuLink | null>(null);
   const [editing, setEditing] = useState<SettingsMenuLink | "new" | null>(null);
   const search = useSettingsSearch(links, (m) => `${m.title} ${m.url ?? ""}`);
+  // Order is the navigation's order (UX9): drag, arrow keys on the grip, or
+  // Move up / Move down. Positions are in the whole list, so a search does
+  // not change what "up" means. Dragging is off while a search hides rows.
+  const { dragIdx, rowProps, gripProps } = useReorder(setLinks);
+  const indexOf = (m: SettingsMenuLink) => links.findIndex((x) => x.id === m.id);
+  const moveLink = (m: SettingsMenuLink) => (to: number) => setLinks((prev) => moveTo(prev, indexOf(m), to));
+  const searching = !!search.query.trim();
 
   const saveLink = (value: Omit<SettingsMenuLink, "id">): string => {
     if (editing === "new") {
@@ -42,6 +51,13 @@ export function MenuPage() {
       header: "Label",
       cell: (m) => (
         <div className="flex items-center gap-2">
+          <ReorderGrip
+            {...(searching ? {} : gripProps(indexOf(m)))}
+            label={m.title}
+            index={indexOf(m)}
+            count={links.length}
+            onMove={moveLink(m)}
+          />
           {m.type === "group" ? (
             <Folder size={14} className="text-ink-muted shrink-0" />
           ) : (
@@ -63,10 +79,14 @@ export function MenuPage() {
     },
     {
       id: "actions",
-      header: "",
-      width: "4rem",
+      header: <span className="sr-only">Actions</span>,
+      width: "7rem",
       align: "right",
-      cell: (m) => <RowActions label={m.title} onDelete={() => setConfirm(m)} />,
+      cell: (m) => (
+        <RowActions label={m.title} onDelete={() => setConfirm(m)}>
+          <MoveButtons label={m.title} index={indexOf(m)} count={links.length} onMove={moveLink(m)} />
+        </RowActions>
+      ),
     },
   ];
 
@@ -100,6 +120,7 @@ export function MenuPage() {
         columns={columns}
         data={search.rows}
         getRowId={(m) => m.id}
+        rowProps={(m) => (searching ? {} : { ...rowProps(indexOf(m)), className: dragIdx === indexOf(m) ? "opacity-60" : undefined })}
         onRowClick={(m) => setEditing(m)}
         rowAriaLabel={(m) => `Edit ${m.title}`}
         emptyState={

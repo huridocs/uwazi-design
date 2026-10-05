@@ -65,6 +65,8 @@ export function ReorderGrip({
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       onKeyDown={onKeyDown}
+      // Inside a clickable row, the grip is not the row's open action.
+      onClick={(e) => e.stopPropagation()}
       aria-label={`Reorder ${props.label}, position ${props.index + 1} of ${props.count}. Arrow keys move it.`}
       className="shrink-0 p-0.5 -m-0.5 rounded-sm cursor-grab active:cursor-grabbing text-ink-muted hover:text-ink-secondary
         focus:outline-none focus-visible:ring-1 focus-visible:ring-carbon/50"

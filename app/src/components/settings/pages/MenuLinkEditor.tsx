@@ -5,7 +5,7 @@ import { SettingsSection } from "../SettingsSection";
 import { SettingsEmptyState } from "../SettingsEmptyState";
 import { RowActions } from "../RowActions";
 import { SettingsField, TextInput } from "../SettingsField";
-import { DragGrip } from "../DragGrip";
+import { MoveButtons, ReorderGrip, moveTo } from "../ReorderControls";
 import { useReorder } from "../../../hooks/useReorder";
 import { newSettingsId } from "../../../atoms/settingsCollection";
 import { SegmentedControl } from "../../shared/SegmentedControl";
@@ -157,10 +157,16 @@ export function MenuLinkEditor({
                   {...rowProps(i)}
                   data-part="sub-link"
                   className={`group grid items-end gap-3 px-3 py-2.5 border-t border-border-soft first:border-t-0 transition-opacity ${dragIdx === i ? "opacity-40" : ""}`}
-                  style={{ gridTemplateColumns: "1.25rem 1fr 1fr 2.5rem" }}
+                  style={{ gridTemplateColumns: "1.25rem 1fr 1fr auto" }}
                 >
                   <div className="flex justify-center pb-2.5">
-                    <DragGrip {...gripProps(i)} />
+                    <ReorderGrip
+                      {...gripProps(i)}
+                      label={s.title || "sub-link"}
+                      index={i}
+                      count={subLinks.length}
+                      onMove={(to) => setSubLinks((prev) => moveTo(prev, i, to))}
+                    />
                   </div>
                   <SettingsField label="Title">
                     <TextInput value={s.title} onChange={(e) => patchSubLink(s.id, { title: e.target.value })} placeholder="e.g. Methodology" />
@@ -169,7 +175,14 @@ export function MenuLinkEditor({
                     <TextInput value={s.url} onChange={(e) => patchSubLink(s.id, { url: e.target.value })} placeholder="/page/methodology" />
                   </SettingsField>
                   <div className="flex justify-end pb-1.5">
-                    <RowActions label={s.title || "sub-link"} onDelete={() => deleteSubLink(s.id)} />
+                    <RowActions label={s.title || "sub-link"} onDelete={() => deleteSubLink(s.id)}>
+                      <MoveButtons
+                        label={s.title || "sub-link"}
+                        index={i}
+                        count={subLinks.length}
+                        onMove={(to) => setSubLinks((prev) => moveTo(prev, i, to))}
+                      />
+                    </RowActions>
                   </div>
                 </li>
               ))
