@@ -163,6 +163,10 @@ export const sidebarGroups: SidebarGroup[] = [
       { id: "set-empty-state", label: "SettingsEmptyState" },
       { id: "set-section", label: "SettingsSection" },
       { id: "set-editor", label: "SettingsEditor" },
+      { id: "set-stats-card", label: "StatsCard" },
+      { id: "set-date-input", label: "DateInput" },
+      { id: "set-map-point", label: "MapPointPicker" },
+      { id: "set-image-picker", label: "ImagePickerModal" },
     ],
   },
   {

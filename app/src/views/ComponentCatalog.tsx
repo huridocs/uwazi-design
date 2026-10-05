@@ -59,6 +59,7 @@ import { Dropzone } from "../components/shared/Dropzone";
 import { TranslationProgress } from "../components/settings/TranslationProgress";
 import { BulkPickModal } from "../components/settings/BulkPickModal";
 import { SettingsEditorDemo, SettingsEmptyStateDemo, SettingsListPageDemo, SettingsSectionDemo } from "./catalog/settingsDemos";
+import { DateInputDemo, ImagePickerModalDemo, MapPointPickerDemo, StatsCardDemo } from "./catalog/collectionDemos";
 import { StatusPill } from "../components/settings/StatusPill";
 
 // Icons
@@ -2369,6 +2370,46 @@ const textColor = typeLabelColor(type.color);`}
   dirty={dirty} onSave={() => markSaved()} onDiscard={discard}>…</SettingsFormPage>`}
                 >
                   <SettingsEditorDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="set-stats-card" ref={reg("set-stats-card")}>
+                <CatalogEntry
+                  name="StatsCard"
+                  description="One dashboard figure: label, value, its unit and a detail line. With onOpen the card is a button to the page the figure comes from (chevron, focus ring, name 'Users, 5 total users'); without it, plain text."
+                  code={`<StatsCard label="Users" value={5} caption="total users" detail="1 Admins | 2 Editors | 2 Collaborators" onOpen={open} />`}
+                >
+                  <StatsCardDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="set-date-input" ref={reg("set-date-input")}>
+                <CatalogEntry
+                  name="DateInput"
+                  description="A date field in the collection's date format (Settings › Collection). Typed text in the pattern, the browser's calendar on a button; yyyy-mm-dd in and out, like a native date input."
+                  code={`<DateInput value={iso} onChange={setIso} aria-label="Date filed" className={inputClass} />`}
+                >
+                  <DateInputDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="set-map-point" ref={reg("set-map-point")}>
+                <CatalogEntry
+                  name="MapPointPicker"
+                  description="A world map that places one point where it is clicked or tapped. The latitude and longitude inputs beside it are the keyboard path."
+                  code={`<MapPointPicker point={point} onPick={setPoint} label="Map starting point" />`}
+                >
+                  <MapPointPickerDemo />
+                </CatalogEntry>
+              </div>
+
+              <div id="set-image-picker" ref={reg("set-image-picker")}>
+                <CatalogEntry
+                  name="ImagePickerModal"
+                  description="Pick an image from Settings › Uploads, or drop one to upload it at once. Lists only images that pass the size rule; a dropped file that fails it is refused with the actual and expected size."
+                  code={`<ImagePickerModal title="Select favicon image" rule={FAVICON_RULE} value={id} onPick={pick} onClose={close} />`}
+                >
+                  <ImagePickerModalDemo />
                 </CatalogEntry>
               </div>
             </div>

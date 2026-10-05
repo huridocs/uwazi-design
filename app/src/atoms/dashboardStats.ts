@@ -1,9 +1,8 @@
 import { atom } from "jotai";
+import type { Corpus } from "../data/entityChanges";
 import { cejilReadyAtom, dataSourceAtom, libraryEntitiesAtom, travesiaReadyAtom } from "./dataSource";
 import { usersAtom } from "./users";
 import { referencesAtom } from "./references";
-import { templatesAtom } from "./templates";
-import { languages } from "./languages";
 import { uploadsAtom } from "./uploads";
 import { getEntityProfile } from "../data/entityProfiles";
 import { cejilStats } from "../data/cejil/aggregates";
@@ -13,20 +12,27 @@ import { travesiaCorpus } from "../data/travesia/load";
 /** Settings › Dashboard's figures for the collection shown, read from the
  *  stores the rest of Settings and the Library write: users by role (one
  *  account list for every collection), entities as the Library counts them,
- *  relationships, files (entity files plus Uploads) and their size, templates
- *  and installed languages.
- *  A figure the collection does not record is null, never a stand-in zero:
- *  CEJIL's and Travesía's file records carry no sizes. */
+ *  relationships, files (entity files plus Uploads) and storage.
+ *  A count the collection does not record is null, never a stand-in zero. */
 export interface DashboardStats {
   users: { total: number; admin: number; editor: number; collaborator: number };
   entities: number;
   relationships: number | null;
   files: number;
-  /** Bytes, or null where the files' sizes are not recorded. */
-  storage: number | null;
-  templates: number;
-  languages: number;
+  /** Bytes: the mocked database and document base, the entity files whose
+   *  sizes are recorded, and the uploads. */
+  storage: number;
 }
+
+/** Each collection's database and document storage, mocked; Uwazi reads it
+ *  from the server. CEJIL's and Travesía's file records carry no sizes, so
+ *  for them this base is the whole figure before uploads. */
+const BASE_STORAGE: Record<Corpus, number> = {
+  mock: 412_316_860,
+  cejil: 9_871_203_532,
+  artworks: 61_865_984,
+  travesia: 128_974_848,
+};
 
 const UNIT: Record<string, number> = { B: 1, KB: 1024, MB: 1024 ** 2, GB: 1024 ** 3 };
 /** "213 KB" → bytes. */
@@ -34,13 +40,6 @@ export function parseSize(size: string): number {
   const m = /^([\d.]+)\s*(B|KB|MB|GB)$/i.exec(size.trim());
   return m ? Number(m[1]) * UNIT[m[2].toUpperCase()] : 0;
 }
-/** Bytes as "12.34 MB", two decimals. */
-export function formatBytes(n: number): string {
-  if (n < 1024) return `${n} B`;
-  const [v, u] = n >= 1024 ** 3 ? [n / 1024 ** 3, "GB"] : n >= 1024 ** 2 ? [n / 1024 ** 2, "MB"] : [n / 1024, "KB"];
-  return `${v.toFixed(2)} ${u}`;
-}
-
 export const dashboardStatsAtom = atom<DashboardStats>((get) => {
   const corpus = get(dataSourceAtom);
   const users = get(usersAtom);
@@ -91,8 +90,6 @@ export const dashboardStatsAtom = atom<DashboardStats>((get) => {
     entities: corpus === "cejil" && !get(cejilReadyAtom) ? cejilStats.entities : entities.length,
     relationships,
     files: files + uploads.count,
-    storage: bytes === null ? null : bytes + uploads.bytes,
-    templates: get(templatesAtom(corpus)).length,
-    languages: get(languages.listOfAtom(corpus)).length,
+    storage: BASE_STORAGE[corpus] + (bytes ?? 0) + uploads.bytes,
   };
 });
