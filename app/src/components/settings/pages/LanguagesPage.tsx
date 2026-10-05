@@ -1,179 +1,143 @@
-import { useState } from "react";
-import { useSetAtom, useAtomValue } from "jotai";
-import { Plus, RotateCcw, Check, Languages } from "lucide-react";
-import { SettingsButton } from "../SettingsButton";
-import { SettingsListPage, useSettingsSearch } from "../SettingsListPage";
+import { useMemo, useState } from "react";
+import { useAtomValue, useSetAtom, useStore } from "jotai";
+import { Download, Languages, RotateCcw, Star, Trash2 } from "lucide-react";
+import { SettingsListPage } from "../SettingsListPage";
+import { SettingsSection } from "../SettingsSection";
 import { SettingsEmptyState } from "../SettingsEmptyState";
-import { RowActionButton, RowActions } from "../RowActions";
-import { Modal } from "../../shared/Modal";
-import { ModalList, ModalListRow, ModalSearchRow, ModalStatus } from "../../shared/ModalParts";
 import { SettingsTable, type Column } from "../SettingsTable";
+import { MobileActionMenu, type MobileMenuItem } from "../../layout/MobileActionMenu";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
-import { ConfirmDelete } from "../../shared/ConfirmDelete";
-import { ProgressBar } from "../../shared/ProgressBar";
-import { seedLanguages, type SettingsLanguage } from "../../../data/settings";
+import { TypedConfirmModal } from "../../shared/TypedConfirmModal";
 import { dataSourceAtom } from "../../../atoms/dataSource";
-import { cejilSettingsLanguages } from "../../../data/cejil/settingsAdapt";
+import {
+  installKey,
+  installLanguages,
+  languageInstallStateAtom,
+  languagesAtom,
+  LANGUAGE_CATALOG,
+  PREDEFINED_TRANSLATIONS,
+  setDefaultLanguageAtom,
+  uninstallLanguage,
+  type LanguageRecord,
+} from "../../../atoms/languages";
+import { languageUsageAtom } from "../../../atoms/settingsUsage";
+import { isUntranslated, translationRowsAtom } from "../../../atoms/translations";
+import { seedTranslationContexts } from "../../../data/settings";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
-import { LanguageDelete } from "../../shared/SettingsDeletes";
+import { InstallLanguagesModal } from "./languages/InstallLanguagesModal";
 
-type CatalogLanguage = { key: string; label: string; localizedLabel: string; ltr: boolean };
+type Ask = { kind: "default" | "reset" | "uninstall"; lang: LanguageRecord };
 
-const LANGUAGE_CATALOG: CatalogLanguage[] = [
-  { key: "en", label: "English", localizedLabel: "English", ltr: true },
-  { key: "es", label: "Spanish", localizedLabel: "Español", ltr: true },
-  { key: "fr", label: "French", localizedLabel: "Français", ltr: true },
-  { key: "pt", label: "Portuguese", localizedLabel: "Português", ltr: true },
-  { key: "de", label: "German", localizedLabel: "Deutsch", ltr: true },
-  { key: "it", label: "Italian", localizedLabel: "Italiano", ltr: true },
-  { key: "nl", label: "Dutch", localizedLabel: "Nederlands", ltr: true },
-  { key: "pl", label: "Polish", localizedLabel: "Polski", ltr: true },
-  { key: "ru", label: "Russian", localizedLabel: "Русский", ltr: true },
-  { key: "uk", label: "Ukrainian", localizedLabel: "Українська", ltr: true },
-  { key: "ro", label: "Romanian", localizedLabel: "Română", ltr: true },
-  { key: "cs", label: "Czech", localizedLabel: "Čeština", ltr: true },
-  { key: "el", label: "Greek", localizedLabel: "Ελληνικά", ltr: true },
-  { key: "sv", label: "Swedish", localizedLabel: "Svenska", ltr: true },
-  { key: "no", label: "Norwegian", localizedLabel: "Norsk", ltr: true },
-  { key: "da", label: "Danish", localizedLabel: "Dansk", ltr: true },
-  { key: "fi", label: "Finnish", localizedLabel: "Suomi", ltr: true },
-  { key: "hu", label: "Hungarian", localizedLabel: "Magyar", ltr: true },
-  { key: "tr", label: "Turkish", localizedLabel: "Türkçe", ltr: true },
-  { key: "sw", label: "Swahili", localizedLabel: "Kiswahili", ltr: true },
-  { key: "zh", label: "Chinese", localizedLabel: "中文", ltr: true },
-  { key: "ja", label: "Japanese", localizedLabel: "日本語", ltr: true },
-  { key: "ko", label: "Korean", localizedLabel: "한국어", ltr: true },
-  { key: "hi", label: "Hindi", localizedLabel: "हिन्दी", ltr: true },
-  { key: "bn", label: "Bengali", localizedLabel: "বাংলা", ltr: true },
-  { key: "vi", label: "Vietnamese", localizedLabel: "Tiếng Việt", ltr: true },
-  { key: "th", label: "Thai", localizedLabel: "ภาษาไทย", ltr: true },
-  { key: "id", label: "Indonesian", localizedLabel: "Bahasa Indonesia", ltr: true },
-  { key: "ar", label: "Arabic", localizedLabel: "العربية", ltr: false },
-  { key: "fa", label: "Persian", localizedLabel: "فارسی", ltr: false },
-  { key: "he", label: "Hebrew", localizedLabel: "עברית", ltr: false },
-  { key: "ur", label: "Urdu", localizedLabel: "اردو", ltr: false },
-];
+const plural = (n: number, one: string, many: string) => `${n.toLocaleString()} ${n === 1 ? one : many}`;
 
+/** Settings › Languages (Uwazi `LanguagesList`): one "Active languages" table
+ *  sorted by English name, the Default as a badge, Make default / Reset /
+ *  Uninstall in a row menu, and "Install Language(s)" in the footer. Every
+ *  action is immediate: no page Save, no dirty guard. */
 export function LanguagesPage() {
+  const store = useStore();
+  const corpus = useAtomValue(dataSourceAtom);
+  const installed = useAtomValue(languagesAtom);
+  const installState = useAtomValue(languageInstallStateAtom);
+  const setDefault = useSetAtom(setDefaultLanguageAtom);
   const { record } = useSettingsNotify();
-  const dataSource = useAtomValue(dataSourceAtom);
-  const [languages, setLanguages] = useState<SettingsLanguage[]>(
-    dataSource === "cejil" ? cejilSettingsLanguages : seedLanguages,
-  );
-  const [confirm, setConfirm] = useState<{ kind: "reset" | "uninstall" | "default"; lang: SettingsLanguage } | null>(
-    null,
-  );
-  const [installOpen, setInstallOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const search = useSettingsSearch(languages, (l) => `${l.label} ${l.localizedLabel} ${l.key}`);
+  const [dir, setDir] = useState<"asc" | "desc">("asc");
+  const [installing, setInstalling] = useState(false);
+  const [ask, setAsk] = useState<Ask | null>(null);
 
-  const log = (method: "CREATE" | "UPDATE", l: { key: string; label: string }, message: string) =>
-    record({ log: false,  method, domain: "language", noun: "language", id: l.key, name: l.label, message });
+  const rows = useMemo(
+    () => [...installed].sort((a, b) => (dir === "asc" ? 1 : -1) * a.label.localeCompare(b.label)),
+    [installed, dir],
+  );
+  const stateOf = (l: LanguageRecord) => installState[installKey(corpus, l.key)];
+  const catalogOf = (key: string) => LANGUAGE_CATALOG.find((c) => c.key === key);
 
-  const installLanguage = (cat: CatalogLanguage) => {
-    setLanguages((prev) => [
-      ...prev,
+  const menuItems = (l: LanguageRecord): MobileMenuItem[] => {
+    const busy = stateOf(l)?.status === "installing";
+    const items: MobileMenuItem[] = [
       {
-        key: cat.key,
-        label: cat.label,
-        localizedLabel: cat.localizedLabel,
-        ltr: cat.ltr,
-        translationsCount: 0,
-        default: false,
+        id: "default",
+        label: "Make default",
+        icon: <Star size={14} aria-hidden />,
+        disabled: l.default || busy,
+        onSelect: () => setAsk({ kind: "default", lang: l }),
       },
-    ]);
-    log("CREATE", cat, `${cat.label} installed`);
-    // The row just installed leaves the list, and focus with it. Put focus
-    // back on the search field so the dialog keeps Escape and the trap.
-    requestAnimationFrame(() =>
-      document.querySelector<HTMLInputElement>('[data-component="InstallLanguageDialog"] input')?.focus(),
-    );
+    ];
+    if (PREDEFINED_TRANSLATIONS.has(l.key))
+      items.push({ id: "reset", label: "Reset", icon: <RotateCcw size={14} aria-hidden />, disabled: busy, onSelect: () => setAsk({ kind: "reset", lang: l }) });
+    if (!l.default)
+      items.push({
+        id: "uninstall",
+        label: "Uninstall",
+        icon: <Trash2 size={14} aria-hidden />,
+        disabled: busy,
+        onSelect: () => setAsk({ kind: "uninstall", lang: l }),
+      });
+    return items;
   };
 
-  const q = query.trim().toLowerCase();
-  const installable = LANGUAGE_CATALOG.filter(
-    (c) =>
-      !languages.some((l) => l.key === c.key) &&
-      (q === "" ||
-        c.label.toLowerCase().includes(q) ||
-        c.localizedLabel.toLowerCase().includes(q)),
-  );
-
-  const setDefault = (key: string) =>
-    setLanguages((prev) => prev.map((l) => ({ ...l, default: l.key === key })));
-
-  const columns: Column<SettingsLanguage>[] = [
+  const columns: Column<LanguageRecord>[] = [
     {
       id: "label",
       header: "Language",
-      cell: (l) => (
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-ink">{l.label}</span>
-          <span className="text-ink-tertiary">{l.localizedLabel}</span>
-          {!l.ltr && (
-            <span className="text-meta font-semibold text-ink-tertiary bg-vellum px-1.5 py-px rounded w-fit">
-              RTL
-            </span>
-          )}
-          {l.default && (
-            <span className="text-meta font-semibold text-carbon bg-carbon-tint px-1.5 py-px rounded w-fit">
-              Default
-            </span>
-          )}
-        </div>
-      ),
-    },
-    {
-      id: "translations",
-      header: "Translations",
-      width: "13rem",
-      cell: (l) => (
-        <div className="flex items-center gap-2 w-full min-w-32">
-          <div className="flex-1">
-            <ProgressBar value={l.translationsCount} color={l.translationsCount === 100 ? "green" : "blue"} />
+      sortKey: "label",
+      mobile: "primary",
+      cell: (l) => {
+        const state = stateOf(l);
+        return (
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
+              <span className="font-medium text-ink">
+                {l.label} ({l.key})
+              </span>
+              {l.localizedLabel && l.localizedLabel !== l.label && (
+                <span lang={l.key} dir={l.ltr ? "ltr" : "rtl"} className="text-ink-tertiary">
+                  {l.localizedLabel}
+                </span>
+              )}
+              {l.default && (
+                <span data-part="default" className="w-fit text-meta font-semibold text-ink bg-parchment px-1.5 py-px rounded-md">
+                  Default
+                </span>
+              )}
+              {state?.status === "installing" && (
+                <span data-part="installing" className="w-fit text-meta font-semibold text-ink-secondary bg-vellum px-1.5 py-px rounded-md">
+                  Installing
+                </span>
+              )}
+              {state?.status === "failed" && (
+                <span data-part="failed" className="w-fit text-meta font-semibold text-seal-label bg-seal-tint px-1.5 py-px rounded-md">
+                  Install failed
+                </span>
+              )}
+            </div>
+            {state?.status === "failed" && (
+              <div className="flex flex-wrap items-center gap-2 text-xs text-ink-secondary">
+                <span>{state.reason}</span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const c = catalogOf(l.key);
+                    if (c) installLanguages(store, corpus, [c]);
+                  }}
+                  className="font-medium text-ink underline underline-offset-2 cursor-pointer"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
           </div>
-          <span className="text-xs text-ink-tertiary tabular-nums w-9 text-right">
-            {l.translationsCount}%
-          </span>
-        </div>
-      ),
-    },
-    {
-      id: "default",
-      header: "Default",
-      align: "center",
-      width: "6rem",
-      cell: (l) =>
-        l.default ? (
-          <Check size={16} className="text-success mx-auto" />
-        ) : (
-          <button
-            onClick={() => setConfirm({ kind: "default", lang: l })}
-            className="text-xs font-medium text-carbon hover:underline cursor-pointer"
-          >
-            Set
-          </button>
-        ),
+        );
+      },
     },
     {
       id: "actions",
-      header: "",
+      header: <span className="sr-only">Actions</span>,
+      width: "3rem",
       align: "right",
-      width: "5rem",
-      cell: (l) => (
-        <RowActions
-          label={l.label}
-          deleteLabel="Uninstall"
-          // The default language cannot be uninstalled.
-          onDelete={l.default ? undefined : () => setConfirm({ kind: "uninstall", lang: l })}
-        >
-          <RowActionButton
-            label={`Reset ${l.label}`}
-            icon={<RotateCcw size={14} aria-hidden />}
-            onClick={() => setConfirm({ kind: "reset", lang: l })}
-          />
-        </RowActions>
-      ),
+      mobile: "actions",
+      cell: (l) => <MobileActionMenu fixed label={`Actions for ${l.label}`} items={menuItems(l)} />,
     },
   ];
 
@@ -181,124 +145,122 @@ export function LanguagesPage() {
     <SettingsListPage
       component="LanguagesPage"
       title="Languages"
-      intro="Active languages for your collection. The&nbsp;default language is shown to users who haven't chosen one."
-      search={{ value: search.query, onChange: search.setQuery, label: "Search languages" }}
-      lead={{
-        label: "Install language",
-        onClick: () => {
-          setQuery("");
-          setInstallOpen(true);
-        },
-      }}
+      lead={{ label: "Install Language(s)", icon: <Download size={14} aria-hidden />, onClick: () => setInstalling(true) }}
       overlays={
         <>
-          {installOpen && (
-            <Modal
-              component="InstallLanguageDialog"
-              title="Install language"
-              closeLabel="Close language list"
-              onClose={() => setInstallOpen(false)}
-              size="md"
-              // Fixed, so the panel does not shrink as the search filters rows out.
-              height="md:h-[min(34rem,100%)]"
-              flush
-            >
-              <ModalSearchRow
-                value={query}
-                onChange={setQuery}
-                placeholder="Search languages…"
-                ariaLabel="Search languages"
-                autoFocus
-              />
-              <ModalList>
-                {installable.length === 0 ? (
-                  <ModalStatus as="li">
-                    {q === "" ? "All available languages are installed." : "No languages match your search."}
-                  </ModalStatus>
-                ) : (
-                  installable.map((c) => (
-                    <ModalListRow
-                      key={c.key}
-                      part="language"
-                      title={
-                        <>
-                          <span className="font-medium">{c.localizedLabel}</span>
-                          {c.label !== c.localizedLabel && <span className="ms-2 text-ink-tertiary">{c.label}</span>}
-                        </>
-                      }
-                      chip={
-                        !c.ltr ? (
-                          <span className="w-fit text-meta font-semibold text-ink-tertiary bg-vellum px-1.5 py-px rounded-md">
-                            RTL
-                          </span>
-                        ) : undefined
-                      }
-                      meta={
-                        <SettingsButton
-                          variant="ghost"
-                          size="sm"
-                          icon={<Plus size={14} aria-hidden />}
-                          aria-label={`Install ${c.label}`}
-                          onClick={() => installLanguage(c)}
-                        >
-                          Install
-                        </SettingsButton>
-                      }
-                    />
-                  ))
-                )}
-              </ModalList>
-            </Modal>
+          {installing && (
+            <InstallLanguagesModal
+              installedKeys={installed.map((l) => l.key)}
+              onCancel={() => setInstalling(false)}
+              onInstall={(picked) => {
+                setInstalling(false);
+                installLanguages(store, corpus, picked);
+              }}
+            />
           )}
-
           <ConfirmDialog
-            open={confirm?.kind === "default"}
-            title="Change default language"
-            message={`Make ${confirm?.lang.label} the default language? It is shown to users who haven't chosen a language.`}
+            open={ask?.kind === "default"}
+            title="Make default language"
+            message={`Make ${ask?.lang.label} the default language? Languages installed later start as a copy of it, and Translations marks a text untranslated when it is empty or still equals the ${ask?.lang.label} text.`}
             confirmLabel="Make default"
             onConfirm={() => {
-              if (!confirm) return;
-              setDefault(confirm.lang.key);
-              log("UPDATE", confirm.lang, `${confirm.lang.label} set as default language`);
-              setConfirm(null);
+              if (!ask) return;
+              setDefault({ key: ask.lang.key, corpus });
+              record({
+                method: "UPDATE",
+                domain: "language",
+                noun: "language",
+                id: ask.lang.key,
+                name: ask.lang.label,
+                summary: `Set “${ask.lang.label}” as the default language`,
+                message: "Default language change success",
+              });
+              setAsk(null);
             }}
-            onCancel={() => setConfirm(null)}
+            onCancel={() => setAsk(null)}
           />
-          <ConfirmDelete
-            open={confirm?.kind === "reset"}
-            title="Reset language"
-            message={`Reset all translations for ${confirm?.lang.label} to their default values? This can't be undone.`}
-            impact={null}
-            confirmLabel="Reset"
-            onConfirm={() => {
-              if (!confirm) return;
-              log("UPDATE", confirm.lang, `${confirm.lang.label} translations reset`);
-              setConfirm(null);
-            }}
-            onCancel={() => setConfirm(null)}
-          />
-          <LanguageDelete
-            language={confirm?.kind === "uninstall" ? confirm.lang : null}
-            onCancel={() => setConfirm(null)}
-            onDelete={(lang) => setLanguages((prev) => prev.filter((l) => l.key !== lang.key))}
-          />
+          {ask?.kind === "reset" && <ResetDialog lang={ask.lang} onDone={() => setAsk(null)} />}
+          {ask?.kind === "uninstall" && (
+            <UninstallDialog
+              lang={ask.lang}
+              onCancel={() => setAsk(null)}
+              onConfirm={() => {
+                uninstallLanguage(store, corpus, ask.lang);
+                setAsk(null);
+              }}
+            />
+          )}
         </>
       }
     >
-      <SettingsTable
-        corpusScoped
-        columns={columns}
-        data={search.rows}
-        getRowId={(l) => l.key}
-        emptyState={
-          <SettingsEmptyState
-            icon={<Languages size={16} />}
-            title="No languages installed"
-            query={search.query}
-            onClearQuery={search.clear}
-          />
-        }
-      />
+      <SettingsSection title="Active languages">
+        <SettingsTable
+          corpusScoped
+          columns={columns}
+          data={rows}
+          getRowId={(l) => l.key}
+          sort={{ key: "label", dir }}
+          onSort={() => setDir((d) => (d === "asc" ? "desc" : "asc"))}
+          emptyState={<SettingsEmptyState icon={<Languages size={16} />} title="No languages installed" />}
+        />
+      </SettingsSection>
     </SettingsListPage>
+  );
+}
+
+/** System context rows: what Reset overwrites. */
+const SYSTEM_CONTEXTS = seedTranslationContexts.filter((c) => c.type === "System");
+
+function ResetDialog({ lang, onDone }: { lang: LanguageRecord; onDone: () => void }) {
+  const rowsOf = useAtomValue(translationRowsAtom);
+  const { record } = useSettingsNotify();
+  const keys = SYSTEM_CONTEXTS.reduce((n, c) => n + rowsOf(c).length, 0);
+  return (
+    <TypedConfirmModal
+      open
+      message="You are about to reset a language."
+      impact={[
+        `System strings only: ${plural(keys, "key", "keys")} in User Interface go back to the predefined ${lang.label} text.`,
+        "Templates, thesauri, the menu and every other context keep their translations.",
+      ]}
+      confirmLabel="Reset"
+      onCancel={onDone}
+      onConfirm={() => {
+        record({
+          method: "UPDATE",
+          domain: "language",
+          noun: "language",
+          id: lang.key,
+          name: lang.label,
+          summary: `Reset language “${lang.label}”`,
+          message: "Language reset success",
+        });
+        onDone();
+      }}
+    />
+  );
+}
+
+function UninstallDialog({ lang, onCancel, onConfirm }: { lang: LanguageRecord; onCancel: () => void; onConfirm: () => void }) {
+  const usage = useAtomValue(languageUsageAtom(lang));
+  const rowsOf = useAtomValue(translationRowsAtom);
+  const source = useAtomValue(languagesAtom).find((l) => l.default)?.key ?? "en";
+  const translated = seedTranslationContexts.reduce(
+    (n, c) => n + rowsOf(c).filter((r) => !isUntranslated(r, lang.key, source)).length,
+    0,
+  );
+  const entityLine = usage.lines.find((l) => !l.startsWith("Interface translated"));
+  return (
+    <TypedConfirmModal
+      open
+      message="You are about to uninstall a language."
+      impact={[
+        entityLine ? entityLine.replace("a version in this language.", `a ${lang.label} version, which is deleted.`) : `No entity has a ${lang.label} version.`,
+        `${plural(translated, "translated key is", "translated keys are")} removed from Translations.`,
+      ]}
+      confirmLabel="Uninstall"
+      onCancel={onCancel}
+      onConfirm={onConfirm}
+    />
   );
 }
