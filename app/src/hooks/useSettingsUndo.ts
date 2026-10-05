@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useRef } from "react";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
-import { toastsAtom } from "../atoms/notifications";
+import { toastsAtom, type NotificationAction } from "../atoms/notifications";
 import { newSettingsUndoRef, settingsUndoAtom, settingsUndoRequestAtom } from "../atoms/settingsUndo";
 
 let seq = 0;
@@ -49,10 +49,20 @@ export function useSettingsUndo<P>(restore: (payload: P) => void) {
     },
     [store, owner],
   );
+  /** Register an undo and return its Beacon action, for a caller that sends
+   *  its own notification (`record({ action })`): one card per removal. */
+  const prepare = useCallback(
+    (payload: P): NotificationAction => {
+      const ref = newSettingsUndoRef();
+      store.set(settingsUndoAtom, { ref, owner, payload });
+      return { label: "Undo", kind: "settings-undo", ref };
+    },
+    [store, owner],
+  );
   /** End this editor's undo: call on Save from a page that stays open, since
    *  the removal is saved and restoring it would only reopen the draft. */
   const end = useCallback(() => {
     if (store.get(settingsUndoAtom)?.owner === owner) store.set(settingsUndoAtom, null);
   }, [store, owner]);
-  return Object.assign(offer, { end });
+  return Object.assign(offer, { end, prepare });
 }

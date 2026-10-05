@@ -9,16 +9,10 @@ import {
   relationTypesAtom,
 } from "../../atoms/references";
 import { NO_LABEL_RELATION_TYPE } from "../../data/references";
-import {
-  deleteRelationTypeAtom,
-  relationTypeNameIssue,
-  restoreRelationTypeAtom,
-  saveRelationTypeAtom,
-  type RelationTypeDeletion,
-} from "../../atoms/relationTypes";
+import { deleteRelationTypeAtom, relationTypeNameIssue, saveRelationTypeAtom } from "../../atoms/relationTypes";
+import { useRelationTypeUndo } from "../../hooks/useRelationTypeUndo";
 import { relationTypeUsageInAtom } from "../../atoms/settingsUsage";
 import { useSettingsNotify } from "../../hooks/useSettingsNotify";
-import { useSettingsUndo } from "../../hooks/useSettingsUndo";
 import { t } from "../../utils/i18n";
 
 /** The Relationships panel's view of the Sample's relationship-type registry.
@@ -35,9 +29,8 @@ export function ManageRelationTypesModal() {
   const store = useStore();
   const saveType = useSetAtom(saveRelationTypeAtom);
   const removeType = useSetAtom(deleteRelationTypeAtom);
-  const restoreType = useSetAtom(restoreRelationTypeAtom);
+  const prepareUndo = useRelationTypeUndo();
   const { record, fail } = useSettingsNotify();
-  const offerUndo = useSettingsUndo<RelationTypeDeletion>(restoreType);
   const [draftLabel, setDraftLabel] = useState("");
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
 
@@ -95,14 +88,11 @@ export function ManageRelationTypesModal() {
       id,
       name: d.def.label,
       message: `“${d.def.label}” deleted`,
-    });
-    offerUndo(
-      d,
-      `“${d.def.label}” deleted`,
-      d.moved
+      detail: d.moved
         ? `${d.moved.refIds.length.toLocaleString()} references moved to “No label”. Undo puts the type and its references back.`
         : "Undo puts the type back.",
-    );
+      action: prepareUndo(d),
+    });
   };
 
   if (!open) return null;

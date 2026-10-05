@@ -1,4 +1,5 @@
-import { atom } from "jotai";
+import { atom, type Setter } from "jotai";
+import type { NotificationAction } from "./notifications";
 
 /** Undo for a child removed inside an open Settings editor (a template
  *  property, a thesaurus value, a filter group, a menu link): the removal is
@@ -27,11 +28,33 @@ export const settingsUndoRequestAtom = atom<SettingsUndo | null>(null);
 let seq = 0;
 export const newSettingsUndoRef = () => `sundo-${Date.now().toString(36)}-${++seq}`;
 
-/** The Beacon's Undo: hand the current undo to its editor. */
+/** Undos that belong to a store, not an editor: a removal that is already
+ *  saved (a relationship type and the references it moved), which stays
+ *  undoable from anywhere until a later removal replaces it. The store
+ *  registers how it restores, keyed by an owner name that no editor uses. */
+const storeUndoHandlers = new Map<string, (set: Setter, payload: unknown) => void>();
+export function registerStoreUndo(owner: string, restore: (set: Setter, payload: unknown) => void) {
+  storeUndoHandlers.set(owner, restore);
+}
+
+/** Register a store-owned undo and return its Beacon action. */
+export const prepareStoreUndoAtom = atom(
+  null,
+  (_get, set, { owner, payload }: { owner: string; payload: unknown }): NotificationAction => {
+    const ref = newSettingsUndoRef();
+    set(settingsUndoAtom, { ref, owner, payload });
+    return { label: "Undo", kind: "settings-undo", ref };
+  },
+);
+
+/** The Beacon's Undo: a store-owned undo runs here; an editor's is handed to
+ *  the editor, which restores into its draft. */
 export const requestSettingsUndoAtom = atom(null, (get, set, ref: string): boolean => {
   const op = get(settingsUndoAtom);
   if (!op || op.ref !== ref) return false;
   set(settingsUndoAtom, null);
-  set(settingsUndoRequestAtom, op);
+  const restore = storeUndoHandlers.get(op.owner);
+  if (restore) restore(set, op.payload);
+  else set(settingsUndoRequestAtom, op);
   return true;
 });

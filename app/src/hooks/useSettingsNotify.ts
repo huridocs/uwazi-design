@@ -15,6 +15,8 @@ export interface SettingsEvent {
   noun: string;
   id?: string;
   name: string;
+  /** The log line, when "<Verb> <noun> “<name>”" does not say it (a restore). */
+  summary?: string;
   /** The Beacon line. Defaults to "<name> created / saved / deleted". */
   message?: string;
   detail?: string;
@@ -48,7 +50,7 @@ export function useSettingsNotify() {
       if (e.log !== false)
         append({
           method: e.method,
-          summary: `${past} ${e.noun} “${e.name}”`,
+          summary: e.summary ?? `${past} ${e.noun} “${e.name}”`,
           domain: e.domain,
           targetId: e.id,
           scope: scopeOfDomain(e.domain, corpus),

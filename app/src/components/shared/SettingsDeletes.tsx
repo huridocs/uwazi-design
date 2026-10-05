@@ -3,6 +3,7 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { ConfirmDelete } from "./ConfirmDelete";
 import { Select } from "./Select";
 import { useSettingsNotify } from "../../hooks/useSettingsNotify";
+import { useRelationTypeUndo } from "../../hooks/useRelationTypeUndo";
 import {
   groupUsageAtom,
   languageUsageAtom,
@@ -110,8 +111,8 @@ export function RelationTypeDelete({
 }: {
   type: RelationTypeDef | null;
   onCancel: () => void;
-  /** After the delete: what it removed, for the page's Undo. */
-  onDeleted: (deletion: RelationTypeDeletion, movedTo: string | null) => void;
+  /** After the delete, what it removed. */
+  onDeleted?: (deletion: RelationTypeDeletion, movedTo: string | null) => void;
 }) {
   return type ? <RelationTypeDeleteOpen type={type} onCancel={onCancel} onDeleted={onDeleted} /> : null;
 }
@@ -123,11 +124,12 @@ function RelationTypeDeleteOpen({
 }: {
   type: RelationTypeDef;
   onCancel: () => void;
-  onDeleted: (deletion: RelationTypeDeletion, movedTo: string | null) => void;
+  onDeleted?: (deletion: RelationTypeDeletion, movedTo: string | null) => void;
 }) {
   const usage = useAtomValue(relationTypeUsageAtom(type.id));
   const registry = useAtomValue(settingsRelationTypesAtom);
   const remove = useSetAtom(deleteRelationTypeAtom);
+  const prepareUndo = useRelationTypeUndo();
   const { record } = useSettingsNotify();
   const [to, setTo] = useState("");
   // Move-to choices: every other type, and No label (the Relationships
@@ -154,6 +156,8 @@ function RelationTypeDeleteOpen({
       onConfirm={() => {
         const deletion = remove({ id: type.id, to: usage.reassignable ? to : null });
         if (!deletion) return onCancel();
+        // One notification, carrying the registry's Undo (it works from
+        // anywhere, not only while this page is open).
         record({
           method: "DELETE",
           domain: "relationType",
@@ -161,8 +165,13 @@ function RelationTypeDeleteOpen({
           id: type.id,
           name: type.label,
           message: `${type.label} deleted`,
+          detail:
+            deletion.moved && target
+              ? `${deletion.moved.refIds.length.toLocaleString()} references moved to ${target.label}. Undo puts the type and its references back.`
+              : "Undo puts the type back.",
+          action: prepareUndo(deletion),
         });
-        onDeleted(deletion, usage.reassignable && target ? target.label : null);
+        onDeleted?.(deletion, usage.reassignable && target ? target.label : null);
         onCancel();
       }}
     >
@@ -329,7 +338,8 @@ export function RelationTypeReferenceCount({ id }: { id: string }) {
   const usage = useAtomValue(relationTypeUsageAtom(id));
   return (
     <>
-      {usage.references.toLocaleString()} <span className="text-ink-tertiary">{usage.references === 1 ? "reference" : "references"}</span>
+      {usage.pending ? "…" : usage.references.toLocaleString()}{" "}
+      <span className="text-ink-tertiary">{!usage.pending && usage.references === 1 ? "reference" : "references"}</span>
     </>
   );
 }

@@ -339,6 +339,8 @@ export interface RelationTypeUsage extends Impact {
   templates: string[];
   /** The references can be moved to another type before the delete. */
   reassignable: boolean;
+  /** The collection's references have not loaded: the count is unknown. */
+  pending: boolean;
 }
 
 export function relationTypeUsage({
@@ -347,6 +349,7 @@ export function relationTypeUsage({
   schema,
   templateName,
   writable,
+  pending = false,
 }: {
   id: string;
   references: number;
@@ -354,12 +357,15 @@ export function relationTypeUsage({
   templateName: (id: string) => string;
   /** Whether this collection's references live in a store the prototype writes. */
   writable: boolean;
+  /** The references have not loaded yet. */
+  pending?: boolean;
 }): RelationTypeUsage {
   const using = schema.filter((p) => p.relationType === id);
   const fields = using.map((p) => `${templateName(p.templateId)} › ${p.label}`);
   const templates = [...new Set(using.map((p) => templateName(p.templateId)))];
   const lines: string[] = [];
-  if (references) lines.push(`${count(references, "reference uses", "references use")} this type.`);
+  if (pending) lines.push("Reference counts appear when the collection's records have loaded.");
+  else if (references) lines.push(`${count(references, "reference uses", "references use")} this type.`);
   if (fields.length) lines.push(`Relationship ${fields.length === 1 ? "field" : "fields"}: ${nameList(fields)}.`);
   // DeleteRelationshipType.ts refuses, in this order, a type a template uses
   // and a type relationships use; the messages are Uwazi's. Operator's
@@ -367,10 +373,12 @@ export function relationTypeUsage({
   // moved to another type instead of refusing.
   const block = templates.length
     ? `Cannot delete type being used in templates: ${templates.join(", ")}`
-    : references && !writable
-      ? "Cannot delete type being used in relationships"
-      : null;
-  return { references, fields, templates, reassignable: !block && references > 0, lines, block };
+    : pending
+      ? "The collection's references are still loading, so whether they use this type is not known yet. Try again in a moment."
+      : references && !writable
+        ? "Cannot delete type being used in relationships"
+        : null;
+  return { references, fields, templates, reassignable: !block && references > 0, pending, lines, block };
 }
 
 /* ── Users and groups ──────────────────────────────────────────────────── */

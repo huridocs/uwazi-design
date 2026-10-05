@@ -2,6 +2,9 @@ import { atom, getDefaultStore, type Getter } from "jotai";
 import { atomFamily } from "jotai/utils";
 import { writeSampleRegistry } from "../data/sampleRelationTypesStore";
 import { relTypeFiltersAtom } from "./filters";
+import { prepareStoreUndoAtom, registerStoreUndo } from "./settingsUndo";
+import { appendActivityAtom } from "./activityLog";
+import { toastsAtom } from "./notifications";
 import { focusedEntityIdAtom } from "./focusedEntity";
 import { entityCorpusOf } from "../data/entities";
 import { travesiaRelationTypes } from "../data/travesia/schema";
@@ -199,6 +202,29 @@ export const restoreRelationTypeAtom = atom(null, (get, set, d: RelationTypeDele
   }
   persistSample(get);
 });
+
+/* A relationship-type delete is saved the moment it happens, so its Undo
+   belongs to the registry, not to the page that made it: it works from
+   anywhere until a later removal replaces it. The restore is logged and
+   announced, so the log does not end on "Deleted". */
+export const RELATION_TYPE_UNDO_OWNER = "store:relationTypes";
+registerStoreUndo(RELATION_TYPE_UNDO_OWNER, (set, payload) => {
+  const d = payload as RelationTypeDeletion;
+  set(restoreRelationTypeAtom, d);
+  set(appendActivityAtom, {
+    method: "CREATE",
+    summary: `Restored relationship type “${d.def.label}”`,
+    domain: "relationType",
+    targetId: d.def.id,
+    scope: d.corpus,
+  });
+  set(toastsAtom, (p) => [...p, { id: `rt-${Date.now()}`, message: `${d.def.label} restored`, type: "success" }]);
+});
+
+/** The Beacon action for a relationship-type delete's Undo. */
+export const prepareRelationTypeUndoAtom = atom(null, (_get, set, d: RelationTypeDeletion) =>
+  set(prepareStoreUndoAtom, { owner: RELATION_TYPE_UNDO_OWNER, payload: d }),
+);
 
 /** A collection's registry, `no_label` left out. */
 export const relationTypesOfAtom = atomFamily((corpus: Corpus) =>

@@ -251,6 +251,7 @@ export const relationTypeUsageInAtom = atomFamily((key: string) =>
       schema: schemaOf(corpus),
       templateName: templateNameOf(corpus),
       writable: corpus === "mock",
+      pending: corpus === "travesia" && !get(travesiaReadyAtom),
     });
   }),
 );
