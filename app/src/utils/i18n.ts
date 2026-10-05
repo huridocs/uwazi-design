@@ -77,3 +77,98 @@ export function t(_scope: string, key: string, fallback?: string): string {
   if (current === "en") return en;
   return STRINGS[key]?.[current] ?? en;
 }
+
+/** Every string the chrome passes to `t`, by its English key, for the
+ *  Translations page's "User Interface" context. Kept with the dictionary so
+ *  a string added at a call site is added here too. */
+const CALL_SITE_KEYS = [
+  "Add",
+  "Add or remove the relation labels available across this entity.",
+  "Administrators and Editors",
+  "Anchoring",
+  "Anyone can see this entity",
+  "Ask Bert",
+  "Back",
+  "Can edit",
+  "Can see",
+  "Cancel",
+  "Choose relationship type",
+  "Clear search",
+  "Close",
+  "Collapse all",
+  "Copy text",
+  "Create entity",
+  "Create new entity from selection",
+  "Create relationship",
+  "Delete",
+  "Delete & reassign",
+  "Descriptores",
+  "Direction",
+  "Discard changes",
+  "Display options",
+  "Document",
+  "Entity type",
+  "Expand all",
+  "Fallback",
+  "Files",
+  "Fill",
+  "Filters",
+  "From:",
+  "General access",
+  "Highlight added",
+  "Highlight text",
+  "Interface language",
+  "Library",
+  "Log out",
+  "Lookup help",
+  "Manage relationship types",
+  "Metadata",
+  "New entity",
+  "New relationship type label",
+  "New relationship type label…",
+  "No entities match",
+  "No table of contents",
+  "No user or group found",
+  "People and groups",
+  "Permission level",
+  "Pre-filled from your selection. Edit as needed.",
+  "Private",
+  "Published",
+  "Relationship type",
+  "Relationships",
+  "Remove",
+  "Results",
+  "Save changes",
+  "Search",
+  "Search entities",
+  "Search entities…",
+  "Select target entity",
+  "Selection actions",
+  "Settings",
+  "Share",
+  "Sort",
+  "System settings",
+  "Table of contents",
+  "Target country",
+  "Target entity type",
+  "Target:",
+  "Test RTL layout",
+  "Theme",
+  "This document has no table of contents.",
+  "Title",
+  "ToC",
+  "Tools",
+  "User settings",
+  "Username, email or group",
+];
+
+/** The User Interface context's keys: the call sites' strings and the
+ *  dictionary's, once each, sorted as Uwazi sorts keys (case-insensitive). */
+export const UI_KEYS: string[] = [...new Set([...CALL_SITE_KEYS, ...Object.keys(STRINGS)])].sort((a, b) =>
+  a.localeCompare(b, undefined, { sensitivity: "base" }),
+);
+
+/** A UI key's text in a language the dictionary carries, if it does. */
+export function uiTranslation(key: string, lang: string): string | undefined {
+  return lang === "es" || lang === "fr" ? STRINGS[key]?.[lang] : undefined;
+}

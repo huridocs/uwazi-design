@@ -21,8 +21,7 @@ import {
   type LanguageRecord,
 } from "../../../atoms/languages";
 import { languageUsageAtom } from "../../../atoms/settingsUsage";
-import { isUntranslated, translationRowsAtom } from "../../../atoms/translations";
-import { seedTranslationContexts } from "../../../data/settings";
+import { isUntranslated, translationContextsAtom, translationRowsAtom } from "../../../atoms/translations";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
 import { InstallLanguagesModal } from "./languages/InstallLanguagesModal";
 
@@ -208,13 +207,13 @@ export function LanguagesPage() {
   );
 }
 
-/** System context rows: what Reset overwrites. */
-const SYSTEM_CONTEXTS = seedTranslationContexts.filter((c) => c.type === "System");
-
 function ResetDialog({ lang, onDone }: { lang: LanguageRecord; onDone: () => void }) {
-  const rowsOf = useAtomValue(translationRowsAtom);
+  const corpus = useAtomValue(dataSourceAtom);
+  const rowsOf = useAtomValue(translationRowsAtom(corpus));
+  const contexts = useAtomValue(translationContextsAtom(corpus));
   const { record } = useSettingsNotify();
-  const keys = SYSTEM_CONTEXTS.reduce((n, c) => n + rowsOf(c).length, 0);
+  // What Reset overwrites: the User Interface context.
+  const keys = contexts.filter((c) => c.id === "System").reduce((n, c) => n + rowsOf(c).length, 0);
   return (
     <TypedConfirmModal
       open
@@ -243,9 +242,11 @@ function ResetDialog({ lang, onDone }: { lang: LanguageRecord; onDone: () => voi
 
 function UninstallDialog({ lang, onCancel, onConfirm }: { lang: LanguageRecord; onCancel: () => void; onConfirm: () => void }) {
   const usage = useAtomValue(languageUsageAtom(lang));
-  const rowsOf = useAtomValue(translationRowsAtom);
+  const corpus = useAtomValue(dataSourceAtom);
+  const rowsOf = useAtomValue(translationRowsAtom(corpus));
+  const contexts = useAtomValue(translationContextsAtom(corpus));
   const source = useAtomValue(languagesAtom).find((l) => l.default)?.key ?? "en";
-  const translated = seedTranslationContexts.reduce(
+  const translated = contexts.reduce(
     (n, c) => n + rowsOf(c).filter((r) => !isUntranslated(r, lang.key, source)).length,
     0,
   );

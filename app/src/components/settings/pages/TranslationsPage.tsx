@@ -1,115 +1,130 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAtomValue } from "jotai";
+import { Globe } from "lucide-react";
 import { Checkbox } from "../../shared/Checkbox";
 import { TranslationProgress } from "../TranslationProgress";
-import { progressOf, translationRowsAtom } from "../../../atoms/translations";
-import { Globe, Upload } from "lucide-react";
 import { SettingsListPage, useSettingsSearch } from "../SettingsListPage";
+import { SettingsSection } from "../SettingsSection";
 import { SettingsEmptyState } from "../SettingsEmptyState";
 import { SettingsTable, type Column } from "../SettingsTable";
-import { Select } from "../../shared/Select";
 import { TranslationEditor } from "./TranslationEditor";
-import { useNotify } from "../../../hooks/useNotify";
-import { seedTranslationContexts, type SettingsTranslationContext } from "../../../data/settings";
+import type { SortDir } from "../../shared/DataTable";
+import { dataSourceAtom } from "../../../atoms/dataSource";
+import {
+  installedLanguagesAtom,
+  progressOf,
+  translationContextsAtom,
+  translationRowsAtom,
+  type LanguageProgress,
+  type TranslationContext,
+} from "../../../atoms/translations";
 
-const typeStyle: Record<SettingsTranslationContext["type"], string> = {
-  System: "bg-carbon-tint text-carbon-label",
-  Template: "bg-warm text-ink-secondary",
-  Thesaurus: "bg-warm text-ink-secondary",
-  Menu: "bg-warm text-ink-secondary",
-};
+interface Row {
+  context: TranslationContext;
+  progress: LanguageProgress[];
+}
 
+/** Settings › Translations: the collection's translation contexts, in Uwazi's
+ *  two groups. System holds the User Interface, the Menu and the Filters
+ *  groups; Content holds one context per template, thesaurus and relationship
+ *  type, so a template added in Settings › Templates is here at once. */
 export function TranslationsPage() {
-  const notify = useNotify();
-  const [editing, setEditing] = useState<SettingsTranslationContext | null>(null);
-  const [typeFilter, setTypeFilter] = useState("");
+  const corpus = useAtomValue(dataSourceAtom);
+  const contexts = useAtomValue(translationContextsAtom(corpus));
+  const rowsOf = useAtomValue(translationRowsAtom(corpus));
+  const languages = useAtomValue(installedLanguagesAtom(corpus));
+  const [editing, setEditing] = useState<string | null>(null);
   const [gapsOnly, setGapsOnly] = useState(false);
-  const rowsOf = useAtomValue(translationRowsAtom);
-  const progress = new Map(seedTranslationContexts.map((c) => [c.id, progressOf(rowsOf(c))]));
-  const hasGap = (id: string) => progress.get(id)!.some((p) => p.done < p.total);
-  const search = useSettingsSearch(
-    seedTranslationContexts.filter((c) => (!typeFilter || c.type === typeFilter) && (!gapsOnly || hasGap(c.id))),
-    (c) => c.name,
+  const [sort, setSort] = useState<{ key: string; dir: SortDir }>({ key: "name", dir: "asc" });
+
+  const rows = useMemo<Row[]>(
+    () => contexts.map((context) => ({ context, progress: progressOf(rowsOf(context), languages) })),
+    [contexts, rowsOf, languages],
   );
+  const hasGap = (r: Row) => r.progress.some((p) => p.done < p.total);
+  const search = useSettingsSearch(
+    rows.filter((r) => !gapsOnly || hasGap(r)),
+    (r) => r.context.name,
+  );
+  const sorted = useMemo(() => {
+    const by = (a: Row, b: Row) =>
+      sort.key === "type"
+        ? a.context.type.localeCompare(b.context.type) || a.context.name.localeCompare(b.context.name)
+        : a.context.name.localeCompare(b.context.name);
+    return [...search.rows].sort((a, b) => (sort.dir === "asc" ? by(a, b) : by(b, a)));
+  }, [search.rows, sort]);
+  const onSort = (key: string) => setSort((s) => (s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" }));
 
-  if (editing) return <TranslationEditor context={editing} onClose={() => setEditing(null)} />;
+  const open = editing ? contexts.find((c) => c.id === editing) : undefined;
+  if (open) return <TranslationEditor context={open} onClose={() => setEditing(null)} />;
 
-  const columns: Column<SettingsTranslationContext>[] = [
+  const columns: Column<Row>[] = [
     {
       id: "name",
-      header: "Context",
-      cell: (c) => <span className="font-medium text-ink truncate">{c.name}</span>,
+      header: "Name",
+      sortKey: "name",
+      cell: (r) => <span className="font-medium text-ink truncate">{r.context.name}</span>,
     },
     {
       id: "type",
       header: "Type",
-      width: "9rem",
-      cell: (c) => (
-        <span className={`text-meta font-semibold px-2 py-0.5 rounded-md w-fit ${typeStyle[c.type]}`}>
-          {c.type}
+      sortKey: "type",
+      width: "10rem",
+      cell: (r) => (
+        <span className="text-meta font-semibold px-2 py-0.5 rounded-md w-fit whitespace-nowrap bg-warm text-ink-secondary">
+          {r.context.type}
         </span>
       ),
     },
     {
       id: "keys",
       header: "Keys",
-      width: "6rem",
-      cell: (c) => <span className="text-ink-secondary tabular-nums">{c.keyCount}</span>,
+      width: "5rem",
+      cell: (r) => <span className="text-ink-secondary tabular-nums">{r.context.keys.length}</span>,
     },
     {
       id: "translated",
       header: "Translated",
       width: "16rem",
-      cell: (c) => <TranslationProgress variant="compact" progress={progress.get(c.id)!} />,
+      cell: (r) => <TranslationProgress variant="compact" progress={r.progress} />,
     },
   ];
 
-  const importCsv = () => notify("CSV import is not built in the prototype. No translations changed.", "info");
+  const table = (list: Row[], empty: string) => (
+    <SettingsTable
+      corpusScoped
+      columns={columns}
+      data={list}
+      getRowId={(r) => r.context.id}
+      onRowClick={(r) => setEditing(r.context.id)}
+      rowAriaLabel={(r) => `Translate ${r.context.name}`}
+      sort={sort}
+      onSort={onSort}
+      emptyState={<SettingsEmptyState icon={<Globe size={16} />} title={empty} query={search.query} onClearQuery={search.clear} />}
+    />
+  );
 
   return (
     <SettingsListPage
       component="TranslationsPage"
       title="Translations"
-      intro="Translate the interface and your collection's content across active languages."
+      intro="Translate the interface and your collection's content into its installed languages."
       search={{ value: search.query, onChange: search.setQuery, label: "Search contexts" }}
       filters={
-        <>
         <label className="flex items-center gap-2 text-xs text-ink-secondary cursor-pointer whitespace-nowrap">
           <Checkbox checked={gapsOnly} onChange={() => setGapsOnly((v) => !v)} />
           Untranslated only
         </label>
-        <div className="w-36">
-          <Select
-            value={typeFilter}
-            onChange={setTypeFilter}
-            ariaLabel="Filter by type"
-            options={[
-              { value: "", label: "All types" },
-              ...(Object.keys(typeStyle) as SettingsTranslationContext["type"][]).map((t) => ({ value: t, label: t })),
-            ]}
-          />
-        </div>
-        </>
       }
-      lead={{ label: "Import translations (CSV)", icon: <Upload size={14} aria-hidden />, onClick: importCsv }}
     >
-      <SettingsTable
-        corpusScoped
-        columns={columns}
-        data={search.rows}
-        getRowId={(c) => c.id}
-        onRowClick={(c) => setEditing(c)}
-        rowAriaLabel={(c) => `Translate ${c.name}`}
-        emptyState={
-          <SettingsEmptyState
-            icon={<Globe size={16} />}
-            title={gapsOnly ? "Every context is fully translated" : "No translation contexts"}
-            hint="Templates, thesauri and the menu each add a context to translate."
-            query={search.query}
-            onClearQuery={search.clear}
-          />
-        }
-      />
+      <div className="flex flex-col gap-6">
+        <SettingsSection title="System translations">
+          {table(sorted.filter((r) => r.context.system), gapsOnly ? "Every system context is translated" : "No system contexts")}
+        </SettingsSection>
+        <SettingsSection title="Content translations">
+          {table(sorted.filter((r) => !r.context.system), gapsOnly ? "Every content context is translated" : "No content contexts")}
+        </SettingsSection>
+      </div>
     </SettingsListPage>
   );
 }
