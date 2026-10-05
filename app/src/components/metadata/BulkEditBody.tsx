@@ -30,6 +30,7 @@ import {
   type BulkPlan,
 } from "../../utils/bulkEdit";
 import { fromDateInputValue, toDateInputValue } from "../../utils/dateValue";
+import { DateInput } from "../shared/DateInput";
 import { BULK_TASK_THRESHOLD, runBulkApply } from "../../utils/libraryTasks";
 import { FacetSection } from "../shared/FacetSection";
 import { BAR_GHOST } from "../shared/warmButton";
@@ -303,11 +304,10 @@ export function BulkEditBody({
                   fresh={fresh}
                 />
               ) : f.type === "date" ? (
-                <input
+                <DateInput
                   id={inputId}
-                  type="date"
                   value={toDateInputValue(value)}
-                  onChange={(ev) => set(fromDateInputValue(ev.target.value, value))}
+                  onChange={(iso) => set(fromDateInputValue(iso, value))}
                   className={inputClass}
                 />
               ) : f.type === "multiline" ? (

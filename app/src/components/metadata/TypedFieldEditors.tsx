@@ -2,6 +2,7 @@ import { useState, type HTMLAttributes, type ReactNode } from "react";
 import { Plus, X } from "lucide-react";
 import type { MetadataField } from "../../data/metadata";
 import { toDateInputValue } from "../../utils/dateValue";
+import { DateInput } from "../shared/DateInput";
 import { listDate, withDates, withGeo, withLink, withRanges } from "../../utils/typedValues";
 
 /** Editors for the Uwazi property types the form had no editor for (step M4,
@@ -99,13 +100,13 @@ function DateListEditor({ field, inputId, onPatch, inputClass, aria }: TypedEdit
     <div data-component="DateListEditor" className="space-y-1.5">
       {dates.map((d, i) => (
         <div key={i} className="flex items-center gap-1.5">
-          <input
+          <DateInput
             id={i === 0 ? inputId : `${inputId}-${i}`}
-            type="date"
             aria-label={`${field.label} ${i + 1}`}
             value={toDateInputValue(d)}
-            onChange={(e) => set(dates.map((x, j) => (j === i ? listDate(e.target.value, x) : x)))}
-            {...(i === 0 ? aria : {})}
+            onChange={(iso) => set(dates.map((x, j) => (j === i ? listDate(iso, x) : x)))}
+            aria-describedby={i === 0 ? aria?.["aria-describedby"] : undefined}
+            aria-invalid={i === 0 ? aria?.["aria-invalid"] : undefined}
             className={inputClass}
           />
           <button type="button" aria-label={`Remove date ${i + 1}`} onClick={() => set(dates.filter((_, j) => j !== i))} className={REMOVE_BUTTON}>
@@ -129,22 +130,21 @@ function RangeEditor({ field, inputId, onPatch, inputClass, aria, multi }: Typed
     <div data-component="RangeEditor" className="space-y-1.5">
       {ranges.map((r, i) => (
         <div key={i} className="flex items-center gap-1.5">
-          <input
+          <DateInput
             id={i === 0 ? inputId : `${inputId}-${i}-from`}
-            type="date"
             aria-label={`${field.label}${multi ? ` ${i + 1}` : ""}, from`}
             value={toDateInputValue(r.from)}
-            onChange={(e) => edit(i, "from", e.target.value)}
-            {...(i === 0 ? aria : {})}
+            onChange={(iso) => edit(i, "from", iso)}
+            aria-describedby={i === 0 ? aria?.["aria-describedby"] : undefined}
+            aria-invalid={i === 0 ? aria?.["aria-invalid"] : undefined}
             className={inputClass}
           />
           <span aria-hidden className="text-ink-tertiary text-sm">–</span>
-          <input
+          <DateInput
             id={`${inputId}-${i}-to`}
-            type="date"
             aria-label={`${field.label}${multi ? ` ${i + 1}` : ""}, to`}
             value={toDateInputValue(r.to)}
-            onChange={(e) => edit(i, "to", e.target.value)}
+            onChange={(iso) => edit(i, "to", iso)}
             className={inputClass}
           />
           {multi && (

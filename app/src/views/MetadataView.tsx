@@ -74,6 +74,7 @@ import { useRegisterDirtyForm } from "../hooks/useDirtyGuard";
 import { EntityBarActions } from "../components/entity/EntityBarActions";
 import { ModalHostProvider } from "../components/shared/Modal";
 import { fromDateInputValue, toDateInputValue } from "../utils/dateValue";
+import { DateInput } from "../components/shared/DateInput";
 import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
 import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
 import { ConfirmDialog } from "../components/shared/ConfirmDialog";
@@ -1120,13 +1121,10 @@ function EntityEditBody({
                 // passage would be dropped. The value is converted both ways
                 // (utils/dateValue) because seeds hold `dd/mm/yyyy` or prose,
                 // which the browser would blank.
-                <input
+                <DateInput
                   id={inputId(field.id)}
-                  type="date"
                   value={toDateInputValue(field.value)}
-                  onChange={(e) =>
-                    updateField(field.id, fromDateInputValue(e.target.value, field.value))
-                  }
+                  onChange={(iso) => updateField(field.id, fromDateInputValue(iso, field.value))}
                   onBlur={() => flag(field.id, field.value)}
                   {...fieldAria(field.id)}
                   className={fieldClass(field.id)}

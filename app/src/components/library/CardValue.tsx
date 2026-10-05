@@ -1,6 +1,7 @@
 import { HighlightedText } from "../shared/HighlightedText";
 import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
 import type { EntityScalarField } from "../../utils/entityFields";
+import { formatDateText } from "../../utils/dateFormat";
 
 /** ONE renderer for a property's value on a Library surface, switching on the
  *  property's KIND.
@@ -92,7 +93,7 @@ export function CardValue({
   if (field.kind === "dateSpan" || field.kind === "date") {
     return (
       <span data-component="CardValue" data-kind={field.kind} className="truncate tabular-nums" title={field.value}>
-        {marked(field.value)}
+        {marked(field.kind === "date" ? formatDateText(field.value) : field.value)}
       </span>
     );
   }
