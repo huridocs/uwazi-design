@@ -130,12 +130,4 @@ export const TYPE_FIELDS: Record<string, { prop: string; type: MetadataField["ty
   ],
 };
 
-/** The Sample corpus's template properties, as Settings' usage queries read
- *  them (`utils/settingsUsage.ts`): the type, the property key, its English
- *  label, its field type and the thesaurus it is bound to. */
-export function sampleTemplateProperties(): { typeId: string; prop: string; label: string; type: string; thesaurus?: string }[] {
-  return Object.entries(TYPE_FIELDS).flatMap(([typeId, spec]) =>
-    spec.map(({ prop, type, thesaurus }) => ({ typeId, prop, label: lbl(prop, "EN"), type, thesaurus })),
-  );
-}
 

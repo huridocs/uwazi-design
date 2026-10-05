@@ -1,13 +1,11 @@
 import { atom } from "jotai";
 import type { Corpus } from "../data/entityChanges";
-import { templatePropertiesByTemplate } from "../data/settings";
 import { entityTypes } from "../data/entities";
 import { corpusTypes } from "./dataSource";
 import {
   cejilCollection,
   cejilFilterGroups,
   cejilFilterRows,
-  cejilPropertyFilterRows,
 } from "../data/cejil/settingsAdapt";
 import { createSettingsSingleton } from "./settingsCollection";
 
@@ -88,41 +86,25 @@ export interface FilterRow {
   /** "" = ungrouped */
   groupId: string;
 }
-/** A filterable property. Properties are never grouped: groups exist to nest
- *  entity types (CEJIL's "Documentos"). */
-export interface PropertyFilterRow {
-  propertyId: string;
-  active: boolean;
-}
 export interface FilterSettings extends Record<string, unknown> {
   groups: FilterGroup[];
   rows: FilterRow[];
-  propertyRows: PropertyFilterRow[];
 }
-
-/** The Sample's filterable properties: one per label across its templates.
- *  They are not backed by a thesaurus, so they have no value count. */
-export const sampleFilterProperties = Object.values(templatePropertiesByTemplate)
-  .flat()
-  .filter((p) => p.filterable)
-  .filter((p, i, all) => all.findIndex((q) => q.label === p.label) === i);
 
 export const filterSettings = createSettingsSingleton<FilterSettings>({
   name: "filters",
   seedOf: (corpus: Corpus) =>
     corpus === "cejil"
-      ? { groups: cejilFilterGroups, rows: cejilFilterRows, propertyRows: cejilPropertyFilterRows }
+      ? { groups: cejilFilterGroups, rows: cejilFilterRows }
       : {
           // Every template of the corpus, shown: a filter list with nothing
           // hidden is Uwazi's default (an empty `settings.filters` lists all).
           groups: [],
           rows: corpusTypes(corpus, entityTypes).map((t) => ({ templateId: t.id, active: true, groupId: "" })),
-          propertyRows: corpus === "mock" ? sampleFilterProperties.map((p) => ({ propertyId: p.id, active: true })) : [],
         },
   isField: {
     groups: arrayOf((g) => isString(g.id) && isString(g.name)),
     rows: arrayOf((r) => isString(r.templateId) && typeof r.active === "boolean" && isString(r.groupId)),
-    propertyRows: arrayOf((r) => isString(r.propertyId) && typeof r.active === "boolean"),
   },
 });
 
