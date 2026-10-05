@@ -1,4 +1,5 @@
 import { useMemo, type Dispatch, type SetStateAction } from "react";
+import { templatesAtom } from "../../../atoms/templates";
 import { useSetAtom, useAtomValue } from "jotai";
 import { FolderPlus, Trash2 } from "lucide-react";
 import { SettingsButton } from "../SettingsButton";
@@ -12,14 +13,12 @@ import { Checkbox } from "../../shared/Checkbox";
 import { Select } from "../../shared/Select";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom } from "../../../atoms/dataSource";
 import { libraryTypeFiltersAtom } from "../../../atoms/library";
-import { cejilFilterMeta, cejilPropertyFilterMeta } from "../../../data/cejil/settingsAdapt";
+import { cejilFilterMeta } from "../../../data/cejil/settingsAdapt";
 import {
   filterSettings,
-  sampleFilterProperties,
   type FilterGroup,
   type FilterRow,
   type FilterSettings,
-  type PropertyFilterRow,
 } from "../../../atoms/settingsSingletons";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
 import { useSettingsUndo } from "../../../hooks/useSettingsUndo";
@@ -28,15 +27,12 @@ import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 import { newSettingsId } from "../../../atoms/settingsCollection";
 
 
-/** name / value count per filterable property, by id. */
-const mockPropertyMeta: Record<string, { name: string; count: number | null }> = Object.fromEntries(
-  sampleFilterProperties.map((p) => [p.id, { name: p.label, count: null }]),
-);
 
 
 export function FiltersPage() {
   const { record } = useSettingsNotify();
-  const cejil = useAtomValue(dataSourceAtom) === "cejil";
+  const dataSource = useAtomValue(dataSourceAtom);
+  const cejil = dataSource === "cejil";
   // name / colour / entity count per template: CEJIL's from its Settings
   // adapter, every other corpus's from its own types and entities.
   const types = useAtomValue(libraryTypesAtom);
@@ -48,7 +44,6 @@ export function FiltersPage() {
   }, [types, entities]);
   const meta = cejil ? cejilFilterMeta : corpusMeta;
   const setTypeFilters = useSetAtom(libraryTypeFiltersAtom);
-  const propertyMeta = cejil ? cejilPropertyFilterMeta : mockPropertyMeta;
   // The corpus's saved filters (`atoms/settingsSingletons.ts`), which the
   // Library's Template facet reads. Compared with the last save.
   const stored = useAtomValue(filterSettings.valueAtom);
@@ -58,14 +53,12 @@ export function FiltersPage() {
     label: "Filter changes",
     saved: stored,
   });
-  const { groups, rows, propertyRows } = draft;
+  const { groups, rows } = draft;
   const setGroups = setField("groups");
   const setRows = setField("rows");
-  const setPropertyRows = setField("propertyRows");
   const { dragIdx, rowProps, gripProps } = useReorder(setRows);
-  const propertyReorder = useReorder(setPropertyRows);
 
-  const activeCount = rows.filter((r) => r.active).length + propertyRows.filter((r) => r.active).length;
+  const activeCount = rows.filter((r) => r.active).length;
   const groupOptions = [
     { value: "", label: "No group" },
     ...groups.map((g) => ({ value: g.id, label: g.name || "Untitled group" })),
@@ -75,8 +68,6 @@ export function FiltersPage() {
     setRows((prev) => prev.map((r) => (r.templateId === templateId ? { ...r, active: !r.active } : r)));
   const setGroup = (templateId: string, groupId: string) =>
     setRows((prev) => prev.map((r) => (r.templateId === templateId ? { ...r, groupId } : r)));
-  const toggleProperty = (propertyId: string) =>
-    setPropertyRows((prev) => prev.map((r) => (r.propertyId === propertyId ? { ...r, active: !r.active } : r)));
 
   const addGroup = () =>
     setGroups((prev) => [...prev, { id: newSettingsId("fg"), name: `Group ${prev.length + 1}` }]);
@@ -163,42 +154,40 @@ export function FiltersPage() {
     orderColumn(setRows, rows.length, (r) => meta[r.templateId]?.name ?? "filter"),
   ];
 
-  const propertyColumns: Column<PropertyFilterRow>[] = [
+  /* The Properties table is a read view over the templates' own flags
+     (decision G13, check FLT-23): one row per property flagged "Use as filter",
+     with the templates that flag it. It writes nothing; the flags are edited on
+     each template, in Settings › Templates. */
+  const templates = useAtomValue(templatesAtom(dataSource));
+  const filterProperties = useMemo(() => {
+    const byName = new Map<string, { name: string; label: string; templates: string[]; defaultfilter: boolean }>();
+    for (const t of templates)
+      for (const p of t.properties) {
+        if (!p.filter) continue;
+        const row = byName.get(p.name) ?? { name: p.name, label: p.label, templates: [], defaultfilter: false };
+        row.templates.push(t.name);
+        row.defaultfilter ||= !!p.defaultfilter;
+        byName.set(p.name, row);
+      }
+    return [...byName.values()];
+  }, [templates]);
+  type FilterPropertyRow = (typeof filterProperties)[number];
+  const propertyColumns: Column<FilterPropertyRow>[] = [
     {
-      id: "filter",
-      header: "Filter",
-      cell: (r, i) => (
-        <div className="flex items-center gap-2 w-full min-w-0">
-          <ReorderGrip
-            {...propertyReorder.gripProps(i)}
-            label={propertyMeta[r.propertyId]?.name ?? "filter"}
-            index={i}
-            count={propertyRows.length}
-            onMove={(to) => setPropertyRows((prev) => moveTo(prev, i, to))}
-          />
-          <Checkbox checked={r.active} onChange={() => toggleProperty(r.propertyId)} ariaLabel={`Show ${propertyMeta[r.propertyId]?.name}`} />
-          <span className={`truncate text-sm ${r.active ? "text-ink" : "text-ink-tertiary"}`}>
-            {propertyMeta[r.propertyId]?.name}
-          </span>
-          <span className="sr-only">{`row ${i + 1}`}</span>
-        </div>
-      ),
-    },
-    {
-      id: "values",
-      header: "Values",
-      width: "7rem",
+      id: "property",
+      header: "Property",
       cell: (r) => (
-        <span className="text-xs text-ink-tertiary tabular-nums">{propertyMeta[r.propertyId]?.count ?? "—"}</span>
+        <span className="truncate text-sm text-ink">
+          {r.label}
+          {r.defaultfilter && <span className="ms-1.5 text-meta text-ink-tertiary">Default filter</span>}
+        </span>
       ),
     },
     {
-      id: "group",
-      header: "Group",
-      width: "11rem",
-      cell: () => <span className="text-xs text-ink-muted">—</span>,
+      id: "templates",
+      header: "Templates",
+      cell: (r) => <span className="text-xs text-ink-secondary truncate">{r.templates.join(", ")}</span>,
     },
-    orderColumn(setPropertyRows, propertyRows.length, (r) => propertyMeta[r.propertyId]?.name ?? "filter"),
   ];
 
   return (
@@ -266,16 +255,15 @@ export function FiltersPage() {
         />
       </SettingsSection>
 
-      <SettingsSection title="Properties">
+      <SettingsSection
+        title="Properties"
+        description="Properties a template marks “Use as filter” appear in the Library's filters. Change them on the template."
+      >
         <SettingsTable
           corpusScoped
           columns={propertyColumns}
-          data={propertyRows}
-          getRowId={(r) => r.propertyId}
-          rowProps={(_r, i) => ({
-            ...propertyReorder.rowProps(i),
-            className: propertyReorder.dragIdx === i ? "opacity-60" : undefined,
-          })}
+          data={filterProperties}
+          getRowId={(r) => r.name}
           emptyState={
             <SettingsEmptyState
               title="No filterable properties"
