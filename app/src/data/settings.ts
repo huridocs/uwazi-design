@@ -359,20 +359,6 @@ export const seedParagraphJobs: SettingsParagraphJob[] = [
   { id: "pe3", template: "Document", status: "ready", paragraphs: 327 },
 ];
 
-// ── Preserve ────────────────────────────────────────────────────────────────
-export interface SettingsPreserveToken {
-  id: string;
-  name: string;
-  token: string;
-  capturedCount: number;
-  lastRun: string;
-}
-
-export const seedPreserveTokens: SettingsPreserveToken[] = [
-  { id: "pr1", name: "Court press releases", token: "pk_live_a1b2…f9", capturedCount: 214, lastRun: "2026-06-15 06:00" },
-  { id: "pr2", name: "NGO bulletins", token: "pk_live_c3d4…2a", capturedCount: 87, lastRun: "2026-06-14 06:00" },
-];
-
 // ── Uploads (custom uploads) ────────────────────────────────────────────────
 /** A custom upload. `filename` is the stored name and fixes the URL
  *  (`/assets/<filename>`); `name` is what the list shows and Edit renames, as
