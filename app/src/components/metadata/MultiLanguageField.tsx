@@ -161,7 +161,7 @@ export function MultiLanguageField({
         {s === 0 ? (
           /* Both wordings share one grid cell; the one not showing is invisible
              and only holds the width. */
-          <span className="grid grid-cols-[minmax(0,max-content)] min-w-0 text-start text-ink-muted tabular-nums">
+          <span className="grid grid-cols-[minmax(0,max-content)] min-w-0 text-start text-ink-tertiary tabular-nums">
             <span className={`col-start-1 row-start-1 truncate ${empties.length === 0 || probe ? "" : "invisible"}`}>
               {setText}
             </span>
@@ -170,7 +170,7 @@ export function MultiLanguageField({
             </span>
           </span>
         ) : (
-          <span className="min-w-0 truncate text-start text-ink-muted tabular-nums">{shortSummary}</span>
+          <span className="min-w-0 truncate text-start text-ink-tertiary tabular-nums">{shortSummary}</span>
         )}
       </button>
       <button

@@ -90,7 +90,7 @@ export function LibraryTimelineView(props: Props) {
 
   if (!dated.length) {
     return (
-      <div className="flex items-center justify-center h-40 text-sm text-ink-muted">
+      <div className="flex items-center justify-center h-40 text-sm text-ink-tertiary">
         {entities.length
           ? `None of these ${entities.length.toLocaleString()} entities carry a date.`
           : "No entities match your filters."}
@@ -111,7 +111,7 @@ export function LibraryTimelineView(props: Props) {
     <div className="flex flex-col h-full min-h-0">
       <div className="flex-1 min-h-0">{body}</div>
       {undated > 0 && (
-        <div className="shrink-0 pt-2 text-meta text-ink-muted">
+        <div className="shrink-0 pt-2 text-meta text-ink-tertiary">
           {undated.toLocaleString()} undated {undated === 1 ? "entity" : "entities"} not plotted.
         </div>
       )}
@@ -736,7 +736,7 @@ function SpineLayout({ dated, query, selectedId, onSelect }: LayoutProps) {
                 >
                   <HighlightedText text={e.title} query={query} />
                 </span>
-                <span className="shrink-0 text-meta text-ink-muted hidden md:block">
+                <span className="shrink-0 text-meta text-ink-tertiary hidden md:block">
                   {getEntityType(e.typeId)?.name ?? e.typeId}
                 </span>
                 {/* Reserved while a query is active — a fixed box the per-row
@@ -762,7 +762,7 @@ function SpineLayout({ dated, query, selectedId, onSelect }: LayoutProps) {
         }}
       />
       {dated.length > SPINE_CAP && (
-        <div className="py-3 text-center text-meta text-ink-muted">
+        <div className="py-3 text-center text-meta text-ink-tertiary">
           Plotting the first {SPINE_CAP} of {dated.length.toLocaleString()} — narrow the range to see
           the rest.
         </div>
@@ -845,11 +845,11 @@ function LanesLayout({ laneChart }: LayoutProps) {
                   style={{ backgroundColor: lane.color, opacity: laneOn ? 1 : 0.35 }}
                 />
                 <span
-                  className={`text-meta font-medium truncate ${laneOn ? "text-ink-secondary" : "text-ink-muted"}`}
+                  className={`text-meta font-medium truncate ${laneOn ? "text-ink-secondary" : "text-ink-tertiary"}`}
                 >
                   {lane.name}
                 </span>
-                <span className="ms-auto text-meta tabular-nums text-ink-muted">
+                <span className="ms-auto text-meta tabular-nums text-ink-tertiary">
                   {lane.total.toLocaleString()}
                 </span>
               </div>
@@ -907,7 +907,7 @@ function LanesLayout({ laneChart }: LayoutProps) {
           );
         })}
 
-        <p className="pt-3 text-meta text-ink-muted">
+        <p className="pt-3 text-meta text-ink-tertiary">
           A dot is one period of one template, sized by how many entities landed in it. Select one to
           filter the Library to that slice; select it again to clear.
         </p>

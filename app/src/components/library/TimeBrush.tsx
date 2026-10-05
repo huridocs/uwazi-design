@@ -205,7 +205,7 @@ export function TimeBrush({ entities }: { entities: Entity[] }) {
             className="absolute left-0 right-0 bottom-0"
             style={{ height: 1, backgroundColor: "var(--border-primary)" }}
           />
-          <span className="absolute inset-0 flex items-center justify-center text-meta text-ink-muted">
+          <span className="absolute inset-0 flex items-center justify-center text-meta text-ink-tertiary">
             {entities.length ? "Nothing to plot on the timeline" : "Widen your filters to see the timeline"}
           </span>
         </div>

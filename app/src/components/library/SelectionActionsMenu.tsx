@@ -73,7 +73,7 @@ export function SelectionActionsMenu({ actions }: { actions: SelectionAction[] }
         {a.label}
         {/* Why it is off, IN the item — a `title` never shows to a keyboard. */}
         {a.disabledReason && (
-          <span id={`sel-action-${a.id}-why`} className="block text-meta text-ink-muted">
+          <span id={`sel-action-${a.id}-why`} className="block text-meta text-ink-tertiary">
             {a.disabledReason}
           </span>
         )}

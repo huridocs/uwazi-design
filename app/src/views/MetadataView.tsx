@@ -941,7 +941,7 @@ function EntityEditBody({
           <EditSection label="Icon">
             <button
               onClick={() => notify("Icon picker isn't available in the prototype")}
-              className="w-full px-3 py-2 text-sm text-ink-muted bg-paper border border-border rounded-md text-left"
+              className={`w-full px-3 py-2 text-sm ${icon ? "text-ink" : "text-ink-muted"} bg-paper border border-border rounded-md text-left`}
             >
               {icon ?? "Select icon…"}
             </button>
@@ -952,7 +952,7 @@ function EntityEditBody({
                   setIcon(null);
                   setIconOpen(false);
                 }}
-                className="text-xs text-ink-muted hover:text-ink-secondary cursor-pointer"
+                className="text-xs text-ink-tertiary hover:text-ink-secondary cursor-pointer"
               >
                 Clear
               </button>
@@ -1016,7 +1016,7 @@ function EntityEditBody({
             return (
               <EditSection key="control:geolocation" label="Geolocation">
                 <div className="h-40 bg-warm rounded-md flex items-center justify-center overflow-hidden">
-                  <span className="text-xs text-ink-muted">Map preview</span>
+                  <span className="text-xs text-ink-tertiary">Map preview</span>
                 </div>
                 {/* Stacks in the drawer: side by side, each box is narrower than its value. */}
                 <div className={`gap-2 mt-2 ${compact ? "flex flex-col" : "flex items-center"}`}>
@@ -1594,7 +1594,7 @@ function MetadataDrawer() {
         <RelationshipsDrawerSection />
       ) : (
         <div className="flex-1 flex items-center justify-center">
-          <p className="text-sm text-ink-muted capitalize">{activeDrawerTab} content</p>
+          <p className="text-sm text-ink-tertiary capitalize">{activeDrawerTab} content</p>
         </div>
       )}
     </div>

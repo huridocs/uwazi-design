@@ -29,7 +29,7 @@ export function ThemeToggle({ variant = "icon" }: { variant?: "icon" | "row" }) 
           <Icon size={16} className="text-ink-tertiary" />
           {t("System", "Theme")}
         </div>
-        <span data-part="value" className="px-1.5 py-0.5 text-meta font-semibold rounded bg-warm text-ink-muted">
+        <span data-part="value" className="px-1.5 py-0.5 text-meta font-semibold rounded bg-warm text-ink-tertiary">
           {label}
         </span>
       </button>

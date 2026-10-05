@@ -151,7 +151,7 @@ export function LibraryDisplayMenu() {
           </div>
         )}
         {body}
-        {searchable && shown.length === 0 && <p className="px-2 py-1.5 text-xs text-ink-muted">No matches.</p>}
+        {searchable && shown.length === 0 && <p className="px-2 py-1.5 text-xs text-ink-tertiary">No matches.</p>}
       </div>
     );
   };

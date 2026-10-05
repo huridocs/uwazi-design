@@ -208,7 +208,7 @@ export function DrawerFilesBody({
           >
             Add file
           </button>
-          <span className="text-xs text-ink-muted">
+          <span className="text-xs text-ink-tertiary">
             Learn more about <span className="font-bold underline">files</span>
           </span>
         </div>
@@ -268,7 +268,7 @@ function FileThumbnail({ type }: { type: FileEntry["type"] }) {
         className="bg-paper rounded shadow-sm flex items-center justify-center"
         style={{ width: "2.25rem", height: "2.75rem" }}
       >
-        <span className="text-meta text-ink-muted">{label}</span>
+        <span className="text-meta text-ink-tertiary">{label}</span>
       </div>
     </div>
   );

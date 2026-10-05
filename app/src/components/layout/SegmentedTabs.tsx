@@ -29,7 +29,7 @@ export function SegmentedTabs({ tabs, activeId, onChange }: SegmentedTabsProps) 
         >
           {tab.label}
           {tab.count !== undefined && (
-            <span data-part="count" className="ml-1.5 text-ink-muted">
+            <span data-part="count" className="ml-1.5 text-ink-tertiary">
               {tab.count}
             </span>
           )}

@@ -316,7 +316,7 @@ function TipLabel({ children }: { children: React.ReactNode }) {
 }
 
 function TipHint({ children }: { children: React.ReactNode }) {
-  return <span data-part="hint" className="mt-1 block text-meta text-ink-muted">{children}</span>;
+  return <span data-part="hint" className="mt-1 block text-meta text-ink-tertiary">{children}</span>;
 }
 
 function PropertyTip({

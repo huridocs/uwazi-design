@@ -151,7 +151,7 @@ export function FileViewerBody({ file, url }: { file: FileEntry; url?: string })
     );
   }
   return (
-    <div data-component="FileViewerBody" data-part="empty" className="text-sm text-ink-muted">
+    <div data-component="FileViewerBody" data-part="empty" className="text-sm text-ink-tertiary">
       No preview available for this file kind.
     </div>
   );

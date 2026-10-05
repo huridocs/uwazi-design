@@ -336,7 +336,7 @@ export function AgentModal() {
               </span>
               <h2 id="agent-modal-title" data-part="title" className="text-base font-semibold text-ink leading-none">Bert</h2>
             </div>
-            <kbd data-part="shortcut" className="[@media(pointer:coarse)]:hidden px-1.5 py-0.5 text-meta font-medium text-ink-muted bg-warm rounded leading-none">{shortcutLabel}</kbd>
+            <kbd data-part="shortcut" className="[@media(pointer:coarse)]:hidden px-1.5 py-0.5 text-meta font-medium text-ink-tertiary bg-warm rounded leading-none">{shortcutLabel}</kbd>
             <button
               type="button"
               data-part="close"
@@ -454,7 +454,7 @@ export function AgentModal() {
                 <BertMark px={10} gap={3} />
               </div>
               <p className="text-sm font-semibold text-ink">Hi, I'm Bert.</p>
-              <p className="text-xs text-ink-muted max-w-[19rem] leading-relaxed">
+              <p className="text-xs text-ink-tertiary max-w-[19rem] leading-relaxed">
                 A friendly hand for serious work — I'll act in the context shown above.
               </p>
               <div data-part="suggestions" className="flex flex-col gap-1 w-full max-w-[20rem] mt-1">
@@ -585,7 +585,7 @@ function AddMenu({
         </div>
         <div data-part="results" className="max-h-50 overflow-auto py-1">
           {items.length === 0 ? (
-            <div data-part="empty" className="px-3 py-2 text-xs text-ink-muted">No matches.</div>
+            <div data-part="empty" className="px-3 py-2 text-xs text-ink-tertiary">No matches.</div>
           ) : (
             items.map((it) => (
               <button

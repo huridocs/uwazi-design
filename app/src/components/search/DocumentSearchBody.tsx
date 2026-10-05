@@ -123,7 +123,7 @@ export function DocumentSearchBody() {
         <Centered>
           <Search size={20} className="text-ink-muted" aria-hidden="true" />
           <span className="text-sm text-ink-tertiary">Search this document</span>
-          <span className="text-xs text-ink-muted">
+          <span className="text-xs text-ink-tertiary">
             Matches show the passage and the page they’re on.
           </span>
         </Centered>

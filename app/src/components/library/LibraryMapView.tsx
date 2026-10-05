@@ -272,7 +272,7 @@ export function LibraryMapView({ entities }: { entities: Entity[] }) {
           {located.toLocaleString()} located {located === 1 ? "entity" : "entities"} ·{" "}
           {clusters.length.toLocaleString()} {clusters.length === 1 ? "pin" : "pins"}
           {unlocated > 0 && (
-            <span className="text-ink-muted">
+            <span className="text-ink-tertiary">
               {" · "}
               {unlocated.toLocaleString()} with no geolocation
             </span>

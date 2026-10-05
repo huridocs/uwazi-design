@@ -28,7 +28,7 @@ export function Stepper({ steps }: StepperProps) {
                   ? "bg-success text-white"
                   : step.state === "active"
                   ? "bg-carbon text-white"
-                  : "bg-warm text-ink-muted border border-border"
+                  : "bg-warm text-ink-tertiary border border-border"
               }`}
             >
               {step.state === "completed" ? <Check size={14} /> : i + 1}
@@ -36,7 +36,7 @@ export function Stepper({ steps }: StepperProps) {
             <span
               data-part="label"
               className={`text-xs font-medium whitespace-nowrap ${
-                step.state === "upcoming" ? "text-ink-muted" : "text-ink"
+                step.state === "upcoming" ? "text-ink-tertiary" : "text-ink"
               }`}
             >
               {step.label}

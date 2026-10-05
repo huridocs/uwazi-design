@@ -648,7 +648,7 @@ export function BatchEntryModal({
               const shown = columns.filter((f) => cell(r, f.id).trim()).slice(0, 3);
               return (
                 <li key={rows[r].key} className="py-2 flex items-baseline gap-3 min-w-0">
-                  <span className="w-6 shrink-0 text-meta text-ink-muted tabular-nums">{r + 1}</span>
+                  <span className="w-6 shrink-0 text-meta text-ink-tertiary tabular-nums">{r + 1}</span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-medium text-ink truncate">{cell(r, "title")}</span>
                     <span className="block text-meta text-ink-tertiary truncate">
@@ -821,7 +821,7 @@ export function BatchEntryModal({
               <button type="button" onClick={() => addRows(10)} className={`${MODAL_BUTTON} ${BAR_GHOST} cursor-pointer`}>
                 Add 10
               </button>
-              <span className="ms-auto text-meta text-ink-muted">
+              <span className="ms-auto text-meta text-ink-tertiary">
                 Enter moves down · Cmd/Ctrl+D fills from above · paste a block to map it
               </span>
             </div>
@@ -864,7 +864,7 @@ export function BatchEntryModal({
                 )}
               </>
             ) : (
-              <span className="text-ink-muted">
+              <span className="text-ink-tertiary">
                 {filledRows.length ? "" : "Type in the grid, or paste rows copied from a spreadsheet."}
               </span>
             )}

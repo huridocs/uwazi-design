@@ -132,7 +132,7 @@ export function FileDrawer({
                 <MousePointerClick size={32} className="text-ink-muted/40" aria-hidden />
                 <div>
                   <p className="text-sm font-medium text-ink-secondary">No file selected</p>
-                  <p className="text-xs text-ink-muted mt-1">
+                  <p className="text-xs text-ink-tertiary mt-1">
                     Click a file in the table to see its details
                   </p>
                 </div>
@@ -282,7 +282,7 @@ export function FileDrawer({
             {!focusedFile || !focusedGroup ? (
               <div data-part="empty" className="flex flex-col items-center justify-center h-full text-center gap-3">
                 <MousePointerClick size={32} className="text-ink-muted/40" aria-hidden />
-                <p className="text-xs text-ink-muted">
+                <p className="text-xs text-ink-tertiary">
                   Focus a single file to see its translations
                 </p>
               </div>
@@ -374,10 +374,10 @@ function TranslationCard({
       <div data-part="content" className="relative flex-1 min-w-0">
         <h3 data-part="title" className="text-xs font-medium text-ink truncate">{file.name}</h3>
         <div data-part="meta" className="flex items-center gap-2 mt-0.5">
-          <span className="text-meta text-ink-muted">
+          <span className="text-meta text-ink-tertiary">
             {file.type.toUpperCase()}
           </span>
-          <span className="text-meta text-ink-muted">{file.size}</span>
+          <span className="text-meta text-ink-tertiary">{file.size}</span>
         </div>
       </div>
       <button
@@ -416,11 +416,11 @@ function FileCompactCard({ file }: { file: FileEntry }) {
       <div data-part="content" className="flex-1 min-w-0">
         <h3 data-part="title" className="text-xs font-medium text-ink truncate">{file.name}</h3>
         <div data-part="meta" className="flex items-center gap-2 mt-0.5">
-          <span className="text-meta text-ink-muted">
+          <span className="text-meta text-ink-tertiary">
             {file.type.toUpperCase()}
           </span>
-          <span className="text-meta text-ink-muted">{file.size}</span>
-          <span className="text-meta text-ink-muted">{languageName(file.language)}</span>
+          <span className="text-meta text-ink-tertiary">{file.size}</span>
+          <span className="text-meta text-ink-tertiary">{languageName(file.language)}</span>
         </div>
       </div>
     </article>

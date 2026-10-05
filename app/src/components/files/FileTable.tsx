@@ -241,7 +241,7 @@ export function FileTable({
                   <span aria-hidden>•</span>
                   <span>{languageName(file.language)}</span>
                 </div>
-                <div data-part="modified" className="text-meta text-ink-muted mt-0.5">
+                <div data-part="modified" className="text-meta text-ink-tertiary mt-0.5">
                   {formatFileDate(file.modified)}
                 </div>
               </div>
@@ -255,7 +255,7 @@ export function FileTable({
         {!embedded && (
           <div
             data-part="footer"
-            className="flex items-center justify-between px-3 h-10 text-xs text-ink-muted"
+            className="flex items-center justify-between px-3 h-10 text-xs text-ink-tertiary"
             style={{ backgroundColor: "var(--bg-warm)", borderTop: "1px solid var(--border-primary)" }}
           >
             <span>{files.length} files</span>

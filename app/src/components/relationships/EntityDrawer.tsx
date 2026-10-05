@@ -98,7 +98,7 @@ export function EntityDrawer() {
 
       {!["metadata", "toc", "relationships", "files", "search"].includes(activeDrawerTab) && (
         <div data-part="empty" className="flex-1 flex items-center justify-center">
-          <p className="text-sm text-ink-muted capitalize">
+          <p className="text-sm text-ink-tertiary capitalize">
             {activeDrawerTab} content
           </p>
         </div>

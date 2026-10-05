@@ -289,7 +289,7 @@ function FilterPill({
       }`}
     >
       {label}
-      <span className={`text-meta tabular-nums ${active ? "text-ink-tertiary" : "text-ink-muted"}`}>{count}</span>
+      <span className={`text-meta tabular-nums ${active ? "text-ink-tertiary" : "text-ink-tertiary"}`}>{count}</span>
     </button>
   );
 }

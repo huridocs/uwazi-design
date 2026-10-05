@@ -34,12 +34,12 @@ function PropertyItem({ prop }: { prop: TemplateProperty }) {
       <span data-part="name" className="flex-1 text-sm font-medium text-ink">
         {prop.name}
         {prop.required && (
-          <span data-part="required" className="text-xs font-medium text-ink-muted ml-1.5">
+          <span data-part="required" className="text-xs font-medium text-ink-tertiary ml-1.5">
             *Required
           </span>
         )}
       </span>
-      <span data-part="type" className="text-meta text-ink-muted shrink-0 capitalize">
+      <span data-part="type" className="text-meta text-ink-tertiary shrink-0 capitalize">
         {prop.type}
       </span>
       <button

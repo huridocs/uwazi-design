@@ -122,7 +122,7 @@ export function UsersPage() {
       header: "Groups",
       cell: (u) =>
         u.groupIds.length === 0 ? (
-          <span className="text-ink-muted">—</span>
+          <span className="text-ink-tertiary">—</span>
         ) : (
           <div className="flex flex-wrap gap-1">
             {u.groupIds.map((g) => (

@@ -680,7 +680,7 @@ function TreeRowView({
           className={`flex-1 min-w-0 h-7 px-1 -mx-1 rounded-sm text-start text-sm truncate cursor-text hover:bg-paper/60
             focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-carbon/50 ${
               group ? "font-semibold text-ink" : "text-ink"
-            } ${label ? "" : "text-ink-muted italic"}`}
+            } ${label ? "" : "text-ink-tertiary italic"}`}
         >
           {label ? <HighlightedText text={label} query={query} /> : name}
         </button>

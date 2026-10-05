@@ -233,7 +233,7 @@ export function MetadataRecord({
   if (empty) {
     return (
       <div data-component="MetadataRecord" data-part="empty" className="flex items-center justify-center py-10 text-center">
-        <p className="text-xs text-ink-muted">No metadata for this entity yet.</p>
+        <p className="text-xs text-ink-tertiary">No metadata for this entity yet.</p>
       </div>
     );
   }

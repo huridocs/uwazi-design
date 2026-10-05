@@ -223,7 +223,7 @@ function LayerPicker({ value, onChange }: { value: MapLayer[]; onChange: (v: Map
         }
       }}
     >
-      {value.length === 0 && <span className="text-xs text-ink-muted">No options</span>}
+      {value.length === 0 && <span className="text-xs text-ink-tertiary">No options</span>}
       {value.map((l) => (
         <span key={l} className="inline-flex items-center gap-1 ps-2 pe-1 py-0.5 rounded-md bg-paper text-xs font-medium text-ink w-fit">
           {l}

@@ -269,7 +269,7 @@ export function ActionsSheet({
                   {a.icon}
                 </span>
                 <span className={`flex-1 ${a.danger && !a.disabledReason ? "text-seal-label" : ""}`}>{a.label}</span>
-                {a.disabledReason && <span className="text-meta text-ink-muted">{a.disabledReason}</span>}
+                {a.disabledReason && <span className="text-meta text-ink-tertiary">{a.disabledReason}</span>}
               </button>
             </li>
           ))}

@@ -278,7 +278,7 @@ export function FacetSection({
             emptyState
           ) : (
             matched.length === 0 && (
-              <p data-part="empty" className={`${bare ? "px-2 " : ""}py-1.5 text-xs text-ink-muted`}>
+              <p data-part="empty" className={`${bare ? "px-2 " : ""}py-1.5 text-xs text-ink-tertiary`}>
                 No matches.
               </p>
             )

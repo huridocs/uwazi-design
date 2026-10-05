@@ -232,13 +232,13 @@ export function ResultsMainView({
       <Centered>
         {cejilError ? (
           <>
-            <span role="alert" className="text-sm text-ink-muted">Couldn’t load the CEJIL collection.</span>
+            <span role="alert" className="text-sm text-ink-tertiary">Couldn’t load the CEJIL collection.</span>
             <WarmButton onClick={onRetry}>Retry</WarmButton>
           </>
         ) : (
           <>
             <span aria-hidden className="w-5 h-5 rounded-full border-2 border-border border-t-carbon animate-spin" />
-            <span role="status" className="text-sm text-ink-muted">Loading the full CEJIL collection…</span>
+            <span role="status" className="text-sm text-ink-tertiary">Loading the full CEJIL collection…</span>
           </>
         )}
       </Centered>
@@ -252,7 +252,7 @@ export function ResultsMainView({
       <Centered>
         <Search size={22} className="text-ink-muted" aria-hidden="true" />
         <span className="text-sm text-ink-tertiary">Search to see where terms match</span>
-        <span className="text-xs text-ink-muted">
+        <span className="text-xs text-ink-tertiary">
           Results show the passages behind each hit — the field, the page, the sentence.
         </span>
       </Centered>
@@ -377,7 +377,7 @@ export function ResultsMainView({
           </div>
         )}
         {capped && visible >= entities.length && (
-          <p data-part="end" className="py-4 text-center text-meta text-ink-muted">
+          <p data-part="end" className="py-4 text-center text-meta text-ink-tertiary">
             Showing every result for this query.
           </p>
         )}
@@ -594,7 +594,7 @@ function TreeBody({
           >
             <div className="flex flex-col">
               {bare && (
-                <p data-part="title-only" className="px-4 py-2 text-xs text-ink-muted">
+                <p data-part="title-only" className="px-4 py-2 text-xs text-ink-tertiary">
                   Matched in the title — nothing else.
                 </p>
               )}
@@ -702,8 +702,8 @@ function TreeBranch({
         />
         {icon}
         <SectionLabel as="span">{label}</SectionLabel>
-        <span data-part="count" className="text-meta tabular-nums text-ink-muted">{count.toLocaleString()}</span>
-        {note && <span data-part="note" className="text-meta text-ink-muted">· {note}</span>}
+        <span data-part="count" className="text-meta tabular-nums text-ink-tertiary">{count.toLocaleString()}</span>
+        {note && <span data-part="note" className="text-meta text-ink-tertiary">· {note}</span>}
         {trailing}
       </button>
       {open && (
@@ -1011,7 +1011,7 @@ function PassagesBody({
         })}
       </ul>
       {(notShown > 0 || titleOnly > 0) && (
-        <p data-part="note" className="pt-3 text-center text-meta text-ink-muted">
+        <p data-part="note" className="pt-3 text-center text-meta text-ink-tertiary">
           {notShown > 0 && (
             <>
               {notShown.toLocaleString()} further matching {notShown === 1 ? "page" : "pages"}{" "}
@@ -1132,7 +1132,7 @@ function SpineBody({
                   "Document · p.5" in order under RTL. Fixed width, not `max-w`,
                   so rows line up whether or not they carry a borrowed document. */}
               {best && (
-                <span className="hidden md:flex shrink-0 w-[14rem] items-center gap-1.5 overflow-hidden text-meta text-ink-muted">
+                <span className="hidden md:flex shrink-0 w-[14rem] items-center gap-1.5 overflow-hidden text-meta text-ink-tertiary">
                   <bdi dir="ltr" className="shrink-0">
                     {best.label}
                   </bdi>
@@ -1154,7 +1154,7 @@ function SpineBody({
         }}
       />
       {undated > 0 && (
-        <p data-part="note" className="pt-3 text-center text-meta text-ink-muted">
+        <p data-part="note" className="pt-3 text-center text-meta text-ink-tertiary">
           {undated.toLocaleString()} matching {undated === 1 ? "result carries" : "results carry"} no
           date and {undated === 1 ? "is" : "are"} not plotted.
         </p>
@@ -1290,7 +1290,7 @@ function PassageRow({
  *  shows the full count. */
 function PageCount({ shown, total }: { shown: number; total: number }) {
   return (
-    <span dir="ltr" data-part="page-count" className="ms-1.5 font-normal normal-case tracking-normal text-ink-muted">
+    <span dir="ltr" data-part="page-count" className="ms-1.5 font-normal normal-case tracking-normal text-ink-tertiary">
       <span className="tabular-nums">
         {shown < total ? `${shown} of ${total.toLocaleString()}` : total.toLocaleString()}
       </span>{" "}

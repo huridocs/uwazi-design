@@ -148,7 +148,7 @@ export function FiltersPage() {
         groupOptions.length > 1 ? (
           <Select value={r.groupId} options={groupOptions} onChange={(g) => setGroup(r.templateId, g)} ariaLabel="Move to group" />
         ) : (
-          <span className="text-xs text-ink-muted">—</span>
+          <span className="text-xs text-ink-tertiary">—</span>
         ),
     },
     orderColumn(setRows, rows.length, (r) => meta[r.templateId]?.name ?? "filter"),

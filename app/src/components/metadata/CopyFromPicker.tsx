@@ -387,7 +387,7 @@ function PropertyStep({
             </ul>
           </>
         ) : (
-          <p data-part="empty" className="py-4 text-center text-xs text-ink-muted">
+          <p data-part="empty" className="py-4 text-center text-xs text-ink-tertiary">
             Nothing on this entity lines up with the one you are editing.
           </p>
         )}

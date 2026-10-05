@@ -262,7 +262,7 @@ export function DataTable<T>({
 
         {/* Empty state — outside the table so it has no invalid children. */}
         {data.length === 0 && (
-          <div data-part="empty" className="px-4 py-10 text-center text-xs text-ink-muted">
+          <div data-part="empty" className="px-4 py-10 text-center text-xs text-ink-tertiary">
             {emptyState ?? "Nothing here yet."}
           </div>
         )}
@@ -271,7 +271,7 @@ export function DataTable<T>({
         {footer !== undefined && (
           <div
             data-part="footer"
-            className="flex items-center justify-between px-4 h-10 text-xs text-ink-muted"
+            className="flex items-center justify-between px-4 h-10 text-xs text-ink-tertiary"
             style={{ backgroundColor: "var(--bg-warm)", borderTop: "1px solid var(--border-primary)" }}
           >
             {footer}

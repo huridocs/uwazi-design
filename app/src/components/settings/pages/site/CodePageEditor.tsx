@@ -254,7 +254,7 @@ export function CodePageEditor({
         <div
           ref={gutter}
           aria-hidden
-          className="shrink-0 py-3 ps-3 pe-2 text-end font-mono text-sm leading-6 text-ink-muted select-none overflow-hidden border-e border-border bg-paper tabular-nums"
+          className="shrink-0 py-3 ps-3 pe-2 text-end font-mono text-sm leading-6 text-ink-tertiary select-none overflow-hidden border-e border-border bg-paper tabular-nums"
         >
           {Array.from({ length: lines }, (_, i) => (
             <div key={i}>{i + 1}</div>

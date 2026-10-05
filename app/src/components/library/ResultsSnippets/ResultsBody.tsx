@@ -163,7 +163,7 @@ export const ResultsBody = memo(function ResultsBody({
         <Centered>
           {cejilError ? (
             <>
-              <span role="alert" className="text-sm text-ink-muted">Couldn’t load the CEJIL collection.</span>
+              <span role="alert" className="text-sm text-ink-tertiary">Couldn’t load the CEJIL collection.</span>
               <button
                 type="button"
                 data-part="retry"
@@ -177,7 +177,7 @@ export const ResultsBody = memo(function ResultsBody({
           ) : (
             <>
               <span aria-hidden className="w-5 h-5 rounded-full border-2 border-border border-t-carbon animate-spin" />
-              <span role="status" className="text-sm text-ink-muted">Loading the full CEJIL collection…</span>
+              <span role="status" className="text-sm text-ink-tertiary">Loading the full CEJIL collection…</span>
             </>
           )}
         </Centered>
@@ -192,7 +192,7 @@ export const ResultsBody = memo(function ResultsBody({
         <Centered>
           <Search size={20} className="text-ink-muted" aria-hidden="true" />
           <span className="text-sm font-medium text-ink-secondary">Search to see where terms match</span>
-          <span className="text-xs text-ink-muted">Results show the passages behind each hit.</span>
+          <span className="text-xs text-ink-tertiary">Results show the passages behind each hit.</span>
         </Centered>
       </Shell>
     );

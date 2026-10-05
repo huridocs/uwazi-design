@@ -837,7 +837,7 @@ function KeywordFacetCard({
 
       <div data-part="options" className="max-h-64 overflow-auto">
         {visible.length === 0 ? (
-          <p className="px-2 py-1 text-xs text-ink-muted">No matches.</p>
+          <p className="px-2 py-1 text-xs text-ink-tertiary">No matches.</p>
         ) : (
           visible.map((c) => {
             const checked = !!selected[c];

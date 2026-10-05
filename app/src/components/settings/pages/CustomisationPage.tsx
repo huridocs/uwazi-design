@@ -122,7 +122,7 @@ export function CustomisationPage() {
             <div
               ref={gutterRef}
               aria-hidden
-              className="shrink-0 overflow-hidden py-4 pl-3 pr-2 text-sm font-mono leading-6 text-ink-muted text-right tabular-nums select-none bg-vellum border-e border-border-soft"
+              className="shrink-0 overflow-hidden py-4 pl-3 pr-2 text-sm font-mono leading-6 text-ink-tertiary text-right tabular-nums select-none bg-vellum border-e border-border-soft"
             >
               {Array.from({ length: lineCount }, (_, i) => (
                 <div key={i}>{i + 1}</div>

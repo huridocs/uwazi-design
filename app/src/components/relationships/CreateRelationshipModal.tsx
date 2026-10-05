@@ -317,7 +317,7 @@ export function CreateRelationshipModal() {
     {step === "relation" && (
       <>
         <div data-part="target" className="bleed shrink-0 flex items-center gap-2 py-2 border-b border-border">
-          <span className="text-xs text-ink-muted">{t("System", "Target:")}</span>
+          <span className="text-xs text-ink-tertiary">{t("System", "Target:")}</span>
           <EntityPill
             typeId={selectedEntity?.typeId ?? ""}
             label={selectedEntity?.title}

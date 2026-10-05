@@ -542,7 +542,7 @@ function TemplateEditorBody({
                 })}
                 {shownCommon.length + shownCustom.length === 0 && (
                   <tr role="row" className="block">
-                    <td role="cell" className="block px-3 py-6 border-t border-border-soft text-center text-xs text-ink-muted">
+                    <td role="cell" className="block px-3 py-6 border-t border-border-soft text-center text-xs text-ink-tertiary">
                       No property matches “{query}”.
                     </td>
                   </tr>

@@ -1243,7 +1243,7 @@ export function LibraryView() {
       >
         {cejilLoading ? (
           cejilError ? (
-            <div className="flex flex-col items-center justify-center h-40 gap-3 text-sm text-ink-muted">
+            <div className="flex flex-col items-center justify-center h-40 gap-3 text-sm text-ink-tertiary">
               <span>Couldn’t load the {lazyName} collection.</span>
               <button
                 onClick={() => setCejilRetry((n) => n + 1)}
@@ -1253,7 +1253,7 @@ export function LibraryView() {
               </button>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-40 gap-3 text-sm text-ink-muted">
+            <div className="flex flex-col items-center justify-center h-40 gap-3 text-sm text-ink-tertiary">
               <span className="w-5 h-5 rounded-full border-2 border-border border-t-carbon animate-spin" />
               Loading the full {lazyName} collection…
             </div>
@@ -1262,7 +1262,7 @@ export function LibraryView() {
           <div className="flex-1 min-h-0">
             <Suspense
               fallback={
-                <div className="flex items-center justify-center h-40 text-sm text-ink-muted">
+                <div className="flex items-center justify-center h-40 text-sm text-ink-tertiary">
                   Loading map…
                 </div>
               }
@@ -1308,7 +1308,7 @@ export function LibraryView() {
             />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex items-center justify-center h-40 text-sm text-ink-muted">
+          <div className="flex items-center justify-center h-40 text-sm text-ink-tertiary">
             No entities match your filters.
           </div>
         ) : viewMode === "cards" ? (
@@ -1337,7 +1337,7 @@ export function LibraryView() {
         ) : tableColumns.length === 0 ? (
           // Every column can be switched off; with none on, show a message that
           // names the way out instead of an empty grid.
-          <div className="flex items-center justify-center h-40 text-sm text-ink-muted">
+          <div className="flex items-center justify-center h-40 text-sm text-ink-tertiary">
             No columns shown — pick one in Display.
           </div>
         ) : (

@@ -280,7 +280,7 @@ export function AddFileModal() {
           <span className="text-sm font-medium text-ink-secondary">
             Select files
           </span>
-          <span className="text-xs text-ink-muted mt-0.5">
+          <span className="text-xs text-ink-tertiary mt-0.5">
             or drag and drop here
           </span>
         </button>
@@ -297,7 +297,7 @@ export function AddFileModal() {
           <span className="text-xs font-medium text-ink-secondary">
             Add another file
           </span>
-          <span className="text-xs text-ink-muted">
+          <span className="text-xs text-ink-tertiary">
             or drag &amp; drop
           </span>
         </button>

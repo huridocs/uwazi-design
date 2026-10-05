@@ -574,12 +574,12 @@ export function DocumentViewer({ actionBarMenu, showMinimap = true, fileOverride
           onLoadSuccess={onDocumentLoadSuccess}
           loading={
             <div data-part="loading" className="flex items-center justify-center h-[56.25rem] bg-paper rounded-md" style={{ width: "100%", maxWidth: "56.25rem" }}>
-              <p className="text-ink-muted text-sm">Loading document…</p>
+              <p className="text-ink-tertiary text-sm">Loading document…</p>
             </div>
           }
           error={
             <div data-part="error" className="flex flex-col items-center justify-center h-[56.25rem] bg-paper rounded-md gap-3" style={{ width: "100%", maxWidth: "56.25rem" }}>
-              <p className="text-ink-muted text-sm">
+              <p className="text-ink-tertiary text-sm">
                 PDF not found. Place a sample.pdf in app/public/
               </p>
             </div>

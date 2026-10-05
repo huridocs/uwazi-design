@@ -217,7 +217,7 @@ function SettingsList<T>({ columns, data, getRowId, onRowClick, rowAriaLabel, se
       style={{ boxShadow: CARD_SHADOW }}
     >
       {data.length === 0 ? (
-        <div data-part="empty" className="px-4 py-10 text-center text-xs text-ink-muted">
+        <div data-part="empty" className="px-4 py-10 text-center text-xs text-ink-tertiary">
           {emptyState ?? "Nothing here yet."}
         </div>
       ) : (

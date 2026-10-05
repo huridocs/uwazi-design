@@ -272,7 +272,7 @@ export function TemplateSelect({
               )}
               {rest.map(option)}
               {flat.length === 0 && (
-                <li role="presentation" className="px-3 py-3 text-xs text-ink-muted">
+                <li role="presentation" className="px-3 py-3 text-xs text-ink-tertiary">
                   No templates match “{query.trim()}”.
                 </li>
               )}

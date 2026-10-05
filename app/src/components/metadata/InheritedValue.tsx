@@ -103,7 +103,7 @@ export function MissingValue({ propLabel }: { propLabel?: string }) {
     <span
       data-component="MissingValue"
       title={`No ${propLabel ?? "value"} on the connected entity`}
-      className="text-sm text-ink-muted select-none"
+      className="text-sm text-ink-tertiary select-none"
       aria-label={`No ${propLabel ?? "value"}`}
     >
       —

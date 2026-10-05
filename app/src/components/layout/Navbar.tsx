@@ -481,7 +481,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                       className={`px-1.5 py-0.5 text-meta font-semibold rounded ${
                         rtl
                           ? "bg-success-light text-success"
-                          : "bg-warm text-ink-muted"
+                          : "bg-warm text-ink-tertiary"
                       }`}
                     >
                       {rtl ? "ON" : "OFF"}
@@ -663,7 +663,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
               </div>
               <span
                 className={`px-1.5 py-0.5 text-meta font-semibold rounded ${
-                  rtl ? "bg-success-light text-success" : "bg-warm text-ink-muted"
+                  rtl ? "bg-success-light text-success" : "bg-warm text-ink-tertiary"
                 }`}
               >
                 {rtl ? "ON" : "OFF"}

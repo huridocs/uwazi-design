@@ -93,7 +93,7 @@ export function RelationshipFieldEditor({
                 <tr data-part="empty">
                   <td
                     colSpan={columns.length + 2}
-                    className="px-3 py-2.5 text-xs text-ink-muted border-t border-border/40"
+                    className="px-3 py-2.5 text-xs text-ink-tertiary border-t border-border/40"
                   >
                     No connected entities yet.
                   </td>
@@ -179,7 +179,7 @@ export function RelationshipFieldEditor({
           </div>
           <div className="max-h-[11.25rem] overflow-auto">
             {candidates.length === 0 ? (
-              <div className="px-3 py-2 text-xs text-ink-muted">No matching entities.</div>
+              <div className="px-3 py-2 text-xs text-ink-tertiary">No matching entities.</div>
             ) : (
               candidates.map((e) => (
                 <button

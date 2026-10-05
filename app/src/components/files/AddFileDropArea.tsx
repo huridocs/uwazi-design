@@ -179,7 +179,7 @@ export function AddFileDropArea({
       style={{ border: "1.5px dashed var(--border-soft)" }}
     >
       <Plus size={14} className="text-ink-muted" aria-hidden />
-      <span data-part="prompt" className="text-xs text-ink-muted">
+      <span data-part="prompt" className="text-xs text-ink-tertiary">
         {dragging ? "Drop to add" : "Drag a file here, or"}
       </span>
       <button
