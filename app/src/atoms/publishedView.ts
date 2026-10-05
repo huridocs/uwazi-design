@@ -33,5 +33,6 @@ export const showPublishedViewAtom = atom(
 );
 
 /** One-shot: the entity view opens on this tab when it next shows. Set by the
- *  published view's document link, consumed (and cleared) by `EntityView`. */
+ *  published view's document link and by the toggle (Metadata), consumed (and
+ *  cleared) by `EntityView`. */
 export const entityTabRequestAtom = atom<string | null>(null);

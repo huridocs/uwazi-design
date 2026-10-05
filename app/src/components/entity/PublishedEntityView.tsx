@@ -552,6 +552,7 @@ export function PublishedViewToggle() {
   const available = useAtomValue(focusedHasPublishedViewAtom);
   const mode = useAtomValue(entityDisplayModeAtom);
   const setMode = useSetAtom(entityDisplayModeAtom);
+  const requestTab = useSetAtom(entityTabRequestAtom);
   const guard = useDirtyGuard();
   // A slide-over, sheet or dialog puts its own close where this sits; the
   // toggle steps aside (invisible, so nothing moves) until it closes.
@@ -569,7 +570,13 @@ export function PublishedViewToggle() {
           data-component="PublishedViewToggle"
           data-mode={mode}
           aria-label={label}
-          onClick={() => (toEntity ? setMode("entity") : guard(() => setMode("published")))}
+          onClick={() => {
+            if (!toEntity) return guard(() => setMode("published"));
+            // The entity view opens on Metadata from here, whatever tab was
+            // open last; drawer, scroll and language stay as they were.
+            requestTab("metadata");
+            setMode("entity");
+          }}
           className={`fixed z-30 top-13 left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-md
             transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35 ${WARM_BUTTON} ${
             covered ? "invisible" : ""
