@@ -59,8 +59,10 @@ export function SettingsSection({
       className="flex flex-col gap-3 min-w-0 pt-6 border-t border-border-soft first:pt-0 first:border-t-0"
     >
       {(title || action) && (
-        <div data-part="heading" className="flex items-start gap-3">
-          <div className="flex-1 min-w-0">
+        // On a narrow pane the actions wrap under the heading rather than
+        // squeezing it to one word per line.
+        <div data-part="heading" className="flex flex-wrap items-start gap-x-3 gap-y-2">
+          <div className="flex-1 min-w-[min(100%,10rem)]">
             {title && (
               <h3 id={headingId} className="text-sm font-semibold text-ink">
                 {title}
@@ -68,7 +70,7 @@ export function SettingsSection({
             )}
             {description && <p className="mt-1 text-xs text-ink-tertiary text-pretty">{description}</p>}
           </div>
-          {action && <div className="shrink-0 flex items-center gap-2">{action}</div>}
+          {action && <div className="shrink-0 flex flex-wrap items-center gap-2">{action}</div>}
         </div>
       )}
       <HeadingId.Provider value={title ? headingId : undefined}>{children}</HeadingId.Provider>

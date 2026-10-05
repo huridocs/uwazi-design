@@ -52,6 +52,8 @@ import { SettingsField, TextInput } from "../components/settings/SettingsField";
 import { RowActionButton, RowActions } from "../components/settings/RowActions";
 import { SettingsSelectionBar } from "../components/settings/SettingsSelectionBar";
 import { MoveButtons, ReorderGrip } from "../components/settings/ReorderControls";
+import { AlphaJump } from "../components/shared/AlphaJump";
+import { BulkPickModal } from "../components/settings/BulkPickModal";
 import { SettingsEditorDemo, SettingsEmptyStateDemo, SettingsListPageDemo, SettingsSectionDemo } from "./catalog/settingsDemos";
 import { StatusPill } from "../components/settings/StatusPill";
 
@@ -2199,6 +2201,31 @@ const textColor = typeLabelColor(type.color);`}
                 </CatalogEntry>
               </div>
 
+              <div id="set-alpha-jump" ref={reg("set-alpha-jump")}>
+                <CatalogEntry
+                  name="AlphaJump"
+                  description="An A–Z index for a long list (the thesaurus editor's 2,443 values). Letters with no row are disabled; # covers labels that start with anything else. A toolbar of buttons; the caller scrolls to the first row filed under the letter and focuses it."
+                  code={`<AlphaJump present={lettersInList} onJump={(letter) => scrollToFirst(letter)} />`}
+                >
+                  <AlphaJump present={new Set([..."ABCDEGHIJLMNOPQRSTUVYZ"])} onJump={() => {}} />
+                </CatalogEntry>
+              </div>
+
+              <div id="set-bulk-pick" ref={reg("set-bulk-pick")}>
+                <CatalogEntry
+                  name="BulkPickModal"
+                  description="One choice applied to a selection: Add to group, Change role, Move to group. A radio list (searchable past eight options) and a reserved readback line saying what the choice changes and what it leaves alone and why, before anything is applied. A choice that changes nothing keeps the commit off."
+                  code={`<BulkPickModal
+  title="Change role" subtitle="3 users" confirmLabel="Change role"
+  options={roles}
+  readback={(role) => ({ text: "2 users become Editor. admin stays: …", none: false })}
+  onConfirm={apply} onClose={close}
+/>`}
+                >
+                  <BulkPickDemo />
+                </CatalogEntry>
+              </div>
+
               <div id="set-list-page" ref={reg("set-list-page")}>
                 <CatalogEntry
                   name="SettingsListPage"
@@ -2340,5 +2367,31 @@ function ConfirmDeleteDemo() {
         onCancel={() => setOpen(null)}
       />
     </div>
+  );
+}
+
+function BulkPickDemo() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)} className="px-3 py-1.5 text-xs rounded-md bg-paper text-ink border border-border-soft cursor-pointer">
+        Open Change role
+      </button>
+      {open && (
+        <BulkPickModal
+          title="Change role"
+          subtitle="3 users"
+          confirmLabel="Change role"
+          options={[
+            { value: "admin", label: "Admin" },
+            { value: "editor", label: "Editor" },
+            { value: "collaborator", label: "Collaborator" },
+          ]}
+          readback={(v) => (v === "admin" ? { text: "All 3 users are already Admin.", none: true } : { text: `3 users become ${v === "editor" ? "Editor" : "Collaborator"}.` })}
+          onConfirm={() => setOpen(false)}
+          onClose={() => setOpen(false)}
+        />
+      )}
+    </>
   );
 }
