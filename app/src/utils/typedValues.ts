@@ -35,6 +35,14 @@ export function withGeo(geo: { lat: number; lon: number; label?: string } | unde
 
 /** A value the record can draw as a picture: a URL, not a corpus's own token
  *  (Travesía's `portrait:…`, which its record's image card draws). */
+/** A link value as an anchor's `href`: http(s) and mailto only. Anything
+ *  else (a `javascript:` URL from an import or an old record) is shown as text,
+ *  never followed. */
+export function safeHref(url: string | undefined): string | undefined {
+  const v = url?.trim();
+  return v && /^(https?:|mailto:)/i.test(v) ? v : undefined;
+}
+
 export const isImageUrl = (v: string | undefined) => !!v && /^(https?:|\/|data:image\/|blob:)/.test(v.trim());
 
 /** Whether focusing the editor arms click-to-fill (CLAUDE.md › Metadata view):

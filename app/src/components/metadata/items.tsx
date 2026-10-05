@@ -7,6 +7,7 @@ import { EntityPill } from "../shared/EntityPill";
 import { MediaFieldValue } from "./MediaFieldValue";
 import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
 import { countryFlag } from "../../utils/countryFlag";
+import { safeHref } from "../../utils/typedValues";
 import { resolveRelationshipField } from "../../utils/inheritance";
 import type { MetadataField, RelationshipMetadataField } from "../../data/metadata";
 import { previewEntityIdAtom } from "../../atoms/entityPreview";
@@ -119,10 +120,16 @@ export function fieldItem(f: MetadataField): MetadataItem {
           title={f.value}
         >
           {/* Uwazi's link is a label and a URL: the label shows, the URL opens. */}
-          <a href={f.value} target="_blank" rel="noreferrer" className="font-medium underline truncate">
-            {f.link?.label || f.value}
-          </a>
-          <ExternalLink size={10} className="text-ink-muted shrink-0" />
+          {safeHref(f.link?.url ?? f.value) ? (
+            <>
+              <a href={safeHref(f.link?.url ?? f.value)} target="_blank" rel="noreferrer" className="font-medium underline truncate">
+                {f.link?.label || f.value}
+              </a>
+              <ExternalLink size={10} className="text-ink-muted shrink-0" />
+            </>
+          ) : (
+            <span className="font-medium truncate">{f.link?.label || f.value}</span>
+          )}
         </span>
       ) : long ? (
         <p className="text-sm text-ink leading-relaxed">{f.value}</p>

@@ -649,7 +649,7 @@ function EntityEditBody({
   };
   const imageFiles = (profile.files ?? [])
     .filter((f) => f.type === "image" && f.url)
-    .map((f) => ({ name: f.name, url: f.url! }));
+    .map((f) => ({ id: f.id, name: f.name, url: f.url! }));
   const typedEditor = (field: MetadataField) =>
     isTyped(field) ? (
       <TypedFieldEditor

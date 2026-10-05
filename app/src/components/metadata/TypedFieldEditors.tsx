@@ -25,8 +25,9 @@ export interface TypedEditorProps {
   armProps?: HTMLAttributes<HTMLInputElement>;
   aria?: HTMLAttributes<HTMLInputElement>;
   onBlur?: (value: string) => void;
-  /** The entity's image files, for an image property's picker. */
-  images?: { name: string; url: string }[];
+  /** The entity's image files, for an image property's picker. The property
+   *  stores the file's id, as the Artworks seed does. */
+  images?: { id: string; name: string; url: string }[];
 }
 
 const SMALL_BUTTON =
@@ -191,59 +192,81 @@ function LinkEditor({ field, inputId, onPatch, inputClass, armProps, aria, onBlu
   );
 }
 
+/** A coordinate as typed: a number within its range, or why not. */
+function coordIssue(raw: string, max: number, name: string): string | null {
+  if (!raw.trim()) return null;
+  const n = Number(raw);
+  return Number.isFinite(n) && Math.abs(n) <= max ? null : `${name} runs from -${max} to ${max}`;
+}
+
 function GeoEditor({ field, inputId, onPatch, inputClass, aria }: TypedEditorProps) {
   // The two numbers are held as typed, so "-12." survives while it is being
-  // written; the field gets a place only once both read as numbers.
+  // written. The field holds a place only while both are numbers in range:
+  // clearing either coordinate, or typing one out of range, clears it.
   const [lat, setLat] = useState(field.geo ? String(field.geo.lat) : "");
   const [lon, setLon] = useState(field.geo ? String(field.geo.lon) : "");
   const label = field.geo?.label ?? "";
+  const latIssue = coordIssue(lat, 90, "Latitude");
+  const lonIssue = coordIssue(lon, 180, "Longitude");
   const commit = (a: string, b: string, name: string) => {
-    const x = a.trim() === "" ? NaN : Number(a);
-    const y = b.trim() === "" ? NaN : Number(b);
-    if (Number.isFinite(x) && Number.isFinite(y)) onPatch(withGeo({ lat: x, lon: y, ...(name.trim() ? { label: name } : {}) }));
-    else if (!a.trim() && !b.trim()) onPatch(withGeo(undefined));
+    const ok = a.trim() && b.trim() && !coordIssue(a, 90, "") && !coordIssue(b, 180, "");
+    if (ok) onPatch(withGeo({ lat: Number(a), lon: Number(b), ...(name.trim() ? { label: name } : {}) }));
+    else if (field.geo) onPatch(withGeo(undefined));
   };
+  const issueId = `${inputId}-geo-issue`;
+  const describedBy =
+    [aria?.["aria-describedby"], latIssue || lonIssue ? issueId : undefined].filter(Boolean).join(" ") || undefined;
   return (
-    <div data-component="GeoEditor" className="grid gap-1.5 grid-cols-2 sm:grid-cols-[8rem_8rem_minmax(0,1fr)]">
-      <input
-        id={inputId}
-        type="number"
-        step="any"
-        min={-90}
-        max={90}
-        aria-label={`${field.label}, latitude`}
-        placeholder="Latitude"
-        value={lat}
-        onChange={(e) => {
-          setLat(e.target.value);
-          commit(e.target.value, lon, label);
-        }}
-        {...aria}
-        className={`${inputClass} tabular-nums`}
-      />
-      <input
-        type="number"
-        step="any"
-        min={-180}
-        max={180}
-        aria-label={`${field.label}, longitude`}
-        placeholder="Longitude"
-        value={lon}
-        onChange={(e) => {
-          setLon(e.target.value);
-          commit(lat, e.target.value, label);
-        }}
-        className={`${inputClass} tabular-nums`}
-      />
-      <input
-        type="text"
-        aria-label={`${field.label}, place name`}
-        placeholder="Place name (optional)"
-        value={label}
-        disabled={!field.geo}
-        onChange={(e) => field.geo && onPatch(withGeo({ ...field.geo, label: e.target.value }))}
-        className={`${inputClass} col-span-2 sm:col-span-1`}
-      />
+    <div data-component="GeoEditor" className="space-y-1">
+      <div className="grid gap-1.5 grid-cols-2 sm:grid-cols-[8rem_8rem_minmax(0,1fr)]">
+        <input
+          {...aria}
+          id={inputId}
+          type="number"
+          step="any"
+          min={-90}
+          max={90}
+          aria-label={`${field.label}, latitude`}
+          aria-invalid={!!latIssue || aria?.["aria-invalid"] || undefined}
+          aria-describedby={describedBy}
+          placeholder="Latitude"
+          value={lat}
+          onChange={(e) => {
+            setLat(e.target.value);
+            commit(e.target.value, lon, label);
+          }}
+          className={`${inputClass} tabular-nums`}
+        />
+        <input
+          type="number"
+          step="any"
+          min={-180}
+          max={180}
+          aria-label={`${field.label}, longitude`}
+          aria-invalid={!!lonIssue || undefined}
+          aria-describedby={latIssue || lonIssue ? issueId : undefined}
+          placeholder="Longitude"
+          value={lon}
+          onChange={(e) => {
+            setLon(e.target.value);
+            commit(lat, e.target.value, label);
+          }}
+          className={`${inputClass} tabular-nums`}
+        />
+        <input
+          type="text"
+          aria-label={`${field.label}, place name`}
+          placeholder="Place name (optional)"
+          value={label}
+          disabled={!field.geo}
+          onChange={(e) => field.geo && onPatch(withGeo({ ...field.geo, label: e.target.value }))}
+          className={`${inputClass} col-span-2 sm:col-span-1`}
+        />
+      </div>
+      {/* Mounted at a fixed height so the form does not move as it shows. */}
+      <p id={issueId} role="status" className="min-h-4 text-meta leading-4 text-seal-label">
+        {latIssue ?? lonIssue}
+      </p>
     </div>
   );
 }
@@ -251,12 +274,14 @@ function GeoEditor({ field, inputId, onPatch, inputClass, aria }: TypedEditorPro
 function ImageEditor({ field, inputId, onPatch, inputClass, images = [] }: TypedEditorProps) {
   if (!images.length && !field.value)
     return <p className="text-xs text-ink-tertiary">Attach an image in the Files tab, then pick it here.</p>;
+  // A value saved as the file's URL reads as that file.
+  const current = images.find((i) => i.id === field.value || i.url === field.value)?.id ?? field.value;
   return (
-    <select id={inputId} value={field.value} onChange={(e) => onPatch({ value: e.target.value })} className={inputClass}>
+    <select id={inputId} value={current} onChange={(e) => onPatch({ value: e.target.value })} className={inputClass}>
       <option value="">No image</option>
-      {field.value && !images.some((i) => i.url === field.value) && <option value={field.value}>Current image</option>}
+      {current && !images.some((i) => i.id === current) && <option value={current}>Current image</option>}
       {images.map((i) => (
-        <option key={i.url} value={i.url}>
+        <option key={i.id} value={i.id}>
           {i.name}
         </option>
       ))}
