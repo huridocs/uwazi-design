@@ -34,6 +34,26 @@ function PaneEntityOverlay() {
   return <OverlayLayer depth={0} />;
 }
 
+/** Drop the click that ends the current press, before React sees it. Released
+ *  after the press ends, so a press that never becomes a click (a drag off the
+ *  panel) does not eat a later one. */
+function swallowNextClick() {
+  const stop = (e: MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    release();
+  };
+  const onUp = () => window.setTimeout(release, 0);
+  const release = () => {
+    document.removeEventListener("click", stop, true);
+    document.removeEventListener("pointerup", onUp, true);
+    document.removeEventListener("pointercancel", onUp, true);
+  };
+  document.addEventListener("click", stop, true);
+  document.addEventListener("pointerup", onUp, true);
+  document.addEventListener("pointercancel", onUp, true);
+}
+
 /** Layers narrow by this much per level from the start edge, so the layers
  *  beneath show as edges; deeper than MAX_STEP levels they stop narrowing. */
 const STEP_REM = 1;
@@ -111,9 +131,15 @@ function OverlayLayer({ depth }: { depth: number }) {
       if (!layer.isTopNow()) return;
       const panel = panelRef.current;
       if (!panel || panel.contains(e.target as Node)) return;
+      // A covered title is a control of its own: its click goes back to that layer.
+      if ((e.target as Element).closest?.('[data-part="back-to-parent"]')) return;
       const root = panel.closest("[data-overlay-root]");
-      if (root && root.contains(e.target as Node)) pop();
-      else closeAll();
+      if (root && root.contains(e.target as Node)) {
+        pop();
+        // The press has popped this layer; the click that follows would land
+        // on the layer now on top (its scrim pops again, a pill opens).
+        swallowNextClick();
+      } else closeAll();
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !e.defaultPrevented && layer.isTopNow()) pop();
