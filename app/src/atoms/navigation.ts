@@ -1,17 +1,16 @@
-import { atomWithStorage, createJSONStorage } from "jotai/utils";
+import { atom } from "jotai";
 
 export type AppView = "entity" | "library" | "catalog" | "import-csv" | "settings";
 
-/** Which top-level surface is showing.
- *
- *  Kept in SESSION storage, not local. The point of persisting it was that a
- *  reload shouldn't bounce you back to the Library — and sessionStorage does
- *  exactly that. localStorage went further than asked: it made the last page you
- *  happened to be on your permanent front door, so the deployed prototype opened
- *  on whatever entity someone had left behind days earlier instead of the Library.
- *  A visit starts at the Library; a reload keeps your place. */
-const sessionJSON = createJSONStorage<AppView>(() => sessionStorage);
+/** Which top-level surface is showing. Every load (fresh tab, reload, deploy
+ *  URL) opens on the Library; a switch lasts until the next load and is not
+ *  stored. */
+export const appViewAtom = atom<AppView>("library");
 
-export const appViewAtom = atomWithStorage<AppView>("uwazi:appView", "library", sessionJSON, {
-  getOnInit: true,
-});
+// The view used to be kept in sessionStorage under this key; drop it so an
+// old value has no effect.
+try {
+  sessionStorage.removeItem("uwazi:appView");
+} catch {
+  /* storage blocked */
+}

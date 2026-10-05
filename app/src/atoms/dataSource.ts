@@ -1,5 +1,5 @@
 import { atom, type Getter } from "jotai";
-import { atomFamily, atomWithStorage } from "jotai/utils";
+import { atomFamily } from "jotai/utils";
 import { entitiesAtom, entityTypesAtom } from "./entities";
 import { entityCorpusOf, entityTypes, type Entity, type EntityType } from "../data/entities";
 import { cejilEntityTypes } from "../data/cejil/typesAdapter";
@@ -11,23 +11,20 @@ import { applyOverlay, overlayMirror, type Corpus, type CorpusOverlay } from "..
 
 export type DataSource = "mock" | "cejil" | "artworks";
 
-/** Which dataset the Library renders. Persisted. `mock` keeps the curated demo
+/** Which dataset the Library renders. Every load starts on `cejil`; a switch
+ *  lasts until the next load and is not stored. `mock` keeps the curated demo
  *  (Velásquez etc.); `cejil` shows the real public summa.cejil.org sample;
  *  `artworks` is the bundled image corpus (see `data/artworks/adapt.ts`).
  *  Scoped to the Library — EntityView/Relationships stay on the mock seed. */
-const DATA_SOURCES: readonly DataSource[] = ["mock", "cejil", "artworks"];
-const storedDataSourceAtom = atomWithStorage<string>("uwazi:dataSource", "mock");
-/** The stored value is read through a check: main and playground share one
- *  origin (huridocs.github.io), so storage can hold a source this build does
- *  not have (playground's `travesia`), which blanked the Library. An unknown
- *  value reads as `mock`. */
-export const dataSourceAtom = atom(
-  (get): DataSource => {
-    const v = get(storedDataSourceAtom);
-    return (DATA_SOURCES as readonly string[]).includes(v) ? (v as DataSource) : "mock";
-  },
-  (_get, set, next: DataSource) => set(storedDataSourceAtom, next),
-);
+export const dataSourceAtom = atom<DataSource>("cejil");
+
+// The collection used to be kept in localStorage under this key; drop it so
+// an old value has no effect.
+try {
+  localStorage.removeItem("uwazi:dataSource");
+} catch {
+  /* storage blocked */
+}
 
 /** Flipped true once the lazy CEJIL corpus (public/cejil-data/*.json) has been
  *  fetched. LibraryView triggers the load and sets this; the entity atom below
@@ -66,8 +63,8 @@ function seedFor(source: DataSource, get: Getter): Entity[] {
       return cejilLibraryEntities();
     default: {
       // Compile-time: widening DataSource without answering here is a type
-      // error. Runtime: `dataSourceAtom` is storage-backed, so a stale
-      // persisted value degrades to the mock seed instead of crashing.
+      // error. Runtime: an unknown value degrades to the mock seed instead
+      // of crashing.
       const _exhaustive: never = source;
       void _exhaustive;
       return get(entitiesAtom);
@@ -126,7 +123,7 @@ export const libraryTypesAtom = atom<EntityType[]>((get) => {
       return get(entityTypesAtom) ?? entityTypes;
     default: {
       // Same shape as libraryEntitiesAtom: type error on widening, mock
-      // fallback for a stale persisted value.
+      // fallback for an unknown value.
       const _exhaustive: never = source;
       void _exhaustive;
       return get(entityTypesAtom) ?? entityTypes;
