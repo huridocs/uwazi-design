@@ -195,12 +195,16 @@ export function Modal({
         aria-describedby={describedBy}
         data-part="panel"
         data-gutter-host
+        // Focusable, so a press on its text or padding moves focus to the
+        // panel instead of dropping it to <body>, where Escape (handled here)
+        // never arrives. Not a tab stop, and no ring: it is not a control.
+        tabIndex={-1}
         onKeyDown={onKeyDown}
         {...panelProps}
         className={
           sheet
-            ? "gutter-host-main absolute inset-x-0 bottom-0 flex flex-col bg-paper overflow-hidden animate-fade-in-up transition-transform duration-250 motion-reduce:transition-none motion-reduce:animate-none"
-            : `gutter-host-main w-full ${WIDTH[size]} flex flex-col bg-paper shadow-xl overflow-hidden animate-fade-in-up ${
+            ? "gutter-host-main absolute inset-x-0 bottom-0 flex flex-col outline-none bg-paper overflow-hidden animate-fade-in-up transition-transform duration-250 motion-reduce:transition-none motion-reduce:animate-none"
+            : `gutter-host-main w-full ${WIDTH[size]} flex flex-col outline-none bg-paper shadow-xl overflow-hidden animate-fade-in-up ${
                 fullOnPhone
                   ? "h-full md:rounded-lg md:border md:border-border"
                   : "max-h-full rounded-lg border border-border"
