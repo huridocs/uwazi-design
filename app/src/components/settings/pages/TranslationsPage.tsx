@@ -77,7 +77,7 @@ export function TranslationsPage() {
           size="sm"
           className="me-auto"
           icon={<Upload size={14} />}
-          onClick={() => notify("Translations imported", "success")}
+          onClick={() => notify("CSV import is not built in the prototype. No translations changed.", "info")}
         >
           Import translations (CSV)
         </SettingsButton>

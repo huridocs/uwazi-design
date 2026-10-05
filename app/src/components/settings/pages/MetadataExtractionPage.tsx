@@ -6,7 +6,7 @@ import { SettingsButton } from "../SettingsButton";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { RowActions } from "../RowActions";
 import { StatusPill } from "../StatusPill";
-import { ConfirmDialog } from "../../shared/ConfirmDialog";
+import { ConfirmDelete } from "../../shared/ConfirmDelete";
 import { ExtractorEditor } from "./ExtractorEditor";
 import { seedExtractors, type SettingsExtractor } from "../../../data/settings";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
@@ -61,12 +61,12 @@ export function MetadataExtractionPage() {
         </SettingsButton>
       </SettingsContent.Footer>
 
-      <ConfirmDialog
+      <ConfirmDelete
         open={confirm !== null}
+        impact={confirm ? { lines: [`It covers ${confirm.documents.toLocaleString()} documents.`], block: null } : null}
         title="Delete extractor"
         message={`Delete the extractor for “${confirm?.property}”? Its suggestions are deleted with it; values already accepted stay on the entities.`}
         confirmLabel="Delete"
-        variant="danger"
         onConfirm={() => {
           if (confirm) {
             setExtractors((prev) => prev.filter((x) => x.id !== confirm.id));

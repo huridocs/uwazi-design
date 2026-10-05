@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
+import { codeDocsAtom } from "../../../atoms/sitePages";
+import { nameList } from "../../../utils/settingsUsage";
 import { Upload, Image, FileText, Type, File, Search, X, LayoutGrid, List, Link2, Trash2 } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
@@ -7,7 +9,7 @@ import { SettingsTable, type Column } from "../SettingsTable";
 import { RowActions } from "../RowActions";
 import { Select } from "../../shared/Select";
 import { SegmentedControl } from "../../shared/SegmentedControl";
-import { ConfirmDialog } from "../../shared/ConfirmDialog";
+import { ConfirmDelete } from "../../shared/ConfirmDelete";
 import { seedUploads, type SettingsUpload } from "../../../data/settings";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
 import { useNotify } from "../../../hooks/useNotify";
@@ -29,6 +31,15 @@ const VIEW_OPTIONS = [
 
 export function UploadsPage() {
   const notify = useNotify();
+  // Pages whose code names the file's URL. Only pages edited in this visit
+  // have code in the store; the seeded pages' code is built on open.
+  const docs = useAtomValue(codeDocsAtom);
+  const uploadUsage = (url: string) => {
+    const titles = Object.values(docs)
+      .filter((d) => JSON.stringify(d).includes(url))
+      .map((d) => d.draft.en.title || "Untitled page");
+    return { lines: titles.length ? [`Used in ${nameList(titles)}. Those references will break.`] : [], block: null };
+  };
   const { record } = useSettingsNotify();
   const toast = (message: string) => notify(message, "success");
 
@@ -161,18 +172,18 @@ export function UploadsPage() {
           size="sm"
           className="me-auto"
           icon={<Upload size={14} />}
-          onClick={() => toast("File uploaded")}
+          onClick={() => notify("Upload is not built in the prototype. No file was added.", "info")}
         >
           Upload file
         </SettingsButton>
       </SettingsContent.Footer>
 
-      <ConfirmDialog
+      <ConfirmDelete
         open={confirm !== null}
+        impact={confirm ? uploadUsage(confirm.url) : null}
         title="Delete upload"
-        message={`Delete “${confirm?.name}”? References to its URL will break.`}
+        message={`Delete “${confirm?.name}”?`}
         confirmLabel="Delete"
-        variant="danger"
         onConfirm={() => {
           if (confirm) {
             setUploads((prev) => prev.filter((u) => u.id !== confirm.id));

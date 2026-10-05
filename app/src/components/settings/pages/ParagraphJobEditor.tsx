@@ -9,6 +9,7 @@ import { StatusPill } from "../StatusPill";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { seedTemplates, type SettingsParagraphJob } from "../../../data/settings";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { LastSavedLine } from "../../shared/LastSavedLine";
 import { useNotify } from "../../../hooks/useNotify";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
@@ -255,6 +256,7 @@ export function ParagraphJobEditor({
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
+        <LastSavedLine domain="paragraphJob" id={base?.id} className="me-auto" />
         <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
         <SettingsButton variant="commit" size="sm" onClick={save}>
           {isNew ? "Start extraction" : "Re-run"}

@@ -5,7 +5,7 @@ import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { RowActions } from "../RowActions";
-import { ConfirmDialog } from "../../shared/ConfirmDialog";
+import { ConfirmDelete } from "../../shared/ConfirmDelete";
 import { MenuLinkEditor } from "./MenuLinkEditor";
 import { seedMenuLinks, type SettingsMenuLink } from "../../../data/settings";
 import { dataSourceAtom } from "../../../atoms/dataSource";
@@ -84,12 +84,12 @@ export function MenuPage() {
         </SettingsButton>
       </SettingsContent.Footer>
 
-      <ConfirmDialog
+      <ConfirmDelete
         open={confirm !== null}
-        title="Delete menu link?"
-        message={`“${confirm?.title}” is removed from the navigation menu. This can’t be undone.`}
+        impact={confirm ? { lines: [confirm.type === "group" ? "Its sub-links are removed with it." : `It links to ${confirm.url}.`], block: null } : null}
+        title="Delete menu link"
+        message={`Remove “${confirm?.title}” from the navigation menu?`}
         confirmLabel="Delete"
-        variant="danger"
         onConfirm={() => {
           if (confirm) {
             setLinks((prev) => prev.filter((m) => m.id !== confirm.id));

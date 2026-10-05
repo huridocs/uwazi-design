@@ -5,7 +5,7 @@ import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { RowActions } from "../RowActions";
-import { ConfirmDialog } from "../../shared/ConfirmDialog";
+import { ConfirmDelete } from "../../shared/ConfirmDelete";
 import { PreserveTokenEditor } from "./PreserveTokenEditor";
 import { seedPreserveTokens, type SettingsPreserveToken } from "../../../data/settings";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
@@ -50,12 +50,12 @@ export function PreservePage() {
         </SettingsButton>
       </SettingsContent.Footer>
 
-      <ConfirmDialog
+      <ConfirmDelete
         open={confirm !== null}
+        impact={confirm ? { lines: [`${confirm.capturedCount.toLocaleString()} captures made with it stay in the collection.`], block: null } : null}
         title="Revoke token"
         message={`Revoke the token for “${confirm?.name}”? Scheduled captures from this source will stop.`}
         confirmLabel="Revoke"
-        variant="danger"
         onConfirm={() => {
           if (confirm) {
             setTokens((prev) => prev.filter((t) => t.id !== confirm.id));

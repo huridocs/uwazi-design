@@ -293,7 +293,7 @@ export function ExtractorEditor({
         title="Accept all suggestions"
         message={(() => {
           const n = rows.filter((r) => r.state !== "accepted").length;
-          return `Accept ${n} ${n === 1 ? "suggestion" : "suggestions"}? Each one replaces the entity's current value.`;
+          return `Accept ${n} ${n === 1 ? "suggestion" : "suggestions"}? They are marked accepted in this list. Entity values are not written in the prototype.`;
         })()}
         confirmLabel="Accept all"
         onConfirm={() => {

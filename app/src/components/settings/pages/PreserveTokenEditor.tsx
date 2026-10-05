@@ -9,6 +9,7 @@ import { RadioGroup } from "../../shared/RadioGroup";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { type SettingsPreserveToken } from "../../../data/settings";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { LastSavedLine } from "../../shared/LastSavedLine";
 import { useNotify } from "../../../hooks/useNotify";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
@@ -284,6 +285,7 @@ export function PreserveTokenEditor({
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
+        <LastSavedLine domain="preserve" id={base?.id} className="me-auto" />
         <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
         <SettingsButton variant={isNew ? "commit" : "success"} size="sm" disabled={!dirty || !name.trim()} onClick={save}>
           {isNew ? "Add source" : "Save"}

@@ -18,6 +18,7 @@ import { useSiteData } from "../../../site/useSiteData";
 import { codeDocsAtom } from "../../../../atoms/sitePages";
 import { useSettingsNotify } from "../../../../hooks/useSettingsNotify";
 import { ConfirmDialog } from "../../../shared/ConfirmDialog";
+import { LastSavedLine } from "../../../shared/LastSavedLine";
 import { breakpointAtom } from "../../../../atoms/viewport";
 import {
   PALETTE,
@@ -271,8 +272,9 @@ export function CodePageEditor({
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        <div className="me-auto min-w-0">
+        <div className="me-auto min-w-0 flex items-center gap-2">
           <StatusLine state={state} unsaved={unsaved} />
+          <LastSavedLine domain="page" id={pageId} />
         </div>
         <SettingsButton variant="ghost" size="sm" disabled={!unsaved} onClick={() => setAskDiscard(true)}>
           Discard
