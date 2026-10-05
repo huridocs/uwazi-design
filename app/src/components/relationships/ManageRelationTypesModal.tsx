@@ -2,29 +2,42 @@ import { useMemo, useState } from "react";
 import { Modal } from "../shared/Modal";
 import { MODAL_INPUT, ModalList, ModalListRow } from "../shared/ModalParts";
 import { Plus, Trash2 } from "lucide-react";
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import {
   manageRelationTypesOpenAtom,
   referencesAtom,
   relationTypesAtom,
 } from "../../atoms/references";
+import { NO_LABEL_RELATION_TYPE } from "../../data/references";
 import {
-  NO_LABEL_RELATION_TYPE,
-  registerRelationType,
-  unregisterRelationType,
-} from "../../data/references";
+  deleteRelationTypeAtom,
+  relationTypeNameIssue,
+  restoreRelationTypeAtom,
+  saveRelationTypeAtom,
+  type RelationTypeDeletion,
+} from "../../atoms/relationTypes";
+import { relationTypeUsageInAtom } from "../../atoms/settingsUsage";
+import { useSettingsNotify } from "../../hooks/useSettingsNotify";
+import { useSettingsUndo } from "../../hooks/useSettingsUndo";
 import { t } from "../../utils/i18n";
-import { toastsAtom } from "../../atoms/notifications";
 
-/** CRUD for the relation-type registry. Add: label input → derived snake_case
- *  id; duplicates are blocked. Delete: orphaned references are reassigned to
- *  `no_label` so the prototype stays usable (no dangling typeIds). The
- *  `no_label` type itself is non-deletable since it's the fallback target. */
+/** The Relationships panel's view of the Sample's relationship-type registry.
+ *  Add and Delete go through the same actions and rules as Settings ›
+ *  Relationship types (`atoms/relationTypes.ts`): a name is required and
+ *  unique ignoring case; a type a template field uses is refused; a type only
+ *  references use is deleted after moving them to `no_label` (this modal's
+ *  path, decision G6), with an Undo in the Beacon and a log entry. `no_label`
+ *  itself stays, as the fallback. */
 export function ManageRelationTypesModal() {
   const [open, setOpen] = useAtom(manageRelationTypesOpenAtom);
-  const [types, setTypes] = useAtom(relationTypesAtom);
-  const [references, setReferences] = useAtom(referencesAtom);
-  const setToasts = useSetAtom(toastsAtom);
+  const types = useAtomValue(relationTypesAtom);
+  const references = useAtomValue(referencesAtom);
+  const store = useStore();
+  const saveType = useSetAtom(saveRelationTypeAtom);
+  const removeType = useSetAtom(deleteRelationTypeAtom);
+  const restoreType = useSetAtom(restoreRelationTypeAtom);
+  const { record, fail } = useSettingsNotify();
+  const offerUndo = useSettingsUndo<RelationTypeDeletion>(restoreType);
   const [draftLabel, setDraftLabel] = useState("");
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
 
@@ -42,72 +55,54 @@ export function ManageRelationTypesModal() {
     setPendingDelete(null);
   };
 
-  const slugify = (label: string) =>
-    label
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "_")
-      .replace(/^_+|_+$/g, "");
-
   const handleAdd = () => {
     const label = draftLabel.trim();
-    if (!label) return;
-    const id = slugify(label);
-    if (!id) return;
-    if (types.some((tdef) => tdef.id === id)) {
-      setToasts((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          message: `Type "${label}" already exists`,
-          type: "error" as const,
-        },
-      ]);
+    const issue = relationTypeNameIssue(
+      types.filter((x) => x.id !== NO_LABEL_RELATION_TYPE),
+      null,
+      label,
+    );
+    if (issue) {
+      fail(issue === "Already exists" ? `Relationship type “${label}” already exists` : issue);
       return;
     }
-    const def = { id, label };
-    // Write-through to the static registry (see registerRelationType's contract)
-    // so utils reading `relationTypes` statically resolve the new label too.
-    registerRelationType(def);
-    setTypes((prev) => [...prev, def]);
+    const id = saveType({ id: null, name: label, corpus: "mock" });
+    if (!id) return;
     setDraftLabel("");
-    setToasts((prev) => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        message: `Relationship type “${label}” added`,
-        type: "success" as const,
-      },
-    ]);
+    record({
+      method: "CREATE",
+      domain: "relationType",
+      noun: "relationship type",
+      id,
+      name: label,
+      message: `Relationship type “${label}” added`,
+    });
   };
 
   const handleDelete = (id: string) => {
-    const def = types.find((tdef) => tdef.id === id);
-    if (!def) return;
-    const usage = refCountByType.get(id) ?? 0;
-    if (usage > 0) {
-      setReferences((prev) =>
-        prev.map((r) =>
-          r.relationType === id
-            ? { ...r, relationType: NO_LABEL_RELATION_TYPE }
-            : r,
-        ),
-      );
-    }
-    setTypes((prev) => prev.filter((tdef) => tdef.id !== id));
-    unregisterRelationType(id);
     setPendingDelete(null);
-    setToasts((prev) => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        message:
-          usage > 0
-            ? `“${def.label}” deleted; ${usage} relationship${usage === 1 ? "" : "s"} reassigned to “No label”`
-            : `“${def.label}” deleted`,
-        type: "success" as const,
-      },
-    ]);
+    const usage = store.get(relationTypeUsageInAtom(`mock|${id}`));
+    if (usage.block) {
+      fail(usage.block);
+      return;
+    }
+    const d = removeType({ id, to: usage.references ? NO_LABEL_RELATION_TYPE : null, corpus: "mock" });
+    if (!d) return;
+    record({
+      method: "DELETE",
+      domain: "relationType",
+      noun: "relationship type",
+      id,
+      name: d.def.label,
+      message: `“${d.def.label}” deleted`,
+    });
+    offerUndo(
+      d,
+      `“${d.def.label}” deleted`,
+      d.moved
+        ? `${d.moved.refIds.length.toLocaleString()} references moved to “No label”. Undo puts the type and its references back.`
+        : "Undo puts the type back.",
+    );
   };
 
   if (!open) return null;
