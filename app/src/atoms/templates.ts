@@ -63,7 +63,8 @@ const typesCache = new WeakMap<TemplateDef[], EntityType[]>();
 const projectTypes = (list: TemplateDef[]): EntityType[] => {
   let out = typesCache.get(list);
   if (!out) {
-    out = list.map((t) => ({ id: t.id, name: t.name, color: t.color }));
+    // `publishedView` rides along: the published view reads it from the type.
+    out = list.map((t) => ({ id: t.id, name: t.name, color: t.color, ...(t.publishedView ? { publishedView: true } : {}) }));
     typesCache.set(list, out);
   }
   return out;
