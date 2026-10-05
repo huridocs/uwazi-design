@@ -43,6 +43,9 @@ export function useLoadSettingsCorpus(): { retry: () => void } {
   const section = useAtomValue(effectiveSettingsSectionAtom);
   const needsCejil = CEJIL_USAGE_SECTIONS.has(section);
   const [attempt, setAttempt] = useState(0);
+  // A failure belongs to the collection that failed: switching collections
+  // clears it, so a CEJIL banner never shows on the Sample's pages.
+  useEffect(() => setError(null), [source, setError]);
   useEffect(() => {
     const load =
       source === "travesia" && !travesiaReady

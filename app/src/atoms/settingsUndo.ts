@@ -1,4 +1,4 @@
-import { atom, type Setter } from "jotai";
+import { atom, type Getter, type Setter } from "jotai";
 import type { NotificationAction } from "./notifications";
 
 /** Undo for a child removed inside an open Settings editor (a template
@@ -32,8 +32,8 @@ export const newSettingsUndoRef = () => `sundo-${Date.now().toString(36)}-${++se
  *  saved (a relationship type and the references it moved), which stays
  *  undoable from anywhere until a later removal replaces it. The store
  *  registers how it restores, keyed by an owner name that no editor uses. */
-const storeUndoHandlers = new Map<string, (set: Setter, payload: unknown) => void>();
-export function registerStoreUndo(owner: string, restore: (set: Setter, payload: unknown) => void) {
+const storeUndoHandlers = new Map<string, (get: Getter, set: Setter, payload: unknown) => void>();
+export function registerStoreUndo(owner: string, restore: (get: Getter, set: Setter, payload: unknown) => void) {
   storeUndoHandlers.set(owner, restore);
 }
 
@@ -54,7 +54,7 @@ export const requestSettingsUndoAtom = atom(null, (get, set, ref: string): boole
   if (!op || op.ref !== ref) return false;
   set(settingsUndoAtom, null);
   const restore = storeUndoHandlers.get(op.owner);
-  if (restore) restore(set, op.payload);
+  if (restore) restore(get, set, op.payload);
   else set(settingsUndoRequestAtom, op);
   return true;
 });

@@ -208,8 +208,15 @@ export const restoreRelationTypeAtom = atom(null, (get, set, d: RelationTypeDele
    anywhere until a later removal replaces it. The restore is logged and
    announced, so the log does not end on "Deleted". */
 export const RELATION_TYPE_UNDO_OWNER = "store:relationTypes";
-registerStoreUndo(RELATION_TYPE_UNDO_OWNER, (set, payload) => {
-  const d = payload as RelationTypeDeletion;
+registerStoreUndo(RELATION_TYPE_UNDO_OWNER, (get, set, payload) => {
+  const deleted = payload as RelationTypeDeletion;
+  // The name rule holds for a restore too: if a type of the same name was
+  // created since, the restored one comes back renamed, never as a second
+  // "Cites".
+  const list = get(relationTypesOfAtom(deleted.corpus));
+  let label = deleted.def.label;
+  for (let n = 2; relationTypeNameIssue(list, deleted.def.id, label); n++) label = `${deleted.def.label} (${n})`;
+  const d = label === deleted.def.label ? deleted : { ...deleted, def: { ...deleted.def, label } };
   set(restoreRelationTypeAtom, d);
   set(appendActivityAtom, {
     method: "CREATE",
@@ -218,7 +225,15 @@ registerStoreUndo(RELATION_TYPE_UNDO_OWNER, (set, payload) => {
     targetId: d.def.id,
     scope: d.corpus,
   });
-  set(toastsAtom, (p) => [...p, { id: `rt-${Date.now()}`, message: `${d.def.label} restored`, type: "success" }]);
+  set(toastsAtom, (p) => [
+    ...p,
+    {
+      id: `rt-${Date.now()}`,
+      message: `${d.def.label} restored`,
+      type: "success",
+      ...(d !== deleted ? { detail: `Another type is named “${deleted.def.label}” now, so this one is restored as “${label}”.` } : {}),
+    },
+  ]);
 });
 
 /** The Beacon action for a relationship-type delete's Undo. */
