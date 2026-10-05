@@ -3,6 +3,7 @@ import { atom, type Getter, type Setter } from "jotai";
 import { bulkEditDirtyAtom, editSessionOpenAtom, guardNavigationAtom } from "./dirtyGuard";
 import { atomFamily, atomWithStorage, createJSONStorage } from "jotai/utils";
 import { dataSourceAtom, libraryEntitiesAtom, type DataSource } from "./dataSource";
+import { collectionSettings, type DefaultLibraryView } from "./settingsSingletons";
 import { languageAtom } from "./language";
 import { breakpointAtom } from "./viewport";
 import { distinctFieldLabels } from "../utils/entityFields";
@@ -407,7 +408,15 @@ export type { LibraryViewMode };
 const preSearchViewModeAtom = atom<LibraryViewMode | null>(null);
 const searchModeOverriddenAtom = atom(false);
 
-const viewModeStateAtom = atom<LibraryViewMode>("cards");
+/** The view the reader picked, or null: until they pick one, the Library
+ *  opens on the collection's default view (Settings › Collection). */
+const viewModeChosenAtom = atom<LibraryViewMode | null>(null);
+const DEFAULT_VIEW_MODE: Record<DefaultLibraryView, LibraryViewMode> = { cards: "cards", table: "list", map: "map" };
+const viewModeStateAtom = atom(
+  (get): LibraryViewMode =>
+    get(viewModeChosenAtom) ?? DEFAULT_VIEW_MODE[get(collectionSettings.valueAtom).defaultView] ?? "cards",
+  (_get, set, next: LibraryViewMode) => set(viewModeChosenAtom, next),
+);
 
 /** Phones: the Results sheet a search opened. Opened once per query, so refining
  *  never reopens a sheet the user closed; closing it keeps the query;

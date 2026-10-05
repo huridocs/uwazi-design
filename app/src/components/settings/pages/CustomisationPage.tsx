@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
+import { customisationSettings } from "../../../atoms/settingsSingletons";
 import { RotateCcw, AlertTriangle } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
@@ -9,23 +10,17 @@ import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { LastSavedLine } from "../../shared/LastSavedLine";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
-const SAMPLE_CSS = `/* Global CSS — applied across the public collection */
-.home-banner {
-  background: var(--bg-parchment);
-}`;
-
-const SAMPLE_JS = `// Global JS — runs on every public page
-console.log('Collection loaded');`;
 
 export function CustomisationPage() {
   const { record } = useSettingsNotify();
+  const saveCustomisation = useSetAtom(customisationSettings.saveAtom);
   const [askReset, setAskReset] = useState(false);
   const [lang, setLang] = useState<"css" | "js">("css");
   // Compared with the last save, not the sample: after Save the page is clean.
   const { draft, setField, dirty, markSaved, saved } = useSettingsDraft({
     id: "customisation",
     label: "CSS and JS edits",
-    saved: { css: SAMPLE_CSS, js: SAMPLE_JS },
+    saved: useAtomValue(customisationSettings.valueAtom),
   });
   const { css, js } = draft;
   const setCss = setField("css");
@@ -40,6 +35,7 @@ export function CustomisationPage() {
   const charCount = value.length;
 
   const save = () => {
+    saveCustomisation({ value: { css, js } });
     markSaved();
     // The log names what changed by size, never the code itself.
     const lines = (t: string) => t.split("\n").length;

@@ -6,8 +6,7 @@ import { SettingsField, TextInput } from "../SettingsField";
 import { RadioGroup } from "../../shared/RadioGroup";
 import { Checkbox } from "../../shared/Checkbox";
 import { LayoutGrid, Table2, Map } from "lucide-react";
-import { dataSourceAtom } from "../../../atoms/dataSource";
-import { cejilCollection } from "../../../data/cejil/settingsAdapt";
+import { collectionSettings, type DefaultLibraryView } from "../../../atoms/settingsSingletons";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
 import { LastSavedLine } from "../../shared/LastSavedLine";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
@@ -35,24 +34,16 @@ function ToggleRow({ label, hint, checked, onChange }: ToggleRowProps) {
 
 export function CollectionPage() {
   const { record } = useSettingsNotify();
-  const dataSource = useAtomValue(dataSourceAtom);
-  const init =
-    dataSource === "cejil"
-      ? { name: cejilCollection.name, view: cejilCollection.defaultView }
-      : { name: "Inter-American Human Rights Archive", view: "cards" };
+  // The corpus's stored value (`atoms/settingsSingletons.ts`); the window
+  // title and the Library's default view read the same store.
+  const stored = useAtomValue(collectionSettings.valueAtom);
+  const saveCollection = useSetAtom(collectionSettings.saveAtom);
   const accessHeadingId = useId();
   // Compared with the last save, not the seed: after Save the page is clean.
   const { draft, setField, dirty, markSaved } = useSettingsDraft({
     id: "collection",
     label: "Collection settings",
-    saved: {
-      name: init.name,
-      landing: "/library",
-      defaultView: init.view,
-      privateInstance: false,
-      cookiePolicy: true,
-      publicSharing: true,
-    },
+    saved: stored,
   });
   const { name, landing, defaultView, privateInstance, cookiePolicy, publicSharing } = draft;
   const setName = setField("name");
@@ -63,7 +54,9 @@ export function CollectionPage() {
   const setPublicSharing = setField("publicSharing");
 
   const save = () => {
-    markSaved();
+    const value = { ...draft, name: draft.name.trim() || stored.name };
+    saveCollection({ value });
+    markSaved(value);
     record({ method: "UPDATE", domain: "collection", noun: "settings", id: "collection", name: "Collection", message: "Collection settings saved" });
   };
 
@@ -89,7 +82,7 @@ export function CollectionPage() {
               ariaLabel="Default library view"
               inline
               value={defaultView}
-              onChange={setDefaultView}
+              onChange={(v) => setDefaultView(v as DefaultLibraryView)}
               options={[
                 { id: "cards", label: "Cards", hint: "Visual entity cards", icon: <LayoutGrid size={14} className="text-ink-tertiary" /> },
                 { id: "table", label: "Table", hint: "Dense rows", icon: <Table2 size={14} className="text-ink-tertiary" /> },

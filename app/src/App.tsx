@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { collectionSettings } from "./atoms/settingsSingletons";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Navbar } from "./components/layout/Navbar";
 import { EntityView } from "./views/EntityView";
@@ -35,6 +36,12 @@ export function App() {
   useEffect(() => {
     document.documentElement.dir = rtl ? "rtl" : "ltr";
   }, [rtl]);
+
+  // The window title is the collection's name (Settings › Collection).
+  const collectionName = useAtomValue(collectionSettings.valueAtom).name;
+  useEffect(() => {
+    document.title = collectionName ? `${collectionName} · Uwazi` : "Uwazi";
+  }, [collectionName]);
 
   const handleToggleRtl = () => {
     setLanguage(rtl ? "EN" : "AR");

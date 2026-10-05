@@ -8,36 +8,22 @@ import { DragGrip } from "../DragGrip";
 import { useReorder } from "../../../hooks/useReorder";
 import { Checkbox } from "../../shared/Checkbox";
 import { Select } from "../../shared/Select";
-import { seedFilterConfig, seedTemplates, templatePropertiesByTemplate } from "../../../data/settings";
+import { seedFilterConfig, seedTemplates } from "../../../data/settings";
 import { dataSourceAtom } from "../../../atoms/dataSource";
+import { cejilFilterMeta, cejilPropertyFilterMeta } from "../../../data/cejil/settingsAdapt";
 import {
-  cejilFilterRows,
-  cejilFilterGroups,
-  cejilFilterMeta,
-  cejilPropertyFilterRows,
-  cejilPropertyFilterMeta,
-} from "../../../data/cejil/settingsAdapt";
+  filterSettings,
+  sampleFilterProperties,
+  type FilterGroup,
+  type FilterRow,
+  type FilterSettings,
+  type PropertyFilterRow,
+} from "../../../atoms/settingsSingletons";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
 import { useSettingsUndo } from "../../../hooks/useSettingsUndo";
 import { LastSavedLine } from "../../shared/LastSavedLine";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 import { newSettingsId } from "../../../atoms/settingsCollection";
-
-interface FilterGroup {
-  id: string;
-  name: string;
-}
-interface FilterRow {
-  templateId: string;
-  active: boolean;
-  groupId: string; // "" = ungrouped
-}
-/** A filterable property. Properties are never grouped: groups exist to nest
- *  entity types (CEJIL's "Documentos"). */
-interface PropertyFilterRow {
-  propertyId: string;
-  active: boolean;
-}
 
 /** name / colour / entity-count per template, by id, for the active source. */
 const mockMeta: Record<string, { name: string; color: string; count: number }> =
@@ -48,20 +34,10 @@ const mockMeta: Record<string, { name: string; color: string; count: number }> =
     ]),
   );
 
-const mockRows = (): FilterRow[] =>
-  seedFilterConfig.map((f) => ({ templateId: f.templateId, active: f.active, groupId: "" }));
-
-/** name / value count per filterable property, by id. The mock properties are
- *  not backed by a thesaurus, so they have no value count. */
-const mockFilterProperties = Object.values(templatePropertiesByTemplate)
-  .flat()
-  .filter((p) => p.filterable)
-  .filter((p, i, all) => all.findIndex((q) => q.label === p.label) === i);
+/** name / value count per filterable property, by id. */
 const mockPropertyMeta: Record<string, { name: string; count: number | null }> = Object.fromEntries(
-  mockFilterProperties.map((p) => [p.id, { name: p.label, count: null }]),
+  sampleFilterProperties.map((p) => [p.id, { name: p.label, count: null }]),
 );
-const mockPropertyRows = (): PropertyFilterRow[] =>
-  mockFilterProperties.map((p) => ({ propertyId: p.id, active: true }));
 
 function swap<T>(arr: T[], i: number, dir: -1 | 1): T[] {
   const j = i + dir;
@@ -75,16 +51,15 @@ export function FiltersPage() {
   const { record } = useSettingsNotify();
   const cejil = useAtomValue(dataSourceAtom) === "cejil";
   const meta = cejil ? cejilFilterMeta : mockMeta;
-  const initialRows = cejil ? cejilFilterRows : mockRows();
-  const initialGroups: FilterGroup[] = cejil ? cejilFilterGroups : [];
-
   const propertyMeta = cejil ? cejilPropertyFilterMeta : mockPropertyMeta;
-  const initialPropertyRows = cejil ? cejilPropertyFilterRows : mockPropertyRows();
-  // Compared with the last save, not the seed: after Save the page is clean.
-  const { draft, setField, dirty, markSaved } = useSettingsDraft({
+  // The corpus's saved filters (`atoms/settingsSingletons.ts`), which the
+  // Library's Template facet reads. Compared with the last save.
+  const stored = useAtomValue(filterSettings.valueAtom);
+  const saveFilters = useSetAtom(filterSettings.saveAtom);
+  const { draft, setField, dirty, markSaved } = useSettingsDraft<FilterSettings>({
     id: "filters",
     label: "Filter changes",
-    saved: { groups: initialGroups, rows: initialRows, propertyRows: initialPropertyRows },
+    saved: stored,
   });
   const { groups, rows, propertyRows } = draft;
   const setGroups = setField("groups");
@@ -135,7 +110,10 @@ export function FiltersPage() {
   };
 
   const save = () => {
-    markSaved();
+    // Empty groups are dropped on save, as Uwazi does.
+    const value = { ...draft, groups: groups.filter((g) => rows.some((r) => r.groupId === g.id)) };
+    saveFilters({ value });
+    markSaved(value);
     record({ method: "UPDATE", domain: "filters", noun: "settings", id: "filters", name: "Library filters", message: "Library filters updated" });
   };
 

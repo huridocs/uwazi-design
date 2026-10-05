@@ -2,6 +2,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Play, Search, Lock, Globe, X, ChevronRight, Link2, type LucideIcon } from "lucide-react";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom } from "../../atoms/dataSource";
+import { libraryTemplateFacetsAtom } from "../../atoms/settingsSingletons";
 import { getEntityType } from "../../data/entities";
 import type { ChainFacetDef } from "../../data/cejil/chainFacets";
 import { languageAtom } from "../../atoms/language";
@@ -180,8 +181,19 @@ export function LibraryFilters() {
       Object.values(chainFilters[d.key] ?? {}).some(Boolean),
   );
 
-  const nonDocTypes = types.filter((t) => !typeHasDocument(t.id));
-  const docTypes = types.filter((t) => typeHasDocument(t.id));
+  // The Template facet follows Settings › Filters: only the templates it
+  // shows, in its order. CEJIL also takes its groups; the Sample keeps its
+  // Documents card and lists grouped templates flat.
+  const facetNodes = useAtomValue(libraryTemplateFacetsAtom);
+  const shownOrder = new Map(
+    facetNodes.flatMap((n) => (n.kind === "group" ? n.ids : [n.id])).map((id, i) => [id, i] as const),
+  );
+  const shownTypes = types
+    .filter((t) => shownOrder.has(t.id))
+    .sort((a, b) => shownOrder.get(a.id)! - shownOrder.get(b.id)!);
+  const typeName = (id: string) => types.find((t) => t.id === id)?.name ?? id;
+  const nonDocTypes = shownTypes.filter((t) => !typeHasDocument(t.id));
+  const docTypes = shownTypes.filter((t) => typeHasDocument(t.id));
 
   const toggleType = (id: string) => setTypeFilters((prev) => ({ ...prev, [id]: !prev[id] }));
   const toggleStatus = (id: string) => setStatusFilters((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -235,9 +247,7 @@ export function LibraryFilters() {
   // CEJIL filter groups (e.g. "Documentos") — expanded by default.
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const groupNames =
-    dataSource === "cejil"
-      ? cejilSettings.filters.filter((n) => n.items).map((n) => n.name)
-      : [];
+    dataSource === "cejil" ? facetNodes.flatMap((n) => (n.kind === "group" ? [n.name] : [])) : [];
   const cejilHasGroup = groupNames.length > 0;
   const setAllGroups = (open: boolean) => {
     setOpenGroups(Object.fromEntries(groupNames.map((n) => [n, open])));
@@ -291,21 +301,21 @@ export function LibraryFilters() {
             {/* CEJIL: the curated summa.cejil.org filter config — top-level
                 templates + the expandable "Documentos" group. */}
             <FacetCard title="Template">
-              {cejilSettings.filters.map((node) => {
-                if (!node.items) {
+              {facetNodes.map((node) => {
+                if (node.kind === "template") {
                   return (
                     <FacetRow
                       key={node.id}
-                      checked={!!typeFilters[node.id!]}
-                      onToggle={() => toggleType(node.id!)}
-                      label={node.name}
-                      count={typeCounts[node.id!] ?? 0}
+                      checked={!!typeFilters[node.id]}
+                      onToggle={() => toggleType(node.id)}
+                      label={typeName(node.id)}
+                      count={typeCounts[node.id] ?? 0}
                       reserveGutter={cejilHasGroup}
                       bold
                     />
                   );
                 }
-                const ids = node.items.map((c) => c.id!).filter(Boolean);
+                const ids = node.ids;
                 const open = openGroups[node.name] ?? true;
                 const total = ids.reduce((s, id) => s + (typeCounts[id] ?? 0), 0);
                 return (
@@ -322,13 +332,13 @@ export function LibraryFilters() {
                     />
                     {open && (
                       <TreeChildren>
-                        {node.items.map((c) => (
+                        {ids.map((id) => (
                           <FacetRow
-                            key={c.id}
-                            checked={!!typeFilters[c.id!]}
-                            onToggle={() => toggleType(c.id!)}
-                            label={c.name}
-                            count={typeCounts[c.id!] ?? 0}
+                            key={id}
+                            checked={!!typeFilters[id]}
+                            onToggle={() => toggleType(id)}
+                            label={typeName(id)}
+                            count={typeCounts[id] ?? 0}
                             child
                           />
                         ))}
