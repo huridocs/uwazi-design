@@ -138,7 +138,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
     // padding parked the logo (and the right cluster) 8px inboard of everything it
     // sits above. The chrome and its content share a left edge now.
     <header
-      className="relative h-13 bg-paper flex items-center justify-between px-3 shrink-0"
+      className="relative h-navbar bg-paper flex items-center justify-between px-3 shrink-0"
       style={{ borderBottom: "1px solid var(--border-primary)" }}
     >
       {/* Left: Logo + (mobile hamburger | desktop nav) */}

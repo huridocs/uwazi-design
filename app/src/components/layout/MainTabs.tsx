@@ -218,7 +218,7 @@ function TabStrip({
        corner. The end tabs round themselves instead, logically, so the strip
        still reads as one frame under RTL. */
     <div
-      className="flex items-stretch rounded-md shrink-0"
+      className="flex items-stretch h-tabstrip rounded-md shrink-0"
       role={probe ? undefined : "tablist"}
       style={TAB_STRIP_FRAME}
     >

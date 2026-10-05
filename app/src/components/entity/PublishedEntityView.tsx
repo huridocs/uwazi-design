@@ -519,6 +519,10 @@ function PublishedMap({ lat, lon, label }: { lat: number; lon: number; label: st
 
 /** The toggle's size, in one place so it cannot drift. */
 const TOGGLE_BOX = "w-7 h-7 rounded-md";
+/** Its top: under the navbar, past the host's `stack` offset above the tab
+ *  strip, then half the strip's height less half its own, so its centre is the
+ *  strip's centre. Built from the layout tokens, so it follows them. */
+const TOGGLE_TOP = "top-[calc(var(--spacing-navbar)+var(--spacing-stack)+(var(--spacing-tabstrip)-var(--spacing)*7)/2)]";
 const TOGGLE_ICON = 14;
 
 /** The one switch between the published view and the entity view, for an
@@ -526,7 +530,8 @@ const TOGGLE_ICON = 14;
  *
  *  Fixed at the content area's top inline-end corner, under the navbar: in the
  *  entity view that is the empty end of the drawer's tab row, in the published
- *  view the page's margin. It is the same spot in both modes, and being fixed
+ *  view the page's margin. Its centre is on the tab strip's centre line
+ *  (`TOGGLE_TOP`). It is the same spot in both modes, and being fixed
  *  it moves nothing when the mode changes. Icon only, with a hint; its name
  *  says where it goes ("Entity view" / "Published view"). Back to the entity
  *  view opens Metadata. Leaving the entity view goes through the dirty-form
@@ -561,7 +566,7 @@ export function PublishedViewToggle() {
             requestTab("metadata");
             setMode("entity");
           }}
-          className={`fixed z-30 top-[3.75rem] end-3 ${TOGGLE_BOX} flex items-center justify-center
+          className={`fixed z-30 ${TOGGLE_TOP} end-3 ${TOGGLE_BOX} flex items-center justify-center
             transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35 ${WARM_BUTTON} ${
             covered ? "invisible" : ""
           }`}
