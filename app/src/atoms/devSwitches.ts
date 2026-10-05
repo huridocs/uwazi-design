@@ -1,5 +1,11 @@
 import { atom } from "jotai";
+import { atomWithStorage, createJSONStorage } from "jotai/utils";
 import { registerSettingsReset } from "./settingsReset";
+import { dataSourceAtom } from "./dataSource";
+import { templateStore, templatesAtom } from "./templates";
+import { deleteThesaurusAtom, thesauriAtom } from "./thesauri";
+import { deleteRelationTypeAtom, relationTypesCorpus, relationTypesOfAtom } from "./relationTypes";
+import { emptyActivityLogAtom } from "./activityLog";
 
 /** Dev switches for demos and QA (the component catalog's Dev panel,
  *  acceptance SD-1): one-shot failure injection. The next action of the armed
@@ -26,4 +32,34 @@ export const consumeFailureAtom = atom(null, (get, set, scope: FailScope): strin
   if (!armed || armed.scope !== scope) return null;
   set(failNextAtom, null);
   return armed.reason;
+});
+
+/* ── Slow load (SD-4) ──────────────────────────────────────────────────── */
+
+/** "Slow load (2 s)": while on, Settings holds its stores as loading for two
+ *  seconds each time it opens, so the loading rows can be seen. Kept for the
+ *  session, so a reload shows it too. */
+export const slowLoadAtom = atomWithStorage<boolean>("uwazi:dev:slowLoad", false, createJSONStorage(() => sessionStorage), {
+  getOnInit: true,
+});
+registerSettingsReset((set) => set(slowLoadAtom, false));
+/** True during the two seconds. Set by the Settings shell on open. */
+export const slowLoadingAtom = atom(false);
+
+/* ── Zero rows (SD-5) ──────────────────────────────────────────────────── */
+
+export type EmptyDomain = "templates" | "thesauri" | "relationTypes" | "activity";
+
+/** Empty a content store for the collection shown, past its delete guards,
+ *  so its empty state and create action can be reached. Reset demo data
+ *  brings the seed back. */
+export const emptyDomainAtom = atom(null, (get, set, domain: EmptyDomain) => {
+  const corpus = get(dataSourceAtom);
+  if (domain === "templates")
+    for (const t of get(templatesAtom(corpus))) set(templateStore.deleteAtom, { id: t.id, corpus });
+  if (domain === "thesauri") for (const t of get(thesauriAtom(corpus))) set(deleteThesaurusAtom, { corpus, id: t.id });
+  if (domain === "relationTypes")
+    for (const t of get(relationTypesOfAtom(relationTypesCorpus(corpus))))
+      set(deleteRelationTypeAtom, { id: t.id, to: null, corpus: relationTypesCorpus(corpus) });
+  if (domain === "activity") set(emptyActivityLogAtom);
 });

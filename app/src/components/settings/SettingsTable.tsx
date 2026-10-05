@@ -5,6 +5,7 @@ import { DataTable, type Column, type SortDir } from "../shared/DataTable";
 import { breakpointAtom } from "../../atoms/viewport";
 import { settingsCorpusErrorAtom, useSettingsCorpusLoading } from "../../hooks/useSettingsCorpus";
 import { useAnnounceLoading } from "./SettingsContent";
+import { slowLoadingAtom } from "../../atoms/devSwitches";
 import { SettingsEmptyState } from "./SettingsEmptyState";
 import { Checkbox } from "../shared/Checkbox";
 import { Hint } from "../shared/Hint";
@@ -151,7 +152,9 @@ export function SettingsTable<T>(props: SettingsTableProps<T>) {
   // Settings shell (`SettingsCorpusError`), which holds the retry.
   const lazy = useSettingsCorpusLoading();
   const failed = !!useAtomValue(settingsCorpusErrorAtom);
-  const waiting = corpusScoped && data.length === 0 && lazy;
+  // The Dev panel's slow load holds even a filled table as loading.
+  const slow = useAtomValue(slowLoadingAtom);
+  const waiting = corpusScoped && (slow || (data.length === 0 && lazy));
   const loading = waiting && !failed;
   const pageAnnounces = useAnnounceLoading(loading);
   const columns = props.selection ? [selectColumn(props.selection, data, getRowId), ...given] : given;

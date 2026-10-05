@@ -4,6 +4,7 @@ import { cejilReadyAtom, dataSourceAtom, travesiaReadyAtom } from "../atoms/data
 import { loadTravesiaData } from "../data/travesia/load";
 import { loadCejilData } from "../data/cejil/load";
 import { effectiveSettingsSectionAtom } from "../atoms/settings";
+import { slowLoadAtom, slowLoadingAtom } from "../atoms/devSwitches";
 
 /** True while the active corpus's Settings data is still on its way.
  *
@@ -15,7 +16,9 @@ import { effectiveSettingsSectionAtom } from "../atoms/settings";
 export function useSettingsCorpusLoading(): boolean {
   const source = useAtomValue(dataSourceAtom);
   const ready = useAtomValue(travesiaReadyAtom);
-  return source === "travesia" && !ready;
+  // The Dev panel's "Slow load (2 s)" (SD-4).
+  const slow = useAtomValue(slowLoadingAtom);
+  return slow || (source === "travesia" && !ready);
 }
 
 /** Settings pages that count CEJIL entities for a usage line. */
@@ -43,6 +46,21 @@ export function useLoadSettingsCorpus(): { retry: () => void } {
   const section = useAtomValue(effectiveSettingsSectionAtom);
   const needsCejil = CEJIL_USAGE_SECTIONS.has(section);
   const [attempt, setAttempt] = useState(0);
+  // "Slow load (2 s)": each time Settings opens, its stores read as loading
+  // for two seconds.
+  const slowLoad = useAtomValue(slowLoadAtom);
+  const setSlowLoading = useSetAtom(slowLoadingAtom);
+  useEffect(() => {
+    if (!slowLoad) return;
+    setSlowLoading(true);
+    const t = setTimeout(() => setSlowLoading(false), 2000);
+    return () => {
+      clearTimeout(t);
+      setSlowLoading(false);
+    };
+    // Once per opening of Settings.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // A failure belongs to the collection that failed: switching collections
   // clears it, so a CEJIL banner never shows on the Sample's pages.
   useEffect(() => setError(null), [source, setError]);

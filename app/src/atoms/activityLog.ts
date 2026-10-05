@@ -42,6 +42,14 @@ const storage = createJSONStorage<ActivityEntry[]>(() => {
 const LOG_KEY = "uwazi:settings:activity";
 const appendedAtom = atomWithStorage<ActivityEntry[]>(LOG_KEY, [], storage, { getOnInit: true });
 registerSettingsReset((set) => set(appendedAtom, RESET));
+/** The Dev panel's "Empty activity log" (SD-5) hides the seed rows too, so the
+ *  log's empty state can be seen. Reset demo data brings them back. */
+const seedHiddenAtom = atom(false);
+registerSettingsReset((set) => set(seedHiddenAtom, false));
+export const emptyActivityLogAtom = atom(null, (_get, set) => {
+  set(seedHiddenAtom, true);
+  set(appendedAtom, []);
+});
 
 const pad = (n: number) => String(n).padStart(2, "0");
 /** "2026-06-15 18:42", the seed's form. */
@@ -67,7 +75,7 @@ export const activityLogAtom = atom<ActivityEntry[]>((get) => {
   const appended = Array.isArray(raw)
     ? raw.filter((e) => e && typeof e.id === "string" && typeof e.at === "number" && typeof e.summary === "string")
     : [];
-  return [...appended, ...seeded].sort((a, b) => b.at - a.at);
+  return [...appended, ...(get(seedHiddenAtom) ? [] : seeded)].sort((a, b) => b.at - a.at);
 });
 
 /** Bumped by the page's Retry, so the check below reads storage again. */

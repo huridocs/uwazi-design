@@ -1,7 +1,22 @@
 import { useState } from "react";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { Select } from "../../components/shared/Select";
-import { FAIL_SCOPES, failNextAtom, type FailScope } from "../../atoms/devSwitches";
+import { Checkbox } from "../../components/shared/Checkbox";
+import {
+  FAIL_SCOPES,
+  emptyDomainAtom,
+  failNextAtom,
+  slowLoadAtom,
+  type EmptyDomain,
+  type FailScope,
+} from "../../atoms/devSwitches";
+
+const EMPTY: { domain: EmptyDomain; label: string }[] = [
+  { domain: "templates", label: "Empty templates" },
+  { domain: "thesauri", label: "Empty thesauri" },
+  { domain: "relationTypes", label: "Empty relationship types" },
+  { domain: "activity", label: "Empty activity log" },
+];
 
 /** Switches for demos and QA (acceptance "Amendments for run 2"). Each is
  *  cleared by Settings › Dashboard › Reset demo data. */
@@ -9,6 +24,9 @@ export function DevPanel() {
   const [armed, setArmed] = useAtom(failNextAtom);
   const [scope, setScope] = useState<FailScope>("save");
   const [reason, setReason] = useState("The server did not answer in time.");
+  const [slow, setSlow] = useAtom(slowLoadAtom);
+  const empty = useSetAtom(emptyDomainAtom);
+  const [emptied, setEmptied] = useState<string | null>(null);
   return (
     <div data-component="DevPanel" className="flex flex-col gap-4 max-w-xl">
       <section className="flex flex-col gap-2">
@@ -42,6 +60,39 @@ export function DevPanel() {
         </div>
         <p role="status" className="min-h-4 text-meta text-ink-secondary">
           {armed ? `Armed: the next ${FAIL_SCOPES.find((s) => s.value === armed.scope)?.label.toLowerCase()} fails with “${armed.reason}”.` : "Not armed."}
+        </p>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h3 className="text-sm font-semibold text-ink">Slow load (2 s)</h3>
+        <label className="flex items-center gap-2 text-xs text-ink cursor-pointer w-fit">
+          <Checkbox checked={slow} onChange={() => setSlow((v) => !v)} ariaLabel="Slow load (2 s)" />
+          Settings holds its lists as loading for two seconds each time it opens
+        </label>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h3 className="text-sm font-semibold text-ink">Zero rows</h3>
+        <p className="text-xs text-ink-tertiary text-pretty">
+          Empties a store for the collection shown, past its delete guards, so its empty state can be seen.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {EMPTY.map((e) => (
+            <button
+              key={e.domain}
+              type="button"
+              onClick={() => {
+                empty(e.domain);
+                setEmptied(e.label);
+              }}
+              className="h-8 px-3 text-xs font-medium rounded-md bg-warm text-ink hover:bg-parchment cursor-pointer"
+            >
+              {e.label}
+            </button>
+          ))}
+        </div>
+        <p role="status" className="min-h-4 text-meta text-ink-secondary">
+          {emptied ? `${emptied}: done. Reset demo data brings the seed back.` : ""}
         </p>
       </section>
     </div>
