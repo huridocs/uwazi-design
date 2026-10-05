@@ -44,7 +44,7 @@ import {
   libraryDescriptorFiltersAtom,
   libraryDescriptorModeAtom,
   libraryDrawnIdsAtom,
-  libraryFieldLabelsAtom,
+  libraryFieldColumnsAtom,
   libraryHasDocAtom,
   libraryInheritedFiltersAtom,
   libraryLanguageInMenuAtom,
@@ -248,7 +248,7 @@ export function LibraryView() {
   const cardInfo = useAtomValue(libraryCardInfoAtom);
   const listColumnOn = useAtomValue(libraryListColumnsAtom);
   const listDensity = useAtomValue(libraryListDensityAtom);
-  const fieldLabels = useAtomValue(libraryFieldLabelsAtom);
+  const fieldColumns = useAtomValue(libraryFieldColumnsAtom);
   const thumbFrame = useAtomValue(libraryThumbFrameAtom);
   const thumbSize = useAtomValue(libraryThumbSizeAtom);
   const cardSide = useAtomValue(libraryCardSideAtom);
@@ -980,8 +980,8 @@ export function LibraryView() {
   // also read, so drawable and listed columns can't drift apart. The Match cell
   // is passed in rather than imported: see `ListCellContext.renderMatch`.
   const listSpecs = useMemo(
-    () => listColumnSpecs({ hasQuery, fieldLabels }),
-    [hasQuery, fieldLabels],
+    () => listColumnSpecs({ hasQuery, fieldColumns }),
+    [hasQuery, fieldColumns],
   );
   const tableColumns = buildListColumns(listSpecs, listColumnOn, {
     query,

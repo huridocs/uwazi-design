@@ -6,7 +6,8 @@ import { dataSourceAtom, libraryEntitiesAtom, type DataSource } from "./dataSour
 import { collectionSettings, type DefaultLibraryView } from "./settingsSingletons";
 import { languageAtom } from "./language";
 import { breakpointAtom } from "./viewport";
-import { distinctFieldLabels } from "../utils/entityFields";
+import { propertyColumns } from "../utils/entityFields";
+import { templatesAtom } from "./templates";
 import { listColumnOptions } from "../components/library/listColumns";
 import {
   optionsFor,
@@ -534,12 +535,11 @@ export interface LibraryDisplayState {
 }
 export const libraryDisplayAtom = atom<LibraryDisplayState>({ modes: {}, shared: {} });
 
-/** The property labels the current corpus carries, for the list's optional
- *  metadata columns. Derived from entities and language only, so it does not
- *  recompute per keystroke. */
-export const libraryFieldLabelsAtom = atom((get) =>
-  distinctFieldLabels(get(libraryEntitiesAtom), get(languageAtom)),
-);
+/** The list's optional metadata columns: one per template property of the
+ *  Library's corpus, keyed by name (spec §6.3). Derived from the templates
+ *  only, so it does not recompute per keystroke, and a label renamed in
+ *  Settings retitles its column without losing a saved choice. */
+export const libraryFieldColumnsAtom = atom((get) => propertyColumns(get(templatesAtom(get(dataSourceAtom)))));
 
 /** Set by the Library toolbar from its own width: true while the Sort select
  *  has no room in the row (see the masthead fold in `LibraryView`). */
@@ -559,7 +559,7 @@ export const libraryDisplayContextAtom = atom<DisplayContext>((get) => {
     sortInMenu: isMobile || get(librarySortInMenuAtom),
     languageInMenu: get(libraryLanguageInMenuAtom),
     hasQuery,
-    listColumns: listColumnOptions({ hasQuery, fieldLabels: get(libraryFieldLabelsAtom) }),
+    listColumns: listColumnOptions({ hasQuery, fieldColumns: get(libraryFieldColumnsAtom) }),
   };
 });
 

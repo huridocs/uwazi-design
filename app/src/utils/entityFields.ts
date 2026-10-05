@@ -152,6 +152,63 @@ export function entityCardFields(entity: Entity, language: Language): EntityScal
   return out;
 }
 
+/** The value an entity carries for one template property, by its `name`, or
+ *  undefined (spec §6.3: list columns are keyed by name, not by label). The
+ *  corpus's formatted line where it has one, else the record's field. */
+export function entityPropertyValue(entity: Entity, name: string, language: Language): EntityScalarField | undefined {
+  if (entity.fields && entityCorpusOf(entity.id) !== "artworks") {
+    const f = entity.fields.find((x) => x.prop === name);
+    if (f) return { id: name, key: f.key, kind: f.kind, label: f.label, value: f.value, values: f.values, more: f.more };
+    if (entity.fields.some((x) => x.prop)) return undefined;
+  }
+  const field = (getEntityProfile(entity.id).metadata[language] ?? []).find((f) => f.id === name);
+  return field ? (lineOf(field) ?? undefined) : undefined;
+}
+
+/** A list column a corpus offers: one per template property `name`. */
+export interface PropertyColumn {
+  name: string;
+  label: string;
+  /** Uwazi's `prioritySorting`: the column sorts. */
+  sortable: boolean;
+}
+
+/** Types that share a column under one name (Uwazi's combine rule). */
+const COMPATIBLE: Record<string, string> = {
+  multiselect: "select",
+  multidate: "date",
+  multidaterange: "daterange",
+  markdown: "text",
+};
+const family = (t: string) => COMPATIBLE[t] ?? t;
+/** Not a column: a picture, a preview, a table, a recording, a paragraph
+ *  (spec §2.1: too long for a cell). */
+const NOT_A_COLUMN = new Set(["image", "preview", "nested", "media", "markdown"]);
+
+/** The columns a corpus's templates offer, in template order: properties
+ *  with the same name and a compatible type are one column, labelled as the
+ *  first template has it. Cached per template list. */
+const columnsCache = new WeakMap<TemplateDef[], PropertyColumn[]>();
+export function propertyColumns(templates: TemplateDef[]): PropertyColumn[] {
+  const hit = columnsCache.get(templates);
+  if (hit) return hit;
+  const byName = new Map<string, { col: PropertyColumn; family: string }>();
+  for (const t of templates)
+    for (const p of t.properties) {
+      if (NOT_A_COLUMN.has(p.type)) continue;
+      const seen = byName.get(p.name);
+      if (seen && seen.family === family(p.type)) {
+        if (p.prioritySorting) seen.col.sortable = true;
+        continue;
+      }
+      if (seen) continue; // same name, another type: the first one keeps the column
+      byName.set(p.name, { col: { name: p.name, label: p.label, sortable: !!p.prioritySorting }, family: family(p.type) });
+    }
+  const out = [...byName.values()].map((x) => x.col);
+  columnsCache.set(templates, out);
+  return out;
+}
+
 /** The value an entity carries for one property label, or undefined.
  *
  *  The list table addresses metadata columns by LABEL rather than by property
