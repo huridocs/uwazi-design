@@ -4,7 +4,7 @@ import { getEntityProfile } from "../data/entityProfiles";
 import { overlayRecord } from "../data/entityChanges";
 import { cejilBySidLang, cejilEsBySid } from "../data/cejil/load";
 import { travesiaEntity } from "../data/travesia/load";
-import { templateMirror } from "../data/templates/mirror";
+import { templateMirror, templatesMirror } from "../data/templates/mirror";
 import { displayStrings } from "./templateProjection";
 
 /** An entity's values for one template property, by `name`, as the labels a
@@ -15,18 +15,31 @@ import { displayStrings } from "./templateProjection";
  *  CEJIL and Travesía read the raw record (a map lookup); the Sample and
  *  Artworks read their projected profile; an entity edited in this session
  *  reads its record. Cached per entity object and language, so a facet's
- *  full-corpus count pass reads each value once. */
+ *  full-corpus count pass reads each value once. A save on the Sample or
+ *  Artworks writes the entity's record and keeps its object, and a template
+ *  edit keeps every object, so an entry also holds the record and the
+ *  template list it was read from and is dropped when either changes. */
 const LANG_CODE: Record<Language, string> = { EN: "en", ES: "es", FR: "es", AR: "es" };
-const cache = new WeakMap<Entity, Map<string, string[]>>();
+interface Entry {
+  record: ReturnType<typeof overlayRecord>;
+  templates: object;
+  byKey: Map<string, string[]>;
+}
+const cache = new WeakMap<Entity, Entry>();
 
 export function entityPropertyValues(e: Entity, name: string, lang: Language): string[] {
-  let byKey = cache.get(e);
-  if (!byKey) cache.set(e, (byKey = new Map()));
+  const record = overlayRecord(e.id);
+  const templates = templatesMirror(entityCorpusOf(e.id));
+  let entry = cache.get(e);
+  if (!entry || entry.record !== record || entry.templates !== templates) {
+    entry = { record, templates, byKey: new Map() };
+    cache.set(e, entry);
+  }
   const key = `${lang}|${name}`;
-  const hit = byKey.get(key);
+  const hit = entry.byKey.get(key);
   if (hit) return hit;
   const out = read(e, name, lang);
-  byKey.set(key, out);
+  entry.byKey.set(key, out);
   return out;
 }
 
