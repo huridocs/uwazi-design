@@ -216,7 +216,7 @@ generic):
 | Shell | `rounded-md bg-paper`, `boxShadow: 0 1px 3px …/0 1px 2px …` (the card shadow) |
 | Header | `h-10`, `bg-warm`, `text-[11px] font-semibold text-ink-tertiary uppercase tracking-wider`, `border-bottom: 1px solid var(--border-primary)` |
 | Row | `min-h-11 py-2`, `hover:bg-warm`, selected `bg-parchment`, `border-bottom: 1px solid var(--border-primary)` |
-| Footer | `h-10`, `bg-warm`, `text-xs text-ink-muted`, top border |
+| Footer | `h-10`, `bg-warm`, `text-xs text-ink-tertiary`, top border |
 | Overflow | `minWidthRem` set ⇒ `overflow-x-auto` + `min-width`; unset ⇒ `overflow-hidden` (columns always fit) |
 | Layout | CSS grid per row (`gridTemplateColumns` from `column.width`), **not** `<table>` — matches the prototype's grid-table convention |
 
