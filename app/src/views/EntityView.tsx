@@ -23,6 +23,8 @@ import { RelationshipsView } from "./RelationshipsView";
 import { t } from "../utils/i18n";
 import { useDirtyGuard } from "../hooks/useDirtyGuard";
 import { DRAWER_MIN_WIDTH } from "../components/layout/SplitView";
+import { PublishedEntityView } from "../components/entity/PublishedEntityView";
+import { entityTabRequestAtom, showPublishedViewAtom } from "../atoms/publishedView";
 
 export function EntityView() {
   const focusedId = useAtomValue(focusedEntityIdAtom);
@@ -47,6 +49,16 @@ export function EntityView() {
     setActiveTab(profile.hasDocument ? "document" : "metadata");
   }, [focusedId, profile.hasDocument]);
 
+  // The published view's document link and toggle ask for a tab on their way
+  // here.
+  const [tabRequest, setTabRequest] = useAtom(entityTabRequestAtom);
+  const published = useAtomValue(showPublishedViewAtom);
+  useEffect(() => {
+    if (!tabRequest || published) return;
+    setActiveTab(tabRequest);
+    setTabRequest(null);
+  }, [tabRequest, published, setTabRequest]);
+
   // The main-tab strip swaps whole page bodies, so it's a navigation choke
   // point: leaving a tab with a dirty edit session gets a confirm first.
   const handleTabChange = (id: string) => {
@@ -67,6 +79,10 @@ export function EntityView() {
     if (tab.id === "files") return { ...tab, count: filesCount };
     return tab;
   });
+
+  // A template with a published view opens in it; the floating toggle in the
+  // app shell switches to the entity view below, whose tab state is kept.
+  if (published) return <PublishedEntityView />;
 
   if (activeTab === "metadata") {
     return (

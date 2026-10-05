@@ -162,8 +162,8 @@ export function NotificationsDrawer({ rtl = false }: { rtl?: boolean }) {
         data-state={open ? "open" : "closed"}
         data-gutter-host
         className={`fixed top-0 bottom-0 ${side} z-[61] w-[23rem] max-w-[calc(100vw-2.5rem)]
-          gutter-host-main bg-paper border-border shadow-xl flex flex-col beacon-spring
-          transition-transform duration-300 ${open ? "translate-x-0" : closedTransform}`}
+          gutter-host-main bg-paper border-border flex flex-col beacon-spring
+          transition-transform duration-300 ${open ? "translate-x-0 shadow-xl" : closedTransform}`}
       >
         {/* Header — `bleed`, so its rule runs to the panel edge */}
         <header data-part="header" className="shrink-0 bleed border-b border-border">

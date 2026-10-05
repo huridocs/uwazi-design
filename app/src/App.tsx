@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useAtom } from "jotai";
 import { Navbar } from "./components/layout/Navbar";
 import { EntityView } from "./views/EntityView";
+import { PublishedViewToggle } from "./components/entity/PublishedEntityView";
 import { LibraryView } from "./views/LibraryView";
 import { ComponentCatalog } from "./views/ComponentCatalog";
 import { ImportCSVView } from "./views/ImportCSVView";
@@ -75,6 +76,8 @@ export function App() {
         rtl={rtl}
         onToggleRtl={handleToggleRtl}
       />
+      {/* Before the view in the tab order, floating over the navbar's edge. */}
+      {appView === "entity" && <PublishedViewToggle />}
       <div className="flex-1 min-h-0 flex flex-col">
         {appView === "import-csv" ? (
           <ImportCSVView onNavigate={handleNavigate} />

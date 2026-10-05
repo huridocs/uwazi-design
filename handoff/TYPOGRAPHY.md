@@ -133,6 +133,8 @@ prose/passage   text-sm leading-relaxed text-ink
 button          text-xs font-medium
 badge / chip    text-[11px] font-medium          (count/entity pills: text-xs font-medium)
 dialog heading  text-base font-semibold text-ink
+published title text-2xl md:text-3xl font-semibold leading-tight text-ink text-balance
+                                                 (PublishedEntityView masthead only: the one display size)
 empty title     text-sm font-medium text-ink-secondary
 caption         text-xs text-ink-muted           (field messages: FieldMessage, text-[11px] leading-4)
 ```

@@ -22,10 +22,15 @@ export interface EntityType {
   id: string;
   name: string;
   color: string;
+  /** The prototype's stand-in for Uwazi's `entityViewPage`: entities of this
+   *  template open in the published view, with a toggle to the entity view.
+   *  Seeded. */
+  publishedView?: boolean;
 }
 
 export const entityTypes: EntityType[] = [
-  { id: "person", name: "Person", color: "#8B5CF6" },
+  // Person opens in the published view.
+  { id: "person", name: "Person", color: "#8B5CF6", publishedView: true },
   { id: "court_case", name: "Court Case", color: "#0891B2" },
   { id: "country", name: "Country", color: "#059669" },
   { id: "judgment", name: "Judgment", color: "#D97706" },

@@ -113,7 +113,9 @@ export function Hint({
             role="tooltip"
             aria-hidden
             data-component="Hint"
-            className="pointer-events-none fixed z-50 max-w-[20rem] rounded-md bg-ink px-2 py-1
+            // `w-max`: a fixed box placed near the viewport's end otherwise
+            // shrinks to the room left of it and wraps a short hint.
+            className="pointer-events-none fixed z-50 w-max max-w-[20rem] rounded-md bg-ink px-2 py-1
               text-meta font-normal normal-case tracking-normal text-paper shadow-md"
             // Hidden until placed: the first layout pass only measures it.
             style={pos ? { left: pos.left, top: pos.top } : { left: 0, top: 0, visibility: "hidden" }}

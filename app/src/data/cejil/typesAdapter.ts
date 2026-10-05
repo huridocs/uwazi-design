@@ -13,10 +13,15 @@ const PALETTE = [
   "#1D4ED8", "#A16207", "#047857", "#6B7280",
 ];
 
+/** Juez y/o Comisionado (facts only) and Causa (a Resumen to read) open in the
+ *  published view (`EntityType.publishedView`). */
+const PUBLISHED_VIEW_TEMPLATES = new Set(["58b2f3a35d59f31e1345b4b6", "58b2f3a35d59f31e1345b48a"]);
+
 export const cejilEntityTypes: EntityType[] = cejilTemplates.map((t, i) => ({
   id: t._id,
   name: t.name.trim(),
   color: t.color || PALETTE[i % PALETTE.length],
+  ...(PUBLISHED_VIEW_TEMPLATES.has(t._id) ? { publishedView: true } : {}),
 }));
 
 export const cejilTypeById = new Map(cejilEntityTypes.map((t) => [t.id, t]));
