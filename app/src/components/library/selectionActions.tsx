@@ -115,7 +115,7 @@ export function SelectionDialogs({ corpus, notInView }: { corpus: Corpus; notInV
   const doDelete = () => {
     close();
     // Behind the bulk form's guard BEFORE anything is deleted: with a dirty
-    // form, "Keep editing" must leave the entities where they are, not
+    // form, "Cancel" must leave the entities where they are, not
     // deleted-but-still-selected in the form's frozen set.
     store.set(whenBulkCleanAtom, deleteSelection);
   };

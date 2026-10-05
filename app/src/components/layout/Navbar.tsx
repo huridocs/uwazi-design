@@ -131,7 +131,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
     });
   };
   /** Switch collection and open the Library on it. Guarded as one step: an
-   *  open settings or metadata form asks first, and "Keep editing" leaves the
+   *  open settings or metadata form asks first, and "Cancel" leaves the
    *  collection as it was (Settings pages remount on a collection change). */
   const switchCollection = (source: DataSource) => {
     guard(() => {

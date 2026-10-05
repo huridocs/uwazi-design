@@ -30,10 +30,11 @@ export function UnsavedChangesGuard() {
   return (
     <ConfirmDialog
       open={pending !== null}
-      title="Discard unsaved changes?"
-      message={`${pending?.label ?? "Your edits"} haven't been saved. Leaving now will discard them.`}
-      confirmLabel="Discard"
-      cancelLabel="Keep editing"
+      // Uwazi's wording for every unsaved form.
+      title="Discard changes?"
+      message="You have unsaved changes. Do you want to continue?"
+      confirmLabel="Discard changes"
+      cancelLabel="Cancel"
       variant="danger"
       onConfirm={confirmPending}
       onCancel={() => setPending(null)}

@@ -64,7 +64,7 @@ const guardBypassAtom = atom(false);
 /** Write-only choke point: every navigation setter routes its write through
  *  this. Nothing dirty → the write runs immediately, zero cost. Something
  *  dirty → the write is parked in `pendingNavigationAtom` and the dialog asks;
- *  Discard runs it, Keep editing drops it. Guard the handful of setters that
+ *  Discard runs it, Cancel drops it. Guard the handful of setters that
  *  switch surfaces (app view, entity tabs, focal entity, settings section) —
  *  not every button. */
 export const guardNavigationAtom = atom(null, (get, set, run: () => void) => {
