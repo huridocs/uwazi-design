@@ -1,16 +1,17 @@
 import { useMemo, useState } from "react";
-import { useSetAtom } from "jotai";
 import { Copy, Camera, ExternalLink, RefreshCw } from "lucide-react";
-import { SettingsContent } from "../SettingsContent";
+import { SettingsEditor } from "../SettingsEditor";
+import { SettingsSection, SettingsStat } from "../SettingsSection";
+import { SettingsEmptyState } from "../SettingsEmptyState";
 import { SettingsButton } from "../SettingsButton";
 import { SettingsField, TextInput } from "../SettingsField";
 import { Select } from "../../shared/Select";
 import { RadioGroup } from "../../shared/RadioGroup";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { type SettingsPreserveToken } from "../../../data/settings";
+import { useNotify } from "../../../hooks/useNotify";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
 import { LastSavedLine } from "../../shared/LastSavedLine";
-import { useNotify } from "../../../hooks/useNotify";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
 const AUTH_OPTIONS = [
@@ -90,8 +91,8 @@ export function PreserveTokenEditor({
   onClose: () => void;
 }) {
   const notify = useNotify();
-  const { record } = useSettingsNotify();
   const toast = (message: string) => notify(message, "success");
+  const { record } = useSettingsNotify();
 
   const isNew = token === "new";
   const base = isNew ? undefined : token;
@@ -132,7 +133,7 @@ export function PreserveTokenEditor({
   };
 
   const save = () => {
-    record({ log: false, 
+    record({ log: false,
       method: isNew ? "CREATE" : "UPDATE",
       domain: "preserve",
       noun: "capture source",
@@ -208,101 +209,95 @@ export function PreserveTokenEditor({
   ];
 
   return (
-    <SettingsContent component="PreserveTokenEditor">
-      <SettingsContent.Header path={["Preserve"]} title={isNew ? "New capture source" : base!.name} onBack={onClose} />
-      <SettingsContent.Body>
-        <div className="flex flex-col gap-6">
-          {/* Config */}
-          <section className="flex flex-col gap-6 max-w-lg">
-            <SettingsField label="Source name">
-              <TextInput value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Court press releases" />
-            </SettingsField>
-
-            <SettingsField label="Source URL" hint="The page or feed Preserve captures.">
-              <TextInput value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…" />
-            </SettingsField>
-
-            <SettingsField label="Authentication">
-              <Select value={auth} options={AUTH_OPTIONS} onChange={setAuth} ariaLabel="Authentication" />
-            </SettingsField>
-
-            <div>
-              <h3 className="text-sm font-semibold text-ink mb-1">Capture schedule</h3>
-              <p className="text-xs text-ink-tertiary mb-3">How often Preserve re-captures this source.</p>
-              <RadioGroup
-                name="preserve-schedule"
-                ariaLabel="Capture schedule"
-                inline
-                value={schedule}
-                onChange={setSchedule}
-                options={[
-                  { id: "hourly", label: "Hourly" },
-                  { id: "daily", label: "Daily" },
-                  { id: "weekly", label: "Weekly" },
-                ]}
-              />
-            </div>
-          </section>
-
-          {/* Stats + capture + evidence table (existing source) */}
-          {!isNew && (
-            <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
-              <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
-                <dl data-part="stats" className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3">
-                  <Stat label="Captures" value={captured} />
-                  <Stat label="Schedule" value={schedule[0].toUpperCase() + schedule.slice(1)} />
-                  <Stat label="Failed" value={failed} />
-                  <Stat label="Last run" value={base!.lastRun} ltr />
-                </dl>
-                <SettingsButton variant="primary" size="sm" icon={<Camera size={14} />} onClick={captureNow}>
-                  Capture now
-                </SettingsButton>
-              </div>
-
-              {/* A readout with a copy action, not a control: a label/value pair. */}
-              <dl data-part="token" className="flex flex-col gap-1.5">
-                <dt className="text-xs font-medium text-ink-secondary">Token</dt>
-                <dd className="flex items-center gap-2 max-w-lg">
-                  <code className="flex-1 min-w-0 truncate text-xs font-mono text-ink-secondary bg-vellum px-3 py-2 rounded-md" dir="ltr">
-                    {base!.token}
-                  </code>
-                  <SettingsButton variant="secondary" size="sm" icon={<Copy size={13} />} onClick={() => toast("Token copied")}>
-                    Copy
-                  </SettingsButton>
-                </dd>
-              </dl>
-
-              {/* Evidence table */}
-              <div className="flex flex-wrap items-center justify-between gap-2 mt-6 mb-3">
-                <h3 className="text-sm font-semibold text-ink">
-                  Captures <span className="text-ink-tertiary font-normal">({visible.length})</span>
-                </h3>
-                <Select value={filter} options={FILTERS} onChange={setFilter} ariaLabel="Filter captures" />
-              </div>
-              <SettingsTable columns={columns} data={visible} getRowId={(r) => r.id} emptyState="No captures in this view." />
-            </section>
-          )}
+    <SettingsEditor
+      component="PreserveTokenEditor"
+      path={["Preserve"]}
+      title={isNew ? "New capture source" : base!.name}
+      onBack={onClose}
+      isNew={isNew}
+      createLabel="Add source"
+      dirty={dirty}
+      valid={!!name.trim()}
+      onSave={save}
+      footerStart={<LastSavedLine domain="preserve" id={base?.id} />}
+      wide
+    >
+      <SettingsSection>
+        <div className="flex flex-col gap-3 max-w-lg">
+          <SettingsField label="Source name">
+            <TextInput value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Court press releases" />
+          </SettingsField>
+          <SettingsField label="Source URL" hint="The page or feed Preserve captures.">
+            <TextInput value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…" />
+          </SettingsField>
+          <SettingsField label="Authentication">
+            <Select value={auth} options={AUTH_OPTIONS} onChange={setAuth} ariaLabel="Authentication" />
+          </SettingsField>
         </div>
-      </SettingsContent.Body>
-      <SettingsContent.Footer>
-        <LastSavedLine domain="preserve" id={base?.id} className="me-auto" />
-        <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
-        <SettingsButton variant={isNew ? "commit" : "success"} size="sm" disabled={!dirty || !name.trim()} onClick={save}>
-          {isNew ? "Add source" : "Save"}
-        </SettingsButton>
-      </SettingsContent.Footer>
-    </SettingsContent>
-  );
-}
+      </SettingsSection>
 
-/** One term of the stats `dl`: a `dt`/`dd` pair in a `div`, which a `dl` allows. */
-function Stat({ label, value, ltr }: { label: string; value: string | number; ltr?: boolean }) {
-  return (
-    <div data-part="stat" className="flex flex-col gap-1">
-      <dt className="text-xs font-medium text-ink-tertiary uppercase tracking-wider">{label}</dt>
-      <dd className="text-lg font-semibold text-ink tabular-nums" dir={ltr ? "ltr" : undefined}>
-        {value}
-      </dd>
-    </div>
+      <SettingsSection title="Capture schedule" description="How often Preserve re-captures this source.">
+        <RadioGroup
+          name="preserve-schedule"
+          ariaLabel="Capture schedule"
+          inline
+          value={schedule}
+          onChange={setSchedule}
+          options={[
+            { id: "hourly", label: "Hourly" },
+            { id: "daily", label: "Daily" },
+            { id: "weekly", label: "Weekly" },
+          ]}
+        />
+      </SettingsSection>
+
+      {!isNew && (
+        <SettingsSection
+          title="Status"
+          action={
+            <SettingsButton variant="secondary" size="sm" icon={<Camera size={14} />} onClick={captureNow}>
+              Capture now
+            </SettingsButton>
+          }
+        >
+          <dl data-part="stats" className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3">
+            <SettingsStat label="Captures" value={captured} />
+            <SettingsStat label="Schedule" value={schedule[0].toUpperCase() + schedule.slice(1)} />
+            <SettingsStat label="Failed" value={failed} />
+            <SettingsStat label="Last run" value={base!.lastRun} ltr />
+          </dl>
+          {/* A readout with a copy action, not a control: a label/value pair. */}
+          <dl data-part="token" className="flex flex-col gap-1.5">
+            <dt className="text-xs font-medium text-ink-secondary">Token</dt>
+            <dd className="flex items-center gap-2 max-w-lg">
+              <code className="flex-1 min-w-0 truncate text-xs font-mono text-ink-secondary bg-vellum px-3 py-2 rounded-md" dir="ltr">
+                {base!.token}
+              </code>
+              <SettingsButton variant="secondary" size="sm" icon={<Copy size={13} />} onClick={() => toast("Token copied")}>
+                Copy
+              </SettingsButton>
+            </dd>
+          </dl>
+        </SettingsSection>
+      )}
+
+      {!isNew && (
+        <SettingsSection
+          title={
+            <>
+              Captures <span className="text-ink-tertiary font-normal">({visible.length})</span>
+            </>
+          }
+          action={<Select value={filter} options={FILTERS} onChange={setFilter} ariaLabel="Filter captures" />}
+        >
+          <SettingsTable
+            columns={columns}
+            data={visible}
+            getRowId={(r) => r.id}
+            emptyState={<SettingsEmptyState title="No captures in this view" hint="Change the filter to see other captures." />}
+          />
+        </SettingsSection>
+      )}
+    </SettingsEditor>
   );
 }

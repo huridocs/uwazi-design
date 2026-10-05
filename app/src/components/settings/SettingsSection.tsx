@@ -96,3 +96,16 @@ export function SettingsCheckRow({ children }: { children: ReactNode }) {
     </label>
   );
 }
+
+/** One figure in a section's stats `dl` ("Documents 42"): a `dt`/`dd` pair
+ *  in a `div`, which a `dl` allows. `value` may be a node (a status pill). */
+export function SettingsStat({ label, value, ltr }: { label: string; value: ReactNode; ltr?: boolean }) {
+  return (
+    <div data-part="stat" className="flex flex-col gap-1">
+      <dt className="text-xs font-medium text-ink-tertiary uppercase tracking-wider">{label}</dt>
+      <dd dir={ltr ? "ltr" : undefined} className="text-lg font-semibold text-ink tabular-nums">
+        {value}
+      </dd>
+    </div>
+  );
+}

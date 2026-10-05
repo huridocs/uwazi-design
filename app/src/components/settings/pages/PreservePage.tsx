@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { useSetAtom } from "jotai";
-import { Plus } from "lucide-react";
-import { SettingsContent } from "../SettingsContent";
-import { SettingsButton } from "../SettingsButton";
+import { Archive } from "lucide-react";
+import { SettingsListPage, useSettingsSearch } from "../SettingsListPage";
+import { SettingsEmptyState } from "../SettingsEmptyState";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { RowActions } from "../RowActions";
 import { ConfirmDelete } from "../../shared/ConfirmDelete";
@@ -15,6 +14,7 @@ export function PreservePage() {
   const [tokens, setTokens] = useState<SettingsPreserveToken[]>(seedPreserveTokens);
   const [confirm, setConfirm] = useState<SettingsPreserveToken | null>(null);
   const [editing, setEditing] = useState<SettingsPreserveToken | "new" | null>(null);
+  const search = useSettingsSearch(tokens, (t) => t.name);
 
   if (editing) return <PreserveTokenEditor token={editing} onClose={() => setEditing(null)} />;
 
@@ -32,39 +32,51 @@ export function PreservePage() {
     },
     { id: "captured", header: "Captured", width: "7rem", cell: (t) => <span className="text-ink-secondary tabular-nums">{t.capturedCount}</span> },
     { id: "lastRun", header: "Last run", width: "11rem", cell: (t) => <span dir="ltr" className="text-xs text-ink-tertiary tabular-nums">{t.lastRun}</span> },
-    { id: "actions", header: "", width: "6rem", align: "right", cell: (t) => <RowActions label={t.name} onEdit={() => setEditing(t)} onDelete={() => setConfirm(t)} /> },
+    { id: "actions", header: "", width: "4rem", align: "right", cell: (t) => <RowActions label={`the token for ${t.name}`} deleteLabel="Revoke" onDelete={() => setConfirm(t)} /> },
   ];
 
   return (
-    <SettingsContent component="PreservePage">
-      <SettingsContent.Header title="Preserve" />
-      <SettingsContent.Body>
-        <p className="text-xs text-ink-tertiary mb-4">
-          Capture and archive web sources on a schedule. Each token authenticates one capture source.
-        </p>
-        <SettingsTable columns={columns} data={tokens} getRowId={(t) => t.id} onRowClick={(t) => setEditing(t)} rowAriaLabel={(t) => `Edit ${t.name}`} />
-      </SettingsContent.Body>
-      <SettingsContent.Footer>
-        <SettingsButton variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
-          New token
-        </SettingsButton>
-      </SettingsContent.Footer>
-
-      <ConfirmDelete
-        open={confirm !== null}
-        impact={confirm ? { lines: [`${confirm.capturedCount.toLocaleString()} captures made with it stay in the collection.`], block: null } : null}
-        title="Revoke token"
-        message={`Revoke the token for “${confirm?.name}”? Scheduled captures from this source will stop.`}
-        confirmLabel="Revoke"
-        onConfirm={() => {
-          if (confirm) {
-            setTokens((prev) => prev.filter((t) => t.id !== confirm.id));
-            record({ log: false,  method: "DELETE", domain: "preserve", noun: "Preserve token for", id: confirm.id, name: confirm.name, message: "Token revoked" });
-          }
-          setConfirm(null);
-        }}
-        onCancel={() => setConfirm(null)}
+    <SettingsListPage
+      component="PreservePage"
+      title="Preserve"
+      intro="Capture and archive web sources on a schedule. Each&nbsp;token authenticates one capture source."
+      search={{ value: search.query, onChange: search.setQuery, label: "Search sources" }}
+      lead={{ label: "Add token", onClick: () => setEditing("new") }}
+      overlays={
+        <ConfirmDelete
+          open={confirm !== null}
+          impact={confirm ? { lines: [`${confirm.capturedCount.toLocaleString()} captures made with it stay in the collection.`], block: null } : null}
+          title="Revoke token"
+          message={`Revoke the token for “${confirm?.name}”? Scheduled captures from this source will stop.`}
+          confirmLabel="Revoke"
+          onConfirm={() => {
+            if (confirm) {
+              setTokens((prev) => prev.filter((t) => t.id !== confirm.id));
+              record({ log: false,  method: "DELETE", domain: "preserve", noun: "Preserve token for", id: confirm.id, name: confirm.name, message: "Token revoked" });
+            }
+            setConfirm(null);
+          }}
+          onCancel={() => setConfirm(null)}
+        />
+      }
+    >
+      <SettingsTable
+        columns={columns}
+        data={search.rows}
+        getRowId={(t) => t.id}
+        onRowClick={(t) => setEditing(t)}
+        rowAriaLabel={(t) => `Edit ${t.name}`}
+        emptyState={
+          <SettingsEmptyState
+            icon={<Archive size={16} />}
+            title="No capture sources yet"
+            hint="Add a token to archive a web source on a schedule."
+            action={{ label: "Add token", onClick: () => setEditing("new") }}
+            query={search.query}
+            onClearQuery={search.clear}
+          />
+        }
       />
-    </SettingsContent>
+    </SettingsListPage>
   );
 }

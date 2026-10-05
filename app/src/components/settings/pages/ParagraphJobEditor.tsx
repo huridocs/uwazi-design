@@ -1,16 +1,17 @@
 import { useMemo, useState } from "react";
-import { useSetAtom } from "jotai";
 import { Play, RotateCw } from "lucide-react";
-import { SettingsContent } from "../SettingsContent";
+import { SettingsEditor } from "../SettingsEditor";
+import { SettingsSection, SettingsStat } from "../SettingsSection";
+import { SettingsEmptyState } from "../SettingsEmptyState";
 import { SettingsButton } from "../SettingsButton";
 import { SettingsField, TextInput } from "../SettingsField";
 import { Select } from "../../shared/Select";
 import { StatusPill } from "../StatusPill";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { seedTemplates, type SettingsParagraphJob } from "../../../data/settings";
+import { useNotify } from "../../../hooks/useNotify";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
 import { LastSavedLine } from "../../shared/LastSavedLine";
-import { useNotify } from "../../../hooks/useNotify";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
 const TEMPLATE_OPTIONS = seedTemplates.map((t) => ({ value: t.name, label: t.name }));
@@ -129,7 +130,7 @@ export function ParagraphJobEditor({
   const rerunDoc = (title: string) => toast(`Re-running extraction for ${title.split(" — ")[0]}`);
 
   const save = () => {
-    record({ log: false, 
+    record({ log: false,
       method: isNew ? "CREATE" : "UPDATE",
       domain: "paragraphJob",
       noun: "paragraph extraction for",
@@ -193,85 +194,80 @@ export function ParagraphJobEditor({
   ];
 
   return (
-    <SettingsContent component="ParagraphJobEditor">
-      <SettingsContent.Header path={["Paragraph extraction"]} title={isNew ? "New extraction" : base!.template} onBack={onClose} />
-      <SettingsContent.Body>
-        <div className="flex flex-col gap-6">
-          <p className="text-xs text-ink-tertiary">
-            Split every document of a template into paragraph-level records for fine-grained search.
-          </p>
-
-          {/* Config */}
-          <section className="grid sm:grid-cols-3 gap-3">
-            <SettingsField label="Template">
-              {isNew ? (
-                <Select value={template} options={TEMPLATE_OPTIONS} onChange={setTemplate} ariaLabel="Template" />
-              ) : (
-                <span className="text-sm text-ink py-2">{base!.template}</span>
-              )}
-            </SettingsField>
-            <SettingsField label="Segmentation" hint="How documents are split into records.">
-              <Select value={segmentation} options={SEGMENTATION_OPTIONS} onChange={setSegmentation} ariaLabel="Segmentation" />
-            </SettingsField>
-            <SettingsField label="Min characters" hint="Drop fragments shorter than this.">
-              <TextInput
-                value={minChars}
-                inputMode="numeric"
-                onChange={(e) => setMinChars(e.target.value.replace(/[^0-9]/g, ""))}
-                placeholder="40"
-              />
-            </SettingsField>
-          </section>
-
-          {/* Stats + run */}
-          {!isNew && (
-            <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
-              <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
-                <dl data-part="stats" className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3">
-                  <Stat label="Documents" value={documents} />
-                  <Stat label="Paragraphs" value={totalParagraphs.toLocaleString()} />
-                  <div data-part="stat" className="flex flex-col gap-1">
-                    <dt className="text-xs font-medium text-ink-tertiary uppercase tracking-wider">Status</dt>
-                    <dd>
-                      <StatusPill status={base!.status} />
-                    </dd>
-                  </div>
-                  <Stat label="Last run" value="2 days ago" />
-                </dl>
-                <SettingsButton variant="primary" size="sm" icon={<Play size={14} />} onClick={runExtraction}>
-                  Run extraction
-                </SettingsButton>
-              </div>
-
-              {/* Per-document breakdown */}
-              <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-                <h3 className="text-sm font-semibold text-ink">
-                  Documents <span className="text-ink-tertiary font-normal">({visible.length})</span>
-                </h3>
-                <Select value={filter} options={FILTERS} onChange={setFilter} ariaLabel="Filter documents" />
-              </div>
-              <SettingsTable columns={columns} data={visible} getRowId={(r) => r.id} emptyState="No documents in this view." />
-            </section>
-          )}
+    <SettingsEditor
+      component="ParagraphJobEditor"
+      path={["Paragraph extraction"]}
+      title={isNew ? "New extraction" : base!.template}
+      onBack={onClose}
+      intro="Split every document of a template into paragraph-level records for fine-grained search."
+      isNew={isNew}
+      createLabel="Start extraction"
+      saveLabel="Re-run"
+      // The commit runs the job, so it is always available; the settings
+      // draft still guards an unsaved change on the way out.
+      dirty
+      onSave={save}
+      footerStart={<LastSavedLine domain="paragraphJob" id={base?.id} />}
+      wide
+    >
+      <SettingsSection>
+        <div className="grid sm:grid-cols-3 gap-3">
+          <SettingsField label="Template">
+            {isNew ? (
+              <Select value={template} options={TEMPLATE_OPTIONS} onChange={setTemplate} ariaLabel="Template" />
+            ) : (
+              <span className="text-sm text-ink py-2">{base!.template}</span>
+            )}
+          </SettingsField>
+          <SettingsField label="Segmentation" hint="How documents are split into records.">
+            <Select value={segmentation} options={SEGMENTATION_OPTIONS} onChange={setSegmentation} ariaLabel="Segmentation" />
+          </SettingsField>
+          <SettingsField label="Min characters" hint="Drop fragments shorter than this.">
+            <TextInput
+              value={minChars}
+              inputMode="numeric"
+              onChange={(e) => setMinChars(e.target.value.replace(/[^0-9]/g, ""))}
+              placeholder="40"
+            />
+          </SettingsField>
         </div>
-      </SettingsContent.Body>
-      <SettingsContent.Footer>
-        <LastSavedLine domain="paragraphJob" id={base?.id} className="me-auto" />
-        <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
-        <SettingsButton variant="commit" size="sm" onClick={save}>
-          {isNew ? "Start extraction" : "Re-run"}
-        </SettingsButton>
-      </SettingsContent.Footer>
-    </SettingsContent>
-  );
-}
+      </SettingsSection>
 
-/** One term of the stats `dl`: a `dt`/`dd` pair in a `div`, which a `dl` allows. */
-function Stat({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div data-part="stat" className="flex flex-col gap-1">
-      <dt className="text-xs font-medium text-ink-tertiary uppercase tracking-wider">{label}</dt>
-      <dd className="text-lg font-semibold text-ink tabular-nums">{value}</dd>
-    </div>
+      {!isNew && (
+        <SettingsSection
+          title="Last run"
+          action={
+            <SettingsButton variant="secondary" size="sm" icon={<Play size={14} />} onClick={runExtraction}>
+              Run extraction
+            </SettingsButton>
+          }
+        >
+          <dl data-part="stats" className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3">
+            <SettingsStat label="Documents" value={documents} />
+            <SettingsStat label="Paragraphs" value={totalParagraphs.toLocaleString()} />
+            <SettingsStat label="Status" value={<StatusPill status={base!.status} />} />
+            <SettingsStat label="Last run" value="2 days ago" />
+          </dl>
+        </SettingsSection>
+      )}
+
+      {!isNew && (
+        <SettingsSection
+          title={
+            <>
+              Documents <span className="text-ink-tertiary font-normal">({visible.length})</span>
+            </>
+          }
+          action={<Select value={filter} options={FILTERS} onChange={setFilter} ariaLabel="Filter documents" />}
+        >
+          <SettingsTable
+            columns={columns}
+            data={visible}
+            getRowId={(r) => r.id}
+            emptyState={<SettingsEmptyState title="No documents in this view" hint="Change the filter to see other documents." />}
+          />
+        </SettingsSection>
+      )}
+    </SettingsEditor>
   );
 }

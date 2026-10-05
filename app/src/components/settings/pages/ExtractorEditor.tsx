@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { useSetAtom } from "jotai";
 import { Sparkles, Check, X } from "lucide-react";
-import { SettingsContent } from "../SettingsContent";
+import { SettingsEditor } from "../SettingsEditor";
+import { SettingsSection, SettingsStat } from "../SettingsSection";
+import { SettingsEmptyState } from "../SettingsEmptyState";
 import { SettingsButton } from "../SettingsButton";
 import { SettingsField, TextInput } from "../SettingsField";
 import { Select } from "../../shared/Select";
@@ -9,8 +10,8 @@ import { SettingsTable, type Column } from "../SettingsTable";
 import { seedTemplates, type SettingsExtractor } from "../../../data/settings";
 import { useNotify } from "../../../hooks/useNotify";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
-import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { LastSavedLine } from "../../shared/LastSavedLine";
+import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
 const TEMPLATE_OPTIONS = seedTemplates.map((t) => ({ value: t.name, label: t.name }));
@@ -148,7 +149,7 @@ export function ExtractorEditor({
   };
 
   const save = () => {
-    record({ log: false, 
+    record({ log: false,
       method: isNew ? "CREATE" : "UPDATE",
       domain: "extractor",
       noun: "extractor",
@@ -226,92 +227,97 @@ export function ExtractorEditor({
   ];
 
   return (
-    <SettingsContent component="ExtractorEditor">
-      <SettingsContent.Header path={["Metadata extraction"]} title={isNew ? "New extractor" : base!.property} onBack={onClose} />
-      <SettingsContent.Body>
-        <div className="flex flex-col gap-6">
-          {/* Config */}
-          <section className="grid sm:grid-cols-3 gap-3">
-            <SettingsField label="Template">
-              <Select value={template} options={TEMPLATE_OPTIONS} onChange={setTemplate} ariaLabel="Template" />
-            </SettingsField>
-            <SettingsField label="Property" hint="The metadata property to suggest values for.">
-              <TextInput value={property} onChange={(e) => setProperty(e.target.value)} placeholder="e.g. Date filed" />
-            </SettingsField>
-            <SettingsField label="Property type">
-              <Select value={propType} options={TYPE_OPTIONS} onChange={setPropType} ariaLabel="Property type" />
-            </SettingsField>
-          </section>
-
-          {/* Stats + train */}
-          {!isNew && (
-            <section className="pt-6" style={{ borderTop: "1px solid var(--border-soft)" }}>
-              <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
-                <dl data-part="stats" className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3">
-                  <Stat label="Documents" value={base!.documents} />
-                  <Stat label="Reviewed" value={reviewed} />
-                  <Stat label="Pending" value={pending} />
-                  <Stat label="Accuracy" value={accuracy === null ? "—" : `${accuracy}%`} />
-                </dl>
-                <SettingsButton variant="primary" size="sm" icon={<Sparkles size={14} />} onClick={findSuggestions}>
-                  Find suggestions
-                </SettingsButton>
-              </div>
-
-              {/* Review table */}
-              <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-                <h3 className="text-sm font-semibold text-ink">
-                  Suggestions <span className="text-ink-tertiary font-normal">({visible.length})</span>
-                </h3>
-                <div className="flex items-center gap-2">
-                  <Select value={filter} options={FILTERS} onChange={setFilter} ariaLabel="Filter suggestions" />
-                  <SettingsButton
-                    variant="secondary"
-                    size="sm"
-                    icon={<Check size={14} />}
-                    onClick={() => setAskAcceptAll(true)}
-                    disabled={!rows.some((r) => r.state !== "accepted")}
-                  >
-                    Accept all
-                  </SettingsButton>
-                </div>
-              </div>
-              <SettingsTable columns={columns} data={visible} getRowId={(r) => r.id} emptyState="No suggestions in this view." />
-            </section>
-          )}
+    <SettingsEditor
+      component="ExtractorEditor"
+      path={["Metadata extraction"]}
+      title={isNew ? "New extractor" : base!.property}
+      onBack={onClose}
+      isNew={isNew}
+      createLabel="Create extractor"
+      dirty={dirty}
+      valid={!!property.trim()}
+      onSave={save}
+      footerStart={<LastSavedLine domain="extractor" id={base?.id} />}
+      overlays={
+        <ConfirmDialog
+          open={askAcceptAll}
+          title="Accept all suggestions"
+          message={(() => {
+            const n = rows.filter((r) => r.state !== "accepted").length;
+            return `Accept ${n} ${n === 1 ? "suggestion" : "suggestions"}? They are marked accepted in this list. Entity values are not written in the prototype.`;
+          })()}
+          confirmLabel="Accept all"
+          onConfirm={() => {
+            acceptAll();
+            setAskAcceptAll(false);
+          }}
+          onCancel={() => setAskAcceptAll(false)}
+        />
+      }
+      wide
+    >
+      <SettingsSection>
+        <div className="grid sm:grid-cols-3 gap-3">
+          <SettingsField label="Template">
+            <Select value={template} options={TEMPLATE_OPTIONS} onChange={setTemplate} ariaLabel="Template" />
+          </SettingsField>
+          <SettingsField label="Property" hint="The metadata property to suggest values for.">
+            <TextInput value={property} onChange={(e) => setProperty(e.target.value)} placeholder="e.g. Date filed" />
+          </SettingsField>
+          <SettingsField label="Property type">
+            <Select value={propType} options={TYPE_OPTIONS} onChange={setPropType} ariaLabel="Property type" />
+          </SettingsField>
         </div>
-      </SettingsContent.Body>
-      <SettingsContent.Footer>
-        <LastSavedLine domain="extractor" id={base?.id} className="me-auto" />
-        <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
-        <SettingsButton variant={isNew ? "commit" : "success"} size="sm" disabled={!dirty || !property.trim()} onClick={save}>
-          {isNew ? "Create extractor" : "Save"}
-        </SettingsButton>
-      </SettingsContent.Footer>
-      <ConfirmDialog
-        open={askAcceptAll}
-        title="Accept all suggestions"
-        message={(() => {
-          const n = rows.filter((r) => r.state !== "accepted").length;
-          return `Accept ${n} ${n === 1 ? "suggestion" : "suggestions"}? They are marked accepted in this list. Entity values are not written in the prototype.`;
-        })()}
-        confirmLabel="Accept all"
-        onConfirm={() => {
-          acceptAll();
-          setAskAcceptAll(false);
-        }}
-        onCancel={() => setAskAcceptAll(false)}
-      />
-    </SettingsContent>
-  );
-}
+      </SettingsSection>
 
-/** One term of the stats `dl`: a `dt`/`dd` pair in a `div`, which a `dl` allows. */
-function Stat({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div data-part="stat" className="flex flex-col gap-1">
-      <dt className="text-xs font-medium text-ink-tertiary uppercase tracking-wider">{label}</dt>
-      <dd className="text-lg font-semibold text-ink tabular-nums">{value}</dd>
-    </div>
+      {!isNew && (
+        <SettingsSection
+          title="Training"
+          action={
+            <SettingsButton variant="secondary" size="sm" icon={<Sparkles size={14} />} onClick={findSuggestions}>
+              Find suggestions
+            </SettingsButton>
+          }
+        >
+          <dl data-part="stats" className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3">
+            <SettingsStat label="Documents" value={base!.documents} />
+            <SettingsStat label="Reviewed" value={reviewed} />
+            <SettingsStat label="Pending" value={pending} />
+            <SettingsStat label="Accuracy" value={accuracy === null ? "—" : `${accuracy}%`} />
+          </dl>
+        </SettingsSection>
+      )}
+
+      {!isNew && (
+        <SettingsSection
+          title={
+            <>
+              Suggestions <span className="text-ink-tertiary font-normal">({visible.length})</span>
+            </>
+          }
+          action={
+            <>
+              <Select value={filter} options={FILTERS} onChange={setFilter} ariaLabel="Filter suggestions" />
+              <SettingsButton
+                variant="secondary"
+                size="sm"
+                icon={<Check size={14} />}
+                onClick={() => setAskAcceptAll(true)}
+                disabled={!rows.some((r) => r.state !== "accepted")}
+              >
+                Accept all
+              </SettingsButton>
+            </>
+          }
+        >
+          <SettingsTable
+            columns={columns}
+            data={visible}
+            getRowId={(r) => r.id}
+            emptyState={<SettingsEmptyState title="No suggestions in this view" hint="Find suggestions, or change the filter." />}
+          />
+        </SettingsSection>
+      )}
+    </SettingsEditor>
   );
 }

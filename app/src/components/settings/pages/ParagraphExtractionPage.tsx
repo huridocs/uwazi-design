@@ -1,9 +1,9 @@
 import { useAtomValue } from "jotai";
 import { breakpointAtom } from "../../../atoms/viewport";
 import { useState } from "react";
-import { Plus } from "lucide-react";
-import { SettingsContent } from "../SettingsContent";
-import { SettingsButton } from "../SettingsButton";
+import { AlignLeft } from "lucide-react";
+import { SettingsListPage, useSettingsSearch } from "../SettingsListPage";
+import { SettingsEmptyState } from "../SettingsEmptyState";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { StatusPill } from "../StatusPill";
 import { ParagraphJobEditor } from "./ParagraphJobEditor";
@@ -12,6 +12,7 @@ import { seedParagraphJobs, type SettingsParagraphJob } from "../../../data/sett
 export function ParagraphExtractionPage() {
   const [editing, setEditing] = useState<SettingsParagraphJob | "new" | null>(null);
   const mobile = useAtomValue(breakpointAtom) === "mobile";
+  const search = useSettingsSearch(seedParagraphJobs, (j) => j.template);
 
   if (editing) return <ParagraphJobEditor job={editing} onClose={() => setEditing(null)} />;
 
@@ -44,19 +45,30 @@ export function ParagraphExtractionPage() {
   ];
 
   return (
-    <SettingsContent component="ParagraphExtractionPage">
-      <SettingsContent.Header title="Paragraph extraction" />
-      <SettingsContent.Body>
-        <p className="text-xs text-ink-tertiary mb-4">
-          Split documents into paragraph-level records for fine-grained search and analysis.
-        </p>
-        <SettingsTable columns={mobile ? mobileColumns : columns} data={seedParagraphJobs} getRowId={(j) => j.id} onRowClick={(j) => setEditing(j)} rowAriaLabel={(j) => `Edit ${j.template} extraction`} />
-      </SettingsContent.Body>
-      <SettingsContent.Footer>
-        <SettingsButton variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
-          New extraction
-        </SettingsButton>
-      </SettingsContent.Footer>
-    </SettingsContent>
+    <SettingsListPage
+      component="ParagraphExtractionPage"
+      title="Paragraph extraction"
+      intro="Split documents into paragraph-level records for fine-grained search and analysis."
+      search={{ value: search.query, onChange: search.setQuery, label: "Search extractions" }}
+      lead={{ label: "Add extraction", onClick: () => setEditing("new") }}
+    >
+      <SettingsTable
+        columns={mobile ? mobileColumns : columns}
+        data={search.rows}
+        getRowId={(j) => j.id}
+        onRowClick={(j) => setEditing(j)}
+        rowAriaLabel={(j) => `Edit ${j.template} extraction`}
+        emptyState={
+          <SettingsEmptyState
+            icon={<AlignLeft size={16} />}
+            title="No extractions yet"
+            hint="An extraction splits one template's documents into paragraph records."
+            action={{ label: "Add extraction", onClick: () => setEditing("new") }}
+            query={search.query}
+            onClearQuery={search.clear}
+          />
+        }
+      />
+    </SettingsListPage>
   );
 }

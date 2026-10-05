@@ -1,7 +1,7 @@
-import { useId, useMemo, useState } from "react";
-import { Search, X, ChevronRight } from "lucide-react";
-import { SettingsContent } from "../SettingsContent";
-import { SettingsField, TextInput } from "../SettingsField";
+import { useMemo, useState } from "react";
+import { Activity, ChevronRight } from "lucide-react";
+import { SettingsListPage, useSettingsSearch } from "../SettingsListPage";
+import { SettingsEmptyState } from "../SettingsEmptyState";
 import { Select } from "../../shared/Select";
 import { useAtomValue } from "jotai";
 import { type SettingsLogEntry, type LogMethod } from "../../../data/settings";
@@ -54,8 +54,6 @@ function synthesizeRequest(e: SettingsLogEntry): string {
 export function ActivityLogPage() {
   // Seed plus every Settings change made in this session (`useSettingsNotify`).
   const log = useAtomValue(activityLogAtom);
-  const searchId = useId();
-  const [query, setQuery] = useState("");
   const [method, setMethod] = useState("all");
   const [user, setUser] = useState("all");
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -65,119 +63,101 @@ export function ActivityLogPage() {
     return [{ value: "all", label: "All users" }, ...users.map((u) => ({ value: u, label: u }))];
   }, [log]);
 
-  const q = query.trim().toLowerCase();
-  const filtered = log.filter((e) => {
-    if (method !== "all" && e.method !== method) return false;
-    if (user !== "all" && e.user !== user) return false;
-    if (q && !`${e.user} ${e.method} ${e.summary}`.toLowerCase().includes(q)) return false;
-    return true;
-  });
+  const search = useSettingsSearch(
+    log.filter((e) => (method === "all" || e.method === method) && (user === "all" || e.user === user)),
+    (e) => `${e.user} ${e.method} ${e.summary}`,
+  );
+  const filtered = search.rows;
+  const filtering = method !== "all" || user !== "all";
 
   return (
-    <SettingsContent component="ActivityLogPage">
-      <SettingsContent.Header title="Activity log" />
-      <SettingsContent.Body>
-        {/* Filter toolbar */}
-        <div role="search" data-part="filters" className="flex flex-wrap items-end gap-3 mb-4">
-          <div className="grow min-w-[14rem] max-w-sm">
-            <SettingsField label="Search" htmlFor={searchId}>
-              <div className="relative">
-                <Search size={14} aria-hidden className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted" />
-                <TextInput
-                  id={searchId}
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search summary, user…"
-                  className="pl-8 pr-8"
-                />
-                {query && (
-                  <button
-                    onClick={() => setQuery("")}
-                    aria-label="Clear search"
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-parchment text-ink-muted hover:text-ink cursor-pointer"
-                  >
-                    <X size={12} />
-                  </button>
-                )}
-              </div>
-            </SettingsField>
-          </div>
-          <SettingsField label="Action">
-            <Select value={method} options={METHOD_OPTIONS} onChange={setMethod} ariaLabel="Filter by action" />
-          </SettingsField>
-          <SettingsField label="User">
-            <Select value={user} options={userOptions} onChange={setUser} ariaLabel="Filter by user" />
-          </SettingsField>
-        </div>
-
-        <p className="text-xs text-ink-tertiary mb-3">
+    <SettingsListPage
+      component="ActivityLogPage"
+      title="Activity log"
+      intro="Every change made to the collection, newest first. Open&nbsp;an entry to see the request behind it."
+      search={{ value: search.query, onChange: search.setQuery, label: "Search activity", placeholder: "Search summary, user…" }}
+      filters={
+        <>
+          <Select value={method} options={METHOD_OPTIONS} onChange={setMethod} ariaLabel="Filter by action" />
+          <Select value={user} options={userOptions} onChange={setUser} ariaLabel="Filter by user" />
+        </>
+      }
+      footer={
+        <span className="me-auto text-xs text-ink-tertiary tabular-nums">
           {filtered.length} event{filtered.length === 1 ? "" : "s"}
-        </p>
-
-        {/* Expandable list */}
-        {filtered.length === 0 ? (
-          <p className="text-sm text-ink-tertiary py-8 text-center">No activity matches your filters.</p>
-        ) : (
-          <ul className="flex flex-col rounded-md overflow-hidden" style={{ border: "1px solid var(--border-soft)" }}>
-            {filtered.map((e, i) => {
-              const open = expanded === e.id;
-              return (
-                <li key={e.id} style={i > 0 ? { borderTop: "1px solid var(--border-soft)" } : undefined}>
-                  <button
-                    onClick={() => setExpanded((cur) => (cur === e.id ? null : e.id))}
-                    aria-expanded={open}
-                    className="flex items-center gap-3 w-full px-3 py-2.5 text-left hover:bg-warm transition-colors cursor-pointer"
-                  >
-                    <ChevronRight
-                      size={14}
-                      className={`shrink-0 text-ink-tertiary transition-transform ${open ? "rotate-90" : ""}`}
-                    />
-                    <span className={`text-meta font-semibold px-1.5 py-0.5 rounded-md w-fit shrink-0 ${methodStyle[e.method]}`}>
-                      {e.method}
-                    </span>
-                    <span className="text-ink text-sm truncate grow">{e.summary}</span>
-                    <span className="text-ink-secondary text-xs truncate hidden sm:block w-32 shrink-0">{e.user}</span>
-                    <span dir="ltr" className="text-xs text-ink-tertiary tabular-nums hidden md:block w-36 shrink-0 text-right">
-                      {e.time}
-                    </span>
-                  </button>
-                  {open && (
-                    <div className="px-3 pb-3 pt-0 pl-10">
-                      <dl className="grid grid-cols-[5rem_1fr] gap-x-3 gap-y-1.5 text-sm mb-3">
-                        <dt className="text-ink-tertiary">Action</dt>
-                        <dd>
-                          <span className={`text-meta font-semibold px-1.5 py-0.5 rounded-md w-fit inline-block ${methodStyle[e.method]}`}>
-                            {e.method}
-                          </span>
-                        </dd>
-                        <dt className="text-ink-tertiary">Summary</dt>
-                        <dd className="text-ink">{e.summary}</dd>
-                        <dt className="text-ink-tertiary">User</dt>
-                        <dd className="text-ink-secondary">{e.user}</dd>
-                        <dt className="text-ink-tertiary">Time</dt>
-                        <dd dir="ltr" className="text-ink-secondary tabular-nums">{e.time}</dd>
-                      </dl>
-                      {/* A seed row's request line is synthesised and says so: a
-                          made-up request must not read as evidence. An entry
-                          recorded in this session has no request to show. */}
-                      {!isSeedEntry(e) ? null : (
-                        <>
-                          <div className="text-meta font-medium uppercase tracking-wider text-ink-tertiary mb-1">
-                            Request (example)
-                          </div>
-                          <pre className="bg-vellum rounded-md px-3 py-2 text-xs font-mono text-ink-secondary whitespace-pre-wrap break-words">
-                            {synthesizeRequest(e)}
-                          </pre>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </SettingsContent.Body>
-    </SettingsContent>
+        </span>
+      }
+    >
+      {/* Expandable list */}
+      {filtered.length === 0 ? (
+        <div className="rounded-md py-10 border border-border-soft">
+          <SettingsEmptyState
+            icon={<Activity size={16} />}
+            title={filtering ? "No activity matches these filters" : "No activity yet"}
+            query={search.query}
+            onClearQuery={search.clear}
+          />
+        </div>
+      ) : (
+        <ul className="flex flex-col rounded-md overflow-hidden border border-border-soft">
+          {filtered.map((e) => {
+            const open = expanded === e.id;
+            return (
+              <li key={e.id} className="border-t border-border-soft first:border-t-0">
+                <button
+                  onClick={() => setExpanded((cur) => (cur === e.id ? null : e.id))}
+                  aria-expanded={open}
+                  className="flex items-center gap-3 w-full px-3 py-2.5 text-left hover:bg-warm transition-colors cursor-pointer"
+                >
+                  <ChevronRight
+                    size={14}
+                    className={`shrink-0 text-ink-tertiary transition-transform ${open ? "rotate-90" : ""}`}
+                  />
+                  <span className={`text-meta font-semibold px-1.5 py-0.5 rounded-md w-fit shrink-0 ${methodStyle[e.method]}`}>
+                    {e.method}
+                  </span>
+                  <span className="text-ink text-sm truncate grow">{e.summary}</span>
+                  <span className="text-ink-secondary text-xs truncate hidden sm:block w-32 shrink-0">{e.user}</span>
+                  <span dir="ltr" className="text-xs text-ink-tertiary tabular-nums hidden md:block w-36 shrink-0 text-right">
+                    {e.time}
+                  </span>
+                </button>
+                {open && (
+                  <div className="px-3 pb-3 pt-0 pl-10">
+                    <dl className="grid grid-cols-[5rem_1fr] gap-x-3 gap-y-1.5 text-sm mb-3">
+                      <dt className="text-ink-tertiary">Action</dt>
+                      <dd>
+                        <span className={`text-meta font-semibold px-1.5 py-0.5 rounded-md w-fit inline-block ${methodStyle[e.method]}`}>
+                          {e.method}
+                        </span>
+                      </dd>
+                      <dt className="text-ink-tertiary">Summary</dt>
+                      <dd className="text-ink">{e.summary}</dd>
+                      <dt className="text-ink-tertiary">User</dt>
+                      <dd className="text-ink-secondary">{e.user}</dd>
+                      <dt className="text-ink-tertiary">Time</dt>
+                      <dd dir="ltr" className="text-ink-secondary tabular-nums">{e.time}</dd>
+                    </dl>
+                    {/* A seed row's request line is synthesised and says so: a
+                        made-up request must not read as evidence. An entry
+                        recorded in this session has no request to show. */}
+                    {!isSeedEntry(e) ? null : (
+                      <>
+                        <div className="text-meta font-medium uppercase tracking-wider text-ink-tertiary mb-1">
+                          Request (example)
+                        </div>
+                        <pre className="bg-vellum rounded-md px-3 py-2 text-xs font-mono text-ink-secondary whitespace-pre-wrap break-words">
+                          {synthesizeRequest(e)}
+                        </pre>
+                      </>
+                    )}
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </SettingsListPage>
   );
 }
