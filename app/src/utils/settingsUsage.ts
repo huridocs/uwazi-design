@@ -318,42 +318,44 @@ export function valueUsage({
 
 export interface RelationTypeUsage extends Impact {
   references: number;
-  /** Relationship properties that use it, as "Template › Property". */
+  /** Relationship fields that use it, as "Template › Property". */
   fields: string[];
+  /** The templates those fields are on (Uwazi's Templates column). */
+  templates: string[];
   /** The references can be moved to another type before the delete. */
   reassignable: boolean;
 }
 
 export function relationTypeUsage({
-  registryId,
+  id,
   references,
   schema,
   templateName,
   writable,
 }: {
-  /** The type's id where references and fields name it. */
-  registryId: string | undefined;
+  id: string;
   references: number;
   schema: SchemaProperty[];
   templateName: (id: string) => string;
-  /** Whether this corpus's references live in a store the prototype writes. */
+  /** Whether this collection's references live in a store the prototype writes. */
   writable: boolean;
 }): RelationTypeUsage {
-  const fields = registryId
-    ? schema.filter((p) => p.relationType === registryId).map((p) => `${templateName(p.templateId)} › ${p.label}`)
-    : [];
+  const using = schema.filter((p) => p.relationType === id);
+  const fields = using.map((p) => `${templateName(p.templateId)} › ${p.label}`);
+  const templates = [...new Set(using.map((p) => templateName(p.templateId)))];
   const lines: string[] = [];
   if (references) lines.push(`${count(references, "reference uses", "references use")} this type.`);
   if (fields.length) lines.push(`Relationship ${fields.length === 1 ? "field" : "fields"}: ${nameList(fields)}.`);
-  // DeleteRelationshipType.ts refuses a type that a template or a reference
-  // uses. Juan's decision: the references can be moved to another type in the
-  // dialog instead; a template's field still refuses.
-  const block = fields.length
-    ? `A relationship field uses this type. Change ${fields.length === 1 ? "that field" : "those fields"} first.`
+  // DeleteRelationshipType.ts refuses, in this order, a type a template uses
+  // and a type relationships use; the messages are Uwazi's. Operator's
+  // decision: where the prototype can rewrite the references, they can be
+  // moved to another type instead of refusing.
+  const block = templates.length
+    ? `Cannot delete type being used in templates: ${templates.join(", ")}`
     : references && !writable
-      ? `${count(references, "reference uses", "references use")} this type, and this collection's references are read-only in the prototype.`
+      ? "Cannot delete type being used in relationships"
       : null;
-  return { references, fields, reassignable: !block && references > 0, lines, block };
+  return { references, fields, templates, reassignable: !block && references > 0, lines, block };
 }
 
 /* ── Users and groups ──────────────────────────────────────────────────── */

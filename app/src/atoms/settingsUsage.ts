@@ -5,12 +5,11 @@ import { applyOverlay, type Corpus } from "../data/entityChanges";
 import type { AnyMetadataField, MetadataField, RelationshipMetadataField } from "../data/metadata";
 import { cejilEsBySid } from "../data/cejil/load";
 import { travesiaEntity } from "../data/travesia/load";
-import { unregisterRelationType } from "../data/references";
 import { cejilLibraryEntities } from "../data/cejil/adapt";
 import { travesiaLibraryEntities } from "../data/travesia/adapt";
 import { cejilSettingsTemplates } from "../data/cejil/settingsAdapt";
 import { travesiaTemplates } from "../data/travesia/schema";
-import { cejilStats } from "../data/cejil/aggregates";
+import { cejilStats, cejilUsageByRelationType } from "../data/cejil/aggregates";
 import type { SettingsLanguage, ThesaurusValue } from "../data/settings";
 import {
   boundProperties,
@@ -31,7 +30,7 @@ import { entitiesAtom } from "./entities";
 import { entityAccessAtom, libraryEntityOverlayAtom } from "./entityChanges";
 import { entityMetadataAtom } from "./entityMetadata";
 import type { Language } from "./language";
-import { referencesAtom, relationTypesAtom } from "./references";
+import { referencesAtom } from "./references";
 import { thesaurusBindingsAtom } from "./thesauri";
 import { groupsAtom, signedInUserAtom, userDeleteBlock, usersAtom } from "./users";
 
@@ -205,50 +204,24 @@ export const valueUsageAtom = atomFamily((thesaurusId: string) =>
 
 /* ── Relationship types ────────────────────────────────────────────────── */
 
-/** Settings lists relationship types by name; the Sample's references and
- *  fields name them by registry id (Review B5), so the Sample matches by
- *  label. CEJIL's Settings ids are the ids its references use. */
-export const relationTypeUsageAtom = atomFamily(
-  (r: { id: string; name: string; usageCount: number }) =>
-    atom((get) => {
-      const corpus = templatesCorpus(get(dataSourceAtom));
-      const fold = (s: string) => s.trim().toLowerCase();
-      const registryId =
-        corpus === "mock" ? get(relationTypesAtom).find((t) => fold(t.label) === fold(r.name))?.id : r.id;
-      const references =
-        corpus === "mock"
-          ? registryId
-            ? get(referencesAtom).filter((x) => x.relationType === registryId).length
-            : 0
-          : r.usageCount;
-      return {
-        registryId,
-        ...relationTypeUsage({
-          registryId,
-          references,
-          schema: schemaOf(corpus),
-          templateName: templateNameOf(corpus),
-          writable: corpus === "mock",
-        }),
-      };
-    }),
-  (a, b) => a.id === b.id && a.name === b.name && a.usageCount === b.usageCount,
-);
-
-/** Delete a Sample relationship type from the registry, moving its
- *  references to `to` first (Juan's decision: Uwazi refuses, the prototype
- *  offers the move). Same writes as the panel's Manage types modal. */
-export const deleteRelationTypeAtom = atom(
-  null,
-  (get, set, { registryId, to }: { registryId: string; to: string | null }) => {
-    if (to)
-      set(
-        referencesAtom,
-        get(referencesAtom).map((r) => (r.relationType === registryId ? { ...r, relationType: to } : r)),
-      );
-    set(relationTypesAtom, (prev) => prev.filter((t) => t.id !== registryId));
-    unregisterRelationType(registryId);
-  },
+/** A relationship type's usage, by id: the references that name it (the
+ *  Sample's live store; CEJIL's counts from the importer, its references
+ *  being read-only) and the relationship fields in its templates. */
+export const relationTypeUsageAtom = atomFamily((id: string) =>
+  atom((get) => {
+    const corpus = templatesCorpus(get(dataSourceAtom));
+    const references =
+      corpus === "mock"
+        ? get(referencesAtom).filter((x) => x.relationType === id).length
+        : (cejilUsageByRelationType[id] ?? 0);
+    return relationTypeUsage({
+      id,
+      references,
+      schema: schemaOf(corpus),
+      templateName: templateNameOf(corpus),
+      writable: corpus === "mock",
+    });
+  }),
 );
 
 /* ── Users and groups ──────────────────────────────────────────────────── */

@@ -14,11 +14,11 @@ import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { useNotify } from "../../../hooks/useNotify";
 import {
   seedLanguages,
-  seedRelationTypes,
   type SettingsLogEntry,
   type LogMethod,
 } from "../../../data/settings";
 import { activityLogAtom } from "../../../atoms/activityLog";
+import { referencesAtom } from "../../../atoms/references";
 
 const methodStyle: Record<LogMethod, string> = {
   CREATE: "bg-success-light text-success",
@@ -36,7 +36,8 @@ export function DashboardPage() {
   const store = useStore();
   const notify = useNotify();
   const [confirmReset, setConfirmReset] = useState(false);
-  const connectionTotal = seedRelationTypes.reduce((n, r) => n + r.usageCount, 0);
+  // The Sample's references, counted live (the store the panel writes).
+  const connectionTotal = useAtomValue(referencesAtom).length;
 
   const columns: Column<SettingsLogEntry>[] = [
     {

@@ -228,19 +228,8 @@ export const seedThesaurusValues: Record<string, ThesaurusValue[]> = {
 };
 
 // ── Relationship types ──────────────────────────────────────────────────────
-export interface SettingsRelationType {
-  id: string;
-  name: string;
-  usageCount: number;
-}
-
-export const seedRelationTypes: SettingsRelationType[] = [
-  { id: "r1", name: "Mentions", usageCount: 142 },
-  { id: "r2", name: "Relates to", usageCount: 87 },
-  { id: "r3", name: "Cites", usageCount: 54 },
-  { id: "r4", name: "Refers to", usageCount: 31 },
-  { id: "r5", name: "Represented by", usageCount: 12 },
-];
+// Relationship types are not seeded here: the Sample's registry is
+// `relationTypes` in data/references.ts (atoms/relationTypes.ts).
 
 // ── Translations ────────────────────────────────────────────────────────────
 export interface SettingsTranslationContext {
@@ -320,7 +309,7 @@ export interface SettingsLogEntry {
 
 export const seedActivityLog: SettingsLogEntry[] = [
   { id: "l1", time: "2026-06-15 18:42", user: "admin", method: "UPDATE", summary: "Updated entity “Velásquez-Rodríguez v. Honduras”" },
-  { id: "l2", time: "2026-06-15 17:10", user: "mlopez", method: "CREATE", summary: "Created relationship type “Represented by”", domain: "relationType", targetId: "r5" },
+  { id: "l2", time: "2026-06-15 17:10", user: "mlopez", method: "CREATE", summary: "Created relationship type “Represented by”" },
   { id: "l3", time: "2026-06-15 14:55", user: "mlopez", method: "CREATE", summary: "Created entity “Case 12.250 (Bámaca Velásquez)”" },
   { id: "l4", time: "2026-06-14 09:30", user: "admin", method: "DELETE", summary: "Deleted user “t.guest@example.org”" },
   { id: "l5", time: "2026-06-13 22:05", user: "system", method: "MIGRATE", summary: "Ran migration “add-relationship-tiers”" },

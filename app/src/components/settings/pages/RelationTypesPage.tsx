@@ -1,56 +1,61 @@
 import { useState } from "react";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { Plus, Spline } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { RowActions } from "../RowActions";
-import { newSettingsId } from "../../../atoms/settingsCollection";
-import { RelationTypeDelete, RelationTypeReferenceCount } from "../../shared/SettingsDeletes";
 import { RelationTypeEditor } from "./RelationTypeEditor";
-import { seedRelationTypes, type SettingsRelationType } from "../../../data/settings";
-import { dataSourceAtom } from "../../../atoms/dataSource";
-import { cejilSettingsRelationTypes } from "../../../data/cejil/settingsAdapt";
+import {
+  RelationTypeDelete,
+  RelationTypeReferenceCount,
+  RelationTypeTemplates,
+} from "../../shared/SettingsDeletes";
+import type { RelationTypeDef } from "../../../atoms/references";
+import {
+  restoreRelationTypeAtom,
+  settingsRelationTypesAtom,
+  type RelationTypeDeletion,
+} from "../../../atoms/relationTypes";
+import { useSettingsUndo } from "../../../hooks/useSettingsUndo";
 
+/** Settings › Relationship types: the collection's one registry
+ *  (`atoms/relationTypes.ts`), which the Relationships panel and the template
+ *  editor's relationship fields read too. */
 export function RelationTypesPage() {
-  const dataSource = useAtomValue(dataSourceAtom);
-  const [types, setTypes] = useState<SettingsRelationType[]>(
-    dataSource === "cejil" ? cejilSettingsRelationTypes : seedRelationTypes,
-  );
-  const [confirm, setConfirm] = useState<SettingsRelationType | null>(null);
-  const [editing, setEditing] = useState<SettingsRelationType | "new" | null>(null);
+  const types = useAtomValue(settingsRelationTypesAtom);
+  const restore = useSetAtom(restoreRelationTypeAtom);
+  const [confirm, setConfirm] = useState<RelationTypeDef | null>(null);
+  const [editing, setEditing] = useState<string | "new" | null>(null);
+  // A delete, references moved or not, can be undone from the Beacon while
+  // this page is open, like every other removal in Settings.
+  const offerUndo = useSettingsUndo<RelationTypeDeletion>(restore);
 
-  const saveType = (name: string): string => {
-    if (editing === "new") {
-      const id = newSettingsId("rt");
-      setTypes((prev) => [...prev, { id, name, usageCount: 0 }]);
-      return id;
-    }
-    const id = (editing as SettingsRelationType).id;
-    setTypes((prev) => prev.map((r) => (r.id === id ? { ...r, name } : r)));
-    return id;
-  };
+  if (editing) return <RelationTypeEditor typeId={editing} onClose={() => setEditing(null)} />;
 
-  if (editing) return <RelationTypeEditor relationType={editing} onClose={() => setEditing(null)} onSave={saveType} />;
-
-  const columns: Column<SettingsRelationType>[] = [
+  const columns: Column<RelationTypeDef>[] = [
     {
       id: "name",
-      header: "Relationship type",
+      header: "Label",
       cell: (r) => (
         <div className="flex items-center gap-2">
           <Spline size={14} className="text-ink-muted shrink-0" />
-          <span className="font-medium text-ink truncate">{r.name}</span>
+          <span className="font-medium text-ink truncate">{r.label}</span>
         </div>
       ),
     },
     {
+      id: "templates",
+      header: "Templates",
+      cell: (r) => <RelationTypeTemplates id={r.id} />,
+    },
+    {
       id: "usage",
-      header: "Used by",
+      header: "References",
       width: "9rem",
       cell: (r) => (
         <span className="text-ink-secondary tabular-nums">
-          <RelationTypeReferenceCount type={r} />
+          <RelationTypeReferenceCount id={r.id} />
         </span>
       ),
     },
@@ -59,7 +64,7 @@ export function RelationTypesPage() {
       header: "",
       width: "6rem",
       align: "right",
-      cell: (r) => <RowActions label={r.name} onEdit={() => setEditing(r)} onDelete={() => setConfirm(r)} />,
+      cell: (r) => <RowActions label={r.label} onEdit={() => setEditing(r.id)} onDelete={() => setConfirm(r)} />,
     },
   ];
 
@@ -67,22 +72,33 @@ export function RelationTypesPage() {
     <SettingsContent component="RelationTypesPage">
       <SettingsContent.Header title="Relationship types" />
       <SettingsContent.Body>
-        <p className="text-xs text-ink-tertiary mb-4">
-          The labels available when connecting entities.
-        </p>
-        <SettingsTable columns={columns} data={types} getRowId={(r) => r.id} onRowClick={(r) => setEditing(r)} rowAriaLabel={(r) => `Edit ${r.name}`} />
+        <SettingsTable
+          columns={columns}
+          data={types}
+          getRowId={(r) => r.id}
+          onRowClick={(r) => setEditing(r.id)}
+          rowAriaLabel={(r) => `Edit ${r.label}`}
+          emptyState={<span className="text-sm text-ink-tertiary">No relationship types yet. Add one to start connecting entities.</span>}
+        />
       </SettingsContent.Body>
       <SettingsContent.Footer>
         <SettingsButton variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
-          Add type
+          Add relationship type
         </SettingsButton>
       </SettingsContent.Footer>
 
       <RelationTypeDelete
         type={confirm}
-        types={types}
         onCancel={() => setConfirm(null)}
-        onDelete={(r) => setTypes((prev) => prev.filter((x) => x.id !== r.id))}
+        onDeleted={(d, movedTo) =>
+          offerUndo(
+            d,
+            `${d.def.label} deleted`,
+            d.moved && movedTo
+              ? `${d.moved.refIds.length.toLocaleString()} references moved to ${movedTo}. Undo puts the type and its references back.`
+              : "Undo puts the type back.",
+          )
+        }
       />
     </SettingsContent>
   );

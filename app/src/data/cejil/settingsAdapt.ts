@@ -8,14 +8,12 @@ import type {
   PropertyType,
   SettingsThesaurus,
   ThesaurusValue,
-  SettingsRelationType,
   SettingsLanguage,
   SettingsMenuLink,
   SettingsPage,
 } from "../settings";
 import { cejilTemplates } from "./templates";
 import { cejilThesauri } from "./thesauri";
-import { cejilRelationTypes } from "./relationTypes";
 import { cejilEntityCountByTemplate, cejilUsageByRelationType, cejilStats } from "./aggregates";
 import { cejilSettings } from "./settings";
 import { cejilMenu } from "./menu";
@@ -42,7 +40,6 @@ function ptype(t: string): PropertyType {
 // entity count per template (es docs) + relationship usage per relation type —
 // baked into aggregates.ts by the importer, so Settings never loads the corpus.
 const entityCountByTpl = cejilEntityCountByTemplate;
-const usageByType = cejilUsageByRelationType;
 
 export const cejilSettingsTemplates: SettingsTemplate[] = cejilTemplates.map((t) => ({
   id: t._id,
@@ -95,11 +92,7 @@ export const cejilThesaurusValues: Record<string, ThesaurusValue[]> = Object.fro
   ]),
 );
 
-export const cejilSettingsRelationTypes: SettingsRelationType[] = cejilRelationTypes.map((r) => ({
-  id: r._id,
-  name: r.name,
-  usageCount: usageByType[r._id] ?? 0,
-}));
+
 
 export const cejilSettingsLanguages: SettingsLanguage[] = cejilSettings.languages.map((l) => ({
   key: l.key,

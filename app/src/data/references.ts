@@ -1103,6 +1103,17 @@ export function registerRelationType(def: { id: RelationType; label: string }): 
   if (!relationTypes.some((t) => t.id === def.id)) relationTypes.push(def);
 }
 
+export function renameRelationType(id: RelationType, label: string): void {
+  const def = relationTypes.find((t) => t.id === id);
+  if (def) def.label = label;
+}
+
+/** Put a deleted type back at its old position (Settings' Undo). */
+export function restoreRelationType(def: { id: RelationType; label: string }, index: number): void {
+  if (relationTypes.some((t) => t.id === def.id)) return;
+  relationTypes.splice(Math.min(index, relationTypes.length), 0, def);
+}
+
 export function unregisterRelationType(id: RelationType): void {
   const idx = relationTypes.findIndex((t) => t.id === id);
   if (idx >= 0) relationTypes.splice(idx, 1);

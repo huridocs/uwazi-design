@@ -1,5 +1,6 @@
 import { useId, useState } from "react";
-import { useStore } from "jotai";
+import { useAtomValue, useStore } from "jotai";
+import { settingsRelationTypesAtom } from "../../../atoms/relationTypes";
 import { Plus } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { TemplateCardPreview } from "../TemplateCardPreview";
@@ -19,7 +20,6 @@ import {
   propertyTypeLabels,
   seedThesauri,
   seedTemplates,
-  seedRelationTypes,
   type SettingsTemplate,
   type TemplateProperty,
 } from "../../../data/settings";
@@ -43,7 +43,6 @@ const PALETTE = [
 const TYPE_OPTIONS = Object.entries(propertyTypeLabels).map(([value, label]) => ({ value, label }));
 const THESAURUS_OPTIONS = seedThesauri.map((t) => ({ value: t.name, label: t.name }));
 const TEMPLATE_OPTIONS = seedTemplates.map((t) => ({ value: t.name, label: t.name }));
-const RELATION_OPTIONS = seedRelationTypes.map((r) => ({ value: r.name, label: r.name }));
 
 /** Per-property type-specific config, held locally (the shared TemplateProperty
  *  type stays scalar). Keyed by property id. */
@@ -424,7 +423,8 @@ function effectiveConfig(type: TemplateProperty["type"], config?: PropConfig): P
   if (type === "relationship")
     return {
       targetTemplate: config?.targetTemplate ?? TEMPLATE_OPTIONS[0]?.value ?? "",
-      relationType: config?.relationType ?? RELATION_OPTIONS[0]?.value ?? "",
+      // By registry id; none until chosen (Uwazi's "Select...").
+      relationType: config?.relationType ?? "",
     };
   return {};
 }
@@ -440,6 +440,9 @@ function PropertyDialog({
   onCancel: () => void;
   onSave: (draft: PropertyDraft) => void;
 }) {
+  // The collection's relationship types, by id: a type added or renamed in
+  // Settings › Relationship types is here at once.
+  const relationTypes = useAtomValue(settingsRelationTypesAtom);
   const isNew = property === null;
   const [label, setLabel] = useState(property?.label ?? "");
   const [type, setType] = useState<TemplateProperty["type"]>(property?.type ?? "text");
@@ -523,7 +526,7 @@ function PropertyDialog({
               <Select id={targetId} value={targetTemplate} options={TEMPLATE_OPTIONS} onChange={setTargetTemplate} ariaLabel="Related template" sheetTitle="Related template" />
             </ModalField>
             <ModalField label="Relationship type" htmlFor={relationId}>
-              <Select id={relationId} value={relationType} options={RELATION_OPTIONS} onChange={setRelationType} ariaLabel="Relationship type" sheetTitle="Relationship type" />
+              <Select id={relationId} value={relationType} options={[{ value: "", label: "Select...", disabled: true }, ...relationTypes.map((r) => ({ value: r.id, label: r.label }))]} onChange={setRelationType} ariaLabel="Relationship type" sheetTitle="Relationship type" />
             </ModalField>
           </div>
         )}

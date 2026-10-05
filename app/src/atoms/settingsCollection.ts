@@ -168,7 +168,23 @@ export function createSettingsCollection<T extends { id: string }>({
     });
   });
 
-  return { listAtom, listOfAtom, createAtom, patchAtom, deleteAtom };
+  /** Undo a delete: a seed record leaves `deleted` and gets its fields back as
+   *  a patch; a created record is created again with its id. */
+  const restoreAtom = atom(null, (get, set, { record, corpus }: { record: T; corpus?: Corpus }) => {
+    set(overlayAtom(scopeOf(get, corpus)), (o) => {
+      if (o.deleted.includes(record.id)) {
+        const { id: _id, ...fields } = record;
+        return {
+          ...o,
+          deleted: o.deleted.filter((d) => d !== record.id),
+          patched: { ...o.patched, [record.id]: fields as Partial<T> },
+        };
+      }
+      return o.created.some((r) => r.id === record.id) ? o : { ...o, created: [...o.created, record] };
+    });
+  });
+
+  return { listAtom, listOfAtom, createAtom, patchAtom, deleteAtom, restoreAtom };
 }
 
 /* ── Singletons ─────────────────────────────────────────────────────────

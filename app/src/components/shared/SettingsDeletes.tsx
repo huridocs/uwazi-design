@@ -4,7 +4,6 @@ import { ConfirmDelete } from "./ConfirmDelete";
 import { Select } from "./Select";
 import { useSettingsNotify } from "../../hooks/useSettingsNotify";
 import {
-  deleteRelationTypeAtom,
   groupUsageAtom,
   languageUsageAtom,
   relationTypeUsageAtom,
@@ -12,7 +11,13 @@ import {
   thesaurusUsageAtom,
   userUsageAtom,
 } from "../../atoms/settingsUsage";
-import { relationTypesAtom } from "../../atoms/references";
+import {
+  deleteRelationTypeAtom,
+  settingsRelationTypesAtom,
+  type RelationTypeDeletion,
+} from "../../atoms/relationTypes";
+import type { RelationTypeDef } from "../../atoms/references";
+import { NO_LABEL_RELATION_TYPE } from "../../data/references";
 import { deleteThesaurusAtom } from "../../atoms/thesauri";
 import { deleteGroupAtom, deleteUserAtom, type GroupWithMembers } from "../../atoms/users";
 import { removeAccessMemberAtom } from "../../atoms/entityChanges";
@@ -22,7 +27,6 @@ import type {
   SettingsLanguage,
   SettingsMenuLink,
   SettingsPage,
-  SettingsRelationType,
   SettingsTemplate,
   SettingsThesaurus,
   SettingsUser,
@@ -101,80 +105,70 @@ function ThesaurusDeleteOpen({ thesaurus, onCancel }: { thesaurus: SettingsThesa
 
 export function RelationTypeDelete({
   type,
-  types,
   onCancel,
-  onDelete,
+  onDeleted,
 }: {
-  type: SettingsRelationType | null;
-  /** The page's list: the move-to choices. */
-  types: SettingsRelationType[];
+  type: RelationTypeDef | null;
   onCancel: () => void;
-  onDelete: (t: SettingsRelationType) => void;
+  /** After the delete: what it removed, for the page's Undo. */
+  onDeleted: (deletion: RelationTypeDeletion, movedTo: string | null) => void;
 }) {
-  return type ? <RelationTypeDeleteOpen type={type} types={types} onCancel={onCancel} onDelete={onDelete} /> : null;
+  return type ? <RelationTypeDeleteOpen type={type} onCancel={onCancel} onDeleted={onDeleted} /> : null;
 }
 
 function RelationTypeDeleteOpen({
   type,
-  types,
   onCancel,
-  onDelete,
+  onDeleted,
 }: {
-  type: SettingsRelationType;
-  types: SettingsRelationType[];
+  type: RelationTypeDef;
   onCancel: () => void;
-  onDelete: (t: SettingsRelationType) => void;
+  onDeleted: (deletion: RelationTypeDeletion, movedTo: string | null) => void;
 }) {
-  const usage = useAtomValue(relationTypeUsageAtom(type));
-  const registry = useAtomValue(relationTypesAtom);
+  const usage = useAtomValue(relationTypeUsageAtom(type.id));
+  const registry = useAtomValue(settingsRelationTypesAtom);
   const remove = useSetAtom(deleteRelationTypeAtom);
   const { record } = useSettingsNotify();
   const [to, setTo] = useState("");
-  // Move-to choices: the other types the references can name, and No label
-  // (the Relationships panel's fallback).
-  const fold = (s: string) => s.trim().toLowerCase();
+  // Move-to choices: every other type, and No label (the Relationships
+  // panel's fallback for an untyped reference).
   const options = [
-    ...types
-      .filter((t) => t.id !== type.id)
-      .flatMap((t) => {
-        const def = registry.find((d) => fold(d.label) === fold(t.name));
-        return def && def.id !== usage.registryId ? [{ value: def.id, label: t.name }] : [];
-      }),
-    { value: "no_label", label: "No label" },
+    ...registry.filter((t) => t.id !== type.id).map((t) => ({ value: t.id, label: t.label })),
+    { value: NO_LABEL_RELATION_TYPE, label: "No label" },
   ];
   const target = options.find((o) => o.value === to);
+  const n = usage.references;
   return (
     <ConfirmDelete
       open
       title="Delete relationship type"
       message={
         usage.reassignable
-          ? `Delete ${type.name}? Its references move to the type you choose first.`
-          : `Delete ${type.name}? No references or relationship fields use it.`
+          ? `Delete ${type.label}? Its ${n.toLocaleString()} ${n === 1 ? "reference moves" : "references move"} to the type you choose, then the type is deleted. Undo in the notifications puts both back.`
+          : `Delete ${type.label}? No references or relationship fields use it.`
       }
       impact={usage}
       confirmLabel={usage.reassignable ? "Move and delete" : "Delete"}
       confirmDisabled={usage.reassignable && !target}
       onCancel={onCancel}
       onConfirm={() => {
-        if (usage.registryId) remove({ registryId: usage.registryId, to: usage.reassignable ? to : null });
-        onDelete(type);
+        const deletion = remove({ id: type.id, to: usage.reassignable ? to : null });
+        if (!deletion) return onCancel();
         record({
           method: "DELETE",
           domain: "relationType",
           noun: "relationship type",
           id: type.id,
-          name: type.name,
-          detail: usage.reassignable && target ? `${usage.references.toLocaleString()} references moved to ${target.label}.` : undefined,
+          name: type.label,
+          message: `${type.label} deleted`,
         });
+        onDeleted(deletion, usage.reassignable && target ? target.label : null);
         onCancel();
       }}
     >
       {usage.reassignable && (
         <div className="space-y-1">
-          <span id="reassign-label" className="block text-xs font-medium text-ink-secondary">
-            Move references to
-          </span>
+          <span className="block text-xs font-medium text-ink-secondary">Move references to</span>
           <Select
             value={to}
             options={[{ value: "", label: "Choose a type", disabled: true }, ...options]}
@@ -328,12 +322,26 @@ export function TemplateEntityCount({ template }: { template: SettingsTemplate }
   return <>{usage.entities.toLocaleString()}</>;
 }
 
-/** A relationship type's reference count, from the selector its delete reads. */
-export function RelationTypeReferenceCount({ type }: { type: SettingsRelationType }) {
-  const usage = useAtomValue(relationTypeUsageAtom(type));
+/** A relationship type's reference count and templates, from the selector
+ *  its delete reads. */
+export function RelationTypeReferenceCount({ id }: { id: string }) {
+  const usage = useAtomValue(relationTypeUsageAtom(id));
   return (
     <>
       {usage.references.toLocaleString()} <span className="text-ink-tertiary">{usage.references === 1 ? "reference" : "references"}</span>
     </>
+  );
+}
+
+export function RelationTypeTemplates({ id }: { id: string }) {
+  const usage = useAtomValue(relationTypeUsageAtom(id));
+  return (
+    <span className="flex flex-wrap gap-1">
+      {usage.templates.map((t) => (
+        <span key={t} className="text-meta text-ink-secondary bg-vellum px-1.5 py-px rounded-md w-fit whitespace-nowrap">
+          {t}
+        </span>
+      ))}
+    </span>
   );
 }
