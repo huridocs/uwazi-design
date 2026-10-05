@@ -82,14 +82,9 @@ export interface TemplateDef {
   entityViewPage?: string;
   /** The prototype's stand-in for `entityViewPage`: entities of this template
    *  open in the published view, with a toggle to the entity view. Seeded, not
-   *  edited in Settings. `placement` is where the toggle sits (default
-   *  "center"); both are kept so each can be shown. */
-  publishedView?: { placement?: PublishedTogglePlacement };
+   *  edited in Settings. */
+  publishedView?: boolean;
 }
-
-/** Where the published-view toggle sits: "center" on the navbar's lower edge,
- *  "corner" at the content area's top inline-end corner. */
-export type PublishedTogglePlacement = "center" | "corner";
 
 /** The id rule for corpora whose properties carry no `_id` (Sample, CEJIL,
  *  Artworks): stable and unique, and the same everywhere. */

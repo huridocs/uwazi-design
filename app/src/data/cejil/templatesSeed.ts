@@ -61,12 +61,8 @@ function propertyOf(templateId: string, p: CejilTemplateProperty): PropertyDef {
 }
 
 /** Juez y/o Comisionado (facts only) and Causa (a Resumen to read) open in the
- *  published view (`TemplateDef.publishedView`). Causa's toggle sits at the
- *  corner, Juez's at the centre, so both placements can be shown. */
-const PUBLISHED_VIEW_TEMPLATES = new Map<string, NonNullable<TemplateDef["publishedView"]>>([
-  ["58b2f3a35d59f31e1345b4b6", { placement: "center" }],
-  ["58b2f3a35d59f31e1345b48a", { placement: "corner" }],
-]);
+ *  published view (`TemplateDef.publishedView`). */
+const PUBLISHED_VIEW_TEMPLATES = new Set(["58b2f3a35d59f31e1345b4b6", "58b2f3a35d59f31e1345b48a"]);
 
 let built: TemplateDef[] | null = null;
 /** Built on first read (see data/sample/templates.ts). */
@@ -78,5 +74,5 @@ export const cejilTemplateDefs = (): TemplateDef[] => (built ??= cejilTemplates.
   isDefault: !!t.default,
   commonProperties: (t.commonProperties ?? []).map((p) => propertyOf(t._id, p)),
   properties: t.properties.map((p) => propertyOf(t._id, p)),
-  ...(PUBLISHED_VIEW_TEMPLATES.has(t._id) ? { publishedView: PUBLISHED_VIEW_TEMPLATES.get(t._id) } : {}),
+  ...(PUBLISHED_VIEW_TEMPLATES.has(t._id) ? { publishedView: true } : {}),
 })));

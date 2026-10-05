@@ -181,7 +181,7 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
           pill for every language the collection adds. Unavailable renditions stay
           listed but disabled. */}
       {languages.length > 0 && (
-        // `me-10`: the corner published-view toggle's slot (`reserveToggleSlotAtom`).
+        // `me-10`: the published-view toggle's slot (`reserveToggleSlotAtom`).
         <div data-part="language" className={`shrink-0 ${reserveToggle ? "me-10" : ""}`}>
           <Select
             value={currentLang}
