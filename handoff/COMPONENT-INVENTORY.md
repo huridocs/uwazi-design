@@ -157,7 +157,6 @@ that don't exist as reusable components anywhere in `production` yet.
 | NotificationsSlideOver.tsx | `UI/Notifications/NotificationsPanel.tsx` (built on `UI/Drawer.tsx`) | Yes — `NotificationsPanel.stories.tsx`, `NotificationItem.stories.tsx` | None | **S** | Naming/structural convergence with Beacon: real panel already buckets today/earlier, tracks tasks with progress bars; unread filter pill + retry action are the only real gaps |
 | SegmentedTabs.tsx | `UI/SegmentedControl/SegmentedControl.tsx` | Yes — `Components/UI/SegmentedControl.stories.tsx` | None | S | Equivalent pill-group selector structure already exists |
 | SplitView.tsx | `Layouts/PaneLayout/PaneLayoutDesktop.tsx` | Yes — `Layouts/PaneLayout.stories.tsx` | None | S | Same drag-resize concept; real version is more capable (localStorage-persisted ratios, N panes vs 2) |
-| ToolsActionBar.tsx | `Routes/Entity/.../relationships/panel/RelationshipsActionBar.tsx` | No dedicated story | None | M | Same list/detail selection+bulk-delete pattern, but tightly coupled to relationships domain — needs generalizing |
 | ToolsSidebar.tsx | `Routes/Settings/SettingsNavigation.tsx` | No dedicated story | None | S | Near-identical rail structure, even matching section grouping (Templates/Thesauri/Relationship types under a Metadata group) |
 
 ## Rollup

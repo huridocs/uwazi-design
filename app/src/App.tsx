@@ -8,6 +8,7 @@ import { Navbar } from "./components/layout/Navbar";
 import { EntityView } from "./views/EntityView";
 import { LibraryView } from "./views/LibraryView";
 import { ComponentCatalog } from "./views/ComponentCatalog";
+import { useCsvImportRunner } from "./atoms/csvImports";
 import { ImportCSVView } from "./views/ImportCSVView";
 import { SettingsView } from "./views/SettingsView";
 import { LoginView } from "./views/LoginView";
@@ -42,6 +43,9 @@ export function App() {
 
   // Import CSV is an admin page (Uwazi: adminsOnlyRoute); a restored session
   // on it for another role lands on the Library.
+  // Import CSV jobs run whatever view is open.
+  useCsvImportRunner();
+
   const canImport = useAtomValue(settingsAccessAtom)("import-csv");
   useEffect(() => {
     if (appView === "import-csv" && !canImport) setAppView("library");

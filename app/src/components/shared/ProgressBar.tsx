@@ -1,6 +1,6 @@
 interface ProgressBarProps {
   value: number;
-  color?: "green" | "blue" | "red" | "gray";
+  color?: "green" | "blue" | "red" | "amber" | "gray";
   showLabel?: boolean;
   size?: "sm" | "md";
   /** Accessible name for the bar. Defaults to "Progress". */
@@ -11,6 +11,7 @@ const fillColor = {
   green: "bg-success",
   blue: "bg-carbon",
   red: "bg-seal",
+  amber: "bg-warning",
   gray: "bg-ink-muted/40",
 };
 
@@ -18,6 +19,7 @@ const trackColor = {
   green: "bg-success/15",
   blue: "bg-carbon/15",
   red: "bg-seal/15",
+  amber: "bg-warning/15",
   gray: "bg-warm",
 };
 

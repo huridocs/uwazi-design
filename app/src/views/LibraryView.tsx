@@ -1,11 +1,11 @@
 import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import { CheckSquare, FileDown, FileUp, MoreHorizontal, Plus, Search, Upload, X } from "lucide-react";
-import { signedInUserAtom } from "../atoms/users";
+import { settingsAccessAtom } from "../atoms/settings";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom, travesiaReadyAtom } from "../atoms/dataSource";
 import { discardDraftAtom, draftEntityIdAtom, recentTemplatesAtom, startDraftAtom } from "../atoms/entityChanges";
-import { tasksAtom } from "../atoms/notifications";
 import { NewImportModal } from "../components/import-csv/NewImportModal";
+import { useRegisterCsvImport } from "../hooks/useRegisterCsvImport";
 import { editSessionOpenAtom } from "../atoms/dirtyGuard";
 import { CreateEntityDialog } from "../components/library/CreateEntityDialog";
 import { CreateEntityButton } from "../components/library/CreateEntityButton";
@@ -365,20 +365,13 @@ export function LibraryView() {
   // Import CSV opens its modal over the Library; the import then runs as a
   // Beacon task instead of taking the reader to the Import CSV screen.
   const [importOpen, setImportOpen] = useState(false);
-  // Import CSV creates entities in bulk, which Uwazi leaves to admins and
-  // editors: a collaborator is not offered it.
-  const canImport = useAtomValue(signedInUserAtom)?.role !== "collaborator";
-  const setImportTasks = useSetAtom(tasksAtom);
-  const handleImportCsv = useCallback(
-    (filename: string, template: string) => {
-      setImportOpen(false);
-      setImportTasks((prev) => [
-        ...prev,
-        { id: `imp-${Date.now()}`, label: "Importing CSV", detail: `${filename} → ${template}`, current: 0, total: 100 },
-      ]);
-    },
-    [setImportTasks],
-  );
+  // Import CSV is for admins (Uwazi: adminsOnlyRoute and an admin-only link).
+  const canImport = useAtomValue(settingsAccessAtom)("import-csv");
+  const registerImport = useRegisterCsvImport();
+  const handleImportCsv = (filename: string, templateId: string) => {
+    setImportOpen(false);
+    registerImport(filename, templateId);
+  };
   const [createOpen, setCreateOpen] = useState(false);
   const [batchOpen, setBatchOpen] = useState(false);
   const [phoneActionsOpen, setPhoneActionsOpen] = useState(false);

@@ -1,237 +1,185 @@
-export type ImportStatus =
-  | "completed"
-  | "completed_warnings"
-  | "completed_errors"
-  | "processing"
-  | "uploading"
-  | "pending"
-  | "failed";
+/** Import CSV (Uwazi's `csv.v2`): one record per registered import, as
+ *  `GET /api/csvImportEntities/imports/:id` returns it, with its row errors.
+ *  The pipeline and copy are Uwazi's (`statusMessages.ts`, `ImportsTable.tsx`,
+ *  `UploadStatus.tsx`); see uwazi-settings-inventory.md › Import CSV. */
 
-export interface ImportIssue {
-  id: string;
-  field: string;
-  issue: string;
-  type: "warning" | "error";
-  date: string;
+/** The stages a job walks through, in order. */
+export type CsvStage = "queued" | "validating" | "extracting" | "scanning" | "thesauri" | "relationships" | "entities";
+/** A stage, or where the job ended (or a retry). */
+export type CsvStatus = CsvStage | "retrying" | "completed" | "failed" | "cancelled";
+
+export const CSV_STAGES: CsvStage[] = ["queued", "validating", "extracting", "scanning", "thesauri", "relationships", "entities"];
+
+/** Uwazi's status titles and descriptions, exact. */
+export const CSV_STATUS_TEXT: Record<CsvStatus | "completedWithErrors", { title: string; description: string }> = {
+  queued: { title: "Queued", description: "This import is waiting in queue." },
+  validating: { title: "Validating", description: "Validating file structure and headers." },
+  extracting: { title: "Extracting files", description: "Extracting files from uploaded package." },
+  scanning: { title: "Scanning", description: "Scanning rows before import." },
+  thesauri: { title: "Creating thesauri", description: "Preparing required thesauri values." },
+  relationships: { title: "Creating relationships", description: "Preparing required relationships." },
+  entities: { title: "Creating entities", description: "Import is currently processing rows." },
+  retrying: { title: "Retrying", description: "Import is retrying after an error." },
+  completed: { title: "Completed", description: "Import finished successfully." },
+  completedWithErrors: { title: "Completed with errors", description: "Import finished with errors. Review details below." },
+  failed: { title: "Failed", description: "Import failed. Review details below." },
+  cancelled: { title: "Cancelled", description: "Import was cancelled." },
+};
+
+export const isTerminal = (s: CsvStatus) => s === "completed" || s === "failed" || s === "cancelled";
+
+/** A row the job could not write. `row` is the spreadsheet row: the header is
+ *  row 1, so the first data row is 2. */
+export interface CsvRowError {
+  row: number;
+  property: string;
+  message: string;
 }
 
-export interface ImportEntry {
+export interface CsvImport {
   id: string;
   filename: string;
-  template: string;
-  status: ImportStatus;
-  progress: number;
-  entities: number;
-  failed: number;
-  warnings: number;
-  errors: number;
-  date: string;
-  issues: ImportIssue[];
-  // Total row count in the CSV (drives the "X / Y" progress label).
-  totalRows?: number;
-  // Detail-view extras (optional; detail view falls back to sensible defaults)
-  createdBy?: string;
-  time?: string;               // e.g. "3:24 PM"
-  sourceKind?: "CSV" | "ZIP";
-  sourceSizeKb?: number;
-  thesauriTouched?: number;
-  relationshipsCreated?: number;
-  filesExtracted?: number;
-  thesauriObserved?: number;
-  thesauriCreated?: number;
+  /** A template id of the import's collection. A deleted template shows its
+   *  raw id, as in Uwazi. */
+  templateId: string;
+  status: CsvStatus;
+  /** Set once a retry happened, so the stepper shows it. */
+  retried?: boolean;
+  /** The stage a cancel or failure stopped at. */
+  stoppedAt?: CsvStage;
+  /** epoch ms */
+  created: number;
+  updated: number;
+  /** Who registered it. */
+  user: string;
+  totalRows: number;
+  rowsProcessed: number;
+  entitiesCreated: number;
+  entitiesUpdated: number;
+  rowsFailed: number;
+  thesauriValuesCreated: number;
+  relatedEntitiesCreated: number;
+  /** A job failure (status `failed`). */
+  failure?: { message: string; stage: string; code: string; retryable: boolean };
+  rowErrors: CsvRowError[];
+  /** Row errors the job will meet while it runs (the mock's script). */
+  plannedErrors?: CsvRowError[];
+  /** Rows per runner tick in "Creating entities". */
+  rate?: number;
+  /** Ticks spent in the current stage. */
+  ticks?: number;
+  /** Another import this one waits behind (stays Queued until it ends). */
+  waitFor?: string;
 }
 
-export const templates = [
-  { id: "t1", name: "Court Case" },
-  { id: "t2", name: "Judgment" },
-  { id: "t3", name: "Person" },
-  { id: "t4", name: "Country" },
-  { id: "t5", name: "Violation" },
-  { id: "t6", name: "Right" },
-  { id: "t7", name: "Organization" },
-  { id: "t8", name: "Document" },
-];
+/** The Uwazi completed-with-errors case: completed, some rows failed. */
+export const csvTitle = (i: Pick<CsvImport, "status" | "rowsFailed">) =>
+  CSV_STATUS_TEXT[i.status === "completed" && i.rowsFailed > 0 ? "completedWithErrors" : i.status];
 
-export interface CreatedEntity {
-  id: string;
-  title: string;
-  template: string;
-  date: string;
-}
+const at = (iso: string) => new Date(iso).getTime();
 
-const courtCaseNames = [
-  "Velásquez Rodríguez v. Honduras", "Godínez Cruz v. Honduras", "Aloeboetoe et al. v. Suriname",
-  "Neira Alegría et al. v. Peru", "Caballero Delgado and Santana v. Colombia", "El Amparo v. Venezuela",
-  "Garrido and Baigorria v. Argentina", "Loayza Tamayo v. Peru", "Castillo Páez v. Peru",
-  "Suárez Rosero v. Ecuador", "Blake v. Guatemala", "Paniagua Morales et al. v. Guatemala",
-  "Cantoral Benavides v. Peru", "Durand and Ugarte v. Peru", "Bámaca Velásquez v. Guatemala",
-  "Barrios Altos v. Peru", "Hilaire v. Trinidad and Tobago", "Myrna Mack Chang v. Guatemala",
-  "Maritza Urrutia v. Guatemala", "Molina Theissen v. Guatemala",
-];
-
-const personNames = [
-  "Juan Carlos Abella", "María Elena Almeida", "Pedro Cabrera García", "Ana Lucía Flores",
-  "Roberto Mendoza", "Carmen Díaz Ortega", "Fernando Torres", "Isabel Ramírez",
-  "Diego Morales", "Luisa Fernanda Pérez", "Andrés Martínez", "Claudia Vásquez",
-  "Miguel Ángel Reyes", "Patricia Herrera", "Javier Gutiérrez", "Sofía Castillo",
-  "Ricardo Vargas", "Daniela Rojas", "Alejandro Ruiz", "Valentina Espinoza",
-];
-
-const countryNames = [
-  "Argentina", "Bolivia", "Brazil", "Chile", "Colombia", "Costa Rica", "Cuba",
-  "Dominican Republic", "Ecuador", "El Salvador", "Guatemala", "Haiti", "Honduras",
-  "Jamaica", "Mexico", "Nicaragua", "Panama", "Paraguay", "Peru", "Suriname",
-];
-
-function namePool(template: string): string[] {
-  if (template === "Court Case") return courtCaseNames;
-  if (template === "Person") return personNames;
-  if (template === "Country") return countryNames;
-  return courtCaseNames;
-}
-
-export function generateCreatedEntities(entry: ImportEntry): CreatedEntity[] {
-  if (entry.entities === 0) return [];
-  const pool = namePool(entry.template);
-  const count = Math.min(entry.entities, 20); // show up to 20
-  return Array.from({ length: count }, (_, i) => ({
-    id: `${entry.id}-ent-${i}`,
-    title: pool[i % pool.length] + (i >= pool.length ? ` (${Math.floor(i / pool.length) + 1})` : ""),
-    template: entry.template,
-    date: entry.date,
-  }));
-}
-
-export const defaultImports: ImportEntry[] = [
+/** The Sample's imports. Other collections start with none. */
+export const seedCsvImports: CsvImport[] = [
   {
     id: "imp1",
     filename: "cases.csv",
-    template: "Court Case",
+    templateId: "court_case",
     status: "completed",
-    progress: 100,
-    entities: 932,
-    failed: 0,
-    warnings: 0,
-    errors: 0,
-    date: "2026-02-18",
+    created: at("2026-02-18T15:24:10"),
+    updated: at("2026-02-18T15:31:52"),
+    user: "admin",
     totalRows: 932,
-    createdBy: "santi",
-    time: "3:24 PM",
-    sourceKind: "CSV",
-    sourceSizeKb: 245,
-    thesauriTouched: 3,
-    relationshipsCreated: 47,
-    filesExtracted: 1,
-    thesauriObserved: 128,
-    thesauriCreated: 14,
-    issues: [],
+    rowsProcessed: 932,
+    entitiesCreated: 920,
+    entitiesUpdated: 12,
+    rowsFailed: 0,
+    thesauriValuesCreated: 14,
+    relatedEntitiesCreated: 47,
+    rowErrors: [],
   },
   {
     id: "imp2",
     filename: "locations.csv",
-    template: "Country",
-    status: "processing",
-    progress: Math.round((412 / 634) * 100),
-    entities: 412,
-    failed: 3,
-    warnings: 0,
-    errors: 0,
-    date: "2026-02-19",
+    templateId: "country",
+    status: "entities",
+    created: at("2026-02-19T10:08:31"),
+    updated: at("2026-02-19T10:12:05"),
+    user: "mlopez",
     totalRows: 634,
-    createdBy: "maria",
-    time: "10:08 AM",
-    sourceKind: "CSV",
-    sourceSizeKb: 98,
-    thesauriTouched: 1,
-    relationshipsCreated: 12,
-    filesExtracted: 1,
-    thesauriObserved: 52,
-    thesauriCreated: 4,
-    issues: [],
+    rowsProcessed: 412,
+    entitiesCreated: 409,
+    entitiesUpdated: 0,
+    rowsFailed: 3,
+    thesauriValuesCreated: 4,
+    relatedEntitiesCreated: 12,
+    rowErrors: [
+      { row: 57, property: "region", message: "Thesaurus value “Caribe Norte” not found in “Regions”." },
+      { row: 203, property: "", message: "Row is empty or malformed." },
+      { row: 388, property: "capital", message: "Related entity “Ciudad Vieja” not found." },
+    ],
+    // A long job, so it is still running when someone opens it.
+    rate: 1,
   },
   {
     id: "imp3",
     filename: "judges-import.zip",
-    template: "Judge",
+    templateId: "person",
     status: "failed",
-    progress: Math.round((89 / 234) * 100),
-    entities: 89,
-    failed: 12,
-    warnings: 0,
-    errors: 3,
-    date: "2026-02-17",
-    totalRows: 234,
-    createdBy: "santi",
-    time: "4:51 PM",
-    sourceKind: "ZIP",
-    sourceSizeKb: 1240,
-    thesauriTouched: 0,
-    relationshipsCreated: 0,
-    filesExtracted: 234,
-    thesauriObserved: 0,
-    thesauriCreated: 0,
-    issues: [
-      { id: "iss1", field: "date_of_birth", issue: "Invalid date format in 89 rows", type: "error", date: "2026-03-17" },
-      { id: "iss2", field: "nationality", issue: "Unrecognized thesaurus value in 42 rows", type: "error", date: "2026-03-17" },
-      { id: "iss3", field: "file_attachment", issue: "ZIP archive corrupted — extraction failed", type: "error", date: "2026-03-17" },
-    ],
+    stoppedAt: "extracting",
+    created: at("2026-02-17T16:51:02"),
+    updated: at("2026-02-17T16:51:09"),
+    user: "admin",
+    totalRows: 0,
+    rowsProcessed: 0,
+    entitiesCreated: 0,
+    entitiesUpdated: 0,
+    rowsFailed: 0,
+    thesauriValuesCreated: 0,
+    relatedEntitiesCreated: 0,
+    failure: {
+      message: "import.csv not found at zip root",
+      stage: "Extracting files",
+      code: "IMPORT_CSV_NOT_FOUND",
+      retryable: false,
+    },
+    rowErrors: [],
   },
   {
     id: "imp4",
     filename: "witnesses.csv",
-    template: "Person",
-    status: "completed_warnings",
-    progress: 100,
-    entities: 156,
-    failed: 2,
-    warnings: 12,
-    errors: 0,
-    date: "2026-02-15",
+    templateId: "person",
+    status: "completed",
+    created: at("2026-02-15T09:42:44"),
+    updated: at("2026-02-15T09:44:30"),
+    user: "admin",
     totalRows: 156,
-    createdBy: "santi",
-    time: "9:42 AM",
-    sourceKind: "CSV",
-    sourceSizeKb: 68,
-    thesauriTouched: 2,
-    relationshipsCreated: 28,
-    filesExtracted: 1,
-    thesauriObserved: 43,
-    thesauriCreated: 5,
-    issues: [
-      { id: "iss4", field: "phone_number", issue: "Missing value — left blank in 5 rows", type: "warning", date: "2026-03-16" },
-      { id: "iss5", field: "address", issue: "Truncated to 255 characters in 4 rows", type: "warning", date: "2026-03-16" },
-      { id: "iss6", field: "email", issue: "Invalid email format in 3 rows", type: "warning", date: "2026-03-16" },
+    rowsProcessed: 156,
+    entitiesCreated: 154,
+    entitiesUpdated: 0,
+    rowsFailed: 2,
+    thesauriValuesCreated: 5,
+    relatedEntitiesCreated: 28,
+    rowErrors: [
+      { row: 14, property: "email", message: "Invalid value format for property “email”." },
+      { row: 87, property: "date_of_birth", message: "Value cannot be transformed to the correct type." },
     ],
   },
   {
     id: "imp5",
     filename: "hearings-2026.csv",
-    template: "Hearing",
-    status: "pending",
-    progress: 0,
-    entities: 0,
-    failed: 0,
-    warnings: 0,
-    errors: 0,
-    date: "2026-02-20",
+    templateId: "hearing",
+    status: "queued",
+    created: at("2026-02-20T11:17:26"),
+    updated: at("2026-02-20T11:17:26"),
+    user: "mlopez",
     totalRows: 1204,
-    createdBy: "maria",
-    time: "11:17 AM",
-    sourceKind: "CSV",
-    sourceSizeKb: 412,
-    thesauriTouched: 4,
-    relationshipsCreated: 82,
-    filesExtracted: 1,
-    thesauriObserved: 174,
-    thesauriCreated: 22,
-    issues: [
-      { id: "iss7", field: "case_number", issue: "Duplicate case number in 8 rows", type: "error", date: "2026-03-14" },
-      { id: "iss8", field: "hearing_date", issue: "Date out of range in 10 rows", type: "error", date: "2026-03-14" },
-      { id: "iss9", field: "judge_name", issue: "Unresolved relationship in 4 rows", type: "error", date: "2026-03-14" },
-      { id: "iss10", field: "location", issue: "Missing value — left blank in 3 rows", type: "warning", date: "2026-03-14" },
-      { id: "iss11", field: "notes", issue: "Truncated to 255 characters in 2 rows", type: "warning", date: "2026-03-14" },
-      { id: "iss12", field: "transcript", issue: "Encoding issue — replaced with fallback in 2 rows", type: "warning", date: "2026-03-14" },
-      { id: "iss13", field: "status", issue: "Unrecognized thesaurus value in 4 rows", type: "error", date: "2026-03-14" },
-    ],
+    rowsProcessed: 0,
+    entitiesCreated: 0,
+    entitiesUpdated: 0,
+    rowsFailed: 0,
+    thesauriValuesCreated: 0,
+    relatedEntitiesCreated: 0,
+    rowErrors: [],
+    waitFor: "imp2",
   },
 ];

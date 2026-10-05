@@ -219,8 +219,8 @@ repo; update them when tokens or style rules change.
 ## Accessibility
 - A clickable row or card is never `role="button"`. It renders a stretched invisible button as
   its first child (focus ring, `aria-pressed`, accessible name); content sits above it in a
-  `relative` wrapper so nested controls work. Used by `EntityCard`, `DataTable`, `ImportTable`,
-  and `ListCardRow` with `onClick`. Give `DataTable` a `rowAriaLabel`; the fallback is "Open row".
+  `relative` wrapper so nested controls work. Used by `EntityCard`, `DataTable` and
+  `ListCardRow` with `onClick`. Give `DataTable` a `rowAriaLabel`; the fallback is "Open row".
 - A row whose actions are all visible controls has no row target. Relationship rows
   (`rows/RowShell.tsx`) expose the entity pill ("Open Case 12.045") and the page tag ("Go to page
   14"); delete stays behind hover. `PageTag` and `RowEntityPill` stop propagation.
@@ -331,8 +331,11 @@ repo; update them when tokens or style rules change.
 ### Other surfaces
 - Files view: `focusedId` (the open file) is separate from `selectedIds` (checkboxes). The drawer
   shows the open file when nothing is ticked.
-- Import CSV: seed rows in `data/imports.ts` match `images/screens/import_csv/`. `pending` rows
-  are grey with a disabled View. `ToolsActionBar` has `list` and `detail` modes.
+- Import CSV: imports are a per-corpus store (`atoms/csvImports.ts`, seed in `data/imports.ts`,
+  Sample only) with Uwazi's stages and copy. `useCsvImportRunner` (mounted by `App`) moves every
+  unfinished import and keeps one Beacon task each, whatever view is open. The list is a
+  `SettingsListPage`, the status page a `SettingsContent`; Cancel and "Download failed rows" are
+  on its footer. Admins only, from Tools and the Library footer.
 - Catalog: the logo toggles `ComponentCatalog`. Add shared components as a `CatalogEntry` with a
   live demo.
 - Mobile: `<768` / `768–1023` / `≥1024` (`atoms/viewport.ts`). On phones every nested view is a
