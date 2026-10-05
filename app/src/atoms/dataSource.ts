@@ -1,12 +1,10 @@
 import { atom, type Getter } from "jotai";
 import { atomFamily, atomWithStorage } from "jotai/utils";
-import { entitiesAtom, entityTypesAtom } from "./entities";
-import { entityCorpusOf, entityTypes, type Entity, type EntityType } from "../data/entities";
-import { cejilEntityTypes } from "../data/cejil/typesAdapter";
+import { entitiesAtom } from "./entities";
+import { templateTypesAtom, templateTypesMirror } from "./templates";
+import { entityCorpusOf, type Entity, type EntityType } from "../data/entities";
 import { cejilLibraryEntities } from "../data/cejil/adapt";
-import { artworkEntityTypes } from "../data/artworks/typesAdapter";
 import { artworkLibraryEntities } from "../data/artworks/adapt";
-import { travesiaEntityTypes } from "../data/travesia/typesAdapter";
 import { travesiaLibraryEntities } from "../data/travesia/adapt";
 import { libraryEntityOverlayAtom } from "./entityChanges";
 import { applyOverlay, overlayMirror, type Corpus, type CorpusOverlay } from "../data/entityChanges";
@@ -110,10 +108,9 @@ export function entityCorpusPool(
  *  templates whatever the Library is showing. `mockTypes` is the Sample
  *  corpus's list (`entityTypesAtom`), passed in so this stays a function. */
 export function corpusTypes(corpus: DataSource, mockTypes: EntityType[]): EntityType[] {
-  if (corpus === "cejil") return cejilEntityTypes;
-  if (corpus === "artworks") return artworkEntityTypes;
-  if (corpus === "travesia") return travesiaEntityTypes;
-  return mockTypes ?? entityTypes;
+  // Every corpus's list is a projection of its templates (`atoms/templates.ts`).
+  if (corpus === "mock") return mockTypes ?? templateTypesMirror("mock");
+  return templateTypesMirror(corpus);
 }
 
 /** The entity types present for the active source (drives facet lists + colours). */
@@ -121,19 +118,16 @@ export const libraryTypesAtom = atom<EntityType[]>((get) => {
   const source = get(dataSourceAtom);
   switch (source) {
     case "artworks":
-      return artworkEntityTypes;
     case "cejil":
-      return cejilEntityTypes;
     case "travesia":
-      return travesiaEntityTypes;
     case "mock":
-      return get(entityTypesAtom) ?? entityTypes;
+      return get(templateTypesAtom(source));
     default: {
       // Same shape as libraryEntitiesAtom: type error on widening, mock
       // fallback for a stale persisted value.
       const _exhaustive: never = source;
       void _exhaustive;
-      return get(entityTypesAtom) ?? entityTypes;
+      return get(templateTypesAtom("mock"));
     }
   }
 });

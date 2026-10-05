@@ -11,7 +11,8 @@
     "build-storybook": "storybook build",
     "check:thumbs": "node scripts/check-thumbs.ts",
     "check:stories": "node scripts/check-stories-a11y.ts",
-    "check:dates": "node --test scripts/check-entity-dates.ts"
+    "check:dates": "node --test scripts/check-entity-dates.ts",
+    "check:templates": "node scripts/check-template-coverage.ts"
   },
   "dependencies": {
     "@chenglou/pretext": "^0.0.4",

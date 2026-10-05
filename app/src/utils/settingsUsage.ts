@@ -2,7 +2,7 @@ import type { Entity } from "../data/entities";
 import type { Corpus } from "../data/entityChanges";
 import { cejilTemplates } from "../data/cejil/templates";
 import { travesiaTemplates } from "../data/travesia/schema";
-import { sampleTemplateProperties } from "../data/entityProfiles";
+import { sampleTemplateProperties } from "../data/sample/typeFields";
 import { relationshipFieldsByLanguage } from "../data/metadata";
 import { V4_FIELDS } from "../data/sampleSeedV4";
 import type { ThesaurusValue } from "../data/settings";
