@@ -56,6 +56,22 @@
   "name": "geolocates"
  },
  {
+  "_id": "depicts",
+  "name": "shows"
+ },
+ {
+  "_id": "documents",
+  "name": "documents"
+ },
+ {
+  "_id": "published_in",
+  "name": "published in"
+ },
+ {
+  "_id": "geolocated_by",
+  "name": "geolocated by"
+ },
+ {
   "_id": "claimed_by",
   "name": "claimed by"
  },

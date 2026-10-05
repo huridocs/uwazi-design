@@ -743,6 +743,261 @@
   ]
  },
  {
+  "id": "nepal_media",
+  "name": "Media item",
+  "color": "#4F6F8F",
+  "isDefault": false,
+  "commonProperties": [
+   {
+    "id": "nepal_media:title",
+    "name": "title",
+    "label": "Title",
+    "type": "text"
+   },
+   {
+    "id": "nepal_media:creationDate",
+    "name": "creationDate",
+    "label": "Date added",
+    "type": "date"
+   },
+   {
+    "id": "nepal_media:editDate",
+    "name": "editDate",
+    "label": "Date modified",
+    "type": "date"
+   }
+  ],
+  "properties": [
+   {
+    "id": "nepal_media:caption",
+    "name": "caption",
+    "label": "What it shows",
+    "type": "markdown",
+    "required": true,
+    "fullWidth": true,
+    "showInCard": true
+   },
+   {
+    "id": "nepal_media:media_kind",
+    "name": "media_kind",
+    "label": "Kind",
+    "type": "select",
+    "content": "media_kinds",
+    "required": true,
+    "filter": true,
+    "defaultfilter": true,
+    "showInCard": true
+   },
+   {
+    "id": "nepal_media:file",
+    "name": "file",
+    "label": "Bundled file",
+    "type": "image",
+    "style": "contain"
+   },
+   {
+    "id": "nepal_media:embed",
+    "name": "embed",
+    "label": "Embedded media",
+    "type": "media"
+   },
+   {
+    "id": "nepal_media:page_url",
+    "name": "page_url",
+    "label": "Original page",
+    "type": "link",
+    "required": true
+   },
+   {
+    "id": "nepal_media:platform",
+    "name": "platform",
+    "label": "Platform",
+    "type": "select",
+    "content": "platforms",
+    "filter": true
+   },
+   {
+    "id": "nepal_media:outlet",
+    "name": "outlet",
+    "label": "Outlet or channel",
+    "type": "text",
+    "showInCard": true,
+    "filter": true
+   },
+   {
+    "id": "nepal_media:creator",
+    "name": "creator",
+    "label": "Creator",
+    "type": "text"
+   },
+   {
+    "id": "nepal_media:rights",
+    "name": "rights",
+    "label": "Rights",
+    "type": "select",
+    "content": "rights",
+    "required": true,
+    "filter": true,
+    "defaultfilter": true
+   },
+   {
+    "id": "nepal_media:licence",
+    "name": "licence",
+    "label": "Licence",
+    "type": "text"
+   },
+   {
+    "id": "nepal_media:licence_url",
+    "name": "licence_url",
+    "label": "Licence text",
+    "type": "link"
+   },
+   {
+    "id": "nepal_media:attribution",
+    "name": "attribution",
+    "label": "Attribution line",
+    "type": "text",
+    "fullWidth": true
+   },
+   {
+    "id": "nepal_media:recorded",
+    "name": "recorded",
+    "label": "Recorded",
+    "type": "date",
+    "filter": true,
+    "prioritySorting": true
+   },
+   {
+    "id": "nepal_media:recorded_precision",
+    "name": "recorded_precision",
+    "label": "Recorded: precision",
+    "type": "select",
+    "content": "time_precision"
+   },
+   {
+    "id": "nepal_media:published",
+    "name": "published",
+    "label": "Published",
+    "type": "date",
+    "filter": true
+   },
+   {
+    "id": "nepal_media:duration_seconds",
+    "name": "duration_seconds",
+    "label": "Duration in seconds",
+    "type": "numeric"
+   },
+   {
+    "id": "nepal_media:segment_start",
+    "name": "segment_start",
+    "label": "Relevant segment starts (s)",
+    "type": "numeric"
+   },
+   {
+    "id": "nepal_media:segment_end",
+    "name": "segment_end",
+    "label": "Relevant segment ends (s)",
+    "type": "numeric"
+   },
+   {
+    "id": "nepal_media:language",
+    "name": "language",
+    "label": "Language",
+    "type": "select",
+    "content": "languages"
+   },
+   {
+    "id": "nepal_media:content_warning",
+    "name": "content_warning",
+    "label": "Content warning",
+    "type": "select",
+    "content": "content_warnings",
+    "filter": true
+   },
+   {
+    "id": "nepal_media:geolocation",
+    "name": "geolocation",
+    "label": "Place shown",
+    "type": "geolocation",
+    "showInCard": true
+   },
+   {
+    "id": "nepal_media:location_method",
+    "name": "location_method",
+    "label": "How place and time were established",
+    "type": "markdown",
+    "fullWidth": true
+   },
+   {
+    "id": "nepal_media:verified_by",
+    "name": "verified_by",
+    "label": "Established by",
+    "type": "text"
+   },
+   {
+    "id": "nepal_media:verification",
+    "name": "verification",
+    "label": "Verification",
+    "type": "select",
+    "content": "media_verification",
+    "required": true,
+    "filter": true,
+    "defaultfilter": true,
+    "showInCard": true
+   },
+   {
+    "id": "nepal_media:file_size_bytes",
+    "name": "file_size_bytes",
+    "label": "File size in bytes",
+    "type": "numeric"
+   },
+   {
+    "id": "nepal_media:depicts",
+    "name": "depicts",
+    "label": "Shows",
+    "type": "relationship",
+    "content": "",
+    "relationType": "depicts",
+    "x": {
+     "connectionKey": "depicts:"
+    }
+   },
+   {
+    "id": "nepal_media:documents",
+    "name": "documents",
+    "label": "Documents",
+    "type": "relationship",
+    "content": "",
+    "relationType": "documents",
+    "x": {
+     "connectionKey": "documents:"
+    }
+   },
+   {
+    "id": "nepal_media:published_in",
+    "name": "published_in",
+    "label": "Published in",
+    "type": "relationship",
+    "content": "nepal_source",
+    "relationType": "published_in",
+    "x": {
+     "connectionKey": "published_in:nepal_source"
+    }
+   },
+   {
+    "id": "nepal_media:geolocated_by",
+    "name": "geolocated_by",
+    "label": "Geolocated by",
+    "type": "relationship",
+    "content": "nepal_source",
+    "relationType": "geolocated_by",
+    "x": {
+     "connectionKey": "geolocated_by:nepal_source"
+    }
+   }
+  ]
+ },
+ {
   "id": "nepal_casualty",
   "name": "Casualty record",
   "color": "#7A2E2E",

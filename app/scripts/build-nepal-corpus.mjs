@@ -12,8 +12,13 @@
 //   public/nepal-data/entities.json     records in Uwazi's metadata shape
 //   public/nepal-data/relationships.json  references, with anchor quotes
 //   public/nepal-data/thesauri.json     select vocabularies
+//   public/nepal-data/docs.json         the bundled documents: issuer, source,
+//                                       licence basis and per-page OCR text
+//   public/nepal-data/media/            the bundled Commons images, as copied
+//   public/nepal-data/docs/<id>.pdf     the bundled PDFs, unaltered
 //
-// The three public files are fetched when the collection is picked.
+// The four JSON files are fetched when the collection is picked; an image or a
+// PDF is fetched when a record shows it. None of it is in the app bundle.
 //
 // Mapping decisions:
 // - Template ids get a `nepal_` prefix: the Sample already has a `person`
@@ -32,17 +37,28 @@
 // - Per-property evidence and reference notes are not shipped. The reference's
 //   verification status and its date range are.
 //
-// Privacy (Research's rules, checked here, the build stops if one fails): a
-// casualty under 18 or with a withheld identity has no name; no record holds
-// a phone number or an e-mail address.
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { join, dirname } from "node:path";
+// - Media items: the `file` image property holds the bundled copy's public
+//   path; its pixel size goes on the record (`image`) so the record reserves
+//   the box before the picture loads. `embed` is the video or podcast URL.
+// - Documents: a record's attached PDFs (`files[]` in the seed) become `docs`,
+//   primary first. A reference whose quote was located in a bundled PDF keeps
+//   its file and page, so the Relationships panel can jump to it.
+//
+// Privacy and rights (Research's rules, checked here, the build stops if one
+// fails): a casualty under 18 or with a withheld identity has no name; no
+// record holds a phone number or an e-mail address; a bundled image carries
+// its licence, licence link and attribution; a bundled document names its
+// issuer and its source URL, and none of the link-only documents is copied.
+import { readFileSync, writeFileSync, mkdirSync, copyFileSync, existsSync, readdirSync, rmSync, statSync } from "node:fs";
+import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 // The seed lives outside git, in the main checkout's dev/results.
 const seedDir = process.argv[2] ?? join(here, "../../dev/results/nepal-seed/data");
 const read = (p) => JSON.parse(readFileSync(join(seedDir, p), "utf8"));
+// Media and documents sit beside data/: ../media/images, ../docs.
+const seedRoot = join(seedDir, "..");
 
 const seedTemplates = read("schema/templates.json");
 const seedRelTypes = read("schema/relationTypes.json");
@@ -85,6 +101,11 @@ const THESAURUS_NAMES = {
   outcomes: "Outcomes",
   causes: "Causes",
   identity_status: "Identity status",
+  media_kinds: "Media kinds",
+  platforms: "Platforms",
+  rights: "Rights",
+  content_warnings: "Content warnings",
+  media_verification: "Media verification",
 };
 const thesauri = Object.entries(seedThesauri).map(([id, values]) => {
   if (!THESAURUS_NAMES[id]) throw new Error(`Thesaurus ${id} has no name`);
@@ -127,13 +148,17 @@ const REPRESENTATIVE = {
   source: (p) => p.published,
   claim: (p) => p.asserted_on,
   casualty: (p) => p.occurred,
+  // When it was recorded, which for a recycled clip is years before it was
+  // shared; the record shows both.
+  media: (p) => p.recorded ?? p.published,
 };
 
 /** How precisely that date is known, when it is less than a day: a value
  *  written as a month ("2024-03") or a year, or a record whose Time precision
  *  says month. Day (and hour) is the default and is not written. */
 function precisionOf(raw, props) {
-  if (props.precision === "month" || props.precision === "year") return props.precision;
+  const stated = props.precision ?? props.recorded_precision;
+  if (stated === "month" || stated === "year") return stated;
   if (typeof raw !== "string") return null;
   if (/^\d{4}$/.test(raw)) return "year";
   if (/^\d{4}-\d{2}$/.test(raw)) return "month";
@@ -145,6 +170,7 @@ const titleOf = new Map(seedEntities.map((e) => [e.id, e.title]));
 const VERIFICATION = new Set(["confirmed", "single-source", "disputed"]);
 let anchored = 0;
 let anchorElsewhere = 0;
+let pageAnchored = 0;
 const relationships = seedRefs.map((r) => {
   if (!titleOf.has(r.from) || !titleOf.has(r.to)) throw new Error(`Reference ${r.id} points at a missing entity`);
   if (!VERIFICATION.has(r.verification)) throw new Error(`Reference ${r.id}: verification ${r.verification}`);
@@ -157,6 +183,12 @@ const relationships = seedRefs.map((r) => {
   if (quote && r.anchor.source === r.from) {
     out.quote = quote;
     anchored++;
+    // Located in a bundled PDF: the file and the page the quote is on.
+    if (r.anchor.file && typeof r.anchor.page === "number" && r.anchor.page > 0) {
+      out.file = r.anchor.file;
+      out.page = r.anchor.page;
+      pageAnchored++;
+    }
   } else if (quote) anchorElsewhere++;
   if (r.date && (r.date.from || r.date.to)) out.date = { from: secs(r.date.from), to: secs(r.date.to) };
   return out;
@@ -174,6 +206,52 @@ for (const r of relationships) {
 // Nepali mobile and landline numbers, and e-mail addresses.
 const PHONE = /(\+977[\s-]?\d{7,10}|\b9[78]\d{8}\b|\b01-?\d{7}\b)/;
 const EMAIL = /[\w.+-]+@[\w-]+\.[a-z]{2,}/i;
+
+/* ── Documents ──────────────────────────────────────────────────────── */
+const INSTITUTIONAL_MAIL = /@(?:[\w-]+\.)*(?:gov\.np|nhrcnepal\.org|nhrenepal\.org)$/i;
+const docsDir = join(seedRoot, "docs");
+const linkOnly = new Set(JSON.parse(readFileSync(join(docsDir, "linkonly.json"), "utf8")).map((d) => d.url));
+const docMeta = new Map();
+for (const id of readdirSync(docsDir)) {
+  const metaPath = join(docsDir, id, "meta.json");
+  if (!existsSync(metaPath)) continue;
+  const m = JSON.parse(readFileSync(metaPath, "utf8"));
+  if (m.doc_id !== id) throw new Error(`docs/${id}: meta.json names ${m.doc_id}`);
+  if (!m.publisher?.trim()) throw new Error(`docs/${id}: no issuer`);
+  if (!m.source_url?.trim()) throw new Error(`docs/${id}: no source URL`);
+  if (linkOnly.has(m.source_url)) throw new Error(`docs/${id}: listed as link only`);
+  if (!existsSync(join(docsDir, id, "doc.pdf"))) throw new Error(`docs/${id}: no doc.pdf`);
+  const pageFiles = readdirSync(join(docsDir, id, "pages")).filter((f) => /^\d+\.txt$/.test(f)).sort();
+  if (pageFiles.length !== m.pages) throw new Error(`docs/${id}: ${pageFiles.length} pages of text for ${m.pages} pages`);
+  const text = pageFiles.map((f) => readFileSync(join(docsDir, id, "pages", f), "utf8").trim());
+  // The documents are published as issued, so their contact lines stay: an
+  // institution's address. Anything else (a person's number or address) stops
+  // the build. "nhrenepal" is the OCR's reading of "nhrcnepal".
+  for (const [i, t] of text.entries()) {
+    if (PHONE.test(t)) throw new Error(`docs/${id} p.${i + 1}: holds a phone number`);
+    for (const [addr] of t.matchAll(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g))
+      if (!INSTITUTIONAL_MAIL.test(addr)) throw new Error(`docs/${id} p.${i + 1}: holds the e-mail address ${addr}`);
+  }
+  docMeta.set(id, {
+    id,
+    title: m.title,
+    language: m.language,
+    pages: m.pages,
+    bytes: m.bytes,
+    publisher: m.publisher,
+    ...(m.published ? { published: secs(m.published) } : {}),
+    sourceUrl: m.source_url,
+    ...(m.source_page ? { sourcePage: m.source_page } : {}),
+    retrieved: secs(m.retrieved),
+    licenceBasis: m.licence_basis,
+    // Every page was OCRed; nobody has read the result against the scan.
+    textSource: m.text_source ?? "ocr",
+    textQuality: "unreviewed",
+    text,
+  });
+}
+const imagesToCopy = new Set();
+
 
 function valuesOf(p, v) {
   switch (p.type) {
@@ -206,6 +284,12 @@ function valuesOf(p, v) {
       return typeof v?.lat === "number" && typeof v?.lon === "number"
         ? [{ value: { lat: v.lat, lon: v.lon, label: v.label ?? "" } }]
         : [];
+    case "image":
+      // The bundled copy, by its public path (the app resolves it against its
+      // base). Copied below.
+      return v?.path ? [{ value: `/nepal-data/media/${basename(v.path)}` }] : [];
+    case "media":
+      return typeof v === "string" && v.trim() ? [{ value: v.trim() }] : [];
     default:
       throw new Error(`${p.id}: unhandled type ${p.type}`);
   }
@@ -252,6 +336,24 @@ const entities = seedEntities.map((e) => {
         throw new Error(`${e.id}.${p.name}: holds a phone number or an e-mail address`);
     if (vals.length) metadata[p.name] = vals;
   }
+  // A bundled image is published with its terms or not at all.
+  let image;
+  if (e.template === "media" && props.file) {
+    for (const k of ["licence", "attribution"])
+      if (!props[k]?.trim()) throw new Error(`${e.id}: a bundled image without its ${k}`);
+    if (!props.licence_url?.url) throw new Error(`${e.id}: a bundled image without its licence link`);
+    if (!String(props.rights).startsWith("bundled-")) throw new Error(`${e.id}: an image is bundled under rights "${props.rights}"`);
+    const f = props.file;
+    if (!(f.width > 0 && f.height > 0)) throw new Error(`${e.id}: the image has no pixel size`);
+    imagesToCopy.add(f.path);
+    image = { url: `/nepal-data/media/${basename(f.path)}`, width: f.width, height: f.height };
+  }
+  const docs = (e.files ?? []).map((f) => {
+    if (!docMeta.has(f.id)) throw new Error(`${e.id}: attached document ${f.id} is not in docs/index.json`);
+    return f;
+  });
+  // Primary first; Research attaches one per record, but keep the rule.
+  docs.sort((a, b) => (a.role === "primary" ? 0 : 1) - (b.role === "primary" ? 0 : 1));
   // Wikipedia, OpenStreetMap and institutional pages have no publication
   // date: `published` is empty and `accessed` holds the day Research read
   // them. That is not when anything happened, so they have no record date and
@@ -265,6 +367,8 @@ const entities = seedEntities.map((e) => {
     title: titleOf.get(e.id),
     ...(date !== null ? { date } : {}),
     ...(precision ? { datePrecision: precision } : {}),
+    ...(image ? { image } : {}),
+    ...(docs.length ? { docs: docs.map((f) => f.id) } : {}),
     metadata,
   };
 });
@@ -280,7 +384,30 @@ writeFileSync(join(srcOut, "relationTypes.json"), pretty(relationTypes));
 writeFileSync(join(pubOut, "entities.json"), JSON.stringify(entities));
 writeFileSync(join(pubOut, "relationships.json"), JSON.stringify(relationships));
 writeFileSync(join(pubOut, "thesauri.json"), JSON.stringify(thesauri));
+const attached = new Set(entities.flatMap((e) => e.docs ?? []));
+writeFileSync(join(pubOut, "docs.json"), JSON.stringify([...docMeta.values()].filter((d) => attached.has(d.id))));
+
+// The binaries, copied as they are. The folders are rebuilt each run, so a
+// file Research drops does not linger.
+const mediaOut = join(pubOut, "media");
+const docsOut = join(pubOut, "docs");
+for (const dir of [mediaOut, docsOut]) {
+  rmSync(dir, { recursive: true, force: true });
+  mkdirSync(dir, { recursive: true });
+}
+let mediaBytes = 0;
+for (const p of imagesToCopy) {
+  copyFileSync(join(seedRoot, p), join(mediaOut, basename(p)));
+  mediaBytes += statSync(join(mediaOut, basename(p))).size;
+}
+let docBytes = 0;
+for (const id of attached) {
+  copyFileSync(join(docsDir, id, "doc.pdf"), join(docsOut, `${id}.pdf`));
+  docBytes += statSync(join(docsOut, `${id}.pdf`)).size;
+}
+const mb = (n) => (n / 1048576).toFixed(1);
 console.log(
-  `${entities.length} entities, ${relationships.length} references (${anchored} anchored, ${anchorElsewhere} quotes on a third record dropped), ` +
-    `${templates.length} templates, ${relationTypes.length} relationship types, ${thesauri.length} thesauri`,
+  `${entities.length} entities, ${relationships.length} references (${anchored} anchored, ${pageAnchored} to a page of a bundled PDF, ` +
+    `${anchorElsewhere} quotes on a third record dropped), ${templates.length} templates, ${relationTypes.length} relationship types, ` +
+    `${thesauri.length} thesauri; ${imagesToCopy.size} images (${mb(mediaBytes)} MB), ${attached.size} PDFs (${mb(docBytes)} MB)`,
 );
