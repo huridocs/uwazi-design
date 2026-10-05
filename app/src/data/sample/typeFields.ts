@@ -4,6 +4,8 @@
 // (`data/sample/templates.ts`) can read it without loading every profile.
 import type { Language } from "../../atoms/language";
 import type { MetadataField } from "../metadata";
+import { metadataFieldsByLanguage } from "../metadata";
+import { V4_DATES } from "../sampleSeedV4";
 
 /** Localized labels for the handful of synthesized fields, so AR/RTL renders. */
 export const FIELD_LABELS: Record<string, Record<Language, string>> = {
@@ -51,8 +53,20 @@ const ENGLISH_LABELS: Record<string, string> = {
   source: "Source",
 };
 
+/** The labels the Sample's record already carries per language for the
+ *  properties outside the field table: the case record's own fields and the
+ *  v4 seed's dates. One translation table with FIELD_LABELS. */
+const RECORD_LABELS: Record<string, Partial<Record<Language, string>>> = (() => {
+  const out: Record<string, Partial<Record<Language, string>>> = {};
+  for (const lang of ["EN", "ES", "FR", "AR"] as Language[]) {
+    for (const f of metadataFieldsByLanguage[lang]) (out[f.id] ??= {})[lang] = f.label;
+    for (const list of Object.values(V4_DATES)) for (const d of list) (out[d.prop] ??= {})[lang] ??= d.label[lang];
+  }
+  return out;
+})();
+
 export function lbl(key: string, lang: Language): string {
-  return FIELD_LABELS[key]?.[lang] ?? ENGLISH_LABELS[key] ?? key;
+  return FIELD_LABELS[key]?.[lang] ?? (lang === "EN" ? ENGLISH_LABELS[key] : undefined) ?? RECORD_LABELS[key]?.[lang] ?? ENGLISH_LABELS[key] ?? key;
 }
 
 
@@ -74,7 +88,7 @@ export const TYPE_FIELDS: Record<string, { prop: string; type: MetadataField["ty
     { prop: "country", type: "text" },
     { prop: "role", type: "text" },
     { prop: "profession", type: "text" },
-    { prop: "born", type: "text" },
+    { prop: "born", type: "date" },
   ],
   country: [
     { prop: "region", type: "select", thesaurus: "t5" },
@@ -83,7 +97,7 @@ export const TYPE_FIELDS: Record<string, { prop: string; type: MetadataField["ty
   ],
   court_case: [
     { prop: "caseNumber", type: "text" },
-    { prop: "dateFiled", type: "text" },
+    { prop: "dateFiled", type: "date" },
     { prop: "respondent", type: "text" },
     { prop: "status", type: "select", thesaurus: "t3" },
     { prop: "region", type: "select", thesaurus: "t5" },
@@ -94,7 +108,7 @@ export const TYPE_FIELDS: Record<string, { prop: string; type: MetadataField["ty
     { prop: "category", type: "text" },
   ],
   judgment: [
-    { prop: "date", type: "text" },
+    { prop: "date", type: "date" },
     { prop: "court", type: "text" },
     { prop: "series", type: "text" },
     { prop: "outcome", type: "text" },
@@ -111,7 +125,7 @@ export const TYPE_FIELDS: Record<string, { prop: string; type: MetadataField["ty
   ],
   document: [
     { prop: "docType", type: "select", thesaurus: "t4" },
-    { prop: "adopted", type: "text" },
+    { prop: "adopted", type: "date" },
     { prop: "source", type: "text" },
   ],
 };

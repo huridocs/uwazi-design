@@ -385,7 +385,7 @@ function EntityEditBody({
   const kindOf = (t: MetadataField["type"]): ValueKind =>
     t === "date" ? "date" : t === "link" ? "link" : t === "multiline" ? "multiline" : "text";
   const scalarEditable = fields.filter(
-    (f) => !["description", "country"].includes(f.id) && f.type !== "file-list",
+    (f) => f.id !== "description" && f.type !== "country" && f.type !== "file-list",
   );
   /** The media editor validates its own value and reports here. A ref, so a
    *  save reads the result of the same keystroke, not the last render. Unset
@@ -738,7 +738,10 @@ function EntityEditBody({
       continue;
     }
     if (f.id === "description") continue;
-    if (f.id === "country") {
+    // A legacy `country` field (name and flag) keeps its picker; a template's
+    // country property is a select on the Countries thesaurus (decision S3) and
+    // is edited like any select.
+    if (f.type === "country") {
       editUnits.push({ kind: "country" });
       continue;
     }
@@ -747,8 +750,10 @@ function EntityEditBody({
     if (!field) continue;
     editUnits.push({ kind: field.type === "file-list" ? "files" : "scalar", field });
   }
-  if (!editUnits.some((u) => u.kind === "country")) editUnits.push({ kind: "country" });
-  editUnits.push({ kind: "geolocation" });
+  if (!editUnits.some((u) => u.kind === "country") && !fields.some((f) => f.id === "country"))
+    editUnits.push({ kind: "country" });
+  // The fixed place box stands in only where the template declares no place.
+  if (!fields.some((f) => f.propertyType === "geolocation")) editUnits.push({ kind: "geolocation" });
 
   /* ── Copy From ────────────────────────────────────────────────────────────
      The picker chooses the source and properties; the ticked set lands in this
@@ -797,7 +802,7 @@ function EntityEditBody({
         continue;
       }
       const field = fields.find((f) => f.id === m.id);
-      if (!field || field.id === "country" || field.type === "file-list") {
+      if (!field || field.type === "country" || field.type === "file-list") {
         unstageable.push(m);
         continue;
       }

@@ -5,6 +5,7 @@ import { cejilSettingsThesauri, cejilThesaurusValues } from "../data/cejil/setti
 import type { Corpus } from "../data/entityChanges";
 import { dataSourceAtom, travesiaReadyAtom } from "./dataSource";
 import { travesiaSettingsThesauri } from "../data/travesia/load";
+import { artworkThesauri } from "../data/artworks/thesauri";
 import { cejilValueLabels } from "../data/cejil/profile";
 import type { Language } from "./language";
 import { registerSettingsReset } from "./settingsCollection";
@@ -54,6 +55,12 @@ function seedOf(corpus: Corpus): { list: SettingsThesaurus[]; values: Record<str
   if (corpus === "cejil") return { list: cejilSettingsThesauri, values: cejilThesaurusValues };
   // Travesía's thesauri arrive with its entities (empty until then).
   if (corpus === "travesia") return travesiaSettingsThesauri();
+  // The artworks corpus shows the Sample's thesauri plus its own two (genres,
+  // nationalities), which its templates bind since step M5.
+  if (corpus === "artworks") {
+    const art = artworkThesauri();
+    return { list: [...seedThesauri, ...art.list], values: { ...seedThesaurusValues, ...art.values } };
+  }
   return { list: seedThesauri, values: seedThesaurusValues };
 }
 

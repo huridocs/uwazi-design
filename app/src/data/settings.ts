@@ -149,6 +149,9 @@ export const seedThesauri: SettingsThesaurus[] = [
   { id: "t3", name: "Case status", itemCount: 5 },
   { id: "t4", name: "Document types", itemCount: 11 },
   { id: "t5", name: "Regions", itemCount: 8 },
+  // Decision S3: a country on a record is a select on this thesaurus (Uwazi
+  // has no country type); the flag comes from the label (utils/countryFlag).
+  { id: "t6", name: "Countries", itemCount: 22 },
 ];
 
 /** A thesaurus value, in Uwazi's exact shape: `{ id, label, values? }`. A value
@@ -226,6 +229,30 @@ export const seedThesaurusValues: Record<string, ThesaurusValue[]> = {
       ],
     },
   ],
+  t6: [
+    { id: "t6-argentina", label: "Argentina" },
+    { id: "t6-barbados", label: "Barbados" },
+    { id: "t6-bolivia", label: "Bolivia" },
+    { id: "t6-brazil", label: "Brazil" },
+    { id: "t6-chile", label: "Chile" },
+    { id: "t6-colombia", label: "Colombia" },
+    { id: "t6-costa-rica", label: "Costa Rica" },
+    { id: "t6-dominican-republic", label: "Dominican Republic" },
+    { id: "t6-ecuador", label: "Ecuador" },
+    { id: "t6-el-salvador", label: "El Salvador" },
+    { id: "t6-guatemala", label: "Guatemala" },
+    { id: "t6-haiti", label: "Haiti" },
+    { id: "t6-honduras", label: "Honduras" },
+    { id: "t6-mexico", label: "Mexico" },
+    { id: "t6-nicaragua", label: "Nicaragua" },
+    { id: "t6-panama", label: "Panama" },
+    { id: "t6-paraguay", label: "Paraguay" },
+    { id: "t6-peru", label: "Peru" },
+    { id: "t6-suriname", label: "Suriname" },
+    { id: "t6-trinidad-and-tobago", label: "Trinidad and Tobago" },
+    { id: "t6-uruguay", label: "Uruguay" },
+    { id: "t6-venezuela", label: "Venezuela" },
+  ]
 };
 
 // ── Relationship types ──────────────────────────────────────────────────────

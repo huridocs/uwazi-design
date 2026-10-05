@@ -2,7 +2,7 @@ import type { Language } from "../atoms/language";
 import type { DocumentMeta } from "./document";
 import { documentsByLanguage } from "./document";
 import type { AnyMetadataField, MetadataField } from "./metadata";
-import { metadataFieldsByLanguage, pdfMetadataByLanguage } from "./metadata";
+import { pdfMetadataByLanguage } from "./metadata";
 import type { DocRendition } from "./documentRenditions";
 import { renditionsByLanguage } from "./documentRenditions";
 import type { FileEntry, DocumentGroup } from "./files";
@@ -14,9 +14,7 @@ import { isArtworkEntity, buildArtworkProfile } from "./artworks/profile";
 import { isTravesiaEntity, buildTravesiaProfile } from "./travesia/profile";
 import type { EntityImage } from "./entities";
 import { overlayCreated, overlayRecord, type EntityRecord } from "./entityChanges";
-import { v4RelationshipFields } from "./sampleSeedV4Fields";
-import { V4_DATES } from "./sampleSeedV4";
-import { lbl, TYPE_FIELDS } from "./sample/typeFields";
+import { sampleRecordFields } from "./sample/values";
 import { templatesMirror } from "./templates/mirror";
 import type { TemplateDef } from "./templates/types";
 
@@ -65,7 +63,8 @@ export interface EntityProfile {
 /** Canonical main entity. `e3` is already the source of the whole references[]
  *  corpus and the only id wired into the relationships pipeline, so it stays the
  *  focal default and its profile reuses every existing global unchanged. */
-export const MAIN_ENTITY_ID = "e3";
+export { MAIN_ENTITY_ID } from "./sample/mainEntity";
+import { MAIN_ENTITY_ID } from "./sample/mainEntity";
 
 /** Types that carry a document (and therefore a Document tab + viewer). */
 const DOC_TYPES = new Set(["court_case", "judgment", "document"]);
@@ -74,6 +73,7 @@ export function typeHasDocument(typeId: string): boolean {
 }
 
 /** Main entity = the existing Velásquez globals, assembled by reference. */
+let mainMetadata: Record<Language, AnyMetadataField[]> | null = null;
 const mainProfile: EntityProfile = {
   id: MAIN_ENTITY_ID,
   typeId: "court_case",
@@ -82,53 +82,19 @@ const mainProfile: EntityProfile = {
   renditions: renditionsByLanguage,
   documentGroups,
   files,
-  metadata: LANGS.reduce((acc, lang) => {
-    acc[lang] = [...metadataFieldsByLanguage[lang], ...v4DateFields(MAIN_ENTITY_ID, lang), ...v4RelationshipFields(MAIN_ENTITY_ID, "court_case", lang)];
-    return acc;
-  }, {} as Record<Language, AnyMetadataField[]>),
+  // Court Case's projection over the case record's values (step M5). Built
+  // on first read: this module loads while `data/entities` is still loading.
+  get metadata() {
+    return (mainMetadata ??= LANGS.reduce((acc, lang) => {
+      acc[lang] = sampleRecordFields(MAIN_ENTITY_ID, "court_case", lang);
+      return acc;
+    }, {} as Record<Language, AnyMetadataField[]>));
+  },
   pdfMetadata: pdfMetadataByLanguage,
   relationships: { kind: "references" },
 };
 
 /* ── Lightweight profile synthesis ──────────────────────────────────────── */
-
-/** The v4 seed's dated properties as `date` fields (a range reads "from – to").
- *  Props a type's scalar spec already renders (a judgment's `date`) are left to
- *  it, so no date prints twice. */
-function v4DateFields(entityId: string, lang: Language, skip: Set<string> = new Set()): MetadataField[] {
-  return (V4_DATES[entityId] ?? [])
-    .filter((d) => !skip.has(d.prop))
-    .map((d) => ({ id: d.prop, label: d.label[lang], type: d.end ? "text" : "date", value: d.end ? `${d.value} – ${d.end}` : d.value }));
-}
-
-function field(
-  id: string,
-  labelKey: string,
-  type: MetadataField["type"],
-  value: string,
-  lang: Language,
-  thesaurus?: string,
-): MetadataField {
-  const f: MetadataField = { id, label: lbl(labelKey, lang), type, value };
-  if (type === "select" || type === "multiselect") {
-    if (thesaurus) f.thesaurus = thesaurus;
-    if (type === "multiselect") f.values = value ? [value] : [];
-  }
-  return f;
-}
-
-/** Type-appropriate scalar fields from the entity's populated native props.
- *  Only props that have a value are rendered (no em-dash placeholders). */
-function synthFields(entity: Entity, lang: Language): AnyMetadataField[] {
-  const props = getEntityProps(entity.id, lang);
-  const spec = TYPE_FIELDS[entity.typeId] ?? [];
-  const out: AnyMetadataField[] = [];
-  for (const { prop, type, thesaurus } of spec) {
-    const value = props[prop];
-    if (value) out.push(field(prop, prop, type, value, lang, thesaurus));
-  }
-  return out;
-}
 
 /** A stub document header so doc-bearing entities have something in the viewer. */
 function stubDocByLang(entity: Entity): Record<Language, DocumentMeta> {
@@ -155,13 +121,9 @@ function entityDocDate(entity: Entity): string {
 
 function buildLightweightProfile(entity: Entity): EntityProfile {
   const hasDocument = typeHasDocument(entity.typeId);
+  // The template's projection over the entity's values (step M5).
   const metadata = LANGS.reduce((acc, lang) => {
-    const own = synthFields(entity, lang);
-    acc[lang] = [
-      ...own,
-      ...v4DateFields(entity.id, lang, new Set(own.map((f) => f.id))),
-      ...v4RelationshipFields(entity.id, entity.typeId, lang),
-    ];
+    acc[lang] = sampleRecordFields(entity.id, entity.typeId, lang);
     return acc;
   }, {} as Record<Language, AnyMetadataField[]>);
 

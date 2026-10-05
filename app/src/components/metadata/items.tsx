@@ -6,6 +6,7 @@ import { entityMetadataAtom, makeEntityPropReader } from "../../atoms/entityMeta
 import { EntityPill } from "../shared/EntityPill";
 import { MediaFieldValue } from "./MediaFieldValue";
 import { ThesaurusValueLabel } from "../shared/ThesaurusValueLabel";
+import { countryFlag } from "../../utils/countryFlag";
 import { resolveRelationshipField } from "../../utils/inheritance";
 import type { MetadataField, RelationshipMetadataField } from "../../data/metadata";
 import { previewEntityIdAtom } from "../../atoms/entityPreview";
@@ -137,7 +138,10 @@ export function fieldItem(f: MetadataField): MetadataItem {
         // reserves for view titles. A field value is `text-sm font-medium
         // text-ink leading-relaxed`; nothing here may depend on its container to
         // say so.
-        <span className="text-sm font-medium text-ink leading-relaxed">
+        <span className="inline-flex items-center gap-1.5 text-sm font-medium text-ink leading-relaxed">
+          {/* A country is a select on the Countries thesaurus (decision S3);
+              its flag comes from the label, as the old country field's did. */}
+          {f.type === "select" && countryFlag(f.value) && <span className="leading-none">{countryFlag(f.value)}</span>}
           <ThesaurusValueLabel value={f.value} />
         </span>
       ),

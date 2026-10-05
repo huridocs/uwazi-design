@@ -8,14 +8,16 @@
 // Labels are English (decision S5); the field table's other languages are the
 // Sample's translations and stay with the projection.
 //
-// Kept as the corpus types them today (`multiline` is `markdown`, dates held
-// as text stay `text`): step M4 turns `born`, `dateFiled` and the judgment date
-// into dates, adds the Countries thesaurus and reconciles `e3` with Court Case.
+// Court Case is reconciled with the case record `e3` (step M5): its own fields
+// are Court Case properties, in a reviewed order. Its country is a select on
+// the Countries thesaurus (decision S3), its bench is markdown (S2), and its
+// other files belong to the Files tab, not to metadata. The v4 seed's dates are
+// properties of the templates whose entities carry them.
 import type { PropertyDef, PropertyType, TemplateDef } from "../templates/types";
 import { commonPropertiesFor, propertyIdOf } from "../templates/types";
-import { entityTypes } from "../entities";
+import { entities, entityTypes } from "../entities";
 import { relationshipFieldsByLanguage } from "../metadata";
-import { V4_FIELDS } from "../sampleSeedV4";
+import { V4_DATES, V4_FIELDS } from "../sampleSeedV4";
 import { lbl, TYPE_FIELDS } from "./typeFields";
 
 const TYPE_OF: Record<string, PropertyType> = {
@@ -38,6 +40,60 @@ function nativeProperties(typeId: string): PropertyDef[] {
     // The Sample's selects are what its Library has faceted and carded.
     ...(type === "select" || type === "multiselect" ? { showInCard: true, filter: true } : {}),
   }));
+}
+
+/** Court Case's own properties: the field table's and the case record's,
+ *  merged in a reviewed order (identifiers and parties, place, procedure,
+ *  dates, then the long texts). */
+const COURT_CASE: { name: string; type: PropertyType; content?: string; label?: string }[] = [
+  { name: "caseNumber", type: "text" },
+  { name: "victim", type: "text" },
+  { name: "petitioner", type: "text" },
+  { name: "respondent", type: "text" },
+  { name: "country", type: "select", content: "t6" },
+  { name: "region", type: "select", content: "t5" },
+  { name: "place-incident", type: "text" },
+  { name: "mechanism", type: "text" },
+  { name: "status", type: "select", content: "t3" },
+  { name: "type", type: "text" },
+  { name: "series", type: "text" },
+  { name: "dateFiled", type: "date" },
+  { name: "date-incident", type: "date" },
+  { name: "date", type: "date", label: "Date of judgment" },
+  { name: "articles-invoked", type: "markdown" },
+  { name: "bench", type: "markdown" },
+];
+
+function courtCaseProperties(): PropertyDef[] {
+  return COURT_CASE.map((p) => ({
+    id: propertyIdOf("court_case", p.name),
+    name: p.name,
+    label: p.label ?? lbl(p.name, "EN"),
+    type: p.type,
+    ...(p.content ? { content: p.content } : {}),
+    ...(p.type === "select" ? { showInCard: true, filter: true } : {}),
+  }));
+}
+
+/** The v4 seed's dated properties of a template, from the entities that carry
+ *  them: a date, or a date range where the seed gives an end. Left out where
+ *  the template already declares the name. */
+function v4DateProperties(typeId: string, declared: Set<string>): PropertyDef[] {
+  const typeOf = new Map(entities.map((e) => [e.id, e.typeId]));
+  const out: PropertyDef[] = [];
+  for (const [entityId, dates] of Object.entries(V4_DATES)) {
+    if (typeOf.get(entityId) !== typeId) continue;
+    for (const d of dates) {
+      if (declared.has(d.prop) || out.some((p) => p.name === d.prop)) continue;
+      out.push({
+        id: propertyIdOf(typeId, d.prop),
+        name: d.prop,
+        label: d.label.EN,
+        type: d.end ? "daterange" : "date",
+      });
+    }
+  }
+  return out;
 }
 
 /** The case record's connections: People (with two inherited columns on one
@@ -83,9 +139,18 @@ export const sampleTemplateDefs = (): TemplateDef[] => (built ??= entityTypes.ma
   // The Sample's uploads take Document (createEntity's `uploadTemplateId`).
   isDefault: t.id === "document",
   commonProperties: commonPropertiesFor(t.id),
-  properties: [
-    ...nativeProperties(t.id),
-    ...(t.id === "court_case" ? caseRelationships() : []),
-    ...v4Relationships(t.id),
-  ],
+  properties: (() => {
+    const own = t.id === "court_case" ? courtCaseProperties() : nativeProperties(t.id);
+    const dates = v4DateProperties(t.id, new Set(own.map((p) => p.name)));
+    // Dates sit before a template's long texts (markdown), so the record reads
+    // facts, then prose.
+    const long = own.filter((p) => p.type === "markdown");
+    return [
+      ...own.filter((p) => p.type !== "markdown"),
+      ...dates,
+      ...long,
+      ...(t.id === "court_case" ? caseRelationships() : []),
+      ...v4Relationships(t.id),
+    ];
+  })(),
 })));

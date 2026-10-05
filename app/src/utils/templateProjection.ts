@@ -46,7 +46,9 @@ export const legacyTypeOf = (t: PropertyType) => LEGACY_TYPE[t] ?? null;
  *  Translations exists). The imported corpora are one-language: the label as
  *  the template has it. */
 export function propertyLabel(corpus: Corpus, p: PropertyDef, lang: Language): string {
-  return corpus === "mock" ? lbl(p.name, lang) : p.label;
+  if (corpus !== "mock" || lang === "EN") return p.label;
+  const translated = lbl(p.name, lang);
+  return translated === p.name ? p.label : translated;
 }
 
 /** One property as an empty form field, or null when the form has no editor
