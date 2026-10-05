@@ -1,24 +1,26 @@
 import { useCallback, useEffect, useState } from "react";
 import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
-import { cejilReadyAtom, dataSourceAtom, travesiaReadyAtom } from "../atoms/dataSource";
+import { cejilReadyAtom, dataSourceAtom, nepalReadyAtom, travesiaReadyAtom } from "../atoms/dataSource";
 import { loadTravesiaData } from "../data/travesia/load";
+import { loadNepalData } from "../data/nepal/load";
 import { loadCejilData } from "../data/cejil/load";
 import { effectiveSettingsSectionAtom } from "../atoms/settings";
 import { slowLoadAtom, slowLoadingAtom } from "../atoms/devSwitches";
 
 /** True while the active corpus's Settings data is still on its way.
  *
- *  Only Travesía's Settings lists are lazy (its thesauri arrive with its
- *  entities). CEJIL's lists are bundled, so they never read as loading; its
+ *  Only Travesía's and Nepal's Settings lists are lazy (their thesauri arrive
+ *  with their entities). CEJIL's lists are bundled, so they never read as loading; its
  *  entities still load, for the usage counts (`atoms/settingsUsage.ts`). A
  *  list that reads this shows a loading state instead of its empty state, so
  *  an admin never reads "nothing here" for a corpus that has 98 thesauri. */
 export function useSettingsCorpusLoading(): boolean {
   const source = useAtomValue(dataSourceAtom);
   const ready = useAtomValue(travesiaReadyAtom);
+  const nepalReady = useAtomValue(nepalReadyAtom);
   // The Dev panel's "Slow load (2 s)" (SD-4).
   const slow = useAtomValue(slowLoadingAtom);
-  return slow || (source === "travesia" && !ready);
+  return slow || (source === "travesia" && !ready) || (source === "nepal" && !nepalReady);
 }
 
 /** Settings pages that count CEJIL entities for a usage line. */
@@ -38,6 +40,7 @@ export function useLoadSettingsCorpus(): { retry: () => void } {
   const source = useAtomValue(dataSourceAtom);
   const [travesiaReady, setTravesiaReady] = useAtom(travesiaReadyAtom);
   const [cejilReady, setCejilReady] = useAtom(cejilReadyAtom);
+  const [nepalReady, setNepalReady] = useAtom(nepalReadyAtom);
   const setError = useSetAtom(settingsCorpusErrorAtom);
   // CEJIL's records are about 26 MB: fetched only on the pages whose usage
   // counts read them (template property removal, thesaurus and value
@@ -68,7 +71,9 @@ export function useLoadSettingsCorpus(): { retry: () => void } {
     const load =
       source === "travesia" && !travesiaReady
         ? () => loadTravesiaData().then(() => setTravesiaReady(true))
-        : source === "cejil" && !cejilReady && needsCejil
+        : source === "nepal" && !nepalReady
+          ? () => loadNepalData().then(() => setNepalReady(true))
+          : source === "cejil" && !cejilReady && needsCejil
           ? () => loadCejilData().then(() => setCejilReady(true))
           : null;
     if (!load) return;
@@ -80,7 +85,7 @@ export function useLoadSettingsCorpus(): { retry: () => void } {
     return () => {
       alive = false;
     };
-  }, [source, travesiaReady, cejilReady, needsCejil, setTravesiaReady, setCejilReady, setError, attempt]);
+  }, [source, travesiaReady, nepalReady, cejilReady, needsCejil, setTravesiaReady, setNepalReady, setCejilReady, setError, attempt]);
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
   return { retry };
 }

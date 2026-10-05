@@ -16,10 +16,11 @@ import { artworkEntityById } from "./artworks/adapt";
 import { artworkTypeById } from "./artworks/typesAdapter";
 import { travesiaTypeById } from "./travesia/typesAdapter";
 import { travesiaEntityById } from "./travesia/adapt";
+import { nepalTypeById } from "./nepal/typesAdapter";
 import { artworks, ARTWORK_IMAGE_BASE } from "./artworks/artworks";
 import { asset } from "../utils/asset";
 import { docPageAssets, DOC_PAGE_BASE, type DocPageAsset } from "./docPages";
-import { overlayCreated, overlayPatch, patchedEntity } from "./entityChanges";
+import { overlayCreated, overlayPatch, patchedEntity, type Corpus } from "./entityChanges";
 import { V4_ENTITIES, V4_ENTITY_IDS, V4_HEARING_TYPE } from "./sampleSeedV4";
 
 /** One property as a CARD shows it: the key that names it to the record, the
@@ -457,6 +458,7 @@ export function getEntityType(typeId: string): EntityType | undefined {
     cejilTypeById.get(typeId) ??
     artworkTypeById.get(typeId) ??
     travesiaTypeById.get(typeId) ??
+    nepalTypeById.get(typeId) ??
     previewTypes.get(typeId)
   );
 }
@@ -499,7 +501,7 @@ export function getEntity(id: string): Entity | undefined {
  *  from, whatever the Library happens to be displaying. Ids are disjoint across
  *  the three corpora (asserted when the artworks seed landed), so this is a
  *  lookup, not a guess. */
-export function entityCorpusOf(id: string): "mock" | "cejil" | "artworks" | "travesia" {
+export function entityCorpusOf(id: string): Corpus {
   const created = overlayCreated(id);
   if (created) return created.corpus;
   if (entities.some((e) => e.id === id)) return "mock";

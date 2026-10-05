@@ -110,6 +110,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
     cejil: useAtomValue(collectionSettings.valueOfAtom("cejil")).name,
     artworks: useAtomValue(collectionSettings.valueOfAtom("artworks")).name,
     travesia: useAtomValue(collectionSettings.valueOfAtom("travesia")).name,
+    nepal: useAtomValue(collectionSettings.valueOfAtom("nepal")).name,
   };
   const COLLECTIONS: { id: DataSource; label: string; detail: string }[] = [
     { id: "mock", label: names.mock, detail: "Sample · curated demo entities" },

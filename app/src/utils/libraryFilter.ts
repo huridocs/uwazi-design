@@ -101,6 +101,7 @@ export function entityIsDoc(e: Entity, source: DataSource): boolean {
     case "cejil":
       return e.preview === "document";
     case "travesia":
+    case "nepal":
       // Records, not documents: the schema carries no files.
       return false;
     case "artworks":

@@ -1,6 +1,6 @@
 import { atom } from "jotai";
 import type { Corpus } from "../data/entityChanges";
-import { cejilReadyAtom, dataSourceAtom, libraryEntitiesAtom, travesiaReadyAtom } from "./dataSource";
+import { cejilReadyAtom, dataSourceAtom, libraryEntitiesAtom, nepalReadyAtom, travesiaReadyAtom } from "./dataSource";
 import { usersAtom } from "./users";
 import { referencesAtom } from "./references";
 import { uploadsAtom } from "./uploads";
@@ -8,6 +8,7 @@ import { getEntityProfile } from "../data/entityProfiles";
 import { cejilStats } from "../data/cejil/aggregates";
 import { artworkStats } from "../data/artworks/artworks";
 import { travesiaCorpus } from "../data/travesia/load";
+import { nepalCorpus } from "../data/nepal/load";
 
 /** Settings › Dashboard's figures for the collection shown, read from the
  *  stores the rest of Settings and the Library write: users by role (one
@@ -32,6 +33,7 @@ const BASE_STORAGE: Record<Corpus, number> = {
   cejil: 9_871_203_532,
   artworks: 61_865_984,
   travesia: 128_974_848,
+  nepal: 46_137_344,
 };
 
 const UNIT: Record<string, number> = { B: 1, KB: 1024, MB: 1024 ** 2, GB: 1024 ** 3 };
@@ -64,7 +66,7 @@ export const dashboardStatsAtom = atom<DashboardStats>((get) => {
       files += list.length;
       if (bytes !== null) for (const f of list) bytes += parseSize(f.size);
     }
-    if (corpus === "travesia") bytes = null;
+    if (corpus === "travesia" || corpus === "nepal") bytes = null;
   }
 
   const relationships =
@@ -74,9 +76,13 @@ export const dashboardStatsAtom = atom<DashboardStats>((get) => {
         ? cejilStats.relationships
         : corpus === "artworks"
           ? artworkStats.artworks // each artwork links its artist
-          : get(travesiaReadyAtom)
-            ? (travesiaCorpus()?.relationships.length ?? null)
-            : null;
+          : corpus === "nepal"
+            ? get(nepalReadyAtom)
+              ? (nepalCorpus()?.references.length ?? null)
+              : null
+            : get(travesiaReadyAtom)
+              ? (travesiaCorpus()?.relationships.length ?? null)
+              : null;
 
   return {
     users: {

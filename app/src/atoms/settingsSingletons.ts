@@ -75,6 +75,7 @@ const COLLECTION_NAMES: Record<Corpus, string> = {
   cejil: cejilCollection.name,
   artworks: "Best Artworks",
   travesia: "Red Travesía",
+  nepal: "Nepal protests 2024–2026",
 };
 
 export const collectionSettings = createSettingsSingleton<CollectionSettings>({

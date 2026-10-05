@@ -50,6 +50,8 @@ function curatedDefs(
       return inheritedFilterProps(lang);
     case "travesia":
       return travesiaFacetDefs;
+    case "nepal":
+      return [];
     case "artworks":
       return [];
     default: {
@@ -68,6 +70,7 @@ const FIXED_FACET_PROPERTIES: Record<DataSource, string[]> = {
   cejil: ["pa_s", "descriptores"],
   mock: ["country"],
   travesia: [],
+  nepal: [],
   artworks: ["genres"],
 };
 
@@ -130,6 +133,7 @@ export function entityInheritedValues(
   switch (source) {
     case "cejil":
     case "travesia":
+    case "nepal":
       return e.inherited?.[def.propId] ?? [];
     case "mock": {
       if (def.targetTypeId && e.typeId !== def.targetTypeId) return [];

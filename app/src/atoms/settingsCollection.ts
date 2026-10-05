@@ -30,7 +30,7 @@ export interface Overlay<T> {
 
 /** Where an overlay lives: a corpus, or `global`. */
 type Scope = Corpus | "global";
-const SCOPES: Scope[] = ["mock", "cejil", "artworks", "travesia", "global"];
+const SCOPES: Scope[] = ["mock", "cejil", "artworks", "travesia", "nepal", "global"];
 
 const emptyOverlay = <T>(): Overlay<T> => ({ created: [], patched: {}, deleted: [] });
 
