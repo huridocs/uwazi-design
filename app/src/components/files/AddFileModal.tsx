@@ -316,7 +316,7 @@ export function AddFileModal() {
                 className="rounded-md bg-warm border border-border/50 p-3 space-y-2.5"
               >
                 <div className="flex items-start gap-2">
-                  <Icon size={16} className="text-ink-muted mt-2 shrink-0" aria-hidden />
+                  <Icon size={16} className="text-ink-muted mt-2.5 shrink-0" aria-hidden />
                   <input
                     type="text"
                     data-part="name"
@@ -330,7 +330,7 @@ export function AddFileModal() {
                     data-part="remove"
                     aria-label={`Remove ${entry.name}`}
                     onClick={() => removeEntry(entry.id)}
-                    className="h-8 text-xs text-ink-tertiary hover:text-ink transition-colors cursor-pointer shrink-0"
+                    className="h-9 text-xs text-ink-tertiary hover:text-ink transition-colors cursor-pointer shrink-0"
                   >
                     Remove
                   </button>

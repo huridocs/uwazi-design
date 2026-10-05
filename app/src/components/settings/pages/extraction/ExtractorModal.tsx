@@ -219,7 +219,11 @@ export function ExtractorModal({ extractor, onClose }: { extractor: IxExtractor 
                 </span>
               )}
             </div>
-            <ModalSearchField value={search} onChange={setSearch} ariaLabel="Search properties" placeholder="Search properties or templates…" />
+            {/* A row, so the field's `flex-1` widens it instead of growing it
+                down the column. */}
+            <div className="flex shrink-0">
+              <ModalSearchField value={search} onChange={setSearch} ariaLabel="Search properties" placeholder="Search properties or templates…" />
+            </div>
             <div className="flex-1 min-h-[10rem] overflow-y-auto rounded-lg border border-border">
               {groups.length === 0 ? (
                 <p className="px-3 py-6 text-center text-xs text-ink-tertiary">No property matches “{search.trim()}”</p>

@@ -961,7 +961,7 @@ function PassagesBody({
                 <bdi dir={isDoc ? "ltr" : "auto"} className="shrink-0 flex items-center gap-1">
                   {/* Plain text: the primary button already goes to the
                       evidence, and a second button would announce it twice. */}
-                  <span data-part="source" className="uppercase tracking-wide text-ink-tertiary">
+                  <span data-part="source" className="uppercase tracking-wider text-ink-tertiary">
                     {isDoc ? documentLabel(row.from) : row.field}
                   </span>
                   {/* Only where the corpus is page-mapped. */}

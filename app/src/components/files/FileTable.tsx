@@ -293,7 +293,7 @@ export function FileTable({
         return (
           <div className="flex items-center gap-2 min-w-0">
             <Icon size={14} className="text-ink-muted shrink-0" aria-hidden />
-            <span className="text-xs font-medium text-ink truncate">{file.name}</span>
+            <span className="text-sm font-medium text-ink truncate">{file.name}</span>
             {renderBadge(file)}
           </div>
         );

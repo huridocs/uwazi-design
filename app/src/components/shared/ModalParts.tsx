@@ -5,8 +5,9 @@ import { SectionLabel } from "./SectionLabel";
 /* ── The pieces a modal BODY is built from ─────────────────────────────────
    `Modal` owns the shell (scrim, panel, header, footer). These own what goes
    inside, so that a search box, a row, a label or an empty line reads the
-   same in every dialog: one row height (2.25rem), one type size (`text-xs`,
-   `text-meta` for secondary), one hover and selected ground (`bg-parchment`).
+   same in every dialog: one row height (2.25rem); list rows and search at
+   `text-xs` (`text-meta` for secondary), fields at `text-sm` like a page
+   form; one hover and selected ground (`bg-parchment`).
    Each strip or row is a `bleed` lane: it reaches the panel edge and keeps
    its content on the panel's gutter, so none of them carries `px-*`. */
 
@@ -16,8 +17,10 @@ const INPUT_BASE =
   "w-full text-ink bg-paper rounded-md border border-border placeholder:text-ink-muted " +
   "focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40 disabled:opacity-70 " +
   "aria-invalid:border-seal aria-invalid:focus:ring-seal/20";
-/** A text input or select inside a modal. One height, one type size. */
-export const MODAL_INPUT = `${INPUT_BASE} h-8 px-2.5 text-xs`;
+/** A text input or select inside a modal. Same height and type size as a
+ *  page form's field, so a value does not change size between the record and
+ *  the dialog that edits it. */
+export const MODAL_INPUT = `${INPUT_BASE} h-9 px-2.5 text-sm`;
 /** The larger size, for a form that is the whole page (login): a few
  *  fields in a narrow column, read and typed at arm's length on a phone.
  *  Same look as `MODAL_INPUT`; only height, padding and type size change. */
@@ -27,7 +30,7 @@ export const FORM_INPUT_LG = `${INPUT_BASE} h-10 px-3 text-sm`;
 export const MODAL_LABEL = "block text-xs font-medium text-ink-secondary";
 /** A textarea: `MODAL_INPUT` without the fixed height. */
 export const MODAL_TEXTAREA =
-  "w-full px-2.5 py-2 text-xs text-ink bg-paper rounded-md border border-border placeholder:text-ink-muted resize-y " +
+  "w-full px-2.5 py-2 text-sm text-ink bg-paper rounded-md border border-border placeholder:text-ink-muted resize-y " +
   "focus:outline-none focus:ring-2 focus:ring-carbon/20 focus:border-carbon/40";
 
 /** The search field on its own, for a search that lives inside something

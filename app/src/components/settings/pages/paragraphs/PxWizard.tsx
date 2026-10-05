@@ -143,7 +143,9 @@ export function PxWizard({ onClose }: { onClose: () => void }) {
             </div>
           ) : (
             <>
-              <ModalSearchField value={search} onChange={setSearch} ariaLabel="Search templates" placeholder="Search templates…" />
+              <div className="flex shrink-0">
+                <ModalSearchField value={search} onChange={setSearch} ariaLabel="Search templates" placeholder="Search templates…" />
+              </div>
               <div role="radiogroup" aria-label={STEPS[step].title} className="flex-1 min-h-[8rem] overflow-y-auto rounded-lg border border-border">
                 {list.length === 0 ? (
                   <p className="px-3 py-6 text-center text-xs text-ink-tertiary">No templates available</p>

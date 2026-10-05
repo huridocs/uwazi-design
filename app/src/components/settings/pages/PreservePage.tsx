@@ -137,7 +137,7 @@ function CopyValue({ id, value }: { id: string; value: string }) {
           type="button"
           onClick={copy}
           disabled={!value}
-          className="h-8 w-8 inline-flex items-center justify-center rounded-md bg-warm text-ink-secondary hover:text-ink disabled:text-ink-muted disabled:cursor-not-allowed cursor-pointer"
+          className="h-9 w-9 inline-flex items-center justify-center rounded-md bg-warm text-ink-secondary hover:text-ink disabled:text-ink-muted disabled:cursor-not-allowed cursor-pointer"
         >
           {copied ? <Check size={15} aria-hidden className="text-success" /> : <Copy size={15} aria-hidden />}
           <span className="sr-only">Copy Extension Token</span>

@@ -288,7 +288,7 @@ export function FileDrawer({
               </div>
             ) : (
               <>
-                <p data-part="group-title" className="text-xs font-medium text-ink-secondary">
+                <p data-part="group-title" className="text-xs font-semibold text-ink">
                   {focusedGroup.title}
                 </p>
                 {translations.length === 0 ? (
@@ -372,7 +372,7 @@ function TranslationCard({
       </span>
       <Icon size={14} className="relative text-ink-muted shrink-0" aria-hidden />
       <div data-part="content" className="relative flex-1 min-w-0">
-        <h3 data-part="title" className="text-xs font-medium text-ink truncate">{file.name}</h3>
+        <h3 data-part="title" className="text-sm font-medium text-ink truncate">{file.name}</h3>
         <div data-part="meta" className="flex items-center gap-2 mt-0.5">
           <span className="text-meta text-ink-tertiary">
             {file.type.toUpperCase()}
@@ -414,7 +414,7 @@ function FileCompactCard({ file }: { file: FileEntry }) {
     <article data-component="FileCompactCard" className="flex items-center gap-3 px-3 py-2.5 rounded-md bg-warm border border-border/40">
       <Icon size={14} className="text-ink-muted shrink-0" aria-hidden />
       <div data-part="content" className="flex-1 min-w-0">
-        <h3 data-part="title" className="text-xs font-medium text-ink truncate">{file.name}</h3>
+        <h3 data-part="title" className="text-sm font-medium text-ink truncate">{file.name}</h3>
         <div data-part="meta" className="flex items-center gap-2 mt-0.5">
           <span className="text-meta text-ink-tertiary">
             {file.type.toUpperCase()}

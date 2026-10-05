@@ -94,7 +94,7 @@ function CopySecret({ secret, inputId }: { secret: string; inputId: string }) {
         <button
           type="button"
           onClick={copy}
-          className="h-8 w-8 inline-flex items-center justify-center rounded-md bg-warm text-ink-secondary hover:text-ink cursor-pointer"
+          className="h-9 w-9 inline-flex items-center justify-center rounded-md bg-warm text-ink-secondary hover:text-ink cursor-pointer"
         >
           {copied ? <Check size={15} aria-hidden className="text-success" /> : <Copy size={15} aria-hidden />}
           <span className="sr-only">Copy to clipboard</span>

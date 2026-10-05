@@ -41,15 +41,7 @@ export function FiltersButton({
       {active && (
         <span
           data-part="count"
-          className="inline-flex items-center justify-center rounded-full bg-ink text-paper tabular-nums"
-          style={{
-            minWidth: 14,
-            height: 14,
-            padding: "0 4px",
-            fontSize: 9,
-            fontWeight: 600,
-            lineHeight: 1,
-          }}
+          className="inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-ink text-paper text-meta font-semibold leading-none tabular-nums"
         >
           {activeCount}
         </span>
