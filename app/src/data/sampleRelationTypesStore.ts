@@ -7,6 +7,9 @@
 export interface SavedSampleRegistry {
   types: { id: string; label: string }[];
   moved: Record<string, string>;
+  /** The seed's type ids when this was saved: a seed type added since is not
+   *  one the session deleted, and joins the list. */
+  seedIds?: string[];
 }
 
 const KEY = "uwazi:settings:v2:sampleRelationTypes";
@@ -33,7 +36,8 @@ export function readSampleRegistry(): SavedSampleRegistry | null {
       v.moved && typeof v.moved === "object"
         ? Object.fromEntries(Object.entries(v.moved).filter(([, t]) => typeof t === "string"))
         : {};
-    return { types, moved };
+    const seedIds = Array.isArray(v.seedIds) ? v.seedIds.filter((x) => typeof x === "string") : undefined;
+    return { types, moved, ...(seedIds ? { seedIds } : {}) };
   } catch {
     return null;
   }

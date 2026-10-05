@@ -1,7 +1,7 @@
 import { useRelAtomValue } from "../../../hooks/useEntityScope";
 import { relSearchQueryAtom } from "../../../atoms/filters";
 import { getEntity } from "../../../data/entities";
-import { relationTypes } from "../../../data/references";
+import { relationDisplayLabel } from "../../../utils/inheritance";
 import { Hub } from "../../../utils/relationships";
 import { HighlightedText } from "../../shared/HighlightedText";
 import { RowCheckbox } from "./RowCheckbox";
@@ -25,8 +25,7 @@ export function HubRow({ hub, expanded, onToggleExpand, hideRelLabel }: HubRowPr
   // relation label, the two things the filter actually reads.
   const query = useRelAtomValue(relSearchQueryAtom);
   const relLabel =
-    relationTypes.find((r) => r.id === hub.relationType)?.label ??
-    hub.relationType.replace("_", " ");
+    relationDisplayLabel(hub.relationType);
 
   // A hub has no single target — it IS the relationship between all of them —
   // so every member pill opens its own entity. That is also why the row has no

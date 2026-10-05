@@ -25,6 +25,13 @@ export function relationLabel(type: RelationType): string {
   return renamedLabel?.(type) ?? relationTypes.find((r) => r.id === type)?.label ?? type;
 }
 
+/** `relationLabel`, with an unknown id written as words ("judgment_of" →
+ *  "judgment of"), for rows that print whatever type a reference carries. */
+export function relationDisplayLabel(type: RelationType): string {
+  const label = relationLabel(type);
+  return label === type ? type.replace("_", " ") : label;
+}
+
 /* ── Unified inheritance resolution ──
  *
  * One resolver for both inheritance shapes. `inheritProperty` (a native scalar on

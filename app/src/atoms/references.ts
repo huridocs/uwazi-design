@@ -20,7 +20,18 @@ import { isTravesiaEntity, travesiaReferencesFor } from "../data/travesia/profil
    moved carry their new type. The seed is kept for Reset demo data. */
 export const SEED_RELATION_TYPES: RelationTypeDef[] = initialRelationTypes.map((t) => ({ ...t }));
 export const SEED_REFERENCE_TYPES = new Map(initialRefs.map((r) => [r.id, r.relationType]));
-const savedRegistry = readSampleRegistry();
+const savedRegistry = (() => {
+  const saved = readSampleRegistry();
+  if (!saved?.seedIds) return saved;
+  // Seed types added in a later build than the save are new, not deleted:
+  // they join the saved list at their seed position.
+  const known = new Set(saved.seedIds);
+  const types = [...saved.types];
+  initialRelationTypes.forEach((t, i) => {
+    if (!known.has(t.id) && !types.some((x) => x.id === t.id)) types.splice(Math.min(i, types.length), 0, { ...t });
+  });
+  return { ...saved, types };
+})();
 if (savedRegistry) {
   const keep = new Set(savedRegistry.types.map((t) => t.id));
   for (const t of [...initialRelationTypes]) if (!keep.has(t.id)) unregisterRelationType(t.id);

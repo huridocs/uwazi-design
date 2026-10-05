@@ -13,7 +13,7 @@ import {
 } from "../../atoms/filters";
 import { ANCHORING_LABEL, DIRECTION_LABEL, type Anchoring, type DirectionFacet } from "../../utils/relationships";
 import { getEntityType } from "../../data/entities";
-import { relationTypes } from "../../data/references";
+import { relationLabel } from "../../utils/inheritance";
 import { ActiveFilterChip } from "../shared/ActiveFilterChip";
 
 interface ActiveFilterChipsProps {
@@ -106,7 +106,7 @@ export function ActiveFilterChips({ omitSearch = false }: ActiveFilterChipsProps
       {activeRelTypes.map((id) => (
         <ActiveFilterChip
           key={`rel-${id}`}
-          label={relationTypes.find((r) => r.id === id)?.label ?? id}
+          label={relationLabel(id)}
           onRemove={() =>
             setRelTypeFilters((s) => {
               const next = { ...s };

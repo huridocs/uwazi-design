@@ -6,7 +6,8 @@ import { activeRefIdAtom, scrollToHighlightAtom, scrollToRefAtom } from "../../.
 import { relSearchQueryAtom } from "../../../atoms/filters";
 import { currentPageAtom } from "../../../atoms/selection";
 import { getEntity, getEntityType } from "../../../data/entities";
-import { Reference, relationTypes } from "../../../data/references";
+import { Reference } from "../../../data/references";
+import { relationDisplayLabel } from "../../../utils/inheritance";
 import { FadeTruncate } from "../../shared/FadeTruncate";
 import { HighlightedText } from "../../shared/HighlightedText";
 import { PageTag } from "../../shared/PageTag";
@@ -49,8 +50,8 @@ export function ReferenceRow({ reference, onDelete, nested, hideRelLabel }: Refe
   // floods the panel and steals focus from the row the user actually selected.
   const isActive = activeRefId === reference.id;
   const relLabel =
-    relationTypes.find((r) => r.id === reference.relationType)?.label ??
-    reference.relationType.replace("_", " ");
+    // Through the registry and Settings' renames, every collection's.
+    relationDisplayLabel(reference.relationType);
   const direction = reference.direction ?? "outgoing";
 
   useEffect(() => {

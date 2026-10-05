@@ -1,5 +1,6 @@
 import { getEntity, getEntityType } from "../data/entities";
-import { Reference, relationTypes } from "../data/references";
+import { Reference } from "../data/references";
+import { relationLabel } from "./inheritance";
 import { Relationship } from "./relationships";
 import { GroupBy } from "../atoms/filters";
 
@@ -59,7 +60,7 @@ export function getGroupLabel(key: string, by: GroupBy): string {
     case "source-entity":
       return getEntity(key)?.title ?? "Unknown entity";
     case "relation-type":
-      return relationTypes.find((r) => r.id === key)?.label ?? key;
+      return relationLabel(key);
     case "direction":
       return key === "incoming" ? "Incoming" : "Outgoing";
     case "source-page":

@@ -3,7 +3,7 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { activeAggregateIdAtom, activeRefIdAtom } from "../../../atoms/references";
 import { activeClusterRefIdsAtom, relSearchQueryAtom } from "../../../atoms/filters";
 import { getEntity, getEntityType } from "../../../data/entities";
-import { relationTypes } from "../../../data/references";
+import { relationDisplayLabel } from "../../../utils/inheritance";
 import { Relationship } from "../../../utils/relationships";
 import { EntityTypeTag } from "../../shared/EntityTypeTag";
 import { HighlightedText } from "../../shared/HighlightedText";
@@ -58,8 +58,7 @@ export function AggregateRow({
   const setActiveClusterRefIds = useSetRelAtom(activeClusterRefIdsAtom);
 
   const relLabel =
-    relationTypes.find((r) => r.id === rel.relationType)?.label ??
-    rel.relationType.replace("_", " ");
+    relationDisplayLabel(rel.relationType);
   // Highlight only the aggregate row the user actually clicked, not every
   // sibling pointing at the same entity. Multiple aggregates can share a
   // target entity (one per relation type), so keying selection by entity id

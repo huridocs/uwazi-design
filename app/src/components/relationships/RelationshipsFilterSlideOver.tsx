@@ -25,7 +25,7 @@ import { getEntity, getEntityType } from "../../data/entities";
 import { getEntityProp } from "../../data/entityMetadata";
 import { inheritedFilterProps } from "../../data/metadata";
 import { thesaurusParentOf } from "../../utils/thesauri";
-import { relationTypes } from "../../data/references";
+import { relationLabel } from "../../utils/inheritance";
 import { entityCountries } from "../../utils/libraryFacets";
 import { FacetSection } from "../shared/FacetSection";
 import { t } from "../../utils/i18n";
@@ -278,7 +278,7 @@ export function RelationshipsFilterSlideOver() {
         selected={relTypeFilters}
         onToggle={(id) => setRelTypeFilters((s) => ({ ...s, [id]: !s[id] }))}
         onClear={() => setRelTypeFilters({})}
-        label={(id) => relationTypes.find((r) => r.id === id)?.label ?? id}
+        label={(id) => relationLabel(id)}
         noLabelId="no_label"
         defaultExpanded
       />

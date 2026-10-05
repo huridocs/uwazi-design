@@ -2,6 +2,8 @@ import { atom, getDefaultStore, type Getter } from "jotai";
 import { atomFamily } from "jotai/utils";
 import { writeSampleRegistry } from "../data/sampleRelationTypesStore";
 import { relTypeFiltersAtom } from "./filters";
+import { focusedEntityIdAtom } from "./focusedEntity";
+import { entityCorpusOf } from "../data/entities";
 import { travesiaRelationTypes } from "../data/travesia/schema";
 import { registerRelationLabelReader } from "../utils/inheritance";
 import type { Corpus } from "../data/entityChanges";
@@ -64,10 +66,18 @@ const dumpNameToId = Object.fromEntries(
 ) as Partial<Record<Corpus, Map<string, string>>>;
 registerRelationLabelReader((type) => {
   const store = getDefaultStore();
-  const corpus = relationTypesCorpus(store.get(dataSourceAtom));
-  const id = dumpNameToId[corpus]?.get(type);
-  if (!id) return undefined;
-  return store.get(importedStore.listOfAtom(corpus)).find((t) => t.id === id)?.label;
+  // The open entity's collection first (an entity view can outlive a switch of
+  // the Library's collection), then the Library's.
+  const focused = store.get(focusedEntityIdAtom);
+  const corpora = [
+    ...(focused ? [relationTypesCorpus(entityCorpusOf(focused))] : []),
+    relationTypesCorpus(store.get(dataSourceAtom)),
+  ];
+  for (const corpus of corpora) {
+    const id = dumpNameToId[corpus]?.get(type);
+    if (id) return store.get(importedStore.listOfAtom(corpus)).find((t) => t.id === id)?.label;
+  }
+  return undefined;
 });
 
 /** The types Settings lists, for the collection it shows. */
@@ -207,7 +217,7 @@ function persistSample(get: Getter) {
     const seed = SEED_REFERENCE_TYPES.get(r.id);
     if (seed !== undefined && seed !== r.relationType) moved[r.id] = r.relationType;
   }
-  writeSampleRegistry({ types: get(relationTypesAtom), moved });
+  writeSampleRegistry({ types: get(relationTypesAtom), moved, seedIds: SEED_RELATION_TYPES.map((t) => t.id) });
 }
 
 // Reset demo data: the Sample registry and the references it moved go back to
