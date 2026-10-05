@@ -99,6 +99,21 @@ Known gaps, kept on purpose:
   by `data/documentRenditions.ts`. All four languages stay on the same judgment so references
   line up; FR/AR use the EN PDF. AR renders RTL.
 
+### Settings stores
+- A settings domain's records live in a store built with `createSettingsCollection`
+  (`atoms/settingsCollection.ts`): seed plus a created/patched/deleted overlay, ids from
+  `newSettingsId`, overlay in sessionStorage. Settings and every other reader use the store,
+  never the seed. Users and groups (`atoms/users.ts`) are the first; thesauri predate it.
+- Scope: what describes a collection's content (templates, thesauri, relationship types,
+  filters, menu, pages, translations, languages) is per corpus. What describes the people who
+  sign in (users, groups, the account) is global, because login comes before a collection.
+- Membership is by group id on the user; a group's member count is derived.
+- Every store registers with `registerSettingsReset`; Settings › Dashboard › "Reset demo data"
+  clears them all.
+- Every settings editor and form page edits through `useSettingsDraft`, which registers with
+  the dirty guard. Dirty compares with the last save; call `markSaved` on a page that stays
+  open. The settings header guards back, breadcrumb and the mobile back chevron.
+
 ## Layout and style
 
 ### Units, gutter and rhythm

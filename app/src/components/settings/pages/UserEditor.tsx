@@ -97,7 +97,7 @@ export function UserEditor({
                 >
                   <Checkbox checked={groupIds.includes(g.id)} onChange={() => toggleGroup(g.id)} ariaLabel={g.name} />
                   <span className="text-sm font-medium text-ink flex-1">{g.name}</span>
-                  <span className="text-xs text-ink-tertiary">{g.memberCount} members</span>
+                  <span className="text-xs text-ink-tertiary">{g.memberCount} {g.memberCount === 1 ? "member" : "members"}</span>
                 </label>
               ))}
             </fieldset>
