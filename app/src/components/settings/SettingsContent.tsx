@@ -70,8 +70,7 @@ SettingsContent.Header = function SettingsHeader({ path, title, onBack: leave }:
     // A `header` inside the page's section, so it heads the page, not the site.
     <header
       data-part="header"
-      className="bleed flex items-center gap-2 h-12 shrink-0 bg-paper"
-      style={{ borderBottom: "1px solid var(--border-primary)" }}
+      className="bleed flex items-center gap-2 h-12 shrink-0 bg-paper border-b border-border"
       data-testid="settings-content-header"
     >
       {onBack ? (
@@ -161,10 +160,9 @@ SettingsContent.Footer = function SettingsFooter({
   return (
     <footer
       data-part="footer"
-      className={`bleed sticky bottom-0 z-10 flex items-center justify-end gap-2 h-12 shrink-0 ${
+      className={`bleed sticky bottom-0 z-10 flex items-center justify-end gap-2 h-12 shrink-0 border-t border-border ${
         highlighted ? "bg-carbon-tint" : "bg-paper"
       }`}
-      style={{ borderTop: "1px solid var(--border-primary)" }}
       data-testid="settings-content-footer"
     >
       <SettingsBarContext.Provider value={true}>{children}</SettingsBarContext.Provider>
