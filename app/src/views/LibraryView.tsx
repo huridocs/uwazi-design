@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import { CheckSquare, FileDown, FileUp, MoreHorizontal, Plus, Search, Upload, X } from "lucide-react";
+import { signedInUserAtom } from "../atoms/users";
 import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom, travesiaReadyAtom } from "../atoms/dataSource";
 import { discardDraftAtom, draftEntityIdAtom, recentTemplatesAtom, startDraftAtom } from "../atoms/entityChanges";
 import { tasksAtom } from "../atoms/notifications";
@@ -364,6 +365,9 @@ export function LibraryView() {
   // Import CSV opens its modal over the Library; the import then runs as a
   // Beacon task instead of taking the reader to the Import CSV screen.
   const [importOpen, setImportOpen] = useState(false);
+  // Import CSV creates entities in bulk, which Uwazi leaves to admins and
+  // editors: a collaborator is not offered it.
+  const canImport = useAtomValue(signedInUserAtom)?.role !== "collaborator";
   const setImportTasks = useSetAtom(tasksAtom);
   const handleImportCsv = useCallback(
     (filename: string, template: string) => {
@@ -1467,13 +1471,15 @@ export function LibraryView() {
         />
         {!selectionActive && (
           <>
-            <FooterButton
-              icon={<FileUp size={13} className="text-ink-tertiary" />}
-              label="Import CSV"
-              onClick={() =>
-                guard(() => setImportOpen(true))
-              }
-            />
+            {canImport && (
+              <FooterButton
+                icon={<FileUp size={13} className="text-ink-tertiary" />}
+                label="Import CSV"
+                onClick={() =>
+                  guard(() => setImportOpen(true))
+                }
+              />
+            )}
             {/* With a selection, the bar's own Export CSV exports the
                 selection; without one, this exports the current results. */}
             <FooterButton
@@ -1511,12 +1517,15 @@ export function LibraryView() {
               { label: "Select", icon: <CheckSquare size={14} />, onClick: () => setSelectMode(true) },
               { label: "Create entity", icon: <Plus size={14} />, onClick: () => handleCreate(createPreset) },
               { label: "Upload PDF", icon: <Upload size={14} />, onClick: () => uploadInputRef.current?.click() },
-              {
-                label: "Import CSV",
-                icon: <FileUp size={14} />,
-                onClick: () =>
-                  guard(() => setImportOpen(true)),
-              },
+              ...(canImport
+                ? [
+                    {
+                      label: "Import CSV",
+                      icon: <FileUp size={14} />,
+                      onClick: () => guard(() => setImportOpen(true)),
+                    },
+                  ]
+                : []),
               { label: "Export CSV", icon: <FileDown size={14} />, onClick: handleExport },
             ]}
           />

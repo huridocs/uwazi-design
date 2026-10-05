@@ -167,13 +167,22 @@ export const visibleSettingsGroupsAtom = atom<SettingsGroup[]>((get) => {
  *  Persisted so a reload keeps you on the same settings section. */
 export const settingsSectionAtom = atomWithStorage<string>("uwazi:settingsSection", "account");
 
-/** The section Settings shows: the stored one if the signed-in role reaches
- *  it, else Account. Derived, not written back, so an admin who signs in
- *  after a collaborator lands on their own last section. */
-export const effectiveSettingsSectionAtom = atom((get) => {
+/** The section Settings is on: the stored one. One the signed-in role cannot
+ *  reach renders the "not available" page (`blockedSettingsSectionAtom`) and
+ *  marks no rail item, since the rail does not list it. Not written back, so
+ *  an admin who signs in after a collaborator lands on their own last
+ *  section. */
+export const effectiveSettingsSectionAtom = atom((get) => get(settingsSectionAtom));
+
+/** The stored section when the signed-in role cannot open it, so Settings
+ *  can say why instead of quietly showing another page; null otherwise. */
+export const blockedSettingsSectionAtom = atom((get) => {
   const stored = get(settingsSectionAtom);
-  return get(settingsAccessAtom)(stored) ? stored : "account";
+  return get(settingsAccessAtom)(stored) ? null : stored;
 });
+
+/** The first section the signed-in role reaches, for a blocked page's way out. */
+export const firstAllowedSettingsSectionAtom = atom((get) => get(visibleSettingsGroupsAtom)[0]?.items[0]?.id ?? "account");
 
 /** Mobile drill-in: on a phone the rail and the content can't share the width,
  *  so we show one at a time. False = rail; true = the selected section (with a
