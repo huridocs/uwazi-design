@@ -1,4 +1,5 @@
 import { atom } from "jotai";
+import { sectionFlagOffAtom } from "./featureFlags";
 import { atomWithStorage } from "jotai/utils";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -148,10 +149,12 @@ const NON_ADMIN_SECTIONS: Record<Exclude<UserRole, "admin">, string[]> = {
 export const settingsSectionAllowed = (role: UserRole | undefined, id: string): boolean =>
   !role || role === "admin" || NON_ADMIN_SECTIONS[role].includes(id);
 
-/** Whether the signed-in user may open a settings section. */
+/** Whether the signed-in user may open a settings section: their role
+ *  reaches it, and no feature switch hides it. */
 export const settingsAccessAtom = atom((get) => {
   const role = get(signedInUserAtom)?.role;
-  return (id: string) => settingsSectionAllowed(role, id);
+  const flagOff = get(sectionFlagOffAtom);
+  return (id: string) => settingsSectionAllowed(role, id) && !flagOff(id);
 });
 
 /** The groups the signed-in user sees, each with only the items they reach;

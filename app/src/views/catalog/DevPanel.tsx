@@ -1,5 +1,8 @@
 import { useState } from "react";
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { signedInUserIdAtom, usersAtom } from "../../atoms/users";
+import { FEATURE_LABELS, featureFlagsAtom, type FeatureFlags } from "../../atoms/featureFlags";
+import type { UserRole } from "../../data/settings";
 import { Select } from "../../components/shared/Select";
 import { Checkbox } from "../../components/shared/Checkbox";
 import {
@@ -27,8 +30,44 @@ export function DevPanel() {
   const [slow, setSlow] = useAtom(slowLoadAtom);
   const empty = useSetAtom(emptyDomainAtom);
   const [emptied, setEmptied] = useState<string | null>(null);
+  const users = useAtomValue(usersAtom);
+  const [signedIn, setSignedIn] = useAtom(signedInUserIdAtom);
+  const role = users.find((u) => u.id === signedIn)?.role ?? "admin";
+  const [flags, setFlags] = useAtom(featureFlagsAtom);
   return (
     <div data-component="DevPanel" className="flex flex-col gap-4 max-w-xl">
+      <section className="flex flex-col gap-2">
+        <h3 className="text-sm font-semibold text-ink">Role</h3>
+        <p className="text-xs text-ink-tertiary text-pretty">Signs in as the first seed account with the role; the Settings rail follows at once.</p>
+        <div className="w-44">
+          <Select
+            value={role}
+            onChange={(r) => {
+              const u = users.find((x) => x.role === (r as UserRole));
+              if (u) setSignedIn(u.id);
+            }}
+            options={[
+              { value: "admin", label: "Admin" },
+              { value: "editor", label: "Editor" },
+              { value: "collaborator", label: "Collaborator" },
+            ]}
+            ariaLabel="Role"
+          />
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h3 className="text-sm font-semibold text-ink">Features</h3>
+        <div className="flex flex-col gap-1.5">
+          {(Object.keys(FEATURE_LABELS) as (keyof FeatureFlags)[]).map((k) => (
+            <label key={k} className="flex items-center gap-2 text-xs text-ink cursor-pointer w-fit">
+              <Checkbox checked={flags[k] !== false} onChange={() => setFlags((f) => ({ ...f, [k]: f[k] === false }))} ariaLabel={FEATURE_LABELS[k]} />
+              <span className="font-mono">{FEATURE_LABELS[k]}</span>
+            </label>
+          ))}
+        </div>
+      </section>
+
       <section className="flex flex-col gap-2">
         <h3 className="text-sm font-semibold text-ink">Fail next request</h3>
         <p className="text-xs text-ink-tertiary text-pretty">

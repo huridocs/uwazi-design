@@ -9,6 +9,7 @@ import {
   settingsSectionAtom,
 } from "../atoms/settings";
 import { signedInUserAtom } from "../atoms/users";
+import { FEATURE_LABELS, sectionFlagOffAtom } from "../atoms/featureFlags";
 import { SettingsContent } from "../components/settings/SettingsContent";
 import { SettingsEmptyState } from "../components/settings/SettingsEmptyState";
 import { useEffect, useRef } from "react";
@@ -132,6 +133,7 @@ const ROLE_NAMES = { admin: "an admin", editor: "an editor", collaborator: "a co
 function BlockedSettingsPage({ section }: { section: string }) {
   const role = useAtomValue(signedInUserAtom)?.role;
   const first = useAtomValue(firstAllowedSettingsSectionAtom);
+  const flag = useAtomValue(sectionFlagOffAtom)(section);
   const setSection = useSetAtom(settingsSectionAtom);
   const ref = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -147,8 +149,16 @@ function BlockedSettingsPage({ section }: { section: string }) {
         <SettingsContent.Header title="This page is not available." />
         <SettingsContent.Body>
           <SettingsEmptyState
-            title={`${name} is open to ${settingsSectionAllowed("editor", section) ? "admins and editors" : "admins"} only.`}
-            hint={`You are signed in as ${role ? ROLE_NAMES[role] : "a user"}, and your role cannot open it.`}
+            title={
+              flag
+                ? `${name} is switched off for this collection.`
+                : `${name} is open to ${settingsSectionAllowed("editor", section) ? "admins and editors" : "admins"} only.`
+            }
+            hint={
+              flag
+                ? `The ${FEATURE_LABELS[flag]} feature is off, so nobody can open it.`
+                : `You are signed in as ${role ? ROLE_NAMES[role] : "a user"}, and your role cannot open it.`
+            }
             action={{ label: `Go to ${firstName}`, onClick: () => setSection(first) }}
           />
         </SettingsContent.Body>
