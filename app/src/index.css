@@ -56,6 +56,13 @@
   --spacing-gutter-main: 1rem;
   --spacing-gutter-rail: 1.25rem;
   --spacing-stack: 0.5rem;
+  /* The app frame's two fixed bands. `navbar` is the Navbar's height.
+   * `tabstrip` is a tab strip's (MainTabs, DrawerTabs): one `text-tab` line at
+   * the inherited leading (1.5), the tab's `py-1.5`, and the frame's 1px top
+   * and bottom border. The published-view toggle centres on the strip from
+   * these and `stack`, so it follows either if it changes. */
+  --spacing-navbar: 3.25rem;
+  --spacing-tabstrip: calc(var(--text-tab) * 1.5 + 0.75rem + 2px);
 }
 
 /* THE LAYOUT OWNS THE GUTTER.
@@ -113,6 +120,9 @@
  * sits flush. */
 @utility tabstrip-slot {
   padding-top: var(--tabstrip-top, 0px);
+  /* At least one strip tall, so a row that folds its tabs into a select keeps
+   * the strip's centre line (and the published-view toggle's). */
+  min-height: calc(var(--tabstrip-top, 0px) + var(--spacing-tabstrip));
 }
 /* THE HOST OWNS THE GAP ABOVE A TAB'S BODY, as it owns the strip's top offset.
  * Every gutter host declares `--body-top` (one `stack` step), and the first

@@ -166,7 +166,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
     // MainTabs, DocMeta), so the logo and right cluster share their edges.
     <header
       data-component="Navbar"
-      className="relative h-13 bg-paper flex items-center justify-between px-3 shrink-0"
+      className="relative h-navbar bg-paper flex items-center justify-between px-3 shrink-0"
       style={{ borderBottom: "1px solid var(--border-primary)" }}
     >
       {/* The page's one h1. The logo is an image inside a button, so it can't

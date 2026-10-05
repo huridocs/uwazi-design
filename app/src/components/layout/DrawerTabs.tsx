@@ -126,7 +126,7 @@ function Strip({
        outside their tab's corner. The end tabs round themselves logically
        (`rounded-s`/`rounded-e`), so the corners stay right under RTL. */
     <div
-      className="flex items-stretch rounded-md w-fit"
+      className="flex items-stretch h-tabstrip rounded-md w-fit"
       data-part="strip"
       role={probe ? undefined : "tablist"}
       style={TAB_STRIP_FRAME}
