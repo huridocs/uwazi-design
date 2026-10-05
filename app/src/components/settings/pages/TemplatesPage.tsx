@@ -1,19 +1,18 @@
 import { useState } from "react";
-import { useSetAtom, useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import { Plus } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { RowActions } from "../RowActions";
-import { ConfirmDialog } from "../../shared/ConfirmDialog";
+import { newSettingsId } from "../../../atoms/settingsCollection";
+import { TemplateDelete, TemplateEntityCount } from "../../shared/SettingsDeletes";
 import { TemplateEditor } from "./TemplateEditor";
 import { seedTemplates, type SettingsTemplate } from "../../../data/settings";
 import { dataSourceAtom } from "../../../atoms/dataSource";
 import { cejilSettingsTemplates } from "../../../data/cejil/settingsAdapt";
-import { toastsAtom } from "../../../atoms/notifications";
 
 export function TemplatesPage() {
-  const setToasts = useSetAtom(toastsAtom);
   const dataSource = useAtomValue(dataSourceAtom);
   const [templates, setTemplates] = useState<SettingsTemplate[]>(
     dataSource === "cejil" ? cejilSettingsTemplates : seedTemplates,
@@ -21,24 +20,21 @@ export function TemplatesPage() {
   const [confirm, setConfirm] = useState<SettingsTemplate | null>(null);
   const [editing, setEditing] = useState<SettingsTemplate | "new" | null>(null);
 
-  const handleSave = (patch: { name: string; color: string }) => {
+  const handleSave = (patch: { name: string; color: string }): string | undefined => {
     if (editing === "new") {
+      const id = newSettingsId("tpl");
       setTemplates((prev) => [
         ...prev,
-        {
-          id: `tpl-${prev.length}-${patch.name.length}`,
-          name: patch.name,
-          color: patch.color,
-          propertyCount: 0,
-          entityCount: 0,
-          isDefault: false,
-        },
+        { id, name: patch.name, color: patch.color, propertyCount: 0, entityCount: 0, isDefault: false },
       ]);
-    } else if (editing) {
+      return id;
+    }
+    if (editing) {
       const id = editing.id;
       setTemplates((prev) =>
         prev.map((t) => (t.id === id ? { ...t, name: patch.name, color: patch.color } : t)),
       );
+      return id;
     }
   };
 
@@ -73,7 +69,7 @@ export function TemplatesPage() {
       id: "entities",
       header: "Entities",
       width: "7rem",
-      cell: (t) => <span className="text-ink-secondary tabular-nums">{t.entityCount}</span>,
+      cell: (t) => <span className="text-ink-secondary tabular-nums"><TemplateEntityCount template={t} /></span>,
     },
     {
       id: "actions",
@@ -99,20 +95,10 @@ export function TemplatesPage() {
         </SettingsButton>
       </SettingsContent.Footer>
 
-      <ConfirmDialog
-        open={confirm !== null}
-        title="Delete template"
-        message={`Delete the ${confirm?.name} template? Entities using it won't be removed but will lose this template's properties.`}
-        confirmLabel="Delete"
-        variant="danger"
-        onConfirm={() => {
-          if (confirm) {
-            setTemplates((prev) => prev.filter((t) => t.id !== confirm.id));
-            setToasts((p) => [...p, { id: Date.now().toString(), message: `${confirm.name} deleted`, type: "success" as const }]);
-          }
-          setConfirm(null);
-        }}
+      <TemplateDelete
+        template={confirm}
         onCancel={() => setConfirm(null)}
+        onDelete={(t) => setTemplates((prev) => prev.filter((x) => x.id !== t.id))}
       />
     </SettingsContent>
   );

@@ -1,5 +1,5 @@
 import { useId, useState } from "react";
-import { useSetAtom } from "jotai";
+import { useStore } from "jotai";
 import { Plus } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { TemplateCardPreview } from "../TemplateCardPreview";
@@ -25,7 +25,11 @@ import {
 } from "../../../data/settings";
 import { cejilTemplateProperties } from "../../../data/cejil/settingsAdapt";
 import { validateValue, blockingSummary, type ValidationIssue } from "../../../utils/validation";
-import { toastsAtom } from "../../../atoms/notifications";
+import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { useSettingsUndo } from "../../../hooks/useSettingsUndo";
+import { propertyUsageAtom } from "../../../atoms/settingsUsage";
+import { ConfirmDelete } from "../../shared/ConfirmDelete";
+import { LastSavedLine } from "../../shared/LastSavedLine";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 import { newSettingsId } from "../../../atoms/settingsCollection";
 import { deepEqual } from "../../../utils/deepEqual";
@@ -75,9 +79,10 @@ export function TemplateEditor({
   onClose: () => void;
   /** Persist the edited name/colour back to the list so changes stick for the
    *  session (the mock has no backend). */
-  onSave?: (patch: { name: string; color: string }) => void;
+  onSave?: (patch: { name: string; color: string }) => string | undefined;
 }) {
-  const setToasts = useSetAtom(toastsAtom);
+  const store = useStore();
+  const { record } = useSettingsNotify();
   const isNew = template === "new";
   const base = isNew ? undefined : template;
 
@@ -116,12 +121,41 @@ export function TemplateEditor({
   const patchProp = (id: string, patch: Partial<TemplateProperty>) =>
     setProps((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
 
+  /** Remove a property from the draft, with an Undo in the Beacon (UX5),
+   *  unless another template inherits it: Uwazi refuses that
+   *  (UpdateTemplate.ts), so the dialog names the rule. */
+  const [refused, setRefused] = useState<{ label: string; block: string } | null>(null);
+  const offerUndo = useSettingsUndo<{ prop: TemplateProperty; index: number; cfg?: PropConfig }>(({ prop, index, cfg }) => {
+    setProps((prev) => (prev.some((p) => p.id === prop.id) ? prev : [...prev.slice(0, index), prop, ...prev.slice(index)]));
+    if (cfg) setConfig((prev) => ({ ...prev, [prop.id]: cfg }));
+  });
   const deleteProperty = (id: string) => {
+    const index = props.findIndex((x) => x.id === id);
+    const prop = props[index];
+    if (!prop) return;
+    const usage = base
+      ? store.get(
+          propertyUsageAtom({
+            templateId: base.id,
+            label: prop.label,
+            name: prop.id.startsWith(`${base.id}-`) ? prop.id.slice(base.id.length + 1) : undefined,
+          }),
+        )
+      : null;
+    if (usage?.block) {
+      setRefused({ label: prop.label, block: usage.block });
+      return;
+    }
     setProps((prev) => prev.filter((x) => x.id !== id));
     setConfig((prev) => {
       const { [id]: _drop, ...rest } = prev;
       return rest;
     });
+    offerUndo(
+      { prop, index, cfg: config[id] },
+      `${prop.label} removed`,
+      [...(usage?.lines ?? []), "Nothing is saved until you save the template."].join(" "),
+    );
   };
 
   /** Commit a property dialog — append (new) or patch (existing) + its config. */
@@ -155,11 +189,16 @@ export function TemplateEditor({
   };
 
   const save = () => {
-    onSave?.({ name: name.trim() || base?.name || "Untitled template", color });
-    setToasts((p) => [
-      ...p,
-      { id: Date.now().toString(), message: isNew ? "Template created" : `${name || "Template"} saved`, type: "success" as const },
-    ]);
+    const finalName = name.trim() || base?.name || "Untitled template";
+    const id = onSave?.({ name: finalName, color }) ?? base?.id;
+    record({
+      method: isNew ? "CREATE" : "UPDATE",
+      domain: "template",
+      noun: "template",
+      id,
+      name: finalName,
+      message: isNew ? "Template created" : `${finalName} saved`,
+    });
     onClose();
   };
 
@@ -334,10 +373,12 @@ export function TemplateEditor({
         </SettingsButton>
         {/* Save-attempt summary — alert only on the attempt, not per keystroke.
             The footer keeps its fixed height; this rides the existing row. */}
-        {saveBlocked && (
+        {saveBlocked ? (
           <span role="alert" className="text-meta font-medium text-seal-label">
             {blockingSummary(1, 0)}
           </span>
+        ) : (
+          <LastSavedLine domain="template" id={base?.id} />
         )}
         <SettingsButton variant="ghost" size="sm" onClick={onClose}>
           Cancel
@@ -354,6 +395,14 @@ export function TemplateEditor({
         </SettingsButton>
       </SettingsContent.Footer>
 
+      <ConfirmDelete
+        open={refused !== null}
+        title="Remove property"
+        message=""
+        impact={refused ? { lines: [], block: refused.block } : null}
+        onConfirm={() => setRefused(null)}
+        onCancel={() => setRefused(null)}
+      />
       {editing !== null && (
         <PropertyDialog
           property={editing === "new" ? null : editing}

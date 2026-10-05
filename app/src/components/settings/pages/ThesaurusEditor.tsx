@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { Plus, FolderOpen } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
@@ -10,7 +10,10 @@ import { SettingsField, TextInput } from "../SettingsField";
 import type { SettingsThesaurus, ThesaurusValue } from "../../../data/settings";
 import { dataSourceAtom } from "../../../atoms/dataSource";
 import { saveThesaurusAtom, thesauriAtom } from "../../../atoms/thesauri";
-import { toastsAtom } from "../../../atoms/notifications";
+import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { useSettingsUndo } from "../../../hooks/useSettingsUndo";
+import { valueUsageAtom } from "../../../atoms/settingsUsage";
+import { LastSavedLine } from "../../shared/LastSavedLine";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
 interface Item {
@@ -57,7 +60,8 @@ export function ThesaurusEditor({
   thesaurus: SettingsThesaurus | "new";
   onClose: () => void;
 }) {
-  const setToasts = useSetAtom(toastsAtom);
+  const store = useStore();
+  const { record } = useSettingsNotify();
   const corpus = useAtomValue(dataSourceAtom);
   const saveThesaurus = useSetAtom(saveThesaurusAtom);
   const isNew = thesaurus === "new";
@@ -89,7 +93,40 @@ export function ThesaurusEditor({
   // Top-level edits
   const patch = (id: string, label: string) =>
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, label } : it)));
-  const remove = (id: string) => setItems((prev) => prev.filter((x) => x.id !== id));
+  /** A removed value or group gets an Undo in the Beacon (UX5) rather than a
+   *  dialog: the removal stays in the draft until Save. The notification says
+   *  how many entities hold the value. A blank row has nothing to lose. */
+  const offerUndo = useSettingsUndo<{ item: Item; index: number; groupId?: string }>(({ item, index, groupId }) =>
+    setItems((prev) => {
+      if (!groupId) return prev.some((x) => x.id === item.id) ? prev : [...prev.slice(0, index), item, ...prev.slice(index)];
+      return prev.map((g) =>
+        g.id === groupId && g.children && !g.children.some((c) => c.id === item.id)
+          ? { ...g, children: [...g.children.slice(0, index), item, ...g.children.slice(index)] }
+          : g,
+      );
+    }),
+  );
+  const undoNotice = (item: Item, index: number, groupId?: string) => {
+    if (!item.label.trim()) return;
+    const held = base
+      ? store.get(valueUsageAtom(base.id))({
+          id: item.id,
+          label: item.label,
+          ...(item.children ? { values: item.children.map((c) => ({ id: c.id, label: c.label })) } : {}),
+        })
+      : 0;
+    offerUndo(
+      { item, index, groupId },
+      `${item.label} removed`,
+      `${held ? `${held.toLocaleString()} ${held === 1 ? "entity holds" : "entities hold"} ${item.children ? "a value in this group" : "this value"}. ` : ""}Nothing is saved until you save the thesaurus.`,
+    );
+  };
+  const remove = (id: string) => {
+    const index = items.findIndex((x) => x.id === id);
+    if (index < 0) return;
+    setItems((prev) => prev.filter((x) => x.id !== id));
+    undoNotice(items[index], index);
+  };
   const addItem = () => setItems((prev) => [...prev, { id: newId(), label: "" }]);
   const addGroup = () => setItems((prev) => [...prev, { id: newId(), label: "", children: [] }]);
 
@@ -102,12 +139,16 @@ export function ThesaurusEditor({
           : g,
       ),
     );
-  const removeChild = (groupId: string, childId: string) =>
+  const removeChild = (groupId: string, childId: string) => {
+    const index = items.find((g) => g.id === groupId)?.children?.findIndex((c) => c.id === childId) ?? -1;
+    const child = index >= 0 ? items.find((g) => g.id === groupId)!.children![index] : undefined;
     setItems((prev) =>
       prev.map((g) =>
         g.id === groupId && g.children ? { ...g, children: g.children.filter((c) => c.id !== childId) } : g,
       ),
     );
+    if (child) undoNotice(child, index, groupId);
+  };
   const addChild = (groupId: string) =>
     setItems((prev) =>
       prev.map((g) =>
@@ -129,11 +170,16 @@ export function ThesaurusEditor({
   };
 
   const save = () => {
-    saveThesaurus({ corpus, id: base?.id ?? null, name: name.trim() || base?.name || "Untitled", values: toValues(items) });
-    setToasts((p) => [
-      ...p,
-      { id: Date.now().toString(), message: isNew ? "Thesaurus created" : `${name || "Thesaurus"} saved`, type: "success" as const },
-    ]);
+    const finalName = name.trim() || base?.name || "Untitled";
+    const id = saveThesaurus({ corpus, id: base?.id ?? null, name: finalName, values: toValues(items) });
+    record({
+      method: isNew ? "CREATE" : "UPDATE",
+      domain: "thesaurus",
+      noun: "thesaurus",
+      id,
+      name: finalName,
+      message: isNew ? "Thesaurus created" : `${finalName} saved`,
+    });
     onClose();
   };
 
@@ -242,6 +288,7 @@ export function ThesaurusEditor({
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
+        <LastSavedLine domain="thesaurus" id={base?.id} className="me-auto" />
         <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
         <SettingsButton variant={isNew ? "commit" : "success"} size="sm" disabled={!dirty || !name.trim()} onClick={save}>
           {isNew ? "Create thesaurus" : "Save"}

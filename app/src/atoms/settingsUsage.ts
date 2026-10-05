@@ -2,6 +2,7 @@ import { atom, type Getter } from "jotai";
 import { atomFamily } from "jotai/utils";
 import { entityTypes, type Entity } from "../data/entities";
 import { applyOverlay, type Corpus } from "../data/entityChanges";
+import { unregisterRelationType } from "../data/references";
 import { cejilLibraryEntities } from "../data/cejil/adapt";
 import { travesiaLibraryEntities } from "../data/travesia/adapt";
 import { cejilSettingsTemplates } from "../data/cejil/settingsAdapt";
@@ -153,15 +154,18 @@ export const thesaurusUsageAtom = atomFamily((thesaurusId: string) =>
   }),
 );
 
-/** Entities holding one value of a thesaurus. Read once per removal, so a
- *  plain getter rather than a family per value. */
-export const valueUsageAtom = atom((get) => {
-  const corpus = thesauriCorpus(get(dataSourceAtom));
-  const groups = get(byTemplate(corpus));
-  const read = get(readerAtom(corpus));
-  return (thesaurusId: string, value: ThesaurusValue) =>
-    valueUsage({ value, properties: get(boundAtom(thesaurusId)), entitiesOf: (id) => groups?.get(id) ?? [], read });
-});
+/** Entities holding one value of a thesaurus: a function of the value, read
+ *  once per removal rather than a family per value. */
+export const valueUsageAtom = atomFamily((thesaurusId: string) =>
+  atom((get) => {
+    const corpus = thesauriCorpus(get(dataSourceAtom));
+    const groups = get(byTemplate(corpus));
+    const read = get(readerAtom(corpus));
+    const properties = get(boundAtom(thesaurusId));
+    return (value: ThesaurusValue) =>
+      valueUsage({ value, properties, entitiesOf: (id) => groups?.get(id) ?? [], read });
+  }),
+);
 
 /* ── Relationship types ────────────────────────────────────────────────── */
 
@@ -195,13 +199,21 @@ export const relationTypeUsageAtom = atomFamily(
   (a, b) => a.id === b.id && a.name === b.name && a.usageCount === b.usageCount,
 );
 
-/** Move every Sample reference of one type to another. */
-export const reassignReferencesAtom = atom(null, (get, set, { from, to }: { from: string; to: string }) => {
-  set(
-    referencesAtom,
-    get(referencesAtom).map((r) => (r.relationType === from ? { ...r, relationType: to } : r)),
-  );
-});
+/** Delete a Sample relationship type from the registry, moving its
+ *  references to `to` first (Juan's decision: Uwazi refuses, the prototype
+ *  offers the move). Same writes as the panel's Manage types modal. */
+export const deleteRelationTypeAtom = atom(
+  null,
+  (get, set, { registryId, to }: { registryId: string; to: string | null }) => {
+    if (to)
+      set(
+        referencesAtom,
+        get(referencesAtom).map((r) => (r.relationType === registryId ? { ...r, relationType: to } : r)),
+      );
+    set(relationTypesAtom, (prev) => prev.filter((t) => t.id !== registryId));
+    unregisterRelationType(registryId);
+  },
+);
 
 /* ── Users and groups ──────────────────────────────────────────────────── */
 

@@ -18,7 +18,7 @@ export function savedAgo(at: number, now: number): string {
  *  (UX11): several admins edit one collection, and this says who touched the
  *  record last. Always mounted, so the footer keeps its layout when there is
  *  nothing to say (a new record, or one nobody has saved). */
-export function LastSavedLine({ domain, id }: { domain: string; id: string | undefined }) {
+export function LastSavedLine({ domain, id, className = "" }: { domain: string; id: string | undefined; className?: string }) {
   const entry = useAtomValue(lastSavedAtom(`${domain}:${id ?? ""}`));
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -28,7 +28,7 @@ export function LastSavedLine({ domain, id }: { domain: string; id: string | und
     return () => clearInterval(t);
   }, [entry]);
   return (
-    <span data-part="last-saved" className="min-w-0 truncate text-xs text-ink-tertiary">
+    <span data-part="last-saved" className={`min-w-0 truncate text-xs text-ink-tertiary ${className}`}>
       {id && entry ? `Saved ${savedAgo(entry.at, now)} by ${entry.user}` : ""}
     </span>
   );

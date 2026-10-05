@@ -210,6 +210,15 @@ export const defaultMembersAtom = atom((get) => defaultMembersOf(get(usersAtom))
 
 export const entityAccessAtom = atom<Record<string, AccessMember[]>>({});
 
+/** Take a deleted user or group off every entity it was shared with. */
+export const removeAccessMemberAtom = atom(null, (get, set, memberId: string) => {
+  const access = get(entityAccessAtom);
+  const next: Record<string, AccessMember[]> = {};
+  for (const [id, list] of Object.entries(access))
+    next[id] = list.some((m) => m.id === memberId) ? list.filter((m) => m.id !== memberId) : list;
+  set(entityAccessAtom, next);
+});
+
 /** One member's change across a set: given a level (added where missing,
  *  set where present) or removed from every entity that has them. Members
  *  with no change are not written. */

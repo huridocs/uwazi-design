@@ -1,25 +1,22 @@
 import { useState } from "react";
-import { useSetAtom, useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import { Plus, BookOpen } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { RowActions } from "../RowActions";
-import { ConfirmDialog } from "../../shared/ConfirmDialog";
+import { ThesaurusDelete } from "../../shared/SettingsDeletes";
 import { ThesaurusEditor } from "./ThesaurusEditor";
 import type { SettingsThesaurus } from "../../../data/settings";
 import { dataSourceAtom } from "../../../atoms/dataSource";
-import { deleteThesaurusAtom, thesauriAtom } from "../../../atoms/thesauri";
-import { toastsAtom } from "../../../atoms/notifications";
+import { thesauriAtom } from "../../../atoms/thesauri";
 
 export function ThesauriPage() {
-  const setToasts = useSetAtom(toastsAtom);
   const dataSource = useAtomValue(dataSourceAtom);
   // The shared store (`atoms/thesauri`), not local state: a value or thesaurus
   // created from the edit form is listed here, and this page's own changes
   // reach the form.
   const thesauri = useAtomValue(thesauriAtom(dataSource));
-  const deleteThesaurus = useSetAtom(deleteThesaurusAtom);
   const [confirm, setConfirm] = useState<SettingsThesaurus | null>(null);
   const [editing, setEditing] = useState<SettingsThesaurus | "new" | null>(null);
 
@@ -66,21 +63,7 @@ export function ThesauriPage() {
         </SettingsButton>
       </SettingsContent.Footer>
 
-      <ConfirmDialog
-        open={confirm !== null}
-        title="Delete thesaurus"
-        message={`Delete the ${confirm?.name} thesaurus? Properties using it will fall back to free text.`}
-        confirmLabel="Delete"
-        variant="danger"
-        onConfirm={() => {
-          if (confirm) {
-            deleteThesaurus({ corpus: dataSource, id: confirm.id });
-            setToasts((p) => [...p, { id: Date.now().toString(), message: `${confirm.name} deleted`, type: "success" as const }]);
-          }
-          setConfirm(null);
-        }}
-        onCancel={() => setConfirm(null)}
-      />
+      <ThesaurusDelete thesaurus={confirm} onCancel={() => setConfirm(null)} />
     </SettingsContent>
   );
 }
