@@ -92,6 +92,9 @@ export interface DisplayContext {
   /** The toolbar's Language select has folded away; the menu carries it. */
   languageInMenu: boolean;
   hasQuery: boolean;
+  /** The sort keys on offer: the fixed ones and the templates'
+   *  `prioritySorting` properties. */
+  sortChoices?: Choice[];
   /** The list's column toggles — built-ins plus one per metadata property the
    *  corpus carries. Supplied by `components/library/listColumns`, so a new
    *  column is one entry there and appears here, in the menu and in the table

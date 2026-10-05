@@ -39,6 +39,7 @@ import {
   libraryCardSideAtom,
   cardFieldLimit,
   librarySortAtom,
+  libraryPropertySortsAtom,
   libraryThumbSizeAtom,
   type LibrarySort,
   libraryThumbFitAtom,
@@ -245,7 +246,8 @@ export const EntityCard = memo(function EntityCard({
   /* The sort mark shades an existing element (property row, title, template tag
      or connection count), so it adds no line and moves nothing. */
   const sortedId = sortedFieldId(sort, entity, fields);
-  const sortLabel = LIBRARY_SORTS.find((c) => c.id === sort)?.label ?? sort;
+  const propertySorts = useAtomValue(libraryPropertySortsAtom);
+  const sortLabel = [...LIBRARY_SORTS, ...propertySorts].find((c) => c.id === sort)?.label ?? sort;
   const sortedNote = `Sorted by ${sortLabel}`;
   const sortMark = (on: boolean) =>
     on ? "rounded-sm bg-vellum -mx-1 px-1 -my-px py-px" : "";

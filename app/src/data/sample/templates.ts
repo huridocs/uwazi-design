@@ -78,6 +78,7 @@ function courtCaseProperties(): PropertyDef[] {
     type: p.type,
     ...(p.content ? { content: p.content } : {}),
     ...(CASE_CARD.has(p.name) ? { showInCard: true } : {}),
+    ...(p.name === "dateFiled" || p.name === "date" ? { prioritySorting: true } : {}),
     ...(p.type === "select" ? { filter: true } : {}),
   }));
 }

@@ -1,4 +1,6 @@
 import type { Language } from "../atoms/language";
+import { templatesMirror } from "../data/templates/mirror";
+import { entityPropertyValues } from "./propertyValues";
 import type { DataSource } from "../atoms/dataSource";
 import { getEntityProp } from "../data/entityMetadata";
 import type { Entity } from "../data/entities";
@@ -17,13 +19,27 @@ export interface LibraryInheritedDef {
   label: string;
   /** Restrict the facet to entities of this type (mock only). */
   targetTypeId?: string;
+  /** A facet generated from a template property flagged `filter`: the
+   *  property's `name`, read by `entityPropertyValues`. */
+  property?: string;
+  /** Uwazi's `defaultfilter`: listed first, open. */
+  defaultFilter?: boolean;
+  /** The templates whose `filter` property this facet lists: with a Type
+   *  selection, the facet shows only when one of them is selected (§6.4). */
+  templateIds?: string[];
 }
 
 /** The inherited-property facet definitions for the active data source:
  *  CEJIL's relationship/select facets, the mock's relationship-field
  *  inheritance (Role/Region), or nothing — artworks carry flat fields only
  *  (data/artworks/adapt.ts), so there is no inherited facet to offer. */
-export function libraryInheritedDefs(
+export function libraryInheritedDefs(source: DataSource, lang: Language): LibraryInheritedDef[] {
+  return withPropertyFacets(source, lang, () => curatedDefs(source, lang));
+}
+
+/** Facets the corpora hand-picked before templates were the schema. Kept as
+ *  they are, so every existing facet keeps its counts. */
+function curatedDefs(
   source: DataSource,
   lang: Language,
 ): LibraryInheritedDef[] {
@@ -46,14 +62,71 @@ export function libraryInheritedDefs(
   }
 }
 
+/** Properties a fixed facet already lists (Countries, Descriptors), by corpus:
+ *  not repeated as property facets. */
+const FIXED_FACET_PROPERTIES: Record<DataSource, string[]> = {
+  cejil: ["pa_s", "descriptores"],
+  mock: ["country"],
+  travesia: [],
+  artworks: ["genres"],
+};
+
+/** The curated facets, then one per template property flagged `filter`
+ *  (spec §6.4) that neither they nor a fixed facet already cover: the
+ *  property's name as its key, its label, selects, multiselects and
+ *  relationships (value lists). Properties sharing a name are one facet,
+ *  Uwazi's combine rule. `defaultfilter` ones lead. Cached per template list
+ *  and curated list. */
+const defsCache = new WeakMap<object, Map<Language, LibraryInheritedDef[]>>();
+const LISTED = new Set(["select", "multiselect", "relationship"]);
+function withPropertyFacets(
+  source: DataSource,
+  lang: Language,
+  curatedOf: () => LibraryInheritedDef[],
+): LibraryInheritedDef[] {
+  const templates = templatesMirror(source);
+  let byLang = defsCache.get(templates);
+  if (!byLang) defsCache.set(templates, (byLang = new Map()));
+  const hit = byLang.get(lang);
+  if (hit) return hit;
+  const curated = curatedOf();
+  const taken = new Set([...curated.map((d) => d.propId), ...FIXED_FACET_PROPERTIES[source]]);
+  const added: LibraryInheritedDef[] = [];
+  const byName = new Map<string, LibraryInheritedDef>();
+  for (const t of templates)
+    for (const p of t.properties) {
+      if (!p.filter || !LISTED.has(p.type)) continue;
+      const seen = byName.get(p.name);
+      if (seen) {
+        seen.templateIds!.push(t.id);
+        if (p.defaultfilter) seen.defaultFilter = true;
+        continue;
+      }
+      if (taken.has(p.name)) continue;
+      taken.add(p.name);
+      const def: LibraryInheritedDef = { propId: p.name, label: p.label, property: p.name, templateIds: [t.id], ...(p.defaultfilter ? { defaultFilter: true } : {}) };
+      byName.set(p.name, def);
+      added.push(def);
+    }
+  const out = [
+    ...added.filter((d) => d.defaultFilter),
+    ...curated,
+    ...added.filter((d) => !d.defaultFilter),
+  ];
+  byLang.set(lang, out);
+  return out;
+}
+
 /** An entity's value(s) for an inherited facet — read from the adapter-supplied
- *  `inherited` map (CEJIL) or the mock entityMetadata (type-restricted). */
+ *  `inherited` map (CEJIL) or the mock entityMetadata (type-restricted); a
+ *  property facet reads the template property. */
 export function entityInheritedValues(
   e: Entity,
   def: LibraryInheritedDef,
   lang: Language,
   source: DataSource,
 ): string[] {
+  if (def.property) return entityPropertyValues(e, def.property, lang);
   switch (source) {
     case "cejil":
     case "travesia":

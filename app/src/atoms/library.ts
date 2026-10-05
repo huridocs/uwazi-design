@@ -7,6 +7,7 @@ import { collectionSettings, type DefaultLibraryView } from "./settingsSingleton
 import { languageAtom } from "./language";
 import { breakpointAtom } from "./viewport";
 import { propertyColumns } from "../utils/entityFields";
+import { LIBRARY_SORTS, type Choice } from "../data/libraryDisplay";
 import { templatesAtom } from "./templates";
 import { listColumnOptions } from "../components/library/listColumns";
 import {
@@ -541,6 +542,26 @@ export const libraryDisplayAtom = atom<LibraryDisplayState>({ modes: {}, shared:
  *  Settings retitles its column without losing a saved choice. */
 export const libraryFieldColumnsAtom = atom((get) => propertyColumns(get(templatesAtom(get(dataSourceAtom)))));
 
+/** The sort keys the Library's templates add: one per property flagged
+ *  `prioritySorting` (Uwazi: "the system will try to pick up the best fit"),
+ *  by name, labelled as the first template has it. */
+export const libraryPropertySortsAtom = atom<Choice[]>((get) => propertySorts(get(templatesAtom(get(dataSourceAtom)))));
+const sortsCache = new WeakMap<object, Choice[]>();
+function propertySorts(templates: { properties: { name: string; label: string; prioritySorting?: boolean }[] }[]): Choice[] {
+  const hit = sortsCache.get(templates);
+  if (hit) return hit;
+  const seen = new Set<string>();
+  const out: Choice[] = [];
+  for (const t of templates)
+    for (const p of t.properties)
+      if (p.prioritySorting && !seen.has(p.name)) {
+        seen.add(p.name);
+        out.push({ id: `prop:${p.name}`, label: p.label });
+      }
+  sortsCache.set(templates, out);
+  return out;
+}
+
 /** Set by the Library toolbar from its own width: true while the Sort select
  *  has no room in the row (see the masthead fold in `LibraryView`). */
 export const librarySortInMenuAtom = atom(false);
@@ -560,6 +581,7 @@ export const libraryDisplayContextAtom = atom<DisplayContext>((get) => {
     languageInMenu: get(libraryLanguageInMenuAtom),
     hasQuery,
     listColumns: listColumnOptions({ hasQuery, fieldColumns: get(libraryFieldColumnsAtom) }),
+    sortChoices: [...LIBRARY_SORTS, ...get(libraryPropertySortsAtom)],
   };
 });
 
@@ -740,7 +762,9 @@ export type LibrarySort =
   | "title"
   | "connections"
   | "type"
-  | "country";
+  | "country"
+  // A template property with Uwazi's `prioritySorting` (spec §6.4).
+  | `prop:${string}`;
 export const DEFAULT_LIBRARY_SORT: LibrarySort = "recent";
 export type LibrarySortDir = "asc" | "desc";
 

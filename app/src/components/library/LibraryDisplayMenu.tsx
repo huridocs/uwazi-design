@@ -176,7 +176,9 @@ export function LibraryDisplayMenu() {
       );
     }
     // Relevance is an order only while a query runs; with none it isn't offered.
-    const choices = bound && !searching ? option.choices.filter((c) => c.id !== "relevance") : option.choices;
+    // Sort also offers the templates' prioritySorting properties.
+    const all = option.id === "sort" && ctx.sortChoices ? ctx.sortChoices : option.choices;
+    const choices = bound && !searching ? all.filter((c) => c.id !== "relevance") : all;
     return choices.map((c) => (
       <OptionRow
         key={c.id}

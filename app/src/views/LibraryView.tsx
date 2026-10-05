@@ -45,6 +45,7 @@ import {
   libraryDescriptorModeAtom,
   libraryDrawnIdsAtom,
   libraryFieldColumnsAtom,
+  libraryPropertySortsAtom,
   libraryHasDocAtom,
   libraryInheritedFiltersAtom,
   libraryLanguageInMenuAtom,
@@ -100,6 +101,8 @@ import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { EntityCard } from "../components/library/EntityCard";
 import { ImageLightbox } from "../components/shared/ImageLightbox";
 import { entityCardFields } from "../utils/entityFields";
+import { entityPropertyValues } from "../utils/propertyValues";
+import { parseDateValue } from "../utils/dateValue";
 import { MatchOrigin } from "../components/library/MatchOrigin";
 import { listColumnSpecs, buildListColumns } from "../components/library/listColumns";
 import { LIBRARY_SORTS } from "../data/libraryDisplay";
@@ -137,6 +140,18 @@ const LANGUAGES: Language[] = ["EN", "ES", "FR", "AR"];
 
 /** Sort keys, shared by the toolbar Select and the Display popover (where Sort
  *  goes when the row is too narrow). */
+/** Two property values in sort order: as dates where both read as dates, as
+ *  numbers where both are numbers, else as text. */
+function compareValues(a: string, b: string): number {
+  const na = Number(a);
+  const nb = Number(b);
+  if (a.trim() !== "" && b.trim() !== "" && Number.isFinite(na) && Number.isFinite(nb)) return na - nb;
+  const da = parseDateValue(a);
+  const db = parseDateValue(b);
+  if (da && db) return da.getTime() - db.getTime();
+  return a.localeCompare(b);
+}
+
 export const SORTS = LIBRARY_SORTS.map((c) => ({ value: c.id, label: c.label }));
 
 /** How long the query must stay unchanged before it is recorded in recent
@@ -249,6 +264,7 @@ export function LibraryView() {
   const listColumnOn = useAtomValue(libraryListColumnsAtom);
   const listDensity = useAtomValue(libraryListDensityAtom);
   const fieldColumns = useAtomValue(libraryFieldColumnsAtom);
+  const propertySorts = useAtomValue(libraryPropertySortsAtom);
   const thumbFrame = useAtomValue(libraryThumbFrameAtom);
   const thumbSize = useAtomValue(libraryThumbSizeAtom);
   const cardSide = useAtomValue(libraryCardSideAtom);
@@ -697,7 +713,18 @@ export function LibraryView() {
         case "connections":
           r = (countByEntity.get(a.id) ?? 0) - (countByEntity.get(b.id) ?? 0);
           break;
-        default: // recent / date
+        default:
+          if (sort.startsWith("prop:")) {
+            // A prioritySorting property: dates and numbers by value, the rest
+            // by text; an entity without a value sorts last either way.
+            const name = sort.slice(5);
+            const va = entityPropertyValues(a, name, language)[0];
+            const vb = entityPropertyValues(b, name, language)[0];
+            if (!va || !vb) return va ? -1 : vb ? 1 : 0;
+            r = compareValues(va, vb);
+            break;
+          }
+          // recent / date
           r = (a.createdAt ?? "").localeCompare(b.createdAt ?? "");
       }
       return sortDir === "asc" ? r : -r;
@@ -1144,7 +1171,9 @@ export function LibraryView() {
               ariaLabel={t("System", "Sort")}
               // Same rows, chrome-language labels; values stay the sort keys.
               // Relevance only exists while a query runs (`librarySortAtom`).
-              options={SORTS.filter((s) => q || s.value !== "relevance").map((s) => ({ ...s, label: t("System", s.label) }))}
+              options={[...SORTS, ...propertySorts.map((c) => ({ value: c.id, label: c.label }))]
+                .filter((s) => q || s.value !== "relevance")
+                .map((s) => ({ ...s, label: t("System", s.label) }))}
               // `steady`: a fixed trigger width, so changing the sort doesn't
               // shift View, Display and Language.
               steady

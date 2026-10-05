@@ -76,6 +76,19 @@ export function LibraryFilters() {
     () => libraryInheritedDefs(dataSource, language),
     [dataSource, language],
   );
+  // Spec §6.4 scope: with a Type selection, a property facet shows only for
+  // the selected templates. A facet holding a selection stays, so it can be
+  // cleared.
+  const shownDefs = useMemo(() => {
+    const typeIds = Object.keys(typeFilters).filter((k) => typeFilters[k]);
+    if (!typeIds.length) return inheritedDefs;
+    return inheritedDefs.filter(
+      (d) =>
+        !d.templateIds ||
+        d.templateIds.some((id) => typeIds.includes(id)) ||
+        Object.values(inheritedFilters[d.propId] ?? {}).some(Boolean),
+    );
+  }, [inheritedDefs, typeFilters, inheritedFilters]);
   const chainDefs = useMemo(
     () => (dataSource === "cejil" ? cejilChainFacetDefs() : []),
     [dataSource],
@@ -418,10 +431,11 @@ export function LibraryFilters() {
           sort="alpha"
         />
 
-        {inheritedDefs.map(({ propId, label }) => (
+        {shownDefs.map(({ propId, label, property, defaultFilter }) => (
           <KeywordFacetCard
             key={propId}
             title={label}
+            collapsible={!!property && !defaultFilter}
             counts={inheritedCounts[propId] ?? new Map()}
             selected={inheritedFilters[propId] ?? {}}
             onToggle={(v) => toggleInherited(propId, v)}
@@ -718,6 +732,7 @@ function KeywordFacetCard({
   onModeChange,
   sort,
   hideWhenEmpty = false,
+  collapsible = false,
   headingLevel = 2,
 }: {
   title: string;
@@ -729,17 +744,23 @@ function KeywordFacetCard({
   onModeChange?: (m: FacetMode) => void;
   sort: "alpha" | "count";
   hideWhenEmpty?: boolean;
+  /** A property facet without `defaultfilter`: starts closed, the header
+   *  opens it. Closed, it renders no rows (spec §6.4: default filters open). */
+  collapsible?: boolean;
   /** 3 inside the chain-filter group, which carries its own `h2`. */
   headingLevel?: 2 | 3;
 }) {
   const Heading = headingLevel === 3 ? "h3" : "h2";
   const [search, setSearch] = useState("");
   const [showAll, setShowAll] = useState(false);
+  const [open, setOpen] = useState(() => !collapsible || Object.values(selected).some(Boolean));
   const q = search.trim().toLowerCase();
 
   // Items with a non-zero faceted count, plus any selected (so a selection never
   // disappears under the current facet base).
+  // A closed card lists nothing; it only needs to know whether it has values.
   const list = useMemo(() => {
+    if (!open) return [];
     const names = new Set<string>([...counts.keys()].filter((c) => (counts.get(c) ?? 0) > 0));
     for (const c of Object.keys(selected)) if (selected[c]) names.add(c);
     return [...names].sort((a, b) =>
@@ -747,7 +768,7 @@ function KeywordFacetCard({
         ? (counts.get(b) ?? 0) - (counts.get(a) ?? 0) || a.localeCompare(b)
         : a.localeCompare(b),
     );
-  }, [counts, selected, sort]);
+  }, [counts, selected, sort, open]);
 
   const matched = q ? list.filter((c) => c.toLowerCase().includes(q)) : list;
   const cap = q || showAll ? Infinity : KEYWORD_CAP;
@@ -755,13 +776,28 @@ function KeywordFacetCard({
   const hidden = matched.length - visible.length;
   const selectedCount = Object.values(selected).filter(Boolean).length;
 
-  if (hideWhenEmpty && list.length === 0) return null;
+  const empty = open ? list.length === 0 : ![...counts.values()].some((n) => n > 0);
+  if (hideWhenEmpty && empty) return null;
 
   return (
     <section data-component="KeywordFacetCard" className={`${FACET_CARD} space-y-1.5`}>
       <header data-part="header" className="flex items-center justify-between gap-2 px-2 pt-1">
         <span className="flex items-center gap-1.5 min-w-0">
-          <Heading data-part="title" className="text-tab font-bold text-ink truncate">{title}</Heading>
+          <Heading data-part="title" className="text-tab font-bold text-ink truncate">
+            {collapsible ? (
+              <button
+                type="button"
+                aria-expanded={open}
+                onClick={() => setOpen((o) => !o)}
+                className="inline-flex items-center gap-1 max-w-full truncate cursor-pointer"
+              >
+                <ChevronRight size={12} aria-hidden className={`shrink-0 text-ink-tertiary transition-transform ${open ? "rotate-90" : ""}`} />
+                <span className="truncate">{title}</span>
+              </button>
+            ) : (
+              title
+            )}
+          </Heading>
           {selectedCount > 0 && (
             <span data-part="selected-count" className="shrink-0 inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-carbon/10 text-meta font-semibold text-carbon tabular-nums">
               {selectedCount}
@@ -791,78 +827,82 @@ function KeywordFacetCard({
         </span>
       </header>
 
-      <div data-part="search" className="px-1">
-        <div className="relative flex items-center gap-1.5 h-8 px-2 bg-warm border border-border rounded-md focus-within:ring-2 focus-within:ring-carbon/20 focus-within:border-carbon/40 transition-all">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search"
-            aria-label={`Search ${title.toLowerCase()}`}
-            className="flex-1 min-w-0 bg-transparent text-xs font-medium placeholder:text-ink-muted focus:outline-none"
-          />
-          {search ? (
-            <button
-              type="button"
-              onClick={() => setSearch("")}
-              aria-label="Clear search"
-              className="shrink-0 text-ink-muted hover:text-ink cursor-pointer"
-            >
-              <X size={14} />
-            </button>
-          ) : (
-            <Search size={14} className="text-ink-muted shrink-0" />
-          )}
-        </div>
-      </div>
+      {open && (
+        <>
+          <div data-part="search" className="px-1">
+            <div className="relative flex items-center gap-1.5 h-8 px-2 bg-warm border border-border rounded-md focus-within:ring-2 focus-within:ring-carbon/20 focus-within:border-carbon/40 transition-all">
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search"
+                aria-label={`Search ${title.toLowerCase()}`}
+                className="flex-1 min-w-0 bg-transparent text-xs font-medium placeholder:text-ink-muted focus:outline-none"
+              />
+              {search ? (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  aria-label="Clear search"
+                  className="shrink-0 text-ink-muted hover:text-ink cursor-pointer"
+                >
+                  <X size={14} />
+                </button>
+              ) : (
+                <Search size={14} className="text-ink-muted shrink-0" />
+              )}
+            </div>
+          </div>
 
-      <div data-part="options" className="max-h-64 overflow-auto">
-        {visible.length === 0 ? (
-          <p className="px-2 py-1 text-xs text-ink-muted">No matches.</p>
-        ) : (
-          visible.map((c) => {
-            const checked = !!selected[c];
-            return (
-              <label
-                key={c}
-                data-part="option"
-                data-state={checked ? "checked" : "unchecked"}
-                className={`${FACET_ROW} gap-2.5 px-2 rounded-sm ${
-                  checked ? "bg-carbon/[0.04] hover:bg-carbon/[0.07]" : "hover:bg-warm"
-                }`}
+          <div data-part="options" className="max-h-64 overflow-auto">
+            {visible.length === 0 ? (
+              <p className="px-2 py-1 text-xs text-ink-muted">No matches.</p>
+            ) : (
+              visible.map((c) => {
+                const checked = !!selected[c];
+                return (
+                  <label
+                    key={c}
+                    data-part="option"
+                    data-state={checked ? "checked" : "unchecked"}
+                    className={`${FACET_ROW} gap-2.5 px-2 rounded-sm ${
+                      checked ? "bg-carbon/[0.04] hover:bg-carbon/[0.07]" : "hover:bg-warm"
+                    }`}
+                  >
+                    <Checkbox checked={checked} onChange={() => onToggle(c)} ariaLabel={c} />
+                    <span className={`flex-1 truncate text-tab ${checked ? "text-ink font-medium" : "text-ink-secondary"}`}>
+                      {c}
+                    </span>
+                    <span className="shrink-0 text-tab font-semibold tabular-nums text-ink-secondary">
+                      {counts.get(c) ?? 0}
+                    </span>
+                  </label>
+                );
+              })
+            )}
+            {hidden > 0 && (
+              <button
+                type="button"
+                data-part="load-more"
+                onClick={() => setShowAll(true)}
+                className="px-2 py-1 text-xs font-medium text-ink-secondary underline underline-offset-2 hover:text-ink transition-colors cursor-pointer"
               >
-                <Checkbox checked={checked} onChange={() => onToggle(c)} ariaLabel={c} />
-                <span className={`flex-1 truncate text-tab ${checked ? "text-ink font-medium" : "text-ink-secondary"}`}>
-                  {c}
-                </span>
-                <span className="shrink-0 text-tab font-semibold tabular-nums text-ink-secondary">
-                  {counts.get(c) ?? 0}
-                </span>
-              </label>
-            );
-          })
-        )}
-        {hidden > 0 && (
-          <button
-            type="button"
-            data-part="load-more"
-            onClick={() => setShowAll(true)}
-            className="px-2 py-1 text-xs font-medium text-ink-secondary underline underline-offset-2 hover:text-ink transition-colors cursor-pointer"
-          >
-            Load {hidden} more
-          </button>
-        )}
-        {showAll && !q && matched.length > KEYWORD_CAP && (
-          <button
-            type="button"
-            data-part="show-less"
-            onClick={() => setShowAll(false)}
-            className="px-2 py-1 text-xs font-medium text-ink-tertiary underline underline-offset-2 hover:text-ink transition-colors cursor-pointer"
-          >
-            Show less
-          </button>
-        )}
-      </div>
+                Load {hidden} more
+              </button>
+            )}
+            {showAll && !q && matched.length > KEYWORD_CAP && (
+              <button
+                type="button"
+                data-part="show-less"
+                onClick={() => setShowAll(false)}
+                className="px-2 py-1 text-xs font-medium text-ink-tertiary underline underline-offset-2 hover:text-ink transition-colors cursor-pointer"
+              >
+                Show less
+              </button>
+            )}
+          </div>
+        </>
+      )}
     </section>
   );
 }

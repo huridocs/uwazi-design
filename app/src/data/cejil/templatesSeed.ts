@@ -51,6 +51,8 @@ function propertyOf(templateId: string, p: CejilTemplateProperty): PropertyDef {
     type: typeOf(p.type),
     ...(carded ? { showInCard: true } : {}),
     ...(flagged ? { filter: true } : {}),
+    // A document's date is the sort Uwazi would "pick as best fit".
+    ...(p.name === "fecha" ? { prioritySorting: true } : {}),
     ...(p.content ? { content: p.content } : p.type === "relationship" ? { content: "" } : {}),
     ...(p.relationType ? { relationType: p.relationType } : {}),
     ...resolveInherit(p),
