@@ -83,7 +83,7 @@ export function MenuLinkEditor({
   const { dragIdx, rowProps, gripProps } = useReorder(setSubLinks);
 
   const save = () => {
-    const id = onSave({ type, title: title.trim(), url: type === "group" ? "" : url.trim() });
+    const id = onSave({ type, title: title.trim(), url: type === "group" ? "" : url.trim(), sublinks: [] });
     record({ log: false, 
       method: isNew ? "CREATE" : "UPDATE",
       domain: "menu",

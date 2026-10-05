@@ -108,6 +108,7 @@ export const cejilSettingsMenu: SettingsMenuLink[] = cejilMenu.map((m) => ({
   title: m.title,
   url: m.url,
   type: m.type,
+  sublinks: [],
 }));
 
 export const cejilSettingsPages: SettingsPage[] = cejilPages.map((p) => ({

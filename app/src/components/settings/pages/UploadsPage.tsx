@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formatBytes, uploadUrl } from "../../../atoms/uploads";
 import { useAtomValue, useSetAtom } from "jotai";
 import { codeDocsAtom } from "../../../atoms/sitePages";
 import { nameList } from "../../../utils/settingsUsage";
@@ -49,13 +50,13 @@ export function UploadsPage() {
   const [view, setView] = useState("grid");
 
   const search = useSettingsSearch(
-    typeFilter === "all" ? uploads : uploads.filter((u) => u.type === typeFilter),
-    (u) => `${u.name} ${u.url}`,
+    typeFilter === "all" ? uploads : uploads.filter((u) => u.kind === typeFilter),
+    (u) => `${u.name} ${uploadUrl(u)}`,
   );
   const filtered = search.rows;
 
   const copyUrl = (u: SettingsUpload) => {
-    navigator.clipboard?.writeText(u.url).catch(() => {});
+    navigator.clipboard?.writeText(uploadUrl(u)).catch(() => {});
     toast("URL copied");
   };
 
@@ -64,7 +65,7 @@ export function UploadsPage() {
       id: "name",
       header: "File",
       cell: (u) => {
-        const Icon = typeIcon[u.type];
+        const Icon = typeIcon[u.kind];
         return (
           <div className="flex items-center gap-2 min-w-0">
             <Icon size={14} className="text-ink-muted shrink-0" />
@@ -73,8 +74,8 @@ export function UploadsPage() {
         );
       },
     },
-    { id: "url", header: "URL", cell: (u) => <span dir="ltr" className="text-xs text-ink-tertiary truncate">{u.url}</span> },
-    { id: "size", header: "Size", width: "7rem", cell: (u) => <span dir="ltr" className="text-xs text-ink-tertiary">{u.size}</span> },
+    { id: "url", header: "URL", cell: (u) => <span dir="ltr" className="text-xs text-ink-tertiary truncate">{uploadUrl(u)}</span> },
+    { id: "size", header: "Size", width: "7rem", cell: (u) => <span dir="ltr" className="text-xs text-ink-tertiary">{formatBytes(u.size)}</span> },
     {
       id: "actions",
       header: "",
@@ -116,7 +117,7 @@ export function UploadsPage() {
       overlays={
         <ConfirmDelete
           open={confirm !== null}
-          impact={confirm ? uploadUsage(confirm.url) : null}
+          impact={confirm ? uploadUsage(uploadUrl(confirm)) : null}
           title="Delete upload"
           message={`Delete “${confirm?.name}”?`}
           confirmLabel="Delete"
@@ -137,7 +138,7 @@ export function UploadsPage() {
         ) : (
           <ul data-part="assets" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {filtered.map((u) => {
-              const Icon = typeIcon[u.type];
+              const Icon = typeIcon[u.kind];
               return (
                 <li
                   key={u.id}
@@ -150,7 +151,7 @@ export function UploadsPage() {
                   </div>
                   <div className="flex flex-col gap-1 p-3">
                     <span className="text-sm font-medium text-ink truncate" title={u.name}>{u.name}</span>
-                    <span className="text-xs text-ink-tertiary" dir="ltr">{u.size}</span>
+                    <span className="text-xs text-ink-tertiary" dir="ltr">{formatBytes(u.size)}</span>
                     <div className="flex items-center gap-1 mt-1.5">
                       <button
                         onClick={() => copyUrl(u)}

@@ -18,6 +18,15 @@ export interface ActivityEntry extends SettingsLogEntry {
   /** Where the record lives: a corpus for the collection's content, `global`
    *  for users and groups (CLAUDE.md › Settings stores). */
   scope?: string;
+  /** What a save changed, field by field, read back by the log's detail row.
+   *  Absent when the entry did not record it (seed rows, creates, deletes). */
+  changes?: ActivityChange[];
+}
+
+export interface ActivityChange {
+  field: string;
+  before: string;
+  after: string;
 }
 
 /** Entries kept in the session, newest first. */
@@ -64,7 +73,11 @@ let seq = 0;
 /** Append one entry, signed by the signed-in user. */
 export const appendActivityAtom = atom(
   null,
-  (get, set, e: { method: LogMethod; summary: string; domain: string; targetId?: string; scope: string }) => {
+  (
+    get,
+    set,
+    e: { method: LogMethod; summary: string; domain: string; targetId?: string; scope: string; changes?: ActivityChange[] },
+  ) => {
     seq += 1;
     const at = Date.now();
     const entry: ActivityEntry = {

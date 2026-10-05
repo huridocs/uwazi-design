@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { dataSourceAtom } from "../atoms/dataSource";
 import { toastsAtom, type NotificationAction } from "../atoms/notifications";
-import { appendActivityAtom, scopeOfDomain } from "../atoms/activityLog";
+import { appendActivityAtom, scopeOfDomain, type ActivityChange } from "../atoms/activityLog";
 import type { LogMethod } from "../data/settings";
 
 let seq = 0;
@@ -29,6 +29,8 @@ export interface SettingsEvent {
   /** False to write the log entry without its own Beacon card: a bulk
    *  action logs each record and sends one summary card. */
   notify?: boolean;
+  /** Field-by-field before and after, kept on the log entry. */
+  changes?: ActivityChange[];
 }
 
 const VERB: Record<SettingsEvent["method"], [string, string]> = {
@@ -57,6 +59,7 @@ export function useSettingsNotify() {
           domain: e.domain,
           targetId: e.id,
           scope: scopeOfDomain(e.domain, corpus),
+          ...(e.changes?.length ? { changes: e.changes } : {}),
         });
       if (e.notify === false) return;
       setToasts((p) => [
