@@ -22,9 +22,11 @@ export const FEATURE_LABELS: Record<keyof FeatureFlags, string> = {
 
 const ALL_ON: FeatureFlags = { metadataExtraction: true, paragraphExtraction: true, preserve: true, customJs: true };
 
-export const featureFlagsAtom = atomWithStorage<FeatureFlags>("uwazi:dev:features", ALL_ON, createJSONStorage(() => sessionStorage), {
-  getOnInit: true,
-});
+/** Dev builds only: a production build has every feature on, reads no
+ *  storage, and drops the switch code. */
+export const featureFlagsAtom = import.meta.env.DEV
+  ? atomWithStorage<FeatureFlags>("uwazi:dev:features", ALL_ON, createJSONStorage(() => sessionStorage), { getOnInit: true })
+  : atom<FeatureFlags>(ALL_ON);
 registerSettingsReset((set) => set(featureFlagsAtom, ALL_ON));
 
 /** The flag a Settings section depends on, if any. */
@@ -36,6 +38,7 @@ export const SECTION_FLAG: Record<string, keyof FeatureFlags> = {
 
 /** The flag that hides a section right now, or null. */
 export const sectionFlagOffAtom = atom((get) => {
+  if (!import.meta.env.DEV) return (): keyof FeatureFlags | null => null;
   const flags = { ...ALL_ON, ...get(featureFlagsAtom) };
   return (section: string): keyof FeatureFlags | null => {
     const flag = SECTION_FLAG[section];

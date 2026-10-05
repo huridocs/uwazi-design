@@ -28,6 +28,8 @@ registerSettingsReset((set) => set(failNextAtom, null));
 /** Called by an action before it writes: the armed failure's reason if the
  *  scope matches (and the switch clears), else null. */
 export const consumeFailureAtom = atom(null, (get, set, scope: FailScope): string | null => {
+  // Dev builds only: production never fails on purpose.
+  if (!import.meta.env.DEV) return null;
   const armed = get(failNextAtom);
   if (!armed || armed.scope !== scope) return null;
   set(failNextAtom, null);
@@ -39,12 +41,19 @@ export const consumeFailureAtom = atom(null, (get, set, scope: FailScope): strin
 /** "Slow load (2 s)": while on, Settings holds its stores as loading for two
  *  seconds each time it opens, so the loading rows can be seen. Kept for the
  *  session, so a reload shows it too. */
-export const slowLoadAtom = atomWithStorage<boolean>("uwazi:dev:slowLoad", false, createJSONStorage(() => sessionStorage), {
-  getOnInit: true,
-});
+export const slowLoadAtom = import.meta.env.DEV
+  ? atomWithStorage<boolean>("uwazi:dev:slowLoad", false, createJSONStorage(() => sessionStorage), { getOnInit: true })
+  : atom(false);
 registerSettingsReset((set) => set(slowLoadAtom, false));
-/** True during the two seconds. Set by the Settings shell on open. */
-export const slowLoadingAtom = atom(false);
+/** True during the two seconds. Set by the Settings shell on open; always
+ *  false in a production build. */
+const slowLoadingBaseAtom = atom(false);
+export const slowLoadingAtom = atom(
+  (get) => import.meta.env.DEV && get(slowLoadingBaseAtom),
+  (_get, set, on: boolean) => {
+    if (import.meta.env.DEV) set(slowLoadingBaseAtom, on);
+  },
+);
 
 /* ── Zero rows (SD-5) ──────────────────────────────────────────────────── */
 
