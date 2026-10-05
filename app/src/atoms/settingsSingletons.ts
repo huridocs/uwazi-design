@@ -128,13 +128,16 @@ export const filterSettings = createSettingsSingleton<FilterSettings>({
 
 /** What the Library's Template facet shows, from the saved Filters: active
  *  templates only, in the saved order, nested in their groups. A group sits
- *  where its first member does; an empty group is not shown. */
+ *  where its first member does; an empty group is not shown. With no template
+ *  ticked, every template is listed: in Uwazi an empty `settings.filters`
+ *  means "show them all". */
 export type TemplateFacetNode =
   | { kind: "template"; id: string }
   | { kind: "group"; id: string; name: string; ids: string[] };
 
 export const libraryTemplateFacetsAtom = atom<TemplateFacetNode[]>((get) => {
-  const { groups, rows } = get(filterSettings.valueAtom);
+  const { groups, rows: saved } = get(filterSettings.valueAtom);
+  const rows = saved.some((r) => r.active) ? saved : saved.map((r) => ({ ...r, active: true }));
   const names = new Map(groups.map((g) => [g.id, g.name]));
   const out: TemplateFacetNode[] = [];
   const placed = new Map<string, { kind: "group"; id: string; name: string; ids: string[] }>();

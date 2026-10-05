@@ -161,6 +161,14 @@ export const visibleSettingsGroupsAtom = atom<SettingsGroup[]>((get) => {
  *  Persisted so a reload keeps you on the same settings section. */
 export const settingsSectionAtom = atomWithStorage<string>("uwazi:settingsSection", "account");
 
+/** The section Settings shows: the stored one if the signed-in role reaches
+ *  it, else Account. Derived, not written back, so an admin who signs in
+ *  after a collaborator lands on their own last section. */
+export const effectiveSettingsSectionAtom = atom((get) => {
+  const stored = get(settingsSectionAtom);
+  return get(settingsAccessAtom)(stored) ? stored : "account";
+});
+
 /** Mobile drill-in: on a phone the rail and the content can't share the width,
  *  so we show one at a time. False = rail; true = the selected section (with a
  *  back chevron). Ignored on desktop, where both panes render side by side.
