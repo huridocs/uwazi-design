@@ -224,6 +224,15 @@ const TYPE_FIELDS: Record<string, { prop: string; type: MetadataField["type"]; t
   ],
 };
 
+/** The Sample corpus's template properties, as Settings' usage queries read
+ *  them (`utils/settingsUsage.ts`): the type, the property key, its English
+ *  label, its field type and the thesaurus it is bound to. */
+export function sampleTemplateProperties(): { typeId: string; prop: string; label: string; type: string; thesaurus?: string }[] {
+  return Object.entries(TYPE_FIELDS).flatMap(([typeId, spec]) =>
+    spec.map(({ prop, type, thesaurus }) => ({ typeId, prop, label: lbl(prop, "EN"), type, thesaurus })),
+  );
+}
+
 /** A type's fields, EMPTY and in template order, per language — what a new
  *  entity's edit form opens on. `synthFields` emits only populated props, which
  *  is right for a record and useless for a form that has nothing yet. */
