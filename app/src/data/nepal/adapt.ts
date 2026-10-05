@@ -9,7 +9,7 @@ import { kindOfUwaziType } from "../../utils/propertyKind";
 import { displayStrings, latLngOf } from "../../utils/templateProjection";
 import { nepalTemplateById } from "./schema";
 import { nepalCorpus, nepalEntity } from "./load";
-import type { NepalEntity } from "./types";
+import type { NepalEntity, NepalReference } from "./types";
 
 /** One property's values as display strings. */
 export const displayValues = (p: PropertyDef, e: NepalEntity): string[] => displayStrings(p.type, e.metadata[p.name]);
@@ -34,11 +34,32 @@ function fieldsOf(e: NepalEntity, tpl: TemplateDef): CardField[] | undefined {
   return out.length ? out : undefined;
 }
 
-function searchFieldsOf(e: NepalEntity, tpl: TemplateDef) {
-  const out: { key: string; label: string; value: string }[] = [];
+type SearchField = { key: string; label: string; value: string };
+
+function searchFieldsOf(e: NepalEntity, tpl: TemplateDef, quotes: SearchField[] | undefined) {
+  const out: SearchField[] = [];
   for (const p of tpl.properties) {
     const values = displayValues(p, e);
     if (values.length) out.push({ key: p.name, label: p.label, value: values.join(", ") });
+  }
+  return quotes ? out.concat(quotes) : out;
+}
+
+/** The references' anchored quotes as search fields: on the source as
+ *  "Quote", on the record it is about as "Source quote". One field per quote,
+ *  so a Results snippet is cut from one quote and never runs into the next.
+ *  Keyed by reference, so each field is its own group in the snippets. */
+function quoteFieldsByEntity(refs: NepalReference[]): Map<string, SearchField[]> {
+  const out = new Map<string, SearchField[]>();
+  const add = (id: string, f: SearchField) => {
+    const arr = out.get(id);
+    if (arr) arr.push(f);
+    else out.set(id, [f]);
+  };
+  for (const r of refs) {
+    if (!r.quote) continue;
+    add(r.from, { key: `quote:${r.id}`, label: "Quote", value: r.quote });
+    if (r.to !== r.from) add(r.to, { key: `quote:${r.id}`, label: "Source quote", value: r.quote });
   }
   return out;
 }
@@ -113,6 +134,7 @@ export function nepalLibraryEntities(): Entity[] {
   const c = nepalCorpus();
   if (!c) return [];
   if (_entities) return _entities;
+  const quotes = quoteFieldsByEntity(c.references);
   _entities = c.entities.map((e) => {
     const tpl = nepalTemplateById.get(e.template)!;
     const geo = geoOf(e);
@@ -130,7 +152,7 @@ export function nepalLibraryEntities(): Entity[] {
       ...(inherited ? { inherited } : {}),
       ...(listCells ? { listCells } : {}),
       fields: fieldsOf(e, tpl),
-      searchFields: searchFieldsOf(e, tpl),
+      searchFields: searchFieldsOf(e, tpl, quotes.get(e.sharedId)),
     };
   });
   return _entities;

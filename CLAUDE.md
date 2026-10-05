@@ -363,7 +363,10 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   built from Research's seed by `scripts/build-nepal-corpus.mjs` (the seed lives in the main
   checkout's `dev/results/nepal-seed`, outside git). Rerun the script; do not edit the JSON.
   The build enforces the privacy rules (no named minor or withheld casualty, no phone or
-  e-mail). Verification is the leading Library facet.
+  e-mail). Verification is the leading Library facet. Its List opens on its own columns
+  (`COLLECTION_COLUMNS` and `listCells` in `listColumns.tsx`). A reference's quote is a search
+  field ("Quote" on the source, "Source quote" on its target), so search and Results snippets
+  reach it through `entitySearchFields`, with no second index.
 - Paragraph extraction: extractors and per-entity statuses are per-corpus stores
   (`atoms/paragraphExtraction.ts`); paragraphs are derived per entity. A target template needs a
   rich text and a numeric property; only Red Travesía has one, so it holds the seed and the
