@@ -1,7 +1,7 @@
 import type { HTMLAttributes, ReactNode } from "react";
 import { useAtomValue } from "jotai";
 import { CloudOff } from "lucide-react";
-import { DataTable, type Column } from "../shared/DataTable";
+import { DataTable, type Column, type SortDir } from "../shared/DataTable";
 import { breakpointAtom } from "../../atoms/viewport";
 import { settingsCorpusErrorAtom, useSettingsCorpusLoading } from "../../hooks/useSettingsCorpus";
 import { useAnnounceLoading } from "./SettingsContent";
@@ -31,6 +31,9 @@ interface SettingsTableProps<T> {
    *  shown; the page's footer shows `SettingsSelectionBar` while any are
    *  ticked. */
   selection?: RowSelection<T>;
+  /** Controlled column sort (`DataTable`'s): the page sorts its rows. */
+  sort?: { key: string; dir: SortDir };
+  onSort?: (key: string) => void;
 }
 
 export interface RowSelection<T> {
@@ -38,12 +41,15 @@ export interface RowSelection<T> {
   onChange: (next: Set<string>) => void;
   /** The row's name, for its checkbox ("Select admin"). */
   label: (row: T) => string;
+  /** Why a row cannot be ticked, if it cannot (the default template). Its box
+   *  stays focusable and says why on hover and focus; Select all skips it. */
+  disabledReason?: (row: T) => string | undefined;
 }
 
 /** The checkbox column `selection` adds. Ticking a box never opens the row:
  *  the click stops at the cell. */
 function selectColumn<T>(sel: RowSelection<T>, data: T[], getRowId: (row: T) => string): Column<T> {
-  const ids = data.map(getRowId);
+  const ids = data.filter((r) => !sel.disabledReason?.(r)).map(getRowId);
   const ticked = ids.filter((id) => sel.selected.has(id)).length;
   const all = ids.length > 0 && ticked === ids.length;
   const toggleAll = () => {
@@ -75,6 +81,29 @@ function selectColumn<T>(sel: RowSelection<T>, data: T[], getRowId: (row: T) => 
 }
 
 function RowCheckbox<T>({ sel, row, id }: { sel: RowSelection<T>; row: T; id: string }) {
+  const reason = sel.disabledReason?.(row);
+  if (reason)
+    return (
+      <span data-part="select" className="relative inline-flex" onClick={(e) => e.stopPropagation()}>
+        <Hint text={reason}>
+          {(hint) => (
+            // aria-disabled, not disabled: a disabled box cannot take focus,
+            // and the reason must be readable from the keyboard too.
+            <input
+              {...hint}
+              type="checkbox"
+              data-component="Checkbox"
+              checked={false}
+              aria-disabled="true"
+              aria-label={`Select ${sel.label(row)}`}
+              onChange={() => {}}
+              onClick={(e) => e.preventDefault()}
+              className="w-3.5 h-3.5 rounded shrink-0 accent-ink opacity-40 cursor-not-allowed"
+            />
+          )}
+        </Hint>
+      </span>
+    );
   return (
     <span data-part="select" className="relative inline-flex" onClick={(e) => e.stopPropagation()}>
       <Checkbox
@@ -160,6 +189,8 @@ export function SettingsTable<T>(props: SettingsTableProps<T>) {
       emptyState={emptyState}
       minWidthRem={minWidthRem}
       rowProps={rowProps}
+      sort={props.sort}
+      onSort={props.onSort}
     />
   );
 }

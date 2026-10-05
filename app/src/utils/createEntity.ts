@@ -3,11 +3,9 @@ import type { Entity } from "../data/entities";
 import type { MetadataField } from "../data/metadata";
 import type { DocumentGroup, FileEntry } from "../data/files";
 import type { Corpus, EntityRecord } from "../data/entityChanges";
-import { cejilDefaultTemplateId } from "../data/cejil/profile";
 import { ARTWORK_TYPE_ID } from "../data/artworks/typesAdapter";
-import { templateMirror } from "../data/templates/mirror";
+import { templateMirror, templatesMirror } from "../data/templates/mirror";
 import { blankFieldsFor, generatedId } from "./templateProjection";
-import { travesiaDefaultTemplateId, travesiaTemplates } from "../data/travesia/schema";
 
 const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
 
@@ -43,23 +41,18 @@ export function templateFields(
   ) as Record<Language, MetadataField[]>;
 }
 
-/** The template a corpus flags as its default, if it flags one — Create entity
- *  lists it first. CEJIL's and Travesía's dumps carry the flag. */
+/** The template the corpus flags as its default (Settings › Templates' star,
+ *  from the template store): Create entity lists it first. */
 export function defaultTemplateId(corpus: Corpus): string | undefined {
-  if (corpus === "travesia") return travesiaDefaultTemplateId;
-  return corpus === "cejil" ? cejilDefaultTemplateId() : undefined;
+  return templatesMirror(corpus).find((t) => t.isDefault)?.id;
 }
 
 /** The template an uploaded document gets. Uwazi gives an upload the template
- *  flagged `default`; the Sample corpus's is its Document type. The artworks
- *  corpus has no document template, so an upload there is an artwork carrying
- *  a PDF. */
+ *  flagged `default`; the Sample's is its Document type. The artworks corpus
+ *  has no document template, so an upload there is an artwork carrying a PDF. */
 export function uploadTemplateId(corpus: Corpus): string {
-  if (corpus === "cejil") return cejilDefaultTemplateId() ?? "document";
   if (corpus === "artworks") return ARTWORK_TYPE_ID;
-  // No document template in this schema: an upload takes the default one.
-  if (corpus === "travesia") return travesiaDefaultTemplateId ?? travesiaTemplates[0]._id;
-  return "document";
+  return defaultTemplateId(corpus) ?? templatesMirror(corpus)[0]?.id ?? "document";
 }
 
 /** The attached file, as the record and the viewer read it. */

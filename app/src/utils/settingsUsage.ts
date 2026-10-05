@@ -1,10 +1,7 @@
 import type { Entity } from "../data/entities";
 import type { Corpus } from "../data/entityChanges";
-import { cejilTemplates } from "../data/cejil/templates";
-import { travesiaTemplates } from "../data/travesia/schema";
-import { sampleTemplateProperties } from "../data/sample/typeFields";
-import { relationshipFieldsByLanguage } from "../data/metadata";
-import { V4_FIELDS } from "../data/sampleSeedV4";
+import type { TemplateDef } from "../data/templates/types";
+import { templatesMirror } from "../data/templates/mirror";
 import type { ThesaurusValue } from "../data/settings";
 
 /** Usage queries for Settings: what a template, property, thesaurus, value,
@@ -16,9 +13,9 @@ import type { ThesaurusValue } from "../data/settings";
  *  prototype has no server, so `block` is checked before the dialog opens
  *  and the dialog names the rule instead of a Delete button. */
 
-/** One template property as the usage queries read it, whatever the corpus's
- *  own shape: CEJIL and Travesía ship Uwazi templates, the Sample has its
- *  field table (`data/entityProfiles.ts`) and the case's relationship fields. */
+/** One template property as the usage queries read it: the template store's
+ *  `PropertyDef`, with a relationship's inherited property resolved to its
+ *  name. */
 export interface SchemaProperty {
   templateId: string;
   /** Uwazi's property `name`; the Sample's property key. */
@@ -33,94 +30,41 @@ export interface SchemaProperty {
   inherits?: string;
 }
 
-type UwaziProperty = {
-  _id?: string;
-  name: string;
-  label: string;
-  type: string;
-  content?: string;
-  relationType?: string;
-  inherit?: { property: string; type: string };
-};
-type UwaziTemplate = { _id: string; name: string; properties: UwaziProperty[]; commonProperties?: UwaziProperty[] };
-
-function fromUwazi(templates: UwaziTemplate[]): SchemaProperty[] {
-  const byId = new Map(templates.map((t) => [t._id, t]));
-  return templates.flatMap((t) =>
+/** A corpus's template properties, from the template store (step M8), so a
+ *  property added, removed or rebound in Settings › Templates is what every
+ *  usage query reads. Cached per template list: the store returns the same
+ *  array until it changes. */
+const schemaCache = new WeakMap<TemplateDef[], SchemaProperty[]>();
+export function schemaFromTemplates(templates: TemplateDef[]): SchemaProperty[] {
+  const hit = schemaCache.get(templates);
+  if (hit) return hit;
+  const byId = new Map(templates.map((t) => [t.id, t]));
+  const out = templates.flatMap((t) =>
     t.properties.map((p) => {
-      const out: SchemaProperty = { templateId: t._id, name: p.name, label: p.label, type: p.type };
-      if (p.type === "select" || p.type === "multiselect") out.thesaurusId = p.content;
+      const sp: SchemaProperty = { templateId: t.id, name: p.name, label: p.label, type: p.type };
+      if (p.type === "select" || p.type === "multiselect") sp.thesaurusId = p.content;
       if (p.type === "relationship") {
-        out.relationType = p.relationType;
-        out.targetTemplateId = p.content;
+        sp.relationType = p.relationType;
+        sp.targetTemplateId = p.content;
         if (p.inherit && p.content) {
-          // Inheritance names the target property by `_id`. CEJIL's dump drops
-          // property ids, so there the target's only property of the inherited
-          // type stands in for it.
+          // Inheritance names the target property by id. CEJIL's dump drops
+          // property ids, so there the target's only property of the
+          // inherited type stands in for it.
           const target = byId.get(p.content)?.properties ?? [];
-          const hit =
-            target.find((x) => x._id === p.inherit!.property) ??
-            (target.filter((x) => x.type === p.inherit!.type).length === 1
-              ? target.find((x) => x.type === p.inherit!.type)
-              : undefined);
-          if (hit) out.inherits = hit.name;
+          const ofType = target.filter((x) => x.type === p.inherit!.type);
+          const hit = target.find((x) => x.id === p.inherit!.property) ?? (ofType.length === 1 ? ofType[0] : undefined);
+          if (hit) sp.inherits = hit.name;
         }
       }
-      return out;
+      return sp;
     }),
   );
+  schemaCache.set(templates, out);
+  return out;
 }
 
-/** The Sample's schema: its field table, plus the relationship fields the
- *  case record carries (`data/metadata.ts`), which belong to Court case. */
-function sampleSchema(): SchemaProperty[] {
-  const fields: SchemaProperty[] = sampleTemplateProperties().map((p) => ({
-    templateId: p.typeId,
-    name: p.prop,
-    label: p.label,
-    type: p.type,
-    thesaurusId: p.thesaurus,
-  }));
-  const rels: SchemaProperty[] = relationshipFieldsByLanguage.EN.map((f) => ({
-    templateId: "court_case",
-    name: f.id,
-    label: f.label,
-    type: "relationship",
-    relationType: f.relationType,
-    targetTemplateId: f.targetTypeId,
-    inherits: f.inheritProperty,
-  }));
-  // The v4 seed's relationship fields (Victims, Petitioners, Signed by, …),
-  // which the records render from `V4_FIELDS`.
-  const v4: SchemaProperty[] = Object.entries(V4_FIELDS).flatMap(([templateId, list]) =>
-    list.map((f) => ({
-      templateId,
-      name: f.id,
-      label: f.label.EN,
-      type: "relationship",
-      relationType: f.relationType,
-      targetTemplateId: f.targetTypeId,
-    })),
-  );
-  return [...fields, ...rels, ...v4];
-}
-
-const schemaCache = new Map<Corpus, SchemaProperty[]>();
-/** A corpus's template properties. The artworks corpus shows the Sample's
- *  configuration in Settings, so it reads the Sample's schema. */
-export function schemaOf(corpus: Corpus): SchemaProperty[] {
-  let s = schemaCache.get(corpus);
-  if (!s) {
-    s =
-      corpus === "cejil"
-        ? fromUwazi(cejilTemplates as UwaziTemplate[])
-        : corpus === "travesia"
-          ? fromUwazi(travesiaTemplates as UwaziTemplate[])
-          : sampleSchema();
-    schemaCache.set(corpus, s);
-  }
-  return s;
-}
+/** A corpus's template properties, outside an atom. */
+export const schemaOf = (corpus: Corpus): SchemaProperty[] => schemaFromTemplates(templatesMirror(corpus));
 
 export const foldName = (s: string) =>
   s.normalize("NFD").replace(/\p{M}/gu, "").trim().toLowerCase();
@@ -154,46 +98,6 @@ export function nameList(names: string[], max = 3): string {
 export interface Impact {
   lines: string[];
   block: string | null;
-}
-
-/* ── Templates ─────────────────────────────────────────────────────────── */
-
-export interface TemplateUsage extends Impact {
-  entities: number;
-  /** Other templates with a relationship property that links to this one. */
-  linkedFrom: string[];
-}
-
-export function templateUsage({
-  templateId,
-  isDefault,
-  entities,
-  schema,
-  templateName,
-}: {
-  templateId: string;
-  isDefault: boolean;
-  entities: number;
-  schema: SchemaProperty[];
-  templateName: (id: string) => string;
-}): TemplateUsage {
-  const linkedFrom = schema
-    .filter((p) => p.type === "relationship" && p.targetTemplateId === templateId && p.templateId !== templateId)
-    .map((p) => templateName(p.templateId));
-  const lines: string[] = [];
-  // When the entities are the refusal, the rule says the count; listing it
-  // again below would state one fact twice.
-  if (entities > 0 && isDefault) lines.push(`Used by ${count(entities, "entity", "entities")}.`);
-  if (linkedFrom.length)
-    lines.push(`Relationship properties in ${nameList(linkedFrom)} link to it. They are not changed.`);
-  // DeleteTemplate.ts: the default template and a template with entities
-  // are refused.
-  const block = isDefault
-    ? "This is the default template. Set another template as default first."
-    : entities > 0
-      ? `${count(entities, "entity uses", "entities use")} this template. Move or delete them first.`
-      : null;
-  return { entities, linkedFrom, lines, block };
 }
 
 /* ── Template properties ───────────────────────────────────────────────── */

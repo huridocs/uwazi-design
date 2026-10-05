@@ -12,9 +12,11 @@ import { createSettingsCollection, hasId } from "./settingsCollection";
  *  A save replaces the whole template, as Uwazi's editor saves a whole
  *  template; there is no partial patch.
  *
- *  Read-only so far (migration step M1): nothing writes it until Settings ›
- *  Templates moves onto it (M8). The type lists (`entityTypesAtom`,
- *  `libraryTypesAtom`, `corpusTypes`) are projections of it. */
+ *  Settings › Templates writes it (step M8) through `templateStore`; the
+ *  actions that also touch other stores (filters, the Library's type
+ *  filters) are in `atoms/templateActions.ts`. The type lists
+ *  (`entityTypesAtom`, `libraryTypesAtom`, `corpusTypes`) are projections of
+ *  it. */
 
 
 const isTemplate = (r: unknown): boolean => {
@@ -38,6 +40,10 @@ const templates = createSettingsCollection<TemplateDef>({
   corpusScoped: true,
   isRecord: isTemplate,
 });
+
+/** The store's write atoms (create, patch, delete, restore), for
+ *  `atoms/templateActions.ts`. */
+export const templateStore = templates;
 
 /** A corpus's templates, seed plus the session's changes. */
 export const templatesAtom = templates.listOfAtom as (corpus: Corpus) => ReturnType<typeof templates.listOfAtom>;

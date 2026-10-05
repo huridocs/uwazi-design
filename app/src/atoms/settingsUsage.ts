@@ -8,8 +8,9 @@ import { travesiaCorpus, travesiaEntity } from "../data/travesia/load";
 import { relationTypesCorpus } from "./relationTypes";
 import { cejilLibraryEntities } from "../data/cejil/adapt";
 import { travesiaLibraryEntities } from "../data/travesia/adapt";
-import { cejilSettingsTemplates } from "../data/cejil/settingsAdapt";
-import { travesiaTemplates } from "../data/travesia/schema";
+import { artworkLibraryEntities } from "../data/artworks/adapt";
+import { templatesAtom } from "./templates";
+import { entityPropertyValues } from "../utils/propertyValues";
 import { cejilStats, cejilUsageByRelationType } from "../data/cejil/aggregates";
 import type { SettingsLanguage, ThesaurusValue } from "../data/settings";
 import {
@@ -18,8 +19,7 @@ import {
   languageUsage,
   propertyUsage,
   relationTypeUsage,
-  schemaOf,
-  templateUsage,
+  schemaFromTemplates,
   thesaurusUsage,
   userUsage,
   valueUsage,
@@ -41,16 +41,26 @@ import { groupsAtom, signedInUserAtom, userDeleteBlock, usersAtom } from "./user
  *  CEJIL and the Sample's everywhere else; Thesauri show each corpus's own,
  *  with artworks showing the Sample's (`atoms/thesauri.ts`). */
 export const templatesCorpus = (source: DataSource): Corpus => (source === "cejil" ? "cejil" : "mock");
+
+/** A corpus's template properties and template names, from the template
+ *  store: what Settings › Templates last saved. */
+const schemaAtom = atomFamily((corpus: Corpus) => atom((get) => schemaFromTemplates(get(templatesAtom(corpus)))));
+const templateNamesAtom = atomFamily((corpus: Corpus) =>
+  atom((get) => {
+    const m = new Map(get(templatesAtom(corpus)).map((t) => [t.id, t.name]));
+    return (id: string) => m.get(id) ?? id;
+  }),
+);
 export const thesauriCorpus = (source: DataSource): Corpus => (source === "artworks" ? "mock" : source);
 
 /** A corpus's entities with the session's changes. `null` while a lazy corpus
- *  has not loaded: counts are unknown, not zero. Artworks reads as the Sample
- *  (its Settings are the Sample's). */
+ *  has not loaded: counts are unknown, not zero. */
 function entitiesOf(get: Getter, corpus: Corpus): Entity[] | null {
   const overlay = get(libraryEntityOverlayAtom);
   if (corpus === "cejil") return get(cejilReadyAtom) ? applyOverlay(overlay.cejil, cejilLibraryEntities()) : null;
   if (corpus === "travesia")
     return get(travesiaReadyAtom) ? applyOverlay(overlay.travesia, travesiaLibraryEntities()) : null;
+  if (corpus === "artworks") return applyOverlay(overlay.artworks, artworkLibraryEntities());
   return applyOverlay(overlay.mock, get(entitiesAtom));
 }
 
@@ -97,7 +107,7 @@ function heldFromRecord(fields: AnyMetadataField[] | undefined, p: { name: strin
  *  props. */
 const readerAtom = atomFamily((corpus: Corpus) =>
   atom<ValueReader>((get) => {
-    const records = get(libraryEntityOverlayAtom)[corpus === "artworks" ? "mock" : corpus].records;
+    const records = get(libraryEntityOverlayAtom)[corpus].records;
     const lang: Language = corpus === "mock" || corpus === "artworks" ? "EN" : "ES";
     const native = get(entityMetadataAtom).EN;
     const cejilReady = get(cejilReadyAtom);
@@ -110,24 +120,12 @@ const readerAtom = atomFamily((corpus: Corpus) =>
       }
       if (corpus === "cejil") return cejilReady ? heldFromRaw(cejilEsBySid().get(e.id)?.metadata[p.name]) : [];
       if (corpus === "travesia") return travesiaReady ? heldFromRaw(travesiaEntity(e.id)?.metadata[p.name]) : [];
+      if (corpus === "artworks") return entityPropertyValues(e, p.name, "EN").map((label) => ({ label }));
       const v = native[e.id]?.[p.name];
       return v ? [{ label: v }] : [];
     };
   }),
 );
-
-function templateNameOf(corpus: Corpus): (id: string) => string {
-  if (corpus === "cejil") {
-    const m = new Map(cejilSettingsTemplates.map((t) => [t.id, t.name]));
-    return (id) => m.get(id) ?? id;
-  }
-  if (corpus === "travesia") {
-    const m = new Map(travesiaTemplates.map((t) => [t._id, t.name]));
-    return (id) => m.get(id) ?? id;
-  }
-  const m = new Map(entityTypes.map((t) => [t.id, t.name]));
-  return (id) => m.get(id) ?? id;
-}
 
 /** Said instead of a count while a lazy corpus's entities are still loading:
  *  an unknown count must not read as zero. */
@@ -137,44 +135,22 @@ const withPending = <T extends { lines: string[] }>(u: T, pending: boolean): T =
 
 /* ── Templates ─────────────────────────────────────────────────────────── */
 
-/** Entities using a template: live where the corpus is loaded, otherwise the
- *  count the importer baked in (`entityCount`). */
-// Families are keyed by a string: an object key with an equality function
-// makes every lookup scan all earlier keys.
-const templateUsageFamily = atomFamily((key: string) => {
-  const [id, isDefault, entityCount] = JSON.parse(key) as [string, boolean, number];
-  const t = { id, isDefault, entityCount };
-  return atom((get) => {
-      const corpus = templatesCorpus(get(dataSourceAtom));
-      const live = get(byTemplate(corpus));
-      return templateUsage({
-        templateId: t.id,
-        isDefault: t.isDefault,
-        entities: live ? (live.get(t.id)?.length ?? 0) : t.entityCount,
-        schema: schemaOf(corpus),
-        templateName: templateNameOf(corpus),
-      });
-    });
-});
-export const templateUsageAtom = (t: { id: string; isDefault: boolean; entityCount: number }) =>
-  templateUsageFamily(JSON.stringify([t.id, t.isDefault, t.entityCount]));
-
 /** A template property: entities holding a value, and templates that
  *  inherit it. Key: `templateId\u0000label` (and the name, where known). */
 const propertyUsageFamily = atomFamily((key: string) => {
   const [templateId, label, name] = JSON.parse(key) as [string, string, string | null];
   const k = { templateId, label, name: name ?? undefined };
   return atom((get) => {
-      const corpus = templatesCorpus(get(dataSourceAtom));
+      const corpus = get(dataSourceAtom);
       const groups = get(byTemplate(corpus));
       return withPending(
         propertyUsage({
           templateId: k.templateId,
           prop: k,
-          schema: schemaOf(corpus),
+          schema: get(schemaAtom(corpus)),
           entities: groups?.get(k.templateId) ?? [],
           read: get(readerAtom(corpus)),
-          templateName: templateNameOf(corpus),
+          templateName: get(templateNamesAtom(corpus)),
         }),
         groups === null,
       );
@@ -189,7 +165,7 @@ const boundAtom = atomFamily((thesaurusId: string) =>
   atom((get) => {
     const source = get(dataSourceAtom);
     const corpus = thesauriCorpus(source);
-    return boundProperties(schemaOf(corpus), thesaurusId, get(thesaurusBindingsAtom(source)));
+    return boundProperties(get(schemaAtom(corpus)), thesaurusId, get(thesaurusBindingsAtom(source)));
   }),
 );
 
@@ -202,7 +178,7 @@ export const thesaurusUsageAtom = atomFamily((thesaurusId: string) =>
         properties: get(boundAtom(thesaurusId)),
         entitiesOf: (id) => groups?.get(id) ?? [],
         read: get(readerAtom(corpus)),
-        templateName: templateNameOf(corpus),
+        templateName: get(templateNamesAtom(corpus)),
       }),
       groups === null,
     );
@@ -248,8 +224,8 @@ export const relationTypeUsageInAtom = atomFamily((key: string) =>
     return relationTypeUsage({
       id,
       references,
-      schema: schemaOf(corpus),
-      templateName: templateNameOf(corpus),
+      schema: get(schemaAtom(corpus)),
+      templateName: get(templateNamesAtom(corpus)),
       writable: corpus === "mock",
       pending: corpus === "travesia" && !get(travesiaReadyAtom),
     });

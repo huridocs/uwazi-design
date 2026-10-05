@@ -8,7 +8,6 @@ import {
   groupUsageAtom,
   languageUsageAtom,
   relationTypeUsageAtom,
-  templateUsageAtom,
   thesaurusUsageAtom,
   userUsageAtom,
 } from "../../atoms/settingsUsage";
@@ -28,7 +27,6 @@ import type {
   SettingsLanguage,
   SettingsMenuLink,
   SettingsPage,
-  SettingsTemplate,
   SettingsThesaurus,
   SettingsUser,
 } from "../../data/settings";
@@ -38,45 +36,6 @@ import type {
  *  delete it describes, and records it (`useSettingsNotify`). A page whose
  *  list is its own state passes `onDelete` to drop the row; a page on a store
  *  needs nothing. Each mounts only while open, so its selector runs only then. */
-
-export function TemplateDelete({
-  template,
-  onCancel,
-  onDelete,
-}: {
-  template: SettingsTemplate | null;
-  onCancel: () => void;
-  onDelete: (t: SettingsTemplate) => void;
-}) {
-  return template ? <TemplateDeleteOpen template={template} onCancel={onCancel} onDelete={onDelete} /> : null;
-}
-
-function TemplateDeleteOpen({
-  template,
-  onCancel,
-  onDelete,
-}: {
-  template: SettingsTemplate;
-  onCancel: () => void;
-  onDelete: (t: SettingsTemplate) => void;
-}) {
-  const usage = useAtomValue(templateUsageAtom(template));
-  const { record } = useSettingsNotify();
-  return (
-    <ConfirmDelete
-      open
-      title="Delete template"
-      message={`Delete the ${template.name} template? No entities use it.`}
-      impact={usage}
-      onCancel={onCancel}
-      onConfirm={() => {
-        onDelete(template);
-        record({ log: false, method: "DELETE", domain: "template", noun: "template", id: template.id, name: template.name });
-        onCancel();
-      }}
-    />
-  );
-}
 
 export function ThesaurusDelete({ thesaurus, onCancel }: { thesaurus: SettingsThesaurus | null; onCancel: () => void }) {
   return thesaurus ? <ThesaurusDeleteOpen thesaurus={thesaurus} onCancel={onCancel} /> : null;
@@ -323,13 +282,6 @@ export function PageDelete({
       }}
     />
   );
-}
-
-/** A template's entity count, from the same selector the delete reads, so
- *  the list and the dialog never disagree. */
-export function TemplateEntityCount({ template }: { template: SettingsTemplate }) {
-  const usage = useAtomValue(templateUsageAtom(template));
-  return <>{usage.entities.toLocaleString()}</>;
 }
 
 /** A relationship type's reference count and templates, from the selector
