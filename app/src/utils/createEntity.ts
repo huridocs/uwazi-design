@@ -24,12 +24,20 @@ export interface EditResult {
  *  Create entity, Change template, bulk edit and batch entry in every corpus.
  *  Properties the form has no editor for yet (relationship, geolocation,
  *  image) are left out, as they always were. */
-export function templateFields(typeId: string, corpus: Corpus): Record<Language, MetadataField[]> {
+export function templateFields(
+  typeId: string,
+  corpus: Corpus,
+  { newEntity = false }: { newEntity?: boolean } = {},
+): Record<Language, MetadataField[]> {
   const template = templateMirror(corpus, typeId);
-  // A "Generated ID" property starts with a value, the same in every language.
-  const ids = Object.fromEntries(
-    (template?.properties ?? []).filter((p) => p.type === "generatedid").map((p) => [p.name, generatedId()]),
-  );
+  // A "Generated ID" property starts with a value, the same in every language,
+  // drawn once for each entity being created. Change template and bulk edit
+  // read blank fields and must not hand an id to existing entities.
+  const ids = newEntity
+    ? Object.fromEntries(
+        (template?.properties ?? []).filter((p) => p.type === "generatedid").map((p) => [p.name, generatedId()]),
+      )
+    : {};
   return Object.fromEntries(
     LANGS.map((l) => [l, blankFieldsFor(corpus, template, l).map((f) => (ids[f.id] ? { ...f, value: ids[f.id] } : f))]),
   ) as Record<Language, MetadataField[]>;

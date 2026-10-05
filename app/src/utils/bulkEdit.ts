@@ -38,7 +38,8 @@ const EXCLUDED = new Set<MetadataField["type"]>(["file-list", "media", "country"
 /** By template type: values one box cannot write to many entities without
  *  losing their shape (a place, a picture, a link's label and URL, date lists
  *  and ranges). Bulk edit compares template types exactly (spec §8). */
-const EXCLUDED_PROPERTY_TYPES = new Set(["geolocation", "image", "link", "multidate", "daterange", "multidaterange", "media", "preview", "nested"]);
+// A generated id identifies one entity: one value written to many would not.
+const EXCLUDED_PROPERTY_TYPES = new Set(["geolocation", "image", "link", "multidate", "daterange", "multidaterange", "media", "preview", "nested", "generatedid"]);
 
 const kindOf = (t: MetadataField["type"]): BulkFieldKind =>
   t === "select" ? "select" : t === "multiselect" ? "multi" : "scalar";

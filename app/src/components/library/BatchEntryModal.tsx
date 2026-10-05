@@ -138,7 +138,6 @@ export function BatchEntryModal({
   const focusValue = useRef("");
 
   const fieldsOf = (tid: string) => (templateFields(tid, corpus)[language] ?? []).filter((f) => f.id !== "description");
-  const blank = useMemo(() => templateFields(typeId, corpus), [typeId, corpus]);
   const fields = useMemo(() => fieldsOf(typeId), [typeId, corpus, language]); // eslint-disable-line react-hooks/exhaustive-deps
   const columns = fields.filter((f) => GRID_TYPES.has(f.type) && !f.list);
   const left = fields.filter((f) => !columns.includes(f));
@@ -361,8 +360,10 @@ export function BatchEntryModal({
   const create = () => {
     if (!readyRows.length) return;
     const out = readyRows.map((r) => {
+      // Each new entity draws its own generated ids.
+      const fresh = templateFields(typeId, corpus, { newEntity: true });
       const byLang = Object.fromEntries(
-        LANGUAGES.map((l) => [l, blank[l].map((f) => ({ ...f }))]),
+        LANGUAGES.map((l) => [l, fresh[l].map((f) => ({ ...f }))]),
       ) as Record<Language, MetadataField[]>;
       for (const f of columns) {
         const raw = cell(r, f.id).trim();

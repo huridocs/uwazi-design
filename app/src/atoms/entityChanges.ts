@@ -561,7 +561,7 @@ export const startDraftAtom = atom(
   ): string => {
     const id = newEntityId();
     const entity: Entity = { id, title: "", typeId, createdAt: today(), published: false };
-    const empty = templateFields(typeId, corpus);
+    const empty = templateFields(typeId, corpus, { newEntity: true });
     const fieldsByLang = carry ? carryValues(empty, carry, only) : empty;
     setDraftMirror({ entity, corpus, record: buildRecord({ id, typeId, fieldsByLang }) });
     set(draftEntityIdAtom, id);
@@ -683,7 +683,7 @@ export const addUploadedDocumentsAtom = atom(
     const entries = uploads.map(({ title, file }) => {
       const id = newEntityId();
       const entity: Entity = { id, title, typeId, createdAt: today(), published: false, preview: "document" };
-      return { entity, record: buildRecord({ id, typeId, fieldsByLang: templateFields(typeId, corpus), file }) };
+      return { entity, record: buildRecord({ id, typeId, fieldsByLang: templateFields(typeId, corpus, { newEntity: true }), file }) };
     });
     // Newest first in the library, so the batch is reversed on the way in and
     // reads in the order it was picked.
