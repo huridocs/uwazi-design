@@ -397,6 +397,9 @@ export function LibraryFilters() {
               ))}
             </FacetCard>
 
+            {/* The Nepal records hold no files and no country field: the
+                Documents card and Countries would only ever read 0. */}
+            {dataSource !== "nepal" && (
             <FacetCard>
               <FacetRow
                 checked={hasDocOnly}
@@ -423,6 +426,7 @@ export function LibraryFilters() {
                 </TreeChildren>
               )}
             </FacetCard>
+            )}
           </>
         )}
 
@@ -435,6 +439,7 @@ export function LibraryFilters() {
           mode={countryMode}
           onModeChange={setCountryMode}
           sort="alpha"
+          hideWhenEmpty={dataSource === "nepal"}
         />
 
         {shownDefs.map(({ propId, label }) => (

@@ -113,9 +113,11 @@ function withPropertyFacets(
       byName.set(p.name, def);
       added.push(def);
     }
+  // A curated facet marked `defaultFilter` leads (Nepal's Verification).
   const out = [
+    ...curated.filter((d) => d.defaultFilter),
     ...added.filter((d) => d.defaultFilter),
-    ...curated,
+    ...curated.filter((d) => !d.defaultFilter),
     ...added.filter((d) => !d.defaultFilter),
   ];
   byLang.set(lang, out);

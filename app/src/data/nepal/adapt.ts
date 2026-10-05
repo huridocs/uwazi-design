@@ -61,8 +61,11 @@ function geoOf(e: NepalEntity): LatLng | undefined {
 /** The Library's curated facet: one Verification list across the templates
  *  that carry a status. Events, actions and casualty records call it
  *  `verification`; a claim's `verification_status` is the outcome of the
- *  checks on it, the same three values. */
-export const nepalFacetDefs: { propId: string; label: string }[] = [{ propId: "verification", label: "Verification" }];
+ *  checks on it, the same three values. It is the point of the corpus, so it
+ *  leads the facets. */
+export const nepalFacetDefs: { propId: string; label: string; defaultFilter: boolean }[] = [
+  { propId: "verification", label: "Verification", defaultFilter: true },
+];
 
 function facetValuesOf(e: NepalEntity): Record<string, string[]> | undefined {
   const v = (e.metadata.verification ?? e.metadata.verification_status)?.[0]?.label;

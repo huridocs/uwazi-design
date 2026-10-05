@@ -54,6 +54,9 @@ Uwazi v2 stores one `Relationship { from, to, type }`; either end may carry a te
   into one row with `directions[]` of length 2. A relationship exposes `refIds`, `evidenceCount`
   (`refIds.length`) and `firstPage` (undefined when no backing reference is anchored).
 - A hub id with one member is a plain aggregate; hub rows have two or more members.
+- A selection on page 0 is a quote from a source with no pages (the Nepal corpus's web
+  articles): read pages through `selectionPage()`, which returns undefined for it, so no page
+  tag or jump is drawn.
 - The list view renders references; the tree and graph render relationships.
 - Full write-up for the real repo: `handoff/DATA-SEAMS.md`.
 
@@ -356,6 +359,11 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   Suggestion rows are derived from the entities (current value read through the entity overlay);
   Accept writes the entity (G12). Train and process runs are timers with one Beacon task each;
   the page restarts a run that a reload interrupted. No Reject, no "Accept all".
+- Nepal protests 2024–2026 (`data/nepal/`, `public/nepal-data/`): a real open-source corpus,
+  built from Research's seed by `scripts/build-nepal-corpus.mjs` (the seed lives in the main
+  checkout's `dev/results/nepal-seed`, outside git). Rerun the script; do not edit the JSON.
+  The build enforces the privacy rules (no named minor or withheld casualty, no phone or
+  e-mail). Verification is the leading Library facet.
 - Paragraph extraction: extractors and per-entity statuses are per-corpus stores
   (`atoms/paragraphExtraction.ts`); paragraphs are derived per entity. A target template needs a
   rich text and a numeric property; only Red Travesía has one, so it holds the seed and the
