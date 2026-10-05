@@ -6,6 +6,7 @@ import { breakpointAtom } from "../atoms/viewport";
 import type { AppView } from "../atoms/navigation";
 import { SettingsNav } from "../components/settings/SettingsNav";
 import { useLoadSettingsCorpus } from "../hooks/useSettingsCorpus";
+import { SettingsCorpusError } from "../components/shared/SettingsCorpusError";
 import { AccountPage } from "../components/settings/pages/AccountPage";
 import { LanguagesPage } from "../components/settings/pages/LanguagesPage";
 import { UsersPage } from "../components/settings/pages/UsersPage";
@@ -44,7 +45,7 @@ export function SettingsView({ onNavigate }: { onNavigate?: (view: AppView) => v
   // Pages init their useState from the active source; remount on a source flip
   // (rail toggle) so their tables re-seed from CEJIL ↔ Sample.
   const dataSource = useAtomValue(dataSourceAtom);
-  useLoadSettingsCorpus();
+  const { retry } = useLoadSettingsCorpus();
 
   const page = (() => {
     switch (section) {
@@ -89,12 +90,20 @@ export function SettingsView({ onNavigate }: { onNavigate?: (view: AppView) => v
     }
   })();
 
+  // A load failure shows above the page; the page still works.
+  const content = (
+    <div className="h-full min-h-0 flex flex-col">
+      <SettingsCorpusError onRetry={retry} />
+      <div className="flex-1 min-h-0">{page}</div>
+    </div>
+  );
+
   // Mobile drills in: rail until a section is picked, then the section
   // full-width (its header carries the back chevron). Desktop shows both.
   if (isMobile) {
     return (
       <div className="h-full min-h-0">
-        {drilled ? <div key={dataSource} className="h-full min-h-0">{page}</div> : <SettingsNav onNavigate={onNavigate} />}
+        {drilled ? <div key={dataSource} className="h-full min-h-0">{content}</div> : <SettingsNav onNavigate={onNavigate} />}
       </div>
     );
   }
@@ -102,7 +111,7 @@ export function SettingsView({ onNavigate }: { onNavigate?: (view: AppView) => v
   return (
     <div className="flex h-full min-h-0">
       <SettingsNav onNavigate={onNavigate} />
-      <div key={dataSource} className="flex-1 min-w-0 min-h-0">{page}</div>
+      <div key={dataSource} className="flex-1 min-w-0 min-h-0">{content}</div>
     </div>
   );
 }

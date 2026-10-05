@@ -118,7 +118,7 @@ export function ThesaurusEditor({
     offerUndo(
       { item, index, groupId },
       `${item.label} removed`,
-      `${held ? `${held.toLocaleString()} ${held === 1 ? "entity holds" : "entities hold"} ${item.children ? "a value in this group" : "this value"}. ` : ""}Nothing is saved until you save the thesaurus.`,
+      `${held === null ? "Entity counts appear when the collection's records have loaded. " : held ? `${held.toLocaleString()} ${held === 1 ? "entity holds" : "entities hold"} ${item.children ? "a value in this group" : "this value"}. ` : ""}Nothing is saved until you save the thesaurus.`,
     );
   };
   const remove = (id: string) => {
