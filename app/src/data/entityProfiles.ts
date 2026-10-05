@@ -115,17 +115,6 @@ function field(
   return f;
 }
 
-/** A type's fields, EMPTY and in template order, per language — what a new
- *  entity's edit form opens on. `synthFields` emits only populated props, which
- *  is right for a record and useless for a form that has nothing yet. */
-export function blankTypeFields(typeId: string): Record<Language, MetadataField[]> {
-  const spec = TYPE_FIELDS[typeId] ?? [];
-  return LANGS.reduce((acc, lang) => {
-    acc[lang] = spec.map(({ prop, type, thesaurus }) => field(prop, prop, type, "", lang, thesaurus));
-    return acc;
-  }, {} as Record<Language, MetadataField[]>);
-}
-
 /** Type-appropriate scalar fields from the entity's populated native props.
  *  Only props that have a value are rendered (no em-dash placeholders). */
 function synthFields(entity: Entity, lang: Language): AnyMetadataField[] {

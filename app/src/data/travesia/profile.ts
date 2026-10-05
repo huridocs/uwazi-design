@@ -158,26 +158,3 @@ export function travesiaReferencesFor(id: string): Reference[] {
     };
   });
 }
-
-/** A template's fields, empty and in template order — Create entity's form.
- *  Relationship, image and geolocation properties have no scalar editor here
- *  (as in CEJIL's `cejilBlankFields`). */
-export function travesiaBlankFields(templateId: string): MetadataField[] {
-  const out: MetadataField[] = [];
-  for (const p of travesiaTemplateById.get(templateId)?.properties ?? []) {
-    if (p.type === "relationship" || p.type === "image" || p.type === "geolocation") continue;
-    const base = { id: p.name, label: p.label, value: "" };
-    if ((p.type === "select" || p.type === "multiselect") && p.content) {
-      out.push({ ...base, type: p.type, thesaurus: p.content, ...(p.type === "multiselect" ? { values: [] } : {}) });
-    } else if (p.type === "date") {
-      out.push({ ...base, type: "date" });
-    } else if (p.type === "markdown") {
-      out.push({ ...base, type: "multiline" });
-    } else if (p.type === "link") {
-      out.push({ ...base, type: "link" });
-    } else {
-      out.push({ ...base, type: "text", ...(p.type === "multidaterange" ? { list: true } : {}) });
-    }
-  }
-  return out;
-}

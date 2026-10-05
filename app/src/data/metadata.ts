@@ -1,10 +1,17 @@
 import type { Language } from "../atoms/language";
 import type { RelationType } from "./references";
 import type { ChainSegment, ProvenanceStep } from "../utils/chainTraversal";
+import type { PropertyType } from "./templates/types";
 
 export interface MetadataField {
+  /** The template property's `name` (template-schema-spec.md §4.1): the key
+   *  click-to-fill, Copy From, card focus and bulk edit address it by. */
   id: string;
   label: string;
+  /** The template property's type, where the field was projected from a
+   *  template (`utils/templateProjection.ts`). `type` below is derived from it
+   *  until the migration's last step retires that union. */
+  propertyType?: PropertyType;
   /** `media`: the raw Uwazi media value — a URL, optionally a comma and a JSON
    *  config of chapter timelinks. Read with `parseMediaValue`. */
   type: "text" | "date" | "link" | "country" | "multiline" | "file-list" | "media" | "select" | "multiselect";
