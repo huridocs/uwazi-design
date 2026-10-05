@@ -57,6 +57,8 @@ export function SettingsEditor({
   isNew = false,
   createLabel = "Create",
   saveLabel = "Save",
+  intro,
+  toolbar,
   wide = false,
   footerStart,
   footerStatus,
@@ -65,6 +67,10 @@ export function SettingsEditor({
   ...save
 }: SaveProps & {
   component: string;
+  /** A line on what the editor is for, above the form. */
+  intro?: ReactNode;
+  /** A `SettingsToolbar` (search over a long grid), above the form. */
+  toolbar?: ReactNode;
   /** The list's name, as the breadcrumb ("Templates"). */
   path: string[];
   title: ReactNode;
@@ -84,6 +90,8 @@ export function SettingsEditor({
     <SettingsContent component={component}>
       <SettingsContent.Header path={path} title={title} onBack={onBack} />
       <SettingsContent.Body>
+        {intro && <SettingsIntro>{intro}</SettingsIntro>}
+        {toolbar}
         <SettingsForm wide={wide}>{children}</SettingsForm>
       </SettingsContent.Body>
       <SettingsContent.Footer>

@@ -1,6 +1,7 @@
 import { useSetAtom } from "jotai";
-import { SettingsContent } from "../SettingsContent";
-import { SettingsButton } from "../SettingsButton";
+import { SettingsEditor } from "../SettingsEditor";
+import { SettingsToolbar, useSettingsSearch } from "../SettingsListPage";
+import { SettingsEmptyState } from "../SettingsEmptyState";
 import { SettingsTable, type Column } from "../SettingsTable";
 import {
   seedLanguages,
@@ -43,10 +44,10 @@ export function TranslationEditor({
     saved: buildRows(context),
   });
 
-  const patch = (rowIndex: number, langKey: string, value: string) =>
-    setRows((prev) =>
-      prev.map((r, i) => (i === rowIndex ? { ...r, values: { ...r.values, [langKey]: value } } : r)),
-    );
+  // Rows are patched by key, not index: the search filters the grid.
+  const patch = (key: string, langKey: string, value: string) =>
+    setRows((prev) => prev.map((r) => (r.key === key ? { ...r, values: { ...r.values, [langKey]: value } } : r)));
+  const search = useSettingsSearch(rows, (r) => `${r.key} ${Object.values(r.values).join(" ")}`);
 
   const save = () => {
     record({ log: false, 
@@ -80,7 +81,7 @@ export function TranslationEditor({
           )}
         </span>
       ),
-      cell: (r, i) =>
+      cell: (r) =>
         lang.default ? (
           <span className="text-sm text-ink-tertiary truncate" dir={lang.ltr ? "ltr" : "rtl"}>
             {r.values[lang.key] || "—"}
@@ -88,7 +89,7 @@ export function TranslationEditor({
         ) : (
           <input
             value={r.values[lang.key] ?? ""}
-            onChange={(e) => patch(i, lang.key, e.target.value)}
+            onChange={(e) => patch(r.key, lang.key, e.target.value)}
             dir={lang.ltr ? "ltr" : "rtl"}
             placeholder="Add translation…"
             aria-label={`${r.key} in ${lang.label}`}
@@ -99,23 +100,26 @@ export function TranslationEditor({
   ];
 
   return (
-    <SettingsContent component="TranslationEditor">
-      <SettingsContent.Header path={["Translations"]} title={context.name} onBack={onClose} />
-      <SettingsContent.Body>
-        <p className="text-xs text-ink-tertiary mb-4">
-          Translate each term into your active languages. The source language is shown for reference.
-        </p>
-        <SettingsTable columns={columns} data={rows} getRowId={(r) => r.key} />
-      </SettingsContent.Body>
-      <SettingsContent.Footer>
-        <LastSavedLine domain="translations" id={context.id} className="me-auto" />
-        <SettingsButton variant="ghost" size="sm" onClick={onClose}>
-          Cancel
-        </SettingsButton>
-        <SettingsButton variant="success" size="sm" disabled={!dirty} onClick={save}>
-          Save
-        </SettingsButton>
-      </SettingsContent.Footer>
-    </SettingsContent>
+    <SettingsEditor
+      component="TranslationEditor"
+      path={["Translations"]}
+      title={context.name}
+      onBack={onClose}
+      intro="Translate each term into your active languages. The source language is shown for reference."
+      toolbar={<SettingsToolbar search={{ value: search.query, onChange: search.setQuery, label: "Search terms" }} />}
+      dirty={dirty}
+      onSave={save}
+      wide
+      footerStart={<LastSavedLine domain="translations" id={context.id} />}
+    >
+      <SettingsTable
+        columns={columns}
+        data={search.rows}
+        getRowId={(r) => r.key}
+        emptyState={
+          <SettingsEmptyState title="No terms yet" query={search.query} onClearQuery={search.clear} />
+        }
+      />
+    </SettingsEditor>
   );
 }

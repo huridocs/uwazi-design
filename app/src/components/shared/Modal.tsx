@@ -7,6 +7,7 @@ import { useOverlayLayer } from "../../hooks/useOverlayLayer";
 import { SHEET_STACK, sheetZ } from "../../atoms/sheetStack";
 import { COMMIT_FILL } from "./warmButton";
 import { CloseAllButton } from "../layout/CloseAllButton";
+import { SettingsBarContext } from "../settings/SettingsButton";
 
 /** Width tiers. A modal picks the narrowest that holds its content. `grid` is
  *  for a spreadsheet-like body (batch entry) and nothing else: it takes most of
@@ -159,148 +160,155 @@ export function Modal({
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key !== "Escape" || e.defaultPrevented) return;
+    // A dialog under another one leaves Escape to the top layer.
+    if (!layer.isTop) return;
     e.stopPropagation();
     // Claimed, so a sheet listening on the document doesn't close too.
     e.preventDefault();
     onClose();
   };
 
+  // A dialog opened from inside a settings footer is not part of that bar:
+  // its body buttons take their page look, and its own footer sets the bar
+  // context again where it needs it.
   const node = (
-    <div
-      data-component={component}
-      {...scrimProps}
-      className={
-        sheet
-          ? "fixed inset-0"
-          : `${scope === "pane" ? "absolute" : "fixed"} inset-0 ${z} flex bg-overlay ${
-              // Full-screen on a phone: its footer rises above the keyboard (`--kb`).
-              fullOnPhone ? "pb-[var(--kb,0px)] md:pb-0 md:items-center md:justify-center md:p-4" : "items-center justify-center p-4"
-            }`
-      }
-      // A stacked sheet's scrim is clear (the first layer's dims the page) but
-      // still takes the tap that closes it.
-      style={layer.stacked ? { zIndex: sheetZ(layer.index) } : undefined}
-      onMouseDown={(e) => {
-        if (dismissOnScrim && e.target === e.currentTarget) onClose();
-      }}
-    >
+    <SettingsBarContext.Provider value={false}>
       <div
-        ref={(el) => {
-          panelRef.current = el;
-          if (panelRefProp) panelRefProp.current = el;
-        }}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        aria-describedby={describedBy}
-        data-part="panel"
-        data-gutter-host
-        // Focusable, so a press on its text or padding moves focus to the
-        // panel instead of dropping it to <body>, where Escape (handled here)
-        // never arrives. Not a tab stop, and no ring: it is not a control.
-        tabIndex={-1}
-        onKeyDown={onKeyDown}
-        {...panelProps}
+        data-component={component}
+        {...scrimProps}
         className={
           sheet
-            ? "gutter-host-main absolute inset-x-0 bottom-0 flex flex-col outline-none bg-paper overflow-hidden animate-fade-in-up transition-transform duration-250 motion-reduce:transition-none motion-reduce:animate-none"
-            : `gutter-host-main w-full ${WIDTH[size]} flex flex-col outline-none bg-paper shadow-xl overflow-hidden animate-fade-in-up ${
-                fullOnPhone
-                  ? "h-full md:rounded-lg md:border md:border-border"
-                  : "max-h-full rounded-lg border border-border"
-              } ${height ?? "md:h-auto"} ${maxHeight ?? "md:max-h-[min(90vh,100%)]"}`
+            ? "fixed inset-0"
+            : `${scope === "pane" ? "absolute" : "fixed"} inset-0 ${z} flex bg-overlay ${
+                // Full-screen on a phone: its footer rises above the keyboard (`--kb`).
+                fullOnPhone ? "pb-[var(--kb,0px)] md:pb-0 md:items-center md:justify-center md:p-4" : "items-center justify-center p-4"
+              }`
         }
-        style={
-          sheet
-            ? {
-                height: `calc(100dvh - ${layer.offsetRem}rem)`,
-                borderTopLeftRadius: 12,
-                borderTopRightRadius: 12,
-                boxShadow: "0 -8px 24px rgba(0,0,0,0.15)",
-                paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + var(--kb, 0px))",
-                transform: `scale(${1 - SHEET_STACK.scaleStep * depth})`,
-                transformOrigin: "top center",
-              }
-            : layer.stacked && depth > 0
-              ? { transform: `scale(${1 - SHEET_STACK.scaleStep * depth})`, transformOrigin: "top center" }
-              : undefined
-        }
+        // A stacked sheet's scrim is clear (the first layer's dims the page) but
+        // still takes the tap that closes it.
+        style={layer.stacked ? { zIndex: sheetZ(layer.index) } : undefined}
+        onMouseDown={(e) => {
+          if (dismissOnScrim && e.target === e.currentTarget) onClose();
+        }}
       >
-        <header
-          data-part="header"
-          className="bleed shrink-0 flex items-center gap-2 h-12 border-b border-border"
+        <div
+          ref={(el) => {
+            panelRef.current = el;
+            if (panelRefProp) panelRefProp.current = el;
+          }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          aria-describedby={describedBy}
+          data-part="panel"
+          data-gutter-host
+          // Focusable, so a press on its text or padding moves focus to the
+          // panel instead of dropping it to <body>, where Escape (handled here)
+          // never arrives. Not a tab stop, and no ring: it is not a control.
+          tabIndex={-1}
+          onKeyDown={onKeyDown}
+          {...panelProps}
+          className={
+            sheet
+              ? "gutter-host-main absolute inset-x-0 bottom-0 flex flex-col outline-none bg-paper overflow-hidden animate-fade-in-up transition-transform duration-250 motion-reduce:transition-none motion-reduce:animate-none"
+              : `gutter-host-main w-full ${WIDTH[size]} flex flex-col outline-none bg-paper shadow-xl overflow-hidden animate-fade-in-up ${
+                  fullOnPhone
+                    ? "h-full md:rounded-lg md:border md:border-border"
+                    : "max-h-full rounded-lg border border-border"
+                } ${height ?? "md:h-auto"} ${maxHeight ?? "md:max-h-[min(90vh,100%)]"}`
+          }
+          style={
+            sheet
+              ? {
+                  height: `calc(100dvh - ${layer.offsetRem}rem)`,
+                  borderTopLeftRadius: 12,
+                  borderTopRightRadius: 12,
+                  boxShadow: "0 -8px 24px rgba(0,0,0,0.15)",
+                  paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + var(--kb, 0px))",
+                  transform: `scale(${1 - SHEET_STACK.scaleStep * depth})`,
+                  transformOrigin: "top center",
+                }
+              : layer.stacked && depth > 0
+                ? { transform: `scale(${1 - SHEET_STACK.scaleStep * depth})`, transformOrigin: "top center" }
+                : undefined
+          }
         >
-          {sheet && (
-            <button
-              type="button"
-              data-part="back"
-              data-gutter-align="box"
-              onClick={onClose}
-              aria-label={layer.belowLabel ? `Back to ${layer.belowLabel}` : "Back"}
-              className="relative after:absolute after:-inset-2.5 after:content-[''] shrink-0 p-1 rounded-md text-ink-muted hover:bg-warm hover:text-ink transition-colors cursor-pointer"
-            >
-              <ArrowLeft size={16} aria-hidden className="rtl:rotate-180" />
-            </button>
-          )}
-          {leading}
-          <div className="min-w-0 flex-1 flex items-baseline gap-2">
-            <h2
-              id={titleId}
-              ref={titleRef}
-              tabIndex={titleRef ? -1 : undefined}
-              data-part="title"
-              className={
-                hideTitle
-                  ? "sr-only"
-                  : "shrink-0 max-w-full text-sm font-semibold text-ink truncate focus:outline-none"
-              }
-            >
-              {title}
-            </h2>
-            {header}
-            {subtitle && (
-              <p data-part="subtitle" className="min-w-0 text-meta text-ink-tertiary truncate">
-                {subtitle}
-              </p>
-            )}
-          </div>
-          {headerActions}
-          {/* A stacked sheet closes the whole stack with a LABELLED control;
-              Back (above) pops one. Elsewhere the × closes this dialog. */}
-          {sheet ? (
-            <CloseAllButton onClick={layer.closeAll} />
-          ) : (
-            <button
-              type="button"
-              data-part="close"
-              data-gutter-align="box"
-              onClick={onClose}
-              aria-label={closeLabel}
-              className="shrink-0 p-1 rounded-md text-ink-muted hover:bg-warm hover:text-ink transition-colors cursor-pointer"
-            >
-              <X size={16} aria-hidden />
-            </button>
-          )}
-        </header>
-        {flush ? (
-          <div data-part="body" className="bleed flex-1 min-h-0 flex flex-col">
-            {children}
-          </div>
-        ) : (
-          <div data-part="body" className={`bleed flex-1 min-h-0 overflow-auto ${bodyClassName}`}>
-            {children}
-          </div>
-        )}
-        {footer && (
-          <footer
-            data-part="footer"
-            className="bleed shrink-0 flex items-center justify-end gap-2 h-12 border-t border-border"
+          <header
+            data-part="header"
+            className="bleed shrink-0 flex items-center gap-2 h-12 border-b border-border"
           >
-            {footer}
-          </footer>
-        )}
+            {sheet && (
+              <button
+                type="button"
+                data-part="back"
+                data-gutter-align="box"
+                onClick={onClose}
+                aria-label={layer.belowLabel ? `Back to ${layer.belowLabel}` : "Back"}
+                className="relative after:absolute after:-inset-2.5 after:content-[''] shrink-0 p-1 rounded-md text-ink-muted hover:bg-warm hover:text-ink transition-colors cursor-pointer"
+              >
+                <ArrowLeft size={16} aria-hidden className="rtl:rotate-180" />
+              </button>
+            )}
+            {leading}
+            <div className="min-w-0 flex-1 flex items-baseline gap-2">
+              <h2
+                id={titleId}
+                ref={titleRef}
+                tabIndex={titleRef ? -1 : undefined}
+                data-part="title"
+                className={
+                  hideTitle
+                    ? "sr-only"
+                    : "shrink-0 max-w-full text-sm font-semibold text-ink truncate focus:outline-none"
+                }
+              >
+                {title}
+              </h2>
+              {header}
+              {subtitle && (
+                <p data-part="subtitle" className="min-w-0 text-meta text-ink-tertiary truncate">
+                  {subtitle}
+                </p>
+              )}
+            </div>
+            {headerActions}
+            {/* A stacked sheet closes the whole stack with a LABELLED control;
+                Back (above) pops one. Elsewhere the × closes this dialog. */}
+            {sheet ? (
+              <CloseAllButton onClick={layer.closeAll} />
+            ) : (
+              <button
+                type="button"
+                data-part="close"
+                data-gutter-align="box"
+                onClick={onClose}
+                aria-label={closeLabel}
+                className="shrink-0 p-1 rounded-md text-ink-muted hover:bg-warm hover:text-ink transition-colors cursor-pointer"
+              >
+                <X size={16} aria-hidden />
+              </button>
+            )}
+          </header>
+          {flush ? (
+            <div data-part="body" className="bleed flex-1 min-h-0 flex flex-col">
+              {children}
+            </div>
+          ) : (
+            <div data-part="body" className={`bleed flex-1 min-h-0 overflow-auto ${bodyClassName}`}>
+              {children}
+            </div>
+          )}
+          {footer && (
+            <footer
+              data-part="footer"
+              className="bleed shrink-0 flex items-center justify-end gap-2 h-12 border-t border-border"
+            >
+              <SettingsBarContext.Provider value={true}>{footer}</SettingsBarContext.Provider>
+            </footer>
+          )}
+        </div>
       </div>
-    </div>
+    </SettingsBarContext.Provider>
   );
 
   if (sheet) return createPortal(node, document.body);
