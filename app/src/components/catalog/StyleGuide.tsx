@@ -44,7 +44,7 @@ const accentColors: ColorDef[] = [
 
 const semanticColors: ColorDef[] = [
   { name: "success", cssVar: "--success", light: "#059669", dark: "#059669", tw: "text-success" },
-  { name: "success-light", cssVar: "--success-light", light: "#D1FAE5", dark: "#064E3B", tw: "bg-success-light" },
+  { name: "success-light", cssVar: "--success-light", light: "#D1FAE5", dark: "#064C3A", tw: "bg-success-light" },
   { name: "warning", cssVar: "--warning", light: "#F59E0B", dark: "#F59E0B", tw: "text-warning" },
   { name: "warning-light", cssVar: "--warning-light", light: "#FEF3C7", dark: "#78350F", tw: "bg-warning-light" },
   { name: "seal (error)", cssVar: "--danger", light: "#E8432A", dark: "#E8432A", tw: "text-seal" },
