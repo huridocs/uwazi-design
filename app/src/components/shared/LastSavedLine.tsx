@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAtomValue } from "jotai";
-import { lastSavedAtom } from "../../atoms/activityLog";
+import { lastSavedAtom, scopeOfDomain } from "../../atoms/activityLog";
+import { dataSourceAtom } from "../../atoms/dataSource";
 
 /** "2 min ago", "3 days ago", or the date past a month. */
 export function savedAgo(at: number, now: number): string {
@@ -19,7 +20,8 @@ export function savedAgo(at: number, now: number): string {
  *  record last. Always mounted, so the footer keeps its layout when there is
  *  nothing to say (a new record, or one nobody has saved). */
 export function LastSavedLine({ domain, id, className = "" }: { domain: string; id: string | undefined; className?: string }) {
-  const entry = useAtomValue(lastSavedAtom(`${domain}:${id ?? ""}`));
+  const corpus = useAtomValue(dataSourceAtom);
+  const entry = useAtomValue(lastSavedAtom(`${scopeOfDomain(domain, corpus)}:${domain}:${id ?? ""}`));
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (!entry) return;

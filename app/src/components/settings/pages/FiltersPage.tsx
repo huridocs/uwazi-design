@@ -116,6 +116,7 @@ export function FiltersPage() {
     const value = { ...draft, groups: groups.filter((g) => rows.some((r) => r.groupId === g.id)) };
     saveFilters({ value });
     markSaved(value);
+    offerUndo.end();
     // A type filter set on a template the facet no longer shows could not be
     // cleared from the Library: drop it.
     const hidden = new Set(value.rows.filter((r) => !r.active).map((r) => r.templateId));

@@ -93,7 +93,7 @@ export function MenuPage() {
         onConfirm={() => {
           if (confirm) {
             setLinks((prev) => prev.filter((m) => m.id !== confirm.id));
-            record({ method: "DELETE", domain: "menu", noun: "menu item", id: confirm.id, name: confirm.title, message: `${confirm.title} removed` });
+            record({ log: false,  method: "DELETE", domain: "menu", noun: "menu item", id: confirm.id, name: confirm.title, message: `${confirm.title} removed` });
           }
           setConfirm(null);
         }}

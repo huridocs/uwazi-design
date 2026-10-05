@@ -70,7 +70,7 @@ function TemplateDeleteOpen({
       onCancel={onCancel}
       onConfirm={() => {
         onDelete(template);
-        record({ method: "DELETE", domain: "template", noun: "template", id: template.id, name: template.name });
+        record({ log: false, method: "DELETE", domain: "template", noun: "template", id: template.id, name: template.name });
         onCancel();
       }}
     />
@@ -272,6 +272,7 @@ function LanguageDeleteOpen({
       onConfirm={() => {
         onDelete(language);
         record({
+          log: false,
           method: "DELETE",
           domain: "language",
           noun: "language",
@@ -308,7 +309,7 @@ export function PageDelete({
       onCancel={onCancel}
       onConfirm={() => {
         onDelete(page);
-        record({ method: "DELETE", domain: "page", noun: "page", id: page.id, name: page.title });
+        record({ log: false, method: "DELETE", domain: "page", noun: "page", id: page.id, name: page.title });
         onCancel();
       }}
     />

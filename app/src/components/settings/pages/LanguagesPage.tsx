@@ -64,7 +64,7 @@ export function LanguagesPage() {
   const [query, setQuery] = useState("");
 
   const log = (method: "CREATE" | "UPDATE", l: { key: string; label: string }, message: string) =>
-    record({ method, domain: "language", noun: "language", id: l.key, name: l.label, message });
+    record({ log: false,  method, domain: "language", noun: "language", id: l.key, name: l.label, message });
 
   const installLanguage = (cat: CatalogLanguage) => {
     setLanguages((prev) => [

@@ -190,7 +190,7 @@ export function TemplateEditor({
   const save = () => {
     const finalName = name.trim() || base?.name || "Untitled template";
     const id = onSave?.({ name: finalName, color }) ?? base?.id;
-    record({
+    record({ log: false, 
       method: isNew ? "CREATE" : "UPDATE",
       domain: "template",
       noun: "template",

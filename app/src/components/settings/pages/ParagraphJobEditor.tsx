@@ -128,7 +128,7 @@ export function ParagraphJobEditor({
   const rerunDoc = (title: string) => toast(`Re-running extraction for ${title.split(" — ")[0]}`);
 
   const save = () => {
-    record({
+    record({ log: false, 
       method: isNew ? "CREATE" : "UPDATE",
       domain: "paragraphJob",
       noun: "paragraph extraction for",

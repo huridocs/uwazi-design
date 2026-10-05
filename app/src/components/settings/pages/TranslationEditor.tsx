@@ -49,7 +49,7 @@ export function TranslationEditor({
     );
 
   const save = () => {
-    record({
+    record({ log: false, 
       method: "UPDATE",
       domain: "translations",
       noun: "translations of",

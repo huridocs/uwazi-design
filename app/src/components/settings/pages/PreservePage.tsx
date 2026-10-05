@@ -59,7 +59,7 @@ export function PreservePage() {
         onConfirm={() => {
           if (confirm) {
             setTokens((prev) => prev.filter((t) => t.id !== confirm.id));
-            record({ method: "DELETE", domain: "preserve", noun: "Preserve token for", id: confirm.id, name: confirm.name, message: "Token revoked" });
+            record({ log: false,  method: "DELETE", domain: "preserve", noun: "Preserve token for", id: confirm.id, name: confirm.name, message: "Token revoked" });
           }
           setConfirm(null);
         }}

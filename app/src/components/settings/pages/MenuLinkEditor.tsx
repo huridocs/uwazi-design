@@ -82,7 +82,7 @@ export function MenuLinkEditor({
 
   const save = () => {
     const id = onSave({ type, title: title.trim(), url: type === "group" ? "" : url.trim() });
-    record({
+    record({ log: false, 
       method: isNew ? "CREATE" : "UPDATE",
       domain: "menu",
       noun: "menu item",

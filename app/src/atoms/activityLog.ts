@@ -15,7 +15,13 @@ export interface ActivityEntry extends SettingsLogEntry {
   /** The settings domain ("template", "thesaurus", …). Seed rows have none. */
   domain?: string;
   targetId?: string;
+  /** Where the record lives: a corpus for the collection's content, `global`
+   *  for users and groups (CLAUDE.md › Settings stores). */
+  scope?: string;
 }
+
+/** Entries kept in the session, newest first. */
+const LOG_CAP = 500;
 
 const storage = createJSONStorage<ActivityEntry[]>(() => {
   try {
@@ -34,7 +40,16 @@ export const logTime = (ms: number) => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
-const seeded: ActivityEntry[] = seedActivityLog.map((e) => ({ ...e, at: new Date(e.time.replace(" ", "T")).getTime() }));
+// Seed rows that name a record are the Sample's.
+const seeded: ActivityEntry[] = seedActivityLog.map((e) => ({
+  ...e,
+  at: new Date(e.time.replace(" ", "T")).getTime(),
+  ...(e.domain ? { scope: "mock" } : {}),
+}));
+
+/** Whether an entry is one of the seed rows (whose request line is made up). */
+export const isSeedEntry = (e: ActivityEntry) => seededIds.has(e.id);
+const seededIds = new Set(seedActivityLog.map((e) => e.id));
 
 /** Newest first. Whatever storage hands back that is not an entry is dropped. */
 export const activityLogAtom = atom<ActivityEntry[]>((get) => {
@@ -49,7 +64,7 @@ let seq = 0;
 /** Append one entry, signed by the signed-in user. */
 export const appendActivityAtom = atom(
   null,
-  (get, set, e: { method: LogMethod; summary: string; domain: string; targetId?: string }) => {
+  (get, set, e: { method: LogMethod; summary: string; domain: string; targetId?: string; scope: string }) => {
     seq += 1;
     const at = Date.now();
     const entry: ActivityEntry = {
@@ -59,16 +74,21 @@ export const appendActivityAtom = atom(
       time: logTime(at),
       user: get(signedInUserAtom)?.username ?? "unknown",
     };
-    set(appendedAtom, (prev) => [entry, ...(Array.isArray(prev) ? prev : [])]);
+    set(appendedAtom, (prev) => [entry, ...(Array.isArray(prev) ? prev : [])].slice(0, LOG_CAP));
   },
 );
 
 /** The last save (create or update) of one record, for an editor footer.
- *  Keyed `domain:targetId`. */
+ *  Keyed `scope:domain:targetId`, so Filters saved on the Sample is not
+ *  "saved" on CEJIL. */
 export const lastSavedAtom = atomFamily((key: string) =>
   atom((get) =>
     get(activityLogAtom).find(
-      (e) => e.method !== "DELETE" && e.domain !== undefined && `${e.domain}:${e.targetId}` === key,
+      (e) => e.method !== "DELETE" && e.domain !== undefined && `${e.scope}:${e.domain}:${e.targetId}` === key,
     ),
   ),
 );
+
+/** Settings domains about the people who sign in, not a collection. */
+export const GLOBAL_DOMAINS = new Set(["user", "group"]);
+export const scopeOfDomain = (domain: string, corpus: string) => (GLOBAL_DOMAINS.has(domain) ? "global" : corpus);

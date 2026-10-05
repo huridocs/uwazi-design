@@ -1,7 +1,8 @@
 import { useCallback } from "react";
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
+import { dataSourceAtom } from "../atoms/dataSource";
 import { toastsAtom, type NotificationAction } from "../atoms/notifications";
-import { appendActivityAtom } from "../atoms/activityLog";
+import { appendActivityAtom, scopeOfDomain } from "../atoms/activityLog";
 import type { LogMethod } from "../data/settings";
 
 let seq = 0;
@@ -18,6 +19,11 @@ export interface SettingsEvent {
   message?: string;
   detail?: string;
   action?: NotificationAction;
+  /** False for a change that does not persist yet (a page that keeps its list
+   *  in its own state): the notification shows, the Activity log is not
+   *  written, since an audit trail must not list edits that are gone after
+   *  navigation. */
+  log?: boolean;
 }
 
 const VERB: Record<SettingsEvent["method"], [string, string]> = {
@@ -34,11 +40,19 @@ const VERB: Record<SettingsEvent["method"], [string, string]> = {
 export function useSettingsNotify() {
   const setToasts = useSetAtom(toastsAtom);
   const append = useSetAtom(appendActivityAtom);
+  const corpus = useAtomValue(dataSourceAtom);
 
   const record = useCallback(
     (e: SettingsEvent) => {
       const [past, done] = VERB[e.method];
-      append({ method: e.method, summary: `${past} ${e.noun} “${e.name}”`, domain: e.domain, targetId: e.id });
+      if (e.log !== false)
+        append({
+          method: e.method,
+          summary: `${past} ${e.noun} “${e.name}”`,
+          domain: e.domain,
+          targetId: e.id,
+          scope: scopeOfDomain(e.domain, corpus),
+        });
       setToasts((p) => [
         ...p,
         {
@@ -50,7 +64,7 @@ export function useSettingsNotify() {
         },
       ]);
     },
-    [append, setToasts],
+    [append, setToasts, corpus],
   );
 
   const fail = useCallback(

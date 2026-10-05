@@ -8,8 +8,8 @@ let seq = 0;
 /** Removal with an Undo in the Beacon, for a child row inside an open
  *  Settings editor (UX5). Returns `offer(payload, message, detail?)`: call it
  *  after removing the row from the draft, with what `restore` needs to put
- *  it back. The undo lives while this editor is mounted and no later removal
- *  replaced it (`atoms/settingsUndo.ts`). */
+ *  it back. The undo lives while this editor is mounted, no later removal
+ *  replaced it, and `offer.end()` was not called (on Save). */
 export function useSettingsUndo<P>(restore: (payload: P) => void) {
   const owner = useId();
   const store = useStore();
@@ -32,7 +32,7 @@ export function useSettingsUndo<P>(restore: (payload: P) => void) {
     [store, owner],
   );
 
-  return useCallback(
+  const offer = useCallback(
     (payload: P, message: string, detail?: string) => {
       const ref = newSettingsUndoRef();
       store.set(settingsUndoAtom, { ref, owner, payload });
@@ -49,4 +49,10 @@ export function useSettingsUndo<P>(restore: (payload: P) => void) {
     },
     [store, owner],
   );
+  /** End this editor's undo: call on Save from a page that stays open, since
+   *  the removal is saved and restoring it would only reopen the draft. */
+  const end = useCallback(() => {
+    if (store.get(settingsUndoAtom)?.owner === owner) store.set(settingsUndoAtom, null);
+  }, [store, owner]);
+  return Object.assign(offer, { end });
 }

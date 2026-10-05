@@ -70,7 +70,7 @@ export function MetadataExtractionPage() {
         onConfirm={() => {
           if (confirm) {
             setExtractors((prev) => prev.filter((x) => x.id !== confirm.id));
-            record({ method: "DELETE", domain: "extractor", noun: "extractor", id: confirm.id, name: confirm.property, message: "Extractor deleted" });
+            record({ log: false,  method: "DELETE", domain: "extractor", noun: "extractor", id: confirm.id, name: confirm.property, message: "Extractor deleted" });
           }
           setConfirm(null);
         }}

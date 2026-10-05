@@ -5,7 +5,7 @@ import { SettingsField, TextInput } from "../SettingsField";
 import { Select } from "../../shared/Select";
 import { useAtomValue } from "jotai";
 import { type SettingsLogEntry, type LogMethod } from "../../../data/settings";
-import { activityLogAtom } from "../../../atoms/activityLog";
+import { activityLogAtom, isSeedEntry, type ActivityEntry } from "../../../atoms/activityLog";
 
 const methodStyle: Record<LogMethod, string> = {
   CREATE: "bg-success-light text-success",
@@ -157,10 +157,10 @@ export function ActivityLogPage() {
                         <dt className="text-ink-tertiary">Time</dt>
                         <dd dir="ltr" className="text-ink-secondary tabular-nums">{e.time}</dd>
                       </dl>
-                      {/* An entry recorded in this session names its record. A seed
-                          row has none, so its request line is synthesised and
-                          says so: a made-up request must not read as evidence. */}
-                      {e.domain ? null : (
+                      {/* A seed row's request line is synthesised and says so: a
+                          made-up request must not read as evidence. An entry
+                          recorded in this session has no request to show. */}
+                      {!isSeedEntry(e) ? null : (
                         <>
                           <div className="text-meta font-medium uppercase tracking-wider text-ink-tertiary mb-1">
                             Request (example)

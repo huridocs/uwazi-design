@@ -34,10 +34,11 @@ export function AccountPage() {
     notify(message, type);
   const { record } = useSettingsNotify();
   /** Every change to the account is a change to the signed-in user's record. */
+  // API keys live in this page's state, so their changes are not logged.
   const logAccount = (message: string, method: "CREATE" | "UPDATE" | "DELETE" = "UPDATE", noun = "user") =>
-    me && record({ method, domain: "user", noun, id: me.id, name: me.username, message });
+    me && record({ method, domain: "user", noun, id: me.id, name: me.username, message, log: noun === "user" });
   /** Revoke and Disable 2FA ask first (UX audit Summary 3). */
-  const [ask, setAsk] = useState<{ kind: "revoke"; id: string } | { kind: "2fa" } | null>(null);
+  const [ask, setAsk] = useState<{ kind: "revoke"; id: string } | null>(null);
 
   // ── Profile ────────────────────────────────────────────────────────────
   // The signed-in user's record in the users store, so Settings › Users and
@@ -96,10 +97,6 @@ export function AccountPage() {
     logAccount("Two-factor authentication enabled");
   };
 
-  const disableTwoFactor = () => {
-    if (me) patchUser({ id: me.id, patch: { using2fa: false } });
-    logAccount("Two-factor authentication disabled");
-  };
 
   // ── API keys ───────────────────────────────────────────────────────────
   const [keys, setKeys] = useState<ApiKey[]>(seedKeys);
@@ -267,9 +264,10 @@ export function AccountPage() {
             </div>
 
             {twoFactorEnabled ? (
-              <SettingsButton variant="danger" size="sm" onClick={() => setAsk({ kind: "2fa" })}>
-                Disable
-              </SettingsButton>
+              // Uwazi has no self-disable: an admin resets 2FA from Users (G4).
+              <p data-part="2fa-note" className="text-xs text-ink-tertiary">
+                To turn it off, ask an admin to reset it in Users &amp; Groups.
+              </p>
             ) : setupOpen ? (
               <div className="rounded-lg border border-border bg-paper px-4 py-4 flex flex-col gap-4">
                 <div className="flex items-start gap-4">
@@ -355,17 +353,12 @@ export function AccountPage() {
       </SettingsContent.Body>
       <ConfirmDialog
         open={ask !== null}
-        title={ask?.kind === "revoke" ? "Revoke key" : "Disable two-factor authentication"}
-        message={
-          ask?.kind === "revoke"
-            ? "Revoke this key? Anything that signs in with it stops working."
-            : "Disable two-factor authentication? Signing in will need only your password."
-        }
-        confirmLabel={ask?.kind === "revoke" ? "Revoke" : "Disable"}
+        title="Revoke key"
+        message="Revoke this key? Anything that signs in with it stops working."
+        confirmLabel="Revoke"
         variant="danger"
         onConfirm={() => {
-          if (ask?.kind === "revoke") revokeKey(ask.id);
-          else if (ask) disableTwoFactor();
+          if (ask) revokeKey(ask.id);
           setAsk(null);
         }}
         onCancel={() => setAsk(null)}

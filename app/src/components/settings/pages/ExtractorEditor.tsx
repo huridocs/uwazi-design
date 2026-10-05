@@ -148,7 +148,7 @@ export function ExtractorEditor({
   };
 
   const save = () => {
-    record({
+    record({ log: false, 
       method: isNew ? "CREATE" : "UPDATE",
       domain: "extractor",
       noun: "extractor",

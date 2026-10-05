@@ -176,7 +176,7 @@ export function UploadsPage() {
         onConfirm={() => {
           if (confirm) {
             setUploads((prev) => prev.filter((u) => u.id !== confirm.id));
-            record({ method: "DELETE", domain: "upload", noun: "file", id: confirm.id, name: confirm.name });
+            record({ log: false,  method: "DELETE", domain: "upload", noun: "file", id: confirm.id, name: confirm.name });
           }
           setConfirm(null);
         }}

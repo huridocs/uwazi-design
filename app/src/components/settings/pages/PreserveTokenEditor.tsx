@@ -131,7 +131,7 @@ export function PreserveTokenEditor({
   };
 
   const save = () => {
-    record({
+    record({ log: false, 
       method: isNew ? "CREATE" : "UPDATE",
       domain: "preserve",
       noun: "capture source",
