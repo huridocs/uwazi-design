@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSetAtom, useAtomValue } from "jotai";
-import { Plus, RotateCcw, Trash2, Check, Search, X } from "lucide-react";
+import { Plus, RotateCcw, Trash2, Check } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
-import { SettingsField, TextInput } from "../SettingsField";
+import { Modal } from "../../shared/Modal";
+import { ModalList, ModalListRow, ModalSearchRow, ModalStatus } from "../../shared/ModalParts";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { ProgressBar } from "../../shared/ProgressBar";
@@ -63,15 +64,6 @@ export function LanguagesPage() {
 
   const toast = (message: string) =>
     setToasts((prev) => [...prev, { id: Date.now().toString(), message, type: "success" as const }]);
-
-  useEffect(() => {
-    if (!installOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setInstallOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [installOpen]);
 
   const installLanguage = (cat: CatalogLanguage) => {
     setLanguages((prev) => [
@@ -159,6 +151,7 @@ export function LanguagesPage() {
     {
       id: "reset",
       header: "Reset",
+      mobile: "actions",
       align: "center",
       width: "5rem",
       cell: (l) => (
@@ -174,6 +167,7 @@ export function LanguagesPage() {
     {
       id: "uninstall",
       header: "Uninstall",
+      mobile: "actions",
       align: "center",
       width: "6rem",
       cell: (l) =>
@@ -217,87 +211,62 @@ export function LanguagesPage() {
       </SettingsContent.Footer>
 
       {installOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-          onClick={() => setInstallOpen(false)}
+        <Modal
+          component="InstallLanguageDialog"
+          title="Install language"
+          closeLabel="Close language list"
+          onClose={() => setInstallOpen(false)}
+          size="md"
+          // Fixed, so the panel does not shrink as the search filters rows out.
+          height="md:h-[min(34rem,100%)]"
+          flush
         >
-          <div
-            role="dialog"
-            aria-label="Install predefined language"
-            className="flex w-full max-w-[28rem] max-h-[70vh] flex-col overflow-hidden rounded-lg bg-paper"
-            style={{ border: "1px solid var(--border-primary)" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              className="flex items-center justify-between px-4 py-3"
-              style={{ borderBottom: "1px solid var(--border-soft)" }}
-            >
-              <h2 className="text-sm font-semibold text-ink">Install predefined language</h2>
-              <button
-                onClick={() => setInstallOpen(false)}
-                aria-label="Close language list"
-                className="p-1.5 rounded-md text-ink-tertiary hover:bg-warm hover:text-ink transition-colors cursor-pointer"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <div className="px-4 pt-3">
-              <SettingsField>
-                <div className="relative">
-                  <Search
-                    size={14}
-                    className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-tertiary"
-                  />
-                  <TextInput
-                    autoFocus
-                    aria-label="Search languages"
-                    placeholder="Search languages…"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    className="ps-8"
-                  />
-                </div>
-              </SettingsField>
-            </div>
-
-            <div className="flex-1 overflow-y-auto px-4 pb-4 pt-2">
-              {installable.length === 0 ? (
-                <p className="py-8 text-center text-xs text-ink-tertiary">
-                  {q === "" ? "All available languages are installed." : "No languages match your search."}
-                </p>
-              ) : (
-                <ul className="flex flex-col">
-                  {installable.map((c) => (
-                    <li
-                      key={c.key}
-                      className="flex items-center justify-between gap-2 py-2"
-                      style={{ borderBottom: "1px solid var(--border-soft)" }}
+          <ModalSearchRow
+            value={query}
+            onChange={setQuery}
+            placeholder="Search languages…"
+            ariaLabel="Search languages"
+            autoFocus
+          />
+          <ModalList>
+            {installable.length === 0 ? (
+              <ModalStatus as="li">
+                {q === "" ? "All available languages are installed." : "No languages match your search."}
+              </ModalStatus>
+            ) : (
+              installable.map((c) => (
+                <ModalListRow
+                  key={c.key}
+                  part="language"
+                  title={
+                    <>
+                      <span className="font-medium">{c.localizedLabel}</span>
+                      {c.label !== c.localizedLabel && <span className="ms-2 text-ink-tertiary">{c.label}</span>}
+                    </>
+                  }
+                  chip={
+                    !c.ltr ? (
+                      <span className="w-fit text-meta font-semibold text-ink-tertiary bg-vellum px-1.5 py-px rounded-md">
+                        RTL
+                      </span>
+                    ) : undefined
+                  }
+                  meta={
+                    <SettingsButton
+                      variant="ghost"
+                      size="sm"
+                      icon={<Plus size={14} aria-hidden />}
+                      aria-label={`Install ${c.label}`}
+                      onClick={() => installLanguage(c)}
                     >
-                      <div className="flex min-w-0 items-center gap-2">
-                        <span className="font-medium text-ink">{c.localizedLabel}</span>
-                        <span className="truncate text-ink-tertiary">{c.label}</span>
-                        {!c.ltr && (
-                          <span className="text-meta font-semibold text-ink-tertiary bg-vellum px-1.5 py-px rounded w-fit">
-                            RTL
-                          </span>
-                        )}
-                      </div>
-                      <SettingsButton
-                        variant="secondary"
-                        size="sm"
-                        icon={<Plus size={14} />}
-                        onClick={() => installLanguage(c)}
-                      >
-                        Install
-                      </SettingsButton>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-        </div>
+                      Install
+                    </SettingsButton>
+                  }
+                />
+              ))
+            )}
+          </ModalList>
+        </Modal>
       )}
 
       <ConfirmDialog

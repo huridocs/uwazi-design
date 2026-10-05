@@ -110,7 +110,19 @@ export function Select({
   const current = options.find((o) => o.value === value) ?? options[0];
 
   return (
-    <div ref={ref} data-component="Select" className="relative shrink-0">
+    <div
+      ref={ref}
+      data-component="Select"
+      className="relative shrink-0"
+      // An open list claims its Escape before it bubbles to a dialog's panel,
+      // so the dialog stays open (Modal leaves a prevented Escape alone).
+      onKeyDown={(e) => {
+        if (open && !asSheet && e.key === "Escape") {
+          e.preventDefault();
+          setOpen(false);
+        }
+      }}
+    >
       <button
         type="button"
         id={id}

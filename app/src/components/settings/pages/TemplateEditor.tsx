@@ -1,9 +1,12 @@
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import { useSetAtom } from "jotai";
-import { Plus, X } from "lucide-react";
+import { Plus } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { TemplateCardPreview } from "../TemplateCardPreview";
-import { SettingsButton } from "../SettingsButton";
+import { SettingsBarContext, SettingsButton } from "../SettingsButton";
+import { Modal } from "../../shared/Modal";
+import { ModalField, MODAL_INPUT } from "../../shared/ModalParts";
+import { FieldMessage } from "../../shared/FieldMessage";
 import { RowActions } from "../RowActions";
 import { DragGrip } from "../DragGrip";
 import { useReorder } from "../../../hooks/useReorder";
@@ -56,7 +59,9 @@ interface PropertyDraft extends PropConfig {
 }
 
 /** The property table's tracks — header and rows must share them to align:
- *  property · type · required · filter · cards · actions. */
+ *  property · type · required · filter · cards · actions. From `md` up only:
+ *  on a phone these fixed tracks left the name nothing (390px), so a row
+ *  wraps instead, the name on its own line and the flags labelled under it. */
 const PROPERTY_COLUMNS = "minmax(0, 1fr) 8rem 5rem 3.5rem 3.5rem 4rem";
 
 /** Template detail/editor — name, colour, and the property list. Opened from
@@ -233,7 +238,9 @@ export function TemplateEditor({
               <thead role="rowgroup" className="block">
                 <tr
                   role="row"
-                  className="grid items-center gap-3 px-3 py-2 text-meta font-semibold uppercase tracking-wide text-ink-tertiary bg-warm"
+                  // Phone rows label their own flags, so the header row is for
+                  // screen readers only below `md`.
+                  className="sr-only md:not-sr-only md:grid items-center gap-3 px-3 py-2 text-meta font-semibold uppercase tracking-wide text-ink-tertiary bg-warm"
                   style={{ gridTemplateColumns: PROPERTY_COLUMNS }}
                 >
                   <th role="columnheader" scope="col" className="font-semibold text-start min-w-0 truncate">Property</th>
@@ -267,10 +274,10 @@ export function TemplateEditor({
                         {...rowProps(i)}
                         role="row"
                         data-part="property"
-                        className={`grid items-center gap-3 px-3 py-2 transition-opacity ${dragIdx === i ? "opacity-40" : ""}`}
+                        className={`flex flex-wrap md:grid items-center gap-x-3 gap-y-1.5 md:gap-3 px-3 py-2 transition-opacity ${dragIdx === i ? "opacity-40" : ""}`}
                         style={{ gridTemplateColumns: PROPERTY_COLUMNS, borderTop: "1px solid var(--border-soft)" }}
                       >
-                        <td role="cell" className="flex items-center gap-2 w-full min-w-0">
+                        <td role="cell" className="flex items-center gap-2 basis-full md:basis-auto w-full min-w-0">
                           <DragGrip {...gripProps(i)} />
                           <span className="truncate text-sm font-medium text-ink">{p.label}</span>
                           {detail && (
@@ -282,16 +289,25 @@ export function TemplateEditor({
                             {propertyTypeLabels[p.type]}
                           </span>
                         </td>
-                        <td role="cell" className="flex justify-center">
-                          <Checkbox checked={p.required} onChange={(e) => patchProp(p.id, { required: e.target.checked })} ariaLabel={`${p.label} required`} />
+                        <td role="cell" className="flex md:justify-center">
+                          <label className="flex items-center gap-1.5 cursor-pointer">
+                            <Checkbox checked={p.required} onChange={(e) => patchProp(p.id, { required: e.target.checked })} ariaLabel={`${p.label} required`} />
+                            <span aria-hidden className="md:hidden text-meta text-ink-tertiary">Required</span>
+                          </label>
                         </td>
-                        <td role="cell" className="flex justify-center">
-                          <Checkbox checked={p.filterable} onChange={(e) => patchProp(p.id, { filterable: e.target.checked })} ariaLabel={`${p.label} filterable`} />
+                        <td role="cell" className="flex md:justify-center">
+                          <label className="flex items-center gap-1.5 cursor-pointer">
+                            <Checkbox checked={p.filterable} onChange={(e) => patchProp(p.id, { filterable: e.target.checked })} ariaLabel={`${p.label} filterable`} />
+                            <span aria-hidden className="md:hidden text-meta text-ink-tertiary">Filter</span>
+                          </label>
                         </td>
-                        <td role="cell" className="flex justify-center">
-                          <Checkbox checked={p.showInCard} onChange={(e) => patchProp(p.id, { showInCard: e.target.checked })} ariaLabel={`${p.label} show in cards`} />
+                        <td role="cell" className="flex md:justify-center">
+                          <label className="flex items-center gap-1.5 cursor-pointer">
+                            <Checkbox checked={p.showInCard} onChange={(e) => patchProp(p.id, { showInCard: e.target.checked })} ariaLabel={`${p.label} show in cards`} />
+                            <span aria-hidden className="md:hidden text-meta text-ink-tertiary">Cards</span>
+                          </label>
                         </td>
-                        <td role="cell">
+                        <td role="cell" className="ms-auto md:ms-0">
                           <RowActions label={p.label} onEdit={() => setEditing(p)} onDelete={() => deleteProperty(p.id)} />
                         </td>
                       </tr>
@@ -388,12 +404,6 @@ function PropertyDialog({
   const [labelIssue, setLabelIssue] = useState<ValidationIssue | null>(null);
   const checkLabel = (v: string) => validateValue("text", v, { required: true, label: "Label" });
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onCancel();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onCancel]);
-
   const submit = () => {
     const draft: PropertyDraft = { label: label.trim() || "Untitled", type, required, filterable, showInCard };
     if (type === "select") draft.content = content;
@@ -404,77 +414,86 @@ function PropertyDialog({
     onSave(draft);
   };
 
+  const labelInputId = useId();
+  const labelMsgId = useId();
+  const typeId = useId();
+  const contentId = useId();
+  const targetId = useId();
+  const relationId = useId();
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onCancel}>
-      <div
-        className="w-full max-w-[26rem] bg-paper rounded-lg shadow-xl flex flex-col"
-        style={{ border: "1px solid var(--border-primary)" }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between h-12 px-4" style={{ borderBottom: "1px solid var(--border-soft)" }}>
-          <h3 className="text-sm font-semibold text-ink">{isNew ? "New property" : "Edit property"}</h3>
-          <button onClick={onCancel} aria-label={isNew ? "Close new property" : "Close property editor"} className="p-1.5 rounded-md hover:bg-warm text-ink-muted hover:text-ink transition-colors cursor-pointer">
-            <X size={16} />
-          </button>
-        </div>
-
-        <div className="flex flex-col gap-3 p-4">
-          <SettingsField label="Label" issue={labelIssue}>
-            <TextInput
-              value={label}
-              issue={labelIssue}
-              onChange={(e) => {
-                setLabel(e.target.value);
-                if (labelIssue) setLabelIssue(checkLabel(e.target.value));
-              }}
-              onBlur={(e) => setLabelIssue(checkLabel(e.currentTarget.value))}
-              placeholder="e.g. Date filed"
-              autoFocus
-            />
-          </SettingsField>
-          <SettingsField label="Type">
-            <Select value={type} options={TYPE_OPTIONS} onChange={(v) => setType(v as TemplateProperty["type"])} ariaLabel="Property type" />
-          </SettingsField>
-
-          {type === "select" && (
-            <SettingsField label="Thesaurus" hint="Which thesaurus the options come from.">
-              <Select value={content} options={THESAURUS_OPTIONS} onChange={setContent} ariaLabel="Thesaurus" />
-            </SettingsField>
-          )}
-          {type === "relationship" && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <SettingsField label="Related template">
-                <Select value={targetTemplate} options={TEMPLATE_OPTIONS} onChange={setTargetTemplate} ariaLabel="Related template" />
-              </SettingsField>
-              <SettingsField label="Relationship type">
-                <Select value={relationType} options={RELATION_OPTIONS} onChange={setRelationType} ariaLabel="Relationship type" />
-              </SettingsField>
-            </div>
-          )}
-
-          <div className="flex items-center gap-6 pt-1">
-            <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
-              <Checkbox checked={required} onChange={(e) => setRequired(e.target.checked)} ariaLabel="Required" />
-              Required
-            </label>
-            <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
-              <Checkbox checked={filterable} onChange={(e) => setFilterable(e.target.checked)} ariaLabel="Use as filter" />
-              Use as filter
-            </label>
-            <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
-              <Checkbox checked={showInCard} onChange={(e) => setShowInCard(e.target.checked)} ariaLabel="Show in cards" />
-              Show in cards
-            </label>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-end gap-2 h-12 px-4" style={{ borderTop: "1px solid var(--border-soft)" }}>
+    <Modal
+      component="PropertyDialog"
+      title={isNew ? "New property" : "Edit property"}
+      closeLabel={isNew ? "Close new property" : "Close property editor"}
+      onClose={onCancel}
+      size="md"
+      // Fixed, so the panel does not resize when a type adds its own fields,
+      // and an open type list has room below its trigger.
+      height="md:h-[min(30rem,100%)]"
+      footer={
+        <SettingsBarContext.Provider value={true}>
           <SettingsButton variant="ghost" size="sm" onClick={onCancel}>Cancel</SettingsButton>
-          <SettingsButton variant="success" size="sm" disabled={!label.trim()} onClick={submit}>
+          <SettingsButton variant={isNew ? "commit" : "success"} size="sm" disabled={!label.trim()} onClick={submit}>
             {isNew ? "Add property" : "Save"}
           </SettingsButton>
+        </SettingsBarContext.Provider>
+      }
+    >
+      <div className="flex flex-col gap-3">
+        <ModalField label="Label" htmlFor={labelInputId}>
+          <input
+            id={labelInputId}
+            type="text"
+            value={label}
+            aria-invalid={labelIssue?.severity === "error" || undefined}
+            aria-describedby={labelMsgId}
+            onChange={(e) => {
+              setLabel(e.target.value);
+              if (labelIssue) setLabelIssue(checkLabel(e.target.value));
+            }}
+            onBlur={(e) => setLabelIssue(checkLabel(e.currentTarget.value))}
+            placeholder="e.g. Date filed"
+            autoFocus
+            className={MODAL_INPUT}
+          />
+          <FieldMessage id={labelMsgId} issue={labelIssue} reserve />
+        </ModalField>
+        <ModalField label="Type" htmlFor={typeId}>
+          <Select id={typeId} value={type} options={TYPE_OPTIONS} onChange={(v) => setType(v as TemplateProperty["type"])} ariaLabel="Property type" sheetTitle="Type" />
+        </ModalField>
+
+        {type === "select" && (
+          <ModalField label="Thesaurus" htmlFor={contentId} hint="Which thesaurus the options come from.">
+            <Select id={contentId} value={content} options={THESAURUS_OPTIONS} onChange={setContent} ariaLabel="Thesaurus" sheetTitle="Thesaurus" />
+          </ModalField>
+        )}
+        {type === "relationship" && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <ModalField label="Related template" htmlFor={targetId}>
+              <Select id={targetId} value={targetTemplate} options={TEMPLATE_OPTIONS} onChange={setTargetTemplate} ariaLabel="Related template" sheetTitle="Related template" />
+            </ModalField>
+            <ModalField label="Relationship type" htmlFor={relationId}>
+              <Select id={relationId} value={relationType} options={RELATION_OPTIONS} onChange={setRelationType} ariaLabel="Relationship type" sheetTitle="Relationship type" />
+            </ModalField>
+          </div>
+        )}
+
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-1">
+          <label className="flex items-center gap-2 text-xs text-ink cursor-pointer">
+            <Checkbox checked={required} onChange={(e) => setRequired(e.target.checked)} ariaLabel="Required" />
+            Required
+          </label>
+          <label className="flex items-center gap-2 text-xs text-ink cursor-pointer">
+            <Checkbox checked={filterable} onChange={(e) => setFilterable(e.target.checked)} ariaLabel="Use as filter" />
+            Use as filter
+          </label>
+          <label className="flex items-center gap-2 text-xs text-ink cursor-pointer">
+            <Checkbox checked={showInCard} onChange={(e) => setShowInCard(e.target.checked)} ariaLabel="Show in cards" />
+            Show in cards
+          </label>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
