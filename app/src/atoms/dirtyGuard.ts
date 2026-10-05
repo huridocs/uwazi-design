@@ -34,6 +34,10 @@ export const unregisterDirtyFormAtom = atom(null, (get, set, id: string) => {
   );
 });
 
+/** The first dirty form, if any — what the guard would be protecting. Also
+ *  drives the beforeunload listener in `UnsavedChangesGuard`. */
+export const dirtyFormAtom = atom((get) => get(dirtyFormsAtom).find((f) => f.isDirty) ?? null);
+
 /** Whether ANY edit session is mounted, dirty or not. Starting a selection
  *  drops the preview to show the selection list — unless the preview is
  *  holding an open form, which must not unmount under what was typed. */
@@ -46,10 +50,6 @@ export const editSessionOpenAtom = atom((get) => get(dirtyFormsAtom).length > 0)
 export const bulkEditDirtyAtom = atom((get) =>
   get(dirtyFormsAtom).some((f) => f.id === "bulk-edit" && f.isDirty),
 );
-
-/** The first dirty form, if any — what the guard would be protecting. Also
- *  drives the beforeunload listener in `UnsavedChangesGuard`. */
-export const dirtyFormAtom = atom((get) => get(dirtyFormsAtom).find((f) => f.isDirty) ?? null);
 
 /** A navigation held back by the guard, waiting on the user's verdict.
  *  Non-null = the confirm dialog is open. */
@@ -64,14 +64,22 @@ const guardBypassAtom = atom(false);
 /** Write-only choke point: every navigation setter routes its write through
  *  this. Nothing dirty → the write runs immediately, zero cost. Something
  *  dirty → the write is parked in `pendingNavigationAtom` and the dialog asks;
- *  Discard runs it, Keep editing drops it. Guard the handful of setters that
+ *  Discard runs it, Cancel drops it. Guard the handful of setters that
  *  switch surfaces (app view, entity tabs, focal entity, settings section) —
  *  not every button. */
 export const guardNavigationAtom = atom(null, (get, set, run: () => void) => {
-  const dirty = get(dirtyFormAtom);
-  if (!dirty || get(guardBypassAtom)) run();
-  else set(pendingNavigationAtom, { label: dirty.label, run });
+  const dirty = get(dirtyFormsAtom).filter((f) => f.isDirty);
+  if (!dirty.length || get(guardBypassAtom)) run();
+  else set(pendingNavigationAtom, { label: joinLabels(dirty.map((f) => f.label)), run });
 });
+
+/** Every dirty form, named: a page with two drafts (Account's profile and
+ *  password) must not have the dialog mention only one. "A", "A and B",
+ *  "A, B and C". */
+function joinLabels(labels: string[]): string {
+  const u = [...new Set(labels)];
+  return u.length <= 1 ? (u[0] ?? "") : `${u.slice(0, -1).join(", ")} and ${u[u.length - 1]}`;
+}
 
 /** Write-only: the dialog's Discard. Clears the pending slot first (the write
  *  may unmount the dialog's own trigger), then replays the parked write with

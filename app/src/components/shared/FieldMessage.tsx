@@ -9,7 +9,7 @@ import type { ValidationIssue } from "../../utils/validation";
  *  `reserve` keeps the line MOUNTED at its height with only the content
  *  toggling (PATTERNS: never shift layout on state change) — a message landing
  *  on blur must not shove the fields below it. Hosts that already reserve
- *  space in their own flow (settings `Field`, which swaps hint ↔ message on
+ *  space in their own flow (`SettingsField`, which swaps hint ↔ message on
  *  one line) leave it off.
  *
  *  No `role="alert"` here on purpose: per-field messages arrive on blur and
@@ -37,16 +37,18 @@ export function FieldMessage({
       : "text-warning";
   return (
     <div
+      data-component="FieldMessage"
+      data-severity={issue?.severity ?? "hint"}
       id={id}
       className={`flex items-center gap-1 text-meta leading-4 ${reserve ? "min-h-4" : ""} ${tone}`}
     >
       {issue &&
         (issue.severity === "error" ? (
-          <CircleAlert size={11} className="shrink-0" aria-hidden />
+          <CircleAlert size={11} data-part="icon" className="shrink-0" aria-hidden />
         ) : (
-          <AlertTriangle size={11} className="shrink-0" aria-hidden />
+          <AlertTriangle size={11} data-part="icon" className="shrink-0" aria-hidden />
         ))}
-      <span className="min-w-0">{issue ? issue.message : (hint ?? "")}</span>
+      <span data-part="message" className="min-w-0">{issue ? issue.message : (hint ?? "")}</span>
     </div>
   );
 }

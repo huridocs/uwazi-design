@@ -110,7 +110,7 @@ Light values are unchanged; they already clear their floors.
 | Seal — **danger only** | `--accent-seal` | `text-seal` / `bg-seal` | `#E8432A` | same | `error-600` `#d9534f` |
 | Seal tint | `--accent-seal-tint` | `bg-seal-tint` | `#FEE2E2` | `#4A1A1A` | `error-50` |
 | Success | `--success` | `text-success` | `#059669` | same | `success-600` `#5cb85c` |
-| Success bg | `--success-light` | `bg-success-light` | `#D1FAE5` | `#064E3B` | `success-100` |
+| Success bg | `--success-light` | `bg-success-light` | `#D1FAE5` | `#064C3A` | `success-100` |
 | Warning | `--warning` | `text-warning` | `#F59E0B` | same | `warning-500` (identical hex) |
 | Warning bg | `--warning-light` | `bg-warning-light` | `#FEF3C7` | `#78350F` | `warning-100` |
 | Text highlight | `--highlight-yellow` | `bg-highlight` | `#FDE68A` | `#78350F` | `warning-200` (identical hex) |

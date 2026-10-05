@@ -40,6 +40,7 @@ export function Select({
   ariaSuffix,
   triggerTitle,
   steady = false,
+  id,
   sheetTitle,
 }: {
   value: string;
@@ -74,6 +75,8 @@ export function Select({
    *  every control beside it. (Measured before this existed: the Sort trigger
    *  swung 65.45px on "Title" to 112.67px on "Connections".) */
   steady?: boolean;
+  /** Put on the trigger, so a `<label htmlFor>` can name and focus it. */
+  id?: string;
   /** On phones, open the options as a bottom sheet with this title (44px
    *  rows, Done) instead of a popover. Opt-in per use. */
   sheetTitle?: string;
@@ -89,7 +92,12 @@ export function Select({
       if (!ref.current?.contains(e.target as Node)) setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      // Consumed: the Escape that closes this list must not also reach a
+      // window-level Escape (the Library's clear-selection) after it.
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setOpen(false);
+      }
     };
     document.addEventListener("mousedown", onClick);
     document.addEventListener("keydown", onKey);
@@ -102,9 +110,23 @@ export function Select({
   const current = options.find((o) => o.value === value) ?? options[0];
 
   return (
-    <div ref={ref} className="relative shrink-0">
+    <div
+      ref={ref}
+      data-component="Select"
+      className="relative shrink-0"
+      // An open list claims its Escape before it bubbles to a dialog's panel,
+      // so the dialog stays open (Modal leaves a prevented Escape alone).
+      onKeyDown={(e) => {
+        if (open && !asSheet && e.key === "Escape") {
+          e.preventDefault();
+          setOpen(false);
+        }
+      }}
+    >
       <button
         type="button"
+        id={id}
+        data-part="trigger"
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -142,18 +164,26 @@ export function Select({
           rounded-md transition-colors cursor-pointer
           focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35 ${
             tone === "carbon"
-              ? "text-carbon bg-carbon-tint/40 border border-carbon/30 hover:bg-carbon-tint"
+              ? "text-carbon-label bg-carbon-tint/40 border border-carbon/30 hover:bg-carbon-tint"
               : "text-ink-secondary bg-paper border border-border hover:bg-parchment hover:text-ink"
           }`}
       >
-        {triggerIcon && <span className="shrink-0 flex items-center">{triggerIcon}</span>}
+        {triggerIcon && (
+          <span data-part="icon" className="shrink-0 flex items-center">
+            {triggerIcon}
+          </span>
+        )}
         {/* Prefix and value are ONE run. As two loose spans they are two inline
             boxes, so an RTL page lays them end-to-start and "View: Cards"
             renders as "Cards :View". `<bdi>` resolves direction from its own
             first strong character, so a Latin pair stays Latin-ordered inside an
             RTL toolbar and a translated pair orders itself correctly too. */}
-        <bdi className="flex items-center gap-1 min-w-0">
-          {triggerPrefix && <span className="shrink-0 text-ink-secondary">{triggerPrefix}</span>}
+        <bdi data-part="value" className="flex items-center gap-1 min-w-0">
+          {triggerPrefix && (
+            <span data-part="prefix" className="shrink-0 text-ink-secondary">
+              {triggerPrefix}
+            </span>
+          )}
           {steady ? (
             // Every label laid out in ONE grid cell, only the current one
             // visible: the cell is as wide as the widest label RENDERS. A
@@ -180,7 +210,7 @@ export function Select({
             <span className="truncate">{current?.label}</span>
           )}
         </bdi>
-        <ChevronDown size={14} className={`text-ink-secondary shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown size={14} data-part="chevron" aria-hidden className={`text-ink-secondary shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {asSheet ? (
         <MobileBottomSheet open={open} onClose={() => setOpen(false)} title={sheetTitle} footer={<SheetDone onClick={() => setOpen(false)} />}>
@@ -190,6 +220,7 @@ export function Select({
                 key={o.value}
                 type="button"
                 role="option"
+                data-part="option"
                 aria-selected={o.value === value}
                 disabled={o.disabled}
                 onClick={() => {
@@ -212,6 +243,7 @@ export function Select({
         <div
           role="listbox"
           id={listId}
+          data-part="listbox"
           // The panel is named too — landing in an unnamed listbox tells you
           // nothing about what you are choosing.
           aria-label={ariaLabel}
@@ -228,6 +260,7 @@ export function Select({
               key={o.value}
               type="button"
               role="option"
+              data-part="option"
               aria-selected={o.value === value}
               disabled={o.disabled}
               onClick={() => {

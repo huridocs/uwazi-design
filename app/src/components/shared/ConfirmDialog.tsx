@@ -8,8 +8,8 @@ interface ConfirmDialogProps {
   message: string;
   confirmLabel?: string;
   /** The safe way out. Defaults to "Cancel"; the dirty-form guard says
-   *  "Keep editing". */
-  cancelLabel?: string;
+   *  "Keep editing". `null` drops it: a notice that only needs "OK". */
+  cancelLabel?: string | null;
   onConfirm: () => void;
   onCancel: () => void;
   variant?: "danger" | "default";
@@ -50,9 +50,11 @@ export function ConfirmDialog({
       }
       footer={
         <>
-          <button type="button" data-part="cancel" onClick={onCancel} className={`${MODAL_BUTTON} ${BAR_GHOST} cursor-pointer`}>
-            {cancelLabel}
-          </button>
+          {cancelLabel !== null && (
+            <button type="button" data-part="cancel" onClick={onCancel} className={`${MODAL_BUTTON} ${BAR_GHOST} cursor-pointer`}>
+              {cancelLabel}
+            </button>
+          )}
           <button
             type="button"
             data-part="confirm"
@@ -64,7 +66,7 @@ export function ConfirmDialog({
         </>
       }
     >
-      <p id="confirm-dialog-message" data-part="message" className="text-sm text-ink-secondary">
+      <p id="confirm-dialog-message" data-part="message" className="text-sm text-ink">
         {message}
       </p>
     </Modal>

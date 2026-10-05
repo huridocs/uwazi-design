@@ -114,7 +114,9 @@ export function useFocusTrap<T extends HTMLElement>(active: boolean, contentKey?
       const last = els[els.length - 1];
       const current = document.activeElement;
       if (e.shiftKey) {
-        if (current === first || !container.contains(current)) {
+        // From the container itself (a dialog panel takes focus on a press),
+        // the browser's Shift+Tab would leave the trap.
+        if (current === first || current === container || !container.contains(current)) {
           e.preventDefault();
           last.focus({ preventScroll: true });
         }

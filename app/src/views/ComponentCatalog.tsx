@@ -39,7 +39,9 @@ import { Breadcrumb } from "../components/layout/Breadcrumb";
 import { SettingsNav } from "../components/settings/SettingsNav";
 
 // Settings primitives (static demos)
-import { Button as SettingsButton } from "../components/settings/Button";
+import { Button } from "../components/settings/Button";
+import { SettingsBarContext, SettingsButton } from "../components/settings/SettingsButton";
+import { Dropzone } from "../components/shared/Dropzone";
 import { Field, TextInput } from "../components/settings/Field";
 import { RowActions } from "../components/settings/RowActions";
 import { StatusPill } from "../components/settings/StatusPill";
@@ -1867,11 +1869,57 @@ const textColor = typeLabelColor(type.color);`}
 <Button variant="danger" size="sm">Delete</Button>`}
                 >
                   <div className="flex flex-wrap items-center gap-2">
-                    <SettingsButton variant="primary" size="sm">Save</SettingsButton>
-                    <SettingsButton variant="secondary" size="sm">Translate</SettingsButton>
-                    <SettingsButton variant="ghost" size="sm">Cancel</SettingsButton>
-                    <SettingsButton variant="danger" size="sm">Delete</SettingsButton>
-                    <SettingsButton variant="primary" size="sm" disabled>Disabled</SettingsButton>
+                    <Button variant="primary" size="sm">Save</Button>
+                    <Button variant="secondary" size="sm">Translate</Button>
+                    <Button variant="ghost" size="sm">Cancel</Button>
+                    <Button variant="danger" size="sm">Delete</Button>
+                    <Button variant="primary" size="sm" disabled>Disabled</Button>
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="set-settings-button" ref={reg("set-settings-button")}>
+                <CatalogEntry
+                  name="SettingsButton"
+                  description="Settings button on the bar ladder. Inside a settings footer (SettingsBarContext) the variants take their bar rung (lead, ghost, seal text); in a page body primary and secondary keep the warm fill. Ink commits; green only on a Save. Replaces Button as the Settings pages move over."
+                  code={`<SettingsBarContext.Provider value={true}>
+  <SettingsButton variant="primary" size="sm">Add template</SettingsButton>
+  <SettingsButton variant="ghost" size="sm">Cancel</SettingsButton>
+  <SettingsButton variant="danger" size="sm">Delete</SettingsButton>
+  <SettingsButton variant="commit" size="sm">Create template</SettingsButton>
+  <SettingsButton variant="success" size="sm">Save</SettingsButton>
+</SettingsBarContext.Provider>
+<SettingsButton variant="secondary" size="sm">Translate</SettingsButton>`}
+                >
+                  <div className="flex flex-col gap-3">
+                    <SettingsBarContext.Provider value={true}>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <SettingsButton variant="primary" size="sm">Add template</SettingsButton>
+                        <SettingsButton variant="ghost" size="sm">Cancel</SettingsButton>
+                        <SettingsButton variant="danger" size="sm">Delete</SettingsButton>
+                        <SettingsButton variant="commit" size="sm">Create template</SettingsButton>
+                        <SettingsButton variant="success" size="sm">Save</SettingsButton>
+                        <SettingsButton variant="success" size="sm" disabled>Save</SettingsButton>
+                      </div>
+                    </SettingsBarContext.Provider>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <SettingsButton variant="secondary" size="sm">Translate</SettingsButton>
+                      <SettingsButton variant="danger" size="sm">Disable</SettingsButton>
+                      <SettingsButton variant="secondary" size="sm" disabled>Disabled</SettingsButton>
+                    </div>
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="set-dropzone" ref={reg("set-dropzone")}>
+                <CatalogEntry
+                  name="Dropzone"
+                  description="A file picker: a dashed warm well that opens the file chooser or takes a dropped file, then a row naming the chosen file with Remove. onFile receives the File; onBrowse replaces the chooser. The input is cleared after each pick, so choosing the same file again still reports it."
+                  code={`<Dropzone onFile={read} file={file && { name: file.name, detail: summary }} onRemove={() => setFile(null)} />`}
+                >
+                  <div className="max-w-md flex flex-col gap-2">
+                    <Dropzone onFile={() => {}} />
+                    <Dropzone file={{ name: "estados.csv", detail: "Adds 3 values and 1 group." }} onRemove={() => {}} />
                   </div>
                 </CatalogEntry>
               </div>

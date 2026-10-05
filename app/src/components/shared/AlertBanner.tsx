@@ -11,15 +11,17 @@ export function AlertBanner({ variant, children }: AlertBannerProps) {
 
   return (
     <div
+      data-component="AlertBanner"
+      data-variant={variant}
       className={`flex items-start gap-3 px-4 py-3 rounded-lg text-sm ${
         isWarning
-          ? "bg-warning-light text-warning"
+          ? "bg-warning-light text-warning-label"
           : "bg-seal-tint text-seal-label"
       }`}
       role="alert"
     >
-      <Icon size={16} className="shrink-0 mt-0.5" />
-      <div className="flex-1">{children}</div>
+      <Icon size={16} data-part="icon" className="shrink-0 mt-0.5" aria-hidden />
+      <div data-part="message" className="flex-1">{children}</div>
     </div>
   );
 }

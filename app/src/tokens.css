@@ -53,6 +53,14 @@
      swatches still mean "seal". */
   --accent-seal-label: color-mix(in srgb, var(--accent-seal) var(--label-mix), var(--text-primary));
 
+  /* Carbon, success and warning AS TEXT (status pills, badges): the same mix
+     as seal, for the same reason. Raw carbon on its tint is 2.1:1, amber 1.9:1,
+     green 3.3:1; mixed, each clears 4.5:1 on its tint and on paper in both
+     themes. Raw tokens stay for dots, icons and borders. */
+  --accent-blue-label: color-mix(in srgb, var(--accent-blue) var(--label-mix), var(--text-primary));
+  --success-label: color-mix(in srgb, var(--success) var(--label-mix), var(--text-primary));
+  --warning-label: color-mix(in srgb, var(--warning) var(--label-mix), var(--text-primary));
+
   /* Seal as a solid FILL behind white text. 8% toward black: 4.62:1 with white,
      identically in both themes, because both the fill and the white are
      theme-invariant. Same hue, one shade deeper. */
@@ -138,7 +146,7 @@
   --accent-blue-tint: #0C3A4D;
   --accent-seal-tint: #4A1A1A;
 
-  --success-light: #064E3B;
+  --success-light: #064C3A;
   --warning-light: #78350F;
   --danger-light: #4A1A1A;
 

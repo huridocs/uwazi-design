@@ -14,14 +14,18 @@
  *  shows, and those buttons take no edge. */
 export const WARM_EDGE = "inset-ring inset-ring-border-soft";
 
+/** Rung 1 of the ladder below: the solid ink commit. Colour only; the caller
+ *  sizes it (`MODAL_COMMIT` for footers, a full-width button on login). */
+export const COMMIT_FILL = "bg-ink text-paper hover:bg-ink/90";
+
 export const WARM_BUTTON = `text-ink-secondary bg-warm hover:bg-parchment hover:text-ink ${WARM_EDGE}`;
 
 /** Action-bar weight, one ladder for every bar at the foot of a pane. No
  *  bar button carries a border, ring or inset ring, at any rung:
  *
  *  1. Solid ink (or the success fill on a Save): the one commit a bar may
- *     carry (Save, Open entity, New Import). Not defined here; those buttons
- *     own it.
+ *     carry (Save, Open entity, New Import). `COMMIT_FILL` is its colour;
+ *     each button owns its size.
  *  2. `BAR_LEAD`: the bar's lead action when it has no commit (Create entity,
  *     Edit, Add file). At most one per bar. No fill at rest: a filled button
  *     at rest reads as a pressed or active state. It leads by weight, ink
