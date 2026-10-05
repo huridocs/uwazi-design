@@ -5,7 +5,8 @@ import { SettingsButton } from "../SettingsButton";
 import { SettingsField, TextInput } from "../SettingsField";
 import { Checkbox } from "../../shared/Checkbox";
 import { groupsAtom, saveGroupAtom, usersAtom } from "../../../atoms/users";
-import { useNotify } from "../../../hooks/useNotify";
+import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { LastSavedLine } from "../../shared/LastSavedLine";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
 /** Group detail/editor — name + membership, opened from the Groups tab.
@@ -17,7 +18,7 @@ export function GroupEditor({
   groupId: string | "new";
   onClose: () => void;
 }) {
-  const notify = useNotify();
+  const { record } = useSettingsNotify();
   const users = useAtomValue(usersAtom);
   const groups = useAtomValue(groupsAtom);
   const saveGroup = useSetAtom(saveGroupAtom);
@@ -36,8 +37,15 @@ export function GroupEditor({
     update({ memberIds: members.includes(id) ? members.filter((m) => m !== id) : [...members, id] });
 
   const save = () => {
-    saveGroup({ id: base?.id ?? null, name: name.trim(), memberIds: members });
-    notify(isNew ? "Group created" : `${name.trim()} saved`, "success");
+    const id = saveGroup({ id: base?.id ?? null, name: name.trim(), memberIds: members });
+    record({
+      method: isNew ? "CREATE" : "UPDATE",
+      domain: "group",
+      noun: "group",
+      id,
+      name: name.trim(),
+      message: isNew ? "Group created" : undefined,
+    });
     onClose();
   };
 
@@ -78,6 +86,7 @@ export function GroupEditor({
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
+        <LastSavedLine domain="group" id={base?.id} className="me-auto" />
         <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
         <SettingsButton variant={isNew ? "commit" : "success"} size="sm" disabled={!dirty || !name.trim()} onClick={save}>
           {isNew ? "Create group" : "Save"}

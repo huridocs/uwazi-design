@@ -327,3 +327,13 @@ export function TemplateEntityCount({ template }: { template: SettingsTemplate }
   const usage = useAtomValue(templateUsageAtom(template));
   return <>{usage.entities.toLocaleString()}</>;
 }
+
+/** A relationship type's reference count, from the selector its delete reads. */
+export function RelationTypeReferenceCount({ type }: { type: SettingsRelationType }) {
+  const usage = useAtomValue(relationTypeUsageAtom(type));
+  return (
+    <>
+      {usage.references.toLocaleString()} <span className="text-ink-tertiary">{usage.references === 1 ? "reference" : "references"}</span>
+    </>
+  );
+}

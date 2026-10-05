@@ -1,19 +1,18 @@
 import { useState } from "react";
-import { useSetAtom, useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import { Plus, Spline } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { RowActions } from "../RowActions";
-import { ConfirmDialog } from "../../shared/ConfirmDialog";
+import { newSettingsId } from "../../../atoms/settingsCollection";
+import { RelationTypeDelete, RelationTypeReferenceCount } from "../../shared/SettingsDeletes";
 import { RelationTypeEditor } from "./RelationTypeEditor";
 import { seedRelationTypes, type SettingsRelationType } from "../../../data/settings";
 import { dataSourceAtom } from "../../../atoms/dataSource";
 import { cejilSettingsRelationTypes } from "../../../data/cejil/settingsAdapt";
-import { toastsAtom } from "../../../atoms/notifications";
 
 export function RelationTypesPage() {
-  const setToasts = useSetAtom(toastsAtom);
   const dataSource = useAtomValue(dataSourceAtom);
   const [types, setTypes] = useState<SettingsRelationType[]>(
     dataSource === "cejil" ? cejilSettingsRelationTypes : seedRelationTypes,
@@ -21,7 +20,18 @@ export function RelationTypesPage() {
   const [confirm, setConfirm] = useState<SettingsRelationType | null>(null);
   const [editing, setEditing] = useState<SettingsRelationType | "new" | null>(null);
 
-  if (editing) return <RelationTypeEditor relationType={editing} onClose={() => setEditing(null)} />;
+  const saveType = (name: string): string => {
+    if (editing === "new") {
+      const id = newSettingsId("rt");
+      setTypes((prev) => [...prev, { id, name, usageCount: 0 }]);
+      return id;
+    }
+    const id = (editing as SettingsRelationType).id;
+    setTypes((prev) => prev.map((r) => (r.id === id ? { ...r, name } : r)));
+    return id;
+  };
+
+  if (editing) return <RelationTypeEditor relationType={editing} onClose={() => setEditing(null)} onSave={saveType} />;
 
   const columns: Column<SettingsRelationType>[] = [
     {
@@ -40,7 +50,7 @@ export function RelationTypesPage() {
       width: "9rem",
       cell: (r) => (
         <span className="text-ink-secondary tabular-nums">
-          {r.usageCount} <span className="text-ink-tertiary">relationships</span>
+          <RelationTypeReferenceCount type={r} />
         </span>
       ),
     },
@@ -58,8 +68,7 @@ export function RelationTypesPage() {
       <SettingsContent.Header title="Relationship types" />
       <SettingsContent.Body>
         <p className="text-xs text-ink-tertiary mb-4">
-          The labels available when connecting entities. Deleting a type re-labels its connections as
-          unlabeled.
+          The labels available when connecting entities.
         </p>
         <SettingsTable columns={columns} data={types} getRowId={(r) => r.id} onRowClick={(r) => setEditing(r)} rowAriaLabel={(r) => `Edit ${r.name}`} />
       </SettingsContent.Body>
@@ -69,20 +78,11 @@ export function RelationTypesPage() {
         </SettingsButton>
       </SettingsContent.Footer>
 
-      <ConfirmDialog
-        open={confirm !== null}
-        title="Delete relationship type?"
-        message={`Its ${confirm?.usageCount} relationships lose their type and become unlabeled. This can’t be undone.`}
-        confirmLabel="Delete"
-        variant="danger"
-        onConfirm={() => {
-          if (confirm) {
-            setTypes((prev) => prev.filter((r) => r.id !== confirm.id));
-            setToasts((p) => [...p, { id: Date.now().toString(), message: `${confirm.name} deleted`, type: "success" as const }]);
-          }
-          setConfirm(null);
-        }}
+      <RelationTypeDelete
+        type={confirm}
+        types={types}
         onCancel={() => setConfirm(null)}
+        onDelete={(r) => setTypes((prev) => prev.filter((x) => x.id !== r.id))}
       />
     </SettingsContent>
   );

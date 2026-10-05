@@ -1,24 +1,20 @@
 import { useState } from "react";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue } from "jotai";
 import { Plus, Pencil, Trash2, ShieldCheck } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { DrawerTabs } from "../../layout/DrawerTabs";
-import { ConfirmDialog } from "../../shared/ConfirmDialog";
+import { GroupDelete, UserDelete } from "../../shared/SettingsDeletes";
 import { UserEditor } from "./UserEditor";
 import { GroupEditor } from "./GroupEditor";
 import type { SettingsUser, UserRole } from "../../../data/settings";
 import {
-  deleteGroupAtom,
-  deleteUserAtom,
   groupsAtom,
   signedInUserAtom,
-  userDeleteBlock,
   usersAtom,
   type GroupWithMembers,
 } from "../../../atoms/users";
-import { useNotify } from "../../../hooks/useNotify";
 
 const roleStyle: Record<UserRole, string> = {
   admin: "bg-seal-tint text-seal-label",
@@ -27,15 +23,11 @@ const roleStyle: Record<UserRole, string> = {
 };
 
 export function UsersPage() {
-  const notify = useNotify();
   const users = useAtomValue(usersAtom);
   const groups = useAtomValue(groupsAtom);
   const me = useAtomValue(signedInUserAtom);
-  const deleteUser = useSetAtom(deleteUserAtom);
-  const deleteGroup = useSetAtom(deleteGroupAtom);
   const [tab, setTab] = useState<"users" | "groups">("users");
   const [confirmUser, setConfirmUser] = useState<SettingsUser | null>(null);
-  const [blocked, setBlocked] = useState<string | null>(null);
   const [confirmGroup, setConfirmGroup] = useState<GroupWithMembers | null>(null);
   // Ids, not records: the editor reads the live record from the store.
   const [editingUser, setEditingUser] = useState<string | "new" | null>(null);
@@ -44,16 +36,11 @@ export function UsersPage() {
   if (editingUser) return <UserEditor userId={editingUser} onClose={() => setEditingUser(null)} />;
   if (editingGroup) return <GroupEditor groupId={editingGroup} onClose={() => setEditingGroup(null)} />;
 
-  const toast = (message: string) => notify(message, "success");
   const groupName = new Map(groups.map((g) => [g.id, g.name]));
 
-  /** Delete, unless it would remove the signed-in account or the last admin;
-   *  then say why instead. Uwazi leaves both to the server. */
-  const askDeleteUser = (u: SettingsUser) => {
-    const reason = userDeleteBlock(users, me?.id, u.id);
-    if (reason) setBlocked(reason);
-    else setConfirmUser(u);
-  };
+  /** The dialog refuses the signed-in account and the last admin, and says
+   *  why (`userUsageAtom`). Uwazi leaves both to the server. */
+  const askDeleteUser = (u: SettingsUser) => setConfirmUser(u);
 
   const userColumns: Column<SettingsUser>[] = [
     {
@@ -205,51 +192,8 @@ export function UsersPage() {
         </SettingsButton>
       </SettingsContent.Footer>
 
-      <ConfirmDialog
-        open={confirmUser !== null}
-        title="Delete user"
-        message={`Delete ${confirmUser?.username}? They will lose access to this collection.`}
-        confirmLabel="Delete"
-        variant="danger"
-        onConfirm={() => {
-          if (confirmUser) {
-            deleteUser(confirmUser.id);
-            toast(`${confirmUser.username} deleted`);
-          }
-          setConfirmUser(null);
-        }}
-        onCancel={() => setConfirmUser(null)}
-      />
-      <ConfirmDialog
-        open={confirmGroup !== null}
-        title="Delete group"
-        message={
-          !confirmGroup?.memberCount
-            ? `Delete the ${confirmGroup?.name} group? It has no members.`
-            : confirmGroup.memberCount === 1
-              ? `Delete the ${confirmGroup.name} group? Its member keeps their account.`
-              : `Delete the ${confirmGroup.name} group? Its ${confirmGroup.memberCount} members keep their accounts.`
-        }
-        confirmLabel="Delete"
-        variant="danger"
-        onConfirm={() => {
-          if (confirmGroup) {
-            deleteGroup(confirmGroup.id);
-            toast(`${confirmGroup.name} deleted`);
-          }
-          setConfirmGroup(null);
-        }}
-        onCancel={() => setConfirmGroup(null)}
-      />
-      <ConfirmDialog
-        open={blocked !== null}
-        title="Can't delete this user"
-        message={blocked ?? ""}
-        confirmLabel="OK"
-        cancelLabel={null}
-        onConfirm={() => setBlocked(null)}
-        onCancel={() => setBlocked(null)}
-      />
+      <UserDelete user={confirmUser} onCancel={() => setConfirmUser(null)} />
+      <GroupDelete group={confirmGroup} onCancel={() => setConfirmGroup(null)} />
     </SettingsContent>
   );
 }

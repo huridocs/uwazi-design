@@ -1,45 +1,48 @@
-import { useSetAtom } from "jotai";
+import { useAtomValue } from "jotai";
 import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
 import { SettingsField, TextInput } from "../SettingsField";
 import { type SettingsRelationType } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/notifications";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
+import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { relationTypeUsageAtom } from "../../../atoms/settingsUsage";
+import { LastSavedLine } from "../../shared/LastSavedLine";
 
-/** A relationship type may optionally carry a label for its reverse direction
- *  (forward "appealed to" / inverse "ruled on"). The shared SettingsRelationType
- *  stays minimal, so this seam lives locally. */
-type WithInverse = SettingsRelationType & { inverseName?: string };
-
-/** Relationship-type detail/editor — opened from the list (list → detail). */
+/** Relationship-type detail/editor — opened from the list (list → detail).
+ *  A type has one name: Uwazi stores one `type` per relationship and no
+ *  inverse label (CLAUDE.md › Known gaps). */
 export function RelationTypeEditor({
   relationType,
   onClose,
+  onSave,
 }: {
   relationType: SettingsRelationType | "new";
   onClose: () => void;
+  /** Write the name to the list; returns the record's id. */
+  onSave: (name: string) => string;
 }) {
-  const setToasts = useSetAtom(toastsAtom);
+  const { record } = useSettingsNotify();
   const isNew = relationType === "new";
-  const base = isNew ? undefined : (relationType as WithInverse);
+  const base = isNew ? undefined : relationType;
 
   const { draft, setField, dirty } = useSettingsDraft({
     id: `relation-type:${base?.id ?? "new"}`,
     label: "Relationship type edits",
-    saved: { name: base?.name ?? "", inverseName: base?.inverseName ?? "" },
+    saved: { name: base?.name ?? "" },
   });
-  const { name, inverseName } = draft;
+  const { name } = draft;
   const setName = setField("name");
-  const setInverseName = setField("inverseName");
-
-  // Show the usage stat only when the record actually carries a count.
-  const usageCount = typeof base?.usageCount === "number" ? base.usageCount : undefined;
 
   const save = () => {
-    setToasts((p) => [
-      ...p,
-      { id: Date.now().toString(), message: isNew ? "Relationship type created" : `${name || "Type"} saved`, type: "success" as const },
-    ]);
+    const id = onSave(name.trim());
+    record({
+      method: isNew ? "CREATE" : "UPDATE",
+      domain: "relationType",
+      noun: "relationship type",
+      id,
+      name: name.trim(),
+      message: isNew ? "Relationship type created" : undefined,
+    });
     onClose();
   };
 
@@ -52,23 +55,27 @@ export function RelationTypeEditor({
             <SettingsField label="Name" hint="The label shown when connecting two entities.">
               <TextInput value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Appealed to" />
             </SettingsField>
-            <SettingsField label="Inverse name" hint="Optional — the label for the reverse direction.">
-              <TextInput value={inverseName} onChange={(e) => setInverseName(e.target.value)} placeholder="e.g. Ruled on" />
-            </SettingsField>
           </section>
-          {usageCount !== undefined && (
-            <p className="text-xs text-ink-tertiary">
-              Used by <span className="font-semibold text-ink-secondary tabular-nums">{usageCount}</span> connections.
-            </p>
-          )}
+          {base && <UsageLine type={base} />}
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
+        <LastSavedLine domain="relationType" id={base?.id} className="me-auto" />
         <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
         <SettingsButton variant={isNew ? "commit" : "success"} size="sm" disabled={!dirty || !name.trim()} onClick={save}>
           {isNew ? "Create type" : "Save"}
         </SettingsButton>
       </SettingsContent.Footer>
     </SettingsContent>
+  );
+}
+
+/** What uses the type: the same facts its delete dialog lists. */
+function UsageLine({ type }: { type: SettingsRelationType }) {
+  const usage = useAtomValue(relationTypeUsageAtom(type));
+  return (
+    <p className="text-xs text-ink-tertiary">
+      {usage.lines.length ? usage.lines.join(" ") : "No references or relationship fields use it."}
+    </p>
   );
 }

@@ -9,6 +9,8 @@ import { Checkbox } from "../../shared/Checkbox";
 import type { SettingsUser, UserRole } from "../../../data/settings";
 import { groupsAtom, roleChangeBlock, saveUserAtom, usersAtom } from "../../../atoms/users";
 import { useNotify } from "../../../hooks/useNotify";
+import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { LastSavedLine } from "../../shared/LastSavedLine";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
 const ROLE_OPTIONS = [
@@ -31,6 +33,7 @@ export function UserEditor({
   onClose: () => void;
 }) {
   const notify = useNotify();
+  const { record } = useSettingsNotify();
   const users = useAtomValue(usersAtom);
   const groups = useAtomValue(groupsAtom);
   const saveUser = useSetAtom(saveUserAtom);
@@ -52,8 +55,15 @@ export function UserEditor({
     update({ groupIds: groupIds.includes(id) ? groupIds.filter((g) => g !== id) : [...groupIds, id] });
 
   const save = () => {
-    saveUser({ id: base?.id ?? null, value: { ...draft, username: username.trim(), email: email.trim() } });
-    notify(isNew ? "User invited" : `${username.trim()} saved`, "success");
+    const id = saveUser({ id: base?.id ?? null, value: { ...draft, username: username.trim(), email: email.trim() } });
+    record({
+      method: isNew ? "CREATE" : "UPDATE",
+      domain: "user",
+      noun: "user",
+      id,
+      name: username.trim(),
+      message: isNew ? "User invited" : undefined,
+    });
     onClose();
   };
 
@@ -126,6 +136,7 @@ export function UserEditor({
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
+        <LastSavedLine domain="user" id={base?.id} className="me-auto" />
         <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
         <SettingsButton variant={isNew ? "commit" : "success"} size="sm" disabled={!dirty || !valid} onClick={save}>
           {isNew ? "Invite user" : "Save"}
