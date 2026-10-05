@@ -1,5 +1,5 @@
 import { useAtomValue } from "jotai";
-import { settingsSectionAtom, settingsMobileDrilledAtom } from "../atoms/settings";
+import { settingsAccessAtom, settingsSectionAtom, settingsMobileDrilledAtom } from "../atoms/settings";
 import { dataSourceAtom } from "../atoms/dataSource";
 import { breakpointAtom } from "../atoms/viewport";
 import type { AppView } from "../atoms/navigation";
@@ -29,7 +29,10 @@ import { PlaceholderPage } from "../components/settings/pages/PlaceholderPage";
  *  V2 Settings shell. Cloned pages render natively; the rest fall back to a
  *  placeholder so the whole IA is navigable. */
 export function SettingsView({ onNavigate }: { onNavigate?: (view: AppView) => void }) {
-  const section = useAtomValue(settingsSectionAtom);
+  const stored = useAtomValue(settingsSectionAtom);
+  // A section the signed-in role cannot reach renders Account, as Uwazi's
+  // route guard sends it away (a stored section can outlive a sign-in).
+  const section = useAtomValue(settingsAccessAtom)(stored) ? stored : "account";
   const drilled = useAtomValue(settingsMobileDrilledAtom);
   const isMobile = useAtomValue(breakpointAtom) === "mobile";
   // Pages init their useState from the active source; remount on a source flip

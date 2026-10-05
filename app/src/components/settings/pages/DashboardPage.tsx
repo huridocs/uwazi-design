@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { RotateCcw } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { StatsCard } from "../../shared/StatsCard";
@@ -7,7 +7,7 @@ import { SettingsTable, type Column } from "../SettingsTable";
 import { entities } from "../../../data/entities";
 import { dataSourceAtom } from "../../../atoms/dataSource";
 import { cejilDashboardStats } from "../../../data/cejil/settingsAdapt";
-import { usersAtom } from "../../../atoms/users";
+import { signedInUserAtom, usersAtom } from "../../../atoms/users";
 import { resetSettingsDataAtom } from "../../../atoms/settingsCollection";
 import { SettingsButton } from "../SettingsButton";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
@@ -33,6 +33,7 @@ export function DashboardPage() {
   const userCount = useAtomValue(usersAtom).length;
   const activity = useAtomValue(activityLogAtom);
   const resetData = useSetAtom(resetSettingsDataAtom);
+  const store = useStore();
   const notify = useNotify();
   const [confirmReset, setConfirmReset] = useState(false);
   const connectionTotal = seedRelationTypes.reduce((n, r) => n + r.usageCount, 0);
@@ -99,13 +100,22 @@ export function DashboardPage() {
       <ConfirmDialog
         open={confirmReset}
         title="Reset demo data"
-        message="Settings changes made in this visit go back to the demo data, in every collection: users, groups, thesauri and pages."
+        message="Settings changes made in this visit go back to the demo data, in every collection: users, groups, thesauri, collection settings, filters, global CSS and JS, and the activity log."
         confirmLabel="Reset"
         variant="danger"
         onConfirm={() => {
+          const before = store.get(signedInUserAtom);
           resetData();
           setConfirmReset(false);
-          notify("Demo data reset", "success");
+          const after = store.get(signedInUserAtom);
+          // A user created in this visit is gone after a reset: say who is
+          // signed in now rather than switching accounts silently.
+          notify(
+            before && after && before.id !== after.id
+              ? `Demo data reset. ${before.username} no longer exists, so you are signed in as ${after.username}.`
+              : "Demo data reset",
+            "success",
+          );
         }}
         onCancel={() => setConfirmReset(false)}
       />

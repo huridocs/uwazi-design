@@ -1,9 +1,9 @@
 import { Fragment } from "react";
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { ExternalLink } from "lucide-react";
 import { SectionLabel } from "../shared/SectionLabel";
 import {
-  settingsGroups,
+  visibleSettingsGroupsAtom,
   settingsSectionAtom,
   settingsMobileDrilledAtom,
   settingsDocumentation,
@@ -27,6 +27,8 @@ export function SettingsNav({
   activeId?: string;
 }) {
   const [section, setSection] = useAtom(settingsSectionAtom);
+  // Only what the signed-in role reaches (`atoms/settings.ts`).
+  const groups = useAtomValue(visibleSettingsGroupsAtom);
   const setDrilled = useSetAtom(settingsMobileDrilledAtom);
   const guard = useDirtyGuard();
   /** Where we are, whether that's a settings section or another view. */
@@ -49,7 +51,7 @@ export function SettingsNav({
       <div data-part="groups" className="bleed flex-1 min-h-0 overflow-y-auto py-4">
       {/* Every group, each with its task shelves (`subgroup`). The navbar's
           three entries still open their own group's first page. */}
-      {settingsGroups.map((group) => (
+      {groups.map((group) => (
         // A flex column, so the items stretch: a stretched item's `bleed`
         // margins widen it to the rail edge. A `w-full` button does not widen,
         // it only moves.

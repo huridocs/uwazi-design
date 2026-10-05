@@ -27,6 +27,7 @@ import {
   settingsSectionAtom,
   settingsMobileDrilledAtom,
   settingsToolsItems,
+  settingsAccessAtom,
   settingsEntryOf,
   settingsDocumentation,
 } from "../../atoms/settings";
@@ -112,7 +113,11 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
   const collection = COLLECTIONS.find((c) => c.id === dataSource) ?? COLLECTIONS[0];
 
   // The Tools dropdown reads the Tools settings group, so the two lists cannot drift.
-  const toolsItems = settingsToolsItems();
+  // Only what the signed-in role reaches: a collaborator has no Tools and no
+  // System settings (`atoms/settings.ts`).
+  const settingsAllowed = useAtomValue(settingsAccessAtom);
+  const toolsItems = settingsToolsItems().filter((i) => settingsAllowed(i.id));
+  const systemAllowed = settingsAllowed(settingsEntryOf("system"));
 
   /** Open a settings destination. The rail scopes itself to the group the
    *  section belongs to, so this is also what picks User vs System vs Tools.
@@ -299,7 +304,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                 )}
               </div>
             )}
-            <div className="relative" ref={toolsRef} data-part="tools">
+            <div className={`relative ${toolsItems.length ? "" : "hidden"}`} ref={toolsRef} data-part="tools">
               <button
                 type="button"
                 onClick={() => { setToolsOpen((o) => !o); setSettingsOpen(false); }}
@@ -499,7 +504,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                     <User size={14} className="text-ink-tertiary" />
                     {t("System", "User settings")}
                   </button>
-                  <button
+                  {systemAllowed && <button
                     onClick={() => {
                       openSettings(settingsEntryOf("system"));
                       setSettingsOpen(false);
@@ -508,7 +513,7 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
                   >
                     <Server size={14} className="text-ink-tertiary" />
                     {t("System", "System settings")}
-                  </button>
+                  </button>}
                   <DocumentationLink onDone={() => setSettingsOpen(false)} />
                   <button
                     onClick={() => {
@@ -573,9 +578,11 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
             </div>
 
             {/* Tools section */}
-            <SectionLabel className="px-4 pt-4 pb-1">
-              {t("System", "Tools")}
-            </SectionLabel>
+            {toolsItems.length > 0 && (
+              <SectionLabel className="px-4 pt-4 pb-1">
+                {t("System", "Tools")}
+              </SectionLabel>
+            )}
             {toolsItems.map((item, i) => {
               const Icon = item.icon;
               const active =
@@ -670,13 +677,15 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
               <User size={16} className="text-ink-tertiary" />
               {t("System", "User settings")}
             </button>
-            <button
-              onClick={() => { openSettingsList("system"); setMobileMenuOpen(false); }}
-              className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
-            >
-              <Server size={16} className="text-ink-tertiary" />
-              {t("System", "System settings")}
-            </button>
+            {systemAllowed && (
+              <button
+                onClick={() => { openSettingsList("system"); setMobileMenuOpen(false); }}
+                className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-ink-secondary hover:bg-warm transition-colors"
+              >
+                <Server size={16} className="text-ink-tertiary" />
+                {t("System", "System settings")}
+              </button>
+            )}
             <button
               onClick={() => { setMobileMenuOpen(false); onNavigate?.("login"); }}
               data-part="log-out"

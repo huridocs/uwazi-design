@@ -24,6 +24,8 @@ import {
   ExternalLink,
 } from "lucide-react";
 import type { AppView } from "./navigation";
+import type { UserRole } from "../data/settings";
+import { signedInUserAtom } from "./users";
 
 /** A single settings destination. Mirrors Uwazi's V2 SettingsNavigation IA
  *  (huridocs/uwazi · app/react/V2/Routes/Settings/SettingsNavigation.tsx).
@@ -126,6 +128,34 @@ export const settingsEntryOf = (groupId: string): string =>
 /** The Tools group, rendered by the navbar's Tools dropdown. */
 export const settingsToolsItems = (): SettingsItem[] =>
   settingsGroups.find((g) => g.id === "tools")?.items ?? [];
+
+/* ── Who reaches what ────────────────────────────────────────────────────
+   Uwazi guards every settings page with `adminsOnlyRoute`, except Account
+   (every signed-in role) and the two extraction pages (admin and editor)
+   (inventory Part 0.8). A page a role cannot reach is not listed and does
+   not render. */
+const NON_ADMIN_SECTIONS: Record<Exclude<UserRole, "admin">, string[]> = {
+  editor: ["account", "metadata-extraction", "paragraph-extraction"],
+  collaborator: ["account"],
+};
+
+export const settingsSectionAllowed = (role: UserRole | undefined, id: string): boolean =>
+  !role || role === "admin" || NON_ADMIN_SECTIONS[role].includes(id);
+
+/** Whether the signed-in user may open a settings section. */
+export const settingsAccessAtom = atom((get) => {
+  const role = get(signedInUserAtom)?.role;
+  return (id: string) => settingsSectionAllowed(role, id);
+});
+
+/** The groups the signed-in user sees, each with only the items they reach;
+ *  a group left empty is dropped. */
+export const visibleSettingsGroupsAtom = atom<SettingsGroup[]>((get) => {
+  const allowed = get(settingsAccessAtom);
+  return settingsGroups
+    .map((g) => ({ ...g, items: g.items.filter((i) => allowed(i.id)) }))
+    .filter((g) => g.items.length > 0);
+});
 
 /** Which settings page is showing. Defaults to Account (Uwazi's first item).
  *  Persisted so a reload keeps you on the same settings section. */

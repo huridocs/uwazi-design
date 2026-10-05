@@ -68,10 +68,18 @@ const guardBypassAtom = atom(false);
  *  switch surfaces (app view, entity tabs, focal entity, settings section) —
  *  not every button. */
 export const guardNavigationAtom = atom(null, (get, set, run: () => void) => {
-  const dirty = get(dirtyFormAtom);
-  if (!dirty || get(guardBypassAtom)) run();
-  else set(pendingNavigationAtom, { label: dirty.label, run });
+  const dirty = get(dirtyFormsAtom).filter((f) => f.isDirty);
+  if (!dirty.length || get(guardBypassAtom)) run();
+  else set(pendingNavigationAtom, { label: joinLabels(dirty.map((f) => f.label)), run });
 });
+
+/** Every dirty form, named: a page with two drafts (Account's profile and
+ *  password) must not have the dialog mention only one. "A", "A and B",
+ *  "A, B and C". */
+function joinLabels(labels: string[]): string {
+  const u = [...new Set(labels)];
+  return u.length <= 1 ? (u[0] ?? "") : `${u.slice(0, -1).join(", ")} and ${u[u.length - 1]}`;
+}
 
 /** Write-only: the dialog's Discard. Clears the pending slot first (the write
  *  may unmount the dialog's own trigger), then replays the parked write with
