@@ -73,7 +73,10 @@ function v4Relationships(typeId: string): PropertyDef[] {
   }));
 }
 
-export const sampleTemplateDefs: TemplateDef[] = entityTypes.map((t) => ({
+/** Built on first read, not at module load: the record profiles import the
+ *  template store, and `data/entities` may still be loading when they do. */
+let built: TemplateDef[] | null = null;
+export const sampleTemplateDefs = (): TemplateDef[] => (built ??= entityTypes.map((t) => ({
   id: t.id,
   name: t.name,
   color: t.color,
@@ -85,4 +88,4 @@ export const sampleTemplateDefs: TemplateDef[] = entityTypes.map((t) => ({
     ...(t.id === "court_case" ? caseRelationships() : []),
     ...v4Relationships(t.id),
   ],
-}));
+})));

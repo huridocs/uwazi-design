@@ -5,7 +5,7 @@ import type { DocumentGroup, FileEntry } from "../data/files";
 import type { Corpus, EntityRecord } from "../data/entityChanges";
 import { cejilDefaultTemplateId } from "../data/cejil/profile";
 import { ARTWORK_TYPE_ID } from "../data/artworks/typesAdapter";
-import { templateMirror } from "../atoms/templates";
+import { templateMirror } from "../data/templates/mirror";
 import { blankFieldsFor } from "./templateProjection";
 import { travesiaDefaultTemplateId, travesiaTemplates } from "../data/travesia/schema";
 

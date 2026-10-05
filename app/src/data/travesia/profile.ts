@@ -3,103 +3,34 @@
 // Spanish-only (as CEJIL's labels are), so the four reading languages share one
 // field list rather than dressing a monolingual record as a translated one.
 import type { Language } from "../../atoms/language";
-import type { AnyMetadataField, MetadataField, RelationshipMetadataField } from "../metadata";
+import type { AnyMetadataField } from "../metadata";
 import type { EntityProfile } from "../entityProfiles";
 import type { Reference } from "../references";
 import { registerEntityPropReader } from "../entityMetadata";
-import { formatPlace } from "../../utils/geoFormat";
+import { recordFieldsFor, type RecordContext } from "../../utils/templateProjection";
+import { templateMirror } from "../templates/mirror";
 import { travesiaRelTypeName, travesiaTemplateById } from "./schema";
 import { travesiaEntity, travesiaRelsByEntity } from "./load";
-import { displayValues, fmtDay, latLngOf, portraitOf } from "./adapt";
-import type { TravesiaEntity, TravesiaProperty } from "./types";
+import { displayValues, portraitOf } from "./adapt";
 
 export { isTravesiaEntity } from "./load";
 
 const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
 
-/** A property's scalar field, or nothing when the entity holds no value. */
-function scalarField(p: TravesiaProperty, e: TravesiaEntity): MetadataField | undefined {
-  const vals = e.metadata[p.name];
-  if (!vals?.length) return undefined;
-  const base = { id: p.name, label: p.label };
-  switch (p.type) {
-    case "select":
-    case "multiselect": {
-      const labels = vals.map((v) => v.label ?? "").filter(Boolean);
-      if (!labels.length) return undefined;
-      return {
-        ...base,
-        type: p.type,
-        ...(p.content ? { thesaurus: p.content } : {}),
-        value: labels.join(", "),
-        valueIds: vals.map((v) => String(v.value)),
-        ...(p.type === "multiselect" ? { values: labels } : {}),
-      };
-    }
-    case "date": {
-      const value = fmtDay(vals[0].value);
-      return value ? { ...base, type: "date", value } : undefined;
-    }
-    case "daterange":
-    case "multidaterange": {
-      const value = displayValues(p, vals).join(" · ");
-      return value ? { ...base, type: "text", value, ...(p.type === "multidaterange" ? { list: true } : {}) } : undefined;
-    }
-    case "markdown": {
-      const value = displayValues(p, vals).join("\n\n");
-      return value ? { ...base, type: "multiline", value } : undefined;
-    }
-    case "link": {
-      const value = (vals[0].value as { url?: string } | undefined)?.url;
-      return value ? { ...base, type: "link", value } : undefined;
-    }
-    case "geolocation": {
-      const c = latLngOf(vals[0].value);
-      const name = (vals[0].value as { label?: string } | undefined)?.label;
-      return c ? { ...base, type: "text", value: formatPlace(c, name) } : undefined;
-    }
-    case "image":
-      return undefined; // the record's image card (`profile.image`)
-    default: {
-      const value = displayValues(p, vals).join(", ");
-      return value ? { ...base, type: "text", value } : undefined;
-    }
-  }
-}
-
-/** A relationship property as the record's connection field. The properties
- *  that ride ONE connection — the link and the values it inherits ("PMRS /
- *  Nombre", "PMRS / NURMAH", "PMRS / Género"…) — share a `connectionKey`, so the
- *  record draws them as one table: the connected entities once, a column per
- *  inherited value. Read-only, as CEJIL's are: the connections are the
- *  corpus's, and inherited values are derived. */
-function relationshipField(p: TravesiaProperty, e: TravesiaEntity): RelationshipMetadataField | undefined {
-  const ids = (e.metadata[p.name] ?? []).map((v) => String(v.value));
-  if (!ids.length) return undefined;
-  const target = p.content ? travesiaTemplateById.get(p.content) : undefined;
-  const source = p.inherit && target?.properties.find((x) => x._id === p.inherit!.property);
-  return {
-    id: p.name,
-    label: p.label,
-    type: "relationship",
-    relationType: travesiaRelTypeName.get(p.relationType ?? "") ?? "",
-    targetTypeId: p.content ?? "",
-    connectedEntityIds: ids,
-    connectionKey: `${p.relationType}:${p.content}`,
-    ...(source ? { inheritProperty: source.name, inheritLabel: p.label } : {}),
-    ...(target ? { entityLabel: target.name } : {}),
-    readOnly: true,
-  };
-}
+/** What the record projection needs to know about Travesía: relationship
+ *  types by their dump name (what references carry and `relationLabel`
+ *  resolves), and its templates for a connection's target. */
+const ctx: RecordContext = {
+  corpus: "travesia",
+  relationTypeName: (id) => travesiaRelTypeName.get(id ?? "") ?? "",
+  template: (id) => templateMirror("travesia", id),
+};
 
 export function buildTravesiaProfile(id: string): EntityProfile {
   const e = travesiaEntity(id)!;
-  const tpl = travesiaTemplateById.get(e.template)!;
-  const fields: AnyMetadataField[] = [];
-  for (const p of tpl.properties) {
-    const f = p.type === "relationship" ? relationshipField(p, e) : scalarField(p, e);
-    if (f) fields.push(f);
-  }
+  // The template is the schema: every property in its order, typed as the
+  // template types it (template-schema-spec.md §4.4, step M3).
+  const fields = recordFieldsFor(templateMirror("travesia", e.template), e.metadata, ctx);
   const image = portraitOf(e);
   // The portrait as the entity's one file, as the artworks corpus does with its
   // paintings: the record draws a single picture through the Files tab, not as

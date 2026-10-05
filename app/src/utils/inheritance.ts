@@ -185,7 +185,7 @@ export function resolveRelationshipField(
     const provenance = [...(field.connectionProvenance?.[id] ?? []), ...steps];
     return {
       entityId: id,
-      entityTitle: entity?.title ?? "Unknown entity",
+      entityTitle: entity?.title ?? field.connectedLabels?.[id] ?? "Unknown entity",
       entityTypeId: entity?.typeId ?? field.targetTypeId,
       inheritedValue: value,
       sourcePropLabel: field.inheritLabel,
@@ -346,7 +346,7 @@ export function groupConnections(
       const entity = getEntity(id);
       return {
         entityId: id,
-        entityTitle: entity?.title ?? "Unknown entity",
+        entityTitle: entity?.title ?? primary.connectedLabels?.[id] ?? "Unknown entity",
         entityTypeId: entity?.typeId ?? primary.targetTypeId,
         cells: columns.map((c) => ({
           fieldId: c.fieldId,

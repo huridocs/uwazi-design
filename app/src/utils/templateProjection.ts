@@ -1,7 +1,9 @@
 import type { Language } from "../atoms/language";
 import type { Corpus } from "../data/entityChanges";
-import type { MetadataField } from "../data/metadata";
+import type { AnyMetadataField, MetadataField, RelationshipMetadataField } from "../data/metadata";
 import type { PropertyDef, PropertyType, TemplateDef } from "../data/templates/types";
+import { allProperties } from "../data/templates/types";
+import { formatPlace } from "./geoFormat";
 import { lbl } from "../data/sample/typeFields";
 
 /** The one place a template becomes the fields a form, a record, Copy From,
@@ -74,6 +76,175 @@ export function blankFieldsFor(corpus: Corpus, template: TemplateDef | undefined
   for (const p of template?.properties ?? []) {
     const f = blankField(corpus, p, lang);
     if (f) out.push(f);
+  }
+  return out;
+}
+
+/* ── Records (step M3: CEJIL and Travesía) ──────────────────────────────── */
+
+/** One Uwazi metadata value, as both dumps store it. */
+export interface RawValue {
+  value: unknown;
+  label?: string;
+}
+
+/** What a corpus tells the record projection about itself. */
+export interface RecordContext {
+  corpus: Corpus;
+  /** A relationship type's display name, by registry id. References carry it,
+   *  so it is what `relationLabel` resolves (Settings renames included). */
+  relationTypeName: (id: string | undefined) => string;
+  /** A template of the corpus, for a relationship's target: the inherited
+   *  property's name and the connected column's header. */
+  template: (id: string) => TemplateDef | undefined;
+}
+
+/** Dates are epoch seconds in both dumps; the record prints dd/mm/yyyy. */
+export function fmtDate(v: unknown): string {
+  if (typeof v !== "number" || !Number.isFinite(v) || v <= 0) return "";
+  const d = new Date(v * 1000);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${p(d.getUTCDate())}/${p(d.getUTCMonth() + 1)}/${d.getUTCFullYear()}`;
+}
+
+function fmtRange(v: unknown): string {
+  const r = v as { from?: unknown; to?: unknown } | undefined;
+  const a = fmtDate(r?.from);
+  const b = fmtDate(r?.to);
+  if (a && b) return `${a} – ${b}`;
+  return a ? `${a} –` : b ? `– ${b}` : "";
+}
+
+/** `{lat, lon}` as both dumps write it (`lng` accepted). */
+export function latLngOf(v: unknown): { lat: number; lng: number } | undefined {
+  const o = v as { lat?: unknown; lon?: unknown; lng?: unknown } | undefined;
+  const lng = o?.lon ?? o?.lng;
+  return typeof o?.lat === "number" && typeof lng === "number" ? { lat: o.lat, lng } : undefined;
+}
+
+/** One property's values as display strings, by its type. A thesaurus or
+ *  relationship value prints its label. */
+export function displayStrings(type: PropertyType, vals: RawValue[] | undefined): string[] {
+  const out: string[] = [];
+  for (const v of vals ?? []) {
+    let s = "";
+    switch (type) {
+      case "date":
+      case "multidate":
+        s = fmtDate(v.value);
+        break;
+      case "daterange":
+      case "multidaterange":
+        s = fmtRange(v.value);
+        break;
+      case "geolocation": {
+        const c = latLngOf(v.value);
+        s = c ? formatPlace(c, (v.value as { label?: string }).label || undefined) : "";
+        break;
+      }
+      case "link":
+        s = (v.value as { url?: string } | undefined)?.url ?? (typeof v.value === "string" ? v.value : "");
+        break;
+      default:
+        s = typeof v.label === "string" && v.label ? v.label : typeof v.value === "string" || typeof v.value === "number" ? String(v.value) : "";
+    }
+    if (s.trim()) out.push(s);
+  }
+  return out;
+}
+
+/** A relationship property as the record's connection field: the entities
+ *  the record holds for it (`metadata[name]`), the inherited column resolved
+ *  through the target template (by the inherited property's `name`). Read-only:
+ *  the connections are the corpus's. */
+function relationshipFieldOf(p: PropertyDef, vals: RawValue[], ctx: RecordContext): RelationshipMetadataField | null {
+  const ids = vals.map((v) => (typeof v.value === "string" ? v.value : "")).filter(Boolean);
+  if (!ids.length) return null;
+  const target = p.content ? ctx.template(p.content) : undefined;
+  const inherited = p.inherit && target ? allProperties(target).find((x) => x.id === p.inherit!.property) : undefined;
+  return {
+    id: p.name,
+    label: p.label,
+    type: "relationship",
+    relationType: ctx.relationTypeName(p.relationType),
+    targetTypeId: p.content ?? "",
+    connectedEntityIds: ids,
+    connectedLabels: Object.fromEntries(
+      vals.filter((v) => typeof v.value === "string" && v.label).map((v) => [v.value as string, v.label as string]),
+    ),
+    connectionKey: p.x?.connectionKey ?? `${p.relationType}:${p.content ?? ""}`,
+    ...(inherited ? { inheritProperty: inherited.name, inheritLabel: p.label } : {}),
+    ...(target ? { entityLabel: target.name } : {}),
+    readOnly: true,
+  };
+}
+
+/** A record's fields from its template and its raw values, in template
+ *  order (template-schema-spec.md §4.4): no type is flattened. Dates, ranges
+ *  and places keep their type (`propertyType`); list types keep each value
+ *  (`displayValues`). A property the form can edit is emitted even when empty,
+ *  since the form needs it; one it cannot (a connection, a place) only when it
+ *  holds a value. Images and previews are not metadata fields (the record's
+ *  image card and the Document tab draw them); nested tables wait for a
+ *  renderer. */
+export function recordFieldsFor(
+  template: TemplateDef | undefined,
+  values: Record<string, RawValue[] | undefined>,
+  ctx: RecordContext,
+): AnyMetadataField[] {
+  const out: AnyMetadataField[] = [];
+  for (const p of template?.properties ?? []) {
+    const vals = (values[p.name] ?? []).filter((v) => v && v.value !== null && v.value !== undefined && v.value !== "");
+    if (p.type === "image" || p.type === "preview" || p.type === "nested") continue;
+    if (p.type === "relationship") {
+      const f = relationshipFieldOf(p, vals, ctx);
+      if (f) out.push(f);
+      continue;
+    }
+    const base = { id: p.name, label: propertyLabel(ctx.corpus, p, "EN"), propertyType: p.type };
+    if (p.type === "media") {
+      // The raw value, untouched: the editor must save it byte-identical.
+      const raw = vals[0]?.value;
+      out.push({ ...base, type: "media", value: typeof raw === "string" ? raw : "" });
+      continue;
+    }
+    if (p.type === "select" || p.type === "multiselect") {
+      const chosen = vals.filter((v) => typeof v.label === "string" && v.label);
+      const labels = chosen.map((v) => v.label as string);
+      out.push({
+        ...base,
+        type: p.type,
+        ...(p.content ? { thesaurus: p.content } : {}),
+        value: labels.join(", "),
+        // Labels are this language's; ids are the thesaurus's, the same in every
+        // language: what lets the form tick the right row.
+        valueIds: chosen.map((v) => (typeof v.value === "string" ? v.value : "")),
+        ...(p.type === "multiselect" ? { values: labels } : {}),
+      });
+      continue;
+    }
+    const strings = displayStrings(p.type, vals);
+    if (!strings.length) {
+      if (p.type === "geolocation") continue;
+      const blank = blankField(ctx.corpus, p, "EN");
+      if (blank) out.push({ ...blank, label: base.label });
+      continue;
+    }
+    const multi = p.type === "multidate" || p.type === "multidaterange";
+    const value = p.type === "markdown" ? strings.join("\n\n") : multi ? strings.join(" · ") : strings.join(", ");
+    out.push({
+      ...base,
+      type:
+        p.type === "markdown" || (p.type === "text" && value.length > 120)
+          ? "multiline"
+          : p.type === "date"
+            ? "date"
+            : p.type === "link"
+              ? "link"
+              : "text",
+      value,
+      ...(multi ? { list: true, displayValues: strings } : {}),
+    });
   }
   return out;
 }

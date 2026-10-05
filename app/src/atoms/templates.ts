@@ -3,10 +3,7 @@ import { atomFamily } from "jotai/utils";
 import type { Corpus } from "../data/entityChanges";
 import type { EntityType } from "../data/entities";
 import type { TemplateDef } from "../data/templates/types";
-import { sampleTemplateDefs } from "../data/sample/templates";
-import { cejilTemplateDefs } from "../data/cejil/templatesSeed";
-import { travesiaTemplateDefs } from "../data/travesia/templatesSeed";
-import { artworkTemplateDefs } from "../data/artworks/templates";
+import { registerTemplateReader, TEMPLATE_SEEDS, templateMirror, templatesMirror } from "../data/templates/mirror";
 import { createSettingsCollection, hasId } from "./settingsCollection";
 
 /** Templates: one store per corpus, the schema an entity's form, record,
@@ -19,12 +16,6 @@ import { createSettingsCollection, hasId } from "./settingsCollection";
  *  Templates moves onto it (M8). The type lists (`entityTypesAtom`,
  *  `libraryTypesAtom`, `corpusTypes`) are projections of it. */
 
-const SEEDS: Record<Corpus, TemplateDef[]> = {
-  mock: sampleTemplateDefs,
-  cejil: cejilTemplateDefs,
-  travesia: travesiaTemplateDefs,
-  artworks: artworkTemplateDefs,
-};
 
 const isTemplate = (r: unknown): boolean => {
   if (!hasId(r)) return false;
@@ -43,7 +34,7 @@ const isTemplate = (r: unknown): boolean => {
 const templates = createSettingsCollection<TemplateDef>({
   name: "templates",
   idPrefix: "tpl",
-  seedOf: (scope) => SEEDS[scope as Corpus] ?? [],
+  seedOf: (scope) => TEMPLATE_SEEDS[scope as Corpus]?.() ?? [],
   corpusScoped: true,
   isRecord: isTemplate,
 });
@@ -80,12 +71,8 @@ export const templateTypesAtom = atomFamily((corpus: Corpus) =>
    templates through these, from the app's one store: the same value the atoms
    hold, kept in step by the store's one write path. */
 
-/** A corpus's templates, outside React. */
-export const templatesMirror = (corpus: Corpus): TemplateDef[] => getDefaultStore().get(templatesAtom(corpus));
-
-/** One template, outside React. */
-export const templateMirror = (corpus: Corpus, id: string): TemplateDef | undefined =>
-  templatesMirror(corpus).find((t) => t.id === id);
+registerTemplateReader((corpus) => getDefaultStore().get(templatesAtom(corpus)));
+export { templatesMirror, templateMirror };
 
 /** A corpus's type list, outside React. */
 export const templateTypesMirror = (corpus: Corpus): EntityType[] => getDefaultStore().get(templateTypesAtom(corpus));

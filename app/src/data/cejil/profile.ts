@@ -10,8 +10,9 @@ import type { DocRendition, HtmlBlock } from "../documentRenditions";
 import type { FileEntry, DocumentGroup } from "../files";
 import type { Reference } from "../references";
 import type { CejilEntity, CejilFile } from "./types";
-import type { LatLng } from "../geo";
-import { formatPlace } from "../../utils/geoFormat";
+import { displayStrings, recordFieldsFor, type RecordContext } from "../../utils/templateProjection";
+import { templateMirror } from "../templates/mirror";
+import { registerEntityPropReader } from "../entityMetadata";
 import { PLACE_INHERITED_KEY } from "./placeKey";
 import { cejilTemplates } from "./templates";
 import { cejilRelationTypes } from "./relationTypes";
@@ -98,147 +99,9 @@ const propsByTemplate = new Map(
   ]),
 );
 
-const SKIP = new Set(["preview", "image", "link", "nested", "generatedtoc", "relationship"]);
-
 /** The template Uwazi gives an uploaded document: the one flagged `default`. */
 export function cejilDefaultTemplateId(): string | undefined {
   return cejilTemplates.find((t) => t.default)?._id;
-}
-
-/** The relation type NAME a template inherits a geolocation through — the
- *  `inherit: {type: "geolocation"}` spec, read at last. Mirrors the adapter's
- *  copy so the record and the card resolve the same connection. */
-const inheritedPlaceRelCache = new Map<string, string | undefined>();
-function inheritedPlaceRelName(templateId: string): string | undefined {
-  if (inheritedPlaceRelCache.has(templateId)) return inheritedPlaceRelCache.get(templateId);
-  const nameOf = new Map(cejilRelationTypes.map((r) => [r._id, r.name]));
-  let name: string | undefined;
-  for (const p of propsByTemplate.get(templateId) || []) {
-    if (p.type === "relationship" && p.inherit?.type === "geolocation" && p.relationType) {
-      name = nameOf.get(p.relationType);
-      break;
-    }
-  }
-  inheritedPlaceRelCache.set(templateId, name);
-  return name;
-}
-
-/** A CEJIL geolocation value as a LatLng. The dump writes `lon`, not `lng`. */
-function latLngOf(v: unknown): LatLng | undefined {
-  if (!v || typeof v !== "object") return undefined;
-  const o = v as { lat?: unknown; lon?: unknown; lng?: unknown };
-  const lat = o.lat;
-  const lng = o.lon ?? o.lng;
-  return typeof lat === "number" && typeof lng === "number" ? { lat, lng } : undefined;
-}
-
-function fmtDate(v: unknown): string {
-  if (typeof v !== "number" || v <= 0) return "";
-  const d = new Date(v * 1000);
-  const p = (n: number) => String(n).padStart(2, "0");
-  return `${p(d.getUTCDate())}/${p(d.getUTCMonth() + 1)}/${d.getUTCFullYear()}`;
-}
-
-/** Resolve one entity-language doc's metadata into scalar MetadataField[]. */
-function mdFields(e: CejilEntity): MetadataField[] {
-  const props = propsByTemplate.get(e.template) || [];
-  const out: MetadataField[] = [];
-  for (const p of props) {
-    if (p.name === "title" || SKIP.has(p.type)) continue;
-    const vals = e.metadata?.[p.name];
-
-    /* A RECORDING. `SKIP` used to drop `media` here while the card marked it, so
-       a hearing's card said a video existed and its record had no trace of one.
-       The raw value (URL + timelinks JSON) is kept EXACTLY as stored — not even
-       trimmed — because the editor must save an untouched value byte-identical.
-       A template's media property is emitted even when EMPTY, so the edit form
-       offers an empty editor to add one; the read record skips empty values. */
-    if (p.type === "media") {
-      const raw = vals?.[0]?.value;
-      out.push({ id: p.name, label: p.label, type: "media", value: typeof raw === "string" ? raw : "" });
-      continue;
-    }
-
-    /* A THESAURUS property, bound to its thesaurus (`content`) so the edit form
-       can offer the vocabulary rather than a free-text box. Emitted even when
-       EMPTY, like media: the form needs the editor to add a first value, and
-       the read record skips empty values anyway. */
-    if ((p.type === "select" || p.type === "multiselect") && p.content) {
-      const chosen = (vals ?? []).filter((v) => typeof v.label === "string" && v.label);
-      const labels = chosen.map((v) => v.label as string);
-      out.push({
-        id: p.name,
-        label: p.label,
-        type: p.type,
-        thesaurus: p.content,
-        value: labels.join(", "),
-        // The labels are this LANGUAGE's; the ids are the thesaurus's, the same
-        // in every language — what lets the form tick the right row in English.
-        valueIds: chosen.map((v) => (typeof v.value === "string" ? v.value : "")),
-        ...(p.type === "multiselect" ? { values: labels } : {}),
-      });
-      continue;
-    }
-
-    if (!vals || !vals.length) continue;
-
-    /* A PLACE, in the record too — until now `SKIP` dropped geolocation here as
-       well, so even an entity whose only real property was a coordinate had a
-       record with nothing in it, and a card click had nowhere to land. The raw
-       `{lat, lon}` stays unread; what the record holds is the coordinate as it
-       is written. */
-    if (p.type === "geolocation") {
-      const coords = latLngOf(vals[0]?.value);
-      if (coords) out.push({ id: p.name, label: p.label, type: "text", value: formatPlace(coords) });
-      continue;
-    }
-    if (p.type === "date" || p.type === "datasection") {
-      const value = fmtDate(vals[0]?.value);
-      if (value) out.push({ id: p.name, label: p.label, type: "date", value });
-      continue;
-    }
-    /* The record was losing the same dates the card was, and for the same
-       reason — see `formatVals` in adapt.ts. A multidate holds SEVERAL instants
-       and a multidaterange several spans, so the record prints all of them
-       rather than the first: this is the full view, and it is also what a card
-       property click has to be able to scroll to. */
-    if (p.type === "multidate") {
-      const value = vals
-        .map((v) => fmtDate(v?.value))
-        .filter(Boolean)
-        .join(" \u00b7 ");
-      if (value) out.push({ id: p.name, label: p.label, type: "date", value });
-      continue;
-    }
-    if (p.type === "multidaterange") {
-      const value = vals
-        .map((v) => {
-          const r = v?.value as { from?: unknown; to?: unknown } | undefined;
-          const from = fmtDate(r?.from);
-          const to = fmtDate(r?.to);
-          if (from && to) return `${from} \u2013 ${to}`;
-          return from ? `${from} \u2013` : to ? `\u2013 ${to}` : "";
-        })
-        .filter(Boolean)
-        .join(" \u00b7 ");
-      if (value) out.push({ id: p.name, label: p.label, type: "date", value });
-      continue;
-    }
-    // país / country-flavoured relationship handled upstream as relationship —
-    // but plain text/select/multiselect land here.
-    const labels = vals.map((v) => (typeof v.label === "string" ? v.label : "")).filter(Boolean);
-    if (labels.length) {
-      out.push({ id: p.name, label: p.label, type: "text", value: labels.join(", ") });
-      continue;
-    }
-    const v = vals[0]?.value;
-    if (typeof v === "string" && v.trim()) {
-      const s = v.replace(/\s+/g, " ").trim();
-      if (/^https?:\/\//.test(s) || s.startsWith("{") || s.startsWith("[")) continue;
-      out.push({ id: p.name, label: p.label, type: s.length > 120 ? "multiline" : "text", value: s });
-    }
-  }
-  return out;
 }
 
 const FILE_LANG: Record<string, string> = { spa: "ES", eng: "EN", por: "ES" };
@@ -399,9 +262,6 @@ function propNamesForRelType(templateId: string, typeName: string): string[] | u
   return aliasIndex.get(`${templateId}::${typeName}`);
 }
 
-/** Cap connected entities rendered per relationship card — a País hub has
- *  thousands of edges; show a workable slice rather than the whole fan-out. */
-const REL_CONN_CAP = 15;
 const CHAIN_JUDGE_CAP = 12;
 
 const templateIdByName = (name: string) => cejilTemplates.find((t) => t.name === name)?._id;
@@ -481,11 +341,10 @@ function signingJudges(
  *     link-only group so judges aren't listed twice.
  *  2. Direct connections grouped by relation type → one link-only field each
  *     (capped). Makes every CEJIL entity show its remaining graph neighbours. */
-function cejilRelationshipFields(sharedId: string, template: string): RelationshipMetadataField[] {
+function cejilChainFields(sharedId: string, template: string): RelationshipMetadataField[] {
   const out: RelationshipMetadataField[] = [];
 
   // 1. Signing judges + inherited país (Causa via chain, signing doc directly).
-  let promotedRelType: string | undefined;
   const graph = cejilChainGraph();
   if (graph) {
     const signing = signingJudges(graph, sharedId, template);
@@ -508,84 +367,45 @@ function cejilRelationshipFields(sharedId: string, template: string): Relationsh
         totalConnected: judges.length,
         readOnly: true,
       });
-      promotedRelType = "Firmantes"; // shown inherited above — don't repeat below
     }
   }
 
-  // 2. Direct connections grouped by relation type (skip the promoted group).
-  const rels = cejilRelsByEntity().get(sharedId) || [];
-  const byType = new Map<string, { ids: string[]; seen: Set<string> }>();
-  for (const r of rels) {
-    const other = r.from === sharedId ? r.to : r.from;
-    const typeName = r.typeName || "Relacionado";
-    if (typeName === promotedRelType) continue;
-    let g = byType.get(typeName);
-    if (!g) byType.set(typeName, (g = { ids: [], seen: new Set() }));
-    if (!g.seen.has(other)) {
-      g.seen.add(other);
-      g.ids.push(other);
-    }
-  }
-  for (const [typeName, g] of byType) {
-    out.push({
-      id: `cejil-rel-${sharedId}-${typeName}`,
-      keyAliases: propNamesForRelType(template, typeName),
-      label: typeName,
-      type: "relationship",
-      relationType: typeName,
-      targetTypeId: "",
-      connectedEntityIds: g.ids.slice(0, REL_CONN_CAP),
-      totalConnected: g.ids.length,
-      readOnly: true,
-    });
-  }
-
+  // Direct connections are the record's relationship PROPERTIES now
+  // (template-schema-spec.md step M3), read from `metadata[name]`; the rest of
+  // the graph stays on the Relationships tab.
   return out;
 }
 
 
-/** The place an entity reached through a connection, for one that carries no
- *  coordinate of its own.
- *
- *  The record's half of the Causa fix: `Causa` declares its location as a
- *  relationship carrying `inherit: {type: "geolocation"}`, which nothing has
- *  ever read, so a case has never said where its events happened. Walking that
- *  edge once gives the record a field — which is also what a card's place row
- *  needs somewhere to scroll TO.
- *
- *  Narrow in the same way the borrowed DATE is narrow (see `createdOf` in
- *  adapt.ts): only from a record that HAS a coordinate, only to one that has
- *  none. Nothing else borrows anything. */
-function inheritedPlaceField(sharedId: string, own: CejilEntity): MetadataField | undefined {
-  for (const p of propsByTemplate.get(own.template) || []) {
-    if (p.type === "geolocation" && own.metadata?.[p.name]?.length) return undefined;
-  }
-  /* Follow the relation type the TEMPLATE names, not any edge that happens to
-     end somewhere with coordinates. A Causa is also connected to its País, and a
-     País carries a centroid, so the loose version made every case in a country
-     print one identical point — the country facet drawn on a map, which is what
-     this corpus's adapter rewrite rejected. */
-  const viaName = inheritedPlaceRelName(own.template);
-  if (!viaName) return undefined;
-  for (const r of cejilRelsByEntity().get(sharedId) ?? []) {
-    if ((r.typeName || "Relacionado") !== viaName) continue;
-    const other = r.from === sharedId ? r.to : r.from;
-    const doc = cejilBySidLang().get(`${other}::es`) || cejilBySidLang().get(`${other}::en`);
-    if (!doc) continue;
-    for (const p of propsByTemplate.get(doc.template) || []) {
-      if (p.type !== "geolocation") continue;
-      const coords = latLngOf(doc.metadata?.[p.name]?.[0]?.value);
-      if (!coords) continue;
-      return {
-        id: PLACE_INHERITED_KEY,
-        label: "Lugar de los hechos",
-        type: "text",
-        value: formatPlace(coords, doc.title.trim()),
-      };
-    }
-  }
-  return undefined;
+/** What the record projection needs to know about CEJIL: relationship types
+ *  by their dump name (what its references carry and `relationLabel`
+ *  resolves) and its templates. */
+const relTypeNameById = new Map(cejilRelationTypes.map((r) => [r._id, r.name]));
+const recordCtx: RecordContext = {
+  corpus: "cejil",
+  relationTypeName: (id) => relTypeNameById.get(id ?? "") ?? "Relacionado",
+  template: (id) => templateMirror("cejil", id),
+};
+
+/** The relationship property of a template that inherits a geolocation
+ *  (Causa's "Geolocalización de los hechos"): the card's place line focuses it. */
+function placePropertyOf(templateId: string): string | undefined {
+  return templateMirror("cejil", templateId)?.properties.find(
+    (p) => p.type === "relationship" && p.inherit?.type === "geolocation",
+  )?.name;
 }
+
+/** An inherited column's value: one property of a CEJIL entity, as display
+ *  text through its template's type. Registered with `getEntityProp`, which
+ *  the inheritance resolver reads (as Travesía's profile does). */
+registerEntityPropReader((entityId, propName) => {
+  const doc = cejilEsBySid().get(entityId);
+  if (!doc) return undefined;
+  const p = templateMirror("cejil", doc.template)?.properties.find((x) => x.name === propName);
+  if (!p) return undefined;
+  const values = displayStrings(p.type, doc.metadata?.[propName]);
+  return values.length ? values.join(", ") : undefined;
+});
 
 /** Put an entity's fields in its template's declared order.
  *
@@ -624,6 +444,10 @@ function orderByTemplate(templateId: string, fields: AnyMetadataField[]): AnyMet
   const position = (f: AnyMetadataField): number => {
     if (f.id === PLACE_INHERITED_KEY) return placeIndex >= 0 ? placeIndex : Infinity;
     if (f.type === "relationship") {
+      // A relationship property sits at itself; a chain field at the property
+      // of its relation type, else by its targets.
+      const own = indexOf.get(f.id);
+      if (own !== undefined) return own;
       const hits = (f.keyAliases ?? [])
         .map((name) => indexOf.get(name))
         .filter((i): i is number => i !== undefined);
@@ -639,15 +463,17 @@ function orderByTemplate(templateId: string, fields: AnyMetadataField[]): AnyMet
 
 export function buildCejilProfile(sharedId: string): EntityProfile {
   const es = cejilBySidLang().get(`${sharedId}::es`) || cejilBySidLang().get(`${sharedId}::en`)!;
-  const relFields = cejilRelationshipFields(sharedId, es.template);
-  const place = inheritedPlaceField(sharedId, es);
+  const chainFields = cejilChainFields(sharedId, es.template);
+  const template = templateMirror("cejil", es.template);
   const metadata = LANGS.reduce((acc, lang) => {
     const doc = cejilBySidLang().get(`${sharedId}::${LANG_CODE[lang]}`) || es;
-    acc[lang] = orderByTemplate(es.template, [
-      ...mdFields(doc),
-      ...(place ? [place] : []),
-      ...relFields,
-    ]);
+    // The template is the schema: every property in its order, typed as the
+    // template types it, nothing flattened (step M3). The connection that
+    // inherits a place also answers to the card's place line.
+    const projected = recordFieldsFor(template, doc.metadata, recordCtx).map((f) =>
+      f.type === "relationship" && f.id === placePropertyOf(es.template) ? { ...f, keyAliases: [PLACE_INHERITED_KEY] } : f,
+    );
+    acc[lang] = orderByTemplate(es.template, [...projected, ...chainFields]);
     return acc;
   }, {} as Record<Language, AnyMetadataField[]>);
 

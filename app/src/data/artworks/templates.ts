@@ -18,7 +18,9 @@ const p = (templateId: string, name: string, label: string, type: "text" | "link
   type,
 });
 
-export const artworkTemplateDefs: TemplateDef[] = [
+let built: TemplateDef[] | null = null;
+/** Built on first read (see data/sample/templates.ts). */
+export const artworkTemplateDefs = (): TemplateDef[] => (built ??= [
   {
     id: ARTWORK_TYPE_ID,
     name: artworkTypeById.get(ARTWORK_TYPE_ID)!.name,
@@ -62,4 +64,4 @@ export const artworkTemplateDefs: TemplateDef[] = [
       },
     ],
   },
-];
+]);

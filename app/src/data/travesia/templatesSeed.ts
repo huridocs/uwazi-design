@@ -23,11 +23,13 @@ function propertyOf(p: TravesiaProperty): PropertyDef {
   };
 }
 
-export const travesiaTemplateDefs: TemplateDef[] = travesiaTemplates.map((t) => ({
+let built: TemplateDef[] | null = null;
+/** Built on first read (see data/sample/templates.ts). */
+export const travesiaTemplateDefs = (): TemplateDef[] => (built ??= travesiaTemplates.map((t) => ({
   id: t._id,
   name: t.name,
   color: travesiaTypeById.get(t._id)!.color,
   isDefault: !!t.default,
   commonProperties: commonPropertiesFor(t._id),
   properties: t.properties.map(propertyOf),
-}));
+})));

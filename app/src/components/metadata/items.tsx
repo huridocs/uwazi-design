@@ -68,6 +68,9 @@ const LONG_CHARS = 60;
 export function fieldKind(f: MetadataField): FieldKind {
   // A recording and its chapter list is a block of its own, like a paragraph.
   if (f.type === "multiline" || f.type === "media") return "long";
+  // Several dates or date ranges are a list, one value per line (step M3:
+  // a multidate is no longer one string).
+  if ((f.displayValues?.length ?? 0) > 1) return "chips";
   if (f.items && f.items.length > 0) return "chips";
   return (f.value?.length ?? 0) > LONG_CHARS ? "long" : "scalar";
 }
@@ -88,7 +91,15 @@ export function fieldItem(f: MetadataField): MetadataItem {
     // field is asking for.
     fillValue: !long && f.type !== "link" ? f.value?.trim() || undefined : undefined,
     content:
-      f.type === "media" ? (
+      (f.displayValues?.length ?? 0) > 1 ? (
+        <ul data-part="value-list" className="space-y-0.5">
+          {f.displayValues!.map((v, i) => (
+            <li key={i} className="text-sm font-medium text-ink leading-relaxed tabular-nums">
+              {v}
+            </li>
+          ))}
+        </ul>
+      ) : f.type === "media" ? (
         <MediaFieldValue raw={f.value} />
       ) : f.type === "country" ? (
         <span className="inline-flex items-center gap-1.5 text-sm text-ink leading-relaxed">

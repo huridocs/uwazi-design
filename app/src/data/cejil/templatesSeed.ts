@@ -52,7 +52,9 @@ function propertyOf(templateId: string, p: CejilTemplateProperty): PropertyDef {
   };
 }
 
-export const cejilTemplateDefs: TemplateDef[] = cejilTemplates.map((t) => ({
+let built: TemplateDef[] | null = null;
+/** Built on first read (see data/sample/templates.ts). */
+export const cejilTemplateDefs = (): TemplateDef[] => (built ??= cejilTemplates.map((t) => ({
   id: t._id,
   name: t.name.trim(),
   // The typesAdapter's colour: the dump's own, else the palette by index.
@@ -60,4 +62,4 @@ export const cejilTemplateDefs: TemplateDef[] = cejilTemplates.map((t) => ({
   isDefault: !!t.default,
   commonProperties: (t.commonProperties ?? []).map((p) => propertyOf(t._id, p)),
   properties: t.properties.map((p) => propertyOf(t._id, p)),
-}));
+})));
