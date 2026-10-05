@@ -215,8 +215,14 @@ export const valueUsageAtom = atomFamily((thesaurusId: string) =>
  *  Sample's live store; CEJIL's counts from the importer, its references
  *  being read-only) and the relationship fields in its templates. */
 export const relationTypeUsageAtom = atomFamily((id: string) =>
+  atom((get) => get(relationTypeUsageInAtom(`${relationTypesCorpus(get(dataSourceAtom))}|${id}`))),
+);
+
+/** The same, for a named collection (`corpus|id`): the Relationships panel
+ *  asks about the Sample whatever the Library shows. */
+export const relationTypeUsageInAtom = atomFamily((key: string) =>
   atom((get) => {
-    const corpus = relationTypesCorpus(get(dataSourceAtom));
+    const [corpus, id] = key.split("|") as [Corpus, string];
     const references =
       corpus === "mock"
         ? get(referencesAtom).filter((x) => x.relationType === id).length

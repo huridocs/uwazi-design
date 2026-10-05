@@ -4,12 +4,36 @@ import {
   relationTypes as initialRelationTypes,
   Reference,
   RelationType,
+  renameRelationType,
+  restoreRelationType,
+  unregisterRelationType,
 } from "../data/references";
+import { readSampleRegistry } from "../data/sampleRelationTypesStore";
 import { focusedEntityIdAtom } from "./focusedEntity";
 import { isCejilEntity, cejilReferencesFor } from "../data/cejil/profile";
 import { isTravesiaEntity, travesiaReferencesFor } from "../data/travesia/profile";
 
-export const referencesAtom = atom<Reference[]>(initialRefs);
+/* ── The Sample registry as saved in this visit ──────────────────────────
+   Settings' relationship-type changes are kept in sessionStorage
+   (`data/sampleRelationTypesStore.ts`). At load the saved list replaces the
+   seed list, in the atom and in the static mirror, and references a delete
+   moved carry their new type. The seed is kept for Reset demo data. */
+export const SEED_RELATION_TYPES: RelationTypeDef[] = initialRelationTypes.map((t) => ({ ...t }));
+export const SEED_REFERENCE_TYPES = new Map(initialRefs.map((r) => [r.id, r.relationType]));
+const savedRegistry = readSampleRegistry();
+if (savedRegistry) {
+  const keep = new Set(savedRegistry.types.map((t) => t.id));
+  for (const t of [...initialRelationTypes]) if (!keep.has(t.id)) unregisterRelationType(t.id);
+  savedRegistry.types.forEach((t, i) => {
+    if (initialRelationTypes.some((x) => x.id === t.id)) renameRelationType(t.id, t.label);
+    else restoreRelationType(t, i);
+  });
+}
+const startRefs = savedRegistry && Object.keys(savedRegistry.moved).length
+  ? initialRefs.map((r) => (savedRegistry.moved[r.id] ? { ...r, relationType: savedRegistry.moved[r.id] } : r))
+  : initialRefs;
+
+export const referencesAtom = atom<Reference[]>(startRefs);
 
 /** True if a reference touches the given entity on either endpoint. */
 const involvesEntity = (r: Reference, id: string) =>
@@ -106,7 +130,9 @@ export interface RelationTypeDef {
   id: RelationType;
   label: string;
 }
-export const relationTypesAtom = atom<RelationTypeDef[]>(initialRelationTypes);
+export const relationTypesAtom = atom<RelationTypeDef[]>(
+  savedRegistry ? savedRegistry.types.map((t) => ({ ...t })) : initialRelationTypes.map((t) => ({ ...t })),
+);
 
 /** Open-state for the Manage Relationship Types modal. */
 export const manageRelationTypesOpenAtom = atom(false);

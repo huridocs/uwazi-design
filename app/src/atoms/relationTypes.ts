@@ -1,4 +1,7 @@
-import { atom, getDefaultStore } from "jotai";
+import { atom, getDefaultStore, type Getter } from "jotai";
+import { atomFamily } from "jotai/utils";
+import { writeSampleRegistry } from "../data/sampleRelationTypesStore";
+import { relTypeFiltersAtom } from "./filters";
 import { travesiaRelationTypes } from "../data/travesia/schema";
 import { registerRelationLabelReader } from "../utils/inheritance";
 import type { Corpus } from "../data/entityChanges";
@@ -11,8 +14,14 @@ import {
 } from "../data/references";
 import { cejilRelationTypes } from "../data/cejil/relationTypes";
 import { dataSourceAtom } from "./dataSource";
-import { referencesAtom, relationTypesAtom, type RelationTypeDef } from "./references";
-import { createSettingsCollection, hasId, newSettingsId } from "./settingsCollection";
+import {
+  referencesAtom,
+  relationTypesAtom,
+  SEED_REFERENCE_TYPES,
+  SEED_RELATION_TYPES,
+  type RelationTypeDef,
+} from "./references";
+import { createSettingsCollection, hasId, newSettingsId, registerSettingsReset } from "./settingsCollection";
 
 /** Relationship types: ONE registry per collection, which Settings ›
  *  Relationship types, the Relationships panel (Create relationship, Manage
@@ -63,12 +72,7 @@ registerRelationLabelReader((type) => {
 
 /** The types Settings lists, for the collection it shows. */
 export const settingsRelationTypesAtom = atom<RelationTypeDef[]>((get) =>
-  {
-    const corpus = relationTypesCorpus(get(dataSourceAtom));
-    return isImported(corpus)
-      ? get(importedStore.listOfAtom(corpus))
-      : get(relationTypesAtom).filter((t) => t.id !== NO_LABEL_RELATION_TYPE);
-  },
+  get(relationTypesOfAtom(relationTypesCorpus(get(dataSourceAtom)))),
 );
 
 /** Uwazi's name rules, with its two defects not copied: the name is trimmed,
@@ -85,11 +89,13 @@ export function relationTypeNameIssue(list: RelationTypeDef[], id: string | null
 /** Create (`id` null) or rename a type in the shown collection's registry.
  *  Returns its id, or null when the name is refused. The id never changes on
  *  rename, so references and template fields keep pointing at it. */
-export const saveRelationTypeAtom = atom(null, (get, set, { id, name }: { id: string | null; name: string }): string | null => {
-  const list = get(settingsRelationTypesAtom);
+export const saveRelationTypeAtom = atom(
+  null,
+  (get, set, { id, name, corpus: given }: { id: string | null; name: string; corpus?: Corpus }): string | null => {
+  const corpus = given ?? relationTypesCorpus(get(dataSourceAtom));
+  const list = get(relationTypesOfAtom(corpus));
   if (relationTypeNameIssue(list, id, name)) return null;
   const label = name.trim();
-  const corpus = relationTypesCorpus(get(dataSourceAtom));
   if (isImported(corpus)) {
     if (!id) return set(importedStore.createAtom, { value: { label }, corpus });
     set(importedStore.patchAtom, { id, patch: { label }, corpus });
@@ -103,12 +109,15 @@ export const saveRelationTypeAtom = atom(null, (get, set, { id, name }: { id: st
       return at < 0 ? [...prev, def] : [...prev.slice(0, at), def, ...prev.slice(at)];
     });
     registerRelationType(def);
+    persistSample(get);
     return def.id;
   }
   set(relationTypesAtom, (prev) => prev.map((t) => (t.id === id ? { ...t, label } : t)));
   renameRelationType(id, label);
+  persistSample(get);
   return id;
-});
+  },
+);
 
 /** What a delete removed, so Undo can put it back exactly. */
 export interface RelationTypeDeletion {
@@ -124,8 +133,15 @@ export interface RelationTypeDeletion {
  *  Operator's decision). The caller has already checked usage. */
 export const deleteRelationTypeAtom = atom(
   null,
-  (get, set, { id, to }: { id: string; to: string | null }): RelationTypeDeletion | null => {
-    const corpus = relationTypesCorpus(get(dataSourceAtom));
+  (get, set, { id, to, corpus: given }: { id: string; to: string | null; corpus?: Corpus }): RelationTypeDeletion | null => {
+    const corpus = given ?? relationTypesCorpus(get(dataSourceAtom));
+    // A Relationships panel filter on the type would match nothing and could
+    // not be cleared from its list: drop it (Undo does not bring it back).
+    set(relTypeFiltersAtom, (prev) => {
+      if (!(id in prev)) return prev;
+      const { [id]: _drop, ...rest } = prev;
+      return rest;
+    });
     if (isImported(corpus)) {
       const list = get(importedStore.listOfAtom(corpus));
       const index = list.findIndex((t) => t.id === id);
@@ -145,6 +161,7 @@ export const deleteRelationTypeAtom = atom(
     }
     set(relationTypesAtom, all.filter((t) => t.id !== id));
     unregisterRelationType(id);
+    persistSample(get);
     return { corpus, def: all[index], index, moved };
   },
 );
@@ -170,4 +187,44 @@ export const restoreRelationTypeAtom = atom(null, (get, set, d: RelationTypeDele
       prev.map((r) => (ids.has(r.id) && r.relationType === to ? { ...r, relationType: d.def.id } : r)),
     );
   }
+  persistSample(get);
+});
+
+/** A collection's registry, `no_label` left out. */
+export const relationTypesOfAtom = atomFamily((corpus: Corpus) =>
+  atom<RelationTypeDef[]>((get) =>
+    isImported(corpus)
+      ? get(importedStore.listOfAtom(corpus))
+      : get(relationTypesAtom).filter((t) => t.id !== NO_LABEL_RELATION_TYPE),
+  ),
+);
+
+/** Save the Sample registry (`data/sampleRelationTypesStore.ts`): its type
+ *  list, and the seed references whose type differs from the seed's. */
+function persistSample(get: Getter) {
+  const moved: Record<string, string> = {};
+  for (const r of get(referencesAtom)) {
+    const seed = SEED_REFERENCE_TYPES.get(r.id);
+    if (seed !== undefined && seed !== r.relationType) moved[r.id] = r.relationType;
+  }
+  writeSampleRegistry({ types: get(relationTypesAtom), moved });
+}
+
+// Reset demo data: the Sample registry and the references it moved go back to
+// the seed, in the atom and in the static mirror.
+registerSettingsReset((set, get) => {
+  const now = get(relationTypesAtom);
+  for (const t of now) if (!SEED_RELATION_TYPES.some((s) => s.id === t.id)) unregisterRelationType(t.id);
+  SEED_RELATION_TYPES.forEach((t, i) => {
+    restoreRelationType(t, i);
+    renameRelationType(t.id, t.label);
+  });
+  set(relationTypesAtom, SEED_RELATION_TYPES.map((t) => ({ ...t })));
+  set(referencesAtom, (prev) =>
+    prev.map((r) => {
+      const seed = SEED_REFERENCE_TYPES.get(r.id);
+      return seed !== undefined && seed !== r.relationType ? { ...r, relationType: seed } : r;
+    }),
+  );
+  writeSampleRegistry(null);
 });
