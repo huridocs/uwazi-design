@@ -70,6 +70,11 @@ export function loadCejilData(): Promise<CejilCorpus> {
       }
 
       corpus = { entities, relationships, files, fullText };
+      // Fold the documents off the main thread so the first full-text
+      // keystroke finds the search caches warm, whoever loaded the corpus (the
+      // Library, or Settings for its usage counts). Not awaited; nothing
+      // depends on it. Imported here, lazily, so this module stays light.
+      void import("../../utils/warmSearchScan").then((m) => m.warmSearchScan(), () => {});
       return corpus;
     })().catch((err) => {
       // Don't cache the rejection — clearing the promise lets a later call

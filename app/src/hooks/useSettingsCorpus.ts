@@ -3,6 +3,7 @@ import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
 import { cejilReadyAtom, dataSourceAtom, travesiaReadyAtom } from "../atoms/dataSource";
 import { loadTravesiaData } from "../data/travesia/load";
 import { loadCejilData } from "../data/cejil/load";
+import { effectiveSettingsSectionAtom } from "../atoms/settings";
 
 /** True while the active corpus's Settings data is still on its way.
  *
@@ -16,6 +17,9 @@ export function useSettingsCorpusLoading(): boolean {
   const ready = useAtomValue(travesiaReadyAtom);
   return source === "travesia" && !ready;
 }
+
+/** Settings pages that count CEJIL entities for a usage line. */
+const CEJIL_USAGE_SECTIONS = new Set(["templates", "thesauri"]);
 
 /** Why the active corpus failed to load, or null. Set by
  *  `useLoadSettingsCorpus`; Retry clears it and loads again. */
@@ -32,12 +36,18 @@ export function useLoadSettingsCorpus(): { retry: () => void } {
   const [travesiaReady, setTravesiaReady] = useAtom(travesiaReadyAtom);
   const [cejilReady, setCejilReady] = useAtom(cejilReadyAtom);
   const setError = useSetAtom(settingsCorpusErrorAtom);
+  // CEJIL's records are about 26 MB: fetched only on the pages whose usage
+  // counts read them (template property removal, thesaurus and value
+  // deletes), not for Account or the Activity log. Its type lists and the
+  // template and relationship-type counts are bundled.
+  const section = useAtomValue(effectiveSettingsSectionAtom);
+  const needsCejil = CEJIL_USAGE_SECTIONS.has(section);
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     const load =
       source === "travesia" && !travesiaReady
         ? () => loadTravesiaData().then(() => setTravesiaReady(true))
-        : source === "cejil" && !cejilReady
+        : source === "cejil" && !cejilReady && needsCejil
           ? () => loadCejilData().then(() => setCejilReady(true))
           : null;
     if (!load) return;
@@ -49,7 +59,7 @@ export function useLoadSettingsCorpus(): { retry: () => void } {
     return () => {
       alive = false;
     };
-  }, [source, travesiaReady, cejilReady, setTravesiaReady, setCejilReady, setError, attempt]);
+  }, [source, travesiaReady, cejilReady, needsCejil, setTravesiaReady, setCejilReady, setError, attempt]);
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
   return { retry };
 }

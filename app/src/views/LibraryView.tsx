@@ -17,7 +17,6 @@ import { cejilDefaultEntityId } from "../data/cejil/defaultEntity";
 import { isCejilEntity } from "../data/cejil/profile";
 import { focusCollectionDefaultAtom } from "../atoms/focusedEntity";
 import { loadTravesiaData, travesiaRelsByEntity } from "../data/travesia/load";
-import { warmSearchScan } from "../utils/warmSearchScan";
 import { referencesAtom } from "../atoms/references";
 import { languageAtom, type Language } from "../atoms/language";
 import { uiLanguageAtom } from "../atoms/uiLanguage";
@@ -171,11 +170,8 @@ export function LibraryView() {
       loadCejilData().then(
         () => {
           if (!alive) return;
+          // The loader starts the search warm-up itself (`warmSearchScan`).
           setCejilReady(true);
-          // Fold the documents off the main thread so the first full-text
-          // keystroke finds the search caches warm. Not awaited; nothing depends
-          // on it finishing. See `utils/warmSearchScan.ts`.
-          warmSearchScan();
         },
         () => alive && setCejilError(true),
       );
