@@ -128,7 +128,7 @@ export function FilesView({ tabs, activeTab, onTabChange, onBack }: FilesViewPro
       />
       <DocMeta showPdfSelector={false} />
       <div className="bleed flex-1 overflow-auto body-top pb-8 bg-warm">
-        <SectionLabel as="h3" level="section" className="mb-2">
+        <SectionLabel as="h3" className="mb-2">
           Primary documents
         </SectionLabel>
         {primaryGroups.length === 0 ? (
@@ -165,7 +165,7 @@ export function FilesView({ tabs, activeTab, onTabChange, onBack }: FilesViewPro
           })
         )}
 
-        <SectionLabel as="h3" level="section" className="mb-2 mt-5">
+        <SectionLabel as="h3" className="mb-2 mt-5">
           Supporting files
         </SectionLabel>
         {supportingFiles.length === 0 ? (

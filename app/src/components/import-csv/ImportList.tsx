@@ -80,7 +80,7 @@ export function ImportList({
       sortKey: "template",
       width: "7.5rem",
       mobile: "meta",
-      cell: (i) => <span className="text-ink-secondary truncate">{templateName(i.templateId)}</span>,
+      cell: (i) => <span className="text-xs text-ink-tertiary truncate">{templateName(i.templateId)}</span>,
     },
     {
       id: "progress",
@@ -92,7 +92,7 @@ export function ImportList({
           <span className="flex-1 min-w-[3rem]">
             <ProgressBar value={processedPct(i)} color={progressColor(i)} ariaLabel={`Progress, ${i.filename}`} />
           </span>
-          <span dir="ltr" className="text-meta text-ink-secondary tabular-nums shrink-0">
+          <span dir="ltr" className="text-meta text-ink-tertiary tabular-nums shrink-0">
             {i.rowsProcessed.toLocaleString()}/{i.totalRows.toLocaleString()}
           </span>
         </span>
@@ -104,7 +104,7 @@ export function ImportList({
       width: "6rem",
       align: "right",
       mobile: "hidden",
-      cell: (i) => <span className="text-ink-secondary tabular-nums">{countOrDash(i.entitiesCreated)}</span>,
+      cell: (i) => <span className="text-xs text-ink-tertiary tabular-nums">{countOrDash(i.entitiesCreated)}</span>,
     },
     {
       id: "updated",
@@ -112,7 +112,7 @@ export function ImportList({
       width: "6rem",
       align: "right",
       mobile: "hidden",
-      cell: (i) => <span className="text-ink-secondary tabular-nums">{countOrDash(i.entitiesUpdated)}</span>,
+      cell: (i) => <span className="text-xs text-ink-tertiary tabular-nums">{countOrDash(i.entitiesUpdated)}</span>,
     },
     {
       id: "failed",
@@ -121,7 +121,7 @@ export function ImportList({
       align: "right",
       mobile: "hidden",
       cell: (i) => (
-        <span className={`tabular-nums ${i.rowsFailed ? "text-seal-label font-medium" : "text-ink-secondary"}`}>
+        <span className={`text-xs tabular-nums ${i.rowsFailed ? "text-seal-label font-medium" : "text-ink-tertiary"}`}>
           {countOrDash(i.rowsFailed)}
         </span>
       ),
@@ -133,7 +133,7 @@ export function ImportList({
       width: "9rem",
       mobile: "meta",
       cell: (i) => (
-        <span dir="ltr" className="text-xs text-ink-secondary tabular-nums">
+        <span dir="ltr" className="text-xs text-ink-tertiary tabular-nums">
           {csvTime(i.created)}
         </span>
       ),

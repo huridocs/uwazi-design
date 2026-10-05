@@ -91,7 +91,7 @@ function Flag({
         </label>
         <HelpTip label={label} text={help} />
       </div>
-      {visibleHelp && <p className="ps-5.5 text-meta text-ink-tertiary text-pretty">{help}</p>}
+      {visibleHelp && <p className="ps-5.5 text-xs text-ink-tertiary text-pretty">{help}</p>}
     </div>
   );
 }
@@ -231,7 +231,7 @@ export function TemplatePropertyPanel({
             reserve
           />
           {renamed && (
-            <p className="text-meta text-ink-tertiary">Internal name stays “{property!.name}”, so entity values are kept.</p>
+            <p className="text-xs text-ink-tertiary">Internal name stays “{property!.name}”, so entity values are kept.</p>
           )}
         </ModalField>
 
@@ -411,7 +411,7 @@ function SameLabelTable({
       <h4 className="text-xs font-semibold text-ink">Properties from other templates in the collection using the same label.</h4>
       <div className="overflow-x-auto rounded-md border border-border-soft">
         <table className="w-full text-xs">
-          <thead className="bg-warm text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
+          <thead className="bg-warm text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
             <tr>
               <th scope="col" className="px-2 py-1.5 text-start">Template</th>
               <th scope="col" className="px-2 py-1.5 text-start">Type</th>

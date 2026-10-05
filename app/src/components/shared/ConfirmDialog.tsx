@@ -66,7 +66,7 @@ export function ConfirmDialog({
         </>
       }
     >
-      <p id="confirm-dialog-message" data-part="message" className="text-sm text-ink-secondary">
+      <p id="confirm-dialog-message" data-part="message" className="text-sm text-ink">
         {message}
       </p>
     </Modal>

@@ -178,7 +178,7 @@ export function SuggestionsView({ extractor: x, onBack }: { extractor: IxExtract
         ) : r.processed && !r.error ? (
           <span className="text-xs text-warning-label">No context</span>
         ) : (
-          <span className="text-xs text-ink-secondary">-</span>
+          <span className="text-xs text-ink-tertiary">-</span>
         ),
     },
     {
@@ -196,7 +196,7 @@ export function SuggestionsView({ extractor: x, onBack }: { extractor: IxExtract
       width: "4.5rem",
       align: "right",
       mobile: "hidden",
-      cell: (r) => <span className="text-xs text-ink-secondary tabular-nums">{r.score ? `${r.score}%` : "-"}</span>,
+      cell: (r) => <span className="text-xs text-ink-tertiary tabular-nums">{r.score ? `${r.score}%` : "-"}</span>,
     },
     {
       id: "state",
@@ -204,7 +204,7 @@ export function SuggestionsView({ extractor: x, onBack }: { extractor: IxExtract
       width: "7.5rem",
       mobile: "meta",
       cell: (r) => (
-        <span className={`w-fit px-2 py-0.5 rounded-md text-meta font-medium whitespace-nowrap ${STATE_PILL[r.state].cls}`}>
+        <span className={`w-fit px-2 py-0.5 rounded-md text-meta font-semibold whitespace-nowrap ${STATE_PILL[r.state].cls}`}>
           {STATE_PILL[r.state].label}
         </span>
       ),
@@ -319,7 +319,7 @@ export function SuggestionsView({ extractor: x, onBack }: { extractor: IxExtract
               <Stat label="Pending" value={stats.pending.toLocaleString()} />
               <Stat label="Accuracy" value={stats.accuracy === null ? "-" : `${stats.accuracy}%`} />
             </dl>
-            <p className="text-meta text-ink-secondary text-pretty max-w-[44rem]">
+            <p className="text-xs text-ink-tertiary text-pretty max-w-[44rem]">
               Score is the model's confidence in one suggestion. Accuracy is defined by the amount of matches vs mismatches for labeled samples that have been processed.
             </p>
 
@@ -451,7 +451,7 @@ export function SuggestionsView({ extractor: x, onBack }: { extractor: IxExtract
         <div className="flex flex-col gap-5 py-3">
           {FLAGS.map((g) => (
             <fieldset key={g.section} className="flex flex-col gap-1.5">
-              <legend className="mb-1.5 text-meta font-semibold uppercase tracking-wider text-ink-secondary">{g.section}</legend>
+              <legend className="mb-1.5 text-meta font-semibold uppercase tracking-wider text-ink-tertiary">{g.section}</legend>
               {g.items.map(([id, label]) => (
                 <label key={id} className="flex items-center gap-2 text-xs text-ink cursor-pointer">
                   <Checkbox
@@ -473,7 +473,7 @@ export function SuggestionsView({ extractor: x, onBack }: { extractor: IxExtract
             </fieldset>
           ))}
           <section aria-labelledby="ix-stats-heading" className="flex flex-col gap-1.5">
-            <h4 id="ix-stats-heading" className="text-meta font-semibold uppercase tracking-wider text-ink-secondary">
+            <h4 id="ix-stats-heading" className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
               Statistics
             </h4>
             <p className="flex items-center gap-2 text-xs text-ink">

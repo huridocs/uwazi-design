@@ -212,7 +212,7 @@ export function FacetSection({
               open ? "" : "-rotate-90"
             }`}
           />
-          <span data-part="title" className="text-tab font-semibold text-ink-secondary truncate">
+          <span data-part="title" className="text-tab font-semibold text-ink truncate">
             {title}
           </span>
           {selectedCount > 0 && (

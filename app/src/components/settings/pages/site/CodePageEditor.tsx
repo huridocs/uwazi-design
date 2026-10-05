@@ -636,7 +636,7 @@ function PaletteModal({ onInsert, onClose }: { onInsert: (e: PaletteEntry) => vo
       </div>
       {groups.map(([group, items]) => (
         <section key={group} className="mb-3">
-          <h3 className="text-meta font-semibold uppercase tracking-wide text-ink-tertiary mb-1">{group}</h3>
+          <h3 className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary mb-1">{group}</h3>
           <ul className="flex flex-col">
             {items.map((p) => (
               <li key={p.name}>

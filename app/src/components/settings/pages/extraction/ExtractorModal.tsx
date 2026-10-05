@@ -214,7 +214,7 @@ export function ExtractorModal({ extractor, onClose }: { extractor: IxExtractor 
                 Properties by template
               </span>
               {draft.picks.length > 0 && (
-                <span className="text-meta text-ink-secondary" role="status">
+                <span className="text-meta text-ink-tertiary" role="status">
                   {draft.picks.length} selected
                 </span>
               )}
@@ -222,7 +222,7 @@ export function ExtractorModal({ extractor, onClose }: { extractor: IxExtractor 
             <ModalSearchField value={search} onChange={setSearch} ariaLabel="Search properties" placeholder="Search properties or templates…" />
             <div className="flex-1 min-h-[10rem] overflow-y-auto rounded-lg border border-border">
               {groups.length === 0 ? (
-                <p className="px-3 py-6 text-center text-xs text-ink-secondary">No property matches “{search.trim()}”</p>
+                <p className="px-3 py-6 text-center text-xs text-ink-tertiary">No property matches “{search.trim()}”</p>
               ) : (
                 groups.map(({ t, props }) => {
                   const open = !folded.has(t.id);

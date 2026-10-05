@@ -76,7 +76,7 @@ export function RelationshipsPanelBody({ onDelete, scrollBgClass }: Props) {
     body = (
       <div data-part="empty" className="flex flex-col items-center justify-center py-16 text-center">
         <Link2 size={36} className="text-ink-tertiary/40 mb-3" aria-hidden />
-        <p className="text-sm text-ink-tertiary">No relationships found</p>
+        <p className="text-sm font-medium text-ink-secondary">No relationships found</p>
         <p className="text-xs text-ink-tertiary mt-1">
           Select text in the document to create one
         </p>

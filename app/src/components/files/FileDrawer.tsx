@@ -27,6 +27,7 @@ import { FileViewerBody, resolveFileUrl } from "./FileViewerModal";
 import { DocumentViewer } from "../viewer/DocumentViewer";
 import { TabCount } from "../shared/TabCount";
 import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../shared/warmButton";
+import { TAB_BUTTON } from "../layout/tabStrip";
 
 const typeIcons: Record<FileEntry["type"], typeof FileText> = {
   pdf: FileText,
@@ -109,7 +110,7 @@ export function FileDrawer({
                 data-state={activeTab === tab.id ? "active" : "inactive"}
                 aria-pressed={activeTab === tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center justify-center gap-1 px-3 py-1.5 text-tab font-medium transition-colors ${
+                className={`${TAB_BUTTON} ${
                   activeTab === tab.id
                     ? "bg-vellum text-ink"
                     : "bg-paper text-ink-tertiary hover:text-ink-secondary"

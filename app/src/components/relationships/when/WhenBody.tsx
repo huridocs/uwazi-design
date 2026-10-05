@@ -73,7 +73,7 @@ export function WhenBody() {
     return (
       <div data-part="empty" className="flex flex-col items-center justify-center py-16 text-center">
         <CalendarX size={36} className="text-ink-tertiary/40 mb-3" aria-hidden />
-        <p className="text-sm text-ink-tertiary">Nothing here has a date</p>
+        <p className="text-sm font-medium text-ink-secondary">Nothing here has a date</p>
         <p className="text-xs text-ink-tertiary mt-1">Dated properties of this entity and its connections show here</p>
       </div>
     );
@@ -86,7 +86,7 @@ export function WhenBody() {
       {shown.length > 0 && (
         <section className="border border-border/60 rounded-md bg-paper">
           <header className="flex items-baseline gap-2 px-3 py-2 border-b border-border/60">
-            <h3 className="text-sm font-medium text-ink" dir="auto">
+            <h3 className="text-sm font-semibold text-ink" dir="auto">
               {shown.length.toLocaleString("en-US")} dated event{shown.length === 1 ? "" : "s"}
             </h3>
             <span className="text-meta text-ink-tertiary min-w-0 truncate" dir="auto">
@@ -138,7 +138,7 @@ export function WhenBody() {
       {undated.length > 0 && (
         <section className="border border-border/60 rounded-md bg-paper">
           <header className="flex items-baseline gap-2 px-3 py-2 border-b border-border/60">
-            <h3 className="text-sm font-medium text-ink">Without a date</h3>
+            <h3 className="text-sm font-semibold text-ink">Without a date</h3>
             <span className="text-meta text-ink-tertiary" dir="auto">
               {undated.length} connected, nothing on either end is dated
             </span>

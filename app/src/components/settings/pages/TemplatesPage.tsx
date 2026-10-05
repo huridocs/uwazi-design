@@ -168,10 +168,10 @@ export function TemplatesPage() {
       // "Counting…"; never a zero that only means "not here yet".
       cell: (r) =>
         r.entities === null ? (
-          <span className="text-ink-tertiary">Counting…</span>
+          <span className="text-xs text-ink-tertiary">Counting…</span>
         ) : (
           <span
-            className="text-ink-secondary tabular-nums"
+            className="text-xs text-ink-tertiary tabular-nums"
             title={r.known ? (r.entities >= 1000 ? r.entities.toLocaleString() : undefined) : "Recorded count; live count pending"}
           >
             {compactCount(r.entities)}

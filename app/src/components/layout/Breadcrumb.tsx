@@ -5,18 +5,15 @@ interface BreadcrumbProps {
 }
 
 export function Breadcrumb({ segments }: BreadcrumbProps) {
-  const onlyOne = segments.length === 1;
   return (
-    <nav data-component="Breadcrumb" className="flex items-center gap-1.5 text-tab" aria-label="Breadcrumb">
+    <nav data-component="Breadcrumb" className="flex items-center gap-1.5 text-sm" aria-label="Breadcrumb">
       {segments.map((seg, i) => {
         const isLast = i === segments.length - 1;
-        // Parent segments: carbon link. Sole segment acts as a page title (also carbon).
-        // Trailing segment inside a multi-segment crumb is muted.
+        // Same recipe as the Settings header: ancestors are tertiary links, the
+        // last segment is the page title.
         const labelClass = !isLast
-          ? "text-carbon font-medium hover:underline"
-          : onlyOne
-            ? "text-carbon font-medium"
-            : "text-ink-tertiary font-medium";
+          ? "text-ink-tertiary hover:text-ink hover:underline transition-colors"
+          : "font-semibold text-ink";
         return (
           <span key={i} data-part="segment" className="flex items-center gap-1.5">
             {i > 0 && <ChevronRight size={12} data-part="separator" aria-hidden className="text-ink-muted" />}

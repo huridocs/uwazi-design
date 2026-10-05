@@ -196,7 +196,7 @@ export function CopyFromLanguageModal({
           ))}
         </div>
       ) : (
-        <p className="text-sm text-ink-tertiary">No other language has content yet.</p>
+        <p className="text-sm font-medium text-ink-secondary">No other language has content yet.</p>
       )}
     </Modal>
   );

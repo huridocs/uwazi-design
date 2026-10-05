@@ -118,16 +118,16 @@ export function PxWizard({ onClose }: { onClose: () => void }) {
       }
       bodyClassName="py-4 flex flex-col gap-3 min-h-0"
     >
-      {STEPS[step].description && <p className="text-xs text-ink-secondary">{STEPS[step].description}</p>}
+      {STEPS[step].description && <p className="text-xs text-ink-tertiary">{STEPS[step].description}</p>}
       {step < 2 ? (
         <>
           {step === 0 && (
-            <p className="text-xs text-ink-secondary text-pretty">
+            <p className="text-xs text-ink-tertiary text-pretty">
               Only templates with at least one rich text property and one numeric property are available for selection.
             </p>
           )}
           {step === 1 && (
-            <p className="text-xs text-ink-secondary text-pretty">
+            <p className="text-xs text-ink-tertiary text-pretty">
               Only templates that are not used as source in any other extractor and are not selected as target in this extractor are available for selection.
             </p>
           )}
@@ -146,7 +146,7 @@ export function PxWizard({ onClose }: { onClose: () => void }) {
               <ModalSearchField value={search} onChange={setSearch} ariaLabel="Search templates" placeholder="Search templates…" />
               <div role="radiogroup" aria-label={STEPS[step].title} className="flex-1 min-h-[8rem] overflow-y-auto rounded-lg border border-border">
                 {list.length === 0 ? (
-                  <p className="px-3 py-6 text-center text-xs text-ink-secondary">No templates available</p>
+                  <p className="px-3 py-6 text-center text-xs text-ink-tertiary">No templates available</p>
                 ) : (
                   list.map((t) => {
                     const checked = (step === 0 ? target : source) === t.id;

@@ -117,7 +117,7 @@ export function PxParagraphsView({
               </div>
             </dl>
             <section className="flex flex-col gap-1 rounded-lg border border-border p-3">
-              <h4 className="text-meta font-semibold uppercase tracking-wider text-ink-secondary">Text</h4>
+              <h4 className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary">Text</h4>
               <p className="text-sm text-ink text-pretty">{viewing.text}</p>
             </section>
           </div>

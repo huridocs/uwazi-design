@@ -49,7 +49,7 @@ export function SettingsEmptyState({
       <span aria-hidden className="flex items-center justify-center w-9 h-9 rounded-md bg-vellum text-ink-tertiary">
         {searching ? <SearchX size={16} /> : (icon ?? <Inbox size={16} />)}
       </span>
-      <p data-part="title" className="text-sm font-medium text-ink">
+      <p data-part="title" className="text-sm font-medium text-ink-secondary">
         {searching ? (noMatchTitle ? noMatchTitle(query!.trim()) : <>{noMatch ?? "Nothing matches"} “{query!.trim()}”</>) : title}
       </p>
       {!searching && hint && (

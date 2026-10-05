@@ -41,7 +41,7 @@ export function MatchModeToggle({
           data-part="option"
           onClick={() => onChange(m)}
           aria-pressed={mode === m}
-          className={`px-2 h-5 rounded text-meta font-bold tracking-wide transition-colors cursor-pointer ${
+          className={`px-2 h-5 rounded text-meta font-semibold tracking-wider transition-colors cursor-pointer ${
             mode === m
               ? "bg-vellum text-ink"
               : "text-ink-tertiary hover:text-ink-secondary"
@@ -68,7 +68,7 @@ export function MatchModeToggle({
           One caveat for whoever moves this: tertiary clears on paper, warm and
           parchment in both themes, but lands at 4.49:1 on VELLUM in dark. Don't
           set this control on a vellum ground without re-measuring. */}
-      <span data-part="label" className="text-meta uppercase tracking-wide text-ink-tertiary">
+      <span data-part="label" className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
         {label}
       </span>
       {control}

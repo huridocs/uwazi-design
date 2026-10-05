@@ -46,7 +46,7 @@ export function RelationTypesPage() {
       header: "References",
       width: "9rem",
       cell: (r) => (
-        <span className="text-ink-secondary tabular-nums">
+        <span className="text-xs text-ink-tertiary tabular-nums">
           <RelationTypeReferenceCount id={r.id} />
         </span>
       ),

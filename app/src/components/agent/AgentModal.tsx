@@ -374,8 +374,8 @@ export function AgentModal() {
                         setScope(id);
                         close();
                       }}
-                      className={`flex w-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                        id === scope ? "text-ink bg-warm" : "text-ink-secondary hover:bg-warm"
+                      className={`flex w-full px-3 py-1.5 text-xs transition-colors ${
+                        id === scope ? "font-semibold text-ink bg-warm" : "text-ink-secondary hover:bg-warm"
                       }`}
                     >
                       {scopeLabels[id]}
@@ -579,7 +579,7 @@ function AddMenu({
             onChange={(e) => setQ(e.target.value)}
             placeholder={`Search ${isEntity ? "entities" : "files"}…`}
             aria-label={`Search ${isEntity ? "entities" : "files"}`}
-            className="w-full h-8 pl-3 pr-8 text-xs font-medium bg-paper placeholder:text-ink-muted focus:outline-none"
+            className="w-full h-8 pl-3 pr-8 text-xs bg-paper placeholder:text-ink-muted focus:outline-none"
           />
           <Search size={13} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted" aria-hidden />
         </div>
@@ -625,7 +625,7 @@ function AddMenu({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full px-3 py-1.5 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors"
+      className="flex w-full px-3 py-1.5 text-xs text-ink-secondary hover:bg-warm transition-colors"
     >
       {label}
     </button>

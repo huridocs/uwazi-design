@@ -196,7 +196,7 @@ export function MobileActionMenu({ items, floating = false, fixed = false, label
                 item.onSelect();
                 close(true);
               }}
-              className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-warm transition-colors aria-disabled:text-ink-muted aria-disabled:hover:bg-transparent aria-disabled:cursor-default"
+              className="flex items-center justify-between w-full px-3 py-2 text-xs text-ink-secondary hover:bg-warm transition-colors aria-disabled:text-ink-muted aria-disabled:hover:bg-transparent aria-disabled:cursor-default"
             >
               <div className="flex items-center gap-2">
                 {item.icon && <span className="text-ink-tertiary">{item.icon}</span>}

@@ -198,14 +198,14 @@ export function ActivityLogPage() {
       </div>
       <fieldset className="flex flex-wrap items-center gap-2 min-w-0">
         <legend className="sr-only">Date range</legend>
-        <span aria-hidden className="text-xs text-ink-tertiary">
+        <span aria-hidden className="text-xs font-medium text-ink-secondary">
           Date range
         </span>
-        <label htmlFor={fromId} className="text-xs text-ink-secondary">
+        <label htmlFor={fromId} className="text-xs font-medium text-ink-secondary">
           From
         </label>
         {dateInput(fromId, from, pickFrom, "From")}
-        <label htmlFor={toId} className="text-xs text-ink-secondary">
+        <label htmlFor={toId} className="text-xs font-medium text-ink-secondary">
           To
         </label>
         {dateInput(toId, to, pickTo, "To")}
@@ -261,7 +261,7 @@ export function ActivityLogPage() {
       </dl>
       {e.changes?.length ? (
         <table className="w-full text-xs">
-          <caption className="text-start text-meta font-medium uppercase tracking-wider text-ink-tertiary pb-1">Changes</caption>
+          <caption className="text-start text-meta font-semibold uppercase tracking-wider text-ink-tertiary pb-1">Changes</caption>
           <thead>
             <tr className="text-ink-tertiary">
               <th scope="col" className="text-start font-medium py-1 pe-3">Field</th>

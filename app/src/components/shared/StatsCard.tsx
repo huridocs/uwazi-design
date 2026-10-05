@@ -28,7 +28,7 @@ const accentColor = {
 export function StatsCard({ label, value, accent, caption, detail, onOpen }: StatsCardProps) {
   const body = (
     <>
-      <span data-part="label" className="flex items-center gap-1.5 text-meta font-medium text-ink-tertiary uppercase tracking-wider">
+      <span data-part="label" className="flex items-center gap-1.5 text-meta font-semibold text-ink-tertiary uppercase tracking-wider">
         {accent && (
           <span
             data-part="accent"

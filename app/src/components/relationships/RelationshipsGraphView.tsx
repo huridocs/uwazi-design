@@ -526,7 +526,7 @@ export function RelationshipsGraphView() {
         className="flex-1 flex flex-col items-center justify-center bg-warm"
       >
         <Link2 size={36} aria-hidden className="text-ink-tertiary/40 mb-3" />
-        <p className="text-sm text-ink-tertiary">No relationships to graph</p>
+        <p className="text-sm font-medium text-ink-secondary">No relationships to graph</p>
       </div>
     );
   }

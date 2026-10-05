@@ -46,7 +46,7 @@ export function ThesauriPage() {
       id: "items",
       header: "Items",
       width: "8rem",
-      cell: (t) => <span className="text-ink-secondary tabular-nums">{t.itemCount}</span>,
+      cell: (t) => <span className="text-xs text-ink-tertiary tabular-nums">{t.itemCount}</span>,
     },
     {
       id: "actions",

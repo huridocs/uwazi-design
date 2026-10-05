@@ -16,7 +16,7 @@ export function RelatedDocCard({ title, entityTypeId, referenceCount }: RelatedD
       hover:bg-warm transition-colors cursor-pointer group">
       <FileText size={16} data-part="icon" aria-hidden className="text-ink-muted shrink-0" />
       <div className="flex-1 min-w-0">
-        <h3 data-part="title" className="text-sm text-ink truncate">
+        <h3 data-part="title" className="text-sm font-medium text-ink truncate">
           {title}
         </h3>
         <EntityTypeTag typeId={entityTypeId} />

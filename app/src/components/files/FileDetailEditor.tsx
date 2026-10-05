@@ -143,7 +143,7 @@ export function FileDetailEditor({
         className="rounded-md bg-warm p-4 space-y-3"
       >
         <div data-part="header" className="flex items-center justify-between">
-          <SectionLabel as="h4" level="section">
+          <SectionLabel as="h4">
             File details
           </SectionLabel>
           <button
@@ -254,13 +254,13 @@ export function FileDetailEditor({
       {group && (
         <section data-part="document" className="rounded-md bg-warm p-4 space-y-3">
           <div data-part="header" className="flex items-center justify-between">
-            <SectionLabel as="h4" level="section">
+            <SectionLabel as="h4">
               Document
             </SectionLabel>
             <span
               data-part="role-badge"
               data-variant={group.isPrimary ? (isActiveGroup ? "active-primary" : "primary") : "supporting"}
-              className={`px-1.5 py-0.5 text-meta font-medium rounded ${
+              className={`px-1.5 py-0.5 text-meta font-semibold rounded ${
                 group.isPrimary
                   ? isActiveGroup
                     ? "bg-ink text-parchment"
@@ -276,7 +276,7 @@ export function FileDetailEditor({
 
           {translations.length > 1 && (
             <div data-part="translations" className="space-y-1.5">
-              <p id={`${langId}-translations`} className="text-meta font-medium text-ink-muted uppercase tracking-wide">
+              <p id={`${langId}-translations`} className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider">
                 Translations
               </p>
               <ul aria-labelledby={`${langId}-translations`} className="flex flex-wrap gap-1.5">
@@ -377,7 +377,7 @@ function Field({
 }) {
   return (
     <div data-part="field" className="space-y-1">
-      <dt className="inline text-meta font-medium text-ink-muted uppercase tracking-wide">
+      <dt className="inline text-meta font-semibold text-ink-tertiary uppercase tracking-wider">
         {htmlFor ? <label htmlFor={htmlFor}>{label}</label> : label}
       </dt>
       <dd>{children}</dd>

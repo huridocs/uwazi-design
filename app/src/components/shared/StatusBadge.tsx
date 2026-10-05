@@ -30,7 +30,7 @@ export function StatusBadge({ status, rowsFailed = 0 }: StatusBadgeProps) {
     <span
       data-component="StatusBadge"
       data-status={status}
-      className={`inline-flex w-fit px-2 py-0.5 text-meta font-medium rounded-md whitespace-nowrap ${tones[toneOf(status, rowsFailed)]}`}
+      className={`inline-flex w-fit px-2 py-0.5 text-meta font-semibold rounded-md whitespace-nowrap ${tones[toneOf(status, rowsFailed)]}`}
     >
       {csvTitle({ status, rowsFailed }).title}
     </span>

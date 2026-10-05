@@ -278,7 +278,7 @@ export function MetadataRecord({
               first picture, which is the honest answer to "where is this
               property". The cards below address one asset each. */}
           <div data-part="images-heading" className="mt-2 flex items-center" data-field-key={images[0].fieldKey}>
-            <SectionLabel as="h3" level="section">
+            <SectionLabel as="h3">
               Images
             </SectionLabel>
           </div>

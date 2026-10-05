@@ -631,7 +631,7 @@ function FaviconField({
           </SettingsButton>
         )}
       </div>
-      <span id={captionId} className="text-meta text-ink-tertiary">
+      <span id={captionId} className="text-xs text-ink-tertiary">
         Recommended: 16x16 to 512x512 px (square)
       </span>
       <div id={helpId} className="text-xs text-ink-tertiary text-pretty flex flex-col gap-1.5">

@@ -136,7 +136,7 @@ function EntityCount({ x }: { x: PxExtractor }) {
   return (
     <span className="flex items-center gap-2">
       <span className="tabular-nums text-ink-secondary">{rows.length.toLocaleString()}</span>
-      {fresh > 0 && <span className="w-fit px-1.5 py-0.5 rounded-md bg-carbon-tint text-carbon-label text-meta font-medium tabular-nums">{fresh.toLocaleString()} New</span>}
+      {fresh > 0 && <span className="w-fit px-1.5 py-0.5 rounded-md bg-carbon-tint text-carbon-label text-meta font-semibold tabular-nums">{fresh.toLocaleString()} New</span>}
     </span>
   );
 }

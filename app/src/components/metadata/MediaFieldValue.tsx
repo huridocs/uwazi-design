@@ -54,7 +54,7 @@ function MetaRow({ media }: { media: MediaValue }) {
   const n = media.chapters.length;
   return (
     <div data-part="meta" className="flex items-baseline justify-between gap-3 min-w-0">
-      <span className="text-meta font-semibold uppercase tracking-wide text-ink-tertiary">
+      <span className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary">
         {n > 0 ? `${n} ${n === 1 ? "chapter" : "chapters"}` : (media.provider ?? "Recording")}
       </span>
       <WatchLink media={media} />

@@ -127,7 +127,7 @@ export function FiltersPage() {
           />
           <Checkbox checked={r.active} onChange={() => toggle(r.templateId)} ariaLabel={`Show ${meta[r.templateId]?.name}`} />
           <span className="w-2.5 h-2.5 rounded-[2px] border border-ink/20 shrink-0" style={{ backgroundColor: meta[r.templateId]?.color }} />
-          <span className={`truncate text-sm ${r.active ? "text-ink" : "text-ink-tertiary"}`}>
+          <span className={`truncate text-sm font-medium ${r.active ? "text-ink" : "text-ink-tertiary"}`}>
             {meta[r.templateId]?.name}
           </span>
           <span className="sr-only">{`row ${i + 1}`}</span>
@@ -177,7 +177,7 @@ export function FiltersPage() {
       id: "property",
       header: "Property",
       cell: (r) => (
-        <span className="truncate text-sm text-ink">
+        <span className="truncate text-sm font-medium text-ink">
           {r.label}
           {r.defaultfilter && <span className="ms-1.5 text-meta text-ink-tertiary">Default filter</span>}
         </span>

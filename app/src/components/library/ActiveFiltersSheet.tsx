@@ -48,7 +48,7 @@ export function ActiveFiltersSheet() {
           data-part="toggle"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
-          className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-wide
+          className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-wider
             text-ink-tertiary hover:text-ink transition-colors cursor-pointer"
         >
           <ChevronDown

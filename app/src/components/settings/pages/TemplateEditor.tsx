@@ -468,7 +468,7 @@ function TemplateEditorBody({
               <thead role="rowgroup" className="block">
                 <tr
                   role="row"
-                  className="sr-only md:not-sr-only md:grid items-center gap-2 md:px-3 md:py-2 text-meta font-semibold uppercase tracking-wide text-ink-tertiary bg-warm"
+                  className="sr-only md:not-sr-only md:grid items-center gap-2 md:px-3 md:py-2 text-meta font-semibold uppercase tracking-wider text-ink-tertiary bg-warm"
                   style={{ gridTemplateColumns: COLUMNS }}
                 >
                   <th role="columnheader" scope="col"><span className="sr-only">Drag</span></th>

@@ -456,7 +456,7 @@ export function LibraryFilters() {
                 breadcrumb shows the full path; the segments these facets filter
                 are emphasised. Selections combine path-coupled. */}
             <header data-part="chain-header" className="px-1.5 pt-1 space-y-1">
-              <h2 className="block text-tab font-bold text-ink">
+              <h2 className="block text-tab font-semibold text-ink">
                 {chainDefs[0].groupLabel}
               </h2>
               <p className="text-meta text-ink-tertiary leading-snug">
@@ -572,7 +572,7 @@ function FacetCard({ title, children }: { title?: string; children: ReactNode })
         <header data-part="header" className="px-2 pt-1 pb-1.5">
           {/* `pb-1.5`: the same 6px from header to first item as the keyword
               cards, whose `space-y-1.5` puts their search box there. */}
-          <h2 data-part="title" className="text-tab font-bold text-ink">{title}</h2>
+          <h2 data-part="title" className="text-tab font-semibold text-ink">{title}</h2>
         </header>
       )}
       {children}
@@ -713,7 +713,7 @@ function FacetRow({
         {Icon && <Icon size={13} className="text-ink-tertiary shrink-0" />}
         <span data-part="label" className={`truncate text-tab ${bold ? "text-ink" : "text-ink-secondary"}`}>{label}</span>
       </span>
-      <span data-part="count" className={`shrink-0 text-tab tabular-nums ${bold ? "font-bold text-ink" : "font-semibold text-ink-secondary"}`}>
+      <span data-part="count" className={`shrink-0 text-tab tabular-nums ${bold ? "font-semibold text-ink" : "font-semibold text-ink-secondary"}`}>
         {count}
       </span>
     </label>
@@ -780,7 +780,7 @@ function KeywordFacetCard({
     <section data-component="KeywordFacetCard" className={`${FACET_CARD} space-y-1.5`}>
       <header data-part="header" className="flex items-center justify-between gap-2 px-2 pt-1">
         <span className="flex items-center gap-1.5 min-w-0">
-          <Heading data-part="title" className="text-tab font-bold text-ink truncate">{title}</Heading>
+          <Heading data-part="title" className="text-tab font-semibold text-ink truncate">{title}</Heading>
           {selectedCount > 0 && (
             <span data-part="selected-count" className="shrink-0 inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-carbon/10 text-meta font-semibold text-carbon tabular-nums">
               {selectedCount}
@@ -916,7 +916,7 @@ function DateRangeCard({
   return (
     <section data-component="DateRangeCard" className={`${FACET_CARD} space-y-1.5`}>
       <header data-part="header" className="flex items-center justify-between gap-2 px-2 pt-1">
-        <h2 data-part="title" className="text-tab font-bold text-ink">Date</h2>
+        <h2 data-part="title" className="text-tab font-semibold text-ink">Date</h2>
         {active && (
           <button
             type="button"

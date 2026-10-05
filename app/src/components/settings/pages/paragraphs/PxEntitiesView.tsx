@@ -36,7 +36,7 @@ export function PxStatusPill({ status }: { status: PxStatus }) {
       </span>
     );
   return (
-    <span className={`w-fit px-2 py-0.5 rounded-md text-meta font-medium whitespace-nowrap ${PILL[status]}`}>
+    <span className={`w-fit px-2 py-0.5 rounded-md text-meta font-semibold whitespace-nowrap ${PILL[status]}`}>
       {status === "processing" ? "Processing..." : PX_STATUS_LABEL[status]}
     </span>
   );
@@ -190,7 +190,7 @@ export function PxEntitiesView({ extractor: x, onBack, onView }: { extractor: Px
               <SettingsButton variant="lead" size="sm" icon={<Scissors size={14} aria-hidden />} disabled={newRows.length === 0} onClick={() => run(newRows)}>
                 Extract new paragraphs
               </SettingsButton>
-              <span className={`me-auto w-fit px-2 py-0.5 rounded-md text-meta font-medium tabular-nums bg-carbon-tint text-carbon-label ${newRows.length ? "" : "invisible"}`}>
+              <span className={`me-auto w-fit px-2 py-0.5 rounded-md text-meta font-semibold tabular-nums bg-carbon-tint text-carbon-label ${newRows.length ? "" : "invisible"}`}>
                 {newRows.length.toLocaleString()} New
               </span>
             </>
@@ -221,7 +221,7 @@ export function PxEntitiesView({ extractor: x, onBack, onView }: { extractor: Px
         }
       >
         <fieldset className="flex flex-col gap-2 py-3">
-          <legend className="mb-1.5 text-meta font-semibold uppercase tracking-wider text-ink-secondary">Status</legend>
+          <legend className="mb-1.5 text-meta font-semibold uppercase tracking-wider text-ink-tertiary">Status</legend>
           {PX_STATUSES.map((s) => (
             <label key={s} className="flex items-center gap-2 text-xs text-ink cursor-pointer">
               <Checkbox

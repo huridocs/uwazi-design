@@ -256,7 +256,7 @@ export function ModalField({
       )}
       {children}
       {hint !== undefined && (
-        <p id={hintId} className="min-h-4 text-meta text-ink-tertiary">
+        <p id={hintId} className="min-h-4 text-xs text-ink-tertiary">
           {hint}
         </p>
       )}

@@ -107,7 +107,7 @@ export function HubRow({ hub, expanded, onToggleExpand, hideRelLabel }: HubRowPr
             {memberPills}
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
-            <span data-part="kind" className="text-meta text-ink-tertiary uppercase tracking-wide">
+            <span data-part="kind" className="text-meta font-semibold text-ink-tertiary uppercase tracking-wider">
               hub
             </span>
             {countBadge}

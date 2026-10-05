@@ -70,9 +70,9 @@ export function ImportStatusPage({ entry: i, onBack }: { entry: CsvImport; onBac
   };
 
   const errorColumns: Column<CsvRowError>[] = [
-    { id: "row", header: "Row", width: "5rem", mobile: "primary", cell: (e) => <span className="tabular-nums text-ink">{e.row}</span> },
-    { id: "property", header: "Property", width: "10rem", mobile: "meta", cell: (e) => <span className="text-ink-secondary truncate">{e.property || "-"}</span> },
-    { id: "message", header: "Message", mobile: "meta", cell: (e) => <span className="text-ink-secondary text-pretty">{e.message}</span> },
+    { id: "row", header: "Row", width: "5rem", mobile: "primary", cell: (e) => <span className="font-medium tabular-nums text-ink">{e.row}</span> },
+    { id: "property", header: "Property", width: "10rem", mobile: "meta", cell: (e) => <span className="text-xs text-ink-tertiary truncate">{e.property || "-"}</span> },
+    { id: "message", header: "Message", mobile: "meta", cell: (e) => <span className="text-xs text-ink-secondary text-pretty">{e.message}</span> },
   ];
 
   return (
@@ -190,8 +190,8 @@ function Meta({ label, value, ltr = false }: { label: string; value: string; ltr
 function Stat({ label, value, seal = false }: { label: string; value: number; seal?: boolean }) {
   return (
     <div data-part="stat" className="rounded-lg border border-border bg-paper px-3 py-2.5 min-w-0">
-      <dt className="text-meta text-ink-secondary">{label}</dt>
-      <dd className={`mt-1 text-lg font-semibold tabular-nums ${seal && value ? "text-seal-label" : "text-ink"}`}>
+      <dt className="text-meta font-semibold uppercase tracking-wider text-ink-tertiary">{label}</dt>
+      <dd className={`mt-1 text-xl font-semibold tabular-nums ${seal && value ? "text-seal-label" : "text-ink"}`}>
         {countOrDash(value)}
       </dd>
     </div>

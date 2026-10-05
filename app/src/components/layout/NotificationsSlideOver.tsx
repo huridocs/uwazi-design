@@ -169,9 +169,9 @@ export function NotificationsSlideOver({ rtl = false }: { rtl?: boolean }) {
         {/* Header — `bleed`, so its rule runs to the panel edge */}
         <header data-part="header" className="shrink-0 bleed border-b border-border">
           <div className="flex items-center gap-2 h-14">
-            <h2 id="notifications-drawer-title" data-part="title" className="text-base font-semibold text-ink">Notifications</h2>
+            <h2 id="notifications-drawer-title" data-part="title" className="text-sm font-semibold text-ink">Notifications</h2>
             {unread > 0 && (
-              <span data-part="unread-count" className="min-w-[18px] h-[18px] px-1.5 flex items-center justify-center rounded-full bg-carbon text-paper text-meta font-bold tabular-nums">
+              <span data-part="unread-count" className="min-w-[18px] h-[18px] px-1.5 flex items-center justify-center rounded-full bg-carbon text-paper text-meta font-semibold tabular-nums">
                 {unread}
               </span>
             )}
@@ -303,7 +303,7 @@ function TaskCard({ a, onCancel }: { a: Task; onCancel: () => void }) {
         <span className="shrink-0 flex items-center">
           <UwaziLoader size="xs" color="carbon" animate={!done} />
         </span>
-        <h4 data-part="task-label" className="text-tab font-medium text-ink truncate flex-1">{a.label}…</h4>
+        <h4 data-part="task-label" className="text-sm font-semibold text-ink truncate flex-1">{a.label}…</h4>
         <span className="text-meta font-medium text-carbon shrink-0">{done ? "Finishing" : "Running"}</span>
         <button
           type="button"
@@ -315,7 +315,7 @@ function TaskCard({ a, onCancel }: { a: Task; onCancel: () => void }) {
           <X size={13} />
         </button>
       </div>
-      {a.detail && <div className="mt-0.5 ms-[1.375rem] text-meta text-ink-muted truncate">{a.detail}</div>}
+      {a.detail && <div className="mt-0.5 ms-[1.375rem] text-meta text-ink-tertiary truncate">{a.detail}</div>}
       <div className="mt-2 flex items-center gap-2">
         <div className="flex-1 h-1.5 rounded-full bg-vellum overflow-hidden">
           <div
@@ -336,7 +336,7 @@ function EmptyState({ filter }: { filter: "all" | "unread" }) {
       <p className="text-sm font-medium text-ink-secondary">
         {filter === "unread" ? "No unread notifications" : "You're all caught up"}
       </p>
-      <p className="text-xs text-ink-muted">
+      <p className="text-xs text-ink-tertiary">
         {filter === "unread" ? "Everything here has been read." : "New activity will show up here."}
       </p>
     </div>
@@ -391,7 +391,7 @@ function NotifCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             {!n.read && <span className="w-1.5 h-1.5 rounded-full bg-carbon shrink-0" />}
-            <h4 data-part="title" className="text-tab font-medium text-ink">{n.title}</h4>
+            <h4 data-part="title" className="text-sm font-semibold text-ink">{n.title}</h4>
           </div>
           {n.detail && <div className="text-xs leading-normal text-ink-secondary mt-0.5">{n.detail}</div>}
 

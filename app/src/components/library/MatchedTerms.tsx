@@ -43,7 +43,7 @@ export function MatchedTerms({
     >
       {groups.map((g) => (
         <div key={g.key} data-part="group" data-field={g.field ?? "none"} className="inline-flex items-baseline gap-1.5 min-w-0">
-          <dt className="shrink-0 font-semibold uppercase tracking-wide text-ink-tertiary">{g.label}</dt>
+          <dt className="shrink-0 font-semibold uppercase tracking-wider text-ink-tertiary">{g.label}</dt>
           {g.terms.map((t) => (
             <dd
               key={t}

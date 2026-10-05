@@ -166,7 +166,7 @@ SettingsContent.Header = function SettingsHeader({ path, title, onBack: leave, s
             </ol>
           </nav>
         )}
-        <h2 id={titleId} data-part="title" className="font-semibold text-ink truncate">
+        <h2 id={titleId} data-part="title" className="text-sm font-semibold text-ink truncate">
           {title}
         </h2>
       </div>
