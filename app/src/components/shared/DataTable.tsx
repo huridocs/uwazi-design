@@ -106,6 +106,7 @@ export function DataTable<T>({
   return (
     <div
       data-component="DataTable"
+      data-table
       data-density={density}
       className={`rounded-md bg-paper ${scrolls ? "overflow-x-auto" : "overflow-hidden"}`}
       style={{ boxShadow: CARD_SHADOW }}

@@ -137,6 +137,7 @@ Known gaps, kept on purpose:
   filters, table, lead create action), `SettingsEditor` (list → detail, Cancel then the commit)
   or `SettingsFormPage` (one form, Discard changes then Save). Bodies use `SettingsSection`,
   `SettingsFieldRow`, `SettingsCheckList`, `SettingsStat`; empty lists use `SettingsEmptyState`.
+  A form keeps fields and prose at 40rem (`data-measure`); a block marked `data-table` is exempt.
   A table of per-corpus records passes `corpusScoped` (loading rows, and an error if the load fails).
   Row actions show on hover and focus; a row that opens its editor has no pencil.
 
@@ -159,6 +160,8 @@ Known gaps, kept on purpose:
   `bleed-flush`) `bleed` reaches nothing, so its action bar takes the gutter as padding.
 - `MainTabs`, `DocMeta`, `ListInfoRow`, `DrawerTabs` and `SearchBar` have no side padding and must
   sit directly inside a host.
+- Every table spans its pane inside the gutter (no `max-w`, `w-fit` or fixed width); the name
+  column takes the slack.
 - Vertical rhythm is `stack` (8px). Each host declares `--body-top`; the first block of every tab
   body takes it with `body-top`, so first blocks line up across tabs.
 - A padded control declares its edge: `data-gutter-align="box"` or `"text"`.

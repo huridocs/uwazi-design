@@ -472,7 +472,7 @@ function ThesaurusEditorBody({
         }
       >
         {items.length === 0 ? (
-          <div className="rounded-md py-8 border border-border-soft">
+          <div data-table className="rounded-md py-8 border border-border-soft">
             <SettingsEmptyState
               title="No values yet"
               hint="Add the values a property using this thesaurus can take. Enter after each one starts the next."
@@ -480,7 +480,7 @@ function ThesaurusEditorBody({
             />
           </div>
         ) : (
-          <div className="flex flex-col gap-2">
+          <div data-table className="flex flex-col gap-2">
             {/* Toolbar: select-all over the rows shown, search, collapse, and
                 the A–Z strip. It sticks to the top of the page body, so a
                 jump far down the list keeps both in reach. */}

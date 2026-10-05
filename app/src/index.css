@@ -133,6 +133,23 @@
   --gutter-reach: 0px;
 }
 
+/* A TABLE SPANS ITS PANE; PROSE AND FIELDS KEEP A 40rem MEASURE. A settings
+ * form (`SettingsForm` without `wide`) caps each block of its sections, except
+ * one marked `data-table` (`DataTable`, `SettingsTable`, a values list), which
+ * takes the full row inside the gutter. A section holding a table spreads its
+ * heading too, so the heading's actions sit over the table's end edge; the
+ * description keeps the measure. In `base` so a block's own `max-w-*` wins. */
+@layer base {
+  [data-measure] > :not(section, [data-table]),
+  [data-measure] > section > :not([data-table]),
+  [data-measure] [data-part="heading"] p {
+    max-width: 40rem;
+  }
+  [data-measure] > section:has(> [data-table]) > [data-part="heading"] {
+    max-width: none;
+  }
+}
+
 /* Brand radii — softer than Tailwind defaults but not pillowy. The earlier
  * 2-3px "square-ish" overrides were too sharp; everything below scales the
  * Tailwind ramp down ~½ so radii are visible without going rounded-pill. */

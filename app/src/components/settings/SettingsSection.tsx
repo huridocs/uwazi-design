@@ -1,8 +1,9 @@
 import { createContext, useContext, useId, type ReactNode } from "react";
 
 /** The column a settings form sits in: sections stacked one rhythm step
- *  apart, capped at a readable 40rem. `wide` lifts the cap for a body that
- *  is a grid (a template's properties, a term table). */
+ *  apart. Fields and prose keep a readable 40rem measure (`data-measure`,
+ *  `index.css`); a table (`data-table`) spans the pane. `wide` lifts the
+ *  measure for a body that is a grid throughout (a template's properties). */
 export function SettingsForm({
   wide = false,
   fill = false,
@@ -16,7 +17,8 @@ export function SettingsForm({
   return (
     <div
       data-component="SettingsForm"
-      className={`flex flex-col gap-6 min-w-0 ${wide ? "" : "max-w-[40rem]"} ${fill ? "flex-1 min-h-0" : ""}`}
+      data-measure={wide ? undefined : ""}
+      className={`flex flex-col gap-6 min-w-0 ${fill ? "flex-1 min-h-0" : ""}`}
     >
       {children}
     </div>

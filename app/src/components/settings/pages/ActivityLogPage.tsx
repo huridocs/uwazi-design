@@ -260,7 +260,7 @@ export function ActivityLogPage() {
         </dd>
       </dl>
       {e.changes?.length ? (
-        <table className="w-full max-w-[40rem] text-xs">
+        <table className="w-full text-xs">
           <caption className="text-start text-meta font-medium uppercase tracking-wider text-ink-tertiary pb-1">Changes</caption>
           <thead>
             <tr className="text-ink-tertiary">

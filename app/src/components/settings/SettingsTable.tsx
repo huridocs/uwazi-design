@@ -211,6 +211,7 @@ function SettingsList<T>({ columns, data, getRowId, onRowClick, rowAriaLabel, se
   return (
     <div
       data-component="SettingsTable"
+      data-table
       data-layout="list"
       className="rounded-md bg-paper overflow-hidden"
       style={{ boxShadow: CARD_SHADOW }}
@@ -296,6 +297,7 @@ function LoadingRows<T>({ columns, phone, announce }: { columns: Column<T>[]; ph
   return (
     <div
       data-component="SettingsTable"
+      data-table
       data-state="loading"
       aria-busy="true"
       className="rounded-md bg-paper overflow-hidden"
