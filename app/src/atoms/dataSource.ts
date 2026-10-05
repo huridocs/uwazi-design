@@ -1,5 +1,5 @@
 import { atom, type Getter } from "jotai";
-import { atomFamily, atomWithStorage } from "jotai/utils";
+import { atomFamily } from "jotai/utils";
 import { entitiesAtom } from "./entities";
 import { templateTypesAtom, templateTypesMirror } from "./templates";
 import { entityCorpusOf, type Entity, type EntityType } from "../data/entities";
@@ -11,13 +11,22 @@ import { applyOverlay, overlayMirror, type Corpus, type CorpusOverlay } from "..
 
 export type DataSource = "mock" | "cejil" | "artworks" | "travesia";
 
-/** Which dataset the Library renders. Persisted. `mock` keeps the curated demo
+/** Which dataset the Library renders. Every load starts on `cejil`; a switch
+ *  lasts until the next load and is not stored. `mock` keeps the curated demo
  *  (Velásquez etc.); `cejil` shows the real public summa.cejil.org sample;
  *  `artworks` is the bundled image corpus (see `data/artworks/adapt.ts`);
  *  `travesia` is a fictional shelter network generated over a real schema
  *  (see `data/travesia/`), loaded on demand like CEJIL.
  *  Scoped to the Library — EntityView/Relationships stay on the mock seed. */
-export const dataSourceAtom = atomWithStorage<DataSource>("uwazi:dataSource", "mock");
+export const dataSourceAtom = atom<DataSource>("cejil");
+
+// The collection used to be kept in localStorage under this key; drop it so
+// an old value has no effect.
+try {
+  localStorage.removeItem("uwazi:dataSource");
+} catch {
+  /* storage blocked */
+}
 
 /** Flipped true once the lazy CEJIL corpus (public/cejil-data/*.json) has been
  *  fetched. LibraryView triggers the load and sets this; the entity atom below
@@ -61,8 +70,8 @@ function seedFor(source: DataSource, get: Getter): Entity[] {
       return travesiaLibraryEntities();
     default: {
       // Compile-time: widening DataSource without answering here is a type
-      // error. Runtime: `dataSourceAtom` is storage-backed, so a stale
-      // persisted value degrades to the mock seed instead of crashing.
+      // error. Runtime: an unknown value degrades to the mock seed instead
+      // of crashing.
       const _exhaustive: never = source;
       void _exhaustive;
       return get(entitiesAtom);
@@ -124,7 +133,7 @@ export const libraryTypesAtom = atom<EntityType[]>((get) => {
       return get(templateTypesAtom(source));
     default: {
       // Same shape as libraryEntitiesAtom: type error on widening, mock
-      // fallback for a stale persisted value.
+      // fallback for an unknown value.
       const _exhaustive: never = source;
       void _exhaustive;
       return get(templateTypesAtom("mock"));
