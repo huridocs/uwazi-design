@@ -336,6 +336,10 @@ repo; update them when tokens or style rules change.
   unfinished import and keeps one Beacon task each, whatever view is open. The list is a
   `SettingsListPage`, the status page a `SettingsContent`; Cancel and "Download failed rows" are
   on its footer. Admins only, from Tools and the Library footer.
+- Metadata extraction: extractors and suggestion states are per-corpus stores (`atoms/extraction.ts`).
+  Suggestion rows are derived from the entities (current value read through the entity overlay);
+  Accept writes the entity (G12). Train and process runs are timers with one Beacon task each;
+  the page restarts a run that a reload interrupted. No Reject, no "Accept all".
 - Catalog: the logo toggles `ComponentCatalog`. Add shared components as a `CatalogEntry` with a
   live demo.
 - Mobile: `<768` / `768–1023` / `≥1024` (`atoms/viewport.ts`). On phones every nested view is a

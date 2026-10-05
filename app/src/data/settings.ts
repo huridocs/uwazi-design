@@ -1,3 +1,4 @@
+import type { ExtractorStatus } from "./extraction";
 /** Mock seed for the cloned Settings views. Shapes mirror Uwazi's real
  *  collections (languages, users, groups) but trimmed to what the prototype
  *  renders. No backend — these are the initial atom values. */
@@ -324,26 +325,6 @@ export const seedMenuLinks: SettingsMenuLink[] = [
 ];
 
 
-
-// ── Metadata extraction (IX) ────────────────────────────────────────────────
-export type ExtractorStatus = "ready" | "training" | "processing" | "error";
-
-export interface SettingsExtractor {
-  id: string;
-  property: string;
-  template: string;
-  status: ExtractorStatus;
-  documents: number;
-  accuracy: number | null;
-}
-
-export const seedExtractors: SettingsExtractor[] = [
-  { id: "x1", property: "Date filed", template: "Court Case", status: "ready", documents: 142, accuracy: 94 },
-  { id: "x2", property: "Respondent state", template: "Court Case", status: "ready", documents: 142, accuracy: 88 },
-  { id: "x3", property: "Court", template: "Judgment", status: "training", documents: 56, accuracy: null },
-  { id: "x4", property: "Date of birth", template: "Person", status: "processing", documents: 38, accuracy: 71 },
-  { id: "x5", property: "Article", template: "Right", status: "error", documents: 12, accuracy: null },
-];
 
 // ── Paragraph extraction ────────────────────────────────────────────────────
 export interface SettingsParagraphJob {
