@@ -6,7 +6,7 @@ import { V4_DATES } from "../sampleSeedV4";
 import { v4RelationshipFields } from "../sampleSeedV4Fields";
 import { templateMirror } from "../templates/mirror";
 import type { PropertyDef } from "../templates/types";
-import { blankField, propertyLabel } from "../../utils/templateProjection";
+import { blankField, blankRelationship, propertyLabel } from "../../utils/templateProjection";
 import { MAIN_ENTITY_ID } from "./mainEntity";
 
 /** The Sample corpus's records as their templates' projection (step M5,
@@ -91,6 +91,10 @@ export function sampleRecordFields(entityId: string, typeId: string, lang: Langu
       if (f) {
         out.push(f);
         placed.add(f.id);
+      } else {
+        // No connection yet (a property added in Settings): the empty field
+        // the form's connection editor fills.
+        out.push(blankRelationship("mock", p, lang, p.content ? templateMirror("mock", p.content) : undefined));
       }
       continue;
     }
