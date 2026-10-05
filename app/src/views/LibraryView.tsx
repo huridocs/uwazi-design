@@ -19,6 +19,7 @@ import { isCejilEntity } from "../data/cejil/profile";
 import { focusCollectionDefaultAtom } from "../atoms/focusedEntity";
 import { loadTravesiaData, travesiaRelsByEntity } from "../data/travesia/load";
 import { loadNepalData, nepalRefsByEntity } from "../data/nepal/load";
+import { preloadMediaItemCard } from "../components/metadata/lazyMediaItemCard";
 import { referencesAtom } from "../atoms/references";
 import { languageAtom, type Language } from "../atoms/language";
 import { uiLanguageAtom } from "../atoms/uiLanguage";
@@ -225,6 +226,8 @@ export function LibraryView() {
     if (dataSource === "nepal" && !nepalReady) {
       let alive = true;
       setCejilError(false);
+      // Its media items' record card is a chunk of its own; fetch it now.
+      preloadMediaItemCard();
       loadNepalData().then(
         () => alive && setNepalReady(true),
         () => alive && setCejilError(true),

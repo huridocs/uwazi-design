@@ -100,7 +100,12 @@ Known gaps, kept on purpose:
   default primary document. `DocumentViewer` keeps the PDF mounted and hidden, because remounting
   leaves the canvases blank. Rendition text is `data/velasquez-judgment-{en,es,fr,ar}.txt`, parsed
   by `data/documentRenditions.ts`. All four languages stay on the same judgment so references
-  line up; FR/AR use the EN PDF. AR renders RTL.
+  line up; FR/AR use the EN PDF. `DocumentRendition` reads the focused profile's `renditions`
+  first (CEJIL's judgment text, Nepal's OCR) and falls back to the sample. The text's script sets
+  the direction, not the reading language.
+- `EntityProfile.documentProvenance` (issuer, source URL, licence basis, text note) prints under
+  the Document tab's `DocMeta` (`DocProvenance`). Nepal's government PDFs use it to show the
+  issuer and source and to mark the text "OCR, unreviewed".
 
 ### Settings stores
 - A settings domain's records live in a store built with `createSettingsCollection`
@@ -367,6 +372,23 @@ One recipe per role; the full table is `handoff/TYPOGRAPHY.md` §3.
   (`COLLECTION_COLUMNS` and `listCells` in `listColumns.tsx`). A reference's quote is a search
   field ("Quote" on the source, "Source quote" on its target), so search and Results snippets
   reach it through `entitySearchFields`, with no second index.
+  - Documents: 23 Government of Nepal PDFs, unaltered, in `public/nepal-data/docs/`; their
+    per-page OCR text, issuer and source in `docs.json`. 51 records (sources and the actions they
+    record) have one as primary document. The OCR text is the rendition and the search text.
+    A reference whose quote was found in a PDF carries `file` and `page`; the page tag shows
+    only on a record that displays that PDF.
+  - Media items (`nepal_media`): the record leads with `MediaItemCard` (its own chunk, preloaded
+    when the collection loads); the properties in `MediaItemView.covers` are not repeated as
+    fields. A bundled image always shows attribution and licence, in the lightbox too
+    (`EntityImage.credit`). `graphic` / `distressing` items are covered until revealed and never
+    show a picture on a Library card. `misattributed` opens with an amber note and its
+    fact-checks. The record's document and media builders (`profileParts.ts`) load with the
+    corpus.
+  - `[data-covered]` belongs to the overlay stack (`index.css` hides everything under it);
+    a component's own covered state uses another attribute.
+  - The build also stops on a bundled image without licence, licence link or attribution, a
+    document without issuer or source URL or listed as link only, and a contact in document
+    text that is not an institution's.
 - Paragraph extraction: extractors and per-entity statuses are per-corpus stores
   (`atoms/paragraphExtraction.ts`); paragraphs are derived per entity. A target template needs a
   rich text and a numeric property; only Red Travesía has one, so it holds the seed and the

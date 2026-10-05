@@ -6,8 +6,7 @@ import { renditionsByLanguage } from "../data/documentRenditions";
 import { documentsByLanguage } from "../data/document";
 import { cejilLoaded, cejilFullText } from "../data/cejil/load";
 import { cejilRenderedDoc, type BorrowedDoc } from "../data/cejil/profile";
-import { nepalLoaded, nepalPrimaryDoc } from "../data/nepal/load";
-import { nepalDocFileId } from "../data/nepal/profile";
+import { nepalDocFileId, nepalLoaded, nepalPrimaryDoc } from "../data/nepal/load";
 import { highlightTerms, fold, foldWithMap, parseSearchQuery, termHit, termIn } from "./queryTokens";
 
 /** Builds Uwazi's per-entity search-snippets shape (`SnippetsSearchResponse`:

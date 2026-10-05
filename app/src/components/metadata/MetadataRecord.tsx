@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { isImageUrl } from "../../utils/typedValues";
 import { useAtomValue, useSetAtom } from "jotai";
 import type { Language } from "../../atoms/language";
@@ -9,7 +9,7 @@ import { focusMetadataFieldAtom } from "../../atoms/library";
 import type { RelationshipMetadataField } from "../../data/metadata";
 import { MetadataCard } from "./MetadataCard";
 import { ImageCard } from "./ImageCard";
-import { MediaItemCard } from "./MediaItemCard";
+import { LazyMediaItemCard } from "./lazyMediaItemCard";
 import { ImageLightbox } from "../shared/ImageLightbox";
 import { SectionLabel } from "../shared/SectionLabel";
 import { imageFocusKey, type EntityImage } from "../../data/entities";
@@ -253,7 +253,9 @@ export function MetadataRecord({
           {/* Keyed on the record: a cover revealed on one item is not revealed
               on the next. */}
           <div data-part="field" data-field-key="file" data-field-keys="embed page_url">
-            <MediaItemCard key={profile.id} item={profile.mediaItem} onOpenImage={setLightbox} />
+            <Suspense fallback={null}>
+              <LazyMediaItemCard key={profile.id} item={profile.mediaItem} onOpenImage={setLightbox} />
+            </Suspense>
           </div>
         </MasonryItem>
       )}

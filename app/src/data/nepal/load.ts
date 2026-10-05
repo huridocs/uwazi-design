@@ -5,6 +5,7 @@
 // on `nepalLoaded()` first. Travesía's loader is the same shape.
 import { asset } from "../../utils/asset";
 import type { NepalDoc, NepalEntity, NepalReference, NepalThesaurus } from "./types";
+import type * as ProfileParts from "./profileParts";
 
 export interface NepalCorpus {
   entities: NepalEntity[];
@@ -17,6 +18,7 @@ let corpus: NepalCorpus | null = null;
 const byId = new Map<string, NepalEntity>();
 const refsByEntity = new Map<string, NepalReference[]>();
 const docsById = new Map<string, NepalDoc>();
+let parts: typeof ProfileParts | null = null;
 let promise: Promise<NepalCorpus> | null = null;
 
 /** Fetch and index the corpus once. Later calls return the cached promise. */
@@ -30,8 +32,17 @@ export function loadNepalData(): Promise<NepalCorpus> {
       });
     // docs.json is the bundled documents' text (about 550 kB): search reads it,
     // so it loads with the records. The PDFs and images load when shown.
-    promise = Promise.all([j("entities.json"), j("relationships.json"), j("thesauri.json"), j("docs.json")])
-      .then(([entities, references, thesauri, docs]: [NepalEntity[], NepalReference[], NepalThesaurus[], NepalDoc[]]) => {
+    // The profile's document and media code is a chunk of its own, fetched
+    // beside the data.
+    promise = Promise.all([
+      j("entities.json"),
+      j("relationships.json"),
+      j("thesauri.json"),
+      j("docs.json"),
+      import("./profileParts"),
+    ])
+      .then(([entities, references, thesauri, docs, profileParts]: [NepalEntity[], NepalReference[], NepalThesaurus[], NepalDoc[], typeof ProfileParts]) => {
+        parts = profileParts;
         for (const x of entities) byId.set(x.sharedId, x);
         for (const d of docs) docsById.set(d.id, d);
         for (const ref of references) {
@@ -59,6 +70,10 @@ export const nepalEntity = (id: string) => byId.get(id);
 export const nepalRefsByEntity = () => refsByEntity;
 export const isNepalEntity = (id: string) => byId.has(id);
 export const nepalDoc = (id: string) => docsById.get(id);
+/** The profile's document and media builders (profileParts.ts), once loaded. */
+export const nepalProfileParts = () => parts;
+/** A bundled PDF's file id: what search passages and page jumps name. */
+export const nepalDocFileId = (docId: string) => `np-doc-${docId}`;
 /** The document a record shows: its primary attached PDF. */
 export const nepalPrimaryDoc = (entityId: string) => {
   const id = byId.get(entityId)?.docs?.[0];
