@@ -59,7 +59,21 @@ export interface EntityProfile {
   images?: EntityImage[];
   metadata: Record<Language, AnyMetadataField[]>;
   pdfMetadata?: PdfMetaByLang;
+  /** Where the rendered document comes from, when the collection says: the
+   *  issuer, the source address, its terms and how its text was made. The
+   *  Document tab prints it under the header (`DocProvenance`). */
+  documentProvenance?: DocumentProvenance;
   relationships: RelationshipSource;
+}
+
+export interface DocumentProvenance {
+  issuer: string;
+  sourceUrl: string;
+  /** "Published 2026/01/07", already formatted. */
+  dateLine?: string;
+  licenceBasis: string;
+  /** How the text layer was made and whether anyone checked it: "OCR, unreviewed". */
+  textNote?: string;
 }
 
 /** Canonical main entity. `e3` is already the source of the whole references[]

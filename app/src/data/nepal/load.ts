@@ -4,17 +4,19 @@
 // read the indexes below, and everything that can reach a Nepal record gates
 // on `nepalLoaded()` first. Travesía's loader is the same shape.
 import { asset } from "../../utils/asset";
-import type { NepalEntity, NepalReference, NepalThesaurus } from "./types";
+import type { NepalDoc, NepalEntity, NepalReference, NepalThesaurus } from "./types";
 
 export interface NepalCorpus {
   entities: NepalEntity[];
   references: NepalReference[];
   thesauri: NepalThesaurus[];
+  docs: NepalDoc[];
 }
 
 let corpus: NepalCorpus | null = null;
 const byId = new Map<string, NepalEntity>();
 const refsByEntity = new Map<string, NepalReference[]>();
+const docsById = new Map<string, NepalDoc>();
 let promise: Promise<NepalCorpus> | null = null;
 
 /** Fetch and index the corpus once. Later calls return the cached promise. */
@@ -26,9 +28,12 @@ export function loadNepalData(): Promise<NepalCorpus> {
         if (!r.ok) throw new Error(`Nepal: failed to load ${n} (${r.status})`);
         return r.json();
       });
-    promise = Promise.all([j("entities.json"), j("relationships.json"), j("thesauri.json")])
-      .then(([entities, references, thesauri]: [NepalEntity[], NepalReference[], NepalThesaurus[]]) => {
+    // docs.json is the bundled documents' text (about 550 kB): search reads it,
+    // so it loads with the records. The PDFs and images load when shown.
+    promise = Promise.all([j("entities.json"), j("relationships.json"), j("thesauri.json"), j("docs.json")])
+      .then(([entities, references, thesauri, docs]: [NepalEntity[], NepalReference[], NepalThesaurus[], NepalDoc[]]) => {
         for (const x of entities) byId.set(x.sharedId, x);
+        for (const d of docs) docsById.set(d.id, d);
         for (const ref of references) {
           for (const id of new Set([ref.from, ref.to])) {
             const arr = refsByEntity.get(id);
@@ -36,7 +41,7 @@ export function loadNepalData(): Promise<NepalCorpus> {
             else refsByEntity.set(id, [ref]);
           }
         }
-        corpus = { entities, references, thesauri };
+        corpus = { entities, references, thesauri, docs };
         return corpus;
       })
       .catch((err) => {
@@ -53,6 +58,12 @@ export const nepalCorpus = () => corpus;
 export const nepalEntity = (id: string) => byId.get(id);
 export const nepalRefsByEntity = () => refsByEntity;
 export const isNepalEntity = (id: string) => byId.has(id);
+export const nepalDoc = (id: string) => docsById.get(id);
+/** The document a record shows: its primary attached PDF. */
+export const nepalPrimaryDoc = (entityId: string) => {
+  const id = byId.get(entityId)?.docs?.[0];
+  return id ? docsById.get(id) : undefined;
+};
 
 /** The loaded thesauri in the Settings / thesauri-store shapes (empty until
  *  the corpus has loaded). Built once per load. */

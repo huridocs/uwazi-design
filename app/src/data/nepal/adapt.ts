@@ -6,6 +6,7 @@ import type { CardField, Entity } from "../entities";
 import type { LatLng } from "../geo";
 import type { PropertyDef, TemplateDef } from "../templates/types";
 import { kindOfUwaziType } from "../../utils/propertyKind";
+import { asset } from "../../utils/asset";
 import { displayStrings, latLngOf } from "../../utils/templateProjection";
 import { nepalTemplateById } from "./schema";
 import { nepalCorpus, nepalEntity } from "./load";
@@ -124,6 +125,36 @@ function listCellsOf(e: NepalEntity): Record<string, string> | undefined {
   return Object.keys(out).length ? out : undefined;
 }
 
+/** The card's preview: page one of an attached PDF; a media item's own
+ *  picture, or the video or audio mark when it is a recording. An item with a
+ *  content warning shows the mark, never the picture: the card is not where a
+ *  reader chooses to look (see `MediaItemCard`). */
+function previewOf(e: NepalEntity): Pick<Entity, "preview" | "image"> {
+  if (e.docs?.length) return { preview: "document" };
+  if (e.template !== "nepal_media") return {};
+  const warned = e.metadata.content_warning?.some((v) => v.value === "graphic" || v.value === "distressing");
+  if (e.image && !warned) {
+    const { width, height } = e.image;
+    const r = width / height;
+    return {
+      preview: "image",
+      image: {
+        url: asset(e.image.url),
+        width,
+        height,
+        aspect: Math.abs(r - 1) <= 0.05 ? "square" : r > 1 ? "landscape" : "portrait",
+        alt: e.title,
+        filename: e.image.url.slice(e.image.url.lastIndexOf("/") + 1),
+        fieldKey: "file",
+      },
+    };
+  }
+  const kind = e.metadata.media_kind?.[0]?.value;
+  if (kind === "video") return { preview: "video" };
+  if (kind === "audio") return { preview: "audio" };
+  return {};
+}
+
 const isoDay = (secs: number) => new Date(secs * 1000).toISOString().slice(0, 10);
 
 let _entities: Entity[] | null = null;
@@ -140,6 +171,7 @@ export function nepalLibraryEntities(): Entity[] {
     const geo = geoOf(e);
     const inherited = facetValuesOf(e);
     const listCells = listCellsOf(e);
+    const preview = previewOf(e);
     return {
       id: e.sharedId,
       title: e.title,
@@ -151,6 +183,7 @@ export function nepalLibraryEntities(): Entity[] {
       ...(geo ? { geo } : {}),
       ...(inherited ? { inherited } : {}),
       ...(listCells ? { listCells } : {}),
+      ...preview,
       fields: fieldsOf(e, tpl),
       searchFields: searchFieldsOf(e, tpl, quotes.get(e.sharedId)),
     };

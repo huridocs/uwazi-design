@@ -1,6 +1,8 @@
 import { useAtomValue } from "jotai";
 import { renditionsByLanguage } from "../../data/documentRenditions";
 import { languageAtom } from "../../atoms/language";
+import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
+import { getEntityProfile } from "../../data/entityProfiles";
 import type { DocumentFormat } from "../../atoms/selection";
 
 /** Plain-text and HTML renditions of the default primary document, shown when
@@ -10,8 +12,14 @@ import type { DocumentFormat } from "../../atoms/selection";
  *  language tab, and Arabic flows right-to-left. */
 export function DocumentRendition({ format }: { format: DocumentFormat }) {
   const language = useAtomValue(languageAtom);
-  const rendition = renditionsByLanguage[language] ?? renditionsByLanguage.EN;
-  const rtl = language === "AR";
+  const focusedId = useAtomValue(focusedEntityIdAtom);
+  // The focused record's own text (a CEJIL judgment, a Nepal decision's OCR);
+  // the sample judgment only for a record that has none of its own.
+  const own = getEntityProfile(focusedId).renditions;
+  const rendition = own?.[language] ?? own?.EN ?? renditionsByLanguage[language] ?? renditionsByLanguage.EN;
+  // The text's own script decides the direction, not the reading language: a
+  // Nepali decision read with the AR tab is still left to right.
+  const rtl = /[\u0590-\u08FF]/.test(rendition.plainText.slice(0, 400));
 
   if (format === "text") {
     return (

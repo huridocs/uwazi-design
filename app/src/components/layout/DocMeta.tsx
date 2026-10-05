@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, FileText, FileType, Code2 } from "lucide-react";
+import { ChevronDown, FileText, FileType, Code2, ExternalLink } from "lucide-react";
 import { useAtom, useAtomValue } from "jotai";
 import {
   documentGroupsAtom,
@@ -8,6 +8,7 @@ import {
 import { documentFormatAtom, type DocumentFormat } from "../../atoms/selection";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { getEntity } from "../../data/entities";
+import { getEntityProfile, type DocumentProvenance } from "../../data/entityProfiles";
 import { EntityIdentity } from "../shared/EntityIdentity";
 
 interface DocMetaProps {
@@ -61,6 +62,10 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
     return () => document.removeEventListener("mousedown", onClick);
   }, [pickerOpen]);
 
+  // Who issued the document on screen and where it was taken from, when the
+  // collection says (the Nepal corpus's government PDFs). Document tab only.
+  const provenance = showPdfSelector ? getEntityProfile(focusedId).documentProvenance : undefined;
+
   const activeFormat = FORMATS.find((f) => f.id === format) ?? FORMATS[0];
   const ActiveIcon = activeFormat.icon;
 
@@ -69,9 +74,12 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
       data-component="DocMeta"
       /* Rendered inside a gutter host: no side padding of its own, and `bleed`
          so its bottom rule spans the pane. */
-      className="@container bleed flex items-center gap-2 min-h-11 pt-1 pb-2 shrink-0"
+      className="@container bleed flex flex-col gap-1 pt-1 pb-2 shrink-0"
       style={{ borderBottom: "1px solid var(--border-primary)" }}
     >
+      {/* min-h-8 + the header's padding is the strip's old min-h-11: a record
+          without a provenance line keeps its height. */}
+      <div data-part="row" className="flex items-center gap-2 min-h-8 min-w-0">
       {/* Stacked, like the drawer: tag over title. Side by side, a long template
           name ("Resolución de Presidencia de la CorteIDH") ran halfway across the
           strip and squeezed the entity's own name — squeezing the wrong thing. */}
@@ -146,6 +154,59 @@ export function DocMeta({ showPdfSelector = true }: DocMetaProps) {
           )}
         </div>
       )}
+      </div>
+      {provenance && <DocProvenance provenance={provenance} />}
     </header>
+  );
+}
+
+const hostOf = (url: string) => {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+};
+
+/** The document's issuer, date and source, and how its text was made. One
+ *  quiet line under the strip; it wraps on a phone rather than truncating the
+ *  issuer. The licence basis is the source link's title: it is a sentence, and
+ *  the link is where a reader goes to check it. */
+function DocProvenance({ provenance }: { provenance: DocumentProvenance }) {
+  const { issuer, sourceUrl, dateLine, licenceBasis, textNote } = provenance;
+  return (
+    <p
+      data-part="provenance"
+      className="flex flex-wrap items-center gap-x-2 gap-y-0.5 min-w-0 text-meta text-ink-tertiary leading-snug"
+    >
+      <span className="text-ink-secondary">{issuer}</span>
+      {dateLine && (
+        <>
+          <span aria-hidden>·</span>
+          <span className="tabular-nums">{dateLine}</span>
+        </>
+      )}
+      <span aria-hidden>·</span>
+      <a
+        href={sourceUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        title={`${sourceUrl}\n${licenceBasis}`}
+        data-part="source"
+        className="inline-flex items-center gap-1 min-w-0 hover:text-ink underline-offset-2 hover:underline rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/40"
+      >
+        <span className="truncate">Source: {hostOf(sourceUrl)}</span>
+        <ExternalLink size={10} aria-hidden className="shrink-0" />
+      </a>
+      {textNote && (
+        <span
+          data-part="text-note"
+          title="The text, search and quotes come from machine OCR of the scan. Nobody has checked it against the pages; expect errors in conjuncts and numerals."
+          className="w-fit rounded-md bg-vellum px-1.5 py-px text-ink-secondary"
+        >
+          Text: {textNote}
+        </span>
+      )}
+    </p>
   );
 }

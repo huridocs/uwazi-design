@@ -6,6 +6,8 @@ import { renditionsByLanguage } from "../data/documentRenditions";
 import { documentsByLanguage } from "../data/document";
 import { cejilLoaded, cejilFullText } from "../data/cejil/load";
 import { cejilRenderedDoc, type BorrowedDoc } from "../data/cejil/profile";
+import { nepalLoaded, nepalPrimaryDoc } from "../data/nepal/load";
+import { nepalDocFileId } from "../data/nepal/profile";
 import { highlightTerms, fold, foldWithMap, parseSearchQuery, termHit, termIn } from "./queryTokens";
 
 /** Builds Uwazi's per-entity search-snippets shape (`SnippetsSearchResponse`:
@@ -323,9 +325,23 @@ function documentPages(e: Entity, language: Language, source: DataSource): DocPa
       }
       return hit;
     }
+    case "nepal": {
+      // The bundled PDFs' OCR text, page by page: real pages, so a passage
+      // jumps. Most records have no document.
+      if (!nepalLoaded()) return NO_PAGES;
+      const key = `nepal:${e.id}`;
+      let hit = docPagesCache.get(key);
+      if (!hit) {
+        const doc = nepalPrimaryDoc(e.id);
+        // A source and the action it records share one document, and so one
+        // page array: the fold caches below are shared between them.
+        hit = doc ? { pages: doc.text, paged: true, borrowedFrom: null, docKey: doc.id, fileId: nepalDocFileId(doc.id) } : NO_PAGES;
+        docPagesCache.set(key, hit);
+      }
+      return hit;
+    }
     case "artworks":
     case "travesia":
-    case "nepal":
       // No document bodies — nothing for full-text search to scan.
       return NO_PAGES;
     case "mock": {
