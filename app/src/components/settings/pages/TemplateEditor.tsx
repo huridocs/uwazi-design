@@ -1,227 +1,354 @@
-import { useId, useState } from "react";
-import { useAtomValue, useStore } from "jotai";
-import { settingsRelationTypesAtom } from "../../../atoms/relationTypes";
-import { Plus } from "lucide-react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useAtomValue, useSetAtom } from "jotai";
+import { Lock, Plus, Search, Trash2, X } from "lucide-react";
 import { SettingsEditor } from "../SettingsEditor";
 import { SettingsFieldRow, SettingsSection } from "../SettingsSection";
+import { SettingsField, TextInput } from "../SettingsField";
+import { SettingsButton } from "../SettingsButton";
 import { SettingsEmptyState } from "../SettingsEmptyState";
 import { TemplateCardPreview } from "../TemplateCardPreview";
-import { SettingsBarContext, SettingsButton } from "../SettingsButton";
+import { MoveButtons, ReorderGrip, moveTo } from "../ReorderControls";
+import { TYPE_ICONS } from "../propertyTypeIcons";
+import { TemplatePropertyPanel } from "./TemplatePropertyPanel";
+import { Checkbox } from "../../shared/Checkbox";
+import { Hint } from "../../shared/Hint";
 import { Modal } from "../../shared/Modal";
 import { ModalField, MODAL_INPUT } from "../../shared/ModalParts";
 import { FieldMessage } from "../../shared/FieldMessage";
-import { RowActions } from "../RowActions";
-import { DragGrip } from "../DragGrip";
-import { useReorder } from "../../../hooks/useReorder";
-import { SettingsField, TextInput } from "../SettingsField";
-import { Checkbox } from "../../shared/Checkbox";
-import { Select } from "../../shared/Select";
-import {
-  templatePropertiesByTemplate,
-  defaultTemplateProperties,
-  propertyTypeLabels,
-  seedThesauri,
-  seedTemplates,
-  type SettingsTemplate,
-  type TemplateProperty,
-} from "../../../data/settings";
-import { cejilTemplateProperties } from "../../../data/cejil/settingsAdapt";
-import { validateValue, blockingSummary, type ValidationIssue } from "../../../utils/validation";
-import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
-import { useSettingsUndo } from "../../../hooks/useSettingsUndo";
-import { propertyUsageAtom } from "../../../atoms/settingsUsage";
 import { ConfirmDelete } from "../../shared/ConfirmDelete";
 import { LastSavedLine } from "../../shared/LastSavedLine";
+import { SettingsBarContext } from "../SettingsButton";
+import { useReorder } from "../../../hooks/useReorder";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
+import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { useSettingsUndo } from "../../../hooks/useSettingsUndo";
+import { dataSourceAtom, libraryEntitiesAtom } from "../../../atoms/dataSource";
+import { templatesAtom } from "../../../atoms/templates";
+import { saveTemplateAtom } from "../../../atoms/templateActions";
+import { createThesaurusAtom, thesauriAtom } from "../../../atoms/thesauri";
+import { relationTypesCorpus, relationTypesOfAtom, saveRelationTypeAtom } from "../../../atoms/relationTypes";
 import { newSettingsId } from "../../../atoms/settingsCollection";
-import { deepEqual } from "../../../utils/deepEqual";
+import { getEntity } from "../../../data/entities";
+import { getEntityProfile } from "../../../data/entityProfiles";
+import { commonPropertiesFor, type PropertyDef, type TemplateDef } from "../../../data/templates/types";
+import { entityPropertyValues } from "../../../utils/propertyValues";
+import { count, foldName } from "../../../utils/settingsUsage";
+import { blockingSummary } from "../../../utils/validation";
+import {
+  TYPE_LABELS,
+  inheritedRefusal,
+  inheritorsOf,
+  newPropertyName,
+  panelFields,
+  templateNameIssue,
+  withFilter,
+} from "../../../utils/templateRules";
+import type { Corpus } from "../../../data/entityChanges";
 
-/** A distinct, calm palette (no duplicates) + a custom picker. */
+/** A distinct, calm palette (no duplicates); a new template starts on one of
+ *  them at random, as in Uwazi. */
 const PALETTE = [
   "#C03B22", "#D97706", "#CA8A04", "#65A30D", "#059669",
   "#0D9488", "#0891B2", "#2563EB", "#7C3AED", "#DB2777", "#6B7280",
 ];
+const HEX = /^#[0-9a-fA-F]{6}$/;
+/** "a, b and c". */
+const andList = (xs: string[]) => (xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`);
 
-const TYPE_OPTIONS = Object.entries(propertyTypeLabels).map(([value, label]) => ({ value, label }));
-const THESAURUS_OPTIONS = seedThesauri.map((t) => ({ value: t.name, label: t.name }));
-const TEMPLATE_OPTIONS = seedTemplates.map((t) => ({ value: t.name, label: t.name }));
+/** The property table's tracks, header and rows alike: grip · select ·
+ *  property · type · options · required · filter · cards · move. From `md`
+ *  up; on a phone a row wraps (name, then type and flags). */
+const COLUMNS = "1.25rem 1.25rem minmax(0,1.1fr) 8.5rem minmax(0,1.4fr) 4.25rem 3.5rem 3.5rem 4.5rem";
 
-/** Per-property type-specific config, held locally (the shared TemplateProperty
- *  type stays scalar). Keyed by property id. */
-interface PropConfig {
-  content?: string;
-  targetTemplate?: string;
-  relationType?: string;
+/** Read-only option pills, only those that apply, in Uwazi's order. */
+function optionPills(
+  p: PropertyDef,
+  names: { relation: (id?: string) => string; thesaurus: (id?: string) => string; template: (id?: string) => string },
+): string[] {
+  const out: string[] = [];
+  if (p.showInCard) out.push("Show in cards");
+  if (p.noLabel) out.push("No label");
+  if (p.filter) out.push("Use as filter");
+  if (p.prioritySorting) out.push("Priority sorting");
+  if (p.required) out.push("Required");
+  if (p.defaultfilter) out.push("Default filter");
+  if (p.generatedId) out.push("Generated ID");
+  if (p.fullWidth) out.push("Full width");
+  if (p.style) out.push(p.style === "contain" ? "Fit" : "Fill");
+  if (p.type === "relationship") {
+    if (p.relationType) out.push(names.relation(p.relationType));
+    out.push(names.template(p.content));
+  }
+  if ((p.type === "select" || p.type === "multiselect") && p.content) out.push(names.thesaurus(p.content));
+  return out;
 }
 
-/** The full editable shape a property dialog produces. */
-interface PropertyDraft extends PropConfig {
-  label: string;
-  type: TemplateProperty["type"];
-  required: boolean;
-  filterable: boolean;
-  showInCard: boolean;
+/** Settings › Templates › one template (spec M8): name and colour, the three
+ *  common properties and the template's own, each opened in the property
+ *  panel, reordered, flagged inline, or removed with an Undo. Save writes the
+ *  template store, after saying what the change does to the entities that
+ *  hold values (UX4). */
+export function TemplateEditor({ templateId, onClose }: { templateId: string | "new"; onClose: (savedId?: string) => void }) {
+  const corpus = useAtomValue(dataSourceAtom) as Corpus;
+  const templates = useAtomValue(templatesAtom(corpus));
+  const base = templateId === "new" ? undefined : templates.find((t) => t.id === templateId);
+  if (templateId !== "new" && !base)
+    return (
+      <SettingsEditor component="TemplateEditor" path={["Templates"]} title="Template not found" onBack={() => onClose()} dirty={false} onSave={() => {}}>
+        <SettingsEmptyState title="Template not found" hint="It may have been deleted. Go back to the list." />
+      </SettingsEditor>
+    );
+  return <TemplateEditorBody key={templateId} base={base} corpus={corpus} templates={templates} onClose={onClose} />;
 }
 
-/** The property table's tracks — header and rows must share them to align:
- *  property · type · required · filter · cards · actions. From `md` up only:
- *  on a phone these fixed tracks left the name nothing (390px), so a row
- *  wraps instead, the name on its own line and the flags labelled under it. */
-const PROPERTY_COLUMNS = "minmax(0, 1fr) 8rem 5rem 3.5rem 3.5rem 4rem";
-
-/** Template detail/editor — name, colour, and the property list. Opened from
- *  the Templates list (list → detail pattern). `onClose` returns to the list. */
-export function TemplateEditor({
-  template,
+function TemplateEditorBody({
+  base,
+  corpus,
+  templates,
   onClose,
-  onSave,
 }: {
-  template: SettingsTemplate | "new";
-  onClose: () => void;
-  /** Persist the edited name/colour back to the list so changes stick for the
-   *  session (the mock has no backend). */
-  onSave?: (patch: { name: string; color: string }) => string | undefined;
+  base: TemplateDef | undefined;
+  corpus: Corpus;
+  templates: TemplateDef[];
+  onClose: (savedId?: string) => void;
 }) {
-  const store = useStore();
-  const { record } = useSettingsNotify();
-  const isNew = template === "new";
-  const base = isNew ? undefined : template;
-
-  // Property storage is unchanged (pending a decision): only name and colour
-  // reach `onSave`. The draft covers everything so the guard sees every edit.
-  const { draft, setField, dirty } = useSettingsDraft({
+  const isNew = !base;
+  const [fresh] = useState<TemplateDef>(() => {
+    const id = newSettingsId("tpl");
+    return {
+      id,
+      name: "",
+      color: PALETTE[Math.floor(Math.random() * PALETTE.length)],
+      isDefault: false,
+      commonProperties: commonPropertiesFor(id),
+      properties: [],
+    };
+  });
+  const { draft, setDraft, setField, dirty } = useSettingsDraft<TemplateDef>({
     id: `template:${base?.id ?? "new"}`,
     label: "Template edits",
-    saved: {
-      name: base?.name ?? "",
-      color: base?.color ?? PALETTE[0],
-      props: isNew
-        ? [...defaultTemplateProperties]
-        : cejilTemplateProperties[base!.id] ?? templatePropertiesByTemplate[base!.id] ?? defaultTemplateProperties,
-      config: {} as Record<string, PropConfig>,
-    },
+    saved: base ?? fresh,
   });
-  const { name, color, props, config } = draft;
-  const setName = setField("name");
-  const setColor = setField("color");
-  const setProps = setField("props");
-  const setConfig = setField("config");
-  // The property being edited in the dialog: an existing property, "new", or none.
-  const [editing, setEditing] = useState<TemplateProperty | "new" | null>(null);
+  const setProps = setField("properties");
+  const setCommon = setField("commonProperties");
+  const saveTemplate = useSetAtom(saveTemplateAtom);
+  const { record } = useSettingsNotify();
+  const entities = useAtomValue(libraryEntitiesAtom);
+  const thesauri = useAtomValue(thesauriAtom(corpus));
+  const relationTypes = useAtomValue(relationTypesOfAtom(relationTypesCorpus(corpus)));
+
+  const names = useMemo(
+    () => ({
+      relation: (id?: string) => relationTypes.find((t) => t.id === id)?.label ?? "No type",
+      thesaurus: (id?: string) => thesauri.find((t) => t.id === id)?.name ?? "No type",
+      template: (id?: string) => (id ? (templates.find((t) => t.id === id)?.name ?? id) : "Any entity"),
+    }),
+    [relationTypes, thesauri, templates],
+  );
+  const valuesOf = useCallback((id: string) => thesauri.find((t) => t.id === id)?.values, [thesauri]);
+
+  /* ── Name ── */
+  const nameIssue = templateNameIssue(templates, base?.id ?? null, draft.name);
+  const [nameShown, setNameShown] = useState(false);
+  const [attempted, setAttempted] = useState(false);
+  const saveBlocked = attempted && !!nameIssue;
+
+  /* ── Panel, search, selection, hover ── */
+  const [panel, setPanel] = useState<{ prop: PropertyDef | null; common: boolean } | null>(null);
+  const [query, setQuery] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [hovered, setHovered] = useState<string | null>(null);
+  const [refused, setRefused] = useState<string | null>(null);
+  const [impact, setImpact] = useState<string[] | null>(null);
+  const [addThesaurus, setAddThesaurus] = useState(false);
+  const [addRelationType, setAddRelationType] = useState(false);
   const { dragIdx, rowProps, gripProps } = useReorder(setProps);
 
-  /* ── Validation — same rules + message idiom as the entity metadata form.
-     Name is required (error, blocks save); a very short name only warns. */
-  const [nameIssue, setNameIssue] = useState<ValidationIssue | null>(null);
-  const [saveAttempted, setSaveAttempted] = useState(false);
-  const checkName = (v: string) =>
-    validateValue("text", v, { required: true, label: "Template name" });
-  const saveBlocked = saveAttempted && nameIssue?.severity === "error";
+  // A ticked row that left the list is no longer ticked.
+  useEffect(() => {
+    setSelected((prev) => {
+      const ids = new Set(draft.properties.map((p) => p.id));
+      const next = new Set([...prev].filter((id) => ids.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [draft.properties]);
 
-  const patchProp = (id: string, patch: Partial<TemplateProperty>) =>
-    setProps((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+  const q = query.trim().toLowerCase();
+  const matches = (p: PropertyDef) => !q || p.label.toLowerCase().includes(q);
 
-  /** Remove a property from the draft, with an Undo in the Beacon (UX5),
-   *  unless another template inherits it: Uwazi refuses that
-   *  (UpdateTemplate.ts), so the dialog names the rule. */
-  const [refused, setRefused] = useState<{ label: string; block: string } | null>(null);
-  const offerUndo = useSettingsUndo<{ prop: TemplateProperty; index: number; cfg?: PropConfig }>(({ prop, index, cfg }) => {
-    setProps((prev) => (prev.some((p) => p.id === prop.id) ? prev : [...prev.slice(0, index), prop, ...prev.slice(index)]));
-    if (cfg) setConfig((prev) => ({ ...prev, [prop.id]: cfg }));
+  /* ── Removal, with Undo (UX5) and the inherit guard ── */
+  const offerUndo = useSettingsUndo<{ removed: { prop: PropertyDef; index: number }[] }>(({ removed }) => {
+    setProps((prev) => {
+      const next = [...prev];
+      for (const { prop, index } of [...removed].sort((a, b) => a.index - b.index))
+        if (!next.some((p) => p.id === prop.id)) next.splice(Math.min(index, next.length), 0, prop);
+      return next;
+    });
   });
-  const deleteProperty = (id: string) => {
-    const index = props.findIndex((x) => x.id === id);
-    const prop = props[index];
-    if (!prop) return;
-    const usage = base
-      ? store.get(
-          propertyUsageAtom({
-            templateId: base.id,
-            label: prop.label,
-            name: prop.id.startsWith(`${base.id}-`) ? prop.id.slice(base.id.length + 1) : undefined,
-          }),
-        )
-      : null;
-    if (usage?.block) {
-      setRefused({ label: prop.label, block: usage.block });
+  const removeSelected = () => {
+    const removed = draft.properties.map((prop, index) => ({ prop, index })).filter(({ prop }) => selected.has(prop.id));
+    // Another template inheriting a property refuses its removal (Uwazi's
+    // server does, by name only): say which templates and properties.
+    const blocked = removed.flatMap(({ prop }) => {
+      const by = inheritorsOf(templates, draft.id, prop);
+      return by.length ? [{ prop, by }] : [];
+    });
+    if (blocked.length) {
+      setRefused(
+        `${blocked
+          .map(({ prop, by }) => `“${prop.label}” is inherited by ${by.map((b) => `${b.templateName} › ${b.label}`).join(", ")}.`)
+          .join(" ")} Remove the inheritance there first. ${inheritedRefusal(blocked.map((b) => b.prop.name))}`,
+      );
       return;
     }
-    setProps((prev) => prev.filter((x) => x.id !== id));
-    setConfig((prev) => {
-      const { [id]: _drop, ...rest } = prev;
-      return rest;
-    });
+    setProps((prev) => prev.filter((p) => !selected.has(p.id)));
+    setSelected(new Set());
     offerUndo(
-      { prop, index, cfg: config[id] },
-      `${prop.label} removed`,
-      [...(usage?.lines ?? []), "Nothing is saved until you save the template."].join(" "),
+      { removed },
+      removed.length === 1 ? `${removed[0].prop.label} removed` : `${removed.length} properties removed`,
+      "Nothing is saved until you save the template.",
     );
   };
 
-  /** Commit a property dialog — append (new) or patch (existing) + its config. */
-  const commitProperty = (prop: PropertyDraft) => {
-    const { label, type, required, filterable, showInCard, ...cfg } = prop;
-    if (editing === "new") {
-      const id = newSettingsId("np");
-      setProps((prev) => [...prev, { id, label, type, required, filterable, showInCard }]);
-      setConfig((prev) => ({ ...prev, [id]: cfg }));
-    } else if (editing) {
-      patchProp(editing.id, { label, type, required, filterable, showInCard });
-      // A dialog saved with no change leaves the config as it was: writing the
-      // dialog's defaults made an unchanged template read as dirty.
-      if (!deepEqual(cfg, effectiveConfig(editing.type, config[editing.id])))
-        setConfig((prev) => ({ ...prev, [editing.id]: cfg }));
+  /* ── Panel submit ── */
+  const submitProperty = (p: PropertyDef) => {
+    if (panel?.common) {
+      setCommon((prev) => prev.map((x) => (x.id === p.id ? p : x)));
+    } else if (panel?.prop) {
+      // An unchanged panel writes nothing, so the page stays clean.
+      setProps((prev) => prev.map((x) => (x.id === p.id ? p : x)));
+    } else {
+      const others = templates.filter((t) => t.id !== draft.id);
+      const name = newPropertyName(p.label, draft, others);
+      setProps((prev) => [...prev, { ...p, id: newSettingsId("prop"), name }]);
     }
-    setEditing(null);
+    setPanel(null);
+  };
+  const patchProp = (id: string, patch: (p: PropertyDef) => PropertyDef) =>
+    setProps((prev) => prev.map((p) => (p.id === id ? patch(p) : p)));
+
+  /* ── Save, with impact (UX4) ── */
+  const impactLines = (): string[] => {
+    if (!base) return [];
+    const own = entities.filter((e) => e.typeId === base.id);
+    const lines: string[] = [];
+    const now = new Map(draft.properties.map((p) => [p.id, p]));
+    for (const old of base.properties) {
+      const next = now.get(old.id);
+      if (!next) {
+        let holders = 0;
+        let values = 0;
+        for (const e of own) {
+          const v = entityPropertyValues(e, old.name, "EN").length;
+          if (v) {
+            holders++;
+            values += v;
+          }
+        }
+        const uses = [old.filter && "a filter", old.showInCard && "shown on cards", "a list column choice"].filter(Boolean);
+        lines.push(
+          holders
+            ? `Removes “${old.label}” from ${count(holders, "entity", "entities")} (${count(values, "value")}). It is also ${andList(uses as string[])}.`
+            : `Removes “${old.label}”. No entity holds a value for it, so nothing is lost.`,
+        );
+        continue;
+      }
+      if ((next.type === "select" || next.type === "multiselect") && next.content && next.content !== old.content) {
+        const labels = new Set((thesauri.find((t) => t.id === next.content)?.values ?? []).flatMap((v) => [v.label, ...(v.values ?? []).map((c) => c.label)]).map(foldName));
+        let values = 0;
+        let holders = 0;
+        for (const e of own) {
+          const miss = entityPropertyValues(e, old.name, "EN").filter((l) => !labels.has(foldName(l))).length;
+          if (miss) {
+            values += miss;
+            holders++;
+          }
+        }
+        if (values)
+          lines.push(`${count(values, "value")} of ${count(holders, "entity", "entities")} have no match in ${names.thesaurus(next.content)} and will show as free text.`);
+      }
+      if (next.type === "relationship" && next.content && next.content !== old.content) {
+        let off = 0;
+        for (const e of own) {
+          const f = (getEntityProfile(e.id).metadata.EN ?? []).find((x) => x.id === old.name);
+          if (f?.type === "relationship")
+            off += f.connectedEntityIds.filter((id) => getEntity(id)?.typeId !== next.content).length;
+        }
+        if (off) lines.push(`${count(off, "connection points", "connections point")} to entities that are not ${names.template(next.content)}.`);
+      }
+    }
+    for (const p of draft.properties) {
+      const old = base.properties.find((x) => x.id === p.id);
+      if (p.required && !old?.required) {
+        const without = own.filter((e) => entityPropertyValues(e, p.name, "EN").length === 0).length;
+        if (without) lines.push(`${count(without, "entity", "entities")} will need a value for “${p.label}” the next time they are edited.`);
+      }
+    }
+    return lines;
   };
 
-  /** Save attempt: an error on the name blocks it, alerts, and refocuses the
-   *  field; warnings let it through. */
   const trySave = () => {
-    const issue = checkName(name);
-    setNameIssue(issue);
-    if (issue?.severity === "error") {
-      setSaveAttempted(true);
+    if (nameIssue) {
+      setAttempted(true);
+      setNameShown(true);
       document.getElementById("template-name-input")?.focus();
       return;
     }
-    save();
+    const lines = impactLines();
+    if (lines.length) setImpact(lines);
+    else commit();
   };
-
-  const save = () => {
-    const finalName = name.trim() || base?.name || "Untitled template";
-    const id = onSave?.({ name: finalName, color }) ?? base?.id;
-    record({ log: false, 
+  const commit = () => {
+    const template = { ...draft, name: draft.name.trim() };
+    const id = saveTemplate({ corpus, template, isNew });
+    offerUndo.end();
+    record({
       method: isNew ? "CREATE" : "UPDATE",
       domain: "template",
       noun: "template",
       id,
-      name: finalName,
-      message: isNew ? "Template created" : `${finalName} saved`,
+      name: template.name,
+      message: "Template saved successfully.",
     });
-    onClose();
+    setImpact(null);
+    onClose(id);
   };
 
-  const customSelected = !PALETTE.some((c) => c.toLowerCase() === color.toLowerCase());
+  /* ── Rows ── */
+  const custom = draft.properties;
+  const shownCustom = custom.map((p, index) => ({ p, index })).filter(({ p }) => matches(p));
+  const shownCommon = draft.commonProperties.filter(matches);
+  const ticked = custom.filter((p) => selected.has(p.id));
+
+  const rowHover = (id: string) => ({
+    onMouseEnter: () => setHovered(id),
+    onMouseLeave: () => setHovered((h) => (h === id ? null : h)),
+    onFocus: () => setHovered(id),
+    onBlur: () => setHovered((h) => (h === id ? null : h)),
+  });
 
   return (
     <SettingsEditor
       component="TemplateEditor"
       path={["Templates"]}
-      title={isNew ? "New template" : base!.name}
-      onBack={onClose}
+      title={draft.name.trim() || (isNew ? "New template" : base!.name)}
+      onBack={() => onClose()}
       isNew={isNew}
       createLabel="Create template"
       dirty={dirty}
       saveBlocked={saveBlocked}
       onSave={trySave}
       wide
+      selection={{
+        count: ticked.length,
+        total: custom.length,
+        onClear: () => setSelected(new Set()),
+        actions: [{ id: "remove", label: "Remove", icon: <Trash2 size={13} />, danger: true, onClick: removeSelected }],
+      }}
       footerStatus={
-        // Save-attempt summary — alert only on the attempt, not per keystroke.
-        // The footer keeps its fixed height; this rides the existing row.
         saveBlocked ? (
           <span role="alert" className="text-meta font-medium text-seal-label">
-            {blockingSummary(1, 0)}
+            {blockingSummary(1, 0)}: {nameIssue}
           </span>
         ) : (
           <LastSavedLine domain="template" id={base?.id} />
@@ -231,20 +358,34 @@ export function TemplateEditor({
         <>
           <ConfirmDelete
             open={refused !== null}
-            title="Remove property"
+            title="Remove properties"
             message=""
-            impact={refused ? { lines: [], block: refused.block } : null}
+            impact={refused ? { lines: [], block: refused } : null}
             onConfirm={() => setRefused(null)}
             onCancel={() => setRefused(null)}
           />
-          {editing !== null && (
-            <PropertyDialog
-              property={editing === "new" ? null : editing}
-              config={editing === "new" ? undefined : config[editing.id]}
-              onCancel={() => setEditing(null)}
-              onSave={commitProperty}
+          <ConfirmDelete
+            open={impact !== null}
+            title="Save template"
+            message="This change reaches the entities of this template:"
+            impact={impact ? { lines: impact, block: null } : null}
+            confirmLabel="Save"
+            onConfirm={commit}
+            onCancel={() => setImpact(null)}
+          />
+          {panel && (
+            <TemplatePropertyPanel
+              property={panel.prop}
+              isCommon={panel.common}
+              draft={draft}
+              saved={templates}
+              corpus={corpus}
+              onCancel={() => setPanel(null)}
+              onSubmit={submitProperty}
             />
           )}
+          {addThesaurus && <AddThesaurusModal corpus={corpus} onClose={() => setAddThesaurus(false)} />}
+          {addRelationType && <AddRelationTypeModal corpus={corpus} onClose={() => setAddRelationType(false)} />}
         </>
       }
     >
@@ -252,53 +393,22 @@ export function TemplateEditor({
         <div className="flex flex-col gap-6 flex-1 min-w-0">
           <SettingsSection>
             <SettingsFieldRow>
-              <SettingsField label="Template name" issue={nameIssue}>
+              <SettingsField label="Template name" issue={nameShown && nameIssue ? { severity: "error", message: nameIssue } : null}>
                 <TextInput
                   id="template-name-input"
-                  value={name}
-                  issue={nameIssue}
+                  value={draft.name}
+                  issue={nameShown && nameIssue ? { severity: "error", message: nameIssue } : null}
                   onChange={(e) => {
-                    setName(e.target.value);
-                    if (nameIssue) setNameIssue(checkName(e.target.value));
+                    setField("name")(e.target.value);
+                    // The message goes as soon as the name is valid.
+                    if (attempted && !templateNameIssue(templates, base?.id ?? null, e.target.value)) setAttempted(false);
                   }}
-                  onBlur={(e) => setNameIssue(checkName(e.currentTarget.value))}
-                  placeholder="e.g. Court Case"
+                  onBlur={() => setNameShown(true)}
+                  placeholder="Template name"
                 />
               </SettingsField>
               <SettingsField label="Colour" group>
-                <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                  {PALETTE.map((c) => (
-                    <button
-                      key={c}
-                      onClick={() => setColor(c)}
-                      aria-label={`Colour ${c}`}
-                      className={`w-6 h-6 rounded-md border border-ink/20 transition-transform ${color.toLowerCase() === c.toLowerCase() ? "ring-2 ring-offset-1 ring-ink scale-105" : "hover:scale-105"}`}
-                      style={{ backgroundColor: c }}
-                    />
-                  ))}
-                  {customSelected && (
-                    <span
-                      className="w-6 h-6 rounded-md border border-ink/20 ring-2 ring-offset-1 ring-ink"
-                      style={{ backgroundColor: color }}
-                      aria-label="Custom colour (selected)"
-                    />
-                  )}
-                  {/* Custom colour picker — opens the native swatch. */}
-                  <label
-                    className="relative w-6 h-6 rounded-md cursor-pointer overflow-hidden grid place-items-center"
-                    style={{ background: "conic-gradient(from 0deg, #ef4444, #f59e0b, #eab308, #22c55e, #06b6d4, #3b82f6, #8b5cf6, #ec4899, #ef4444)" }}
-                    title="Custom colour"
-                  >
-                    <Plus size={12} className="text-white" style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,.4))" }} />
-                    <input
-                      type="color"
-                      value={color}
-                      onChange={(e) => setColor(e.target.value)}
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                      aria-label="Custom colour"
-                    />
-                  </label>
-                </div>
+                <ColorPicker color={draft.color} onChange={setField("color")} />
               </SettingsField>
             </SettingsFieldRow>
           </SettingsSection>
@@ -306,115 +416,147 @@ export function TemplateEditor({
           <SettingsSection
             title="Properties"
             action={
-              <SettingsButton variant="secondary" size="sm" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
+              <SettingsButton variant="secondary" size="sm" icon={<Plus size={14} />} onClick={() => setPanel({ prop: null, common: false })}>
                 Add property
               </SettingsButton>
             }
           >
+            <div data-part="property-search" role="search" className="flex items-center gap-1.5 h-8 px-2 max-w-md bg-warm rounded-md focus-within:ring-2 focus-within:ring-carbon/20">
+              <Search size={14} aria-hidden className="text-ink-muted shrink-0" />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                aria-label="Search properties"
+                placeholder="Search properties…"
+                className="flex-1 min-w-0 bg-transparent text-xs font-medium placeholder:text-ink-muted focus:outline-none"
+              />
+              {query && (
+                <button type="button" aria-label="Clear search" onClick={() => setQuery("")} className="text-ink-muted hover:text-ink cursor-pointer">
+                  <X size={14} />
+                </button>
+              )}
+            </div>
 
             {/* A real table, re-displayed as grid rows like the shared DataTable.
                 WebKit drops table semantics from re-displayed table elements, so
                 the implicit roles are stated too. */}
-            <table
-              role="table"
-              aria-label="Properties"
-              data-part="properties"
-              className="flex flex-col rounded-md overflow-hidden border border-border-soft"
-            >
+            <table role="table" aria-label="Properties" data-part="properties" className="flex flex-col rounded-md overflow-hidden border border-border-soft">
               <thead role="rowgroup" className="block">
                 <tr
                   role="row"
-                  // Phone rows label their own flags, so the header row is for
-                  // screen readers only below `md`.
-                  className="sr-only md:not-sr-only md:grid items-center gap-3 md:px-3 md:py-2 text-meta font-semibold uppercase tracking-wide text-ink-tertiary bg-warm"
-                  style={{ gridTemplateColumns: PROPERTY_COLUMNS }}
+                  className="sr-only md:not-sr-only md:grid items-center gap-2 md:px-3 md:py-2 text-meta font-semibold uppercase tracking-wide text-ink-tertiary bg-warm"
+                  style={{ gridTemplateColumns: COLUMNS }}
                 >
-                  <th role="columnheader" scope="col" className="font-semibold text-start min-w-0 truncate">Property</th>
-                  <th role="columnheader" scope="col" className="font-semibold text-start">Type</th>
-                  <th role="columnheader" scope="col" className="font-semibold text-center">Required</th>
-                  <th role="columnheader" scope="col" className="font-semibold text-center">Filter</th>
-                  <th role="columnheader" scope="col" className="font-semibold text-center">Cards</th>
-                  <th role="columnheader" scope="col">
-                    <span className="sr-only">Actions</span>
-                  </th>
+                  <th role="columnheader" scope="col"><span className="sr-only">Drag</span></th>
+                  <th role="columnheader" scope="col"><span className="sr-only">Select</span></th>
+                  <th role="columnheader" scope="col" className="text-start">Property</th>
+                  <th role="columnheader" scope="col" className="text-start">Type</th>
+                  <th role="columnheader" scope="col" className="text-start">Options</th>
+                  <th role="columnheader" scope="col" className="text-center">Required</th>
+                  <th role="columnheader" scope="col" className="text-center">Filter</th>
+                  <th role="columnheader" scope="col" className="text-center">Cards</th>
+                  <th role="columnheader" scope="col"><span className="sr-only">Order</span></th>
                 </tr>
               </thead>
-
               <tbody role="rowgroup" className="block">
-                {props.length === 0 ? (
+                {shownCommon.map((p) => (
+                  <PropertyRow
+                    key={p.id}
+                    p={p}
+                    common
+                    pills={optionPills(p, names)}
+                    highlight={hovered === p.id}
+                    onOpen={() => setPanel({ prop: p, common: true })}
+                    hover={rowHover(p.id)}
+                  />
+                ))}
+                {shownCustom.map(({ p, index }) => {
+                  const f = panelFields(p.type, null, !!p.filter);
+                  return (
+                    <PropertyRow
+                      key={p.id}
+                      p={p}
+                      pills={optionPills(p, names)}
+                      highlight={hovered === p.id}
+                      dragging={dragIdx === index}
+                      rowProps={rowProps(index)}
+                      hover={rowHover(p.id)}
+                      onOpen={() => setPanel({ prop: p, common: false })}
+                      grip={
+                        <ReorderGrip
+                          {...gripProps(index)}
+                          label={p.label}
+                          index={index}
+                          count={custom.length}
+                          onMove={(to) => setProps((prev) => moveTo(prev, index, to))}
+                        />
+                      }
+                      move={<MoveButtons label={p.label} index={index} count={custom.length} onMove={(to) => setProps((prev) => moveTo(prev, index, to))} />}
+                      select={
+                        <Checkbox
+                          checked={selected.has(p.id)}
+                          onChange={() =>
+                            setSelected((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(p.id)) next.delete(p.id);
+                              else next.add(p.id);
+                              return next;
+                            })
+                          }
+                          ariaLabel={`Select ${p.label}`}
+                        />
+                      }
+                      flags={{
+                        required: <Checkbox checked={!!p.required} onChange={(e) => patchProp(p.id, (x) => ({ ...x, required: e.target.checked || undefined }))} ariaLabel={`${p.label} required`} />,
+                        filter: f.filter ? (
+                          <Checkbox checked={!!p.filter} onChange={(e) => patchProp(p.id, (x) => withFilter(x, e.target.checked))} ariaLabel={`${p.label} use as filter`} />
+                        ) : null,
+                        cards: <Checkbox checked={!!p.showInCard} onChange={(e) => patchProp(p.id, (x) => ({ ...x, showInCard: e.target.checked || undefined }))} ariaLabel={`${p.label} show in cards`} />,
+                      }}
+                    />
+                  );
+                })}
+                {shownCommon.length + shownCustom.length === 0 && (
                   <tr role="row" className="block">
-                    <td role="cell" className="block px-3 py-8 border-t border-border-soft">
-                      <SettingsEmptyState
-                        title="No properties yet"
-                        hint="Add the fields an entity of this template carries."
-                      />
+                    <td role="cell" className="block px-3 py-6 border-t border-border-soft text-center text-xs text-ink-muted">
+                      No property matches “{query}”.
                     </td>
                   </tr>
-                ) : (
-                  props.map((p, i) => {
-                    const cfg = config[p.id] ?? {};
-                    const detail =
-                      p.type === "relationship"
-                        ? cfg.targetTemplate
-                        : p.type === "select"
-                          ? cfg.content
-                          : undefined;
-                    return (
-                      <tr
-                        key={p.id}
-                        {...rowProps(i)}
-                        role="row"
-                        data-part="property"
-                        className={`group flex flex-wrap md:grid items-center gap-x-3 gap-y-1.5 md:gap-3 px-3 py-2 border-t border-border-soft transition-opacity ${dragIdx === i ? "opacity-40" : ""}`}
-                        style={{ gridTemplateColumns: PROPERTY_COLUMNS }}
-                      >
-                        <td role="cell" className="flex items-center gap-2 basis-full md:basis-auto w-full min-w-0">
-                          <DragGrip {...gripProps(i)} />
-                          <span className="truncate text-sm font-medium text-ink">{p.label}</span>
-                          {detail && (
-                            <span className="truncate text-xs text-ink-tertiary shrink-0">· {detail}</span>
-                          )}
-                        </td>
-                        <td role="cell">
-                          <span className="block text-meta font-semibold text-ink-secondary bg-vellum px-2 py-0.5 rounded-md w-fit">
-                            {propertyTypeLabels[p.type]}
-                          </span>
-                        </td>
-                        <td role="cell" className="flex md:justify-center">
-                          <label className="flex items-center gap-1.5 cursor-pointer">
-                            <Checkbox checked={p.required} onChange={(e) => patchProp(p.id, { required: e.target.checked })} ariaLabel={`${p.label} required`} />
-                            <span aria-hidden className="md:hidden text-meta text-ink-tertiary">Required</span>
-                          </label>
-                        </td>
-                        <td role="cell" className="flex md:justify-center">
-                          <label className="flex items-center gap-1.5 cursor-pointer">
-                            <Checkbox checked={p.filterable} onChange={(e) => patchProp(p.id, { filterable: e.target.checked })} ariaLabel={`${p.label} filterable`} />
-                            <span aria-hidden className="md:hidden text-meta text-ink-tertiary">Filter</span>
-                          </label>
-                        </td>
-                        <td role="cell" className="flex md:justify-center">
-                          <label className="flex items-center gap-1.5 cursor-pointer">
-                            <Checkbox checked={p.showInCard} onChange={(e) => patchProp(p.id, { showInCard: e.target.checked })} ariaLabel={`${p.label} show in cards`} />
-                            <span aria-hidden className="md:hidden text-meta text-ink-tertiary">Cards</span>
-                          </label>
-                        </td>
-                        <td role="cell" className="ms-auto md:ms-0">
-                          <RowActions label={p.label} onEdit={() => setEditing(p)} onDelete={() => deleteProperty(p.id)} />
-                        </td>
-                      </tr>
-                    );
-                  })
                 )}
               </tbody>
             </table>
+            <div data-part="table-foot" className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            {custom.length > 0 && (
+              <label className="flex items-center gap-2 text-xs text-ink-secondary cursor-pointer w-fit">
+                <Checkbox
+                  checked={ticked.length === custom.length}
+                  indeterminate={ticked.length > 0 && ticked.length < custom.length}
+                  onChange={() => setSelected(ticked.length === custom.length ? new Set() : new Set(custom.map((p) => p.id)))}
+                  ariaLabel="Select all properties"
+                />
+                Select all properties
+              </label>
+            )}
+              {/* What a property panel picks from, created here (Uwazi puts
+                  these two on the editor's footer). */}
+              <span className="ms-auto flex flex-wrap items-center gap-1">
+                <SettingsButton variant="ghost" size="sm" icon={<Plus size={13} />} onClick={() => setAddThesaurus(true)}>
+                  Add thesaurus
+                </SettingsButton>
+                <SettingsButton variant="ghost" size="sm" icon={<Plus size={13} />} onClick={() => setAddRelationType(true)}>
+                  Add relationship type
+                </SettingsButton>
+              </span>
+            </div>
           </SettingsSection>
         </div>
 
-        {/* Live card preview — beside the field list on wide screens, stacked
-            below it on narrow ones so the property table keeps its width. */}
+        {/* Live card preview — beside the property list on wide screens,
+            stacked below it on narrow ones. */}
         <aside className="lg:w-[17rem] shrink-0 pt-6 lg:pt-0 border-t border-border-soft lg:border-t-0">
           <div className="lg:sticky lg:top-0">
-            <TemplateCardPreview name={name} color={color} properties={props} config={config} />
+            <TemplateCardPreview name={draft.name} color={draft.color} properties={draft.properties} valuesOf={valuesOf} highlight={hovered} />
           </div>
         </aside>
       </div>
@@ -422,138 +564,296 @@ export function TemplateEditor({
   );
 }
 
-/** Modal to edit a single property — label, type, type-specific config, and the
- *  required / filterable flags. Drives both the edit pencil and "Add property". */
-/** The config a property dialog opens with, and submits when left alone:
- *  the stored config, else the first option of each list. */
-function effectiveConfig(type: TemplateProperty["type"], config?: PropConfig): PropConfig {
-  if (type === "select") return { content: config?.content ?? THESAURUS_OPTIONS[0]?.value ?? "" };
-  if (type === "relationship")
-    return {
-      targetTemplate: config?.targetTemplate ?? TEMPLATE_OPTIONS[0]?.value ?? "",
-      // By registry id; none until chosen (Uwazi's "Select...").
-      relationType: config?.relationType ?? "",
-    };
-  return {};
+/** One property row. Common rows carry a lock and no grip, checkbox or flags. */
+function PropertyRow({
+  p,
+  common = false,
+  pills,
+  highlight,
+  dragging = false,
+  rowProps,
+  hover,
+  onOpen,
+  grip,
+  select,
+  move,
+  flags,
+}: {
+  p: PropertyDef;
+  common?: boolean;
+  pills: string[];
+  highlight: boolean;
+  dragging?: boolean;
+  rowProps?: ReturnType<ReturnType<typeof useReorder>["rowProps"]>;
+  hover: Record<string, () => void>;
+  onOpen: () => void;
+  grip?: React.ReactNode;
+  select?: React.ReactNode;
+  move?: React.ReactNode;
+  flags?: { required: React.ReactNode; filter: React.ReactNode; cards: React.ReactNode };
+}) {
+  const Icon = TYPE_ICONS[p.type];
+  const flag = (node: React.ReactNode, label: string) => (
+    <td role="cell" className="flex md:justify-center">
+      {node ? (
+        <label className="flex items-center gap-1.5 cursor-pointer">
+          {node}
+          <span aria-hidden className="md:hidden text-meta text-ink-tertiary">{label}</span>
+        </label>
+      ) : null}
+    </td>
+  );
+  return (
+    <tr
+      {...rowProps}
+      {...hover}
+      role="row"
+      data-part="property"
+      data-common={common || undefined}
+      className={`group flex flex-wrap md:grid items-center gap-x-2 gap-y-1.5 px-3 py-2 border-t border-border-soft transition-colors ${
+        highlight ? "bg-warm" : ""
+      } ${dragging ? "opacity-40" : ""}`}
+      style={{ gridTemplateColumns: COLUMNS }}
+    >
+      <td role="cell" className="flex items-center w-5 md:w-auto">{grip}</td>
+      <td role="cell" className="flex items-center w-5 md:w-auto">
+        {common ? (
+          <Hint text="This property can not be deleted">
+            {(hint) => (
+              <input
+                {...hint}
+                type="checkbox"
+                checked={false}
+                aria-disabled="true"
+                aria-label={`Select ${p.label}`}
+                onChange={() => {}}
+                onClick={(e) => e.preventDefault()}
+                className="w-3.5 h-3.5 rounded shrink-0 accent-ink opacity-40 cursor-not-allowed"
+              />
+            )}
+          </Hint>
+        ) : (
+          select
+        )}
+      </td>
+      <td role="cell" className="flex items-center gap-1.5 min-w-0 flex-1 md:flex-none basis-[calc(100%-3.5rem)] md:basis-auto">
+        {common && <Lock size={12} aria-hidden className="shrink-0 text-ink-muted" />}
+        <button
+          type="button"
+          onClick={onOpen}
+          aria-label={`Edit ${p.label}`}
+          className="min-w-0 truncate text-sm font-medium text-ink text-start hover:underline underline-offset-2 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-carbon/30 rounded-sm"
+        >
+          {p.label}
+        </button>
+      </td>
+      <td role="cell">
+        <span className="inline-flex items-center gap-1.5 text-meta font-semibold text-ink-secondary bg-vellum px-2 py-0.5 rounded-md w-fit">
+          <Icon size={12} aria-hidden />
+          {TYPE_LABELS[p.type]}
+        </span>
+      </td>
+      <td role="cell" className="flex flex-wrap gap-1 min-w-0 basis-full md:basis-auto">
+        {pills.map((label) => (
+          <span key={label} className="text-meta text-ink-secondary bg-warm px-1.5 py-px rounded-md w-fit truncate max-w-full">
+            {label}
+          </span>
+        ))}
+      </td>
+      {common ? (
+        <>
+          <td role="cell" />
+          <td role="cell" />
+          <td role="cell" />
+          <td role="cell" />
+        </>
+      ) : (
+        <>
+          {flag(flags?.required, "Required")}
+          {flag(flags?.filter, "Filter")}
+          {flag(flags?.cards, "Cards")}
+          <td role="cell" className="ms-auto md:ms-0 flex justify-end">{move}</td>
+        </>
+      )}
+    </tr>
+  );
 }
 
-function PropertyDialog({
-  property,
-  config,
-  onCancel,
-  onSave,
-}: {
-  property: TemplateProperty | null;
-  config?: PropConfig;
-  onCancel: () => void;
-  onSave: (draft: PropertyDraft) => void;
-}) {
-  // The collection's relationship types, by id: a type added or renamed in
-  // Settings › Relationship types is here at once.
-  const relationTypes = useAtomValue(settingsRelationTypesAtom);
-  const isNew = property === null;
-  const [label, setLabel] = useState(property?.label ?? "");
-  const [type, setType] = useState<TemplateProperty["type"]>(property?.type ?? "text");
-  const [required, setRequired] = useState(property?.required ?? false);
-  const [filterable, setFilterable] = useState(property?.filterable ?? false);
-  // A new property is on the card unless the author says otherwise.
-  const [showInCard, setShowInCard] = useState(property?.showInCard ?? true);
-  const [content, setContent] = useState(effectiveConfig("select", config).content ?? "");
-  const [targetTemplate, setTargetTemplate] = useState(effectiveConfig("relationship", config).targetTemplate ?? "");
-  const [relationType, setRelationType] = useState(effectiveConfig("relationship", config).relationType ?? "");
-  const [labelIssue, setLabelIssue] = useState<ValidationIssue | null>(null);
-  const checkLabel = (v: string) => validateValue("text", v, { required: true, label: "Label" });
+/** The swatch button and its popover: the palette and a hex field. A hex is
+ *  applied once it is complete; an incomplete one says so and is kept. */
+function ColorPicker({ color, onChange }: { color: string; onChange: (c: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [hex, setHex] = useState(color);
+  const ref = useRef<HTMLDivElement | null>(null);
+  const hexId = useId();
+  useEffect(() => setHex(color), [color]);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false);
+    const esc = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      setOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", esc, true);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", esc, true);
+    };
+  }, [open]);
+  const invalid = hex !== "" && !HEX.test(hex);
+  return (
+    <div ref={ref} className="relative pt-1">
+      <button
+        type="button"
+        aria-label="Template color"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className="inline-flex items-center gap-2 h-8 px-2 rounded-md border border-border bg-paper hover:bg-warm cursor-pointer"
+      >
+        <span className="w-5 h-5 rounded-md border border-ink/20" style={{ backgroundColor: color }} />
+        <span className="text-xs font-mono text-ink-secondary">{color.toUpperCase()}</span>
+      </button>
+      {open && (
+        <div role="dialog" aria-label="Template color" className="absolute z-30 mt-1 w-56 p-2 bg-paper border border-border rounded-md shadow-lg flex flex-col gap-2">
+          <div className="grid grid-cols-6 gap-1.5">
+            {PALETTE.map((c) => (
+              <button
+                key={c}
+                type="button"
+                aria-label={`Colour ${c}`}
+                aria-pressed={color.toLowerCase() === c.toLowerCase()}
+                onClick={() => onChange(c)}
+                className={`w-7 h-7 rounded-md border border-ink/20 cursor-pointer ${color.toLowerCase() === c.toLowerCase() ? "ring-2 ring-offset-1 ring-ink" : ""}`}
+                style={{ backgroundColor: c }}
+              />
+            ))}
+          </div>
+          <label htmlFor={hexId} className="text-xs font-medium text-ink-secondary">
+            Manually set a color
+          </label>
+          <input
+            id={hexId}
+            type="text"
+            value={hex}
+            aria-invalid={invalid || undefined}
+            onChange={(e) => {
+              const v = e.target.value.trim();
+              setHex(v);
+              if (HEX.test(v)) onChange(v);
+            }}
+            placeholder="#2B8A3E"
+            className={`${MODAL_INPUT} font-mono ${invalid ? "border-seal-label" : ""}`}
+          />
+          <p className="min-h-4 text-meta leading-4 text-seal-label">{invalid ? "A colour is # and six hex digits." : ""}</p>
+        </div>
+      )}
+    </div>
+  );
+}
 
-  const submit = () => {
-    const draft: PropertyDraft = { label: label.trim() || "Untitled", type, required, filterable, showInCard };
-    if (type === "select") draft.content = content;
-    if (type === "relationship") {
-      draft.targetTemplate = targetTemplate;
-      draft.relationType = relationType;
-    }
-    onSave(draft);
+/** Uwazi's Add thesaurus modal: a name, unique whatever its case. Creates an
+ *  empty thesaurus the property panel can bind. */
+function AddThesaurusModal({ corpus, onClose }: { corpus: Corpus; onClose: () => void }) {
+  const thesauri = useAtomValue(thesauriAtom(corpus));
+  const create = useSetAtom(createThesaurusAtom);
+  const { record } = useSettingsNotify();
+  const [name, setName] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const id = useId();
+  const clean = name.replace(/\s+/g, " ").trim();
+  const save = () => {
+    if (thesauri.some((t) => t.name.trim().toLowerCase() === clean.toLowerCase())) return setError("Thesaurus name already exists");
+    const created = create({ corpus, name: clean });
+    record({ method: "CREATE", domain: "thesaurus", noun: "thesaurus", id: created, name: clean, message: "Thesaurus created successfully." });
+    onClose();
   };
+  return (
+    <NameModal title="Add thesaurus" placeholder="Thesaurus name" id={id} name={name} error={error} disabled={!clean} onName={(v) => { setName(v); setError(null); }} onSave={save} onClose={onClose} />
+  );
+}
 
-  const labelInputId = useId();
-  const labelMsgId = useId();
-  const typeId = useId();
-  const contentId = useId();
-  const targetId = useId();
-  const relationId = useId();
+/** Uwazi's Add relationship type modal, on the collection's one registry. */
+function AddRelationTypeModal({ corpus, onClose }: { corpus: Corpus; onClose: () => void }) {
+  const types = useAtomValue(relationTypesOfAtom(relationTypesCorpus(corpus)));
+  const save = useSetAtom(saveRelationTypeAtom);
+  const { record } = useSettingsNotify();
+  const [name, setName] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const id = useId();
+  const clean = name.trim();
+  const submit = () => {
+    if (types.some((t) => t.label.trim().toLowerCase() === clean.toLowerCase())) return setError("Relationship type name already exists");
+    const created = save({ id: null, name: clean, corpus: relationTypesCorpus(corpus) });
+    if (!created) return setError("Relationship type name already exists");
+    record({ method: "CREATE", domain: "relationType", noun: "relationship type", id: created, name: clean, message: "Relationship type created successfully." });
+    onClose();
+  };
+  return (
+    <NameModal title="Add relationship type" placeholder="Relationship type name" id={id} name={name} error={error} disabled={!clean} onName={(v) => { setName(v); setError(null); }} onSave={submit} onClose={onClose} />
+  );
+}
 
+function NameModal({
+  title,
+  placeholder,
+  id,
+  name,
+  error,
+  disabled,
+  onName,
+  onSave,
+  onClose,
+}: {
+  title: string;
+  placeholder: string;
+  id: string;
+  name: string;
+  error: string | null;
+  disabled: boolean;
+  onName: (v: string) => void;
+  onSave: () => void;
+  onClose: () => void;
+}) {
   return (
     <Modal
-      component="PropertyDialog"
-      title={isNew ? "New property" : "Edit property"}
-      closeLabel={isNew ? "Close new property" : "Close property editor"}
-      onClose={onCancel}
-      size="md"
-      // Fixed, so the panel does not resize when a type adds its own fields,
-      // and an open type list has room below its trigger.
-      height="md:h-[min(30rem,100%)]"
+      title={title}
+      onClose={onClose}
+      size="sm"
+      dismissOnScrim={!name}
       footer={
         <SettingsBarContext.Provider value={true}>
-          <SettingsButton variant="ghost" size="sm" onClick={onCancel}>Cancel</SettingsButton>
-          <SettingsButton variant={isNew ? "commit" : "success"} size="sm" disabled={!label.trim()} onClick={submit}>
-            {isNew ? "Add property" : "Save"}
+          <SettingsButton variant="ghost" size="sm" onClick={onClose}>
+            Cancel
+          </SettingsButton>
+          <SettingsButton variant="commit" size="sm" disabled={disabled} onClick={onSave}>
+            Save
           </SettingsButton>
         </SettingsBarContext.Provider>
       }
     >
-      <div className="flex flex-col gap-3">
-        <ModalField label="Label" htmlFor={labelInputId}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!disabled) onSave();
+        }}
+      >
+        <ModalField label="Name" htmlFor={id}>
           <input
-            id={labelInputId}
+            id={id}
             type="text"
-            value={label}
-            aria-invalid={labelIssue?.severity === "error" || undefined}
-            aria-describedby={labelMsgId}
-            onChange={(e) => {
-              setLabel(e.target.value);
-              if (labelIssue) setLabelIssue(checkLabel(e.target.value));
-            }}
-            onBlur={(e) => setLabelIssue(checkLabel(e.currentTarget.value))}
-            placeholder="e.g. Date filed"
+            value={name}
             autoFocus
+            placeholder={placeholder}
+            aria-invalid={!!error || undefined}
+            onChange={(e) => onName(e.target.value)}
             className={MODAL_INPUT}
           />
-          <FieldMessage id={labelMsgId} issue={labelIssue} reserve />
+          <FieldMessage issue={error ? { severity: "error", message: error } : null} reserve />
         </ModalField>
-        <ModalField label="Type" htmlFor={typeId}>
-          <Select id={typeId} value={type} options={TYPE_OPTIONS} onChange={(v) => setType(v as TemplateProperty["type"])} ariaLabel="Property type" sheetTitle="Type" />
-        </ModalField>
-
-        {type === "select" && (
-          <ModalField label="Thesaurus" htmlFor={contentId} hint="Which thesaurus the options come from.">
-            <Select id={contentId} value={content} options={THESAURUS_OPTIONS} onChange={setContent} ariaLabel="Thesaurus" sheetTitle="Thesaurus" />
-          </ModalField>
-        )}
-        {type === "relationship" && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <ModalField label="Related template" htmlFor={targetId}>
-              <Select id={targetId} value={targetTemplate} options={TEMPLATE_OPTIONS} onChange={setTargetTemplate} ariaLabel="Related template" sheetTitle="Related template" />
-            </ModalField>
-            <ModalField label="Relationship type" htmlFor={relationId}>
-              <Select id={relationId} value={relationType} options={[{ value: "", label: "Select...", disabled: true }, ...relationTypes.map((r) => ({ value: r.id, label: r.label }))]} onChange={setRelationType} ariaLabel="Relationship type" sheetTitle="Relationship type" />
-            </ModalField>
-          </div>
-        )}
-
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-1">
-          <label className="flex items-center gap-2 text-xs text-ink cursor-pointer">
-            <Checkbox checked={required} onChange={(e) => setRequired(e.target.checked)} ariaLabel="Required" />
-            Required
-          </label>
-          <label className="flex items-center gap-2 text-xs text-ink cursor-pointer">
-            <Checkbox checked={filterable} onChange={(e) => setFilterable(e.target.checked)} ariaLabel="Use as filter" />
-            Use as filter
-          </label>
-          <label className="flex items-center gap-2 text-xs text-ink cursor-pointer">
-            <Checkbox checked={showInCard} onChange={(e) => setShowInCard(e.target.checked)} ariaLabel="Show in cards" />
-            Show in cards
-          </label>
-        </div>
-      </div>
+      </form>
     </Modal>
   );
 }

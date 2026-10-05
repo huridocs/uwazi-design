@@ -11,15 +11,13 @@ import { dataSourceAtom, libraryEntitiesAtom } from "../../../atoms/dataSource";
 import { templatesAtom } from "../../../atoms/templates";
 import {
   deleteTemplatesAtom,
-  saveTemplateAtom,
   setDefaultTemplateAtom,
   templateDeleteCascade,
 } from "../../../atoms/templateActions";
 import { filterSettings } from "../../../atoms/settingsSingletons";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
 import { count as countOf } from "../../../utils/settingsUsage";
-import { commonPropertiesFor, type TemplateDef } from "../../../data/templates/types";
-import type { SettingsTemplate } from "../../../data/settings";
+import type { TemplateDef } from "../../../data/templates/types";
 import type { SortDir } from "../../shared/DataTable";
 
 /** A template row: the template, and how many entities use it. */
@@ -61,7 +59,6 @@ export function TemplatesPage() {
   const filters = useAtomValue(filterSettings.valueAtom);
   const setDefault = useSetAtom(setDefaultTemplateAtom);
   const deleteTemplates = useSetAtom(deleteTemplatesAtom);
-  const saveTemplate = useSetAtom(saveTemplateAtom);
   const { record } = useSettingsNotify();
 
   const [editing, setEditing] = useState<string | "new" | null>(null);
@@ -97,36 +94,16 @@ export function TemplatesPage() {
     ticked.map((r) => r.template.id),
   );
 
-  if (editing) {
-    const base = editing === "new" ? null : templates.find((t) => t.id === editing);
-    // The editor until it moves onto the template store (next step): it edits
-    // name and colour; the store keeps the rest of the template.
-    const legacy: SettingsTemplate | "new" = base
-      ? {
-          id: base.id,
-          name: base.name,
-          color: base.color,
-          propertyCount: base.properties.length,
-          entityCount: rows.find((r) => r.template.id === base.id)?.entities ?? 0,
-          isDefault: base.isDefault,
-        }
-      : "new";
+  if (editing)
     return (
       <TemplateEditor
-        template={legacy}
-        onClose={() => setEditing(null)}
-        onSave={({ name, color }) => {
-          const draftId = base?.id ?? "new";
-          const template: TemplateDef = base
-            ? { ...base, name, color }
-            : { id: draftId, name, color, isDefault: false, commonProperties: commonPropertiesFor(draftId), properties: [] };
-          const id = saveTemplate({ corpus: dataSource, template, isNew: !base });
-          setLastSaved(id);
-          return id;
+        templateId={editing}
+        onClose={(savedId) => {
+          if (savedId) setLastSaved(savedId);
+          setEditing(null);
         }}
       />
     );
-  }
 
   const confirmDelete = () => {
     const ids = ticked.map((r) => r.template.id);

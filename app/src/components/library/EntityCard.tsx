@@ -546,7 +546,7 @@ export const EntityCard = memo(function EntityCard({
             /* Side: label and value columns, one line each. The label takes its
                natural width up to 42% (`fit-content`) so values keep at least
                58%. `contents` puts both straight into the grid. */
-            <div key={f.id} className={side ? "contents" : "min-w-0"}>
+            <div key={f.id} data-field={f.id} className={side ? "contents" : "min-w-0"}>
               <dt
                 className={`text-meta font-semibold uppercase text-ink-tertiary leading-tight ${
                   // Side: tighter tracking to fit a ~270px text column.

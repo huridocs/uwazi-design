@@ -239,13 +239,16 @@ const FIELD_WORDS: Record<MatchField, string> = {
 };
 
 /** The visible error line for an incompatible same-label property: the first
- *  conflicting template and the field that differs. Null when compatible. */
+ *  conflicting template and the field that differs. Null when compatible.
+ *  Only other templates count: a second property with the label in this
+ *  template is the label rule's refusal ("already exists in this template"). */
 export function sameLabelIssue(rows: SameLabelRow[]): string | null {
   const [own, ...others] = rows;
   for (const r of others) {
+    if (r.own) continue;
     const diff = mismatches(own.property, r.property);
     if (diff.length)
-      return `“${r.property.label}” in ${r.own ? "this template" : `“${r.templateName}”`} has a different ${diff
+      return `“${r.property.label}” in “${r.templateName}” has a different ${diff
         .map((d) => FIELD_WORDS[d])
         .join(" and ")}. Use the same, or another label.`;
   }
