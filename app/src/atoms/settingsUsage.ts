@@ -132,9 +132,12 @@ function templateNameOf(corpus: Corpus): (id: string) => string {
 
 /** Entities using a template: live where the corpus is loaded, otherwise the
  *  count the importer baked in (`entityCount`). */
-export const templateUsageAtom = atomFamily(
-  (t: { id: string; isDefault: boolean; entityCount: number }) =>
-    atom((get) => {
+// Families are keyed by a string: an object key with an equality function
+// makes every lookup scan all earlier keys.
+const templateUsageFamily = atomFamily((key: string) => {
+  const [id, isDefault, entityCount] = JSON.parse(key) as [string, boolean, number];
+  const t = { id, isDefault, entityCount };
+  return atom((get) => {
       const corpus = templatesCorpus(get(dataSourceAtom));
       const live = get(byTemplate(corpus));
       return templateUsage({
@@ -144,15 +147,17 @@ export const templateUsageAtom = atomFamily(
         schema: schemaOf(corpus),
         templateName: templateNameOf(corpus),
       });
-    }),
-  (a, b) => a.id === b.id && a.isDefault === b.isDefault && a.entityCount === b.entityCount,
-);
+    });
+});
+export const templateUsageAtom = (t: { id: string; isDefault: boolean; entityCount: number }) =>
+  templateUsageFamily(JSON.stringify([t.id, t.isDefault, t.entityCount]));
 
 /** A template property: entities holding a value, and templates that
  *  inherit it. Key: `templateId\u0000label` (and the name, where known). */
-export const propertyUsageAtom = atomFamily(
-  (k: { templateId: string; label: string; name?: string }) =>
-    atom((get) => {
+const propertyUsageFamily = atomFamily((key: string) => {
+  const [templateId, label, name] = JSON.parse(key) as [string, string, string | null];
+  const k = { templateId, label, name: name ?? undefined };
+  return atom((get) => {
       const corpus = templatesCorpus(get(dataSourceAtom));
       return propertyUsage({
         templateId: k.templateId,
@@ -162,9 +167,10 @@ export const propertyUsageAtom = atomFamily(
         read: get(readerAtom(corpus)),
         templateName: templateNameOf(corpus),
       });
-    }),
-  (a, b) => a.templateId === b.templateId && a.label === b.label && a.name === b.name,
-);
+    });
+});
+export const propertyUsageAtom = (k: { templateId: string; label: string; name?: string }) =>
+  propertyUsageFamily(JSON.stringify([k.templateId, k.label, k.name ?? null]));
 
 /* ── Thesauri ──────────────────────────────────────────────────────────── */
 
@@ -259,9 +265,10 @@ export const userUsageAtom = atomFamily((userId: string) =>
 /** Entities with a version in a language: in Uwazi every entity has one per
  *  installed language. The Sample keeps metadata in EN/ES/FR/AR; CEJIL's
  *  count is the importer's. */
-export const languageUsageAtom = atomFamily(
-  (l: Pick<SettingsLanguage, "key" | "default" | "translationsCount">) =>
-    atom((get) => {
+const languageUsageFamily = atomFamily((key: string) => {
+  const [lkey, isDefault, translationsCount] = JSON.parse(key) as [string, boolean, number];
+  const l = { key: lkey, default: isDefault, translationsCount };
+  return atom((get) => {
       const corpus = templatesCorpus(get(dataSourceAtom));
       const key = l.key.toUpperCase() as Language;
       const entities =
@@ -269,6 +276,7 @@ export const languageUsageAtom = atomFamily(
           ? cejilStats.entities
           : Object.keys(get(entityMetadataAtom)[key] ?? {}).length;
       return languageUsage({ isDefault: l.default, entities, translated: l.translationsCount });
-    }),
-  (a, b) => a.key === b.key && a.default === b.default && a.translationsCount === b.translationsCount,
-);
+    });
+});
+export const languageUsageAtom = (l: Pick<SettingsLanguage, "key" | "default" | "translationsCount">) =>
+  languageUsageFamily(JSON.stringify([l.key, l.default, l.translationsCount]));

@@ -168,7 +168,9 @@ export function templateUsage({
     .filter((p) => p.type === "relationship" && p.targetTemplateId === templateId && p.templateId !== templateId)
     .map((p) => templateName(p.templateId));
   const lines: string[] = [];
-  if (entities > 0) lines.push(`Used by ${count(entities, "entity", "entities")}.`);
+  // When the entities are the refusal, the rule says the count; listing it
+  // again below would state one fact twice.
+  if (entities > 0 && isDefault) lines.push(`Used by ${count(entities, "entity", "entities")}.`);
   if (linkedFrom.length)
     lines.push(`Relationship properties in ${nameList(linkedFrom)} link to it. They are not changed.`);
   // DeleteTemplate.ts: the default template and a template with entities
