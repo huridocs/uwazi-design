@@ -72,6 +72,37 @@ function facetValuesOf(e: NepalEntity): Record<string, string[]> | undefined {
   return v ? { verification: [v] } : undefined;
 }
 
+/** The List's Verification column: the facet's value, shortened to fit. */
+const VERIFICATION_SHORT: Record<string, string> = {
+  confirmed: "Confirmed",
+  "single-source": "Single source",
+  disputed: "Disputed",
+};
+
+/** The List's "Location / Publisher" column: where an event, a casualty or a
+ *  place is, or who published a source. Other records have neither. */
+const PLACE_OR_PUBLISHER: Record<string, string[]> = {
+  nepal_source: ["publisher"],
+  nepal_event: ["occurred_at"],
+  nepal_casualty: ["incident_at", "district"],
+  nepal_location: ["located_in"],
+};
+
+function listCellsOf(e: NepalEntity): Record<string, string> | undefined {
+  const out: Record<string, string> = {};
+  const v = (e.metadata.verification ?? e.metadata.verification_status)?.[0]?.value;
+  if (typeof v === "string" && VERIFICATION_SHORT[v]) out.verification = VERIFICATION_SHORT[v];
+  for (const prop of PLACE_OR_PUBLISHER[e.template] ?? []) {
+    const first = e.metadata[prop]?.[0];
+    const text = first?.label ?? (typeof first?.value === "string" ? first.value : undefined);
+    if (text) {
+      out.placeOrPublisher = text;
+      break;
+    }
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
 const isoDay = (secs: number) => new Date(secs * 1000).toISOString().slice(0, 10);
 
 let _entities: Entity[] | null = null;
@@ -86,16 +117,18 @@ export function nepalLibraryEntities(): Entity[] {
     const tpl = nepalTemplateById.get(e.template)!;
     const geo = geoOf(e);
     const inherited = facetValuesOf(e);
+    const listCells = listCellsOf(e);
     return {
       id: e.sharedId,
       title: e.title,
       typeId: e.template,
       // The record's own date, which the timeline and "Date" sort read. People,
       // organisations and places have none and sit with the undated.
-      ...(e.date !== undefined ? { createdAt: isoDay(e.date) } : {}),
+      ...(e.date !== undefined ? { createdAt: isoDay(e.date), datePrecision: e.datePrecision ?? "day" } : {}),
       published: true,
       ...(geo ? { geo } : {}),
       ...(inherited ? { inherited } : {}),
+      ...(listCells ? { listCells } : {}),
       fields: fieldsOf(e, tpl),
       searchFields: searchFieldsOf(e, tpl),
     };

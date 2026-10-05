@@ -6,10 +6,20 @@ import { HighlightedText } from "../shared/HighlightedText";
 import { ListCardRow } from "../shared/ListCardRow";
 
 const fmt = new Intl.DateTimeFormat("en", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+const fmtMonth = new Intl.DateTimeFormat("en", { month: "short", year: "numeric", timeZone: "UTC" });
+
+/** The date as precisely as it is known (see `Entity.datePrecision`). */
+function dateOf(e: Entity): string | undefined {
+  if (!e.createdAt) return undefined;
+  const d = new Date(e.createdAt);
+  if (e.datePrecision === "year") return String(d.getUTCFullYear());
+  return (e.datePrecision === "month" ? fmtMonth : fmt).format(d);
+}
 
 /** The Library's List view on a phone: two-line rows instead of the table.
  *  The title wraps to two lines; under it one muted line carries only the
- *  fields that have a value (template · country · date), so an empty Country
+ *  fields that have a value (template · country · date, then a collection's
+ *  own List cells such as Nepal's verification and place), so an empty Country
  *  never shows as "—" and no column holds width for it. Sort stays in the
  *  Display menu. Each row is a ListCardRow with its stretched primary button. */
 export const MobileEntityList = memo(function MobileEntityList({
@@ -26,7 +36,13 @@ export const MobileEntityList = memo(function MobileEntityList({
   return (
     <ul data-component="MobileEntityList" className="rounded-lg border border-border bg-paper overflow-hidden">
       {rows.map((e) => {
-        const meta = [getEntityType(e.typeId)?.name, e.country, e.createdAt ? fmt.format(new Date(e.createdAt)) : undefined].filter(Boolean);
+        const meta = [
+          getEntityType(e.typeId)?.name,
+          e.country,
+          dateOf(e),
+          e.listCells?.verification,
+          e.listCells?.placeOrPublisher,
+        ].filter(Boolean);
         return (
           <ListCardRow key={e.id} as="li" selected={selectedId === e.id} onClick={() => onSelect(e.id)} ariaLabel={`Preview ${e.title}`} className="min-h-14">
             <div className="flex items-start gap-2.5">

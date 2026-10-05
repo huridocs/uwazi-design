@@ -591,7 +591,7 @@ export const libraryDisplayContextAtom = atom<DisplayContext>((get) => {
     sortInMenu: isMobile || get(librarySortInMenuAtom),
     languageInMenu: get(libraryLanguageInMenuAtom),
     hasQuery,
-    listColumns: listColumnOptions({ hasQuery, fieldColumns: get(libraryFieldColumnsAtom) }),
+    listColumns: listColumnOptions({ hasQuery, fieldColumns: get(libraryFieldColumnsAtom), source: get(dataSourceAtom) }),
     sortChoices: [...LIBRARY_SORTS, ...get(libraryPropertySortsAtom)],
   };
 });

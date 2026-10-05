@@ -6,6 +6,8 @@ import type { Entity } from "../../data/entities";
 import type { Language } from "../../atoms/language";
 import type { Column } from "../shared/DataTable";
 import type { ToggleOption } from "../../data/libraryDisplay";
+import type { DataSource } from "../../atoms/dataSource";
+import { formatAtPrecision } from "../../utils/dateFormat";
 
 /** Everything the list table can draw, once.
  *
@@ -47,6 +49,8 @@ export interface ListColumnSpec {
    *  one). Gated on CONTEXT, so it comes and goes on the one transition — no
    *  query → query — that replaces every row anyway. */
   requiresQuery?: boolean;
+  /** Offered only in these collections: a column that reads `listCells`. */
+  only?: DataSource[];
   cell: (e: Entity, ctx: ListCellContext) => ReactNode;
 }
 
@@ -116,11 +120,34 @@ export const LIST_COLUMNS: ListColumnSpec[] = [
     default: true,
     width: "5rem",
     sortKey: "recent",
+    // The year, unless the corpus says how precisely the date is known; then
+    // as precisely as that, in the collection's date format.
     cell: (e) => (
       <span data-part="date" className="text-ink-tertiary tabular-nums">
-        {e.createdAt ? new Date(e.createdAt).getUTCFullYear() : "—"}
+        {e.createdAt
+          ? e.datePrecision
+            ? formatAtPrecision(new Date(e.createdAt), e.datePrecision)
+            : new Date(e.createdAt).getUTCFullYear()
+          : "—"}
       </span>
     ),
+  },
+  {
+    id: "verification",
+    label: "Verification",
+    default: true,
+    width: "7rem",
+    only: ["nepal"],
+    cell: (e) => listCell(e, "verification"),
+  },
+  {
+    id: "placeOrPublisher",
+    label: "Location or publisher",
+    header: "Location / Publisher",
+    default: true,
+    width: "10rem",
+    only: ["nepal"],
+    cell: (e, ctx) => listCell(e, "placeOrPublisher", ctx.query),
   },
   {
     id: "connections",
@@ -136,6 +163,28 @@ export const LIST_COLUMNS: ListColumnSpec[] = [
     ),
   },
 ];
+
+function listCell(e: Entity, id: string, query = "") {
+  const value = e.listCells?.[id];
+  return (
+    <span data-part={id} className="text-ink-secondary truncate">
+      {value ? <HighlightedText text={value} query={query} /> : "—"}
+    </span>
+  );
+}
+
+/** A collection's own List defaults, over the built-ins': which columns start
+ *  on or are not offered, and wider tracks where its values are longer. Nepal
+ *  records carry no country, and their dates print to the day. */
+const COLLECTION_COLUMNS: Partial<
+  Record<DataSource, Record<string, { default?: boolean; width?: string; offered?: false }>>
+> = {
+  nepal: {
+    type: { default: true, width: "8.5rem" },
+    country: { offered: false },
+    date: { width: "6rem" },
+  },
+};
 
 /** The id a metadata column takes: the property's name. Prefixed so a
  *  property called "date" can never collide with the built-in track. A label
@@ -178,9 +227,16 @@ export function metaColumn(col: PropertyColumn): ListColumnSpec {
 export function listColumnSpecs(ctx: {
   hasQuery: boolean;
   fieldColumns: PropertyColumn[];
+  source: DataSource;
 }): ListColumnSpec[] {
+  const own = COLLECTION_COLUMNS[ctx.source] ?? {};
   return [
-    ...LIST_COLUMNS.filter((c) => !c.requiresQuery || ctx.hasQuery),
+    ...LIST_COLUMNS.filter(
+      (c) =>
+        (!c.requiresQuery || ctx.hasQuery) &&
+        (!c.only || c.only.includes(ctx.source)) &&
+        own[c.id]?.offered !== false,
+    ).map((c) => (own[c.id] ? { ...c, ...own[c.id] } : c)),
     ...ctx.fieldColumns.map(metaColumn),
   ];
 }
@@ -190,6 +246,7 @@ export function listColumnSpecs(ctx: {
 export function listColumnOptions(ctx: {
   hasQuery: boolean;
   fieldColumns: PropertyColumn[];
+  source: DataSource;
 }): ToggleOption[] {
   return listColumnSpecs(ctx).map((c) => ({
     id: c.id,

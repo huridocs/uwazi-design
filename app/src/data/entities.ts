@@ -79,6 +79,12 @@ export interface Entity {
    *  the Library has a natural, type-mixed order when sorted by date. Optional
    *  so runtime-created entities (CreateRelationship flow) don't need it. */
   createdAt?: string;
+  /** How precisely `createdAt` is known, for a corpus whose dates are the
+   *  records' own (Nepal). Absent: the List prints the year, as before. */
+  datePrecision?: "day" | "month" | "year";
+  /** Values for a collection's own List columns (`only` in `LIST_COLUMNS`),
+   *  by column id. Adapter-supplied, like `fields`. */
+  listCells?: Record<string, string>;
   /** When the entity was last edited, if it ever was. Optional and often
    *  absent: a record that has never been touched since import has no edited
    *  date, and the record footer says only "Created X" for it — which is the

@@ -1030,8 +1030,8 @@ export function LibraryView() {
   // also read, so drawable and listed columns can't drift apart. The Match cell
   // is passed in rather than imported: see `ListCellContext.renderMatch`.
   const listSpecs = useMemo(
-    () => listColumnSpecs({ hasQuery, fieldColumns }),
-    [hasQuery, fieldColumns],
+    () => listColumnSpecs({ hasQuery, fieldColumns, source: dataSource }),
+    [hasQuery, fieldColumns, dataSource],
   );
   const tableColumns = buildListColumns(listSpecs, listColumnOn, {
     query,
