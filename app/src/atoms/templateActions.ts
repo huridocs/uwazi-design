@@ -3,7 +3,8 @@ import type { Corpus } from "../data/entityChanges";
 import type { TemplateDef } from "../data/templates/types";
 import { templateStore, templatesAtom } from "./templates";
 import { filterSettings } from "./settingsSingletons";
-import { dataSourceAtom } from "./dataSource";
+import { cejilReadyAtom, dataSourceAtom, libraryEntitiesAtom, travesiaReadyAtom } from "./dataSource";
+import { cejilEntityCountByTemplate } from "../data/cejil/aggregates";
 import { DEFAULT_LIBRARY_SORT, libraryInheritedFiltersAtom, librarySortAtom, libraryTypeFiltersAtom } from "./library";
 import { libraryInheritedDefs } from "../utils/libraryFacets";
 import { templatesMirror } from "../data/templates/mirror";
@@ -108,4 +109,22 @@ export const deleteTemplatesAtom = atom(null, (get, set, { corpus, ids }: { corp
 export const setDefaultTemplateAtom = atom(null, (get, set, { corpus, id }: { corpus: Corpus; id: string }) => {
   for (const t of get(templatesAtom(corpus)))
     if (t.isDefault !== (t.id === id)) set(templateStore.patchAtom, { id: t.id, patch: { isDefault: t.id === id }, corpus });
+});
+
+/** Entities per template for the collection shown, and whether the count is
+ *  known. CEJIL's and Travesía's records load lazily (CEJIL's are 26 MB): until
+ *  they are in, CEJIL shows its import's counts, Travesía none, and `known` is
+ *  false, so no delete or impact line may treat a template as unused. */
+export const templateEntityCountsAtom = atom((get) => {
+  const corpus = get(dataSourceAtom);
+  const loaded =
+    corpus === "cejil" ? get(cejilReadyAtom) : corpus === "travesia" ? get(travesiaReadyAtom) : true;
+  if (!loaded)
+    return {
+      known: false,
+      count: (id: string): number | null => (corpus === "cejil" ? (cejilEntityCountByTemplate[id] ?? 0) : null),
+    };
+  const counts = new Map<string, number>();
+  for (const e of get(libraryEntitiesAtom)) counts.set(e.typeId, (counts.get(e.typeId) ?? 0) + 1);
+  return { known: true, count: (id: string): number | null => counts.get(id) ?? 0 };
 });

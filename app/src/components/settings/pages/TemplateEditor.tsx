@@ -24,7 +24,7 @@ import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
 import { useSettingsUndo } from "../../../hooks/useSettingsUndo";
 import { dataSourceAtom, libraryEntitiesAtom } from "../../../atoms/dataSource";
 import { templatesAtom } from "../../../atoms/templates";
-import { saveTemplateAtom } from "../../../atoms/templateActions";
+import { saveTemplateAtom, templateEntityCountsAtom } from "../../../atoms/templateActions";
 import { createThesaurusAtom, thesauriAtom } from "../../../atoms/thesauri";
 import { relationTypesCorpus, relationTypesOfAtom, saveRelationTypeAtom } from "../../../atoms/relationTypes";
 import { newSettingsId } from "../../../atoms/settingsCollection";
@@ -134,6 +134,7 @@ function TemplateEditorBody({
   const saveTemplate = useSetAtom(saveTemplateAtom);
   const { record } = useSettingsNotify();
   const entities = useAtomValue(libraryEntitiesAtom);
+  const counts = useAtomValue(templateEntityCountsAtom);
   const thesauri = useAtomValue(thesauriAtom(corpus));
   const relationTypes = useAtomValue(relationTypesOfAtom(relationTypesCorpus(corpus)));
 
@@ -230,6 +231,22 @@ function TemplateEditorBody({
   /* ── Save, with impact (UX4) ── */
   const impactLines = (): string[] => {
     if (!base) return [];
+    // Until the collection's records are in, nothing can be counted, and
+    // "nothing is lost" would be a guess: name each change and say so.
+    if (!counts.known) {
+      const now = new Set(draft.properties.map((p) => p.id));
+      const removed = base.properties.filter((p) => !now.has(p.id));
+      const retargeted = draft.properties.filter((p) => {
+        const old = base.properties.find((x) => x.id === p.id);
+        return !!old && (old.content !== p.content || (p.required && !old.required));
+      });
+      const changed = [...removed, ...retargeted];
+      return changed.length
+        ? [
+            `${changed.map((p) => `“${p.label}”`).join(", ")}: the entities holding values can't be counted until the collection's records have loaded.`,
+          ]
+        : [];
+    }
     const own = entities.filter((e) => e.typeId === base.id);
     const lines: string[] = [];
     const now = new Map(draft.properties.map((p) => [p.id, p]));

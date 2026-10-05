@@ -7,10 +7,11 @@ import { SettingsTable, type Column } from "../SettingsTable";
 import { Hint } from "../../shared/Hint";
 import { ConfirmDelete } from "../../shared/ConfirmDelete";
 import { TemplateEditor } from "./TemplateEditor";
-import { dataSourceAtom, libraryEntitiesAtom } from "../../../atoms/dataSource";
+import { dataSourceAtom } from "../../../atoms/dataSource";
 import { templatesAtom } from "../../../atoms/templates";
 import {
   deleteTemplatesAtom,
+  templateEntityCountsAtom,
   setDefaultTemplateAtom,
   templateDeleteCascade,
 } from "../../../atoms/templateActions";
@@ -23,7 +24,10 @@ import type { SortDir } from "../../shared/DataTable";
 /** A template row: the template, and how many entities use it. */
 interface Row {
   template: TemplateDef;
-  entities: number;
+  /** null while the collection's records load and no count is recorded. */
+  entities: number | null;
+  /** The count is the live one (the records are in). */
+  known: boolean;
 }
 
 /** Uwazi's entity count: "1.2k" from a thousand, "3M" from a million, no
@@ -41,7 +45,11 @@ function deleteBlock(r: Row): string | undefined {
   const reasons: string[] = [];
   if (r.template.isDefault)
     reasons.push("A default template cannot be deleted. Set another template as the default first.");
-  if (r.entities > 0)
+  // Until the records are in, an unused template cannot be told from one in
+  // use: no delete.
+  if (!r.known)
+    reasons.push("The collection's records are still loading, so whether entities use this template is not known yet.");
+  else if (r.entities)
     reasons.push(
       `This template is in use by existing entities and cannot be deleted. ${countOf(r.entities, "entity uses", "entities use")} it: change their template first.`,
     );
@@ -55,7 +63,7 @@ function deleteBlock(r: Row): string | undefined {
 export function TemplatesPage() {
   const dataSource = useAtomValue(dataSourceAtom);
   const templates = useAtomValue(templatesAtom(dataSource));
-  const entities = useAtomValue(libraryEntitiesAtom);
+  const counts = useAtomValue(templateEntityCountsAtom);
   const filters = useAtomValue(filterSettings.valueAtom);
   const setDefault = useSetAtom(setDefaultTemplateAtom);
   const deleteTemplates = useSetAtom(deleteTemplatesAtom);
@@ -68,17 +76,16 @@ export function TemplatesPage() {
   // The row the editor last saved, highlighted on return to the list.
   const [lastSaved, setLastSaved] = useState<string | null>(null);
 
-  const rows = useMemo<Row[]>(() => {
-    const counts = new Map<string, number>();
-    for (const e of entities) counts.set(e.typeId, (counts.get(e.typeId) ?? 0) + 1);
-    return templates.map((template) => ({ template, entities: counts.get(template.id) ?? 0 }));
-  }, [templates, entities]);
+  const rows = useMemo<Row[]>(
+    () => templates.map((template) => ({ template, entities: counts.count(template.id), known: counts.known })),
+    [templates, counts],
+  );
   const search = useSettingsSearch(rows, (r) => r.template.name);
   const sorted = useMemo(() => {
     const out = [...search.rows];
     const by =
       sort.key === "entities"
-        ? (a: Row, b: Row) => a.entities - b.entities || a.template.name.localeCompare(b.template.name)
+        ? (a: Row, b: Row) => (a.entities ?? -1) - (b.entities ?? -1) || a.template.name.localeCompare(b.template.name)
         : (a: Row, b: Row) => a.template.name.localeCompare(b.template.name);
     out.sort((a, b) => (sort.dir === "asc" ? by(a, b) : by(b, a)));
     return out;
@@ -157,11 +164,20 @@ export function TemplatesPage() {
       header: "Entities",
       sortKey: "entities",
       width: "7rem",
-      cell: (r) => (
-        <span className="text-ink-secondary tabular-nums" title={r.entities >= 1000 ? r.entities.toLocaleString() : undefined}>
-          {compactCount(r.entities)}
-        </span>
-      ),
+      // While the records load: CEJIL's recorded count, marked as such, or
+      // "Counting…"; never a zero that only means "not here yet".
+      cell: (r) =>
+        r.entities === null ? (
+          <span className="text-ink-tertiary">Counting…</span>
+        ) : (
+          <span
+            className="text-ink-secondary tabular-nums"
+            title={r.known ? (r.entities >= 1000 ? r.entities.toLocaleString() : undefined) : "Recorded count; live count pending"}
+          >
+            {compactCount(r.entities)}
+            {!r.known && <span className="text-ink-tertiary"> …</span>}
+          </span>
+        ),
     },
     {
       id: "actions",
