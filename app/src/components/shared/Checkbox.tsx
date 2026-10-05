@@ -1,4 +1,4 @@
-import { ChangeEventHandler } from "react";
+import { useEffect, useRef, type ChangeEventHandler } from "react";
 
 interface CheckboxProps {
   checked: boolean;
@@ -9,6 +9,9 @@ interface CheckboxProps {
   /** Accent of the filled (checked) box. Default "ink" (app convention); the
    *  filter facets use "carbon" to match the canonical filter styling. */
   tone?: "ink" | "carbon";
+  /** Mixed: some of what this box stands for is ticked (a select-all over a
+   *  partial selection). A DOM property with no attribute, so set by ref. */
+  indeterminate?: boolean;
 }
 
 export function Checkbox({
@@ -18,9 +21,15 @@ export function Checkbox({
   disabled,
   className,
   tone = "ink",
+  indeterminate = false,
 }: CheckboxProps) {
+  const ref = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    if (ref.current) ref.current.indeterminate = indeterminate;
+  }, [indeterminate]);
   return (
     <input
+      ref={ref}
       type="checkbox"
       data-component="Checkbox"
       checked={checked}

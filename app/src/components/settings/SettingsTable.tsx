@@ -6,6 +6,8 @@ import { breakpointAtom } from "../../atoms/viewport";
 import { settingsCorpusErrorAtom, useSettingsCorpusLoading } from "../../hooks/useSettingsCorpus";
 import { useAnnounceLoading } from "./SettingsContent";
 import { SettingsEmptyState } from "./SettingsEmptyState";
+import { Checkbox } from "../shared/Checkbox";
+import { Hint } from "../shared/Hint";
 
 export type { Column };
 
@@ -25,6 +27,68 @@ interface SettingsTableProps<T> {
    *  activity log) leave it off and show their empty state. */
   corpusScoped?: boolean;
   rowProps?: (row: T, index: number) => HTMLAttributes<HTMLTableRowElement>;
+  /** Row checkboxes for bulk actions (UX2). The header box covers the rows
+   *  shown; the page's footer shows `SettingsSelectionBar` while any are
+   *  ticked. */
+  selection?: RowSelection<T>;
+}
+
+export interface RowSelection<T> {
+  selected: ReadonlySet<string>;
+  onChange: (next: Set<string>) => void;
+  /** The row's name, for its checkbox ("Select admin"). */
+  label: (row: T) => string;
+}
+
+/** The checkbox column `selection` adds. Ticking a box never opens the row:
+ *  the click stops at the cell. */
+function selectColumn<T>(sel: RowSelection<T>, data: T[], getRowId: (row: T) => string): Column<T> {
+  const ids = data.map(getRowId);
+  const ticked = ids.filter((id) => sel.selected.has(id)).length;
+  const all = ids.length > 0 && ticked === ids.length;
+  const toggleAll = () => {
+    const next = new Set(sel.selected);
+    for (const id of ids) (all ? next.delete(id) : next.add(id));
+    sel.onChange(next);
+  };
+  return {
+    id: "select",
+    width: "1.25rem",
+    mobile: "hidden",
+    header: (
+      <Hint text={all ? "Deselect all shown" : `Select all ${ids.length.toLocaleString()} shown`} describe={false}>
+        {(hint) => (
+          <span {...hint} data-part="select" className="inline-flex normal-case">
+            <Checkbox
+              checked={all}
+              indeterminate={ticked > 0 && !all}
+              disabled={ids.length === 0}
+              onChange={toggleAll}
+              ariaLabel="Select all"
+            />
+          </span>
+        )}
+      </Hint>
+    ),
+    cell: (row) => <RowCheckbox sel={sel} row={row} id={getRowId(row)} />,
+  };
+}
+
+function RowCheckbox<T>({ sel, row, id }: { sel: RowSelection<T>; row: T; id: string }) {
+  return (
+    <span data-part="select" className="relative inline-flex" onClick={(e) => e.stopPropagation()}>
+      <Checkbox
+        checked={sel.selected.has(id)}
+        onChange={() => {
+          const next = new Set(sel.selected);
+          if (next.has(id)) next.delete(id);
+          else next.add(id);
+          sel.onChange(next);
+        }}
+        ariaLabel={`Select ${sel.label(row)}`}
+      />
+    </span>
+  );
 }
 
 const CARD_SHADOW = "0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)";
@@ -52,7 +116,7 @@ function slotOf<T>(col: Column<T>, index: number): NonNullable<Column<T>["mobile
  *  the active corpus's Settings data loads, and says so if the load fails
  *  (the shell's banner has the retry). */
 export function SettingsTable<T>(props: SettingsTableProps<T>) {
-  const { columns, data, getRowId, onRowClick, rowAriaLabel, selectedId, rowProps, corpusScoped = false } = props;
+  const { columns: given, data, getRowId, onRowClick, rowAriaLabel, selectedId, rowProps, corpusScoped = false } = props;
   const phone = useAtomValue(breakpointAtom) === "mobile";
   // Travesía's lists arrive with its data; a failed load is reported by the
   // Settings shell (`SettingsCorpusError`), which holds the retry.
@@ -61,6 +125,7 @@ export function SettingsTable<T>(props: SettingsTableProps<T>) {
   const waiting = corpusScoped && data.length === 0 && lazy;
   const loading = waiting && !failed;
   const pageAnnounces = useAnnounceLoading(loading);
+  const columns = props.selection ? [selectColumn(props.selection, data, getRowId), ...given] : given;
 
   if (loading) return <LoadingRows columns={columns} phone={phone} announce={!pageAnnounces} />;
   const emptyState =
@@ -73,7 +138,7 @@ export function SettingsTable<T>(props: SettingsTableProps<T>) {
     ) : (
       props.emptyState
     );
-  if (phone) return <SettingsList {...props} emptyState={emptyState} />;
+  if (phone) return <SettingsList {...props} columns={given} emptyState={emptyState} />;
 
   // Flexible columns counted at a ~9rem floor, + gaps + padding.
   const minWidthRem =
@@ -102,11 +167,12 @@ export function SettingsTable<T>(props: SettingsTableProps<T>) {
 /** The phone layout. A clickable row follows the app's row pattern: a
  *  stretched invisible button is its primary action, and the content sits
  *  above it so a row's own controls (a delete) stay reachable. */
-function SettingsList<T>({ columns, data, getRowId, onRowClick, rowAriaLabel, selectedId, emptyState, rowProps }: SettingsTableProps<T>) {
+function SettingsList<T>({ columns, data, getRowId, onRowClick, rowAriaLabel, selectedId, emptyState, rowProps, selection }: SettingsTableProps<T>) {
   const slotted = columns.map((col, i) => ({ col, slot: slotOf(col, i) }));
   const primary = slotted.filter((c) => c.slot === "primary");
   const meta = slotted.filter((c) => c.slot === "meta");
   const actions = slotted.filter((c) => c.slot === "actions");
+  const ticked = (id: string) => !!selection?.selected.has(id);
 
   return (
     <div
@@ -134,7 +200,7 @@ function SettingsList<T>({ columns, data, getRowId, onRowClick, rowAriaLabel, se
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
                 className={`group relative flex items-center gap-3 px-4 py-2.5 min-h-11 text-sm border-b border-border last:border-b-0 transition-colors ${
                   onRowClick ? "cursor-pointer" : ""
-                } ${selected ? "bg-parchment" : "hover:bg-warm"} ${extraClass ?? ""}`}
+                } ${selected || ticked(id) ? "bg-parchment" : "hover:bg-warm"} ${extraClass ?? ""}`}
                 style={extraStyle}
               >
                 {onRowClick && (
@@ -150,6 +216,7 @@ function SettingsList<T>({ columns, data, getRowId, onRowClick, rowAriaLabel, se
                     className="absolute inset-0 w-full cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/20"
                   />
                 )}
+                {selection && <RowCheckbox sel={selection} row={row} id={id} />}
                 <div className="relative min-w-0 flex-1 flex flex-col gap-1">
                   {primary.map(({ col }) => (
                     <div key={col.id} data-part="primary" className="min-w-0 text-ink">

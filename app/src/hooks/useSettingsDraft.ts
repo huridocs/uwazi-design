@@ -1,4 +1,4 @@
-import { useCallback, useState, type SetStateAction } from "react";
+import { useCallback, useMemo, useState, type SetStateAction } from "react";
 import { useRegisterDirtyForm } from "./useDirtyGuard";
 import { deepEqual } from "../utils/deepEqual";
 
@@ -18,7 +18,9 @@ import { deepEqual } from "../utils/deepEqual";
 export function useSettingsDraft<T>({ id, label, saved }: { id: string; label: string; saved: T }) {
   const [baseline, setBaseline] = useState<T>(saved);
   const [draft, setDraftState] = useState<T>(saved);
-  const dirty = !deepEqual(draft, baseline);
+  // Compared when the draft or baseline changes, not on every render: a long
+  // editor re-renders on scroll and hover, and the walk is over every value.
+  const dirty = useMemo(() => !deepEqual(draft, baseline), [draft, baseline]);
   useRegisterDirtyForm(`settings:${id}`, label, dirty);
 
   const setDraft = useCallback((next: SetStateAction<T>) => setDraftState(next), []);

@@ -22,6 +22,11 @@ const TitleId = createContext<string | undefined>(undefined);
  *  once however many tables wait (Filters has two). */
 const LoadingCount = createContext<((delta: number) => void) | null>(null);
 
+/** The page's polite announcer, for changes a control makes without moving
+ *  focus ("Moved Bogotá to position 3 of 12"). */
+const Announce = createContext<(message: string) => void>(() => {});
+export const useSettingsAnnounce = () => useContext(Announce);
+
 /** Report a loading table to its page's one live region. Returns false when
  *  there is no page (a table in the catalog), so the table announces itself. */
 export function useAnnounceLoading(loading: boolean): boolean {
@@ -46,6 +51,12 @@ export function SettingsContent({
   const titleId = useId();
   const [loadingCount, setLoadingCount] = useState(0);
   const addLoading = useCallback((delta: number) => setLoadingCount((n) => n + delta), []);
+  const [announcement, setAnnouncement] = useState("");
+  // The same text twice in a row would not be read again: clear, then set.
+  const announce = useCallback((message: string) => {
+    setAnnouncement("");
+    requestAnimationFrame(() => setAnnouncement(message));
+  }, []);
   return (
     // The main-tier gutter host (16px). Header, Body and Footer are `bleed`
     // bands: rules, the scrollbar and the footer tint reach the pane edge, and
@@ -61,10 +72,15 @@ export function SettingsContent({
       data-testid="settings-content"
     >
       <TitleId.Provider value={titleId}>
-        <LoadingCount.Provider value={addLoading}>{children}</LoadingCount.Provider>
+        <LoadingCount.Provider value={addLoading}>
+          <Announce.Provider value={announce}>{children}</Announce.Provider>
+        </LoadingCount.Provider>
       </TitleId.Provider>
       <p role="status" className="sr-only">
         {loadingCount > 0 ? "Loading…" : ""}
+      </p>
+      <p aria-live="polite" className="sr-only">
+        {announcement}
       </p>
     </section>
   );
@@ -77,11 +93,14 @@ interface HeaderProps {
   /** Provided by a nested (child) view — renders a back arrow on all sizes and
    *  makes the breadcrumb crumbs clickable, all returning to the parent list. */
   onBack?: () => void;
+  /** Processing state on the header's end ("Updating 412 entities…"), a
+   *  live region. Always mounted, so the header never changes height. */
+  status?: ReactNode;
 }
 
 // Title/breadcrumb only — actions live in the bottom action bar (Footer), per
 // our convention (we don't put primary actions in a top bar).
-SettingsContent.Header = function SettingsHeader({ path, title, onBack: leave }: HeaderProps) {
+SettingsContent.Header = function SettingsHeader({ path, title, onBack: leave, status }: HeaderProps) {
   const setDrilled = useSetAtom(settingsMobileDrilledAtom);
   // Every way out of the page asks first while its form is dirty
   // (`useSettingsDraft` registers it). Cancel in the footer is the explicit
@@ -150,6 +169,9 @@ SettingsContent.Header = function SettingsHeader({ path, title, onBack: leave }:
         <h2 id={titleId} data-part="title" className="font-semibold text-ink truncate">
           {title}
         </h2>
+      </div>
+      <div data-part="status" role="status" className="shrink-0 flex items-center gap-2 text-xs text-ink-tertiary">
+        {status}
       </div>
     </header>
   );

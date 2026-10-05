@@ -50,11 +50,13 @@ import { SettingsNav } from "../components/settings/SettingsNav";
 import { SettingsBarContext, SettingsButton } from "../components/settings/SettingsButton";
 import { SettingsField, TextInput } from "../components/settings/SettingsField";
 import { RowActionButton, RowActions } from "../components/settings/RowActions";
+import { SettingsSelectionBar } from "../components/settings/SettingsSelectionBar";
+import { MoveButtons, ReorderGrip } from "../components/settings/ReorderControls";
 import { SettingsEditorDemo, SettingsEmptyStateDemo, SettingsListPageDemo, SettingsSectionDemo } from "./catalog/settingsDemos";
 import { StatusPill } from "../components/settings/StatusPill";
 
 // Icons
-import { ArrowLeft, FileText, Pencil, Download, Trash2, Share2, Plus, Tag, Link2 } from "lucide-react";
+import { ArrowLeft, FileText, Pencil, Download, Trash2, Share2, Plus, Tag, Link2, FolderOpen } from "lucide-react";
 import { BAR_DANGER, BAR_GHOST, BAR_LEAD } from "../components/shared/warmButton";
 import { BarDivider } from "../components/shared/BarDivider";
 import { ModalDemo, ModalPartsDemo } from "../components/catalog/ModalDemo";
@@ -2146,6 +2148,53 @@ const textColor = typeLabelColor(type.color);`}
                         <RowActionButton label="Copy URL for logo.svg" icon={<Link2 size={14} aria-hidden />} onClick={() => {}} />
                       </RowActions>
                     </div>
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="set-selection-bar" ref={reg("set-selection-bar")}>
+                <CatalogEntry
+                  name="SettingsSelectionBar"
+                  description="A settings footer's selected state (UX2): the count in a fixed-width live slot (n of m selected), ghost actions, a hairline, the danger action, Clear. SettingsListPage and SettingsEditor take a selection prop and swap it in place of the footer's idle start group at the same height; SettingsTable's selection prop adds the checkbox column. Disabled actions stay focusable and say why. Phones get one Actions button opening a sheet."
+                  code={`<SettingsListPage
+  selection={{ count: ticked.size, total: rows.length, onClear, actions: [
+    { id: "role", label: "Change role", icon: <Shield size={13} />, onClick },
+    { id: "delete", label: "Delete", icon: <Trash2 size={13} />, onClick, danger: true },
+  ] }}
+>
+  <SettingsTable selection={{ selected: ticked, onChange: setTicked, label: (u) => u.username }} … />
+</SettingsListPage>`}
+                >
+                  <div className="w-full flex items-center gap-2 h-12 px-4 bg-paper border border-border-soft rounded-md">
+                    <SettingsSelectionBar
+                      count={3}
+                      total={12}
+                      onClear={() => {}}
+                      actions={[
+                        { id: "group", label: "Add to group", icon: <FolderOpen size={13} aria-hidden />, onClick: () => {} },
+                        { id: "delete", label: "Delete", icon: <Trash2 size={13} aria-hidden />, onClick: () => {}, danger: true },
+                      ]}
+                    />
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="set-reorder" ref={reg("set-reorder")}>
+                <CatalogEntry
+                  name="ReorderGrip · MoveButtons"
+                  description="Keyboard reordering for settings rows (UX9), from the Filters pattern. The grip is a button: focused, ArrowUp and ArrowDown move the row, Home and End send it to either end of its own list, and focus moves with it. Move up and Move down sit with the row's actions. The new position is announced through the page's live region (useSettingsAnnounce). The caller owns the list, so a value never leaves its group."
+                  code={`const props = { label: r.title, index: i, count: rows.length, onMove: (to) => setRows((p) => moveTo(p, i, to)) };
+<ReorderGrip {...props} draggable onDragStart={…} />
+<MoveButtons {...props} />`}
+                >
+                  <div className="w-full max-w-xs flex flex-col gap-1">
+                    {["Main menu", "About", "Cases"].map((r, i) => (
+                      <div key={r} className="group flex items-center gap-2 bg-paper border border-border-soft rounded-md px-3 h-10">
+                        <ReorderGrip label={r} index={i} count={3} onMove={() => {}} />
+                        <span className="flex-1 text-sm text-ink">{r}</span>
+                        <MoveButtons label={r} index={i} count={3} onMove={() => {}} />
+                      </div>
+                    ))}
                   </div>
                 </CatalogEntry>
               </div>

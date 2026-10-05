@@ -203,7 +203,12 @@ export function FiltersPage() {
       intro="Choose which entity types and properties appear as filters in the library sidebar, group the types, and set the order of each — exactly how readers will see them."
       dirty={dirty}
       onSave={save}
-      onDiscard={discard}
+      onDiscard={() => {
+        // The draft returns to the last save, so a removed group's Undo
+        // would restore into a clean draft and dirty it.
+        discard();
+        offerUndo.end();
+      }}
       footerStart={
         <span className="text-xs text-ink-tertiary">
           {rows.some((r) => r.active)

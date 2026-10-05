@@ -43,3 +43,8 @@ export const Carbon: Story = {
 export const Disabled: Story = {
   args: { checked: true, onChange: () => {}, disabled: true, ariaLabel: "Disabled" },
 };
+
+/** Mixed: a select-all over a partial selection. */
+export const Indeterminate: Story = {
+  args: { checked: false, indeterminate: true, onChange: () => {}, ariaLabel: "Select all" },
+};

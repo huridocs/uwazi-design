@@ -1,8 +1,10 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { SettingsContent } from "./SettingsContent";
 import { SettingsButton } from "./SettingsButton";
 import { SettingsForm } from "./SettingsSection";
 import { SettingsIntro } from "./SettingsListPage";
+import { SettingsSelectionBar, type SettingsSelection } from "./SettingsSelectionBar";
+import { blockingSummary } from "../../utils/validation";
 
 interface SaveProps {
   /** From `useSettingsDraft`. The commit is enabled only while dirty. */
@@ -16,6 +18,35 @@ interface SaveProps {
   /** A line before the buttons, on the footer's fixed row: a save-attempt
    *  summary (`role="alert"`) or a count. */
   footerStatus?: ReactNode;
+  /** What blocks saving, one line each ("Name is required"). With any, the
+   *  commit is `aria-disabled`; pressing it does not save and the footer
+   *  states the summary ("1 error blocks saving") as an alert, naming the
+   *  first issue. Prefer this to hand-rolling `saveBlocked` + `footerStatus`. */
+  issues?: string[];
+}
+
+/** The footer line `issues` produces after a save attempt. */
+function IssuesSummary({ issues }: { issues: string[] }) {
+  return (
+    <span role="alert" className="min-w-0 truncate text-meta font-medium text-seal-label" title={issues.join("\n")}>
+      {blockingSummary(issues.length, 0)}: {issues[0]}
+    </span>
+  );
+}
+
+/** `issues` wired onto the commit: an attempt with issues is refused and
+ *  shown; without them it saves. */
+function useIssues(issues: string[] | undefined, onSave: () => void) {
+  const [attempted, setAttempted] = useState(false);
+  const blocking = !!issues && issues.length > 0;
+  return {
+    blocked: attempted && blocking,
+    trySave: () => {
+      if (blocking) return setAttempted(true);
+      setAttempted(false);
+      onSave();
+    },
+  };
 }
 
 function CommitButton({
@@ -25,7 +56,7 @@ function CommitButton({
   saveBlocked = false,
   onSave,
   children,
-}: Omit<SaveProps, "footerStatus"> & { variant: "commit" | "success"; children: ReactNode }) {
+}: Omit<SaveProps, "footerStatus" | "issues"> & { variant: "commit" | "success"; children: ReactNode }) {
   return (
     <SettingsButton
       variant={variant}
@@ -48,12 +79,18 @@ function CommitButton({
  *
  *  A new record commits in ink with `createLabel` ("Create template"); an
  *  existing one saves in green with "Save". Cancel is the explicit discard
- *  and is not guarded; the back arrow and breadcrumb are. */
+ *  and is not guarded; the back arrow and breadcrumb are. `onCancel`
+ *  defaults to `onBack`; an editor that discards and stays passes its own.
+ *  While rows are ticked (`selection`), the footer's start shows the
+ *  selection bar in place of `footerStart`. */
 export function SettingsEditor({
   component,
   path,
   title,
   onBack,
+  onCancel,
+  status,
+  selection,
   isNew = false,
   createLabel = "Create",
   saveLabel = "Save",
@@ -74,8 +111,14 @@ export function SettingsEditor({
   /** The list's name, as the breadcrumb ("Templates"). */
   path: string[];
   title: ReactNode;
-  /** Back to the list. Also Cancel. */
+  /** Back to the list (guarded). Also Cancel unless `onCancel` is given. */
   onBack: () => void;
+  /** Cancel: the explicit discard, not guarded. Default `onBack`. */
+  onCancel?: () => void;
+  /** Processing state in the header (`SettingsContent.Header`'s `status`). */
+  status?: ReactNode;
+  /** Bulk actions over ticked rows. */
+  selection?: SettingsSelection;
   isNew?: boolean;
   createLabel?: string;
   saveLabel?: string;
@@ -86,21 +129,33 @@ export function SettingsEditor({
   overlays?: ReactNode;
   children: ReactNode;
 }) {
+  const { issues, onSave, saveBlocked, ...rest } = save;
+  const { blocked, trySave } = useIssues(issues, onSave);
+  const selecting = !!selection && selection.count > 0;
   return (
     <SettingsContent component={component}>
-      <SettingsContent.Header path={path} title={title} onBack={onBack} />
+      <SettingsContent.Header path={path} title={title} onBack={onBack} status={status} />
       <SettingsContent.Body>
         {intro && <SettingsIntro>{intro}</SettingsIntro>}
         {toolbar}
         <SettingsForm wide={wide}>{children}</SettingsForm>
       </SettingsContent.Body>
       <SettingsContent.Footer>
-        {footerStart && <div className="me-auto flex items-center gap-2">{footerStart}</div>}
-        {footerStatus}
-        <SettingsButton variant="ghost" size="sm" onClick={onBack}>
+        {selecting && selection ? (
+          <SettingsSelectionBar {...selection} />
+        ) : (
+          footerStart && <div className="me-auto flex items-center gap-2 min-w-0">{footerStart}</div>
+        )}
+        {blocked ? <IssuesSummary issues={issues!} /> : footerStatus}
+        <SettingsButton variant="ghost" size="sm" onClick={onCancel ?? onBack}>
           Cancel
         </SettingsButton>
-        <CommitButton variant={isNew ? "commit" : "success"} {...save}>
+        <CommitButton
+          variant={isNew ? "commit" : "success"}
+          {...rest}
+          saveBlocked={saveBlocked || blocked}
+          onSave={trySave}
+        >
           {isNew ? createLabel : saveLabel}
         </CommitButton>
       </SettingsContent.Footer>

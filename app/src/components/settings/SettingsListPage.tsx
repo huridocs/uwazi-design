@@ -1,20 +1,21 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Plus } from "lucide-react";
 import { SettingsContent } from "./SettingsContent";
 import { SettingsButton } from "./SettingsButton";
 import { ModalSearchField } from "../shared/ModalParts";
+import { SettingsSelectionBar, type SettingsSelection } from "./SettingsSelectionBar";
 
 /** A list's search: the query and the rows it keeps. Matching is a
- *  case-insensitive substring over the text `textOf` returns for a row. */
+ *  case-insensitive substring over the text `textOf` returns for a row.
+ *
+ *  Not memoised: every caller passes a freshly filtered array and an inline
+ *  `textOf`, and a memo keyed on the rows alone would go stale for a
+ *  `textOf` that reads outside data (a group-name map). Settings lists are
+ *  short; a long editor filters its own rows. */
 export function useSettingsSearch<T>(rows: T[], textOf: (row: T) => string) {
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
-  const filtered = useMemo(
-    () => (q ? rows.filter((r) => textOf(r).toLowerCase().includes(q)) : rows),
-    // `textOf` is an inline arrow at every call site; the rows and query are
-    // what change the result.
-    [rows, q],
-  );
+  const filtered = q ? rows.filter((r) => textOf(r).toLowerCase().includes(q)) : rows;
   return { query, setQuery, rows: filtered, clear: () => setQuery("") };
 }
 
@@ -59,7 +60,8 @@ export function SettingsToolbar({
  *
  *    Header (title, mobile back)
  *    Body:   intro line · tabs · toolbar (search, filters) · the table
- *    Footer: the lead create action (`BAR_LEAD`), then any secondary actions
+ *    Footer: the lead create action (`BAR_LEAD`), then any secondary actions;
+ *            while rows are ticked, the selection bar in their place
  *
  *  The table is `children`, usually a `SettingsTable` whose `emptyState` is a
  *  `SettingsEmptyState`. Dialogs the page opens go in `overlays`. */
@@ -72,6 +74,7 @@ export function SettingsListPage({
   filters,
   lead,
   footer,
+  selection,
   overlays,
   children,
 }: {
@@ -86,9 +89,14 @@ export function SettingsListPage({
   lead?: { label: string; onClick: () => void; icon?: ReactNode };
   /** Further footer actions, after the lead. */
   footer?: ReactNode;
+  /** Bulk actions over ticked rows (`SettingsTable`'s `selection`). While
+   *  `count` is above zero the footer shows `SettingsSelectionBar` in place
+   *  of the lead and `footer`. */
+  selection?: SettingsSelection;
   overlays?: ReactNode;
   children: ReactNode;
 }) {
+  const selecting = !!selection && selection.count > 0;
   return (
     <SettingsContent component={component}>
       <SettingsContent.Header title={title} />
@@ -98,8 +106,12 @@ export function SettingsListPage({
         <SettingsToolbar search={search} filters={filters} />
         {children}
       </SettingsContent.Body>
-      {(lead || footer) && (
+      {(lead || footer || selection) && (
         <SettingsContent.Footer>
+          {selecting && selection ? (
+            <SettingsSelectionBar {...selection} />
+          ) : (
+            <>
           {lead && (
             <SettingsButton
               variant="lead"
@@ -112,6 +124,8 @@ export function SettingsListPage({
             </SettingsButton>
           )}
           {footer}
+            </>
+          )}
         </SettingsContent.Footer>
       )}
       {overlays}
