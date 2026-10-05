@@ -81,7 +81,9 @@ export const translationContextsAtom = atomFamily((corpus: Corpus) =>
       type: "User interface",
       system: true,
       // Uwazi's own System keys and its shipped translations (SD-7).
-      keys: UWAZI_UI_KEYS.map((k) => ({ id: k.key, text: k.key, defaults: { es: k.es, fr: k.fr, ar: k.ar } })),
+      // Korean's column is Uwazi's predefined translation: installing Korean
+      // brings it (SD-8); a language Uwazi ships none for starts untranslated.
+      keys: UWAZI_UI_KEYS.map((k) => ({ id: k.key, text: k.key, defaults: { es: k.es, fr: k.fr, ar: k.ar, ko: k.ko } })),
     });
     // The Menu's links and sub-links, as Settings › Menu saved them.
     const menuKeys = get(menuSettings.valueOfAtom(corpus))

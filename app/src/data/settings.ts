@@ -17,6 +17,8 @@ export const seedLanguages: SettingsLanguage[] = [
   { key: "es", label: "Spanish", localizedLabel: "Español", ltr: true, default: false, translationsCount: 100 },
   { key: "fr", label: "French", localizedLabel: "Français", ltr: true, default: false, translationsCount: 94 },
   { key: "ar", label: "Arabic", localizedLabel: "العربية", ltr: false, default: false, translationsCount: 81 },
+  // Installed with no predefined interface translation (acceptance SD-8).
+  { key: "pt", label: "Portuguese", localizedLabel: "Português", ltr: true, default: false, translationsCount: 67 },
 ];
 
 export type UserRole = "admin" | "editor" | "collaborator";
