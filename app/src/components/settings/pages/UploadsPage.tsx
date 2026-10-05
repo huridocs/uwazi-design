@@ -9,7 +9,8 @@ import { Select } from "../../shared/Select";
 import { SegmentedControl } from "../../shared/SegmentedControl";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { seedUploads, type SettingsUpload } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/notifications";
+import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { useNotify } from "../../../hooks/useNotify";
 
 const typeIcon = { image: Image, pdf: FileText, font: Type, other: File };
 
@@ -27,9 +28,9 @@ const VIEW_OPTIONS = [
 ];
 
 export function UploadsPage() {
-  const setToasts = useSetAtom(toastsAtom);
-  const toast = (message: string) =>
-    setToasts((p) => [...p, { id: Date.now().toString(), message, type: "success" as const }]);
+  const notify = useNotify();
+  const { record } = useSettingsNotify();
+  const toast = (message: string) => notify(message, "success");
 
   const [uploads, setUploads] = useState<SettingsUpload[]>(seedUploads);
   const [confirm, setConfirm] = useState<SettingsUpload | null>(null);
@@ -175,7 +176,7 @@ export function UploadsPage() {
         onConfirm={() => {
           if (confirm) {
             setUploads((prev) => prev.filter((u) => u.id !== confirm.id));
-            toast(`${confirm.name} deleted`);
+            record({ method: "DELETE", domain: "upload", noun: "file", id: confirm.id, name: confirm.name });
           }
           setConfirm(null);
         }}

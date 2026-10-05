@@ -8,7 +8,8 @@ import { Select } from "../../shared/Select";
 import { RadioGroup } from "../../shared/RadioGroup";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { type SettingsPreserveToken } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/notifications";
+import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { useNotify } from "../../../hooks/useNotify";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
 const AUTH_OPTIONS = [
@@ -87,9 +88,9 @@ export function PreserveTokenEditor({
   token: SettingsPreserveToken | "new";
   onClose: () => void;
 }) {
-  const setToasts = useSetAtom(toastsAtom);
-  const toast = (message: string) =>
-    setToasts((p) => [...p, { id: Date.now().toString(), message, type: "success" as const }]);
+  const notify = useNotify();
+  const { record } = useSettingsNotify();
+  const toast = (message: string) => notify(message, "success");
 
   const isNew = token === "new";
   const base = isNew ? undefined : token;
@@ -130,7 +131,14 @@ export function PreserveTokenEditor({
   };
 
   const save = () => {
-    toast(isNew ? "Capture source added" : `${name || "Source"} saved`);
+    record({
+      method: isNew ? "CREATE" : "UPDATE",
+      domain: "preserve",
+      noun: "capture source",
+      id: base?.id,
+      name: name || "Source",
+      message: isNew ? "Capture source added" : undefined,
+    });
     onClose();
   };
 

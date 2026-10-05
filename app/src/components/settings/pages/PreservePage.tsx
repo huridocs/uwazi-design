@@ -8,10 +8,10 @@ import { RowActions } from "../RowActions";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { PreserveTokenEditor } from "./PreserveTokenEditor";
 import { seedPreserveTokens, type SettingsPreserveToken } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/notifications";
+import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
 
 export function PreservePage() {
-  const setToasts = useSetAtom(toastsAtom);
+  const { record } = useSettingsNotify();
   const [tokens, setTokens] = useState<SettingsPreserveToken[]>(seedPreserveTokens);
   const [confirm, setConfirm] = useState<SettingsPreserveToken | null>(null);
   const [editing, setEditing] = useState<SettingsPreserveToken | "new" | null>(null);
@@ -59,7 +59,7 @@ export function PreservePage() {
         onConfirm={() => {
           if (confirm) {
             setTokens((prev) => prev.filter((t) => t.id !== confirm.id));
-            setToasts((p) => [...p, { id: Date.now().toString(), message: `Token revoked`, type: "success" as const }]);
+            record({ method: "DELETE", domain: "preserve", noun: "Preserve token for", id: confirm.id, name: confirm.name, message: "Token revoked" });
           }
           setConfirm(null);
         }}

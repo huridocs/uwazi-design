@@ -9,10 +9,10 @@ import { StatusPill } from "../StatusPill";
 import { ConfirmDialog } from "../../shared/ConfirmDialog";
 import { ExtractorEditor } from "./ExtractorEditor";
 import { seedExtractors, type SettingsExtractor } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/notifications";
+import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
 
 export function MetadataExtractionPage() {
-  const setToasts = useSetAtom(toastsAtom);
+  const { record } = useSettingsNotify();
   const [extractors, setExtractors] = useState<SettingsExtractor[]>(seedExtractors);
   const [confirm, setConfirm] = useState<SettingsExtractor | null>(null);
   const [editing, setEditing] = useState<SettingsExtractor | "new" | null>(null);
@@ -64,13 +64,13 @@ export function MetadataExtractionPage() {
       <ConfirmDialog
         open={confirm !== null}
         title="Delete extractor"
-        message={`Delete the extractor for “${confirm?.property}”? Its training data will be discarded.`}
+        message={`Delete the extractor for “${confirm?.property}”? Its suggestions are deleted with it; values already accepted stay on the entities.`}
         confirmLabel="Delete"
         variant="danger"
         onConfirm={() => {
           if (confirm) {
             setExtractors((prev) => prev.filter((x) => x.id !== confirm.id));
-            setToasts((p) => [...p, { id: Date.now().toString(), message: `Extractor deleted`, type: "success" as const }]);
+            record({ method: "DELETE", domain: "extractor", noun: "extractor", id: confirm.id, name: confirm.property, message: "Extractor deleted" });
           }
           setConfirm(null);
         }}

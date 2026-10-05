@@ -3,7 +3,9 @@ import { Search, X, ChevronRight } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { SettingsField, TextInput } from "../SettingsField";
 import { Select } from "../../shared/Select";
-import { seedActivityLog, type SettingsLogEntry, type LogMethod } from "../../../data/settings";
+import { useAtomValue } from "jotai";
+import { type SettingsLogEntry, type LogMethod } from "../../../data/settings";
+import { activityLogAtom } from "../../../atoms/activityLog";
 
 const methodStyle: Record<LogMethod, string> = {
   CREATE: "bg-success-light text-success",
@@ -50,6 +52,8 @@ function synthesizeRequest(e: SettingsLogEntry): string {
 }
 
 export function ActivityLogPage() {
+  // Seed plus every Settings change made in this session (`useSettingsNotify`).
+  const log = useAtomValue(activityLogAtom);
   const searchId = useId();
   const [query, setQuery] = useState("");
   const [method, setMethod] = useState("all");
@@ -57,12 +61,12 @@ export function ActivityLogPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const userOptions = useMemo(() => {
-    const users = Array.from(new Set(seedActivityLog.map((e) => e.user))).sort();
+    const users = Array.from(new Set(log.map((e) => e.user))).sort();
     return [{ value: "all", label: "All users" }, ...users.map((u) => ({ value: u, label: u }))];
-  }, []);
+  }, [log]);
 
   const q = query.trim().toLowerCase();
-  const filtered = seedActivityLog.filter((e) => {
+  const filtered = log.filter((e) => {
     if (method !== "all" && e.method !== method) return false;
     if (user !== "all" && e.user !== user) return false;
     if (q && !`${e.user} ${e.method} ${e.summary}`.toLowerCase().includes(q)) return false;
@@ -153,12 +157,19 @@ export function ActivityLogPage() {
                         <dt className="text-ink-tertiary">Time</dt>
                         <dd dir="ltr" className="text-ink-secondary tabular-nums">{e.time}</dd>
                       </dl>
-                      <div className="text-meta font-medium uppercase tracking-wider text-ink-tertiary mb-1">
-                        Request
-                      </div>
-                      <pre className="bg-vellum rounded-md px-3 py-2 text-xs font-mono text-ink-secondary whitespace-pre-wrap break-words">
-                        {synthesizeRequest(e)}
-                      </pre>
+                      {/* An entry recorded in this session names its record. A seed
+                          row has none, so its request line is synthesised and
+                          says so: a made-up request must not read as evidence. */}
+                      {e.domain ? null : (
+                        <>
+                          <div className="text-meta font-medium uppercase tracking-wider text-ink-tertiary mb-1">
+                            Request (example)
+                          </div>
+                          <pre className="bg-vellum rounded-md px-3 py-2 text-xs font-mono text-ink-secondary whitespace-pre-wrap break-words">
+                            {synthesizeRequest(e)}
+                          </pre>
+                        </>
+                      )}
                     </div>
                   )}
                 </li>

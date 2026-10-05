@@ -8,7 +8,8 @@ import { Checkbox } from "../../shared/Checkbox";
 import { LayoutGrid, Table2, Map } from "lucide-react";
 import { dataSourceAtom } from "../../../atoms/dataSource";
 import { cejilCollection } from "../../../data/cejil/settingsAdapt";
-import { toastsAtom } from "../../../atoms/notifications";
+import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { LastSavedLine } from "../../shared/LastSavedLine";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
 interface ToggleRowProps {
@@ -33,7 +34,7 @@ function ToggleRow({ label, hint, checked, onChange }: ToggleRowProps) {
 }
 
 export function CollectionPage() {
-  const setToasts = useSetAtom(toastsAtom);
+  const { record } = useSettingsNotify();
   const dataSource = useAtomValue(dataSourceAtom);
   const init =
     dataSource === "cejil"
@@ -63,7 +64,7 @@ export function CollectionPage() {
 
   const save = () => {
     markSaved();
-    setToasts((p) => [...p, { id: Date.now().toString(), message: "Collection settings saved", type: "success" as const }]);
+    record({ method: "UPDATE", domain: "collection", noun: "settings", id: "collection", name: "Collection", message: "Collection settings saved" });
   };
 
   return (
@@ -125,6 +126,7 @@ export function CollectionPage() {
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
+        <LastSavedLine domain="collection" id="collection" className="me-auto" />
         <SettingsButton variant="success" size="sm" disabled={!dirty} onClick={save}>
           Save
         </SettingsButton>

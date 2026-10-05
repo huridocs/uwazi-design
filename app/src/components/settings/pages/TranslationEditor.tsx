@@ -8,7 +8,8 @@ import {
   type SettingsTranslationContext,
   type TranslationKey,
 } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/notifications";
+import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { LastSavedLine } from "../../shared/LastSavedLine";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
 /** Build the editable rows for a context — seeded terms when we have them, else
@@ -35,7 +36,7 @@ export function TranslationEditor({
   context: SettingsTranslationContext;
   onClose: () => void;
 }) {
-  const setToasts = useSetAtom(toastsAtom);
+  const { record } = useSettingsNotify();
   const { draft: rows, setDraft: setRows, dirty } = useSettingsDraft({
     id: `translations:${context.id}`,
     label: "Translation edits",
@@ -48,10 +49,14 @@ export function TranslationEditor({
     );
 
   const save = () => {
-    setToasts((p) => [
-      ...p,
-      { id: Date.now().toString(), message: `${context.name} translations saved`, type: "success" as const },
-    ]);
+    record({
+      method: "UPDATE",
+      domain: "translations",
+      noun: "translations of",
+      id: context.id,
+      name: context.name,
+      message: `${context.name} translations saved`,
+    });
     onClose();
   };
 
@@ -103,6 +108,7 @@ export function TranslationEditor({
         <SettingsTable columns={columns} data={rows} getRowId={(r) => r.key} />
       </SettingsContent.Body>
       <SettingsContent.Footer>
+        <LastSavedLine domain="translations" id={context.id} className="me-auto" />
         <SettingsButton variant="ghost" size="sm" onClick={onClose}>
           Cancel
         </SettingsButton>

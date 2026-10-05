@@ -8,7 +8,8 @@ import { Select } from "../../shared/Select";
 import { StatusPill } from "../StatusPill";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { seedTemplates, type SettingsParagraphJob } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/notifications";
+import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { useNotify } from "../../../hooks/useNotify";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
 const TEMPLATE_OPTIONS = seedTemplates.map((t) => ({ value: t.name, label: t.name }));
@@ -95,9 +96,9 @@ export function ParagraphJobEditor({
   job: SettingsParagraphJob | "new";
   onClose: () => void;
 }) {
-  const setToasts = useSetAtom(toastsAtom);
-  const toast = (message: string) =>
-    setToasts((p) => [...p, { id: Date.now().toString(), message, type: "success" as const }]);
+  const notify = useNotify();
+  const toast = (message: string) => notify(message, "success");
+  const { record } = useSettingsNotify();
 
   const isNew = job === "new";
   const base = isNew ? undefined : job;
@@ -127,7 +128,14 @@ export function ParagraphJobEditor({
   const rerunDoc = (title: string) => toast(`Re-running extraction for ${title.split(" — ")[0]}`);
 
   const save = () => {
-    toast(isNew ? "Extraction started" : "Extraction re-run queued");
+    record({
+      method: isNew ? "CREATE" : "UPDATE",
+      domain: "paragraphJob",
+      noun: "paragraph extraction for",
+      id: base?.id,
+      name: template,
+      message: isNew ? "Extraction started" : "Extraction re-run queued",
+    });
     onClose();
   };
 

@@ -15,10 +15,10 @@ import { useNotify } from "../../../hooks/useNotify";
 import {
   seedLanguages,
   seedRelationTypes,
-  seedActivityLog,
   type SettingsLogEntry,
   type LogMethod,
 } from "../../../data/settings";
+import { activityLogAtom } from "../../../atoms/activityLog";
 
 const methodStyle: Record<LogMethod, string> = {
   CREATE: "bg-success-light text-success",
@@ -31,6 +31,7 @@ export function DashboardPage() {
   const dataSource = useAtomValue(dataSourceAtom);
   const cejil = dataSource === "cejil";
   const userCount = useAtomValue(usersAtom).length;
+  const activity = useAtomValue(activityLogAtom);
   const resetData = useSetAtom(resetSettingsDataAtom);
   const notify = useNotify();
   const [confirmReset, setConfirmReset] = useState(false);
@@ -79,7 +80,7 @@ export function DashboardPage() {
             source to see demo activity.
           </p>
         ) : (
-          <SettingsTable columns={columns} data={seedActivityLog.slice(0, 5)} getRowId={(e) => e.id} />
+          <SettingsTable columns={columns} data={activity.slice(0, 5)} getRowId={(e) => e.id} />
         )}
       </SettingsContent.Body>
       <SettingsContent.Footer>
