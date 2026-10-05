@@ -138,6 +138,9 @@ export function MobileActionMenu({ items, floating = false, fixed = false, label
     });
   };
 
+  // Nothing to open (a record with no document and no link): no trigger.
+  if (!items.length) return null;
+
   return (
     <div ref={containerRef} data-component="MobileActionMenu" className="relative">
       <button

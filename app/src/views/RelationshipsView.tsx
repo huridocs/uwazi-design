@@ -4,7 +4,6 @@ import { useAtom } from "jotai";
 import { LANGUAGES, languageAtom, type Language } from "../atoms/language";
 import { focusedEntityIdAtom } from "../atoms/focusedEntity";
 import { getEntityProfile } from "../data/entityProfiles";
-import { MOCK_DOCUMENT_FILE } from "../data/files";
 import { relViewAtom } from "../atoms/filters";
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { DrawerTabs } from "../components/layout/DrawerTabs";
@@ -20,6 +19,8 @@ import { EntityPreviewSlideOver } from "../components/relationships/EntityPrevie
 import { RelationshipsPanelBody } from "../components/relationships/RelationshipsPanelBody";
 import { RelationshipsActionBar } from "../components/relationships/RelationshipsActionBar";
 import { DRAWER_MIN_WIDTH } from "../hooks/useDrawerWidth";
+import { NoDocumentPane } from "../components/entity/NoDocumentPane";
+import { nepalSourceLink } from "../data/nepal/sourceLink";
 
 interface Props {
   tabs: { id: string; label: string; count?: number }[];
@@ -39,6 +40,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
   const { handleDelete, dialog: deleteDialog } = useReferenceDelete();
 
   const hideMinimap = view === "graph";
+  const sourceLink = profile.hasDocument ? undefined : nepalSourceLink(focusedId);
 
   const renderLeft = (menuTrigger?: ReactNode) => (
         // The narrow-tier gutter host: tabs, DocMeta, toolbar, lane and action
@@ -70,9 +72,10 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
     <>
     <AdaptiveSplitView
       // On mobile the relationships panel (`left`) is already the full-screen
-      // view, so we only surface the Document in a bottom sheet — a
-      // "Relationships" section here would just duplicate what's behind it.
-      mobileSections={[
+      // view, so we only surface the Document (or a Source's link) in a bottom
+      // sheet — a "Relationships" section here would just duplicate what's
+      // behind it.
+      mobileSections={profile.hasDocument ? [
         {
           id: "document",
           label: "Document",
@@ -83,7 +86,17 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
             </div>
           ),
         },
-      ]}
+      ] : sourceLink ? [
+        {
+          id: "source",
+          label: "Source",
+          content: (
+            <div data-gutter-host className="gutter-host flex flex-col h-full min-h-0">
+              <NoDocumentPane entityId={focusedId} />
+            </div>
+          ),
+        },
+      ] : []}
       left={renderLeft()}
       mobileLeft={(menuTrigger) => renderLeft(menuTrigger)}
       right={
@@ -104,9 +117,7 @@ export function RelationshipsView({ tabs, activeTab, onTabChange, onBack }: Prop
           {profile.hasDocument ? (
             <DocumentViewer showMinimap={!hideMinimap} />
           ) : (
-            /* No bundled document — show the shared placeholder PDF rather than a
-               bare empty state (the real doc isn't shipped in this sample). */
-            <DocumentViewer fileOverride={MOCK_DOCUMENT_FILE} showMinimap={false} />
+            <NoDocumentPane entityId={focusedId} />
           )}
           </div>
           {deleteDialog}

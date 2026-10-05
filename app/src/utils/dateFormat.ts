@@ -32,6 +32,23 @@ export function formatWithPattern(d: Date, pattern: DatePattern, utc = true): st
   return pattern.replace("yyyy", y).replace("MM", m).replace("dd", day);
 }
 
+/** How precisely a date is known. */
+export type DatePrecision = "day" | "month" | "year";
+
+/** A date printed only as precisely as it is known: the collection's pattern
+ *  for a day, the same pattern without its day for a month ("2024/03"), the
+ *  year alone for a year. Reads UTC, like `formatWithPattern`. */
+export function formatAtPrecision(d: Date, precision: DatePrecision, pattern: DatePattern = active): string {
+  if (precision === "year") return String(d.getUTCFullYear());
+  if (precision === "day") return formatWithPattern(d, pattern);
+  const sep = pattern.includes("/") ? "/" : "-";
+  const monthPattern = pattern
+    .split(sep)
+    .filter((part) => part !== "dd")
+    .join(sep) as DatePattern;
+  return formatWithPattern(d, monthPattern);
+}
+
 /** "2026/10/04 (Year/Month/Day)": the option label, built from today. */
 export function datePatternLabel(pattern: DatePattern, today = new Date()): string {
   const words = pattern.replace("yyyy", "Year").replace("MM", "Month").replace("dd", "Day");
