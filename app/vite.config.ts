@@ -33,23 +33,14 @@ export default defineConfig({
   optimizeDeps: {
     // Pre-bundle these EXPLICITLY rather than leaving them to the dep scanner.
     //
-    // `react-simple-maps` is only reachable through the lazy `import()` in
-    // LibraryView, so whether it lands in the first optimize pass depends on the
-    // scanner following that dynamic import. When it doesn't, the Map view's
-    // chunk pulls a SECOND pre-bundle of React, hooks run against a null
-    // dispatcher, and the whole app blanks with "Invalid hook call" /
-    // "Cannot read properties of null (reading 'useMemo')" from inside
-    // react-simple-maps' own MapProvider — a crash that looks like our
-    // cluster-pin code and isn't. Vite's recovery (re-optimize, then force a
-    // full reload) also races the render that is already in flight.
-    //
-    // One entry is enough, verified rather than guessed: on a cold start with a
-    // cleared node_modules/.vite, the optimizer emits exactly 11 entries and
-    // d3-geo/d3-selection/d3-zoom/topojson-client are all INLINED into the
-    // react-simple-maps bundle. Listing them separately would split them back
-    // out into their own chunks, which is the opposite of what this fixes.
-    // `world-atlas/countries-110m.json` never appears — it's a JSON asset, not
-    // a dep.
+    // Leaflet and leaflet.markercluster are only reachable through the lazy
+    // `import()`s of the map views, so whether they land in the first optimize
+    // pass depends on the scanner following those dynamic imports. When it
+    // doesn't, opening the first map makes Vite re-optimize and force a full
+    // reload, racing the render already in flight. (react-simple-maps, the map
+    // library before Leaflet, crashed the app outright this way: its chunk pulled
+    // a second pre-bundle of React.) markercluster patches the `L` that leaflet
+    // exports, so both must come from the same pre-bundle pass.
     //
     // The React core is listed EXPLICITLY even though the scanner finds it
     // anyway. This config is also what Storybook builds with (see
@@ -66,7 +57,8 @@ export default defineConfig({
       "react-dom/client",
       "react/jsx-runtime",
       "react-pdf",
-      "react-simple-maps"
+      "leaflet",
+      "leaflet.markercluster"
     ]
   },
   test: {

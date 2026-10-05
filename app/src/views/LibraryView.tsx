@@ -107,8 +107,7 @@ import { parseDateValue } from "../utils/dateValue";
 import { MatchOrigin } from "../components/library/MatchOrigin";
 import { listColumnSpecs, buildListColumns } from "../components/library/listColumns";
 import { LIBRARY_SORTS } from "../data/libraryDisplay";
-// Lazy: react-simple-maps and the world atlas are the largest static chunk and
-// only the map view needs them.
+// Lazy: Leaflet and markercluster load with the map view, not with the Library.
 const LibraryMapView = lazy(() =>
   import("../components/library/LibraryMapView").then((m) => ({ default: m.LibraryMapView })),
 );
