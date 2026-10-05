@@ -1,4 +1,8 @@
 import { useState } from "react";
+import { useAtomValue } from "jotai";
+import { Checkbox } from "../../shared/Checkbox";
+import { TranslationProgress } from "../TranslationProgress";
+import { progressOf, translationRowsAtom } from "../../../atoms/translations";
 import { Globe, Upload } from "lucide-react";
 import { SettingsListPage, useSettingsSearch } from "../SettingsListPage";
 import { SettingsEmptyState } from "../SettingsEmptyState";
@@ -19,8 +23,12 @@ export function TranslationsPage() {
   const notify = useNotify();
   const [editing, setEditing] = useState<SettingsTranslationContext | null>(null);
   const [typeFilter, setTypeFilter] = useState("");
+  const [gapsOnly, setGapsOnly] = useState(false);
+  const rowsOf = useAtomValue(translationRowsAtom);
+  const progress = new Map(seedTranslationContexts.map((c) => [c.id, progressOf(rowsOf(c))]));
+  const hasGap = (id: string) => progress.get(id)!.some((p) => p.done < p.total);
   const search = useSettingsSearch(
-    typeFilter ? seedTranslationContexts.filter((c) => c.type === typeFilter) : seedTranslationContexts,
+    seedTranslationContexts.filter((c) => (!typeFilter || c.type === typeFilter) && (!gapsOnly || hasGap(c.id))),
     (c) => c.name,
   );
 
@@ -48,6 +56,12 @@ export function TranslationsPage() {
       width: "6rem",
       cell: (c) => <span className="text-ink-secondary tabular-nums">{c.keyCount}</span>,
     },
+    {
+      id: "translated",
+      header: "Translated",
+      width: "16rem",
+      cell: (c) => <TranslationProgress variant="compact" progress={progress.get(c.id)!} />,
+    },
   ];
 
   const importCsv = () => notify("CSV import is not built in the prototype. No translations changed.", "info");
@@ -59,6 +73,11 @@ export function TranslationsPage() {
       intro="Translate the interface and your collection's content across active languages."
       search={{ value: search.query, onChange: search.setQuery, label: "Search contexts" }}
       filters={
+        <>
+        <label className="flex items-center gap-2 text-xs text-ink-secondary cursor-pointer whitespace-nowrap">
+          <Checkbox checked={gapsOnly} onChange={() => setGapsOnly((v) => !v)} />
+          Untranslated only
+        </label>
         <div className="w-36">
           <Select
             value={typeFilter}
@@ -70,6 +89,7 @@ export function TranslationsPage() {
             ]}
           />
         </div>
+        </>
       }
       lead={{ label: "Import translations (CSV)", icon: <Upload size={14} aria-hidden />, onClick: importCsv }}
     >
@@ -83,7 +103,7 @@ export function TranslationsPage() {
         emptyState={
           <SettingsEmptyState
             icon={<Globe size={16} />}
-            title="No translation contexts"
+            title={gapsOnly ? "Every context is fully translated" : "No translation contexts"}
             hint="Templates, thesauri and the menu each add a context to translate."
             query={search.query}
             onClearQuery={search.clear}

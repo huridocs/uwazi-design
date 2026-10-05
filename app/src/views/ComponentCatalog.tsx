@@ -54,6 +54,7 @@ import { SettingsSelectionBar } from "../components/settings/SettingsSelectionBa
 import { MoveButtons, ReorderGrip } from "../components/settings/ReorderControls";
 import { AlphaJump } from "../components/shared/AlphaJump";
 import { Dropzone } from "../components/shared/Dropzone";
+import { TranslationProgress } from "../components/settings/TranslationProgress";
 import { BulkPickModal } from "../components/settings/BulkPickModal";
 import { SettingsEditorDemo, SettingsEmptyStateDemo, SettingsListPageDemo, SettingsSectionDemo } from "./catalog/settingsDemos";
 import { StatusPill } from "../components/settings/StatusPill";
@@ -2236,6 +2237,33 @@ const textColor = typeLabelColor(type.color);`}
                   <div className="max-w-md flex flex-col gap-2">
                     <Dropzone onFile={() => {}} />
                     <Dropzone file={{ name: "estados.csv", detail: "Adds 3 values and 1 group." }} onRemove={() => {}} />
+                  </div>
+                </CatalogEntry>
+              </div>
+
+              <div id="set-translation-progress" ref={reg("set-translation-progress")}>
+                <CatalogEntry
+                  name="TranslationProgress"
+                  description="Per-language translation progress (UX8). The strip heads the Translations editor: one cell per target language with its bar and n of m; with onPick a cell is a button that filters the grid to that language's untranslated keys. The compact form (ES 80%) sits in the Translations list. A value that is empty or still equals the source text counts as untranslated (Uwazi's rule)."
+                  code={`<TranslationProgress progress={progressOf(rows)} active={lang} onPick={setLang} />
+<TranslationProgress variant="compact" progress={progressOf(rows)} />`}
+                >
+                  <div className="max-w-2xl flex flex-col gap-3">
+                    <TranslationProgress
+                      progress={[
+                        { key: "es", label: "Spanish", done: 8, total: 10 },
+                        { key: "fr", label: "French", done: 10, total: 10 },
+                        { key: "ar", label: "Arabic", done: 3, total: 10 },
+                      ]}
+                    />
+                    <TranslationProgress
+                      variant="compact"
+                      progress={[
+                        { key: "es", label: "Spanish", done: 8, total: 10 },
+                        { key: "fr", label: "French", done: 10, total: 10 },
+                        { key: "ar", label: "Arabic", done: 3, total: 10 },
+                      ]}
+                    />
                   </div>
                 </CatalogEntry>
               </div>

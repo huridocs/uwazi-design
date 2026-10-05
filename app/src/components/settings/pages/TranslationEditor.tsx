@@ -1,35 +1,29 @@
-import { useSetAtom } from "jotai";
+import { useState } from "react";
+import { useAtomValue, useSetAtom } from "jotai";
 import { SettingsEditor } from "../SettingsEditor";
-import { SettingsToolbar, useSettingsSearch } from "../SettingsListPage";
+import { SettingsToolbar } from "../SettingsListPage";
 import { SettingsEmptyState } from "../SettingsEmptyState";
 import { SettingsTable, type Column } from "../SettingsTable";
-import {
-  seedLanguages,
-  seedTranslationKeys,
-  type SettingsTranslationContext,
-  type TranslationKey,
-} from "../../../data/settings";
+import { TranslationProgress } from "../TranslationProgress";
+import { Checkbox } from "../../shared/Checkbox";
+import { Select } from "../../shared/Select";
+import { seedLanguages, type SettingsTranslationContext, type TranslationKey } from "../../../data/settings";
+import { isUntranslated, progressOf, saveTranslationsAtom, translationRowsAtom } from "../../../atoms/translations";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
 import { LastSavedLine } from "../../shared/LastSavedLine";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
-/** Build the editable rows for a context — seeded terms when we have them, else
- *  a representative set generated from the context's key count. */
-function buildRows(context: SettingsTranslationContext): TranslationKey[] {
-  const seeded = seedTranslationKeys[context.id];
-  if (seeded) return seeded.map((r) => ({ key: r.key, values: { ...r.values } }));
-  const n = Math.min(context.keyCount, 10);
-  return Array.from({ length: n }, (_, i) => ({
-    key: `${context.name} term ${i + 1}`,
-    values: Object.fromEntries(
-      seedLanguages.map((l) => [l.key, l.default ? `${context.name} term ${i + 1}` : ""]),
-    ),
-  }));
-}
+const source = seedLanguages.find((l) => l.default) ?? seedLanguages[0];
+const targets = seedLanguages.filter((l) => !l.default);
 
-/** Per-context translation editor — a key × language grid, opened from the
- *  Translations list (list → detail). The default language column is read-only
- *  (it's the source term); the rest are editable. */
+/** Per-context translation editor: a key × language grid, opened from the
+ *  Translations list (list → detail). The source language is read-only.
+ *
+ *  UX8: a progress cell per language heads the grid; "Untranslated only"
+ *  keeps the keys with a gap, and a language (picked in the strip or the
+ *  select) narrows the grid to that column. Search and the filter read the
+ *  SAVED values, so a row stays put while it is being filled in; it leaves
+ *  the filtered view on Save. */
 export function TranslationEditor({
   context,
   onClose,
@@ -38,19 +32,35 @@ export function TranslationEditor({
   onClose: () => void;
 }) {
   const { record } = useSettingsNotify();
-  const { draft: rows, setDraft: setRows, dirty } = useSettingsDraft({
+  const stored = useAtomValue(translationRowsAtom)(context);
+  const saveRows = useSetAtom(saveTranslationsAtom);
+  const { draft: rows, setDraft: setRows, dirty, saved } = useSettingsDraft({
     id: `translations:${context.id}`,
     label: "Translation edits",
-    saved: buildRows(context),
+    saved: stored,
   });
+  const [query, setQuery] = useState("");
+  const [gapsOnly, setGapsOnly] = useState(false);
+  const [lang, setLang] = useState("");
+  const shownTargets = lang ? targets.filter((l) => l.key === lang) : targets;
 
-  // Rows are patched by key, not index: the search filters the grid.
+  // Rows are patched by key, not index: the grid is filtered.
   const patch = (key: string, langKey: string, value: string) =>
     setRows((prev) => prev.map((r) => (r.key === key ? { ...r, values: { ...r.values, [langKey]: value } } : r)));
-  const search = useSettingsSearch(rows, (r) => `${r.key} ${Object.values(r.values).join(" ")}`);
+
+  const q = query.trim().toLowerCase();
+  const keep = new Set(
+    saved
+      .filter((r) => !q || `${r.key} ${Object.values(r.values).join(" ")}`.toLowerCase().includes(q))
+      .filter((r) => !gapsOnly || shownTargets.some((l) => isUntranslated(r, l.key, source.key)))
+      .map((r) => r.key),
+  );
+  const shown = rows.filter((r) => keep.has(r.key));
+  const progress = progressOf(rows);
 
   const save = () => {
-    record({ log: false, 
+    saveRows({ id: context.id, rows });
+    record({
       method: "UPDATE",
       domain: "translations",
       noun: "translations of",
@@ -64,37 +74,41 @@ export function TranslationEditor({
   const columns: Column<TranslationKey>[] = [
     {
       id: "key",
-      header: "Term",
+      header: "Key",
       width: "14rem",
       cell: (r) => <span className="text-xs font-medium text-ink truncate">{r.key}</span>,
     },
-    ...seedLanguages.map<Column<TranslationKey>>((lang) => ({
-      id: lang.key,
+    ...[source, ...shownTargets].map<Column<TranslationKey>>((l) => ({
+      id: l.key,
       width: "14rem",
       header: (
         <span className="flex items-center gap-1.5">
-          {lang.label}
-          {lang.default && (
-            <span className="text-meta font-semibold text-carbon bg-carbon-tint px-1 py-px rounded normal-case">
-              Source
-            </span>
+          {l.label}
+          {l.default && (
+            <span className="text-meta font-semibold text-ink-secondary bg-vellum px-1 py-px rounded normal-case">Source</span>
           )}
         </span>
       ),
       cell: (r) =>
-        lang.default ? (
-          <span className="text-sm text-ink-tertiary truncate" dir={lang.ltr ? "ltr" : "rtl"}>
-            {r.values[lang.key] || "—"}
+        l.default ? (
+          <span className="text-sm text-ink-tertiary truncate" dir={l.ltr ? "ltr" : "rtl"}>
+            {r.values[l.key] || "—"}
           </span>
         ) : (
-          <input
-            value={r.values[lang.key] ?? ""}
-            onChange={(e) => patch(r.key, lang.key, e.target.value)}
-            dir={lang.ltr ? "ltr" : "rtl"}
-            placeholder="Add translation…"
-            aria-label={`${r.key} in ${lang.label}`}
-            className="w-full min-w-0 bg-transparent text-sm text-ink focus:outline-none focus:bg-warm rounded px-1.5 py-1 placeholder:text-ink-muted"
-          />
+          <span className="relative flex items-center w-full min-w-0">
+            {/* A dot marks a gap; the field says so too. */}
+            {isUntranslated(r, l.key, source.key) && (
+              <span aria-hidden className="absolute -start-2 w-1.5 h-1.5 rounded-full bg-warning" />
+            )}
+            <input
+              value={r.values[l.key] ?? ""}
+              onChange={(e) => patch(r.key, l.key, e.target.value)}
+              dir={l.ltr ? "ltr" : "rtl"}
+              placeholder="Add translation…"
+              aria-label={`${r.key} in ${l.label}${isUntranslated(r, l.key, source.key) ? ", untranslated" : ""}`}
+              className="w-full min-w-0 bg-transparent text-sm text-ink focus:outline-none focus:bg-warm rounded px-1.5 py-1 placeholder:text-ink-muted"
+            />
+          </span>
         ),
     })),
   ];
@@ -105,8 +119,39 @@ export function TranslationEditor({
       path={["Translations"]}
       title={context.name}
       onBack={onClose}
-      intro="Translate each term into your active languages. The&nbsp;source language is shown for reference."
-      toolbar={<SettingsToolbar search={{ value: search.query, onChange: search.setQuery, label: "Search terms" }} />}
+      intro="Translate each key into your active languages. The&nbsp;source language is shown for reference."
+      toolbar={
+        <div className="flex flex-col gap-3 mb-3">
+          <TranslationProgress
+            progress={progress}
+            active={lang}
+            onPick={(k) => {
+              if (lang === k) return setLang("");
+              setLang(k);
+              setGapsOnly(true);
+            }}
+          />
+          <SettingsToolbar
+            search={{ value: query, onChange: setQuery, label: "Search keys" }}
+            filters={
+              <>
+                <label className="flex items-center gap-2 text-xs text-ink-secondary cursor-pointer whitespace-nowrap">
+                  <Checkbox checked={gapsOnly} onChange={() => setGapsOnly((v) => !v)} />
+                  Untranslated only
+                </label>
+                <div className="w-40">
+                  <Select
+                    value={lang}
+                    onChange={setLang}
+                    ariaLabel="Language"
+                    options={[{ value: "", label: "All languages" }, ...targets.map((l) => ({ value: l.key, label: l.label }))]}
+                  />
+                </div>
+              </>
+            }
+          />
+        </div>
+      }
       dirty={dirty}
       onSave={save}
       wide
@@ -114,10 +159,17 @@ export function TranslationEditor({
     >
       <SettingsTable
         columns={columns}
-        data={search.rows}
+        data={shown}
         getRowId={(r) => r.key}
         emptyState={
-          <SettingsEmptyState title="No terms yet" query={search.query} onClearQuery={search.clear} />
+          gapsOnly && !q ? (
+            <SettingsEmptyState
+              title={lang ? `Nothing left to translate into ${targets.find((l) => l.key === lang)?.label}` : "There are no untranslated keys"}
+              action={{ label: "Show all keys", onClick: () => setGapsOnly(false) }}
+            />
+          ) : (
+            <SettingsEmptyState title="No keys yet" query={query} onClearQuery={() => setQuery("")} />
+          )
         }
       />
     </SettingsEditor>
