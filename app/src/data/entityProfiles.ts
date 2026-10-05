@@ -7,7 +7,7 @@ import type { DocRendition } from "./documentRenditions";
 import { renditionsByLanguage } from "./documentRenditions";
 import type { FileEntry, DocumentGroup } from "./files";
 import { files, documentGroups, entityDocument } from "./files";
-import { getEntity, type Entity } from "./entities";
+import { entityCorpusOf, getEntity, type Entity } from "./entities";
 import { getEntityProps } from "./entityMetadata";
 import { isCejilEntity, buildCejilProfile } from "./cejil/profile";
 import { isArtworkEntity, buildArtworkProfile } from "./artworks/profile";
@@ -15,7 +15,8 @@ import { isTravesiaEntity, buildTravesiaProfile } from "./travesia/profile";
 import type { EntityImage } from "./entities";
 import { overlayCreated, overlayRecord, type EntityRecord } from "./entityChanges";
 import { sampleRecordFields } from "./sample/values";
-import { templatesMirror } from "./templates/mirror";
+import { TEMPLATE_SEEDS, templatesMirror } from "./templates/mirror";
+import { projectRecordFields } from "../utils/templateProjection";
 import type { TemplateDef } from "./templates/types";
 
 const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
@@ -73,6 +74,7 @@ export function typeHasDocument(typeId: string): boolean {
 }
 
 /** Main entity = the existing Velásquez globals, assembled by reference. */
+let mainMetadataTemplates: TemplateDef[] | null = null;
 let mainMetadata: Record<Language, AnyMetadataField[]> | null = null;
 const mainProfile: EntityProfile = {
   id: MAIN_ENTITY_ID,
@@ -83,12 +85,18 @@ const mainProfile: EntityProfile = {
   documentGroups,
   files,
   // Court Case's projection over the case record's values (step M5). Built
-  // on first read: this module loads while `data/entities` is still loading.
+  // on first read (this module loads while `data/entities` is still loading)
+  // and again after a template change, like every other profile.
   get metadata() {
-    return (mainMetadata ??= LANGS.reduce((acc, lang) => {
-      acc[lang] = sampleRecordFields(MAIN_ENTITY_ID, "court_case", lang);
-      return acc;
-    }, {} as Record<Language, AnyMetadataField[]>));
+    const templates = templatesMirror("mock");
+    if (!mainMetadata || mainMetadataTemplates !== templates) {
+      mainMetadataTemplates = templates;
+      mainMetadata = LANGS.reduce((acc, lang) => {
+        acc[lang] = sampleRecordFields(MAIN_ENTITY_ID, "court_case", lang);
+        return acc;
+      }, {} as Record<Language, AnyMetadataField[]>);
+    }
+    return mainMetadata;
   },
   pdfMetadata: pdfMetadataByLanguage,
   relationships: { kind: "references" },
@@ -187,12 +195,15 @@ export function getEntityProfile(id: string): EntityProfile {
   return baseProfile(id);
 }
 
-/** Record-built profiles, per record object — records are immutable, so a new
- *  write is a new key and a stale profile is never found again. */
-const recordProfiles = new WeakMap<EntityRecord, EntityProfile>();
+/** Record-built profiles, per record object and template list — records are
+ *  immutable, so a new write is a new key, and a template edit (a new list)
+ *  re-projects every saved record. */
+const recordProfiles = new WeakMap<EntityRecord, { templates: TemplateDef[]; profile: EntityProfile }>();
 function profileFromRecord(id: string, record: EntityRecord): EntityProfile {
+  const corpus = entityCorpusOf(id);
+  const templates = templatesMirror(corpus);
   const hit = recordProfiles.get(record);
-  if (hit) return hit;
+  if (hit && hit.templates === templates) return hit.profile;
   // A created entity has no corpus profile underneath; an edited one does,
   // and keeps whatever the record doesn't replace (its document, relationships).
   const base = overlayCreated(id) ? undefined : baseProfile(id);
@@ -202,11 +213,24 @@ function profileFromRecord(id: string, record: EntityRecord): EntityProfile {
     id,
     typeId: record.typeId,
     hasDocument: files.length > 0 || !!base?.hasDocument,
-    metadata: record.metadata as Record<Language, AnyMetadataField[]>,
+    // The record's values through the template as it is now (spec M8).
+    metadata: Object.fromEntries(
+      Object.entries(record.metadata as Record<Language, AnyMetadataField[]>).map(([lang, fields]) => [
+        lang,
+        projectRecordFields(
+          corpus,
+          templates.find((t) => t.id === record.typeId),
+          TEMPLATE_SEEDS[corpus]?.().find((t) => t.id === record.typeId),
+          fields,
+          lang as Language,
+          (tid) => templates.find((t) => t.id === tid),
+        ),
+      ]),
+    ) as Record<Language, AnyMetadataField[]>,
     documentGroups: record.documentGroups ?? base?.documentGroups ?? [],
     files,
   };
-  recordProfiles.set(record, profile);
+  recordProfiles.set(record, { templates, profile });
   return profile;
 }
 

@@ -292,3 +292,57 @@ function typedOf(type: PropertyType, vals: RawValue[]): Partial<MetadataField> {
       return {};
   }
 }
+
+/** A relationship property with no connection yet: the field the form's
+ *  connection editor fills (an entity picker filtered by the target template).
+ *  The imported corpora keep connections read-only, as their records do. */
+export function blankRelationship(corpus: Corpus, p: PropertyDef, lang: Language, target?: TemplateDef): RelationshipMetadataField {
+  const inherited = p.inherit ? target?.properties.find((x) => x.id === p.inherit!.property) : undefined;
+  return {
+    id: p.name,
+    label: propertyLabel(corpus, p, lang),
+    type: "relationship",
+    relationType: p.relationType ?? "",
+    targetTypeId: p.content ?? "",
+    connectedEntityIds: [],
+    ...(inherited ? { inheritProperty: inherited.name, inheritLabel: inherited.label } : {}),
+    ...(corpus === "mock" ? {} : { readOnly: true }),
+  };
+}
+
+/** A saved record (an entity created or edited in this session) laid over
+ *  its template as it is now: the template decides which fields there are,
+ *  their order and their labels; the record gives the values, by property
+ *  name. A property added since gets its blank field; one removed since
+ *  (a name the template's seed had, or a template-typed field) is dropped;
+ *  fields no template property describes (the Sample's description, derived
+ *  connections) stay after the template's. */
+export function projectRecordFields(
+  corpus: Corpus,
+  template: TemplateDef | undefined,
+  seed: TemplateDef | undefined,
+  fields: AnyMetadataField[],
+  lang: Language,
+  targetOf: (id: string) => TemplateDef | undefined,
+): AnyMetadataField[] {
+  if (!template) return fields;
+  const byName = new Map(fields.map((f) => [f.id, f]));
+  const current = new Set(template.properties.map((p) => p.name));
+  const seeded = new Set((seed?.properties ?? []).map((p) => p.name));
+  const out: AnyMetadataField[] = [];
+  for (const p of template.properties) {
+    const f = byName.get(p.name);
+    if (f) out.push({ ...f, label: propertyLabel(corpus, p, lang) });
+    else if (p.type === "relationship") out.push(blankRelationship(corpus, p, lang, p.content ? targetOf(p.content) : undefined));
+    else {
+      const blank = blankField(corpus, p, lang);
+      if (blank) out.push(blank);
+    }
+  }
+  for (const f of fields) {
+    if (current.has(f.id)) continue;
+    const removed = seeded.has(f.id) || (f.type !== "relationship" && !!(f as MetadataField).propertyType);
+    if (!removed) out.push(f);
+  }
+  return out;
+}

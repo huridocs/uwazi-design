@@ -192,6 +192,9 @@ export function MetadataRecord({
   const placedGroups = new Set<string>();
   const entries: RecordEntry[] = [];
   for (const f of fields) {
+    // A connection with nothing connected (a property added in Settings, not
+    // filled yet) is the form's to fill; the record has nothing to show.
+    if (f.type === "relationship" && f.connectedEntityIds.length === 0 && !f.totalConnected) continue;
     if (f.type === "relationship") {
       const group = f.connectionKey ? groupByKey.get(f.connectionKey) : undefined;
       if (group) {
