@@ -1,195 +1,121 @@
-import { Plus } from "lucide-react";
-import { SettingsButton } from "../SettingsButton";
-import { SettingsEditor } from "../SettingsEditor";
-import { SettingsSection } from "../SettingsSection";
-import { SettingsEmptyState } from "../SettingsEmptyState";
-import { RowActions } from "../RowActions";
+import { useId, useState, type FormEvent } from "react";
+import { Info } from "lucide-react";
+import { Modal, MODAL_BUTTON, MODAL_COMMIT } from "../../shared/Modal";
 import { SettingsField, TextInput } from "../SettingsField";
-import { MoveButtons, ReorderGrip, moveTo } from "../ReorderControls";
-import { useReorder } from "../../../hooks/useReorder";
-import { newSettingsId } from "../../../atoms/settingsCollection";
-import { SegmentedControl } from "../../shared/SegmentedControl";
-import { type SettingsMenuLink } from "../../../data/settings";
-import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
-import { useSettingsUndo } from "../../../hooks/useSettingsUndo";
-import { LastSavedLine } from "../../shared/LastSavedLine";
-import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
+import { Select } from "../../shared/Select";
+import type { SettingsMenuLink } from "../../../data/settings";
 
-/** A group's nested links. The shared SettingsMenuLink is flat, so the editable
- *  sub-link list lives locally. */
-interface SubLink {
-  id: string;
-  title: string;
-  url: string;
+/** What the panel edits: a new or existing link or group. A link's group is
+ *  its parent group's id, or null at the top level. */
+export interface MenuPanelTarget {
+  type: "link" | "group";
+  id?: string;
+  title?: string;
+  url?: string;
+  groupId?: string | null;
 }
 
-/** A representative starter list for a group, so the editor isn't empty. */
-const SAMPLE_SUBLINKS: SubLink[] = [
-  { id: "s1", title: "Methodology", url: "/page/methodology" },
-  { id: "s2", title: "Partners", url: "/page/partners" },
-];
+const REQUIRED = "This field is required";
+const NO_GROUP = "";
 
-/** Menu-link detail/editor — opened from the Menu list (list → detail). A link
- *  points at a URL; a group nests links under a dropdown (no URL of its own). */
-export function MenuLinkEditor({
-  link,
+/** Uwazi's menu sidepanel ("NEW LINK", "EDIT GROUP", …) as a dialog. The type
+ *  is fixed by the button that opened it; a link takes a title, a URL and a
+ *  group, a group only a title. Add / Update changes the menu draft; nothing is
+ *  saved until the page's Save. */
+export function MenuItemPanel({
+  target,
+  groups,
+  onApply,
   onClose,
-  onSave,
 }: {
-  link: SettingsMenuLink | "new";
+  target: MenuPanelTarget;
+  /** The draft's groups, in order, for the Group select. */
+  groups: SettingsMenuLink[];
+  onApply: (value: { title: string; url: string; groupId: string | null }) => void;
   onClose: () => void;
-  /** Write the item to the menu list; returns its id. */
-  onSave: (value: Omit<SettingsMenuLink, "id">) => string;
 }) {
-  const { record } = useSettingsNotify();
-  const isNew = link === "new";
-  const base = isNew ? undefined : link;
+  const isNew = !target.id;
+  const isLink = target.type === "link";
+  const [title, setTitle] = useState(target.title ?? "");
+  const [url, setUrl] = useState(target.url ?? "");
+  const [groupId, setGroupId] = useState<string>(target.groupId ?? NO_GROUP);
+  const [tried, setTried] = useState(false);
+  const titleId = useId();
+  const urlId = useId();
+  const focus = (id: string) => document.getElementById(id)?.focus();
 
-  const { draft, setField, dirty } = useSettingsDraft({
-    id: `menu-link:${base?.id ?? "new"}`,
-    label: "Menu item edits",
-    saved: {
-      type: (base?.type ?? "link") as "link" | "group",
-      title: base?.title ?? "",
-      url: base?.url ?? "",
-      subLinks: !isNew && base?.type === "group" ? SAMPLE_SUBLINKS : ([] as SubLink[]),
-    },
-  });
-  const { type, title, url, subLinks } = draft;
-  const setType = setField("type");
-  const setTitle = setField("title");
-  const setUrl = setField("url");
-  const setSubLinks = setField("subLinks");
+  const titleError = tried && !title.trim();
+  const urlError = tried && isLink && !url.trim();
+  const heading = `${isNew ? "NEW" : "EDIT"} ${isLink ? "LINK" : "GROUP"}`;
 
-  const patchSubLink = (id: string, patch: Partial<SubLink>) =>
-    setSubLinks((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
-
-  const addSubLink = () =>
-    setSubLinks((prev) => [...prev, { id: newSettingsId("ns"), title: "", url: "" }]);
-
-  /** A removed sub-link gets an Undo in the Beacon (UX5); the removal stays
-   *  in the draft until Save. */
-  const offerUndo = useSettingsUndo<{ link: SubLink; index: number }>(({ link: l, index }) =>
-    setSubLinks((prev) => (prev.some((s) => s.id === l.id) ? prev : [...prev.slice(0, index), l, ...prev.slice(index)])),
-  );
-  const deleteSubLink = (id: string) => {
-    const index = subLinks.findIndex((s) => s.id === id);
-    if (index < 0) return;
-    const removed = subLinks[index];
-    setSubLinks((prev) => prev.filter((s) => s.id !== id));
-    if (removed.title.trim() || removed.url.trim())
-      offerUndo({ link: removed, index }, `${removed.title || "Sub-link"} removed`, "Nothing is saved until you save the menu item.");
-  };
-  const { dragIdx, rowProps, gripProps } = useReorder(setSubLinks);
-
-  const save = () => {
-    const id = onSave({ type, title: title.trim(), url: type === "group" ? "" : url.trim(), sublinks: [] });
-    record({ log: false, 
-      method: isNew ? "CREATE" : "UPDATE",
-      domain: "menu",
-      noun: "menu item",
-      id,
-      name: title.trim(),
-      message: isNew ? "Menu item added" : undefined,
-    });
-    onClose();
+  const submit = (e?: FormEvent) => {
+    e?.preventDefault();
+    setTried(true);
+    if (!title.trim()) return focus(titleId);
+    if (isLink && !url.trim()) return focus(urlId);
+    onApply({ title: title.trim(), url: isLink ? url.trim() : "", groupId: isLink && groupId ? groupId : null });
   };
 
   return (
-    <SettingsEditor
-      component="MenuLinkEditor"
-      path={["Menu"]}
-      title={isNew ? "New menu item" : base!.title}
-      onBack={onClose}
-      isNew={isNew}
-      createLabel="Add item"
-      dirty={dirty}
-      valid={!!title.trim()}
-      onSave={save}
-      footerStart={<LastSavedLine domain="menu" id={base?.id} />}
+    <Modal
+      onClose={onClose}
+      title={heading}
+      size="md"
+      component="MenuItemPanel"
+      footer={
+        <>
+          <button type="button" className={`${MODAL_BUTTON} text-ink-secondary hover:bg-warm cursor-pointer`} onClick={onClose}>
+            Cancel
+          </button>
+          <button type="submit" form="menu-item-form" className={MODAL_COMMIT}>
+            {isNew ? "Add" : "Update"}
+          </button>
+        </>
+      }
     >
-      <SettingsSection>
-        <div className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-ink-secondary">Type</span>
-          <SegmentedControl
-            ariaLabel="Item type"
-            value={type}
-            onChange={(v) => setType(v as "link" | "group")}
-            options={[
-              { id: "link", label: "Link" },
-              { id: "group", label: "Group" },
-            ]}
-          />
-          <span className="text-xs text-ink-tertiary">
-            {type === "link" ? "Points at a URL." : "Nests links in a dropdown."}
-          </span>
+      <form id="menu-item-form" noValidate onSubmit={submit} className="flex flex-col gap-4">
+        <div data-part="using-urls" className="flex gap-2.5 px-3 py-2.5 rounded-md bg-carbon-tint text-xs text-ink-secondary">
+          <Info size={14} aria-hidden className="shrink-0 mt-0.5 text-ink-tertiary" />
+          <div className="flex flex-col gap-1 min-w-0">
+            <p className="font-semibold text-ink">Using URLs</p>
+            <p>If it is an external URL, use a fully formed URL. Ie. http://www.uwazi.io.</p>
+            <p className="break-words">
+              If it is an internal URL within this website, be sure to delete the first part ({window.location.origin}),
+              leaving only a relative URL starting with a slash character. Ie.&nbsp;/some_url.
+            </p>
+          </div>
         </div>
-
-        <SettingsField label="Label">
-          <TextInput value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. About" />
+        <SettingsField label="Title" issue={titleError ? { severity: "error", message: REQUIRED } : null}>
+          <TextInput
+            id={titleId}
+            autoFocus
+            value={title}
+            issue={titleError ? { severity: "error", message: REQUIRED } : null}
+            onChange={(e) => setTitle(e.target.value)}
+          />
         </SettingsField>
-
-        {type === "link" && (
-          <SettingsField label="URL" hint="An internal path (/page/about) or a full URL.">
-            <TextInput value={url} onChange={(e) => setUrl(e.target.value)} placeholder="/page/about" />
-          </SettingsField>
+        {isLink && (
+          <>
+            <SettingsField label="URL" issue={urlError ? { severity: "error", message: REQUIRED } : null}>
+              <TextInput
+                id={urlId}
+                dir="ltr"
+                value={url}
+                issue={urlError ? { severity: "error", message: REQUIRED } : null}
+                onChange={(e) => setUrl(e.target.value)}
+              />
+            </SettingsField>
+            <SettingsField label="Group" htmlFor="menu-item-group">
+              <Select
+                id="menu-item-group"
+                value={groupId}
+                onChange={setGroupId}
+                options={[{ value: NO_GROUP, label: "No Group" }, ...groups.map((g) => ({ value: g.id, label: g.title }))]}
+              />
+            </SettingsField>
+          </>
         )}
-      </SettingsSection>
-
-      {type === "group" && (
-        <SettingsSection
-          title="Sub-links"
-          action={
-            <SettingsButton variant="secondary" size="sm" icon={<Plus size={14} />} onClick={addSubLink}>
-              Add sub-link
-            </SettingsButton>
-          }
-        >
-          <ul data-part="sub-links" className="flex flex-col rounded-md overflow-hidden border border-border-soft">
-            {subLinks.length === 0 ? (
-              <li className="px-3 py-8">
-                <SettingsEmptyState title="No sub-links yet" hint="Each sub-link is one entry in this group's dropdown." />
-              </li>
-            ) : (
-              subLinks.map((s, i) => (
-                <li
-                  key={s.id}
-                  {...rowProps(i)}
-                  data-part="sub-link"
-                  className={`group grid items-end gap-3 px-3 py-2.5 border-t border-border-soft first:border-t-0 transition-opacity ${dragIdx === i ? "opacity-40" : ""}`}
-                  style={{ gridTemplateColumns: "1.25rem 1fr 1fr auto" }}
-                >
-                  <div className="flex justify-center pb-2.5">
-                    <ReorderGrip
-                      {...gripProps(i)}
-                      label={s.title || "sub-link"}
-                      index={i}
-                      count={subLinks.length}
-                      onMove={(to) => setSubLinks((prev) => moveTo(prev, i, to))}
-                    />
-                  </div>
-                  <SettingsField label="Title">
-                    <TextInput value={s.title} onChange={(e) => patchSubLink(s.id, { title: e.target.value })} placeholder="e.g. Methodology" />
-                  </SettingsField>
-                  <SettingsField label="URL">
-                    <TextInput value={s.url} onChange={(e) => patchSubLink(s.id, { url: e.target.value })} placeholder="/page/methodology" />
-                  </SettingsField>
-                  <div className="flex justify-end pb-1.5">
-                    <RowActions label={s.title || "sub-link"} onDelete={() => deleteSubLink(s.id)}>
-                      <MoveButtons
-                        label={s.title || "sub-link"}
-                        index={i}
-                        count={subLinks.length}
-                        onMove={(to) => setSubLinks((prev) => moveTo(prev, i, to))}
-                      />
-                    </RowActions>
-                  </div>
-                </li>
-              ))
-            )}
-          </ul>
-        </SettingsSection>
-      )}
-    </SettingsEditor>
+      </form>
+    </Modal>
   );
 }
