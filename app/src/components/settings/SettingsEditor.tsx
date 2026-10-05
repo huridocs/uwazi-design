@@ -168,7 +168,7 @@ export function SettingsEditor({
  *
  *    Header: title
  *    Body:   intro line · `SettingsForm` of `SettingsSection`s
- *    Footer: Discard changes (ghost) · Save (green)
+ *    Footer: Discard changes (ghost) · Save (ink)
  *
  *  One save per page. Both buttons are enabled only while dirty; Discard
  *  returns the draft to the last save (`useSettingsDraft().discard`). The
@@ -214,7 +214,7 @@ export function SettingsFormPage({
         <SettingsButton variant="ghost" size="sm" disabled={!save.dirty} onClick={onDiscard}>
           Discard changes
         </SettingsButton>
-        <CommitButton variant="success" {...save}>
+        <CommitButton variant="commit" {...save}>
           {saveLabel}
         </CommitButton>
       </SettingsContent.Footer>

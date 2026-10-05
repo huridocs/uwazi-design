@@ -1,173 +1,186 @@
 import { useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { ShieldCheck, KeyRound, Copy } from "lucide-react";
+import { Check, Copy, KeyRound, LogOut } from "lucide-react";
 import { SettingsButton } from "../SettingsButton";
 import { SettingsFormPage } from "../SettingsEditor";
 import { SettingsFieldRow, SettingsSection } from "../SettingsSection";
 import { SettingsEmptyState } from "../SettingsEmptyState";
-import { RowActionButton, RowActions } from "../RowActions";
+import { RowActions } from "../RowActions";
 import { SettingsField, TextInput } from "../SettingsField";
 import { SettingsTable, type Column } from "../SettingsTable";
-import { saveUserAtom, signedInUserAtom, userIdentityBlock, usersAtom } from "../../../atoms/users";
-import type { SettingsUser } from "../../../data/settings";
+import { signedInUserAtom, userIdentityBlock, users, usersAtom } from "../../../atoms/users";
+import { apiKeys, maskKey, myApiKeysAtom, newApiKey, type ApiKeyRecord } from "../../../atoms/apiKeys";
+import { appViewAtom } from "../../../atoms/navigation";
+import type { UserRole } from "../../../data/settings";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
-import { useNotify } from "../../../hooks/useNotify";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { useDirtyGuard } from "../../../hooks/useDirtyGuard";
 import { ConfirmDelete } from "../../shared/ConfirmDelete";
+import { LastSavedLine } from "../../shared/LastSavedLine";
+import { PasswordConfirmModal } from "../../shared/PasswordConfirmModal";
+import { TwoFactorSetupModal } from "./account/TwoFactorSetupModal";
 
-interface ApiKey {
-  id: string;
-  token: string;
-  created: string;
+const ROLE_LABEL: Record<UserRole, string> = { admin: "Admin", editor: "Editor", collaborator: "Collaborator" };
+/** Uwazi's `validEmailFormat`. */
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+interface AccountDraft {
+  email: string;
+  password: string;
+  confirm: string;
 }
 
-const seedKeys: ApiKey[] = [
-  { id: "k1", token: "uwz_live_••••3f9a", created: "12 Jan 2026" },
-  { id: "k2", token: "uwz_live_••••8c21", created: "04 Mar 2026" },
-];
-
-function randomKey(): string {
-  const tail = Math.random().toString(16).slice(2, 6);
-  return `uwz_live_••••${tail}`;
-}
-
+/** Settings › Account (Uwazi `Account.tsx`): General Information, Change
+ *  Password and Two-Factor Authentication, one footer Update behind the
+ *  current-password check (G15). API keys are prototype-only (G4). The
+ *  account is the signed-in user's record in the users store, so Users &
+ *  Groups and the login screen see each change. */
 export function AccountPage() {
-  const notify = useNotify();
-  const toast = (message: string, type: "success" | "info" = "success") =>
-    notify(message, type);
   const { record, fail } = useSettingsNotify();
-  /** Every change to the account is a change to the signed-in user's record. */
-  // API keys live in this page's state, so their changes are not logged.
-  const logAccount = (message: string, method: "CREATE" | "UPDATE" | "DELETE" = "UPDATE", noun = "user") =>
-    me && record({ method, domain: "user", noun, id: me.id, name: me.username, message, log: noun === "user" });
-  /** Revoke asks first (UX audit Summary 3). */
-  const [ask, setAsk] = useState<{ kind: "revoke"; id: string } | null>(null);
-
-  // ── Profile ────────────────────────────────────────────────────────────
-  // The signed-in user's record in the users store, so Settings › Users and
-  // the login screen see the change.
   const me = useAtomValue(signedInUserAtom);
-  // Through the store's rules (unique username and email), like the editor.
-  const saveUser = useSetAtom(saveUserAtom);
-  const patchUser = ({ id, patch }: { id: string; patch: Partial<SettingsUser> }) => {
-    const current = me && me.id === id ? me : undefined;
-    if (!current) return null;
-    const { id: _id, ...rest } = current;
-    return saveUser({ id, value: { ...rest, ...patch } });
-  };
-  const profile = useSettingsDraft({
-    id: "account-profile",
-    label: "Profile edits",
-    saved: { username: me?.username ?? "", email: me?.email ?? "" },
+  const allUsers = useAtomValue(usersAtom);
+  const patchUser = useSetAtom(users.patchAtom);
+  const setAppView = useSetAtom(appViewAtom);
+  const guard = useDirtyGuard();
+
+  const form = useSettingsDraft<AccountDraft>({
+    id: "account",
+    label: "Account edits",
+    saved: { email: me?.email ?? "", password: "", confirm: "" },
   });
-  const { username, email } = profile.draft;
-  // Another account's username or email would make login pick the wrong one.
-  const taken = userIdentityBlock(useAtomValue(usersAtom), me?.id ?? null, { username, email });
-  const profileValid = !!username.trim() && !!email.trim() && !taken;
-  /** False when the store refuses the change. */
-  const saveProfile = () => {
-    if (!me) return false;
-    const next = { username: username.trim(), email: email.trim() };
-    if (!patchUser({ id: me.id, patch: next })) return false;
-    profile.markSaved(next);
-    return true;
+  const { email, password, confirm } = form.draft;
+
+  // Errors show from the first Update on, and follow the fields after that.
+  const [attempted, setAttempted] = useState(false);
+  const emailError = attempted && !EMAIL.test(email.trim()) ? "A valid email is required" : null;
+  const mismatch = attempted && password !== confirm;
+  /** The email the "already exists" refusal was for: shown under Email while
+   *  that address is still typed. */
+  const [takenEmail, setTakenEmail] = useState<string | null>(null);
+  const takenError = takenEmail !== null && takenEmail === email ? `The email "${email.trim()}" already exists` : null;
+  const [asking, setAsking] = useState(false);
+
+  const update = () => {
+    setAttempted(true);
+    if (!EMAIL.test(email.trim()) || password !== confirm) {
+      document.getElementById(!EMAIL.test(email.trim()) ? "account-email" : "confirm-new-password")?.focus();
+      return;
+    }
+    setAsking(true);
   };
 
-  // ── Password ───────────────────────────────────────────────────────────
-  const pw = useSettingsDraft({
-    id: "account-password",
-    label: "Password changes",
-    saved: { current: "", password: "", confirm: "" },
-  });
-  const { current, password, confirm } = pw.draft;
-  const mismatch = password.length > 0 && confirm.length > 0 && password !== confirm;
-  const canSavePassword =
-    current.length > 0 && password.length > 0 && confirm.length > 0 && password === confirm;
-
-  const savePassword = () => pw.discard();
-
-  // One save for the page: the profile and the password are two drafts, and
-  // the footer commits whichever has changes. Each must be complete to save.
-  const dirty = profile.dirty || pw.dirty;
-  const valid = (!profile.dirty || profileValid) && (!pw.dirty || canSavePassword);
-  const saveAll = () => {
-    const both = profile.dirty && pw.dirty;
-    const message = both ? "Profile and password saved" : profile.dirty ? "Profile saved" : "Password updated";
-    if (profile.dirty && !saveProfile()) return;
-    if (pw.dirty) savePassword();
-    logAccount(message);
+  /** Accept in the password modal. The mock takes any password. */
+  const save = () => {
+    setAsking(false);
+    if (!me) return;
+    const next = email.trim();
+    if (userIdentityBlock(allUsers, me.id, { username: me.username, email: next })?.email) {
+      // Shown under the field and once in the Beacon. The typed password stays.
+      const detail = `The email "${next}" already exists`;
+      setTakenEmail(email);
+      fail("An error occurred", detail);
+      return;
+    }
+    const changes = next !== me.email ? [{ field: "Email", before: me.email, after: next }] : [];
+    patchUser({ id: me.id, patch: { email: next } });
+    if (password) changes.push({ field: "Password", before: "••••", after: "changed" });
+    form.markSaved({ email: next, password: "", confirm: "" });
+    setAttempted(false);
+    record({
+      method: "UPDATE",
+      domain: "user",
+      noun: "account",
+      id: me.id,
+      name: me.username,
+      message: "Account updated",
+      changes,
+    });
   };
-  const discardAll = () => {
-    profile.discard();
-    pw.discard();
+
+  const discard = () => {
+    form.discard();
+    setAttempted(false);
+    setTakenEmail(null);
   };
 
   // ── Two-factor ─────────────────────────────────────────────────────────
-  const twoFactorEnabled = !!me?.using2fa;
-  const [setupOpen, setSetupOpen] = useState(false);
-  const [code, setCode] = useState("");
+  const [settingUp, setSettingUp] = useState(false);
+  const enable2fa = () => {
+    if (!me) return;
+    patchUser({ id: me.id, patch: { using2fa: true } });
+    setSettingUp(false);
+    record({
+      method: "UPDATE",
+      domain: "user",
+      noun: "account",
+      id: me.id,
+      name: me.username,
+      summary: `Enabled two-factor authentication for “${me.username}”`,
+      message: "2FA Enabled",
+    });
+  };
 
-  const verifyTwoFactor = () => {
-    // The store refuses a record that breaks its rules (a username or email
-    // another account has); say so rather than closing as if it worked.
-    if (me && !patchUser({ id: me.id, patch: { using2fa: true } })) {
-      fail("Two-factor authentication was not enabled", "Another account has this username or email. Change it under Profile first.");
-      return;
+  // ── API keys (prototype-only, G4) ──────────────────────────────────────
+  const keys = useAtomValue(myApiKeysAtom);
+  const createKey = useSetAtom(apiKeys.createAtom);
+  const deleteKey = useSetAtom(apiKeys.deleteAtom);
+  const [keyName, setKeyName] = useState("");
+  /** The full key, shown once until dismissed. */
+  const [fresh, setFresh] = useState<{ id: string; name: string; key: string } | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [revoking, setRevoking] = useState<ApiKeyRecord | null>(null);
+
+  const generate = () => {
+    if (!me) return;
+    const name = keyName.trim() || "API key";
+    const key = newApiKey();
+    const id = createKey({ value: { userId: me.id, name, last4: key.slice(-4), created: Date.now() } });
+    setFresh({ id, name, key });
+    setCopied(false);
+    setKeyName("");
+    record({ method: "CREATE", domain: "apikey", noun: "API key", id, name, summary: `Generated API key “${name}”`, message: "API key generated" });
+  };
+  const copyFresh = async () => {
+    if (!fresh) return;
+    try {
+      await navigator.clipboard.writeText(fresh.key);
+      setCopied(true);
+    } catch {
+      setCopied(false);
     }
-    setSetupOpen(false);
-    setCode("");
-    logAccount("Two-factor authentication enabled");
+  };
+  const revoke = (k: ApiKeyRecord) => {
+    deleteKey({ id: k.id });
+    record({ method: "DELETE", domain: "apikey", noun: "API key", id: k.id, name: k.name, summary: `Revoked API key “${k.name}”`, message: "API key revoked" });
   };
 
-
-  // ── API keys ───────────────────────────────────────────────────────────
-  const [keys, setKeys] = useState<ApiKey[]>(seedKeys);
-
-  const generateKey = () => {
-    const key: ApiKey = {
-      id: Date.now().toString(),
-      token: randomKey(),
-      created: new Date().toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      }),
-    };
-    setKeys((prev) => [key, ...prev]);
-    logAccount("API key generated", "CREATE", "API key for");
-  };
-
-  const copyKey = () => toast("Key copied", "info");
-  const revokeKey = (id: string) => {
-    setKeys((prev) => prev.filter((k) => k.id !== id));
-    logAccount("Key revoked", "DELETE", "API key for");
-  };
-
-  const keyColumns: Column<ApiKey>[] = [
+  const keyColumns: Column<ApiKeyRecord>[] = [
+    { id: "name", header: "Name", cell: (k) => <span className="text-sm font-medium text-ink truncate">{k.name}</span> },
     {
       id: "token",
-      header: "Token",
-      width: "1fr",
-      cell: (row) => (
-        <span className="font-mono text-sm text-ink">{row.token}</span>
+      header: "Key",
+      cell: (k) => (
+        <span dir="ltr" className="font-mono text-xs text-ink-secondary truncate">
+          {maskKey(k.last4)}
+        </span>
       ),
     },
     {
       id: "created",
       header: "Created",
-      width: "10rem",
-      cell: (row) => <span className="text-sm text-ink-secondary">{row.created}</span>,
+      width: "8rem",
+      cell: (k) => (
+        <span className="text-xs text-ink-tertiary">
+          {new Date(k.created).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+        </span>
+      ),
     },
     {
       id: "actions",
       header: "",
-      width: "5rem",
+      width: "4rem",
       align: "right",
-      cell: (row) => (
-        <RowActions label={`key ${row.token}`} deleteLabel="Revoke" onDelete={() => setAsk({ kind: "revoke", id: row.id })}>
-          <RowActionButton label={`Copy key ${row.token}`} icon={<Copy size={14} aria-hidden />} onClick={copyKey} />
-        </RowActions>
-      ),
+      cell: (k) => <RowActions label={`API key ${k.name}`} deleteLabel="Revoke" onDelete={() => setRevoking(k)} />,
     },
   ];
 
@@ -175,150 +188,163 @@ export function AccountPage() {
     <SettingsFormPage
       component="AccountPage"
       title="Account"
-      dirty={dirty}
-      valid={valid}
-      onSave={saveAll}
-      onDiscard={discardAll}
+      dirty={form.dirty}
+      onSave={update}
+      onDiscard={discard}
+      saveLabel="Update"
+      footerStart={
+        <button
+          type="button"
+          data-part="logout"
+          onClick={() => guard(() => setAppView("login"))}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-seal-label/60 text-seal-label hover:bg-seal-tint cursor-pointer"
+        >
+          <LogOut size={14} aria-hidden className="rtl:-scale-x-100" />
+          Logout
+        </button>
+      }
+      footerStatus={<LastSavedLine domain="user" id={me?.id} />}
       overlays={
-        <ConfirmDelete
-          open={ask !== null}
-          title="Revoke key"
-          message="Revoke this key? Anything that signs in with it stops working."
-          impact={null}
-          confirmLabel="Revoke"
-          onConfirm={() => {
-            if (ask) revokeKey(ask.id);
-            setAsk(null);
-          }}
-          onCancel={() => setAsk(null)}
-        />
+        <>
+          <PasswordConfirmModal open={asking} onAccept={save} onCancel={() => setAsking(false)} />
+          {settingUp && <TwoFactorSetupModal onEnable={enable2fa} onCancel={() => setSettingUp(false)} />}
+          <ConfirmDelete
+            open={revoking !== null}
+            title="Revoke API key"
+            message={`Revoke “${revoking?.name}”? Anything that signs in with it stops working.`}
+            impact={null}
+            confirmLabel="Revoke"
+            onConfirm={() => {
+              if (revoking) revoke(revoking);
+              setRevoking(null);
+            }}
+            onCancel={() => setRevoking(null)}
+          />
+        </>
       }
     >
-      <SettingsSection title="Profile" description="The username you log in with, and your email address.">
+      <SettingsSection title="General Information">
         <SettingsFieldRow>
-          <SettingsField label="Username" issue={taken?.username ? { severity: "error", message: taken.username } : null}>
-            <TextInput value={username} onChange={(e) => profile.update({ username: e.target.value })} />
+          <SettingsField label="Username">
+            <TextInput id="account-username" value={me?.username ?? ""} disabled readOnly className="disabled:text-ink-tertiary disabled:cursor-not-allowed" />
           </SettingsField>
-          <SettingsField label="Email" issue={taken?.email ? { severity: "error", message: taken.email } : null}>
-            <TextInput type="email" value={email} onChange={(e) => profile.update({ email: e.target.value })} />
+          <SettingsField label="User Role">
+            <TextInput id="account-role" value={me ? ROLE_LABEL[me.role] : ""} disabled readOnly className="disabled:text-ink-tertiary disabled:cursor-not-allowed" />
           </SettingsField>
         </SettingsFieldRow>
-      </SettingsSection>
-
-      <SettingsSection title="Change password" description="Choose a strong password you don't use elsewhere.">
-        <SettingsField label="Current password">
+        <SettingsField label="Email" error={emailError ?? takenError ?? undefined}>
           <TextInput
-            type="password"
-            value={current}
-            onChange={(e) => pw.update({ current: e.target.value })}
-            placeholder="••••••••"
-            autoComplete="current-password"
+            id="account-email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            issue={emailError || takenError ? { severity: "error", message: "" } : null}
+            onChange={(e) => form.update({ email: e.target.value })}
           />
         </SettingsField>
+      </SettingsSection>
+
+      <SettingsSection title="Change Password">
         <SettingsFieldRow>
           <SettingsField label="New password">
             <TextInput
+              id="new-password"
               type="password"
-              value={password}
-              onChange={(e) => pw.update({ password: e.target.value })}
-              placeholder="••••••••"
               autoComplete="new-password"
+              value={password}
+              issue={mismatch ? { severity: "error", message: "" } : null}
+              onChange={(e) => form.update({ password: e.target.value })}
             />
           </SettingsField>
-          <SettingsField label="Confirm password" error={mismatch ? "Passwords don't match" : undefined}>
+          <SettingsField label="Confirm new password" error={mismatch ? "Passwords do not match" : undefined}>
             <TextInput
+              id="confirm-new-password"
               type="password"
-              value={confirm}
-              onChange={(e) => pw.update({ confirm: e.target.value })}
-              placeholder="••••••••"
               autoComplete="new-password"
+              value={confirm}
+              issue={mismatch ? { severity: "error", message: "" } : null}
+              onChange={(e) => form.update({ confirm: e.target.value })}
             />
           </SettingsField>
         </SettingsFieldRow>
       </SettingsSection>
 
-      <SettingsSection
-        title="Two-factor authentication"
-        description="Add a second step at login using an authenticator app."
-        action={
-          twoFactorEnabled && (
-            <span className="w-fit inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-success-light text-success text-xs font-medium">
-              <ShieldCheck size={13} aria-hidden />
-              Enabled
-            </span>
-          )
-        }
-      >
-        {twoFactorEnabled ? (
-          // Uwazi has no self-disable: an admin resets 2FA from Users (G4).
-          <p data-part="2fa-note" className="text-xs text-ink-tertiary">
-            To turn it off, ask an admin to reset it in Users &amp; Groups.
-          </p>
-        ) : setupOpen ? (
-          <div className="rounded-lg border border-border bg-paper px-4 py-4 flex flex-col gap-4">
-            <div className="flex items-start gap-4">
-              <div className="flex items-center justify-center w-28 h-28 rounded-md bg-warm shrink-0 border border-border">
-                <span className="text-xs font-medium text-ink-tertiary">QR</span>
-              </div>
-              <p className="text-xs text-ink-tertiary pt-1">
-                Scan this code with your authenticator app, then enter the 6-digit verification code it shows.
+      <SettingsSection title="Two-Factor Authentication">
+        <div data-part="2fa" className="flex flex-wrap items-center gap-3">
+          {me?.using2fa ? (
+            <>
+              <SettingsButton variant="secondary" size="sm" disabled icon={<Check size={14} aria-hidden />}>
+                Activated
+              </SettingsButton>
+              <p className="text-sm text-ink-secondary flex-1 min-w-[min(100%,14rem)]">
+                Your account's security is enhanced with two-factor authentication.
               </p>
-            </div>
-            <div className="max-w-[16rem]">
-              <SettingsField label="Verification code">
-                <TextInput
-                  inputMode="numeric"
-                  maxLength={6}
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  placeholder="000000"
-                />
-              </SettingsField>
-            </div>
-            <div className="flex items-center gap-2">
-              <SettingsButton variant="commit" size="sm" disabled={code.length !== 6} onClick={verifyTwoFactor}>
-                Verify &amp; enable
+            </>
+          ) : (
+            <>
+              <SettingsButton variant="secondary" size="sm" onClick={() => setSettingUp(true)}>
+                Enable
               </SettingsButton>
-              <SettingsButton
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSetupOpen(false);
-                  setCode("");
-                }}
-              >
-                Cancel
-              </SettingsButton>
-            </div>
-          </div>
-        ) : (
-          <div>
-            <SettingsButton variant="secondary" size="sm" onClick={() => setSetupOpen(true)}>
-              Enable two-factor authentication
-            </SettingsButton>
-          </div>
-        )}
+              <p className="text-sm text-ink-secondary flex-1 min-w-[min(100%,14rem)]">
+                You should activate this feature for enhanced account security.
+              </p>
+            </>
+          )}
+        </div>
       </SettingsSection>
 
       <SettingsSection
-        title="Personal access keys"
-        description="Use these tokens to authenticate against the Uwazi API."
-        action={
-          <SettingsButton variant="secondary" size="sm" icon={<KeyRound size={14} />} onClick={generateKey}>
-            Generate key
-          </SettingsButton>
-        }
+        title="API keys"
+        description="Keys let scripts call the Uwazi API as you. Prototype only: Uwazi has no API keys."
       >
+        <form
+          className="flex flex-wrap items-end gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            generate();
+          }}
+        >
+          <div className="flex-1 min-w-[min(100%,12rem)]">
+            <SettingsField label="Key name">
+              <TextInput value={keyName} onChange={(e) => setKeyName(e.target.value)} autoComplete="off" />
+            </SettingsField>
+          </div>
+          <SettingsButton type="submit" variant="secondary" size="md" icon={<KeyRound size={14} aria-hidden />}>
+            Generate
+          </SettingsButton>
+        </form>
+        {fresh && (
+          <div data-part="new-key" role="status" className="flex flex-col gap-2 rounded-lg bg-warm px-4 py-3">
+            <p className="text-sm font-medium text-ink">
+              {fresh.name}: copy this key now. You won't see this again.
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <code dir="ltr" className="flex-1 min-w-0 break-all font-mono text-xs text-ink bg-paper rounded-md px-2 py-1.5">
+                {fresh.key}
+              </code>
+              <SettingsButton
+                variant="secondary"
+                size="sm"
+                icon={copied ? <Check size={14} aria-hidden /> : <Copy size={14} aria-hidden />}
+                onClick={copyFresh}
+              >
+                {copied ? "Copied" : "Copy key"}
+              </SettingsButton>
+              <SettingsButton variant="ghost" size="sm" onClick={() => setFresh(null)}>
+                Done
+              </SettingsButton>
+            </div>
+          </div>
+        )}
         <SettingsTable
           columns={keyColumns}
-          data={keys}
-          getRowId={(row) => row.id}
+          data={fresh ? keys.filter((k) => k.id !== fresh.id) : keys}
+          getRowId={(k) => k.id}
           emptyState={
             <SettingsEmptyState
               icon={<KeyRound size={16} />}
-              title="No access keys yet"
-              hint="Generate a key to call the Uwazi API as yourself."
-              action={{ label: "Generate key", onClick: generateKey }}
+              title="No API keys yet"
+              hint="Name a key and generate it to call the Uwazi API as yourself."
             />
           }
         />

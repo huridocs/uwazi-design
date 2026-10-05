@@ -128,5 +128,5 @@ export const lastSavedAtom = atomFamily((key: string) =>
 );
 
 /** Settings domains about the people who sign in, not a collection. */
-export const GLOBAL_DOMAINS = new Set(["user", "group"]);
+export const GLOBAL_DOMAINS = new Set(["user", "group", "apikey"]);
 export const scopeOfDomain = (domain: string, corpus: string) => (GLOBAL_DOMAINS.has(domain) ? "global" : corpus);

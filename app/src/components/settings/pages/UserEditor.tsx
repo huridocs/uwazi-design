@@ -8,10 +8,10 @@ import { SettingsField, TextInput } from "../SettingsField";
 import { RadioGroup } from "../../shared/RadioGroup";
 import { Checkbox } from "../../shared/Checkbox";
 import type { SettingsUser, UserRole } from "../../../data/settings";
-import { groupsAtom, roleChangeBlock, saveUserAtom, signedInUserAtom, userIdentityBlock, usersAtom } from "../../../atoms/users";
+import { groupsAtom, roleChangeBlock, saveUserAtom, signedInUserAtom, userIdentityBlock, users as usersStore, usersAtom } from "../../../atoms/users";
 import { ConfirmDelete } from "../../shared/ConfirmDelete";
 import { MissingRecord } from "../../shared/MissingRecord";
-import { useNotify } from "../../../hooks/useNotify";
+import { PasswordConfirmModal } from "../../shared/PasswordConfirmModal";
 import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
 import { LastSavedLine } from "../../shared/LastSavedLine";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
@@ -35,7 +35,6 @@ export function UserEditor({
   userId: string | "new";
   onClose: () => void;
 }) {
-  const notify = useNotify();
   const { record } = useSettingsNotify();
   const users = useAtomValue(usersAtom);
   const groups = useAtomValue(groupsAtom);
@@ -71,7 +70,12 @@ export function UserEditor({
 
   const save = () => {
     setAskDemote(false);
-    const id = saveUser({ id: isNew ? null : userId, value: { ...draft, username: username.trim(), email: email.trim() } });
+    // 2FA is not edited here: Reset 2FA writes it at once, so the draft's copy
+    // may be stale.
+    const id = saveUser({
+      id: isNew ? null : userId,
+      value: { ...draft, username: username.trim(), email: email.trim(), using2fa: base?.using2fa ?? false },
+    });
     if (!id) return;
     record({
       method: isNew ? "CREATE" : "UPDATE",
@@ -82,6 +86,25 @@ export function UserEditor({
       message: isNew ? "User invited" : undefined,
     });
     onClose();
+  };
+
+  /** Admin "Reset 2FA": behind the password check (G15), takes effect at once
+   *  and clears the flag the user's Account card reads. */
+  const patchUser = useSetAtom(usersStore.patchAtom);
+  const [askReset2fa, setAskReset2fa] = useState(false);
+  const reset2fa = () => {
+    setAskReset2fa(false);
+    if (!base) return;
+    patchUser({ id: base.id, patch: { using2fa: false } });
+    record({
+      method: "UPDATE",
+      domain: "user",
+      noun: "user",
+      id: base.id,
+      name: base.username,
+      summary: `Reset two-factor authentication for “${base.username}”`,
+      message: "2FA reset",
+    });
   };
 
   return (
@@ -97,15 +120,18 @@ export function UserEditor({
       onSave={trySave}
       footerStart={<LastSavedLine domain="user" id={base?.id} />}
       overlays={
-        <ConfirmDelete
-          open={askDemote}
-          title="Change your own role"
-          message={`You will be ${role === "editor" ? "an Editor" : "a Collaborator"} as soon as this saves, and lose access to System settings${role === "editor" ? " and most Tools" : " and Tools"}. Another admin can change it back.`}
-          impact={null}
-          confirmLabel="Change my role"
-          onConfirm={save}
-          onCancel={() => setAskDemote(false)}
-        />
+        <>
+          <PasswordConfirmModal open={askReset2fa} onAccept={reset2fa} onCancel={() => setAskReset2fa(false)} />
+          <ConfirmDelete
+            open={askDemote}
+            title="Change your own role"
+            message={`You will be ${role === "editor" ? "an Editor" : "a Collaborator"} as soon as this saves, and lose access to System settings${role === "editor" ? " and most Tools" : " and Tools"}. Another admin can change it back.`}
+            impact={null}
+            confirmLabel="Change my role"
+            onConfirm={save}
+            onCancel={() => setAskDemote(false)}
+          />
+        </>
       }
     >
       {missing && <MissingRecord noun="user" />}
@@ -153,8 +179,8 @@ export function UserEditor({
             <p className="text-sm text-ink flex-1 min-w-0">
               {base?.using2fa ? "2FA is enabled for this account." : "This account has not enabled 2FA."}
             </p>
-            <SettingsButton variant="secondary" size="sm" onClick={() => notify("2FA reset for this user", "success")}>
-              Reset
+            <SettingsButton variant="secondary" size="sm" disabled={!base?.using2fa} onClick={() => setAskReset2fa(true)}>
+              Reset 2FA
             </SettingsButton>
           </div>
         </SettingsSection>
