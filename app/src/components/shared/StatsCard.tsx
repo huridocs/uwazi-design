@@ -1,6 +1,10 @@
+import type { ReactNode } from "react";
+
 interface StatsCardProps {
   label: string;
   value: string | number;
+  /** A line under the figure (the Users card's role counts). */
+  detail?: ReactNode;
   accent?: "green" | "blue" | "red" | "amber";
 }
 
@@ -11,7 +15,7 @@ const accentColor = {
   amber: "var(--warning)",
 };
 
-export function StatsCard({ label, value, accent }: StatsCardProps) {
+export function StatsCard({ label, value, detail, accent }: StatsCardProps) {
   return (
     <div
       data-component="StatsCard"
@@ -32,6 +36,7 @@ export function StatsCard({ label, value, accent }: StatsCardProps) {
       <span data-part="value" className={`text-xl font-semibold tabular-nums ${accent ? "text-ink" : "text-ink-tertiary"}`}>
         {value}
       </span>
+      {detail && <span data-part="detail" className="text-meta text-ink-tertiary tabular-nums">{detail}</span>}
     </div>
   );
 }

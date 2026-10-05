@@ -6,21 +6,18 @@ import { SettingsIntro } from "../SettingsListPage";
 import { SettingsSection } from "../SettingsSection";
 import { StatsCard } from "../../shared/StatsCard";
 import { SettingsTable, type Column } from "../SettingsTable";
-import { entities } from "../../../data/entities";
 import { dataSourceAtom } from "../../../atoms/dataSource";
-import { cejilDashboardStats } from "../../../data/cejil/settingsAdapt";
-import { signedInUserAtom, usersAtom } from "../../../atoms/users";
+import { dashboardStatsAtom, formatBytes } from "../../../atoms/dashboardStats";
+import { signedInUserAtom } from "../../../atoms/users";
 import { resetSettingsDataAtom } from "../../../atoms/settingsCollection";
 import { SettingsButton } from "../SettingsButton";
 import { ConfirmDelete } from "../../shared/ConfirmDelete";
 import { useNotify } from "../../../hooks/useNotify";
 import {
-  seedLanguages,
   type SettingsLogEntry,
   type LogMethod,
 } from "../../../data/settings";
 import { activityLogAtom } from "../../../atoms/activityLog";
-import { referencesAtom } from "../../../atoms/references";
 
 const methodStyle: Record<LogMethod, string> = {
   CREATE: "bg-success-light text-success",
@@ -32,14 +29,12 @@ const methodStyle: Record<LogMethod, string> = {
 export function DashboardPage() {
   const dataSource = useAtomValue(dataSourceAtom);
   const cejil = dataSource === "cejil";
-  const userCount = useAtomValue(usersAtom).length;
+  const stats = useAtomValue(dashboardStatsAtom);
   const activity = useAtomValue(activityLogAtom);
   const resetData = useSetAtom(resetSettingsDataAtom);
   const store = useStore();
   const notify = useNotify();
   const [confirmReset, setConfirmReset] = useState(false);
-  // The Sample's references, counted live (the store the panel writes).
-  const connectionTotal = useAtomValue(referencesAtom).length;
 
   const columns: Column<SettingsLogEntry>[] = [
     {
@@ -64,21 +59,17 @@ export function DashboardPage() {
         <div className="flex flex-col gap-6">
           <SettingsSection>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              {cejil ? (
-                <>
-                  <StatsCard label="Entities" value={cejilDashboardStats.entities} accent="blue" />
-                  <StatsCard label="Relationships" value={cejilDashboardStats.connections} accent="green" />
-                  <StatsCard label="Templates" value={cejilDashboardStats.templates} />
-                  <StatsCard label="Languages" value={cejilDashboardStats.languages} accent="amber" />
-                </>
-              ) : (
-                <>
-                  <StatsCard label="Entities" value={entities.length} accent="blue" />
-                  <StatsCard label="Relationships" value={connectionTotal} accent="green" />
-                  <StatsCard label="Users" value={userCount} />
-                  <StatsCard label="Languages" value={seedLanguages.length} accent="amber" />
-                </>
-              )}
+              <StatsCard
+                label="Users"
+                value={stats.users.total}
+                detail={`${stats.users.admin} admin · ${stats.users.editor} ${stats.users.editor === 1 ? "editor" : "editors"} · ${stats.users.collaborator} ${stats.users.collaborator === 1 ? "collaborator" : "collaborators"}`}
+              />
+              <StatsCard label="Entities" value={stats.entities.toLocaleString()} accent="blue" />
+              <StatsCard label="Relationships" value={stats.relationships === null ? "—" : stats.relationships.toLocaleString()} accent="green" />
+              <StatsCard label="Files" value={stats.files.toLocaleString()} />
+              <StatsCard label="Storage" value={stats.storage === null ? "Not recorded" : formatBytes(stats.storage)} />
+              <StatsCard label="Templates" value={stats.templates} />
+              <StatsCard label="Languages" value={stats.languages} accent="amber" />
             </div>
           </SettingsSection>
           <SettingsSection title="Recent activity">
