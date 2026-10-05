@@ -244,6 +244,7 @@ export function FiltersPage() {
         )}
 
         <SettingsTable
+          corpusScoped
           columns={columns}
           data={rows}
           getRowId={(r) => r.templateId}
@@ -257,6 +258,7 @@ export function FiltersPage() {
 
       <SettingsSection title="Properties">
         <SettingsTable
+          corpusScoped
           columns={propertyColumns}
           data={propertyRows}
           getRowId={(r) => r.propertyId}

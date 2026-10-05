@@ -48,6 +48,9 @@ export interface SettingsItem {
 export interface SettingsGroup {
   id: string;
   label?: string;
+  /** The label heads the group for assistive tech only: the heading outline
+   *  stays User › System › Tools while the rail shows the shelves alone. */
+  hideLabel?: boolean;
   items: SettingsItem[];
 }
 
@@ -59,9 +62,12 @@ export const settingsGroups: SettingsGroup[] = [
   },
   {
     id: "system",
-    // No heading in the rail: its task shelves (`subgroup`) are the headings,
-    // and a "System" label above them read as one more shelf at the same level.
-    // The navbar still calls the entry "System settings".
+    // No visible heading in the rail: its task shelves (`subgroup`) are the
+    // headings, and a "System" label above them read as one more shelf at the
+    // same level. The heading stays for screen readers, so the shelves do not
+    // nest under "User" in the outline. The navbar calls it "System settings".
+    label: "System",
+    hideLabel: true,
     items: [
       // One shelf per task an admin does: run the collection and its public
       // site, shape the data, translate it, manage who can use it. Dashboard

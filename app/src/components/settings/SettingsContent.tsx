@@ -1,4 +1,4 @@
-import { createContext, useContext, useId, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useId, useState, type ReactNode } from "react";
 import { useSetAtom } from "jotai";
 import { ChevronLeft, ArrowLeft } from "lucide-react";
 import { settingsMobileDrilledAtom } from "../../atoms/settings";
@@ -18,6 +18,22 @@ import { SettingsBarContext } from "./SettingsButton";
 /** The id of the page's title heading, so the section is named by it. */
 const TitleId = createContext<string | undefined>(undefined);
 
+/** Counts the page's tables that are loading, so the page says "Loading…"
+ *  once however many tables wait (Filters has two). */
+const LoadingCount = createContext<((delta: number) => void) | null>(null);
+
+/** Report a loading table to its page's one live region. Returns false when
+ *  there is no page (a table in the catalog), so the table announces itself. */
+export function useAnnounceLoading(loading: boolean): boolean {
+  const add = useContext(LoadingCount);
+  useEffect(() => {
+    if (!loading || !add) return;
+    add(1);
+    return () => add(-1);
+  }, [loading, add]);
+  return !!add;
+}
+
 export function SettingsContent({
   component = "SettingsContent",
   children,
@@ -28,6 +44,8 @@ export function SettingsContent({
   children: ReactNode;
 }) {
   const titleId = useId();
+  const [loadingCount, setLoadingCount] = useState(0);
+  const addLoading = useCallback((delta: number) => setLoadingCount((n) => n + delta), []);
   return (
     // The main-tier gutter host (16px). Header, Body and Footer are `bleed`
     // bands: rules, the scrollbar and the footer tint reach the pane edge, and
@@ -42,7 +60,12 @@ export function SettingsContent({
       className="gutter-host-main flex flex-col h-full min-h-0 bg-paper"
       data-testid="settings-content"
     >
-      <TitleId.Provider value={titleId}>{children}</TitleId.Provider>
+      <TitleId.Provider value={titleId}>
+        <LoadingCount.Provider value={addLoading}>{children}</LoadingCount.Provider>
+      </TitleId.Provider>
+      <p role="status" className="sr-only">
+        {loadingCount > 0 ? "Loading…" : ""}
+      </p>
     </section>
   );
 }

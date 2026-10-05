@@ -117,6 +117,7 @@ export function PagesPage() {
       }
     >
       <SettingsTable
+        corpusScoped
         columns={columns}
         data={search.rows}
         getRowId={(p) => p.id}

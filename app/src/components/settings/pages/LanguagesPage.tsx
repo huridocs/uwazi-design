@@ -286,6 +286,7 @@ export function LanguagesPage() {
       }
     >
       <SettingsTable
+        corpusScoped
         columns={columns}
         data={search.rows}
         getRowId={(l) => l.key}

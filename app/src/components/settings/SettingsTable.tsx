@@ -1,8 +1,11 @@
 import type { HTMLAttributes, ReactNode } from "react";
 import { useAtomValue } from "jotai";
+import { CloudOff } from "lucide-react";
 import { DataTable, type Column } from "../shared/DataTable";
 import { breakpointAtom } from "../../atoms/viewport";
-import { useSettingsCorpusLoading } from "../../hooks/useSettingsCorpus";
+import { settingsCorpusErrorAtom, useSettingsCorpusLoading } from "../../hooks/useSettingsCorpus";
+import { useAnnounceLoading } from "./SettingsContent";
+import { SettingsEmptyState } from "./SettingsEmptyState";
 
 export type { Column };
 
@@ -16,6 +19,11 @@ interface SettingsTableProps<T> {
   rowAriaLabel?: (row: T) => string;
   selectedId?: string | null;
   emptyState?: React.ReactNode;
+  /** The rows belong to the active corpus (templates, thesauri, menu…), so
+   *  while its lazy data loads the table shows loading rows, and an error
+   *  if the load fails. Global tables (users, API keys, the
+   *  activity log) leave it off and show their empty state. */
+  corpusScoped?: boolean;
   rowProps?: (row: T, index: number) => HTMLAttributes<HTMLTableRowElement>;
 }
 
@@ -40,15 +48,32 @@ function slotOf<T>(col: Column<T>, index: number): NonNullable<Column<T>["mobile
  *  title, a meta line of labelled values and the row's actions, so nothing
  *  sits off-screen behind a sideways scroll.
  *
- *  While the active corpus's Settings data is loading, an empty table shows
- *  placeholder rows, not its empty state. */
+ *  A `corpusScoped` table shows placeholder rows, not its empty state, while
+ *  the active corpus's Settings data loads, and says so if the load fails
+ *  (the shell's banner has the retry). */
 export function SettingsTable<T>(props: SettingsTableProps<T>) {
-  const { columns, data, getRowId, onRowClick, rowAriaLabel, selectedId, emptyState, rowProps } = props;
+  const { columns, data, getRowId, onRowClick, rowAriaLabel, selectedId, rowProps, corpusScoped = false } = props;
   const phone = useAtomValue(breakpointAtom) === "mobile";
-  const loading = useSettingsCorpusLoading() && data.length === 0;
+  // Travesía's lists arrive with its data; a failed load is reported by the
+  // Settings shell (`SettingsCorpusError`), which holds the retry.
+  const lazy = useSettingsCorpusLoading();
+  const failed = !!useAtomValue(settingsCorpusErrorAtom);
+  const waiting = corpusScoped && data.length === 0 && lazy;
+  const loading = waiting && !failed;
+  const pageAnnounces = useAnnounceLoading(loading);
 
-  if (loading) return <LoadingRows columns={columns} phone={phone} />;
-  if (phone) return <SettingsList {...props} />;
+  if (loading) return <LoadingRows columns={columns} phone={phone} announce={!pageAnnounces} />;
+  const emptyState =
+    waiting && failed ? (
+      <SettingsEmptyState
+        icon={<CloudOff size={16} />}
+        title="This collection's settings didn't load"
+        hint="Check the connection, then use Try again above."
+      />
+    ) : (
+      props.emptyState
+    );
+  if (phone) return <SettingsList {...props} emptyState={emptyState} />;
 
   // Flexible columns counted at a ~9rem floor, + gaps + padding.
   const minWidthRem =
@@ -163,8 +188,8 @@ function SettingsList<T>({ columns, data, getRowId, onRowClick, rowAriaLabel, se
 }
 
 /** Placeholder rows at the table's row height, in the table's card, while the
- *  data is on its way. The live region says so once; the bars are hidden. */
-function LoadingRows<T>({ columns, phone }: { columns: Column<T>[]; phone: boolean }) {
+ *  data is on its way. The bars are hidden from assistive tech. */
+function LoadingRows<T>({ columns, phone, announce }: { columns: Column<T>[]; phone: boolean; announce: boolean }) {
   const widths = ["w-2/5", "w-1/3", "w-1/2", "w-1/4"];
   const bar = (w: string): ReactNode => <span className={`block h-2.5 rounded-sm bg-vellum ${w}`} />;
   return (
@@ -175,9 +200,12 @@ function LoadingRows<T>({ columns, phone }: { columns: Column<T>[]; phone: boole
       className="rounded-md bg-paper overflow-hidden"
       style={{ boxShadow: CARD_SHADOW }}
     >
-      <p role="status" className="sr-only">
-        Loading…
-      </p>
+      {/* Inside a page, the page's one live region says it. */}
+      {announce && (
+        <p role="status" className="sr-only">
+          Loading…
+        </p>
+      )}
       {!phone && (
         <div
           aria-hidden

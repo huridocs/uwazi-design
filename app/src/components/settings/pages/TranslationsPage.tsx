@@ -74,6 +74,7 @@ export function TranslationsPage() {
       lead={{ label: "Import translations (CSV)", icon: <Upload size={14} aria-hidden />, onClick: importCsv }}
     >
       <SettingsTable
+        corpusScoped
         columns={columns}
         data={search.rows}
         getRowId={(c) => c.id}

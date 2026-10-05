@@ -59,6 +59,7 @@ export function ThesauriPage() {
       overlays={<ThesaurusDelete thesaurus={confirm} onCancel={() => setConfirm(null)} />}
     >
       <SettingsTable
+        corpusScoped
         columns={columns}
         data={search.rows}
         getRowId={(t) => t.id}

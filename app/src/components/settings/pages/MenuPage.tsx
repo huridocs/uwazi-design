@@ -96,6 +96,7 @@ export function MenuPage() {
       }
     >
       <SettingsTable
+        corpusScoped
         columns={columns}
         data={search.rows}
         getRowId={(m) => m.id}

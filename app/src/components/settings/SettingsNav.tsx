@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, useEffect, useRef } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { ExternalLink } from "lucide-react";
 import { SectionLabel } from "../shared/SectionLabel";
@@ -37,6 +37,28 @@ export function SettingsNav({
   /** Where we are, whether that's a settings section or another view. */
   const current = activeId ?? section;
 
+  // Every group is listed, so the current item can sit below the fold (a phone
+  // opening Tools from the navbar lands on Preserve). Scroll the rail's own
+  // lane so it is in view; the page itself does not move.
+  const laneRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    // After the frame, so the rail has its height (it mounts inside a pane
+    // that is laid out in the same commit).
+    const frame = requestAnimationFrame(() => {
+      const lane = laneRef.current;
+      const item = lane?.querySelector<HTMLElement>('[aria-current="page"]');
+      if (!lane || !item) return;
+      const laneBox = lane.getBoundingClientRect();
+      const box = item.getBoundingClientRect();
+      if (box.bottom > laneBox.bottom || box.top < laneBox.top)
+        lane.scrollTop += box.top - laneBox.top - lane.clientHeight / 3;
+    });
+    return () => cancelAnimationFrame(frame);
+    // On a change of the current item too: the stored section arrives after
+    // the first render. A click lands on an item already in view, which this
+    // leaves alone.
+  }, [current]);
+
   return (
     <nav
       aria-label="Settings navigation"
@@ -51,7 +73,7 @@ export function SettingsNav({
       className="gutter-host-rail h-full w-full md:w-[15.625rem] shrink-0 flex flex-col bg-paper"
       style={{ borderInlineEnd: "1px solid var(--border-primary)" }}
     >
-      <div data-part="groups" className="bleed flex-1 min-h-0 overflow-y-auto py-4">
+      <div ref={laneRef} data-part="groups" className="bleed flex-1 min-h-0 overflow-y-auto py-4">
       {/* Every group, each with its task shelves (`subgroup`). The navbar's
           three entries still open their own group's first page. */}
       {groups.map((group) => (
@@ -59,11 +81,14 @@ export function SettingsNav({
         // margins widen it to the rail edge. A `w-full` button does not widen,
         // it only moves.
         <div key={group.id} data-part="group" className="mb-2 flex flex-col">
-          {group.label && (
-            <SectionLabel as="h2" className="py-2">
-              {group.label}
-            </SectionLabel>
-          )}
+          {group.label &&
+            (group.hideLabel ? (
+              <h2 className="sr-only">{group.label}</h2>
+            ) : (
+              <SectionLabel as="h2" className="py-2">
+                {group.label}
+              </SectionLabel>
+            ))}
           {group.items.map((item, i) => {
             const Icon = item.icon;
             // An item that jumps to another VIEW is never the current settings

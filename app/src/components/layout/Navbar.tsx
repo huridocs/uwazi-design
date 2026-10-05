@@ -140,8 +140,8 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
     });
   };
   /** Phones: open a settings group's list (the rail, full width), not a page.
-   *  The rail lists the current section's group, so this sets the section to
-   *  the group's entry; without it every group opens on Account's list. */
+   *  The rail lists every group; setting the section to the group's entry
+   *  marks it current, and the rail scrolls its lane to the current item. */
   const openSettingsList = (groupId: string) => {
     guard(() => {
       setSettingsSection(settingsEntryOf(groupId));

@@ -93,6 +93,7 @@ export function RelationTypesPage() {
       }
     >
       <SettingsTable
+        corpusScoped
         columns={columns}
         data={search.rows}
         getRowId={(r) => r.id}

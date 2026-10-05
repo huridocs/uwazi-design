@@ -97,6 +97,7 @@ export function TemplatesPage() {
       }
     >
       <SettingsTable
+        corpusScoped
         columns={columns}
         data={search.rows}
         getRowId={(t) => t.id}
