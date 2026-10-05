@@ -1,3 +1,5 @@
+import { SAMPLE_COUNTRY_LABELS } from "../data/sample/countryLabels";
+
 // Country name → flag emoji, keyed by lowercased EN + ES names. Covers the mock
 // seed + the CEJIL corpus (Inter-American system) countries. Returns undefined
 // for non-countries (e.g. a region like "Central America") so callers can treat
@@ -45,6 +47,12 @@ const FLAGS: Record<string, string> = {
   italy: "🇮🇹",
   italia: "🇮🇹",
 };
+
+// The Sample's Countries thesaurus in French and Arabic, flagged as in English.
+for (const labels of Object.values(SAMPLE_COUNTRY_LABELS)) {
+  const flag = FLAGS[labels.EN.toLowerCase()];
+  if (flag) for (const l of Object.values(labels)) FLAGS[l.toLowerCase()] ??= flag;
+}
 
 export function countryFlag(name?: string | null): string | undefined {
   if (!name) return undefined;

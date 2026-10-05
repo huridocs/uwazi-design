@@ -7,6 +7,7 @@ import { dataSourceAtom, travesiaReadyAtom } from "./dataSource";
 import { travesiaSettingsThesauri } from "../data/travesia/load";
 import { artworkThesauri } from "../data/artworks/thesauri";
 import { cejilValueLabels } from "../data/cejil/profile";
+import { SAMPLE_COUNTRY_LABELS } from "../data/sample/countryLabels";
 import type { Language } from "./language";
 import { registerSettingsReset } from "./settingsCollection";
 
@@ -235,13 +236,16 @@ const LANGS: Language[] = ["EN", "ES", "FR", "AR"];
  *  plan reads asks, and the list only changes when the store does. */
 const localizedCache = new WeakMap<ThesaurusValue[], Map<Language, ThesaurusValue[]>>();
 export function localizeValues(values: ThesaurusValue[], corpus: Corpus, lang: Language): ThesaurusValue[] {
-  if (corpus !== "cejil") return values;
+  if (corpus === "travesia" || (lang === "EN" && corpus !== "cejil")) return values;
   let byLang = localizedCache.get(values);
   const hit = byLang?.get(lang);
   if (hit) return hit;
-  const map = cejilValueLabels(lang);
-  if (!map.size) return values;
-  const tr = (v: { id: string; label: string }) => map.get(v.id) ?? v.label;
+  // CEJIL's dump carries its labels per language; the Sample's Countries
+  // thesaurus has its own table.
+  const cejil = corpus === "cejil" ? cejilValueLabels(lang) : null;
+  if (cejil && !cejil.size) return values;
+  const tr = (v: { id: string; label: string }) =>
+    (cejil ? cejil.get(v.id) : SAMPLE_COUNTRY_LABELS[v.id]?.[lang]) ?? v.label;
   const out = values.map((v) =>
     v.values ? { ...v, label: tr(v), values: v.values.map((c) => ({ ...c, label: tr(c) })) } : { ...v, label: tr(v) },
   );
@@ -280,9 +284,13 @@ export function fieldKeys(
 ): string[] {
   const labels = f.values ?? (f.value ? [f.value] : []);
   const first = new Map<string, string>();
-  if (thesaurus)
+  if (thesaurus) {
     for (const [id, label] of labelIndex(localizeValues(thesaurus, corpus, lang)))
       if (!first.has(label)) first.set(label, id);
+    // A record that has no translation for a value holds its stored label
+    // (the Sample's fall back to English): it is still that value.
+    for (const [id, label] of labelIndex(thesaurus)) if (!first.has(label)) first.set(label, id);
+  }
   return labels.map((l, i) => f.valueIds?.[i] || first.get(l) || pseudoKey(l));
 }
 
