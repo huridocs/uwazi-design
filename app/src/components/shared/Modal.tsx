@@ -181,7 +181,10 @@ export function Modal({
             ? "fixed inset-0"
             : `${scope === "pane" ? "absolute" : "fixed"} inset-0 ${z} flex bg-overlay ${
                 // Full-screen on a phone: its footer rises above the keyboard (`--kb`).
-                fullOnPhone ? "pb-[var(--kb,0px)] md:pb-0 md:items-center md:justify-center md:p-4" : "items-center justify-center p-4"
+                fullOnPhone
+                  ? "pb-[var(--kb,0px)] md:pb-0 md:items-center md:justify-center md:p-4"
+                  : // A small dialog (a confirm) is a bottom sheet on a phone.
+                    "items-end justify-center pb-[var(--kb,0px)] md:pb-0 md:items-center md:p-4"
               }`
         }
         // A stacked sheet's scrim is clear (the first layer's dims the page) but
@@ -214,7 +217,7 @@ export function Modal({
               : `gutter-host-main w-full ${WIDTH[size]} flex flex-col outline-none bg-paper shadow-xl overflow-hidden animate-fade-in-up ${
                   fullOnPhone
                     ? "h-full md:rounded-lg md:border md:border-border"
-                    : "max-h-full rounded-lg border border-border"
+                    : "max-h-full rounded-t-xl border-t border-border pb-[env(safe-area-inset-bottom,0px)] md:pb-0 md:rounded-lg md:border"
                 } ${height ?? "md:h-auto"} ${maxHeight ?? "md:max-h-[min(90vh,100%)]"}`
           }
           style={
@@ -318,7 +321,8 @@ export function Modal({
 
 /** Footer buttons: the modal's commit and its ghosts. Same metrics as the
  *  action bars' buttons. */
-export const MODAL_BUTTON = "px-3 py-1.5 text-xs font-medium rounded-md transition-colors";
+// 44px tall on a phone: a touch target.
+export const MODAL_BUTTON = "px-3 py-1.5 max-md:min-h-11 max-md:px-4 text-xs font-medium rounded-md transition-colors";
 export const MODAL_COMMIT = `${MODAL_BUTTON} ${COMMIT_FILL} cursor-pointer`;
 export const MODAL_COMMIT_DISABLED = `${MODAL_BUTTON} bg-ink/40 text-paper cursor-not-allowed`;
 export const MODAL_DANGER = `${MODAL_BUTTON} bg-seal-fill text-white hover:bg-seal-fill/90 cursor-pointer`;

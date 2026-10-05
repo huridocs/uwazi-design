@@ -167,6 +167,10 @@ export function DataTable<T>({
                           <ChevronsUpDown size={12} className="shrink-0 opacity-0 group-hover/sort:opacity-50 transition-opacity" />
                         )}
                       </button>
+                    ) : col.header === "" || col.header == null ? (
+                      // An action column shows no heading, but a header cell
+                      // still needs a name for screen readers.
+                      <span className="sr-only">Actions</span>
                     ) : (
                       col.header
                     )}

@@ -129,6 +129,7 @@ export function CustomisationPage() {
               ))}
             </div>
             <textarea
+              aria-label={lang === "css" ? "Global CSS" : "Global JS"}
               value={value}
               onChange={(e) => (lang === "css" ? setCss(e.target.value) : setJs(e.target.value))}
               onScroll={syncScroll}
@@ -145,7 +146,7 @@ export function CustomisationPage() {
               Scripts run on every public page — use with care.
             </div>
           ) : (
-            <p className="mt-2 px-3 text-xs text-ink-tertiary">
+            <p className="mt-2 text-xs text-ink-tertiary">
               Styles cascade over the public theme — scope selectors to avoid surprises.
             </p>
           )}

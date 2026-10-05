@@ -112,12 +112,13 @@ export function SettingsNav({
               </>
             );
 
-            // Active is vellum + semibold, not `bg-warm`, which is the hover fill.
-            // No left-border accent; the icon keeps its colour.
+            // Active is `bg-warm text-ink` (CLAUDE.md: active sidebar item); hover
+            // is a lighter warm so the two stay apart. No left-border accent; the
+            // icon keeps its colour.
             const cls = `bleed flex items-center gap-2.5 py-2 text-tab text-left transition-colors ${
               active
-                ? "bg-vellum text-ink font-semibold"
-                : "font-medium text-ink-secondary hover:bg-warm hover:text-ink"
+                ? "bg-warm text-ink font-medium"
+                : "font-medium text-ink-secondary hover:bg-warm/60 hover:text-ink"
             }`;
 
             const sub = startsSub && (
