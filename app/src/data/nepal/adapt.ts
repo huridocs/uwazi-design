@@ -99,6 +99,9 @@ const VERIFICATION_SHORT: Record<string, string> = {
   confirmed: "Confirmed",
   "single-source": "Single source",
   disputed: "Disputed",
+  // Media items only.
+  misattributed: "Misattributed",
+  unverified: "Unverified",
 };
 
 /** The List's "Location / Publisher" column: where an event, a casualty or a
