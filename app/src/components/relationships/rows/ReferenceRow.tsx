@@ -6,7 +6,7 @@ import { activeRefIdAtom, scrollToHighlightAtom, scrollToRefAtom } from "../../.
 import { relSearchQueryAtom } from "../../../atoms/filters";
 import { currentPageAtom } from "../../../atoms/selection";
 import { getEntity, getEntityType } from "../../../data/entities";
-import { Reference } from "../../../data/references";
+import { Reference, selectionPage } from "../../../data/references";
 import { relationDisplayLabel } from "../../../utils/inheritance";
 import { FadeTruncate } from "../../shared/FadeTruncate";
 import { HighlightedText } from "../../shared/HighlightedText";
@@ -63,14 +63,16 @@ export function ReferenceRow({ reference, onDelete, nested, hideRelLabel }: Refe
   }, [scrollToRef, reference.id, setScrollToRef, setActiveRefId]);
 
   const selection = reference.sourceSelection;
+  // A web source's quote has no page: no tag, nothing to jump to.
+  const page = selectionPage(selection);
 
   /** The page tag's job: go to this passage in the document, and mark the row
    *  as the one you went from. Only ever reached by pressing the tag — the row
    *  itself has no click, so reading a snippet can't move the document. */
   const jumpToPassage = () => {
     setActiveRefId(reference.id);
-    if (selection) {
-      setCurrentPage(selection.page);
+    if (page !== undefined) {
+      setCurrentPage(page);
       setScrollToHighlight(reference.id);
     }
   };
@@ -104,7 +106,7 @@ export function ReferenceRow({ reference, onDelete, nested, hideRelLabel }: Refe
           highlight={query}
         />
       </div>
-      {selection && <PageTag page={selection.page} onClick={jumpToPassage} />}
+      {page !== undefined && <PageTag page={page} onClick={jumpToPassage} />}
     </div>
   );
 
@@ -126,7 +128,7 @@ export function ReferenceRow({ reference, onDelete, nested, hideRelLabel }: Refe
           </span>
         )}
       </div>
-      {selection && <PageTag page={selection.page} onClick={jumpToPassage} />}
+      {page !== undefined && <PageTag page={page} onClick={jumpToPassage} />}
     </div>
   );
 
@@ -159,9 +161,7 @@ export function ReferenceRow({ reference, onDelete, nested, hideRelLabel }: Refe
             <span data-part="type" className="text-meta text-ink-tertiary">
               {type?.name ?? ""}
             </span>
-            {selection && (
-              <PageTag page={selection.page} onClick={jumpToPassage} />
-            )}
+            {page !== undefined && <PageTag page={page} onClick={jumpToPassage} />}
           </div>
         </div>
       )}
@@ -182,9 +182,11 @@ export function ReferenceRow({ reference, onDelete, nested, hideRelLabel }: Refe
               className="text-xs text-ink-secondary leading-relaxed flex-1 min-w-0 italic"
               fadeTo={isActive ? "var(--bg-primary)" : "var(--bg-warm)"}
             />
-            <span className="shrink-0">
-              <PageTag page={selection.page} onClick={jumpToPassage} />
-            </span>
+            {page !== undefined && (
+              <span className="shrink-0">
+                <PageTag page={page} onClick={jumpToPassage} />
+              </span>
+            )}
           </div>
         ) : (
           <FadeTruncate

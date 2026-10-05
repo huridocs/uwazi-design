@@ -12,6 +12,7 @@ import { getEntityProps } from "./entityMetadata";
 import { isCejilEntity, buildCejilProfile } from "./cejil/profile";
 import { isArtworkEntity, buildArtworkProfile } from "./artworks/profile";
 import { isTravesiaEntity, buildTravesiaProfile } from "./travesia/profile";
+import { isNepalEntity, buildNepalProfile } from "./nepal/profile";
 import type { EntityImage } from "./entities";
 import { overlayCreated, overlayRecord, type EntityRecord } from "./entityChanges";
 import { sampleRecordFields } from "./sample/values";
@@ -240,7 +241,7 @@ function profileFromRecord(id: string, record: EntityRecord): EntityProfile {
  *  array for any corpus clears the cache. */
 let seenTemplates: TemplateDef[][] = [];
 function invalidateOnTemplateChange() {
-  const now = (["mock", "cejil", "travesia", "artworks"] as const).map((c) => templatesMirror(c));
+  const now = (["mock", "cejil", "travesia", "nepal", "artworks"] as const).map((c) => templatesMirror(c));
   if (now.some((list, i) => list !== seenTemplates[i])) {
     if (seenTemplates.length) lightweightCache.clear();
     seenTemplates = now;
@@ -264,7 +265,9 @@ function baseProfile(id: string): EntityProfile {
       ? buildArtworkProfile(id)
       : isTravesiaEntity(id)
         ? buildTravesiaProfile(id)
-        : buildLightweightProfile(getEntity(id) ?? { ...FALLBACK_ENTITY, id });
+        : isNepalEntity(id)
+          ? buildNepalProfile(id)
+          : buildLightweightProfile(getEntity(id) ?? { ...FALLBACK_ENTITY, id });
   lightweightCache.set(id, built);
   return built;
 }

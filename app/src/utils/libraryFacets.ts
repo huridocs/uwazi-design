@@ -7,6 +7,7 @@ import type { Entity } from "../data/entities";
 import { inheritedFilterProps } from "../data/metadata";
 import { cejilInheritedDefs } from "../data/cejil/adapt";
 import { travesiaFacetDefs } from "../data/travesia/adapt";
+import { nepalFacetDefs } from "../data/nepal/adapt";
 
 // ONE declaration, in atoms/dataSource.ts. This module used to carry its own
 // copy of the union, which is how "artworks" got added without any branch on
@@ -51,7 +52,7 @@ function curatedDefs(
     case "travesia":
       return travesiaFacetDefs;
     case "nepal":
-      return [];
+      return nepalFacetDefs;
     case "artworks":
       return [];
     default: {
@@ -70,7 +71,8 @@ const FIXED_FACET_PROPERTIES: Record<DataSource, string[]> = {
   cejil: ["pa_s", "descriptores"],
   mock: ["country"],
   travesia: [],
-  nepal: [],
+  // The curated Verification facet lists a claim's status with the others.
+  nepal: ["verification_status"],
   artworks: ["genres"],
 };
 

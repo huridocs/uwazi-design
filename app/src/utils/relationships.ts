@@ -1,4 +1,4 @@
-import { Direction, Reference, RelationType } from "../data/references";
+import { Direction, Reference, RelationType, selectionPage } from "../data/references";
 
 export interface Relationship {
   id: string;
@@ -56,7 +56,7 @@ function computeRelationships(
     if (hubs && ref.hubId && hubs.has(ref.hubId)) continue;
     const direction: Direction = ref.direction ?? "outgoing";
     const key = `${ref.targetEntityId}::${ref.relationType}`;
-    const page = ref.sourceSelection?.page;
+    const page = selectionPage(ref.sourceSelection);
     const existing = map.get(key);
     if (existing) {
       existing.evidenceCount += 1;
@@ -145,7 +145,7 @@ function computeHubs(refs: Reference[]): Hub[] {
   const map = new Map<string, Hub>();
   for (const ref of refs) {
     if (!ref.hubId) continue;
-    const page = ref.sourceSelection?.page;
+    const page = selectionPage(ref.sourceSelection);
     const existing = map.get(ref.hubId);
     if (existing) {
       existing.refIds.push(ref.id);

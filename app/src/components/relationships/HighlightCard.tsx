@@ -1,4 +1,4 @@
-import { Reference } from "../../data/references";
+import { Reference, selectionPage } from "../../data/references";
 import { getEntity } from "../../data/entities";
 import { EntityPill } from "../shared/EntityPill";
 import { PageTag } from "../shared/PageTag";
@@ -16,7 +16,7 @@ export function HighlightCard({ reference }: HighlightCardProps) {
     <article data-component="HighlightCard" className="bg-highlight/20 rounded-lg px-3 py-2.5">
       <div data-part="header" className="flex items-center justify-between mb-1.5">
         <EntityPill typeId={entity?.typeId ?? ""} label={entity?.title} />
-        {selection && <PageTag page={selection.page} />}
+        {selectionPage(selection) !== undefined && <PageTag page={selection!.page} />}
       </div>
       {selection && (
         <FadeTruncate

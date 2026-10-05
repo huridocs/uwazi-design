@@ -14,6 +14,8 @@ export type Direction = "outgoing" | "incoming";
 
 export interface TextSelection {
   text: string;
+  /** 1-based. 0 for a passage of a source with no pages (a web article in the
+   *  Nepal corpus): the quote is shown, with no page to go to. */
   page: number;
   /** Relative positions (0-1) within the page for highlight overlay */
   top: number;
@@ -21,6 +23,10 @@ export interface TextSelection {
   width: number;
   height: number;
 }
+
+/** The page a selection sits on, or undefined when its source has none. */
+export const selectionPage = (s: TextSelection | undefined): number | undefined =>
+  s && s.page >= 1 ? s.page : undefined;
 
 export interface Reference {
   id: string;

@@ -17,6 +17,7 @@ import { artworkTypeById } from "./artworks/typesAdapter";
 import { travesiaTypeById } from "./travesia/typesAdapter";
 import { travesiaEntityById } from "./travesia/adapt";
 import { nepalTypeById } from "./nepal/typesAdapter";
+import { nepalEntityById } from "./nepal/adapt";
 import { artworks, ARTWORK_IMAGE_BASE } from "./artworks/artworks";
 import { asset } from "../utils/asset";
 import { docPageAssets, DOC_PAGE_BASE, type DocPageAsset } from "./docPages";
@@ -486,7 +487,8 @@ export function getEntity(id: string): Entity | undefined {
     entities.find((e) => e.id === id) ??
     cejilEntityById().get(id) ??
     artworkEntityById().get(id) ??
-    travesiaEntityById().get(id);
+    travesiaEntityById().get(id) ??
+    nepalEntityById().get(id);
   if (!base) return undefined;
   const patch = overlayPatch(id);
   return patch ? patchedEntity(base, patch) : base;
@@ -508,6 +510,7 @@ export function entityCorpusOf(id: string): Corpus {
   if (cejilEntityById().has(id)) return "cejil";
   if (artworkEntityById().has(id)) return "artworks";
   if (travesiaEntityById().has(id)) return "travesia";
+  if (nepalEntityById().has(id)) return "nepal";
   // Unknown ids (a runtime-created entity not yet in the seed, a stale
   // persisted id) belong to the seed, which is the only corpus this app writes.
   return "mock";

@@ -1,5 +1,5 @@
 import { getEntity, getEntityType } from "../data/entities";
-import { Reference } from "../data/references";
+import { Reference, selectionPage } from "../data/references";
 import { relationLabel } from "./inheritance";
 import { Relationship } from "./relationships";
 import { GroupBy } from "../atoms/filters";
@@ -41,7 +41,7 @@ export function getGroupKey(ref: Reference, by: GroupBy): string {
     case "direction":
       return ref.direction ?? "outgoing";
     case "source-page": {
-      const page = ref.sourceSelection?.page;
+      const page = selectionPage(ref.sourceSelection);
       return page === undefined ? "no-page" : String(page);
     }
     case "none":

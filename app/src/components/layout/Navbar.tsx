@@ -118,6 +118,8 @@ export function Navbar({ onLogoClick, appView = "entity", onNavigate, rtl, onTog
     { id: "artworks", label: names.artworks, detail: "60 paintings · 22 artists" },
     // A fictional shelter network: generated records, synthetic portraits.
     { id: "travesia", label: names.travesia, detail: "Fictional · synthetic portraits" },
+    // Public sources only; every fact carries a verification status.
+    { id: "nepal", label: names.nepal, detail: "Open sources · verified per fact · 1,868" },
   ];
   const collection = COLLECTIONS.find((c) => c.id === dataSource) ?? COLLECTIONS[0];
 

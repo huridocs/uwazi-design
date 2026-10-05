@@ -6,6 +6,7 @@ import { entityCorpusOf, type Entity, type EntityType } from "../data/entities";
 import { cejilLibraryEntities } from "../data/cejil/adapt";
 import { artworkLibraryEntities } from "../data/artworks/adapt";
 import { travesiaLibraryEntities } from "../data/travesia/adapt";
+import { nepalLibraryEntities } from "../data/nepal/adapt";
 import { libraryEntityOverlayAtom } from "./entityChanges";
 import { applyOverlay, overlayMirror, type Corpus, type CorpusOverlay } from "../data/entityChanges";
 
@@ -72,9 +73,8 @@ function seedFor(source: DataSource, get: Getter): Entity[] {
       get(travesiaReadyAtom);
       return travesiaLibraryEntities();
     case "nepal":
-      // The Library adapter lands with the corpus wiring.
       get(nepalReadyAtom);
-      return [];
+      return nepalLibraryEntities();
     default: {
       // Compile-time: widening DataSource without answering here is a type
       // error. Runtime: an unknown value degrades to the mock seed instead
@@ -112,8 +112,8 @@ export function entityCorpusPool(
     const entities = cejilLibraryEntities();
     return { corpus, entities: applyOverlay(overlay, entities), loading: entities.length === 0 };
   }
-  if (corpus === "travesia") {
-    const entities = travesiaLibraryEntities();
+  if (corpus === "travesia" || corpus === "nepal") {
+    const entities = corpus === "nepal" ? nepalLibraryEntities() : travesiaLibraryEntities();
     return { corpus, entities: applyOverlay(overlay, entities), loading: entities.length === 0 };
   }
   return { corpus, entities: applyOverlay(overlay, mock), loading: false };

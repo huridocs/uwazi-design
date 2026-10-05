@@ -2,7 +2,7 @@ import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useMemo, useR
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import { CheckSquare, FileDown, FileUp, MoreHorizontal, Plus, Search, Upload, X } from "lucide-react";
 import { settingsAccessAtom } from "../atoms/settings";
-import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom, travesiaReadyAtom } from "../atoms/dataSource";
+import { dataSourceAtom, libraryEntitiesAtom, libraryTypesAtom, cejilReadyAtom, nepalReadyAtom, travesiaReadyAtom } from "../atoms/dataSource";
 import { discardDraftAtom, draftEntityIdAtom, recentTemplatesAtom, startDraftAtom } from "../atoms/entityChanges";
 import { NewImportModal } from "../components/import-csv/NewImportModal";
 import { useRegisterCsvImport } from "../hooks/useRegisterCsvImport";
@@ -18,6 +18,7 @@ import { cejilDefaultEntityId } from "../data/cejil/defaultEntity";
 import { isCejilEntity } from "../data/cejil/profile";
 import { focusCollectionDefaultAtom } from "../atoms/focusedEntity";
 import { loadTravesiaData, travesiaRelsByEntity } from "../data/travesia/load";
+import { loadNepalData, nepalRefsByEntity } from "../data/nepal/load";
 import { referencesAtom } from "../atoms/references";
 import { languageAtom, type Language } from "../atoms/language";
 import { uiLanguageAtom } from "../atoms/uiLanguage";
@@ -219,10 +220,26 @@ export function LibraryView() {
       };
     }
   }, [dataSource, travesiaReady, setTravesiaReady, cejilRetry]);
+  const [nepalReady, setNepalReady] = useAtom(nepalReadyAtom);
+  useEffect(() => {
+    if (dataSource === "nepal" && !nepalReady) {
+      let alive = true;
+      setCejilError(false);
+      loadNepalData().then(
+        () => alive && setNepalReady(true),
+        () => alive && setCejilError(true),
+      );
+      return () => {
+        alive = false;
+      };
+    }
+  }, [dataSource, nepalReady, setNepalReady, cejilRetry]);
   // `cejilLoading` covers every lazy source: the selected corpus is still loading.
   const cejilLoading =
-    (dataSource === "cejil" && !cejilReady) || (dataSource === "travesia" && !travesiaReady);
-  const lazyName = dataSource === "travesia" ? "Red Travesía" : "CEJIL";
+    (dataSource === "cejil" && !cejilReady) ||
+    (dataSource === "travesia" && !travesiaReady) ||
+    (dataSource === "nepal" && !nepalReady);
+  const lazyName = dataSource === "travesia" ? "Red Travesía" : dataSource === "nepal" ? "Nepal protests" : "CEJIL";
   const references = useAtomValue(referencesAtom);
   // Filtering, ranking, match categories and highlighting read `query` (the
   // committed search). Only the input binds to the draft.
@@ -499,12 +516,16 @@ export function LibraryView() {
       if (travesiaReady) for (const [sid, arr] of travesiaRelsByEntity()) m.set(sid, arr.length);
       return m;
     }
+    if (dataSource === "nepal") {
+      if (nepalReady) for (const [sid, arr] of nepalRefsByEntity()) m.set(sid, arr.length);
+      return m;
+    }
     for (const r of references) {
       m.set(r.sourceEntityId, (m.get(r.sourceEntityId) ?? 0) + 1);
       m.set(r.targetEntityId, (m.get(r.targetEntityId) ?? 0) + 1);
     }
     return m;
-  }, [references, dataSource, cejilReady, travesiaReady]);
+  }, [references, dataSource, cejilReady, travesiaReady, nepalReady]);
 
   // Precomputed lowercase searchable text per entity (title, country, displayed
   // metadata values, descriptors), so a keystroke doesn't rebuild it per entity.
