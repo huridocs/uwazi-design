@@ -4,7 +4,9 @@ import { RotateCcw, AlertTriangle } from "lucide-react";
 import { SettingsContent } from "../SettingsContent";
 import { SettingsButton } from "../SettingsButton";
 import { DrawerTabs } from "../../layout/DrawerTabs";
-import { toastsAtom } from "../../../atoms/notifications";
+import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { ConfirmDialog } from "../../shared/ConfirmDialog";
+import { LastSavedLine } from "../../shared/LastSavedLine";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
 const SAMPLE_CSS = `/* Global CSS — applied across the public collection */
@@ -16,7 +18,8 @@ const SAMPLE_JS = `// Global JS — runs on every public page
 console.log('Collection loaded');`;
 
 export function CustomisationPage() {
-  const setToasts = useSetAtom(toastsAtom);
+  const { record } = useSettingsNotify();
+  const [askReset, setAskReset] = useState(false);
   const [lang, setLang] = useState<"css" | "js">("css");
   // Compared with the last save, not the sample: after Save the page is clean.
   const { draft, setField, dirty, markSaved, saved } = useSettingsDraft({
@@ -38,7 +41,17 @@ export function CustomisationPage() {
 
   const save = () => {
     markSaved();
-    setToasts((p) => [...p, { id: Date.now().toString(), message: "Customisation saved", type: "success" as const }]);
+    // The log names what changed by size, never the code itself.
+    const lines = (t: string) => t.split("\n").length;
+    record({
+      method: "UPDATE",
+      domain: "customisation",
+      noun: "settings",
+      id: "customisation",
+      name: "Global CSS & JS",
+      message: "Customisation saved",
+      detail: `CSS ${lines(css)} lines, JS ${lines(js)} lines.`,
+    });
   };
 
   const resetTab = () => {
@@ -81,7 +94,7 @@ export function CustomisationPage() {
           <button
             type="button"
             disabled={!tabDirty}
-            onClick={resetTab}
+            onClick={() => setAskReset(true)}
             className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-ink-secondary hover:bg-warm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
           >
             <RotateCcw className="size-3.5" />
@@ -124,10 +137,23 @@ export function CustomisationPage() {
         )}
       </SettingsContent.Body>
       <SettingsContent.Footer>
+        <LastSavedLine domain="customisation" id="customisation" className="me-auto" />
         <SettingsButton variant="success" size="sm" disabled={!dirty} onClick={save}>
           Save
         </SettingsButton>
       </SettingsContent.Footer>
+      <ConfirmDialog
+        open={askReset}
+        title={`Reset ${lang.toUpperCase()}`}
+        message={`Discard your unsaved ${lang.toUpperCase()} changes? The last saved version comes back.`}
+        confirmLabel="Reset"
+        variant="danger"
+        onConfirm={() => {
+          resetTab();
+          setAskReset(false);
+        }}
+        onCancel={() => setAskReset(false)}
+      />
     </SettingsContent>
   );
 }

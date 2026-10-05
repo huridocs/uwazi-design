@@ -8,6 +8,8 @@ import { SettingsTable, type Column } from "../SettingsTable";
 import { signedInUserAtom, users } from "../../../atoms/users";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 import { useNotify } from "../../../hooks/useNotify";
+import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { ConfirmDialog } from "../../shared/ConfirmDialog";
 
 interface ApiKey {
   id: string;
@@ -29,6 +31,12 @@ export function AccountPage() {
   const notify = useNotify();
   const toast = (message: string, type: "success" | "info" = "success") =>
     notify(message, type);
+  const { record } = useSettingsNotify();
+  /** Every change to the account is a change to the signed-in user's record. */
+  const logAccount = (message: string, method: "CREATE" | "UPDATE" | "DELETE" = "UPDATE", noun = "user") =>
+    me && record({ method, domain: "user", noun, id: me.id, name: me.username, message });
+  /** Revoke and Disable 2FA ask first (UX audit Summary 3). */
+  const [ask, setAsk] = useState<{ kind: "revoke"; id: string } | { kind: "2fa" } | null>(null);
 
   // ── Profile ────────────────────────────────────────────────────────────
   // The signed-in user's record in the users store, so Settings › Users and
@@ -47,7 +55,7 @@ export function AccountPage() {
     const next = { username: username.trim(), email: email.trim() };
     patchUser({ id: me.id, patch: next });
     profile.markSaved(next);
-    toast("Profile saved");
+    logAccount("Profile saved");
   };
 
   // ── Password ───────────────────────────────────────────────────────────
@@ -63,7 +71,7 @@ export function AccountPage() {
 
   const savePassword = () => {
     pw.discard();
-    toast("Password updated");
+    logAccount("Password updated");
   };
 
   // ── Two-factor ─────────────────────────────────────────────────────────
@@ -75,12 +83,12 @@ export function AccountPage() {
     if (me) patchUser({ id: me.id, patch: { using2fa: true } });
     setSetupOpen(false);
     setCode("");
-    toast("Two-factor authentication enabled");
+    logAccount("Two-factor authentication enabled");
   };
 
   const disableTwoFactor = () => {
     if (me) patchUser({ id: me.id, patch: { using2fa: false } });
-    toast("Two-factor authentication disabled", "info");
+    logAccount("Two-factor authentication disabled");
   };
 
   // ── API keys ───────────────────────────────────────────────────────────
@@ -97,13 +105,13 @@ export function AccountPage() {
       }),
     };
     setKeys((prev) => [key, ...prev]);
-    toast("API key generated");
+    logAccount("API key generated", "CREATE", "API key for");
   };
 
   const copyKey = () => toast("Key copied", "info");
   const revokeKey = (id: string) => {
     setKeys((prev) => prev.filter((k) => k.id !== id));
-    toast("Key revoked", "info");
+    logAccount("Key revoked", "DELETE", "API key for");
   };
 
   const keyColumns: Column<ApiKey>[] = [
@@ -142,7 +150,7 @@ export function AccountPage() {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              revokeKey(row.id);
+              setAsk({ kind: "revoke", id: row.id });
             }}
             aria-label="Revoke key"
             className="px-2 py-1 rounded-md text-xs text-ink-tertiary hover:bg-seal-tint hover:text-seal-label transition-colors cursor-pointer"
@@ -249,7 +257,7 @@ export function AccountPage() {
             </div>
 
             {twoFactorEnabled ? (
-              <SettingsButton variant="danger" size="sm" onClick={disableTwoFactor}>
+              <SettingsButton variant="danger" size="sm" onClick={() => setAsk({ kind: "2fa" })}>
                 Disable
               </SettingsButton>
             ) : setupOpen ? (
@@ -335,6 +343,23 @@ export function AccountPage() {
           </section>
         </div>
       </SettingsContent.Body>
+      <ConfirmDialog
+        open={ask !== null}
+        title={ask?.kind === "revoke" ? "Revoke key" : "Disable two-factor authentication"}
+        message={
+          ask?.kind === "revoke"
+            ? "Revoke this key? Anything that signs in with it stops working."
+            : "Disable two-factor authentication? Signing in will need only your password."
+        }
+        confirmLabel={ask?.kind === "revoke" ? "Revoke" : "Disable"}
+        variant="danger"
+        onConfirm={() => {
+          if (ask?.kind === "revoke") revokeKey(ask.id);
+          else if (ask) disableTwoFactor();
+          setAsk(null);
+        }}
+        onCancel={() => setAsk(null)}
+      />
     </SettingsContent>
   );
 }

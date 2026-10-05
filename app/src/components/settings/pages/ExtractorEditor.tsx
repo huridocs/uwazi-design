@@ -7,7 +7,10 @@ import { SettingsField, TextInput } from "../SettingsField";
 import { Select } from "../../shared/Select";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { seedTemplates, type SettingsExtractor } from "../../../data/settings";
-import { toastsAtom } from "../../../atoms/notifications";
+import { useNotify } from "../../../hooks/useNotify";
+import { useSettingsNotify } from "../../../hooks/useSettingsNotify";
+import { ConfirmDialog } from "../../shared/ConfirmDialog";
+import { LastSavedLine } from "../../shared/LastSavedLine";
 import { useSettingsDraft } from "../../../hooks/useSettingsDraft";
 
 const TEMPLATE_OPTIONS = seedTemplates.map((t) => ({ value: t.name, label: t.name }));
@@ -93,9 +96,10 @@ export function ExtractorEditor({
   extractor: SettingsExtractor | "new";
   onClose: () => void;
 }) {
-  const setToasts = useSetAtom(toastsAtom);
-  const toast = (message: string) =>
-    setToasts((p) => [...p, { id: Date.now().toString(), message, type: "success" as const }]);
+  const notify = useNotify();
+  const toast = (message: string) => notify(message, "success");
+  const { record } = useSettingsNotify();
+  const [askAcceptAll, setAskAcceptAll] = useState(false);
 
   const isNew = extractor === "new";
   const base = isNew ? undefined : extractor;
@@ -144,7 +148,14 @@ export function ExtractorEditor({
   };
 
   const save = () => {
-    toast(isNew ? "Extractor created" : `${property || "Extractor"} saved`);
+    record({
+      method: isNew ? "CREATE" : "UPDATE",
+      domain: "extractor",
+      noun: "extractor",
+      id: base?.id,
+      name: property || "Extractor",
+      message: isNew ? "Extractor created" : undefined,
+    });
     onClose();
   };
 
@@ -258,7 +269,7 @@ export function ExtractorEditor({
                     variant="secondary"
                     size="sm"
                     icon={<Check size={14} />}
-                    onClick={acceptAll}
+                    onClick={() => setAskAcceptAll(true)}
                     disabled={!rows.some((r) => r.state !== "accepted")}
                   >
                     Accept all
@@ -271,11 +282,26 @@ export function ExtractorEditor({
         </div>
       </SettingsContent.Body>
       <SettingsContent.Footer>
+        <LastSavedLine domain="extractor" id={base?.id} className="me-auto" />
         <SettingsButton variant="ghost" size="sm" onClick={onClose}>Cancel</SettingsButton>
         <SettingsButton variant={isNew ? "commit" : "success"} size="sm" disabled={!dirty || !property.trim()} onClick={save}>
           {isNew ? "Create extractor" : "Save"}
         </SettingsButton>
       </SettingsContent.Footer>
+      <ConfirmDialog
+        open={askAcceptAll}
+        title="Accept all suggestions"
+        message={(() => {
+          const n = rows.filter((r) => r.state !== "accepted").length;
+          return `Accept ${n} ${n === 1 ? "suggestion" : "suggestions"}? Each one replaces the entity's current value.`;
+        })()}
+        confirmLabel="Accept all"
+        onConfirm={() => {
+          acceptAll();
+          setAskAcceptAll(false);
+        }}
+        onCancel={() => setAskAcceptAll(false)}
+      />
     </SettingsContent>
   );
 }

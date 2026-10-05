@@ -16,7 +16,8 @@ import { Modal } from "../../../shared/Modal";
 import { PublicPreview } from "../../../site/PublicPreview";
 import { useSiteData } from "../../../site/useSiteData";
 import { codeDocsAtom } from "../../../../atoms/sitePages";
-import { toastsAtom } from "../../../../atoms/notifications";
+import { useSettingsNotify } from "../../../../hooks/useSettingsNotify";
+import { ConfirmDialog } from "../../../shared/ConfirmDialog";
 import { breakpointAtom } from "../../../../atoms/viewport";
 import {
   PALETTE,
@@ -51,7 +52,8 @@ export function CodePageEditor({
 }) {
   const [docs, setDocs] = useAtom(codeDocsAtom);
   const doc = useMemo(() => docs[pageId] ?? seed(), [docs, pageId, seed]);
-  const setToasts = useSetAtom(toastsAtom);
+  const { record } = useSettingsNotify();
+  const [askDiscard, setAskDiscard] = useState(false);
   const mobile = useAtomValue(breakpointAtom) === "mobile";
   const site = useSiteData();
 
@@ -80,10 +82,14 @@ export function CodePageEditor({
 
   const commit = (publish: boolean) => {
     setDocs((all) => ({ ...all, [pageId]: { draft, published: publish ? draft : (all[pageId] ?? doc).published } }));
-    setToasts((p) => [
-      ...p,
-      { id: Date.now().toString(), message: publish ? `${draft.en.title || "Page"} published` : "Draft saved — the public page is unchanged", type: "success" as const },
-    ]);
+    record({
+      method: "UPDATE",
+      domain: "page",
+      noun: "page",
+      id: pageId,
+      name: draft.en.title || "Page",
+      message: publish ? `${draft.en.title || "Page"} published` : "Draft saved — the public page is unchanged",
+    });
   };
 
   const insert = (entry: PaletteEntry) => {
@@ -268,7 +274,7 @@ export function CodePageEditor({
         <div className="me-auto min-w-0">
           <StatusLine state={state} unsaved={unsaved} />
         </div>
-        <SettingsButton variant="ghost" size="sm" disabled={!unsaved} onClick={() => setDraft(saved)}>
+        <SettingsButton variant="ghost" size="sm" disabled={!unsaved} onClick={() => setAskDiscard(true)}>
           Discard
         </SettingsButton>
         <SettingsButton variant="secondary" size="sm" className="whitespace-nowrap" disabled={!unsaved} onClick={() => commit(false)}>
@@ -278,6 +284,18 @@ export function CodePageEditor({
           Publish
         </SettingsButton>
       </SettingsContent.Footer>
+      <ConfirmDialog
+        open={askDiscard}
+        title="Discard changes"
+        message="Discard your unsaved changes to this page? The last saved draft comes back."
+        confirmLabel="Discard"
+        variant="danger"
+        onConfirm={() => {
+          setDraft(saved);
+          setAskDiscard(false);
+        }}
+        onCancel={() => setAskDiscard(false)}
+      />
 
       {palette && <PaletteModal onInsert={insert} onClose={() => setPalette(false)} />}
       {copying && (
