@@ -34,6 +34,10 @@ export const NoMatch: Story = {
   args: { title: "No templates yet", query: "zzz", onClearQuery: () => {} },
 };
 
+export const NoMatchNamed: Story = {
+  args: { title: "No uploads yet", query: "zzz", onClearQuery: () => {}, noMatchTitle: (q: string) => `No uploads match “${q}”` },
+};
+
 export const Minimal: Story = {
   args: { title: "No suggestions in this view" },
 };

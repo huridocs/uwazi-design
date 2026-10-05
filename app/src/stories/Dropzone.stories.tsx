@@ -28,6 +28,28 @@ export const Default: Story = {
   },
 };
 
+export const Multiple: Story = {
+  render: () => {
+    const [files, setFiles] = useState<File[]>([]);
+    return (
+      <div className="max-w-md flex flex-col gap-2">
+        <Dropzone
+          multiple
+          accept="*/*"
+          onFiles={(more) => setFiles((prev) => [...prev, ...more])}
+          title="Browse files to upload"
+          hint="or drop your files here."
+        />
+        <ul className="text-xs text-ink-secondary">
+          {files.map((f, i) => (
+            <li key={`${f.name}-${i}`}>{f.name}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  },
+};
+
 export const Chosen: Story = {
   args: { file: { name: "estados.csv", detail: "Adds 3 values and 1 group." }, onRemove: () => {} },
   render: (args) => (

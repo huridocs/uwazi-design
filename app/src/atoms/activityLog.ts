@@ -39,7 +39,8 @@ const storage = createJSONStorage<ActivityEntry[]>(() => {
     return undefined as unknown as Storage;
   }
 });
-const appendedAtom = atomWithStorage<ActivityEntry[]>("uwazi:settings:activity", [], storage, { getOnInit: true });
+const LOG_KEY = "uwazi:settings:activity";
+const appendedAtom = atomWithStorage<ActivityEntry[]>(LOG_KEY, [], storage, { getOnInit: true });
 registerSettingsReset((set) => set(appendedAtom, RESET));
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -67,6 +68,30 @@ export const activityLogAtom = atom<ActivityEntry[]>((get) => {
     ? raw.filter((e) => e && typeof e.id === "string" && typeof e.at === "number" && typeof e.summary === "string")
     : [];
   return [...appended, ...seeded].sort((a, b) => b.at - a.at);
+});
+
+/** Bumped by the page's Retry, so the check below reads storage again. */
+export const activityLogRetryAtom = atom(0);
+
+/** Why the stored log could not be read, or null. JSON storage reads an
+ *  unparseable value as empty, which would show "no activity" for a log that
+ *  is there but broken; the Activity log page says so instead and offers a
+ *  retry. */
+export const activityLogErrorAtom = atom<string | null>((get) => {
+  get(activityLogRetryAtom);
+  get(appendedAtom);
+  let raw: string | null = null;
+  try {
+    raw = sessionStorage.getItem(LOG_KEY);
+  } catch {
+    return null;
+  }
+  if (raw === null) return null;
+  try {
+    return Array.isArray(JSON.parse(raw)) ? null : "The stored activity log is not a list of entries.";
+  } catch {
+    return "The stored activity log could not be read.";
+  }
 });
 
 let seq = 0;

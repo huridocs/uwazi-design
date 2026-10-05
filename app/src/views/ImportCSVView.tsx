@@ -7,6 +7,7 @@ import { ToolsActionBar } from "../components/layout/ToolsActionBar";
 import { ConfirmDialog } from "../components/shared/ConfirmDialog";
 import { defaultImports, type ImportEntry } from "../data/imports";
 import { useAtom } from "jotai";
+import { useSettingsNotify } from "../hooks/useSettingsNotify";
 import { openNewImportOnArrivalAtom, type AppView } from "../atoms/navigation";
 
 type Screen = "list" | "detail";
@@ -60,6 +61,7 @@ export function ImportCSVView({ onNavigate }: { onNavigate?: (view: AppView) => 
     setDeleteConfirmOpen(false);
   }, [selectedIds]);
 
+  const { record } = useSettingsNotify();
   const handleImport = useCallback(
     (filename: string, template: string) => {
       const newEntry: ImportEntry = {
@@ -76,11 +78,22 @@ export function ImportCSVView({ onNavigate }: { onNavigate?: (view: AppView) => 
         issues: [],
       };
       setImports((prev) => [newEntry, ...prev]);
+      // The import is registered and runs in the background: the log says so
+      // (Uwazi logs it only as a raw request line).
+      record({
+        method: "CREATE",
+        domain: "csv-import",
+        noun: "CSV import",
+        id: newEntry.id,
+        name: filename,
+        summary: `Registered CSV import “${filename}” (${template})`,
+        notify: false,
+      });
       setModalOpen(false);
       setActiveImportId(newEntry.id);
       setScreen("detail");
     },
-    []
+    [record]
   );
 
   // Upload/processing simulation — ticks every in-flight import (not just the
