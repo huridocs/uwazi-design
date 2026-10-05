@@ -27,8 +27,8 @@
 // - `part_of_org` is folded into `part_of`: one "part of" type, as Uwazi
 //   would have it. `targets` was labelled "concerns", the label of another
 //   type; it is "targets" here.
-// - 45 sources that have their id as title get one built from the record
-//   (see `titleFor`).
+// - A source whose title is its id gets one built from the record (see
+//   `titleFor`).
 // - Per-property evidence and reference notes are not shipped. The reference's
 //   verification status and its date range are.
 //
@@ -120,9 +120,6 @@ function secs(v) {
   return Number.isFinite(t) ? t : null;
 }
 
-/** The day Research read the undated pages (see below). */
-const ACCESS_DATE = "2026-10-05";
-
 /** The date a record sits at on the Library's timeline. */
 const REPRESENTATIVE = {
   event: (p) => p.when?.from,
@@ -131,6 +128,17 @@ const REPRESENTATIVE = {
   claim: (p) => p.asserted_on,
   casualty: (p) => p.occurred,
 };
+
+/** How precisely that date is known, when it is less than a day: a value
+ *  written as a month ("2024-03") or a year, or a record whose Time precision
+ *  says month. Day (and hour) is the default and is not written. */
+function precisionOf(raw, props) {
+  if (props.precision === "month" || props.precision === "year") return props.precision;
+  if (typeof raw !== "string") return null;
+  if (/^\d{4}$/.test(raw)) return "year";
+  if (/^\d{4}-\d{2}$/.test(raw)) return "month";
+  return null;
+}
 
 /* ── References ─────────────────────────────────────────────────────── */
 const titleOf = new Map(seedEntities.map((e) => [e.id, e.title]));
@@ -203,9 +211,9 @@ function valuesOf(p, v) {
   }
 }
 
-/** 45 sources of the transition part were written with their id as title.
- *  They get one from what the record holds: the publisher, the date and the
- *  slug's words ("Al Jazeera, 15 September 2025: gen z discord pick pm"). */
+/** A source written with its id as title (45 in the first seed; Research has
+ *  since given them their headlines) gets one from what the record holds:
+ *  the publisher, the date and the slug's words ("Al Jazeera, 15 September 2025: gen z discord pick pm"). */
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 function titleFor(e) {
   if (e.title && e.title !== e.id) return e.title;
@@ -245,16 +253,18 @@ const entities = seedEntities.map((e) => {
     if (vals.length) metadata[p.name] = vals;
   }
   // Wikipedia, OpenStreetMap and institutional pages have no publication
-  // date; Research recorded the day it read them (the access date). That is
-  // not when anything happened, so those sources stay off the timeline. The
-  // record still shows the date as Research wrote it.
-  const accessDated = e.template === "source" && props.published === ACCESS_DATE && props.publisher_type !== "national-media" && props.publisher_type !== "international-media";
-  const date = accessDated ? null : secs(REPRESENTATIVE[e.template]?.(props));
+  // date: `published` is empty and `accessed` holds the day Research read
+  // them. That is not when anything happened, so they have no record date and
+  // stay off the timeline; the record shows Accessed.
+  const rawDate = REPRESENTATIVE[e.template]?.(props);
+  const date = secs(rawDate);
+  const precision = date !== null ? precisionOf(rawDate, props) : null;
   return {
     sharedId: e.id,
     template: tpl.id,
     title: titleOf.get(e.id),
     ...(date !== null ? { date } : {}),
+    ...(precision ? { datePrecision: precision } : {}),
     metadata,
   };
 });

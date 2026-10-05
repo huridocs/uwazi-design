@@ -450,10 +450,15 @@
     "name": "published",
     "label": "Published",
     "type": "date",
-    "required": true,
     "showInCard": true,
     "prioritySorting": true,
     "filter": true
+   },
+   {
+    "id": "nepal_source:accessed",
+    "name": "accessed",
+    "label": "Accessed",
+    "type": "date"
    },
    {
     "id": "nepal_source:url",

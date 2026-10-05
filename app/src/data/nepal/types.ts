@@ -17,6 +17,9 @@ export interface NepalEntity {
   /** The record's own date (an event's start, a source's publication), epoch
    *  seconds. Absent for people, organisations and places. */
   date?: number;
+  /** Set when `date` is known only to the month or the year (a value written
+   *  "2024-03", or an event whose Time precision says month). Absent: a day. */
+  datePrecision?: "month" | "year";
   metadata: Record<string, NepalMetaValue[]>;
 }
 
