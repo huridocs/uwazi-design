@@ -312,15 +312,20 @@ export interface SettingsLogEntry {
   user: string;
   method: LogMethod;
   summary: string;
+  /** The settings record the entry is about, where it is one: an editor's
+   *  "Saved … by …" line reads the newest entry for its record. */
+  domain?: string;
+  targetId?: string;
 }
 
 export const seedActivityLog: SettingsLogEntry[] = [
   { id: "l1", time: "2026-06-15 18:42", user: "admin", method: "UPDATE", summary: "Updated entity “Velásquez-Rodríguez v. Honduras”" },
-  { id: "l2", time: "2026-06-15 17:10", user: "mlopez", method: "CREATE", summary: "Created relationship type “Represented by”" },
+  { id: "l2", time: "2026-06-15 17:10", user: "mlopez", method: "CREATE", summary: "Created relationship type “Represented by”", domain: "relationType", targetId: "r5" },
   { id: "l3", time: "2026-06-15 14:55", user: "mlopez", method: "CREATE", summary: "Created entity “Case 12.250 (Bámaca Velásquez)”" },
   { id: "l4", time: "2026-06-14 09:30", user: "admin", method: "DELETE", summary: "Deleted user “t.guest@example.org”" },
   { id: "l5", time: "2026-06-13 22:05", user: "system", method: "MIGRATE", summary: "Ran migration “add-relationship-tiers”" },
-  { id: "l6", time: "2026-06-13 11:48", user: "jnkemba", method: "UPDATE", summary: "Edited thesaurus “Violation types”" },
+  { id: "l6", time: "2026-06-13 11:48", user: "jnkemba", method: "UPDATE", summary: "Updated thesaurus “Violation types”", domain: "thesaurus", targetId: "t1" },
+  { id: "l7", time: "2026-06-12 16:20", user: "mlopez", method: "UPDATE", summary: "Updated template “Court Case”", domain: "template", targetId: "court_case" },
 ];
 
 // ── Menu (navlinks) ─────────────────────────────────────────────────────────

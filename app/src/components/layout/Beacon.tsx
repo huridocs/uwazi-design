@@ -88,6 +88,8 @@ export function Beacon({ rtl = false }: { rtl?: boolean }) {
           id: `t-${t.id}`,
           kind: t.type,
           title: t.message,
+          ...(t.detail ? { detail: t.detail } : {}),
+          ...(t.action ? { action: t.action } : {}),
           time: Date.now(),
           read: false,
         }))

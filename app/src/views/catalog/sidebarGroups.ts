@@ -142,6 +142,7 @@ export const sidebarGroups: SidebarGroup[] = [
       { id: "sh-highlighted-text", label: "HighlightedText" },
       { id: "sh-field-message", label: "FieldMessage" },
       { id: "sh-confirm-dialog", label: "ConfirmDialog" },
+      { id: "sh-confirm-delete", label: "ConfirmDelete" },
       { id: "sh-toast", label: "Toast" },
       { id: "sh-uwazi-loader", label: "UwaziLoader" },
       { id: "sh-thesaurus-value-label", label: "ThesaurusValueLabel" },

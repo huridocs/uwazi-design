@@ -24,6 +24,7 @@ import {
   type NotificationAction,
 } from "../../atoms/notifications";
 import { undoAtom, undoConflictsAtom, undoOpAtom } from "../../atoms/entityChanges";
+import { requestSettingsUndoAtom, settingsUndoAtom } from "../../atoms/settingsUndo";
 import { UwaziLoader } from "../shared/UwaziLoader";
 import { Hint } from "../shared/Hint";
 import { SectionLabel } from "../shared/SectionLabel";
@@ -464,13 +465,19 @@ function NotifCard({
 function NotifAction({ action }: { action: NotificationAction }) {
   const op = useAtomValue(undoOpAtom);
   const conflicts = useAtomValue(undoConflictsAtom);
-  const undo = useSetAtom(undoAtom);
-  const current = op?.ref === action.ref;
-  const live = current && conflicts === 0;
+  const undoEntities = useSetAtom(undoAtom);
+  const settingsOp = useAtomValue(settingsUndoAtom);
+  const undoSettings = useSetAtom(requestSettingsUndoAtom);
+  const settings = action.kind === "settings-undo";
+  const current = settings ? settingsOp?.ref === action.ref : op?.ref === action.ref;
+  const live = current && (settings || conflicts === 0);
+  const undo = settings ? undoSettings : undoEntities;
   // Why it is off, on hover AND focus (a `title` never shows on focus).
-  const reason = !current
-    ? "A later change replaced this undo"
-    : `${conflicts.toLocaleString()} of these entities ${conflicts === 1 ? "was" : "were"} changed since; undoing would overwrite that`;
+  const reason = settings
+    ? "The editor closed or a later removal replaced this undo"
+    : !current
+      ? "A later change replaced this undo"
+      : `${conflicts.toLocaleString()} of these entities ${conflicts === 1 ? "was" : "were"} changed since; undoing would overwrite that`;
   return (
     <Hint text={live ? action.label : reason} describe={!live}>
       {(hint) => (

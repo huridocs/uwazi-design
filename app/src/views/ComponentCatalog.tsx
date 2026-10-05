@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { ConfirmDelete } from "../components/shared/ConfirmDelete";
 import { useSetAtom } from "jotai";
 import { appViewAtom } from "../atoms/navigation";
 import { LoginView } from "./LoginView";
@@ -1835,6 +1836,23 @@ const textColor = typeLabelColor(type.color);`}
                 </CatalogEntry>
               </div>
 
+              <div id="sh-confirm-delete" ref={reg("sh-confirm-delete")}>
+                <CatalogEntry
+                  name="ConfirmDelete"
+                  description="Settings delete: lists what the delete touches, or the rule that refuses it (OK only)"
+                  code={`<ConfirmDelete
+  open={open}
+  title="Delete thesaurus"
+  message="Delete the Case status thesaurus?"
+  impact={useAtomValue(thesaurusUsageAtom(id))}
+  onConfirm={…}
+  onCancel={…}
+/>`}
+                >
+                  <ConfirmDeleteDemo />
+                </CatalogEntry>
+              </div>
+
               <div id="sh-toast" ref={reg("sh-toast")}>
                 <CatalogEntry
                   name="Toast"
@@ -2163,6 +2181,30 @@ function PagesEditorDemo() {
       <LangSwitch value={lang} onChange={setLang} filled={(l) => l === "en" || l === "es"} />
       <SyntaxBadge syntax="jsx" />
       <SyntaxBadge syntax="ext" />
+    </div>
+  );
+}
+
+/** Live ConfirmDelete: one allowed delete with its facts, one refused. */
+function ConfirmDeleteDemo() {
+  const [open, setOpen] = useState<"allowed" | "blocked" | null>(null);
+  const btn = "px-3 py-1.5 text-xs font-medium text-ink-secondary bg-warm hover:bg-parchment hover:text-ink rounded-md transition-colors cursor-pointer";
+  return (
+    <div className="flex gap-2">
+      <button type="button" className={btn} onClick={() => setOpen("allowed")}>Delete a group</button>
+      <button type="button" className={btn} onClick={() => setOpen("blocked")}>Delete a used template</button>
+      <ConfirmDelete
+        open={open !== null}
+        title={open === "blocked" ? "Delete template" : "Delete group"}
+        message="Delete the Research group?"
+        impact={
+          open === "blocked"
+            ? { lines: ["Used by 337 entities."], block: "337 entities use this template. Move or delete them first." }
+            : { lines: ["2 members lose this group: jnkemba and afarah."], block: null }
+        }
+        onConfirm={() => setOpen(null)}
+        onCancel={() => setOpen(null)}
+      />
     </div>
   );
 }
