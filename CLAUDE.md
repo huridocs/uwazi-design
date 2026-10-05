@@ -121,8 +121,18 @@ Known gaps, kept on purpose:
 - A child row removed inside an open editor (property, value, filter group, sub-link) gets an Undo
   in the Beacon (`useSettingsUndo`), not a dialog. The undo ends when the editor unmounts.
 - Every settings create, save and delete goes through `useSettingsNotify().record`: one Beacon
-  notification plus an Activity log entry (`atoms/activityLog.ts`). Editor footers show
-  `LastSavedLine`. Transient feedback that changes no record stays on `useNotify`.
+  notification plus an Activity log entry (`atoms/activityLog.ts`), scoped to the corpus (users
+  and groups: global). A save to a list that lives only in a page's state passes `log: false`:
+  the log lists only changes that survive navigation. Editor footers show `LastSavedLine`.
+  Transient feedback that changes no record stays on `useNotify`.
+- Collection, Global CSS & JS and Filters are per-corpus singletons (`createSettingsSingleton`,
+  `atoms/settingsSingletons.ts`). The window title, the Library's default view and its Template
+  facet read them.
+- Relationship types are one registry per collection (`atoms/relationTypes.ts`), by id: the
+  Sample's is `relationTypesAtom`, which Settings, the Relationships panel and the template
+  editor's relationship fields share. Settings never lists `no_label`.
+- Settings is gated by the signed-in role (`settingsAccessAtom`): collaborator sees Account only;
+  editor sees Account and the extraction pages; admin sees everything.
 
 ## Layout and style
 
