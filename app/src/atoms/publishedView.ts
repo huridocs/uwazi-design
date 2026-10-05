@@ -1,6 +1,8 @@
 import { atom } from "jotai";
 import { atomWithStorage, createJSONStorage } from "jotai/utils";
 import { focusedEntityIdAtom } from "./focusedEntity";
+import { appViewAtom } from "./navigation";
+import { breakpointAtom } from "./viewport";
 import { templatesAtom } from "./templates";
 import { entityCorpusOf } from "../data/entities";
 import { getEntityProfile } from "../data/entityProfiles";
@@ -35,3 +37,12 @@ export const showPublishedViewAtom = atom(
 /** One-shot: the entity view opens on this tab when it next shows. Set by the
  *  published view's document link, consumed (and cleared) by `EntityView`. */
 export const entityTabRequestAtom = atom<string | null>(null);
+
+/** Whether the published-view toggle is on screen: the entity view of an entity
+ *  whose template has a published view. */
+export const publishedToggleShownAtom = atom((get) => get(appViewAtom) === "entity" && get(focusedHasPublishedViewAtom));
+
+/** Below desktop the entity view has no drawer, so its tab row runs to the
+ *  screen's end, under the toggle. That row keeps the toggle's slot free
+ *  (`MainTabs`); on desktop the toggle sits in the drawer tab row's empty end. */
+export const reserveToggleSlotAtom = atom((get) => get(publishedToggleShownAtom) && get(breakpointAtom) !== "desktop");

@@ -4,6 +4,8 @@ import { Select } from "../shared/Select";
 import { languageName } from "../../atoms/language";
 import { TabCount } from "../shared/TabCount";
 import { TAB_BUTTON, TAB_STRIP_FRAME } from "./tabStrip";
+import { useAtomValue } from "jotai";
+import { reserveToggleSlotAtom } from "../../atoms/publishedView";
 
 
 
@@ -46,6 +48,7 @@ interface MainTabsProps {
 }
 
 export function MainTabs({ tabs, activeId, onChange, languages = [], availableLanguages, activeLanguage, onLanguageChange, onBack, languageEditing = false }: MainTabsProps) {
+  const reserveToggle = useAtomValue(reserveToggleSlotAtom);
   /* THE FOLD IS DECIDED BY THE CONTAINER, not the viewport.
      `dec4220` folded on `breakpointAtom`, which reads the WINDOW — so a strip
      in a 400px pane at a 1440px window stayed expanded and clipped mid-tab.
@@ -178,7 +181,8 @@ export function MainTabs({ tabs, activeId, onChange, languages = [], availableLa
           pill for every language the collection adds. Unavailable renditions stay
           listed but disabled. */}
       {languages.length > 0 && (
-        <div data-part="language" className="shrink-0">
+        // `me-10`: the published-view toggle's slot (`reserveToggleSlotAtom`).
+        <div data-part="language" className={`shrink-0 ${reserveToggle ? "me-10" : ""}`}>
           <Select
             value={currentLang}
             onChange={(v) => onLanguageChange?.(v)}

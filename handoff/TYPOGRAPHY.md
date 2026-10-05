@@ -104,7 +104,8 @@ app. The floor for UI text is 11px.
 | 13px | `text-tab` | 39 | tab strips, nav buttons, facet headings |
 | 14px | `text-sm` | 302 | titles, inputs, primary cells, field values, prose, empty titles |
 | 20px | `text-xl` | 5 | stat figures |
-| 24px | `text-2xl` | 4 | the login page only |
+| 24px | `text-2xl` | 5 | the login page; the published title on phones |
+| 30px | `text-3xl` | 1 | the published title (one place, see the role table) |
 
 `text-base` and `text-lg` are not UI sizes. What remains of them is document
 content (`DocumentRendition`), the published-site preview and the dev catalog.
@@ -117,6 +118,7 @@ designer, not a new recipe.
 
 | Role | Recipe | Where |
 |---|---|---|
+| Published title (the one display size) | `text-2xl md:text-3xl font-semibold leading-tight text-ink text-balance` | `PublishedEntityView` masthead only. A published page is read like a document, not worked in; nothing else in the app takes this size |
 | Title (page bar, dialog, drawer, sheet) | `text-sm font-semibold text-ink`, truncating | `SettingsContent` header, `Modal`, `MobileBottomSheet`, `NotificationsSlideOver`, `AgentModal` |
 | Section heading | `text-sm font-semibold text-ink` | `SettingsSection`, card and panel sections |
 | Sub-heading (inside a card or popover) | `text-xs font-semibold text-ink` | property panel, file drawer groups |

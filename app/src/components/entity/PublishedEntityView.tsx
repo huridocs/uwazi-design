@@ -2,23 +2,26 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import { useAtomValue, useSetAtom } from "jotai";
 import { FileText, Newspaper, PanelRight } from "lucide-react";
-import { languageAtom } from "../../atoms/language";
+import { languageAtom, LANGUAGE_NAMES } from "../../atoms/language";
 import { focusedEntityIdAtom } from "../../atoms/focusedEntity";
 import { scopedReferencesAtom } from "../../atoms/references";
 import { entityMetadataAtom, makeEntityPropReader } from "../../atoms/entityMetadata";
 import { previewEntityIdAtom } from "../../atoms/entityPreview";
 import { entityDisplayModeAtom, entityTabRequestAtom, focusedHasPublishedViewAtom } from "../../atoms/publishedView";
 import { useDirtyGuard } from "../../hooks/useDirtyGuard";
+import { layerStackAtom } from "../../atoms/layerStack";
 import { getEntityProfile, type EntityProfile } from "../../data/entityProfiles";
-import { entityCorpusOf, getEntity, type EntityImage } from "../../data/entities";
+import { entityCorpusOf, getEntity, getEntityType, type EntityImage } from "../../data/entities";
 import type { MetadataField, RelationshipMetadataField } from "../../data/metadata";
 import type { Reference, RelationType } from "../../data/references";
 import type { Language } from "../../atoms/language";
 import { templateMirror } from "../../data/templates/mirror";
 import { deriveTemplateStructure } from "../../utils/templateStructure";
 import { deriveRelationships } from "../../utils/relationships";
-import { groupConnections, relationLabel, specInherits, type ConnectionGroup } from "../../utils/inheritance";
+import { groupConnections, relationDisplayLabel, specInherits, type ConnectionGroup } from "../../utils/inheritance";
 import { isImageUrl } from "../../utils/typedValues";
+import { countryFlag } from "../../utils/countryFlag";
+import { formatRecordDate } from "../../utils/dates";
 import { t } from "../../utils/i18n";
 import { fieldItem, connectionItem, type MetadataItem } from "../metadata/items";
 import { RelationshipFieldCard } from "../metadata/RelationshipFieldCard";
@@ -26,6 +29,7 @@ import { ConnectionGroupCard } from "../metadata/ConnectionGroupCard";
 import { EntityTypeTag } from "../shared/EntityTypeTag";
 import { EntityPill } from "../shared/EntityPill";
 import { SectionLabel } from "../shared/SectionLabel";
+import { Hint } from "../shared/Hint";
 import { ImageLightbox } from "../shared/ImageLightbox";
 import { useLeafletMap, labelledDivIcon } from "../shared/map/useLeafletMap";
 import { EntityPreviewSlideOver } from "../relationships/EntityPreviewSlideOver";
@@ -35,13 +39,15 @@ import { WARM_BUTTON } from "../shared/warmButton";
 /** The width the entity slide-over takes over this page: the entity view's
  *  default drawer, so a preview is the same panel in both views. */
 const PREVIEW_WIDTH = 560;
-/** Entities listed per relationship type before "Show all". */
+/** Entities listed per template group before "Show all". */
 const GROUP_PREVIEW = 8;
 
 type Block =
   | { kind: "item"; item: MetadataItem }
   | { kind: "group"; group: ConnectionGroup }
   | { kind: "table"; field: RelationshipMetadataField };
+
+type Place = { lat: number; lon: number; label?: string; fieldLabel: string };
 
 /** An entity as a published page: Uwazi's entity view page, which a template
  *  turns on with "Display entity view from page".
@@ -50,13 +56,21 @@ type Block =
  *  same order (`deriveTemplateStructure`), drawn by the same value renderers
  *  (`fieldItem`, `connectionItem`, the inheritance tables with their `↳ via`
  *  trails). What changes is the arrangement, which follows a partner's profile
- *  page: a hero (picture, template, title), then prose and tables in a reading
- *  column, short facts beside it, then the place on a map, the document and
- *  the entity's relationships by relationship type. On a phone it is one
- *  column: facts, prose, the rest.
+ *  page and is decided by what the entity has:
  *
- *  Entity pills open the slide-over over this page, as they do in the record.
- *  Nothing here edits; "Entity view" (the floating toggle) leads to that. */
+ *  - Masthead: the first image (when there is one) beside the template, the
+ *    title, a descriptor made of the first short facts, and when the record
+ *    was last changed.
+ *  - Main column: prose and inheritance tables, the other images, the place
+ *    on a map, the supporting files. With no prose the short facts lead it as
+ *    a definition grid, so no page is a title over an empty half.
+ *  - Side column: the short facts when there is prose to read beside them,
+ *    then the relationships, one row per entity, grouped by template. A
+ *    relationship a fact already shows is not repeated.
+ *
+ *  On a phone it is one column: masthead, facts, the rest. Entity pills open
+ *  the slide-over over this page, as they do in the record. Nothing here
+ *  edits; "Entity view" (the floating toggle) leads to that. */
 export function PublishedEntityView() {
   const entityId = useAtomValue(focusedEntityIdAtom);
   const language = useAtomValue(languageAtom);
@@ -74,7 +88,7 @@ export function PublishedEntityView() {
     scrollRef.current?.scrollTo({ top: 0 });
   }, [entityId]);
 
-  const { facts, reading, geo } = useMemo(
+  const { facts, reading, geo, descriptor, shownLinks } = useMemo(
     () => arrange(profile, language, getProp),
     // `getProp` is new each render; the profile and language decide the layout.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -82,35 +96,66 @@ export function PublishedEntityView() {
   );
   const images = profile.images ?? (profile.image ? [profile.image] : entity?.images ?? (entity?.image ? [entity.image] : []));
   const [hero, ...gallery] = images;
-  const place = geo ?? (entity?.geo ? { lat: entity.geo.lat, lon: entity.geo.lng, label: undefined } : undefined);
-  const relGroups = useMemo(() => relationshipGroups(references), [references]);
+  const place = geo ?? (entity?.geo ? { lat: entity.geo.lat, lon: entity.geo.lng, fieldLabel: t("System", "Location") } : undefined);
+  const rels = useMemo(() => relationshipGroups(references, shownLinks), [references, shownLinks]);
+  const hasFiles = profile.hasDocument || (profile.files?.length ?? 0) > 0;
   const empty = facts.length === 0 && reading.length === 0;
-  // Nothing to read (no prose, table or extra picture): one column, facts in a
-  // grid, rather than a wide empty column beside a narrow full one.
-  const split = reading.length > 0 || gallery.length > 0;
+  // Prose or a table to read: the facts move beside it. Otherwise they lead
+  // the main column as a grid.
+  const narrative = reading.length > 0;
+  const factsInSide = narrative && facts.length > 0;
+  const hasSide = factsInSide || rels.entities > 0;
+  const edited = entity?.updatedAt ?? entity?.createdAt;
+
+  const factList = (
+    <section
+      data-part="facts"
+      data-layout={factsInSide ? "list" : "grid"}
+      aria-labelledby="published-facts"
+      className={`min-w-0 flex flex-col gap-4 ${factsInSide ? "lg:col-start-2 lg:row-start-1" : ""}`}
+    >
+      <SectionLabel as="h2">
+        <span id="published-facts">{t("System", "Key facts")}</span>
+      </SectionLabel>
+      <dl
+        className={
+          factsInSide
+            ? "flex flex-col gap-4"
+            : `grid gap-x-10 gap-y-5 sm:grid-cols-2 ${hasSide ? "xl:grid-cols-3" : "lg:grid-cols-3"}`
+        }
+      >
+        {facts.map((item) => (
+          <div key={item.id} data-field-key={item.id} className="flex flex-col gap-1 min-w-0 break-words">
+            <dt className="text-xs text-ink-tertiary">{item.label}</dt>
+            <dd className="min-w-0">{item.content}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
 
   return (
     <div data-component="PublishedEntityView" className="relative flex-1 min-h-0 flex flex-col overflow-clip bg-paper">
       <DrawerWidthProvider value={PREVIEW_WIDTH}>
         <EntityPreviewSlideOver />
       </DrawerWidthProvider>
-      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
+      <div ref={scrollRef} data-part="published-scroll" className="flex-1 min-h-0 overflow-y-auto">
         <article
           data-gutter-host
           aria-labelledby="published-title"
-          className="gutter-host-main mx-auto w-full max-w-[72rem] pt-12 pb-16 md:pt-14"
+          className="gutter-host-main mx-auto w-full max-w-[72rem] pt-14 pb-20"
         >
           <header
-            data-part="hero"
-            className={`grid gap-6 md:gap-10 ${hero ? "md:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] md:items-end" : ""}`}
+            data-part="masthead"
+            className={`flex flex-col gap-6 ${hero ? "md:flex-row md:items-end md:gap-8" : ""}`}
           >
             {hero && (
               <button
                 type="button"
-                data-part="hero-image"
+                data-part="masthead-image"
                 onClick={() => setLightbox(hero)}
                 aria-label={`View image: ${hero.alt}`}
-                className="block w-full max-w-[15rem] rounded-md overflow-hidden bg-vellum cursor-zoom-in
+                className="block shrink-0 w-full md:w-44 rounded-md overflow-hidden bg-vellum cursor-zoom-in
                   focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35"
               >
                 <img
@@ -118,53 +163,64 @@ export function PublishedEntityView() {
                   alt={hero.alt}
                   width={hero.width}
                   height={hero.height}
-                  className="block w-full aspect-[4/5] object-cover"
+                  className="block w-full aspect-[4/3] md:aspect-[4/5] object-cover"
                 />
               </button>
             )}
-            <div data-part="identity" className="flex flex-col gap-3 min-w-0">
+            <div data-part="identity" className="flex flex-col gap-2 min-w-0">
               <EntityTypeTag typeId={profile.typeId} />
-              <h1 id="published-title" className="text-2xl font-semibold text-ink text-balance break-words">
+              {/* The published title: the one display size (TYPOGRAPHY.md). */}
+              <h1
+                id="published-title"
+                className="text-2xl md:text-3xl font-semibold leading-tight text-ink text-balance break-words"
+              >
                 {title}
               </h1>
+              {descriptor && (
+                <p data-part="descriptor" className="text-sm text-ink-secondary leading-snug break-words">
+                  {descriptor}
+                </p>
+              )}
+              <p data-part="meta" className="text-meta text-ink-tertiary">
+                {edited && (
+                  <>
+                    {entity?.updatedAt ? "Last updated" : "Added"}{" "}
+                    <time dateTime={edited}>{formatRecordDate(edited, language)}</time>
+                    {" · "}
+                  </>
+                )}
+                {LANGUAGE_NAMES[language]}
+              </p>
             </div>
           </header>
 
           <div
             data-part="body"
-            data-layout={split ? "split" : "single"}
-            className={`mt-10 md:mt-12 grid gap-10 ${split ? "lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-[auto_1fr] lg:gap-x-14" : ""}`}
+            data-layout={hasSide ? "split" : "single"}
+            className={`mt-12 md:mt-14 grid gap-12 ${
+              hasSide ? "lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-[auto_1fr] lg:gap-x-16" : ""
+            }`}
           >
-            {/* Facts first in the source: on a phone they lead. On a wide screen
-                they sit in the side column's first row, beside the reading
-                column that spans both rows. */}
-            {facts.length > 0 && (
-              <section data-part="facts" aria-label={t("System", "Key facts")} className={`min-w-0 ${split ? "lg:col-start-2 lg:row-start-1" : ""}`}>
-                <dl className={split ? "flex flex-col gap-4" : "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 sm:gap-x-10"}>
-                  {facts.map((item) => (
-                    <div key={item.id} data-field-key={item.id} className="flex flex-col gap-1 min-w-0 break-words">
-                      <SectionLabel as="dt">{item.label}</SectionLabel>
-                      <dd className="min-w-0">{item.content}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </section>
-            )}
+            {/* With prose, the facts are first in the source so they lead on a
+                phone, and sit in the side column's first row on a wide screen,
+                beside the main column that spans both rows. */}
+            {factsInSide && factList}
 
             <div
-              data-part="reading"
-              className={`flex flex-col gap-8 min-w-0 ${split ? "lg:col-start-1 lg:row-start-1 lg:row-span-2" : empty ? "" : "hidden"}`}
+              data-part="main"
+              className={`flex flex-col gap-12 min-w-0 ${hasSide ? "lg:col-start-1 lg:row-start-1 lg:row-span-2" : ""}`}
             >
               {empty && (
                 <p data-part="empty" className="text-xs text-ink-tertiary">
                   No metadata for this entity yet.
                 </p>
               )}
+              {!factsInSide && facts.length > 0 && factList}
               {reading.map((block) => (
                 <ReadingBlock key={blockKey(block)} block={block} />
               ))}
               {gallery.length > 0 && (
-                <section data-part="gallery" className="flex flex-col gap-3">
+                <section data-part="gallery" className="flex flex-col gap-4">
                   <SectionLabel as="h2">{t("System", "Images")}</SectionLabel>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {gallery.map((img, i) => (
@@ -181,28 +237,35 @@ export function PublishedEntityView() {
                   </div>
                 </section>
               )}
-            </div>
-
-            <aside
-              data-part="side"
-              className={`min-w-0 ${split ? "lg:col-start-2 lg:row-start-2 flex flex-col gap-8" : "grid gap-8 lg:grid-cols-2 lg:gap-x-14 items-start"}`}
-            >
               {place && (
-                <section data-part="place" className="flex flex-col gap-2">
-                  <SectionLabel as="h2">{geo?.fieldLabel ?? t("System", "Location")}</SectionLabel>
+                <section data-part="place" className="flex flex-col gap-4">
+                  <SectionLabel as="h2">{place.fieldLabel}</SectionLabel>
                   <PublishedMap lat={place.lat} lon={place.lon} label={place.label ?? title} />
                 </section>
               )}
-              {profile.hasDocument && <DocumentLink profile={profile} language={language} />}
-              {relGroups.length > 0 && (
-                <section data-part="relationships" className="flex flex-col gap-5">
-                  <SectionLabel as="h2">{t("System", "Relationships")}</SectionLabel>
-                  {relGroups.map((g) => (
-                    <RelationshipGroup key={g.type} type={g.type} entityIds={g.entityIds} />
-                  ))}
-                </section>
-              )}
-            </aside>
+              {hasFiles && <SupportingFiles profile={profile} language={language} />}
+            </div>
+
+            {rels.entities > 0 && (
+              <aside
+                data-part="side"
+                aria-labelledby="published-relationships"
+                className={`min-w-0 flex flex-col gap-5 ${factsInSide ? "lg:col-start-2 lg:row-start-2" : "lg:col-start-2 lg:row-start-1 lg:row-span-2"}`}
+              >
+                <div className="flex flex-col gap-1">
+                  <SectionLabel as="h2">
+                    <span id="published-relationships">{t("System", "Relationships")}</span>
+                  </SectionLabel>
+                  <p data-part="summary" className="text-xs text-ink-tertiary tabular-nums">
+                    {/* `bdi`: a phrase that starts with a number keeps it in front under RTL. */}
+                    <bdi>{plural(rels.links, "relationship")}</bdi>, <bdi>{plural(rels.entities, "entity", "entities")}</bdi>
+                  </p>
+                </div>
+                {rels.groups.map((g) => (
+                  <RelationshipGroup key={g.typeId} typeId={g.typeId} rows={g.rows} />
+                ))}
+              </aside>
+            )}
           </div>
         </article>
       </div>
@@ -211,28 +274,42 @@ export function PublishedEntityView() {
   );
 }
 
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+
 const blockKey = (b: Block) =>
   b.kind === "item" ? b.item.id : b.kind === "group" ? `group:${b.group.connectionKey}` : b.field.id;
 
+const linkKey = (type: RelationType, entityId: string) => `${type}\u0000${entityId}`;
+
 /** The record's entries, in template order, split by shape: short values and
  *  link-only connections are facts; prose, recordings and the inheritance
- *  tables are reading. The first geolocation value is the page's place. */
+ *  tables are reading. The first geolocation is the page's place, native or
+ *  inherited (a connection that inherits only a place becomes the map, not a
+ *  table beside it). Also returns the descriptor (the first short facts as one
+ *  line) and every relationship the page already shows, so the relationships
+ *  list can leave those out. */
 function arrange(
   profile: EntityProfile,
   language: Language,
   getProp: ReturnType<typeof makeEntityPropReader>,
 ) {
+  const corpus = entityCorpusOf(profile.id);
   const { fields } = deriveTemplateStructure(profile, language);
-  const templateProps = new Map(
-    (templateMirror(entityCorpusOf(profile.id), profile.typeId)?.properties ?? []).map((p) => [p.name, p]),
-  );
+  const templateProps = new Map((templateMirror(corpus, profile.typeId)?.properties ?? []).map((p) => [p.name, p]));
   const relFields = fields.filter((f): f is RelationshipMetadataField => f.type === "relationship");
   const { groups } = groupConnections(relFields, language, getProp);
   const groupByKey = new Map(groups.map((g) => [g.connectionKey, g]));
   const placed = new Set<string>();
   const facts: MetadataItem[] = [];
   const reading: Block[] = [];
-  let geo: { lat: number; lon: number; label?: string; fieldLabel: string } | undefined;
+  const shownLinks = new Set<string>();
+  // Descriptor candidates: short, single, plain values. Places go last, so the
+  // line reads "Petitioner · Argentina".
+  const words: string[] = [];
+  const placeWords: string[] = [];
+  let geo: Place | undefined;
+
+  const show = (f: RelationshipMetadataField) => f.connectedEntityIds.forEach((id) => shownLinks.add(linkKey(f.relationType, id)));
 
   for (const f of fields) {
     if (f.type === "relationship") {
@@ -241,25 +318,51 @@ function arrange(
       if (group) {
         if (placed.has(group.connectionKey)) continue;
         placed.add(group.connectionKey);
+        group.fields.forEach(show);
         reading.push({ kind: "group", group });
-      } else if (specInherits(f)) {
+        continue;
+      }
+      show(f);
+      if (specInherits(f)) {
+        const inherited = f.inheritProperty
+          ? templateMirror(corpus, f.targetTypeId)?.properties.find((p) => p.name === f.inheritProperty)
+          : undefined;
+        const at = f.connectedEntityIds.map((id) => getEntity(id)).find((e) => e?.geo);
+        if (inherited?.type === "geolocation" && at?.geo) {
+          geo ??= { lat: at.geo.lat, lon: at.geo.lng, label: at.title, fieldLabel: f.label };
+          continue;
+        }
         reading.push({ kind: "table", field: f });
-      } else {
-        facts.push(connectionItem(f));
+        continue;
+      }
+      facts.push(connectionItem(f));
+      if (f.connectedEntityIds.length === 1) {
+        const e = getEntity(f.connectedEntityIds[0]);
+        const label = e?.title ?? f.connectedLabels?.[f.connectedEntityIds[0]];
+        if (label) (e?.geo ? placeWords : words).push(label);
       }
       continue;
     }
     const field = f as MetadataField;
     if (!field.value?.trim()) continue;
-    // Pictures are the hero and the gallery, not facts.
+    // Pictures are the masthead and the gallery, not facts.
     if (field.propertyType === "image" || isImageUrl(field.value)) continue;
     if (field.geo && !geo) geo = { ...field.geo, fieldLabel: field.label };
     const p = templateProps.get(field.id);
     const item = { ...fieldItem(field, p?.style), noLabel: p?.noLabel };
-    if (item.kind === "long") reading.push({ kind: "item", item });
-    else facts.push(item);
+    if (item.kind === "long") {
+      reading.push({ kind: "item", item });
+      continue;
+    }
+    facts.push(item);
+    const isDate = field.type === "date" || !!field.propertyType?.includes("date");
+    if (item.kind === "scalar" && !isDate && field.type !== "link" && !field.geo && !/^[\d\s.,-]+$/.test(field.value)) {
+      // A country is a select on the Countries thesaurus too (decision S3).
+      (field.type === "country" || countryFlag(field.value) ? placeWords : words).push(field.value.trim());
+    }
   }
-  return { facts, reading, geo };
+  const descriptor = [...new Set([...words.slice(0, placeWords.length ? 1 : 2), ...placeWords.slice(0, 1)])].join(" · ");
+  return { facts, reading, geo, descriptor, shownLinks };
 }
 
 function ReadingBlock({ block }: { block: Block }) {
@@ -277,87 +380,135 @@ function ReadingBlock({ block }: { block: Block }) {
     );
   const { item } = block;
   return (
-    <section data-part="prose" data-field-key={item.id} className="flex flex-col gap-2 max-w-[40rem]" aria-label={item.noLabel ? item.label : undefined}>
-      {!item.noLabel && <h2 className="text-sm font-semibold text-ink">{item.label}</h2>}
+    <section
+      data-part="prose"
+      data-field-key={item.id}
+      className="flex flex-col gap-4 max-w-[42rem]"
+      aria-label={item.noLabel ? item.label : undefined}
+    >
+      {!item.noLabel && <SectionLabel as="h2">{item.label}</SectionLabel>}
       <div className="min-w-0 break-words">{item.content}</div>
     </section>
   );
 }
 
-/** The entity's relationships as relationship types, each with the entities
- *  it reaches, in first-seen order. Hub members are listed as the entities
- *  they are. */
-function relationshipGroups(references: Reference[]) {
-  const byType = new Map<RelationType, string[]>();
+type RelRow = { entityId: string; types: RelationType[] };
+
+/** The entity's relationships as the entities they reach: one row per entity
+ *  with every relationship type that links it, grouped by the entity's
+ *  template, in first-seen order. Relationships the page already shows as a
+ *  fact or a table (`shown`) are left out; an entity left with no type is
+ *  dropped. Hub members are listed as the entities they are. */
+function relationshipGroups(references: Reference[], shown: Set<string>) {
+  const rows = new Map<string, RelRow>();
   for (const rel of deriveRelationships(references, { includeHubMembers: true })) {
-    const list = byType.get(rel.relationType) ?? [];
-    if (!list.includes(rel.targetEntityId)) list.push(rel.targetEntityId);
-    byType.set(rel.relationType, list);
+    if (shown.has(linkKey(rel.relationType, rel.targetEntityId))) continue;
+    const row = rows.get(rel.targetEntityId) ?? { entityId: rel.targetEntityId, types: [] };
+    if (!row.types.includes(rel.relationType)) row.types.push(rel.relationType);
+    rows.set(rel.targetEntityId, row);
   }
-  return [...byType].map(([type, entityIds]) => ({ type, entityIds }));
+  const byTemplate = new Map<string, RelRow[]>();
+  let links = 0;
+  for (const row of rows.values()) {
+    const typeId = getEntity(row.entityId)?.typeId ?? "";
+    byTemplate.set(typeId, [...(byTemplate.get(typeId) ?? []), row]);
+    links += row.types.length;
+  }
+  return {
+    groups: [...byTemplate].map(([typeId, list]) => ({ typeId, rows: list })),
+    links,
+    entities: rows.size,
+  };
 }
 
-function RelationshipGroup({ type, entityIds }: { type: RelationType; entityIds: string[] }) {
+function RelationshipGroup({ typeId, rows }: { typeId: string; rows: RelRow[] }) {
   const [all, setAll] = useState(false);
   const preview = useSetAtom(previewEntityIdAtom);
-  const shown = all ? entityIds : entityIds.slice(0, GROUP_PREVIEW);
-  const label = relationLabel(type);
+  const shown = all ? rows : rows.slice(0, GROUP_PREVIEW);
+  const name = getEntityType(typeId)?.name;
   return (
-    <div data-part="relationship-group" className="flex flex-col gap-2 min-w-0">
-      <h3 className="text-xs font-semibold text-ink">{label}</h3>
-      <ul className="flex flex-wrap gap-1.5 min-w-0">
-        {shown.map((id) => {
-          const e = getEntity(id);
+    <section data-part="relationship-group" aria-label={name} className="flex flex-col gap-2.5 min-w-0">
+      <EntityTypeTag typeId={typeId} />
+      <ul className="flex flex-col gap-2 min-w-0">
+        {shown.map(({ entityId, types }) => {
+          const e = getEntity(entityId);
           return (
-            <li key={id} className="min-w-0 max-w-full">
+            <li key={entityId} className="flex flex-wrap items-center gap-x-2 gap-y-0.5 min-w-0">
               <EntityPill
                 typeId={e?.typeId ?? ""}
                 label={e?.title}
-                onClick={() => preview(id)}
+                onClick={() => preview(entityId)}
                 ariaLabel={`Open ${e?.title ?? "entity"}`}
               />
+              <span data-part="types" className="text-meta text-ink-tertiary min-w-0">
+                {types.map(relationDisplayLabel).join(" · ")}
+              </span>
             </li>
           );
         })}
       </ul>
-      {entityIds.length > GROUP_PREVIEW && (
+      {rows.length > GROUP_PREVIEW && (
         <button
           type="button"
           onClick={() => setAll((v) => !v)}
           aria-expanded={all}
-          className="w-fit text-xs font-medium text-ink-secondary hover:text-ink underline underline-offset-2 cursor-pointer
+          className="w-fit text-xs text-ink-secondary hover:text-ink underline underline-offset-2 cursor-pointer
             focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35 rounded-xs"
         >
-          {all ? "Show fewer" : `Show all ${entityIds.length}`}
+          {all ? "Show fewer" : `Show all ${rows.length}`}
         </button>
       )}
-    </div>
+    </section>
   );
 }
 
-/** The primary document, and the way to read it: the entity view's Document
- *  tab, where the viewer, its references and its search live. */
-function DocumentLink({ profile, language }: { profile: EntityProfile; language: Language }) {
+/** The entity's documents, one row per document with its files' languages.
+ *  A title opens it where it can be read: the primary document in the entity
+ *  view's Document tab (viewer, references, search), the rest in Files. */
+function SupportingFiles({ profile, language }: { profile: EntityProfile; language: Language }) {
   const setMode = useSetAtom(entityDisplayModeAtom);
   const requestTab = useSetAtom(entityTabRequestAtom);
-  const doc = profile.document?.[language];
-  const name = doc?.title ?? profile.documentGroups?.find((g) => g.isPrimary)?.title ?? profile.files?.[0]?.name;
+  const files = profile.files ?? [];
+  const groups = [...(profile.documentGroups ?? [])].sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.order - b.order);
+  const docs = groups.length
+    ? groups.map((g) => ({ id: g.id, title: g.title, primary: g.isPrimary, files: files.filter((f) => f.groupId === g.id) }))
+    : [{ id: "doc", title: profile.document?.[language]?.title ?? files[0]?.name ?? "Document", primary: profile.hasDocument, files }];
+  const pages = profile.document?.[language]?.pages;
   return (
-    <section data-part="document" className="flex flex-col gap-2">
-      <SectionLabel as="h2">{t("System", "Document")}</SectionLabel>
-      {name && <p className="text-sm font-medium text-ink break-words">{name}</p>}
-      <button
-        type="button"
-        onClick={() => {
-          requestTab("document");
-          setMode("entity");
-        }}
-        className={`w-fit inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-md cursor-pointer
-          focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35 ${WARM_BUTTON}`}
-      >
-        <FileText size={14} aria-hidden className="shrink-0" />
-        Read the document
-      </button>
+    <section data-part="files" className="flex flex-col gap-4">
+      <SectionLabel as="h2">{t("System", "Supporting files")}</SectionLabel>
+      <ul className="flex flex-col gap-3">
+        {docs.map((d) => {
+          const langs = [...new Set(d.files.map((f) => f.language).filter(Boolean))];
+          const meta = [
+            (d.files[0]?.type ?? "pdf").toUpperCase(),
+            langs.join(", "),
+            d.primary && pages ? plural(pages, "page") : "",
+          ].filter(Boolean);
+          return (
+            <li key={d.id} className="flex items-start gap-3 min-w-0">
+              <span aria-hidden className="mt-0.5 shrink-0 w-8 h-8 rounded-md bg-vellum text-ink-tertiary flex items-center justify-center">
+                <FileText size={15} />
+              </span>
+              <div className="flex flex-col gap-0.5 min-w-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    requestTab(d.primary && profile.hasDocument ? "document" : "files");
+                    setMode("entity");
+                  }}
+                  aria-label={`Open ${d.title}`}
+                  className="w-fit text-start text-sm font-medium text-ink leading-snug break-words hover:underline underline-offset-2 cursor-pointer
+                    focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35 rounded-xs"
+                >
+                  {d.title}
+                </button>
+                <p className="text-meta text-ink-tertiary tabular-nums">{meta.join(" · ")}</p>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
     </section>
   );
 }
@@ -383,7 +534,7 @@ function PublishedMap({ lat, lon, label }: { lat: number; lon: number; label: st
     };
   }, [map, lat, lon, label]);
   return (
-    <div data-component="PublishedMap" className="relative isolate h-56 rounded-md overflow-hidden border border-border-soft">
+    <div data-component="PublishedMap" className="relative isolate h-64 rounded-md overflow-hidden border border-border-soft">
       <div ref={host} role="group" aria-label={`Map: ${label}`} className="absolute inset-0" />
     </div>
   );
@@ -392,33 +543,43 @@ function PublishedMap({ lat, lon, label }: { lat: number; lon: number; label: st
 /** The one switch between the published view and the entity view, for an
  *  entity whose template has a published view (hidden otherwise).
  *
- *  It floats centred on the navbar's lower edge, the one spot both views leave
- *  free, so it neither moves nor moves anything when the mode changes. Icon
- *  only; its name says where it goes ("Entity view" / "Published view").
- *  Leaving the entity view goes through the dirty-form guard, like a tab
- *  change. It handles no keys of its own. */
+ *  Fixed at the content area's top inline-end corner, under the navbar: in the
+ *  entity view that is the empty end of the drawer's tab row, in the published
+ *  view the page's margin. It is the same spot in both modes, and being fixed
+ *  it moves nothing when the mode changes. Icon only, with a hint; its name
+ *  says where it goes ("Entity view" / "Published view"). Leaving the entity
+ *  view goes through the dirty-form guard, like a tab change. Below desktop
+ *  the entity view's tab row keeps its slot free (`reserveToggleSlotAtom`). */
 export function PublishedViewToggle() {
   const available = useAtomValue(focusedHasPublishedViewAtom);
   const mode = useAtomValue(entityDisplayModeAtom);
   const setMode = useSetAtom(entityDisplayModeAtom);
   const guard = useDirtyGuard();
+  // A slide-over, sheet or dialog puts its own close where this sits; the
+  // toggle steps aside (invisible, so nothing moves) until it closes.
+  const covered = useAtomValue(layerStackAtom).length > 0;
   if (!available) return null;
   const toEntity = mode === "published";
   const label = toEntity ? "Entity view" : "Published view";
   const Icon = toEntity ? PanelRight : Newspaper;
   return (
-    <button
-      type="button"
-      data-component="PublishedViewToggle"
-      data-mode={mode}
-      aria-label={label}
-      title={label}
-      onClick={() => (toEntity ? setMode("entity") : guard(() => setMode("published")))}
-      className="fixed z-30 top-13 left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center
-        rounded-md bg-paper text-ink-secondary hover:text-ink hover:bg-parchment border border-border shadow-sm
-        transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35"
-    >
-      <Icon size={14} aria-hidden />
-    </button>
+    <Hint text={label} describe={false}>
+      {(hint) => (
+        <button
+          {...hint}
+          type="button"
+          data-component="PublishedViewToggle"
+          data-mode={mode}
+          aria-label={label}
+          onClick={() => (toEntity ? setMode("entity") : guard(() => setMode("published")))}
+          className={`fixed z-30 top-[3.75rem] end-3 w-8 h-8 flex items-center justify-center rounded-md
+            transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/35 ${WARM_BUTTON} ${
+            covered ? "invisible" : ""
+          }`}
+        >
+          <Icon size={15} aria-hidden className="rtl:-scale-x-100" />
+        </button>
+      )}
+    </Hint>
   );
 }

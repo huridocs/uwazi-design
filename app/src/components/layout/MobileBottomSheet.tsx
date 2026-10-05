@@ -225,7 +225,9 @@ export function MobileBottomSheet({
           transformOrigin: "top center",
           borderTopLeftRadius: 12,
           borderTopRightRadius: 12,
-          boxShadow: "0 -8px 24px rgba(0,0,0,0.15)",
+          // Only while open: a closed sheet waits just below the viewport, and
+          // its shadow drew a grey band along the bottom edge.
+          boxShadow: open ? "0 -8px 24px rgba(0,0,0,0.15)" : "none",
           zIndex: sheetZ(Math.max(0, layer.index)) + 1,
           // Clear of the on-screen keyboard too (`--kb`, useKeyboardInset).
           paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + var(--kb, 0px))",
