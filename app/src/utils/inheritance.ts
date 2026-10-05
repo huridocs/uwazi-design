@@ -10,10 +10,19 @@ export type { ProvenanceStep } from "./chainTraversal";
  *  pass a closure over `entityMetadataAtom` to make inherited values live. */
 export type EntityPropReader = (entityId: string, propId: string, lang: Language) => string | undefined;
 
-const relationLabelById = new Map(relationTypes.map((r) => [r.id, r.label]));
-/** Human label for a relation type id (falls back to the raw id). */
+/** A reader for types renamed in Settings that references name by their
+ *  dump name (CEJIL, Travesía): registered by `atoms/relationTypes.ts`, so
+ *  this module never imports the atoms. */
+let renamedLabel: ((type: RelationType) => string | undefined) | null = null;
+export function registerRelationLabelReader(read: (type: RelationType) => string | undefined) {
+  renamedLabel = read;
+}
+
+/** Human label for a relation type id (falls back to the raw id). Looked up
+ *  at call time, never cached: Settings renames and creates types while the
+ *  app runs. */
 export function relationLabel(type: RelationType): string {
-  return relationLabelById.get(type) ?? type;
+  return renamedLabel?.(type) ?? relationTypes.find((r) => r.id === type)?.label ?? type;
 }
 
 /* ── Unified inheritance resolution ──

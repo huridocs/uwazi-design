@@ -4,6 +4,7 @@ import { cejilTemplates } from "../data/cejil/templates";
 import { travesiaTemplates } from "../data/travesia/schema";
 import { sampleTemplateProperties } from "../data/entityProfiles";
 import { relationshipFieldsByLanguage } from "../data/metadata";
+import { V4_FIELDS } from "../data/sampleSeedV4";
 import type { ThesaurusValue } from "../data/settings";
 
 /** Usage queries for Settings: what a template, property, thesaurus, value,
@@ -89,7 +90,19 @@ function sampleSchema(): SchemaProperty[] {
     targetTemplateId: f.targetTypeId,
     inherits: f.inheritProperty,
   }));
-  return [...fields, ...rels];
+  // The v4 seed's relationship fields (Victims, Petitioners, Signed by, …),
+  // which the records render from `V4_FIELDS`.
+  const v4: SchemaProperty[] = Object.entries(V4_FIELDS).flatMap(([templateId, list]) =>
+    list.map((f) => ({
+      templateId,
+      name: f.id,
+      label: f.label.EN,
+      type: "relationship",
+      relationType: f.relationType,
+      targetTemplateId: f.targetTypeId,
+    })),
+  );
+  return [...fields, ...rels, ...v4];
 }
 
 const schemaCache = new Map<Corpus, SchemaProperty[]>();

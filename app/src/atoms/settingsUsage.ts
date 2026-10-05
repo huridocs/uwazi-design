@@ -4,7 +4,8 @@ import { entityTypes, type Entity } from "../data/entities";
 import { applyOverlay, type Corpus } from "../data/entityChanges";
 import type { AnyMetadataField, MetadataField, RelationshipMetadataField } from "../data/metadata";
 import { cejilEsBySid } from "../data/cejil/load";
-import { travesiaEntity } from "../data/travesia/load";
+import { travesiaCorpus, travesiaEntity } from "../data/travesia/load";
+import { relationTypesCorpus } from "./relationTypes";
 import { cejilLibraryEntities } from "../data/cejil/adapt";
 import { travesiaLibraryEntities } from "../data/travesia/adapt";
 import { cejilSettingsTemplates } from "../data/cejil/settingsAdapt";
@@ -215,11 +216,15 @@ export const valueUsageAtom = atomFamily((thesaurusId: string) =>
  *  being read-only) and the relationship fields in its templates. */
 export const relationTypeUsageAtom = atomFamily((id: string) =>
   atom((get) => {
-    const corpus = templatesCorpus(get(dataSourceAtom));
+    const corpus = relationTypesCorpus(get(dataSourceAtom));
     const references =
       corpus === "mock"
         ? get(referencesAtom).filter((x) => x.relationType === id).length
-        : (cejilUsageByRelationType[id] ?? 0);
+        : corpus === "travesia"
+          ? get(travesiaReadyAtom)
+            ? (travesiaCorpus()?.relationships ?? []).filter((x) => x.relationType === id).length
+            : 0
+          : (cejilUsageByRelationType[id] ?? 0);
     return relationTypeUsage({
       id,
       references,
