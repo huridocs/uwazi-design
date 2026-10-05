@@ -80,6 +80,10 @@ export interface TemplateDef {
   /** In order: the order of the form, the record, cards and the Template tab. */
   properties: PropertyDef[];
   entityViewPage?: string;
+  /** The prototype's stand-in for `entityViewPage`: entities of this template
+   *  open in the published view, with a toggle to the entity view. Seeded, not
+   *  edited in Settings. */
+  publishedView?: boolean;
 }
 
 /** The id rule for corpora whose properties carry no `_id` (Sample, CEJIL,

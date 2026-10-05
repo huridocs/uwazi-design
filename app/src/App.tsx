@@ -6,6 +6,7 @@ import { settingsAccessAtom } from "./atoms/settings";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Navbar } from "./components/layout/Navbar";
 import { EntityView } from "./views/EntityView";
+import { PublishedViewToggle } from "./components/entity/PublishedEntityView";
 import { LibraryView } from "./views/LibraryView";
 import { ComponentCatalog } from "./views/ComponentCatalog";
 import { useCsvImportRunner } from "./atoms/csvImports";
@@ -133,6 +134,8 @@ export function App() {
         rtl={rtl}
         onToggleRtl={handleToggleRtl}
       />
+      {/* Before `main` in the tab order, floating over the navbar's edge. */}
+      {appView === "entity" && <PublishedViewToggle />}
       {/* The document's one `main`: whichever view is switched in. */}
       <main data-part="view" data-view={appView} className="flex-1 min-h-0 flex flex-col">
         {appView === "import-csv" && canImport ? (

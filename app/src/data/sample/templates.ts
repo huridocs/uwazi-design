@@ -148,6 +148,8 @@ export const sampleTemplateDefs = (): TemplateDef[] => (built ??= entityTypes.ma
   color: t.color,
   // The Sample's uploads take Document (createEntity's `uploadTemplateId`).
   isDefault: t.id === "document",
+  // Person opens in the published view (`TemplateDef.publishedView`).
+  ...(t.id === "person" ? { publishedView: true } : {}),
   commonProperties: commonPropertiesFor(t.id),
   properties: (() => {
     const own = t.id === "court_case" ? courtCaseProperties() : nativeProperties(t.id);

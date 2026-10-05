@@ -60,6 +60,9 @@ function propertyOf(templateId: string, p: CejilTemplateProperty): PropertyDef {
   };
 }
 
+/** Juez y/o Comisionado opens in the published view (`TemplateDef.publishedView`). */
+const PUBLISHED_VIEW_TEMPLATE = "58b2f3a35d59f31e1345b4b6";
+
 let built: TemplateDef[] | null = null;
 /** Built on first read (see data/sample/templates.ts). */
 export const cejilTemplateDefs = (): TemplateDef[] => (built ??= cejilTemplates.map((t) => ({
@@ -70,4 +73,5 @@ export const cejilTemplateDefs = (): TemplateDef[] => (built ??= cejilTemplates.
   isDefault: !!t.default,
   commonProperties: (t.commonProperties ?? []).map((p) => propertyOf(t._id, p)),
   properties: t.properties.map((p) => propertyOf(t._id, p)),
+  ...(t._id === PUBLISHED_VIEW_TEMPLATE ? { publishedView: true } : {}),
 })));
