@@ -1,8 +1,8 @@
 import { useCallback, useState } from "react";
 import { useAtomValue } from "jotai";
-import { Plus } from "lucide-react";
-import { SettingsContent } from "../SettingsContent";
-import { SettingsButton } from "../SettingsButton";
+import { FileText } from "lucide-react";
+import { SettingsListPage, useSettingsSearch } from "../SettingsListPage";
+import { SettingsEmptyState } from "../SettingsEmptyState";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { RowActions } from "../RowActions";
 import { PageDelete } from "../../shared/SettingsDeletes";
@@ -27,6 +27,7 @@ export function PagesPage() {
   const [newSeeds, setNewSeeds] = useState<Record<string, CodeDoc>>({});
   const docs = useAtomValue(codeDocsAtom);
   const site = useSiteData();
+  const search = useSettingsSearch(pages, (p) => `${p.title} ${p.slug}`);
 
   // Existing pages open with their text in English and Spanish only, so French
   // and Arabic show what "Copy from language" is for.
@@ -90,36 +91,48 @@ export function PagesPage() {
     {
       id: "actions",
       header: "",
-      width: "6rem",
+      width: "4rem",
       align: "right",
-      cell: (p) => <RowActions label={p.title} onEdit={() => setEditing(p)} onDelete={() => setConfirm(p)} />,
+      cell: (p) => <RowActions label={p.title} onDelete={() => setConfirm(p)} />,
     },
   ];
 
   return (
-    <SettingsContent component="PagesPage">
-      <SettingsContent.Header title="Pages" />
-      <SettingsContent.Body>
-        <p className="text-xs text-ink-tertiary mb-4">
-          Custom pages for your collection. Each page is HTML, CSS and JavaScript per language, previewed as you type. A draft
-          stays private until you publish it.
-        </p>
-        <SettingsTable columns={columns} data={pages} getRowId={(p) => p.id} onRowClick={(p) => setEditing(p)} rowAriaLabel={(p) => `Edit ${p.title}`} />
-      </SettingsContent.Body>
-      <SettingsContent.Footer>
-        <SettingsButton variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setPicking(true)}>
-          Add page
-        </SettingsButton>
-      </SettingsContent.Footer>
-
-      {picking && <TemplatePickerModal onPick={create} onClose={() => setPicking(false)} />}
-
-      <PageDelete
-        page={confirm}
-        menu={dataSource === "cejil" ? cejilSettingsMenu : seedMenuLinks}
-        onCancel={() => setConfirm(null)}
-        onDelete={(page) => setPages((prev) => prev.filter((p) => p.id !== page.id))}
+    <SettingsListPage
+      component="PagesPage"
+      title="Pages"
+      intro={"Custom pages for your collection. Each page is HTML, CSS and JavaScript per language, previewed as you type. A\u00a0draft stays private until you publish it."}
+      search={{ value: search.query, onChange: search.setQuery, label: "Search pages" }}
+      lead={{ label: "Add page", onClick: () => setPicking(true) }}
+      overlays={
+        <>
+          {picking && <TemplatePickerModal onPick={create} onClose={() => setPicking(false)} />}
+          <PageDelete
+            page={confirm}
+            menu={dataSource === "cejil" ? cejilSettingsMenu : seedMenuLinks}
+            onCancel={() => setConfirm(null)}
+            onDelete={(page) => setPages((prev) => prev.filter((p) => p.id !== page.id))}
+          />
+        </>
+      }
+    >
+      <SettingsTable
+        columns={columns}
+        data={search.rows}
+        getRowId={(p) => p.id}
+        onRowClick={(p) => setEditing(p)}
+        rowAriaLabel={(p) => `Edit ${p.title}`}
+        emptyState={
+          <SettingsEmptyState
+            icon={<FileText size={16} />}
+            title="No pages yet"
+            hint="A page holds your own content, such as an About page or a methodology."
+            action={{ label: "Add page", onClick: () => setPicking(true) }}
+            query={search.query}
+            onClearQuery={search.clear}
+          />
+        }
       />
-    </SettingsContent>
+    </SettingsListPage>
   );
 }

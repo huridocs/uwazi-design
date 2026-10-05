@@ -1,12 +1,12 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { codeDocsAtom } from "../../../atoms/sitePages";
 import { nameList } from "../../../utils/settingsUsage";
-import { Upload, Image, FileText, Type, File, Search, X, LayoutGrid, List, Link2, Trash2 } from "lucide-react";
-import { SettingsContent } from "../SettingsContent";
-import { SettingsButton } from "../SettingsButton";
+import { Upload, Image, FileText, Type, File, LayoutGrid, List, Link2 } from "lucide-react";
+import { SettingsListPage, useSettingsSearch } from "../SettingsListPage";
+import { SettingsEmptyState } from "../SettingsEmptyState";
 import { SettingsTable, type Column } from "../SettingsTable";
-import { RowActions } from "../RowActions";
+import { RowActionButton, RowActions } from "../RowActions";
 import { Select } from "../../shared/Select";
 import { SegmentedControl } from "../../shared/SegmentedControl";
 import { ConfirmDelete } from "../../shared/ConfirmDelete";
@@ -45,18 +45,14 @@ export function UploadsPage() {
 
   const [uploads, setUploads] = useState<SettingsUpload[]>(seedUploads);
   const [confirm, setConfirm] = useState<SettingsUpload | null>(null);
-  const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [view, setView] = useState("grid");
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return uploads.filter((u) => {
-      if (typeFilter !== "all" && u.type !== typeFilter) return false;
-      if (q && !u.name.toLowerCase().includes(q) && !u.url.toLowerCase().includes(q)) return false;
-      return true;
-    });
-  }, [uploads, query, typeFilter]);
+  const search = useSettingsSearch(
+    typeFilter === "all" ? uploads : uploads.filter((u) => u.type === typeFilter),
+    (u) => `${u.name} ${u.url}`,
+  );
+  const filtered = search.rows;
 
   const copyUrl = (u: SettingsUpload) => {
     navigator.clipboard?.writeText(u.url).catch(() => {});
@@ -79,50 +75,66 @@ export function UploadsPage() {
     },
     { id: "url", header: "URL", cell: (u) => <span dir="ltr" className="text-xs text-ink-tertiary truncate">{u.url}</span> },
     { id: "size", header: "Size", width: "7rem", cell: (u) => <span dir="ltr" className="text-xs text-ink-tertiary">{u.size}</span> },
-    { id: "actions", header: "", width: "6rem", align: "right", cell: (u) => <RowActions label={u.name} onEdit={() => copyUrl(u)} onDelete={() => setConfirm(u)} /> },
+    {
+      id: "actions",
+      header: "",
+      width: "5rem",
+      align: "right",
+      cell: (u) => (
+        <RowActions label={u.name} onDelete={() => setConfirm(u)}>
+          <RowActionButton label={`Copy URL for ${u.name}`} icon={<Link2 size={14} aria-hidden />} onClick={() => copyUrl(u)} />
+        </RowActions>
+      ),
+    },
   ];
 
-  return (
-    <SettingsContent component="UploadsPage">
-      <SettingsContent.Header title="Uploads" />
-      <SettingsContent.Body>
-        <p className="text-xs text-ink-tertiary mb-4">
-          Assets you can reference from pages, custom CSS, or templates.
-        </p>
+  const uploadFile = () => notify("Upload is not built in the prototype. No file was added.", "info");
+  const empty = (
+    <SettingsEmptyState
+      icon={<Upload size={16} />}
+      title={typeFilter === "all" ? "No uploads yet" : "No uploads of this type"}
+      hint="Upload images, fonts or files to use in pages and custom CSS."
+      action={{ label: "Upload file", onClick: uploadFile }}
+      query={search.query}
+      onClearQuery={search.clear}
+    />
+  );
 
-        {/* Toolbar */}
-        <div data-part="toolbar" className="flex flex-wrap items-center gap-2 mb-4">
-          <div role="search" className="relative flex-1 min-w-[12rem] max-w-sm">
-            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              aria-label="Search uploads"
-              placeholder="Search by name or URL…"
-              className="w-full pl-8 pr-8 py-2 text-sm text-ink bg-warm border border-border rounded-md placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-carbon/20"
-            />
-            {query && (
-              <button
-                onClick={() => setQuery("")}
-                aria-label="Clear search"
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-parchment text-ink-muted hover:text-ink cursor-pointer"
-              >
-                <X size={12} />
-              </button>
-            )}
-          </div>
+  return (
+    <SettingsListPage
+      component="UploadsPage"
+      title="Uploads"
+      intro="Assets you can reference from pages, custom CSS, or templates."
+      search={{ value: search.query, onChange: search.setQuery, label: "Search uploads", placeholder: "Search by name or URL…" }}
+      filters={
+        <>
           <Select value={typeFilter} options={TYPE_OPTIONS} onChange={setTypeFilter} ariaLabel="Filter by type" />
           <SegmentedControl value={view} options={VIEW_OPTIONS} onChange={setView} ariaLabel="View mode" />
-        </div>
-
-        {filtered.length === 0 ? (
-          <div
-            className="flex items-center justify-center rounded-lg bg-warm py-12 text-sm text-ink-tertiary"
-            style={{ border: "1px solid var(--border-soft)" }}
-          >
-            No assets match your search.
-          </div>
-        ) : view === "grid" ? (
+        </>
+      }
+      lead={{ label: "Upload file", icon: <Upload size={14} aria-hidden />, onClick: uploadFile }}
+      overlays={
+        <ConfirmDelete
+          open={confirm !== null}
+          impact={confirm ? uploadUsage(confirm.url) : null}
+          title="Delete upload"
+          message={`Delete “${confirm?.name}”?`}
+          confirmLabel="Delete"
+          onConfirm={() => {
+            if (confirm) {
+              setUploads((prev) => prev.filter((u) => u.id !== confirm.id));
+              record({ log: false,  method: "DELETE", domain: "upload", noun: "file", id: confirm.id, name: confirm.name });
+            }
+            setConfirm(null);
+          }}
+          onCancel={() => setConfirm(null)}
+        />
+      }
+    >
+      {view === "grid" ? (
+        filtered.length === 0 ? (
+          <div className="rounded-lg py-10 border border-border-soft">{empty}</div>
+        ) : (
           <ul data-part="assets" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {filtered.map((u) => {
               const Icon = typeIcon[u.type];
@@ -130,8 +142,7 @@ export function UploadsPage() {
                 <li
                   key={u.id}
                   data-part="asset"
-                  className="flex flex-col rounded-lg bg-paper overflow-hidden"
-                  style={{ border: "1px solid var(--border-primary)" }}
+                  className="group flex flex-col rounded-lg bg-paper overflow-hidden border border-border"
                 >
                   {/* Thumbnail (placeholder — no real images) */}
                   <div className="flex items-center justify-center aspect-[4/3] bg-warm">
@@ -149,50 +160,19 @@ export function UploadsPage() {
                         <Link2 size={13} />
                         Copy URL
                       </button>
-                      <button
-                        onClick={() => setConfirm(u)}
-                        aria-label={`Delete ${u.name}`}
-                        className="ms-auto p-1.5 rounded-md text-ink-tertiary hover:bg-seal-tint hover:text-seal-label transition-colors cursor-pointer"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                      <div className="ms-auto">
+                        <RowActions label={u.name} onDelete={() => setConfirm(u)} />
+                      </div>
                     </div>
                   </div>
                 </li>
               );
             })}
           </ul>
-        ) : (
-          <SettingsTable columns={columns} data={filtered} getRowId={(u) => u.id} />
-        )}
-      </SettingsContent.Body>
-      <SettingsContent.Footer>
-        <SettingsButton
-          variant="primary"
-          size="sm"
-          className="me-auto"
-          icon={<Upload size={14} />}
-          onClick={() => notify("Upload is not built in the prototype. No file was added.", "info")}
-        >
-          Upload file
-        </SettingsButton>
-      </SettingsContent.Footer>
-
-      <ConfirmDelete
-        open={confirm !== null}
-        impact={confirm ? uploadUsage(confirm.url) : null}
-        title="Delete upload"
-        message={`Delete “${confirm?.name}”?`}
-        confirmLabel="Delete"
-        onConfirm={() => {
-          if (confirm) {
-            setUploads((prev) => prev.filter((u) => u.id !== confirm.id));
-            record({ log: false,  method: "DELETE", domain: "upload", noun: "file", id: confirm.id, name: confirm.name });
-          }
-          setConfirm(null);
-        }}
-        onCancel={() => setConfirm(null)}
-      />
-    </SettingsContent>
+        )
+      ) : (
+        <SettingsTable columns={columns} data={filtered} getRowId={(u) => u.id} emptyState={empty} />
+      )}
+    </SettingsListPage>
   );
 }

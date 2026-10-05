@@ -3,9 +3,21 @@ import { createContext, useContext, useId, type ReactNode } from "react";
 /** The column a settings form sits in: sections stacked one rhythm step
  *  apart, capped at a readable 40rem. `wide` lifts the cap for a body that
  *  is a grid (a template's properties, a term table). */
-export function SettingsForm({ wide = false, children }: { wide?: boolean; children: ReactNode }) {
+export function SettingsForm({
+  wide = false,
+  fill = false,
+  children,
+}: {
+  wide?: boolean;
+  /** Grow to the body's height (a code editor that fills the pane). */
+  fill?: boolean;
+  children: ReactNode;
+}) {
   return (
-    <div data-component="SettingsForm" className={`flex flex-col gap-6 min-w-0 ${wide ? "" : "max-w-[40rem]"}`}>
+    <div
+      data-component="SettingsForm"
+      className={`flex flex-col gap-6 min-w-0 ${wide ? "" : "max-w-[40rem]"} ${fill ? "flex-1 min-h-0" : ""}`}
+    >
       {children}
     </div>
   );

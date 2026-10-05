@@ -117,6 +117,7 @@ export function SettingsFormPage({
   onDiscard,
   saveLabel = "Save",
   wide = false,
+  fill = false,
   footerStart,
   footerStatus,
   overlays,
@@ -125,6 +126,8 @@ export function SettingsFormPage({
 }: SaveProps & {
   component: string;
   title: string;
+  /** The form grows to the body's height (Global CSS & JS's editor). */
+  fill?: boolean;
   intro?: ReactNode;
   onDiscard: () => void;
   saveLabel?: string;
@@ -136,9 +139,11 @@ export function SettingsFormPage({
   return (
     <SettingsContent component={component}>
       <SettingsContent.Header title={title} />
-      <SettingsContent.Body>
+      <SettingsContent.Body className={fill ? "flex flex-col" : ""}>
         {intro && <SettingsIntro>{intro}</SettingsIntro>}
-        <SettingsForm wide={wide}>{children}</SettingsForm>
+        <SettingsForm wide={wide} fill={fill}>
+          {children}
+        </SettingsForm>
       </SettingsContent.Body>
       <SettingsContent.Footer>
         {footerStart && <div className="me-auto flex items-center gap-2">{footerStart}</div>}

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useAtomValue } from "jotai";
-import { Plus, Link2, Folder } from "lucide-react";
-import { SettingsContent } from "../SettingsContent";
-import { SettingsButton } from "../SettingsButton";
+import { Link2, Folder, Menu } from "lucide-react";
+import { SettingsListPage, useSettingsSearch } from "../SettingsListPage";
+import { SettingsEmptyState } from "../SettingsEmptyState";
 import { SettingsTable, type Column } from "../SettingsTable";
 import { RowActions } from "../RowActions";
 import { ConfirmDelete } from "../../shared/ConfirmDelete";
@@ -21,6 +21,7 @@ export function MenuPage() {
   );
   const [confirm, setConfirm] = useState<SettingsMenuLink | null>(null);
   const [editing, setEditing] = useState<SettingsMenuLink | "new" | null>(null);
+  const search = useSettingsSearch(links, (m) => `${m.title} ${m.url ?? ""}`);
 
   const saveLink = (value: Omit<SettingsMenuLink, "id">): string => {
     if (editing === "new") {
@@ -63,42 +64,54 @@ export function MenuPage() {
     {
       id: "actions",
       header: "",
-      width: "6rem",
+      width: "4rem",
       align: "right",
-      cell: (m) => <RowActions label={m.title} onEdit={() => setEditing(m)} onDelete={() => setConfirm(m)} />,
+      cell: (m) => <RowActions label={m.title} onDelete={() => setConfirm(m)} />,
     },
   ];
 
   return (
-    <SettingsContent component="MenuPage">
-      <SettingsContent.Header title="Menu" />
-      <SettingsContent.Body>
-        <p className="text-xs text-ink-tertiary mb-4">
-          Links shown in the top navigation. Groups nest links into a dropdown.
-        </p>
-        <SettingsTable columns={columns} data={links} getRowId={(m) => m.id} onRowClick={(m) => setEditing(m)} rowAriaLabel={(m) => `Edit ${m.title}`} />
-      </SettingsContent.Body>
-      <SettingsContent.Footer>
-        <SettingsButton variant="primary" size="sm" className="me-auto" icon={<Plus size={14} />} onClick={() => setEditing("new")}>
-          Add link
-        </SettingsButton>
-      </SettingsContent.Footer>
-
-      <ConfirmDelete
-        open={confirm !== null}
-        impact={confirm ? { lines: [confirm.type === "group" ? "Its sub-links are removed with it." : `It links to ${confirm.url}.`], block: null } : null}
-        title="Delete menu link"
-        message={`Remove “${confirm?.title}” from the navigation menu?`}
-        confirmLabel="Delete"
-        onConfirm={() => {
-          if (confirm) {
-            setLinks((prev) => prev.filter((m) => m.id !== confirm.id));
-            record({ log: false,  method: "DELETE", domain: "menu", noun: "menu item", id: confirm.id, name: confirm.title, message: `${confirm.title} removed` });
-          }
-          setConfirm(null);
-        }}
-        onCancel={() => setConfirm(null)}
+    <SettingsListPage
+      component="MenuPage"
+      title="Menu"
+      intro="Links shown in the top navigation. Groups nest links into a dropdown."
+      search={{ value: search.query, onChange: search.setQuery, label: "Search menu" }}
+      lead={{ label: "Add link", onClick: () => setEditing("new") }}
+      overlays={
+        <ConfirmDelete
+          open={confirm !== null}
+          impact={confirm ? { lines: [confirm.type === "group" ? "Its sub-links are removed with it." : `It links to ${confirm.url}.`], block: null } : null}
+          title="Delete menu link"
+          message={`Remove “${confirm?.title}” from the navigation menu?`}
+          confirmLabel="Delete"
+          onConfirm={() => {
+            if (confirm) {
+              setLinks((prev) => prev.filter((m) => m.id !== confirm.id));
+              record({ log: false,  method: "DELETE", domain: "menu", noun: "menu item", id: confirm.id, name: confirm.title, message: `${confirm.title} removed` });
+            }
+            setConfirm(null);
+          }}
+          onCancel={() => setConfirm(null)}
+        />
+      }
+    >
+      <SettingsTable
+        columns={columns}
+        data={search.rows}
+        getRowId={(m) => m.id}
+        onRowClick={(m) => setEditing(m)}
+        rowAriaLabel={(m) => `Edit ${m.title}`}
+        emptyState={
+          <SettingsEmptyState
+            icon={<Menu size={16} />}
+            title="No menu links yet"
+            hint="Add the links readers see in the collection's top navigation."
+            action={{ label: "Add link", onClick: () => setEditing("new") }}
+            query={search.query}
+            onClearQuery={search.clear}
+          />
+        }
       />
-    </SettingsContent>
+    </SettingsListPage>
   );
 }
