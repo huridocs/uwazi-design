@@ -71,16 +71,19 @@ function displayScalar(type: string, value: unknown, label?: string): string {
 
 const SKIP_CARD = new Set(["image", "markdown"]);
 
-/** A card's lines: the properties the TEMPLATE marks `showInCard`, in its
- *  order, the way Uwazi builds a card — not every one of up to 56. */
+/** A card's candidate lines: every displayable property, in template order,
+ *  each tagged with its property name. The card shows the ones its template
+ *  marks `showInCard` (`entityCardFields`), read at render, so a flag changed
+ *  in Settings reaches the card without rebuilding the corpus. */
 function fieldsOf(e: TravesiaEntity, tpl: { properties: TravesiaProperty[] }): CardField[] | undefined {
   const out: CardField[] = [];
   for (const p of tpl.properties) {
-    if (!p.showInCard || SKIP_CARD.has(p.type)) continue;
+    if (SKIP_CARD.has(p.type)) continue;
     const values = displayValues(p, e.metadata[p.name]);
     if (!values.length) continue;
     out.push({
       key: p.name,
+      prop: p.name,
       kind: kindOfUwaziType(p.type),
       label: p.label,
       value: values[0],

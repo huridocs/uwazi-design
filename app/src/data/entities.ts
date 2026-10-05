@@ -32,6 +32,10 @@ export interface CardField {
    *  localized label and a synthesized id, neither of which the record knows.
    *  Optional because a hand-authored corpus may not have one. */
   key?: string;
+  /** The template property this line is, always, even where `key` is left
+   *  out because the record has nothing to focus. The card picks its lines by
+   *  it: the template's `showInCard` properties (`entityCardFields`). */
+  prop?: string;
   /** What the property IS, normalized — see `utils/propertyKind`. A card that
    *  draws a coordinate differently from a sentence has to be told which it is
    *  holding. */

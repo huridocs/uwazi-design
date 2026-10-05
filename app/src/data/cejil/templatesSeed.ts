@@ -4,9 +4,11 @@
 // `filter` or `required` (`cleanProp` in scripts/import-cejil.cjs). Decision
 // S1: keep heuristic flags until the dump is re-imported with them, which then
 // replaces this module's flag rules in place:
-//   - showInCard and filter: thesaurus-backed select / multiselect (what the
-//     Library has always faceted and carded), plus `pa_s`, the relationship the
-//     Country facet hoists;
+//   - filter: thesaurus-backed select / multiselect (what the Library has always
+//     faceted), plus `pa_s`, the relationship the Country facet hoists;
+//   - showInCard: every property the Library's card has always shown (all
+//     but paragraphs, pictures, previews, tables and recordings, which ride the
+//     card's footer as marks or are its thumbnail);
 //   - required: false everywhere.
 // Property ids are synthesized `${templateId}:${name}` (propertyIdOf).
 import type { PropertyDef, PropertyType, TemplateDef } from "../templates/types";
@@ -16,6 +18,7 @@ import { cejilTypeById } from "./typesAdapter";
 import type { CejilTemplateProperty } from "./types";
 
 const COUNTRY_PROPERTY = "pa_s";
+const NOT_CARDED = new Set(["markdown", "image", "preview", "nested", "media"]);
 
 const isThesaurusBacked = (p: CejilTemplateProperty) =>
   (p.type === "select" || p.type === "multiselect") && !!p.content;
@@ -40,12 +43,14 @@ function resolveInherit(p: CejilTemplateProperty): Pick<PropertyDef, "inherit" |
 
 function propertyOf(templateId: string, p: CejilTemplateProperty): PropertyDef {
   const flagged = isThesaurusBacked(p) || p.name === COUNTRY_PROPERTY;
+  const carded = !NOT_CARDED.has(p.type) && !["title", "creationDate", "editDate"].includes(p.name);
   return {
     id: propertyIdOf(templateId, p.name),
     name: p.name,
     label: p.label,
     type: typeOf(p.type),
-    ...(flagged ? { showInCard: true, filter: true } : {}),
+    ...(carded ? { showInCard: true } : {}),
+    ...(flagged ? { filter: true } : {}),
     ...(p.content ? { content: p.content } : p.type === "relationship" ? { content: "" } : {}),
     ...(p.relationType ? { relationType: p.relationType } : {}),
     ...resolveInherit(p),

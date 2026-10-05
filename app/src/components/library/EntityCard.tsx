@@ -30,7 +30,7 @@ import { measurePeekRoom, peekEnter, peekLeave } from "./docPeek";
 import { CardValue, ownsItsRemainder } from "./CardValue";
 import { LIBRARY_SORTS } from "../../data/libraryDisplay";
 import { getEntityType, imageFocusKey, type EntityImage } from "../../data/entities";
-import { entityScalarFields, type EntityScalarField } from "../../utils/entityFields";
+import { entityCardFields, type EntityScalarField } from "../../utils/entityFields";
 import type { PropertyKind } from "../../utils/propertyKind";
 import type { CardMark, MediaMark } from "../../data/entities";
 import type { Entity } from "../../data/entities";
@@ -219,7 +219,8 @@ export const EntityCard = memo(function EntityCard({
   );
 
   // Only fields that resolved to a value; shared with the list table's metadata columns.
-  const scalarFields = entityScalarFields(entity, language);
+  // The template's showInCard properties (utils/entityFields).
+  const scalarFields = entityCardFields(entity, language);
   /* No fixed ceiling: the count is the Display menu's choice (None / First 3 /
      First 5 / All). The subgrid keeps rows level whatever the line counts, and
      no "Language" row is added because the toolbar already shows it. */

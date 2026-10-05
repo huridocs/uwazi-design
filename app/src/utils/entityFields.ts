@@ -1,8 +1,11 @@
 import type { Entity } from "../data/entities";
 import type { Language } from "../atoms/language";
-import type { MetadataField } from "../data/metadata";
+import type { AnyMetadataField, MetadataField } from "../data/metadata";
+import { getEntity, entityCorpusOf, type CardField } from "../data/entities";
+import { templateMirror } from "../data/templates/mirror";
+import type { TemplateDef } from "../data/templates/types";
 import { getEntityProfile } from "../data/entityProfiles";
-import { kindOfFieldType, type PropertyKind } from "./propertyKind";
+import { kindOfFieldType, kindOfUwaziType, type PropertyKind } from "./propertyKind";
 
 /** One resolved scalar property of an entity — a label and the value to print.
  *  `more` is the "+N" tail a summarising adapter leaves on a multi-valued
@@ -66,6 +69,87 @@ export function entityScalarFields(entity: Entity, language: Language): EntitySc
       label: f.label,
       value: String(f.value),
     }));
+}
+
+/* ── Cards from the template (template-schema-spec.md §6.2) ───────────────
+   A card shows the properties its template marks `showInCard`, in template
+   order. Where the corpus precomputes formatted lines (CEJIL, Travesía: years
+   for dates, places, "+N" tails), the card picks those by property name;
+   elsewhere it projects them from the record. The flags are read at render,
+   so a change in Settings reaches the card at once. */
+
+/** The names a template shows on cards, in order. Cached per template object
+ *  (the store hands out a new one on change). */
+const shownCache = new WeakMap<TemplateDef, string[]>();
+function shownNames(t: TemplateDef): string[] {
+  let names = shownCache.get(t);
+  if (!names) {
+    names = t.properties.filter((p) => p.showInCard && !NOT_A_LINE.has(p.type)).map((p) => p.name);
+    shownCache.set(t, names);
+  }
+  return names;
+}
+/** Types that are not a card line: the picture is the thumbnail, a paragraph
+ *  is a footer mark, a preview has no value. */
+const NOT_A_LINE = new Set(["image", "preview", "markdown"]);
+
+/** A record field as a card line. */
+function lineOf(f: AnyMetadataField): EntityScalarField | null {
+  if (f.type === "relationship") {
+    const titles = f.connectedEntityIds.map((id) => getEntity(id)?.title ?? f.connectedLabels?.[id]).filter((t): t is string => !!t);
+    if (!titles.length) return null;
+    return {
+      id: f.id,
+      key: f.id,
+      kind: "relationship",
+      label: f.label,
+      value: titles[0],
+      ...(titles.length > 1 ? { values: titles.slice(0, 4), more: titles.length - 1 } : {}),
+    };
+  }
+  const list = f.displayValues?.length ? f.displayValues : f.values?.length ? f.values : f.value ? [f.value] : [];
+  if (!list.length || list[0] === "—") return null;
+  return {
+    id: f.id,
+    key: f.id,
+    kind: (f.propertyType && kindOfUwaziType(f.propertyType)) || kindOfFieldType(f.type),
+    label: f.label,
+    value: list[0],
+    ...(list.length > 1 ? { values: list.slice(0, 4), more: list.length - 1 } : {}),
+  };
+}
+
+/** The card's lines for an entity: its template's `showInCard` properties
+ *  that hold a value, in template order. An entity whose template is unknown
+ *  (a corpus without one) keeps every scalar line, as before. */
+export function entityCardFields(entity: Entity, language: Language): EntityScalarField[] {
+  const corpus = entityCorpusOf(entity.id);
+  const template = templateMirror(corpus, entity.typeId);
+  if (!template) return entityScalarFields(entity, language);
+  const shown = shownNames(template);
+  if (!shown.length) return [];
+  // Precomputed lines, by property name (CEJIL, Travesía; an edited entity's
+  // lines are kept current by `adapterPatch`).
+  if (entity.fields && corpus !== "artworks" && entity.fields.some((f) => f.prop)) {
+    const byProp = new Map<string, CardField>();
+    for (const f of entity.fields) if (f.prop && !byProp.has(f.prop)) byProp.set(f.prop, f);
+    const out: EntityScalarField[] = [];
+    for (const name of shown) {
+      const f = byProp.get(name);
+      if (f) out.push({ id: f.key ?? f.prop!, key: f.key, kind: f.kind, label: f.label, value: f.value, values: f.values, more: f.more });
+    }
+    return out;
+  }
+  // Projected from the record (the Sample, Artworks).
+  const fields = getEntityProfile(entity.id).metadata[language] ?? [];
+  const byName = new Map(fields.map((f) => [f.id, f]));
+  const out: EntityScalarField[] = [];
+  for (const name of shown) {
+    const f = byName.get(name);
+    const line = f ? lineOf(f) : null;
+    if (line) out.push(line);
+  }
+  return out;
 }
 
 /** The value an entity carries for one property label, or undefined.

@@ -37,8 +37,10 @@ function nativeProperties(typeId: string): PropertyDef[] {
     label: lbl(prop, "EN"),
     type: TYPE_OF[type] ?? "text",
     ...(thesaurus ? { content: thesaurus } : {}),
-    // The Sample's selects are what its Library has faceted and carded.
-    ...(type === "select" || type === "multiselect" ? { showInCard: true, filter: true } : {}),
+    // Every native property is a card line, as the Sample's cards have always
+    // shown; its selects are what its Library facets.
+    ...(type !== "multiline" ? { showInCard: true } : {}),
+    ...(type === "select" || type === "multiselect" ? { filter: true } : {}),
   }));
 }
 
@@ -64,6 +66,10 @@ const COURT_CASE: { name: string; type: PropertyType; content?: string; label?: 
   { name: "bench", type: "markdown" },
 ];
 
+/** What a Court Case card shows: the identifiers, parties, place and dates,
+ *  not the procedural detail. */
+const CASE_CARD = new Set(["caseNumber", "victim", "respondent", "country", "region", "status", "dateFiled", "date"]);
+
 function courtCaseProperties(): PropertyDef[] {
   return COURT_CASE.map((p) => ({
     id: propertyIdOf("court_case", p.name),
@@ -71,7 +77,8 @@ function courtCaseProperties(): PropertyDef[] {
     label: p.label ?? lbl(p.name, "EN"),
     type: p.type,
     ...(p.content ? { content: p.content } : {}),
-    ...(p.type === "select" ? { showInCard: true, filter: true } : {}),
+    ...(CASE_CARD.has(p.name) ? { showInCard: true } : {}),
+    ...(p.type === "select" ? { filter: true } : {}),
   }));
 }
 
@@ -90,6 +97,7 @@ function v4DateProperties(typeId: string, declared: Set<string>): PropertyDef[] 
         name: d.prop,
         label: d.label.EN,
         type: d.end ? "daterange" : "date",
+        showInCard: true,
       });
     }
   }

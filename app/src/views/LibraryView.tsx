@@ -99,7 +99,7 @@ import { matchCategoriesWithTerms, passageFileId, type MatchCategories } from ".
 import { AdaptiveSplitView } from "../components/layout/AdaptiveSplitView";
 import { EntityCard } from "../components/library/EntityCard";
 import { ImageLightbox } from "../components/shared/ImageLightbox";
-import { entityScalarFields } from "../utils/entityFields";
+import { entityCardFields } from "../utils/entityFields";
 import { MatchOrigin } from "../components/library/MatchOrigin";
 import { listColumnSpecs, buildListColumns } from "../components/library/listColumns";
 import { LIBRARY_SORTS } from "../data/libraryDisplay";
@@ -776,7 +776,7 @@ export function LibraryView() {
      Every card gets it so all claim the same subgrid row tracks; a per-card test
      would give cards different track counts and the rows would stop lining up. */
   const metadataTrack = useMemo(
-    () => shown.some((e) => entityScalarFields(e, language).length > 0),
+    () => shown.some((e) => entityCardFields(e, language).length > 0),
     [shown, language],
   );
 

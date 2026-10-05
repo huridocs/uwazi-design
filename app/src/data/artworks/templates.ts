@@ -13,13 +13,17 @@ import { ART_GENRES, ART_NATIONALITIES } from "./thesauri";
 import { commonPropertiesFor, propertyIdOf } from "../templates/types";
 import { ARTIST_TYPE_ID, ARTWORK_TYPE_ID, artworkTypeById } from "./typesAdapter";
 
+/** The card lines both templates have always shown. */
+const CARDED = new Set(["artist", "genres", "nationalities", "born", "died", "paintings"]);
+
 const p = (templateId: string, name: string, label: string, type: PropertyType, content?: string) => ({
   id: propertyIdOf(templateId, name),
   name,
   label,
   type,
   ...(content ? { content } : {}),
-  ...(type === "multiselect" ? { showInCard: true, filter: true } : {}),
+  ...(type === "multiselect" ? { filter: true } : {}),
+  ...(CARDED.has(name) ? { showInCard: true } : {}),
 });
 
 let built: TemplateDef[] | null = null;
@@ -37,6 +41,7 @@ export const artworkTemplateDefs = (): TemplateDef[] => (built ??= [
         name: "artist",
         label: "Artist",
         type: "relationship",
+        showInCard: true,
         content: ARTIST_TYPE_ID,
         relationType: "Painted by",
       },

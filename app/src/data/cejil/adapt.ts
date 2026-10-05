@@ -173,6 +173,7 @@ function fieldsOf(
     if (kind === "place" && ownCoords) {
       out.push({
         key: p.name,
+        prop: p.name,
         kind: "place",
         label: p.label,
         value: formatPlace(ownCoords),
@@ -209,6 +210,7 @@ function fieldsOf(
       p.type !== "relationship" || relPropResolves(e.sharedId ?? "", p.relationType);
     out.push({
       key: resolves ? p.name : undefined,
+      prop: p.name,
       kind: kindOfUwaziType(p.type),
       label: p.label,
       value,
@@ -224,6 +226,9 @@ function fieldsOf(
   if (connectedPlace) {
     out.push({
       key: PLACE_INHERITED_KEY,
+      // The relationship property that inherits the place: what the template's
+      // showInCard flag is on.
+      prop: props.find((p) => p.inherit?.type === "geolocation")?.name,
       kind: "place",
       label: "Lugar de los hechos",
       value: formatPlace(connectedPlace.coords, connectedPlace.name),
