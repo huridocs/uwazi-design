@@ -71,11 +71,15 @@ export const slugify = (title: string) =>
 
 function seedPage(p: SettingsPage): SitePage {
   const body = SEED_BODY[p.slug];
+  const en = { ...emptyLocale(), title: p.title, html: body?.en ?? `<h1>${p.title}</h1>` };
+  // Uwazi creates a page in every installed language with the default
+  // language's content; French and Arabic were never translated here, so
+  // they hold the English text. An empty title would block every Save.
   const draft: CodeLocales = {
-    en: { ...emptyLocale(), title: p.title, html: body?.en ?? `<h1>${p.title}</h1>` },
-    es: { ...emptyLocale(), title: ES_TITLE[p.slug] ?? p.title, html: body?.es ?? "" },
-    fr: emptyLocale(),
-    ar: emptyLocale(),
+    en,
+    es: { ...emptyLocale(), title: ES_TITLE[p.slug] ?? p.title, html: body?.es ?? en.html },
+    fr: { ...en },
+    ar: { ...en },
   };
   return {
     id: p.id,
